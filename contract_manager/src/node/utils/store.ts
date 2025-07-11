@@ -29,6 +29,7 @@ import {
   IotaWormholeContract,
   IotaPriceFeedContract,
   EvmPulseContract,
+  EvmExecutorContract,
 } from "../../core/contracts";
 import { Token } from "../../core/token";
 import { PriceFeedContract, Storable } from "../../core/base";
@@ -46,6 +47,7 @@ import {
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, PriceFeedContract> = {};
+  public executor_contracts: Record<string, EvmExecutorContract> = {};
   public entropy_contracts: Record<string, EvmEntropyContract> = {};
   public pulse_contracts: Record<string, EvmPulseContract> = {};
   public wormhole_contracts: Record<string, WormholeContract> = {};
@@ -118,6 +120,7 @@ export class Store {
     const contracts: Storable[] = Object.values(this.contracts);
     contracts.push(...Object.values(this.entropy_contracts));
     contracts.push(...Object.values(this.wormhole_contracts));
+    contracts.push(...Object.values(this.executor_contracts));
     for (const contract of contracts) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
@@ -167,6 +170,7 @@ export class Store {
       [AptosWormholeContract.type]: AptosWormholeContract,
       [EvmEntropyContract.type]: EvmEntropyContract,
       [EvmWormholeContract.type]: EvmWormholeContract,
+      [EvmExecutorContract.type]: EvmExecutorContract,
       [FuelPriceFeedContract.type]: FuelPriceFeedContract,
       [FuelWormholeContract.type]: FuelWormholeContract,
       [StarknetPriceFeedContract.type]: StarknetPriceFeedContract,
@@ -192,7 +196,8 @@ export class Store {
         if (
           this.contracts[chainContract.getId()] ||
           this.entropy_contracts[chainContract.getId()] ||
-          this.wormhole_contracts[chainContract.getId()]
+          this.wormhole_contracts[chainContract.getId()] ||
+          this.executor_contracts[chainContract.getId()]
         )
           throw new Error(
             `Multiple contracts with id ${chainContract.getId()} found`,
@@ -201,6 +206,8 @@ export class Store {
           this.entropy_contracts[chainContract.getId()] = chainContract;
         } else if (chainContract instanceof WormholeContract) {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof EvmExecutorContract) {
+          this.executor_contracts[chainContract.getId()] = chainContract;
         } else {
           this.contracts[chainContract.getId()] = chainContract;
         }

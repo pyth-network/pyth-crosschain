@@ -10,35 +10,38 @@ Each blockchain is configured in `config.yaml`.
 
 ## Build & Test
 
-We use sqlx query macros to check the SQL queries at compile time. This requires
-a database to be available at build time. Create a `.env` file in the root of the project with the following content:
+Fortuna uses Cargo for building and dependency management.
+Simply run `cargo build` and `cargo test` to build and test the project.
+To run Fortuna locally, see the [Local Development](#local-development) section below.
 
+### Connect a database
+Fortuna stores request history in a SQL database and serves it from its explorer API.
+Any SQLite or Postgres database is supported. The database connection is sourced from the `DATABASE_URL` env var.
+Create a `.env` file in the root of the project with a DB connection string.
 ```
 DATABASE_URL="sqlite:fortuna.db?mode=rwc"
 ```
+If not provided, Fortuna will create and use a SQLite file-based database at `./fortuna.db`, as in the example above.
 
-Install sqlx for cargo with:
+### Database migrations
+Fortuna will automatically apply the schema migrations in the `./migrations` directory when connecting to the database.
+To manually administer the migrations, use the `sqlx` tool for cargo. The tool automatically uses the
+database connection in the `.env` file.
+
+Install `sqlx`:
 ```bash
 cargo install sqlx
 ```
 
-Next, you need to create the database and apply the schema migrations. You can do this by running:
-
+To create the database if needed and apply the migrations:
 ```bash
-cargo sqlx migrate run # automatically picks up the .env file
+cargo sqlx migrate run
 ```
-This will create a SQLite database file called `fortuna.db` in the root of the project and apply the schema migrations to it.
-This will allow `cargo check` to check the queries against the existing database.
 
-Fortuna uses Cargo for building and dependency management.
-Simply run `cargo build` and `cargo test` to build and test the project.
-
-If you have changed any queries in the code, you need to update the .sqlx folder with the new queries:
-
+To restore the database to a fresh state (drop, recreate, apply migrations):
 ```bash
-cargo sqlx prepare
+cargo sqlx database reset
 ```
-Please add the changed files in the `.sqlx` folder to your git commit.
 
 ## Command-Line Interface
 
@@ -58,58 +61,45 @@ Fortuna supports running multiple replica instances for high availability and re
 
 ### Fee Management with Multiple Instances
 
-When running multiple Fortuna instances with different keeper wallets but a single provider, only one instance should handle fee management. This instance needs to run using the same private key as the fee manager, because only the registerd fee manager wallet can adjust fees and withdraw funds.
+When running multiple Fortuna instances with different keeper wallets, the system uses a fair fee distribution strategy. Each keeper will withdraw fees from the contract to maintain a balanced distribution across all known keeper addresses and the fee manager address.
+
+The fee manager (configured in the provider section) can be a separate wallet from the keeper wallets. When fees are withdrawn from the contract, they go to the fee manager wallet first, then are automatically transferred to the requesting keeper wallet.
+
+**Key Configuration:**
+- All instances should have `keeper.private_key` and `keeper.fee_manager_private_key` provided so that each keeper can top itself up as fee manager from contract fees.
 
 ### Example Configurations
 
-**Two Replica Setup with Fee Management:**
 ```yaml
-# Replica 0 (fee manager wallet) - handles even sequence numbers + fee management
+# Replica 0 - handles even sequence numbers + fee management
 keeper:
   private_key:
+    value: 0x<keeper_0_private_key>
+  fee_manager_private_key:
     value: 0x<fee_manager_private_key>
+  other_keeper_addresses:
+    - 0x<keeper_0_address>  # This replica's address
+    - 0x<keeper_1_address>  # Other replica's address
   replica_config:
     replica_id: 0
     total_replicas: 2
-    backup_delay_seconds: 30
-  run_config:
-    disable_fee_adjustment: false  # Enable fee management (default)
-    disable_fee_withdrawal: false
+    backup_delay_seconds: 15
 
-# Replica 1 (non-fee-manager wallet) - handles odd sequence numbers only
+
+# Replica 1 - handles odd sequence numbers
 keeper:
   private_key:
-    value: 0x<other_keeper_private_key>
+    value: 0x<keeper_1_private_key>
+  fee_manager_private_key:
+    value: 0x<fee_manager_private_key>
+  other_keeper_addresses:
+    - 0x<keeper_0_address>  # Other replica's address
+    - 0x<keeper_1_address>  # This replica's address
   replica_config:
     replica_id: 1
     total_replicas: 2
-    backup_delay_seconds: 30
-  run_config:
-    disable_fee_adjustment: true   # Disable fee management
-    disable_fee_withdrawal: true
-```
+    backup_delay_seconds: 15
 
-**Three Replica Setup:**
-```yaml
-# Replica 0 (fee manager wallet) - handles sequence numbers 0, 3, 6, 9, ... + fee management
-keeper:
-  replica_config:
-    replica_id: 0
-    total_replicas: 3
-    backup_delay_seconds: 30
-  run_config:
-    disable_fee_adjustment: false
-    disable_fee_withdrawal: false
-
-# Replicas 1 & 2 (non-fee-manager wallets) - request processing only
-keeper:
-  replica_config:
-    replica_id: 1  # or 2
-    total_replicas: 3
-    backup_delay_seconds: 30
-  run_config:
-    disable_fee_adjustment: true
-    disable_fee_withdrawal: true
 ```
 
 ### Deployment Considerations
@@ -117,7 +107,7 @@ keeper:
 1. **Separate Wallets**: Each replica MUST use a different private key to avoid nonce conflicts
 2. **Fee Manager Assignment**: Set the provider's `fee_manager` address to match the primary instance's keeper wallet
 3. **Thread Configuration**: Only enable fee management threads on the instance using the fee manager wallet
-4. **Backup Delay**: Set `backup_delay_seconds` long enough to allow primary replica to process requests, but short enough for acceptable failover time (recommended: 30-60 seconds)
+4. **Backup Delay**: Set `backup_delay_seconds` long enough to allow primary replica to process requests, but short enough for acceptable failover time (recommended: 10-30 seconds)
 5. **Monitoring**: Monitor each replica's processing metrics to ensure proper load distribution
 6. **Gas Management**: Each replica needs sufficient ETH balance for gas fees
 
@@ -127,7 +117,6 @@ keeper:
 - Backup replicas wait for `backup_delay_seconds` before checking if request is still unfulfilled
 - If request is already fulfilled during the delay, backup replica skips processing
 - This prevents duplicate transactions and wasted gas while ensuring reliability
-- Fee management operations (adjustment/withdrawal) only occur on an instance where the keeper wallet is the fee manager wallet.
 
 ## Local Development
 
@@ -138,7 +127,7 @@ To start an instance of the webserver for local testing, you first need to perfo
 1. Run `cargo run -- setup-provider` to register a randomness provider for this service. This command
    will update the on-chain contracts such that the configured provider key is a randomness provider,
    and its on-chain configuration matches `config.yaml`.
-
+1. Review the [Connect a database](#connect-a-database) section above. The default configuration will create a file-based DB.
 Once you've completed the setup, simply run the following command to start the service:
 
 ```bash

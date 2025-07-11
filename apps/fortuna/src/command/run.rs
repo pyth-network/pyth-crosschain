@@ -3,10 +3,7 @@ use {
         api::{self, ApiBlockChainState, BlockchainState, ChainId},
         chain::ethereum::InstrumentedPythContract,
         command::register_provider::CommitmentMetadata,
-        config::{
-            Commitment, Config, EthereumConfig, ProviderConfig, ReplicaConfig, RunConfig,
-            RunOptions,
-        },
+        config::{Commitment, Config, EthereumConfig, KeeperConfig, ProviderConfig, RunOptions},
         eth_utils::traced_client::RpcMetrics,
         history::History,
         keeper::{self, keeper_metrics::KeeperMetrics},
@@ -87,6 +84,8 @@ pub async fn run_api(
 }
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
+    // Load environment variables from a .env file if present
+    let _ = dotenv::dotenv()?;
     let config = Config::load(&opts.config.config)?;
     let secret = config.provider.secret.load()?.ok_or(anyhow!(
         "Please specify a provider secret in the config file."
@@ -103,9 +102,6 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         tracing::info!("Not starting keeper service: no keeper private key specified. Please add one to the config if you would like to run the keeper service.")
     }
 
-    let keeper_replica_config = config.keeper.replica_config.clone();
-    let keeper_run_config = config.keeper.run_config.clone();
-
     let chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>> = Arc::new(RwLock::new(
         config
             .chains
@@ -118,23 +114,25 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         keeper_metrics.add_chain(chain_id.clone(), config.provider.address);
         let keeper_metrics = keeper_metrics.clone();
         let keeper_private_key_option = keeper_private_key_option.clone();
-        let keeper_replica_config = keeper_replica_config.clone();
-        let keeper_run_config = keeper_run_config.clone();
         let chains = chains.clone();
         let secret_copy = secret.clone();
         let rpc_metrics = rpc_metrics.clone();
         let provider_config = config.provider.clone();
         let history = history.clone();
+        let keeper_config_base = config.keeper.clone();
         spawn(async move {
             loop {
+                let keeper_config = if keeper_private_key_option.is_some() {
+                    Some(keeper_config_base.clone())
+                } else {
+                    None
+                };
                 let setup_result = setup_chain_and_run_keeper(
                     provider_config.clone(),
                     &chain_id,
                     chain_config.clone(),
                     keeper_metrics.clone(),
-                    keeper_private_key_option.clone(),
-                    keeper_replica_config.clone(),
-                    keeper_run_config.clone(),
+                    keeper_config,
                     chains.clone(),
                     &secret_copy,
                     history.clone(),
@@ -184,9 +182,7 @@ async fn setup_chain_and_run_keeper(
     chain_id: &ChainId,
     chain_config: EthereumConfig,
     keeper_metrics: Arc<KeeperMetrics>,
-    keeper_private_key_option: Option<String>,
-    keeper_replica_config: Option<ReplicaConfig>,
-    keeper_run_config: RunConfig,
+    keeper_config: Option<KeeperConfig>,
     chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
     secret_copy: &str,
     history: Arc<History>,
@@ -206,11 +202,9 @@ async fn setup_chain_and_run_keeper(
         chain_id.clone(),
         ApiBlockChainState::Initialized(state.clone()),
     );
-    if let Some(keeper_private_key) = keeper_private_key_option {
+    if let Some(keeper_config) = keeper_config {
         keeper::run_keeper_threads(
-            keeper_private_key,
-            keeper_replica_config,
-            keeper_run_config,
+            keeper_config,
             chain_config,
             state,
             keeper_metrics.clone(),
@@ -248,7 +242,7 @@ async fn setup_chain_state(
     });
 
     let provider_info = contract
-        .get_provider_info(*provider)
+        .get_provider_info_v2(*provider)
         .call()
         .await
         .map_err(|e| anyhow!("Failed to get provider info: {}", e))?;

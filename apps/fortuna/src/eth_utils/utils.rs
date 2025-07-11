@@ -1,5 +1,7 @@
 use {
-    crate::eth_utils::nonce_manager::NonceManaged,
+    crate::{
+        chain::ethereum::InstrumentedSignablePythContract, eth_utils::nonce_manager::NonceManaged,
+    },
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethabi::ethereum_types::U64,
@@ -7,7 +9,10 @@ use {
         contract::{ContractCall, ContractError},
         middleware::Middleware,
         providers::ProviderError,
-        types::{transaction::eip2718::TypedTransaction, TransactionReceipt, U256},
+        signers::Signer,
+        types::{
+            transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, U256,
+        },
     },
     std::{
         fmt::Display,
@@ -22,7 +27,6 @@ const TX_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
 #[derive(Debug)]
 pub struct SubmitTxResult {
     pub num_retries: u64,
-    pub gas_multiplier: u64,
     pub fee_multiplier: u64,
     pub duration: Duration,
     pub receipt: TransactionReceipt,
@@ -30,19 +34,6 @@ pub struct SubmitTxResult {
 
 #[derive(Clone, Debug)]
 pub struct EscalationPolicy {
-    // The keeper will perform the callback as long as the tx is within this percentage of the configured gas limit.
-    // Default value is 110, meaning a 10% tolerance over the configured value.
-    pub gas_limit_tolerance_pct: u64,
-
-    /// The initial gas multiplier to apply to the tx gas estimate
-    pub initial_gas_multiplier_pct: u64,
-
-    /// The gas multiplier to apply to the tx gas estimate during backoff retries.
-    /// The gas on each successive retry is multiplied by this value, with the maximum multiplier capped at `gas_multiplier_cap_pct`.
-    pub gas_multiplier_pct: u64,
-    /// The maximum gas multiplier to apply to the tx gas estimate during backoff retries.
-    pub gas_multiplier_cap_pct: u64,
-
     /// The fee multiplier to apply to the fee during backoff retries.
     /// The initial fee is 100% of the estimate (which itself may be padded based on our chain configuration)
     /// The fee on each successive retry is multiplied by this value, with the maximum multiplier capped at `fee_multiplier_cap_pct`.
@@ -51,15 +42,6 @@ pub struct EscalationPolicy {
 }
 
 impl EscalationPolicy {
-    pub fn get_gas_multiplier_pct(&self, num_retries: u64) -> u64 {
-        self.apply_escalation_policy(
-            num_retries,
-            self.initial_gas_multiplier_pct,
-            self.gas_multiplier_pct,
-            self.gas_multiplier_cap_pct,
-        )
-    }
-
     pub fn get_fee_multiplier_pct(&self, num_retries: u64) -> u64 {
         self.apply_escalation_policy(
             num_retries,
@@ -160,7 +142,6 @@ pub async fn estimate_tx_cost<T: Middleware + 'static>(
 pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     middleware: Arc<T>,
     call: ContractCall<T, ()>,
-    gas_limit: U256,
     escalation_policy: EscalationPolicy,
     error_mapper: Option<
         impl Fn(u64, backoff::Error<SubmitTxError<T>>) -> backoff::Error<SubmitTxError<T>>,
@@ -176,23 +157,13 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     let num_retries = Arc::new(AtomicU64::new(0));
 
-    let padded_gas_limit = U256::from(escalation_policy.gas_limit_tolerance_pct) * gas_limit / 100;
-
     let success = backoff::future::retry_notify(
         backoff,
         || async {
             let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
 
-            let gas_multiplier_pct = escalation_policy.get_gas_multiplier_pct(num_retries);
             let fee_multiplier_pct = escalation_policy.get_fee_multiplier_pct(num_retries);
-            let result = submit_tx(
-                middleware.clone(),
-                &call,
-                padded_gas_limit,
-                gas_multiplier_pct,
-                fee_multiplier_pct,
-            )
-            .await;
+            let result = submit_tx(middleware.clone(), &call, fee_multiplier_pct).await;
             if let Some(ref mapper) = error_mapper {
                 result.map_err(|e| mapper(num_retries, e))
             } else {
@@ -217,7 +188,6 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     Ok(SubmitTxResult {
         num_retries,
-        gas_multiplier: escalation_policy.get_gas_multiplier_pct(num_retries),
         fee_multiplier: escalation_policy.get_fee_multiplier_pct(num_retries),
         duration,
         receipt: success,
@@ -274,33 +244,9 @@ where
 pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     client: Arc<T>,
     call: &ContractCall<T, ()>,
-    gas_limit: U256,
-    // A value of 100 submits the tx with the same gas/fee as the estimate.
-    gas_estimate_multiplier_pct: u64,
+    // A value of 100 submits the tx with the same fee as the estimate.
     fee_estimate_multiplier_pct: u64,
 ) -> Result<TransactionReceipt, backoff::Error<SubmitTxError<T>>> {
-    let gas_estimate_res = call.estimate_gas().await;
-
-    let gas_estimate = gas_estimate_res.map_err(|e| {
-        // we consider the error transient even if it is a contract revert since
-        // it can be because of routing to a lagging RPC node. Retrying such errors will
-        // incur a few additional RPC calls, but it is fine.
-        backoff::Error::transient(SubmitTxError::GasUsageEstimateError(e))
-    })?;
-
-    // The gas limit on the simulated transaction is the maximum expected tx gas estimate,
-    // but we are willing to pad the gas a bit to ensure reliable submission.
-    if gas_estimate > gas_limit {
-        return Err(backoff::Error::permanent(SubmitTxError::GasLimitExceeded {
-            estimate: gas_estimate,
-            limit: gas_limit,
-        }));
-    }
-
-    // Pad the gas estimate after checking it against the simulation gas limit.
-    let gas_estimate = gas_estimate.saturating_mul(gas_estimate_multiplier_pct.into()) / 100;
-
-    let call = call.clone().gas(gas_estimate);
     let mut transaction = call.tx.clone();
 
     // manually fill the tx with the gas price info, so we can log the details in case of error
@@ -364,4 +310,50 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     }
 
     Ok(receipt)
+}
+
+/// Transfer funds from the signing wallet to the destination address.
+pub async fn submit_transfer_tx(
+    contract: Arc<InstrumentedSignablePythContract>,
+    destination_address: ethers::types::Address,
+    transfer_amount: U256,
+) -> Result<ethers::types::H256> {
+    let source_wallet_address = contract.wallet().address();
+
+    tracing::info!(
+        "Transferring {:?} from {:?} to {:?}",
+        transfer_amount,
+        source_wallet_address,
+        destination_address
+    );
+
+    let tx = TransactionRequest::new()
+        .to(destination_address)
+        .value(transfer_amount)
+        .from(source_wallet_address);
+
+    let client = contract.client();
+    let pending_tx = client.send_transaction(tx, None).await?;
+
+    // Wait for confirmation with timeout
+    let tx_receipt = timeout(
+        Duration::from_secs(TX_CONFIRMATION_TIMEOUT_SECS),
+        pending_tx,
+    )
+    .await
+    .map_err(|_| anyhow!("Transfer transaction confirmation timeout"))?
+    .map_err(|e| anyhow!("Transfer transaction confirmation error: {:?}", e))?
+    .ok_or_else(|| anyhow!("Transfer transaction, probably dropped from mempool"))?;
+
+    // Check if transaction was successful
+    if tx_receipt.status == Some(U64::from(0)) {
+        return Err(anyhow!(
+            "Transfer transaction failed on-chain. Receipt: {:?}",
+            tx_receipt
+        ));
+    }
+
+    let tx_hash = tx_receipt.transaction_hash;
+    tracing::info!("Transfer transaction confirmed: {:?}", tx_hash);
+    Ok(tx_hash)
 }
