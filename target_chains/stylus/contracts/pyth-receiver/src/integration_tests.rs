@@ -81,7 +81,6 @@ mod test {
         let governance_chain_id = 1u16;
         let governance_emitter_address = [3u8; 32];
         let governance_initial_sequence = 0u64;
-        let data = vec![];
 
         pyth_contract.sender(*alice).initialize(
             wormhole_contract.address(),
@@ -92,7 +91,6 @@ mod test {
             governance_chain_id,
             governance_emitter_address,
             governance_initial_sequence,
-            data,
         );
     }
 
@@ -193,7 +191,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        MockClock::set_time(Duration::from_secs(1761573860));
+        MockClock::set_time(Duration::from_secs(1761573860)); // less than good_update2().timestamp + 1s
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let random_id: [u8; 32] = [

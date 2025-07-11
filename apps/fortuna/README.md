@@ -10,35 +10,38 @@ Each blockchain is configured in `config.yaml`.
 
 ## Build & Test
 
-We use sqlx query macros to check the SQL queries at compile time. This requires
-a database to be available at build time. Create a `.env` file in the root of the project with the following content:
+Fortuna uses Cargo for building and dependency management.
+Simply run `cargo build` and `cargo test` to build and test the project.
+To run Fortuna locally, see the [Local Development](#local-development) section below.
 
+### Connect a database
+Fortuna stores request history in a SQL database and serves it from its explorer API.
+Any SQLite or Postgres database is supported. The database connection is sourced from the `DATABASE_URL` env var.
+Create a `.env` file in the root of the project with a DB connection string.
 ```
 DATABASE_URL="sqlite:fortuna.db?mode=rwc"
 ```
+If not provided, Fortuna will create and use a SQLite file-based database at `./fortuna.db`, as in the example above.
 
-Install sqlx for cargo with:
+### Database migrations
+Fortuna will automatically apply the schema migrations in the `./migrations` directory when connecting to the database.
+To manually administer the migrations, use the `sqlx` tool for cargo. The tool automatically uses the
+database connection in the `.env` file.
+
+Install `sqlx`:
 ```bash
 cargo install sqlx
 ```
 
-Next, you need to create the database and apply the schema migrations. You can do this by running:
-
+To create the database if needed and apply the migrations:
 ```bash
-cargo sqlx migrate run # automatically picks up the .env file
+cargo sqlx migrate run
 ```
-This will create a SQLite database file called `fortuna.db` in the root of the project and apply the schema migrations to it.
-This will allow `cargo check` to check the queries against the existing database.
 
-Fortuna uses Cargo for building and dependency management.
-Simply run `cargo build` and `cargo test` to build and test the project.
-
-If you have changed any queries in the code, you need to update the .sqlx folder with the new queries:
-
+To restore the database to a fresh state (drop, recreate, apply migrations):
 ```bash
-cargo sqlx prepare
+cargo sqlx database reset
 ```
-Please add the changed files in the `.sqlx` folder to your git commit.
 
 ## Command-Line Interface
 
@@ -124,7 +127,7 @@ To start an instance of the webserver for local testing, you first need to perfo
 1. Run `cargo run -- setup-provider` to register a randomness provider for this service. This command
    will update the on-chain contracts such that the configured provider key is a randomness provider,
    and its on-chain configuration matches `config.yaml`.
-
+1. Review the [Connect a database](#connect-a-database) section above. The default configuration will create a file-based DB.
 Once you've completed the setup, simply run the following command to start the service:
 
 ```bash

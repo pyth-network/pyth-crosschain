@@ -42,6 +42,16 @@ pub enum StateTag {
     Failed,
 }
 
+impl std::fmt::Display for StateTag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StateTag::Pending => write!(f, "Pending"),
+            StateTag::Completed => write!(f, "Completed"),
+            StateTag::Failed => write!(f, "Failed"),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]
 pub struct RequestLabel {
     pub value: String,

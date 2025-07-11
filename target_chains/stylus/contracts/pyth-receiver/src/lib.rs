@@ -79,7 +79,6 @@ impl PythReceiver {
         governance_emitter_chain_id: u16,
         governance_emitter_address: [u8; 32],
         governance_initial_sequence: u64,
-        _data: Vec<u8>,
     ) {
         self.wormhole.set(wormhole);
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
