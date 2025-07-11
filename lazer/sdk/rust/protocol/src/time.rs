@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use {
     anyhow::Context,
     protobuf::{
@@ -106,12 +109,12 @@ impl TimestampUs {
 
     #[inline]
     pub fn elapsed(self) -> anyhow::Result<DurationUs> {
-        self.duration_since(Self::now())
+        Self::now().duration_since(self)
     }
 
     #[inline]
     pub fn saturating_elapsed(self) -> DurationUs {
-        self.saturating_duration_since(Self::now())
+        Self::now().saturating_duration_since(self)
     }
 
     #[inline]
@@ -301,6 +304,12 @@ impl DurationUs {
     }
 
     #[inline]
+    pub fn as_nanos_i128(self) -> i128 {
+        // never overflows
+        i128::from(self.0) * 1000
+    }
+
+    #[inline]
     pub fn from_nanos(nanos: u128) -> anyhow::Result<Self> {
         let micros = nanos.checked_div(1000).context("checked_div failed")?;
         Ok(Self::from_micros(micros.try_into()?))
@@ -345,7 +354,7 @@ impl DurationUs {
     }
 
     #[inline]
-    pub fn from_days_u32(days: u32) -> Self {
+    pub fn from_days_u16(days: u16) -> Self {
         // never overflows
         Self((days as u64) * 24 * 3600 * 1_000_000)
     }
