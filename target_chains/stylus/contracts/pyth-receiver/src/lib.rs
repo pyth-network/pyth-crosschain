@@ -30,7 +30,7 @@ use error::PythReceiverError;
 use pythnet_sdk::{
     accumulators::merkle::{MerklePath, MerkleRoot},
     hashers::keccak256_160::Keccak160,
-    messages::Message,
+    messages::{Message, TwapMessage},
     wire::{
         from_slice,
         v1::{
@@ -41,6 +41,8 @@ use pythnet_sdk::{
 };
 use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage, PriceReturn};
 use wormhole_vaas::{Readable, Vaa, Writeable};
+
+use byteorder::BigEndian;  
 
 sol_interface! {
     interface IWormholeContract {
@@ -295,14 +297,16 @@ impl PythReceiver {
         Ok(self.get_total_fee(total_num_updates))
     }
 
+    fn get_twap_update_fee(update_data: Vec<Vec<u8>>) -> U256 {
+        total_updates = 0;
+        get_total_fee(total_updates)
+    }
+
     fn get_total_fee(&self, total_num_updates: u64) -> U256 {
         U256::from(total_num_updates).saturating_mul(self.single_update_fee_in_wei.get())
             + self.transaction_fee_in_wei.get()
     }
 
-    pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
-        U256::from(0u8)
-    }
 
     pub fn parse_price_feed_updates(
         &mut self,
@@ -487,14 +491,6 @@ impl PythReceiver {
         Ok(price_feeds)
     }
 
-    pub fn parse_twap_price_feed_updates(
-        &mut self,
-        _update_data: Vec<Vec<u8>>,
-        _price_ids: Vec<[u8; 32]>,
-    ) -> Vec<PriceFeedReturn> {
-        Vec::new()
-    }
-
     pub fn parse_price_feed_updates_unique(
         &mut self,
         update_data: Vec<Vec<u8>>,
@@ -512,6 +508,31 @@ impl PythReceiver {
             false,
         );
         price_feeds
+    }
+
+    pub fn parse_twap_price_feed_updates(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+    ) -> Result<Vec<PriceFeedReturn>, PythReceiverError> {
+        if update_data.len() != 2 {
+            return Err(PythReceiverError::InvalidUpdateData);
+        }
+
+        let required_fee = self.get_twap_update_fee(update_data);
+        let value = self.vm().msg_value();
+        if value < required_fee {
+            return Err(PythReceiverError::InsufficientFee);
+        }
+
+        
+
+    }
+
+    fn extract_twap_price_infos(twap_bytes: Vec<u8>) -> Result<TwapMessage, PythReceiverError> {
+        let twap_message: TwapMessage = from_slice::<BigEndian, _>(&twap_bytes)?;
+        twap_message.
+
     }
 
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
