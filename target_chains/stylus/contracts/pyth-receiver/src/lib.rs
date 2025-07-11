@@ -203,7 +203,7 @@ impl PythReceiver {
         }
 
         for i in 0..price_ids.len() {
-            if (self.latest_price_info_publish_time(price_ids[i]) < publish_times[i]) {
+            if self.latest_price_info_publish_time(price_ids[i]) < publish_times[i] {
                 self.update_price_feeds(update_data.clone())?;
                 return Ok(());
             }
