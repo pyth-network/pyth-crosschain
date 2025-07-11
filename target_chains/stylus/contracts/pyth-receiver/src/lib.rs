@@ -6,6 +6,7 @@
 extern crate alloc;
 
 mod error;
+mod governance_structs;
 #[cfg(test)]
 mod integration_tests;
 mod structs;

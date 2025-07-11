@@ -20,6 +20,9 @@ pub enum PythReceiverError {
     PriceFeedNotFoundWithinRange,
     NoFreshUpdate,
     PriceFeedNotFound,
+    InvalidGovernanceMessage,
+    InvalidGovernanceTarget,
+    InvalidGovernanceAction,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -49,6 +52,9 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::PriceFeedNotFoundWithinRange => 16,
             PythReceiverError::NoFreshUpdate => 17,
             PythReceiverError::PriceFeedNotFound => 18,
+            PythReceiverError::InvalidGovernanceMessage => 19,
+            PythReceiverError::InvalidGovernanceTarget => 20,
+            PythReceiverError::InvalidGovernanceAction => 21,
         }]
     }
 }
