@@ -24,20 +24,31 @@ impl TimestampUs {
 
 impl TimestampUs {
     pub const UNIX_EPOCH: Self = Self(0);
+    pub const MAX: Self = Self(u64::MAX);
 
+    #[inline]
     pub const fn from_micros(micros: u64) -> Self {
         Self(micros)
     }
 
+    #[inline]
     pub const fn as_micros(self) -> u64 {
         self.0
     }
 
+    #[inline]
     pub fn as_nanos(self) -> u128 {
         // never overflows
         u128::from(self.0) * 1000
     }
 
+    #[inline]
+    pub fn as_nanos_i128(self) -> i128 {
+        // never overflows
+        i128::from(self.0) * 1000
+    }
+
+    #[inline]
     pub fn from_nanos(nanos: u128) -> anyhow::Result<Self> {
         let micros = nanos
             .checked_div(1000)
@@ -45,10 +56,20 @@ impl TimestampUs {
         Ok(Self::from_micros(micros.try_into()?))
     }
 
+    #[inline]
+    pub fn from_nanos_i128(nanos: i128) -> anyhow::Result<Self> {
+        let micros = nanos
+            .checked_div(1000)
+            .context("nanos.checked_div(1000) failed")?;
+        Ok(Self::from_micros(micros.try_into()?))
+    }
+
+    #[inline]
     pub fn as_millis(self) -> u64 {
         self.0 / 1000
     }
 
+    #[inline]
     pub fn from_millis(millis: u64) -> anyhow::Result<Self> {
         let micros = millis
             .checked_mul(1000)
@@ -56,10 +77,12 @@ impl TimestampUs {
         Ok(Self::from_micros(micros))
     }
 
+    #[inline]
     pub fn as_secs(self) -> u64 {
         self.0 / 1_000_000
     }
 
+    #[inline]
     pub fn from_secs(secs: u64) -> anyhow::Result<Self> {
         let micros = secs
             .checked_mul(1_000_000)
@@ -67,6 +90,7 @@ impl TimestampUs {
         Ok(Self::from_micros(micros))
     }
 
+    #[inline]
     pub fn duration_since(self, other: Self) -> anyhow::Result<DurationUs> {
         Ok(DurationUs(
             self.0
@@ -75,26 +99,32 @@ impl TimestampUs {
         ))
     }
 
+    #[inline]
     pub fn saturating_duration_since(self, other: Self) -> DurationUs {
         DurationUs(self.0.saturating_sub(other.0))
     }
 
+    #[inline]
     pub fn elapsed(self) -> anyhow::Result<DurationUs> {
         self.duration_since(Self::now())
     }
 
+    #[inline]
     pub fn saturating_elapsed(self) -> DurationUs {
         self.saturating_duration_since(Self::now())
     }
 
+    #[inline]
     pub fn saturating_add(self, duration: DurationUs) -> TimestampUs {
         TimestampUs(self.0.saturating_add(duration.0))
     }
 
+    #[inline]
     pub fn saturating_sub(self, duration: DurationUs) -> TimestampUs {
         TimestampUs(self.0.saturating_sub(duration.0))
     }
 
+    #[inline]
     pub fn is_multiple_of(self, duration: DurationUs) -> bool {
         match self.0.checked_rem(duration.0) {
             Some(rem) => rem == 0,
@@ -103,6 +133,7 @@ impl TimestampUs {
     }
 
     /// Calculates the smallest value greater than or equal to self that is a multiple of `duration`.
+    #[inline]
     pub fn next_multiple_of(self, duration: DurationUs) -> anyhow::Result<TimestampUs> {
         Ok(TimestampUs(
             self.0
@@ -112,6 +143,7 @@ impl TimestampUs {
     }
 
     /// Calculates the smallest value less than or equal to self that is a multiple of `duration`.
+    #[inline]
     pub fn previous_multiple_of(self, duration: DurationUs) -> anyhow::Result<TimestampUs> {
         Ok(TimestampUs(
             self.0
@@ -122,6 +154,7 @@ impl TimestampUs {
         ))
     }
 
+    #[inline]
     pub fn checked_add(self, duration: DurationUs) -> anyhow::Result<Self> {
         Ok(TimestampUs(
             self.0
@@ -130,6 +163,7 @@ impl TimestampUs {
         ))
     }
 
+    #[inline]
     pub fn checked_sub(self, duration: DurationUs) -> anyhow::Result<Self> {
         Ok(TimestampUs(
             self.0
@@ -142,6 +176,7 @@ impl TimestampUs {
 impl TryFrom<ProtobufTimestamp> for TimestampUs {
     type Error = anyhow::Error;
 
+    #[inline]
     fn try_from(timestamp: ProtobufTimestamp) -> anyhow::Result<Self> {
         TryFrom::<&ProtobufTimestamp>::try_from(&timestamp)
     }
@@ -185,6 +220,7 @@ impl From<TimestampUs> for ProtobufTimestamp {
 }
 
 impl From<TimestampUs> for MessageField<ProtobufTimestamp> {
+    #[inline]
     fn from(value: TimestampUs) -> Self {
         MessageField::some(value.into())
     }
@@ -216,6 +252,7 @@ impl TryFrom<TimestampUs> for SystemTime {
 impl TryFrom<&chrono::DateTime<chrono::Utc>> for TimestampUs {
     type Error = anyhow::Error;
 
+    #[inline]
     fn try_from(value: &chrono::DateTime<chrono::Utc>) -> Result<Self, Self::Error> {
         Ok(Self(value.timestamp_micros().try_into()?))
     }
@@ -224,6 +261,7 @@ impl TryFrom<&chrono::DateTime<chrono::Utc>> for TimestampUs {
 impl TryFrom<chrono::DateTime<chrono::Utc>> for TimestampUs {
     type Error = anyhow::Error;
 
+    #[inline]
     fn try_from(value: chrono::DateTime<chrono::Utc>) -> Result<Self, Self::Error> {
         TryFrom::<&chrono::DateTime<chrono::Utc>>::try_from(&value)
     }
@@ -232,6 +270,7 @@ impl TryFrom<chrono::DateTime<chrono::Utc>> for TimestampUs {
 impl TryFrom<TimestampUs> for chrono::DateTime<chrono::Utc> {
     type Error = anyhow::Error;
 
+    #[inline]
     fn try_from(value: TimestampUs) -> Result<Self, Self::Error> {
         chrono::DateTime::<chrono::Utc>::from_timestamp_micros(value.as_micros().try_into()?)
             .with_context(|| format!("cannot convert timestamp to datetime: {value:?}"))
@@ -245,33 +284,40 @@ pub struct DurationUs(u64);
 impl DurationUs {
     pub const ZERO: Self = Self(0);
 
+    #[inline]
     pub const fn from_micros(micros: u64) -> Self {
         Self(micros)
     }
 
+    #[inline]
     pub const fn as_micros(self) -> u64 {
         self.0
     }
 
+    #[inline]
     pub fn as_nanos(self) -> u128 {
         // never overflows
         u128::from(self.0) * 1000
     }
 
+    #[inline]
     pub fn from_nanos(nanos: u128) -> anyhow::Result<Self> {
         let micros = nanos.checked_div(1000).context("checked_div failed")?;
         Ok(Self::from_micros(micros.try_into()?))
     }
 
+    #[inline]
     pub fn as_millis(self) -> u64 {
         self.0 / 1000
     }
 
+    #[inline]
     pub const fn from_millis_u32(millis: u32) -> Self {
         // never overflows
         Self((millis as u64) * 1_000)
     }
 
+    #[inline]
     pub fn from_millis(millis: u64) -> anyhow::Result<Self> {
         let micros = millis
             .checked_mul(1000)
@@ -279,15 +325,18 @@ impl DurationUs {
         Ok(Self::from_micros(micros))
     }
 
+    #[inline]
     pub fn as_secs(self) -> u64 {
         self.0 / 1_000_000
     }
 
+    #[inline]
     pub const fn from_secs_u32(secs: u32) -> Self {
         // never overflows
         Self((secs as u64) * 1_000_000)
     }
 
+    #[inline]
     pub fn from_secs(secs: u64) -> anyhow::Result<Self> {
         let micros = secs
             .checked_mul(1_000_000)
@@ -295,6 +344,13 @@ impl DurationUs {
         Ok(Self::from_micros(micros))
     }
 
+    #[inline]
+    pub fn from_days_u32(days: u32) -> Self {
+        // never overflows
+        Self((days as u64) * 24 * 3600 * 1_000_000)
+    }
+
+    #[inline]
     pub fn is_multiple_of(self, other: DurationUs) -> bool {
         match self.0.checked_rem(other.0) {
             Some(rem) => rem == 0,
@@ -302,29 +358,38 @@ impl DurationUs {
         }
     }
 
+    #[inline]
     pub const fn is_zero(self) -> bool {
         self.0 == 0
     }
 
+    #[inline]
     pub const fn is_positive(self) -> bool {
         self.0 > 0
     }
 
+    #[inline]
     pub fn checked_add(self, other: DurationUs) -> anyhow::Result<Self> {
         Ok(DurationUs(
             self.0.checked_add(other.0).context("checked_add failed")?,
         ))
     }
+
+    #[inline]
     pub fn checked_sub(self, other: DurationUs) -> anyhow::Result<Self> {
         Ok(DurationUs(
             self.0.checked_sub(other.0).context("checked_sub failed")?,
         ))
     }
+
+    #[inline]
     pub fn checked_mul(self, n: u64) -> anyhow::Result<DurationUs> {
         Ok(DurationUs(
             self.0.checked_mul(n).context("checked_mul failed")?,
         ))
     }
+
+    #[inline]
     pub fn checked_div(self, n: u64) -> anyhow::Result<DurationUs> {
         Ok(DurationUs(
             self.0.checked_div(n).context("checked_div failed")?,
@@ -333,6 +398,7 @@ impl DurationUs {
 }
 
 impl From<DurationUs> for Duration {
+    #[inline]
     fn from(value: DurationUs) -> Self {
         Duration::from_micros(value.as_micros())
     }
@@ -341,6 +407,7 @@ impl From<DurationUs> for Duration {
 impl TryFrom<Duration> for DurationUs {
     type Error = anyhow::Error;
 
+    #[inline]
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
         Ok(Self(value.as_micros().try_into()?))
     }
@@ -349,6 +416,7 @@ impl TryFrom<Duration> for DurationUs {
 impl TryFrom<ProtobufDuration> for DurationUs {
     type Error = anyhow::Error;
 
+    #[inline]
     fn try_from(duration: ProtobufDuration) -> anyhow::Result<Self> {
         TryFrom::<&ProtobufDuration>::try_from(&duration)
     }
