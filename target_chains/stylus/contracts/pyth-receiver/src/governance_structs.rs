@@ -18,6 +18,18 @@ pub enum GovernanceAction {
     SetFeeInToken,
 }
 
+#[derive(Drop, Clone, Debug, PartialEq, Serde)]
+pub enum GovernancePayload {
+    UpgradeContract: UpgradeContract,
+    AuthorizeGovernanceDataSourceTransfer: AuthorizeGovernanceDataSourceTransfer,
+    SetDataSources: SetDataSources,
+    SetFee: SetFee,
+    // SetValidPeriod is unsupported
+    RequestGovernanceDataSourceTransfer: RequestGovernanceDataSourceTransfer,
+    SetWormholeAddress: SetWormholeAddress,
+    SetFeeInToken: SetFeeInToken,
+}
+
 impl TryFrom<u8> for GovernanceAction {
     type Error = PythReceiverError;
 
