@@ -1,7 +1,7 @@
+use crate::error::PythReceiverError;
+use crate::structs::DataSource;
 use alloc::vec::Vec;
 use stylus_sdk::alloy_primitives::{Address, FixedBytes, U16};
-use crate::structs::DataSource;
-use crate::error::PythReceiverError;
 
 const MAGIC: u32 = 0x5054474d;
 const MODULE_TARGET: u8 = 1;
@@ -98,12 +98,16 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
 
     let mut cursor = 0;
 
-    let magic = u32::from_be_bytes([
-        payload[cursor],
-        payload[cursor + 1],
-        payload[cursor + 2],
-        payload[cursor + 3],
-    ]);
+    let magic_bytes = payload
+        .get(cursor..cursor + 4)
+        .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+
+    let magic = u32::from_be_bytes(
+        magic_bytes
+            .try_into()
+            .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+    );
+
     cursor += 4;
 
     if magic != MAGIC {
@@ -145,12 +149,16 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             if payload.len() < cursor + 4 {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
-            let governance_data_source_index = u32::from_be_bytes([
-                payload[cursor],
-                payload[cursor + 1],
-                payload[cursor + 2],
-                payload[cursor + 3],
-            ]);
+            let governance_data_source_bytes = payload
+                .get(cursor..cursor + 4)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+
+            let governance_data_source_index = u32::from_be_bytes(
+                governance_data_source_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
             cursor += 4;
             GovernancePayload::RequestGovernanceDataSourceTransfer(
                 RequestGovernanceDataSourceTransfer {
@@ -188,27 +196,27 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             if payload.len() < cursor + 16 {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
-            let value = u64::from_be_bytes([
-                payload[cursor],
-                payload[cursor + 1],
-                payload[cursor + 2],
-                payload[cursor + 3],
-                payload[cursor + 4],
-                payload[cursor + 5],
-                payload[cursor + 6],
-                payload[cursor + 7],
-            ]);
+            let fee_value_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+
+            let value = u64::from_be_bytes(
+                fee_value_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
             cursor += 8;
-            let expo = u64::from_be_bytes([
-                payload[cursor],
-                payload[cursor + 1],
-                payload[cursor + 2],
-                payload[cursor + 3],
-                payload[cursor + 4],
-                payload[cursor + 5],
-                payload[cursor + 6],
-                payload[cursor + 7],
-            ]);
+
+            let expo_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+            let expo = u64::from_be_bytes(
+                expo_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
             cursor += 8;
             GovernancePayload::SetFee(SetFee { value, expo })
         }
@@ -216,30 +224,31 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             if payload.len() < cursor + 17 {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
-            let value = u64::from_be_bytes([
-                payload[cursor],
-                payload[cursor + 1],
-                payload[cursor + 2],
-                payload[cursor + 3],
-                payload[cursor + 4],
-                payload[cursor + 5],
-                payload[cursor + 6],
-                payload[cursor + 7],
-            ]);
+
+            let fee_token_value = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+
+            let value = u64::from_be_bytes(
+                fee_token_value
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
             cursor += 8;
-            let expo = u64::from_be_bytes([
-                payload[cursor],
-                payload[cursor + 1],
-                payload[cursor + 2],
-                payload[cursor + 3],
-                payload[cursor + 4],
-                payload[cursor + 5],
-                payload[cursor + 6],
-                payload[cursor + 7],
-            ]);
+
+            let expo_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+            let expo = u64::from_be_bytes(
+                expo_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
             cursor += 8;
+
             let token_len = payload[cursor];
             cursor += 1;
+
             if token_len != 20 {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
