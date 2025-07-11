@@ -23,6 +23,9 @@ pub enum PythReceiverError {
     InvalidGovernanceMessage,
     InvalidGovernanceTarget,
     InvalidGovernanceAction,
+    InvalidGovernanceDataSource,
+    OldGovernanceMessage,
+    GovernanceMessageAlreadyExecuted,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -55,6 +58,9 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::InvalidGovernanceMessage => 19,
             PythReceiverError::InvalidGovernanceTarget => 20,
             PythReceiverError::InvalidGovernanceAction => 21,
+            PythReceiverError::InvalidGovernanceDataSource => 22,
+            PythReceiverError::OldGovernanceMessage => 23,
+            PythReceiverError::GovernanceMessageAlreadyExecuted => 24,
         }]
     }
 }

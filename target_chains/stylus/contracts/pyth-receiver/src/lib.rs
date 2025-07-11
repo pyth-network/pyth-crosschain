@@ -28,6 +28,7 @@ use stylus_sdk::{
 };
 
 use error::PythReceiverError;
+use governance_structs::*;
 use pythnet_sdk::{
     accumulators::merkle::{MerklePath, MerkleRoot},
     hashers::keccak256_160::Keccak160,
@@ -513,6 +514,73 @@ impl PythReceiver {
             false,
         );
         price_feeds
+    }
+
+    pub fn execute_governance_instruction(&self, data: Vec<u8>) -> Result<(), PythReceiverError> {
+        let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
+        let config = Call::new();
+        wormhole
+            .parse_and_verify_vm(config, Vec::from(data.clone()))
+            .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
+
+        let vm = Vaa::read(&mut Vec::from(data.clone()).as_slice())
+            .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
+
+        self.verify_governance_vm(vm)?;
+
+        let instruction = governance_structs::parse_instruction(vm.payload.to_vec())
+            .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
+
+        if instruction.target_chain_id != 0 && instruction.target_chain_id != wormhole.chain_id() {
+            return Err(PythReceiverError::InvalidGovernanceTarget);
+        }
+
+        match instruction.payload {
+            SetFee(payload) => {}
+            SetFeeInToken(payload) => {}
+            SetDataSources(payload) => {}
+            SetWormholeAddress(payload) => {}
+            RequestGovernanceDataSourceTransfer(_) => {
+                // RequestGovernanceDataSourceTransfer can be only part of
+                // AuthorizeGovernanceDataSourceTransfer message
+                return Err(PythReceiverError::InvalidGovernanceMessage);
+            }
+            AuthorizeGovernanceDataSourceTransfer(payload) => {}
+            UpgradeContract(payload) => {
+                if instruction.target_chain_id == 0 {
+                    return Err(PythReceiverError::InvalidGovernanceTarget);
+                }
+                self.upgrade_contract(payload.new_implementation);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn upgrade_contract(&self, new_implementation: Address) {
+        !unimplemented!("Upgrade contract not yet implemented");
+    }
+
+    fn verify_governance_vm(&self, vm: Vaa) -> Result<(), PythReceiverError> {
+        if vm.body.emitter_chain != self.governance_data_source_chain_id.get().to::<u16>() {
+            return Err(PythReceiverError::InvalidGovernanceMessage);
+        }
+
+        if vm.body.emitter_address != self.governance_data_source_emitter_address.get() {
+            return Err(PythReceiverError::InvalidGovernanceMessage);
+        }
+
+        let current_sequence = vm.body.sequence.to::<u64>();
+        let last_executed_sequence = self.last_executed_governance_sequence.get().to::<u64>();
+
+        if current_sequence <= last_executed_sequence {
+            return Err(PythReceiverError::GovernanceMessageAlreadyExecuted);
+        }
+
+        self.last_executed_governance_sequence
+            .set(U64::from(current_sequence));
+
+        Ok(())
     }
 
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
