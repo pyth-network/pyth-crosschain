@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::router::{
-    Channel, Format, JsonBinaryEncoding, JsonUpdate, PriceFeedId, PriceFeedProperty, TimestampUs,
+use crate::{
+    router::{Channel, Format, JsonBinaryEncoding, JsonUpdate, PriceFeedId, PriceFeedProperty},
+    time::TimestampUs,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

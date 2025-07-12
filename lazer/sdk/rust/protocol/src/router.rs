@@ -1,18 +1,20 @@
 //! WebSocket JSON protocol types for the API the router provides to consumers and publishers.
 
-use protobuf::MessageField;
 use {
-    crate::payload::AggregatedPriceFeedData,
+    crate::{
+        payload::AggregatedPriceFeedData,
+        time::{DurationUs, TimestampUs},
+    },
     anyhow::{bail, Context},
+    derive_more::derive::From,
     itertools::Itertools,
-    protobuf::well_known_types::timestamp::Timestamp,
+    protobuf::well_known_types::duration::Duration as ProtobufDuration,
     rust_decimal::{prelude::FromPrimitive, Decimal},
     serde::{de::Error, Deserialize, Serialize},
     std::{
         fmt::Display,
         num::NonZeroI64,
         ops::{Add, Deref, DerefMut, Div, Sub},
-        time::{SystemTime, UNIX_EPOCH},
     },
 };
 
@@ -24,53 +26,6 @@ pub struct PriceFeedId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ChannelId(pub u8);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct TimestampUs(pub u64);
-
-impl TryFrom<&Timestamp> for TimestampUs {
-    type Error = anyhow::Error;
-
-    fn try_from(timestamp: &Timestamp) -> anyhow::Result<Self> {
-        let seconds_in_micros: u64 = (timestamp.seconds * 1_000_000).try_into()?;
-        let nanos_in_micros: u64 = (timestamp.nanos / 1_000).try_into()?;
-        Ok(TimestampUs(seconds_in_micros + nanos_in_micros))
-    }
-}
-
-impl From<TimestampUs> for Timestamp {
-    fn from(value: TimestampUs) -> Self {
-        Timestamp {
-            // u64 to i64 after this division can never overflow because the value cannot be too big
-            #[allow(clippy::cast_possible_wrap)]
-            seconds: (value.0 / 1_000_000) as i64,
-            nanos: (value.0 % 1_000_000) as i32 * 1000,
-            special_fields: Default::default(),
-        }
-    }
-}
-
-impl From<TimestampUs> for MessageField<Timestamp> {
-    fn from(value: TimestampUs) -> Self {
-        MessageField::some(value.into())
-    }
-}
-
-impl TimestampUs {
-    pub fn now() -> Self {
-        let value = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("invalid system time")
-            .as_micros()
-            .try_into()
-            .expect("invalid system time");
-        Self(value)
-    }
-
-    pub fn saturating_us_since(self, other: Self) -> u64 {
-        self.0.saturating_sub(other.0)
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[repr(transparent)]
@@ -244,7 +199,7 @@ pub enum JsonBinaryEncoding {
     Hex,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, From)]
 pub enum Channel {
     FixedRate(FixedRate),
 }
@@ -259,7 +214,10 @@ impl Serialize for Channel {
                 if *fixed_rate == FixedRate::MIN {
                     return serializer.serialize_str("real_time");
                 }
-                serializer.serialize_str(&format!("fixed_rate@{}ms", fixed_rate.value_ms()))
+                serializer.serialize_str(&format!(
+                    "fixed_rate@{}ms",
+                    fixed_rate.duration().as_millis()
+                ))
             }
         }
     }
@@ -278,7 +236,7 @@ impl Display for Channel {
         match self {
             Channel::FixedRate(fixed_rate) => match *fixed_rate {
                 FixedRate::MIN => write!(f, "real_time"),
-                rate => write!(f, "fixed_rate@{}ms", rate.value_ms()),
+                rate => write!(f, "fixed_rate@{}ms", rate.duration().as_millis()),
             },
         }
     }
@@ -287,7 +245,7 @@ impl Display for Channel {
 impl Channel {
     pub fn id(&self) -> ChannelId {
         match self {
-            Channel::FixedRate(fixed_rate) => match fixed_rate.value_ms() {
+            Channel::FixedRate(fixed_rate) => match fixed_rate.duration().as_millis() {
                 1 => channel_ids::FIXED_RATE_1,
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
@@ -309,7 +267,7 @@ fn parse_channel(value: &str) -> Option<Channel> {
         Some(Channel::FixedRate(FixedRate::MIN))
     } else if let Some(rest) = value.strip_prefix("fixed_rate@") {
         let ms_value = rest.strip_suffix("ms")?;
-        Some(Channel::FixedRate(FixedRate::from_ms(
+        Some(Channel::FixedRate(FixedRate::from_millis(
             ms_value.parse().ok()?,
         )?))
     } else {
@@ -329,27 +287,75 @@ impl<'de> Deserialize<'de> for Channel {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FixedRate {
-    ms: u32,
+    rate: DurationUs,
 }
 
 impl FixedRate {
+    pub const RATE_1_MS: Self = Self {
+        rate: DurationUs::from_millis_u32(1),
+    };
+    pub const RATE_50_MS: Self = Self {
+        rate: DurationUs::from_millis_u32(50),
+    };
+    pub const RATE_200_MS: Self = Self {
+        rate: DurationUs::from_millis_u32(200),
+    };
+
     // Assumptions (tested below):
     // - Values are sorted.
     // - 1 second contains a whole number of each interval.
     // - all intervals are divisable by the smallest interval.
-    pub const ALL: [Self; 3] = [Self { ms: 1 }, Self { ms: 50 }, Self { ms: 200 }];
+    pub const ALL: [Self; 3] = [Self::RATE_1_MS, Self::RATE_50_MS, Self::RATE_200_MS];
     pub const MIN: Self = Self::ALL[0];
 
-    pub fn from_ms(value: u32) -> Option<Self> {
-        Self::ALL.into_iter().find(|v| v.ms == value)
+    pub fn from_millis(millis: u32) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|v| v.rate.as_millis() == u64::from(millis))
     }
 
-    pub fn value_ms(self) -> u32 {
-        self.ms
+    pub fn duration(self) -> DurationUs {
+        self.rate
     }
+}
 
-    pub fn value_us(self) -> u64 {
-        (self.ms * 1000).into()
+impl TryFrom<DurationUs> for FixedRate {
+    type Error = anyhow::Error;
+
+    fn try_from(value: DurationUs) -> Result<Self, Self::Error> {
+        Self::ALL
+            .into_iter()
+            .find(|v| v.rate == value)
+            .with_context(|| format!("unsupported rate: {value:?}"))
+    }
+}
+
+impl TryFrom<&ProtobufDuration> for FixedRate {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &ProtobufDuration) -> Result<Self, Self::Error> {
+        let duration = DurationUs::try_from(value)?;
+        Self::try_from(duration)
+    }
+}
+
+impl TryFrom<ProtobufDuration> for FixedRate {
+    type Error = anyhow::Error;
+
+    fn try_from(duration: ProtobufDuration) -> anyhow::Result<Self> {
+        TryFrom::<&ProtobufDuration>::try_from(&duration)
+    }
+}
+
+impl From<FixedRate> for DurationUs {
+    fn from(value: FixedRate) -> Self {
+        value.rate
+    }
+}
+
+impl From<FixedRate> for ProtobufDuration {
+    fn from(value: FixedRate) -> Self {
+        value.rate.into()
     }
 }
 
@@ -361,12 +367,12 @@ fn fixed_rate_values() {
     );
     for value in FixedRate::ALL {
         assert_eq!(
-            1000 % value.ms,
+            1_000_000 % value.duration().as_micros(),
             0,
             "1 s must contain whole number of intervals"
         );
         assert_eq!(
-            value.value_us() % FixedRate::MIN.value_us(),
+            value.duration().as_micros() % FixedRate::MIN.duration().as_micros(),
             0,
             "the interval's borders must be a subset of the minimal interval's borders"
         );

@@ -31,7 +31,7 @@ pub mod option_price {
 
 pub mod timestamp {
     use {
-        crate::router::TimestampUs,
+        crate::time::TimestampUs,
         serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer},
     };
 
@@ -39,15 +39,15 @@ pub mod timestamp {
     where
         S: Serializer,
     {
-        value.0.to_string().serialize(serializer)
+        value.as_micros().to_string().serialize(serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<TimestampUs, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let value = <&str>::deserialize(deserializer)?;
+        let value = String::deserialize(deserializer)?;
         let value: u64 = value.parse().map_err(D::Error::custom)?;
-        Ok(TimestampUs(value))
+        Ok(TimestampUs::from_micros(value))
     }
 }

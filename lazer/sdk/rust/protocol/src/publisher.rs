@@ -3,7 +3,8 @@
 //! eliminating WebSocket overhead.
 
 use {
-    super::router::{Price, PriceFeedId, Rate, TimestampUs},
+    super::router::{Price, PriceFeedId, Rate},
+    crate::time::TimestampUs,
     derive_more::derive::From,
     serde::{Deserialize, Serialize},
 };
@@ -101,8 +102,8 @@ fn price_feed_data_v1_serde() {
 
     let expected = PriceFeedDataV1 {
         price_feed_id: PriceFeedId(1),
-        source_timestamp_us: TimestampUs(2),
-        publisher_timestamp_us: TimestampUs(3),
+        source_timestamp_us: TimestampUs::from_micros(2),
+        publisher_timestamp_us: TimestampUs::from_micros(3),
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: Some(Price(5.try_into().unwrap())),
         best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
@@ -123,8 +124,8 @@ fn price_feed_data_v1_serde() {
     ];
     let expected2 = PriceFeedDataV1 {
         price_feed_id: PriceFeedId(1),
-        source_timestamp_us: TimestampUs(2),
-        publisher_timestamp_us: TimestampUs(3),
+        source_timestamp_us: TimestampUs::from_micros(2),
+        publisher_timestamp_us: TimestampUs::from_micros(3),
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
@@ -150,8 +151,8 @@ fn price_feed_data_v2_serde() {
 
     let expected = PriceFeedDataV2 {
         price_feed_id: PriceFeedId(1),
-        source_timestamp_us: TimestampUs(2),
-        publisher_timestamp_us: TimestampUs(3),
+        source_timestamp_us: TimestampUs::from_micros(2),
+        publisher_timestamp_us: TimestampUs::from_micros(3),
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: Some(Price(5.try_into().unwrap())),
         best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
@@ -174,8 +175,8 @@ fn price_feed_data_v2_serde() {
     ];
     let expected2 = PriceFeedDataV2 {
         price_feed_id: PriceFeedId(1),
-        source_timestamp_us: TimestampUs(2),
-        publisher_timestamp_us: TimestampUs(3),
+        source_timestamp_us: TimestampUs::from_micros(2),
+        publisher_timestamp_us: TimestampUs::from_micros(3),
         price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
