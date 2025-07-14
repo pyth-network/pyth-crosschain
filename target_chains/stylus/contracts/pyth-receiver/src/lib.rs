@@ -759,7 +759,7 @@ fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) 
         }
     }
     
-    receiver.valid_data_sources.truncate(0);
+    receiver.valid_data_sources.erase();
     
     for data_source in data_sources {
         let mut storage_data_source = receiver.valid_data_sources.grow();

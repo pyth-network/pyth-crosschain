@@ -19,6 +19,13 @@ pub struct DataSourceStorage {
     pub emitter_address: StorageFixedBytes<32>,
 }
 
+impl Erase for DataSourceStorage {
+    fn erase(&mut self) {
+        self.chain_id.erase();
+        self.emitter_address.erase();
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct DataSource {
     pub chain_id: U16,
