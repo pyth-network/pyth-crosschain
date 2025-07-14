@@ -599,14 +599,15 @@ impl PythReceiver {
 
         self.single_update_fee_in_wei.set(new_fee);
 
-        // TODO: HANDLE EVENT EMISSION
+        // TODO: Emit FeeSet event with old_fee and new_fee
     }
 
     fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
         let _old_valid_period = self.valid_time_period_seconds.get();
         self.valid_time_period_seconds.set(U256::from(valid_time_period_seconds));
         
-        // TODO: HANDLE EVENT EMISSION
+        // TODO: Emit ValidPeriodSet event with old_valid_period and new_valid_period
+        // emit ValidPeriodSet(old_valid_period, valid_time_period_seconds);
     }
 
     fn set_wormhole_address(
@@ -719,6 +720,8 @@ impl PythReceiver {
         let _old_fee = self.transaction_fee_in_wei.get();
 
         self.transaction_fee_in_wei.set(new_fee);
+
+        // TODO: Emit TransactionFeeSet event with old_fee and new_fee
     }
 
     fn withdraw_fee(&mut self, value: u64, expo: u64, target_address: Address) -> Result<(), PythReceiverError> {
@@ -732,6 +735,8 @@ impl PythReceiver {
 
         self.vm().transfer_eth(target_address, fee_to_withdraw)
             .map_err(|_| PythReceiverError::InsufficientFee)?;
+
+        // TODO: Emit FeeWithdrawn event with target_address and fee_to_withdraw
 
         Ok(())
     }

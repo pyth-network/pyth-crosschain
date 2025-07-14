@@ -16,6 +16,8 @@ pub enum GovernanceAction {
     RequestGovernanceDataSourceTransfer,
     SetWormholeAddress,
     SetFeeInToken,
+    SetTransactionFee,
+    WithdrawFee,
 }
 
 impl TryFrom<u8> for GovernanceAction {
@@ -31,6 +33,8 @@ impl TryFrom<u8> for GovernanceAction {
             5 => Ok(GovernanceAction::RequestGovernanceDataSourceTransfer),
             6 => Ok(GovernanceAction::SetWormholeAddress),
             7 => Ok(GovernanceAction::SetFeeInToken),
+            8 => Ok(GovernanceAction::SetTransactionFee),
+            9 => Ok(GovernanceAction::WithdrawFee),
             _ => Err(PythReceiverError::InvalidGovernanceAction),
         }
     }
@@ -311,6 +315,71 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             cursor += 20;
             GovernancePayload::SetWormholeAddress(SetWormholeAddress {
                 address: Address::from(address_bytes),
+            })
+        }
+        GovernanceAction::SetTransactionFee => {
+            if payload.len() < cursor + 16 {
+                return Err(PythReceiverError::InvalidGovernanceMessage);
+            }
+            let fee_value_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+
+            let value = u64::from_be_bytes(
+                fee_value_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
+            cursor += 8;
+
+            let expo_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+            let expo = u64::from_be_bytes(
+                expo_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
+            cursor += 8;
+            GovernancePayload::SetTransactionFee(SetTransactionFee { value, expo })
+        }
+        GovernanceAction::WithdrawFee => {
+            if payload.len() < cursor + 28 {
+                return Err(PythReceiverError::InvalidGovernanceMessage);
+            }
+            
+            let mut target_address_bytes = [0u8; 20];
+            target_address_bytes.copy_from_slice(&payload[cursor..cursor + 20]);
+            cursor += 20;
+
+            let fee_value_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+
+            let value = u64::from_be_bytes(
+                fee_value_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
+            cursor += 8;
+
+            let expo_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+            let expo = u64::from_be_bytes(
+                expo_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+
+            cursor += 8;
+            GovernancePayload::WithdrawFee(WithdrawFee {
+                value,
+                expo,
+                target_address: Address::from(target_address_bytes),
             })
         }
     };
