@@ -48,13 +48,33 @@ pub enum GovernancePayload {
     AuthorizeGovernanceDataSourceTransfer(AuthorizeGovernanceDataSourceTransfer),
     SetDataSources(SetDataSources),
     SetFee(SetFee),
+    SetValidPeriod(SetValidPeriod),
     RequestGovernanceDataSourceTransfer(RequestGovernanceDataSourceTransfer),
     SetWormholeAddress(SetWormholeAddress),
     SetFeeInToken(SetFeeInToken),
+    SetTransactionFee(SetTransactionFee),
+    WithdrawFee(WithdrawFee),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SetFee {
+    pub value: u64,
+    pub expo: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SetValidPeriod {
+    pub valid_time_period_seconds: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SetTransactionFee {
+    pub value: u64,
+    pub expo: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct WithdrawFee {
     pub value: u64,
     pub expo: u64,
 }

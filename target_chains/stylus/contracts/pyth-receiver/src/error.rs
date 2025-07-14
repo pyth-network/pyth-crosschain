@@ -26,6 +26,7 @@ pub enum PythReceiverError {
     InvalidGovernanceDataSource,
     OldGovernanceMessage,
     GovernanceMessageAlreadyExecuted,
+    InvalidWormholeAddressToSet,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -61,6 +62,7 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::InvalidGovernanceDataSource => 22,
             PythReceiverError::OldGovernanceMessage => 23,
             PythReceiverError::GovernanceMessageAlreadyExecuted => 24,
+            PythReceiverError::InvalidWormholeAddressToSet => 25,
         }]
     }
 }
