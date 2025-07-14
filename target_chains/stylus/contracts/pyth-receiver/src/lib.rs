@@ -52,6 +52,7 @@ sol! {
     event FeeWithdrawn(address indexed target_address, uint256 fee_amount);
     event ValidPeriodSet(uint256 indexed old_valid_period, uint256 indexed new_valid_period);
     event DataSourcesSet(bytes32[] old_data_sources, bytes32[] new_data_sources);
+    event GovernanceDataSourceSet(uint16 old_chain_id, bytes32 old_emitter_address, uint16 new_chain_id, bytes32 new_emitter_address, uint64 initial_sequence);
 }
 
 sol_interface! {
@@ -726,7 +727,13 @@ impl PythReceiver {
         self.last_executed_governance_sequence
             .set(U64::from(last_executed_governance_sequence));
 
-        // TODO: EVENT
+        evm::log(GovernanceDataSourceSet {
+            old_chain_id: current_index as u16,
+            old_emitter_address: self.governance_data_source_emitter_address.get(),
+            new_chain_id: claim_vm.body.emitter_chain,
+            new_emitter_address: FixedBytes::from(emitter_bytes),
+            initial_sequence: last_executed_governance_sequence,
+        });
 
         Ok(())
     }
@@ -802,18 +809,21 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
 }
 
 fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) {
+    let mut old_data_sources = Vec::new();
     for i in 0..receiver.valid_data_sources.len() {
         if let Some(storage_data_source) = receiver.valid_data_sources.get(i) {
             let data_source = DataSource {
                 chain_id: storage_data_source.chain_id.get(),
                 emitter_address: storage_data_source.emitter_address.get(),
             };
+            old_data_sources.push(data_source.emitter_address);
             receiver.is_valid_data_source.setter(data_source).set(false);
         }
     }
     
     receiver.valid_data_sources.erase();
     
+    let mut new_data_sources = Vec::new();
     for data_source in data_sources {
         let mut storage_data_source = receiver.valid_data_sources.grow();
         storage_data_source.chain_id.set(data_source.chain_id);
@@ -821,6 +831,12 @@ fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) 
             .emitter_address
             .set(data_source.emitter_address);
 
+        new_data_sources.push(data_source.emitter_address);
         receiver.is_valid_data_source.setter(data_source).set(true);
     }
+
+    evm::log(DataSourcesSet {
+        old_data_sources,
+        new_data_sources,
+    });
 }
