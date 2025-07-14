@@ -559,8 +559,12 @@ impl PythReceiver {
             GovernancePayload::SetValidPeriod(payload) => {
                 self.set_valid_period(payload.valid_time_period_seconds);
             }
-            GovernancePayload::SetTransactionFee(_payload) => todo!(),
-            GovernancePayload::WithdrawFee(_payload) => todo!(),
+            GovernancePayload::SetTransactionFee(payload) => {
+                self.set_transaction_fee(payload.value, payload.expo);
+            },
+            GovernancePayload::WithdrawFee(payload) => {
+                self.withdraw_fee(payload.value, payload.expo, payload.target_address)?;
+            },
         }
 
         Ok(())
@@ -706,6 +710,28 @@ impl PythReceiver {
             .set(U64::from(last_executed_governance_sequence));
 
         // TODO: EVENT
+
+        Ok(())
+    }
+
+    fn set_transaction_fee(&mut self, value: u64, expo: u64) {
+        let new_fee = U256::from(value) * U256::from(10).pow(U256::from(expo));
+        let _old_fee = self.transaction_fee_in_wei.get();
+
+        self.transaction_fee_in_wei.set(new_fee);
+    }
+
+    fn withdraw_fee(&mut self, value: u64, expo: u64, target_address: Address) -> Result<(), PythReceiverError> {
+        let fee_to_withdraw = U256::from(value) * U256::from(10).pow(U256::from(expo));
+        let current_balance = self.vm().balance(self.vm().contract_address());
+    
+
+        if current_balance < fee_to_withdraw {
+            return Err(PythReceiverError::InsufficientFee);
+        }
+
+        self.vm().transfer_eth(target_address, fee_to_withdraw)
+            .map_err(|_| PythReceiverError::InsufficientFee)?;
 
         Ok(())
     }

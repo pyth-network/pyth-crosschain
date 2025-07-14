@@ -77,6 +77,7 @@ pub struct SetTransactionFee {
 pub struct WithdrawFee {
     pub value: u64,
     pub expo: u64,
+    pub target_address: Address,
 }
 
 #[derive(Clone, Debug, PartialEq)]
