@@ -285,7 +285,21 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             })
         }
         GovernanceAction::SetValidPeriod => {
-            return Err(PythReceiverError::InvalidGovernanceMessage);
+            if payload.len() < cursor + 8 {
+                return Err(PythReceiverError::InvalidGovernanceMessage);
+            }
+            let valid_period_bytes = payload
+                .get(cursor..cursor + 8)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
+            let valid_time_period_seconds = u64::from_be_bytes(
+                valid_period_bytes
+                    .try_into()
+                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
+            );
+            cursor += 8;
+            GovernancePayload::SetValidPeriod(SetValidPeriod {
+                valid_time_period_seconds,
+            })
         }
         GovernanceAction::SetWormholeAddress => {
             if payload.len() < cursor + 20 {

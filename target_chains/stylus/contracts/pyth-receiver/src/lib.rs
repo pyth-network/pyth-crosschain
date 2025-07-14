@@ -547,7 +547,7 @@ impl PythReceiver {
                 set_data_sources(self, payload.sources);
             }
             GovernancePayload::SetWormholeAddress(payload) => {
-                self.set_wormhole_address(payload.address, data.clone());
+                self.set_wormhole_address(payload.address, data.clone())?;
             }
             GovernancePayload::RequestGovernanceDataSourceTransfer(_) => {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
@@ -555,10 +555,12 @@ impl PythReceiver {
             GovernancePayload::AuthorizeGovernanceDataSourceTransfer(payload) => {
                 self.authorize_governance_transfer(payload.claim_vaa);
             }
-            GovernancePayload::UpgradeContract(payload) => {}
-            GovernancePayload::SetValidPeriod(payload) => todo!(),
-            GovernancePayload::SetTransactionFee(payload) => todo!(),
-            GovernancePayload::WithdrawFee(payload) => todo!(),
+            GovernancePayload::UpgradeContract(_payload) => {}
+            GovernancePayload::SetValidPeriod(payload) => {
+                self.set_valid_period(payload.valid_time_period_seconds);
+            }
+            GovernancePayload::SetTransactionFee(_payload) => todo!(),
+            GovernancePayload::WithdrawFee(_payload) => todo!(),
         }
 
         Ok(())
@@ -589,27 +591,34 @@ impl PythReceiver {
 
     fn set_fee(&mut self, value: u64, expo: u64) {
         let new_fee = U256::from(value) * U256::from(10).pow(U256::from(expo));
-        let old_fee = self.single_update_fee_in_wei.get();
+        let _old_fee = self.single_update_fee_in_wei.get();
 
         self.single_update_fee_in_wei.set(new_fee);
 
         // TODO: HANDLE EVENT EMISSION
     }
 
+    fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
+        let _old_valid_period = self.valid_time_period_seconds.get();
+        self.valid_time_period_seconds.set(U256::from(valid_time_period_seconds));
+        
+        // TODO: HANDLE EVENT EMISSION
+    }
+
     fn set_wormhole_address(
         &mut self,
         address: Address,
-        data: &Vec<u8>,
+        data: Vec<u8>,
     ) -> Result<(), PythReceiverError> {
         let wormhole: IWormholeContract = IWormholeContract::new(address);
         let config = Call::new();
         wormhole
-            .parse_and_verify_vm(config, data)
+            .parse_and_verify_vm(config, data.clone())
             .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
 
         // if !is_valid_governance_data_source()
 
-        let vm = Vaa::read(&mut Vec::from(data.clone()).as_slice())
+        let vm = Vaa::read(&mut data.as_slice())
             .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
 
         if vm.body.emitter_chain != self.governance_data_source_chain_id.get().to::<u16>() {
@@ -659,8 +668,9 @@ impl PythReceiver {
         let instruction = governance_structs::parse_instruction(claim_vm.body.payload.to_vec())
             .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
 
+        let config2 = Call::new();
         if instruction.target_chain_id != 0
-            && instruction.target_chain_id != wormhole.chain_id() as u16
+            && instruction.target_chain_id != wormhole.chain_id(config2).unwrap_or(0)
         {
             return Err(PythReceiverError::InvalidGovernanceTarget);
         }
@@ -678,19 +688,18 @@ impl PythReceiver {
         }
 
         self.governance_data_source_index.set(U32::from(new_index));
-        let old_data_source = self.governance_data_source_index.get();
+        let _old_data_source = self.governance_data_source_index.get();
 
         self.governance_data_source_chain_id
             .set(U16::from(claim_vm.body.emitter_chain));
+        let emitter_bytes: [u8; 32] = claim_vm
+            .body
+            .emitter_address
+            .as_slice()
+            .try_into()
+            .map_err(|_| PythReceiverError::InvalidEmitterAddress)?;
         self.governance_data_source_emitter_address
-            .set(FixedBytes::from(
-                claim_vm
-                    .body
-                    .emitter_address
-                    .as_slice()
-                    .try_into()
-                    .map_err(|_| PythReceiverError::InvalidEmitterAddress)?,
-            ));
+            .set(FixedBytes::from(emitter_bytes));
 
         let last_executed_governance_sequence = claim_vm.body.sequence.to::<u64>();
         self.last_executed_governance_sequence
@@ -739,10 +748,8 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
     Ok(root)
 }
 
-fn set_data_sources(&mut receiver: PythReceiver, data_sources: Vec<DataSource>) {
-    receiver.valid_data_sources.erase(); // emptying the data sources
-    receiver.is_valid_data_source.erase();
-
+fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) {
+    
     for data_source in data_sources {
         let mut storage_data_source = receiver.valid_data_sources.grow();
         storage_data_source.chain_id.set(data_source.chain_id);
