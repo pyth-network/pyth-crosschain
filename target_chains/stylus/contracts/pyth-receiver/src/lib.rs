@@ -177,7 +177,7 @@ impl PythReceiver {
         update_data: Vec<Vec<u8>>,
     ) -> Result<(), PythReceiverError> {
         for data in &update_data {
-            self.update_price_feeds_internal(data.clone(), Vec::new(), 0, 0, false)?;
+            self.update_price_feeds_internal(data.clone(), 0, 0, false)?;
         }
 
         let total_fee = self.get_update_fee(update_data)?;
@@ -221,16 +221,15 @@ impl PythReceiver {
     fn update_price_feeds_internal(
         &mut self,
         update_data: Vec<u8>,
-        _price_ids: Vec<[u8; 32]>,
         min_publish_time: u64,
         max_publish_time: u64,
-        _unique: bool,
+        unique: bool,
     ) -> Result<Vec<([u8; 32], PriceInfoReturn)>, PythReceiverError> {
         let price_pairs = self.parse_price_feed_updates_internal(
             update_data,
             min_publish_time,
             max_publish_time,
-            false, // check_uniqueness
+            unique,
         )?;
 
         for (price_id, price_return) in price_pairs.clone() {
@@ -266,12 +265,8 @@ impl PythReceiver {
                 }
             }
         }
-        Ok(self.get_total_fee(total_num_updates))
-    }
-
-    fn get_total_fee(&self, total_num_updates: u64) -> U256 {
-        U256::from(total_num_updates).saturating_mul(self.single_update_fee_in_wei.get())
-            + self.transaction_fee_in_wei.get()
+        Ok(U256::from(total_num_updates).saturating_mul(self.single_update_fee_in_wei.get())
+            + self.transaction_fee_in_wei.get())
     }
 
     pub fn get_twap_update_fee(&self, _update_data: Vec<Vec<u8>>) -> U256 {
@@ -312,7 +307,6 @@ impl PythReceiver {
             if store_updates_if_fresh {
                 all_parsed_price_pairs.extend(self.update_price_feeds_internal(
                     data.clone(),
-                    price_ids.clone(),
                     min_allowed_publish_time,
                     max_allowed_publish_time,
                     check_uniqueness,
