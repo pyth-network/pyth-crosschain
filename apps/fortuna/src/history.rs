@@ -357,7 +357,18 @@ impl History {
             }
         };
         if let Err(e) = result {
-            tracing::error!("Failed to update request status: {}", e);
+            match e.as_database_error() {
+                Some(db_error) if db_error.is_unique_violation() => {
+                    tracing::info!(
+                        "Failed to insert request, request already exists: Chain ID: {}, Sequence: {}",
+                        network_id,
+                        sequence
+                    );
+                }
+                _ => {
+                    tracing::error!("Failed to update request status: {}", e);
+                }
+            }
         }
     }
 
