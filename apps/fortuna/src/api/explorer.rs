@@ -110,7 +110,7 @@ pub struct ExplorerQueryParams {
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct ExplorerResponse {
     pub requests: Vec<RequestStatus>,
-    pub total_results: u64,
+    pub total_results: i64,
 }
 
 /// Returns the logs of all requests captured by the keeper.

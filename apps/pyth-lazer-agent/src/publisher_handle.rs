@@ -22,7 +22,7 @@ use crate::{
 };
 
 pub struct PublisherConnectionContext {
-    pub request_type: http_server::Request,
+    pub request_type: http_server::PublisherRequest,
     pub _remote_addr: SocketAddr,
 }
 
@@ -81,7 +81,7 @@ async fn try_handle_publisher(
 
         // reply with an error if we can't parse the binary update
         let feed_update: FeedUpdate = match context.request_type {
-            http_server::Request::PublisherV1 => {
+            http_server::PublisherRequest::PublisherV1 => {
                 match bincode::serde::decode_from_slice::<PriceFeedDataV1, _>(
                     &receive_buf,
                     bincode::config::legacy(),
@@ -132,7 +132,7 @@ async fn try_handle_publisher(
                     }
                 }
             }
-            http_server::Request::PublisherV2 => {
+            http_server::PublisherRequest::PublisherV2 => {
                 match bincode::serde::decode_from_slice::<PriceFeedDataV2, _>(
                     &receive_buf,
                     bincode::config::legacy(),

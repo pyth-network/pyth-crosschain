@@ -6,7 +6,11 @@ import { Contract } from "web3-eth-contract";
 import { InferredOptionType } from "yargs";
 import { PrivateKey, getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
-import { EvmEntropyContract, EvmWormholeContract } from "../src/core/contracts";
+import {
+  EvmEntropyContract,
+  EvmExecutorContract,
+  EvmWormholeContract,
+} from "../src/core/contracts";
 
 export interface BaseDeployConfig {
   gasMultiplier: number;
@@ -232,6 +236,27 @@ export function findWormholeContract(
       contract instanceof EvmWormholeContract &&
       contract.getChain().getId() === chain.getId()
     ) {
+      return contract;
+    }
+  }
+}
+
+/**
+ * Finds the executor contract for a given EVM chain.
+ * @param {EvmChain} chain The EVM chain to find the executor contract for.
+ * @returns If found, the executor contract for the given EVM chain. Else, undefined
+ */
+export function findExecutorContract(
+  chain: EvmChain,
+): EvmExecutorContract | undefined {
+  for (const contract of Object.values(DefaultStore.executor_contracts)) {
+    if (
+      contract instanceof EvmExecutorContract &&
+      contract.chain.getId() === chain.getId()
+    ) {
+      console.log(
+        `Found executor contract for ${chain.getId()} at ${contract.address}`,
+      );
       return contract;
     }
   }
