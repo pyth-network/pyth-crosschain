@@ -553,7 +553,7 @@ impl PythReceiver {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
             GovernancePayload::AuthorizeGovernanceDataSourceTransfer(payload) => {
-                self.authorize_governance_transfer(payload.claim_vaa);
+                self.authorize_governance_transfer(payload.claim_vaa)?;
             }
             GovernancePayload::UpgradeContract(_payload) => {}
             GovernancePayload::SetValidPeriod(payload) => {
@@ -749,6 +749,17 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
 }
 
 fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) {
+    for i in 0..receiver.valid_data_sources.len() {
+        if let Some(storage_data_source) = receiver.valid_data_sources.get(i) {
+            let data_source = DataSource {
+                chain_id: storage_data_source.chain_id.get(),
+                emitter_address: storage_data_source.emitter_address.get(),
+            };
+            receiver.is_valid_data_source.setter(data_source).set(false);
+        }
+    }
+    
+    receiver.valid_data_sources.truncate(0);
     
     for data_source in data_sources {
         let mut storage_data_source = receiver.valid_data_sources.grow();
