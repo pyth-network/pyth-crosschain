@@ -9,11 +9,6 @@ mod test {
     use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
     use std::time::Duration;
     use wormhole_contract::WormholeContract;
-    const TEST_PRICE_ID: [u8; 32] = [
-        0xe6, 0x2d, 0xf6, 0xc8, 0xb4, 0xa8, 0x5f, 0xe1, 0xa6, 0x7d, 0xb4, 0x4d, 0xc1, 0x2d, 0xe5,
-        0xdb, 0x33, 0x0f, 0x7a, 0xc6, 0x6b, 0x72, 0xdc, 0x65, 0x8a, 0xfe, 0xdf, 0x0f, 0x4a, 0x41,
-        0x5b, 0x43,
-    ];
 
     const PYTHNET_CHAIN_ID: u16 = 26;
     const PYTHNET_EMITTER_ADDRESS: [u8; 32] = [
@@ -81,7 +76,6 @@ mod test {
         let governance_chain_id = 1u16;
         let governance_emitter_address = [3u8; 32];
         let governance_initial_sequence = 0u64;
-        let data = vec![];
 
         pyth_contract.sender(*alice).initialize(
             wormhole_contract.address(),
@@ -92,7 +86,6 @@ mod test {
             governance_chain_id,
             governance_emitter_address,
             governance_initial_sequence,
-            data,
         );
     }
 
@@ -199,7 +192,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        MockClock::set_time(Duration::from_secs(1761573860));
+        MockClock::set_time(Duration::from_secs(1761573860)); // less than good_update2().timestamp + 1s
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let random_id: [u8; 32] = [

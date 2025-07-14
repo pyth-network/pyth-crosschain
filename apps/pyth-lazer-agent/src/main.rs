@@ -8,6 +8,7 @@ use {
 
 mod config;
 mod http_server;
+mod jrpc_handle;
 mod lazer_publisher;
 mod publisher_handle;
 mod relayer_session;

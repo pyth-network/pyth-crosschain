@@ -617,12 +617,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
-name = "base64"
-version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
-
-[[package]]
 name = "base64ct"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2007,6 +2001,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b112acc8b3adf4b107a8ec20977da0273a8c386765a3ec0229bd500a1443f9f"
 
 [[package]]
+name = "humantime-serde"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57a3db5ea5923d99402c94e9feb261dc5ee9b4efa158b0315f788cf549cc200c"
+dependencies = [
+ "humantime",
+ "serde",
+]
+
+[[package]]
 name = "hyper"
 version = "0.14.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3200,31 +3204,17 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.7.3"
+version = "0.8.1"
 dependencies = [
  "anyhow",
- "base64 0.22.1",
  "byteorder",
  "derive_more",
+ "humantime-serde",
  "itertools 0.13.0",
  "protobuf",
  "rust_decimal",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "pyth-lazer-publisher-sdk"
-version = "0.1.6"
-dependencies = [
- "anyhow",
- "fs-err",
- "humantime",
- "protobuf",
- "protobuf-codegen",
- "pyth-lazer-protocol",
- "serde-value",
- "tracing",
 ]
 
 [[package]]

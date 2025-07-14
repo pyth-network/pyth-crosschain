@@ -27,7 +27,8 @@ jobs:
         run: curl https://get.starkli.sh | sh && . ~/.config/.starkli/env && starkliup -v $(awk '/starkli/{print $2}' .tool-versions)
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Install Devnet
-        run: cargo install starknet-devnet --version $(awk '/starknet-devnet/{print $2}' .tool-versions)
+        # it doesn't build with more recent Rust versions
+        run: cargo +1.85.0 install starknet-devnet --version $(awk '/starknet-devnet/{print $2}' .tool-versions)
       - name: Check formatting
         run: scarb fmt --check
       - name: Run tests
