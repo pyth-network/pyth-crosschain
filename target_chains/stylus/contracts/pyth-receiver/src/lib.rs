@@ -19,7 +19,9 @@ use mock_instant::global::MockClock;
 use alloc::vec::Vec;
 use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
+    alloy_sol_types::sol,
     call::Call,
+    evm,
     prelude::*,
     storage::{
         StorageAddress, StorageBool, StorageFixedBytes, StorageMap, StorageU16, StorageU256,
@@ -43,6 +45,14 @@ use pythnet_sdk::{
 };
 use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage, PriceReturn};
 use wormhole_vaas::{Readable, Vaa, Writeable};
+
+sol! {
+    event FeeSet(uint256 indexed old_fee, uint256 indexed new_fee);
+    event TransactionFeeSet(uint256 indexed old_fee, uint256 indexed new_fee);
+    event FeeWithdrawn(address indexed target_address, uint256 fee_amount);
+    event ValidPeriodSet(uint256 indexed old_valid_period, uint256 indexed new_valid_period);
+    event DataSourcesSet(bytes32[] old_data_sources, bytes32[] new_data_sources);
+}
 
 sol_interface! {
     interface IWormholeContract  {
@@ -595,19 +605,25 @@ impl PythReceiver {
 
     fn set_fee(&mut self, value: u64, expo: u64) {
         let new_fee = U256::from(value) * U256::from(10).pow(U256::from(expo));
-        let _old_fee = self.single_update_fee_in_wei.get();
+        let old_fee = self.single_update_fee_in_wei.get();
 
         self.single_update_fee_in_wei.set(new_fee);
 
-        // TODO: Emit FeeSet event with old_fee and new_fee
+        evm::log(FeeSet {
+            old_fee,
+            new_fee,
+        });
     }
 
     fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
-        let _old_valid_period = self.valid_time_period_seconds.get();
-        self.valid_time_period_seconds.set(U256::from(valid_time_period_seconds));
+        let old_valid_period = self.valid_time_period_seconds.get();
+        let new_valid_period = U256::from(valid_time_period_seconds);
+        self.valid_time_period_seconds.set(new_valid_period);
         
-        // TODO: Emit ValidPeriodSet event with old_valid_period and new_valid_period
-        // emit ValidPeriodSet(old_valid_period, valid_time_period_seconds);
+        evm::log(ValidPeriodSet {
+            old_valid_period,
+            new_valid_period,
+        });
     }
 
     fn set_wormhole_address(
@@ -717,11 +733,14 @@ impl PythReceiver {
 
     fn set_transaction_fee(&mut self, value: u64, expo: u64) {
         let new_fee = U256::from(value) * U256::from(10).pow(U256::from(expo));
-        let _old_fee = self.transaction_fee_in_wei.get();
+        let old_fee = self.transaction_fee_in_wei.get();
 
         self.transaction_fee_in_wei.set(new_fee);
 
-        // TODO: Emit TransactionFeeSet event with old_fee and new_fee
+        evm::log(TransactionFeeSet {
+            old_fee,
+            new_fee,
+        });
     }
 
     fn withdraw_fee(&mut self, value: u64, expo: u64, target_address: Address) -> Result<(), PythReceiverError> {
@@ -736,7 +755,10 @@ impl PythReceiver {
         self.vm().transfer_eth(target_address, fee_to_withdraw)
             .map_err(|_| PythReceiverError::InsufficientFee)?;
 
-        // TODO: Emit FeeWithdrawn event with target_address and fee_to_withdraw
+        evm::log(FeeWithdrawn {
+            target_address,
+            fee_amount: fee_to_withdraw,
+        });
 
         Ok(())
     }
