@@ -5629,7 +5629,7 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "protobuf",
- "pyth-lazer-protocol 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-protocol 0.8.1",
  "pyth-lazer-publisher-sdk 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.12.22",
  "serde",
@@ -5659,7 +5659,7 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol 0.8.1",
+ "pyth-lazer-protocol 0.9.0",
  "serde",
  "serde_json",
  "tokio",
@@ -5671,6 +5671,23 @@ dependencies = [
 [[package]]
 name = "pyth-lazer-protocol"
 version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1258b8770756a82a39b7b02a296c10a91b93aa58c0cded47950defe4d9377644"
+dependencies = [
+ "anyhow",
+ "byteorder",
+ "derive_more 1.0.0",
+ "humantime-serde",
+ "itertools 0.13.0",
+ "protobuf",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "pyth-lazer-protocol"
+version = "0.9.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5692,23 +5709,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-lazer-protocol"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1258b8770756a82a39b7b02a296c10a91b93aa58c0cded47950defe4d9377644"
-dependencies = [
- "anyhow",
- "byteorder",
- "derive_more 1.0.0",
- "humantime-serde",
- "itertools 0.13.0",
- "protobuf",
- "rust_decimal",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "pyth-lazer-publisher-sdk"
 version = "0.1.7"
 dependencies = [
@@ -5717,7 +5717,7 @@ dependencies = [
  "humantime",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.8.1",
+ "pyth-lazer-protocol 0.9.0",
  "serde-value",
  "tracing",
 ]
@@ -5733,7 +5733,7 @@ dependencies = [
  "humantime",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-protocol 0.8.1",
  "serde-value",
  "tracing",
 ]

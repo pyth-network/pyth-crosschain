@@ -6,7 +6,7 @@ description = "A Rust client for Pyth Lazer"
 license = "Apache-2.0"
 
 [dependencies]
-pyth-lazer-protocol = { path = "../protocol", version = "0.8.1" }
+pyth-lazer-protocol = { path = "../protocol", version = "0.9.0" }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
 futures-util = "0.3"
