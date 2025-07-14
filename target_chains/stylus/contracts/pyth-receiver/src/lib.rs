@@ -572,10 +572,10 @@ impl PythReceiver {
             }
             GovernancePayload::SetTransactionFee(payload) => {
                 self.set_transaction_fee(payload.value, payload.expo);
-            },
+            }
             GovernancePayload::WithdrawFee(payload) => {
                 self.withdraw_fee(payload.value, payload.expo, payload.target_address)?;
-            },
+            }
         }
 
         Ok(())
@@ -610,17 +610,14 @@ impl PythReceiver {
 
         self.single_update_fee_in_wei.set(new_fee);
 
-        evm::log(FeeSet {
-            old_fee,
-            new_fee,
-        });
+        evm::log(FeeSet { old_fee, new_fee });
     }
 
     fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
         let old_valid_period = self.valid_time_period_seconds.get();
         let new_valid_period = U256::from(valid_time_period_seconds);
         self.valid_time_period_seconds.set(new_valid_period);
-        
+
         evm::log(ValidPeriodSet {
             old_valid_period,
             new_valid_period,
@@ -744,22 +741,24 @@ impl PythReceiver {
 
         self.transaction_fee_in_wei.set(new_fee);
 
-        evm::log(TransactionFeeSet {
-            old_fee,
-            new_fee,
-        });
+        evm::log(TransactionFeeSet { old_fee, new_fee });
     }
 
-    fn withdraw_fee(&mut self, value: u64, expo: u64, target_address: Address) -> Result<(), PythReceiverError> {
+    fn withdraw_fee(
+        &mut self,
+        value: u64,
+        expo: u64,
+        target_address: Address,
+    ) -> Result<(), PythReceiverError> {
         let fee_to_withdraw = U256::from(value) * U256::from(10).pow(U256::from(expo));
         let current_balance = self.vm().balance(self.vm().contract_address());
-    
 
         if current_balance < fee_to_withdraw {
             return Err(PythReceiverError::InsufficientFee);
         }
 
-        self.vm().transfer_eth(target_address, fee_to_withdraw)
+        self.vm()
+            .transfer_eth(target_address, fee_to_withdraw)
             .map_err(|_| PythReceiverError::InsufficientFee)?;
 
         evm::log(FeeWithdrawn {
@@ -820,9 +819,9 @@ fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) 
             receiver.is_valid_data_source.setter(data_source).set(false);
         }
     }
-    
+
     receiver.valid_data_sources.erase();
-    
+
     let mut new_data_sources = Vec::new();
     for data_source in data_sources {
         let mut storage_data_source = receiver.valid_data_sources.grow();

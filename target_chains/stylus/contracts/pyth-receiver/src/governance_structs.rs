@@ -349,7 +349,7 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             if payload.len() < cursor + 28 {
                 return Err(PythReceiverError::InvalidGovernanceMessage);
             }
-            
+
             let mut target_address_bytes = [0u8; 20];
             target_address_bytes.copy_from_slice(&payload[cursor..cursor + 20]);
             cursor += 20;
