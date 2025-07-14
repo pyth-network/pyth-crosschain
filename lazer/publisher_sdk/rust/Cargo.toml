@@ -7,7 +7,7 @@ license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [dependencies]
-pyth-lazer-protocol = { version = "0.8.1", path = "../../sdk/rust/protocol" }
+pyth-lazer-protocol = { version = "0.9.0", path = "../../sdk/rust/protocol" }
 anyhow = "1.0.98"
 protobuf = "3.7.2"
 serde-value = "0.7.0"
