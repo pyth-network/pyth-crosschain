@@ -131,7 +131,7 @@ impl TimestampUs {
     pub fn is_multiple_of(self, duration: DurationUs) -> bool {
         match self.0.checked_rem(duration.0) {
             Some(rem) => rem == 0,
-            None => false,
+            None => true,
         }
     }
 
@@ -361,7 +361,7 @@ impl DurationUs {
     pub fn is_multiple_of(self, other: DurationUs) -> bool {
         match self.0.checked_rem(other.0) {
             Some(rem) => rem == 0,
-            None => false,
+            None => true,
         }
     }
 

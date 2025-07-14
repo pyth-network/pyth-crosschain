@@ -152,7 +152,7 @@ fn timestamp_ops() {
     );
     assert_eq!(
         TimestampUs::from_micros(400).is_multiple_of(DurationUs::from_micros(0)),
-        false
+        true
     );
     assert_eq!(
         TimestampUs::from_micros(400)
@@ -202,7 +202,7 @@ fn duration_ops() {
     );
     assert_eq!(
         DurationUs::from_micros(400).is_multiple_of(DurationUs::from_micros(0)),
-        false
+        true
     );
 
     assert_eq!(
