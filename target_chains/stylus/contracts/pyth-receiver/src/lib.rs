@@ -530,6 +530,7 @@ impl PythReceiver {
     ) -> Result<(), PythReceiverError> {
         let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
         let config = Call::new();
+
         wormhole
             .parse_and_verify_vm(config, Vec::from(data.clone()))
             .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
@@ -619,10 +620,13 @@ impl PythReceiver {
         let new_valid_period = U256::from(valid_time_period_seconds);
         self.valid_time_period_seconds.set(new_valid_period);
 
-        log(self.vm(), ValidPeriodSet {
-            old_valid_period,
-            new_valid_period,
-        });
+        log(
+            self.vm(),
+            ValidPeriodSet {
+                old_valid_period,
+                new_valid_period,
+            },
+        );
     }
 
     fn set_wormhole_address(
@@ -725,13 +729,16 @@ impl PythReceiver {
         self.last_executed_governance_sequence
             .set(U64::from(last_executed_governance_sequence));
 
-        log(self.vm(), GovernanceDataSourceSet {
-            old_chain_id: current_index as u16,
-            old_emitter_address: self.governance_data_source_emitter_address.get(),
-            new_chain_id: claim_vm.body.emitter_chain,
-            new_emitter_address: FixedBytes::from(emitter_bytes),
-            initial_sequence: last_executed_governance_sequence,
-        });
+        log(
+            self.vm(),
+            GovernanceDataSourceSet {
+                old_chain_id: current_index as u16,
+                old_emitter_address: self.governance_data_source_emitter_address.get(),
+                new_chain_id: claim_vm.body.emitter_chain,
+                new_emitter_address: FixedBytes::from(emitter_bytes),
+                initial_sequence: last_executed_governance_sequence,
+            },
+        );
 
         Ok(())
     }
@@ -762,10 +769,13 @@ impl PythReceiver {
             .transfer_eth(target_address, fee_to_withdraw)
             .map_err(|_| PythReceiverError::InsufficientFee)?;
 
-        log(self.vm(), FeeWithdrawn {
-            target_address,
-            fee_amount: fee_to_withdraw,
-        });
+        log(
+            self.vm(),
+            FeeWithdrawn {
+                target_address,
+                fee_amount: fee_to_withdraw,
+            },
+        );
 
         Ok(())
     }
@@ -835,8 +845,11 @@ fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) 
         receiver.is_valid_data_source.setter(data_source).set(true);
     }
 
-    log(receiver.vm(), DataSourcesSet {
-        old_data_sources,
-        new_data_sources,
-    });
+    log(
+        receiver.vm(),
+        DataSourcesSet {
+            old_data_sources,
+            new_data_sources,
+        },
+    );
 }
