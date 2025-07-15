@@ -21,7 +21,6 @@ use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
     alloy_sol_types::sol,
     call::Call,
-    evm,
     prelude::*,
     storage::{
         StorageAddress, StorageBool, StorageFixedBytes, StorageMap, StorageU16, StorageU256,
@@ -610,7 +609,7 @@ impl PythReceiver {
 
         self.single_update_fee_in_wei.set(new_fee);
 
-        evm::log(FeeSet { old_fee, new_fee });
+        log(self.vm(), FeeSet { old_fee, new_fee });
     }
 
     fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
@@ -618,7 +617,7 @@ impl PythReceiver {
         let new_valid_period = U256::from(valid_time_period_seconds);
         self.valid_time_period_seconds.set(new_valid_period);
 
-        evm::log(ValidPeriodSet {
+        log(self.vm(), ValidPeriodSet {
             old_valid_period,
             new_valid_period,
         });
@@ -724,7 +723,7 @@ impl PythReceiver {
         self.last_executed_governance_sequence
             .set(U64::from(last_executed_governance_sequence));
 
-        evm::log(GovernanceDataSourceSet {
+        log(self.vm(), GovernanceDataSourceSet {
             old_chain_id: current_index as u16,
             old_emitter_address: self.governance_data_source_emitter_address.get(),
             new_chain_id: claim_vm.body.emitter_chain,
@@ -741,7 +740,7 @@ impl PythReceiver {
 
         self.transaction_fee_in_wei.set(new_fee);
 
-        evm::log(TransactionFeeSet { old_fee, new_fee });
+        log(self.vm(), TransactionFeeSet { old_fee, new_fee });
     }
 
     fn withdraw_fee(
@@ -761,7 +760,7 @@ impl PythReceiver {
             .transfer_eth(target_address, fee_to_withdraw)
             .map_err(|_| PythReceiverError::InsufficientFee)?;
 
-        evm::log(FeeWithdrawn {
+        log(self.vm(), FeeWithdrawn {
             target_address,
             fee_amount: fee_to_withdraw,
         });
@@ -834,7 +833,7 @@ fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) 
         receiver.is_valid_data_source.setter(data_source).set(true);
     }
 
-    evm::log(DataSourcesSet {
+    log(receiver.vm(), DataSourcesSet {
         old_data_sources,
         new_data_sources,
     });
