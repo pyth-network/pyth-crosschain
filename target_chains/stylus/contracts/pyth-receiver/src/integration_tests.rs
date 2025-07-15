@@ -42,6 +42,7 @@ mod test {
         Ok(get_total_fee(total_num_updates))
     }
 
+    #[cfg(test)]
     fn get_total_fee(total_num_updates: u64) -> U256 {
         U256::from(total_num_updates).saturating_mul(SINGLE_UPDATE_FEE_IN_WEI)
             + TRANSACTION_FEE_IN_WEI

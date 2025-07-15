@@ -9,6 +9,8 @@ mod error;
 mod governance_structs;
 #[cfg(test)]
 mod integration_tests;
+#[cfg(test)]
+mod pyth_governance_test;
 mod structs;
 #[cfg(test)]
 mod test_data;
