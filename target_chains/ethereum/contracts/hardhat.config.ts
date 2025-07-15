@@ -60,6 +60,13 @@ module.exports = {
       verifyURL:
         "https://api-explorer-verify.testnet.abs.xyz/contract_verification",
     },
+    abstract: {
+      url: "https://api.mainnet.abs.xyz",
+      ethNetwork: "mainnet",
+      zksync: true,
+      verifyURL:
+        "https://api-explorer-verify.mainnet.abs.xyz/contract_verification",
+    },
     mathMainnet: {
       url: "https://redacted.master.dev/",
       ethNetwork: "mainnet",
@@ -112,7 +119,7 @@ module.exports = {
     ],
   },
   solidity: {
-    version: "0.8.29",
+    version: "0.8.20",
     evmVersion: "paris",
     settings: {
       optimizer: {
