@@ -3,7 +3,7 @@ mod test {
     use crate::error::PythReceiverError;
     use crate::test_data::*;
     use crate::PythReceiver;
-    use alloy_primitives::{Address, U256};
+    use alloy_primitives::{address, Address, U256};
     use mock_instant::global::MockClock;
     use motsu::prelude::*;
     use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
@@ -50,9 +50,7 @@ mod test {
         alice: &Address,
     ) {
         let guardians = vec![
-            Address::new([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]),
-            Address::new([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]),
-            Address::new([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03]),
+            address!("0x6579c588be2026d866231cccc364881cc1219c56")
         ];
         
         let governance_contract =
@@ -97,15 +95,16 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
-        let hex_str = "01000000000100a53d7675143a514fa10756ef19e1281648aec03be2ea071c139f241839cb01206ce5c7f3673fc446a045cab2d4f97ef0de01de70269ab2678bba76b41c3a60ce010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010200020100010000000000000000000000000000000000000000000000000000000000001111";
+        let hex_str = "0x010000000001008eb96d664888b3424e81758b7015c4cc42f20cb03891ed9335724b779262c5571de6ad26372cff8300ba2767239f1f9d412b007118731e62ed7b888cab0c9ac701499602d200000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010300020100010000000000000000000000000000000000000000000000000000000000001111";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        println!("Executing set_data_sources with bytes: {:?}", bytes);
 
         let result = pyth_contract.sender(alice).execute_governance_instruction(bytes.clone());
         if let Err(e) = &result {
             println!("Governance instruction failed with error: {:?}", e);
         }
-        
-        println!("{:?}", result);
+
         assert!(result.is_ok());
     }
 
