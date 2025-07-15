@@ -8,7 +8,6 @@ import {
   Chain,
 } from "viem";
 
-import { multicall3Bundler } from "./multicall3-bundler";
 import { IPythAbi } from "./pyth-abi";
 import {
   debugTraceCallAction,
@@ -28,7 +27,7 @@ export type CallRequest = {
   /** The target contract address */
   to: Address;
   /** The encoded function call data (optional) */
-  data?: `0x${string}`;
+  data?: Hex;
   /** The amount of ETH to send with the call (optional) */
   value?: bigint;
 };
@@ -67,43 +66,36 @@ export type Bundler = (
 ) => CallRequest;
 
 /**
- * Configuration for debug_traceCall method.
- * Use this when you want to trace a single bundled transaction that combines the Pyth update with the original call.
- * The bundler function is responsible for creating a single transaction that executes both operations.
- *
- * The bundler is crucial because debug_traceCall can only trace one transaction at a time. The bundler
- * must create a single call that includes both the Pyth price update and the original transaction logic.
- * This allows the tracer to see all the Pyth price feed calls that would be made in the actual execution.
+ * Tracing configuration options
  */
-export type DebugTraceCallConfig = {
-  /** Must be "debug_traceCall" */
-  method: "debug_traceCall";
-  /** Function that takes a Pyth update and original call, returns a single bundled call request.
-   * Common bundlers include multicall3Bundler for combining calls via Multicall3 contract.
-   * The bundler must create a single transaction that executes both the Pyth update and the original call. */
-  bundler: Bundler;
-  /** Maximum number of iterations to find all required price feeds. Default is 5.
-   * Each iteration traces the current transaction to find new Pyth price feed calls. */
-  maxIter: number;
-};
-
-/**
- * Configuration for trace_callMany method.
- * Use this when you want to trace multiple separate transactions (Pyth update + original call).
- * This method traces each call independently, which may be more accurate but requires more RPC calls.
- */
-export type TraceCallManyConfig = {
-  /** Must be "trace_callMany" */
-  method: "trace_callMany";
-  /** Maximum number of iterations to find all required price feeds. Default is 5.
-   * Each iteration traces the current set of transactions to find new Pyth price feed calls. */
-  maxIter: number;
-};
-
-/**
- * Union type for tracing configuration options
- */
-export type Config = DebugTraceCallConfig | TraceCallManyConfig;
+export type Config = {
+  /** Maximum number of iterations to find all required price feeds. Default is 5. */
+  maxIter?: number;
+} & (
+  | {
+      /**
+       * Use this when you want to trace multiple separate transactions (Pyth update + original call).
+       * This method traces each call independently, which may be more accurate but requires more RPC calls.
+       */
+      method: "trace_callMany";
+    }
+  | {
+      /**
+       * Use this when you want to trace a single bundled transaction that combines the Pyth update with the original call.
+       * The bundler function is responsible for creating a single transaction that executes both operations.
+       *
+       * The bundler is crucial because debug_traceCall can only trace one transaction at a time.
+       * The bundler must create a single call that includes both the Pyth price update and the original transaction logic.
+       * This allows the tracer to see all the Pyth price feed calls that would be made in the actual execution.
+       */
+      method: "debug_traceCall";
+      /**
+       * Function that takes a Pyth update and original call, returns a single bundled call request.
+       * Common bundlers include multicall3Bundler for combining calls via Multicall3 contract.
+       */
+      bundler: Bundler;
+    }
+);
 
 /**
  * Represents a Pyth price update transaction
@@ -120,16 +112,23 @@ export type PythUpdate = {
 /**
  * Fill the Pyth data for a given call request.
  * Requires a client that supports trace_callMany or debug_traceCall with a bundler.
+ * This function will trace the call and find all the Pyth price feeds that are needed to fill the call in multiple
+ * iterations because a single call might revert if it requires a price feed that is not available and we need to
+ * trace the call again with the new price feeds until we have all the price feeds.
  *
  * @param client - The public client instance
  * @param call - The call request to fill with Pyth data
  * @param pythContractAddress - The Pyth contract address
  * @param hermesEndpoint - The Hermes endpoint URL for fetching price updates
- * @param config - Configuration options for tracing and bundling. Can be either:
- *   - `DebugTraceCallConfig`: For debug_traceCall method with a bundler function to combine Pyth update with original call.
- *     The bundler creates a single transaction that executes both the Pyth update and the original call.
- *   - `TraceCallManyConfig`: For trace_callMany method which traces multiple calls separately.
+ * @param config - Configuration options for tracing and bundling. Default is `{ method: "trace_callMany" }`.
+ *   - `Config` with `method: "trace_callMany"`: For trace_callMany method which traces multiple calls separately.
  *     This method traces the Pyth update and original call as separate transactions.
+ *   - `Config` with `method: "debug_traceCall"` and `bundler`: For debug_traceCall method with a bundler function to
+ *     combine Pyth update with the original call. The bundler creates a single transaction that executes both the
+ *     Pyth update and the original call.
+ *   - `maxIter`: Maximum number of iterations to find all required price feeds. Each iteration traces the current
+ *     transaction(s) to find new Pyth price feed calls. The process stops when no new price feeds are found
+ *     or when maxIter is reached. Default is 5.
  * @returns Promise resolving to Pyth update object or undefined if no Pyth data needed
  */
 export async function fillPythUpdate<
@@ -142,77 +141,102 @@ export async function fillPythUpdate<
   hermesEndpoint: string,
   config?: Config,
 ): Promise<PythUpdate | undefined> {
-  const defaultConfig: Config = {
-    method: "debug_traceCall",
-    bundler: multicall3Bundler,
-    maxIter: 5,
+  config = {
+    method: "trace_callMany",
+    ...config,
   };
-  const finalConfig = config ?? defaultConfig;
-  const traceActionsClient = client
-    .extend(debugTraceCallAction)
-    .extend(traceCallManyAction);
+
   const hermesClient = new HermesClient(hermesEndpoint);
 
-  let requiredPriceFeeds = new Set<`0x${string}`>();
-
+  let requiredPriceFeeds = new Set<Address>();
   let pythUpdate: PythUpdate | undefined;
 
-  for (let i = 0; i < finalConfig.maxIter; i++) {
-    let priceFeeds = new Set<`0x${string}`>();
-
-    if (finalConfig.method === "debug_traceCall") {
-      const bundledCall = pythUpdate
-        ? finalConfig.bundler(pythUpdate, call)
-        : call;
-      const traceResult = await traceActionsClient.debugTraceCall(bundledCall);
-      priceFeeds = extractPythPriceFeedsFromDebugTraceCall(
-        traceResult,
-        pythContractAddress,
-      );
-    } else {
-      const calls = pythUpdate ? [pythUpdate.call, call] : [call];
-      const traceResult = await traceActionsClient.traceCallMany(calls);
-      priceFeeds = extractPythPriceFeedsFromTraceCallMany(
-        traceResult,
-        pythContractAddress,
-      );
-    }
-
-    const oldSize = requiredPriceFeeds.size;
-    requiredPriceFeeds = new Set([...requiredPriceFeeds, ...priceFeeds]);
-
-    if (oldSize === requiredPriceFeeds.size) {
-      break;
-    }
-
-    const hermesResponse = await hermesClient.getLatestPriceUpdates([
-      ...requiredPriceFeeds,
-    ]);
-    const updateData = hermesResponse.binary.data.map(
-      (data) => ("0x" + data) as `0x${string}`,
-    );
-
-    const updateFee = await getUpdateFee(
+  for (let i = 0; i < (config.maxIter ?? 5); i++) {
+    const priceFeeds = await getPriceFeeds(
       client,
       pythContractAddress,
-      updateData,
+      call,
+      config,
+      pythUpdate,
     );
 
-    pythUpdate = {
-      call: {
-        to: pythContractAddress,
-        data: encodeFunctionData({
-          abi: IPythAbi,
-          functionName: "updatePriceFeeds",
-          args: [updateData],
-        }),
-        from: call.from,
-        value: updateFee,
-      },
-      updateData,
-      updateFee,
-    };
+    if (priceFeeds.isSubsetOf(requiredPriceFeeds)) {
+      break;
+    } else {
+      requiredPriceFeeds = requiredPriceFeeds.union(priceFeeds);
+      pythUpdate = await getPythUpdate(
+        client,
+        hermesClient,
+        requiredPriceFeeds,
+        pythContractAddress,
+        call,
+      );
+    }
   }
 
   return pythUpdate;
 }
+
+const getPythUpdate = async <
+  transport extends Transport,
+  chain extends Chain | undefined,
+>(
+  client: PublicClient<transport, chain>,
+  hermesClient: HermesClient,
+  priceFeeds: Set<Address>,
+  pythContractAddress: Address,
+  call: CallRequest,
+) => {
+  const hermesResponse = await hermesClient.getLatestPriceUpdates([
+    ...priceFeeds,
+  ]);
+  const updateData = hermesResponse.binary.data.map<Hex>((data) => `0x${data}`);
+  const updateFee = await getUpdateFee(client, pythContractAddress, updateData);
+  return {
+    call: {
+      to: pythContractAddress,
+      data: encodeFunctionData({
+        abi: IPythAbi,
+        functionName: "updatePriceFeeds",
+        args: [updateData],
+      }),
+      from: call.from,
+      value: updateFee,
+    },
+    updateData,
+    updateFee,
+  };
+};
+
+/**
+ * Get the price feeds from the trace of the given call.
+ */
+const getPriceFeeds = async <
+  transport extends Transport,
+  chain extends Chain | undefined,
+>(
+  client: PublicClient<transport, chain>,
+  pythContractAddress: Address,
+  call: CallRequest,
+  config: Config,
+  pythUpdate: PythUpdate | undefined,
+) => {
+  switch (config.method) {
+    case "debug_traceCall": {
+      return extractPythPriceFeedsFromDebugTraceCall(
+        await client
+          .extend(debugTraceCallAction)
+          .debugTraceCall(pythUpdate ? config.bundler(pythUpdate, call) : call),
+        pythContractAddress,
+      );
+    }
+    case "trace_callMany": {
+      return extractPythPriceFeedsFromTraceCallMany(
+        await client
+          .extend(traceCallManyAction)
+          .traceCallMany(pythUpdate ? [pythUpdate.call, call] : [call]),
+        pythContractAddress,
+      );
+    }
+  }
+};

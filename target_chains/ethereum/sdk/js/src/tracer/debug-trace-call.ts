@@ -7,6 +7,7 @@ import {
   ExactPartial,
   formatTransactionRequest,
   Hex,
+  isAddressEqual,
   RpcTransactionRequest,
 } from "viem";
 
@@ -19,9 +20,9 @@ export function extractPythPriceFeedsFromDebugTraceCall(
   trace: RpcCallTrace,
   pythContractAddress: Address,
   ignoreParsingErrors = false,
-): Set<`0x${string}`> {
-  const result = new Set<`0x${string}`>();
-  if (trace.to === pythContractAddress) {
+): Set<Hex> {
+  const result = new Set<Hex>();
+  if (isAddressEqual(trace.to, pythContractAddress)) {
     // Decode the calldata to see what function is being called
     try {
       const decoded = decodeFunctionData({
@@ -29,7 +30,7 @@ export function extractPythPriceFeedsFromDebugTraceCall(
         data: trace.input,
       });
 
-      let priceFeedId: `0x${string}` | undefined;
+      let priceFeedId: Hex | undefined;
       switch (decoded.functionName) {
         case "getPrice":
         case "getPriceNoOlderThan":
@@ -47,16 +48,18 @@ export function extractPythPriceFeedsFromDebugTraceCall(
       if (priceFeedId !== undefined) {
         result.add(priceFeedId);
       }
-    } catch {
+    } catch (error: unknown) {
       if (!ignoreParsingErrors) {
-        throw new Error(
+        const thrownError = new Error(
           `Failed to decode calldata: ${trace.input}. Make sure correct Pyth contract address is used.`,
         );
+        thrownError.cause = error;
+        throw thrownError;
       }
     }
   }
   if (trace.calls === undefined) {
-    return new Set();
+    return result;
   }
   return new Set([
     ...result,

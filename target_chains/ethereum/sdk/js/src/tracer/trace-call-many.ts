@@ -8,6 +8,7 @@ import {
   Client,
   formatTransactionRequest,
   CallParameters,
+  isAddressEqual,
 } from "viem";
 
 import { IPythAbi } from "../pyth-abi";
@@ -23,7 +24,7 @@ export function extractPythPriceFeedsFromTraceCallMany(
   const result = new Set<`0x${string}`>();
   for (const traceResult of traceResults) {
     for (const trace of traceResult.trace) {
-      if (trace.action.to === pythContractAddress) {
+      if (isAddressEqual(trace.action.to, pythContractAddress)) {
         // Decode the calldata to see what function is being called
         try {
           const decoded = decodeFunctionData({

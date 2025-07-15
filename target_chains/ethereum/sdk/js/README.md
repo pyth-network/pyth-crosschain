@@ -25,54 +25,53 @@ The `fillPythUpdate` function helps you automatically determine what Pyth price 
 This function uses the `trace_callMany` method by default but can be used with `debug_traceCall` and a bundler as well. See the example below for more information.
 
 ```typescript
-import { fillPythUpdate, multicall3Bundler } from "@pythnetwork/pyth-evm-js";
+import { fillPythUpdate, multicall3Bundler, CallRequest } from "@pythnetwork/pyth-evm-js";
 import { createPublicClient, http } from "viem";
 import { optimismSepolia } from "viem/chains";
 
-async function example() {
-    const client = createPublicClient({
-        chain: optimismSepolia,
-        transport: http("YOUR_RPC_ENDPOINT"),
-    });
+const PYTH_CONTRACT_OP_SEPOLIA = "0x0708325268df9f66270f1401206434524814508b"
+const HERMES_ENDPOINT = "https://hermes.pyth.network"
 
-    // Fill Pyth update data using "trace_callMany"
-    const pythUpdate = await fillPythUpdate(
-        client,
-        {
-            to: "0x3252c2F7962689fA17f892C52555613f36056f22",
-            data: "0xd09de08a", // Your transaction calldata
-            from: "0x78357316239040e19fC823372cC179ca75e64b81",
-        },
-        "0x0708325268df9f66270f1401206434524814508b", // Pyth contract address
-        "https://hermes.pyth.network", // Hermes endpoint
-        {
-            method: "trace_callMany"
-            maxIter: 5,
-        },
-    );
+const client = createPublicClient({
+    chain: optimismSepolia,
+    transport: http("YOUR_RPC_ENDPOINT"),
+});
 
-    // Fill Pyth update data using "debug_traceCall"
-    const pythUpdateWithDebugTrace = await fillPythUpdate(
-        client,
-        {
-            to: "0x3252c2F7962689fA17f892C52555613f36056f22",
-            data: "0xd09de08a", // Your transaction calldata
-            from: "0x78357316239040e19fC823372cC179ca75e64b81",
-        },
-        "0x0708325268df9f66270f1401206434524814508b", // Pyth contract address
-        "https://hermes.pyth.network", // Hermes endpoint
-        {
-            method: "debug_traceCall",
-            bundler: multicall3Bundler // or any function that takes a PythUpdate and a CallRequest and produces a CallRequest
-            maxIter: 5,
-        },
-    );
+const call: CallRequest = {
+    to: "0x3252c2F7962689fA17f892C52555613f36056f22",
+    data: "0xd09de08a", // Your transaction calldata
+    from: "0x78357316239040e19fC823372cC179ca75e64b81",
+};
 
-    if (pythUpdate) {
-        console.log("Pyth update needed:", pythUpdate);
-        // Bundle the calls together, or pass the pythUpdate.updateData to your contract.
-    } else {
-        console.log("No Pyth data needed for this transaction");
-    }
+// Fill Pyth update data using "trace_callMany"
+const pythUpdate = await fillPythUpdate(
+    client,
+    call,
+    PYTH_CONTRACT_OP_SEPOLIA,
+    HERMES_ENDPOINT,
+    {
+        method: "trace_callMany",
+        maxIter: 5,
+    },
+);
+
+// Fill Pyth update data using "debug_traceCall"
+const _pythUpdateWithDebugTraceCall = await fillPythUpdate(
+    client,
+    call,
+    PYTH_CONTRACT_OP_SEPOLIA,
+    HERMES_ENDPOINT,
+    {
+        method: "debug_traceCall",
+        bundler: multicall3Bundler, // or any function that takes a PythUpdate and a CallRequest and produces a CallRequest
+        maxIter: 5,
+    },
+);
+
+if (pythUpdate) {
+    console.log("Pyth update needed:", pythUpdate);
+    // Bundle the calls together, or pass the pythUpdate.updateData to your contract.
+} else {
+    console.log("No Pyth data needed for this transaction");
 }
 ```
