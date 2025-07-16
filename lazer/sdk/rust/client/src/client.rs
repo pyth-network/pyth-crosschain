@@ -1,3 +1,8 @@
+use std::{
+    hash::{DefaultHasher, Hash},
+    time::Duration,
+};
+
 use crate::{
     resilient_ws_connection::PythLazerResilientWSConnection, ws_connection::AnyResponse,
     CHANNEL_CAPACITY,
@@ -9,6 +14,10 @@ use pyth_lazer_protocol::subscription::{SubscribeRequest, SubscriptionId};
 use tokio::sync::mpsc::{self, error::TrySendError};
 use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use tracing::{error, warn};
+use ttl_cache::TtlCache;
+
+const DEDUP_CACHE_SIZE: usize = 100_000;
+const DEDUP_TTL: Duration = Duration::from_secs(10);
 
 pub struct PythLazerClient {
     endpoints: Vec<String>,
@@ -63,9 +72,16 @@ impl PythLazerClient {
 
         let streams: Vec<_> = self.receivers.drain(..).map(ReceiverStream::new).collect();
         let mut merged_stream = stream::select_all(streams);
+        let mut seen_updates = TtlCache::new(DEDUP_CACHE_SIZE);
 
         tokio::spawn(async move {
             while let Some(response) = merged_stream.next().await {
+                let cache_key = response.cache_key();
+                if seen_updates.contains_key(&cache_key) {
+                    continue;
+                }
+                seen_updates.insert(cache_key, response.clone(), DEDUP_TTL);
+
                 match sender.try_send(response) {
                     Ok(_) => (),
                     Err(TrySendError::Full(r)) => {

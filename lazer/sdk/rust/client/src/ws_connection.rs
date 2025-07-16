@@ -1,3 +1,5 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use anyhow::Result;
 use derive_more::From;
 use futures_util::{SinkExt, StreamExt, TryStreamExt};
@@ -34,6 +36,13 @@ pub enum AnyResponse {
     Binary(BinaryWsUpdate),
 }
 
+impl AnyResponse {
+    pub fn cache_key(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.hash(&mut hasher);
+        hasher.finish()
+    }
+}
 impl PythLazerWSConnection {
     /// Creates a new Lazer client instance
     ///

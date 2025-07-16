@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
     let mut client = PythLazerClient::new(
         vec!["wss://pyth-lazer.dourolabs.app/v1/stream".to_string()],
         get_lazer_access_token(),
-        1,
+        2,
         ExponentialBackoffBuilder::default()
             .with_max_elapsed_time(None) // max_elapsed_time is not supported in Pyth Lazer client
             .build(),
