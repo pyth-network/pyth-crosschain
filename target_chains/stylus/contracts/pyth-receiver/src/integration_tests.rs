@@ -342,4 +342,14 @@ mod test {
             multiple_updates_diff_vaa_results()[1]
         );
     }
+
+    #[motsu::test]
+    fn test_multiple_updates_same_id_updates_latest(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        alice.fund(U256::from(200));
+    }
 }
