@@ -1,6 +1,4 @@
-use backoff::{
-    backoff::Backoff, exponential::ExponentialBackoff, ExponentialBackoffBuilder, SystemClock,
-};
+use backoff::{backoff::Backoff, ExponentialBackoff};
 use futures_util::StreamExt;
 use pyth_lazer_protocol::subscription::{
     Request, SubscribeRequest, SubscriptionId, UnsubscribeRequest,
@@ -28,9 +26,14 @@ impl PythLazerResilientWSConnection {
     ///
     /// # Returns
     /// Returns a new client instance (not yet connected)
-    pub fn new(endpoint: String, access_token: String, sender: mpsc::Sender<AnyResponse>) -> Self {
+    pub fn new(
+        endpoint: String,
+        access_token: String,
+        backoff: ExponentialBackoff,
+        sender: mpsc::Sender<AnyResponse>,
+    ) -> Self {
         let (request_sender, mut request_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let mut task = PythLazerResilientWSConnectionTask::new(endpoint, access_token);
+        let mut task = PythLazerResilientWSConnectionTask::new(endpoint, access_token, backoff);
 
         tokio::spawn(async move {
             if let Err(e) = task.run(sender, &mut request_receiver).await {
@@ -62,17 +65,16 @@ struct PythLazerResilientWSConnectionTask {
     endpoint: String,
     access_token: String,
     subscriptions: Vec<SubscribeRequest>,
-    backoff: ExponentialBackoff<SystemClock>,
+    backoff: ExponentialBackoff,
 }
 
 impl PythLazerResilientWSConnectionTask {
-    pub fn new(endpoint: String, access_token: String) -> Self {
+    pub fn new(endpoint: String, access_token: String, backoff: ExponentialBackoff) -> Self {
         Self {
             endpoint,
             access_token,
             subscriptions: Vec::new(),
-            // TODO: make backoff configurable
-            backoff: ExponentialBackoffBuilder::new().build(),
+            backoff,
         }
     }
 

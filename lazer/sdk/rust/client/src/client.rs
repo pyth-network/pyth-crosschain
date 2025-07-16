@@ -2,7 +2,8 @@ use crate::{
     resilient_ws_connection::PythLazerResilientWSConnection, ws_connection::AnyResponse,
     CHANNEL_CAPACITY,
 };
-use anyhow::Result;
+use anyhow::{bail, Result};
+use backoff::ExponentialBackoff;
 use futures_util::stream;
 use pyth_lazer_protocol::subscription::{SubscribeRequest, SubscriptionId};
 use tokio::sync::mpsc::{self, error::TrySendError};
@@ -15,6 +16,7 @@ pub struct PythLazerClient {
     num_connections: usize,
     ws_connections: Vec<PythLazerResilientWSConnection>,
     receivers: Vec<mpsc::Receiver<AnyResponse>>,
+    backoff: ExponentialBackoff,
 }
 
 impl PythLazerClient {
@@ -24,14 +26,23 @@ impl PythLazerClient {
     /// * `endpoints` - A vector of endpoint URLs
     /// * `access_token` - The access token for authentication
     /// * `num_connections` - The number of WebSocket connections to maintain
-    pub fn new(endpoints: Vec<String>, access_token: String, num_connections: usize) -> Self {
-        Self {
+    pub fn new(
+        endpoints: Vec<String>,
+        access_token: String,
+        num_connections: usize,
+        backoff: ExponentialBackoff,
+    ) -> Result<Self> {
+        if backoff.max_elapsed_time.is_some() {
+            bail!("max_elapsed_time is not supported in Pyth Lazer client");
+        }
+        Ok(Self {
             endpoints,
             access_token,
             num_connections,
             ws_connections: Vec::with_capacity(num_connections),
             receivers: Vec::with_capacity(num_connections),
-        }
+            backoff,
+        })
     }
 
     pub async fn start(&mut self) -> Result<mpsc::Receiver<AnyResponse>> {
@@ -43,6 +54,7 @@ impl PythLazerClient {
             let connection = PythLazerResilientWSConnection::new(
                 endpoint,
                 self.access_token.clone(),
+                self.backoff.clone(),
                 sender.clone(),
             );
             self.ws_connections.push(connection);
