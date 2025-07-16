@@ -374,7 +374,7 @@ fn update_fee(update_data: Vec<Bytes>) -> u64 {
     total_fee(total_number_of_updates, storage.single_update_fee)
 }
 
-#[storage(read, write), payable]
+#[storage(read, write)]
 fn update_price_feeds(update_data: Vec<Bytes>) {
     require(
         msg_asset_id() == AssetId::base(),
