@@ -1,9 +1,11 @@
+use std::time::Duration;
+
 use backoff::{backoff::Backoff, ExponentialBackoff};
 use futures_util::StreamExt;
 use pyth_lazer_protocol::subscription::{
     Request, SubscribeRequest, SubscriptionId, UnsubscribeRequest,
 };
-use tokio::{pin, select, sync::mpsc};
+use tokio::{pin, select, sync::mpsc, time::Instant};
 use tracing::{error, info, warn};
 
 use crate::{
@@ -11,6 +13,8 @@ use crate::{
     CHANNEL_CAPACITY,
 };
 use anyhow::{bail, Context, Result};
+
+const BACKOFF_RESET_DURATION: Duration = Duration::from_secs(10);
 
 pub struct PythLazerResilientWSConnection {
     request_sender: mpsc::Sender<Request>,
@@ -83,8 +87,15 @@ impl PythLazerResilientWSConnectionTask {
         response_sender: mpsc::Sender<AnyResponse>,
         request_receiver: &mut mpsc::Receiver<Request>,
     ) -> Result<()> {
+        let mut last_failure_time = Instant::now();
+
         loop {
             if let Err(e) = self.start(response_sender.clone(), request_receiver).await {
+                if last_failure_time.elapsed() > BACKOFF_RESET_DURATION {
+                    self.backoff.reset();
+                }
+                last_failure_time = Instant::now();
+
                 let delay = self.backoff.next_backoff();
                 match delay {
                     Some(d) => {
