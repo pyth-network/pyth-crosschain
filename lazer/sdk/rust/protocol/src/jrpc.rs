@@ -1,5 +1,6 @@
-use crate::router::{Channel, Price, PriceFeedId, Rate, TimestampUs};
+use crate::router::{Channel, Price, PriceFeedId, Rate};
 use crate::symbol_state::SymbolState;
+use crate::time::TimestampUs;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -157,7 +158,7 @@ mod tests {
             jsonrpc: JsonRpcVersion::V2,
             params: PushUpdate(FeedUpdateParams {
                 feed_id: PriceFeedId(1),
-                source_timestamp: TimestampUs(124214124124),
+                source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::PriceUpdate {
                     price: Price::from_integer(1234567890, 0).unwrap(),
                     best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
@@ -196,7 +197,7 @@ mod tests {
             jsonrpc: JsonRpcVersion::V2,
             params: PushUpdate(FeedUpdateParams {
                 feed_id: PriceFeedId(1),
-                source_timestamp: TimestampUs(124214124124),
+                source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::PriceUpdate {
                     price: Price::from_integer(1234567890, 0).unwrap(),
                     best_bid_price: None,
@@ -236,7 +237,7 @@ mod tests {
             jsonrpc: JsonRpcVersion::V2,
             params: PushUpdate(FeedUpdateParams {
                 feed_id: PriceFeedId(1),
-                source_timestamp: TimestampUs(124214124124),
+                source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::FundingRateUpdate {
                     price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
@@ -273,7 +274,7 @@ mod tests {
             jsonrpc: JsonRpcVersion::V2,
             params: PushUpdate(FeedUpdateParams {
                 feed_id: PriceFeedId(1),
-                source_timestamp: TimestampUs(124214124124),
+                source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::FundingRateUpdate {
                     price: None,
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
