@@ -1,7 +1,4 @@
-use std::{
-    hash::{DefaultHasher, Hash},
-    time::Duration,
-};
+use std::time::Duration;
 
 use crate::{
     resilient_ws_connection::PythLazerResilientWSConnection, ws_connection::AnyResponse,
