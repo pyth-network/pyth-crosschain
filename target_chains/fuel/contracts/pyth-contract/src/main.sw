@@ -272,56 +272,7 @@ impl PythCore for Contract {
 
     #[storage(read, write), payable]
     fn update_price_feeds(update_data: Vec<Bytes>) {
-        require(
-            msg_asset_id() == AssetId::base(),
-            PythError::FeesCanOnlyBePaidInTheBaseAsset,
-        );
-
-        let mut total_number_of_updates = 0;
-
-        // let mut updated_price_feeds: Vec<PriceFeedId> = Vec::new(); // TODO: requires append for Vec
-        let mut i = 0;
-        while i < update_data.len() {
-            let data = update_data.get(i).unwrap();
-
-            match UpdateType::determine_type(data) {
-                UpdateType::Accumulator(accumulator_update) => {
-                    let (number_of_updates, _updated_ids) = accumulator_update.update_price_feeds(
-                        current_guardian_set_index(),
-                        storage
-                            .wormhole_guardian_sets,
-                        storage
-                            .latest_price_feed,
-                        storage
-                            .is_valid_data_source,
-                    );
-                    // updated_price_feeds.append(updated_ids); // TODO: requires append for Vec
-                    total_number_of_updates += number_of_updates;
-                },
-                UpdateType::BatchAttestation(batch_attestation_update) => {
-                    let _updated_ids = batch_attestation_update.update_price_feeds(
-                        current_guardian_set_index(),
-                        storage
-                            .wormhole_guardian_sets,
-                        storage
-                            .latest_price_feed,
-                        storage
-                            .is_valid_data_source,
-                    );
-                    // updated_price_feeds.append(updated_ids); // TODO: requires append for Vec
-                    total_number_of_updates += 1;
-                },
-            }
-
-            i += 1;
-        }
-
-        let required_fee = total_fee(total_number_of_updates, storage.single_update_fee);
-        require(msg_amount() >= required_fee, PythError::InsufficientFee);
-
-        // log(UpdatedPriceFeedsEvent { // TODO: requires append for Vec
-        //     updated_price_feeds,
-        // })
+        
     }
 
     #[storage(read, write), payable]
@@ -341,57 +292,7 @@ impl PythCore for Contract {
         while i < price_feed_ids.len() {
             if latest_publish_time(price_feed_ids.get(i).unwrap()) < publish_times.get(i).unwrap()
             {
-                require(
-                    msg_asset_id() == AssetId::base(),
-                    PythError::FeesCanOnlyBePaidInTheBaseAsset,
-                );
-
-                let mut total_number_of_updates = 0;
-
-                // let mut updated_price_feeds: Vec<PriceFeedId> = Vec::new(); // TODO: requires append for Vec
-                let mut i = 0;
-                while i < update_data.len() {
-                    let data = update_data.get(i).unwrap();
-
-                    match UpdateType::determine_type(data) {
-                        UpdateType::Accumulator(accumulator_update) => {
-                            let (number_of_updates, _updated_ids) = accumulator_update.update_price_feeds(
-                                current_guardian_set_index(),
-                                storage
-                                    .wormhole_guardian_sets,
-                                storage
-                                    .latest_price_feed,
-                                storage
-                                    .is_valid_data_source,
-                            );
-                            // updated_price_feeds.append(updated_ids); // TODO: requires append for Vec
-                            total_number_of_updates += number_of_updates;
-                        },
-                        UpdateType::BatchAttestation(batch_attestation_update) => {
-                            let _updated_ids = batch_attestation_update.update_price_feeds(
-                                current_guardian_set_index(),
-                                storage
-                                    .wormhole_guardian_sets,
-                                storage
-                                    .latest_price_feed,
-                                storage
-                                    .is_valid_data_source,
-                            );
-                            // updated_price_feeds.append(updated_ids); // TODO: requires append for Vec
-                            total_number_of_updates += 1;
-                        },
-                    }
-
-                    i += 1;
-                }
-
-                let required_fee = total_fee(total_number_of_updates, storage.single_update_fee);
-                require(msg_amount() >= required_fee, PythError::InsufficientFee);
-
-                // log(UpdatedPriceFeedsEvent { // TODO: requires append for Vec
-                //     updated_price_feeds,
-                // })
-                return;
+                update_price_feeds(update_data);
             }
 
             i += 1;
@@ -470,6 +371,58 @@ fn update_fee(update_data: Vec<Bytes>) -> u64 {
     }
 
     total_fee(total_number_of_updates, storage.single_update_fee)
+}
+
+#[storage(read, write)]
+fn update_price_feeds(update_data: Vec<Bytes>) {
+    require(
+        msg_asset_id() == AssetId::base(),
+        PythError::FeesCanOnlyBePaidInTheBaseAsset,
+    );
+
+    let required_fee = update_fee(update_data);
+    require(msg_amount() >= required_fee, PythError::InsufficientFee);
+
+    let mut total_number_of_updates = 0;
+
+    let mut i = 0;
+    while i < update_data.len() {
+        let data = update_data.get(i).unwrap();
+
+        match UpdateType::determine_type(data) {
+            UpdateType::Accumulator(accumulator_update) => {
+                let (number_of_updates, updated_ids) = accumulator_update.update_price_feeds(
+                    current_guardian_set_index(),
+                    storage
+                        .wormhole_guardian_sets,
+                    storage
+                        .latest_price_feed,
+                    storage
+                        .is_valid_data_source,
+                );
+                total_number_of_updates += number_of_updates;
+                log(UpdatedPriceFeedsEvent { updated_price_feeds: updated_ids });
+            },
+            UpdateType::BatchAttestation(batch_attestation_update) => {
+                let updated_ids = batch_attestation_update.update_price_feeds(
+                    current_guardian_set_index(),
+                    storage
+                        .wormhole_guardian_sets,
+                    storage
+                        .latest_price_feed,
+                    storage
+                        .is_valid_data_source,
+                );
+                total_number_of_updates += 1;
+                log(UpdatedPriceFeedsEvent { updated_price_feeds: updated_ids });
+            },
+        }
+
+        i += 1;
+    }
+
+    let fee = total_fee(total_number_of_updates, storage.single_update_fee);
+    require(msg_amount() >= fee, PythError::InsufficientFee);
 }
 
 #[storage(read)]
