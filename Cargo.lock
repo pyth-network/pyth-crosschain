@@ -5713,12 +5713,14 @@ name = "pyth-lazer-publisher-sdk"
 version = "0.1.7"
 dependencies = [
  "anyhow",
+ "derive_more 2.0.1",
  "fs-err",
  "humantime",
  "protobuf",
  "protobuf-codegen",
  "pyth-lazer-protocol 0.9.0",
- "serde-value",
+ "serde",
+ "serde_json",
  "tracing",
 ]
 
