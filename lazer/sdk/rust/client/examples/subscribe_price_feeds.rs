@@ -1,6 +1,6 @@
 use base64::Engine;
-use futures_util::StreamExt;
-use pyth_lazer_client::{AnyResponse, LazerClient};
+use pyth_lazer_client::client::PythLazerClient;
+use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::message::{
     EvmMessage, LeEcdsaMessage, LeUnsignedMessage, Message, SolanaMessage,
 };
@@ -9,8 +9,10 @@ use pyth_lazer_protocol::router::{
     Channel, DeliveryFormat, FixedRate, Format, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
     SubscriptionParams, SubscriptionParamsRepr,
 };
-use pyth_lazer_protocol::subscription::{Request, Response, SubscribeRequest, SubscriptionId};
+use pyth_lazer_protocol::subscription::{Response, SubscribeRequest, SubscriptionId};
 use tokio::pin;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 fn get_lazer_access_token() -> String {
     // Place your access token in your env at LAZER_ACCESS_TOKEN or set it here
@@ -20,11 +22,22 @@ fn get_lazer_access_token() -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env()?,
+        )
+        .json()
+        .init();
+
     // Create and start the client
-    let mut client = LazerClient::new(
-        "wss://pyth-lazer.dourolabs.app/v1/stream",
-        &get_lazer_access_token(),
-    )?;
+    let mut client = PythLazerClient::new(
+        vec!["wss://pyth-lazer.dourolabs.app/v1/stream".to_string()],
+        get_lazer_access_token(),
+        1,
+    );
+
     let stream = client.start().await?;
     pin!(stream);
 
@@ -72,16 +85,16 @@ async fn main() -> anyhow::Result<()> {
     ];
 
     for req in subscription_requests {
-        client.subscribe(Request::Subscribe(req)).await?;
+        client.subscribe(req).await?;
     }
 
     println!("Subscribed to price feeds. Waiting for updates...");
 
     // Process the first few updates
     let mut count = 0;
-    while let Some(msg) = stream.next().await {
+    while let Some(msg) = stream.recv().await {
         // The stream gives us base64-encoded binary messages. We need to decode, parse, and verify them.
-        match msg? {
+        match msg {
             AnyResponse::Json(msg) => match msg {
                 Response::StreamUpdated(update) => {
                     println!("Received a JSON update for {:?}", update.subscription_id);
@@ -189,8 +202,6 @@ async fn main() -> anyhow::Result<()> {
         println!("Unsubscribed from {sub_id:?}");
     }
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-    client.close().await?;
     Ok(())
 }
 

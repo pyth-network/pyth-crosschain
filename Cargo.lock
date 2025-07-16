@@ -5647,10 +5647,11 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "0.1.3"
+version = "1.0.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
+ "backoff",
  "base64 0.22.1",
  "bincode 1.3.3",
  "bs58",
@@ -5663,8 +5664,10 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tokio-stream",
  "tokio-tungstenite 0.20.1",
  "tracing",
+ "tracing-subscriber",
  "url",
 ]
 
