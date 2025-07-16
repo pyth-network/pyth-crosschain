@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::collections::BTreeMap;
 
 use crate::protobuf::dynamic_value::{dynamic_value, DynamicValue as ProtobufDynamicValue};
@@ -205,7 +208,7 @@ impl Serialize for DynamicValue {
             DynamicValue::Duration(v) => {
                 serializer.serialize_str(&humantime::format_duration((*v).into()).to_string())
             }
-            DynamicValue::Bytes(v) => serializer.serialize_bytes(v),
+            DynamicValue::Bytes(v) => serializer.serialize_str(&hex::encode(v)),
             DynamicValue::List(v) => {
                 let mut seq_serializer = serializer.serialize_seq(Some(v.len()))?;
                 for element in v {

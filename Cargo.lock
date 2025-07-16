@@ -5715,6 +5715,7 @@ dependencies = [
  "anyhow",
  "derive_more 2.0.1",
  "fs-err",
+ "hex",
  "humantime",
  "protobuf",
  "protobuf-codegen",
