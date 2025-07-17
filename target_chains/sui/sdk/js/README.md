@@ -22,7 +22,7 @@ Pyth prices and submit them to the network:
 
 ```typescript
 const connection = new SuiPriceServiceConnection(
-  "https://hermes-beta.pyth.network"
+  "https://hermes-beta.pyth.network",
 ); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
@@ -137,7 +137,7 @@ This method is useful if you want to show continuously updating real-time prices
 // gets a price update.
 connection.subscribePriceFeedUpdates(priceIds, (priceFeed) => {
   console.log(
-    `Received update for ${priceFeed.id}: ${priceFeed.getPriceNoOlderThan(60)}`
+    `Received update for ${priceFeed.id}: ${priceFeed.getPriceNoOlderThan(60)}`,
   );
 });
 

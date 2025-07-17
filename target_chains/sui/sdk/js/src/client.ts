@@ -108,7 +108,11 @@ export class SuiPythClient {
     return verifiedVaas;
   }
 
-  async verifyVaasAndGetHotPotato(tx: Transaction, updates: Buffer[], packageId: string): Promise<any> {
+  async verifyVaasAndGetHotPotato(
+    tx: Transaction,
+    updates: Buffer[],
+    packageId: string,
+  ): Promise<any> {
     let priceUpdatesHotPotato;
     if (updates.length > 1) {
       throw new Error(
@@ -141,7 +145,7 @@ export class SuiPythClient {
     packageId: string,
     feedIds: HexString[],
     priceUpdatesHotPotato: any,
-    coins: Coin[]
+    coins: Coin[],
   ) {
     const priceInfoObjects: ObjectId[] = [];
     let coinId = 0;
@@ -185,7 +189,11 @@ export class SuiPythClient {
     feedIds: HexString[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(tx, updates, packageId);
+    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(
+      tx,
+      updates,
+      packageId,
+    );
 
     const baseUpdateFee = await this.getBaseUpdateFee();
     const coins = tx.splitCoins(
@@ -193,7 +201,13 @@ export class SuiPythClient {
       feedIds.map(() => tx.pure.u64(baseUpdateFee)),
     );
 
-    return await this.executePriceFeedUpdates(tx, packageId, feedIds, priceUpdatesHotPotato, coins);
+    return await this.executePriceFeedUpdates(
+      tx,
+      packageId,
+      feedIds,
+      priceUpdatesHotPotato,
+      coins,
+    );
   }
 
   /**
@@ -210,9 +224,19 @@ export class SuiPythClient {
     coins: Coin[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(tx, updates, packageId);
+    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(
+      tx,
+      updates,
+      packageId,
+    );
 
-    return await this.executePriceFeedUpdates(tx, packageId, feedIds, priceUpdatesHotPotato, coins);
+    return await this.executePriceFeedUpdates(
+      tx,
+      packageId,
+      feedIds,
+      priceUpdatesHotPotato,
+      coins,
+    );
   }
 
   async createPriceFeed(tx: Transaction, updates: Buffer[]) {
