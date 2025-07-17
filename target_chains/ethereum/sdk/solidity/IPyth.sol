@@ -105,8 +105,7 @@ interface IPyth is IPythEvents {
     /// within `minPublishTime` and `maxPublishTime`.
     ///
     /// You can use this method if you want to use a Pyth price at a fixed time and not the most recent price;
-    /// otherwise, please consider using `updatePriceFeeds`. This method may store the price updates on-chain, if they
-    /// are more recent than the current stored prices.
+    /// otherwise, please consider using `updatePriceFeeds`. This method will not store the price updates on-chain.
     ///
     /// This method requires the caller to pay a fee in wei; the required fee can be computed by calling
     /// `getUpdateFee` with the length of the `updateData` array.
