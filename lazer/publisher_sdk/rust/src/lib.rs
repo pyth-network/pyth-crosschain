@@ -3,6 +3,7 @@ use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use crate::state::FeedState;
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
 use pyth_lazer_protocol::symbol_state::SymbolState;
+use pyth_lazer_protocol::FeedKind;
 
 pub mod transaction_envelope {
     pub use crate::protobuf::transaction_envelope::*;
@@ -84,6 +85,24 @@ impl From<SymbolState> for FeedState {
             SymbolState::ComingSoon => FeedState::COMING_SOON,
             SymbolState::Stable => FeedState::STABLE,
             SymbolState::Inactive => FeedState::INACTIVE,
+        }
+    }
+}
+
+impl From<FeedKind> for protobuf::state::FeedKind {
+    fn from(value: FeedKind) -> Self {
+        match value {
+            FeedKind::Price => protobuf::state::FeedKind::PRICE,
+            FeedKind::FundingRate => protobuf::state::FeedKind::FUNDING_RATE,
+        }
+    }
+}
+
+impl From<protobuf::state::FeedKind> for FeedKind {
+    fn from(value: protobuf::state::FeedKind) -> Self {
+        match value {
+            protobuf::state::FeedKind::PRICE => FeedKind::Price,
+            protobuf::state::FeedKind::FUNDING_RATE => FeedKind::FundingRate,
         }
     }
 }

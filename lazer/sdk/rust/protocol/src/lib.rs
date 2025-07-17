@@ -2,6 +2,7 @@
 
 pub mod api;
 pub mod binary_update;
+mod feed_kind;
 pub mod jrpc;
 pub mod message;
 pub mod payload;
@@ -12,6 +13,8 @@ mod serde_str;
 pub mod subscription;
 pub mod symbol_state;
 pub mod time;
+
+pub use crate::feed_kind::FeedKind;
 
 #[test]
 fn magics_in_big_endian() {
