@@ -8,5 +8,5 @@
   Fuels version: 0.96.1
 */
 
-export { PythContract } from './PythContract';
-export { PythContractFactory } from './PythContractFactory';
+export { PythContract } from "./PythContract";
+export { PythContractFactory } from "./PythContractFactory";
