@@ -208,6 +208,7 @@ impl WormholeContract {
                 .try_into()
                 .map_err(|_| WormholeError::InvalidVAAFormat)?,
         );
+
         cursor += 4;
 
         // Get number of signatures
@@ -542,6 +543,7 @@ mod tests {
     use super::*;
     use alloc::vec;
     use core::str::FromStr;
+    use hex::FromHex;
     use k256::ecdsa::SigningKey;
     use motsu::prelude::Contract;
     use motsu::prelude::*;
@@ -563,9 +565,7 @@ mod tests {
 
     #[cfg(test)]
     fn create_vaa_bytes(input_string: &str) -> Vec<u8> {
-        let vaa_bytes = general_purpose::STANDARD.decode(input_string).unwrap();
-        let vaa: Vec<u8> = vaa_bytes;
-        vaa
+        Vec::from_hex(input_string).expect("Invalid hex input")
     }
 
     #[cfg(test)]
@@ -1530,19 +1530,19 @@ mod tests {
         alice: Address,
     ) {
         let guardians =
-            vec![Address::from_str("0x6579c588be2026d866231cccc364881cc1219c56").unwrap()];
+            vec![Address::from_str("0x7e5f4552091a69125d5dfcb7b8c2659029395bdf").unwrap()];
         let governance_contract =
             Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
         let _ = wormhole_contract.sender(alice).initialize(
             guardians.clone(),
-            4,
+            0,
             CHAIN_ID,
             GOVERNANCE_CHAIN_ID,
             governance_contract,
         );
 
-        let guardian_set_result = wormhole_contract.sender(alice).get_guardian_set(4);
+        let guardian_set_result = wormhole_contract.sender(alice).get_guardian_set(0);
         assert!(
             guardian_set_result.is_ok(),
             "Guardian set retrieval should work - contract is initialized"
@@ -1551,10 +1551,11 @@ mod tests {
         let test_vaa = create_vaa_bytes(
             "0100000000010069825ef00344cf745b6e72a41d4f869d4e90de517849360c72bf94efc97681671d826e484747b21a80c8f1e7816021df9f55e458a6e7a717cb2bd2a1e85fd57100499602d200000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010200020100010000000000000000000000000000000000000000000000000000000000001111",
         );
+        println!("test bytes: {:?}", test_vaa.clone());
         let result = wormhole_contract
             .sender(alice)
             .parse_and_verify_vm(test_vaa);
-        println!("{:?}", result.clone().unwrap_err());
+
         assert!(
             result.is_ok(),
             "Pyth governance instruction should be parsed and verified successfully"

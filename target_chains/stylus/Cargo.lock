@@ -6090,6 +6090,7 @@ version = "0.0.1"
 dependencies = [
  "alloy-primitives 0.7.6",
  "base64 0.21.7",
+ "hex",
  "k256",
  "mini-alloc 0.4.2",
  "motsu",

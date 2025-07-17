@@ -21,6 +21,7 @@ k256 = { version = "0.13.3", default-features = false, features = ["ecdsa"] }
 [dev-dependencies]
 motsu.workspace = true
 base64 = "0.21"
+hex = "0.4"
 
 [lib]
 name = "wormhole_contract"
