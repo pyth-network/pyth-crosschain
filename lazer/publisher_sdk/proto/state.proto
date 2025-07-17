@@ -55,6 +55,16 @@ enum FeedState {
     INACTIVE = 2;
 }
 
+// Feed kind determines the set of data fields available in the feed.
+// It also determines the kind of data accepted from publishers for this feed
+// (`PriceUpdate` or `FundingRateUpdate`).
+enum FeedKind {
+    // Fields: price, best_bid_price, best_ask_price
+    PRICE = 0;
+    // Fields: price, rate.
+    FUNDING_RATE = 1;
+}
+
 // An item of the state describing a feed.
 message Feed {
     // [required] ID of the feed.
@@ -82,8 +92,10 @@ message Feed {
     optional google.protobuf.Duration expiry_time = 105;
     // [required] Market schedule in Pythnet format.
     optional string market_schedule = 106;
-    // [required] Feed state
+    // [required] Feed state.
     optional FeedState state = 107;
+    // [required] Feed kind.
+    optional FeedKind kind = 108;
 
 
     // [required] Feed status in the current shard. Disabled feeds will not be visible in
@@ -92,7 +104,7 @@ message Feed {
     //
     // If a feed is present in
     // multiple shards, it must only be active in one of them at each time.
-    // To enforce this, `pending_activation` and `pending_deactivation` fields
+    // To enforce this, `enable_in_shard_timestamp` and `disable_in_shard_timestamp` fields
     // can be used to deactivate a feed in one shard and activate it in another shard
     // at the same instant.
     optional bool is_enabled_in_shard = 201;
