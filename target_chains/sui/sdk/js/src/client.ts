@@ -185,7 +185,7 @@ export class SuiPythClient {
     feedIds: HexString[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    let priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(tx, updates, packageId);
+    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(tx, updates, packageId);
 
     const baseUpdateFee = await this.getBaseUpdateFee();
     const coins = tx.splitCoins(
@@ -210,7 +210,7 @@ export class SuiPythClient {
     coins: Coin[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    let priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(tx, updates, packageId);
+    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(tx, updates, packageId);
 
     return await this.executePriceFeedUpdates(tx, packageId, feedIds, priceUpdatesHotPotato, coins);
   }
