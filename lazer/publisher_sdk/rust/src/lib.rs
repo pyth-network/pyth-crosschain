@@ -25,14 +25,16 @@ pub mod state {
     pub use crate::protobuf::state::*;
 }
 
+pub mod dynamic_value {
+    pub use crate::protobuf::dynamic_value::*;
+}
+
 #[allow(rustdoc::broken_intra_doc_links)]
 mod protobuf {
     include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 }
 
-mod dynamic_value;
-
-pub use crate::dynamic_value::DynamicValue;
+mod convert_dynamic_value;
 
 impl From<FeedUpdateParams> for FeedUpdate {
     fn from(value: FeedUpdateParams) -> Self {

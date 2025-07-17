@@ -4,13 +4,11 @@ use protobuf::{
     well_known_types::{duration::Duration, timestamp::Timestamp},
     MessageField,
 };
+use pyth_lazer_protocol::DynamicValue;
 
-use crate::{
-    protobuf::dynamic_value::{
-        dynamic_value::{List, Map, MapItem, Value},
-        DynamicValue as ProtobufDynamicValue,
-    },
-    DynamicValue,
+use crate::protobuf::dynamic_value::{
+    dynamic_value::{List, Map, MapItem, Value},
+    DynamicValue as ProtobufDynamicValue,
 };
 
 #[test]
