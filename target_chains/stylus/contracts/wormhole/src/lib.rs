@@ -496,7 +496,7 @@ impl IWormhole for WormholeContract {
 mod tests {
     use super::*;
     use alloc::vec;
-    use motsu::prelude::DefaultStorage;
+    use motsu::prelude::*;
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
     use stylus_sdk::alloy_primitives::keccak256;
@@ -623,16 +623,15 @@ mod tests {
     }
 
     #[cfg(test)]
-    fn deploy_with_test_guardian() -> WormholeContract {
-        let mut contract = WormholeContract::default();
+    fn deploy_with_test_guardian(wormhole_contract: &Contract<WormholeContract>, alice: &Address) {
         let guardians = vec![test_guardian_address1()];
         let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        match contract.store_gs(0, guardians.clone(), 0) {
+
+        match wormhole_contract.sender(*alice).store_gs(0, guardians.clone(), 0) {
             Ok(_) => {}
             Err(_) => unreachable!(),
         }
-        contract.initialize(guardians, 1, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
-        contract
+        wormhole_contract.sender(*alice).initialize(guardians, 1, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
     }
 
     #[cfg(test)]
@@ -860,8 +859,8 @@ mod tests {
     }
 
     #[motsu::test]
-    fn test_verify_vm_invalid_guardian_set() {
-        let contract = deploy_with_test_guardian();
+    fn test_verify_vm_invalid_guardian_set(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+        let contract = deploy_with_test_guardian(wormhole_contract, alice);
         let vaa = create_test_vaa(999, vec![]);
 
         let result = contract.verify_vm(&vaa);
@@ -869,11 +868,11 @@ mod tests {
     }
 
     #[motsu::test]
-    fn test_verify_vm_insufficient_signatures() {
-        let contract = deploy_with_test_guardian();
+    fn test_verify_vm_insufficient_signatures(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+        deploy_with_test_guardian(wormhole_contract, alice);
         let vaa = create_test_vaa(0, vec![]);
 
-        let result = contract.verify_vm(&vaa);
+        let result = wormhole_contract.sender(*alice).verify_vm(&vaa);
         assert!(matches!(result, Err(WormholeError::InsufficientSignatures)));
     }
 
@@ -902,14 +901,14 @@ mod tests {
     }
 
     #[motsu::test]
-    fn test_verify_vm_invalid_guardian_index() {
-        let contract = deploy_with_test_guardian();
+    fn test_verify_vm_invalid_guardian_index(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+        deploy_with_test_guardian(wormhole_contract, alice);
         let signatures = vec![
             create_guardian_signature(5),
         ];
         let vaa = create_test_vaa(0, signatures);
 
-        let result = contract.verify_vm(&vaa);
+        let result = wormhole_contract.sender(*alice).verify_vm(&vaa);
         assert!(matches!(result, Err(WormholeError::InvalidGuardianIndex)));
     }
 
@@ -946,19 +945,19 @@ mod tests {
     }
 
     #[motsu::test]
-    fn test_rejects_invalid_guardian_set_index() {
-        let contract = deploy_with_test_guardian();
+    fn test_rejects_invalid_guardian_set_index(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+        deploy_with_test_guardian(wormhole_contract, alice);
 
-        let result = contract.get_gs_internal(999);
+        let result = wormhole_contract.sender(*alice).get_gs_internal(999);
         assert!(result.is_err());
     }
 
     #[motsu::test]
-    fn test_submit_guardian_set_rejects_invalid_emitter() {
-        let contract = deploy_with_test_guardian();
+    fn test_submit_guardian_set_rejects_invalid_emitter(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+        deploy_with_test_guardian(wormhole_contract, alice);
 
         let vaa = create_test_vaa_with_emitter(0, vec![], Address::from([0x99u8; 20]));
-        let result = contract.verify_vm(&vaa);
+        let result = wormhole_contract.sender(*alice).verify_vm(&vaa);
         assert!(result.is_err());
     }
 
