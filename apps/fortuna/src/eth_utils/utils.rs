@@ -8,7 +8,7 @@ use {
     ethers::{
         contract::{ContractCall, ContractError},
         middleware::Middleware,
-        providers::ProviderError,
+        providers::{MiddlewareError, ProviderError},
         signers::Signer,
         types::{
             transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, U256,
@@ -253,7 +253,19 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     client
         .fill_transaction(&mut transaction, None)
         .await
-        .map_err(|e| backoff::Error::transient(SubmitTxError::GasPriceEstimateError(e)))?;
+        .map_err(|e| {
+            // If there is revert data, the contract reverted during gas usage estimation.
+            if let Some(e) = e.as_error_response() {
+                if let Some(e) = e.as_revert_data() {
+                    return backoff::Error::transient(SubmitTxError::GasUsageEstimateError(
+                        ContractError::Revert(e.clone()),
+                    ));
+                }
+            }
+
+            // If there is no revert data, there was likely an error during gas price polling.
+            backoff::Error::transient(SubmitTxError::GasPriceEstimateError(e))
+        })?;
 
     // Apply the fee escalation policy. Note: the unwrap_or_default should never default as we have a gas oracle
     // in the client that sets the gas price.

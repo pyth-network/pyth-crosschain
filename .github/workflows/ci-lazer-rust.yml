@@ -41,6 +41,12 @@ jobs:
       - name: Clippy check
         run: cargo clippy -p pyth-lazer-protocol -p pyth-lazer-client -p pyth-lazer-publisher-sdk --all-targets -- --deny warnings
         if: success() || failure()
+      - name: Clippy check with mry
+        run: cargo clippy -F mry -p pyth-lazer-protocol --all-targets -- --deny warnings
+        if: success() || failure()
       - name: test
         run: cargo test -p pyth-lazer-protocol -p pyth-lazer-client -p pyth-lazer-publisher-sdk
+        if: success() || failure()
+      - name: test with mry
+        run: cargo test -F mry -p pyth-lazer-protocol
         if: success() || failure()

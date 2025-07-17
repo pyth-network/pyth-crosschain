@@ -7,7 +7,7 @@ use anyhow::{bail, ensure, Context};
 use humantime::format_duration;
 use protobuf::dynamic_value::{dynamic_value, DynamicValue};
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
-use pyth_lazer_protocol::router::TimestampUs;
+use pyth_lazer_protocol::time::TimestampUs;
 
 pub mod transaction_envelope {
     pub use crate::protobuf::transaction_envelope::*;
@@ -141,7 +141,7 @@ impl TryFrom<DynamicValue> for serde_value::Value {
             }
             dynamic_value::Value::TimestampValue(ts) => {
                 let ts = TimestampUs::try_from(&ts)?;
-                Ok(serde_value::Value::U64(ts.0))
+                Ok(serde_value::Value::U64(ts.as_micros()))
             }
             dynamic_value::Value::List(list) => {
                 let mut output = Vec::new();

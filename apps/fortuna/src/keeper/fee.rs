@@ -44,6 +44,13 @@ async fn calculate_fair_fee_withdrawal_amount<M: Middleware + 'static>(
         .await
         .map_err(|e| anyhow!("Error while getting current keeper balance. error: {:?}", e))?;
 
+    tracing::info!(
+        "Contract has available fees: {:?}, current keeper ({:?}) has balance: {:?}",
+        available_fees,
+        keeper_address,
+        current_balance
+    );
+
     // Calculate total funds across all keepers + available fees
     let mut total_funds = current_balance + available_fees;
 
@@ -55,6 +62,7 @@ async fn calculate_fair_fee_withdrawal_amount<M: Middleware + 'static>(
                 e
             )
         })?;
+        tracing::info!("Keeper address {:?} has balance: {:?}", address, balance);
         total_funds += balance;
     }
 
@@ -174,7 +182,7 @@ pub async fn withdraw_fees_if_necessary(
     if withdrawal_amount < min_withdrawal_amount {
         // We don't have enough to meaningfully top up the balance.
         // NOTE: This log message triggers a grafana alert. If you want to change the text, please change the alert also.
-        tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up.", keeper_balance, min_balance);
+        tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up. (withdrawal_amount={:?} < min_withdrawal_amount={:?})", keeper_balance, min_balance, withdrawal_amount, min_withdrawal_amount);
         return Ok(());
     }
 
