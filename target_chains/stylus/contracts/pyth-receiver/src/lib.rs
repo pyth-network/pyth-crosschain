@@ -543,9 +543,13 @@ impl PythReceiver {
         let instruction = governance_structs::parse_instruction(vm.body.payload.to_vec())
             .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
 
-        if instruction.target_chain_id != 0
-            && instruction.target_chain_id != self.vm().chain_id() as u16
-        {
+        let chain_id_config = Call::new();
+
+        let wormhole_id = wormhole
+            .chain_id(chain_id_config)
+            .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
+
+        if instruction.target_chain_id != 0 && instruction.target_chain_id != wormhole_id {
             return Err(PythReceiverError::InvalidGovernanceTarget);
         }
 

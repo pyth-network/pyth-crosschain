@@ -43,20 +43,30 @@ impl core::fmt::Debug for PythReceiverError {
             PythReceiverError::InvalidMerklePath => write!(f, "InvalidMerklePath"),
             PythReceiverError::InvalidUnknownSource => write!(f, "InvalidUnknownSource"),
             PythReceiverError::NewPriceUnavailable => write!(f, "NewPriceUnavailable"),
-            PythReceiverError::InvalidAccumulatorMessageType => write!(f, "InvalidAccumulatorMessageType"),
+            PythReceiverError::InvalidAccumulatorMessageType => {
+                write!(f, "InvalidAccumulatorMessageType")
+            }
             PythReceiverError::InsufficientFee => write!(f, "InsufficientFee"),
             PythReceiverError::InvalidEmitterAddress => write!(f, "InvalidEmitterAddress"),
             PythReceiverError::TooManyUpdates => write!(f, "TooManyUpdates"),
-            PythReceiverError::PriceFeedNotFoundWithinRange => write!(f, "PriceFeedNotFoundWithinRange"),
+            PythReceiverError::PriceFeedNotFoundWithinRange => {
+                write!(f, "PriceFeedNotFoundWithinRange")
+            }
             PythReceiverError::NoFreshUpdate => write!(f, "NoFreshUpdate"),
             PythReceiverError::PriceFeedNotFound => write!(f, "PriceFeedNotFound"),
             PythReceiverError::InvalidGovernanceMessage => write!(f, "InvalidGovernanceMessage"),
             PythReceiverError::InvalidGovernanceTarget => write!(f, "InvalidGovernanceTarget"),
             PythReceiverError::InvalidGovernanceAction => write!(f, "InvalidGovernanceAction"),
-            PythReceiverError::InvalidGovernanceDataSource => write!(f, "InvalidGovernanceDataSource"),
+            PythReceiverError::InvalidGovernanceDataSource => {
+                write!(f, "InvalidGovernanceDataSource")
+            }
             PythReceiverError::OldGovernanceMessage => write!(f, "OldGovernanceMessage"),
-            PythReceiverError::GovernanceMessageAlreadyExecuted => write!(f, "GovernanceMessageAlreadyExecuted"),
-            PythReceiverError::InvalidWormholeAddressToSet => write!(f, "InvalidWormholeAddressToSet"),
+            PythReceiverError::GovernanceMessageAlreadyExecuted => {
+                write!(f, "GovernanceMessageAlreadyExecuted")
+            }
+            PythReceiverError::InvalidWormholeAddressToSet => {
+                write!(f, "InvalidWormholeAddressToSet")
+            }
         }
     }
 }
@@ -70,25 +80,37 @@ impl core::fmt::Display for PythReceiverError {
             PythReceiverError::InvalidVaa => write!(f, "Invalid VAA"),
             PythReceiverError::InvalidWormholeMessage => write!(f, "Invalid Wormhole message"),
             PythReceiverError::InvalidMerkleProof => write!(f, "Invalid Merkle proof"),
-            PythReceiverError::InvalidAccumulatorMessage => write!(f, "Invalid accumulator message"),
+            PythReceiverError::InvalidAccumulatorMessage => {
+                write!(f, "Invalid accumulator message")
+            }
             PythReceiverError::InvalidMerkleRoot => write!(f, "Invalid Merkle root"),
             PythReceiverError::InvalidMerklePath => write!(f, "Invalid Merkle path"),
             PythReceiverError::InvalidUnknownSource => write!(f, "Invalid unknown source"),
             PythReceiverError::NewPriceUnavailable => write!(f, "New price unavailable"),
-            PythReceiverError::InvalidAccumulatorMessageType => write!(f, "Invalid accumulator message type"),
+            PythReceiverError::InvalidAccumulatorMessageType => {
+                write!(f, "Invalid accumulator message type")
+            }
             PythReceiverError::InsufficientFee => write!(f, "Insufficient fee"),
             PythReceiverError::InvalidEmitterAddress => write!(f, "Invalid emitter address"),
             PythReceiverError::TooManyUpdates => write!(f, "Too many updates"),
-            PythReceiverError::PriceFeedNotFoundWithinRange => write!(f, "Price feed not found within range"),
+            PythReceiverError::PriceFeedNotFoundWithinRange => {
+                write!(f, "Price feed not found within range")
+            }
             PythReceiverError::NoFreshUpdate => write!(f, "No fresh update"),
             PythReceiverError::PriceFeedNotFound => write!(f, "Price feed not found"),
             PythReceiverError::InvalidGovernanceMessage => write!(f, "Invalid governance message"),
             PythReceiverError::InvalidGovernanceTarget => write!(f, "Invalid governance target"),
             PythReceiverError::InvalidGovernanceAction => write!(f, "Invalid governance action"),
-            PythReceiverError::InvalidGovernanceDataSource => write!(f, "Invalid governance data source"),
+            PythReceiverError::InvalidGovernanceDataSource => {
+                write!(f, "Invalid governance data source")
+            }
             PythReceiverError::OldGovernanceMessage => write!(f, "Old governance message"),
-            PythReceiverError::GovernanceMessageAlreadyExecuted => write!(f, "Governance message already executed"),
-            PythReceiverError::InvalidWormholeAddressToSet => write!(f, "Invalid Wormhole address to set"),
+            PythReceiverError::GovernanceMessageAlreadyExecuted => {
+                write!(f, "Governance message already executed")
+            }
+            PythReceiverError::InvalidWormholeAddressToSet => {
+                write!(f, "Invalid Wormhole address to set")
+            }
         }
     }
 }

@@ -547,7 +547,6 @@ mod tests {
     use motsu::prelude::Contract;
     use core::str::FromStr;
     use k256::ecdsa::SigningKey;
-    use motsu::prelude::DefaultStorage;
     use stylus_sdk::alloy_primitives::keccak256;
 
     #[cfg(test)]
