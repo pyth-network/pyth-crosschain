@@ -5,11 +5,12 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 
 import "dynamic_value.proto";
+import "state.proto";
 
 // If any field documented as `[required]` is not present in the instruction,
 // the instruction will be rejected.
 
-package pyth_lazer_transaction;
+package pyth_lazer;
 
 // Representation of a complete governance instruction. This value will be signed
 // by a governance source.
@@ -130,9 +131,10 @@ message Permissions {
     enum UpdateFeedAction {
         // Required by protobuf. Instruction will be rejected if this value is encountered.
         UPDATE_FEED_ACTION_UNSPECIFIED = 0;
-        UPDATE_FEED_METADATA = 101;
-        ACTIVATE_FEED = 102;
-        DEACTIVATE_FEED = 103;
+        UPDATE_FEED_PROPERTIES = 101;
+        UPDATE_FEED_METADATA = 102;
+        ENABLE_FEED_IN_SHARD = 103;
+        DISABLE_FEED_IN_SHARD = 104;
         REMOVE_FEED = 199;
     }
 
@@ -302,17 +304,31 @@ message SetPublisherActive {
     optional bool is_active = 1;
 }
 
-// Feed is inactive when added, meaning that it will be available to publishers but not to consumers.
+// Add a new feed. Refer to `Feed` message fields documentation.
 message AddFeed {
-    // [required] ID of the feed. Must be unique (within the shard).
+    // [required]
     optional uint32 feed_id = 1;
-    // [required] Feed metadata. Some properties are required (name, exponent, etc.).
-    // Known properties must have the expected type.
-    // Additional arbitrary properties are allowed.
-    // (TODO: document known metadata properties)
-    optional DynamicValue.Map metadata = 2;
-    // IDs of publishers enabled for this feed.
-    repeated uint32 permissioned_publishers = 3;
+    // [required]
+    optional DynamicValue.Map metadata = 3;
+    // [required]
+    optional string name = 101;
+    // [required]
+    optional sint32 exponent = 102;
+    // [required]
+    optional uint32 min_publishers = 103;
+    // [required]
+    optional google.protobuf.Duration min_rate = 104;
+    // [required]
+    optional google.protobuf.Duration expiry_time = 105;
+    // [required]
+    optional string market_schedule = 106;
+    // [required]
+    optional FeedState state = 107;
+    // [required]
+    optional bool is_enabled_in_shard = 201;
+
+    // TODO: IDs of publishers enabled for this feed.
+    // repeated uint32 permissioned_publishers = 3;
 }
 
 message UpdateFeed {
@@ -321,11 +337,36 @@ message UpdateFeed {
     // [required]
     // Note: when adding a new variant here, update `Permissions` as well.
     oneof action {
-        UpdateFeedMetadata update_feed_metadata = 101;
-        ActivateFeed activate_feed = 102;
-        DeactivateFeed deactivate_feed = 103;
+        UpdateFeedProperties update_feed_properties = 101;
+        UpdateFeedMetadata update_feed_metadata = 102;
+        EnableFeedInShard enable_feed_in_shard = 103;
+        DisableFeedInShard disable_feed_in_shard = 104;
         google.protobuf.Empty remove_feed = 199;
     }
+}
+
+// Update a feed's properties. The feed will be updated with values present in each field.
+// If a value is not supplied, the corresponding property will remain unchanged.
+// Refer to `Feed` message fields documentation.
+message UpdateFeedProperties {
+    // [optional]
+    optional DynamicValue.Map metadata = 3;
+    // [optional]
+    optional string name = 101;
+    // [optional]
+    optional sint32 exponent = 102;
+    // [optional]
+    optional uint32 min_publishers = 103;
+    // [optional]
+    optional google.protobuf.Duration min_rate = 104;
+    // [optional]
+    optional google.protobuf.Duration expiry_time = 105;
+    // [optional]
+    optional string market_schedule = 106;
+    // [optional]
+    optional FeedState state = 107;
+    // [optional]
+    optional bool is_enabled_in_shard = 201;
 }
 
 message UpdateFeedMetadata {
@@ -335,29 +376,29 @@ message UpdateFeedMetadata {
     optional DynamicValue value = 2;
 }
 
-// Set the feed as active or shedule an activation.
-// If there was already a pending activation or deactivation, it will be cleared
+// Set the feed as enabled in this shard or shedule it for a certain timestamp.
+// If there was already a pending status change, it will be cleared
 // when this governance instruction is processed.
-// Warning: there must never be two feeds with the same name active at the same time
+// Warning: there must never be two feeds with the same name enabled at the same time
 // within a shard group. This cannot be enforced within a shard. When a feed needs to be
-// moved between shards, use `activation_timestamp` and `deactivation_timestamp`
-// to deactivate it in the old shard and activate it in the new shard at the same time.
-message ActivateFeed {
-    // [optional] If provided, the feed will activate at the specified timestamp.
-    // If `activation_timestamp` is already passed or if it's unset,
-    // the feed will be activated immediately when this
+// moved between shards, use `enable_in_shard_timestamp` and `disable_in_shard_timestamp`
+// to disable it in the old shard and enable it in the new shard at the same time.
+message EnableFeedInShard {
+    // [optional] If provided, the feed will be enabled at the specified timestamp.
+    // If `enable_in_shard_timestamp` is already passed or if it's unset,
+    // the feed will be enabled immediately when this
     // governance instruction is processed.
-    optional google.protobuf.Timestamp activation_timestamp = 1;
+    optional google.protobuf.Timestamp enable_in_shard_timestamp = 1;
 }
 
-// Set the feed as inactive or shedule a deactivation.
-// If there was already a pending activation or deactivation, it will be cleared
+// Set the feed as disabled in this shard or shedule it for a certain timestamp.
+// If there was already a pending status change, it will be cleared
 // when this governance instruction is processed.
-// See also: `ActivateFeed` docs.
-message DeactivateFeed {
-    // [optional] If provided, the feed will deactivate at the specified timestamp.
-    // If `deactivation_timestamp` is already passed or if it's unset,
-    // the feed will be deactivated immediately when this
+// See also: `EnableFeedInShard` docs.
+message DisableFeedInShard {
+    // [optional] If provided, the feed will be disabled at the specified timestamp.
+    // If `disable_in_shard_timestamp` is already passed or if it's unset,
+    // the feed will be disabled immediately when this
     // governance instruction is processed.
-    optional google.protobuf.Timestamp deactivation_timestamp = 1;
+    optional google.protobuf.Timestamp disable_in_shard_timestamp = 1;
 }
