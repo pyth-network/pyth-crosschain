@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use base64::Engine;
 use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
 use pyth_lazer_client::client::PythLazerClient;
@@ -41,6 +43,7 @@ async fn main() -> anyhow::Result<()> {
         get_lazer_access_token(),
         4,
         PythLazerExponentialBackoffBuilder::default().build(),
+        Duration::from_secs(5), // Timeout for each connection
     )?;
 
     let stream = client

@@ -21,6 +21,7 @@ pub struct PythLazerClient {
     num_connections: usize,
     ws_connections: Vec<PythLazerResilientWSConnection>,
     backoff: ExponentialBackoff,
+    timeout: Duration,
 }
 
 impl PythLazerClient {
@@ -35,6 +36,7 @@ impl PythLazerClient {
         access_token: String,
         num_connections: usize,
         backoff: ExponentialBackoff,
+        timeout: Duration,
     ) -> Result<Self> {
         if backoff.max_elapsed_time.is_some() {
             bail!("max_elapsed_time is not supported in Pyth Lazer client");
@@ -48,6 +50,7 @@ impl PythLazerClient {
             num_connections,
             ws_connections: Vec::with_capacity(num_connections),
             backoff,
+            timeout,
         })
     }
 
@@ -62,6 +65,7 @@ impl PythLazerClient {
                 endpoint,
                 self.access_token.clone(),
                 self.backoff.clone(),
+                self.timeout,
                 ws_connection_sender.clone(),
             );
             self.ws_connections.push(connection);

@@ -35,10 +35,12 @@ impl PythLazerResilientWSConnection {
         endpoint: Url,
         access_token: String,
         backoff: ExponentialBackoff,
+        timeout: Duration,
         sender: mpsc::Sender<AnyResponse>,
     ) -> Self {
         let (request_sender, mut request_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let mut task = PythLazerResilientWSConnectionTask::new(endpoint, access_token, backoff);
+        let mut task =
+            PythLazerResilientWSConnectionTask::new(endpoint, access_token, backoff, timeout);
 
         tokio::spawn(async move {
             if let Err(e) = task.run(sender, &mut request_receiver).await {
@@ -71,15 +73,22 @@ struct PythLazerResilientWSConnectionTask {
     access_token: String,
     subscriptions: Vec<SubscribeRequest>,
     backoff: ExponentialBackoff,
+    timeout: Duration,
 }
 
 impl PythLazerResilientWSConnectionTask {
-    pub fn new(endpoint: Url, access_token: String, backoff: ExponentialBackoff) -> Self {
+    pub fn new(
+        endpoint: Url,
+        access_token: String,
+        backoff: ExponentialBackoff,
+        timeout: Duration,
+    ) -> Self {
         Self {
             endpoint,
             access_token,
             subscriptions: Vec::new(),
             backoff,
+            timeout,
         }
     }
 
@@ -130,10 +139,12 @@ impl PythLazerResilientWSConnectionTask {
                 .await?;
         }
         loop {
+            let timeout_response = tokio::time::timeout(self.timeout, stream.next());
+
             select! {
-                response = stream.next() => {
+                response = timeout_response => {
                     match response {
-                        Some(response) => match response {
+                        Ok(Some(response)) => match response {
                             Ok(response) => {
                                 sender
                                     .send(response)
@@ -144,8 +155,11 @@ impl PythLazerResilientWSConnectionTask {
                                 bail!("WebSocket stream error: {}", e);
                             }
                         },
-                        None => {
+                        Ok(None) => {
                             bail!("WebSocket stream ended unexpectedly");
+                        }
+                        Err(_elapsed) => {
+                            bail!("WebSocket stream timed out");
                         }
                     }
                 }
