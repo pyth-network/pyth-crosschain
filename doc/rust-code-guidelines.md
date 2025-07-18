@@ -60,7 +60,7 @@ The recommendations on this page should help with dealing with these lints.
 
 Refer also to [Clippy lints documentation](https://rust-lang.github.io/rust-clippy/master/index.html) for more information about the lints.
 
-If the lint is a false positive, put `#[allow(lint_name, reason = "...")]` on the relevant line or block and and specify the reason why the code is correct.
+If the lint is a false positive, put `#[allow(lint_name, reason = "...")]` on the relevant line or block and specify the reason why the code is correct.
 
 Many of the lints (e.g. most of the panic-related lints) can be allowed globally for tests and other non-production code.
 
