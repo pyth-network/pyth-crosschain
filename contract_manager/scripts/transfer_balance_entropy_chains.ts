@@ -160,6 +160,9 @@ async function transferOnChain(
       transferAmountEth = (balanceEth - gasCostEth) * transferRatio!;
     }
 
+    // Round to 10 decimal places to avoid Web3 conversion errors
+    transferAmountEth = Math.round(transferAmountEth * 1e10) / 1e10;
+
     // Validate transfer amount
     if (transferAmountEth <= 0) {
       console.log(
