@@ -6,10 +6,8 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use backoff::ExponentialBackoff;
-use futures_util::stream;
 use pyth_lazer_protocol::subscription::{SubscribeRequest, SubscriptionId};
 use tokio::sync::mpsc::{self, error::TrySendError};
-use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use tracing::{error, warn};
 use ttl_cache::TtlCache;
 use url::Url;
@@ -22,7 +20,6 @@ pub struct PythLazerClient {
     access_token: String,
     num_connections: usize,
     ws_connections: Vec<PythLazerResilientWSConnection>,
-    receivers: Vec<mpsc::Receiver<AnyResponse>>,
     backoff: ExponentialBackoff,
 }
 
@@ -50,33 +47,30 @@ impl PythLazerClient {
             access_token,
             num_connections,
             ws_connections: Vec::with_capacity(num_connections),
-            receivers: Vec::with_capacity(num_connections),
             backoff,
         })
     }
 
     pub async fn start(&mut self, channel_capacity: usize) -> Result<mpsc::Receiver<AnyResponse>> {
         let (sender, receiver) = mpsc::channel::<AnyResponse>(channel_capacity);
+        let (ws_connection_sender, mut ws_connection_receiver) =
+            mpsc::channel::<AnyResponse>(CHANNEL_CAPACITY);
 
         for i in 0..self.num_connections {
             let endpoint = self.endpoints[i % self.endpoints.len()].clone();
-            let (sender, receiver) = mpsc::channel::<AnyResponse>(CHANNEL_CAPACITY);
             let connection = PythLazerResilientWSConnection::new(
                 endpoint,
                 self.access_token.clone(),
                 self.backoff.clone(),
-                sender.clone(),
+                ws_connection_sender.clone(),
             );
             self.ws_connections.push(connection);
-            self.receivers.push(receiver);
         }
 
-        let streams: Vec<_> = self.receivers.drain(..).map(ReceiverStream::new).collect();
-        let mut merged_stream = stream::select_all(streams);
         let mut seen_updates = TtlCache::new(DEDUP_CACHE_SIZE);
 
         tokio::spawn(async move {
-            while let Some(response) = merged_stream.next().await {
+            while let Some(response) = ws_connection_receiver.recv().await {
                 let cache_key = response.cache_key();
                 if seen_updates.contains_key(&cache_key) {
                     continue;
