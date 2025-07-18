@@ -33,7 +33,7 @@ pub struct RelayerRequest(pub http::Request<Incoming>);
 
 const PUBLISHER_WS_URI_V1: &str = "/v1/publisher";
 const PUBLISHER_WS_URI_V2: &str = "/v2/publisher";
-const JRPC_WS_URI_V1: &str = "/v1/jprc";
+const JRPC_WS_URI_V1: &str = "/v1/jrpc";
 
 const READINESS_PROBE_PATH: &str = "/ready";
 const LIVENESS_PROBE_PATH: &str = "/live";
