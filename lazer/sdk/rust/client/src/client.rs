@@ -12,12 +12,13 @@ use tokio::sync::mpsc::{self, error::TrySendError};
 use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use tracing::{error, warn};
 use ttl_cache::TtlCache;
+use url::Url;
 
 const DEDUP_CACHE_SIZE: usize = 100_000;
 const DEDUP_TTL: Duration = Duration::from_secs(10);
 
 pub struct PythLazerClient {
-    endpoints: Vec<String>,
+    endpoints: Vec<Url>,
     access_token: String,
     num_connections: usize,
     ws_connections: Vec<PythLazerResilientWSConnection>,
@@ -33,7 +34,7 @@ impl PythLazerClient {
     /// * `access_token` - The access token for authentication
     /// * `num_connections` - The number of WebSocket connections to maintain
     pub fn new(
-        endpoints: Vec<String>,
+        endpoints: Vec<Url>,
         access_token: String,
         num_connections: usize,
         backoff: ExponentialBackoff,

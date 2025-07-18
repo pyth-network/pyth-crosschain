@@ -7,6 +7,7 @@ use pyth_lazer_protocol::subscription::{
 };
 use tokio::{pin, select, sync::mpsc, time::Instant};
 use tracing::{error, info, warn};
+use url::Url;
 
 use crate::{
     ws_connection::{AnyResponse, PythLazerWSConnection},
@@ -31,7 +32,7 @@ impl PythLazerResilientWSConnection {
     /// # Returns
     /// Returns a new client instance (not yet connected)
     pub fn new(
-        endpoint: String,
+        endpoint: Url,
         access_token: String,
         backoff: ExponentialBackoff,
         sender: mpsc::Sender<AnyResponse>,
@@ -66,14 +67,14 @@ impl PythLazerResilientWSConnection {
 }
 
 struct PythLazerResilientWSConnectionTask {
-    endpoint: String,
+    endpoint: Url,
     access_token: String,
     subscriptions: Vec<SubscribeRequest>,
     backoff: ExponentialBackoff,
 }
 
 impl PythLazerResilientWSConnectionTask {
-    pub fn new(endpoint: String, access_token: String, backoff: ExponentialBackoff) -> Self {
+    pub fn new(endpoint: Url, access_token: String, backoff: ExponentialBackoff) -> Self {
         Self {
             endpoint,
             access_token,

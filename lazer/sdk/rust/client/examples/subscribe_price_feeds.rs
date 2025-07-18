@@ -35,8 +35,8 @@ async fn main() -> anyhow::Result<()> {
     // Create and start the client
     let mut client = PythLazerClient::new(
         vec![
-            "wss://pyth-lazer-0.dourolabs.app/v1/stream".to_string(),
-            "wss://pyth-lazer-1.dourolabs.app/v1/stream".to_string(),
+            "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
+            "wss://pyth-lazer-1.dourolabs.app/v1/stream".parse()?,
         ],
         get_lazer_access_token(),
         4,

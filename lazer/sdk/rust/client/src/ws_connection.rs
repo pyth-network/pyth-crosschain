@@ -52,8 +52,7 @@ impl PythLazerWSConnection {
     ///
     /// # Returns
     /// Returns a new client instance (not yet connected)
-    pub fn new(endpoint: String, access_token: String) -> Result<Self> {
-        let endpoint = Url::parse(endpoint.as_str())?;
+    pub fn new(endpoint: Url, access_token: String) -> Result<Self> {
         Ok(Self {
             endpoint,
             access_token,
