@@ -42,6 +42,9 @@ impl PythLazerClient {
         if backoff.max_elapsed_time.is_some() {
             bail!("max_elapsed_time is not supported in Pyth Lazer client");
         }
+        if endpoints.is_empty() {
+            bail!("At least one endpoint must be provided");
+        }
         Ok(Self {
             endpoints,
             access_token,
