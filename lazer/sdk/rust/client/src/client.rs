@@ -55,8 +55,8 @@ impl PythLazerClient {
         })
     }
 
-    pub async fn start(&mut self) -> Result<mpsc::Receiver<AnyResponse>> {
-        let (sender, receiver) = mpsc::channel::<AnyResponse>(CHANNEL_CAPACITY);
+    pub async fn start(&mut self, channel_capacity: usize) -> Result<mpsc::Receiver<AnyResponse>> {
+        let (sender, receiver) = mpsc::channel::<AnyResponse>(channel_capacity);
 
         for i in 0..self.num_connections {
             let endpoint = self.endpoints[i % self.endpoints.len()].clone();

@@ -45,7 +45,11 @@ async fn main() -> anyhow::Result<()> {
             .build(),
     )?;
 
-    let stream = client.start().await?;
+    let stream = client
+        .start(
+            1000, // Use a channel capacity of 1000
+        )
+        .await?;
     pin!(stream);
 
     let subscription_requests = vec![
