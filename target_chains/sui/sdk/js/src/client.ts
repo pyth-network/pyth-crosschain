@@ -113,7 +113,6 @@ export class SuiPythClient {
     updates: Buffer[],
     packageId: string,
   ): Promise<any> {
-    let priceUpdatesHotPotato;
     if (updates.length > 1) {
       throw new Error(
         "SDK does not support sending multiple accumulator messages in a single transaction",
@@ -121,7 +120,7 @@ export class SuiPythClient {
     }
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
-    [priceUpdatesHotPotato] = tx.moveCall({
+    const [priceUpdatesHotPotato] = tx.moveCall({
       target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
       arguments: [
         tx.object(this.pythStateId),
