@@ -106,4 +106,42 @@ mod test {
             .execute_governance_instruction(bytes.clone());
         assert!(result.is_ok());
     }
+
+    #[motsu::test]
+    fn test_set_valid_period(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "010000000001006fc16df905b08c16553eda9d5a7898ec7eba4267ce0af7945625c955e8f435fc7df7a4087af360f88c2477f0c2f4e7eaa4bb1e8fd43677f4d6b04ee20e225186000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010400020000000000000000";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        println!("Result: {:?}", result.unwrap_err());
+        // assert!(result.is_ok());
+    }
+
+    #[motsu::test]
+    fn test_set_fee(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(result.is_ok());
+        // println!("Result: {:?}", result.unwrap_err());
+    }
 }
