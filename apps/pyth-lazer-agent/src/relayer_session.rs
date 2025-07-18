@@ -22,10 +22,7 @@ use url::Url;
 type RelayerWsSender = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, TungsteniteMessage>;
 type RelayerWsReceiver = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
-async fn connect_to_relayer(
-    url: Url,
-    token: &str,
-) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
+async fn connect_to_relayer(url: Url, token: &str) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
     tracing::info!("connecting to the relayer at {}", url);
     let mut req = url.clone().into_client_request()?;
     let headers = req.headers_mut();
