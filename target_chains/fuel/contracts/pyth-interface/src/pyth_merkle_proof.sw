@@ -20,11 +20,8 @@ fn node_hash(child_a: Bytes, child_b: Bytes) -> Bytes {
     let mut bytes = Bytes::with_capacity(41);
     bytes.push(MERKLE_NODE_PREFIX);
 
-    // let a: b256 = child_a.into();
-    // let b: b256 = child_b.into();
-
-    let a: b256 = b256::from_le_bytes(child_a.clone());
-    let b: b256 = b256::from_le_bytes(child_b.clone());
+    let a: b256 = b256::from_be_bytes(child_a.clone());
+    let b: b256 = b256::from_be_bytes(child_b.clone());
 
     if a > b {
         bytes.append(child_b);
@@ -58,8 +55,8 @@ pub fn validate_proof(
         i += 1;
     }
 
-    let current_digest_b256: b256 = b256::from_le_bytes(current_digest.clone());
-    let root_b256: b256 = b256::from_le_bytes(root.clone());
+    let current_digest_b256: b256 = b256::from_be_bytes(current_digest.clone());
+    let root_b256: b256 = b256::from_be_bytes(root.clone());
 
     require(current_digest_b256 == root_b256, PythError::InvalidProof);
 

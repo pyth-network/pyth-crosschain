@@ -99,7 +99,7 @@ impl PriceFeed {
         let mut offset = 1u64;
         let (_, slice) = encoded_price_feed.split_at(offset);
         let (price_feed_id, _) = slice.split_at(32);
-        let price_feed_id: PriceFeedId = b256::from_le_bytes(price_feed_id.clone());
+        let price_feed_id: PriceFeedId = b256::from_be_bytes(price_feed_id.clone());
         offset += 32;
         let price = u64::from_be_bytes([
             encoded_price_feed.get(offset).unwrap(),
@@ -186,7 +186,7 @@ impl PriceFeed {
         let mut attestation_index = index + 32;
         let (_, slice) = encoded_payload.split_at(attestation_index);
         let (price_feed_id, _) = slice.split_at(32);
-        let price_feed_id: PriceFeedId = b256::from_le_bytes(price_feed_id.clone());
+        let price_feed_id: PriceFeedId = b256::from_be_bytes(price_feed_id.clone());
         attestation_index += 32;
         let mut price = u64::from_be_bytes([
             encoded_payload.get(attestation_index).unwrap(),

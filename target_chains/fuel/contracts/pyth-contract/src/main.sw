@@ -58,7 +58,7 @@ use src5::{SRC5, State};
 
 const GUARDIAN_SET_EXPIRATION_TIME_SECONDS: u64 = 86400; // 24 hours in seconds
 configurable {
-    DEPLOYER: Identity = Identity::Address(Address::from(ZERO_B256)),
+    DEPLOYER: Identity = Identity::Address(Address::from(b256::zero())),
 }
 
 storage {
@@ -209,7 +209,7 @@ impl PythCore for Contract {
                     while i_2 < number_of_attestations {
                         let (_, slice) = vm.payload.split_at(attestation_index + 32);
                         let (price_feed_id, _) = slice.split_at(32);
-                        let price_feed_id: PriceFeedId = b256::from_le_bytes(price_feed_id.clone());
+                        let price_feed_id: PriceFeedId = b256::from_be_bytes(price_feed_id.clone());
 
                         if price_feed_id.is_target(target_price_feed_ids) == false {
                             attestation_index += attestation_size_u16;

@@ -139,7 +139,7 @@ impl GovernanceInstruction {
             index += 2;
             let (_, slice) = encoded_payload.split_at(index);
             let (slice, _) = slice.split_at(32);
-            let emitter_address: b256 = b256::from_le_bytes(slice.clone());
+            let emitter_address: b256 = b256::from_be_bytes(slice.clone());
             index += 32;
 
             data_sources.push(DataSource {

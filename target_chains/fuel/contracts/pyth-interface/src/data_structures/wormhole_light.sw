@@ -86,7 +86,7 @@ impl GuardianSetUpgrade {
         let mut index = 0;
         let (_, slice) = encoded_upgrade.split_at(index);
         let (module, _) = slice.split_at(32);
-        let module: b256 = b256::from_le_bytes(module.clone());
+        let module: b256 = b256::from_be_bytes(module.clone());
         require(module == UPGRADE_MODULE, WormholeError::InvalidModule);
         index += 32;
         let action = encoded_upgrade.get(index).unwrap();
@@ -115,7 +115,7 @@ impl GuardianSetUpgrade {
         while i < guardian_length {
             let (_, slice) = encoded_upgrade.split_at(index);
             let (key, _) = slice.split_at(20);
-            let key: b256 = b256::from_le_bytes(key.clone());
+            let key: b256 = b256::from_be_bytes(key.clone());
             new_guardian_set.keys.push(key.rsh(96));
             index += 20;
             i += 1;
@@ -353,10 +353,10 @@ impl WormholeVM {
             index += 1;
             let (_, slice) = encoded_vm.split_at(index);
             let (slice, remainder) = slice.split_at(32);
-            let r: b256 = b256::from_le_bytes(slice.clone());
+            let r: b256 = b256::from_be_bytes(slice.clone());
             index += 32;
             let (slice, remainder) = remainder.split_at(32);
-            let s: b256 = b256::from_le_bytes(slice.clone());
+            let s: b256 = b256::from_be_bytes(slice.clone());
             index += 32;
             let v = remainder.get(0);
             require(v.is_some(), WormholeError::SignatureVIrretrievable);
@@ -409,7 +409,7 @@ impl WormholeVM {
         index += 2;
         let (_, slice) = encoded_vm.split_at(index);
         let (slice, _) = slice.split_at(32);
-        let emitter_address: b256 = b256::from_le_bytes(slice.clone());
+        let emitter_address: b256 = b256::from_be_bytes(slice.clone());
         index += 32;
         let (_, slice) = encoded_vm.split_at(index);
         let (slice, _) = slice.split_at(8);
@@ -512,7 +512,7 @@ impl WormholeVM {
         index += 2;
         let (_, slice) = encoded_vm.split_at(index);
         let (slice, _) = slice.split_at(32);
-        let emitter_address: b256 = b256::from_le_bytes(slice.clone());
+        let emitter_address: b256 = b256::from_be_bytes(slice.clone());
         index += 32;
         let (_, slice) = encoded_vm.split_at(index);
         let (slice, _) = slice.split_at(8);
