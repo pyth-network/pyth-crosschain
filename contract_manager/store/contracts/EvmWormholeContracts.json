@@ -843,5 +843,10 @@
     "chain": "ethereal_testnet",
     "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
     "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "camp_network",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
   }
 ]
