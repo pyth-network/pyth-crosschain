@@ -5611,7 +5611,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "backoff",
