@@ -193,7 +193,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "762414662d793d7aaa36ee3af6928b6be23227df1681ce9c039f6f11daadef64"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "serde",
  "serde_json",
  "thiserror 2.0.12",
@@ -216,7 +216,7 @@ dependencies = [
  "alloy-rpc-types-eth",
  "alloy-serde",
  "alloy-signer",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "async-trait",
  "auto_impl",
  "futures-utils-wasm",
@@ -317,7 +317,7 @@ dependencies = [
  "alloy-primitives 0.8.20",
  "alloy-rpc-client",
  "alloy-rpc-types-eth",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "alloy-transport",
  "alloy-transport-http",
  "async-stream",
@@ -418,7 +418,7 @@ dependencies = [
  "alloy-primitives 0.8.20",
  "alloy-rlp 0.3.12",
  "alloy-serde",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "itertools 0.14.0",
  "serde",
  "serde_json",
@@ -469,48 +469,16 @@ dependencies = [
 
 [[package]]
 name = "alloy-sol-macro"
-version = "0.7.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b40397ddcdcc266f59f959770f601ce1280e699a91fc1862f29cef91707cd09"
-dependencies = [
- "alloy-sol-macro-expander 0.7.7",
- "alloy-sol-macro-input 0.7.7",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "alloy-sol-macro"
 version = "0.8.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e10ae8e9a91d328ae954c22542415303919aabe976fe7a92eb06db1b68fd59f2"
 dependencies = [
- "alloy-sol-macro-expander 0.8.25",
- "alloy-sol-macro-input 0.8.25",
+ "alloy-sol-macro-expander",
+ "alloy-sol-macro-input",
  "proc-macro-error2",
  "proc-macro2",
  "quote",
  "syn 2.0.101",
-]
-
-[[package]]
-name = "alloy-sol-macro-expander"
-version = "0.7.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "867a5469d61480fea08c7333ffeca52d5b621f5ca2e44f271b117ec1fc9a0525"
-dependencies = [
- "alloy-sol-macro-input 0.7.7",
- "const-hex",
- "heck",
- "indexmap",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
- "syn-solidity 0.7.7",
- "tiny-keccak",
 ]
 
 [[package]]
@@ -519,7 +487,7 @@ version = "0.8.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83ad5da86c127751bc607c174d6c9fe9b85ef0889a9ca0c641735d77d4f98f26"
 dependencies = [
- "alloy-sol-macro-input 0.8.25",
+ "alloy-sol-macro-input",
  "const-hex",
  "heck",
  "indexmap",
@@ -527,23 +495,8 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.101",
- "syn-solidity 0.8.25",
+ "syn-solidity",
  "tiny-keccak",
-]
-
-[[package]]
-name = "alloy-sol-macro-input"
-version = "0.7.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e482dc33a32b6fadbc0f599adea520bd3aaa585c141a80b404d0a3e3fa72528"
-dependencies = [
- "const-hex",
- "dunce",
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
- "syn-solidity 0.7.7",
 ]
 
 [[package]]
@@ -559,7 +512,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.101",
- "syn-solidity 0.8.25",
+ "syn-solidity",
 ]
 
 [[package]]
@@ -574,24 +527,13 @@ dependencies = [
 
 [[package]]
 name = "alloy-sol-types"
-version = "0.7.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a49042c6d3b66a9fe6b2b5a8bf0d39fc2ae1ee0310a2a26ffedd79fb097878dd"
-dependencies = [
- "alloy-primitives 0.7.6",
- "alloy-sol-macro 0.7.7",
- "const-hex",
-]
-
-[[package]]
-name = "alloy-sol-types"
 version = "0.8.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75f306fc801b3aa2e3c4785b7b5252ec8b19f77b30e3b75babfd23849c81bd8c"
 dependencies = [
  "alloy-json-abi",
  "alloy-primitives 0.8.20",
- "alloy-sol-macro 0.8.25",
+ "alloy-sol-macro",
  "const-hex",
  "serde",
 ]
@@ -3294,45 +3236,21 @@ checksum = "dce6dd36094cac388f119d2e9dc82dc730ef91c32a6222170d630e5414b956e6"
 
 [[package]]
 name = "motsu"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "744174e5011fed86212d90c1120037da87e0c45fee7a5861c2b3105e41283810"
-dependencies = [
- "const-hex",
- "motsu-proc 0.1.1",
- "once_cell",
- "stylus-sdk 0.6.0",
- "tiny-keccak",
-]
-
-[[package]]
-name = "motsu"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31eab998c3d9d9e2627e291cc44dc98a8f7c30f63bd21181f6468e58ceb70185"
 dependencies = [
  "alloy-primitives 0.8.20",
  "alloy-signer-local",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "const-hex",
  "dashmap",
  "k256",
- "motsu-proc 0.9.0",
+ "motsu-proc",
  "once_cell",
  "revm-precompile",
- "stylus-sdk 0.9.0",
+ "stylus-sdk",
  "tiny-keccak",
-]
-
-[[package]]
-name = "motsu-proc"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00b990e6013802b44b3d0c0806c80b40bb36a2ecd70ca380a5df09fd7a201576"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
 ]
 
 [[package]]
@@ -3982,17 +3900,17 @@ name = "pyth-receiver-stylus"
 version = "0.1.11"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "byteorder",
  "dotenv",
  "ethers",
  "eyre",
  "hex",
  "mock_instant",
- "motsu 0.9.1",
+ "motsu",
  "pythnet-sdk",
  "serde",
- "stylus-sdk 0.9.0",
+ "stylus-sdk",
  "tokio",
  "wormhole-contract",
  "wormhole-vaas",
@@ -5079,28 +4997,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b96d0a4daa641fb5904cc3302c90b2d160f59c62aae7a19c2c6b94e28e3ab93e"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "cfg-if 1.0.0",
  "dyn-clone",
-]
-
-[[package]]
-name = "stylus-proc"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce199dd40c83734b835a6c952e29edd9a7e9370b438829c6b2cd908fd3acfb1e"
-dependencies = [
- "alloy-primitives 0.7.6",
- "alloy-sol-types 0.7.6",
- "cfg-if 1.0.0",
- "convert_case 0.6.0",
- "lazy_static",
- "proc-macro2",
- "quote",
- "regex",
- "sha3",
- "syn 1.0.109",
- "syn-solidity 0.7.7",
 ]
 
 [[package]]
@@ -5110,7 +5009,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c87cad1205aac3d46a3bb303ebe24976de3e88652d001a2e0e489b1e2bd6d0b9"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "cfg-if 1.0.0",
  "convert_case 0.6.0",
  "lazy_static",
@@ -5120,24 +5019,8 @@ dependencies = [
  "regex",
  "sha3",
  "syn 2.0.101",
- "syn-solidity 0.8.25",
+ "syn-solidity",
  "trybuild",
-]
-
-[[package]]
-name = "stylus-sdk"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26042693706e29fb7e3cf3d71c99534ac97fca98b6f81ba77ab658022ab2e210"
-dependencies = [
- "alloy-primitives 0.7.6",
- "alloy-sol-types 0.7.6",
- "cfg-if 1.0.0",
- "derivative",
- "hex",
- "keccak-const",
- "lazy_static",
- "stylus-proc 0.6.1",
 ]
 
 [[package]]
@@ -5147,7 +5030,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38519923dae967837b90f00cd669b9d6df778ec1f0df849089f4dd456be96bf8"
 dependencies = [
  "alloy-primitives 0.8.20",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "cfg-if 1.0.0",
  "clap",
  "derivative",
@@ -5158,7 +5041,7 @@ dependencies = [
  "rclite",
  "regex",
  "stylus-core",
- "stylus-proc 0.9.0",
+ "stylus-proc",
  "stylus-test",
 ]
 
@@ -5170,7 +5053,7 @@ checksum = "abef8a75532dab6480d83577e47f4db429e7f0330825b3e167a3c9ddb363fd1f"
 dependencies = [
  "alloy-primitives 0.8.20",
  "alloy-provider",
- "alloy-sol-types 0.8.20",
+ "alloy-sol-types",
  "stylus-core",
  "tokio",
  "url",
@@ -5235,18 +5118,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "syn-solidity"
-version = "0.7.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c837dc8852cb7074e46b444afb81783140dab12c58867b49fb3898fbafedf7ea"
-dependencies = [
- "paste",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
 ]
 
 [[package]]
@@ -6221,8 +6092,8 @@ dependencies = [
  "base64 0.21.7",
  "k256",
  "mini-alloc 0.4.2",
- "motsu 0.1.0",
- "stylus-sdk 0.9.0",
+ "motsu",
+ "stylus-sdk",
 ]
 
 [[package]]
