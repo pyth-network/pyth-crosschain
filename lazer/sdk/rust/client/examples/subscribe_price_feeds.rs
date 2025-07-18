@@ -1,5 +1,5 @@
-use backoff::ExponentialBackoffBuilder;
 use base64::Engine;
+use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
 use pyth_lazer_client::client::PythLazerClient;
 use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::message::{
@@ -40,9 +40,7 @@ async fn main() -> anyhow::Result<()> {
         ],
         get_lazer_access_token(),
         4,
-        ExponentialBackoffBuilder::default()
-            .with_max_elapsed_time(None) // max_elapsed_time is not supported in Pyth Lazer client
-            .build(),
+        PythLazerExponentialBackoffBuilder::default().build(),
     )?;
 
     let stream = client

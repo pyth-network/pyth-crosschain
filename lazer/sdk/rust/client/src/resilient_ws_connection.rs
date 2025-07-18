@@ -169,7 +169,7 @@ impl PythLazerResilientWSConnectionTask {
         request: SubscribeRequest,
     ) -> Result<()> {
         self.subscriptions.push(request.clone());
-        return ws_connection.subscribe(request).await;
+        ws_connection.subscribe(request).await
     }
 
     pub async fn unsubscribe(
@@ -189,6 +189,6 @@ impl PythLazerResilientWSConnectionTask {
                 request.subscription_id
             );
         }
-        return ws_connection.unsubscribe(request).await;
+        ws_connection.unsubscribe(request).await
     }
 }
