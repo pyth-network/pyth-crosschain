@@ -22,7 +22,7 @@ Pyth prices and submit them to the network:
 
 ```typescript
 const connection = new SuiPriceServiceConnection(
-  "https://hermes-beta.pyth.network"
+  "https://hermes-beta.pyth.network",
 ); // See Hermes endpoints section below for other endpoints
 
 const priceIds = [
@@ -104,8 +104,9 @@ You can run this example with `pnpm turbo --filter @pythnetwork/pyth-sui-js run 
 
 ```bash
 export SUI_KEY=YOUR_PRIV_KEY;
-pnpm turbo --filter @pythnetwork/pyth-sui-js run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
---price-service "https://hermes-beta.pyth.network" \
+pnpm turbo run example-relay --filter @pythnetwork/pyth-sui-js -- \
+--feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
+--hermes "https://hermes-beta.pyth.network" \
 --full-node "https://fullnode.testnet.sui.io:443" \
 --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" \
 --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
@@ -136,7 +137,7 @@ This method is useful if you want to show continuously updating real-time prices
 // gets a price update.
 connection.subscribePriceFeedUpdates(priceIds, (priceFeed) => {
   console.log(
-    `Received update for ${priceFeed.id}: ${priceFeed.getPriceNoOlderThan(60)}`
+    `Received update for ${priceFeed.id}: ${priceFeed.getPriceNoOlderThan(60)}`,
   );
 });
 
