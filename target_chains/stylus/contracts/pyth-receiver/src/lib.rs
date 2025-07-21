@@ -711,7 +711,7 @@ impl PythReceiver {
         let current_index = self.governance_data_source_index.get().to::<u32>();
         let new_index = request_payload.governance_data_source_index;
 
-        if current_index >= new_index {
+        if current_index > new_index {
             return Err(PythReceiverError::OldGovernanceMessage);
         }
 

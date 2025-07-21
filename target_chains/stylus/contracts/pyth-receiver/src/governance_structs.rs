@@ -166,6 +166,7 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
         }
         GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
             let claim_vaa = payload[cursor..].to_vec();
+            cursor = payload.len();
             GovernancePayload::AuthorizeGovernanceDataSourceTransfer(
                 AuthorizeGovernanceDataSourceTransfer { claim_vaa },
             )
