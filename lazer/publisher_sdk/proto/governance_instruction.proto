@@ -325,6 +325,8 @@ message AddFeed {
     // [required]
     optional FeedState state = 107;
     // [required]
+    optional FeedKind kind = 108;
+    // [required]
     optional bool is_enabled_in_shard = 201;
 
     // TODO: IDs of publishers enabled for this feed.
