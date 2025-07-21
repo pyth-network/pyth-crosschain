@@ -374,23 +374,28 @@ pub struct PriceFeedMetadata {
 #[serde(rename_all = "snake_case")]
 pub enum AssetType {
     Crypto,
-    #[serde(rename = "fx")]
-    FX,
+    Fx,
     Equity,
     Metal,
     Rates,
     CryptoRedemptionRate,
+    Commodities,
+    CryptoIndex,
+    CryptoNav,
 }
 
 impl Display for AssetType {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match self {
             AssetType::Crypto => write!(f, "crypto"),
-            AssetType::FX => write!(f, "fx"),
+            AssetType::Fx => write!(f, "fx"),
             AssetType::Equity => write!(f, "equity"),
             AssetType::Metal => write!(f, "metal"),
             AssetType::Rates => write!(f, "rates"),
             AssetType::CryptoRedemptionRate => write!(f, "crypto_redemption_rate"),
+            AssetType::Commodities => write!(f, "commodities"),
+            AssetType::CryptoIndex => write!(f, "crypto_index"),
+            AssetType::CryptoNav => write!(f, "crypto_nav"),
         }
     }
 }
@@ -409,8 +414,8 @@ mod tests {
                 .trim_matches('"')
         );
         assert_eq!(
-            AssetType::FX.to_string(),
-            serde_json::to_string(&AssetType::FX)
+            AssetType::Fx.to_string(),
+            serde_json::to_string(&AssetType::Fx)
                 .unwrap()
                 .trim_matches('"')
         );
@@ -435,6 +440,24 @@ mod tests {
         assert_eq!(
             AssetType::CryptoRedemptionRate.to_string(),
             serde_json::to_string(&AssetType::CryptoRedemptionRate)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::Commodities.to_string(),
+            serde_json::to_string(&AssetType::Commodities)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::CryptoIndex.to_string(),
+            serde_json::to_string(&AssetType::CryptoIndex)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::CryptoNav.to_string(),
+            serde_json::to_string(&AssetType::CryptoNav)
                 .unwrap()
                 .trim_matches('"')
         );
