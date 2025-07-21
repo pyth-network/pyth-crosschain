@@ -1,16 +1,10 @@
 #[cfg(test)]
 mod test {
-    use crate::error::PythReceiverError;
-    use crate::test_data::*;
     use crate::PythReceiver;
-    use alloy_primitives::{address, Address, U256, U64};
+    use alloy_primitives::{address, Address, U256};
     use hex::FromHex;
-    use mock_instant::global::MockClock;
     use motsu::prelude::*;
-    use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
-    use std::time::Duration;
     use wormhole_contract::WormholeContract;
-    use wormhole_vaas::{Readable, Vaa, Writeable};
 
     const PYTHNET_CHAIN_ID: u16 = 26;
     const PYTHNET_EMITTER_ADDRESS: [u8; 32] = [
@@ -105,6 +99,12 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
         assert!(result.is_ok());
+
+        let result2 = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
+
     }
 
     #[motsu::test]
@@ -122,8 +122,11 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        println!("Result: {:?}", result.unwrap_err());
-        // assert!(result.is_ok());
+        if result.is_err() {
+            println!("Result: {:?}", result.as_ref().unwrap_err());
+        }
+        assert!(result.is_ok());
+
     }
 
     #[motsu::test]
@@ -142,7 +145,12 @@ mod test {
             .execute_governance_instruction(bytes.clone());
 
         assert!(result.is_ok());
-        // println!("Result: {:?}", result.unwrap_err());
+
+        let result2 = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
+
     }
 
     #[motsu::test]
@@ -163,6 +171,12 @@ mod test {
             println!("Error: {:?}", result.as_ref().unwrap_err());
         }
         assert!(result.is_ok());
+
+        let result2 = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
+
     }
 
     #[motsu::test]
@@ -186,6 +200,7 @@ mod test {
             );
         }
         assert!(result.is_ok());
+
     }
 
     #[motsu::test]
@@ -232,6 +247,12 @@ mod test {
             );
         }
         assert!(result.is_ok());
+
+        let result2 = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
+
     }
 
     // Fee transfers can't be done in the motsu testing framework. This commented test serves as an example for how to use the function, though.
