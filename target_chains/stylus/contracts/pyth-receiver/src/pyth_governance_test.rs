@@ -144,4 +144,104 @@ mod test {
         assert!(result.is_ok());
         // println!("Result: {:?}", result.unwrap_err());
     }
+
+    #[motsu::test]
+    fn test_set_fee_in_token(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000025005054474d0107000200000000000000050000000000000003147e5f4552091a69125d5dfcb7b8c2659029395bdf";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!("Error: {:?}", result.as_ref().unwrap_err());
+        }
+        assert!(result.is_ok());
+    }
+
+    #[motsu::test]
+    fn test_set_wormhole_address(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed00000000010000000000010000000000000000000000000000000000000000000000000000000000000011000000000000001a005054474d010600027e5f4552091a69125d5dfcb7b8c2659029395bdf";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!("SetWormholeAddress Error: {:?}", result.as_ref().unwrap_err());
+        }
+        assert!(result.is_ok());
+    }
+
+    #[motsu::test]
+    fn test_authorize_governance_data_source_transfer(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000070005054474d0101000201000000000100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000008005054474d010500020000000000000001";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!("AuthorizeGovernanceDataSourceTransfer Error: {:?}", result.as_ref().unwrap_err());
+        }
+        assert!(result.is_ok());
+    }
+
+    #[motsu::test]
+    fn test_set_transaction_fee(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000018005054474d010800020000000000000064000000000000000003";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!("SetTransactionFee Error: {:?}", result.as_ref().unwrap_err());
+        }
+        assert!(result.is_ok());
+    }
+
+    #[motsu::test]
+    fn test_withdraw_fee(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed00000000010000000000010000000000000000000000000000000000000000000000000000000000000011000000000000002a005054474d0109000200be7e5f4552091a69125d5dfcb7b8c2659029395bdf00000000000000640000000000000003";
+        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!("WithdrawFee Error: {:?}", result.as_ref().unwrap_err());
+        }
+        assert!(result.is_ok());
+    }
 }
