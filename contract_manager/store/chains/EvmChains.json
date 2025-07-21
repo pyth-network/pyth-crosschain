@@ -1272,5 +1272,12 @@
     "rpcUrl": "https://rpc-ethereal-testnet.t.conduit.xyz",
     "networkId": 657468,
     "type": "EvmChain"
+  },
+  {
+    "id": "camp_network",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.camp.raas.gelato.cloud",
+    "networkId": 484,
+    "type": "EvmChain"
   }
 ]

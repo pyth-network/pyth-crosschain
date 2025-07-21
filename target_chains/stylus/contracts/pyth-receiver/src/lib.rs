@@ -474,13 +474,20 @@ impl PythReceiver {
                                 }
                             }
 
+                            let expo = I32::try_from(price_feed_message.exponent)
+                                .map_err(|_| PythReceiverError::InvalidUpdateData)?;
+                            let price = I64::try_from(price_feed_message.price)
+                                .map_err(|_| PythReceiverError::InvalidUpdateData)?;
+                            let ema_price = I64::try_from(price_feed_message.ema_price)
+                                .map_err(|_| PythReceiverError::InvalidUpdateData)?;
+
                             let price_info_return = (
                                 price_id_fb,
                                 U64::from(publish_time),
-                                I32::from_be_bytes(price_feed_message.exponent.to_be_bytes()),
-                                I64::from_be_bytes(price_feed_message.price.to_be_bytes()),
+                                expo,
+                                price,
                                 U64::from(price_feed_message.conf),
-                                I64::from_be_bytes(price_feed_message.ema_price.to_be_bytes()),
+                                ema_price,
                                 U64::from(price_feed_message.ema_conf),
                             );
 

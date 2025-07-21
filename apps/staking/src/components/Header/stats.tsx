@@ -12,7 +12,7 @@ import { Tokens } from "../Tokens";
 const ONE_SECOND_IN_MS = 1000;
 const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
 const REFRESH_INTERVAL = 1 * ONE_MINUTE_IN_MS;
-const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
+const INITIAL_REWARD_POOL_SIZE = 100_000_010_000_000n;
 
 export const Stats = ({ className, ...props }: HTMLProps<HTMLDivElement>) => {
   const { connection } = useConnection();

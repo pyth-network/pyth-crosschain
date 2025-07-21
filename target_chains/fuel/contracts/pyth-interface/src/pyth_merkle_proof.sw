@@ -1,6 +1,6 @@
 library;
 
-use std::{bytes::Bytes, hash::{Hash, keccak256}};
+use std::{bytes::Bytes, hash::{Hash, keccak256}, bytes_conversions::b256::*};
 use ::errors::PythError;
 
 pub const MERKLE_LEAF_PREFIX = 0u8;
@@ -20,8 +20,9 @@ fn node_hash(child_a: Bytes, child_b: Bytes) -> Bytes {
     let mut bytes = Bytes::with_capacity(41);
     bytes.push(MERKLE_NODE_PREFIX);
 
-    let a: b256 = child_a.into();
-    let b: b256 = child_b.into();
+    let a: b256 = b256::from_be_bytes(child_a.clone());
+    let b: b256 = b256::from_be_bytes(child_b.clone());
+
     if a > b {
         bytes.append(child_b);
         bytes.append(child_a);
@@ -54,8 +55,8 @@ pub fn validate_proof(
         i += 1;
     }
 
-    let current_digest_b256: b256 = current_digest.into();
-    let root_b256: b256 = root.into();
+    let current_digest_b256: b256 = b256::from_be_bytes(current_digest.clone());
+    let root_b256: b256 = b256::from_be_bytes(root.clone());
 
     require(current_digest_b256 == root_b256, PythError::InvalidProof);
 

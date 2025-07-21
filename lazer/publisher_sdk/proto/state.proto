@@ -1,8 +1,10 @@
 syntax = "proto3";
-package lazer;
+package pyth_lazer;
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+
+import "dynamic_value.proto";
 
 // All optional fields should always be set unless documented otherwise.
 
@@ -45,67 +47,76 @@ message Publisher {
 }
 
 enum FeedState {
-    COMING_SOON = 0; // Default value
+    // Default value. Feeds in this state are not available to consumers.
+    // `COMING_SOON` feeds are expected to become stable in the future.
+    COMING_SOON = 0;
+    // A fully available feed.
     STABLE = 1;
+    // Inactive feeds are not available to consumers.
+    // `INACTIVE` feeds are not expected to become stable again.
     INACTIVE = 2;
 }
 
-// Static data for a feed.
-message FeedMetadata {
-    // [required] ID of the price feed.
-    optional uint32 price_feed_id = 1;
-    // [required] Feed name.
-    optional string name = 2;
-    // [required] Feed symbol.
-    optional string symbol = 3;
-    // [required] Feed description.
-    optional string description = 4;
-    // [required] Feed asset type.
-    optional string asset_type = 5;
-    // [required] Exponent applied to all price and rate values for this feed.
-    // Actual value is `mantissa * 10 ^ exponent`.
-    // Restricted to int16.
-    optional sint32 exponent = 6;
-    // [optional] CoinMarketCap ID. Can be absent if there is no CoinMarketCap ID for this symbol.
-    optional uint32 cmc_id = 7;
-    // [optional] Funding rate interval. Only present for funding rate feeds.
-    optional google.protobuf.Duration funding_rate_interval = 8;
-    // [required] Minimal number of publisher prices required to produce an aggregate.
-    optional uint32 min_publishers = 9;
-    // [required] Minimal rate of aggregation performed by the aggregator for this feed.
-    // Cannot be lower than the shard's top level `State.min_rate`.
-    optional google.protobuf.Duration min_rate = 10;
-    // [required] Time after which the publisher update is discarded.
-    optional google.protobuf.Duration expiry_time = 11;
-    // [required] If true, the feed is visible to the consumers. This can be used to prepare and verify
-    // new feeds before releasing them. This can also be used to migrate a feed from
-    // one shard to another. If a feed is present in
-    // multiple shards, it must only be active in one of them at each time.
-    // To enforce this, `pending_activation` and `pending_deactivation` fields
-    // can be used to deactivate a feed in one shard and activate it in another shard
-    // at the same instant.
-    optional bool is_activated = 12;
-    // [optional] ID of the corresponding price feed in Hermes (Pythnet).
-    optional string hermes_id = 13;
-    // [optional] Quote currency of the asset.
-    optional string quote_currency = 14;
-    // [optional] Market schedule in Pythnet format.
-    // If absent, the default schedule is used (market is always open).
-    optional string market_schedule = 15;
-    // [required] Feed state
-    optional FeedState state = 16;
+// Feed kind determines the set of data fields available in the feed.
+// It also determines the kind of data accepted from publishers for this feed
+// (`PriceUpdate` or `FundingRateUpdate`).
+enum FeedKind {
+    // Fields: price, best_bid_price, best_ask_price
+    PRICE = 0;
+    // Fields: price, rate.
+    FUNDING_RATE = 1;
 }
 
 // An item of the state describing a feed.
 message Feed {
-    optional FeedMetadata metadata = 1;
-    // [optional] If present, the aggregator will activate the feed at the specified instant.
-    optional google.protobuf.Timestamp pending_activation = 2;
-    // [optional] If present, the aggregator will deactivate the feed at the specified instant.
-    optional google.protobuf.Timestamp pending_deactivation = 3;
+    // [required] ID of the feed.
+    optional uint32 feed_id = 1;
     // Additional state per publisher.
     // If an eligible publisher is not listed here, the corresponding state should be considered empty.
-    repeated FeedPublisherState per_publisher = 4;
+    repeated FeedPublisherState per_publisher = 2;
+    // [required] Additional metadata values. These values will be exposed in the APIs, but
+    // are not directly used in the aggregator.
+    optional DynamicValue.Map metadata = 3;
+
+    // [required] A readable feed name. It must be unique across all feeds in the shard.
+    // Used for logs, metrics, feed search API, TradingView API.
+    optional string name = 101;
+    // [required] Exponent applied to all price and rate values for this feed.
+    // Actual value is `mantissa * 10 ^ exponent`.
+    // Restricted to int16.
+    optional sint32 exponent = 102;
+    // [required] Minimal number of publisher prices required to produce an aggregate.
+    optional uint32 min_publishers = 103;
+    // [required] Minimal rate of aggregation performed by the aggregator for this feed.
+    // Cannot be lower than the shard's top level `State.min_rate`.
+    optional google.protobuf.Duration min_rate = 104;
+    // [required] Time after which the publisher update is discarded.
+    optional google.protobuf.Duration expiry_time = 105;
+    // [required] Market schedule in Pythnet format.
+    optional string market_schedule = 106;
+    // [required] Feed state.
+    optional FeedState state = 107;
+    // [required] Feed kind.
+    optional FeedKind kind = 108;
+
+
+    // [required] Feed status in the current shard. Disabled feeds will not be visible in
+    // the consumer API for the current shard. This setting should only be used
+    // to migrate a feed from one shard to another.
+    //
+    // If a feed is present in
+    // multiple shards, it must only be active in one of them at each time.
+    // To enforce this, `enable_in_shard_timestamp` and `disable_in_shard_timestamp` fields
+    // can be used to deactivate a feed in one shard and activate it in another shard
+    // at the same instant.
+    optional bool is_enabled_in_shard = 201;
+    // [optional] If present, the aggregator will enable the feed in the current shard
+    // at the specified instant.
+    optional google.protobuf.Timestamp enable_in_shard_timestamp = 202;
+    // [optional] If present, the aggregator will disable the feed in the current shard
+    // at the specified instant.
+    optional google.protobuf.Timestamp disable_in_shard_timestamp = 203;
+
     // TODO: list of permissioned publisher IDs.
 }
 

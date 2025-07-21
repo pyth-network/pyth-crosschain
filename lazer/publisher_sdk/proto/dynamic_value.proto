@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-package pyth_lazer_transaction;
+package pyth_lazer;
 
 // A dynamically typed value similar to `google.protobuf.Value`
 // but supporting more types.
