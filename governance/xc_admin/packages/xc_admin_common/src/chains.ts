@@ -33,6 +33,7 @@ export const RECEIVER_CHAINS = {
   atlas_testnet: 40007,
   mantis_mainnet: 40008,
   sonic_mainnet: 40009,
+  fogo_testnet: 40010,
 
   cronos: 60001,
   kcc: 60002,
