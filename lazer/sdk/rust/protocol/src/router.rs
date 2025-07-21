@@ -6,7 +6,7 @@ use {
         time::{DurationUs, TimestampUs},
     },
     anyhow::{bail, Context},
-    derive_more::derive::From,
+    derive_more::derive::{From, Into},
     itertools::Itertools,
     protobuf::well_known_types::duration::Duration as ProtobufDuration,
     rust_decimal::{prelude::FromPrimitive, Decimal},
@@ -18,13 +18,19 @@ use {
     },
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
 pub struct PublisherId(pub u16);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
 pub struct PriceFeedId(pub u32);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
 pub struct ChannelId(pub u8);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]

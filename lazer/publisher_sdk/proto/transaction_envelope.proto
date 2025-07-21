@@ -1,5 +1,5 @@
 syntax = "proto3";
-package pyth_lazer_transaction;
+package pyth_lazer;
 
 import "google/protobuf/timestamp.proto";
 import "pyth_lazer_transaction.proto";
