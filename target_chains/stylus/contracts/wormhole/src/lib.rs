@@ -331,14 +331,8 @@ impl WormholeContract {
 
     fn verify_vm(&self, vaa: &VerifiedVM) -> Result<(), WormholeError> {
         let guardian_set = self.get_gs_internal(vaa.guardian_set_index)?;
-        if vaa.guardian_set_index
-            != self
-                .current_guardian_set_index
-                .get()
-                .try_into()
-                .unwrap_or(0u32)
-            && guardian_set.expiration_time > 0
-        {
+        let current_gsi = self.current_guardian_set_index.get().try_into().unwrap_or(0u32);
+        if vaa.guardian_set_index != current_gsi && guardian_set.expiration_time > 0 {
             return Err(WormholeError::GuardianSetExpired);
         }
 
