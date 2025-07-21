@@ -103,8 +103,10 @@ mod test {
         let result2 = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
-        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
-
+        assert!(
+            result2.is_err(),
+            "Second execution should fail due to sequence number check"
+        );
     }
 
     #[motsu::test]
@@ -124,7 +126,6 @@ mod test {
 
         println!("Result: {:?}", result.unwrap_err());
         // assert!(result.is_ok());
-
     }
 
     #[motsu::test]
@@ -147,8 +148,10 @@ mod test {
         let result2 = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
-        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
-
+        assert!(
+            result2.is_err(),
+            "Second execution should fail due to sequence number check"
+        );
     }
 
     #[motsu::test]
@@ -173,39 +176,44 @@ mod test {
         let result2 = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
-        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
-
+        assert!(
+            result2.is_err(),
+            "Second execution should fail due to sequence number check"
+        );
     }
 
-    #[motsu::test]
-    fn test_set_wormhole_address(
-        pyth_contract: Contract<PythReceiver>,
-        wormhole_contract: Contract<WormholeContract>,
-        alice: Address,
-    ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+    // This test is commented out because it requires an already deployed new Wormhole contract.
+    // This function demonstrates the usage of this instruction, however.
+    /*
+        #[motsu::test]
+        fn test_set_wormhole_address(
+            pyth_contract: Contract<PythReceiver>,
+            wormhole_contract: Contract<WormholeContract>,
+            alice: Address,
+        ) {
+            pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let hex_str = "010000000001001daf08e5e3799cbc6096a90c2361e43220325418f377620a7a73d6bece18322679f6ada9725d9081743805efb8bccecd51098f1d76f34cba8b835fae643bbd9c000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010600027e5f4552091a69125d5dfcb7b8c2659029395bdf";
-        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+            let hex_str = "010000000001001daf08e5e3799cbc6096a90c2361e43220325418f377620a7a73d6bece18322679f6ada9725d9081743805efb8bccecd51098f1d76f34cba8b835fae643bbd9c000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010600027e5f4552091a69125d5dfcb7b8c2659029395bdf";
+            let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
-        let result = pyth_contract
-            .sender(alice)
-            .execute_governance_instruction(bytes.clone());
-        if result.is_err() {
-            println!(
-                "SetWormholeAddress Error: {:?}",
-                result.as_ref().unwrap_err()
-            );
+            let result = pyth_contract
+                .sender(alice)
+                .execute_governance_instruction(bytes.clone());
+            if result.is_err() {
+                println!(
+                    "SetWormholeAddress Error: {:?}",
+                    result.as_ref().unwrap_err()
+                );
+            }
+            assert!(result.is_ok());
+
+            let result2 = pyth_contract
+                .sender(alice)
+                .execute_governance_instruction(bytes.clone());
+            assert!(result2.is_err(), "Second execution should fail due to sequence number check");
+
         }
-        assert!(result.is_ok());
-
-        let result2 = pyth_contract
-            .sender(alice)
-            .execute_governance_instruction(bytes.clone());
-        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
-
-    }
-
+    */
     #[motsu::test]
     fn test_authorize_governance_data_source_transfer(
         pyth_contract: Contract<PythReceiver>,
@@ -254,8 +262,10 @@ mod test {
         let result2 = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
-        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
-
+        assert!(
+            result2.is_err(),
+            "Second execution should fail due to sequence number check"
+        );
     }
 
     // Fee transfers can't be done in the motsu testing framework. This commented test serves as an example for how to use the function, though.
