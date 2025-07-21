@@ -30,13 +30,14 @@ sonic_testnet = []
 atlas_testnet = []
 mantis_mainnet = []
 sonic_mainnet = []
+fogo_testnet = []
 
 
 [dependencies]
-anchor-lang = {version = "0.30.1", features = ["init-if-needed"]}
-wormhole-solana = { git = "https://github.com/guibescos/wormhole-solana", rev="f14b3b54c1e37e1aaf8c2ac2a5e236832ffdb3c2"}
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+wormhole-solana = { git = "https://github.com/guibescos/wormhole-solana", rev = "f14b3b54c1e37e1aaf8c2ac2a5e236832ffdb3c2" }
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 boolinator = "2.4.0"
 
 [dev-dependencies]
