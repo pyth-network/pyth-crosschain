@@ -127,6 +127,11 @@ mod test {
         }
         assert!(result.is_ok());
 
+        let result2 = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
+
     }
 
     #[motsu::test]
@@ -200,6 +205,11 @@ mod test {
             );
         }
         assert!(result.is_ok());
+
+        let result2 = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        assert!(result2.is_err(), "Second execution should fail due to sequence number check");
 
     }
 
