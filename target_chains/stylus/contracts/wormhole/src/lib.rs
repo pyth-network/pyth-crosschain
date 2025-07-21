@@ -502,6 +502,7 @@ impl IWormhole for WormholeContract {
 
         let vaa = self.parse_vm(&encoded_vaa)?;
         self.verify_vm(&vaa)?;
+        
         Ok(vaa)
     }
 

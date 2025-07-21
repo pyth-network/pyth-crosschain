@@ -133,6 +133,29 @@ contract GenerateGovernanceVAAs is Test, WormholeTestUtils, PythTestUtils, PythG
         console.logBytes(vaa);
     }
 
+    function testGenerateWithdrawFeeVAAWithAlice() public view {
+        // Generate VAA with Alice's address: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+        bytes memory withdrawFeeMessage = abi.encodePacked(
+            MAGIC,
+            uint8(GovernanceModule.Target),
+            uint8(GovernanceAction.WithdrawFee),
+            TARGET_CHAIN_ID,
+            hex"70997970C51812dc3A010C7d01b50e0d17dc79C8", // Alice's address (20 bytes)
+            uint64(100), // value (8 bytes)
+            uint64(3) // expo (8 bytes)
+        );
+
+        bytes memory vaa = encodeAndSignMessage(
+            withdrawFeeMessage,
+            TEST_GOVERNANCE_CHAIN_ID,
+            TEST_GOVERNANCE_EMITTER,
+            1
+        );
+
+        console.log("test_withdraw_fee VAA with Alice:");
+        console.logBytes(vaa);
+    }
+
     function encodeAndSignMessage(
         bytes memory data,
         uint16 emitterChainId,
