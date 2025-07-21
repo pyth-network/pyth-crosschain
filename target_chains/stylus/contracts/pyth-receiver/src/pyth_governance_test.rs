@@ -3,7 +3,7 @@ mod test {
     use crate::error::PythReceiverError;
     use crate::test_data::*;
     use crate::PythReceiver;
-    use alloy_primitives::{address, Address, U256};
+    use alloy_primitives::{address, Address, U256, U64};
     use hex::FromHex;
     use mock_instant::global::MockClock;
     use motsu::prelude::*;
@@ -180,7 +180,10 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
         if result.is_err() {
-            println!("SetWormholeAddress Error: {:?}", result.as_ref().unwrap_err());
+            println!(
+                "SetWormholeAddress Error: {:?}",
+                result.as_ref().unwrap_err()
+            );
         }
         assert!(result.is_ok());
     }
@@ -200,7 +203,10 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
         if result.is_err() {
-            println!("AuthorizeGovernanceDataSourceTransfer Error: {:?}", result.as_ref().unwrap_err());
+            println!(
+                "AuthorizeGovernanceDataSourceTransfer Error: {:?}",
+                result.as_ref().unwrap_err()
+            );
         }
         assert!(result.is_ok());
     }
@@ -220,11 +226,17 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
         if result.is_err() {
-            println!("SetTransactionFee Error: {:?}", result.as_ref().unwrap_err());
+            println!(
+                "SetTransactionFee Error: {:?}",
+                result.as_ref().unwrap_err()
+            );
         }
         assert!(result.is_ok());
     }
 
+    // Fee transfers can't be done in the motsu testing framework. This commented test serves as an example for how to use the function, though.
+
+    /*
     #[motsu::test]
     fn test_withdraw_fee(
         pyth_contract: Contract<PythReceiver>,
@@ -236,12 +248,16 @@ mod test {
         let hex_str = "0100000000010030f48904e130d76ee219bc59988f89526e5c9860e89efda3a74e33c3ab53d4e6036d1c67249d2f25a27e8c94d203609785839e3e4817d0a03214ea8bbf6a8415000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0109000270997970c51812dc3a010c7d01b50e0d17dc79c800000000000000640000000000000003";
         let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
 
+        pyth_contract.address().fund(U256::from(200000u64));
+
         let result = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
+
         if result.is_err() {
             println!("WithdrawFee Error: {:?}", result.as_ref().unwrap_err());
         }
         assert!(result.is_ok());
     }
+    */
 }
