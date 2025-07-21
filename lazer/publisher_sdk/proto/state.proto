@@ -48,10 +48,12 @@ message Publisher {
 
 enum FeedState {
     // Default value. Feeds in this state are not available to consumers.
+    // `COMING_SOON` feeds are expected to become stable in the future.
     COMING_SOON = 0;
     // A fully available feed.
     STABLE = 1;
-    // Inactive feeds are not available to consumers or publishers.
+    // Inactive feeds are not available to consumers.
+    // `INACTIVE` feeds are not expected to become stable again.
     INACTIVE = 2;
 }
 
