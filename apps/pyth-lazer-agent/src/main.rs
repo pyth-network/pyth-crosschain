@@ -15,7 +15,8 @@ mod publisher_handle;
 mod relayer_session;
 mod websocket_utils;
 
-#[derive(Parser)]
+#[derive(Parser, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 #[command(version)]
 struct Cli {
     #[clap(short, long, default_value = "config/config.toml")]
