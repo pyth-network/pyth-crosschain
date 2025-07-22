@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod test {
-    use crate::PythReceiver;
-    use alloy_primitives::{address, Address, U256};
+    use crate::{PythReceiver, FeeSet, TransactionFeeSet, DataSourcesSet, GovernanceDataSourceSet};
+    use alloy_primitives::{address, Address, U256, FixedBytes};
     use hex::FromHex;
     use motsu::prelude::*;
     use wormhole_contract::WormholeContract;
@@ -100,6 +100,17 @@ mod test {
             .execute_governance_instruction(bytes.clone());
         assert!(result.is_ok());
 
+
+        let expected_event = DataSourcesSet {
+            old_data_sources: vec![FixedBytes::from(PYTHNET_EMITTER_ADDRESS)],
+            new_data_sources: vec![FixedBytes::from([
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x11, 0x11
+            ])],
+        };
+        assert!(pyth_contract.emitted(&expected_event), "DataSourcesSet event should be emitted");
+
         let result2 = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
@@ -144,6 +155,13 @@ mod test {
             .execute_governance_instruction(bytes.clone());
 
         assert!(result.is_ok());
+
+        let expected_new_fee = U256::from(5000);
+        let expected_event = FeeSet {
+            old_fee: SINGLE_UPDATE_FEE_IN_WEI,
+            new_fee: expected_new_fee,
+        };
+        assert!(pyth_contract.emitted(&expected_event), "FeeSet event should be emitted");
 
         let result2 = pyth_contract
             .sender(alice)
@@ -245,6 +263,15 @@ mod test {
             );
         }
         assert!(result.is_ok());
+
+        let expected_event = GovernanceDataSourceSet {
+            old_chain_id: 0, // Initial governance_data_source_index
+            old_emitter_address: FixedBytes::from(GOVERNANCE_EMITTER), // Initial governance emitter from pyth_wormhole_init
+            new_chain_id: 1, // claim_vm.body.emitter_chain from the VAA
+            new_emitter_address: FixedBytes::from(GOVERNANCE_EMITTER), // emitter_bytes from the VAA
+            initial_sequence: 100, // claim_vm.body.sequence from the VAA (0x64 = 100)
+        };
+        assert!(pyth_contract.emitted(&expected_event), "GovernanceDataSourceSet event should be emitted");
     }
 
     #[motsu::test]
@@ -268,6 +295,13 @@ mod test {
             );
         }
         assert!(result.is_ok());
+
+        let expected_new_fee = U256::from(100000);
+        let expected_event = TransactionFeeSet {
+            old_fee: U256::ZERO,
+            new_fee: expected_new_fee,
+        };
+        assert!(pyth_contract.emitted(&expected_event), "TransactionFeeSet event should be emitted");
 
         let result2 = pyth_contract
             .sender(alice)
