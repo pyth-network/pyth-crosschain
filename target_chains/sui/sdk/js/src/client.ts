@@ -6,7 +6,7 @@ import { HexString } from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
-type Coin = {
+type NestedTransactionResult = {
   $kind: "NestedResult";
   NestedResult: [number, number];
 };
@@ -112,7 +112,7 @@ export class SuiPythClient {
     tx: Transaction,
     updates: Buffer[],
     packageId: string,
-  ): Promise<any> {
+  ): Promise<NestedTransactionResult> {
     if (updates.length > 1) {
       throw new Error(
         "SDK does not support sending multiple accumulator messages in a single transaction",
@@ -144,7 +144,7 @@ export class SuiPythClient {
     packageId: string,
     feedIds: HexString[],
     priceUpdatesHotPotato: any,
-    coins: Coin[],
+    coins: NestedTransactionResult[],
   ) {
     const priceInfoObjects: ObjectId[] = [];
     let coinId = 0;
@@ -220,7 +220,7 @@ export class SuiPythClient {
     tx: Transaction,
     updates: Buffer[],
     feedIds: HexString[],
-    coins: Coin[],
+    coins: NestedTransactionResult[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
     const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(
