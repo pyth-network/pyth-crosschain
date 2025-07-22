@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use base64::Engine;
 use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
-use pyth_lazer_client::client::PythLazerClient;
+use pyth_lazer_client::client::PythLazerClientBuilder;
 use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::message::{
     EvmMessage, LeEcdsaMessage, LeUnsignedMessage, Message, SolanaMessage,
@@ -35,22 +35,23 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     // Create and start the client
-    let mut client = PythLazerClient::new(
-        vec![
+    let mut client = PythLazerClientBuilder::new(get_lazer_access_token())
+        // Optionally override the default endpoints
+        .with_endpoints(vec![
             "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
             "wss://pyth-lazer-1.dourolabs.app/v1/stream".parse()?,
-        ],
-        get_lazer_access_token(),
-        4,
-        PythLazerExponentialBackoffBuilder::default().build(),
-        Duration::from_secs(5), // Timeout for each connection
-    )?;
+        ])
+        // Optionally set the number of connections
+        .with_num_connections(4)
+        // Optionally set the backoff strategy
+        .with_backoff(PythLazerExponentialBackoffBuilder::default().build())
+        // Optionally set the timeout for each connection
+        .with_timeout(Duration::from_secs(5))
+        // Optionally set the channel capacity for responses
+        .with_channel_capacity(1000)
+        .build()?;
 
-    let stream = client
-        .start(
-            1000, // Use a channel capacity of 1000
-        )
-        .await?;
+    let stream = client.start().await?;
     pin!(stream);
 
     let subscription_requests = vec![

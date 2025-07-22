@@ -15,6 +15,13 @@ use url::Url;
 const DEDUP_CACHE_SIZE: usize = 100_000;
 const DEDUP_TTL: Duration = Duration::from_secs(10);
 
+const DEFAULT_ENDPOINTS: [&str; 2] = [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+];
+const DEFAULT_NUM_CONNECTIONS: usize = 4;
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
+
 pub struct PythLazerClient {
     endpoints: Vec<Url>,
     access_token: String,
@@ -22,6 +29,7 @@ pub struct PythLazerClient {
     ws_connections: Vec<PythLazerResilientWSConnection>,
     backoff: ExponentialBackoff,
     timeout: Duration,
+    channel_capacity: usize,
 }
 
 impl PythLazerClient {
@@ -37,6 +45,7 @@ impl PythLazerClient {
         num_connections: usize,
         backoff: ExponentialBackoff,
         timeout: Duration,
+        channel_capacity: usize,
     ) -> Result<Self> {
         if backoff.max_elapsed_time.is_some() {
             bail!("max_elapsed_time is not supported in Pyth Lazer client");
@@ -51,11 +60,12 @@ impl PythLazerClient {
             ws_connections: Vec::with_capacity(num_connections),
             backoff,
             timeout,
+            channel_capacity,
         })
     }
 
-    pub async fn start(&mut self, channel_capacity: usize) -> Result<mpsc::Receiver<AnyResponse>> {
-        let (sender, receiver) = mpsc::channel::<AnyResponse>(channel_capacity);
+    pub async fn start(&mut self) -> Result<mpsc::Receiver<AnyResponse>> {
+        let (sender, receiver) = mpsc::channel::<AnyResponse>(self.channel_capacity);
         let (ws_connection_sender, mut ws_connection_receiver) =
             mpsc::channel::<AnyResponse>(CHANNEL_CAPACITY);
 
@@ -111,5 +121,66 @@ impl PythLazerClient {
             connection.unsubscribe(subscription_id).await?;
         }
         Ok(())
+    }
+}
+
+pub struct PythLazerClientBuilder {
+    endpoints: Vec<Url>,
+    access_token: String,
+    num_connections: usize,
+    backoff: ExponentialBackoff,
+    timeout: Duration,
+    channel_capacity: usize,
+}
+
+impl PythLazerClientBuilder {
+    pub fn new(access_token: String) -> Self {
+        Self {
+            endpoints: DEFAULT_ENDPOINTS
+                .iter()
+                .map(|&s| s.parse().unwrap())
+                .collect(),
+            access_token,
+            num_connections: DEFAULT_NUM_CONNECTIONS,
+            backoff: ExponentialBackoff::default(),
+            timeout: DEFAULT_TIMEOUT,
+            channel_capacity: CHANNEL_CAPACITY,
+        }
+    }
+
+    pub fn with_endpoints(mut self, endpoints: Vec<Url>) -> Self {
+        self.endpoints = endpoints;
+        self
+    }
+
+    pub fn with_num_connections(mut self, num_connections: usize) -> Self {
+        self.num_connections = num_connections;
+        self
+    }
+
+    pub fn with_backoff(mut self, backoff: ExponentialBackoff) -> Self {
+        self.backoff = backoff;
+        self
+    }
+
+    pub fn with_timeout(mut self, timeout: Duration) -> Self {
+        self.timeout = timeout;
+        self
+    }
+
+    pub fn with_channel_capacity(mut self, channel_capacity: usize) -> Self {
+        self.channel_capacity = channel_capacity;
+        self
+    }
+
+    pub fn build(self) -> Result<PythLazerClient> {
+        PythLazerClient::new(
+            self.endpoints,
+            self.access_token,
+            self.num_connections,
+            self.backoff,
+            self.timeout,
+            self.channel_capacity,
+        )
     }
 }
