@@ -97,14 +97,16 @@ impl PythLazerResilientWSConnectionTask {
         response_sender: mpsc::Sender<AnyResponse>,
         request_receiver: &mut mpsc::Receiver<Request>,
     ) -> Result<()> {
-        let mut last_failure_time = Instant::now();
-
         loop {
+            let start_time = Instant::now();
             if let Err(e) = self.start(response_sender.clone(), request_receiver).await {
-                if last_failure_time.elapsed() > BACKOFF_RESET_DURATION {
+                // If a connection was working for BACKOFF_RESET_DURATION
+                // and timeout + 1sec, it was considered successful therefore reset the backoff
+                if start_time.elapsed() > BACKOFF_RESET_DURATION
+                    && start_time.elapsed() > self.timeout + Duration::from_secs(1)
+                {
                     self.backoff.reset();
                 }
-                last_failure_time = Instant::now();
 
                 let delay = self.backoff.next_backoff();
                 match delay {
