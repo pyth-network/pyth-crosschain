@@ -16,7 +16,6 @@ mod relayer_session;
 mod websocket_utils;
 
 #[derive(Parser, Deserialize)]
-#[serde(rename_all = "kebab-case")]
 #[command(version)]
 struct Cli {
     #[clap(short, long, default_value = "config/config.toml")]
@@ -26,7 +25,6 @@ struct Cli {
 }
 
 #[derive(clap::ValueEnum, Clone, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
 enum LogFormat {
     #[default]
     Json,
@@ -50,7 +48,6 @@ async fn main() -> anyhow::Result<()> {
 }
 
 fn init_tracing_subscriber(log_format: LogFormat) {
-
     #[allow(
         clippy::expect_used,
         reason = "application can fail on invalid RUST_LOG"
