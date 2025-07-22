@@ -3,6 +3,7 @@ use crate::structs::DataSource;
 use alloc::vec::Vec;
 use stylus_sdk::alloy_primitives::{Address, FixedBytes, U16};
 
+// Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
 const MAGIC: u32 = 0x5054474d;
 const MODULE_TARGET: u8 = 1;
 

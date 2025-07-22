@@ -543,7 +543,7 @@ impl PythReceiver {
             .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
 
         let vm = Vaa::read(&mut Vec::from(data.clone()).as_slice())
-            .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
+            .map_err(|_| PythReceiverError::InvalidVaa)?;
 
         verify_governance_vm(self, vm.clone())?;
 
@@ -554,7 +554,7 @@ impl PythReceiver {
 
         let wormhole_id = wormhole
             .chain_id(chain_id_config)
-            .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
+            .map_err(|_| PythReceiverError::WormholeUninitialized)?;
 
         if instruction.target_chain_id != 0 && instruction.target_chain_id != wormhole_id {
             return Err(PythReceiverError::InvalidGovernanceTarget);
@@ -618,7 +618,7 @@ impl PythReceiver {
     }
 
     fn set_fee(&mut self, value: u64, expo: u64) {
-        let new_fee = U256::from(value) * U256::from(10).pow(U256::from(expo));
+        let new_fee = U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
         let old_fee = self.single_update_fee_in_wei.get();
 
         self.single_update_fee_in_wei.set(new_fee);
@@ -649,9 +649,7 @@ impl PythReceiver {
         let config = Call::new();
         wormhole
             .parse_and_verify_vm(config, data.clone())
-            .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
-
-        // if !is_valid_governance_data_source()
+            .map_err(|_| PythReceiverError::InvalidVaa)?;
 
         let vm = Vaa::read(&mut data.as_slice())
             .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
@@ -723,7 +721,7 @@ impl PythReceiver {
         }
 
         self.governance_data_source_index.set(U32::from(new_index));
-        let _old_data_source = self.governance_data_source_index.get();
+        let old_data_source_emitter_address = self.governance_data_source_emitter_address.get();
 
         self.governance_data_source_chain_id
             .set(U16::from(claim_vm.body.emitter_chain));
@@ -744,7 +742,7 @@ impl PythReceiver {
             self.vm(),
             GovernanceDataSourceSet {
                 old_chain_id: current_index as u16,
-                old_emitter_address: self.governance_data_source_emitter_address.get(),
+                old_emitter_address: old_data_source_emitter_address,
                 new_chain_id: claim_vm.body.emitter_chain,
                 new_emitter_address: FixedBytes::from(emitter_bytes),
                 initial_sequence: last_executed_governance_sequence,
@@ -755,7 +753,7 @@ impl PythReceiver {
     }
 
     fn set_transaction_fee(&mut self, value: u64, expo: u64) {
-        let new_fee = U256::from(value) * U256::from(10).pow(U256::from(expo));
+        let new_fee = U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
         let old_fee = self.transaction_fee_in_wei.get();
 
         self.transaction_fee_in_wei.set(new_fee);
@@ -769,7 +767,8 @@ impl PythReceiver {
         expo: u64,
         target_address: Address,
     ) -> Result<(), PythReceiverError> {
-        let fee_to_withdraw = U256::from(value) * U256::from(10).pow(U256::from(expo));
+        let fee_to_withdraw =
+            U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
         let current_balance = self.vm().balance(self.vm().contract_address());
 
         if current_balance < fee_to_withdraw {

@@ -189,6 +189,7 @@ mod test {
         fn test_set_wormhole_address(
             pyth_contract: Contract<PythReceiver>,
             wormhole_contract: Contract<WormholeContract>,
+            wormhole_contract_2: Contract<WormholeContract>,
             alice: Address,
         ) {
             pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
@@ -214,6 +215,7 @@ mod test {
 
         }
     */
+
     #[motsu::test]
     fn test_authorize_governance_data_source_transfer(
         pyth_contract: Contract<PythReceiver>,
