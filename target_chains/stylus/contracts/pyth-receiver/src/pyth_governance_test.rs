@@ -194,25 +194,33 @@ mod test {
         ) {
             pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-            let hex_str = "010000000001001daf08e5e3799cbc6096a90c2361e43220325418f377620a7a73d6bece18322679f6ada9725d9081743805efb8bccecd51098f1d76f34cba8b835fae643bbd9c000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010600027e5f4552091a69125d5dfcb7b8c2659029395bdf";
-            let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+        let guardians = vec![address!("0x7e5f4552091a69125d5dfcb7b8c2659029395bdf")];
+        let governance_contract =
+            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        wormhole_contract_2
+            .sender(alice)
+            .initialize(
+                guardians,
+                0,
+                CHAIN_ID,
+                GOVERNANCE_CHAIN_ID,
+                governance_contract,
+            )
+            .unwrap();
 
-            let result = pyth_contract
-                .sender(alice)
-                .execute_governance_instruction(bytes.clone());
-            if result.is_err() {
-                println!(
-                    "SetWormholeAddress Error: {:?}",
-                    result.as_ref().unwrap_err()
-                );
-            }
-            assert!(result.is_ok());
+        
+        
+        let hex_str = format!("010000000001001daf08e5e3799cbc6096a90c2361e43220325418f377620a7a73d6bece18322679f6ada9725d9081743805efb8bccecd51098f1d76f34cba8b835fae643bbd9c000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d01060002{:040x}", wormhole_contract_2.address());
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
 
-            let result2 = pyth_contract
-                .sender(alice)
-                .execute_governance_instruction(bytes.clone());
-            assert!(result2.is_err(), "Second execution should fail due to sequence number check");
-
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!(
+                "SetWormholeAddress Error: {:?}",
+                result.as_ref().unwrap_err()
+            );
         }
     */
 
