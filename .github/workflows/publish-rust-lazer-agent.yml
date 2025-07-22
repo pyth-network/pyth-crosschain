@@ -5,7 +5,7 @@ on:
     tags:
       - pyth-lazer-agent-v*
 jobs:
-  publish-pyth-lazer-protocol:
+  publish-pyth-lazer-agent:
     name: Publish Rust package pyth-lazer-agent to crates.io
     runs-on: ubuntu-latest
     steps:
