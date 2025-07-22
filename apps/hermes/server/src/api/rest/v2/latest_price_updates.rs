@@ -79,7 +79,7 @@ where
         Aggregates::get_price_feeds_with_update_data(state, &price_ids, RequestTime::Latest)
             .await
             .map_err(|e| {
-                tracing::warn!(
+                tracing::debug!(
                     "Error getting price feeds {:?} with update data: {:?}",
                     price_ids,
                     e

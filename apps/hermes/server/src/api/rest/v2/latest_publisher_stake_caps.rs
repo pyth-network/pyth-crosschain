@@ -59,7 +59,7 @@ where
         Aggregates::get_latest_publisher_stake_caps_with_update_data(state)
             .await
             .map_err(|e| {
-                tracing::warn!(
+                tracing::debug!(
                     "Error getting publisher stake caps with update data: {:?}",
                     e
                 );
