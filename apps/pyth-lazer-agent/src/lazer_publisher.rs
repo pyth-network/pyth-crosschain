@@ -62,7 +62,7 @@ impl LazerPublisher {
         let authorization_token =
             if let Some(authorization_token) = config.authorization_token.clone() {
                 // If authorization_token is configured, use it.
-                authorization_token
+                authorization_token.0
             } else {
                 // Otherwise, use the base64 pubkey.
                 BASE64_STANDARD.encode(signing_key.verifying_key().to_bytes())
