@@ -644,6 +644,8 @@ impl PythReceiver {
     ) -> Result<(), PythReceiverError> {
         let wormhole: IWormholeContract = IWormholeContract::new(address);
         let config = Call::new();
+
+        // Make sure the contract at the new Wormhole address is initialized and functional by testing it on the SetWormholeAddress instruction VAA
         wormhole
             .parse_and_verify_vm(config, data.clone())
             .map_err(|_| PythReceiverError::InvalidVaa)?;
