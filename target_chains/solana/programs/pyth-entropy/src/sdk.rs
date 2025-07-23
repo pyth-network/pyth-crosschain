@@ -1,5 +1,5 @@
 use {
-    crate::{CONFIG_SEED, PROVIDER_SEED, REQUEST_SEED, TREASURY_SEED, ID},
+    crate::{CONFIG_SEED, ID, PROVIDER_SEED, REQUEST_SEED, TREASURY_SEED},
     anchor_lang::{prelude::*, system_program, InstructionData},
     solana_program::instruction::Instruction,
 };
@@ -18,9 +18,14 @@ pub fn get_provider_info_address(provider: &Pubkey) -> Pubkey {
 
 pub fn get_request_address(provider: &Pubkey, sequence_number: u64) -> Pubkey {
     Pubkey::find_program_address(
-        &[REQUEST_SEED, provider.as_ref(), &sequence_number.to_le_bytes()],
+        &[
+            REQUEST_SEED,
+            provider.as_ref(),
+            &sequence_number.to_le_bytes(),
+        ],
         &ID,
-    ).0
+    )
+    .0
 }
 
 pub struct InitializeAccounts {
@@ -147,7 +152,8 @@ impl crate::instruction::Register {
                 commitment_metadata,
                 chain_length,
                 uri,
-            }.data(),
+            }
+            .data(),
         }
     }
 }
@@ -162,7 +168,8 @@ impl crate::instruction::RequestV2 {
     ) -> Instruction {
         Instruction {
             program_id: ID,
-            accounts: RequestV2Accounts::populate(payer, requester, provider, sequence_number).to_account_metas(None),
+            accounts: RequestV2Accounts::populate(payer, requester, provider, sequence_number)
+                .to_account_metas(None),
             data: crate::instruction::RequestV2 { gas_limit }.data(),
         }
     }

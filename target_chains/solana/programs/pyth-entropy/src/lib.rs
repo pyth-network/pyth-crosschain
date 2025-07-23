@@ -36,7 +36,6 @@ pub mod pyth_entropy {
         require!(chain_length > 0, EntropyError::AssertionFailure);
 
         let provider_info = &mut ctx.accounts.provider_info;
-        let clock = Clock::get()?;
 
         provider_info.provider = ctx.accounts.provider.key();
         provider_info.fee_in_lamports = fee_in_lamports;
@@ -96,8 +95,10 @@ pub mod pyth_entropy {
 
         request_account.provider = provider_info.provider;
         request_account.sequence_number = assigned_sequence_number;
-        request_account.num_hashes = (assigned_sequence_number - provider_info.current_commitment_sequence_number) as u32;
-        request_account.commitment = combine_commitments(user_commitment, provider_info.current_commitment);
+        request_account.num_hashes =
+            (assigned_sequence_number - provider_info.current_commitment_sequence_number) as u32;
+        request_account.commitment =
+            combine_commitments(user_commitment, provider_info.current_commitment);
         request_account.requester = ctx.accounts.requester.key();
         request_account.block_number = clock.slot;
         request_account.use_blockhash = false;
@@ -231,8 +232,16 @@ pub mod pyth_entropy {
 
         provider_info.accrued_fees_in_lamports -= amount;
 
-        **ctx.accounts.provider.to_account_info().try_borrow_mut_lamports()? += amount;
-        **ctx.accounts.treasury.to_account_info().try_borrow_mut_lamports()? -= amount;
+        **ctx
+            .accounts
+            .provider
+            .to_account_info()
+            .try_borrow_mut_lamports()? += amount;
+        **ctx
+            .accounts
+            .treasury
+            .to_account_info()
+            .try_borrow_mut_lamports()? -= amount;
 
         emit!(Withdrawal {
             provider: provider_info.provider,
@@ -509,7 +518,8 @@ fn reveal_helper(
     user_contribution: [u8; 32],
     provider_contribution: [u8; 32],
 ) -> Result<[u8; 32]> {
-    let provider_commitment = construct_provider_commitment(request.num_hashes, provider_contribution);
+    let provider_commitment =
+        construct_provider_commitment(request.num_hashes, provider_contribution);
     let user_commitment = construct_user_commitment(user_contribution);
     let expected_commitment = combine_commitments(user_commitment, provider_commitment);
 
@@ -566,7 +576,11 @@ fn generate_user_contribution(clock: &Clock, requester: &Pubkey) -> [u8; 32] {
     keccak::hash(&data).to_bytes()
 }
 
-fn get_fee_v2_internal(provider_info: &ProviderInfo, config: &EntropyConfig, gas_limit: u32) -> u64 {
+fn get_fee_v2_internal(
+    provider_info: &ProviderInfo,
+    config: &EntropyConfig,
+    gas_limit: u32,
+) -> u64 {
     get_provider_fee_internal(provider_info, gas_limit) + config.pyth_fee_in_lamports
 }
 
