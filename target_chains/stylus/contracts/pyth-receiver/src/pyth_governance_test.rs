@@ -130,16 +130,17 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let hex_str = "010000000001006fc16df905b08c16553eda9d5a7898ec7eba4267ce0af7945625c955e8f435fc7df7a4087af360f88c2477f0c2f4e7eaa4bb1e8fd43677f4d6b04ee20e225186000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010400020000000000000000";
+        //
+        let hex_str = "01000000000100b2e15dd5ef41b800ec5ec10f61c6415f706a769f459757f43be78a8fd9f1f6e104e909239fe73b4d8652f7aa1a07825e3230d01a0a7bd6efa0be2e7e72377d71010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010400020000000000000000";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
         let result = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        println!("Result: {:?}", result.unwrap_err());
-        // assert!(result.is_ok());
+        assert!(result.is_ok(), "SetValidPeriod governance instruction should succeed");
     }
+
 
     #[motsu::test]
     fn test_set_fee(
