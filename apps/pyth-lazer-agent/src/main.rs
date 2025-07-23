@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use {
     crate::lazer_publisher::LazerPublisher,
     anyhow::Context,
@@ -14,32 +15,28 @@ mod publisher_handle;
 mod relayer_session;
 mod websocket_utils;
 
-#[derive(Parser)]
+#[derive(Parser, Deserialize)]
 #[command(version)]
 struct Cli {
     #[clap(short, long, default_value = "config/config.toml")]
     config: String,
+    #[clap(short, long, default_value = "json")]
+    log_format: LogFormat,
+}
+
+#[derive(clap::ValueEnum, Clone, Deserialize, Default)]
+enum LogFormat {
+    #[default]
+    Json,
+    Compact,
+    Pretty,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    #[allow(
-        clippy::expect_used,
-        reason = "application can fail on invalid RUST_LOG"
-    )]
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::builder()
-                .with_default_directive(LevelFilter::INFO.into())
-                .from_env()
-                .expect("invalid RUST_LOG env var"),
-        )
-        .with_span_events(FmtSpan::NONE)
-        .json()
-        .with_span_list(false)
-        .init();
-
     let args = Cli::parse();
+    init_tracing_subscriber(args.log_format);
+
     let config =
         config::load_config(args.config.to_string()).context("Failed to read config file")?;
     info!(?config, "starting lazer-agent");
@@ -48,4 +45,31 @@ async fn main() -> anyhow::Result<()> {
     http_server::run(config, lazer_publisher).await?;
 
     Ok(())
+}
+
+fn init_tracing_subscriber(log_format: LogFormat) {
+    #[allow(
+        clippy::expect_used,
+        reason = "application can fail on invalid RUST_LOG"
+    )]
+    let subscriber = tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env()
+                .expect("invalid RUST_LOG env var"),
+        )
+        .with_span_events(FmtSpan::NONE);
+
+    match log_format {
+        LogFormat::Json => {
+            subscriber.json().with_span_list(false).init();
+        }
+        LogFormat::Compact => {
+            subscriber.compact().init();
+        }
+        LogFormat::Pretty => {
+            subscriber.pretty().init();
+        }
+    }
 }

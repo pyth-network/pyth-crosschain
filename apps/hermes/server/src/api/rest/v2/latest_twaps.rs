@@ -114,7 +114,7 @@ where
     )
     .await
     .map_err(|e| {
-        tracing::warn!(
+        tracing::debug!(
             "Error getting TWAPs for price IDs {:?} with update data: {:?}",
             price_ids,
             e

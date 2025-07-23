@@ -664,7 +664,7 @@ where
     // to guarantee that the start and end messages are window_seconds apart
     let start_timestamp = if end_messages.is_empty() {
         // If there are no end messages, we can't calculate a TWAP
-        tracing::warn!(
+        tracing::debug!(
             price_ids = ?price_ids,
             time = ?end_time,
             "Could not find TWAP messages"
@@ -693,7 +693,7 @@ where
         .await?;
 
     if start_messages.is_empty() {
-        tracing::warn!(
+        tracing::debug!(
             price_ids = ?price_ids,
             time = ?start_time,
             "Could not find TWAP messages"
