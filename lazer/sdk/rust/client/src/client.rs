@@ -351,7 +351,6 @@ impl PythLazerClientBuilder {
     ///
     /// * `timeout` - The timeout duration for each WebSocket
     ///
-
     pub fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;
         self
