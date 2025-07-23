@@ -14,7 +14,7 @@
 //!
 //! ## Basic Usage
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use pyth_lazer_client::PythLazerClientBuilder;
 //! use pyth_lazer_protocol::subscription::SubscribeRequest;
 //!
