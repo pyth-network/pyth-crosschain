@@ -9,8 +9,8 @@ use pyth_lazer_protocol::jrpc::{
     GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcResponse, JrpcSuccessResponse,
     JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata,
 };
-use soketto::Sender;
 use soketto::handshake::http::Server;
+use soketto::Sender;
 use std::str::FromStr;
 use tokio::{pin, select};
 use tokio_util::compat::TokioAsyncReadCompatExt;
