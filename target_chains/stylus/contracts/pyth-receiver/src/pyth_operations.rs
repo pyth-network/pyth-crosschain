@@ -433,9 +433,6 @@ impl PythReceiver {
     }
 }
 
-impl PythReceiver {
-}
-
 pub(crate) fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
     let message = WormholeMessage::try_from_bytes(vaa.body.payload.to_vec())
         .map_err(|_| PythReceiverError::PriceUnavailable)?;
