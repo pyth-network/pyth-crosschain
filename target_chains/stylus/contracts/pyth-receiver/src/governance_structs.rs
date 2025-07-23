@@ -238,9 +238,6 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             GovernancePayload::SetFee(SetFee { value, expo })
         }
         GovernanceAction::SetValidPeriod => {
-            if payload.len() < cursor + 8 {
-                return Err(PythReceiverError::InvalidGovernanceMessage);
-            }
             let valid_period_bytes = payload
                 .get(cursor..cursor + 8)
                 .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
@@ -255,20 +252,17 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
             })
         }
         GovernanceAction::SetWormholeAddress => {
-            if payload.len() < cursor + 20 {
-                return Err(PythReceiverError::InvalidGovernanceMessage);
-            }
-            let mut address_bytes = [0u8; 20];
-            address_bytes.copy_from_slice(&payload[cursor..cursor + 20]);
+            let address_bytes: &[u8; 20] = payload
+                .get(cursor..cursor + 20)
+                .ok_or(PythReceiverError::InvalidGovernanceMessage)?
+                .try_into()
+                .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
             cursor += 20;
             GovernancePayload::SetWormholeAddress(SetWormholeAddress {
                 address: Address::from(address_bytes),
             })
         }
         GovernanceAction::SetTransactionFee => {
-            if payload.len() < cursor + 16 {
-                return Err(PythReceiverError::InvalidGovernanceMessage);
-            }
             let fee_value_bytes = payload
                 .get(cursor..cursor + 8)
                 .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
