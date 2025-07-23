@@ -391,6 +391,7 @@ impl PythReceiver {
         max_allowed_publish_time: u64,
         check_uniqueness: bool,
     ) -> Result<Vec<PriceFeedReturn>, PythReceiverError> {
+        // Check the first 4 bytes of the update_data_array for the magic header
         let update_data_array: &[u8] = &update_data;
         if update_data_array.len() < 4 {
             return Err(PythReceiverError::InvalidUpdateData);
@@ -544,6 +545,8 @@ impl PythReceiver {
             <= max_age
     }
 
+    // Stylus doesn't provide a way to mock up the testing timestamp
+    // so at the moment I'm using the testing trait to let me test old timestamps
     fn get_current_timestamp(&self) -> u64 {
         #[cfg(test)]
         {
