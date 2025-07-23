@@ -16,7 +16,6 @@ pub enum GovernanceAction {
     SetValidPeriod,
     RequestGovernanceDataSourceTransfer,
     SetWormholeAddress,
-    SetFeeInToken,
     SetTransactionFee,
     WithdrawFee,
 }
@@ -33,7 +32,6 @@ impl TryFrom<u8> for GovernanceAction {
             4 => Ok(GovernanceAction::SetValidPeriod),
             5 => Ok(GovernanceAction::RequestGovernanceDataSourceTransfer),
             6 => Ok(GovernanceAction::SetWormholeAddress),
-            7 => Ok(GovernanceAction::SetFeeInToken),
             8 => Ok(GovernanceAction::SetTransactionFee),
             9 => Ok(GovernanceAction::WithdrawFee),
             _ => Err(PythReceiverError::InvalidGovernanceAction),
@@ -56,7 +54,6 @@ pub enum GovernancePayload {
     SetValidPeriod(SetValidPeriod),
     RequestGovernanceDataSourceTransfer(RequestGovernanceDataSourceTransfer),
     SetWormholeAddress(SetWormholeAddress),
-    SetFeeInToken(SetFeeInToken),
     SetTransactionFee(SetTransactionFee),
     WithdrawFee(WithdrawFee),
 }
@@ -83,13 +80,6 @@ pub struct WithdrawFee {
     pub value: u64,
     pub expo: u64,
     pub target_address: Address,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct SetFeeInToken {
-    pub value: u64,
-    pub expo: u64,
-    pub token: Address,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -246,50 +236,6 @@ pub fn parse_instruction(payload: Vec<u8>) -> Result<GovernanceInstruction, Pyth
 
             cursor += 8;
             GovernancePayload::SetFee(SetFee { value, expo })
-        }
-        GovernanceAction::SetFeeInToken => {
-            if payload.len() < cursor + 17 {
-                return Err(PythReceiverError::InvalidGovernanceMessage);
-            }
-
-            let fee_token_value = payload
-                .get(cursor..cursor + 8)
-                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
-
-            let value = u64::from_be_bytes(
-                fee_token_value
-                    .try_into()
-                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
-            );
-            cursor += 8;
-
-            let expo_bytes = payload
-                .get(cursor..cursor + 8)
-                .ok_or(PythReceiverError::InvalidGovernanceMessage)?;
-            let expo = u64::from_be_bytes(
-                expo_bytes
-                    .try_into()
-                    .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?,
-            );
-            cursor += 8;
-
-            let token_len = payload[cursor];
-            cursor += 1;
-
-            if token_len != 20 {
-                return Err(PythReceiverError::InvalidGovernanceMessage);
-            }
-            if payload.len() < cursor + 20 {
-                return Err(PythReceiverError::InvalidGovernanceMessage);
-            }
-            let mut token_bytes = [0u8; 20];
-            token_bytes.copy_from_slice(&payload[cursor..cursor + 20]);
-            cursor += 20;
-            GovernancePayload::SetFeeInToken(SetFeeInToken {
-                value,
-                expo,
-                token: Address::from(token_bytes),
-            })
         }
         GovernanceAction::SetValidPeriod => {
             if payload.len() < cursor + 8 {

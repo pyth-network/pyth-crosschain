@@ -564,9 +564,6 @@ impl PythReceiver {
             GovernancePayload::SetFee(payload) => {
                 self.set_fee(payload.value, payload.expo);
             }
-            GovernancePayload::SetFeeInToken(payload) => {
-                self.set_fee(payload.value, payload.expo);
-            }
             GovernancePayload::SetDataSources(payload) => {
                 set_data_sources(self, payload.sources);
             }
