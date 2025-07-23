@@ -1,6 +1,5 @@
 #![cfg_attr(not(any(test, feature = "export-abi")), no_main)]
 #![cfg_attr(not(any(test, feature = "export-abi")), no_std)]
-
 #![macro_use]
 extern crate alloc;
 
@@ -9,9 +8,9 @@ static ALLOC: mini_alloc::MiniAlloc = mini_alloc::MiniAlloc::INIT;
 
 use alloc::{vec, vec::Vec};
 use stylus_sdk::{
-    prelude::*,
-    storage::{StorageMap, StorageUint, StorageAddress, StorageBool},
     alloy_primitives::{Address, FixedBytes, U256, keccak256},
+    prelude::*,
+    storage::{StorageAddress, StorageBool, StorageMap, StorageUint},
 };
 
 use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
@@ -125,9 +124,11 @@ impl WormholeContract {
         if self.initialized.get() {
             return Err(WormholeError::AlreadyInitialized.into());
         }
-        self.current_guardian_set_index.set(U256::from(initial_guardian_set_index));
+        self.current_guardian_set_index
+            .set(U256::from(initial_guardian_set_index));
         self.chain_id.set(U256::from(chain_id));
-        self.governance_chain_id.set(U256::from(governance_chain_id));
+        self.governance_chain_id
+            .set(U256::from(governance_chain_id));
         self.governance_contract.set(governance_contract);
 
         self.store_gs(initial_guardian_set_index, initial_guardians, 0)?;
@@ -148,7 +149,7 @@ impl WormholeContract {
                     encoded.extend_from_slice(address.as_slice());
                 }
                 Ok(encoded)
-            },
+            }
             Err(e) => Err(e.into()),
         }
     }
@@ -172,6 +173,9 @@ impl WormholeContract {
     fn quorum(num_guardians: u32) -> u32 {
         (num_guardians * 2) / 3 + 1
     }
+    fn chain_id(&self) -> u16 {
+        self.chain_id.get().try_into().unwrap_or(0u16)
+    }
 }
 
 impl WormholeContract {
@@ -185,118 +189,131 @@ impl WormholeContract {
         if encoded_vaa.len() < 6 {
             return Err(WormholeError::InvalidVAAFormat);
         }
-    
+
         let mut cursor = 0;
-    
+
         // Get version
-        let version = encoded_vaa.get(cursor)
+        let version = encoded_vaa
+            .get(cursor)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         cursor += 1;
-    
+
         if *version != 1 {
             return Err(WormholeError::InvalidVAAFormat);
         }
-    
+
         // Get guardian set index
-        let gsi_bytes = encoded_vaa.get(cursor..cursor + 4)
+        let gsi_bytes = encoded_vaa
+            .get(cursor..cursor + 4)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         let guardian_set_index = u32::from_be_bytes(
-            gsi_bytes.try_into()
-                .map_err(|_| WormholeError::InvalidVAAFormat)?
+            gsi_bytes
+                .try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?,
         );
         cursor += 4;
-    
+
         // Get number of signatures
-        let len_signatures = *encoded_vaa.get(cursor)
+        let len_signatures = *encoded_vaa
+            .get(cursor)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         cursor += 1;
-    
+
         if len_signatures > 19 {
             return Err(WormholeError::InvalidVAAFormat);
         }
-    
+
         let mut signatures = Vec::with_capacity(len_signatures as usize);
-    
+
         for _ in 0..len_signatures {
             if cursor + 66 > encoded_vaa.len() {
                 return Err(WormholeError::InvalidVAAFormat);
             }
-    
-            let guardian_index = *encoded_vaa.get(cursor)
+
+            let guardian_index = *encoded_vaa
+                .get(cursor)
                 .ok_or(WormholeError::InvalidVAAFormat)?;
             cursor += 1;
-    
-            let sig_bytes = encoded_vaa.get(cursor..cursor + 65)
+
+            let sig_bytes = encoded_vaa
+                .get(cursor..cursor + 65)
                 .ok_or(WormholeError::InvalidVAAFormat)?;
             let mut fixed_sig = [0u8; 65];
             fixed_sig.copy_from_slice(sig_bytes);
             cursor += 65;
-    
+
             signatures.push(GuardianSignature {
                 guardian_index,
                 signature: FixedBytes::from(fixed_sig),
             });
         }
-    
+
         if cursor + 51 > encoded_vaa.len() {
             return Err(WormholeError::InvalidVAAFormat);
         }
-    
+
         // Get timestamp
-        let ts_bytes = encoded_vaa.get(cursor..cursor + 4)
+        let ts_bytes = encoded_vaa
+            .get(cursor..cursor + 4)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         let timestamp = u32::from_be_bytes(
-            ts_bytes.try_into()
-                .map_err(|_| WormholeError::InvalidVAAFormat)?
+            ts_bytes
+                .try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?,
         );
         cursor += 4;
-    
+
         // Get nonce
-        let nonce_bytes = encoded_vaa.get(cursor..cursor + 4)
+        let nonce_bytes = encoded_vaa
+            .get(cursor..cursor + 4)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         let nonce = u32::from_be_bytes(
-            nonce_bytes.try_into()
-                .map_err(|_| WormholeError::InvalidVAAFormat)?
+            nonce_bytes
+                .try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?,
         );
         cursor += 4;
-    
+
         // Get emitter chain ID
-        let emitter_chain_bytes = encoded_vaa.get(cursor..cursor + 2)
+        let emitter_chain_bytes = encoded_vaa
+            .get(cursor..cursor + 2)
             .ok_or(WormholeError::InvalidVAAFormat)?;
-        let emitter_chain_id = u16::from_be_bytes([
-            emitter_chain_bytes[0],
-            emitter_chain_bytes[1],
-        ]);
+        let emitter_chain_id = u16::from_be_bytes([emitter_chain_bytes[0], emitter_chain_bytes[1]]);
         cursor += 2;
-    
+
         // Get emitter address
-        let emitter_address_bytes = encoded_vaa.get(cursor..cursor + 32)
+        let emitter_address_bytes = encoded_vaa
+            .get(cursor..cursor + 32)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         let mut fixed_emitter = [0u8; 32];
         fixed_emitter.copy_from_slice(emitter_address_bytes);
         cursor += 32;
-    
+
         // Get sequence
-        let sequence_bytes = encoded_vaa.get(cursor..cursor + 8)
+        let sequence_bytes = encoded_vaa
+            .get(cursor..cursor + 8)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         let sequence = u64::from_be_bytes(
-            sequence_bytes.try_into()
-                .map_err(|_| WormholeError::InvalidVAAFormat)?
+            sequence_bytes
+                .try_into()
+                .map_err(|_| WormholeError::InvalidVAAFormat)?,
         );
         cursor += 8;
-    
+
         // Get consistency level
-        let consistency_level = *encoded_vaa.get(cursor)
+        let consistency_level = *encoded_vaa
+            .get(cursor)
             .ok_or(WormholeError::InvalidVAAFormat)?;
         cursor += 1;
-    
+
         // Get payload
-        let payload = encoded_vaa.get(cursor..)
+        let payload = encoded_vaa
+            .get(cursor..)
             .ok_or(WormholeError::InvalidVAAFormat)?
             .to_vec();
-    
+
         let hash = keccak256(&encoded_vaa[cursor - 51..]);
-    
+
         Ok(VerifiedVM {
             version: *version,
             guardian_set_index,
@@ -311,20 +328,26 @@ impl WormholeContract {
             hash,
         })
     }
-    
 
     fn verify_vm(&self, vaa: &VerifiedVM) -> Result<(), WormholeError> {
         let guardian_set = self.get_gs_internal(vaa.guardian_set_index)?;
-        if vaa.guardian_set_index != self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
-            && guardian_set.expiration_time > 0 {
-                return Err(WormholeError::GuardianSetExpired)
+        let current_gsi = self.current_guardian_set_index.get().try_into().unwrap_or(0u32);
+        if vaa.guardian_set_index != current_gsi && guardian_set.expiration_time > 0 {
+            return Err(WormholeError::GuardianSetExpired);
         }
 
-
-        let num_guardians : u32 = guardian_set.keys.len().try_into().map_err(|_| WormholeError::InvalidInput)?;
+        let num_guardians: u32 = guardian_set
+            .keys
+            .len()
+            .try_into()
+            .map_err(|_| WormholeError::InvalidInput)?;
 
         let required_signatures = Self::quorum(num_guardians);
-        let num_signatures : u32 = vaa.signatures.len().try_into().map_err(|_| WormholeError::InvalidInput)?;
+        let num_signatures: u32 = vaa
+            .signatures
+            .len()
+            .try_into()
+            .map_err(|_| WormholeError::InvalidInput)?;
 
         if num_signatures < required_signatures {
             return Err(WormholeError::InsufficientSignatures);
@@ -353,7 +376,7 @@ impl WormholeContract {
             let hashed_vaa_hash: FixedBytes<32> = FixedBytes::from(keccak256(vaa.hash));
 
             match self.verify_signature(&hashed_vaa_hash, &signature.signature, guardian_address) {
-                Ok(true) => {},
+                Ok(true) => {}
                 Ok(false) => return Err(WormholeError::InvalidSignature.into()),
                 Err(e) => return Err(e),
             }
@@ -367,16 +390,26 @@ impl WormholeContract {
         U256::from_be_bytes(keccak256(&key_data).0)
     }
 
-    fn store_gs(&mut self, set_index: u32, guardians: Vec<Address>, expiration_time: u32) -> Result<(), WormholeError> {
+    fn store_gs(
+        &mut self,
+        set_index: u32,
+        guardians: Vec<Address>,
+        expiration_time: u32,
+    ) -> Result<(), WormholeError> {
         if guardians.is_empty() {
             return Err(WormholeError::InvalidInput);
         }
 
-        self.guardian_set_sizes.setter(U256::from(set_index)).set(U256::from(guardians.len()));
-        self.guardian_set_expiry.setter(U256::from(set_index)).set(U256::from(expiration_time));
+        self.guardian_set_sizes
+            .setter(U256::from(set_index))
+            .set(U256::from(guardians.len()));
+        self.guardian_set_expiry
+            .setter(U256::from(set_index))
+            .set(U256::from(expiration_time));
 
         for (i, guardian) in guardians.iter().enumerate() {
-            let i_u8: u8 = i.try_into()
+            let i_u8: u8 = i
+                .try_into()
                 .map_err(|_| WormholeError::InvalidGuardianIndex)?;
             let key = self.compute_gs_key(set_index, i_u8);
             self.guardian_keys.setter(key).set(*guardian);
@@ -400,27 +433,33 @@ impl WormholeContract {
             RecoveryId::try_from(recovery_id_byte - 27)
                 .map_err(|_| WormholeError::InvalidSignature)?
         } else {
-            RecoveryId::try_from(recovery_id_byte)
-                .map_err(|_| WormholeError::InvalidSignature)?
+            RecoveryId::try_from(recovery_id_byte).map_err(|_| WormholeError::InvalidSignature)?
         };
 
-        let sig = Signature::try_from(&signature[..64])
-            .map_err(|_| WormholeError::InvalidSignature)?;
+        let sig =
+            Signature::try_from(&signature[..64]).map_err(|_| WormholeError::InvalidSignature)?;
 
-        let verifying_key = VerifyingKey::recover_from_prehash(hash.as_slice().try_into().map_err(|_| WormholeError::InvalidInput)?, &sig, recovery_id)
-            .map_err(|_| WormholeError::InvalidSignature)?;
+        let verifying_key = VerifyingKey::recover_from_prehash(
+            hash.as_slice()
+                .try_into()
+                .map_err(|_| WormholeError::InvalidInput)?,
+            &sig,
+            recovery_id,
+        )
+        .map_err(|_| WormholeError::InvalidSignature)?;
 
         let public_key_bytes = verifying_key.to_encoded_point(false);
         let public_key_slice = &public_key_bytes.as_bytes()[1..];
 
         let address_hash = keccak256(public_key_slice);
-        let address_bytes: [u8; 20] = address_hash[12..].try_into()
+        let address_bytes: [u8; 20] = address_hash[12..]
+            .try_into()
             .map_err(|_| WormholeError::InvalidAddressLength)?;
 
         Ok(Address::from(address_bytes) == guardian_address)
     }
 
-   fn get_gs_internal(&self, index: u32) -> Result<GuardianSet, WormholeError> {
+    fn get_gs_internal(&self, index: u32) -> Result<GuardianSet, WormholeError> {
         let size = self.guardian_set_sizes.getter(U256::from(index)).get();
         if size.is_zero() {
             return Err(WormholeError::InvalidGuardianSetIndex);
@@ -457,6 +496,7 @@ impl IWormhole for WormholeContract {
 
         let vaa = self.parse_vm(&encoded_vaa)?;
         self.verify_vm(&vaa)?;
+        
         Ok(vaa)
     }
 
@@ -465,14 +505,16 @@ impl IWormhole for WormholeContract {
     }
 
     fn get_current_guardian_set_index(&self) -> u32 {
-        self.current_guardian_set_index.get().try_into().unwrap_or(0u32)
+        self.current_guardian_set_index
+            .get()
+            .try_into()
+            .unwrap_or(0u32)
     }
 
     fn governance_action_is_consumed(&self, hash: Vec<u8>) -> bool {
         self.consumed_governance_actions.get(hash)
     }
 
-    #[inline]
     fn chain_id(&self) -> u16 {
         self.chain_id.get().try_into().unwrap_or(0u16)
     }
@@ -503,9 +545,9 @@ mod tests {
     use stylus_sdk::alloy_primitives::keccak256;
 
     #[cfg(test)]
-    use base64::engine::general_purpose;
-    #[cfg(test)]
     use base64::Engine;
+    #[cfg(test)]
+    use base64::engine::general_purpose;
 
     const CHAIN_ID: u16 = 60051;
     const GOVERNANCE_CHAIN_ID: u16 = 1;
@@ -518,9 +560,7 @@ mod tests {
 
     #[cfg(test)]
     fn create_vaa_bytes(input_string: &str) -> Vec<u8> {
-        let vaa_bytes = general_purpose::STANDARD
-            .decode(input_string)
-            .unwrap();
+        let vaa_bytes = general_purpose::STANDARD.decode(input_string).unwrap();
         let vaa: Vec<u8> = vaa_bytes;
         vaa
     }
@@ -528,20 +568,18 @@ mod tests {
     #[cfg(test)]
     fn test_guardian_secret1() -> [u8; 32] {
         [
-            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
-            0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-            0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+            0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c,
+            0x1d, 0x1e, 0x1f, 0x20,
         ]
     }
 
     #[cfg(test)]
     fn test_guardian_secret2() -> [u8; 32] {
         [
-            0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-            0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
-            0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
-            0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
+            0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
+            0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c,
+            0x3d, 0x3e, 0x3f, 0x40,
         ]
     }
 
@@ -596,8 +634,6 @@ mod tests {
         ]
     }
 
-
-
     #[cfg(test)]
     fn test_guardian_address1() -> Address {
         let secret = test_guardian_secret1();
@@ -609,7 +645,6 @@ mod tests {
         let address_bytes: [u8; 20] = hash[12..].try_into().unwrap();
         Address::from(address_bytes)
     }
-
 
     #[cfg(test)]
     fn test_guardian_address2() -> Address {
@@ -677,8 +712,14 @@ mod tests {
     #[cfg(test)]
     fn mock_guardian_set13() -> Vec<Address> {
         vec![
-            Address::from([0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc, 0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3]),
-            Address::from([0xff, 0x6C, 0xB9, 0x52, 0x58, 0x9B, 0xDE, 0x86, 0x2c, 0x25, 0xEf, 0x43, 0x92, 0x13, 0x2f, 0xb9, 0xD4, 0xA4, 0x21, 0x57]),
+            Address::from([
+                0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc,
+                0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3,
+            ]),
+            Address::from([
+                0xff, 0x6C, 0xB9, 0x52, 0x58, 0x9B, 0xDE, 0x86, 0x2c, 0x25, 0xEf, 0x43, 0x92, 0x13,
+                0x2f, 0xb9, 0xD4, 0xA4, 0x21, 0x57,
+            ]),
         ]
     }
 
@@ -711,7 +752,11 @@ mod tests {
         }
     }
 
-    fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVM {
+    fn create_test_vaa_with_emitter(
+        guardian_set_index: u32,
+        signatures: Vec<GuardianSignature>,
+        emitter: Address,
+    ) -> VerifiedVM {
         let mut emitter_bytes = [0u8; 32];
         emitter_bytes[12..32].copy_from_slice(emitter.as_slice());
 
@@ -730,7 +775,10 @@ mod tests {
         }
     }
 
-    fn create_valid_guardian_signature(guardian_index: u8, hash: &FixedBytes<32>) -> Result<GuardianSignature, WormholeError> {
+    fn create_valid_guardian_signature(
+        guardian_index: u8,
+        hash: &FixedBytes<32>,
+    ) -> Result<GuardianSignature, WormholeError> {
         let secret_bytes = match guardian_index {
             0 => test_guardian_secret1(),
             1 => test_guardian_secret2(),
@@ -740,10 +788,13 @@ mod tests {
         let signing_key = SigningKey::from_bytes(&secret_bytes.into())
             .map_err(|_| WormholeError::InvalidInput)?;
 
-        let hash_array: [u8; 32] = hash.as_slice().try_into()
+        let hash_array: [u8; 32] = hash
+            .as_slice()
+            .try_into()
             .map_err(|_| WormholeError::InvalidInput)?;
 
-        let (signature, recovery_id) = signing_key.sign_prehash_recoverable(&hash_array)
+        let (signature, recovery_id) = signing_key
+            .sign_prehash_recoverable(&hash_array)
             .map_err(|_| WormholeError::InvalidInput)?;
 
         let mut sig_bytes = [0u8; 65];
@@ -1113,7 +1164,6 @@ mod tests {
         let gov_contract = wormhole_contract.sender(alice).governance_contract();
         let expected = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
         assert_eq!(gov_contract, expected);
-
     }
 
     #[motsu::test]
@@ -1127,7 +1177,8 @@ mod tests {
     #[motsu::test]
     fn test_initialize_contract_like_shell_script(wormhole_contract: Contract<WormholeContract>, alice: Address) {
         let guardians = current_guardians();
-        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        let governance_contract =
+            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
         let result = wormhole_contract.sender(alice).initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
         assert!(result.is_ok(), "Contract initialization should succeed");
@@ -1136,13 +1187,17 @@ mod tests {
     #[motsu::test]
     fn test_quorum_calculation_integration_test(wormhole_contract: Contract<WormholeContract>, alice: Address) {
         let quorum_result = WormholeContract::quorum(3);
-        assert_eq!(quorum_result, 3, "Quorum calculation should work: (3 * 2) / 3 + 1 = 3");
+        assert_eq!(
+            quorum_result, 3,
+            "Quorum calculation should work: (3 * 2) / 3 + 1 = 3"
+        );
     }
 
     #[motsu::test]
     fn test_guardian_set_retrieval_current_guardians(wormhole_contract: Contract<WormholeContract>, alice: Address) {
         let guardians = current_guardians();
-        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        let governance_contract =
+            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
         let _ = wormhole_contract.sender(alice).initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
 
@@ -1150,7 +1205,11 @@ mod tests {
         assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
 
         let guardian_set_bytes = guardian_set_result.unwrap();
-        assert_eq!(guardian_set_bytes.len(), 19 * 20, "Should have 19 guardian addresses (20 bytes each)");
+        assert_eq!(
+            guardian_set_bytes.len(),
+            19 * 20,
+            "Should have 19 guardian addresses (20 bytes each)"
+        );
 
         assert_eq!(wormhole_contract.sender(alice).chain_id(), CHAIN_ID, "Chain ID should match shell script value");
 
@@ -1164,7 +1223,8 @@ mod tests {
     #[motsu::test]
     fn test_duplicate_verification(wormhole_contract: Contract<WormholeContract>, alice: Address) {
         let guardians = current_guardians_duplicate();
-        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        let governance_contract =
+            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
         let _ = wormhole_contract.sender(alice).initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
 
@@ -1179,7 +1239,8 @@ mod tests {
     #[motsu::test]
     fn switch_guardian_set(wormhole_contract: Contract<WormholeContract>, alice: Address) {
         let guardians = current_guardians_duplicate();
-        let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        let governance_contract =
+            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
         let _ = wormhole_contract.sender(alice).initialize(guardians.clone(), 3, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
         let test_vaa = create_vaa_bytes("AQAAAAQNAInUwKI1ItLfYeLaAibn9oXaouTs9BL3Aa9DKCFWrLu0KDaQQMQJlih0Qh7l7yH2o6kD/g9RCmRwZJ6q0OZE0t4AArCSH1wpX04N1U59tQmss2xXZilimAMKlogp7ErAhAo0LFkDogqB74+2By9rm3P5OUWlbC0lrFNut5CQQV38DGsAAxO+1nUTUc842P2afDSjdWcmjvJl2s8secQzuiW8zrdgPpbzhzWsiYXizLQBRKigDS8pWGD4vRk0fuR8H/ZkO/0BBOmDobl1BLNJx7+Pt+NWfuOUBipVFIXGxI9b3vxxH0BIec8hhxDN4m2Pd2I0klGEXKhv9plcR7VlzAsaC7ZE7QIABh4ff66tP7EHdVfZR4mTzv5B97agMcSB1eDeijpyl9JuBhbMupw7nExZNnZag/x2k6AUEWnQnfp8AoaCK7Av+icAB2Ouk9mPd1ybyju39Q8m7GMevt2f1nHVyWVsPRzdEcCuAbzjh5137DCLzVWuFUujTQJ7IJiznQb6cm2Ljk3WOXUACMa/JwRdpVKZf6eTD6O6tivqhdhMtbijlPBZX/kgVKk5Xuyv3h1SRTrNCwkMg5XOWegnCbXqjbUlo+F3qTjCalQBCxfp1itJskZmv+SXA47QivURKWzGa3mntNh0vcAXYi8FeChvoUYmfYpejmBlOkD1I73pmUsyrbYbetHa7qFu3eoBDZScdyrWp2dS5Y9L4b0who/PncVp5oFs/4J8ThHNQoXWXvys+nUc2aM+E+Fwazo2ODdI8XZz9YOGf/ZfE6iXFBYBDgckow8Nb2QD//C6MfP2Bz8zftqvt+D6Dko7v/Inb2OtCj342yjrxcvAMlCQ6lYoTIAMNemzNoqlfNyDMdB9yKoAEKebRtCm8QZSjLQ5uPk8aoQpmNwCpLhiHuzh2fqH55fcQrE6/KFttfw7VzeGUE7k3PF6xIMq0BPr3vkG2MedIh8BEQvpmYK4fChLY5JG26Kk6KuZ1eCkJAOQgdSjWasAvNgsSIlsb5mFjIkGwK9j20svLSl+OJ7I0olefXcZ2JywjgYAEu1jITMLHCMR1blXENulhApdhMfTef1aQ/USMqRVWNigausEzq49Hi2GtcQzHmZuhgnhBZEnjq9K8jsZwJk59iwBaFxZegAAAAAAATTNxrJiPzbWCugg6Vtg92ToHsLNO1e3fj+OJd3UOsNzAAAAAAATpFIAAVE6cNLnZT2Noq5nJ4VNRSf2KrRBNrlimFaXauHv3efDAAFm5RiKEwih25C20x8/vcqMPfJnjIES3909GSxaPMRXqAAAAAAAAAAAAAAAAFxIFHGlrpnuxd5M5WePQalLpUyHAB4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALFcwAAAAAAAAAAAAAAAAaFxdzQAAAAAAAAAAAAAAAK3MabLDE8LWvGN6+AdUvFHJdm5RAAMAAAAAAAAAAAAAAADf0SJhChSsEtk0iYwC2+wfcnCBFg==");
@@ -1199,6 +1260,4 @@ mod tests {
         let result2 = wormhole_contract.sender(alice).parse_and_verify_vm(test_vaa.clone());
         assert!(result2.is_ok());
     }
-
-
 }

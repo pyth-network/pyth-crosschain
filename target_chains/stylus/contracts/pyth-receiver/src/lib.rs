@@ -6,8 +6,11 @@
 extern crate alloc;
 
 mod error;
+mod governance_structs;
 #[cfg(test)]
 mod integration_tests;
+#[cfg(test)]
+mod pyth_governance_test;
 mod structs;
 #[cfg(test)]
 mod test_data;
@@ -18,6 +21,7 @@ use mock_instant::global::MockClock;
 use alloc::vec::Vec;
 use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
+    alloy_sol_types::sol,
     call::Call,
     prelude::*,
     storage::{
@@ -27,6 +31,7 @@ use stylus_sdk::{
 };
 
 use error::PythReceiverError;
+use governance_structs::*;
 use pythnet_sdk::{
     accumulators::merkle::{MerklePath, MerkleRoot},
     hashers::keccak256_160::Keccak160,
@@ -42,13 +47,23 @@ use pythnet_sdk::{
 use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage, PriceReturn};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
+sol! {
+    event FeeSet(uint256 indexed old_fee, uint256 indexed new_fee);
+    event TransactionFeeSet(uint256 indexed old_fee, uint256 indexed new_fee);
+    event FeeWithdrawn(address indexed target_address, uint256 fee_amount);
+    event ValidPeriodSet(uint256 indexed old_valid_period, uint256 indexed new_valid_period);
+    event DataSourcesSet(bytes32[] old_data_sources, bytes32[] new_data_sources);
+    event GovernanceDataSourceSet(uint16 old_chain_id, bytes32 old_emitter_address, uint16 new_chain_id, bytes32 new_emitter_address, uint64 initial_sequence);
+}
+
 sol_interface! {
-    interface IWormholeContract {
-        function initialize(address[] memory initial_guardians, uint16 chain_id, uint16 governance_chain_id, address governance_contract) external;
-        function getGuardianSet(uint32 index) external view returns (uint8[] memory);
-        function parseAndVerifyVm(uint8[] memory encoded_vaa) external view returns (uint8[] memory);
-        function quorum(uint32 num_guardians) external pure returns (uint32);
-    }
+    interface IWormholeContract  {
+    function initialize(address[] memory initial_guardians, uint32 initial_guardian_set_index, uint16 chain_id, uint16 governance_chain_id, address governance_contract) external;
+    function getGuardianSet(uint32 index) external view returns (uint8[] memory);
+    function parseAndVerifyVm(uint8[] memory encoded_vaa) external view returns (uint8[] memory);
+    function quorum(uint32 num_guardians) external pure returns (uint32);
+    function chainId() external view returns (uint16);
+}
 }
 
 #[storage]
@@ -516,6 +531,70 @@ impl PythReceiver {
         price_feeds
     }
 
+    pub fn execute_governance_instruction(
+        &mut self,
+        data: Vec<u8>,
+    ) -> Result<(), PythReceiverError> {
+        let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
+        let config = Call::new();
+
+        wormhole
+            .parse_and_verify_vm(config, Vec::from(data.clone()))
+            .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
+
+        let vm = Vaa::read(&mut Vec::from(data.clone()).as_slice())
+            .map_err(|_| PythReceiverError::InvalidVaa)?;
+
+        verify_governance_vm(self, vm.clone())?;
+
+        let instruction = governance_structs::parse_instruction(vm.body.payload.to_vec())
+            .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
+
+        let chain_id_config = Call::new();
+
+        let wormhole_id = wormhole
+            .chain_id(chain_id_config)
+            .map_err(|_| PythReceiverError::WormholeUninitialized)?;
+
+        if instruction.target_chain_id != 0 && instruction.target_chain_id != wormhole_id {
+            return Err(PythReceiverError::InvalidGovernanceTarget);
+        }
+
+        match instruction.payload {
+            GovernancePayload::SetFee(payload) => {
+                self.set_fee(payload.value, payload.expo);
+            }
+            GovernancePayload::SetDataSources(payload) => {
+                set_data_sources(self, payload.sources);
+            }
+            GovernancePayload::SetWormholeAddress(payload) => {
+                self.set_wormhole_address(payload.address, data.clone())?;
+            }
+            GovernancePayload::RequestGovernanceDataSourceTransfer(_) => {
+                return Err(PythReceiverError::InvalidGovernanceMessage);
+            }
+            GovernancePayload::AuthorizeGovernanceDataSourceTransfer(payload) => {
+                self.authorize_governance_transfer(payload.claim_vaa)?;
+            }
+            GovernancePayload::UpgradeContract(_payload) => {}
+            GovernancePayload::SetValidPeriod(payload) => {
+                self.set_valid_period(payload.valid_time_period_seconds);
+            }
+            GovernancePayload::SetTransactionFee(payload) => {
+                self.set_transaction_fee(payload.value, payload.expo);
+            }
+            GovernancePayload::WithdrawFee(payload) => {
+                self.withdraw_fee(payload.value, payload.expo, payload.target_address)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn upgrade_contract(&self, _new_implementation: FixedBytes<32>) {
+        unimplemented!("Upgrade contract not yet implemented");
+    }
+
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
         self.get_current_timestamp()
             .saturating_sub(publish_time.to::<u64>())
@@ -534,6 +613,209 @@ impl PythReceiver {
             self.vm().block_timestamp()
         }
     }
+
+    fn set_fee(&mut self, value: u64, expo: u64) {
+        let new_fee = U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
+        let old_fee = self.single_update_fee_in_wei.get();
+
+        self.single_update_fee_in_wei.set(new_fee);
+
+        log(self.vm(), FeeSet { old_fee, new_fee });
+    }
+
+    fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
+        let old_valid_period = self.valid_time_period_seconds.get();
+        let new_valid_period = U256::from(valid_time_period_seconds);
+        self.valid_time_period_seconds.set(new_valid_period);
+
+        log(
+            self.vm(),
+            ValidPeriodSet {
+                old_valid_period,
+                new_valid_period,
+            },
+        );
+    }
+
+    fn set_wormhole_address(
+        &mut self,
+        address: Address,
+        data: Vec<u8>,
+    ) -> Result<(), PythReceiverError> {
+        let wormhole: IWormholeContract = IWormholeContract::new(address);
+        let config = Call::new();
+
+        // Make sure the contract at the new Wormhole address is initialized and functional by testing it on the SetWormholeAddress instruction VAA
+        wormhole
+            .parse_and_verify_vm(config, data.clone())
+            .map_err(|_| PythReceiverError::InvalidVaa)?;
+
+        let vm = Vaa::read(&mut data.as_slice())
+            .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
+
+        if vm.body.emitter_chain != self.governance_data_source_chain_id.get().to::<u16>() {
+            return Err(PythReceiverError::InvalidGovernanceMessage);
+        }
+
+        if vm.body.emitter_address.as_slice()
+            != self.governance_data_source_emitter_address.get().as_slice()
+        {
+            return Err(PythReceiverError::InvalidGovernanceMessage);
+        }
+
+        if vm.body.sequence.to::<u64>() <= self.last_executed_governance_sequence.get().to::<u64>()
+        {
+            return Err(PythReceiverError::InvalidWormholeAddressToSet);
+        }
+
+        let data = governance_structs::parse_instruction(vm.body.payload.to_vec())
+            .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
+
+        match data.payload {
+            GovernancePayload::SetWormholeAddress(payload) => {
+                if payload.address != address {
+                    return Err(PythReceiverError::InvalidWormholeAddressToSet);
+                }
+            }
+            _ => return Err(PythReceiverError::InvalidGovernanceMessage),
+        }
+
+        self.wormhole.set(address);
+        Ok(())
+    }
+
+    fn authorize_governance_transfer(
+        &mut self,
+        claim_vaa: Vec<u8>,
+    ) -> Result<(), PythReceiverError> {
+        let wormhole: IWormholeContract = IWormholeContract::new(self.wormhole.get());
+        let config = Call::new();
+        wormhole
+            .parse_and_verify_vm(config, claim_vaa.clone())
+            .map_err(|_| PythReceiverError::InvalidWormholeMessage)?;
+
+        let claim_vm = Vaa::read(&mut Vec::from(claim_vaa).as_slice())
+            .map_err(|_| PythReceiverError::VaaVerificationFailed)?;
+
+        let instruction = governance_structs::parse_instruction(claim_vm.body.payload.to_vec())
+            .map_err(|_| PythReceiverError::InvalidGovernanceMessage)?;
+
+        let config2 = Call::new();
+        if instruction.target_chain_id != 0
+            && instruction.target_chain_id != wormhole.chain_id(config2).unwrap_or(0)
+        {
+            return Err(PythReceiverError::InvalidGovernanceTarget);
+        }
+
+        let request_payload = match instruction.payload {
+            GovernancePayload::RequestGovernanceDataSourceTransfer(payload) => payload,
+            _ => return Err(PythReceiverError::InvalidGovernanceMessage),
+        };
+
+        let current_index = self.governance_data_source_index.get().to::<u32>();
+        let new_index = request_payload.governance_data_source_index;
+
+        if current_index >= new_index {
+            return Err(PythReceiverError::OldGovernanceMessage);
+        }
+
+        self.governance_data_source_index.set(U32::from(new_index));
+        let old_data_source_emitter_address = self.governance_data_source_emitter_address.get();
+
+        self.governance_data_source_chain_id
+            .set(U16::from(claim_vm.body.emitter_chain));
+        let emitter_bytes: [u8; 32] = claim_vm
+            .body
+            .emitter_address
+            .as_slice()
+            .try_into()
+            .map_err(|_| PythReceiverError::InvalidEmitterAddress)?;
+        self.governance_data_source_emitter_address
+            .set(FixedBytes::from(emitter_bytes));
+
+        let last_executed_governance_sequence = claim_vm.body.sequence.to::<u64>();
+        self.last_executed_governance_sequence
+            .set(U64::from(last_executed_governance_sequence));
+
+        log(
+            self.vm(),
+            GovernanceDataSourceSet {
+                old_chain_id: current_index as u16,
+                old_emitter_address: old_data_source_emitter_address,
+                new_chain_id: claim_vm.body.emitter_chain,
+                new_emitter_address: FixedBytes::from(emitter_bytes),
+                initial_sequence: last_executed_governance_sequence,
+            },
+        );
+
+        Ok(())
+    }
+
+    fn set_transaction_fee(&mut self, value: u64, expo: u64) {
+        let new_fee = U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
+        let old_fee = self.transaction_fee_in_wei.get();
+
+        self.transaction_fee_in_wei.set(new_fee);
+
+        log(self.vm(), TransactionFeeSet { old_fee, new_fee });
+    }
+
+    fn withdraw_fee(
+        &mut self,
+        value: u64,
+        expo: u64,
+        target_address: Address,
+    ) -> Result<(), PythReceiverError> {
+        let fee_to_withdraw =
+            U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
+        let current_balance = self.vm().balance(self.vm().contract_address());
+
+        if current_balance < fee_to_withdraw {
+            return Err(PythReceiverError::InsufficientFee);
+        }
+
+        self.vm()
+            .transfer_eth(target_address, fee_to_withdraw)
+            .map_err(|_| PythReceiverError::InsufficientFee)?;
+
+        log(
+            self.vm(),
+            FeeWithdrawn {
+                target_address,
+                fee_amount: fee_to_withdraw,
+            },
+        );
+
+        Ok(())
+    }
+}
+
+fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), PythReceiverError> {
+    if vm.body.emitter_chain != receiver.governance_data_source_chain_id.get().to::<u16>() {
+        return Err(PythReceiverError::InvalidGovernanceMessage);
+    }
+
+    if vm.body.emitter_address.as_slice()
+        != receiver
+            .governance_data_source_emitter_address
+            .get()
+            .as_slice()
+    {
+        return Err(PythReceiverError::InvalidGovernanceMessage);
+    }
+
+    let current_sequence = vm.body.sequence.to::<u64>();
+    let last_executed_sequence = receiver.last_executed_governance_sequence.get().to::<u64>();
+
+    if current_sequence <= last_executed_sequence {
+        return Err(PythReceiverError::GovernanceMessageAlreadyExecuted);
+    }
+
+    receiver
+        .last_executed_governance_sequence
+        .set(U64::from(current_sequence));
+
+    Ok(())
 }
 
 fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverError> {
@@ -543,4 +825,40 @@ fn parse_wormhole_proof(vaa: Vaa) -> Result<MerkleRoot<Keccak160>, PythReceiverE
         WormholePayload::Merkle(merkle_root) => merkle_root.root,
     });
     Ok(root)
+}
+
+fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) {
+    let mut old_data_sources = Vec::new();
+    for i in 0..receiver.valid_data_sources.len() {
+        if let Some(storage_data_source) = receiver.valid_data_sources.get(i) {
+            let data_source = DataSource {
+                chain_id: storage_data_source.chain_id.get(),
+                emitter_address: storage_data_source.emitter_address.get(),
+            };
+            old_data_sources.push(data_source.emitter_address);
+            receiver.is_valid_data_source.setter(data_source).set(false);
+        }
+    }
+
+    receiver.valid_data_sources.erase();
+
+    let mut new_data_sources = Vec::new();
+    for data_source in data_sources {
+        let mut storage_data_source = receiver.valid_data_sources.grow();
+        storage_data_source.chain_id.set(data_source.chain_id);
+        storage_data_source
+            .emitter_address
+            .set(data_source.emitter_address);
+
+        new_data_sources.push(data_source.emitter_address);
+        receiver.is_valid_data_source.setter(data_source).set(true);
+    }
+
+    log(
+        receiver.vm(),
+        DataSourcesSet {
+            old_data_sources,
+            new_data_sources,
+        },
+    );
 }
