@@ -3,11 +3,6 @@ use crate::structs::{DataSource, PriceFeedReturn, PriceReturn};
 use crate::PythReceiver;
 
 use alloc::vec::Vec;
-use stylus_sdk::{
-    alloy_primitives::{FixedBytes, I32, I64, U16, U256, U64},
-    call::Call,
-    prelude::*,
-};
 use pythnet_sdk::{
     accumulators::merkle::{MerklePath, MerkleRoot},
     hashers::keccak256_160::Keccak160,
@@ -20,6 +15,11 @@ use pythnet_sdk::{
         },
     },
 };
+use stylus_sdk::{
+    alloy_primitives::{FixedBytes, I32, I64, U16, U256, U64},
+    call::Call,
+    prelude::*,
+};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
 use crate::IWormholeContract;
@@ -31,7 +31,10 @@ impl PythReceiver {
         return price_info.publish_time.get() != U64::ZERO;
     }
 
-    pub(crate) fn query_price_feed_internal(&self, id: [u8; 32]) -> Result<PriceFeedReturn, PythReceiverError> {
+    pub(crate) fn query_price_feed_internal(
+        &self,
+        id: [u8; 32],
+    ) -> Result<PriceFeedReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(id);
 
         let price_info = self.latest_price_info.get(id_fb);
@@ -51,7 +54,10 @@ impl PythReceiver {
         ))
     }
 
-    pub(crate) fn get_price_unsafe_internal(&self, id: [u8; 32]) -> Result<PriceReturn, PythReceiverError> {
+    pub(crate) fn get_price_unsafe_internal(
+        &self,
+        id: [u8; 32],
+    ) -> Result<PriceReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(id);
 
         let price_info = self.latest_price_info.get(id_fb);
@@ -80,7 +86,10 @@ impl PythReceiver {
         Ok(price_info)
     }
 
-    pub(crate) fn get_ema_price_unsafe_internal(&self, id: [u8; 32]) -> Result<PriceReturn, PythReceiverError> {
+    pub(crate) fn get_ema_price_unsafe_internal(
+        &self,
+        id: [u8; 32],
+    ) -> Result<PriceReturn, PythReceiverError> {
         let id_fb = FixedBytes::<32>::from(id);
         let price_info = self.latest_price_info.get(id_fb);
 
@@ -190,7 +199,10 @@ impl PythReceiver {
         Ok(price_pairs)
     }
 
-    pub(crate) fn get_update_fee_internal(&self, update_data: Vec<Vec<u8>>) -> Result<U256, PythReceiverError> {
+    pub(crate) fn get_update_fee_internal(
+        &self,
+        update_data: Vec<Vec<u8>>,
+    ) -> Result<U256, PythReceiverError> {
         let mut total_num_updates: u64 = 0;
         for data in &update_data {
             let update_data_array: &[u8] = &data;

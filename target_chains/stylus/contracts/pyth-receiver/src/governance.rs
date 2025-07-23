@@ -2,7 +2,10 @@ use crate::error::PythReceiverError;
 use crate::governance_structs::{self, GovernancePayload};
 use crate::structs::DataSource;
 use crate::PythReceiver;
-use crate::{DataSourcesSet, FeeSet, GovernanceDataSourceSet, TransactionFeeSet, ValidPeriodSet, FeeWithdrawn};
+use crate::{
+    DataSourcesSet, FeeSet, FeeWithdrawn, GovernanceDataSourceSet, TransactionFeeSet,
+    ValidPeriodSet,
+};
 
 use alloc::vec::Vec;
 use stylus_sdk::{
@@ -12,7 +15,7 @@ use stylus_sdk::{
 };
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
-use crate::{IWormholeContract, log};
+use crate::{log, IWormholeContract};
 
 impl PythReceiver {
     pub(crate) fn execute_governance_instruction_internal(
@@ -253,7 +256,10 @@ impl PythReceiver {
     }
 }
 
-pub(crate) fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), PythReceiverError> {
+pub(crate) fn verify_governance_vm(
+    receiver: &mut PythReceiver,
+    vm: Vaa,
+) -> Result<(), PythReceiverError> {
     if vm.body.emitter_chain != receiver.governance_data_source_chain_id.get().to::<u16>() {
         return Err(PythReceiverError::InvalidGovernanceMessage);
     }

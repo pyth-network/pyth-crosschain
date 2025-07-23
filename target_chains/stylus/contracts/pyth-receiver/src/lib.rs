@@ -10,9 +10,9 @@ mod governance;
 mod governance_structs;
 #[cfg(test)]
 mod integration_tests;
-mod pyth_operations;
 #[cfg(test)]
 mod pyth_governance_test;
+mod pyth_operations;
 mod structs;
 #[cfg(test)]
 mod test_data;
@@ -111,7 +111,6 @@ impl PythReceiver {
         }
     }
 
-
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {
         self.get_current_timestamp()
             .saturating_sub(publish_time.to::<u64>())
@@ -135,36 +134,64 @@ impl PythReceiver {
         self.price_feed_exists_internal(id)
     }
 
-    pub fn query_price_feed(&self, id: [u8; 32]) -> Result<structs::PriceFeedReturn, error::PythReceiverError> {
+    pub fn query_price_feed(
+        &self,
+        id: [u8; 32],
+    ) -> Result<structs::PriceFeedReturn, error::PythReceiverError> {
         self.query_price_feed_internal(id)
     }
 
-    pub fn get_price_unsafe(&self, id: [u8; 32]) -> Result<structs::PriceReturn, error::PythReceiverError> {
+    pub fn get_price_unsafe(
+        &self,
+        id: [u8; 32],
+    ) -> Result<structs::PriceReturn, error::PythReceiverError> {
         self.get_price_unsafe_internal(id)
     }
 
-    pub fn get_price_no_older_than(&self, id: [u8; 32], age: u64) -> Result<structs::PriceReturn, error::PythReceiverError> {
+    pub fn get_price_no_older_than(
+        &self,
+        id: [u8; 32],
+        age: u64,
+    ) -> Result<structs::PriceReturn, error::PythReceiverError> {
         self.get_price_no_older_than_internal(id, age)
     }
 
-    pub fn get_ema_price_unsafe(&self, id: [u8; 32]) -> Result<structs::PriceReturn, error::PythReceiverError> {
+    pub fn get_ema_price_unsafe(
+        &self,
+        id: [u8; 32],
+    ) -> Result<structs::PriceReturn, error::PythReceiverError> {
         self.get_ema_price_unsafe_internal(id)
     }
 
-    pub fn get_ema_price_no_older_than(&self, id: [u8; 32], age: u64) -> Result<structs::PriceReturn, error::PythReceiverError> {
+    pub fn get_ema_price_no_older_than(
+        &self,
+        id: [u8; 32],
+        age: u64,
+    ) -> Result<structs::PriceReturn, error::PythReceiverError> {
         self.get_ema_price_no_older_than_internal(id, age)
     }
 
     #[payable]
-    pub fn update_price_feeds(&mut self, update_data: Vec<Vec<u8>>) -> Result<(), error::PythReceiverError> {
+    pub fn update_price_feeds(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+    ) -> Result<(), error::PythReceiverError> {
         self.update_price_feeds_internal(update_data)
     }
 
-    pub fn update_price_feeds_if_necessary(&mut self, update_data: Vec<Vec<u8>>, price_ids: Vec<[u8; 32]>, publish_times: Vec<u64>) -> Result<(), error::PythReceiverError> {
+    pub fn update_price_feeds_if_necessary(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+        publish_times: Vec<u64>,
+    ) -> Result<(), error::PythReceiverError> {
         self.update_price_feeds_if_necessary_internal(update_data, price_ids, publish_times)
     }
 
-    pub fn get_update_fee(&self, update_data: Vec<Vec<u8>>) -> Result<U256, error::PythReceiverError> {
+    pub fn get_update_fee(
+        &self,
+        update_data: Vec<Vec<u8>>,
+    ) -> Result<U256, error::PythReceiverError> {
         self.get_update_fee_internal(update_data)
     }
 
@@ -172,24 +199,69 @@ impl PythReceiver {
         self.get_twap_update_fee_internal(update_data)
     }
 
-    pub fn parse_price_feed_updates(&mut self, update_data: Vec<u8>, price_ids: Vec<[u8; 32]>, min_publish_time: u64, max_publish_time: u64) -> Result<Vec<structs::PriceFeedReturn>, error::PythReceiverError> {
-        self.parse_price_feed_updates_internal_wrapper(update_data, price_ids, min_publish_time, max_publish_time)
+    pub fn parse_price_feed_updates(
+        &mut self,
+        update_data: Vec<u8>,
+        price_ids: Vec<[u8; 32]>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+    ) -> Result<Vec<structs::PriceFeedReturn>, error::PythReceiverError> {
+        self.parse_price_feed_updates_internal_wrapper(
+            update_data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+        )
     }
 
-    pub fn parse_price_feed_updates_with_config(&mut self, update_data: Vec<Vec<u8>>, price_ids: Vec<[u8; 32]>, min_allowed_publish_time: u64, max_allowed_publish_time: u64, check_uniqueness: bool, check_update_data_is_minimal: bool, store_updates_if_fresh: bool) -> Result<Vec<structs::PriceFeedReturn>, error::PythReceiverError> {
-        self.parse_price_feed_updates_with_config_internal(update_data, price_ids, min_allowed_publish_time, max_allowed_publish_time, check_uniqueness, check_update_data_is_minimal, store_updates_if_fresh)
+    pub fn parse_price_feed_updates_with_config(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+        min_allowed_publish_time: u64,
+        max_allowed_publish_time: u64,
+        check_uniqueness: bool,
+        check_update_data_is_minimal: bool,
+        store_updates_if_fresh: bool,
+    ) -> Result<Vec<structs::PriceFeedReturn>, error::PythReceiverError> {
+        self.parse_price_feed_updates_with_config_internal(
+            update_data,
+            price_ids,
+            min_allowed_publish_time,
+            max_allowed_publish_time,
+            check_uniqueness,
+            check_update_data_is_minimal,
+            store_updates_if_fresh,
+        )
     }
 
-    pub fn parse_twap_price_feed_updates(&mut self, update_data: Vec<Vec<u8>>, price_ids: Vec<[u8; 32]>) -> Vec<structs::PriceFeedReturn> {
+    pub fn parse_twap_price_feed_updates(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+    ) -> Vec<structs::PriceFeedReturn> {
         self.parse_twap_price_feed_updates_internal(update_data, price_ids)
     }
 
-    pub fn parse_price_feed_updates_unique(&mut self, update_data: Vec<Vec<u8>>, price_ids: Vec<[u8; 32]>, min_publish_time: u64, max_publish_time: u64) -> Result<Vec<structs::PriceFeedReturn>, error::PythReceiverError> {
-        self.parse_price_feed_updates_unique_internal(update_data, price_ids, min_publish_time, max_publish_time)
+    pub fn parse_price_feed_updates_unique(
+        &mut self,
+        update_data: Vec<Vec<u8>>,
+        price_ids: Vec<[u8; 32]>,
+        min_publish_time: u64,
+        max_publish_time: u64,
+    ) -> Result<Vec<structs::PriceFeedReturn>, error::PythReceiverError> {
+        self.parse_price_feed_updates_unique_internal(
+            update_data,
+            price_ids,
+            min_publish_time,
+            max_publish_time,
+        )
     }
 
-    pub fn execute_governance_instruction(&mut self, encoded_vaa: Vec<u8>) -> Result<(), error::PythReceiverError> {
+    pub fn execute_governance_instruction(
+        &mut self,
+        encoded_vaa: Vec<u8>,
+    ) -> Result<(), error::PythReceiverError> {
         self.execute_governance_instruction_internal(encoded_vaa)
     }
-
 }
