@@ -6,6 +6,26 @@ use backoff::{
 };
 
 #[derive(Debug)]
+pub struct PythLazerExponentialBackoff {
+    initial_interval: Duration,
+    randomization_factor: f64,
+    multiplier: f64,
+    max_interval: Duration,
+}
+
+impl From<PythLazerExponentialBackoff> for ExponentialBackoff {
+    fn from(val: PythLazerExponentialBackoff) -> Self {
+        ExponentialBackoffBuilder::default()
+            .with_initial_interval(val.initial_interval)
+            .with_randomization_factor(val.randomization_factor)
+            .with_multiplier(val.multiplier)
+            .with_max_interval(val.max_interval)
+            .with_max_elapsed_time(None)
+            .build()
+    }
+}
+
+#[derive(Debug)]
 pub struct PythLazerExponentialBackoffBuilder {
     initial_interval: Duration,
     randomization_factor: f64,
@@ -57,13 +77,12 @@ impl PythLazerExponentialBackoffBuilder {
         self
     }
 
-    pub fn build(&self) -> ExponentialBackoff {
-        ExponentialBackoffBuilder::default()
-            .with_initial_interval(self.initial_interval)
-            .with_randomization_factor(self.randomization_factor)
-            .with_multiplier(self.multiplier)
-            .with_max_interval(self.max_interval)
-            .with_max_elapsed_time(None)
-            .build()
+    pub fn build(&self) -> PythLazerExponentialBackoff {
+        PythLazerExponentialBackoff {
+            initial_interval: self.initial_interval,
+            randomization_factor: self.randomization_factor,
+            multiplier: self.multiplier,
+            max_interval: self.max_interval,
+        }
     }
 }

@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use crate::{
-    resilient_ws_connection::PythLazerResilientWSConnection, ws_connection::AnyResponse,
+    backoff::{PythLazerExponentialBackoff, PythLazerExponentialBackoffBuilder},
+    resilient_ws_connection::PythLazerResilientWSConnection,
+    ws_connection::AnyResponse,
     CHANNEL_CAPACITY,
 };
 use anyhow::{bail, Result};
@@ -43,13 +45,10 @@ impl PythLazerClient {
         endpoints: Vec<Url>,
         access_token: String,
         num_connections: usize,
-        backoff: ExponentialBackoff,
+        backoff: PythLazerExponentialBackoff,
         timeout: Duration,
         channel_capacity: usize,
     ) -> Result<Self> {
-        if backoff.max_elapsed_time.is_some() {
-            bail!("max_elapsed_time is not supported in Pyth Lazer client");
-        }
         if endpoints.is_empty() {
             bail!("At least one endpoint must be provided");
         }
@@ -58,7 +57,7 @@ impl PythLazerClient {
             access_token,
             num_connections,
             ws_connections: Vec::with_capacity(num_connections),
-            backoff,
+            backoff: backoff.into(),
             timeout,
             channel_capacity,
         })
@@ -128,7 +127,7 @@ pub struct PythLazerClientBuilder {
     endpoints: Vec<Url>,
     access_token: String,
     num_connections: usize,
-    backoff: ExponentialBackoff,
+    backoff: PythLazerExponentialBackoff,
     timeout: Duration,
     channel_capacity: usize,
 }
@@ -142,7 +141,7 @@ impl PythLazerClientBuilder {
                 .collect(),
             access_token,
             num_connections: DEFAULT_NUM_CONNECTIONS,
-            backoff: ExponentialBackoff::default(),
+            backoff: PythLazerExponentialBackoffBuilder::default().build(),
             timeout: DEFAULT_TIMEOUT,
             channel_capacity: CHANNEL_CAPACITY,
         }
@@ -158,7 +157,7 @@ impl PythLazerClientBuilder {
         self
     }
 
-    pub fn with_backoff(mut self, backoff: ExponentialBackoff) -> Self {
+    pub fn with_backoff(mut self, backoff: PythLazerExponentialBackoff) -> Self {
         self.backoff = backoff;
         self
     }
