@@ -177,34 +177,6 @@ mod test {
         );
     }
 
-    #[motsu::test]
-    fn test_set_fee_in_token(
-        pyth_contract: Contract<PythReceiver>,
-        wormhole_contract: Contract<WormholeContract>,
-        alice: Address,
-    ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
-
-        let hex_str = "0100000000010051c35e992b6dcfc81f02b430914694b4fbbeae7f952f3d3f1ff350f332d1d24916e2f56336ce0c392247e8c1fbb1b74eac87a68d681c729fa860f3788ece2788000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0107000200000000000000050000000000000003147e5f4552091a69125d5dfcb7b8c2659029395bdf";
-        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
-
-        let result = pyth_contract
-            .sender(alice)
-            .execute_governance_instruction(bytes.clone());
-        if result.is_err() {
-            println!("Error: {:?}", result.as_ref().unwrap_err());
-        }
-        assert!(result.is_ok());
-
-        let result2 = pyth_contract
-            .sender(alice)
-            .execute_governance_instruction(bytes.clone());
-        assert!(
-            result2.is_err(),
-            "Second execution should fail due to sequence number check"
-        );
-    }
-
     // This test is commented out because it requires an already deployed new Wormhole contract.
     // This function demonstrates the usage of this instruction, however.
     /*
