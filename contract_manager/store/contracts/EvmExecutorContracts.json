@@ -198,5 +198,15 @@
     "chain": "ethereal_testnet",
     "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
     "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "polynomial_testnet",
+    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "polynomial",
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "type": "EvmExecutorContract"
   }
 ]
