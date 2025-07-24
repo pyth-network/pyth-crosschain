@@ -1,4 +1,4 @@
-use crate::router::{Channel, Price, PriceFeedId, Rate};
+use crate::router::{Channel, FundingRateInterval, Price, PriceFeedId, Rate};
 use crate::symbol_state::SymbolState;
 use crate::time::TimestampUs;
 use serde::{Deserialize, Serialize};
@@ -37,7 +37,11 @@ pub enum UpdateParams {
         best_ask_price: Option<Price>,
     },
     #[serde(rename = "funding_rate")]
-    FundingRateUpdate { price: Option<Price>, rate: Rate },
+    FundingRateUpdate {
+        price: Option<Price>,
+        rate: Rate,
+        funding_rate_interval: Option<FundingRateInterval>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -226,7 +230,8 @@ mod tests {
             "update": {
               "type": "funding_rate",
               "price": 1234567890,
-              "rate": 1234567891
+              "rate": 1234567891,
+              "funding_rate_interval": "8h"
             }
           },
           "id": 1
@@ -241,6 +246,7 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
+                    funding_rate_interval: Some(FundingRateInterval::Interval8Hours),
                 },
             }),
             id: 1,
@@ -278,6 +284,7 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: None,
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
+                    funding_rate_interval: None,
                 },
             }),
             id: 1,
