@@ -232,7 +232,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let hex_str = "01000000000100b441e497034be4ee82242a866461d5e6744082654f71301a96f579f629b6bf176cc0c1964cd7d4f792436b7a73fc7024d72b138869b4d81d449740bb08148238000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d01010002010000000001009c9dc62e92fefe0806dce30b662a5d319417a62dccc700b5f2678306d39c005f7a5e74d11df287301d85d328a3d000c5d793c57161f3150c7eb1a17668946e6b010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000064005054474d0105000200000000";
+        let hex_str = "010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e02000000000100000000000200000000000000000000000000000000000000000000000000000000000011110000000000000001005054474d0105000200000001";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
         let result = pyth_contract
@@ -325,4 +325,209 @@ mod test {
         assert!(result.is_ok());
     }
     */
+
+    #[motsu::test]
+    fn test_invalid_wormhole_vaa_signature_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010067940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Invalid VAA should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_invalid_wormhole_vaa_magic_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        // Changed the magic signature to an invalid one (6064474d instead of 5054474d)
+        let hex_str = "0100000000010067940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001006064474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Invalid VAA should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_invalid_wormhole_vaa_random_byte_cut_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010067940f58a676869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Invalid VAA should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_invalid_wormhole_vaa_invalid_version_number_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        // Changed the version number to an invalid one (2 instead of 1)
+        let hex_str = "0200000000010067940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Invalid VAA should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_different_emitter_chain_id_than_wormhole_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        // Changed the emitter chain ID to a different one (2 instead of 1)
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000200000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Invalid VAA should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_different_emitter_chain_address_than_wormhole_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        // Changed the emitter chain ID to a different one (...0011 to ...0022)
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000220000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Invalid VAA should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_sequence_number_greater_than_last_executed_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_ok(),
+            "This is a valid VAA, should go through"
+        );
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Cannot execute the same sequence number again, should revert"
+        );
+    }
+
+    #[motsu::test]
+    fn test_target_chain_id_from_ethereum_to_solana_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        // This VAA is for a target chain ID of 1 (Solana), but the PythReceiver is on chain ID 1 (Ethereum)
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000100000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Incorrect target chain ID should revert the transaction"
+        );
+    }
+
+    #[motsu::test]
+    fn test_unexpected_governance_action_id_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
+
+        // Changes this action to be a SetDataSources action instead of a SetFee action
+        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0102000200000000000000050000000000000003";
+        let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
+
+        let result = pyth_contract
+            .sender(alice)
+            .execute_governance_instruction(bytes.clone());
+
+        assert!(
+            result.is_err(),
+            "Wrong action expected should lead to bad parsing"
+        );
+    }
+
 }
