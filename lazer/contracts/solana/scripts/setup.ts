@@ -1,7 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { PythLazerSolanaContract } from "../src/idl/pyth_lazer_solana_contract";
-import * as pythLazerSolanaContractIdl from "../src/idl/pyth_lazer_solana_contract.json";
+import { PYTH_LAZER_SOLANA_CONTRACT_IDL, type PythLazerSolanaContract } from "../src";
 import yargs from "yargs/yargs";
 import { readFileSync } from "fs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
@@ -36,8 +34,8 @@ async function main() {
   });
   const provider = new anchor.AnchorProvider(connection, wallet);
 
-  const program: Program<PythLazerSolanaContract> = new Program(
-    pythLazerSolanaContractIdl as PythLazerSolanaContract,
+  const program: anchor.Program<PythLazerSolanaContract> = new anchor.Program(
+    PYTH_LAZER_SOLANA_CONTRACT_IDL,
     provider,
   );
 

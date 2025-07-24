@@ -1,8 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
-import { PythLazerSolanaContract } from "../src/idl/pyth_lazer_solana_contract";
-import * as pythLazerSolanaContractIdl from "../src/idl/pyth_lazer_solana_contract.json";
 import yargs from "yargs/yargs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { PYTH_LAZER_SOLANA_CONTRACT_IDL, type PythLazerSolanaContract } from "../src";
 
 const parser = yargs(process.argv.slice(2)).options({
   url: {
@@ -30,7 +29,7 @@ async function main() {
   anchor.setProvider(provider);
 
   const program: anchor.Program<PythLazerSolanaContract> = new anchor.Program(
-    pythLazerSolanaContractIdl as PythLazerSolanaContract,
+    PYTH_LAZER_SOLANA_CONTRACT_IDL,
     provider,
   );
 
