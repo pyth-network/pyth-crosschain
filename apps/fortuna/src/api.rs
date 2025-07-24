@@ -586,9 +586,13 @@ mod test {
 
         // Parse the response as JSON
         let configs: Vec<ChainConfigSummary> = response.json();
-        
+
         // Verify the response structure - should be empty for test server
-        assert_eq!(configs.len(), 0, "Should return empty configs for test server");
+        assert_eq!(
+            configs.len(),
+            0,
+            "Should return empty configs for test server"
+        );
     }
 
     #[tokio::test]
@@ -736,20 +740,32 @@ mod test {
 
         // Parse the response as JSON
         let configs: Vec<ChainConfigSummary> = response.json();
-        
+
         // Verify we have 2 chains
         assert_eq!(configs.len(), 2, "Should return 2 chain configs");
-        
+
         // Find ethereum config
-        let eth_config = configs.iter().find(|c| c.name == "ethereum").expect("Ethereum config not found");
-        assert_eq!(eth_config.contract_addr, "0x0000000000000000000000000000000000001234");
+        let eth_config = configs
+            .iter()
+            .find(|c| c.name == "ethereum")
+            .expect("Ethereum config not found");
+        assert_eq!(
+            eth_config.contract_addr,
+            "0x0000000000000000000000000000000000001234"
+        );
         assert_eq!(eth_config.reveal_delay_blocks, 1);
         assert_eq!(eth_config.gas_limit, 500000);
         assert_eq!(eth_config.fee, 1500000000000000);
-        
+
         // Find avalanche config
-        let avax_config = configs.iter().find(|c| c.name == "avalanche").expect("Avalanche config not found");
-        assert_eq!(avax_config.contract_addr, "0x0000000000000000000000000000000000005678");
+        let avax_config = configs
+            .iter()
+            .find(|c| c.name == "avalanche")
+            .expect("Avalanche config not found");
+        assert_eq!(
+            avax_config.contract_addr,
+            "0x0000000000000000000000000000000000005678"
+        );
         assert_eq!(avax_config.reveal_delay_blocks, 2);
         assert_eq!(avax_config.gas_limit, 600000);
         assert_eq!(avax_config.fee, 2000000000000000);

@@ -13,7 +13,9 @@ pub struct ChainConfigSummary {
     pub fee: u128,
 }
 
-pub async fn get_chain_configs(State(state): State<ApiState>) -> Result<Json<Vec<ChainConfigSummary>>, RestError> {
+pub async fn get_chain_configs(
+    State(state): State<ApiState>,
+) -> Result<Json<Vec<ChainConfigSummary>>, RestError> {
     let mut configs = Vec::new();
     for (name, chain) in state.config.chains.iter() {
         configs.push(ChainConfigSummary {
