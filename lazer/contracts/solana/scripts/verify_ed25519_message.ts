@@ -69,7 +69,9 @@ async function main() {
     console.log("Transaction confirmed with signature:", signature);
   } catch (e) {
     console.log("error", e);
-    console.log(e.getLogs());
+    if (e instanceof SendTransactionError) {
+      console.log(await e.getLogs(connection));
+    }
   }
 }
 

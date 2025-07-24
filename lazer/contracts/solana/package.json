@@ -7,6 +7,7 @@
     "fix:format": "prettier --write **/*.*",
     "test:format": "prettier --check **/*.*",
     "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor test",
+    "test:types": "tsc",
     "setup": "pnpm ts-node scripts/setup.ts",
     "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
   },
@@ -27,6 +28,7 @@
     "ts-mocha": "^10.0.0",
     "ts-node": "catalog:",
     "typescript": "catalog:",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "@cprussin/tsconfig": "catalog:"
   }
 }
