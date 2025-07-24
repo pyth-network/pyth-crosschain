@@ -31,7 +31,7 @@ mod test {
     const GOVERNANCE_EMITTER: [u8; 32] = [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x11, 0x11,
+        0x00, 0x11,
     ];
     const TEST_PYTH2_WORMHOLE_CHAIN_ID: u16 = 1;
     const TEST_PYTH2_WORMHOLE_EMITTER: [u8; 32] = [
@@ -69,7 +69,7 @@ mod test {
         let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
         let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
 
-        let governance_chain_id = 2u16;
+        let governance_chain_id = 1u16;
         let governance_initial_sequence = 0u64;
 
         pyth_contract.sender(*alice).initialize(
@@ -237,7 +237,7 @@ mod test {
         alice: Address,
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
-        let hex_str = "010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e020000000001000000000002000000000000000000000000000000000000000000000000000000000000111100000000000001015054474d01010002010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e02000000000100000000000200000000000000000000000000000000000000000000000000000000000011110000000000000001005054474d0105000200000001";
+        let hex_str = "01000000000100eb6abceff17a900422cbe415bd4776aa6477ee6ec7f3f58d1635ea2071fb915e43c6ac312b34996d4a76c52de96a8c2cc1c50aacb45aa2013eb6c8d05a472f94010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d01010002010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e02000000000100000000000200000000000000000000000000000000000000000000000000000000000011110000000000000001005054474d0105000200000001";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
         let result = pyth_contract
@@ -251,12 +251,18 @@ mod test {
         }
         assert!(result.is_ok());
 
+        const NEW_GOVERNANCE_EMITTER: [u8; 32] = [
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x11, 0x11,
+        ];
+
         let expected_event = GovernanceDataSourceSet {
             old_chain_id: 0, // Initial governance_data_source_index
             old_emitter_address: FixedBytes::from(GOVERNANCE_EMITTER), // Initial governance emitter from pyth_wormhole_init
-            new_chain_id: 1, // claim_vm.body.emitter_chain from the VAA
-            new_emitter_address: FixedBytes::from(GOVERNANCE_EMITTER), // emitter_bytes from the VAA
-            initial_sequence: 100, // claim_vm.body.sequence from the VAA (0x64 = 100)
+            new_chain_id: 2, // claim_vm.body.emitter_chain from the VAA
+            new_emitter_address: FixedBytes::from(NEW_GOVERNANCE_EMITTER), // emitter_bytes from the VAA
+            initial_sequence: 1, // claim_vm.body.sequence from the VAA (0x64 = 100)
         };
         assert!(
             pyth_contract.emitted(&expected_event),
