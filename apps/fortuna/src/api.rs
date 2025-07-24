@@ -22,7 +22,7 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*};
+pub use {chain_ids::*, config::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*};
 
 mod chain_ids;
 mod explorer;
@@ -31,6 +31,7 @@ mod live;
 mod metrics;
 mod ready;
 mod revelation;
+mod config;
 
 pub type ChainId = String;
 pub type NetworkId = u64;
@@ -211,6 +212,7 @@ pub fn routes(state: ApiState) -> Router<(), Body> {
             "/v1/chains/:chain_id/revelations/:sequence",
             get(revelation),
         )
+        .route("/v1/chains/configs", get(get_chain_configs))
         .with_state(state)
 }
 
