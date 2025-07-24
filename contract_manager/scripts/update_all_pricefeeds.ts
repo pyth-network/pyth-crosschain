@@ -75,6 +75,8 @@ async function main() {
         ),
       ),
     );
+    // Wait for 2 seconds to avoid rate limiting and nonce collision
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }
 
