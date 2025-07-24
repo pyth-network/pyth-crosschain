@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PythLazerSolanaContract } from "../src/idl/pyth_lazer_solana_contract";
+import { PythLazerSolanaContract } from "../src/index.js";
 import { BN } from "bn.js";
 
 describe("pyth-lazer-solana-contract", () => {

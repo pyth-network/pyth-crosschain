@@ -1,5 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-solana-contract",
+  "type": "module",
   "private": true,
   "license": "ISC",
   "scripts": {

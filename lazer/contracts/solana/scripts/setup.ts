@@ -1,8 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
-import { PYTH_LAZER_SOLANA_CONTRACT_IDL, type PythLazerSolanaContract } from "../src";
+import { PYTH_LAZER_SOLANA_CONTRACT_IDL, type PythLazerSolanaContract } from "../src/index.js";
 import yargs from "yargs/yargs";
 import { readFileSync } from "fs";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 
 // This script initializes the program. It should be run once after the program is deployed. Additionally, if the
 // top authority be the same as the given keypair and the trusted signer and expiry time are provided, the trusted

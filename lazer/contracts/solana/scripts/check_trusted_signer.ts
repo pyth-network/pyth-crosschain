@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import yargs from "yargs/yargs";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { PYTH_LAZER_SOLANA_CONTRACT_IDL, type PythLazerSolanaContract } from "../src";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
+import { PYTH_LAZER_SOLANA_CONTRACT_IDL, type PythLazerSolanaContract } from "../src/index.js";
 
 const parser = yargs(process.argv.slice(2)).options({
   url: {
