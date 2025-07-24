@@ -1,5 +1,3 @@
-
-
 use alloc::vec::Vec;
 use hex::FromHex;
 use stylus_sdk::alloy_primitives::Address;
@@ -15,8 +13,15 @@ pub fn create_authorize_governance_data_source_transfer_vaa(_claim_vaa: Vec<u8>)
 }
 
 pub fn create_set_data_sources_vaa(sources: Vec<(u16, [u8; 32])>) -> Vec<u8> {
-    let expected_source = (1u16, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x11]);
-    
+    let expected_source = (
+        1u16,
+        [
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x11, 0x11,
+        ],
+    );
+
     if sources.len() == 1 && sources[0] == expected_source {
         let hex_str = "0100000000010069825ef00344cf745b6e72a41d4f869d4e90de517849360c72bf94efc97681671d826e484747b21a80c8f1e7816021df9f55e458a6e7a717cb2bd2a1e85fd57100499602d200000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010200020100010000000000000000000000000000000000000000000000000000000000001111";
         Vec::from_hex(hex_str).expect("Invalid hex string")
@@ -35,7 +40,9 @@ pub fn create_set_valid_period_vaa(_valid_time_period_seconds: u64) -> Vec<u8> {
     Vec::from_hex(hex_str).expect("Invalid hex string")
 }
 
-pub fn create_request_governance_data_source_transfer_vaa(_governance_data_source_index: u32) -> Vec<u8> {
+pub fn create_request_governance_data_source_transfer_vaa(
+    _governance_data_source_index: u32,
+) -> Vec<u8> {
     let hex_str = "01000000000100b2e15dd5ef41b800ec5ec10f61c6415f706a769f459757f43be78a8fd9f1f6e104e909239fe73b4d8652f7aa1a07825e3230d01a0a7bd6efa0be2e7e72377d71010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010500020000000000000000";
     Vec::from_hex(hex_str).expect("Invalid hex string")
 }
@@ -86,7 +93,14 @@ mod tests {
 
     #[test]
     fn test_create_set_data_sources_vaa() {
-        let sources = vec![(1u16, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x11])];
+        let sources = vec![(
+            1u16,
+            [
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x11, 0x11,
+            ],
+        )];
         let vaa = create_set_data_sources_vaa(sources);
         assert!(!vaa.is_empty());
         let hex_str = hex::encode(&vaa);

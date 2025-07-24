@@ -31,7 +31,7 @@ mod test {
     const GOVERNANCE_EMITTER: [u8; 32] = [
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x11,
+        0x11, 0x11,
     ];
     const TEST_PYTH2_WORMHOLE_CHAIN_ID: u16 = 1;
     const TEST_PYTH2_WORMHOLE_EMITTER: [u8; 32] = [
@@ -69,7 +69,7 @@ mod test {
         let data_source_chain_ids = vec![PYTHNET_CHAIN_ID];
         let data_source_emitter_addresses = vec![PYTHNET_EMITTER_ADDRESS];
 
-        let governance_chain_id = 1u16;
+        let governance_chain_id = 2u16;
         let governance_initial_sequence = 0u64;
 
         pyth_contract.sender(*alice).initialize(
@@ -92,17 +92,21 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let sources = vec![(1u16, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x11])];
+        let sources = vec![(
+            1u16,
+            [
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x11, 0x11,
+            ],
+        )];
         let bytes = crate::test_utils::create_set_data_sources_vaa(sources);
 
         let result = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
         if result.is_err() {
-            println!(
-                "SetDataSources Error: {:?}",
-                result.as_ref().unwrap_err()
-            );
+            println!("SetDataSources Error: {:?}", result.as_ref().unwrap_err());
         }
         assert!(result.is_ok());
 
@@ -143,9 +147,11 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(result.is_ok(), "SetValidPeriod governance instruction should succeed");
+        assert!(
+            result.is_ok(),
+            "SetValidPeriod governance instruction should succeed"
+        );
     }
-
 
     #[motsu::test]
     fn test_set_fee(
@@ -231,8 +237,7 @@ mod test {
         alice: Address,
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
-
-        let hex_str = "010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e02000000000100000000000200000000000000000000000000000000000000000000000000000000000011110000000000000001005054474d0105000200000001";
+        let hex_str = "010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e020000000001000000000002000000000000000000000000000000000000000000000000000000000000111100000000000001015054474d01010002010000000001006fc27ac424b300c23a564bcabe1d7888a898cba92b8aec62468c35025baaf4a87056c50d443fbc172c3caa30d28ec57cefc0bbabf4590ffe98c44dff040d0e02000000000100000000000200000000000000000000000000000000000000000000000000000000000011110000000000000001005054474d0105000200000001";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
         let result = pyth_contract
@@ -341,10 +346,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_err(),
-            "Invalid VAA should revert the transaction"
-        );
+        assert!(result.is_err(), "Invalid VAA should revert the transaction");
     }
 
     #[motsu::test]
@@ -363,10 +365,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_err(),
-            "Invalid VAA should revert the transaction"
-        );
+        assert!(result.is_err(), "Invalid VAA should revert the transaction");
     }
 
     #[motsu::test]
@@ -384,10 +383,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_err(),
-            "Invalid VAA should revert the transaction"
-        );
+        assert!(result.is_err(), "Invalid VAA should revert the transaction");
     }
 
     #[motsu::test]
@@ -406,10 +402,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_err(),
-            "Invalid VAA should revert the transaction"
-        );
+        assert!(result.is_err(), "Invalid VAA should revert the transaction");
     }
 
     #[motsu::test]
@@ -428,10 +421,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_err(),
-            "Invalid VAA should revert the transaction"
-        );
+        assert!(result.is_err(), "Invalid VAA should revert the transaction");
     }
 
     #[motsu::test]
@@ -450,10 +440,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_err(),
-            "Invalid VAA should revert the transaction"
-        );
+        assert!(result.is_err(), "Invalid VAA should revert the transaction");
     }
 
     #[motsu::test]
@@ -471,10 +458,7 @@ mod test {
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
 
-        assert!(
-            result.is_ok(),
-            "This is a valid VAA, should go through"
-        );
+        assert!(result.is_ok(), "This is a valid VAA, should go through");
 
         let result = pyth_contract
             .sender(alice)
@@ -529,5 +513,4 @@ mod test {
             "Wrong action expected should lead to bad parsing"
         );
     }
-
 }
