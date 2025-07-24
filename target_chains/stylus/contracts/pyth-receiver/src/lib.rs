@@ -15,6 +15,8 @@ mod pyth_governance_test;
 mod structs;
 #[cfg(test)]
 mod test_data;
+#[cfg(test)]
+mod test_utils;
 
 #[cfg(test)]
 use mock_instant::global::MockClock;

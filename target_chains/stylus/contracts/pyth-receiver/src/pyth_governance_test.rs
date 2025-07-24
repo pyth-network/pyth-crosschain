@@ -92,12 +92,18 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let hex_str = "0100000000010069825ef00344cf745b6e72a41d4f869d4e90de517849360c72bf94efc97681671d826e484747b21a80c8f1e7816021df9f55e458a6e7a717cb2bd2a1e85fd57100499602d200000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010200020100010000000000000000000000000000000000000000000000000000000000001111";
-        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+        let sources = vec![(1u16, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x11])];
+        let bytes = crate::test_utils::create_set_data_sources_vaa(sources);
 
         let result = pyth_contract
             .sender(alice)
             .execute_governance_instruction(bytes.clone());
+        if result.is_err() {
+            println!(
+                "SetDataSources Error: {:?}",
+                result.as_ref().unwrap_err()
+            );
+        }
         assert!(result.is_ok());
 
         let expected_event = DataSourcesSet {
@@ -131,8 +137,7 @@ mod test {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
         //
-        let hex_str = "01000000000100b2e15dd5ef41b800ec5ec10f61c6415f706a769f459757f43be78a8fd9f1f6e104e909239fe73b4d8652f7aa1a07825e3230d01a0a7bd6efa0be2e7e72377d71010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010400020000000000000000";
-        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+        let bytes = crate::test_utils::create_set_valid_period_vaa(0);
 
         let result = pyth_contract
             .sender(alice)
@@ -150,8 +155,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000200000000000000050000000000000003";
-        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+        let bytes = crate::test_utils::create_set_fee_vaa(5, 3);
 
         let result = pyth_contract
             .sender(alice)
@@ -263,8 +267,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let hex_str = "010000000001001554008232e74cb3ac74acc4527ead8a39637c537ec9b3d1fbb624c1f4f52e341e24ae89d978e033f5345e4af244df0ec61f380d9e33330f439d2b6764850270010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0108000200000000000000640000000000000003";
-        let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
+        let bytes = crate::test_utils::create_set_transaction_fee_vaa(100, 3);
 
         let result = pyth_contract
             .sender(alice)
