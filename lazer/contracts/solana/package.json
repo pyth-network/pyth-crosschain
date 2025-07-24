@@ -3,6 +3,7 @@
   "private": true,
   "license": "ISC",
   "scripts": {
+    "update-idl": "RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build --idl \"$PWD/src/idl\" --idl-ts \"$PWD/src/idl\"",
     "fix:format": "prettier --write **/*.*",
     "test:format": "prettier --check **/*.*",
     "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor test",

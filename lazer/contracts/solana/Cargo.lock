@@ -3204,12 +3204,14 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.8.1"
+version = "0.9.1"
 dependencies = [
  "anyhow",
  "byteorder",
  "chrono",
  "derive_more",
+ "hex",
+ "humantime",
  "humantime-serde",
  "itertools 0.13.0",
  "protobuf",

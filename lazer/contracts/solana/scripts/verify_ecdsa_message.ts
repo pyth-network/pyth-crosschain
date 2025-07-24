@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PythLazerSolanaContract } from "../target/types/pyth_lazer_solana_contract";
-import * as pythLazerSolanaContractIdl from "../target/idl/pyth_lazer_solana_contract.json";
+import { PythLazerSolanaContract } from "../src/idl/pyth_lazer_solana_contract";
+import * as pythLazerSolanaContractIdl from "../src/idl/pyth_lazer_solana_contract.json";
 import yargs from "yargs/yargs";
 import { readFileSync } from "fs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
