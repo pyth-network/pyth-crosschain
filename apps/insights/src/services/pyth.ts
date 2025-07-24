@@ -55,18 +55,23 @@ const clients = {
   [Cluster.PythtestConformance]: mkClient(Cluster.PythtestConformance),
 } as const;
 
+const getDataForCluster = (cluster: keyof typeof clients) => {
+  "use cache";
+  return clients[cluster].getData()
+}
+
 export const getPublishersForFeed = async (
   cluster: Cluster,
   symbol: string,
 ) => {
-  const data = await clients[cluster].getData();
+  const data = await getDataForCluster(cluster);
   return data.productPrice
     .get(symbol)
     ?.priceComponents.map(({ publisher }) => publisher.toBase58());
 };
 
 export const getFeeds = async (cluster: Cluster) => {
-  const data = await clients[cluster].getData();
+  const data = await getDataForCluster(cluster);
   return priceFeedsSchema.parse(
     data.symbols.map((symbol) => ({
       symbol,
@@ -80,7 +85,7 @@ export const getFeedsForPublisher = async (
   cluster: Cluster,
   publisher: string,
 ) => {
-  const data = await clients[cluster].getData();
+  const data = await getDataForCluster(cluster);
   return priceFeedsSchema.parse(
     data.symbols
       .filter(
