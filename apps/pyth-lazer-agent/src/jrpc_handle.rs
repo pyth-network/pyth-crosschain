@@ -1,13 +1,13 @@
 use crate::config::Config;
 use crate::lazer_publisher::LazerPublisher;
-use crate::websocket_utils::{handle_websocket_error, send_text};
+use crate::websocket_utils::{handle_websocket_error, send_json, send_text};
 use anyhow::Error;
 use futures::{AsyncRead, AsyncWrite};
 use futures_util::io::{BufReader, BufWriter};
 use hyper_util::rt::TokioIo;
 use pyth_lazer_protocol::jrpc::{
-    GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcResponse, JrpcSuccessResponse,
-    JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata,
+    FeedUpdateParams, GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcResponse,
+    JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata,
 };
 use soketto::Sender;
 use soketto::handshake::http::Server;
@@ -82,7 +82,7 @@ async fn try_handle_jrpc(
                     serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
                         JrpcErrorResponse {
                             jsonrpc: JsonRpcVersion::V2,
-                            error: JrpcError::InternalError.into(),
+                            error: JrpcError::InternalError(err.to_string()).into(),
                             id: None,
                         },
                     ))?
@@ -103,93 +103,40 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
     match serde_json::from_slice::<PythLazerAgentJrpcV1>(receive_buf.as_slice()) {
         Ok(jrpc_request) => match jrpc_request.params {
             JrpcCall::PushUpdate(request_params) => {
-                match lazer_publisher
-                    .push_feed_update(request_params.into())
+                handle_push_update(sender, lazer_publisher, request_params, jrpc_request.id).await
+            }
+            JrpcCall::GetMetadata(request_params) => {
+                if let Some(request_id) = jrpc_request.id {
+                    handle_get_metadata(sender, config, request_params, request_id).await
+                } else {
+                    send_json(
+                        sender,
+                        &JrpcErrorResponse {
+                            jsonrpc: JsonRpcVersion::V2,
+                            error: JrpcError::ParseError(
+                                "The request to method 'get_metadata' requires an 'id'".to_string(),
+                            )
+                            .into(),
+                            id: None,
+                        },
+                    )
                     .await
-                {
-                    Ok(_) => {
-                        send_text(
-                            sender,
-                            serde_json::to_string::<JrpcResponse<String>>(&JrpcResponse::Success(
-                                JrpcSuccessResponse::<String> {
-                                    jsonrpc: JsonRpcVersion::V2,
-                                    result: "success".to_string(),
-                                    id: jrpc_request.id,
-                                },
-                            ))?
-                            .as_str(),
-                        )
-                        .await?;
-                    }
-                    Err(err) => {
-                        debug!("error while sending updates: {:?}", err);
-                        send_text(
-                            sender,
-                            serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
-                                JrpcErrorResponse {
-                                    jsonrpc: JsonRpcVersion::V2,
-                                    error: JrpcError::InternalError.into(),
-                                    id: Some(jrpc_request.id),
-                                },
-                            ))?
-                            .as_str(),
-                        )
-                        .await?;
-                    }
                 }
             }
-            JrpcCall::GetMetadata(request_params) => match get_metadata(config.clone()).await {
-                Ok(symbols) => {
-                    let symbols = filter_symbols(symbols.clone(), request_params);
-
-                    send_text(
-                        sender,
-                        serde_json::to_string::<JrpcResponse<Vec<SymbolMetadata>>>(
-                            &JrpcResponse::Success(JrpcSuccessResponse::<Vec<SymbolMetadata>> {
-                                jsonrpc: JsonRpcVersion::V2,
-                                result: symbols,
-                                id: jrpc_request.id,
-                            }),
-                        )?
-                        .as_str(),
-                    )
-                    .await?;
-                }
-                Err(err) => {
-                    error!("error while retrieving metadata: {:?}", err);
-                    send_text(
-                        sender,
-                        serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
-                            JrpcErrorResponse {
-                                jsonrpc: JsonRpcVersion::V2,
-                                // note: right now specifying an invalid method results in a parse error
-                                error: JrpcError::InternalError.into(),
-                                id: None,
-                            },
-                        ))?
-                        .as_str(),
-                    )
-                    .await?;
-                }
-            },
         },
         Err(err) => {
             debug!("Error parsing JRPC request: {}", err);
-            send_text(
+            send_json(
                 sender,
-                serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
-                    JrpcErrorResponse {
-                        jsonrpc: JsonRpcVersion::V2,
-                        error: JrpcError::ParseError(err.to_string()).into(),
-                        id: None,
-                    },
-                ))?
-                .as_str(),
+                &JrpcErrorResponse {
+                    jsonrpc: JsonRpcVersion::V2,
+                    error: JrpcError::ParseError(err.to_string()).into(),
+                    id: None,
+                },
             )
-            .await?;
+            .await
         }
     }
-    Ok(())
 }
 
 async fn get_metadata(config: Config) -> Result<Vec<SymbolMetadata>, Error> {
@@ -240,6 +187,81 @@ fn filter_symbols(
         .collect();
 
     res
+}
+
+async fn handle_push_update<T: AsyncRead + AsyncWrite + Unpin>(
+    sender: &mut Sender<T>,
+    lazer_publisher: &LazerPublisher,
+    request_params: FeedUpdateParams,
+    request_id: Option<i64>,
+) -> anyhow::Result<()> {
+    match lazer_publisher
+        .push_feed_update(request_params.clone().into())
+        .await
+    {
+        Ok(_) => {
+            if let Some(request_id) = request_id {
+                send_json(
+                    sender,
+                    &JrpcSuccessResponse::<String> {
+                        jsonrpc: JsonRpcVersion::V2,
+                        result: "success".to_string(),
+                        id: request_id,
+                    },
+                )
+                .await
+            } else {
+                Ok(())
+            }
+        }
+        Err(err) => {
+            debug!("error while sending updates: {:?}", err);
+            send_json(
+                sender,
+                &JrpcErrorResponse {
+                    jsonrpc: JsonRpcVersion::V2,
+                    error: JrpcError::SendUpdateError(request_params).into(),
+                    id: request_id,
+                },
+            )
+            .await
+        }
+    }
+}
+
+async fn handle_get_metadata<T: AsyncRead + AsyncWrite + Unpin>(
+    sender: &mut Sender<T>,
+    config: &Config,
+    request_params: GetMetadataParams,
+    request_id: i64,
+) -> anyhow::Result<()> {
+    match get_metadata(config.clone()).await {
+        Ok(symbols) => {
+            let symbols = filter_symbols(symbols.clone(), request_params);
+
+            send_json(
+                sender,
+                &JrpcSuccessResponse::<Vec<SymbolMetadata>> {
+                    jsonrpc: JsonRpcVersion::V2,
+                    result: symbols,
+                    id: request_id,
+                },
+            )
+            .await
+        }
+        Err(err) => {
+            error!("error while retrieving metadata: {:?}", err);
+            send_json(
+                sender,
+                &JrpcErrorResponse {
+                    jsonrpc: JsonRpcVersion::V2,
+                    error: JrpcError::InternalError(err.to_string()).into(),
+                    id: Some(request_id),
+                },
+            )
+            .await
+        }
+    }
 }
 
 #[cfg(test)]
