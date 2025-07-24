@@ -22,16 +22,18 @@ use {
     tokio::sync::RwLock,
     url::Url,
 };
-pub use {chain_ids::*, config::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*};
+pub use {
+    chain_ids::*, config::*, explorer::*, index::*, live::*, metrics::*, ready::*, revelation::*,
+};
 
 mod chain_ids;
+mod config;
 mod explorer;
 mod index;
 mod live;
 mod metrics;
 mod ready;
 mod revelation;
-mod config;
 
 pub type ChainId = String;
 pub type NetworkId = u64;
