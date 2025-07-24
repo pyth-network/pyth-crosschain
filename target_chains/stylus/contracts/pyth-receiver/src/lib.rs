@@ -15,8 +15,6 @@ mod pyth_governance_test;
 mod structs;
 #[cfg(test)]
 mod test_data;
-#[cfg(test)]
-mod test_utils;
 
 #[cfg(test)]
 use mock_instant::global::MockClock;
@@ -34,7 +32,6 @@ use stylus_sdk::{
 };
 
 use error::PythReceiverError;
-use governance_structs::*;
 use pythnet_sdk::{
     accumulators::merkle::{MerklePath, MerkleRoot},
     hashers::keccak256_160::Keccak160,
