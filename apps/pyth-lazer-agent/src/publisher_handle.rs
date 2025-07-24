@@ -85,19 +85,17 @@ async fn try_handle_publisher(
                     &receive_buf,
                     bincode::config::legacy(),
                 ) {
-                    Ok((data, _)) => {
-                        FeedUpdate {
-                            feed_id: Some(data.price_feed_id.0),
-                            source_timestamp: MessageField::some(data.source_timestamp_us.into()),
-                            update: Some(Update::PriceUpdate(PriceUpdate {
-                                price: data.price.map(|p| p.0.get()),
-                                best_bid_price: data.best_bid_price.map(|p| p.0.get()),
-                                best_ask_price: data.best_ask_price.map(|p| p.0.get()),
-                                ..PriceUpdate::default()
-                            })),
-                            special_fields: Default::default(),
-                        }
-                    }
+                    Ok((data, _)) => FeedUpdate {
+                        feed_id: Some(data.price_feed_id.0),
+                        source_timestamp: MessageField::some(data.source_timestamp_us.into()),
+                        update: Some(Update::PriceUpdate(PriceUpdate {
+                            price: data.price.map(|p| p.0.get()),
+                            best_bid_price: data.best_bid_price.map(|p| p.0.get()),
+                            best_ask_price: data.best_ask_price.map(|p| p.0.get()),
+                            ..PriceUpdate::default()
+                        })),
+                        special_fields: Default::default(),
+                    },
                     Err(err) => {
                         error_count += 1;
                         if error_count <= MAX_ERROR_LOG {
@@ -123,18 +121,16 @@ async fn try_handle_publisher(
                     &receive_buf,
                     bincode::config::legacy(),
                 ) {
-                    Ok((data, _)) => {
-                        FeedUpdate {
-                            feed_id: Some(data.price_feed_id.0),
-                            source_timestamp: MessageField::some(data.source_timestamp_us.into()),
-                            update: Some(Update::FundingRateUpdate(FundingRateUpdate {
-                                price: data.price.map(|p| p.0.get()),
-                                rate: data.funding_rate.map(|r| r.0),
-                                ..FundingRateUpdate::default()
-                            })),
-                            special_fields: Default::default(),
-                        }
-                    }
+                    Ok((data, _)) => FeedUpdate {
+                        feed_id: Some(data.price_feed_id.0),
+                        source_timestamp: MessageField::some(data.source_timestamp_us.into()),
+                        update: Some(Update::FundingRateUpdate(FundingRateUpdate {
+                            price: data.price.map(|p| p.0.get()),
+                            rate: data.funding_rate.map(|r| r.0),
+                            ..FundingRateUpdate::default()
+                        })),
+                        special_fields: Default::default(),
+                    },
                     Err(err) => {
                         error_count += 1;
                         if error_count <= MAX_ERROR_LOG {
