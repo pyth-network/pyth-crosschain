@@ -78,7 +78,7 @@ impl PythReceiver {
         unimplemented!("Upgrade contract not yet implemented");
     }
 
-    fn set_fee(&mut self, value: u64, expo: u64) {
+    pub(crate) fn set_fee(&mut self, value: u64, expo: u64) {
         let new_fee = U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
         let old_fee = self.single_update_fee_in_wei.get();
 
@@ -87,7 +87,7 @@ impl PythReceiver {
         log(self.vm(), crate::FeeSet { old_fee, new_fee });
     }
 
-    fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
+    pub(crate) fn set_valid_period(&mut self, valid_time_period_seconds: u64) {
         let old_valid_period = self.valid_time_period_seconds.get();
         let new_valid_period = U256::from(valid_time_period_seconds);
         self.valid_time_period_seconds.set(new_valid_period);
@@ -101,7 +101,7 @@ impl PythReceiver {
         );
     }
 
-    fn set_wormhole_address(
+    pub(crate) fn set_wormhole_address(
         &mut self,
         address: Address,
         data: Vec<u8>,
@@ -147,7 +147,7 @@ impl PythReceiver {
         Ok(())
     }
 
-    fn authorize_governance_transfer(
+    pub(crate) fn authorize_governance_transfer(
         &mut self,
         claim_vaa: Vec<u8>,
     ) -> Result<(), PythReceiverError> {
@@ -214,7 +214,7 @@ impl PythReceiver {
         Ok(())
     }
 
-    fn set_transaction_fee(&mut self, value: u64, expo: u64) {
+    pub(crate) fn set_transaction_fee(&mut self, value: u64, expo: u64) {
         let new_fee = U256::from(value).saturating_mul(U256::from(10).pow(U256::from(expo)));
         let old_fee = self.transaction_fee_in_wei.get();
 
@@ -223,7 +223,7 @@ impl PythReceiver {
         log(self.vm(), crate::TransactionFeeSet { old_fee, new_fee });
     }
 
-    fn withdraw_fee(
+    pub(crate) fn withdraw_fee(
         &mut self,
         value: u64,
         expo: u64,
@@ -281,7 +281,7 @@ pub fn verify_governance_vm(receiver: &mut PythReceiver, vm: Vaa) -> Result<(), 
     Ok(())
 }
 
-pub fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) {
+pub(crate) fn set_data_sources(receiver: &mut PythReceiver, data_sources: Vec<DataSource>) {
     let mut old_data_sources = Vec::new();
     for i in 0..receiver.valid_data_sources.len() {
         if let Some(storage_data_source) = receiver.valid_data_sources.get(i) {

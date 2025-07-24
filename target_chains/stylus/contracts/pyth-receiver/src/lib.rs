@@ -85,6 +85,7 @@ pub struct PythReceiver {
     pub transaction_fee_in_wei: StorageU256,
 }
 
+
 #[public]
 impl PythReceiver {
     pub fn initialize(
