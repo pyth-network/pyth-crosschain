@@ -1,5 +1,6 @@
 use crate::{api::{ApiState, RestError}, config::Config};
 use axum::{extract::State, Json};
+use anyhow::{anyhow, Error};
 
 #[derive(serde::Serialize)]
 pub struct ChainConfigSummary {
@@ -10,12 +11,10 @@ pub struct ChainConfigSummary {
     pub fee: u128,
 }
 
-pub async fn get_chain_configs(State(_state): State<ApiState>) -> Result<Json<Vec<ChainConfigSummary>>, RestError> {
+pub async fn get_chain_configs(State(_state): State<ApiState>) -> Result<Json<Vec<ChainConfigSummary>>, Error> {
     // Try to load the config file (assume default path for now)
-    let config = match Config::load("config.yaml") {
-        Ok(cfg) => cfg,
-        Err(_) => return Err(RestError::Unknown),
-    };
+    let yaml_content = std::fs::read_to_string("../config.yaml").map_err(|e| anyhow!("Failed to read config file: {}", e))?;
+    let config: Config = serde_yaml::from_str(&yaml_content).map_err(|e| anyhow!("Failed to parse config file: {}", e))?;
     let mut configs = Vec::new();
     for (name, chain) in config.chains.iter() {
         configs.push(ChainConfigSummary {
