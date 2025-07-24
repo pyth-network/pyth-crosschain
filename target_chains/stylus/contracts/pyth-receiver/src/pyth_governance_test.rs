@@ -488,7 +488,7 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        // This VAA is for a target chain ID of 1 (Solana), but the PythReceiver is on chain ID 1 (Ethereum)
+        // This VAA is for a target chain ID of 1 (Solana), but the PythReceiver is on chain ID 2 (Ethereum)
         let hex_str = "0100000000010057940f58a6a44c93606bd721701539e0da93d5ea1583a735fbb13ecbcf9c01fc70240de519ea76869af14d067d68c5f3f2230f565f41b7009f3c3e63749353ed000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d0103000100000000000000050000000000000003";
         let bytes = Vec::from_hex(&hex_str).expect("Invalid hex string");
 
