@@ -63,6 +63,7 @@ pub enum JsonRpcVersion {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[serde(untagged)]
 pub enum JrpcResponse<T> {
     Success(JrpcSuccessResponse<T>),
     Error(JrpcErrorResponse),
@@ -401,6 +402,56 @@ mod tests {
                 result: "success".to_string(),
                 id: 2,
             }
+        );
+    }
+
+    #[test]
+    pub fn test_parse_response() {
+        let success_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "result": "success"
+            }
+            "#,
+        )
+            .unwrap();
+
+        assert_eq!(
+            success_response,
+            JrpcResponse::Success(JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: 2,
+            })
+        );
+
+        let error_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": 3,
+              "error": {
+                "code": -32603,
+                "message": "Internal error"
+              }
+            }
+            "#,
+        )
+            .unwrap();
+
+        assert_eq!(
+            error_response,
+            JrpcResponse::Error(JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: Some(3),
+            })
         );
     }
 }
