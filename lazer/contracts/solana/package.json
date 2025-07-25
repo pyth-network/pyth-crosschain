@@ -6,6 +6,7 @@
     "fix:format": "prettier --write **/*.*",
     "test:format": "prettier --check **/*.*",
     "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor test",
+    "update-idl": "RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
     "setup": "pnpm ts-node scripts/setup.ts",
     "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
   },
