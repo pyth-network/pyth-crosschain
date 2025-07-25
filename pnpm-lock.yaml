@@ -320,6 +320,9 @@ overrides:
   '@solana/web3.js@1.77.4>rpc-websockets': 7.11.0
 
 patchedDependencies:
+  '@coral-xyz/anchor@0.30.1':
+    hash: fdde6a69e89e7230c6979bd86d753f6c9a7d699054519a32546f1419afc22ff3
+    path: patches/@coral-xyz__anchor@0.30.1.patch
   eccrypto@1.1.6:
     hash: 14256f85228cfd014e6cdf67183ec7d4f0f50b9ac06e0f09ec38023c598839f1
     path: patches/eccrypto@1.1.6.patch
@@ -1051,7 +1054,7 @@ importers:
         version: 1.39.0(axios@1.8.4)(got@12.1.0)
       '@coral-xyz/anchor':
         specifier: ^0.30.0
-        version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 0.30.1(patch_hash=fdde6a69e89e7230c6979bd86d753f6c9a7d699054519a32546f1419afc22ff3)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@injectivelabs/networks':
         specifier: 1.14.47
         version: 1.14.47
@@ -1190,7 +1193,7 @@ importers:
         version: 3.0.10(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.8.2)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor':
         specifier: 'catalog:'
-        version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 0.30.1(patch_hash=fdde6a69e89e7230c6979bd86d753f6c9a7d699054519a32546f1419afc22ff3)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@heroicons/react':
         specifier: 'catalog:'
         version: 2.2.0(react@19.1.0)
@@ -1483,7 +1486,7 @@ importers:
     dependencies:
       '@coral-xyz/anchor':
         specifier: 'catalog:'
-        version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 0.30.1(patch_hash=fdde6a69e89e7230c6979bd86d753f6c9a7d699054519a32546f1419afc22ff3)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client':
         specifier: 'catalog:'
         version: 2.22.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -1903,7 +1906,7 @@ importers:
     dependencies:
       '@coral-xyz/anchor':
         specifier: ^0.30.1
-        version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+        version: 0.30.1(patch_hash=fdde6a69e89e7230c6979bd86d753f6c9a7d699054519a32546f1419afc22ff3)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/pyth-lazer-sdk':
         specifier: workspace:*
         version: link:../../sdk/js
@@ -25495,7 +25498,7 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@coral-xyz/anchor@0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
+  '@coral-xyz/anchor@0.30.1(patch_hash=fdde6a69e89e7230c6979bd86d753f6c9a7d699054519a32546f1419afc22ff3)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor-errors': 0.30.1
       '@coral-xyz/borsh': 0.30.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))

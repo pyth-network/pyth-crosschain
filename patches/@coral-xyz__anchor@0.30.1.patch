@@ -1,0 +1,112 @@
+diff --git a/dist/esm/index.js b/dist/esm/index.js
+index be1a18d642ea047746c66823ae48279fe408c203..9e40b570a0354bda5e1cc8b4cff046853720dd3e 100644
+--- a/dist/esm/index.js
++++ b/dist/esm/index.js
+@@ -1,5 +1,3 @@
+-import NodeWallet from "./nodewallet";
+-import { isBrowser } from "./utils/common.js";
+ export { default as BN } from "bn.js";
+ export * as web3 from "@solana/web3.js";
+ export { getProvider, setProvider, AnchorProvider, } from "./provider.js";
+@@ -8,8 +6,6 @@ export * from "./coder/index.js";
+ export * as utils from "./utils/index.js";
+ export * from "./program/index.js";
+ export * from "./native/index.js";
+-if (!isBrowser) {
+-    exports.workspace = require("./workspace.js").default;
+-    exports.Wallet = require("./nodewallet.js").default;
+-}
++export * as workspace from "./workspace.js";
++export * as Wallet from "./nodewallet.js";
+ //# sourceMappingURL=index.js.map
+diff --git a/dist/esm/package.json b/dist/esm/package.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..3dbc1ca591c0557e35b6004aeba250e6a70b56e3
+--- /dev/null
++++ b/dist/esm/package.json
+@@ -0,0 +1,3 @@
++{
++  "type": "module"
++}
+diff --git a/dist/esm/program/accounts-resolver.js b/dist/esm/program/accounts-resolver.js
+index 46bd6f62f5a0ff756421ed44c879a409c5df77ca..981bcc44979a236fb11d952e4a584e4369bf0ccf 100644
+--- a/dist/esm/program/accounts-resolver.js
++++ b/dist/esm/program/accounts-resolver.js
+@@ -1,9 +1,9 @@
+ import BN from "bn.js";
+ import { PublicKey } from "@solana/web3.js";
+ import { isCompositeAccounts, } from "../idl.js";
+-import { decodeTokenAccount } from "./token-account-layout";
++import { decodeTokenAccount } from "./token-account-layout.js";
+ import { Program, translateAddress } from "./index.js";
+-import { flattenPartialAccounts, isPartialAccounts, } from "./namespace/methods";
++import { flattenPartialAccounts, isPartialAccounts, } from "./namespace/methods.js";
+ export function isAccountsGeneric(accounts) {
+     return !(accounts instanceof PublicKey);
+ }
+diff --git a/dist/esm/program/namespace/index.js b/dist/esm/program/namespace/index.js
+index 605813f1dfc79e4fbf6b81800f8ef754b637f452..3f53b921c120a37cbbad559797e537b87f6ed8ca 100644
+--- a/dist/esm/program/namespace/index.js
++++ b/dist/esm/program/namespace/index.js
+@@ -4,10 +4,10 @@ import RpcFactory from "./rpc.js";
+ import AccountFactory from "./account.js";
+ import SimulateFactory from "./simulate.js";
+ import { parseIdlErrors } from "../common.js";
+-import { MethodsBuilderFactory } from "./methods";
+-import ViewFactory from "./views";
++import { MethodsBuilderFactory } from "./methods.js";
++import ViewFactory from "./views.js";
+ export { AccountClient } from "./account.js";
+-export { MethodsBuilderFactory } from "./methods";
++export { MethodsBuilderFactory } from "./methods.js";
+ export default class NamespaceFactory {
+     /**
+      * Generates all namespaces for a given program.
+diff --git a/dist/esm/program/namespace/views.js b/dist/esm/program/namespace/views.js
+index 75c97da65073fb37bf95f04737997a2a9f497104..da7932eb359625a61b1bc1b8d8d5f3e11d54af87 100644
+--- a/dist/esm/program/namespace/views.js
++++ b/dist/esm/program/namespace/views.js
+@@ -1,5 +1,5 @@
+-import { IdlCoder } from "../../coder/borsh/idl";
+-import { decode } from "../../utils/bytes/base64";
++import { IdlCoder } from "../../coder/borsh/idl.js";
++import { decode } from "../../utils/bytes/base64.js";
+ export default class ViewFactory {
+     static build(programId, idlIx, simulateFn, idl) {
+         const isWritable = idlIx.accounts.find((a) => a.writable);
+diff --git a/dist/esm/utils/bytes/utf8.js b/dist/esm/utils/bytes/utf8.js
+index 6535b3c8a26c96810ab02cec024a20666b8f0b4f..8f9bf1edddcd98b3fa62c197432f7103ef631849 100644
+--- a/dist/esm/utils/bytes/utf8.js
++++ b/dist/esm/utils/bytes/utf8.js
+@@ -1,4 +1,4 @@
+-import { isBrowser } from "../common";
++import { isBrowser } from "../common.js";
+ export function decode(array) {
+     const decoder = isBrowser
+         ? new TextDecoder("utf-8") // Browser https://caniuse.com/textencoder.
+diff --git a/package.json b/package.json
+index 28cdc19ab29945f5ae24e68c007fc4093a2082ad..2a402f502a935ce34252dd4bdc9a437200e86cf9 100644
+--- a/package.json
++++ b/package.json
+@@ -2,11 +2,20 @@
+   "name": "@coral-xyz/anchor",
+   "version": "0.30.1",
+   "description": "Anchor client",
+-  "module": "./dist/esm/index.js",
+   "main": "./dist/cjs/index.js",
+   "browser": "./dist/browser/index.js",
+   "license": "(MIT OR Apache-2.0)",
+   "types": "dist/cjs/index.d.ts",
++  "exports": {
++    "import": {
++      "types": "dist/cjs/index.d.ts",
++      "default": "./dist/esm/index.js"
++    },
++    "require": {
++      "types": "dist/cjs/index.d.ts",
++      "default": "./dist/cjs/index.js"
++    }
++  },
+   "homepage": "https://github.com/coral-xyz/anchor#readme",
+   "bugs": {
+     "url": "https://github.com/coral-xyz/anchor/issues"

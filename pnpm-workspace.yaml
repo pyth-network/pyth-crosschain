@@ -9,6 +9,7 @@ overrides:
 
 patchedDependencies:
   "eccrypto@1.1.6": patches/eccrypto@1.1.6.patch
+  "@coral-xyz/anchor@0.30.1": patches/@coral-xyz__anchor@0.30.1.patch
 
 packages:
   - apps/*
