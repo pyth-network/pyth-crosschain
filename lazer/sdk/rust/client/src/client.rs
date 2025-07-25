@@ -277,8 +277,6 @@ impl PythLazerClientBuilder {
     /// - Default Pyth Lazer endpoints
     /// - 4 WebSocket connections
     /// - 5-second timeout
-    /// - Default exponential backoff settings
-    /// - Default channel capacity
     ///
     /// # Arguments
     ///
