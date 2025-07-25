@@ -44,6 +44,7 @@ packages:
   - contract_manager
   - lazer/contracts/solana
   - lazer/sdk/js
+  - lazer/sdk/js-solana
 
 catalog:
   "@amplitude/analytics-browser": ^2.13.0
@@ -185,3 +186,5 @@ onlyBuiltDependencies:
   - web3
   - web3-bzz
   - web3-shh
+ignoredBuiltDependencies:
+  - "@swc/core"

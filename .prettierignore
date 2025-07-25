@@ -1,5 +1,6 @@
 pnpm-lock.yaml
 patches/
+.mypy_cache/
 .turbo/
 target_chains/sui/vendor/
 lazer/contracts/evm/lib/
@@ -38,3 +39,4 @@ target_chains/ton/sdk/js
 contract_manager
 lazer/contracts/solana
 lazer/sdk/js
+lazer/sdk/js-solana
