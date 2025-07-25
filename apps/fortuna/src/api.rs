@@ -354,7 +354,7 @@ mod test {
             Arc::new(RwLock::new(chains)),
             metrics_registry,
             Arc::new(History::new().await.unwrap()),
-            config,
+            Arc::new(config),
         )
         .await;
 
@@ -726,7 +726,7 @@ mod test {
             Arc::new(RwLock::new(chains)),
             metrics_registry,
             Arc::new(History::new().await.unwrap()),
-            config,
+            Arc::new(config),
         )
         .await;
 
