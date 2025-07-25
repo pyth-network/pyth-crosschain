@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod test {
-    use crate::{DataSourcesSet, FeeSet, GovernanceDataSourceSet, PythReceiver, TransactionFeeSet};
+    use crate::{
+        DataSourcesSet, FeeSet, GovernanceDataSourceSet, PythReceiver, TransactionFeeSet,
+        ValidPeriodSet,
+    };
     use alloy_primitives::{address, Address, FixedBytes, U256};
     use hex::FromHex;
     use motsu::prelude::*;
@@ -92,15 +95,6 @@ mod test {
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
 
-        let sources = vec![(
-            1u16,
-            [
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x11, 0x11,
-            ],
-        )];
-
         let hex_str = "0100000000010069825ef00344cf745b6e72a41d4f869d4e90de517849360c72bf94efc97681671d826e484747b21a80c8f1e7816021df9f55e458a6e7a717cb2bd2a1e85fd57100499602d200000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010200020100010000000000000000000000000000000000000000000000000000000000001111";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
@@ -141,8 +135,7 @@ mod test {
         alice: Address,
     ) {
         pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice, 0);
-
-        let hex_str = "01000000000100b2e15dd5ef41b800ec5ec10f61c6415f706a769f459757f43be78a8fd9f1f6e104e909239fe73b4d8652f7aa1a07825e3230d01a0a7bd6efa0be2e7e72377d71010000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010400020000000000000000";
+        let hex_str = "01000000000100c9effcab077af2f3f65a7abfd1883295529eab7c0d4434772ed1f2d10b1de3571c214af45e944a3fee65417c9f0c6024010dadc26d30bb361e05f552ca4de04d000000000100000000000100000000000000000000000000000000000000000000000000000000000000110000000000000001005054474d010400020000000000000003";
         let bytes = Vec::from_hex(hex_str).expect("Invalid hex string");
 
         let result = pyth_contract
@@ -152,6 +145,16 @@ mod test {
         assert!(
             result.is_ok(),
             "SetValidPeriod governance instruction should succeed"
+        );
+
+        let expected_event = ValidPeriodSet {
+            old_valid_period: U256::from(3600),
+            new_valid_period: U256::from(3),
+        };
+
+        assert!(
+            pyth_contract.emitted(&expected_event),
+            "ValidPeriodSet event should be emitted"
         );
     }
 
