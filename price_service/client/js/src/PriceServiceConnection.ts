@@ -160,7 +160,7 @@ export class PriceServiceConnection {
    * Fetch latest VAA of given price ids.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
    *
-   * This function is coupled to wormhole implemntation.
+   * This function is coupled to wormhole implementation.
    *
    * @param priceIds Array of hex-encoded price ids.
    * @returns Array of base64 encoded VAAs.
@@ -180,7 +180,7 @@ export class PriceServiceConnection {
    * is old and the price service endpoint does not have a db backend for historical requests.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price id)
    *
-   * This function is coupled to wormhole implemntation.
+   * This function is coupled to wormhole implementation.
    *
    * @param priceId Hex-encoded price id.
    * @param publishTime Epoch timestamp in seconds.
