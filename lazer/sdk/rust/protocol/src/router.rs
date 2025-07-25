@@ -261,6 +261,16 @@ impl Channel {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum FundingRateInterval {
+    #[serde(rename = "1h")]
+    Interval1Hour,
+    #[serde(rename = "4h")]
+    Interval4Hours,
+    #[serde(rename = "8h")]
+    Interval8Hours,
+}
+
 #[test]
 fn id_supports_all_fixed_rates() {
     for rate in FixedRate::ALL {

@@ -1,4 +1,4 @@
-use crate::router::{Channel, Price, PriceFeedId, Rate};
+use crate::router::{Channel, FundingRateInterval, Price, PriceFeedId, Rate};
 use crate::symbol_state::SymbolState;
 use crate::time::TimestampUs;
 use serde::{Deserialize, Serialize};
@@ -37,7 +37,11 @@ pub enum UpdateParams {
         best_ask_price: Option<Price>,
     },
     #[serde(rename = "funding_rate")]
-    FundingRateUpdate { price: Option<Price>, rate: Rate },
+    FundingRateUpdate {
+        price: Option<Price>,
+        rate: Rate,
+        funding_rate_interval: Option<FundingRateInterval>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -59,6 +63,7 @@ pub enum JsonRpcVersion {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[serde(untagged)]
 pub enum JrpcResponse<T> {
     Success(JrpcSuccessResponse<T>),
     Error(JrpcErrorResponse),
@@ -226,7 +231,8 @@ mod tests {
             "update": {
               "type": "funding_rate",
               "price": 1234567890,
-              "rate": 1234567891
+              "rate": 1234567891,
+              "funding_rate_interval": "8h"
             }
           },
           "id": 1
@@ -241,6 +247,7 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
+                    funding_rate_interval: Some(FundingRateInterval::Interval8Hours),
                 },
             }),
             id: 1,
@@ -278,6 +285,7 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: None,
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
+                    funding_rate_interval: None,
                 },
             }),
             id: 1,
@@ -394,6 +402,56 @@ mod tests {
                 result: "success".to_string(),
                 id: 2,
             }
+        );
+    }
+
+    #[test]
+    pub fn test_parse_response() {
+        let success_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "result": "success"
+            }
+            "#,
+        )
+            .unwrap();
+
+        assert_eq!(
+            success_response,
+            JrpcResponse::Success(JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: 2,
+            })
+        );
+
+        let error_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": 3,
+              "error": {
+                "code": -32603,
+                "message": "Internal error"
+              }
+            }
+            "#,
+        )
+            .unwrap();
+
+        assert_eq!(
+            error_response,
+            JrpcResponse::Error(JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: Some(3),
+            })
         );
     }
 }

@@ -1,6 +1,7 @@
 use crate::publisher_update::feed_update::Update;
 use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use crate::state::FeedState;
+use ::protobuf::EnumOrUnknown;
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
 use pyth_lazer_protocol::symbol_state::SymbolState;
 use pyth_lazer_protocol::FeedKind;
@@ -60,12 +61,35 @@ impl From<UpdateParams> for Update {
                 best_ask_price: best_ask_price.map(|p| p.0.into()),
                 special_fields: Default::default(),
             }),
-            UpdateParams::FundingRateUpdate { price, rate } => {
-                Update::FundingRateUpdate(FundingRateUpdate {
-                    price: price.map(|p| p.0.into()),
-                    rate: Some(rate.0),
-                    special_fields: Default::default(),
-                })
+            UpdateParams::FundingRateUpdate {
+                price,
+                rate,
+                funding_rate_interval,
+            } => Update::FundingRateUpdate(FundingRateUpdate {
+                price: price.map(|p| p.0.into()),
+                rate: Some(rate.0),
+                funding_rate_interval: funding_rate_interval
+                    .map(From::from)
+                    .map(EnumOrUnknown::new),
+                special_fields: Default::default(),
+            }),
+        }
+    }
+}
+
+impl From<pyth_lazer_protocol::router::FundingRateInterval>
+    for publisher_update::funding_rate_update::FundingRateInterval
+{
+    fn from(value: pyth_lazer_protocol::router::FundingRateInterval) -> Self {
+        match value {
+            pyth_lazer_protocol::router::FundingRateInterval::Interval1Hour => {
+                publisher_update::funding_rate_update::FundingRateInterval::INTERVAL_1H
+            }
+            pyth_lazer_protocol::router::FundingRateInterval::Interval4Hours => {
+                publisher_update::funding_rate_update::FundingRateInterval::INTERVAL_4H
+            }
+            pyth_lazer_protocol::router::FundingRateInterval::Interval8Hours => {
+                publisher_update::funding_rate_update::FundingRateInterval::INTERVAL_8H
             }
         }
     }
