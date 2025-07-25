@@ -596,54 +596,6 @@ mod test {
 
     #[tokio::test]
     async fn test_chain_configs_with_data() {
-        // Create a test server with actual chain configurations
-        let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
-        let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
-
-        let eth_state = MonitoredHashChainState::new(
-            ETH_CHAIN.clone(),
-            Default::default(),
-            "ethereum".into(),
-            PROVIDER,
-        );
-
-        let eth_state = BlockchainState {
-            id: "ethereum".into(),
-            network_id: 1,
-            state: Arc::new(eth_state),
-            contract: eth_read.clone(),
-            provider_address: PROVIDER,
-            reveal_delay_blocks: 1,
-            confirmed_block_status: BlockStatus::Latest,
-        };
-
-        let avax_state = MonitoredHashChainState::new(
-            AVAX_CHAIN.clone(),
-            Default::default(),
-            "avalanche".into(),
-            PROVIDER,
-        );
-
-        let avax_state = BlockchainState {
-            id: "avalanche".into(),
-            network_id: 43114,
-            state: Arc::new(avax_state),
-            contract: avax_read.clone(),
-            provider_address: PROVIDER,
-            reveal_delay_blocks: 2,
-            confirmed_block_status: BlockStatus::Latest,
-        };
-
-        let mut chains = HashMap::new();
-        chains.insert(
-            "ethereum".into(),
-            ApiBlockChainState::Initialized(eth_state),
-        );
-        chains.insert(
-            "avalanche".into(),
-            ApiBlockChainState::Initialized(avax_state),
-        );
-
         // Create a config with actual chain data
         let mut config_chains = HashMap::new();
         config_chains.insert(
@@ -723,7 +675,7 @@ mod test {
 
         let metrics_registry = Arc::new(RwLock::new(Registry::default()));
         let api_state = ApiState::new(
-            Arc::new(RwLock::new(chains)),
+            Arc::new(RwLock::new(HashMap::new())),
             metrics_registry,
             Arc::new(History::new().await.unwrap()),
             Arc::new(config),
