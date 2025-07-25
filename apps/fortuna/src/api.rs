@@ -78,7 +78,7 @@ pub struct ApiState {
 
     pub explorer_metrics: Arc<ExplorerMetrics>,
 
-    pub config: Arc<Config>,
+    pub config: Config,
 }
 
 impl ApiState {
@@ -86,7 +86,7 @@ impl ApiState {
         chains: Arc<RwLock<HashMap<ChainId, ApiBlockChainState>>>,
         metrics_registry: Arc<RwLock<Registry>>,
         history: Arc<History>,
-        config: Arc<Config>,
+        config: &Config,
     ) -> ApiState {
         let metrics = ApiMetrics {
             http_requests: Family::default(),
@@ -354,7 +354,7 @@ mod test {
             Arc::new(RwLock::new(chains)),
             metrics_registry,
             Arc::new(History::new().await.unwrap()),
-            Arc::new(config),
+            &config,
         )
         .await;
 
@@ -678,7 +678,7 @@ mod test {
             Arc::new(RwLock::new(HashMap::new())),
             metrics_registry,
             Arc::new(History::new().await.unwrap()),
-            Arc::new(config),
+            &config,
         )
         .await;
 
