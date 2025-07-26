@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-evm-js",
-  "version": "1.83.0",
+  "version": "2.0.0-alpha2",
   "description": "Pyth Network EVM Utils in JS",
   "homepage": "https://pyth.network",
   "author": {
@@ -21,16 +21,13 @@
   },
   "scripts": {
     "build": "tsc",
-    "example-client": "pnpm run build && node lib/examples/EvmPriceServiceClient.js",
-    "example-relay": "pnpm run build && node lib/examples/EvmRelay.js",
-    "example-benchmark": "pnpm run build && node lib/examples/EvmBenchmark.js",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run test:format && git add -A src"
   },
   "keywords": [
     "pyth",
@@ -38,6 +35,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
@@ -45,18 +43,14 @@
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.10",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
-    "eslint": "^8.14.0",
+    "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5",
-    "typescript": "^4.6.3",
-    "web3": "^1.8.2",
-    "yargs": "^17.4.1"
+    "typescript": "catalog:"
   },
   "dependencies": {
-    "@pythnetwork/price-service-client": "workspace:*",
-    "buffer": "^6.0.3"
+    "@pythnetwork/hermes-client": "workspace:*",
+    "viem": "catalog:"
   }
 }
