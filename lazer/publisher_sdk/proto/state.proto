@@ -23,10 +23,14 @@ message State {
     // [required] Timestamp of the last update provided by Kafka/Nats.
     // If no updates were applied, contains the timestamp of genesis snapshot creation time.
     optional google.protobuf.Timestamp last_timestamp = 3;
-    // [required] Shard name (only for debug/monitoring/management purposes). Must be unique.
+    // [required] Shard name. Must be unique. Used for governance instruction targeting and
+    // for logs, metrics, etc. Example: "shard1.tokyo.staging.pyth-lazer"
     optional string shard_name = 4;
+    // [required] Shard group name. Used for governance instruction targeting.
+    // Example: "tokyo.staging.pyth-lazer"
+    optional string shard_group = 5;
     // [required] Minimal aggregation rate allowed in this shard.
-    optional google.protobuf.Duration min_rate = 5;
+    optional google.protobuf.Duration min_rate = 6;
     // List of feeds.
     repeated Feed feeds = 7;
     // List of publishers.
