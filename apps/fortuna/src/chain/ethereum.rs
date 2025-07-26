@@ -274,13 +274,17 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .get_request_v2(provider_address, sequence_number)
             .call()
             .await?;
-        Ok(Some(reader::Request {
-            provider: request.provider,
-            sequence_number: request.sequence_number,
-            block_number: request.block_number,
-            use_blockhash: request.use_blockhash,
-            callback_status: reader::RequestCallbackStatus::try_from(request.callback_status)?,
-        }))
+        if request.sequence_number == 0 {
+            Ok(None)
+        } else {
+            Ok(Some(reader::Request {
+                provider: request.provider,
+                sequence_number: request.sequence_number,
+                block_number: request.block_number,
+                use_blockhash: request.use_blockhash,
+                callback_status: reader::RequestCallbackStatus::try_from(request.callback_status)?,
+            }))
+        }
     }
 
     async fn get_block_number(&self, confirmed_block_status: BlockStatus) -> Result<BlockNumber> {
