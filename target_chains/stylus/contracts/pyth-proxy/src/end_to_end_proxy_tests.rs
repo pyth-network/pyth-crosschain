@@ -6,6 +6,7 @@ mod end_to_end_proxy_tests {
     use motsu::prelude::*;
     use pyth_receiver_stylus::PythReceiver;
     use wormhole_contract::WormholeContract;
+    use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
 
     sol! {
         function getPriceUnsafe(uint8[32] calldata id) external view returns (int64,uint64,int32,uint64);
@@ -21,6 +22,26 @@ mod end_to_end_proxy_tests {
         0x8c, 0x2b, 0xac, 0x4a, 0xae, 0x3e, 0xd4, 0xdd, 0x7b, 0x81, 0x1d, 0xd1, 0xa7, 0x2e, 0xa4,
         0xaa, 0x71,
     ];
+
+    const SINGLE_UPDATE_FEE_IN_WEI: U256 = U256::from_limbs([100, 0, 0, 0]);
+    const TRANSACTION_FEE_IN_WEI: U256 = U256::from_limbs([32, 0, 0, 0]);
+
+    fn mock_get_update_fee(update_data: Vec<Vec<u8>>) -> Result<U256, Vec<u8>> {
+        let mut total_num_updates: u64 = 0;
+        for data in &update_data {
+            let update_data_array: &[u8] = &data;
+            let accumulator_update = AccumulatorUpdateData::try_from_slice(&update_data_array)
+                .map_err(|_| b"Invalid accumulator message".to_vec())?;
+            match accumulator_update.proof {
+                Proof::WormholeMerkle { vaa: _, updates } => {
+                    let num_updates = u64::try_from(updates.len())
+                        .map_err(|_| b"Too many updates".to_vec())?;
+                    total_num_updates += num_updates;
+                }
+            }
+        }
+        Ok(U256::from(total_num_updates).saturating_mul(SINGLE_UPDATE_FEE_IN_WEI) + TRANSACTION_FEE_IN_WEI)
+    }
 
     fn ban_usd_feed_id() -> [u8; 32] {
         let hex_string = "a6320c8329924601f4d092dd3f562376f657fa0b5d0cba9e4385a24aaf135384";
@@ -51,7 +72,7 @@ mod end_to_end_proxy_tests {
 
         receiver.sender(*alice).initialize(
             wormhole.address(),
-            U256::from(100u64), // single_update_fee
+            SINGLE_UPDATE_FEE_IN_WEI, // single_update_fee
             U256::from(3600u64),  // valid_time_period
             vec![PYTHNET_CHAIN_ID],        // data_source_chain_ids
             vec![PYTHNET_EMITTER_ADDRESS], // emitter_addresses
@@ -356,5 +377,54 @@ mod end_to_end_proxy_tests {
         assert_eq!(result1, result3, "State should remain consistent across different function calls");
         
         println!("Successfully verified proxy state consistency across multiple delegated calls");
+    }
+
+    #[motsu::test]
+    fn test_successful_price_update_through_proxy(
+        proxy: Contract<Proxy>,
+        receiver: Contract<PythReceiver>,
+        wormhole: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
+
+        let test_id = ban_usd_feed_id();
+        
+        let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
+        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        let result_bytes = exists_result.unwrap();
+        let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
+        assert!(!feed_exists, "Feed should not exist initially");
+
+        let update_data = ban_usd_update();
+        let update_data_bytes: Vec<Vec<u8>> = update_data;
+        let update_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
+        
+        println!("Calculated update fee: {:?}", update_fee);
+        println!("Update data length: {}", update_data_bytes.len());
+        
+        alice.fund(update_fee);
+        
+        let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
+        let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
+        
+        if proxy_result.is_err() {
+            println!("Proxy price update error: {:?}", proxy_result.as_ref().unwrap_err());
+        }
+        assert!(proxy_result.is_ok(), "Price update through proxy should succeed with proper fee");
+        
+        let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
+        assert!(exists_result2.is_ok(), "Price feed exists check should work after update");
+        let result_bytes2 = exists_result2.unwrap();
+        let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
+        assert!(feed_exists2, "Feed should exist after successful update");
+        
+        let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
+        let price_result = proxy.sender(alice).relay_to_implementation(price_call);
+        assert!(price_result.is_ok(), "Should be able to get price after successful update");
+        
+        println!("Successfully updated price feeds through proxy with proper fee payment");
     }
 }

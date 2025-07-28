@@ -19,6 +19,7 @@ motsu = "0.9.0"
 stylus-sdk = { version = "0.9.0", features = ["stylus-test"] }
 pyth-receiver-stylus = { path = "../pyth-receiver" }
 wormhole-contract = { path = "../wormhole" }
+pythnet-sdk = { path = "../../../../pythnet/pythnet_sdk" }
 
 [features]
 default = ["mini-alloc"]

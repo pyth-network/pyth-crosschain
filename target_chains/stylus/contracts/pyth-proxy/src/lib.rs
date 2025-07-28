@@ -64,6 +64,7 @@ impl Proxy {
         self.is_initialized.get()
     }
 
+    #[payable]
     pub fn relay_to_implementation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         let implementation_address = self.get_implementation()?;
         let res;
