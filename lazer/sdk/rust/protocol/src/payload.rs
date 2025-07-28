@@ -52,6 +52,7 @@ pub struct AggregatedPriceFeedData {
     pub confidence: Option<Price>,
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
+    pub funding_rate_interval: Option<u64>,
 }
 
 /// First bytes of a payload's encoding

@@ -278,7 +278,10 @@ mod tests {
               "type": "funding_rate",
               "price": 1234567890,
               "rate": 1234567891,
-              "funding_rate_interval": 28800
+              "funding_rate_interval": {
+                "secs": 28800,
+                "nanos": 0
+               }
             }
           },
           "id": 1
