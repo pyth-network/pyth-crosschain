@@ -3896,6 +3896,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-proxy-stylus"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives 0.8.20",
+ "alloy-sol-types",
+ "hex",
+ "mini-alloc 0.4.2",
+ "motsu",
+ "pyth-receiver-stylus",
+ "pythnet-sdk",
+ "stylus-sdk",
+ "wormhole-contract",
+]
+
+[[package]]
 name = "pyth-receiver-stylus"
 version = "0.1.11"
 dependencies = [
@@ -5000,20 +5015,6 @@ dependencies = [
  "alloy-sol-types",
  "cfg-if 1.0.0",
  "dyn-clone",
-]
-
-[[package]]
-name = "stylus-hello-world"
-version = "0.1.11"
-dependencies = [
- "alloy-primitives 0.8.20",
- "alloy-sol-types",
- "dotenv",
- "ethers",
- "eyre",
- "hex",
- "stylus-sdk",
- "tokio",
 ]
 
 [[package]]

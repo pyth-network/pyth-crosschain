@@ -26,6 +26,31 @@ mod end_to_end_proxy_tests {
     const SINGLE_UPDATE_FEE_IN_WEI: U256 = U256::from_limbs([100, 0, 0, 0]);
     const TRANSACTION_FEE_IN_WEI: U256 = U256::from_limbs([32, 0, 0, 0]);
 
+    #[cfg(test)]
+    pub fn current_guardians() -> Vec<Address> {
+        vec![
+            address!("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3"), // Rockaway
+            address!("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157"), // Staked
+            address!("0x114De8460193bdf3A2fCf81f86a09765F4762fD1"), // Figment
+            address!("0x107A0086b32d7A0977926A205131d8731D39cbEB"), // ChainodeTech
+            address!("0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2"), // Inotel
+            address!("0x11b39756C042441BE6D8650b69b54EbE715E2343"), // HashKey Cloud
+            address!("0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd"), // ChainLayer
+            address!("0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20"), // xLabs
+            address!("0x74a3bf913953D695260D88BC1aA25A4eeE363ef0"), // Forbole
+            address!("0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e"), // Staking Fund
+            address!("0xAF45Ced136b9D9e24903464AE889F5C8a723FC14"), // Moonlet Wallet
+            address!("0xf93124b7c738843CBB89E864c862c38cddCccF95"), // P2P Validator
+            address!("0xD2CC37A4dc036a8D232b48f62cDD4731412f4890"), // 01node
+            address!("0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811"), // MCF
+            address!("0x71AA1BE1D36CaFE3867910F99C09e347899C19C3"), // Everstake
+            address!("0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf"), // Chorus One
+            address!("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8"), // Syncnode
+            address!("0x5E1487F35515d02A92753504a8D75471b9f49EdB"), // Triton
+            address!("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"), // Staking Facilities
+        ]
+    }
+
     fn mock_get_update_fee(update_data: Vec<Vec<u8>>) -> Result<U256, Vec<u8>> {
         let mut total_num_updates: u64 = 0;
         for data in &update_data {
@@ -68,6 +93,32 @@ mod end_to_end_proxy_tests {
         let governance_contract = Address::from_slice(&U256::from(4u64).to_be_bytes::<32>()[12..32]);
         wormhole.sender(*alice).initialize(
             initial_guardians, 4, 60051u16, 1u16, governance_contract
+        ).unwrap();
+
+        receiver.sender(*alice).initialize(
+            wormhole.address(),
+            SINGLE_UPDATE_FEE_IN_WEI, // single_update_fee
+            U256::from(3600u64),  // valid_time_period
+            vec![PYTHNET_CHAIN_ID],        // data_source_chain_ids
+            vec![PYTHNET_EMITTER_ADDRESS], // emitter_addresses
+            1u16,              // governance_chain_id
+            [3u8; 32],       // governance_emitter_address
+            0u64,                          // governance_initial_sequence
+        ).unwrap();
+    }
+
+    fn setup_proxy_with_receiver_all_current_guardians(
+        proxy: &Contract<Proxy>,
+        receiver: &Contract<PythReceiver>,
+        wormhole: &Contract<WormholeContract>,
+        alice: &Address,
+    ) {
+        proxy.sender(OWNER).init(OWNER).unwrap();
+        proxy.sender(OWNER).set_implementation(receiver.address()).unwrap();
+
+        let governance_contract = Address::from_slice(&U256::from(4u64).to_be_bytes::<32>()[12..32]);
+        wormhole.sender(*alice).initialize(
+            current_guardians(), 4, 60051u16, 1u16, governance_contract
         ).unwrap();
 
         receiver.sender(*alice).initialize(
@@ -487,29 +538,32 @@ mod end_to_end_proxy_tests {
         wormhole: Contract<WormholeContract>,
         alice: Address,
     ) {
-        setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
+        setup_proxy_with_receiver_all_current_guardians(&proxy, &receiver, &wormhole, &alice);
+
+        OWNER.fund(U256::from(100_000_000_000_000_000u64)); // Fund owner with enough ETH for fees
 
         let test_id = ban_usd_feed_id();
         
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
-        let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
+        let exists_result = proxy.sender_and_value(OWNER, U256::from(3500)).relay_to_implementation(exists_call);
         assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
         let result_bytes = exists_result.unwrap();
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
         assert!(!feed_exists, "Feed should not exist initially");
 
         let update_data = ban_usd_update();
+
         let update_data_bytes: Vec<Vec<u8>> = update_data;
         let update_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
-        println!("Calculated update fee for intended workflow: {:?}", update_fee);
         
         alice.fund(update_fee);
         
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
         
-        assert!(proxy_result.is_ok(), "Price update should succeed through proxy with proper fee when ETH forwarding is implemented");
+        panic!("proxy_results is: {:?}", proxy_result);
+
+        // assert!(proxy_result.is_ok(), "Price update should succeed through proxy with proper fee when ETH forwarding is implemented");
         
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);

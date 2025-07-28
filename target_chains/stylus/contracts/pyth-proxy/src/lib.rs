@@ -11,7 +11,7 @@ mod end_to_end_proxy_tests;
 
 use alloc::vec::Vec;
 
-use stylus_sdk::{alloy_primitives::Address, call::delegate_call, prelude::*};
+use stylus_sdk::{alloy_primitives::Address, call::{delegate_call, Call}, prelude::*};
 
 sol_storage! {
     #[entrypoint]
@@ -68,8 +68,9 @@ impl Proxy {
     pub fn relay_to_implementation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         let implementation_address = self.get_implementation()?;
         let res;
-        unsafe {
-            res = delegate_call(self, implementation_address, &data[..])
+        unsafe {            
+            let call_config = Call::new().value(self.vm().msg_value());
+            res = delegate_call(call_config, implementation_address, &data[..])
         };
 
         match res {
