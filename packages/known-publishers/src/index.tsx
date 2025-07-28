@@ -3,6 +3,7 @@ import finazonColor from "./icons/color/finazon.svg";
 import lotechColor from "./icons/color/lotech.svg";
 import nobiColor from "./icons/color/nobi.svg";
 import orcaColor from "./icons/color/orca.svg";
+import portofinoColor from "./icons/color/portofino.svg";
 import sentioColor from "./icons/color/sentio.svg";
 import wooColor from "./icons/color/woo.svg";
 import amberDark from "./icons/dark/amber.svg";
@@ -21,6 +22,7 @@ import lotechMonochrome from "./icons/monochrome/lotech.svg";
 import ltpMonochrome from "./icons/monochrome/ltp.svg";
 import nobiMonochrome from "./icons/monochrome/nobi.svg";
 import orcaMonochrome from "./icons/monochrome/orca.svg";
+import portofinoMonochrome from "./icons/monochrome/portofino.svg";
 import sentioMonochrome from "./icons/monochrome/sentio.svg";
 import wooMonochrome from "./icons/monochrome/woo.svg";
 
@@ -118,6 +120,13 @@ export const knownPublishers = {
       monochrome: amberMonochrome,
       dark: amberDark,
       light: amberLight,
+    },
+  },
+  UZZ1sH1jvTV5QPHtRcsA6inURuSoD5UFT6a2RBTNvXr: {
+    name: "Portofino",
+    icon: {
+      monochrome: portofinoMonochrome,
+      color: portofinoColor,
     },
   },
 } as const;
