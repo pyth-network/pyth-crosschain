@@ -7,8 +7,8 @@ license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [dependencies]
-pyth-lazer-publisher-sdk = { path = "../../lazer/publisher_sdk/rust" }
-pyth-lazer-protocol = { path = "../../lazer/sdk/rust/protocol"}
+pyth-lazer-publisher-sdk = "0.2.1"
+pyth-lazer-protocol = "0.10.0"
 
 anyhow = "1.0.98"
 backoff = "0.4.0"
