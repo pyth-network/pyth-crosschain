@@ -5736,19 +5736,14 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
- "derive_more 2.0.1",
  "fs-err",
- "hex",
- "humantime",
  "protobuf",
  "protobuf-codegen",
  "pyth-lazer-protocol 0.10.0",
- "serde",
  "serde_json",
- "tracing",
 ]
 
 [[package]]
