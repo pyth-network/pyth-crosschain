@@ -1,7 +1,7 @@
+use ::protobuf::MessageField;
 use crate::publisher_update::feed_update::Update;
 use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use crate::state::FeedState;
-use ::protobuf::EnumOrUnknown;
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
 use pyth_lazer_protocol::symbol_state::SymbolState;
 use pyth_lazer_protocol::FeedKind;
@@ -68,29 +68,9 @@ impl From<UpdateParams> for Update {
             } => Update::FundingRateUpdate(FundingRateUpdate {
                 price: price.map(|p| p.0.into()),
                 rate: Some(rate.0),
-                funding_rate_interval: funding_rate_interval
-                    .map(From::from)
-                    .map(EnumOrUnknown::new),
+                funding_rate_interval: MessageField::from_option(funding_rate_interval.map(|i| i.into())),
                 special_fields: Default::default(),
             }),
-        }
-    }
-}
-
-impl From<pyth_lazer_protocol::router::FundingRateInterval>
-    for publisher_update::funding_rate_update::FundingRateInterval
-{
-    fn from(value: pyth_lazer_protocol::router::FundingRateInterval) -> Self {
-        match value {
-            pyth_lazer_protocol::router::FundingRateInterval::Interval1Hour => {
-                publisher_update::funding_rate_update::FundingRateInterval::INTERVAL_1H
-            }
-            pyth_lazer_protocol::router::FundingRateInterval::Interval4Hours => {
-                publisher_update::funding_rate_update::FundingRateInterval::INTERVAL_4H
-            }
-            pyth_lazer_protocol::router::FundingRateInterval::Interval8Hours => {
-                publisher_update::funding_rate_update::FundingRateInterval::INTERVAL_8H
-            }
         }
     }
 }
@@ -115,20 +95,20 @@ impl From<SymbolState> for FeedState {
     }
 }
 
-impl From<FeedKind> for protobuf::state::FeedKind {
+impl From<FeedKind> for state::FeedKind {
     fn from(value: FeedKind) -> Self {
         match value {
-            FeedKind::Price => protobuf::state::FeedKind::PRICE,
-            FeedKind::FundingRate => protobuf::state::FeedKind::FUNDING_RATE,
+            FeedKind::Price => state::FeedKind::PRICE,
+            FeedKind::FundingRate => state::FeedKind::FUNDING_RATE,
         }
     }
 }
 
-impl From<protobuf::state::FeedKind> for FeedKind {
-    fn from(value: protobuf::state::FeedKind) -> Self {
+impl From<state::FeedKind> for FeedKind {
+    fn from(value: state::FeedKind) -> Self {
         match value {
-            protobuf::state::FeedKind::PRICE => FeedKind::Price,
-            protobuf::state::FeedKind::FUNDING_RATE => FeedKind::FundingRate,
+            state::FeedKind::PRICE => FeedKind::Price,
+            state::FeedKind::FUNDING_RATE => FeedKind::FundingRate,
         }
     }
 }

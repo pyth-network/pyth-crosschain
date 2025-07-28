@@ -1,6 +1,7 @@
 syntax = "proto3";
 package pyth_lazer;
 
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 // if any fields marked as [required] are missing, feed/publisher update will be rejected
@@ -54,18 +55,12 @@ message PriceUpdate {
 
 // feed update containing data relating to funding rate
 message FundingRateUpdate {
-    enum FundingRateInterval {
-      INTERVAL_1H = 0;
-      INTERVAL_4H = 1;
-      INTERVAL_8H = 2;
-    }
-
     // [optional] price for which the funding rate applies to
     optional int64 price = 1;
 
     // [optional] perpetual future funding rate
     optional int64 rate = 2;
 
-    // [optional] funding rate update
-    optional FundingRateInterval funding_rate_interval = 3;
+    // [optional] funding rate update interval
+    optional google.protobuf.Duration funding_rate_interval = 3;
 }
