@@ -16,6 +16,18 @@ pyth-lazer-agent will need to configure access to this keypair file to sign tran
 
 ## Build and run
 
+### From cargo
+```
+# Download the cargo package
+cargo install pyth-lazer-agent
+
+# Add .cargo/bin to PATH
+export PATH="$PATH:~/.cargo/bin"
+
+# Run the agent
+pyth-lazer-agent --help
+```
+
 ### From source
 Please check [rust-toolchain](/rust-toolchain.toml) to see the version of Rust needed to build (currently 1.88).
 You will also need SSL and CA certificates. `cargo build` it should then work as usual.

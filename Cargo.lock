@@ -5627,7 +5627,7 @@ dependencies = [
  "hyper-util",
  "protobuf",
  "pyth-lazer-protocol 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pyth-lazer-publisher-sdk 0.2.1",
+ "pyth-lazer-publisher-sdk 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.12.22",
  "serde",
  "serde_json",
