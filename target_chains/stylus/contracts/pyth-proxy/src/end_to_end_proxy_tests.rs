@@ -468,16 +468,7 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
         
-        if proxy_result.is_err() {
-            let error = proxy_result.as_ref().unwrap_err();
-            println!("Expected proxy price update error (delegate call limitation): {:?}", error);
-            
-            if error.len() == 1 && error[0] == 5 {
-                println!("Confirmed: InsufficientFee error due to delegate call not preserving msg.value");
-            }
-        }
-        
-        assert!(proxy_result.is_err(), "Expected to fail due to delegate call limitation");
+        assert!(proxy_result.is_ok(), "Price update through proxy should succeed when ETH forwarding is implemented");
         
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
@@ -518,29 +509,18 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
         
-        if proxy_result.is_err() {
-            let error = proxy_result.as_ref().unwrap_err();
-            println!("Proxy price update error (expected until ETH forwarding implemented): {:?}", error);
-        } else {
-            println!("Proxy price update succeeded!");
-        }
+        assert!(proxy_result.is_ok(), "Price update should succeed through proxy with proper fee when ETH forwarding is implemented");
         
-        if proxy_result.is_ok() {
-            let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
-            let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-            assert!(exists_result2.is_ok(), "Price feed exists check should work after update");
-            let result_bytes2 = exists_result2.unwrap();
-            let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
-            assert!(feed_exists2, "Feed should exist after successful update");
-            
-            let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
-            let price_result = proxy.sender(alice).relay_to_implementation(price_call);
-            assert!(price_result.is_ok(), "Should be able to get price after successful update");
-            
-            println!("Complete payable workflow succeeded through proxy!");
-        } else {
-            println!("Test demonstrates intended payable workflow - will succeed when ETH forwarding is implemented");
-        }
+        let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
+        assert!(exists_result2.is_ok(), "Price feed exists check should work after update");
+        let result_bytes2 = exists_result2.unwrap();
+        let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
+        assert!(feed_exists2, "Feed should exist after successful update");
+        
+        let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
+        let price_result = proxy.sender(alice).relay_to_implementation(price_call);
+        assert!(price_result.is_ok(), "Should be able to get price after successful update");
     }
 
     #[motsu::test]
@@ -573,19 +553,7 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
         
-        if proxy_result.is_err() {
-            let error = proxy_result.as_ref().unwrap_err();
-            println!("Current proxy update error (expected until ETH forwarding): {:?}", error);
-            
-            let error_str = String::from_utf8_lossy(error);
-            if error_str.contains("Delegate call failed") && error_str.contains("[5]") {
-                println!("✓ Confirmed: InsufficientFee due to delegate call not preserving msg.value");
-                println!("✓ This test will pass once ETH forwarding is implemented in proxy");
-                return; // Exit early due to current limitation
-            }
-        }
-        
-        assert!(proxy_result.is_ok(), "Price update should succeed with proper fee when ETH forwarding works");
+        assert!(proxy_result.is_ok(), "Price update should succeed with proper fee when ETH forwarding is implemented");
         
         // Verify price feed now exists after successful update
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
@@ -637,19 +605,7 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((multiple_updates.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, total_fee).relay_to_implementation(call_data);
         
-        if proxy_result.is_err() {
-            let error = proxy_result.as_ref().unwrap_err();
-            println!("Multiple feeds update error (expected until ETH forwarding): {:?}", error);
-            
-            let error_str = String::from_utf8_lossy(error);
-            if error_str.contains("Delegate call failed") && error_str.contains("[5]") {
-                println!("✓ Expected limitation: delegate call doesn't preserve msg.value for batch updates");
-                println!("✓ This test documents intended batch update functionality");
-                return;
-            }
-        }
-        
-        assert!(proxy_result.is_ok(), "Batch price update should succeed with proper total fee");
+        assert!(proxy_result.is_ok(), "Batch price update should succeed with proper total fee when ETH forwarding is implemented");
         
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
@@ -683,19 +639,12 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, insufficient_fee).relay_to_implementation(call_data);
         
-        assert!(proxy_result.is_err(), "Update should fail with insufficient fee");
+        assert!(proxy_result.is_err(), "Update should fail with insufficient fee when ETH forwarding is implemented");
         
         let error = proxy_result.unwrap_err();
         let error_str = String::from_utf8_lossy(&error);
-        
-        if error_str.contains("Delegate call failed") {
-            println!("✓ Current: delegate call limitation prevents proper fee validation");
-            println!("✓ Intended: should return clean InsufficientFee error when ETH forwarding works");
-        } else {
-            assert!(error_str.contains("InsufficientFee") || error.len() == 1 && error[0] == 5, 
-                   "Should fail with InsufficientFee error");
-            println!("✓ Proper insufficient fee error handling through proxy");
-        }
+        assert!(error_str.contains("InsufficientFee") || error.len() == 1 && error[0] == 5, 
+               "Should fail with InsufficientFee error when ETH forwarding is implemented");
     }
 
     #[motsu::test]
@@ -726,18 +675,7 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, exact_fee).relay_to_implementation(call_data);
         
-        if proxy_result.is_err() {
-            let error = proxy_result.as_ref().unwrap_err();
-            let error_str = String::from_utf8_lossy(error);
-            
-            if error_str.contains("Delegate call failed") && error_str.contains("[5]") {
-                println!("✓ Fee calculation correct - fails only due to delegate call limitation");
-                println!("✓ Will succeed with exact fee once ETH forwarding is implemented");
-                return;
-            }
-        }
-        
-        assert!(proxy_result.is_ok(), "Update should succeed with exact fee amount");
+        assert!(proxy_result.is_ok(), "Update should succeed with exact fee amount when ETH forwarding is implemented");
         
         println!("✓ Exact fee calculation and payment successful through proxy");
     }
