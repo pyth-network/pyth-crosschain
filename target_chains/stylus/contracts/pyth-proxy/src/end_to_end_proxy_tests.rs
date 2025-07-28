@@ -561,9 +561,7 @@ mod end_to_end_proxy_tests {
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
         
-        panic!("proxy_results is: {:?}", proxy_result);
-
-        // assert!(proxy_result.is_ok(), "Price update should succeed through proxy with proper fee when ETH forwarding is implemented");
+        assert!(proxy_result.is_ok(), "Price update should succeed through proxy with proper fee when ETH forwarding is implemented");
         
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
