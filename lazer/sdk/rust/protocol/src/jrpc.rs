@@ -37,7 +37,11 @@ pub enum UpdateParams {
         best_ask_price: Option<Price>,
     },
     #[serde(rename = "funding_rate")]
-    FundingRateUpdate { price: Option<Price>, rate: Rate },
+    FundingRateUpdate {
+        price: Option<Price>,
+        rate: Rate,
+        funding_rate_interval: Option<Duration>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -273,7 +277,8 @@ mod tests {
             "update": {
               "type": "funding_rate",
               "price": 1234567890,
-              "rate": 1234567891
+              "rate": 1234567891,
+              "funding_rate_interval": 28800
             }
           },
           "id": 1
@@ -288,6 +293,7 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
+                    funding_rate_interval: Duration::from_secs(28800).into(),
                 },
             }),
             id: Some(1),
@@ -325,6 +331,7 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: None,
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
+                    funding_rate_interval: None,
                 },
             }),
             id: Some(1),
