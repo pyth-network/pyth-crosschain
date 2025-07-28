@@ -6,5 +6,6 @@ pub extern "C" fn main() {}
 
 #[cfg(feature = "export-abi")]
 fn main() {
-    stylus_hello_world::print_from_args();
+    use pyth_receiver_stylus::PythReceiver;
+    stylus_sdk::abi::export::print_abi::<PythReceiver>("pyth-receiver-stylus", include_str!("../Cargo.toml"));
 }

@@ -1,5 +1,8 @@
 use alloc::vec::Vec;
 
+#[cfg(feature = "export-abi")]
+use stylus_sdk::abi::export::internal::InnerTypes;
+
 #[derive(PartialEq)]
 pub enum PythReceiverError {
     PriceUnavailable,
@@ -121,6 +124,9 @@ impl core::fmt::Display for PythReceiverError {
         }
     }
 }
+
+#[cfg(feature = "export-abi")]
+impl InnerTypes for PythReceiverError {}
 
 impl From<PythReceiverError> for Vec<u8> {
     fn from(error: PythReceiverError) -> Vec<u8> {

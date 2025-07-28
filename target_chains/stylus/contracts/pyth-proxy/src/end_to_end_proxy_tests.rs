@@ -8,23 +8,10 @@ mod end_to_end_proxy_tests {
     use wormhole_contract::WormholeContract;
 
     sol! {
-        struct Price {
-            int64 price;
-            uint64 conf;
-            int32 expo;
-            uint publish_time;
-        }
-
-        struct PriceFeed {
-            bytes32 id;
-            Price price;
-            Price ema_price;
-        }
-
-        function getPriceUnsafe(bytes32 id) external view returns (int64,uint64,int32,uint);
-        function updatePriceFeeds(bytes[] calldata updateData) external payable;
-        function queryPriceFeed(bytes32 id) public view returns (PriceFeed[] memory priceFeeds);
-        function priceFeedExists(bytes32 id) public view returns (PriceFeed[] memory priceFeeds);
+        function getPriceUnsafe(uint8[32] calldata id) external view returns (int64,uint64,int32,uint64);
+        function updatePriceFeeds(uint8[][] memory update_data) external payable;
+        function queryPriceFeed(uint8[32] calldata id) external view returns (bytes32,uint64,int32,int64,uint64,int64,uint64);
+        function priceFeedExists(uint8[32] calldata id) external view returns (bool);
     }
 
     const OWNER: Address = address!("beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe");
@@ -88,7 +75,7 @@ mod end_to_end_proxy_tests {
         let direct_result = receiver.sender(alice).get_price_unsafe(test_id);
         assert!(direct_result.is_err(), "Direct call should fail with no price data");
 
-        let call_data = getPriceUnsafeCall::new((FixedBytes::from(test_id),)).abi_encode();
+        let call_data = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let proxy_result = proxy.sender(OWNER).relay_to_implementation(call_data);
         
         assert!(proxy_result.is_err(), "Proxy call should also fail with no price data");
@@ -111,7 +98,7 @@ mod end_to_end_proxy_tests {
         let direct_exists = receiver.sender(alice).price_feed_exists(test_id);
         assert!(!direct_exists, "Price feed should not exist initially");
 
-        let call_data = priceFeedExistsCall::new((FixedBytes::from(test_id),)).abi_encode();
+        let call_data = priceFeedExistsCall::new((test_id,)).abi_encode();
         let proxy_result = proxy.sender(OWNER).relay_to_implementation(call_data);
         
         if proxy_result.is_err() {
@@ -134,19 +121,14 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let update_data = ban_usd_update();
-        let update_data_bytes: Vec<alloy_primitives::Bytes> = update_data
-            .into_iter()
-            .map(|data| alloy_primitives::Bytes::from(data))
-            .collect();
+        let update_data_bytes: Vec<Vec<u8>> = update_data;
         
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender(OWNER).relay_to_implementation(call_data);
         
         assert!(proxy_result.is_err(), "Proxy call should fail due to insufficient fee");
         
-        let direct_result = receiver.sender(alice).update_price_feeds(
-            update_data_bytes.into_iter().map(|b| b.to_vec()).collect()
-        );
+        let direct_result = receiver.sender(alice).update_price_feeds(update_data_bytes.clone());
         assert!(direct_result.is_err(), "Direct call should also fail with insufficient fee");
     }
 
@@ -161,7 +143,7 @@ mod end_to_end_proxy_tests {
 
         let test_id = ban_usd_feed_id();
         
-        let exists_call = priceFeedExistsCall::new((FixedBytes::from(test_id),)).abi_encode();
+        let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
         
         if exists_result.is_err() {
@@ -169,7 +151,7 @@ mod end_to_end_proxy_tests {
         }
         assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
 
-        let price_call = getPriceUnsafeCall::new((FixedBytes::from(test_id),)).abi_encode();
+        let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(OWNER).relay_to_implementation(price_call);
         assert!(price_result.is_err(), "Get price should fail when no data exists");
 
