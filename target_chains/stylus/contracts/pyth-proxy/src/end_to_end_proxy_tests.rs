@@ -247,4 +247,114 @@ mod end_to_end_proxy_tests {
         assert_eq!(impl1, impl2, "Implementation should persist across calls");
         assert_eq!(init1, init2, "Initialization state should persist across calls");
     }
+
+    #[motsu::test]
+    fn test_successful_proxy_delegation_for_read_operations(
+        proxy: Contract<Proxy>,
+        receiver: Contract<PythReceiver>,
+        wormhole: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
+
+        let test_id = ban_usd_feed_id();
+        
+        let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
+        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        
+        let result_bytes = exists_result.unwrap();
+        assert!(!result_bytes.is_empty(), "Result should not be empty");
+        let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
+        assert!(!feed_exists, "Feed should not exist initially (expected behavior)");
+
+        let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
+        let price_result = proxy.sender(OWNER).relay_to_implementation(price_call);
+        assert!(price_result.is_err(), "Get price should fail when no data exists (expected behavior)");
+
+        println!("Successfully delegated read operations through proxy with expected results");
+    }
+
+    #[motsu::test]
+    fn test_successful_proxy_function_selector_matching(
+        proxy: Contract<Proxy>,
+        receiver: Contract<PythReceiver>,
+        wormhole: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
+
+        let test_id = ban_usd_feed_id();
+        
+        
+        let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
+        assert!(exists_result.is_ok(), "priceFeedExists function selector should be found and delegated");
+        
+        let query_call = queryPriceFeedCall::new((test_id,)).abi_encode();
+        let query_result = proxy.sender(OWNER).relay_to_implementation(query_call);
+        if query_result.is_err() {
+            println!("queryPriceFeed error: {:?}", query_result.as_ref().unwrap_err());
+        }
+        let is_selector_error = if let Err(ref err_bytes) = query_result {
+            let err_str = String::from_utf8_lossy(err_bytes);
+            err_str.contains("function not found for selector")
+        } else {
+            false
+        };
+        assert!(!is_selector_error, "queryPriceFeed function selector should be found (even if call fails for other reasons)");
+        
+        let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
+        let price_result = proxy.sender(OWNER).relay_to_implementation(price_call);
+        assert!(price_result.is_err(), "getPriceUnsafe should be delegated but fail due to no data");
+        
+        println!("Successfully verified all function selectors are correctly matched and delegated");
+    }
+
+    #[motsu::test]
+    fn test_successful_proxy_state_consistency(
+        proxy: Contract<Proxy>,
+        receiver: Contract<PythReceiver>,
+        wormhole: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
+
+        let test_id = ban_usd_feed_id();
+        
+        
+        let exists_call1 = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result1 = proxy.sender(OWNER).relay_to_implementation(exists_call1);
+        assert!(exists_result1.is_ok(), "First priceFeedExists call should succeed");
+        let result1 = exists_result1.unwrap();
+        
+        let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
+        assert!(exists_result2.is_ok(), "Second priceFeedExists call should succeed");
+        let result2 = exists_result2.unwrap();
+        
+        assert_eq!(result1, result2, "Consecutive calls should return identical results");
+        
+        let query_call = queryPriceFeedCall::new((test_id,)).abi_encode();
+        let query_result = proxy.sender(OWNER).relay_to_implementation(query_call);
+        if query_result.is_err() {
+            println!("queryPriceFeed error in state consistency test: {:?}", query_result.as_ref().unwrap_err());
+        }
+        let is_selector_error = if let Err(ref err_bytes) = query_result {
+            let err_str = String::from_utf8_lossy(err_bytes);
+            err_str.contains("function not found for selector")
+        } else {
+            false
+        };
+        assert!(!is_selector_error, "queryPriceFeed function selector should be found in state consistency test");
+        
+        let exists_call3 = priceFeedExistsCall::new((test_id,)).abi_encode();
+        let exists_result3 = proxy.sender(OWNER).relay_to_implementation(exists_call3);
+        assert!(exists_result3.is_ok(), "Third priceFeedExists call should succeed");
+        let result3 = exists_result3.unwrap();
+        
+        assert_eq!(result1, result3, "State should remain consistent across different function calls");
+        
+        println!("Successfully verified proxy state consistency across multiple delegated calls");
+    }
 }
