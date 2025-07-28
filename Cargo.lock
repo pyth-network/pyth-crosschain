@@ -3071,7 +3071,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "8.2.2"
+version = "8.2.5"
 dependencies = [
  "anyhow",
  "axum 0.6.20",
@@ -5644,7 +5644,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "1.0.0"
+version = "2.0.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",

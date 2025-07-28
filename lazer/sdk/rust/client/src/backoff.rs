@@ -1,3 +1,8 @@
+//! Exponential backoff implementation for Pyth Lazer client.
+//!
+//! This module provides a wrapper around the [`backoff`] crate's exponential backoff functionality,
+//! offering a simplified interface tailored for Pyth Lazer client operations.
+
 use std::time::Duration;
 
 use backoff::{
@@ -5,6 +10,42 @@ use backoff::{
     ExponentialBackoff, ExponentialBackoffBuilder,
 };
 
+/// A wrapper around the backoff crate's exponential backoff configuration.
+///
+/// This struct encapsulates the parameters needed to configure exponential backoff
+/// behavior and can be converted into the backoff crate's [`ExponentialBackoff`] type.
+#[derive(Debug)]
+pub struct PythLazerExponentialBackoff {
+    /// The initial retry interval.
+    initial_interval: Duration,
+    /// The randomization factor to use for creating a range around the retry interval.
+    ///
+    /// A randomization factor of 0.5 results in a random period ranging between 50% below and 50%
+    /// above the retry interval.
+    randomization_factor: f64,
+    /// The value to multiply the current interval with for each retry attempt.
+    multiplier: f64,
+    /// The maximum value of the back off period. Once the retry interval reaches this
+    /// value it stops increasing.
+    max_interval: Duration,
+}
+
+impl From<PythLazerExponentialBackoff> for ExponentialBackoff {
+    fn from(val: PythLazerExponentialBackoff) -> Self {
+        ExponentialBackoffBuilder::default()
+            .with_initial_interval(val.initial_interval)
+            .with_randomization_factor(val.randomization_factor)
+            .with_multiplier(val.multiplier)
+            .with_max_interval(val.max_interval)
+            .with_max_elapsed_time(None)
+            .build()
+    }
+}
+
+/// Builder for [`PythLazerExponentialBackoff`].
+///
+/// Provides a fluent interface for configuring exponential backoff parameters
+/// with sensible defaults from the backoff crate.
 #[derive(Debug)]
 pub struct PythLazerExponentialBackoffBuilder {
     initial_interval: Duration,
@@ -25,45 +66,53 @@ impl Default for PythLazerExponentialBackoffBuilder {
 }
 
 impl PythLazerExponentialBackoffBuilder {
+    /// Creates a new builder with default values.
     pub fn new() -> Self {
         Default::default()
     }
 
-    /// The initial retry interval.
+    /// Sets the initial retry interval.
+    ///
+    /// This is the starting interval for the first retry attempt.
     pub fn with_initial_interval(&mut self, initial_interval: Duration) -> &mut Self {
         self.initial_interval = initial_interval;
         self
     }
 
-    /// The randomization factor to use for creating a range around the retry interval.
+    /// Sets the randomization factor to use for creating a range around the retry interval.
     ///
     /// A randomization factor of 0.5 results in a random period ranging between 50% below and 50%
-    /// above the retry interval.
+    /// above the retry interval. This helps avoid the "thundering herd" problem when multiple
+    /// clients retry at the same time.
     pub fn with_randomization_factor(&mut self, randomization_factor: f64) -> &mut Self {
         self.randomization_factor = randomization_factor;
         self
     }
 
-    /// The value to multiply the current interval with for each retry attempt.
+    /// Sets the value to multiply the current interval with for each retry attempt.
+    ///
+    /// A multiplier of 2.0 means each retry interval will be double the previous one.
     pub fn with_multiplier(&mut self, multiplier: f64) -> &mut Self {
         self.multiplier = multiplier;
         self
     }
 
-    /// The maximum value of the back off period. Once the retry interval reaches this
-    /// value it stops increasing.
+    /// Sets the maximum value of the back off period.
+    ///
+    /// Once the retry interval reaches this value it stops increasing, providing
+    /// an upper bound on the wait time between retries.
     pub fn with_max_interval(&mut self, max_interval: Duration) -> &mut Self {
         self.max_interval = max_interval;
         self
     }
 
-    pub fn build(&self) -> ExponentialBackoff {
-        ExponentialBackoffBuilder::default()
-            .with_initial_interval(self.initial_interval)
-            .with_randomization_factor(self.randomization_factor)
-            .with_multiplier(self.multiplier)
-            .with_max_interval(self.max_interval)
-            .with_max_elapsed_time(None)
-            .build()
+    /// Builds the [`PythLazerExponentialBackoff`] configuration.
+    pub fn build(&self) -> PythLazerExponentialBackoff {
+        PythLazerExponentialBackoff {
+            initial_interval: self.initial_interval,
+            randomization_factor: self.randomization_factor,
+            multiplier: self.multiplier,
+            max_interval: self.max_interval,
+        }
     }
 }

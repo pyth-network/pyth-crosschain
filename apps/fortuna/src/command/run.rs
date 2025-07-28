@@ -28,6 +28,7 @@ pub async fn run_api(
     chains: Arc<RwLock<HashMap<String, ApiBlockChainState>>>,
     metrics_registry: Arc<RwLock<Registry>>,
     history: Arc<History>,
+    config: &Config,
     mut rx_exit: watch::Receiver<bool>,
 ) -> Result<()> {
     #[derive(OpenApi)]
@@ -54,7 +55,7 @@ pub async fn run_api(
     )]
     struct ApiDoc;
 
-    let api_state = api::ApiState::new(chains, metrics_registry, history).await;
+    let api_state = api::ApiState::new(chains, metrics_registry, history, config).await;
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -85,7 +86,7 @@ pub async fn run_api(
 
 pub async fn run(opts: &RunOptions) -> Result<()> {
     // Load environment variables from a .env file if present
-    let _ = dotenv::dotenv()?;
+    let _ = dotenv::dotenv().map_err(|e| anyhow!("Failed to load .env file: {}", e))?;
     let config = Config::load(&opts.config.config)?;
     let secret = config.provider.secret.load()?.ok_or(anyhow!(
         "Please specify a provider secret in the config file."
@@ -170,6 +171,7 @@ pub async fn run(opts: &RunOptions) -> Result<()> {
         chains.clone(),
         metrics_registry.clone(),
         history,
+        &config,
         rx_exit,
     )
     .await?;
