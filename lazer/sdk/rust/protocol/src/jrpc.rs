@@ -419,7 +419,7 @@ mod tests {
             }
             "#,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(
             success_response,
@@ -442,7 +442,7 @@ mod tests {
             }
             "#,
         )
-            .unwrap();
+        .unwrap();
 
         assert_eq!(
             error_response,
