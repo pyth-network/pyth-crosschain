@@ -5,8 +5,8 @@ mod end_to_end_proxy_tests {
     use alloy_sol_types::{sol, SolCall};
     use motsu::prelude::*;
     use pyth_receiver_stylus::PythReceiver;
-    use wormhole_contract::WormholeContract;
     use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
+    use wormhole_contract::WormholeContract;
 
     sol! {
         function getPriceUnsafe(uint8[32] calldata id) external view returns (int64,uint64,int32,uint64);
@@ -59,19 +59,24 @@ mod end_to_end_proxy_tests {
                 .map_err(|_| b"Invalid accumulator message".to_vec())?;
             match accumulator_update.proof {
                 Proof::WormholeMerkle { vaa: _, updates } => {
-                    let num_updates = u64::try_from(updates.len())
-                        .map_err(|_| b"Too many updates".to_vec())?;
+                    let num_updates =
+                        u64::try_from(updates.len()).map_err(|_| b"Too many updates".to_vec())?;
                     total_num_updates += num_updates;
                 }
             }
         }
-        Ok(U256::from(total_num_updates).saturating_mul(SINGLE_UPDATE_FEE_IN_WEI) + TRANSACTION_FEE_IN_WEI)
+        Ok(
+            U256::from(total_num_updates).saturating_mul(SINGLE_UPDATE_FEE_IN_WEI)
+                + TRANSACTION_FEE_IN_WEI,
+        )
     }
 
     fn ban_usd_feed_id() -> [u8; 32] {
         let hex_string = "a6320c8329924601f4d092dd3f562376f657fa0b5d0cba9e4385a24aaf135384";
         let bytes_vec = hex::decode(hex_string).expect("Invalid hex string");
-        bytes_vec.try_into().expect("Hex string must decode to exactly 32 bytes")
+        bytes_vec
+            .try_into()
+            .expect("Hex string must decode to exactly 32 bytes")
     }
 
     fn ban_usd_update() -> Vec<Vec<u8>> {
@@ -87,24 +92,32 @@ mod end_to_end_proxy_tests {
         alice: &Address,
     ) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        proxy.sender(OWNER).set_implementation(receiver.address()).unwrap();
+        proxy
+            .sender(OWNER)
+            .set_implementation(receiver.address())
+            .unwrap();
 
         let initial_guardians = vec![*alice];
-        let governance_contract = Address::from_slice(&U256::from(4u64).to_be_bytes::<32>()[12..32]);
-        wormhole.sender(*alice).initialize(
-            initial_guardians, 4, 60051u16, 1u16, governance_contract
-        ).unwrap();
+        let governance_contract =
+            Address::from_slice(&U256::from(4u64).to_be_bytes::<32>()[12..32]);
+        wormhole
+            .sender(*alice)
+            .initialize(initial_guardians, 4, 60051u16, 1u16, governance_contract)
+            .unwrap();
 
-        receiver.sender(*alice).initialize(
-            wormhole.address(),
-            SINGLE_UPDATE_FEE_IN_WEI, // single_update_fee
-            U256::from(3600u64),  // valid_time_period
-            vec![PYTHNET_CHAIN_ID],        // data_source_chain_ids
-            vec![PYTHNET_EMITTER_ADDRESS], // emitter_addresses
-            1u16,              // governance_chain_id
-            [3u8; 32],       // governance_emitter_address
-            0u64,                          // governance_initial_sequence
-        ).unwrap();
+        receiver
+            .sender(*alice)
+            .initialize(
+                wormhole.address(),
+                SINGLE_UPDATE_FEE_IN_WEI,      // single_update_fee
+                U256::from(3600u64),           // valid_time_period
+                vec![PYTHNET_CHAIN_ID],        // data_source_chain_ids
+                vec![PYTHNET_EMITTER_ADDRESS], // emitter_addresses
+                1u16,                          // governance_chain_id
+                [3u8; 32],                     // governance_emitter_address
+                0u64,                          // governance_initial_sequence
+            )
+            .unwrap();
     }
 
     fn setup_proxy_with_receiver_all_current_guardians(
@@ -114,23 +127,31 @@ mod end_to_end_proxy_tests {
         alice: &Address,
     ) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        proxy.sender(OWNER).set_implementation(receiver.address()).unwrap();
+        proxy
+            .sender(OWNER)
+            .set_implementation(receiver.address())
+            .unwrap();
 
-        let governance_contract = Address::from_slice(&U256::from(4u64).to_be_bytes::<32>()[12..32]);
-        wormhole.sender(*alice).initialize(
-            current_guardians(), 4, 60051u16, 1u16, governance_contract
-        ).unwrap();
+        let governance_contract =
+            Address::from_slice(&U256::from(4u64).to_be_bytes::<32>()[12..32]);
+        wormhole
+            .sender(*alice)
+            .initialize(current_guardians(), 4, 60051u16, 1u16, governance_contract)
+            .unwrap();
 
-        receiver.sender(*alice).initialize(
-            wormhole.address(),
-            SINGLE_UPDATE_FEE_IN_WEI, // single_update_fee
-            U256::from(3600u64),  // valid_time_period
-            vec![PYTHNET_CHAIN_ID],        // data_source_chain_ids
-            vec![PYTHNET_EMITTER_ADDRESS], // emitter_addresses
-            1u16,              // governance_chain_id
-            [3u8; 32],       // governance_emitter_address
-            0u64,                          // governance_initial_sequence
-        ).unwrap();
+        receiver
+            .sender(*alice)
+            .initialize(
+                wormhole.address(),
+                SINGLE_UPDATE_FEE_IN_WEI,      // single_update_fee
+                U256::from(3600u64),           // valid_time_period
+                vec![PYTHNET_CHAIN_ID],        // data_source_chain_ids
+                vec![PYTHNET_EMITTER_ADDRESS], // emitter_addresses
+                1u16,                          // governance_chain_id
+                [3u8; 32],                     // governance_emitter_address
+                0u64,                          // governance_initial_sequence
+            )
+            .unwrap();
     }
 
     #[motsu::test]
@@ -143,17 +164,25 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let direct_result = receiver.sender(alice).get_price_unsafe(test_id);
-        assert!(direct_result.is_err(), "Direct call should fail with no price data");
+        assert!(
+            direct_result.is_err(),
+            "Direct call should fail with no price data"
+        );
 
         let call_data = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let proxy_result = proxy.sender(OWNER).relay_to_implementation(call_data);
-        
-        assert!(proxy_result.is_err(), "Proxy call should also fail with no price data");
-        
-        assert!(proxy_result.is_err() && direct_result.is_err(), 
-                "Both direct and proxy calls should fail consistently");
+
+        assert!(
+            proxy_result.is_err(),
+            "Proxy call should also fail with no price data"
+        );
+
+        assert!(
+            proxy_result.is_err() && direct_result.is_err(),
+            "Both direct and proxy calls should fail consistently"
+        );
     }
 
     #[motsu::test]
@@ -166,21 +195,27 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let direct_exists = receiver.sender(alice).price_feed_exists(test_id);
         assert!(!direct_exists, "Price feed should not exist initially");
 
         let call_data = priceFeedExistsCall::new((test_id,)).abi_encode();
         let proxy_result = proxy.sender(OWNER).relay_to_implementation(call_data);
-        
+
         if proxy_result.is_err() {
-            println!("Proxy delegation error: {:?}", proxy_result.as_ref().unwrap_err());
+            println!(
+                "Proxy delegation error: {:?}",
+                proxy_result.as_ref().unwrap_err()
+            );
         }
         assert!(proxy_result.is_ok(), "Proxy call should succeed");
-        
+
         let result_bytes = proxy_result.unwrap();
         let decoded_result = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
-        assert!(!decoded_result, "Both should return false (no price feed exists)");
+        assert!(
+            !decoded_result,
+            "Both should return false (no price feed exists)"
+        );
     }
 
     #[motsu::test]
@@ -194,14 +229,22 @@ mod end_to_end_proxy_tests {
 
         let update_data = ban_usd_update();
         let update_data_bytes: Vec<Vec<u8>> = update_data;
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
         let proxy_result = proxy.sender(OWNER).relay_to_implementation(call_data);
-        
-        assert!(proxy_result.is_err(), "Proxy call should fail due to insufficient fee");
-        
-        let direct_result = receiver.sender(alice).update_price_feeds(update_data_bytes.clone());
-        assert!(direct_result.is_err(), "Direct call should also fail with insufficient fee");
+
+        assert!(
+            proxy_result.is_err(),
+            "Proxy call should fail due to insufficient fee"
+        );
+
+        let direct_result = receiver
+            .sender(alice)
+            .update_price_feeds(update_data_bytes.clone());
+        assert!(
+            direct_result.is_err(),
+            "Direct call should also fail with insufficient fee"
+        );
     }
 
     #[motsu::test]
@@ -214,23 +257,35 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        
+
         if exists_result.is_err() {
-            println!("Proxy delegation error for exists_call: {:?}", exists_result.as_ref().unwrap_err());
+            println!(
+                "Proxy delegation error for exists_call: {:?}",
+                exists_result.as_ref().unwrap_err()
+            );
         }
-        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        assert!(
+            exists_result.is_ok(),
+            "Price feed exists check should work through proxy"
+        );
 
         let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(OWNER).relay_to_implementation(price_call);
-        assert!(price_result.is_err(), "Get price should fail when no data exists");
+        assert!(
+            price_result.is_err(),
+            "Get price should fail when no data exists"
+        );
 
-        assert_eq!(proxy.sender(alice).get_implementation().unwrap(), receiver.address());
+        assert_eq!(
+            proxy.sender(alice).get_implementation().unwrap(),
+            receiver.address()
+        );
         assert_eq!(proxy.sender(alice).get_owner(), OWNER);
         assert!(proxy.sender(alice).is_initialized());
-        
+
         println!("Proxy delegation workflow test completed successfully");
     }
 
@@ -241,14 +296,28 @@ mod end_to_end_proxy_tests {
         alice: Address,
     ) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        assert!(proxy.sender(alice).is_initialized(), "Proxy should be initialized");
-        assert_eq!(proxy.sender(alice).get_owner(), OWNER, "Proxy should have correct owner");
-        
-        proxy.sender(OWNER).set_implementation(implementation.address()).unwrap();
-        assert_eq!(proxy.sender(alice).get_implementation().unwrap(), implementation.address(), "Implementation should be set correctly");
+        assert!(
+            proxy.sender(alice).is_initialized(),
+            "Proxy should be initialized"
+        );
+        assert_eq!(
+            proxy.sender(alice).get_owner(),
+            OWNER,
+            "Proxy should have correct owner"
+        );
+
+        proxy
+            .sender(OWNER)
+            .set_implementation(implementation.address())
+            .unwrap();
+        assert_eq!(
+            proxy.sender(alice).get_implementation().unwrap(),
+            implementation.address(),
+            "Implementation should be set correctly"
+        );
     }
 
-    #[motsu::test] 
+    #[motsu::test]
     fn test_proxy_upgrade_workflow(
         proxy: Contract<Proxy>,
         implementation1: Contract<PythReceiver>,
@@ -256,13 +325,27 @@ mod end_to_end_proxy_tests {
         alice: Address,
     ) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        proxy.sender(OWNER).set_implementation(implementation1.address()).unwrap();
-        
-        assert_eq!(proxy.sender(alice).get_implementation().unwrap(), implementation1.address(), "First implementation should be set");
-        
-        proxy.sender(OWNER).set_implementation(implementation2.address()).unwrap();
-        
-        assert_eq!(proxy.sender(alice).get_implementation().unwrap(), implementation2.address(), "Should upgrade to second implementation");
+        proxy
+            .sender(OWNER)
+            .set_implementation(implementation1.address())
+            .unwrap();
+
+        assert_eq!(
+            proxy.sender(alice).get_implementation().unwrap(),
+            implementation1.address(),
+            "First implementation should be set"
+        );
+
+        proxy
+            .sender(OWNER)
+            .set_implementation(implementation2.address())
+            .unwrap();
+
+        assert_eq!(
+            proxy.sender(alice).get_implementation().unwrap(),
+            implementation2.address(),
+            "Should upgrade to second implementation"
+        );
     }
 
     #[motsu::test]
@@ -272,30 +355,46 @@ mod end_to_end_proxy_tests {
         alice: Address,
     ) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        
-        let non_owner_result = proxy.sender(alice).set_implementation(implementation.address());
-        assert!(non_owner_result.is_err(), "Non-owner should not be able to set implementation");
-        
-        let owner_result = proxy.sender(OWNER).set_implementation(implementation.address());
-        assert!(owner_result.is_ok(), "Owner should be able to set implementation");
+
+        let non_owner_result = proxy
+            .sender(alice)
+            .set_implementation(implementation.address());
+        assert!(
+            non_owner_result.is_err(),
+            "Non-owner should not be able to set implementation"
+        );
+
+        let owner_result = proxy
+            .sender(OWNER)
+            .set_implementation(implementation.address());
+        assert!(
+            owner_result.is_ok(),
+            "Owner should be able to set implementation"
+        );
     }
 
     #[motsu::test]
-    fn test_proxy_validation_checks(
-        proxy: Contract<Proxy>,
-        alice: Address,
-    ) {
+    fn test_proxy_validation_checks(proxy: Contract<Proxy>, alice: Address) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        
+
         let zero_impl_result = proxy.sender(OWNER).set_implementation(Address::ZERO);
-        assert!(zero_impl_result.is_err(), "Should not allow zero address as implementation");
-        
+        assert!(
+            zero_impl_result.is_err(),
+            "Should not allow zero address as implementation"
+        );
+
         let double_init_result = proxy.sender(OWNER).init(OWNER);
-        assert!(double_init_result.is_err(), "Should not allow double initialization");
-        
+        assert!(
+            double_init_result.is_err(),
+            "Should not allow double initialization"
+        );
+
         let uninitialized_proxy = Contract::<Proxy>::new();
         let get_impl_result = uninitialized_proxy.sender(alice).get_implementation();
-        assert!(get_impl_result.is_err(), "Should fail to get implementation when not set");
+        assert!(
+            get_impl_result.is_err(),
+            "Should fail to get implementation when not set"
+        );
     }
 
     #[motsu::test]
@@ -305,19 +404,25 @@ mod end_to_end_proxy_tests {
         alice: Address,
     ) {
         proxy.sender(OWNER).init(OWNER).unwrap();
-        proxy.sender(OWNER).set_implementation(implementation.address()).unwrap();
-        
+        proxy
+            .sender(OWNER)
+            .set_implementation(implementation.address())
+            .unwrap();
+
         let owner1 = proxy.sender(alice).get_owner();
         let impl1 = proxy.sender(alice).get_implementation().unwrap();
         let init1 = proxy.sender(alice).is_initialized();
-        
+
         let owner2 = proxy.sender(alice).get_owner();
         let impl2 = proxy.sender(alice).get_implementation().unwrap();
         let init2 = proxy.sender(alice).is_initialized();
-        
+
         assert_eq!(owner1, owner2, "Owner should persist across calls");
         assert_eq!(impl1, impl2, "Implementation should persist across calls");
-        assert_eq!(init1, init2, "Initialization state should persist across calls");
+        assert_eq!(
+            init1, init2,
+            "Initialization state should persist across calls"
+        );
     }
 
     #[motsu::test]
@@ -330,19 +435,28 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
-        
+        assert!(
+            exists_result.is_ok(),
+            "Price feed exists check should work through proxy"
+        );
+
         let result_bytes = exists_result.unwrap();
         assert!(!result_bytes.is_empty(), "Result should not be empty");
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
-        assert!(!feed_exists, "Feed should not exist initially (expected behavior)");
+        assert!(
+            !feed_exists,
+            "Feed should not exist initially (expected behavior)"
+        );
 
         let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(OWNER).relay_to_implementation(price_call);
-        assert!(price_result.is_err(), "Get price should fail when no data exists (expected behavior)");
+        assert!(
+            price_result.is_err(),
+            "Get price should fail when no data exists (expected behavior)"
+        );
 
         println!("Successfully delegated read operations through proxy with expected results");
     }
@@ -357,16 +471,21 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "priceFeedExists function selector should be found and delegated");
-        
+        assert!(
+            exists_result.is_ok(),
+            "priceFeedExists function selector should be found and delegated"
+        );
+
         let query_call = queryPriceFeedCall::new((test_id,)).abi_encode();
         let query_result = proxy.sender(OWNER).relay_to_implementation(query_call);
         if query_result.is_err() {
-            println!("queryPriceFeed error: {:?}", query_result.as_ref().unwrap_err());
+            println!(
+                "queryPriceFeed error: {:?}",
+                query_result.as_ref().unwrap_err()
+            );
         }
         let is_selector_error = if let Err(ref err_bytes) = query_result {
             let err_str = String::from_utf8_lossy(err_bytes);
@@ -375,12 +494,17 @@ mod end_to_end_proxy_tests {
             false
         };
         assert!(!is_selector_error, "queryPriceFeed function selector should be found (even if call fails for other reasons)");
-        
+
         let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(OWNER).relay_to_implementation(price_call);
-        assert!(price_result.is_err(), "getPriceUnsafe should be delegated but fail due to no data");
-        
-        println!("Successfully verified all function selectors are correctly matched and delegated");
+        assert!(
+            price_result.is_err(),
+            "getPriceUnsafe should be delegated but fail due to no data"
+        );
+
+        println!(
+            "Successfully verified all function selectors are correctly matched and delegated"
+        );
     }
 
     #[motsu::test]
@@ -393,24 +517,35 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
-        
+
         let exists_call1 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result1 = proxy.sender(OWNER).relay_to_implementation(exists_call1);
-        assert!(exists_result1.is_ok(), "First priceFeedExists call should succeed");
+        assert!(
+            exists_result1.is_ok(),
+            "First priceFeedExists call should succeed"
+        );
         let result1 = exists_result1.unwrap();
-        
+
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-        assert!(exists_result2.is_ok(), "Second priceFeedExists call should succeed");
+        assert!(
+            exists_result2.is_ok(),
+            "Second priceFeedExists call should succeed"
+        );
         let result2 = exists_result2.unwrap();
-        
-        assert_eq!(result1, result2, "Consecutive calls should return identical results");
-        
+
+        assert_eq!(
+            result1, result2,
+            "Consecutive calls should return identical results"
+        );
+
         let query_call = queryPriceFeedCall::new((test_id,)).abi_encode();
         let query_result = proxy.sender(OWNER).relay_to_implementation(query_call);
         if query_result.is_err() {
-            println!("queryPriceFeed error in state consistency test: {:?}", query_result.as_ref().unwrap_err());
+            println!(
+                "queryPriceFeed error in state consistency test: {:?}",
+                query_result.as_ref().unwrap_err()
+            );
         }
         let is_selector_error = if let Err(ref err_bytes) = query_result {
             let err_str = String::from_utf8_lossy(err_bytes);
@@ -418,15 +553,24 @@ mod end_to_end_proxy_tests {
         } else {
             false
         };
-        assert!(!is_selector_error, "queryPriceFeed function selector should be found in state consistency test");
-        
+        assert!(
+            !is_selector_error,
+            "queryPriceFeed function selector should be found in state consistency test"
+        );
+
         let exists_call3 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result3 = proxy.sender(OWNER).relay_to_implementation(exists_call3);
-        assert!(exists_result3.is_ok(), "Third priceFeedExists call should succeed");
+        assert!(
+            exists_result3.is_ok(),
+            "Third priceFeedExists call should succeed"
+        );
         let result3 = exists_result3.unwrap();
-        
-        assert_eq!(result1, result3, "State should remain consistent across different function calls");
-        
+
+        assert_eq!(
+            result1, result3,
+            "State should remain consistent across different function calls"
+        );
+
         println!("Successfully verified proxy state consistency across multiple delegated calls");
     }
 
@@ -440,10 +584,13 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        assert!(
+            exists_result.is_ok(),
+            "Price feed exists check should work through proxy"
+        );
         let result_bytes = exists_result.unwrap();
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
         assert!(!feed_exists, "Feed should not exist initially");
@@ -451,41 +598,57 @@ mod end_to_end_proxy_tests {
         let update_data = ban_usd_update();
         let update_data_bytes: Vec<Vec<u8>> = update_data;
         let update_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
+
         println!("Calculated update fee: {:?}", update_fee);
         println!("Update data length: {}", update_data_bytes.len());
-        
+
         alice.fund(update_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, update_fee)
+            .relay_to_implementation(call_data);
+
         if proxy_result.is_err() {
-            println!("Proxy price update error: {:?}", proxy_result.as_ref().unwrap_err());
+            println!(
+                "Proxy price update error: {:?}",
+                proxy_result.as_ref().unwrap_err()
+            );
         }
         if proxy_result.is_err() {
             let error = proxy_result.as_ref().unwrap_err();
             let error_str = String::from_utf8_lossy(error);
             if error_str.contains("Delegate call failed") && error_str.contains("[5]") {
                 println!("Expected InsufficientFee error due to delegate call limitation - will succeed when ETH forwarding is implemented");
-                println!("Test demonstrates intended successful price update workflow through proxy");
+                println!(
+                    "Test demonstrates intended successful price update workflow through proxy"
+                );
                 return; // Exit early since we can't proceed without successful update
             }
         }
-        
-        assert!(proxy_result.is_ok(), "Price update through proxy should succeed with proper fee");
-        
+
+        assert!(
+            proxy_result.is_ok(),
+            "Price update through proxy should succeed with proper fee"
+        );
+
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-        assert!(exists_result2.is_ok(), "Price feed exists check should work after update");
+        assert!(
+            exists_result2.is_ok(),
+            "Price feed exists check should work after update"
+        );
         let result_bytes2 = exists_result2.unwrap();
         let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
         assert!(feed_exists2, "Feed should exist after successful update");
-        
+
         let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(alice).relay_to_implementation(price_call);
-        assert!(price_result.is_ok(), "Should be able to get price after successful update");
-        
+        assert!(
+            price_result.is_ok(),
+            "Should be able to get price after successful update"
+        );
+
         println!("Successfully updated price feeds through proxy with proper fee payment");
     }
 
@@ -499,10 +662,13 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        assert!(
+            exists_result.is_ok(),
+            "Price feed exists check should work through proxy"
+        );
         let result_bytes = exists_result.unwrap();
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
         assert!(!feed_exists, "Feed should not exist initially");
@@ -510,24 +676,32 @@ mod end_to_end_proxy_tests {
         let update_data = ban_usd_update();
         let update_data_bytes: Vec<Vec<u8>> = update_data;
         let update_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
+
         println!("Calculated update fee for payable test: {:?}", update_fee);
         println!("Update data length: {}", update_data_bytes.len());
-        
+
         alice.fund(update_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
-        
-        assert!(proxy_result.is_ok(), "Price update through proxy should succeed when ETH forwarding is implemented");
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, update_fee)
+            .relay_to_implementation(call_data);
+
+        assert!(
+            proxy_result.is_ok(),
+            "Price update through proxy should succeed when ETH forwarding is implemented"
+        );
+
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-        assert!(exists_result2.is_ok(), "Price feed exists check should work after failed update");
+        assert!(
+            exists_result2.is_ok(),
+            "Price feed exists check should work after failed update"
+        );
         let result_bytes2 = exists_result2.unwrap();
         let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
         assert!(!feed_exists2, "Feed should not exist after failed update");
-        
+
         println!("Test completed - demonstrates payable function limitation in proxy delegation");
     }
 
@@ -543,10 +717,15 @@ mod end_to_end_proxy_tests {
         OWNER.fund(U256::from(100_000_000_000_000_000u64)); // Fund owner with enough ETH for fees
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
-        let exists_result = proxy.sender_and_value(OWNER, U256::from(3500)).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        let exists_result = proxy
+            .sender_and_value(OWNER, U256::from(3500))
+            .relay_to_implementation(exists_call);
+        assert!(
+            exists_result.is_ok(),
+            "Price feed exists check should work through proxy"
+        );
         let result_bytes = exists_result.unwrap();
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
         assert!(!feed_exists, "Feed should not exist initially");
@@ -555,24 +734,32 @@ mod end_to_end_proxy_tests {
 
         let update_data_bytes: Vec<Vec<u8>> = update_data;
         let update_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
+
         alice.fund(update_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, update_fee)
+            .relay_to_implementation(call_data);
+
         assert!(proxy_result.is_ok(), "Price update should succeed through proxy with proper fee when ETH forwarding is implemented");
-        
+
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-        assert!(exists_result2.is_ok(), "Price feed exists check should work after update");
+        assert!(
+            exists_result2.is_ok(),
+            "Price feed exists check should work after update"
+        );
         let result_bytes2 = exists_result2.unwrap();
         let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
         assert!(feed_exists2, "Feed should exist after successful update");
-        
+
         let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(alice).relay_to_implementation(price_call);
-        assert!(price_result.is_ok(), "Should be able to get price after successful update");
+        assert!(
+            price_result.is_ok(),
+            "Should be able to get price after successful update"
+        );
     }
 
     #[motsu::test]
@@ -585,10 +772,13 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "Price feed exists check should work through proxy");
+        assert!(
+            exists_result.is_ok(),
+            "Price feed exists check should work through proxy"
+        );
         let result_bytes = exists_result.unwrap();
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
         assert!(!feed_exists, "Feed should not exist initially");
@@ -596,32 +786,49 @@ mod end_to_end_proxy_tests {
         let update_data = ban_usd_update();
         let update_data_bytes: Vec<Vec<u8>> = update_data;
         let update_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
-        println!("Complete workflow test - calculated update fee: {:?}", update_fee);
-        println!("Update data contains {} price updates", update_data_bytes.len());
-        
+
+        println!(
+            "Complete workflow test - calculated update fee: {:?}",
+            update_fee
+        );
+        println!(
+            "Update data contains {} price updates",
+            update_data_bytes.len()
+        );
+
         alice.fund(update_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, update_fee).relay_to_implementation(call_data);
-        
-        assert!(proxy_result.is_ok(), "Price update should succeed with proper fee when ETH forwarding is implemented");
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, update_fee)
+            .relay_to_implementation(call_data);
+
+        assert!(
+            proxy_result.is_ok(),
+            "Price update should succeed with proper fee when ETH forwarding is implemented"
+        );
+
         // Verify price feed now exists after successful update
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-        assert!(exists_result2.is_ok(), "Price feed exists check should work after update");
+        assert!(
+            exists_result2.is_ok(),
+            "Price feed exists check should work after update"
+        );
         let result_bytes2 = exists_result2.unwrap();
         let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
         assert!(feed_exists2, "Feed should exist after successful update");
-        
+
         let price_call = getPriceUnsafeCall::new((test_id,)).abi_encode();
         let price_result = proxy.sender(alice).relay_to_implementation(price_call);
-        assert!(price_result.is_ok(), "Should be able to get price after successful update");
-        
+        assert!(
+            price_result.is_ok(),
+            "Should be able to get price after successful update"
+        );
+
         let price_data = price_result.unwrap();
         assert!(!price_data.is_empty(), "Price data should not be empty");
-        
+
         println!("✓ Complete successful price update workflow verified through proxy");
         println!("✓ Price feed exists and data is retrievable after update");
     }
@@ -636,10 +843,13 @@ mod end_to_end_proxy_tests {
         setup_proxy_with_receiver(&proxy, &receiver, &wormhole, &alice);
 
         let test_id = ban_usd_feed_id();
-        
+
         let exists_call = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result = proxy.sender(OWNER).relay_to_implementation(exists_call);
-        assert!(exists_result.is_ok(), "Initial price feed check should work");
+        assert!(
+            exists_result.is_ok(),
+            "Initial price feed check should work"
+        );
         let result_bytes = exists_result.unwrap();
         let feed_exists = result_bytes.len() > 0 && result_bytes[result_bytes.len() - 1] != 0;
         assert!(!feed_exists, "Feed should not exist initially");
@@ -647,25 +857,37 @@ mod end_to_end_proxy_tests {
         let update_data = ban_usd_update();
         let mut multiple_updates: Vec<Vec<u8>> = Vec::new();
         multiple_updates.extend(update_data);
-        
+
         let total_fee = mock_get_update_fee(multiple_updates.clone()).unwrap();
-        
-        println!("Multiple feeds test - total fee for {} updates: {:?}", multiple_updates.len(), total_fee);
-        
+
+        println!(
+            "Multiple feeds test - total fee for {} updates: {:?}",
+            multiple_updates.len(),
+            total_fee
+        );
+
         alice.fund(total_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((multiple_updates.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, total_fee).relay_to_implementation(call_data);
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, total_fee)
+            .relay_to_implementation(call_data);
+
         assert!(proxy_result.is_ok(), "Batch price update should succeed with proper total fee when ETH forwarding is implemented");
-        
+
         let exists_call2 = priceFeedExistsCall::new((test_id,)).abi_encode();
         let exists_result2 = proxy.sender(OWNER).relay_to_implementation(exists_call2);
-        assert!(exists_result2.is_ok(), "Price feed check should work after batch update");
+        assert!(
+            exists_result2.is_ok(),
+            "Price feed check should work after batch update"
+        );
         let result_bytes2 = exists_result2.unwrap();
         let feed_exists2 = result_bytes2.len() > 0 && result_bytes2[result_bytes2.len() - 1] != 0;
-        assert!(feed_exists2, "Feed should exist after successful batch update");
-        
+        assert!(
+            feed_exists2,
+            "Feed should exist after successful batch update"
+        );
+
         println!("✓ Multiple price feeds updated successfully through proxy");
     }
 
@@ -681,22 +903,32 @@ mod end_to_end_proxy_tests {
         let update_data = ban_usd_update();
         let update_data_bytes: Vec<Vec<u8>> = update_data;
         let required_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
+
         let insufficient_fee = required_fee / U256::from(2);
-        
-        println!("Insufficient fee test - required: {:?}, provided: {:?}", required_fee, insufficient_fee);
-        
+
+        println!(
+            "Insufficient fee test - required: {:?}, provided: {:?}",
+            required_fee, insufficient_fee
+        );
+
         alice.fund(insufficient_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, insufficient_fee).relay_to_implementation(call_data);
-        
-        assert!(proxy_result.is_err(), "Update should fail with insufficient fee when ETH forwarding is implemented");
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, insufficient_fee)
+            .relay_to_implementation(call_data);
+
+        assert!(
+            proxy_result.is_err(),
+            "Update should fail with insufficient fee when ETH forwarding is implemented"
+        );
+
         let error = proxy_result.unwrap_err();
         let error_str = String::from_utf8_lossy(&error);
-        assert!(error_str.contains("InsufficientFee") || error.len() == 1 && error[0] == 5, 
-               "Should fail with InsufficientFee error when ETH forwarding is implemented");
+        assert!(
+            error_str.contains("InsufficientFee") || error.len() == 1 && error[0] == 5,
+            "Should fail with InsufficientFee error when ETH forwarding is implemented"
+        );
     }
 
     #[motsu::test]
@@ -710,25 +942,37 @@ mod end_to_end_proxy_tests {
 
         let update_data = ban_usd_update();
         let update_data_bytes: Vec<Vec<u8>> = update_data;
-        
+
         let exact_fee = mock_get_update_fee(update_data_bytes.clone()).unwrap();
-        
+
         let expected_update_fee = U256::from(update_data_bytes.len()) * SINGLE_UPDATE_FEE_IN_WEI;
         let expected_total = expected_update_fee + TRANSACTION_FEE_IN_WEI;
-        
-        assert_eq!(exact_fee, expected_total, "Fee calculation should match expected formula");
-        
+
+        assert_eq!(
+            exact_fee, expected_total,
+            "Fee calculation should match expected formula"
+        );
+
         println!("Exact fee test - calculated: {:?}", exact_fee);
-        println!("Components: {} updates × {} + {} transaction fee", 
-                update_data_bytes.len(), SINGLE_UPDATE_FEE_IN_WEI, TRANSACTION_FEE_IN_WEI);
-        
+        println!(
+            "Components: {} updates × {} + {} transaction fee",
+            update_data_bytes.len(),
+            SINGLE_UPDATE_FEE_IN_WEI,
+            TRANSACTION_FEE_IN_WEI
+        );
+
         alice.fund(exact_fee);
-        
+
         let call_data = updatePriceFeedsCall::new((update_data_bytes.clone(),)).abi_encode();
-        let proxy_result = proxy.sender_and_value(alice, exact_fee).relay_to_implementation(call_data);
-        
-        assert!(proxy_result.is_ok(), "Update should succeed with exact fee amount when ETH forwarding is implemented");
-        
+        let proxy_result = proxy
+            .sender_and_value(alice, exact_fee)
+            .relay_to_implementation(call_data);
+
+        assert!(
+            proxy_result.is_ok(),
+            "Update should succeed with exact fee amount when ETH forwarding is implemented"
+        );
+
         println!("✓ Exact fee calculation and payment successful through proxy");
     }
 }

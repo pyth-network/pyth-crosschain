@@ -5,9 +5,9 @@
 extern crate alloc;
 
 #[cfg(test)]
-mod proxy_integration_tests;
-#[cfg(test)]
 mod end_to_end_proxy_tests;
+#[cfg(test)]
+mod proxy_integration_tests;
 
 use alloc::vec::Vec;
 
@@ -15,7 +15,7 @@ use stylus_sdk::{alloy_primitives::Address, call::delegate_call, prelude::*};
 
 sol_storage! {
     #[entrypoint]
-    pub struct Proxy { 
+    pub struct Proxy {
         bool is_initialized;
         MetaInformation meta_information;
     }
@@ -68,12 +68,10 @@ impl Proxy {
     pub fn relay_to_implementation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
         let implementation_address = self.get_implementation()?;
         let res;
-        unsafe {            
-            res = delegate_call(self, implementation_address, &data[..])
-        };
+        unsafe { res = delegate_call(self, implementation_address, &data[..]) };
 
         match res {
-            Ok(res) => Ok(res.into()), 
+            Ok(res) => Ok(res.into()),
             Err(e) => Err(format!("Delegate call failed: {:?}", e).into()),
         }
     }
