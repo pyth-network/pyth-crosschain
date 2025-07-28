@@ -6,8 +6,12 @@
 extern crate alloc;
 
 mod error;
+mod governance;
+mod governance_structs;
 #[cfg(test)]
 mod integration_tests;
+#[cfg(test)]
+mod pyth_governance_test;
 mod structs;
 #[cfg(test)]
 mod test_data;
@@ -18,6 +22,7 @@ use mock_instant::global::MockClock;
 use alloc::vec::Vec;
 use stylus_sdk::{
     alloy_primitives::{Address, FixedBytes, I32, I64, U16, U256, U32, U64},
+    alloy_sol_types::sol,
     call::Call,
     prelude::*,
     storage::{
@@ -42,13 +47,23 @@ use pythnet_sdk::{
 use structs::{DataSource, DataSourceStorage, PriceFeedReturn, PriceFeedStorage, PriceReturn};
 use wormhole_vaas::{Readable, Vaa, Writeable};
 
+sol! {
+    event FeeSet(uint256 indexed old_fee, uint256 indexed new_fee);
+    event TransactionFeeSet(uint256 indexed old_fee, uint256 indexed new_fee);
+    event FeeWithdrawn(address indexed target_address, uint256 fee_amount);
+    event ValidPeriodSet(uint256 indexed old_valid_period, uint256 indexed new_valid_period);
+    event DataSourcesSet(bytes32[] old_data_sources, bytes32[] new_data_sources);
+    event GovernanceDataSourceSet(uint16 old_chain_id, bytes32 old_emitter_address, uint16 new_chain_id, bytes32 new_emitter_address, uint64 initial_sequence);
+}
+
 sol_interface! {
-    interface IWormholeContract {
-        function initialize(address[] memory initial_guardians, uint16 chain_id, uint16 governance_chain_id, address governance_contract) external;
-        function getGuardianSet(uint32 index) external view returns (uint8[] memory);
-        function parseAndVerifyVm(uint8[] memory encoded_vaa) external view returns (uint8[] memory);
-        function quorum(uint32 num_guardians) external pure returns (uint32);
-    }
+    interface IWormholeContract  {
+    function initialize(address[] memory initial_guardians, uint32 initial_guardian_set_index, uint16 chain_id, uint16 governance_chain_id, address governance_contract) external;
+    function getGuardianSet(uint32 index) external view returns (uint8[] memory);
+    function parseAndVerifyVm(uint8[] memory encoded_vaa) external view returns (uint8[] memory);
+    function quorum(uint32 num_guardians) external pure returns (uint32);
+    function chainId() external view returns (uint16);
+}
 }
 
 #[storage]
@@ -375,8 +390,8 @@ impl PythReceiver {
         max_allowed_publish_time: u64,
         check_uniqueness: bool,
     ) -> Result<Vec<PriceFeedReturn>, PythReceiverError> {
-        let update_data_array: &[u8] = &update_data;
         // Check the first 4 bytes of the update_data_array for the magic header
+        let update_data_array: &[u8] = &update_data;
         if update_data_array.len() < 4 {
             return Err(PythReceiverError::InvalidUpdateData);
         }
@@ -514,6 +529,13 @@ impl PythReceiver {
             false,
         );
         price_feeds
+    }
+
+    pub fn execute_governance_instruction(
+        &mut self,
+        data: Vec<u8>,
+    ) -> Result<(), PythReceiverError> {
+        self.execute_governance_instruction_internal(data)
     }
 
     fn is_no_older_than(&self, publish_time: U64, max_age: u64) -> bool {

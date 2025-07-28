@@ -9,7 +9,7 @@ pub struct PythLazerAgentJrpcV1 {
     pub jsonrpc: JsonRpcVersion,
     #[serde(flatten)]
     pub params: JrpcCall,
-    pub id: i64,
+    pub id: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -20,14 +20,14 @@ pub enum JrpcCall {
     GetMetadata(GetMetadataParams),
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 pub struct FeedUpdateParams {
     pub feed_id: PriceFeedId,
     pub source_timestamp: TimestampUs,
     pub update: UpdateParams,
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(tag = "type")]
 pub enum UpdateParams {
     #[serde(rename = "price")]
@@ -37,11 +37,7 @@ pub enum UpdateParams {
         best_ask_price: Option<Price>,
     },
     #[serde(rename = "funding_rate")]
-    FundingRateUpdate {
-        price: Option<Price>,
-        rate: Rate,
-        funding_rate_interval: Option<Duration>,
-    },
+    FundingRateUpdate { price: Option<Price>, rate: Rate },
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -94,7 +90,8 @@ pub struct JrpcErrorObject {
 #[derive(Debug, Eq, PartialEq)]
 pub enum JrpcError {
     ParseError(String),
-    InternalError,
+    InternalError(String),
+    SendUpdateError(FeedUpdateParams),
 }
 
 // note: error codes can be found in the rfc https://www.jsonrpc.org/specification#error_object
@@ -106,10 +103,15 @@ impl From<JrpcError> for JrpcErrorObject {
                 message: "Parse error".to_string(),
                 data: Some(error_message.into()),
             },
-            JrpcError::InternalError => JrpcErrorObject {
+            JrpcError::InternalError(error_message) => JrpcErrorObject {
                 code: -32603,
                 message: "Internal error".to_string(),
-                data: None,
+                data: Some(error_message.into()),
+            },
+            JrpcError::SendUpdateError(feed_update_params) => JrpcErrorObject {
+                code: -32000,
+                message: "Internal error".to_string(),
+                data: Some(serde_json::to_value(feed_update_params).unwrap()),
             },
         }
     }
@@ -170,7 +172,47 @@ mod tests {
                     best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
                 },
             }),
-            id: 1,
+            id: Some(1),
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_push_update_price_without_id() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 745214124124,
+
+            "update": {
+              "type": "price",
+              "price": 5432,
+              "best_bid_price": 5432,
+              "best_ask_price": 5432
+            }
+          }
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs::from_micros(745214124124),
+                update: UpdateParams::PriceUpdate {
+                    price: Price::from_integer(5432, 0).unwrap(),
+                    best_bid_price: Some(Price::from_integer(5432, 0).unwrap()),
+                    best_ask_price: Some(Price::from_integer(5432, 0).unwrap()),
+                },
+            }),
+            id: None,
         };
 
         assert_eq!(
@@ -209,7 +251,7 @@ mod tests {
                     best_ask_price: None,
                 },
             }),
-            id: 1,
+            id: Some(1),
         };
 
         assert_eq!(
@@ -231,11 +273,7 @@ mod tests {
             "update": {
               "type": "funding_rate",
               "price": 1234567890,
-              "rate": 1234567891,
-              "funding_rate_interval": {
-                "secs": 28800,
-                "nanos": 0
-              }
+              "rate": 1234567891
             }
           },
           "id": 1
@@ -250,10 +288,9 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
-                    funding_rate_interval: Some(Duration::from_secs(28800)),
                 },
             }),
-            id: 1,
+            id: Some(1),
         };
 
         assert_eq!(
@@ -288,10 +325,9 @@ mod tests {
                 update: UpdateParams::FundingRateUpdate {
                     price: None,
                     rate: Rate::from_integer(1234567891, 0).unwrap(),
-                    funding_rate_interval: None,
                 },
             }),
-            id: 1,
+            id: Some(1),
         };
 
         assert_eq!(
@@ -320,7 +356,7 @@ mod tests {
                 names: Some(vec!["BTC/USD".to_string()]),
                 asset_types: Some(vec!["crypto".to_string()]),
             }),
-            id: 1,
+            id: Some(1),
         };
 
         assert_eq!(
@@ -346,7 +382,7 @@ mod tests {
                 names: None,
                 asset_types: None,
             }),
-            id: 1,
+            id: Some(1),
         };
 
         assert_eq!(
@@ -416,8 +452,7 @@ mod tests {
               "jsonrpc": "2.0",
               "id": 2,
               "result": "success"
-            }
-            "#,
+            }"#,
         )
         .unwrap();
 
@@ -439,8 +474,7 @@ mod tests {
                 "code": -32603,
                 "message": "Internal error"
               }
-            }
-            "#,
+            }"#,
         )
         .unwrap();
 

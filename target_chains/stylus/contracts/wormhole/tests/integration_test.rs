@@ -5,10 +5,12 @@ use core::str::FromStr;
 use stylus_sdk::alloy_primitives::{Address, FixedBytes, U256};
 use motsu::prelude::Contract;
 use k256::ecdsa::SigningKey;
+use motsu::prelude::DefaultStorage;
 use stylus_sdk::alloy_primitives::keccak256;
+use wormhole_contract::*;
 
-use base64::engine::general_purpose;
 use base64::Engine;
+use base64::engine::general_purpose;
 
 const CHAIN_ID: u16 = 60051;
 const GOVERNANCE_CHAIN_ID: u16 = 1;
@@ -19,28 +21,24 @@ fn test_wormhole_vaa() -> Vec<u8> {
 }
 
 fn create_vaa_bytes(input_string: &str) -> Vec<u8> {
-    let vaa_bytes = general_purpose::STANDARD
-        .decode(input_string)
-        .unwrap();
+    let vaa_bytes = general_purpose::STANDARD.decode(input_string).unwrap();
     let vaa: Vec<u8> = vaa_bytes;
     vaa
 }
 
 fn test_guardian_secret1() -> [u8; 32] {
     [
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e,
+        0x1f, 0x20,
     ]
 }
 
 fn test_guardian_secret2() -> [u8; 32] {
     [
-        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-        0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
-        0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
-        0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
+        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+        0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e,
+        0x3f, 0x40,
     ]
 }
 
@@ -104,8 +102,6 @@ fn test_guardian_address1() -> Address {
     Address::from(address_bytes)
 }
 
-
-
 fn test_guardian_address2() -> Address {
     let secret = test_guardian_secret2();
     let signing_key = SigningKey::from_bytes(&secret.into()).expect("key");
@@ -145,11 +141,9 @@ fn deploy_with_mainnet_guardians(wormhole_contract: &Contract<WormholeContract>,
     wormhole_contract.sender(*alice).initialize(guardians, 0, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
 }
 
-
 fn guardian_set0() -> Vec<Address> {
     vec![Address::from_str("0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5").unwrap()]
 }
-
 
 fn guardian_set4() -> Vec<Address> {
     vec![
@@ -159,14 +153,18 @@ fn guardian_set4() -> Vec<Address> {
     ]
 }
 
-
 fn mock_guardian_set13() -> Vec<Address> {
     vec![
-        Address::from([0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc, 0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3]),
-        Address::from([0xff, 0x6C, 0xB9, 0x52, 0x58, 0x9B, 0xDE, 0x86, 0x2c, 0x25, 0xEf, 0x43, 0x92, 0x13, 0x2f, 0xb9, 0xD4, 0xA4, 0x21, 0x57]),
+        Address::from([
+            0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc,
+            0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3,
+        ]),
+        Address::from([
+            0xff, 0x6C, 0xB9, 0x52, 0x58, 0x9B, 0xDE, 0x86, 0x2c, 0x25, 0xEf, 0x43, 0x92, 0x13,
+            0x2f, 0xb9, 0xD4, 0xA4, 0x21, 0x57,
+        ]),
     ]
 }
-
 
 fn corrupted_vaa(mut real_data: Vec<u8>, pos: usize, random1: u8, random2: u8) -> Vec<u8> {
     if real_data.len() < 2 {
@@ -196,7 +194,11 @@ fn create_test_vaa(guardian_set_index: u32, signatures: Vec<GuardianSignature>) 
     }
 }
 
-fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVM {
+fn create_test_vaa_with_emitter(
+    guardian_set_index: u32,
+    signatures: Vec<GuardianSignature>,
+    emitter: Address,
+) -> VerifiedVM {
     let mut emitter_bytes = [0u8; 32];
     emitter_bytes[12..32].copy_from_slice(emitter.as_slice());
 
@@ -215,20 +217,26 @@ fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<Guardia
     }
 }
 
-fn create_valid_guardian_signature(guardian_index: u8, hash: &FixedBytes<32>) -> Result<GuardianSignature, WormholeError> {
+fn create_valid_guardian_signature(
+    guardian_index: u8,
+    hash: &FixedBytes<32>,
+) -> Result<GuardianSignature, WormholeError> {
     let secret_bytes = match guardian_index {
         0 => test_guardian_secret1(),
         1 => test_guardian_secret2(),
         _ => test_guardian_secret1(),
     };
 
-    let signing_key = SigningKey::from_bytes(&secret_bytes.into())
+    let signing_key =
+        SigningKey::from_bytes(&secret_bytes.into()).map_err(|_| WormholeError::InvalidInput)?;
+
+    let hash_array: [u8; 32] = hash
+        .as_slice()
+        .try_into()
         .map_err(|_| WormholeError::InvalidInput)?;
 
-    let hash_array: [u8; 32] = hash.as_slice().try_into()
-        .map_err(|_| WormholeError::InvalidInput)?;
-
-    let (signature, recovery_id) = signing_key.sign_prehash_recoverable(&hash_array)
+    let (signature, recovery_id) = signing_key
+        .sign_prehash_recoverable(&hash_array)
         .map_err(|_| WormholeError::InvalidInput)?;
 
     let mut sig_bytes = [0u8; 65];
@@ -240,7 +248,6 @@ fn create_valid_guardian_signature(guardian_index: u8, hash: &FixedBytes<32>) ->
         signature: FixedBytes::from(sig_bytes),
     })
 }
-
 
 fn create_guardian_signature(guardian_index: u8) -> GuardianSignature {
     GuardianSignature {
@@ -353,7 +360,6 @@ fn test_chain_id_governance_values(wormhole_contract: Contract<WormholeContract>
     let gov_contract = wormhole_contract.sender(alice).governance_contract();
     let expected = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
     assert_eq!(gov_contract, expected);
-
 }
 
 #[motsu::test]
@@ -384,7 +390,11 @@ fn test_guardian_set_retrieval_current_guardians(wormhole_contract: Contract<Wor
     assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
 
     let guardian_set_bytes = guardian_set_result.unwrap();
-    assert_eq!(guardian_set_bytes.len(), 19 * 20, "Should have 19 guardian addresses (20 bytes each)");
+    assert_eq!(
+        guardian_set_bytes.len(),
+        19 * 20,
+        "Should have 19 guardian addresses (20 bytes each)"
+    );
 
     assert_eq!(wormhole_contract.sender(alice).chain_id(), CHAIN_ID, "Chain ID should match shell script value");
 

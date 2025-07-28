@@ -749,7 +749,7 @@
   {
     "id": "polynomial_testnet",
     "mainnet": false,
-    "rpcUrl": "https://rpc-polynomial-network-testnet-x0tryg8u1c.t.conduit.xyz",
+    "rpcUrl": "https://rpc.sepolia.polynomial.fi",
     "networkId": 80008,
     "type": "EvmChain"
   },
