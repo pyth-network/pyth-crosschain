@@ -40,8 +40,13 @@ pub enum UpdateParams {
     FundingRateUpdate {
         price: Option<Price>,
         rate: Rate,
+        #[serde(default = "default_funding_rate_interval", with = "humantime_serde")]
         funding_rate_interval: Option<Duration>,
     },
+}
+
+fn default_funding_rate_interval() -> Option<Duration> {
+    None
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -278,10 +283,7 @@ mod tests {
               "type": "funding_rate",
               "price": 1234567890,
               "rate": 1234567891,
-              "funding_rate_interval": {
-                "secs": 28800,
-                "nanos": 0
-               }
+              "funding_rate_interval": "8h"
             }
           },
           "id": 1
