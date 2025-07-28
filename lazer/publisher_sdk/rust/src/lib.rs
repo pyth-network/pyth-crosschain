@@ -1,7 +1,7 @@
-use ::protobuf::MessageField;
 use crate::publisher_update::feed_update::Update;
 use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use crate::state::FeedState;
+use ::protobuf::MessageField;
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
 use pyth_lazer_protocol::symbol_state::SymbolState;
 use pyth_lazer_protocol::FeedKind;
@@ -68,7 +68,9 @@ impl From<UpdateParams> for Update {
             } => Update::FundingRateUpdate(FundingRateUpdate {
                 price: price.map(|p| p.0.into()),
                 rate: Some(rate.0),
-                funding_rate_interval: MessageField::from_option(funding_rate_interval.map(|i| i.into())),
+                funding_rate_interval: MessageField::from_option(
+                    funding_rate_interval.map(|i| i.into()),
+                ),
                 special_fields: Default::default(),
             }),
         }
