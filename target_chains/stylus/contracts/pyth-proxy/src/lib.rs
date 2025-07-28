@@ -4,10 +4,14 @@
 #[macro_use]
 extern crate alloc;
 
+#[cfg(test)]
+mod proxy_integration_tests;
+#[cfg(test)]
+mod end_to_end_proxy_tests;
+
 use alloc::vec::Vec;
 
-/// Import the Stylus SDK along with alloy primitive types for use in our program.
-use stylus_sdk::{alloy_primitives::Address, call::delegate_call, msg, prelude::*};
+use stylus_sdk::{alloy_primitives::Address, call::delegate_call, prelude::*};
 
 sol_storage! {
     #[entrypoint]
@@ -20,14 +24,13 @@ sol_storage! {
         address owner;
         address implementation_address;
     }
-
 }
 
-#[external]
+#[public]
 impl Proxy {
     pub fn init(&mut self, owner: Address) -> Result<(), Vec<u8>> {
         if self.is_initialized.get() {
-            return Err(format!("Already initialized").into());
+            return Err(b"Already initialized".to_vec());
         }
         self.meta_information.owner.set(owner);
         self.is_initialized.set(true);
@@ -36,15 +39,29 @@ impl Proxy {
 
     pub fn get_implementation(&self) -> Result<Address, Vec<u8>> {
         let addr = self.meta_information.implementation_address.get();
+        if addr == Address::ZERO {
+            return Err(b"Implementation not set".to_vec());
+        }
         Ok(addr)
     }
 
     pub fn set_implementation(&mut self, implementation: Address) -> Result<(), Vec<u8>> {
         self.only_owner()?;
+        if implementation == Address::ZERO {
+            return Err(b"Invalid implementation address".to_vec());
+        }
         self.meta_information
             .implementation_address
             .set(implementation);
         Ok(())
+    }
+
+    pub fn get_owner(&self) -> Address {
+        self.meta_information.owner.get()
+    }
+
+    pub fn is_initialized(&self) -> bool {
+        self.is_initialized.get()
     }
 
     pub fn relay_to_implementation(&mut self, data: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
@@ -56,16 +73,14 @@ impl Proxy {
 
         match res {
             Ok(res) => Ok(res.into()), 
-            Err(e) => Err(format!("Error: {:?}", e).into()),
+            Err(e) => Err(format!("Delegate call failed: {:?}", e).into()),
         }
     }
-}
 
-impl Proxy {
-    pub fn only_owner(&mut self) -> Result<(), Vec<u8>> {
+    fn only_owner(&self) -> Result<(), Vec<u8>> {
         let owner = self.meta_information.owner.get();
-        if owner != msg::sender() {
-            return Err(format!("Invalid").into());
+        if owner != self.vm().msg_sender() {
+            return Err(b"Unauthorized: not owner".to_vec());
         }
         Ok(())
     }

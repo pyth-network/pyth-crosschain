@@ -11,6 +11,8 @@ mod governance_structs;
 #[cfg(test)]
 mod integration_tests;
 #[cfg(test)]
+mod proxy_tests;
+#[cfg(test)]
 mod pyth_governance_test;
 mod structs;
 #[cfg(test)]
@@ -66,6 +68,13 @@ sol_interface! {
 }
 }
 
+
+sol_storage! {
+    pub struct InitializationState {
+        bool is_initialized;
+    }
+}
+
 #[storage]
 #[entrypoint]
 pub struct PythReceiver {
@@ -80,6 +89,7 @@ pub struct PythReceiver {
     pub governance_data_source_index: StorageUint<32, 1>,
     pub latest_price_info: StorageMap<FixedBytes<32>, PriceFeedStorage>,
     pub transaction_fee_in_wei: StorageU256,
+    pub initialization_state: InitializationState,
 }
 
 #[public]
@@ -94,7 +104,10 @@ impl PythReceiver {
         governance_emitter_chain_id: u16,
         governance_emitter_address: [u8; 32],
         governance_initial_sequence: u64,
-    ) {
+    ) -> Result<(), Vec<u8>> {
+        if self.initialization_state.is_initialized.get() {
+            return Err(b"Already initialized".to_vec());
+        }
         self.wormhole.set(wormhole);
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
         self.valid_time_period_seconds
@@ -123,6 +136,13 @@ impl PythReceiver {
 
             self.is_valid_data_source.setter(data_source_key).set(true);
         }
+
+        self.initialization_state.is_initialized.set(true);
+        Ok(())
+    }
+
+    pub fn is_initialized(&self) -> bool {
+        self.initialization_state.is_initialized.get()
     }
 
     pub fn price_feed_exists(&self, id: [u8; 32]) -> bool {
