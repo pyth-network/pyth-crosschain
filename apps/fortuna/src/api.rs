@@ -596,6 +596,9 @@ mod test {
 
     #[tokio::test]
     async fn test_chain_configs_with_data() {
+        use crate::api::get_chain_configs;
+        use axum::{routing::get, Router};
+
         // Create a config with actual chain data
         let mut config_chains = HashMap::new();
         config_chains.insert(
@@ -673,16 +676,72 @@ mod test {
             },
         };
 
-        let metrics_registry = Arc::new(RwLock::new(Registry::default()));
-        let api_state = ApiState::new(
-            Arc::new(RwLock::new(HashMap::new())),
-            metrics_registry,
-            Arc::new(History::new().await.unwrap()),
-            &config,
-        )
-        .await;
+        // Create initialized blockchain states with network IDs
+        let eth_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
+        let avax_read = Arc::new(MockEntropyReader::with_requests(10, &[]));
 
-        let app = api::routes(api_state);
+        let eth_state = MonitoredHashChainState::new(
+            ETH_CHAIN.clone(),
+            Default::default(),
+            "ethereum".into(),
+            PROVIDER,
+        );
+
+        let eth_blockchain_state = BlockchainState {
+            id: "ethereum".into(),
+            network_id: 1, // Ethereum mainnet
+            state: Arc::new(eth_state),
+            contract: eth_read.clone(),
+            provider_address: PROVIDER,
+            reveal_delay_blocks: 1,
+            confirmed_block_status: BlockStatus::Latest,
+        };
+
+        let avax_state = MonitoredHashChainState::new(
+            AVAX_CHAIN.clone(),
+            Default::default(),
+            "avalanche".into(),
+            PROVIDER,
+        );
+
+        let avax_blockchain_state = BlockchainState {
+            id: "avalanche".into(),
+            network_id: 43114, // Avalanche C-Chain
+            state: Arc::new(avax_state),
+            contract: avax_read.clone(),
+            provider_address: PROVIDER,
+            reveal_delay_blocks: 2,
+            confirmed_block_status: BlockStatus::Latest,
+        };
+
+        // Create chains HashMap with initialized states
+        let mut chains = HashMap::new();
+        chains.insert(
+            "ethereum".into(),
+            ApiBlockChainState::Initialized(eth_blockchain_state),
+        );
+        chains.insert(
+            "avalanche".into(),
+            ApiBlockChainState::Initialized(avax_blockchain_state),
+        );
+
+        // Minimal ApiState for this endpoint
+        let api_state = ApiState {
+            chains: Arc::new(RwLock::new(chains)),
+            history: Arc::new(History::new().await.unwrap()),
+            metrics_registry: Arc::new(RwLock::new(Registry::default())),
+            metrics: Arc::new(crate::api::ApiMetrics {
+                http_requests: prometheus_client::metrics::family::Family::default(),
+            }),
+            explorer_metrics: Arc::new(
+                crate::api::ExplorerMetrics::new(Arc::new(RwLock::new(Registry::default()))).await,
+            ),
+            config,
+        };
+
+        let app = Router::new()
+            .route("/v1/chains/configs", get(get_chain_configs))
+            .with_state(api_state);
         let server = TestServer::new(app).unwrap();
 
         // Test the chain configs endpoint
@@ -706,7 +765,8 @@ mod test {
         );
         assert_eq!(eth_config.reveal_delay_blocks, 1);
         assert_eq!(eth_config.gas_limit, 500000);
-        assert_eq!(eth_config.fee, 1500000000000000);
+        assert_eq!(eth_config.default_fee, 1500000000000000);
+        assert_eq!(eth_config.network_id, 1); // Ethereum mainnet
 
         // Find avalanche config
         let avax_config = configs
@@ -719,6 +779,7 @@ mod test {
         );
         assert_eq!(avax_config.reveal_delay_blocks, 2);
         assert_eq!(avax_config.gas_limit, 600000);
-        assert_eq!(avax_config.fee, 2000000000000000);
+        assert_eq!(avax_config.default_fee, 2000000000000000);
+        assert_eq!(avax_config.network_id, 43114); // Avalanche C-Chain
     }
 }
