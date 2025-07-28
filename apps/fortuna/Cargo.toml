@@ -1,6 +1,6 @@
 [package]
 name = "fortuna"
-version = "8.2.4"
+version = "8.2.5"
 edition = "2021"
 
 [lib]
