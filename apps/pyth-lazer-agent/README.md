@@ -6,7 +6,7 @@ but will batch and sign transactions before publishing them to Lazer.
 
 ## Keypair
 
-You will need to generate an ed25519 keypair and provide the pubkey to the Lazer team. `solana-keygen` it is the recommended utility.
+You will need to generate an ed25519 keypair and provide the pubkey to the Lazer team. `solana-keygen` is the recommended utility.
 ```bash
 solana-keygen new -o /path/to/keypair.json
 solana-keygen pubkey /path/to/keypair.json
@@ -29,8 +29,8 @@ pyth-lazer-agent --help
 ```
 
 ### From source
-Please check [rust-toolchain](/rust-toolchain.toml) to see the version of Rust needed to build (currently 1.88).
-You will also need SSL and CA certificates. `cargo build` it should then work as usual.
+Please check [rust-toolchain](rust-toolchain.toml) to see the version of Rust needed to build (currently 1.88).
+You will also need SSL and CA certificates. `cargo build` should then work as usual.
 
 ### Docker
 See the included [Dockerfile](Dockerfile) to build an image yourself.
@@ -54,5 +54,5 @@ publish_interval_duration = "25ms"
 - `relayers_urls`: The Lazer team will provide these.
 - `publish_keypair_path`: The keypair file generated with `solana-keygen` or similar.
 - `authorization_token`: The Lazer team will provide this or instruct that it can be omitted.
-- `listen_address`: The local port the agent will be listening to on; can be anything you want.
+- `listen_address`: The local port the agent will be listening on; can be anything you want.
 - `publisher_interval`: The agent will batch and send transaction bundles at this interval. The Lazer team will provide guidance here.
