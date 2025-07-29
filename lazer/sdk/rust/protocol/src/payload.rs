@@ -1,5 +1,6 @@
 //! Types representing binary encoding of signable payloads and signature envelopes.
 
+use crate::time::DurationUs;
 use {
     super::router::{PriceFeedId, PriceFeedProperty},
     crate::{
@@ -14,7 +15,6 @@ use {
         num::NonZeroI64,
     },
 };
-use crate::time::DurationUs;
 
 /// Data contained within a signable payload.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
