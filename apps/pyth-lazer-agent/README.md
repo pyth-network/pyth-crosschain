@@ -1,7 +1,7 @@
 # pyth-lazer-agent
 
 pyth-lazer-agent is intended to be run by Lazer publishers analogous to [pyth-agent](https://github.com/pyth-network/pyth-agent)
-for pythnet publishers. Currently it retains [the existing Lazer publishing interface](https://github.com/pyth-network/pyth-examples/tree/main/lazer/publisher),
+for pythnet publishers. Currently, it retains [the existing Lazer publishing interface](https://github.com/pyth-network/pyth-examples/tree/main/lazer/publisher),
 but will batch and sign transactions before publishing them to Lazer.
 
 ## Keypair
@@ -15,6 +15,18 @@ solana-keygen pubkey /path/to/keypair.json
 pyth-lazer-agent will need to configure access to this keypair file to sign transactions.
 
 ## Build and run
+
+### From cargo
+```
+# Download the cargo package
+cargo install pyth-lazer-agent
+
+# Add .cargo/bin to PATH
+export PATH="$PATH:~/.cargo/bin"
+
+# Run the agent
+pyth-lazer-agent --help
+```
 
 ### From source
 Please check [rust-toolchain](rust-toolchain.toml) to see the version of Rust needed to build (currently 1.88).
@@ -32,7 +44,7 @@ The agent takes a single `--config` CLI option, pointing at
 `config/config.toml` by default. Configuration is currently minimal:
 
 ```toml
-relayer_urls = ["ws://relayer-0.pyth-lazer.dourolabs.app/v1/transaction", "ws://relayer-0.pyth-lazer.dourolabs.app/v1/transaction"]
+relayer_urls = ["wss://relayer.pyth-lazer-staging.dourolabs.app/v1/transaction", "wss://relayer-1.pyth-lazer-staging.dourolabs.app/v1/transaction"]
 publish_keypair_path = "/path/to/keypair.json"
 authorization_token = "your_token"
 listen_address = "0.0.0.0:8910"
@@ -44,8 +56,3 @@ publish_interval_duration = "25ms"
 - `authorization_token`: The Lazer team will provide this or instruct that it can be omitted.
 - `listen_address`: The local port the agent will be listening on; can be anything you want.
 - `publisher_interval`: The agent will batch and send transaction bundles at this interval. The Lazer team will provide guidance here.
-
-## Publish
-
-Please use the `/v1/publisher` or `/v2/publisher` endpoints and the corresponding `PriceFeedDataV1` and `PriceFeedDataV2`
-schemas as defined in [the sdk](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/publisher.rs).

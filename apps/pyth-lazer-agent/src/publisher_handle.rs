@@ -4,7 +4,6 @@ use anyhow::bail;
 use futures_util::io::{BufReader, BufWriter};
 use hyper_util::rt::TokioIo;
 use protobuf::MessageField;
-use protobuf::well_known_types::timestamp::Timestamp;
 use pyth_lazer_protocol::publisher::{
     PriceFeedDataV1, PriceFeedDataV2, ServerResponse, UpdateDeserializationErrorResponse,
 };
@@ -86,32 +85,17 @@ async fn try_handle_publisher(
                     &receive_buf,
                     bincode::config::legacy(),
                 ) {
-                    Ok((data, _)) => {
-                        let source_timestamp = MessageField::some(Timestamp {
-                            #[allow(
-                                clippy::cast_possible_wrap,
-                                reason = "Unix seconds won't wrap any time soon"
-                            )]
-                            seconds: (data.source_timestamp_us.0 / 1_000_000) as i64,
-                            #[allow(
-                                clippy::cast_possible_truncation,
-                                reason = "this value will always be less than one billion"
-                            )]
-                            nanos: (data.source_timestamp_us.0 % 1_000_000 * 1000) as i32,
-                            special_fields: Default::default(),
-                        });
-                        FeedUpdate {
-                            feed_id: Some(data.price_feed_id.0),
-                            source_timestamp,
-                            update: Some(Update::PriceUpdate(PriceUpdate {
-                                price: data.price.map(|p| p.0.get()),
-                                best_bid_price: data.best_bid_price.map(|p| p.0.get()),
-                                best_ask_price: data.best_ask_price.map(|p| p.0.get()),
-                                ..PriceUpdate::default()
-                            })),
-                            special_fields: Default::default(),
-                        }
-                    }
+                    Ok((data, _)) => FeedUpdate {
+                        feed_id: Some(data.price_feed_id.0),
+                        source_timestamp: MessageField::some(data.source_timestamp_us.into()),
+                        update: Some(Update::PriceUpdate(PriceUpdate {
+                            price: data.price.map(|p| p.0.get()),
+                            best_bid_price: data.best_bid_price.map(|p| p.0.get()),
+                            best_ask_price: data.best_ask_price.map(|p| p.0.get()),
+                            ..PriceUpdate::default()
+                        })),
+                        special_fields: Default::default(),
+                    },
                     Err(err) => {
                         error_count += 1;
                         if error_count <= MAX_ERROR_LOG {
@@ -137,31 +121,16 @@ async fn try_handle_publisher(
                     &receive_buf,
                     bincode::config::legacy(),
                 ) {
-                    Ok((data, _)) => {
-                        let source_timestamp = MessageField::some(Timestamp {
-                            #[allow(
-                                clippy::cast_possible_wrap,
-                                reason = "Unix seconds won't wrap any time soon"
-                            )]
-                            seconds: (data.source_timestamp_us.0 / 1_000_000) as i64,
-                            #[allow(
-                                clippy::cast_possible_truncation,
-                                reason = "this value will always be less than one billion"
-                            )]
-                            nanos: (data.source_timestamp_us.0 % 1_000_000 * 1000) as i32,
-                            special_fields: Default::default(),
-                        });
-                        FeedUpdate {
-                            feed_id: Some(data.price_feed_id.0),
-                            source_timestamp,
-                            update: Some(Update::FundingRateUpdate(FundingRateUpdate {
-                                price: data.price.map(|p| p.0.get()),
-                                rate: data.funding_rate.map(|r| r.0),
-                                ..FundingRateUpdate::default()
-                            })),
-                            special_fields: Default::default(),
-                        }
-                    }
+                    Ok((data, _)) => FeedUpdate {
+                        feed_id: Some(data.price_feed_id.0),
+                        source_timestamp: MessageField::some(data.source_timestamp_us.into()),
+                        update: Some(Update::FundingRateUpdate(FundingRateUpdate {
+                            price: data.price.map(|p| p.0.get()),
+                            rate: data.funding_rate.map(|r| r.0),
+                            ..FundingRateUpdate::default()
+                        })),
+                        special_fields: Default::default(),
+                    },
                     Err(err) => {
                         error_count += 1;
                         if error_count <= MAX_ERROR_LOG {
