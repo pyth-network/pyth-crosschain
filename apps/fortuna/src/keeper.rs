@@ -18,9 +18,12 @@ use {
         },
     },
     anyhow,
-    ethers::{signers::Signer, types::U256},
+    ethers::{
+        signers::{LocalWallet, Signer},
+        types::U256,
+    },
     keeper_metrics::{AccountLabel, KeeperMetrics},
-    std::{collections::HashSet, sync::Arc},
+    std::{collections::HashSet, str::FromStr, sync::Arc},
     tokio::{
         spawn,
         sync::{mpsc, RwLock},
@@ -128,7 +131,7 @@ pub async fn run_keeper_threads(
         None
     };
 
-    if let Some(fee_manager_private_key) = fee_manager_private_key {
+    if let Some(fee_manager_private_key) = fee_manager_private_key.clone() {
         let contract_as_fee_manager = Arc::new(InstrumentedSignablePythContract::from_config(
             &chain_eth_config,
             &fee_manager_private_key,
@@ -178,13 +181,23 @@ pub async fn run_keeper_threads(
 
     spawn(update_commitments_loop(contract.clone(), chain_state.clone()).in_current_span());
 
-    // Spawn a thread to track the provider info and the balance of the keeper
+    // Spawn a thread to track the provider info and the balance of the keeper & fee manager
     spawn(
         async move {
             let chain_id = chain_state.id.clone();
             let chain_config = chain_eth_config.clone();
             let provider_address = chain_state.provider_address;
             let keeper_metrics = metrics.clone();
+            let fee_manager_address_option = fee_manager_private_key.as_ref().and_then(
+                |private_key| match LocalWallet::from_str(private_key) {
+                    Ok(wallet) => Some(wallet.address()),
+                    Err(e) => {
+                        tracing::error!("Invalid fee manager private key: {:?}", e);
+                        None
+                    }
+                },
+            );
+
             let contract = match InstrumentedPythContract::from_config(
                 &chain_config,
                 chain_id.clone(),
@@ -223,10 +236,25 @@ pub async fn run_keeper_threads(
                 )
                 .await
                 {
-                    tracing::error!("Error tracking balance: {:?}", e);
+                    tracing::error!("Error tracking balance for keeper: {:?}", e);
                     continue;
                 }
 
+                if let Some(fee_manager_address) = fee_manager_address_option {
+                    if fee_manager_address != keeper_address {
+                        if let Err(e) = track_balance(
+                            chain_id.clone(),
+                            contract.client(),
+                            fee_manager_address,
+                            keeper_metrics.clone(),
+                        )
+                        .await
+                        {
+                            tracing::error!("Error tracking balance for fee manager: {:?}", e);
+                            continue;
+                        }
+                    }
+                }
                 if let Err(e) = track_accrued_pyth_fees(
                     chain_id.clone(),
                     contract.clone(),
