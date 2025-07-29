@@ -1,5 +1,6 @@
 //! Types representing binary encoding of signable payloads and signature envelopes.
 
+use crate::time::DurationUs;
 use {
     super::router::{PriceFeedId, PriceFeedProperty},
     crate::{
@@ -52,6 +53,7 @@ pub struct AggregatedPriceFeedData {
     pub confidence: Option<Price>,
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
+    pub funding_rate_interval: Option<DurationUs>,
 }
 
 /// First bytes of a payload's encoding
