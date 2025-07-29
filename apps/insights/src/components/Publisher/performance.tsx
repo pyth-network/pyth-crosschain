@@ -378,7 +378,7 @@ const TopFeedsCard = ({
       <NoResults
         icon={emptyIcon}
         header={emptyHeader}
-        body={emptyBody}
+        body={<p>{emptyBody}</p>}
         variant={emptyVariant}
       />
     )}
