@@ -14,6 +14,7 @@ use {
         num::NonZeroI64,
     },
 };
+use crate::time::DurationUs;
 
 /// Data contained within a signable payload.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -52,7 +53,7 @@ pub struct AggregatedPriceFeedData {
     pub confidence: Option<Price>,
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
-    pub funding_rate_interval: Option<u64>,
+    pub funding_rate_interval: Option<DurationUs>,
 }
 
 /// First bytes of a payload's encoding
