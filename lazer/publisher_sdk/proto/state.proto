@@ -152,4 +152,6 @@ message FeedData {
     optional int64 best_ask_price = 5;
     // [optional] Funding rate. Can be absent if no data is available. Can only be present for funding rate feeds.
     optional int64 funding_rate = 6;
+    // [optional] Funding rate interval. Can be absent if no data is available. Can only be present for funding rate feeds.
+    optional google.protobuf.Duration funding_rate_interval = 7;
 }

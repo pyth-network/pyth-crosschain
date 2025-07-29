@@ -1,6 +1,7 @@
 use crate::publisher_update::feed_update::Update;
 use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use crate::state::FeedState;
+use ::protobuf::MessageField;
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
 use pyth_lazer_protocol::symbol_state::SymbolState;
 use pyth_lazer_protocol::FeedKind;
@@ -60,13 +61,18 @@ impl From<UpdateParams> for Update {
                 best_ask_price: best_ask_price.map(|p| p.0.into()),
                 special_fields: Default::default(),
             }),
-            UpdateParams::FundingRateUpdate { price, rate } => {
-                Update::FundingRateUpdate(FundingRateUpdate {
-                    price: price.map(|p| p.0.into()),
-                    rate: Some(rate.0),
-                    special_fields: Default::default(),
-                })
-            }
+            UpdateParams::FundingRateUpdate {
+                price,
+                rate,
+                funding_rate_interval,
+            } => Update::FundingRateUpdate(FundingRateUpdate {
+                price: price.map(|p| p.0.into()),
+                rate: Some(rate.0),
+                funding_rate_interval: MessageField::from_option(
+                    funding_rate_interval.map(|i| i.into()),
+                ),
+                special_fields: Default::default(),
+            }),
         }
     }
 }
@@ -91,20 +97,20 @@ impl From<SymbolState> for FeedState {
     }
 }
 
-impl From<FeedKind> for protobuf::state::FeedKind {
+impl From<FeedKind> for state::FeedKind {
     fn from(value: FeedKind) -> Self {
         match value {
-            FeedKind::Price => protobuf::state::FeedKind::PRICE,
-            FeedKind::FundingRate => protobuf::state::FeedKind::FUNDING_RATE,
+            FeedKind::Price => state::FeedKind::PRICE,
+            FeedKind::FundingRate => state::FeedKind::FUNDING_RATE,
         }
     }
 }
 
-impl From<protobuf::state::FeedKind> for FeedKind {
-    fn from(value: protobuf::state::FeedKind) -> Self {
+impl From<state::FeedKind> for FeedKind {
+    fn from(value: state::FeedKind) -> Self {
         match value {
-            protobuf::state::FeedKind::PRICE => FeedKind::Price,
-            protobuf::state::FeedKind::FUNDING_RATE => FeedKind::FundingRate,
+            state::FeedKind::PRICE => FeedKind::Price,
+            state::FeedKind::FUNDING_RATE => FeedKind::FundingRate,
         }
     }
 }
