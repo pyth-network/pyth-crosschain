@@ -5653,7 +5653,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
