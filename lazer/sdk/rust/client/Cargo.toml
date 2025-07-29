@@ -1,12 +1,12 @@
 [package]
 name = "pyth-lazer-client"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 description = "A Rust client for Pyth Lazer"
 license = "Apache-2.0"
 
 [dependencies]
-pyth-lazer-protocol = { path = "../protocol", version = "0.10.0" }
+pyth-lazer-protocol = { path = "../protocol", version = "0.10.1" }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
 futures-util = "0.3"
