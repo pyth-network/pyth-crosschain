@@ -61,10 +61,7 @@ async fn main() {
     println!("gsi: {:?}", gsi);
 
     let update_data = update_data_bytes(None).await.unwrap();
-
-    let update_fee_return = pyth.update_fee(&update_data).await.unwrap();
-
-    let fee = update_fee_return.value;
+    let fee = pyth.update_fee(&update_data).await.unwrap().value;
 
     //print fee
     println!("fee: {:?}", fee);
