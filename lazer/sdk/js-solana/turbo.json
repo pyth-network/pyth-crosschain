@@ -1,0 +1,13 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:types": {
+      "dependsOn": ["//#install:modules"],
+      "outputs": ["dist/types/**"]
+    },
+    "build": {
+      "dependsOn": ["build:types", "build:cjs", "build:esm"]
+    }
+  }
+}
