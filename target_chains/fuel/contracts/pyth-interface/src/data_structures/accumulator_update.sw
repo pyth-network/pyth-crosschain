@@ -110,6 +110,13 @@ impl AccumulatorUpdate {
         let mut updated_ids = Vec::new();
         let mut i = 0;
         while i < number_of_updates {
+            log("before extracting from merkle proof");
+            log("digest:");
+            log(digest);
+            log("encoded_data length:");
+            log(encoded_data.len());
+            log("offset:");
+            log(offset);
             let (new_offset, price_feed) = PriceFeed::extract_from_merkle_proof(digest, encoded_data, offset);
             offset = new_offset;
             let latest_publish_time = match latest_price_feed.get(price_feed.id).try_read() {
