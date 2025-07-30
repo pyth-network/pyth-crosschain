@@ -2,7 +2,7 @@ use fuels::{
     prelude::{Address, Provider, WalletUnlocked},
     types::Bits256,
 };
-use pyth_sdk::{constants::BETA_5_URL, pyth_utils::guardian_set_upgrade_4_addresses};
+use pyth_sdk::pyth_utils::guardian_set_upgrade_4_addresses;
 use pyth_sdk::{
     constants::{
         BTC_USD_PRICE_FEED_ID, DEFAULT_VALID_TIME_PERIOD, DUMMY_CHAIN_ID, ETH_USD_PRICE_FEED_ID,
@@ -17,7 +17,9 @@ async fn main() {
 
     println!("🔮 Testnet Pyth deploy action");
 
-    let provider = Provider::connect(BETA_5_URL).await.unwrap();
+    let provider = Provider::connect("https://testnet.fuel.network")
+        .await
+        .unwrap();
 
     let admin_pk = std::env::var("ADMIN").expect("ADMIN environment variable missing");
     let admin =
@@ -59,7 +61,10 @@ async fn main() {
     println!("gsi: {:?}", gsi);
 
     let update_data = update_data_bytes(None).await.unwrap();
-    let fee = pyth.update_fee(&update_data).await.unwrap().value;
+
+    let update_fee_return = pyth.update_fee(&update_data).await.unwrap();
+
+    let fee = update_fee_return.value;
 
     //print fee
     println!("fee: {:?}", fee);
