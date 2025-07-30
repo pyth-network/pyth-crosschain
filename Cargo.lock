@@ -5627,7 +5627,7 @@ dependencies = [
  "hyper-util",
  "protobuf",
  "pyth-lazer-protocol 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "pyth-lazer-publisher-sdk 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-publisher-sdk 0.3.0",
  "reqwest 0.12.22",
  "serde",
  "serde_json",
@@ -5715,18 +5715,6 @@ dependencies = [
 [[package]]
 name = "pyth-lazer-publisher-sdk"
 version = "0.3.0"
-dependencies = [
- "anyhow",
- "fs-err",
- "protobuf",
- "protobuf-codegen",
- "pyth-lazer-protocol 0.10.1",
- "serde_json",
-]
-
-[[package]]
-name = "pyth-lazer-publisher-sdk"
-version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2bebeacbc58d9e0143e03a397b08becbed1dacf5baad6a245bc00f74ca5cc50d"
 dependencies = [
@@ -5735,6 +5723,18 @@ dependencies = [
  "protobuf",
  "protobuf-codegen",
  "pyth-lazer-protocol 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json",
+]
+
+[[package]]
+name = "pyth-lazer-publisher-sdk"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "fs-err",
+ "protobuf",
+ "protobuf-codegen",
+ "pyth-lazer-protocol 0.10.1",
  "serde_json",
 ]
 
