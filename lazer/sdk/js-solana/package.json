@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-solana-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pyth Lazer Solana SDK",
   "publishConfig": {
     "access": "public"
@@ -9,14 +9,14 @@
     "dist/**/*"
   ],
   "main": "./dist/cjs/index.js",
-  "types": "./dist/cjs/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     "import": {
-      "types": "./dist/esm/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/esm/index.js"
     },
     "require": {
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "default": "./dist/cjs/index.js"
     }
   },
@@ -24,6 +24,7 @@
     "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
     "build:cjs": "swc src -d dist/cjs --strip-leading-paths --copy-files -C module.type=commonjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "build:esm": "swc src -d dist/esm --strip-leading-paths --copy-files -C jsc.experimental.keepImportAttributes=true && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:types": "tsc --project tsconfig.build.json",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
