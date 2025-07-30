@@ -167,6 +167,13 @@ impl PythCore for Contract {
                     );
                     let mut i_2 = 0;
                     while i_2 < number_of_updates {
+                        log("before extracting from merkle proof");
+                        log("digest:");
+                        log(digest);
+                        log("encoded_data length:");
+                        log(encoded.len());
+                        log("offset:");
+                        log(offset);
                         let (new_offset, price_feed) = PriceFeed::extract_from_merkle_proof(digest, encoded, offset);
 
                         offset = new_offset;
