@@ -63,7 +63,6 @@ pub(crate) async fn submit_new_guardian_set(
         .methods()
         .submit_new_guardian_set(encoded_vm)
         .call()
-        .await;
-
-    result.map_err(handle_error).unwrap()
+        .await
+        .map_err(handle_error).unwrap()
 }

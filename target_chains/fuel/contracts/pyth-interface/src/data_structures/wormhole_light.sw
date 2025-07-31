@@ -133,20 +133,17 @@ impl GuardianSetUpgrade {
             index += 20;
             i += 1;
         }
-
         require(
             new_guardian_set
                 .keys
                 .len() == guardian_length.as_u64(),
             WormholeError::GuardianSetKeysLengthNotEqual,
         );
-        log("Guardian set keys length check passed");
         require(
             encoded_upgrade
                 .len()  == index,
             WormholeError::InvalidGuardianSetUpgradeLength,
         );
-        log("Guardian set upgrade length check passed");
         GuardianSetUpgrade::new(
             action,
             chain,
