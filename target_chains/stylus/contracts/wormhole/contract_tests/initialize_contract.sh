@@ -35,7 +35,7 @@ fi
 if cast send "$CONTRACT_ADDRESS" "initialize(address[],uint16,uint16,address)" "$GUARDIAN_ADDRESSES" $CHAIN_ID $GOVERNANCE_CHAIN_ID $GOVERNANCE_CONTRACT --rpc-url "$RPC_URL" --private-key "$PRIVATE_KEY"; then
     echo "✅ Contract initialization successful!"
     echo ""
-
+    
     echo "🔍 Verifying initialization..."
     echo "Testing quorum function (pure function)..."
     if cast call "$CONTRACT_ADDRESS" "quorum(uint32)" 3 --rpc-url "$RPC_URL"; then
@@ -43,20 +43,20 @@ if cast send "$CONTRACT_ADDRESS" "initialize(address[],uint16,uint16,address)" "
     else
         echo "❌ Pure function failed"
     fi
-
+    
     echo "Testing getGuardianSet function..."
     if cast call "$CONTRACT_ADDRESS" "getGuardianSet(uint32)" 4 --rpc-url "$RPC_URL"; then
         echo "✅ Guardian set retrieval works - contract is initialized"
     else
         echo "❌ Guardian set retrieval failed"
     fi
-
+    
     echo ""
     echo "🎯 Next steps:"
     echo "1. Run your test scripts to verify parse_and_verify_vm works"
     echo "2. Test with different VAA data for comprehensive validation"
     echo "3. Monitor contract functionality for production readiness"
-
+    
 else
     echo "❌ Contract initialization failed!"
     echo ""
