@@ -59,11 +59,11 @@ pub(crate) async fn submit_new_guardian_set(
     contract: &PythOracleContract<WalletUnlocked>,
     encoded_vm: Bytes,
 ) -> CallResponse<()> {
-    contract
+    let result = contract
         .methods()
         .submit_new_guardian_set(encoded_vm)
         .call()
-        .await
-        .map_err(handle_error)
-        .unwrap()
+        .await;
+
+    result.map_err(handle_error).unwrap()
 }
