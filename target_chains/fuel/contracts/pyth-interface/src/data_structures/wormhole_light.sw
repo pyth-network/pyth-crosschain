@@ -124,10 +124,7 @@ impl GuardianSetUpgrade {
                 j += 1;
             }
 
-            // Append the 20-byte data
             full_address_key.append(key);
-
-            // log(full_address_key.clone());
 
             let key: b256 = b256::from_be_bytes(full_address_key.clone());
 
