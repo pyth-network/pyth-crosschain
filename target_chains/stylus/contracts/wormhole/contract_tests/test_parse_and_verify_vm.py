@@ -51,30 +51,30 @@ CONTRACT_ABI = [
 
 def test_parse_and_verify_vm():
     """Test the parse_and_verify_vm function on the deployed contract"""
-    
+
     print("🔍 Testing parse_and_verify_vm function on deployed Stylus Wormhole contract")
     print(f"Contract: {CONTRACT_ADDRESS}")
     print(f"Network: Arbitrum Sepolia")
     print()
-    
+
     w3 = Web3(Web3.HTTPProvider(RPC_URL))
-    
+
     if not w3.is_connected():
         print("❌ Failed to connect to RPC endpoint")
         return False
-        
+
     print("✅ Connected to Arbitrum Sepolia")
-    
+
     contract = w3.eth.contract(
         address=Web3.to_checksum_address(CONTRACT_ADDRESS),
         abi=CONTRACT_ABI
     )
-    
+
     print("📝 Converting VAA from base64 to bytes...")
     vaa_bytes = base64.b64decode(VAA_BASE64)
     print(f"VAA byte length: {len(vaa_bytes)}")
     print()
-    
+
     print("🔍 Test 1: Checking contract initialization")
     try:
         print("getting guardians")
@@ -90,9 +90,9 @@ def test_parse_and_verify_vm():
         print(f"❌ Failed to check initialization: {e}")
         print("⚠️  Contract likely not initialized - run initialization script first")
         return False
-    
+
     print()
-    
+
     print("🔍 Test 2: Testing pure function (quorum)")
     try:
         quorum_result = contract.functions.quorum(3).call()
@@ -101,21 +101,21 @@ def test_parse_and_verify_vm():
         print(f"❌ Failed to call quorum function: {e}")
         print("This suggests a fundamental issue with the contract deployment")
         return False
-    
+
     print()
-    
+
     print("🚀 Test 3: Calling parse_and_verify_vm")
     try:
         vaa_uint8_array = list(vaa_bytes)
         print(f"Converted VAA to uint8 array with {len(vaa_uint8_array)} elements")
-        
+
         result = contract.functions.parseAndVerifyVm(vaa_uint8_array).call()
         print(f"✅ parse_and_verify_vm succeeded!")
         print(f"Guardian set is working properly! ✅")
         print(f"Contract can successfully verify VAAs with the initialized guardian addresses.")
         print(f"Returned payload length: {len(result)} bytes")
         print(f"Payload (hex): {bytes(result).hex()[:100]}..." if len(result) > 50 else f"Payload (hex): {bytes(result).hex()}")
-        
+
         try:
             if len(result) > 0:
                 result_bytes = bytes(result)
@@ -124,50 +124,50 @@ def test_parse_and_verify_vm():
                     print(f"Payload (text): {text_attempt[:100]}...")
         except:
             pass
-            
+
         return True
-        
+
     except Exception as e:
         print(f"❌ parse_and_verify_vm failed: {e}")
-        
+
         print("\n🔧 Debugging hints:")
         print("- Check if contract is properly initialized with guardian sets")
         print("- Verify the VAA data matches expected guardian signatures")
         print("- Ensure guardian set index in VAA matches contract state")
         print("- Run initialization script: chmod +x /tmp/initialize_contract.sh && /tmp/initialize_contract.sh")
         print("- Set PRIVATE_KEY environment variable before running initialization")
-        
+
         return False
 
 def estimate_gas():
     """Estimate gas usage for the parse_and_verify_vm function"""
     print("\n⛽ Estimating gas usage...")
-    
+
     w3 = Web3(Web3.HTTPProvider(RPC_URL))
     contract = w3.eth.contract(
         address=Web3.to_checksum_address(CONTRACT_ADDRESS),
         abi=CONTRACT_ABI
     )
-    
+
     vaa_bytes = base64.b64decode(VAA_BASE64)
-    
+
     try:
         vaa_uint8_array = list(vaa_bytes)
         gas_estimate = contract.functions.parseAndVerifyVm(vaa_uint8_array).estimate_gas()
         print(f"✅ Estimated gas: {gas_estimate:,}")
-        
+
         gas_prices = [0.1, 0.5, 1.0, 2.0]  # gwei
         print("\n💰 Estimated costs:")
         for price in gas_prices:
             cost_eth = (gas_estimate * price * 1e9) / 1e18
             print(f"  At {price} gwei: {cost_eth:.6f} ETH")
-            
+
     except Exception as e:
         print(f"❌ Gas estimation failed: {e}")
 
 if __name__ == "__main__":
     success = test_parse_and_verify_vm()
-    
+
     if success:
         estimate_gas()
         print("succ: ", success)
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     else:
         print("\n🎯 Test Summary: ❌ TESTS FAILED")
         print("Check contract initialization and guardian set configuration.")
-    
+
     print("\n💡 Next steps:")
     print("1. Test with different VAA data for comprehensive validation")
     print("2. Test error cases (invalid VAAs, corrupted signatures)")
