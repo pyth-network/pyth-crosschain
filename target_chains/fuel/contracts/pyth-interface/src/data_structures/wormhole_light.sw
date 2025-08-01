@@ -128,7 +128,7 @@ impl GuardianSetUpgrade {
 
             let key: b256 = b256::from_be_bytes(full_address_key.clone());
 
-            
+
             new_guardian_set.keys.push(key);
             index += 20;
             i += 1;
