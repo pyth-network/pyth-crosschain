@@ -1,7 +1,7 @@
 [
   {
     "chain": "fuel_testnet",
-    "address": "0x25146735b29d4216639f7f8b1d7b921ff87a1d3051de62d6cceaacabeb33b8e7",
+    "address": "0x5d17f54708afd01530c2e0ffb123cd21e92461aae8450de2cc08d0fd330cf240",
     "type": "FuelPriceFeedContract"
   },
   {
