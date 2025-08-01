@@ -20,6 +20,7 @@ fn node_hash(child_a: Bytes, child_b: Bytes) -> Bytes {
     let mut bytes = Bytes::with_capacity(41);
     bytes.push(MERKLE_NODE_PREFIX);
 
+    // Sway's from_be_bytes expects a 32-byte array, so we pad with zeros
     let mut full_address_child_a = Bytes::with_capacity(32);
     let mut full_address_child_b = Bytes::with_capacity(32);
 
