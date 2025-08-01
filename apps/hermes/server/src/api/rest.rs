@@ -49,10 +49,10 @@ impl IntoResponse for RestError {
     fn into_response(self) -> Response {
         match self {
             RestError::BenchmarkPriceNotUnique => {
-                (StatusCode::NOT_FOUND, "Benchmark price is not unique").into_response()
+                (StatusCode::NO_CONTENT, "Benchmark price is not unique").into_response()
             }
             RestError::UpdateDataNotFound => {
-                (StatusCode::NOT_FOUND, "Update data not found").into_response()
+                (StatusCode::NO_CONTENT, "Update data not found").into_response()
             }
             RestError::CcipUpdateDataNotFound => {
                 // Return "Bad Gateway" error because CCIP expects a 5xx error if it needs to retry
@@ -75,7 +75,7 @@ impl IntoResponse for RestError {
                     .join(", ");
 
                 (
-                    StatusCode::NOT_FOUND,
+                    StatusCode::NO_CONTENT,
                     format!("Price ids not found: {missing_ids}"),
                 )
                     .into_response()
