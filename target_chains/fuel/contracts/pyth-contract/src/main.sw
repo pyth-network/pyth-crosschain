@@ -935,3 +935,4 @@ fn verify_governance_vm(encoded_vm: Bytes) -> WormholeVM {
     set_last_executed_governance_sequence(vm.sequence);
     vm
 }
+

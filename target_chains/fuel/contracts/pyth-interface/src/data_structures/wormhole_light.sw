@@ -115,8 +115,20 @@ impl GuardianSetUpgrade {
         while i < guardian_length {
             let (_, slice) = encoded_upgrade.split_at(index);
             let (key, _) = slice.split_at(20);
-            let key: b256 = b256::from_be_bytes(key.clone());
-            new_guardian_set.keys.push(key.rsh(96));
+            let mut full_address_key = Bytes::with_capacity(32);
+
+            // Sway's from_be_bytes expects a 32-byte array, so we pad with zeros
+            let mut j = 0;
+            while j < 12 {
+                full_address_key.push(0u8);
+                j += 1;
+            }
+
+            full_address_key.append(key);
+
+            let key: b256 = b256::from_be_bytes(full_address_key.clone());
+
+            new_guardian_set.keys.push(key);
             index += 20;
             i += 1;
         }
