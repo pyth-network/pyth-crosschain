@@ -22,12 +22,8 @@ use url::Url;
 type RelayerWsSender = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, TungsteniteMessage>;
 type RelayerWsReceiver = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
-async fn connect_to_relayer(
-    mut url: Url,
-    token: &str,
-) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
+async fn connect_to_relayer(url: Url, token: &str) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
     tracing::info!("connecting to the relayer at {}", url);
-    url.set_path("/v1/transaction");
     let mut req = url.clone().into_client_request()?;
     let headers = req.headers_mut();
     headers.insert(
@@ -35,6 +31,7 @@ async fn connect_to_relayer(
         HeaderValue::from_str(&format!("Bearer {token}"))?,
     );
     let (ws_stream, _) = connect_async_with_config(req, None, true).await?;
+    tracing::info!("connected to the relayer at {}", url);
     Ok(ws_stream.split())
 }
 
@@ -149,7 +146,7 @@ impl RelayerSessionTask {
                 msg = relayer_ws_receiver.next() => {
                     match msg {
                         Some(Ok(msg)) => {
-                            tracing::debug!("Received message from relayer: {msg:?}");
+                            tracing::debug!("Received a message from relayer: {msg:?}");
                         }
                         Some(Err(e)) => {
                             tracing::error!("Error receiving message from at relayer: {e:?}");
@@ -165,6 +162,7 @@ impl RelayerSessionTask {
     }
 }
 
+//noinspection DuplicatedCode
 #[cfg(test)]
 mod tests {
     use crate::relayer_session::RelayerSessionTask;
@@ -215,7 +213,7 @@ mod tests {
             while let Some(msg) = read.next().await {
                 if let Ok(msg) = msg {
                     if msg.is_binary() {
-                        tracing::info!("Received binary message: {msg:?}");
+                        tracing::info!("Received a binary message: {msg:?}");
                         let transaction =
                             SignedLazerTransaction::parse_from_bytes(msg.into_data().as_ref())
                                 .unwrap();

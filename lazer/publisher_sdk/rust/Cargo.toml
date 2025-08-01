@@ -1,18 +1,16 @@
 [package]
 name = "pyth-lazer-publisher-sdk"
-version = "0.1.6"
+version = "0.4.0"
 edition = "2021"
 description = "Pyth Lazer Publisher SDK types."
 license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [dependencies]
-pyth-lazer-protocol = { version = "0.7.2", path = "../../sdk/rust/protocol" }
+pyth-lazer-protocol = { version = "0.10.1", path = "../../sdk/rust/protocol" }
 anyhow = "1.0.98"
 protobuf = "3.7.2"
-serde-value = "0.7.0"
-humantime = "2.2.0"
-tracing = "0.1.41"
+serde_json = "1.0.140"
 
 [build-dependencies]
 fs-err = "3.1.0"

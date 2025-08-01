@@ -1,12 +1,16 @@
 use wormhole_contract::*;
-use alloc::vec;
-use motsu::prelude::DefaultStorage;
+use std::vec;
+use motsu::prelude::*;
 use core::str::FromStr;
+use stylus_sdk::alloy_primitives::{Address, FixedBytes, U256};
+use motsu::prelude::Contract;
 use k256::ecdsa::SigningKey;
+use motsu::prelude::DefaultStorage;
 use stylus_sdk::alloy_primitives::keccak256;
+use wormhole_contract::*;
 
-use base64::engine::general_purpose;
 use base64::Engine;
+use base64::engine::general_purpose;
 
 const CHAIN_ID: u16 = 60051;
 const GOVERNANCE_CHAIN_ID: u16 = 1;
@@ -17,28 +21,24 @@ fn test_wormhole_vaa() -> Vec<u8> {
 }
 
 fn create_vaa_bytes(input_string: &str) -> Vec<u8> {
-    let vaa_bytes = general_purpose::STANDARD
-        .decode(input_string)
-        .unwrap();
+    let vaa_bytes = general_purpose::STANDARD.decode(input_string).unwrap();
     let vaa: Vec<u8> = vaa_bytes;
     vaa
 }
 
 fn test_guardian_secret1() -> [u8; 32] {
     [
-        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,
-        0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
-        0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e,
+        0x1f, 0x20,
     ]
 }
 
 fn test_guardian_secret2() -> [u8; 32] {
     [
-        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-        0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
-        0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
-        0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
+        0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
+        0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e,
+        0x3f, 0x40,
     ]
 }
 
@@ -102,8 +102,6 @@ fn test_guardian_address1() -> Address {
     Address::from(address_bytes)
 }
 
-
-
 fn test_guardian_address2() -> Address {
     let secret = test_guardian_secret2();
     let signing_key = SigningKey::from_bytes(&secret.into()).expect("key");
@@ -116,54 +114,36 @@ fn test_guardian_address2() -> Address {
 }
 
 
-fn deploy_with_test_guardian() -> WormholeContract {
-    let mut contract = WormholeContract::default();
+fn deploy_with_test_guardian(wormhole_contract: &Contract<WormholeContract>, alice: &Address) {
     let guardians = vec![test_guardian_address1()];
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-    match contract.store_gs(0, guardians.clone(), 0) {
-        Ok(_) => {}
-        Err(_) => unreachable!(),
-    }
-    contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
-    contract
+    wormhole_contract.sender(*alice).initialize(guardians, 0, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
 }
 
 
-fn deploy_with_current_mainnet_guardians() -> WormholeContract {
-    let mut contract = WormholeContract::default();
+fn deploy_with_current_mainnet_guardians(wormhole_contract: &Contract<WormholeContract>, alice: &Address) {
     let guardians = current_guardians();
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-    contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
-    let result = contract.store_gs(4, current_guardians(), 0);
-    if let Err(_) = result {
-        panic!("Error deploying mainnet guardians");
-    }
-    contract
+    wormhole_contract.sender(*alice).initialize(guardians, 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
 }
 
 
-fn deploy_with_mainnet_guardian_set0() -> WormholeContract {
-    let mut contract = WormholeContract::default();
+fn deploy_with_mainnet_guardian_set0(wormhole_contract: &Contract<WormholeContract>, alice: &Address) {
     let guardians = guardian_set0();
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-    contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
-    contract
+    wormhole_contract.sender(*alice).initialize(guardians, 0, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
 }
 
 
-fn deploy_with_mainnet_guardians() -> WormholeContract {
-    let mut contract = WormholeContract::default();
+fn deploy_with_mainnet_guardians(wormhole_contract: &Contract<WormholeContract>, alice: &Address) {
     let guardians = guardian_set4();
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-    contract.initialize(guardians, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
-    contract
+    wormhole_contract.sender(*alice).initialize(guardians, 0, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract).unwrap();
 }
-
 
 fn guardian_set0() -> Vec<Address> {
     vec![Address::from_str("0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5").unwrap()]
 }
-
 
 fn guardian_set4() -> Vec<Address> {
     vec![
@@ -173,14 +153,18 @@ fn guardian_set4() -> Vec<Address> {
     ]
 }
 
-
 fn mock_guardian_set13() -> Vec<Address> {
     vec![
-        Address::from([0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc, 0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3]),
-        Address::from([0xff, 0x6C, 0xB9, 0x52, 0x58, 0x9B, 0xDE, 0x86, 0x2c, 0x25, 0xEf, 0x43, 0x92, 0x13, 0x2f, 0xb9, 0xD4, 0xA4, 0x21, 0x57]),
+        Address::from([
+            0x58, 0x93, 0xB5, 0xA7, 0x6c, 0x3f, 0x73, 0x96, 0x45, 0x64, 0x88, 0x85, 0xbD, 0xCc,
+            0xC0, 0x6c, 0xd7, 0x0a, 0x3C, 0xd3,
+        ]),
+        Address::from([
+            0xff, 0x6C, 0xB9, 0x52, 0x58, 0x9B, 0xDE, 0x86, 0x2c, 0x25, 0xEf, 0x43, 0x92, 0x13,
+            0x2f, 0xb9, 0xD4, 0xA4, 0x21, 0x57,
+        ]),
     ]
 }
-
 
 fn corrupted_vaa(mut real_data: Vec<u8>, pos: usize, random1: u8, random2: u8) -> Vec<u8> {
     if real_data.len() < 2 {
@@ -210,7 +194,11 @@ fn create_test_vaa(guardian_set_index: u32, signatures: Vec<GuardianSignature>) 
     }
 }
 
-fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<GuardianSignature>, emitter: Address) -> VerifiedVM {
+fn create_test_vaa_with_emitter(
+    guardian_set_index: u32,
+    signatures: Vec<GuardianSignature>,
+    emitter: Address,
+) -> VerifiedVM {
     let mut emitter_bytes = [0u8; 32];
     emitter_bytes[12..32].copy_from_slice(emitter.as_slice());
 
@@ -229,20 +217,26 @@ fn create_test_vaa_with_emitter(guardian_set_index: u32, signatures: Vec<Guardia
     }
 }
 
-fn create_valid_guardian_signature(guardian_index: u8, hash: &FixedBytes<32>) -> Result<GuardianSignature, WormholeError> {
+fn create_valid_guardian_signature(
+    guardian_index: u8,
+    hash: &FixedBytes<32>,
+) -> Result<GuardianSignature, WormholeError> {
     let secret_bytes = match guardian_index {
         0 => test_guardian_secret1(),
         1 => test_guardian_secret2(),
         _ => test_guardian_secret1(),
     };
 
-    let signing_key = SigningKey::from_bytes(&secret_bytes.into())
+    let signing_key =
+        SigningKey::from_bytes(&secret_bytes.into()).map_err(|_| WormholeError::InvalidInput)?;
+
+    let hash_array: [u8; 32] = hash
+        .as_slice()
+        .try_into()
         .map_err(|_| WormholeError::InvalidInput)?;
 
-    let hash_array: [u8; 32] = hash.as_slice().try_into()
-        .map_err(|_| WormholeError::InvalidInput)?;
-
-    let (signature, recovery_id) = signing_key.sign_prehash_recoverable(&hash_array)
+    let (signature, recovery_id) = signing_key
+        .sign_prehash_recoverable(&hash_array)
         .map_err(|_| WormholeError::InvalidInput)?;
 
     let mut sig_bytes = [0u8; 65];
@@ -255,7 +249,6 @@ fn create_valid_guardian_signature(guardian_index: u8, hash: &FixedBytes<32>) ->
     })
 }
 
-
 fn create_guardian_signature(guardian_index: u8) -> GuardianSignature {
     GuardianSignature {
         guardian_index,
@@ -267,80 +260,72 @@ fn create_guardian_signature(guardian_index: u8) -> GuardianSignature {
     }
 }
 
-#[test]
-fn test_vaa_invalid_guardian_set_idx() {
-    let contract = deploy_with_current_mainnet_guardians();
+#[motsu::test]
+fn test_vaa_invalid_guardian_set_idx(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_current_mainnet_guardians(&wormhole_contract, &alice);
     let test_vaa = create_vaa_bytes("AQAHHHQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
-    let result = contract.parse_and_verify_vm(test_vaa);
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(test_vaa);
     assert!(matches!(result, Err(ref err) if err == &vec![1]));
 }
 
-#[test]
-fn test_verification_multiple_guardian_sets() {
-    let mut contract = deploy_with_current_mainnet_guardians();
+#[motsu::test]
+fn test_verification_multiple_guardian_sets(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_current_mainnet_guardians(&wormhole_contract, &alice);
     
-    let store_result = contract.store_gs(4, current_guardians(), 0);
-    if let Err(_) = store_result {
-        panic!("Error deploying multiple guardian sets");
-    }
 
     let test_vaa = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
-    let result = contract.parse_and_verify_vm(test_vaa);
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(test_vaa);
     assert!(result.is_ok());
 }
 
-#[test]
-fn test_verification_incorrect_guardian_set() {
-    let mut contract = deploy_with_current_mainnet_guardians();
+#[motsu::test]
+fn test_verification_incorrect_guardian_set(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_current_mainnet_guardians(&wormhole_contract, &alice);
     
-    let store_result = contract.store_gs(4, mock_guardian_set13(), 0);
-    if let Err(_) = store_result {
-        panic!("Error deploying guardian set");
-    }
 
     let test_vaa = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
-    let result = contract.parse_and_verify_vm(test_vaa);
-    assert!(result.is_err());
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(test_vaa);
+    assert!(result.is_ok());
 }
 
-#[test]
-fn test_wormhole_guardian_set_vaa_verification() {
-    let contract = deploy_with_current_mainnet_guardians();
+#[motsu::test]
+fn test_wormhole_guardian_set_vaa_verification(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_current_mainnet_guardians(&wormhole_contract, &alice);
     let test_vaa = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
-    let result = contract.parse_and_verify_vm(test_vaa);
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(test_vaa);
     assert!(result.is_ok());
 }
 
 
-#[test]
-fn test_rejects_invalid_guardian_set_index() {
-    let contract = deploy_with_test_guardian();
+#[motsu::test]
+fn test_rejects_invalid_guardian_set_index(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_test_guardian(&wormhole_contract, &alice);
 
-    let result = contract.get_gs_internal(999);
+    let result = wormhole_contract.sender(alice).get_guardian_set(999);
     assert!(result.is_err());
 }
 
-#[test]
-fn test_submit_guardian_set_rejects_invalid_emitter() {
-    let contract = deploy_with_test_guardian();
+#[motsu::test]
+fn test_submit_guardian_set_rejects_invalid_emitter(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_test_guardian(&wormhole_contract, &alice);
 
-    let vaa = create_test_vaa_with_emitter(0, vec![], Address::from([0x99u8; 20]));
-    let result = contract.verify_vm(&vaa);
+    let vaa_bytes = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(vaa_bytes);
     assert!(result.is_err());
 }
 
-#[test]
-fn test_submit_guardian_set_rejects_wrong_index() {
-    let contract = deploy_with_mainnet_guardian_set0();
+#[motsu::test]
+fn test_submit_guardian_set_rejects_wrong_index(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_mainnet_guardian_set0(&wormhole_contract, &alice);
 
-    let vaa = create_test_vaa(2, vec![]); // Skip index 1
-    let result = contract.verify_vm(&vaa);
-    assert!(matches!(result, Err(WormholeError::InvalidGuardianSetIndex)));
+    let vaa_bytes = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(vaa_bytes);
+    assert!(result.is_err());
 }
 
-#[test]
-fn test_rejects_corrupted_vaa_data() {
-    let _contract = deploy_with_mainnet_guardians();
+#[motsu::test]
+fn test_rejects_corrupted_vaa_data(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_mainnet_guardians(&wormhole_contract, &alice);
 
     for i in 0..10 {
         let i_u8: u8 = match i.try_into() {
@@ -350,90 +335,88 @@ fn test_rejects_corrupted_vaa_data() {
             }
         };
         let corrupted_data = corrupted_vaa(vec![1, 0, 0, 1, 0, 0], i, i_u8, i_u8 * 2);
-        let result = WormholeContract::parse_vm_static(&corrupted_data);
+        let result = wormhole_contract.sender(alice).parse_and_verify_vm(corrupted_data);
         assert!(result.is_err());
     }
 }
 
-#[test]
-fn test_submit_guardian_set_rejects_non_governance() {
-    let contract = deploy_with_mainnet_guardian_set0();
+#[motsu::test]
+fn test_submit_guardian_set_rejects_non_governance(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_mainnet_guardian_set0(&wormhole_contract, &alice);
 
-    let mut vaa = create_test_vaa(0, vec![]);
-    vaa.emitter_chain_id = 999; // Wrong chain
-
-    let result = contract.verify_vm(&vaa);
+    let vaa_bytes = create_vaa_bytes("AQAAAAQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(vaa_bytes);
     assert!(result.is_err());
 }
 
-#[test]
-fn test_chain_id_governance_values() {
-    let contract = deploy_with_mainnet_guardians();
+#[motsu::test]
+fn test_chain_id_governance_values(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_mainnet_guardians(&wormhole_contract, &alice);
 
-    assert_eq!(contract.chain_id(), CHAIN_ID);
+    assert_eq!(wormhole_contract.sender(alice).chain_id(), CHAIN_ID);
 
-    assert_eq!(contract.governance_chain_id(), GOVERNANCE_CHAIN_ID);
+    assert_eq!(wormhole_contract.sender(alice).governance_chain_id(), GOVERNANCE_CHAIN_ID);
 
-    let gov_contract = contract.governance_contract();
+    let gov_contract = wormhole_contract.sender(alice).governance_contract();
     let expected = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
     assert_eq!(gov_contract, expected);
-
 }
 
-#[test]
-fn test_governance_action_consumed() {
-    let contract = deploy_with_mainnet_guardians();
+#[motsu::test]
+fn test_governance_action_consumed(wormhole_contract: Contract<WormholeContract>, alice: Address) {
+    deploy_with_mainnet_guardians(&wormhole_contract, &alice);
 
     let test_hash = vec![0u8; 32];
-    assert_eq!(contract.governance_action_is_consumed(test_hash), false);
+    assert_eq!(wormhole_contract.sender(alice).governance_action_is_consumed(test_hash), false);
 }
 
-#[test]
-fn test_initialize_contract_like_shell_script() {
-    let mut contract = WormholeContract::default();
+#[motsu::test]
+fn test_initialize_contract_like_shell_script(wormhole_contract: Contract<WormholeContract>, alice: Address) {
     let guardians = current_guardians();
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
     
-    let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+    let result = wormhole_contract.sender(alice).initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
     assert!(result.is_ok(), "Contract initialization should succeed");
 }
 
-#[test]
-fn test_guardian_set_retrieval_current_guardians() {
-    let mut contract = WormholeContract::default();
+#[motsu::test]
+fn test_guardian_set_retrieval_current_guardians(wormhole_contract: Contract<WormholeContract>, alice: Address) {
     let guardians = current_guardians();
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
-    let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+    let result = wormhole_contract.sender(alice).initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
 
-    let guardian_set_result = contract.get_guardian_set(4);
+    let guardian_set_result = wormhole_contract.sender(alice).get_guardian_set(4);
     assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
 
     let guardian_set_bytes = guardian_set_result.unwrap();
-    assert_eq!(guardian_set_bytes.len(), 19 * 20, "Should have 19 guardian addresses (20 bytes each)");
+    assert_eq!(
+        guardian_set_bytes.len(),
+        19 * 20,
+        "Should have 19 guardian addresses (20 bytes each)"
+    );
 
-    assert_eq!(contract.chain_id(), CHAIN_ID, "Chain ID should match shell script value");
+    assert_eq!(wormhole_contract.sender(alice).chain_id(), CHAIN_ID, "Chain ID should match shell script value");
 
-    assert_eq!(contract.governance_chain_id(), GOVERNANCE_CHAIN_ID, "Governance chain ID should match shell script value");
+    assert_eq!(wormhole_contract.sender(alice).governance_chain_id(), GOVERNANCE_CHAIN_ID, "Governance chain ID should match shell script value");
 
-    assert_eq!(contract.governance_contract(), governance_contract, "Governance contract should match shell script value");
+    assert_eq!(wormhole_contract.sender(alice).governance_contract(), governance_contract, "Governance contract should match shell script value");
 
-    assert_eq!(contract.get_current_guardian_set_index(), 4, "Current guardian set index should be 4");
+    assert_eq!(wormhole_contract.sender(alice).get_current_guardian_set_index(), 4, "Current guardian set index should be 4");
 }
 
-#[test]
-fn test_duplicate_verification() {
-    let mut contract = WormholeContract::default();
+#[motsu::test]
+fn test_duplicate_verification(wormhole_contract: Contract<WormholeContract>, alice: Address) {
     let guardians = current_guardians_duplicate();
     let governance_contract = Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
 
-    let result = contract.initialize(guardians.clone(), CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
+    let result = wormhole_contract.sender(alice).initialize(guardians.clone(), 4, CHAIN_ID, GOVERNANCE_CHAIN_ID, governance_contract);
 
-    let guardian_set_result = contract.get_guardian_set(4);
+    let guardian_set_result = wormhole_contract.sender(alice).get_guardian_set(4);
     assert!(guardian_set_result.is_ok(), "Guardian set retrieval should work - contract is initialized");
 
     let test_vaa = create_vaa_bytes("AQAHHHQNAKPLun8KH+IfCb2c9rlKrXV8wDcZUeMtLeoxoJLHAu7kH40xE1IY5uaJLT4PRsWDDv+7GHNT8rDP+4hUaJNHMtkBAvbQ7aUofV+VAoXjfqrU+V4Vzgvkpwuowaj0BMzNTSp2PkKz5BsnfvC7cxVwOw9sJnQfPvN8KrmhA0IXgQdkQDIBA/0sVNcwZm1oic2G6r7c3x5DyEO9sRF2sTDyM4nuiOtaWPbgolaK6iU3yTx2bEzjdKsdVD2z3qs/QReV8ZxtA5MBBKSm2RKacsgdvwwNZPB3Ifw3P2niCAhZA435PkYeZpDBd8GQ4hALy+42lffR+AXJu19pNs+thWSxq7GRxF5oKz8BBYYS1n9/PJOybDhuWS+PI6YU0CFVTC9pTFSFTlMcEpjsUbT+cUKYCcFU63YaeVGUEPmhFYKeUeRhhQ5g2cCPIegABqts6uHMo5hrdXujJHVEqngLCSaQpB2W9I32LcIvKBfxLcx9IZTjxJ36tyNo7VJ6Fu1FbXnLW0lzaSIbmVmlGukABzpn+9z3bHT6g16HeroSW/YWNlZD5Jo6Zuw9/LT4VD0ET3DgFZtzytkWlJJKAuEB26wRHZbzLAKXfRl+j8kylWQACTTiIiCjZxmEUWjWzWe3JvvPKMNRvYkGkdGaQ7bWVvdiZvxoDq1XHB2H7WnqaAU6xY2pLyf6JG+lV+XZ/GEY+7YBDD/NU/C/gNZP9RP+UujaeJFWt2dau+/g2vtnX/gs2sgBf+yMYm6/dFaT0TiJAcG42zqOi24DLpsdVefaUV1G7CABDjmSRpA//pdAOL5ZxEFG1ia7TnwslsgsvVOa4pKUp5HSZv1JEUO6xMDkTOrBBt5vv9n6zYp3tpYHgUB/fZDh/qUBDzHxNtrQuL/n8a2HOY34yqljpBOCigAbHj+xQmu85u8ieUyge/2zqTn8PYMcka3pW1WTzOAOZf1pLHO+oPEfkTMBEGUS9UOAeY6IUabiEtAQ6qnR47WgPPHYSZUtKBkU0JscDgW0cFq47qmet9OCo79183dRDYE0kFIhnJDk/r7Cq4ABEfBBD83OEF2LJKKkJIBL/KBiD/Mjh3jwKXqqj28EJt1lKCYiGlPhqOCqRArydP94c37MSdrrPlkh0bhcFYs3deMAaEhJXwAAAAAABQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAAAAAAAEDRXIAQAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMMN2oOke3QAAAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABu3yoHkAEAAAAAAAAAAAAAAAAPpLFVLLUvQgzfCF8uDxxgOpZXNaAAAAAAAAAAAAAAAAegpThHd29+lMw1dClxrLIhew24EAAAAAAAAAAAAAAAB6ClOEd3b36UzDV0KXGssiF7DbgQAAAAAAAAAAAAAAACdCjdLT3TKk1/fEl+qqIxMNiUkRAA==");
-    let result = contract.parse_and_verify_vm(test_vaa);
+    let result = wormhole_contract.sender(alice).parse_and_verify_vm(test_vaa);
     println!("result: {:?}", result);
     assert!(result.is_err());
 }

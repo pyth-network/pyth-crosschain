@@ -1,6 +1,9 @@
+use std::time::Duration;
+
 use base64::Engine;
-use futures_util::StreamExt;
-use pyth_lazer_client::{AnyResponse, LazerClient};
+use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
+use pyth_lazer_client::client::PythLazerClientBuilder;
+use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::message::{
     EvmMessage, LeEcdsaMessage, LeUnsignedMessage, Message, SolanaMessage,
 };
@@ -9,8 +12,10 @@ use pyth_lazer_protocol::router::{
     Channel, DeliveryFormat, FixedRate, Format, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
     SubscriptionParams, SubscriptionParamsRepr,
 };
-use pyth_lazer_protocol::subscription::{Request, Response, SubscribeRequest, SubscriptionId};
+use pyth_lazer_protocol::subscription::{Response, SubscribeRequest, SubscriptionId};
 use tokio::pin;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 fn get_lazer_access_token() -> String {
     // Place your access token in your env at LAZER_ACCESS_TOKEN or set it here
@@ -20,11 +25,32 @@ fn get_lazer_access_token() -> String {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env()?,
+        )
+        .json()
+        .init();
+
     // Create and start the client
-    let mut client = LazerClient::new(
-        "wss://pyth-lazer.dourolabs.app/v1/stream",
-        &get_lazer_access_token(),
-    )?;
+    let mut client = PythLazerClientBuilder::new(get_lazer_access_token())
+        // Optionally override the default endpoints
+        .with_endpoints(vec![
+            "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
+            "wss://pyth-lazer-1.dourolabs.app/v1/stream".parse()?,
+        ])
+        // Optionally set the number of connections
+        .with_num_connections(4)
+        // Optionally set the backoff strategy
+        .with_backoff(PythLazerExponentialBackoffBuilder::default().build())
+        // Optionally set the timeout for each connection
+        .with_timeout(Duration::from_secs(5))
+        // Optionally set the channel capacity for responses
+        .with_channel_capacity(1000)
+        .build()?;
+
     let stream = client.start().await?;
     pin!(stream);
 
@@ -44,9 +70,7 @@ async fn main() -> anyhow::Result<()> {
                 delivery_format: DeliveryFormat::Json,
                 json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: true,
-                channel: Channel::FixedRate(
-                    FixedRate::from_ms(200).expect("unsupported update rate"),
-                ),
+                channel: Channel::FixedRate(FixedRate::RATE_200_MS),
                 ignore_invalid_feed_ids: false,
             })
             .expect("invalid subscription params"),
@@ -66,9 +90,7 @@ async fn main() -> anyhow::Result<()> {
                 delivery_format: DeliveryFormat::Binary,
                 json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: false,
-                channel: Channel::FixedRate(
-                    FixedRate::from_ms(50).expect("unsupported update rate"),
-                ),
+                channel: Channel::FixedRate(FixedRate::RATE_50_MS),
                 ignore_invalid_feed_ids: false,
             })
             .expect("invalid subscription params"),
@@ -76,16 +98,16 @@ async fn main() -> anyhow::Result<()> {
     ];
 
     for req in subscription_requests {
-        client.subscribe(Request::Subscribe(req)).await?;
+        client.subscribe(req).await?;
     }
 
     println!("Subscribed to price feeds. Waiting for updates...");
 
     // Process the first few updates
     let mut count = 0;
-    while let Some(msg) = stream.next().await {
+    while let Some(msg) = stream.recv().await {
         // The stream gives us base64-encoded binary messages. We need to decode, parse, and verify them.
-        match msg? {
+        match msg {
             AnyResponse::Json(msg) => match msg {
                 Response::StreamUpdated(update) => {
                     println!("Received a JSON update for {:?}", update.subscription_id);
@@ -193,8 +215,6 @@ async fn main() -> anyhow::Result<()> {
         println!("Unsubscribed from {sub_id:?}");
     }
 
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-    client.close().await?;
     Ok(())
 }
 

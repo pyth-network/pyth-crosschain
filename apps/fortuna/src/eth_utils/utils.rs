@@ -8,7 +8,7 @@ use {
     ethers::{
         contract::{ContractCall, ContractError},
         middleware::Middleware,
-        providers::ProviderError,
+        providers::{MiddlewareError, ProviderError},
         signers::Signer,
         types::{
             transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, U256,
@@ -196,7 +196,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
 #[allow(clippy::large_enum_variant)]
 pub enum SubmitTxError<T: Middleware + NonceManaged + 'static> {
-    GasUsageEstimateError(ContractError<T>),
+    GasUsageEstimateError(TypedTransaction, ContractError<T>),
     GasLimitExceeded { estimate: U256, limit: U256 },
     GasPriceEstimateError(<T as Middleware>::Error),
     SubmissionError(TypedTransaction, <T as Middleware>::Error),
@@ -211,8 +211,8 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SubmitTxError::GasUsageEstimateError(e) => {
-                write!(f, "Error estimating gas for reveal: {e:?}")
+            SubmitTxError::GasUsageEstimateError(tx, e) => {
+                write!(f, "Error estimating gas for reveal: Tx:{tx:?}, Error:{e:?}")
             }
             SubmitTxError::GasLimitExceeded { estimate, limit } => write!(
                 f,
@@ -247,13 +247,35 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
     // A value of 100 submits the tx with the same fee as the estimate.
     fee_estimate_multiplier_pct: u64,
 ) -> Result<TransactionReceipt, backoff::Error<SubmitTxError<T>>> {
+    // Estimate the gas *before* filling the transaction. Filling the transaction increments the nonce of the
+    // provider. If we can't send the transaction (because the gas estimation fails), then the nonce will be
+    // out of sync with the one on-chain, causing subsequent transactions to fail.
+    let gas: U256 = call.estimate_gas().await.map_err(|e| {
+        backoff::Error::transient(SubmitTxError::GasUsageEstimateError(call.tx.clone(), e))
+    })?;
+
     let mut transaction = call.tx.clone();
+    // Setting the gas here avoids a redundant call to estimate_gas within the Provider's fill_transaction method.
+    transaction.set_gas(gas);
 
     // manually fill the tx with the gas price info, so we can log the details in case of error
     client
         .fill_transaction(&mut transaction, None)
         .await
-        .map_err(|e| backoff::Error::transient(SubmitTxError::GasPriceEstimateError(e)))?;
+        .map_err(|e| {
+            // If there is revert data, the contract reverted during gas usage estimation.
+            if let Some(e) = e.as_error_response() {
+                if let Some(e) = e.as_revert_data() {
+                    return backoff::Error::transient(SubmitTxError::GasUsageEstimateError(
+                        transaction.clone(),
+                        ContractError::Revert(e.clone()),
+                    ));
+                }
+            }
+
+            // If there is no revert data, there was likely an error during gas price polling.
+            backoff::Error::transient(SubmitTxError::GasPriceEstimateError(e))
+        })?;
 
     // Apply the fee escalation policy. Note: the unwrap_or_default should never default as we have a gas oracle
     // in the client that sets the gas price.

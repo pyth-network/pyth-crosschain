@@ -1,6 +1,6 @@
 library;
 
-use std::{bytes::Bytes, block::timestamp};
+use std::{bytes::Bytes, block::timestamp, bytes_conversions::b256::*};
 
 use ::errors::PythError;
 use ::utils::absolute_of_exponent;
@@ -99,7 +99,7 @@ impl PriceFeed {
         let mut offset = 1u64;
         let (_, slice) = encoded_price_feed.split_at(offset);
         let (price_feed_id, _) = slice.split_at(32);
-        let price_feed_id: PriceFeedId = price_feed_id.into();
+        let price_feed_id: PriceFeedId = b256::from_be_bytes(price_feed_id.clone());
         offset += 32;
         let price = u64::from_be_bytes([
             encoded_price_feed.get(offset).unwrap(),
@@ -186,7 +186,7 @@ impl PriceFeed {
         let mut attestation_index = index + 32;
         let (_, slice) = encoded_payload.split_at(attestation_index);
         let (price_feed_id, _) = slice.split_at(32);
-        let price_feed_id: PriceFeedId = price_feed_id.into();
+        let price_feed_id: PriceFeedId = b256::from_be_bytes(price_feed_id.clone());
         attestation_index += 32;
         let mut price = u64::from_be_bytes([
             encoded_payload.get(attestation_index).unwrap(),
@@ -321,7 +321,7 @@ impl PriceFeed {
 }
 
 impl PriceFeed {
-    pub fn extract_from_merkle_proof(digest: Bytes, encoded_proof: Bytes, offset: u64) -> (u64, self) {
+    pub fn extract_from_merkle_proof(digest: Bytes, encoded_proof: Bytes, offset: u64) -> (u64, Self) {
         // In order to avoid `ref mut` param related MemoryWriteOverlap error
         let mut current_offset = offset;
 

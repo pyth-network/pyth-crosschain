@@ -133,35 +133,39 @@ async function generateVaaInstructionGroups(
 
   // Second write and verify instructions
   const writeSecondPartAndVerifyInstructions: InstructionWithEphemeralSigners[] =
-    [
-      {
-        instruction: await wormhole.methods
-          .writeEncodedVaa({
-            index: VAA_SPLIT_INDEX,
-            data: vaa.subarray(VAA_SPLIT_INDEX),
-          })
-          .accounts({
-            draftVaa: encodedVaaKeypair.publicKey,
-          })
-          .instruction(),
-        signers: [],
-        computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
-      },
-      {
-        instruction: await wormhole.methods
-          .verifyEncodedVaaV1()
-          .accounts({
-            guardianSet: getGuardianSetPda(
-              getGuardianSetIndex(vaa),
-              wormhole.programId,
-            ),
-            draftVaa: encodedVaaKeypair.publicKey,
-          })
-          .instruction(),
-        signers: [],
-        computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
-      },
-    ];
+    [];
+
+  // The second write instruction is only needed if there are more bytes past the split index in the VAA
+  if (vaa.length > VAA_SPLIT_INDEX) {
+    writeSecondPartAndVerifyInstructions.push({
+      instruction: await wormhole.methods
+        .writeEncodedVaa({
+          index: VAA_SPLIT_INDEX,
+          data: vaa.subarray(VAA_SPLIT_INDEX),
+        })
+        .accounts({
+          draftVaa: encodedVaaKeypair.publicKey,
+        })
+        .instruction(),
+      signers: [],
+      computeUnits: WRITE_ENCODED_VAA_COMPUTE_BUDGET,
+    });
+  }
+
+  writeSecondPartAndVerifyInstructions.push({
+    instruction: await wormhole.methods
+      .verifyEncodedVaaV1()
+      .accounts({
+        guardianSet: getGuardianSetPda(
+          getGuardianSetIndex(vaa),
+          wormhole.programId,
+        ),
+        draftVaa: encodedVaaKeypair.publicKey,
+      })
+      .instruction(),
+    signers: [],
+    computeUnits: VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
+  });
 
   // Close instructions
   const closeInstructions: InstructionWithEphemeralSigners[] = [

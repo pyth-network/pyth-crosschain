@@ -1,6 +1,7 @@
 syntax = "proto3";
-package pyth_lazer_transaction;
+package pyth_lazer;
 
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 // if any fields marked as [required] are missing, feed/publisher update will be rejected
@@ -28,7 +29,7 @@ message FeedUpdate {
     // [required] timestamp when this data was first acquired or generated
     optional google.protobuf.Timestamp source_timestamp = 2;
 
-    // [required] one type of update containing specific data 
+    // [required] one type of update containing specific data
     oneof update {
       PriceUpdate price_update = 3;
       FundingRateUpdate funding_rate_update = 4;
@@ -59,4 +60,7 @@ message FundingRateUpdate {
 
     // [optional] perpetual future funding rate
     optional int64 rate = 2;
+
+    // [optional] funding rate update interval
+    optional google.protobuf.Duration funding_rate_interval = 3;
 }

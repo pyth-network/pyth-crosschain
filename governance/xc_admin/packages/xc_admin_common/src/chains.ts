@@ -33,6 +33,7 @@ export const RECEIVER_CHAINS = {
   atlas_testnet: 40007,
   mantis_mainnet: 40008,
   sonic_mainnet: 40009,
+  fogo_testnet: 40010,
 
   cronos: 60001,
   kcc: 60002,
@@ -113,6 +114,7 @@ export const RECEIVER_CHAINS = {
   swellchain: 60083,
   mezo: 60084,
   iota_sui_mainnet: 60085,
+  camp_network: 60086,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

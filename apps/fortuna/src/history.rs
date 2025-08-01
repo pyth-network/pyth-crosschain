@@ -234,7 +234,8 @@ impl History {
     /// Useful for testing.
     pub async fn new_in_memory() -> Result<Self> {
         sqlx::any::install_default_drivers();
-        // Prevent the pool from dropping the cxn, otherwise the database will be deleted
+        // Connect to an in-memory SQLite database
+        // Don't let the pool drop the cxn, otherwise the database will be deleted
         let pool = AnyPoolOptions::new()
             .min_connections(1)
             .max_connections(1)
@@ -242,7 +243,7 @@ impl History {
             .max_lifetime(None)
             .connect("sqlite::memory:")
             .await?;
-        let migrator = migrate!("./migrations");
+        let migrator = migrate!(); // defaults to "./migrations"
         migrator.run(&pool).await?;
         Self::new_with_pool(pool).await
     }
@@ -357,7 +358,18 @@ impl History {
             }
         };
         if let Err(e) = result {
-            tracing::error!("Failed to update request status: {}", e);
+            match e.as_database_error() {
+                Some(db_error) if db_error.is_unique_violation() => {
+                    tracing::info!(
+                        "Failed to insert request, request already exists: Chain ID: {}, Sequence: {}",
+                        network_id,
+                        sequence
+                    );
+                }
+                _ => {
+                    tracing::error!("Failed to update request status: {}", e);
+                }
+            }
         }
     }
 

@@ -101,7 +101,7 @@ where
     )
     .await
     .map_err(|e| {
-        tracing::warn!(
+        tracing::debug!(
             "Error getting price feeds {:?} with update data: {:?}",
             price_ids,
             e

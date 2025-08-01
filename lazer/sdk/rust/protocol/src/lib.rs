@@ -2,6 +2,9 @@
 
 pub mod api;
 pub mod binary_update;
+mod dynamic_value;
+mod feed_kind;
+pub mod jrpc;
 pub mod message;
 pub mod payload;
 pub mod publisher;
@@ -10,6 +13,9 @@ mod serde_price_as_i64;
 mod serde_str;
 pub mod subscription;
 pub mod symbol_state;
+pub mod time;
+
+pub use crate::{dynamic_value::DynamicValue, feed_kind::FeedKind};
 
 #[test]
 fn magics_in_big_endian() {
@@ -23,7 +29,7 @@ fn magics_in_big_endian() {
     };
 
     // The values listed in this test can be used when reading the magic headers in BE format
-    // (e.g. on EVM).
+    // (e.g., on EVM).
 
     assert_eq!(u32::swap_bytes(BINARY_UPDATE_FORMAT_MAGIC), 1937213467);
     assert_eq!(u32::swap_bytes(PAYLOAD_FORMAT_MAGIC), 1976813459);
@@ -44,6 +50,6 @@ fn magics_in_big_endian() {
         LE_UNSIGNED_FORMAT_MAGIC,
     ] {
         // Required to distinguish between byte orders.
-        assert!(u32::swap_bytes(magic) != magic);
+        assert_ne!(u32::swap_bytes(magic), magic);
     }
 }

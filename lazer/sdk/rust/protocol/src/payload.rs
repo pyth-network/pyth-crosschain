@@ -1,8 +1,12 @@
 //! Types representing binary encoding of signable payloads and signature envelopes.
 
+use crate::time::DurationUs;
 use {
-    super::router::{PriceFeedId, PriceFeedProperty, TimestampUs},
-    crate::router::{ChannelId, Price, Rate},
+    super::router::{PriceFeedId, PriceFeedProperty},
+    crate::{
+        router::{ChannelId, Price, Rate},
+        time::TimestampUs,
+    },
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
     serde::{Deserialize, Serialize},
@@ -49,6 +53,7 @@ pub struct AggregatedPriceFeedData {
     pub confidence: Option<Price>,
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
+    pub funding_rate_interval: Option<DurationUs>,
 }
 
 /// First bytes of a payload's encoding
@@ -103,7 +108,7 @@ impl PayloadData {
 
     pub fn serialize<BO: ByteOrder>(&self, mut writer: impl Write) -> anyhow::Result<()> {
         writer.write_u32::<BO>(PAYLOAD_FORMAT_MAGIC)?;
-        writer.write_u64::<BO>(self.timestamp_us.0)?;
+        writer.write_u64::<BO>(self.timestamp_us.as_micros())?;
         writer.write_u8(self.channel_id.0)?;
         writer.write_u8(self.feeds.len().try_into()?)?;
         for feed in &self.feeds {
@@ -162,7 +167,7 @@ impl PayloadData {
         if magic != PAYLOAD_FORMAT_MAGIC {
             bail!("magic mismatch");
         }
-        let timestamp_us = TimestampUs(reader.read_u64::<BO>()?);
+        let timestamp_us = TimestampUs::from_micros(reader.read_u64::<BO>()?);
         let channel_id = ChannelId(reader.read_u8()?);
         let num_feeds = reader.read_u8()?;
         let mut feeds = Vec::with_capacity(num_feeds.into());
@@ -252,7 +257,7 @@ fn write_option_timestamp<BO: ByteOrder>(
     match value {
         Some(value) => {
             writer.write_u8(1)?;
-            writer.write_u64::<BO>(value.0)
+            writer.write_u64::<BO>(value.as_micros())
         }
         None => {
             writer.write_u8(0)?;
@@ -266,7 +271,7 @@ fn read_option_timestamp<BO: ByteOrder>(
 ) -> std::io::Result<Option<TimestampUs>> {
     let present = reader.read_u8()? != 0;
     if present {
-        Ok(Some(TimestampUs(reader.read_u64::<BO>()?)))
+        Ok(Some(TimestampUs::from_micros(reader.read_u64::<BO>()?)))
     } else {
         Ok(None)
     }

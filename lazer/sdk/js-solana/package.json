@@ -1,0 +1,65 @@
+{
+  "name": "@pythnetwork/pyth-lazer-solana-sdk",
+  "version": "0.1.2",
+  "description": "Pyth Lazer Solana SDK",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/esm/index.js"
+    },
+    "require": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/cjs/index.js"
+    }
+  },
+  "scripts": {
+    "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
+    "build:cjs": "swc src -d dist/cjs --strip-leading-paths --copy-files -C module.type=commonjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "build:esm": "swc src -d dist/esm --strip-leading-paths --copy-files -C jsc.experimental.keepImportAttributes=true && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:types": "tsc --project tsconfig.build.json",
+    "fix:lint": "eslint --fix . --max-warnings 0",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:types": "tsc",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write .",
+    "build:docs": "typedoc --out docs/typedoc src"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@swc/cli": "catalog:",
+    "@swc/core": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typedoc": "catalog:",
+    "typescript": "catalog:"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "type": "module",
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js-solana",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "lazer/sdk/js-solana"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@solana/buffer-layout": "catalog:",
+    "@solana/web3.js": "catalog:"
+  }
+}

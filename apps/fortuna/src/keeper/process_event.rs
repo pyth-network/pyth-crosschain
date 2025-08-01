@@ -137,15 +137,17 @@ pub async fn process_event_with_backoff(
     );
     let error_mapper = |num_retries, e| {
         if let backoff::Error::Transient {
-            err: SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)),
+            err: SubmitTxError::GasUsageEstimateError(tx, ContractError::Revert(revert)),
             ..
         } = &e
         {
             if let Ok(PythRandomErrorsErrors::NoSuchRequest(_)) =
                 PythRandomErrorsErrors::decode(revert)
             {
-                let err =
-                    SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert.clone()));
+                let err = SubmitTxError::GasUsageEstimateError(
+                    tx.clone(),
+                    ContractError::Revert(revert.clone()),
+                );
                 // Slow down the retries if the request is not found.
                 // This probably means that the request is already fulfilled via another process.
                 // After 5 retries, we return the error permanently.
@@ -255,13 +257,13 @@ pub async fn process_event_with_backoff(
                     .inc();
                 // Do not display the internal error, it might include RPC details.
                 let reason = match e {
-                    SubmitTxError::GasUsageEstimateError(ContractError::Revert(revert)) => {
+                    SubmitTxError::GasUsageEstimateError(_, ContractError::Revert(revert)) => {
                         format!("Reverted: {revert}")
                     }
                     SubmitTxError::GasLimitExceeded { limit, estimate } => {
                         format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
                     }
-                    SubmitTxError::GasUsageEstimateError(_) => {
+                    SubmitTxError::GasUsageEstimateError(_, _) => {
                         "Unable to estimate gas usage".to_string()
                     }
                     SubmitTxError::GasPriceEstimateError(_) => {

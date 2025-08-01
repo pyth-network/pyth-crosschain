@@ -41,3 +41,10 @@ pub async fn send_text<T: AsyncRead + AsyncWrite + Unpin>(
     })
     .await?
 }
+
+pub async fn send_json<T: AsyncRead + AsyncWrite + Unpin, U: serde::Serialize>(
+    sender: &mut Sender<T>,
+    value: &U,
+) -> anyhow::Result<()> {
+    send_text(sender, &serde_json::to_string(value)?).await
+}

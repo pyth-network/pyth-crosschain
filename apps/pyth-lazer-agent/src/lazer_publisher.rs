@@ -24,7 +24,7 @@ use tokio::{
 };
 use tracing::error;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LazerPublisher {
     sender: Sender<FeedUpdate>,
     pub(crate) is_ready: Arc<AtomicBool>,
@@ -62,7 +62,7 @@ impl LazerPublisher {
         let authorization_token =
             if let Some(authorization_token) = config.authorization_token.clone() {
                 // If authorization_token is configured, use it.
-                authorization_token
+                authorization_token.0
             } else {
                 // Otherwise, use the base64 pubkey.
                 BASE64_STANDARD.encode(signing_key.verifying_key().to_bytes())
@@ -223,6 +223,7 @@ mod tests {
             authorization_token: None,
             publish_keypair_path: PathBuf::from(signing_key_file.path()),
             publish_interval_duration: Duration::from_millis(25),
+            history_service_url: None,
         };
 
         let (relayer_sender, mut relayer_receiver) = broadcast::channel(CHANNEL_CAPACITY);
