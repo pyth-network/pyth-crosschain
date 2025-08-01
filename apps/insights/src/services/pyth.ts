@@ -1,12 +1,13 @@
 import {
   PythHttpClient,
   PythConnection,
-  getPythClusterApiUrl,
   getPythProgramKeyForCluster,
 } from "@pythnetwork/client";
 import type { PythPriceCallback } from "@pythnetwork/client/lib/PythConnection";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
+
+import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../config/isomorphic";
 
 export enum Cluster {
   Pythnet,
@@ -16,6 +17,11 @@ export enum Cluster {
 export const ClusterToName = {
   [Cluster.Pythnet]: "pythnet",
   [Cluster.PythtestConformance]: "pythtest-conformance",
+} as const;
+
+const ClusterToRPC = {
+  [Cluster.Pythnet]: PYTHNET_RPC,
+  [Cluster.PythtestConformance]: PYTHTEST_CONFORMANCE_RPC,
 } as const;
 
 export const CLUSTER_NAMES = ["pythnet", "pythtest-conformance"] as const;
@@ -37,7 +43,7 @@ export const parseCluster = (name: string): Cluster | undefined =>
     : undefined;
 
 const mkConnection = (cluster: Cluster) =>
-  new Connection(getPythClusterApiUrl(ClusterToName[cluster]));
+  new Connection(ClusterToRPC[cluster]);
 
 const connections = {
   [Cluster.Pythnet]: mkConnection(Cluster.Pythnet),
