@@ -192,6 +192,9 @@ pub async fn process_event_with_backoff(
                     &event.user_random_number,
                     &provider_revelation,
                 ),
+                callback_failed: result.revealed_event.callback_failed,
+                callback_return_value: result.revealed_event.callback_return_value,
+                callback_gas_used: result.revealed_event.callback_gas_used,
             };
             history.add(&status);
             tracing::info!(

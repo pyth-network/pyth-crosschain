@@ -1,12 +1,13 @@
 use {
     crate::{
-        chain::ethereum::InstrumentedSignablePythContract, eth_utils::nonce_manager::NonceManaged,
+        chain::ethereum::{InstrumentedSignablePythContract, PythRandomEvents, Revealed2Filter},
+        eth_utils::nonce_manager::NonceManaged,
     },
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
     ethabi::ethereum_types::U64,
     ethers::{
-        contract::{ContractCall, ContractError},
+        contract::{ContractCall, ContractError, EthLogDecode},
         middleware::Middleware,
         providers::{MiddlewareError, ProviderError},
         signers::Signer,
@@ -30,6 +31,7 @@ pub struct SubmitTxResult {
     pub fee_multiplier: u64,
     pub duration: Duration,
     pub receipt: TransactionReceipt,
+    pub revealed_event: Revealed2Filter,
 }
 
 #[derive(Clone, Debug)]
@@ -186,11 +188,26 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
     let duration = start_time.elapsed();
     let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
 
+    let revealed_event: Revealed2Filter = {
+        let mut found_event = None;
+        for log in &success.logs {
+            if let Ok(PythRandomEvents::Revealed2Filter(decoded_event)) =
+                PythRandomEvents::decode_log(&log.clone().into())
+            {
+                found_event = Some(decoded_event);
+                break;
+            }
+        }
+        // A successful reveal will always emit a Revealed v2 event, so theoretically we should never get here.
+        found_event.ok_or_else(|| SubmitTxError::ReceiptError(call.tx.clone(), success.clone()))?
+    };
+
     Ok(SubmitTxResult {
         num_retries,
         fee_multiplier: escalation_policy.get_fee_multiplier_pct(num_retries),
         duration,
         receipt: success,
+        revealed_event,
     })
 }
 
