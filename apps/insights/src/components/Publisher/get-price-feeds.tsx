@@ -4,6 +4,8 @@ import { ClusterToName, getFeedsForPublisher } from "../../services/pyth";
 import { getStatus } from "../../status";
 
 export const getPriceFeeds = async (cluster: Cluster, key: string) => {
+  "use cache"
+
   const [feeds, rankings] = await Promise.all([
     getFeedsForPublisher(cluster, key),
     getRankingsByPublisher(key),
