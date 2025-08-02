@@ -19,3 +19,23 @@ pub mod u256 {
         U256::from_dec_str(s.as_str()).map_err(|err| D::Error::custom(err.to_string()))
     }
 }
+
+pub mod u32 {
+    use serde::{de::Error, Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(n: &u32, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        s.serialize_str(&n.to_string())
+    }
+
+    pub fn deserialize<'de, D>(d: D) -> Result<u32, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = Deserialize::deserialize(d)?;
+        s.parse::<u32>()
+            .map_err(|err| D::Error::custom(err.to_string()))
+    }
+}

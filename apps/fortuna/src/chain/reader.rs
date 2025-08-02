@@ -45,12 +45,12 @@ pub struct EntropyRequestInfo {
 }
 
 #[derive(Clone)]
-pub struct RequestedWithCallbackEvent {
+pub struct RequestedV2Event {
     pub sequence_number: u64,
     pub user_random_number: [u8; 32],
     pub provider_address: Address,
-    pub requestor: Address,
-    pub request: EntropyRequestInfo,
+    pub sender: Address,
+    pub gas_limit: u32,
     pub log_meta: LogMeta,
 }
 
@@ -73,7 +73,7 @@ pub trait EntropyReader: Send + Sync {
         from_block: BlockNumber,
         to_block: BlockNumber,
         provider: Address,
-    ) -> Result<Vec<RequestedWithCallbackEvent>>;
+    ) -> Result<Vec<RequestedV2Event>>;
 
     /// Estimate the gas required to reveal a random number with a callback.
     async fn estimate_reveal_with_callback_gas(
@@ -97,6 +97,8 @@ pub struct Request {
     pub block_number: BlockNumber,
     pub use_blockhash: bool,
     pub callback_status: RequestCallbackStatus,
+    /// The gas limit for the request, in 10k gas units. (i.e., 2 = 20k gas).
+    pub gas_limit_10k: u16,
 }
 
 /// Status values for Request.callback_status
@@ -169,6 +171,7 @@ pub mod mock {
                             block_number: b,
                             use_blockhash: u,
                             callback_status: RequestCallbackStatus::CallbackNotNecessary,
+                            gas_limit_10k: 0,
                         })
                         .collect(),
                 ),
@@ -189,6 +192,7 @@ pub mod mock {
                 block_number,
                 use_blockhash,
                 callback_status: RequestCallbackStatus::CallbackNotNecessary,
+                gas_limit_10k: 0,
             });
             self
         }
@@ -227,7 +231,7 @@ pub mod mock {
             _from_block: BlockNumber,
             _to_block: BlockNumber,
             _provider: Address,
-        ) -> Result<Vec<super::RequestedWithCallbackEvent>> {
+        ) -> Result<Vec<super::RequestedV2Event>> {
             Ok(vec![])
         }
 
