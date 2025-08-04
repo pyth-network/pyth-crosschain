@@ -55,9 +55,11 @@ Note:
 -}
 (cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
     cell chunks = null();
+    cell first_chunk = chunks;
+    cell next_chunk = begin_cell();
     int total_bits_loaded = 0;
     builder current_builder = begin_cell();
-    
+
     while ((~ in_msg_body.slice_empty?()) & (total_bits_loaded < size)) {
         int bits_to_load = min(min(in_msg_body.slice_bits(), MAX_BITS - current_builder.builder_bits()), size - total_bits_loaded);
         current_builder = current_builder.store_slice(in_msg_body~load_bits(bits_to_load));
@@ -70,9 +72,11 @@ Note:
             if (cell_null?(chunks)) {
                 chunks = current_chunk;
             } else {
-                chunks = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(chunks).end_cell();
+                chunks = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(next_chunk).end_cell();
             }
             
+            chunks = next_chunk;
+            next_chunk = begin_cell();
             current_builder = begin_cell();
         }
         
@@ -81,23 +85,7 @@ Note:
         }
     }
     
-    ;; Now reverse the chunks to get correct order - this is still one reversal instead of two
-    cell final_result = null();
-    while (~ cell_null?(chunks)) {
-        slice chunk = chunks.begin_parse();
-        builder cb = begin_cell().store_slice(chunk~load_bits(chunk.slice_bits()));
-        if (~ cell_null?(final_result)) {
-            cb = cb.store_ref(final_result);
-        }
-        final_result = cb.end_cell();
-        if (chunk.slice_refs_empty?()) {
-            chunks = null();
-        } else {
-            chunks = chunk~load_ref();
-        }
-    }
-    
-    return (final_result, in_msg_body);
+    return (first_chunk, in_msg_body);
 }
 
 (int) pubkey_to_eth_address(int x1, int x2) {
