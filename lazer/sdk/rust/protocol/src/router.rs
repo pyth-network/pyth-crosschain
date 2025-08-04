@@ -175,8 +175,8 @@ pub enum PriceFeedProperty {
     Confidence,
     FundingRate,
     FundingTimestamp,
-    // More fields may be added later.
     FundingRateInterval,
+    // More fields may be added later.
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
