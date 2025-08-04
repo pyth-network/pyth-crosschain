@@ -159,7 +159,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     let num_retries = Arc::new(AtomicU64::new(0));
 
-    let success = backoff::future::retry_notify(
+    let receipt = backoff::future::retry_notify(
         backoff,
         || async {
             let num_retries = num_retries.load(std::sync::atomic::Ordering::Relaxed);
@@ -190,7 +190,7 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
 
     let revealed_event: Revealed2Filter = {
         let mut found_event = None;
-        for log in &success.logs {
+        for log in &receipt.logs {
             if let Ok(PythRandomEvents::Revealed2Filter(decoded_event)) =
                 PythRandomEvents::decode_log(&log.clone().into())
             {
@@ -199,14 +199,14 @@ pub async fn submit_tx_with_backoff<T: Middleware + NonceManaged + 'static>(
             }
         }
         // A successful reveal will always emit a Revealed v2 event, so theoretically we should never get here.
-        found_event.ok_or_else(|| SubmitTxError::ReceiptError(call.tx.clone(), success.clone()))?
+        found_event.ok_or_else(|| SubmitTxError::ReceiptError(call.tx.clone(), receipt.clone()))?
     };
 
     Ok(SubmitTxResult {
         num_retries,
         fee_multiplier: escalation_policy.get_fee_multiplier_pct(num_retries),
         duration,
-        receipt: success,
+        receipt,
         revealed_event,
     })
 }
