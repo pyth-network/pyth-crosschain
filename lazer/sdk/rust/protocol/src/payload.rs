@@ -99,9 +99,11 @@ impl PayloadData {
                             }
                             PriceFeedProperty::FundingTimestamp => {
                                 PayloadPropertyValue::FundingTimestamp(feed.funding_timestamp)
-                            },
+                            }
                             PriceFeedProperty::FundingRateInterval => {
-                                PayloadPropertyValue::FundingRateInterval(feed.funding_rate_interval)
+                                PayloadPropertyValue::FundingRateInterval(
+                                    feed.funding_rate_interval,
+                                )
                             }
                         })
                         .collect(),
@@ -151,11 +153,10 @@ impl PayloadData {
                     PayloadPropertyValue::FundingTimestamp(timestamp) => {
                         writer.write_u8(PriceFeedProperty::FundingTimestamp as u8)?;
                         write_option_timestamp::<BO>(&mut writer, *timestamp)?;
-                    },
+                    }
                     &PayloadPropertyValue::FundingRateInterval(interval) => {
                         writer.write_u8(PriceFeedProperty::FundingRateInterval as u8)?;
                         write_option_duration::<BO>(&mut writer, interval)?;
-
                     }
                 }
             }
@@ -209,7 +210,8 @@ impl PayloadData {
                     )?)
                 } else if property == PriceFeedProperty::FundingRateInterval as u8 {
                     PayloadPropertyValue::FundingRateInterval(read_option_interval::<BO>(
-                        &mut reader, )?)
+                        &mut reader,
+                    )?)
                 } else {
                     bail!("unknown property");
                 };

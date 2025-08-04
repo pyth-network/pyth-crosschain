@@ -548,7 +548,7 @@ impl ParsedFeedPayload {
             confidence: None,
             funding_rate: None,
             funding_timestamp: None,
-            funding_rate_interval: None
+            funding_rate_interval: None,
         };
         for &property in properties {
             match property {
