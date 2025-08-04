@@ -54,9 +54,8 @@ Note:
    - Uses direct forward construction to avoid gas-inefficient double reversal
 -}
 (cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
-    cell chunks = null();
-    cell first_chunk = chunks;
-    cell next_chunk = begin_cell();
+    ;; Collect chunks in order as we build them
+    tuple chunk_list = empty_tuple();
     int total_bits_loaded = 0;
     builder current_builder = begin_cell();
 
@@ -67,16 +66,7 @@ Note:
         
         if ((current_builder.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
             cell current_chunk = current_builder.end_cell();
-            
-            ;; Build forward instead of reverse - store current chunk with reference to previous chunks
-            if (cell_null?(chunks)) {
-                chunks = current_chunk;
-            } else {
-                chunks = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(next_chunk).end_cell();
-            }
-            
-            chunks = next_chunk;
-            next_chunk = begin_cell();
+            chunk_list~tpush(current_chunk);
             current_builder = begin_cell();
         }
         
@@ -85,7 +75,24 @@ Note:
         }
     }
     
-    return (first_chunk, in_msg_body);
+    ;; Build forward chain: first chunk → second chunk → third chunk etc
+    cell result = null();
+    int chunk_count = chunk_list.tlen();
+    
+    if (chunk_count > 0) {
+        ;; Start from the last chunk (no references)
+        result = chunk_list.at(chunk_count - 1);
+        
+        ;; Build forward by adding references from earlier chunks to later chunks
+        int i = chunk_count - 2;
+        while (i >= 0) {
+            cell current_chunk = chunk_list.at(i);
+            result = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(result).end_cell();
+            i -= 1;
+        }
+    }
+    
+    return (result, in_msg_body);
 }
 
 (int) pubkey_to_eth_address(int x1, int x2) {
