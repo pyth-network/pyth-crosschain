@@ -1,17 +1,16 @@
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
+import { PublishersCard } from "./publishers-card";
+import { getFeedsCached, getPublishersForFeedCached } from "../../server/pyth";
 import { getRankingsBySymbol } from "../../services/clickhouse";
 import {
   Cluster,
   ClusterToName,
-  getFeeds,
-  getPublishersForFeed,
 } from "../../services/pyth";
 import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
-import { PublishersCard } from "./publishers-card";
 
 type Props = {
   params: Promise<{
@@ -28,8 +27,8 @@ export const Publishers = async ({ params }: Props) => {
     pythnetPublishers,
     pythtestConformancePublishers,
   ] = await Promise.all([
-    getFeeds(Cluster.Pythnet),
-    getFeeds(Cluster.PythtestConformance),
+    getFeedsCached(Cluster.Pythnet),
+    getFeedsCached(Cluster.PythtestConformance),
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
   ]);
@@ -87,7 +86,7 @@ export const PublishersLoading = () => <PublishersCard isLoading />;
 
 const getPublishers = async (cluster: Cluster, symbol: string) => {
   const [publishers, rankings] = await Promise.all([
-    getPublishersForFeed(cluster, symbol),
+    getPublishersForFeedCached(cluster, symbol),
     getRankingsBySymbol(symbol),
   ]);
 
