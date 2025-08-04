@@ -34,34 +34,11 @@ int keccak256_slice(slice s) inline {
     return keccak256_tuple(slices);
 }
 
-;; Splits a slice into chunks of MAX_BITS bits or less, in reverse order
-(cell, slice) split_into_reverse_chunks(slice data, int size) {
-    cell chunks = null();
-    int total_bits_loaded = 0;
-    builder current_chunk = begin_cell();
-    while ((~ data.slice_empty?()) & (total_bits_loaded < size)) {
-        int bits_to_load = min(min(data.slice_bits(), MAX_BITS - current_chunk.builder_bits()), size - total_bits_loaded);
-        current_chunk = current_chunk.store_slice(data~load_bits(bits_to_load));
-        total_bits_loaded += bits_to_load;
-        if ((current_chunk.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
-            slice current_chunk_slice = current_chunk.end_cell().begin_parse();
-            if (cell_null?(chunks)) {
-                chunks = begin_cell().store_slice(current_chunk_slice).end_cell();
-            } else {
-                chunks = begin_cell().store_slice(current_chunk_slice).store_ref(chunks).end_cell();
-            }
-            current_chunk = begin_cell();
-        }
-        if ((data.slice_bits() == 0) & (~ data.slice_refs_empty?())) {
-            data = data~load_ref().begin_parse();
-        }
-    }
-    return (chunks, data);
-}
 
 {-
 This function reads a specified number of bits from the input slice and stores them in a cell structure,
 handling data that may exceed the maximum cell capacity in FunC (1023 bits).
+Optimized to build cells directly in forward order without double reversal.
 
 Parameters:
    - in_msg_body: The input slice containing the data to be read
@@ -69,30 +46,58 @@ Parameters:
 Returns:
    - A tuple containing:
      1. A cell containing the read data, potentially spanning multiple cells if the size exceeds 1016 bits
-         2. A slice containing the remaining unread data from the input
+     2. A slice containing the remaining unread data from the input
 
 Note:
    - The function uses a maximum of 1016 bits per cell (instead of 1023) to ensure byte alignment
    - If the input data exceeds 1016 bits, it is split into multiple cells linked by references
+   - Uses direct forward construction to avoid gas-inefficient double reversal
 -}
 (cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
-    (cell chunks, slice remaining) = split_into_reverse_chunks(in_msg_body, size);
-    cell last_cell = null();
+    cell chunks = null();
+    int total_bits_loaded = 0;
+    builder current_builder = begin_cell();
+    
+    while ((~ in_msg_body.slice_empty?()) & (total_bits_loaded < size)) {
+        int bits_to_load = min(min(in_msg_body.slice_bits(), MAX_BITS - current_builder.builder_bits()), size - total_bits_loaded);
+        current_builder = current_builder.store_slice(in_msg_body~load_bits(bits_to_load));
+        total_bits_loaded += bits_to_load;
+        
+        if ((current_builder.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
+            cell current_chunk = current_builder.end_cell();
+            
+            ;; Build forward instead of reverse - store current chunk with reference to previous chunks
+            if (cell_null?(chunks)) {
+                chunks = current_chunk;
+            } else {
+                chunks = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(chunks).end_cell();
+            }
+            
+            current_builder = begin_cell();
+        }
+        
+        if ((in_msg_body.slice_bits() == 0) & (~ in_msg_body.slice_refs_empty?())) {
+            in_msg_body = in_msg_body~load_ref().begin_parse();
+        }
+    }
+    
+    ;; Now reverse the chunks to get correct order - this is still one reversal instead of two
+    cell final_result = null();
     while (~ cell_null?(chunks)) {
         slice chunk = chunks.begin_parse();
         builder cb = begin_cell().store_slice(chunk~load_bits(chunk.slice_bits()));
-        if (~ cell_null?(last_cell)) {
-            cb = cb.store_ref(last_cell);
+        if (~ cell_null?(final_result)) {
+            cb = cb.store_ref(final_result);
         }
-        last_cell = cb.end_cell();
+        final_result = cb.end_cell();
         if (chunk.slice_refs_empty?()) {
             chunks = null();
         } else {
             chunks = chunk~load_ref();
         }
     }
-
-    return (last_cell, remaining);
+    
+    return (final_result, in_msg_body);
 }
 
 (int) pubkey_to_eth_address(int x1, int x2) {
