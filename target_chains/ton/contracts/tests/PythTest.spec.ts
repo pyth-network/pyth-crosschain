@@ -45,6 +45,19 @@ import {
   HERMES_ETH_UNIQUE_EXPO,
   HERMES_ETH_UNIQUE_PRICE,
   HERMES_ETH_UNIQUE_PUBLISH_TIME,
+  HERMES_SOL_TON_PYTH_USDT_UPDATE,
+  PYTH_PRICE_FEED_ID,
+  SOL_PRICE_FEED_ID,
+  TON_PRICE_FEED_ID,
+  USDT_PRICE_FEED_ID,
+  HERMES_SOL_UNIQUE_PUBLISH_TIME,
+  HERMES_SOL_UNIQUE_PRICE,
+  HERMES_SOL_UNIQUE_CONF,
+  HERMES_SOL_UNIQUE_EXPO,
+  HERMES_USDT_UNIQUE_PRICE,
+  HERMES_USDT_UNIQUE_EXPO,
+  HERMES_USDT_UNIQUE_CONF,
+  HERMES_USDT_UNIQUE_PUBLISH_TIME,
   DOGE_PRICE_FEED_ID,
   SOL_USD_PRICE_FEED_ID,
   PYTH_USD_PRICE_FEED_ID,
@@ -1247,6 +1260,122 @@ describe("PythTest", () => {
     );
   });
 
+  it("should successfully parse price feed updates with more than 3 price feed ids", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParsePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_SOL_TON_PYTH_USDT_UPDATE, "hex"),
+      sentValue,
+      [
+        SOL_PRICE_FEED_ID,
+        TON_PRICE_FEED_ID,
+        PYTH_PRICE_FEED_ID,
+        USDT_PRICE_FEED_ID,
+      ],
+      HERMES_SOL_UNIQUE_PUBLISH_TIME,
+      HERMES_SOL_UNIQUE_PUBLISH_TIME,
+      deployer.address,
+      CUSTOM_PAYLOAD,
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins,
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(5); // OP_PARSE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(4); // We expect SOL, TON, PYTH and USDT price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (SOL)
+    const solCs = currentCell.beginParse();
+    const solPriceId =
+      "0x" + solCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(solPriceId).toBe(SOL_PRICE_FEED_ID);
+
+    const solPriceFeedCell = solCs.loadRef();
+    const solPriceFeedSlice = solPriceFeedCell.beginParse();
+
+    // Verify SOL current price
+    const solCurrentPriceCell = solPriceFeedSlice.loadRef();
+    const solCurrentPrice = solCurrentPriceCell.beginParse();
+    expect(solCurrentPrice.loadInt(64)).toBe(HERMES_SOL_UNIQUE_PRICE);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_CONF);
+    expect(solCurrentPrice.loadInt(32)).toBe(HERMES_SOL_UNIQUE_EXPO);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_PUBLISH_TIME);
+
+    // Move through TON and PYTH price feeds to reach USDT
+    currentCell = solCs.loadRef(); // Move to TON
+    const tonCs = currentCell.beginParse();
+    tonCs.loadUintBig(256); // Skip TON price ID
+    tonCs.loadRef(); // Skip TON price data
+
+    currentCell = tonCs.loadRef(); // Move to PYTH
+    const pythCs = currentCell.beginParse();
+    pythCs.loadUintBig(256); // Skip PYTH price ID
+    pythCs.loadRef(); // Skip PYTH price data
+
+    currentCell = pythCs.loadRef(); // Move to USDT
+    const usdtCs = currentCell.beginParse();
+    const usdtPriceId =
+      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
+
+    const usdtPriceFeedCell = usdtCs.loadRef();
+    const usdtPriceFeedSlice = usdtPriceFeedCell.beginParse();
+
+    // Verify USDT current price
+    const usdtCurrentPriceCell = usdtPriceFeedSlice.loadRef();
+    const usdtCurrentPrice = usdtCurrentPriceCell.beginParse();
+    expect(usdtCurrentPrice.loadInt(64)).toBe(HERMES_USDT_UNIQUE_PRICE);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_CONF);
+    expect(usdtCurrentPrice.loadInt(32)).toBe(HERMES_USDT_UNIQUE_EXPO);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(usdtCs.remainingRefs).toBe(0);
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString(),
+    );
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length),
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex"),
+    );
+  });
+
   it("should successfully parse unique price feed updates", async () => {
     await deployContract();
     await updateGuardianSets(pythTest, deployer);
@@ -1348,6 +1477,122 @@ describe("PythTest", () => {
 
     // Verify this is the end of the chain
     expect(ethCs.remainingRefs).toBe(0);
+
+    // Verify sender address
+    const senderAddress = cs.loadAddress();
+    expect(senderAddress?.toString()).toBe(
+      deployer.getSender().address.toString(),
+    );
+
+    // Verify custom payload
+    const customPayloadCell = cs.loadRef();
+    const customPayloadSlice = customPayloadCell.beginParse();
+    const receivedPayload = Buffer.from(
+      customPayloadSlice.loadBuffer(CUSTOM_PAYLOAD.length),
+    );
+    expect(receivedPayload.toString("hex")).toBe(
+      CUSTOM_PAYLOAD.toString("hex"),
+    );
+  });
+
+  it("should successfully parse unique price feed updates with more than 3 price feed ids", async () => {
+    await deployContract();
+    await updateGuardianSets(pythTest, deployer);
+
+    const sentValue = toNano("1");
+    const result = await pythTest.sendParseUniquePriceFeedUpdates(
+      deployer.getSender(),
+      Buffer.from(HERMES_SOL_TON_PYTH_USDT_UPDATE, "hex"),
+      sentValue,
+      [
+        SOL_PRICE_FEED_ID,
+        TON_PRICE_FEED_ID,
+        PYTH_PRICE_FEED_ID,
+        USDT_PRICE_FEED_ID,
+      ],
+      HERMES_SOL_UNIQUE_PUBLISH_TIME,
+      60,
+      deployer.address,
+      CUSTOM_PAYLOAD,
+    );
+
+    // Verify transaction success and message count
+    expect(result.transactions).toHaveTransaction({
+      from: deployer.address,
+      to: pythTest.address,
+      success: true,
+      outMessagesCount: 1,
+    });
+
+    // Get the output message
+    const outMessage = result.transactions[1].outMessages.values()[0];
+
+    // Verify excess value is returned
+    expect(
+      (outMessage.info as CommonMessageInfoInternal).value.coins,
+    ).toBeGreaterThan(0);
+
+    const cs = outMessage.body.beginParse();
+
+    // Verify message header
+    const op = cs.loadUint(32);
+    expect(op).toBe(6); // OP_PARSE_UNIQUE_PRICE_FEED_UPDATES
+
+    // Verify number of price feeds
+    const numPriceFeeds = cs.loadUint(8);
+    expect(numPriceFeeds).toBe(4); // We expect SOL, TON, PYTH and USDT price feeds
+
+    // Load and verify price feeds
+    const priceFeedsCell = cs.loadRef();
+    let currentCell = priceFeedsCell;
+
+    // First price feed (SOL)
+    const solCs = currentCell.beginParse();
+    const solPriceId =
+      "0x" + solCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(solPriceId).toBe(SOL_PRICE_FEED_ID);
+
+    const solPriceFeedCell = solCs.loadRef();
+    const solPriceFeedSlice = solPriceFeedCell.beginParse();
+
+    // Verify SOL current price
+    const solCurrentPriceCell = solPriceFeedSlice.loadRef();
+    const solCurrentPrice = solCurrentPriceCell.beginParse();
+    expect(solCurrentPrice.loadInt(64)).toBe(HERMES_SOL_UNIQUE_PRICE);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_CONF);
+    expect(solCurrentPrice.loadInt(32)).toBe(HERMES_SOL_UNIQUE_EXPO);
+    expect(solCurrentPrice.loadUint(64)).toBe(HERMES_SOL_UNIQUE_PUBLISH_TIME);
+
+    // Move through TON and PYTH price feeds to reach USDT
+    currentCell = solCs.loadRef(); // Move to TON
+    const tonCs = currentCell.beginParse();
+    tonCs.loadUintBig(256); // Skip TON price ID
+    tonCs.loadRef(); // Skip TON price data
+
+    currentCell = tonCs.loadRef(); // Move to PYTH
+    const pythCs = currentCell.beginParse();
+    pythCs.loadUintBig(256); // Skip PYTH price ID
+    pythCs.loadRef(); // Skip PYTH price data
+
+    currentCell = pythCs.loadRef(); // Move to USDT
+    const usdtCs = currentCell.beginParse();
+    const usdtPriceId =
+      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
+
+    const usdtPriceFeedCell = usdtCs.loadRef();
+    const usdtPriceFeedSlice = usdtPriceFeedCell.beginParse();
+
+    // Verify USDT current price
+    const usdtCurrentPriceCell = usdtPriceFeedSlice.loadRef();
+    const usdtCurrentPrice = usdtCurrentPriceCell.beginParse();
+    expect(usdtCurrentPrice.loadInt(64)).toBe(HERMES_USDT_UNIQUE_PRICE);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_CONF);
+    expect(usdtCurrentPrice.loadInt(32)).toBe(HERMES_USDT_UNIQUE_EXPO);
+    expect(usdtCurrentPrice.loadUint(64)).toBe(HERMES_USDT_UNIQUE_PUBLISH_TIME);
+
+    // Verify this is the end of the chain
+    expect(usdtCs.remainingRefs).toBe(0);
 
     // Verify sender address
     const senderAddress = cs.loadAddress();
@@ -1741,9 +1986,7 @@ describe("PythTest", () => {
       deployer.getSender(),
       Buffer.from(HERMES_UPDATE_1_PRICE_FEED, "hex"),
       sentValue,
-      [
-        BTC_PRICE_FEED_ID,
-      ],
+      [BTC_PRICE_FEED_ID],
       HERMES_1_BTC_PUBLISH_TIME,
       HERMES_1_BTC_PUBLISH_TIME,
       deployer.address,
@@ -1781,12 +2024,23 @@ describe("PythTest", () => {
     let currentCell = priceFeedsCell;
 
     const expectedFeeds = [
-      { id: BTC_PRICE_FEED_ID, price: HERMES_1_BTC_PRICE, conf: HERMES_1_BTC_CONF, expo: HERMES_1_BTC_EXPO, publishTime: HERMES_1_BTC_PUBLISH_TIME, emaPrice: HERMES_1_BTC_EMA_PRICE, emaConf: HERMES_1_BTC_EMA_CONF, emaExpo: HERMES_1_BTC_EMA_EXPO, emaPublishTime: HERMES_1_BTC_EMA_PUBLISH_TIME },
+      {
+        id: BTC_PRICE_FEED_ID,
+        price: HERMES_1_BTC_PRICE,
+        conf: HERMES_1_BTC_CONF,
+        expo: HERMES_1_BTC_EXPO,
+        publishTime: HERMES_1_BTC_PUBLISH_TIME,
+        emaPrice: HERMES_1_BTC_EMA_PRICE,
+        emaConf: HERMES_1_BTC_EMA_CONF,
+        emaExpo: HERMES_1_BTC_EMA_EXPO,
+        emaPublishTime: HERMES_1_BTC_EMA_PUBLISH_TIME,
+      },
     ];
 
     for (let i = 0; i < expectedFeeds.length; i++) {
       const feedCs = currentCell.beginParse();
-      const priceId = "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
+      const priceId =
+        "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
       expect(priceId).toBe(expectedFeeds[i].id);
 
       const priceFeedCell = feedCs.loadRef();
@@ -1883,18 +2137,89 @@ describe("PythTest", () => {
     let currentCell = priceFeedsCell;
 
     const expectedFeeds = [
-      { id: BTC_PRICE_FEED_ID, price: HERMES_7_BTC_PRICE, conf: HERMES_7_BTC_CONF, expo: HERMES_7_BTC_EXPO, publishTime: HERMES_7_BTC_PUBLISH_TIME, emaPrice: HERMES_7_BTC_EMA_PRICE, emaConf: HERMES_7_BTC_EMA_CONF, emaExpo: HERMES_7_BTC_EMA_EXPO, emaPublishTime: HERMES_7_BTC_EMA_PUBLISH_TIME },
-      { id: ETH_PRICE_FEED_ID, price: HERMES_7_ETH_PRICE, conf: HERMES_7_ETH_CONF, expo: HERMES_7_ETH_EXPO, publishTime: HERMES_7_ETH_PUBLISH_TIME, emaPrice: HERMES_7_ETH_EMA_PRICE, emaConf: HERMES_7_ETH_EMA_CONF, emaExpo: HERMES_7_ETH_EMA_EXPO, emaPublishTime: HERMES_7_ETH_EMA_PUBLISH_TIME },
-      { id: DOGE_PRICE_FEED_ID, price: HERMES_7_DOGE_PRICE, conf: HERMES_7_DOGE_CONF, expo: HERMES_7_DOGE_EXPO, publishTime: HERMES_7_DOGE_PUBLISH_TIME, emaPrice: HERMES_7_DOGE_EMA_PRICE, emaConf: HERMES_7_DOGE_EMA_CONF, emaExpo: HERMES_7_DOGE_EMA_EXPO, emaPublishTime: HERMES_7_DOGE_EMA_PUBLISH_TIME },
-      { id: SOL_USD_PRICE_FEED_ID, price: HERMES_7_SOL_PRICE, conf: HERMES_7_SOL_CONF, expo: HERMES_7_SOL_EXPO, publishTime: HERMES_7_SOL_PUBLISH_TIME, emaPrice: HERMES_7_SOL_EMA_PRICE, emaConf: HERMES_7_SOL_EMA_CONF, emaExpo: HERMES_7_SOL_EMA_EXPO, emaPublishTime: HERMES_7_SOL_EMA_PUBLISH_TIME },
-      { id: PYTH_USD_PRICE_FEED_ID, price: HERMES_7_PYTH_PRICE, conf: HERMES_7_PYTH_CONF, expo: HERMES_7_PYTH_EXPO, publishTime: HERMES_7_PYTH_PUBLISH_TIME, emaPrice: HERMES_7_PYTH_EMA_PRICE, emaConf: HERMES_7_PYTH_EMA_CONF, emaExpo: HERMES_7_PYTH_EMA_EXPO, emaPublishTime: HERMES_7_PYTH_EMA_PUBLISH_TIME },
-      { id: ARBITRUM_USD_PRICE_FEED_ID, price: HERMES_7_ARB_PRICE, conf: HERMES_7_ARB_CONF, expo: HERMES_7_ARB_EXPO, publishTime: HERMES_7_ARB_PUBLISH_TIME, emaPrice: HERMES_7_ARB_EMA_PRICE, emaConf: HERMES_7_ARB_EMA_CONF, emaExpo: HERMES_7_ARB_EMA_EXPO, emaPublishTime: HERMES_7_ARB_EMA_PUBLISH_TIME },
-      { id: TON_USD_PRICE_FEED_ID, price: HERMES_7_TON_PRICE, conf: HERMES_7_TON_CONF, expo: HERMES_7_TON_EXPO, publishTime: HERMES_7_TON_PUBLISH_TIME, emaPrice: HERMES_7_TON_EMA_PRICE, emaConf: HERMES_7_TON_EMA_CONF, emaExpo: HERMES_7_TON_EMA_EXPO, emaPublishTime: HERMES_7_TON_EMA_PUBLISH_TIME },
+      {
+        id: BTC_PRICE_FEED_ID,
+        price: HERMES_7_BTC_PRICE,
+        conf: HERMES_7_BTC_CONF,
+        expo: HERMES_7_BTC_EXPO,
+        publishTime: HERMES_7_BTC_PUBLISH_TIME,
+        emaPrice: HERMES_7_BTC_EMA_PRICE,
+        emaConf: HERMES_7_BTC_EMA_CONF,
+        emaExpo: HERMES_7_BTC_EMA_EXPO,
+        emaPublishTime: HERMES_7_BTC_EMA_PUBLISH_TIME,
+      },
+      {
+        id: ETH_PRICE_FEED_ID,
+        price: HERMES_7_ETH_PRICE,
+        conf: HERMES_7_ETH_CONF,
+        expo: HERMES_7_ETH_EXPO,
+        publishTime: HERMES_7_ETH_PUBLISH_TIME,
+        emaPrice: HERMES_7_ETH_EMA_PRICE,
+        emaConf: HERMES_7_ETH_EMA_CONF,
+        emaExpo: HERMES_7_ETH_EMA_EXPO,
+        emaPublishTime: HERMES_7_ETH_EMA_PUBLISH_TIME,
+      },
+      {
+        id: DOGE_PRICE_FEED_ID,
+        price: HERMES_7_DOGE_PRICE,
+        conf: HERMES_7_DOGE_CONF,
+        expo: HERMES_7_DOGE_EXPO,
+        publishTime: HERMES_7_DOGE_PUBLISH_TIME,
+        emaPrice: HERMES_7_DOGE_EMA_PRICE,
+        emaConf: HERMES_7_DOGE_EMA_CONF,
+        emaExpo: HERMES_7_DOGE_EMA_EXPO,
+        emaPublishTime: HERMES_7_DOGE_EMA_PUBLISH_TIME,
+      },
+      {
+        id: SOL_USD_PRICE_FEED_ID,
+        price: HERMES_7_SOL_PRICE,
+        conf: HERMES_7_SOL_CONF,
+        expo: HERMES_7_SOL_EXPO,
+        publishTime: HERMES_7_SOL_PUBLISH_TIME,
+        emaPrice: HERMES_7_SOL_EMA_PRICE,
+        emaConf: HERMES_7_SOL_EMA_CONF,
+        emaExpo: HERMES_7_SOL_EMA_EXPO,
+        emaPublishTime: HERMES_7_SOL_EMA_PUBLISH_TIME,
+      },
+      {
+        id: PYTH_USD_PRICE_FEED_ID,
+        price: HERMES_7_PYTH_PRICE,
+        conf: HERMES_7_PYTH_CONF,
+        expo: HERMES_7_PYTH_EXPO,
+        publishTime: HERMES_7_PYTH_PUBLISH_TIME,
+        emaPrice: HERMES_7_PYTH_EMA_PRICE,
+        emaConf: HERMES_7_PYTH_EMA_CONF,
+        emaExpo: HERMES_7_PYTH_EMA_EXPO,
+        emaPublishTime: HERMES_7_PYTH_EMA_PUBLISH_TIME,
+      },
+      {
+        id: ARBITRUM_USD_PRICE_FEED_ID,
+        price: HERMES_7_ARB_PRICE,
+        conf: HERMES_7_ARB_CONF,
+        expo: HERMES_7_ARB_EXPO,
+        publishTime: HERMES_7_ARB_PUBLISH_TIME,
+        emaPrice: HERMES_7_ARB_EMA_PRICE,
+        emaConf: HERMES_7_ARB_EMA_CONF,
+        emaExpo: HERMES_7_ARB_EMA_EXPO,
+        emaPublishTime: HERMES_7_ARB_EMA_PUBLISH_TIME,
+      },
+      {
+        id: TON_USD_PRICE_FEED_ID,
+        price: HERMES_7_TON_PRICE,
+        conf: HERMES_7_TON_CONF,
+        expo: HERMES_7_TON_EXPO,
+        publishTime: HERMES_7_TON_PUBLISH_TIME,
+        emaPrice: HERMES_7_TON_EMA_PRICE,
+        emaConf: HERMES_7_TON_EMA_CONF,
+        emaExpo: HERMES_7_TON_EMA_EXPO,
+        emaPublishTime: HERMES_7_TON_EMA_PUBLISH_TIME,
+      },
     ];
 
     for (let i = 0; i < expectedFeeds.length; i++) {
       const feedCs = currentCell.beginParse();
-      const priceId = "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
+      const priceId =
+        "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
       expect(priceId).toBe(expectedFeeds[i].id);
 
       const priceFeedCell = feedCs.loadRef();
@@ -1953,7 +2278,7 @@ describe("PythTest", () => {
         PYTH_USD_PRICE_FEED_ID,
         ARBITRUM_USD_PRICE_FEED_ID,
         TON_USD_PRICE_FEED_ID,
-        AAPL_PRICE_FEED_ID
+        AAPL_PRICE_FEED_ID,
       ],
       HERMES_8_ETH_PUBLISH_TIME,
       HERMES_8_ETH_PUBLISH_TIME,
@@ -1992,19 +2317,100 @@ describe("PythTest", () => {
     let currentCell = priceFeedsCell;
 
     const expectedFeeds = [
-      { id: BTC_PRICE_FEED_ID, price: HERMES_8_BTC_PRICE, conf: HERMES_8_BTC_CONF, expo: HERMES_8_BTC_EXPO, publishTime: HERMES_8_BTC_PUBLISH_TIME, emaPrice: HERMES_8_BTC_EMA_PRICE, emaConf: HERMES_8_BTC_EMA_CONF, emaExpo: HERMES_8_BTC_EMA_EXPO, emaPublishTime: HERMES_8_BTC_EMA_PUBLISH_TIME },
-      { id: ETH_PRICE_FEED_ID, price: HERMES_8_ETH_PRICE, conf: HERMES_8_ETH_CONF, expo: HERMES_8_ETH_EXPO, publishTime: HERMES_8_ETH_PUBLISH_TIME, emaPrice: HERMES_8_ETH_EMA_PRICE, emaConf: HERMES_8_ETH_EMA_CONF, emaExpo: HERMES_8_ETH_EMA_EXPO, emaPublishTime: HERMES_8_ETH_EMA_PUBLISH_TIME },
-      { id: DOGE_PRICE_FEED_ID, price: HERMES_8_DOGE_PRICE, conf: HERMES_8_DOGE_CONF, expo: HERMES_8_DOGE_EXPO, publishTime: HERMES_8_DOGE_PUBLISH_TIME, emaPrice: HERMES_8_DOGE_EMA_PRICE, emaConf: HERMES_8_DOGE_EMA_CONF, emaExpo: HERMES_8_DOGE_EMA_EXPO, emaPublishTime: HERMES_8_DOGE_EMA_PUBLISH_TIME },
-      { id: SOL_USD_PRICE_FEED_ID, price: HERMES_8_SOL_PRICE, conf: HERMES_8_SOL_CONF, expo: HERMES_8_SOL_EXPO, publishTime: HERMES_8_SOL_PUBLISH_TIME, emaPrice: HERMES_8_SOL_EMA_PRICE, emaConf: HERMES_8_SOL_EMA_CONF, emaExpo: HERMES_8_SOL_EMA_EXPO, emaPublishTime: HERMES_8_SOL_EMA_PUBLISH_TIME },
-      { id: PYTH_USD_PRICE_FEED_ID, price: HERMES_8_PYTH_PRICE, conf: HERMES_8_PYTH_CONF, expo: HERMES_8_PYTH_EXPO, publishTime: HERMES_8_PYTH_PUBLISH_TIME, emaPrice: HERMES_8_PYTH_EMA_PRICE, emaConf: HERMES_8_PYTH_EMA_CONF, emaExpo: HERMES_8_PYTH_EMA_EXPO, emaPublishTime: HERMES_8_PYTH_EMA_PUBLISH_TIME },
-      { id: ARBITRUM_USD_PRICE_FEED_ID, price: HERMES_8_ARB_PRICE, conf: HERMES_8_ARB_CONF, expo: HERMES_8_ARB_EXPO, publishTime: HERMES_8_ARB_PUBLISH_TIME, emaPrice: HERMES_8_ARB_EMA_PRICE, emaConf: HERMES_8_ARB_EMA_CONF, emaExpo: HERMES_8_ARB_EMA_EXPO, emaPublishTime: HERMES_8_ARB_EMA_PUBLISH_TIME },
-      { id: TON_USD_PRICE_FEED_ID, price: HERMES_8_TON_PRICE, conf: HERMES_8_TON_CONF, expo: HERMES_8_TON_EXPO, publishTime: HERMES_8_TON_PUBLISH_TIME, emaPrice: HERMES_8_TON_EMA_PRICE, emaConf: HERMES_8_TON_EMA_CONF, emaExpo: HERMES_8_TON_EMA_EXPO, emaPublishTime: HERMES_8_TON_EMA_PUBLISH_TIME },
-      { id: AAPL_PRICE_FEED_ID, price: HERMES_8_AAPL_PRICE, conf: HERMES_8_AAPL_CONF, expo: HERMES_8_AAPL_EXPO, publishTime: HERMES_8_AAPL_PUBLISH_TIME, emaPrice: HERMES_8_AAPL_EMA_PRICE, emaConf: HERMES_8_AAPL_EMA_CONF, emaExpo: HERMES_8_AAPL_EMA_EXPO, emaPublishTime: HERMES_8_AAPL_EMA_PUBLISH_TIME },
+      {
+        id: BTC_PRICE_FEED_ID,
+        price: HERMES_8_BTC_PRICE,
+        conf: HERMES_8_BTC_CONF,
+        expo: HERMES_8_BTC_EXPO,
+        publishTime: HERMES_8_BTC_PUBLISH_TIME,
+        emaPrice: HERMES_8_BTC_EMA_PRICE,
+        emaConf: HERMES_8_BTC_EMA_CONF,
+        emaExpo: HERMES_8_BTC_EMA_EXPO,
+        emaPublishTime: HERMES_8_BTC_EMA_PUBLISH_TIME,
+      },
+      {
+        id: ETH_PRICE_FEED_ID,
+        price: HERMES_8_ETH_PRICE,
+        conf: HERMES_8_ETH_CONF,
+        expo: HERMES_8_ETH_EXPO,
+        publishTime: HERMES_8_ETH_PUBLISH_TIME,
+        emaPrice: HERMES_8_ETH_EMA_PRICE,
+        emaConf: HERMES_8_ETH_EMA_CONF,
+        emaExpo: HERMES_8_ETH_EMA_EXPO,
+        emaPublishTime: HERMES_8_ETH_EMA_PUBLISH_TIME,
+      },
+      {
+        id: DOGE_PRICE_FEED_ID,
+        price: HERMES_8_DOGE_PRICE,
+        conf: HERMES_8_DOGE_CONF,
+        expo: HERMES_8_DOGE_EXPO,
+        publishTime: HERMES_8_DOGE_PUBLISH_TIME,
+        emaPrice: HERMES_8_DOGE_EMA_PRICE,
+        emaConf: HERMES_8_DOGE_EMA_CONF,
+        emaExpo: HERMES_8_DOGE_EMA_EXPO,
+        emaPublishTime: HERMES_8_DOGE_EMA_PUBLISH_TIME,
+      },
+      {
+        id: SOL_USD_PRICE_FEED_ID,
+        price: HERMES_8_SOL_PRICE,
+        conf: HERMES_8_SOL_CONF,
+        expo: HERMES_8_SOL_EXPO,
+        publishTime: HERMES_8_SOL_PUBLISH_TIME,
+        emaPrice: HERMES_8_SOL_EMA_PRICE,
+        emaConf: HERMES_8_SOL_EMA_CONF,
+        emaExpo: HERMES_8_SOL_EMA_EXPO,
+        emaPublishTime: HERMES_8_SOL_EMA_PUBLISH_TIME,
+      },
+      {
+        id: PYTH_USD_PRICE_FEED_ID,
+        price: HERMES_8_PYTH_PRICE,
+        conf: HERMES_8_PYTH_CONF,
+        expo: HERMES_8_PYTH_EXPO,
+        publishTime: HERMES_8_PYTH_PUBLISH_TIME,
+        emaPrice: HERMES_8_PYTH_EMA_PRICE,
+        emaConf: HERMES_8_PYTH_EMA_CONF,
+        emaExpo: HERMES_8_PYTH_EMA_EXPO,
+        emaPublishTime: HERMES_8_PYTH_EMA_PUBLISH_TIME,
+      },
+      {
+        id: ARBITRUM_USD_PRICE_FEED_ID,
+        price: HERMES_8_ARB_PRICE,
+        conf: HERMES_8_ARB_CONF,
+        expo: HERMES_8_ARB_EXPO,
+        publishTime: HERMES_8_ARB_PUBLISH_TIME,
+        emaPrice: HERMES_8_ARB_EMA_PRICE,
+        emaConf: HERMES_8_ARB_EMA_CONF,
+        emaExpo: HERMES_8_ARB_EMA_EXPO,
+        emaPublishTime: HERMES_8_ARB_EMA_PUBLISH_TIME,
+      },
+      {
+        id: TON_USD_PRICE_FEED_ID,
+        price: HERMES_8_TON_PRICE,
+        conf: HERMES_8_TON_CONF,
+        expo: HERMES_8_TON_EXPO,
+        publishTime: HERMES_8_TON_PUBLISH_TIME,
+        emaPrice: HERMES_8_TON_EMA_PRICE,
+        emaConf: HERMES_8_TON_EMA_CONF,
+        emaExpo: HERMES_8_TON_EMA_EXPO,
+        emaPublishTime: HERMES_8_TON_EMA_PUBLISH_TIME,
+      },
+      {
+        id: AAPL_PRICE_FEED_ID,
+        price: HERMES_8_AAPL_PRICE,
+        conf: HERMES_8_AAPL_CONF,
+        expo: HERMES_8_AAPL_EXPO,
+        publishTime: HERMES_8_AAPL_PUBLISH_TIME,
+        emaPrice: HERMES_8_AAPL_EMA_PRICE,
+        emaConf: HERMES_8_AAPL_EMA_CONF,
+        emaExpo: HERMES_8_AAPL_EMA_EXPO,
+        emaPublishTime: HERMES_8_AAPL_EMA_PUBLISH_TIME,
+      },
     ];
 
     for (let i = 0; i < expectedFeeds.length; i++) {
       const feedCs = currentCell.beginParse();
-      const priceId = "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
+      const priceId =
+        "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
       expect(priceId).toBe(expectedFeeds[i].id);
 
       const priceFeedCell = feedCs.loadRef();
@@ -2045,7 +2451,6 @@ describe("PythTest", () => {
       CUSTOM_PAYLOAD.toString("hex"),
     );
   });
-
 
   it("should successfully parse price feed updates with a different target address", async () => {
     await deployContract();
