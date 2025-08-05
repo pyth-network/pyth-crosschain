@@ -5,7 +5,7 @@ use {
     ethers::{
         core::utils::hex::ToHex,
         prelude::TxHash,
-        types::{Address, U256},
+        types::{Address, Bytes, U256},
         utils::keccak256,
     },
     serde::Serialize,
@@ -45,6 +45,17 @@ pub enum RequestEntryState {
         #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
         #[serde_as(as = "serde_with::hex::Hex")]
         combined_random_number: [u8; 32],
+        /// Whether the callback to the caller failed.
+        callback_failed: bool,
+        /// Return value from the callback. If the callback failed, this field contains
+        /// the error code and any additional returned data. Note that "" often indicates an out-of-gas error.
+        /// If the callback returns more than 256 bytes, only the first 256 bytes of the callback return value are included.
+        /// NOTE: This field is the raw bytes returned from the callback, not hex-decoded. The client should decode it as needed.
+        callback_return_value: Bytes,
+        /// How much gas the callback used.
+        #[schema(example = "567890", value_type = String)]
+        #[serde(with = "crate::serde::u32")]
+        callback_gas_used: u32,
     },
     Failed {
         reason: String,
@@ -78,8 +89,7 @@ pub struct RequestStatus {
     /// Gas limit for the callback in the smallest unit of the chain.
     /// For example, if the native currency is ETH, this will be in wei.
     #[schema(example = "500000", value_type = String)]
-    #[serde(with = "crate::serde::u256")]
-    pub gas_limit: U256,
+    pub gas_limit: u32,
     /// The user contribution to the random number.
     #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
     #[serde_as(as = "serde_with::hex::Hex")]
@@ -121,6 +131,9 @@ struct RequestRow {
     provider_random_number: Option<String>,
     gas_used: Option<String>,
     info: Option<String>,
+    callback_failed: Option<i64>,
+    callback_return_value: Option<String>,
+    callback_gas_used: Option<String>,
 }
 
 impl TryFrom<RequestRow> for RequestStatus {
@@ -139,7 +152,9 @@ impl TryFrom<RequestRow> for RequestStatus {
         let user_random_number = hex::FromHex::from_hex(row.user_random_number)?;
         let request_tx_hash = row.request_tx_hash.parse()?;
         let sender = row.sender.parse()?;
-        let gas_limit = U256::from_dec_str(&row.gas_limit)
+        let gas_limit = row
+            .gas_limit
+            .parse::<u32>()
             .map_err(|_| anyhow::anyhow!("Failed to parse gas limit"))?;
 
         let state = match row.state.as_str() {
@@ -173,6 +188,18 @@ impl TryFrom<RequestRow> for RequestStatus {
                         &user_random_number,
                         &provider_random_number,
                     ),
+                    //  Sqlx::Any doesn't support boolean types, so we need to convert from integer
+                    //  https://github.com/launchbadge/sqlx/issues/2778
+                    callback_failed: row.callback_failed.unwrap_or(0) == 1,
+                    callback_return_value: row
+                        .callback_return_value
+                        .map(|s| s.parse::<Bytes>().unwrap_or_default())
+                        .unwrap_or_default(),
+                    callback_gas_used: row
+                        .callback_gas_used
+                        .unwrap_or_default()
+                        .parse::<u32>()
+                        .map_err(|_| anyhow::anyhow!("Failed to parse callback_gas_used"))?,
                 }
             }
             "Failed" => RequestEntryState::Failed {
@@ -312,18 +339,29 @@ impl History {
                 provider_random_number,
                 gas_used,
                 combined_random_number: _,
+                callback_failed,
+                callback_return_value,
+                callback_gas_used,
             } => {
                 let reveal_block_number = reveal_block_number as i64;
                 let reveal_tx_hash: String = reveal_tx_hash.encode_hex();
                 let provider_random_number: String = provider_random_number.encode_hex();
                 let gas_used: String = gas_used.to_string();
-                let result = sqlx::query("UPDATE request SET state = $1, last_updated_at = $2, reveal_block_number = $3, reveal_tx_hash = $4, provider_random_number = $5, gas_used = $6 WHERE network_id = $7 AND sequence = $8 AND provider = $9 AND request_tx_hash = $10")
+                //  Sqlx::Any doesn't support boolean types, so we need to convert to integer
+                //  https://github.com/launchbadge/sqlx/issues/2778
+                let callback_failed: i64 = if callback_failed { 1 } else { 0 };
+                let callback_return_value: String = callback_return_value.encode_hex();
+                let callback_gas_used: String = callback_gas_used.to_string();
+                let result = sqlx::query("UPDATE request SET state = $1, last_updated_at = $2, reveal_block_number = $3, reveal_tx_hash = $4, provider_random_number = $5, gas_used = $6, callback_failed = $7, callback_return_value = $8, callback_gas_used = $9 WHERE network_id = $10 AND sequence = $11 AND provider = $12 AND request_tx_hash = $13")
                     .bind("Completed")
                     .bind(new_status.last_updated_at.timestamp())
                     .bind(reveal_block_number)
                     .bind(reveal_tx_hash)
                     .bind(provider_random_number)
                     .bind(gas_used)
+                    .bind(callback_failed)
+                    .bind(callback_return_value)
+                    .bind(callback_gas_used)
                     .bind(network_id)
                     .bind(sequence)
                     .bind(provider.clone())
@@ -646,7 +684,7 @@ mod test {
             user_random_number: [20; 32],
             sender: Address::random(),
             state: RequestEntryState::Pending,
-            gas_limit: U256::from(500_000),
+            gas_limit: 500_000,
         }
     }
 
@@ -665,6 +703,9 @@ mod test {
                 &status.user_random_number,
                 &[40; 32],
             ),
+            callback_failed: false,
+            callback_return_value: Default::default(),
+            callback_gas_used: 100_000,
         };
         History::update_request_status(&history.pool, status.clone()).await;
 
@@ -876,6 +917,9 @@ mod test {
                 &status.user_random_number,
                 &[40; 32],
             ),
+            callback_failed: false,
+            callback_return_value: Default::default(),
+            callback_gas_used: 0,
         };
         History::update_request_status(&history.pool, status.clone()).await;
         let mut failed_status = status.clone();
