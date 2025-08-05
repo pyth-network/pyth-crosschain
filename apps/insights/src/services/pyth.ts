@@ -37,13 +37,6 @@ export const toCluster = (name: (typeof CLUSTER_NAMES)[number]): Cluster => {
   }
 };
 
-let inMemoryData: Awaited<ReturnType<typeof clients[Cluster]["getData"]>> | undefined;
-
-const getData = async (cluster: Cluster) => {
-  inMemoryData ??= await clients[cluster].getData();
-  return inMemoryData;
-};
-
 export const parseCluster = (name: string): Cluster | undefined =>
   (CLUSTER_NAMES as readonly string[]).includes(name)
     ? toCluster(name as (typeof CLUSTER_NAMES)[number])
@@ -63,23 +56,13 @@ const mkClient = (cluster: Cluster) =>
     getPythProgramKeyForCluster(ClusterToName[cluster]),
   );
 
-const clients = {
+export const clients = {
   [Cluster.Pythnet]: mkClient(Cluster.Pythnet),
   [Cluster.PythtestConformance]: mkClient(Cluster.PythtestConformance),
 } as const;
 
-export const getPublishersForFeed = async (
-  cluster: Cluster,
-  symbol: string,
-) => {
-  const data = await getData(cluster);
-  return data.productPrice
-    .get(symbol)
-    ?.priceComponents.map(({ publisher }) => publisher.toBase58());
-};
-
 export const getFeeds = async (cluster: Cluster) => {
-  const data = await getData(cluster);
+  const data = await clients[cluster].getData();
   return priceFeedsSchema.parse(
     data.symbols.map((symbol) => ({
       symbol,
@@ -93,7 +76,7 @@ export const getFeedsForPublisher = async (
   cluster: Cluster,
   publisher: string,
 ) => {
-  const data = await getData(cluster);
+  const data = await clients[cluster].getData();
   return priceFeedsSchema.parse(
     data.symbols
       .filter(
@@ -113,7 +96,7 @@ export const getFeedsForPublisher = async (
   );
 };
 
-const priceFeedsSchema = z.array(
+export const priceFeedsSchema = z.array(
   z.object({
     symbol: z.string(),
     product: z.object({
