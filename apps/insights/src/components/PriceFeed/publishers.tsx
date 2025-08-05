@@ -18,6 +18,22 @@ type Props = {
   }>;
 };
 
+const funcA = async () => {
+  "use cache";
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  return Math.random();
+}
+
+const funcB = async () => {
+  const start = performance.now();
+  const res = await funcA();
+  const end = performance.now();
+  // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
+  console.log(`funcB: ${end - start}ms`);
+  return res;
+}
+
+
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
@@ -31,6 +47,7 @@ export const Publishers = async ({ params }: Props) => {
     getFeedsCached(Cluster.PythtestConformance),
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
+    funcB(),
   ]);
   const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
   const testFeed = pythtestConformanceFeeds.find(
