@@ -1774,7 +1774,7 @@ describe("PythTest", () => {
       ],
       HERMES_1_BTC_PUBLISH_TIME,
       HERMES_1_BTC_PUBLISH_TIME,
-      mockDeployer.address,
+      deployer.address,
       CUSTOM_PAYLOAD,
     );
 
@@ -1805,7 +1805,7 @@ describe("PythTest", () => {
     expect(op).toBe(5);
 
     const numPriceFeeds = cs.loadUint(8);
-    expect(numPriceFeeds).toBe(10);
+    expect(numPriceFeeds).toBe(1);
 
     const priceFeedsCell = cs.loadRef();
     let currentCell = priceFeedsCell;
@@ -1878,7 +1878,7 @@ describe("PythTest", () => {
       ],
       HERMES_7_ETH_PUBLISH_TIME,
       HERMES_7_ETH_PUBLISH_TIME,
-      mockDeployer.address,
+      deployer.address,
       CUSTOM_PAYLOAD,
     );
 
@@ -1909,7 +1909,7 @@ describe("PythTest", () => {
     expect(op).toBe(5);
 
     const numPriceFeeds = cs.loadUint(8);
-    expect(numPriceFeeds).toBe(10);
+    expect(numPriceFeeds).toBe(7);
 
     const priceFeedsCell = cs.loadRef();
     let currentCell = priceFeedsCell;
@@ -1993,9 +1993,26 @@ describe("PythTest", () => {
       ],
       HERMES_10_ETH_PUBLISH_TIME,
       HERMES_10_ETH_PUBLISH_TIME,
-      mockDeployer.address,
+      deployer.address,
       CUSTOM_PAYLOAD,
     );
+
+    console.log(result.transactions.length);
+    console.log("deployer address: " + deployer.address.toString());
+    console.log("pythTest address: " + pythTest.address.toString());
+
+    let i = 0;
+
+    result.transactions.forEach((tx) => {
+      console.log("Transaction " + i.toString() + ":");
+      console.log(tx.inMessage?.info.src?.toString() + " -> " + tx.inMessage?.info.dest?.toString());
+      console.log("out message count: " + tx.outMessages.values().length);
+      if (tx.outMessages.values().length > 0) {
+        console.log("Out Messages: ");
+        console.log(tx.outMessages.values()[0]);
+      }
+      i++;
+    });
 
     expect(result.transactions).toHaveTransaction({
       from: deployer.address,
