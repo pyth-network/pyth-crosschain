@@ -1,5 +1,5 @@
-import type { PriceData, Product } from '@pythnetwork/client';
 import superjson from "superjson";
+import { z } from 'zod';
 
 import { Cluster, clients, getFeeds, priceFeedsSchema } from "../services/pyth";
 
@@ -19,21 +19,28 @@ export const getPublishersForFeed = async (
 const getAllFeeds = async (cluster: Cluster) => {
   "use cache";
   const data = await clients[cluster].getData();
-  return superjson.stringify(data.symbols.filter(
+  
+  return superjson.stringify(priceFeedsSchema.parse(data.symbols.filter(
         (symbol) =>
           data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
       ).map((symbol) => ({
         symbol,
         product: data.productFromSymbol.get(symbol),
-        price: data.productPrice.get(symbol),
-      })))
+        price: {
+          ...data.productPrice.get(symbol),
+          priceComponents: data.productPrice.get(symbol)?.priceComponents.map(({ publisher }) => ({
+            publisher: publisher.toBase58(),
+          })) ?? [],
+        },
+      }))))
 }
 
 export const getFeedsForPublisherCached = async (
   cluster: Cluster,
   publisher: string,
 ) => {
-  const feeds = superjson.parse<{ symbol: string, product: Product, price: PriceData }[]>(await getAllFeeds(cluster));
+  const rawFeeds = await getAllFeeds(cluster);
+  const feeds = superjson.parse<z.infer<typeof priceFeedsSchema>>(rawFeeds);
   return priceFeedsSchema.parse(feeds.filter(({ price }) =>
     price.priceComponents.some(
       (component) => component.publisher.toString() === publisher,

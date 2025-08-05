@@ -67,7 +67,12 @@ export const getFeeds = async (cluster: Cluster) => {
     data.symbols.map((symbol) => ({
       symbol,
       product: data.productFromSymbol.get(symbol),
-      price: data.productPrice.get(symbol),
+      price: {
+          ...data.productPrice.get(symbol),
+          priceComponents: data.productPrice.get(symbol)?.priceComponents.map(({ publisher }) => ({
+            publisher: publisher.toBase58(),
+          })) ?? [],
+        },
     })),
   );
 };
@@ -123,6 +128,9 @@ export const priceFeedsSchema = z.array(
       minPublishers: z.number(),
       lastSlot: z.bigint(),
       validSlot: z.bigint(),
+      priceComponents: z.array(z.object({
+        publisher: z.string(),
+      })),
     }),
   }),
 );
