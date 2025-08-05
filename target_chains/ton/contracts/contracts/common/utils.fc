@@ -77,46 +77,66 @@ Note:
    - If the input data exceeds 1016 bits, it is split into multiple cells linked by references
    - Uses direct forward construction to avoid gas-inefficient double reversal
 -}
-(cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
-    ;; Collect chunks in order as we build them
-    tuple chunk_list = empty_tuple();
-    int total_bits_loaded = 0;
-    builder current_builder = begin_cell();
+;; (cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
+;;     ;; Collect chunks in order as we build them
+;;     tuple chunk_list = empty_tuple();
+;;     int total_bits_loaded = 0;
+;;     builder current_builder = begin_cell();
 
-    while ((~ in_msg_body.slice_empty?()) & (total_bits_loaded < size)) {
-        int bits_to_load = min(min(in_msg_body.slice_bits(), MAX_BITS - current_builder.builder_bits()), size - total_bits_loaded);
-        current_builder = current_builder.store_slice(in_msg_body~load_bits(bits_to_load));
-        total_bits_loaded += bits_to_load;
+;;     while ((~ in_msg_body.slice_empty?()) & (total_bits_loaded < size)) {
+;;         int bits_to_load = min(min(in_msg_body.slice_bits(), MAX_BITS - current_builder.builder_bits()), size - total_bits_loaded);
+;;         current_builder = current_builder.store_slice(in_msg_body~load_bits(bits_to_load));
+;;         total_bits_loaded += bits_to_load;
         
-        if ((current_builder.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
-            cell current_chunk = current_builder.end_cell();
-            chunk_list~tpush(current_chunk);
-            current_builder = begin_cell();
+;;         if ((current_builder.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
+;;             cell current_chunk = current_builder.end_cell();
+;;             chunk_list~tpush(current_chunk);
+;;             current_builder = begin_cell();
+;;         }
+        
+;;         if ((in_msg_body.slice_bits() == 0) & (~ in_msg_body.slice_refs_empty?())) {
+;;             in_msg_body = in_msg_body~load_ref().begin_parse();
+;;         }
+;;     }
+    
+;;     ;; Build forward chain: first chunk → second chunk → third chunk etc
+;;     cell result = null();
+;;     int chunk_count = chunk_list.tlen();
+    
+;;     if (chunk_count > 0) {
+;;         ;; Start from the last chunk (no references)
+;;         result = chunk_list.at(chunk_count - 1);
+        
+;;         ;; Build forward by adding references from earlier chunks to later chunks
+;;         int i = chunk_count - 2;
+;;         while (i >= 0) {
+;;             cell current_chunk = chunk_list.at(i);
+;;             result = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(result).end_cell();
+;;             i -= 1;
+;;         }
+;;     }
+    
+;;     return (result, in_msg_body);
+;; }
+
+(cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
+    (cell chunks, slice remaining) = split_into_reverse_chunks(in_msg_body, size);
+    cell last_cell = null();
+    while (~ cell_null?(chunks)) {
+        slice chunk = chunks.begin_parse();
+        builder cb = begin_cell().store_slice(chunk~load_bits(chunk.slice_bits()));
+        if (~ cell_null?(last_cell)) {
+            cb = cb.store_ref(last_cell);
         }
-        
-        if ((in_msg_body.slice_bits() == 0) & (~ in_msg_body.slice_refs_empty?())) {
-            in_msg_body = in_msg_body~load_ref().begin_parse();
+        last_cell = cb.end_cell();
+        if (chunk.slice_refs_empty?()) {
+            chunks = null();
+        } else {
+            chunks = chunk~load_ref();
         }
     }
-    
-    ;; Build forward chain: first chunk → second chunk → third chunk etc
-    cell result = null();
-    int chunk_count = chunk_list.tlen();
-    
-    if (chunk_count > 0) {
-        ;; Start from the last chunk (no references)
-        result = chunk_list.at(chunk_count - 1);
-        
-        ;; Build forward by adding references from earlier chunks to later chunks
-        int i = chunk_count - 2;
-        while (i >= 0) {
-            cell current_chunk = chunk_list.at(i);
-            result = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(result).end_cell();
-            i -= 1;
-        }
-    }
-    
-    return (result, in_msg_body);
+
+    return (last_cell, remaining);
 }
 
 (int) pubkey_to_eth_address(int x1, int x2) {
