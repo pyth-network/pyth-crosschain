@@ -1,7 +1,7 @@
 import superjson from "superjson";
 import { z } from 'zod';
 
-import { Cluster, clients, getFeeds, priceFeedsSchema } from "../services/pyth";
+import { Cluster, clients, priceFeedsSchema } from "../services/pyth";
 
 export const getPublishersForFeed = async (
   cluster: Cluster,
@@ -16,7 +16,7 @@ export const getPublishersForFeed = async (
   return result;
 };
 
-const getAllFeeds = async (cluster: Cluster) => {
+const getFeeds = async (cluster: Cluster) => {
   "use cache";
   const data = await clients[cluster].getData();
   
@@ -39,7 +39,7 @@ export const getFeedsForPublisherCached = async (
   cluster: Cluster,
   publisher: string,
 ) => {
-  const rawFeeds = await getAllFeeds(cluster);
+  const rawFeeds = await getFeeds(cluster);
   const feeds = superjson.parse<z.infer<typeof priceFeedsSchema>>(rawFeeds);
   return priceFeedsSchema.parse(feeds.filter(({ price }) =>
     price.priceComponents.some(
@@ -50,7 +50,8 @@ export const getFeedsForPublisherCached = async (
 
 export const getFeedsCached = async (cluster: Cluster) => {
   "use cache";
-  return getFeeds(cluster);
+  const rawFeeds = await getFeeds(cluster);
+  return superjson.parse<z.infer<typeof priceFeedsSchema>>(rawFeeds);
 };
 
 export const getPublishersForFeedCached = async (cluster: Cluster, symbol: string) => {

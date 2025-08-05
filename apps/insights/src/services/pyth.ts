@@ -61,46 +61,6 @@ export const clients = {
   [Cluster.PythtestConformance]: mkClient(Cluster.PythtestConformance),
 } as const;
 
-export const getFeeds = async (cluster: Cluster) => {
-  const data = await clients[cluster].getData();
-  return priceFeedsSchema.parse(
-    data.symbols.map((symbol) => ({
-      symbol,
-      product: data.productFromSymbol.get(symbol),
-      price: {
-          ...data.productPrice.get(symbol),
-          priceComponents: data.productPrice.get(symbol)?.priceComponents.map(({ publisher }) => ({
-            publisher: publisher.toBase58(),
-          })) ?? [],
-        },
-    })),
-  );
-};
-
-export const getFeedsForPublisher = async (
-  cluster: Cluster,
-  publisher: string,
-) => {
-  const data = await clients[cluster].getData();
-  return priceFeedsSchema.parse(
-    data.symbols
-      .filter(
-        (symbol) =>
-          data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
-      )
-      .map((symbol) => ({
-        symbol,
-        product: data.productFromSymbol.get(symbol),
-        price: data.productPrice.get(symbol),
-      }))
-      .filter(({ price }) =>
-        price?.priceComponents.some(
-          (component) => component.publisher.toBase58() === publisher,
-        ),
-      ),
-  );
-};
-
 export const priceFeedsSchema = z.array(
   z.object({
     symbol: z.string(),
