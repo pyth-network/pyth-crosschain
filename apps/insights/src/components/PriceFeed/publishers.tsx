@@ -11,6 +11,7 @@ import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { PublishersCard } from "./publishers-card";
+import { funcA, funcAUnstableCache } from "./util";
 
 type Props = {
   params: Promise<{
@@ -18,11 +19,6 @@ type Props = {
   }>;
 };
 
-const funcA = async () => {
-  "use cache";
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  return Math.random();
-}
 
 const funcB = async () => {
   const start = performance.now();
@@ -33,6 +29,14 @@ const funcB = async () => {
   return res;
 }
 
+const funcBUnstableCache = async () => {
+  const start = performance.now();
+  const res = await funcAUnstableCache();
+  const end = performance.now();
+  // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
+  console.log(`funcBUnstableCache: ${end - start}ms`);
+  return res;
+}
 
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
@@ -42,13 +46,19 @@ export const Publishers = async ({ params }: Props) => {
     pythtestConformanceFeeds,
     pythnetPublishers,
     pythtestConformancePublishers,
+    funcRes,
+    funcResUnstableCache,
   ] = await Promise.all([
     getFeedsCached(Cluster.Pythnet),
     getFeedsCached(Cluster.PythtestConformance),
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
     funcB(),
+    funcBUnstableCache(),
   ]);
+
+  // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
+  console.log(funcRes, funcResUnstableCache);
   const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
   const testFeed = pythtestConformanceFeeds.find(
     (feed) => feed.symbol === symbol,
