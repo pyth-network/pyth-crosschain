@@ -66,5 +66,5 @@ enum RejectReason {
     MissingFields = 4;
     InactiveFeedId = 5;
     MarketClosed = 6;
-    Unpermissioned = 7;
+    Unauthorized = 7;
 }
