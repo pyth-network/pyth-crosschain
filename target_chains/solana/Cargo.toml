@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "programs/*",
+    "programs/pyth-entropy",
     "cli/",
     "program_simulator/",
     "pyth_solana_receiver_sdk/",
