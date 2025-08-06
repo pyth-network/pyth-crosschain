@@ -1,6 +1,7 @@
 const config = {
   experimental: {
     useCache: true,
+    cacheComponents: true,
     reactCompiler: true,
   },
 

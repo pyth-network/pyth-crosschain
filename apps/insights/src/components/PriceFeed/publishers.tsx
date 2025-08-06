@@ -11,7 +11,7 @@ import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { PublishersCard } from "./publishers-card";
-import { funcA, funcAUnstableCache } from "./util";
+import { funcA, funcAUnstableCache } from '../../app/actions';
 
 type Props = {
   params: Promise<{

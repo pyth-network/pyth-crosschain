@@ -1,7 +1,11 @@
+'use server';
 import { unstable_cache } from 'next/cache';
+import { unstable_cacheTag as cacheTag } from 'next/cache'
+
 
 export const funcA = async () => {
   "use cache";
+  cacheTag('func-a-tag')
   await new Promise((resolve) => setTimeout(resolve, 2000));
   return Math.random();
 }
@@ -14,6 +18,6 @@ const rand = async () => {
 
 export const funcAUnstableCache = unstable_cache(
   rand,
-  [], // cache keys here; leave [] for simple global cache
-  { revalidate: 60 }, // revalidate period in seconds, or use false for infinite
+  ['specific-key'], // cache keys here; leave [] for simple global cache
+  { revalidate: 600 }, // revalidate period in seconds, or use false for infinite
 );
