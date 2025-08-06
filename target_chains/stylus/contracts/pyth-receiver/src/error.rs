@@ -28,6 +28,7 @@ pub enum PythReceiverError {
     GovernanceMessageAlreadyExecuted,
     InvalidWormholeAddressToSet,
     WormholeUninitialized,
+    AlreadyInitialized,
 }
 
 impl core::fmt::Debug for PythReceiverError {
@@ -71,6 +72,7 @@ impl core::fmt::Debug for PythReceiverError {
             PythReceiverError::WormholeUninitialized => {
                 write!(f, "Wormhole is uninitialized, please set the Wormhole address and initialize the contract first")
             }
+            PythReceiverError::AlreadyInitialized => write!(f, "AlreadyInitialized"),
         }
     }
 }
@@ -118,6 +120,7 @@ impl core::fmt::Display for PythReceiverError {
             PythReceiverError::WormholeUninitialized => {
                 write!(f, "Wormhole is uninitialized, please set the Wormhole address and initialize the contract first")
             }
+            PythReceiverError::AlreadyInitialized => write!(f, "Contract is already initialized"),
         }
     }
 }
@@ -151,6 +154,7 @@ impl From<PythReceiverError> for Vec<u8> {
             PythReceiverError::GovernanceMessageAlreadyExecuted => 24,
             PythReceiverError::InvalidWormholeAddressToSet => 25,
             PythReceiverError::WormholeUninitialized => 26,
+            PythReceiverError::AlreadyInitialized => 27,
         }]
     }
 }

@@ -49,25 +49,11 @@ mod test {
     }
 
     #[cfg(test)]
-    fn pyth_wormhole_init(
+    fn pyth_init(
         pyth_contract: &Contract<PythReceiver>,
         wormhole_contract: &Contract<WormholeContract>,
         alice: &Address,
-    ) {
-        let guardians = current_guardians();
-        let governance_contract =
-            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
-        wormhole_contract
-            .sender(*alice)
-            .initialize(
-                guardians,
-                4,
-                CHAIN_ID,
-                GOVERNANCE_CHAIN_ID,
-                governance_contract,
-            )
-            .unwrap();
-
+    ) -> Result<(), PythReceiverError> {
         let single_update_fee = SINGLE_UPDATE_FEE_IN_WEI;
         let valid_time_period = U256::from(3600u64);
 
@@ -87,7 +73,33 @@ mod test {
             governance_chain_id,
             governance_emitter_address,
             governance_initial_sequence,
-        );
+        )?;
+
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn pyth_wormhole_init(
+        pyth_contract: &Contract<PythReceiver>,
+        wormhole_contract: &Contract<WormholeContract>,
+        alice: &Address,
+    ) -> Result<(), PythReceiverError> {
+        let guardians = current_guardians();
+        let governance_contract =
+            Address::from_slice(&GOVERNANCE_CONTRACT.to_be_bytes::<32>()[12..32]);
+        wormhole_contract
+            .sender(*alice)
+            .initialize(
+                guardians,
+                4,
+                CHAIN_ID,
+                GOVERNANCE_CHAIN_ID,
+                governance_contract,
+            )
+            .unwrap();
+
+        pyth_init(pyth_contract, wormhole_contract, alice)?;
+        Ok(())
     }
 
     #[motsu::test]
@@ -96,7 +108,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data = ban_usd_update();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
@@ -121,7 +133,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         alice.fund(U256::from(200));
 
@@ -142,7 +154,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data1 = ban_usd_update();
         let update_fee1 = mock_get_update_fee(update_data1.clone()).unwrap();
@@ -175,7 +187,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let price_result = pyth_contract
             .sender(alice)
@@ -194,7 +206,7 @@ mod test {
         alice: Address,
     ) {
         MockClock::set_time(Duration::from_secs(1761573860)); // less than good_update2().timestamp + 1s
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let random_id: [u8; 32] = [
             0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc,
@@ -219,7 +231,7 @@ mod test {
         alice: Address,
     ) {
         MockClock::set_time(Duration::from_secs(1761573860));
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data = btc_usd_update();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
@@ -245,7 +257,7 @@ mod test {
         alice: Address,
     ) {
         MockClock::set_time(Duration::from_secs(1761573860));
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data = btc_usd_update();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
@@ -274,7 +286,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data = multiple_updates_diff_vaa();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
@@ -311,7 +323,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         assert!(!pyth_contract
             .sender(alice)
@@ -338,7 +350,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let price_result = pyth_contract
             .sender(alice)
@@ -357,7 +369,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data = ban_usd_update();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
@@ -384,7 +396,7 @@ mod test {
         wormhole_contract: Contract<WormholeContract>,
         alice: Address,
     ) {
-        pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
 
         let update_data = multiple_updates_diff_vaa();
         let update_fee = mock_get_update_fee(update_data.clone()).unwrap();
@@ -415,6 +427,23 @@ mod test {
         assert_eq!(
             price_result2.unwrap(),
             multiple_updates_diff_vaa_results_full()[1]
+        );
+    }
+
+    #[motsu::test]
+    fn test_double_initialization_reverts(
+        pyth_contract: Contract<PythReceiver>,
+        wormhole_contract: Contract<WormholeContract>,
+        alice: Address,
+    ) {
+        let _ = pyth_wormhole_init(&pyth_contract, &wormhole_contract, &alice);
+
+        let double_init = pyth_init(&pyth_contract, &wormhole_contract, &alice);
+
+        assert!(double_init.is_err());
+        assert_eq!(
+            double_init.unwrap_err(),
+            PythReceiverError::AlreadyInitialized
         );
     }
 }
