@@ -1,5 +1,8 @@
 //! WebSocket JSON protocol types for the API the router provides to consumers and publishers.
 
+#[cfg(test)]
+mod tests;
+
 use {
     crate::{
         payload::AggregatedPriceFeedData,
@@ -16,6 +19,7 @@ use {
         num::NonZeroI64,
         ops::{Add, Deref, DerefMut, Div, Sub},
     },
+    thiserror::Error,
 };
 
 #[derive(
@@ -66,37 +70,67 @@ impl Rate {
     }
 }
 
+#[derive(Debug, Error)]
+#[error("zero price is unsupported")]
+pub struct ZeroPriceUnsupported(());
+
+#[derive(Debug, Error)]
+#[error("overflow")]
+pub struct Overflow(());
+
+#[derive(Debug, Error)]
+pub enum PriceConversionError {
+    #[error("decimal parse error: {0}")]
+    DecimalParse(#[from] rust_decimal::Error),
+    #[error("price value is more precise than available exponent")]
+    TooPrecise,
+    #[error("zero price is unsupported")]
+    ZeroPriceUnsupported,
+    #[error("overflow")]
+    Overflow,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[repr(transparent)]
 pub struct Price(pub NonZeroI64);
 
 impl Price {
-    pub fn from_integer(value: i64, exponent: u32) -> anyhow::Result<Price> {
-        let coef = 10i64.checked_pow(exponent).context("overflow")?;
-        let value = value.checked_mul(coef).context("overflow")?;
-        let value = NonZeroI64::new(value).context("zero price is unsupported")?;
+    pub fn from_integer(mantissa: i64, exponent: u32) -> Result<Price, PriceConversionError> {
+        let coef = 10i64
+            .checked_pow(exponent)
+            .ok_or(PriceConversionError::Overflow)?;
+        let value = mantissa
+            .checked_mul(coef)
+            .ok_or(PriceConversionError::Overflow)?;
+        let value = NonZeroI64::new(value).ok_or(PriceConversionError::ZeroPriceUnsupported)?;
         Ok(Self(value))
     }
 
-    pub fn parse_str(value: &str, exponent: u32) -> anyhow::Result<Price> {
-        let value: Decimal = value.parse()?;
-        let coef = 10i64.checked_pow(exponent).context("overflow")?;
-        let coef = Decimal::from_i64(coef).context("overflow")?;
-        let value = value.checked_mul(coef).context("overflow")?;
+    pub fn parse_str(mantissa: &str, exponent: u32) -> Result<Price, PriceConversionError> {
+        let value: Decimal = mantissa.parse()?;
+        let coef = 10i64
+            .checked_pow(exponent)
+            .ok_or(PriceConversionError::Overflow)?;
+        let coef = Decimal::from_i64(coef).ok_or(PriceConversionError::Overflow)?;
+        let value = value
+            .checked_mul(coef)
+            .ok_or(PriceConversionError::Overflow)?;
         if !value.is_integer() {
-            bail!("price value is more precise than available exponent");
+            return Err(PriceConversionError::TooPrecise);
         }
-        let value: i64 = value.try_into().context("overflow")?;
-        let value = NonZeroI64::new(value).context("zero price is unsupported")?;
+        let value: i64 = value
+            .try_into()
+            .map_err(|_| PriceConversionError::Overflow)?;
+        let value = NonZeroI64::new(value).ok_or(PriceConversionError::Overflow)?;
         Ok(Self(value))
     }
 
-    pub fn new(value: i64) -> anyhow::Result<Self> {
-        let value = NonZeroI64::new(value).context("zero price is unsupported")?;
+    pub fn new(mantissa: i64) -> Result<Self, ZeroPriceUnsupported> {
+        let value = NonZeroI64::new(mantissa).ok_or(ZeroPriceUnsupported(()))?;
         Ok(Self(value))
     }
 
-    pub fn into_inner(self) -> NonZeroI64 {
+    pub fn mantissa(self) -> NonZeroI64 {
         self.0
     }
 
@@ -104,9 +138,9 @@ impl Price {
         Ok(self.0.get() as f64 / 10i64.checked_pow(exponent).context("overflow")? as f64)
     }
 
-    pub fn from_f64(value: f64, exponent: u32) -> anyhow::Result<Self> {
-        let value = (value * 10f64.powi(exponent as i32)) as i64;
-        let value = NonZeroI64::new(value).context("zero price is unsupported")?;
+    pub fn from_f64(mantissa: f64, exponent: u32) -> Result<Self, ZeroPriceUnsupported> {
+        let value = (mantissa * 10f64.powi(exponent as i32)) as i64;
+        let value = NonZeroI64::new(value).ok_or(ZeroPriceUnsupported(()))?;
         Ok(Self(value))
     }
 
