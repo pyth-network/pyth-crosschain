@@ -9,7 +9,7 @@ use {
         pubkey::Pubkey,
         signature::Keypair,
         signer::Signer,
-        system_instruction, system_program, sysvar,
+        sysvar,
         transaction::{Transaction, TransactionError},
     },
     std::env,
@@ -44,8 +44,12 @@ impl Setup {
     async fn with_program_test(program_test: ProgramTest) -> Self {
         let (banks_client, payer, recent_blockhash) = program_test.start().await;
         let mut setup = Self {
-            treasury: Pubkey::create_with_seed(&payer.pubkey(), "treasury", &system_program::ID)
-                .unwrap(),
+            treasury: Pubkey::create_with_seed(
+                &payer.pubkey(),
+                "treasury",
+                &solana_system_interface::program::ID,
+            )
+            .unwrap(),
             banks_client,
             payer,
             recent_blockhash,
@@ -60,15 +64,17 @@ impl Setup {
 
     async fn create_treasury(&mut self) {
         let mut transaction_create_treasury = Transaction::new_with_payer(
-            &[system_instruction::create_account_with_seed(
-                &self.payer.pubkey(),
-                &self.treasury,
-                &self.payer.pubkey(),
-                "treasury",
-                10_000_000,
-                0,
-                &system_program::ID,
-            )],
+            &[
+                solana_system_interface::instruction::create_account_with_seed(
+                    &self.payer.pubkey(),
+                    &self.treasury,
+                    &self.payer.pubkey(),
+                    "treasury",
+                    10_000_000,
+                    0,
+                    &solana_system_interface::program::ID,
+                ),
+            ],
             Some(&self.payer.pubkey()),
         );
         transaction_create_treasury.sign(&[&self.payer], self.recent_blockhash);
@@ -90,7 +96,7 @@ impl Setup {
                 vec![
                     AccountMeta::new(self.payer.pubkey(), true),
                     AccountMeta::new(pyth_lazer_solana_contract::STORAGE_ID, false),
-                    AccountMeta::new_readonly(system_program::ID, false),
+                    AccountMeta::new_readonly(solana_system_interface::program::ID, false),
                 ],
             )],
             Some(&self.payer.pubkey()),
@@ -204,7 +210,7 @@ impl Setup {
                         AccountMeta::new(self.payer.pubkey(), true),
                         AccountMeta::new_readonly(pyth_lazer_solana_contract::STORAGE_ID, false),
                         AccountMeta::new(self.treasury, false),
-                        AccountMeta::new_readonly(system_program::ID, false),
+                        AccountMeta::new_readonly(solana_system_interface::program::ID, false),
                         AccountMeta::new_readonly(sysvar::instructions::ID, false),
                     ],
                 ),
@@ -237,7 +243,7 @@ impl Setup {
                     AccountMeta::new(self.payer.pubkey(), true),
                     AccountMeta::new_readonly(pyth_lazer_solana_contract::STORAGE_ID, false),
                     AccountMeta::new(self.treasury, false),
-                    AccountMeta::new_readonly(system_program::ID, false),
+                    AccountMeta::new_readonly(solana_system_interface::program::ID, false),
                 ],
             )],
             Some(&self.payer.pubkey()),

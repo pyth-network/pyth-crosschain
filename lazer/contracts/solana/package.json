@@ -5,12 +5,12 @@
   "scripts": {
     "fix:format": "prettier --write **/*.*",
     "test:format": "prettier --check **/*.*",
-    "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor test",
+    "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" anchor test",
     "setup": "pnpm ts-node scripts/setup.ts",
     "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1",
+    "@coral-xyz/anchor": "^0.31.1",
     "@pythnetwork/pyth-lazer-sdk": "workspace:*",
     "@solana/web3.js": "^1.98.0",
     "@solana/buffer-layout": "^4.0.1"
