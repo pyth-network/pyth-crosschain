@@ -62,6 +62,7 @@ int keccak256_slice(slice s) inline {
 {-
 This function reads a specified number of bits from the input slice and stores them in a cell structure,
 handling data that may exceed the maximum cell capacity in FunC (1023 bits).
+Optimized to build cells directly in forward order without double reversal.
 
 Parameters:
    - in_msg_body: The input slice containing the data to be read
@@ -69,31 +70,55 @@ Parameters:
 Returns:
    - A tuple containing:
      1. A cell containing the read data, potentially spanning multiple cells if the size exceeds 1016 bits
-         2. A slice containing the remaining unread data from the input
+     2. A slice containing the remaining unread data from the input
 
 Note:
    - The function uses a maximum of 1016 bits per cell (instead of 1023) to ensure byte alignment
    - If the input data exceeds 1016 bits, it is split into multiple cells linked by references
+   - Uses direct forward construction to avoid gas-inefficient double reversal
 -}
 (cell, slice) read_and_store_large_data(slice in_msg_body, int size) {
-    (cell chunks, slice remaining) = split_into_reverse_chunks(in_msg_body, size);
-    cell last_cell = null();
-    while (~ cell_null?(chunks)) {
-        slice chunk = chunks.begin_parse();
-        builder cb = begin_cell().store_slice(chunk~load_bits(chunk.slice_bits()));
-        if (~ cell_null?(last_cell)) {
-            cb = cb.store_ref(last_cell);
+    ;; Collect chunks in order as we build them
+    tuple chunk_list = empty_tuple();
+    int total_bits_loaded = 0;
+    builder current_builder = begin_cell();
+
+    while ((~ in_msg_body.slice_empty?()) & (total_bits_loaded < size)) {
+        int bits_to_load = min(min(in_msg_body.slice_bits(), MAX_BITS - current_builder.builder_bits()), size - total_bits_loaded);
+        current_builder = current_builder.store_slice(in_msg_body~load_bits(bits_to_load));
+        total_bits_loaded += bits_to_load;
+        
+        if ((current_builder.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
+            cell current_chunk = current_builder.end_cell();
+            chunk_list~tpush(current_chunk);
+            current_builder = begin_cell();
         }
-        last_cell = cb.end_cell();
-        if (chunk.slice_refs_empty?()) {
-            chunks = null();
-        } else {
-            chunks = chunk~load_ref();
+        
+        if ((in_msg_body.slice_bits() == 0) & (~ in_msg_body.slice_refs_empty?())) {
+            in_msg_body = in_msg_body~load_ref().begin_parse();
         }
     }
-
-    return (last_cell, remaining);
+    
+    ;; Build forward chain: first chunk → second chunk → third chunk etc
+    cell result = null();
+    int chunk_count = chunk_list.tlen();
+    
+    if (chunk_count > 0) {
+        ;; Start from the last chunk (no references)
+        result = chunk_list.at(chunk_count - 1);
+        
+        ;; Build forward by adding references from earlier chunks to later chunks
+        int i = chunk_count - 2;
+        while (i >= 0) {
+            cell current_chunk = chunk_list.at(i);
+            result = begin_cell().store_slice(current_chunk.begin_parse()).store_ref(result).end_cell();
+            i -= 1;
+        }
+    }
+    
+    return (result, in_msg_body);
 }
+
 
 (int) pubkey_to_eth_address(int x1, int x2) {
     slice pubkey = begin_cell()
