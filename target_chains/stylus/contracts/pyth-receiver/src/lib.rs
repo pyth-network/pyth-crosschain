@@ -80,6 +80,7 @@ pub struct PythReceiver {
     pub governance_data_source_index: StorageUint<32, 1>,
     pub latest_price_info: StorageMap<FixedBytes<32>, PriceFeedStorage>,
     pub transaction_fee_in_wei: StorageU256,
+    pub initialized: StorageBool,
 }
 
 #[public]
@@ -94,7 +95,10 @@ impl PythReceiver {
         governance_emitter_chain_id: u16,
         governance_emitter_address: [u8; 32],
         governance_initial_sequence: u64,
-    ) {
+    ) -> Result<(), PythReceiverError> {
+        if self.initialized.get() {
+            return Err(PythReceiverError::AlreadyInitialized.into());
+        }
         self.wormhole.set(wormhole);
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
         self.valid_time_period_seconds
@@ -123,6 +127,8 @@ impl PythReceiver {
 
             self.is_valid_data_source.setter(data_source_key).set(true);
         }
+        self.initialized.set(true);
+        Ok(())
     }
 
     pub fn price_feed_exists(&self, id: [u8; 32]) -> bool {
