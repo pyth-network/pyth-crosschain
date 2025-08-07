@@ -1,23 +1,73 @@
-//! Protocol types.
+//! Lazer type definitions and utilities.
 
+/// Types describing Lazer HTTP and WebSocket APIs.
 pub mod api;
+/// Binary delivery format for WebSocket.
 pub mod binary_update;
 mod dynamic_value;
 mod feed_kind;
+/// Lazer Agent JSON-RPC API.
 pub mod jrpc;
+/// Types describing Lazer's verifiable messages containing signature and payload.
 pub mod message;
+/// Types describing Lazer's message payload.
 pub mod payload;
+mod price;
+/// Legacy publisher API.
 pub mod publisher;
-pub mod router;
+mod rate;
 mod serde_price_as_i64;
 mod serde_str;
-pub mod subscription;
-pub mod symbol_state;
+mod symbol_state;
+/// Lazer's types for time representation.
 pub mod time;
-pub mod price;
-pub mod rate;
 
-pub use crate::{dynamic_value::DynamicValue, feed_kind::FeedKind};
+use derive_more::derive::{From, Into};
+use serde::{Deserialize, Serialize};
+
+pub use crate::{
+    dynamic_value::DynamicValue,
+    feed_kind::FeedKind,
+    price::{Price, PriceError},
+    rate::{Rate, RateError},
+    symbol_state::SymbolState,
+};
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
+pub struct PublisherId(pub u16);
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
+pub struct PriceFeedId(pub u32);
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
+pub struct ChannelId(pub u8);
+
+impl ChannelId {
+    pub const REAL_TIME: ChannelId = ChannelId(1);
+    pub const FIXED_RATE_50: ChannelId = ChannelId(2);
+    pub const FIXED_RATE_200: ChannelId = ChannelId(3);
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PriceFeedProperty {
+    Price,
+    BestBidPrice,
+    BestAskPrice,
+    PublisherCount,
+    Exponent,
+    Confidence,
+    FundingRate,
+    FundingTimestamp,
+    FundingRateInterval,
+    // More fields may be added later.
+}
 
 #[test]
 fn magics_in_big_endian() {

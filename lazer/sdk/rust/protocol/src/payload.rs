@@ -1,9 +1,12 @@
 //! Types representing binary encoding of signable payloads and signature envelopes.
 
-use crate::{price::Price, rate::Rate, time::DurationUs};
+use crate::{
+    price::Price,
+    rate::Rate,
+    time::{DurationUs, TimestampUs},
+    ChannelId, PriceFeedId, PriceFeedProperty,
+};
 use {
-    super::router::{PriceFeedId, PriceFeedProperty},
-    crate::{router::ChannelId, time::TimestampUs},
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
     serde::{Deserialize, Serialize},

@@ -2,9 +2,7 @@ use std::time::Duration;
 
 use backoff::{backoff::Backoff, ExponentialBackoff};
 use futures_util::StreamExt;
-use pyth_lazer_protocol::subscription::{
-    Request, SubscribeRequest, SubscriptionId, UnsubscribeRequest,
-};
+use pyth_lazer_protocol::api::{SubscribeRequest, SubscriptionId, UnsubscribeRequest, WsRequest};
 use tokio::{pin, select, sync::mpsc, time::Instant};
 use tracing::{error, info, warn};
 use url::Url;
@@ -18,7 +16,7 @@ use anyhow::{bail, Context, Result};
 const BACKOFF_RESET_DURATION: Duration = Duration::from_secs(10);
 
 pub struct PythLazerResilientWSConnection {
-    request_sender: mpsc::Sender<Request>,
+    request_sender: mpsc::Sender<WsRequest>,
 }
 
 impl PythLazerResilientWSConnection {
@@ -53,7 +51,7 @@ impl PythLazerResilientWSConnection {
 
     pub async fn subscribe(&mut self, request: SubscribeRequest) -> Result<()> {
         self.request_sender
-            .send(Request::Subscribe(request))
+            .send(WsRequest::Subscribe(request))
             .await
             .context("Failed to send subscribe request")?;
         Ok(())
@@ -61,7 +59,9 @@ impl PythLazerResilientWSConnection {
 
     pub async fn unsubscribe(&mut self, subscription_id: SubscriptionId) -> Result<()> {
         self.request_sender
-            .send(Request::Unsubscribe(UnsubscribeRequest { subscription_id }))
+            .send(WsRequest::Unsubscribe(UnsubscribeRequest {
+                subscription_id,
+            }))
             .await
             .context("Failed to send unsubscribe request")?;
         Ok(())
@@ -95,7 +95,7 @@ impl PythLazerResilientWSConnectionTask {
     pub async fn run(
         &mut self,
         response_sender: mpsc::Sender<AnyResponse>,
-        request_receiver: &mut mpsc::Receiver<Request>,
+        request_receiver: &mut mpsc::Receiver<WsRequest>,
     ) -> Result<()> {
         loop {
             let start_time = Instant::now();
@@ -128,7 +128,7 @@ impl PythLazerResilientWSConnectionTask {
     pub async fn start(
         &mut self,
         sender: mpsc::Sender<AnyResponse>,
-        request_receiver: &mut mpsc::Receiver<Request>,
+        request_receiver: &mut mpsc::Receiver<WsRequest>,
     ) -> Result<()> {
         let mut ws_connection =
             PythLazerWSConnection::new(self.endpoint.clone(), self.access_token.clone())?;
@@ -137,7 +137,7 @@ impl PythLazerResilientWSConnectionTask {
 
         for subscription in self.subscriptions.clone() {
             ws_connection
-                .send_request(Request::Subscribe(subscription))
+                .send_request(WsRequest::Subscribe(subscription))
                 .await?;
         }
         loop {
@@ -167,10 +167,10 @@ impl PythLazerResilientWSConnectionTask {
                 }
                 Some(request) = request_receiver.recv() => {
                    match request {
-                        Request::Subscribe(request) => {
+                        WsRequest::Subscribe(request) => {
                             self.subscribe(&mut ws_connection, request).await?;
                         }
-                        Request::Unsubscribe(request) => {
+                        WsRequest::Unsubscribe(request) => {
                             self.unsubscribe(&mut ws_connection, request).await?;
                         }
                    }
