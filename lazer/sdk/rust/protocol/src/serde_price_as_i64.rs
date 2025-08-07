@@ -9,7 +9,7 @@ where
     S: Serializer,
 {
     value
-        .map_or(0i64, |price| price.0.get())
+        .map_or(0i64, |price| price.mantissa_i64())
         .serialize(serializer)
 }
 
@@ -18,5 +18,5 @@ where
     D: Deserializer<'de>,
 {
     let value = i64::deserialize(deserializer)?;
-    Ok(NonZeroI64::new(value).map(Price))
+    Ok(NonZeroI64::new(value).map(Price::from_nonzero_mantissa))
 }

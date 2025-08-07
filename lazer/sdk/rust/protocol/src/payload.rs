@@ -231,12 +231,12 @@ fn write_option_price<BO: ByteOrder>(
     mut writer: impl Write,
     value: Option<Price>,
 ) -> std::io::Result<()> {
-    writer.write_i64::<BO>(value.map_or(0, |v| v.0.get()))
+    writer.write_i64::<BO>(value.map_or(0, |v| v.mantissa_i64()))
 }
 
 fn read_option_price<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<Price>> {
     let value = NonZeroI64::new(reader.read_i64::<BO>()?);
-    Ok(value.map(Price))
+    Ok(value.map(Price::from_nonzero_mantissa))
 }
 
 fn write_option_rate<BO: ByteOrder>(
