@@ -18,7 +18,7 @@ use {
         cmp::Ordering,
         fmt::Display,
         num::NonZeroI64,
-        ops::{Add, Deref, DerefMut, Div, Sub},
+        ops::{Deref, DerefMut},
     },
     thiserror::Error,
 };
@@ -80,7 +80,7 @@ pub struct ZeroPriceUnsupported(());
 pub struct Overflow(());
 
 #[derive(Debug, Error)]
-pub enum PriceConversionError {
+pub enum PriceError {
     #[error("decimal parse error: {0}")]
     DecimalParse(#[from] rust_decimal::Error),
     #[error("price value is more precise than available exponent")]
@@ -93,46 +93,47 @@ pub enum PriceConversionError {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[repr(transparent)]
-pub struct Price(pub NonZeroI64);
+pub struct Price(NonZeroI64);
 
 impl Price {
-    pub fn from_integer(mantissa: i64, exponent: u32) -> Result<Price, PriceConversionError> {
-        let coef = 10i64
-            .checked_pow(exponent)
-            .ok_or(PriceConversionError::Overflow)?;
-        let value = mantissa
-            .checked_mul(coef)
-            .ok_or(PriceConversionError::Overflow)?;
-        let value = NonZeroI64::new(value).ok_or(PriceConversionError::ZeroPriceUnsupported)?;
+    pub fn from_integer(mantissa: i64, exponent: u32) -> Result<Price, PriceError> {
+        let coef = 10i64.checked_pow(exponent).ok_or(PriceError::Overflow)?;
+        let value = mantissa.checked_mul(coef).ok_or(PriceError::Overflow)?;
+        let value = NonZeroI64::new(value).ok_or(PriceError::ZeroPriceUnsupported)?;
         Ok(Self(value))
     }
 
-    pub fn parse_str(mantissa: &str, exponent: u32) -> Result<Price, PriceConversionError> {
+    pub fn parse_str(mantissa: &str, exponent: u32) -> Result<Price, PriceError> {
         let value: Decimal = mantissa.parse()?;
-        let coef = 10i64
-            .checked_pow(exponent)
-            .ok_or(PriceConversionError::Overflow)?;
-        let coef = Decimal::from_i64(coef).ok_or(PriceConversionError::Overflow)?;
-        let value = value
-            .checked_mul(coef)
-            .ok_or(PriceConversionError::Overflow)?;
+        let coef = 10i64.checked_pow(exponent).ok_or(PriceError::Overflow)?;
+        let coef = Decimal::from_i64(coef).ok_or(PriceError::Overflow)?;
+        let value = value.checked_mul(coef).ok_or(PriceError::Overflow)?;
         if !value.is_integer() {
-            return Err(PriceConversionError::TooPrecise);
+            return Err(PriceError::TooPrecise);
         }
-        let value: i64 = value
-            .try_into()
-            .map_err(|_| PriceConversionError::Overflow)?;
-        let value = NonZeroI64::new(value).ok_or(PriceConversionError::Overflow)?;
+        let value: i64 = value.try_into().map_err(|_| PriceError::Overflow)?;
+        let value = NonZeroI64::new(value).ok_or(PriceError::Overflow)?;
         Ok(Self(value))
     }
 
-    pub fn new(mantissa: i64) -> Result<Self, ZeroPriceUnsupported> {
-        let value = NonZeroI64::new(mantissa).ok_or(ZeroPriceUnsupported(()))?;
-        Ok(Self(value))
+    pub const fn from_nonzero_mantissa(mantissa: NonZeroI64) -> Self {
+        Self(mantissa)
+    }
+
+    pub const fn from_mantissa(mantissa: i64) -> Result<Self, ZeroPriceUnsupported> {
+        if let Some(value) = NonZeroI64::new(mantissa) {
+            Ok(Self(value))
+        } else {
+            Err(ZeroPriceUnsupported(()))
+        }
     }
 
     pub fn mantissa(self) -> NonZeroI64 {
         self.0
+    }
+
+    pub fn mantissa_i64(self) -> i64 {
+        self.0.get()
     }
 
     pub fn to_f64(self, exponent: u32) -> anyhow::Result<f64> {
@@ -145,57 +146,57 @@ impl Price {
         Ok(Self(value))
     }
 
-    pub fn mul(self, rhs: Price, rhs_exponent: u32) -> anyhow::Result<Price> {
+    pub fn add_with_same_mantissa(self, other: Price) -> Result<Self, PriceError> {
+        let value = self
+            .0
+            .get()
+            .checked_add(other.0.get())
+            .ok_or(PriceError::Overflow)?;
+        Self::from_mantissa(value).map_err(|_| PriceError::ZeroPriceUnsupported)
+    }
+
+    pub fn sub_with_same_mantissa(self, other: Price) -> Result<Self, PriceError> {
+        let value = self
+            .0
+            .get()
+            .checked_sub(other.0.get())
+            .ok_or(PriceError::Overflow)?;
+        Self::from_mantissa(value).map_err(|_| PriceError::ZeroPriceUnsupported)
+    }
+
+    pub fn mul_integer(self, factor: i64) -> Result<Self, PriceError> {
+        let value = self
+            .0
+            .get()
+            .checked_mul(factor)
+            .ok_or(PriceError::Overflow)?;
+        Self::from_mantissa(value).map_err(|_| PriceError::ZeroPriceUnsupported)
+    }
+
+    pub fn div_integer(self, factor: i64) -> Result<Self, PriceError> {
+        let value = self
+            .0
+            .get()
+            .checked_div(factor)
+            .ok_or(PriceError::Overflow)?;
+        Self::from_mantissa(value).map_err(|_| PriceError::ZeroPriceUnsupported)
+    }
+
+    pub fn mul_decimal(self, mantissa: i64, rhs_exponent: u32) -> Result<Self, PriceError> {
         let left_value = i128::from(self.0.get());
-        let right_value = i128::from(rhs.0.get());
+        let right_value = i128::from(mantissa);
 
-        let value = left_value * right_value / 10i128.pow(rhs_exponent);
-        let value = value.try_into()?;
-        NonZeroI64::new(value)
-            .context("zero price is unsupported")
-            .map(Self)
-    }
-}
-
-impl Sub<i64> for Price {
-    type Output = Option<Price>;
-
-    fn sub(self, rhs: i64) -> Self::Output {
-        let value = self.0.get().saturating_sub(rhs);
-        NonZeroI64::new(value).map(Self)
-    }
-}
-
-impl Add<i64> for Price {
-    type Output = Option<Price>;
-
-    fn add(self, rhs: i64) -> Self::Output {
-        let value = self.0.get().saturating_add(rhs);
-        NonZeroI64::new(value).map(Self)
-    }
-}
-
-impl Add<Price> for Price {
-    type Output = Option<Price>;
-    fn add(self, rhs: Price) -> Self::Output {
-        let value = self.0.get().saturating_add(rhs.0.get());
-        NonZeroI64::new(value).map(Self)
-    }
-}
-
-impl Sub<Price> for Price {
-    type Output = Option<Price>;
-    fn sub(self, rhs: Price) -> Self::Output {
-        let value = self.0.get().saturating_sub(rhs.0.get());
-        NonZeroI64::new(value).map(Self)
-    }
-}
-
-impl Div<i64> for Price {
-    type Output = Option<Price>;
-    fn div(self, rhs: i64) -> Self::Output {
-        let value = self.0.get().saturating_div(rhs);
-        NonZeroI64::new(value).map(Self)
+        let value = left_value
+            .checked_mul(right_value)
+            .ok_or(PriceError::Overflow)?
+            .checked_div(
+                10i128
+                    .checked_pow(rhs_exponent)
+                    .ok_or(PriceError::Overflow)?,
+            )
+            .ok_or(PriceError::Overflow)?;
+        let value: i64 = value.try_into().map_err(|_| PriceError::Overflow)?;
+        Self::from_mantissa(value).map_err(|_| PriceError::ZeroPriceUnsupported)
     }
 }
 
