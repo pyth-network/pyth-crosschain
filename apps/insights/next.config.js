@@ -1,9 +1,9 @@
 const config = {
   experimental: {
     useCache: true,
+    cacheComponents: true,
     reactCompiler: true,
   },
-
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],

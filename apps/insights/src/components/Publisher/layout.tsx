@@ -16,10 +16,10 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import {
-  getPublisherRankingHistory,
-  getPublisherAverageScoreHistory,
-  getPublishers,
-} from "../../services/clickhouse";
+  getPublishersCached,
+  getPublisherRankingHistoryCached,
+  getPublisherAverageScoreHistoryCached,
+} from "../../server/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
 import { ClusterToName, parseCluster, Cluster } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
@@ -150,7 +150,7 @@ const RankingCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const rankingHistory = await getPublisherRankingHistory(
+  const rankingHistory = await getPublisherRankingHistoryCached(
     cluster,
     publisherKey,
   );
@@ -234,7 +234,7 @@ const ScoreCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const averageScoreHistory = await getPublisherAverageScoreHistory(
+  const averageScoreHistory = await getPublisherAverageScoreHistoryCached(
     cluster,
     publisherKey,
   );
@@ -338,7 +338,7 @@ const ActiveFeedsCard = async ({
   publisherKey: string;
 }) => {
   const [publishers, priceFeeds] = await Promise.all([
-    getPublishers(cluster),
+    getPublishersCached(cluster),
     getPriceFeeds(cluster, publisherKey),
   ]);
   const publisher = publishers.find(

@@ -11,10 +11,11 @@ import {
 } from "../../config/server";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { getPublishers } from "../../services/clickhouse";
-import { Cluster, getFeeds } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { SearchButton as SearchButtonImpl } from "./search-button";
+import { getFeedsCached } from '../../server/pyth';
 
 export const TABS = [
   { segment: "", children: "Overview" },
@@ -76,7 +77,7 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
   "use cache";
-  const feeds = await getFeeds(cluster);
+  const feeds = await getFeedsCached(cluster);
 
   return feeds.map((feed) => ({
     symbol: feed.symbol,

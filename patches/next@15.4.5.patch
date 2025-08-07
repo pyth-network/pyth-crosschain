@@ -1,0 +1,22 @@
+diff --git a/dist/server/lib/incremental-cache/index.js b/dist/server/lib/incremental-cache/index.js
+index 7570bd7edb5c966884f3f7fd84db5c7bcb128c03..c13eb71ddd040581177b34d4d481543fee2e962b 100644
+--- a/dist/server/lib/incremental-cache/index.js
++++ b/dist/server/lib/incremental-cache/index.js
+@@ -385,14 +385,14 @@ class IncrementalCache {
+         }
+         if (this.disableForTestmode || this.dev && !ctx.fetchCache) return;
+         pathname = this._getPathname(pathname, ctx.fetchCache);
+-        // FetchCache has upper limit of 2MB per-entry currently
++        // FetchCache has upper limit of 200MB per-entry currently
+         const itemSize = JSON.stringify(data).length;
+-        if (ctx.fetchCache && itemSize > 2 * 1024 * 1024 && // We ignore the size limit when custom cache handler is being used, as it
++        if (ctx.fetchCache && itemSize > 200 * 1024 * 1024 && // We ignore the size limit when custom cache handler is being used, as it
+         // might not have this limit
+         !this.hasCustomCacheHandler && // We also ignore the size limit when it's an implicit build-time-only
+         // caching that the user isn't even aware of.
+         !ctx.isImplicitBuildTimeCache) {
+-            const warningText = `Failed to set Next.js data cache for ${ctx.fetchUrl || pathname}, items over 2MB can not be cached (${itemSize} bytes)`;
++            const warningText = `Failed to set Next.js data cache for ${ctx.fetchUrl || pathname}, items over 200MB can not be cached (${itemSize} bytes)`;
+             if (this.dev) {
+                 throw Object.defineProperty(new Error(warningText), "__NEXT_ERROR_CODE", {
+                     value: "E394",

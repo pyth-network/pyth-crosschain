@@ -1,23 +1,42 @@
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
-import { getRankingsBySymbol } from "../../services/clickhouse";
+import { getRankingsBySymbolCached } from '../../server/clickhouse';
+import { getFeedsCached, getPublishersForFeedCached } from "../../server/pyth";
 import {
   Cluster,
   ClusterToName,
-  getFeeds,
-  getPublishersForFeed,
 } from "../../services/pyth";
 import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { PublishersCard } from "./publishers-card";
+import { funcA, funcAUnstableCache } from '../../app/actions';
 
 type Props = {
   params: Promise<{
     slug: string;
   }>;
 };
+
+
+const funcB = async () => {
+  const start = performance.now();
+  const res = await funcA();
+  const end = performance.now();
+  // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
+  console.log(`funcB: ${end - start}ms`);
+  return res;
+}
+
+const funcBUnstableCache = async () => {
+  const start = performance.now();
+  const res = await funcAUnstableCache();
+  const end = performance.now();
+  // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
+  console.log(`funcBUnstableCache: ${end - start}ms`);
+  return res;
+}
 
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
@@ -27,12 +46,19 @@ export const Publishers = async ({ params }: Props) => {
     pythtestConformanceFeeds,
     pythnetPublishers,
     pythtestConformancePublishers,
+    funcRes,
+    funcResUnstableCache,
   ] = await Promise.all([
-    getFeeds(Cluster.Pythnet),
-    getFeeds(Cluster.PythtestConformance),
+    getFeedsCached(Cluster.Pythnet),
+    getFeedsCached(Cluster.PythtestConformance),
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
+    funcB(),
+    funcBUnstableCache(),
   ]);
+
+  // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
+  console.log(funcRes, funcResUnstableCache);
   const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
   const testFeed = pythtestConformanceFeeds.find(
     (feed) => feed.symbol === symbol,
@@ -87,8 +113,8 @@ export const PublishersLoading = () => <PublishersCard isLoading />;
 
 const getPublishers = async (cluster: Cluster, symbol: string) => {
   const [publishers, rankings] = await Promise.all([
-    getPublishersForFeed(cluster, symbol),
-    getRankingsBySymbol(symbol),
+    getPublishersForFeedCached(cluster, symbol),
+    getRankingsBySymbolCached(symbol),
   ]);
 
   return (

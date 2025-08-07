@@ -19,7 +19,8 @@ import { AssetClassTable } from "./asset-class-table";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { Cluster, getFeeds } from "../../services/pyth";
+import { getFeedsCached } from "../../server/pyth";
+import { Cluster } from "../../services/pyth";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { activeChains } from "../../static-data/stats";
 import { Cards } from "../Cards";
@@ -289,7 +290,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
 );
 
 const getPriceFeeds = async () => {
-  const priceFeeds = await getFeeds(Cluster.Pythnet);
+  const priceFeeds = await getFeedsCached(Cluster.Pythnet);
   const activeFeeds = priceFeeds.filter((feed) => isActive(feed));
   const comingSoon = priceFeeds.filter((feed) => !isActive(feed));
   return { activeFeeds, comingSoon };
