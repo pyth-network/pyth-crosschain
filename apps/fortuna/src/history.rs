@@ -144,9 +144,9 @@ impl TryFrom<RequestRow> for RequestStatus {
         let network_id = row.network_id as u64;
         let provider = row.provider.parse()?;
         let sequence = row.sequence as u64;
-        let created_at = DateTime::from_timestamp(row.created_at, 0)
+        let created_at = DateTime::from_timestamp_millis(row.created_at)
             .ok_or(anyhow::anyhow!("Invalid created_at timestamp"))?;
-        let last_updated_at = DateTime::from_timestamp(row.last_updated_at, 0)
+        let last_updated_at = DateTime::from_timestamp_millis(row.last_updated_at)
             .ok_or(anyhow::anyhow!("Invalid last_updated_at timestamp"))?;
         let request_block_number = row.request_block_number as u64;
         let user_random_number = hex::FromHex::from_hex(row.user_random_number)?;
@@ -322,8 +322,8 @@ impl History {
                     .bind(network_id)
                     .bind(provider.clone())
                     .bind(sequence)
-                    .bind(new_status.created_at.timestamp())
-                    .bind(new_status.last_updated_at.timestamp())
+                    .bind(new_status.created_at.timestamp_millis())
+                    .bind(new_status.last_updated_at.timestamp_millis())
                     .bind("Pending")
                     .bind(block_number)
                     .bind(request_tx_hash.clone())
@@ -354,7 +354,7 @@ impl History {
                 let callback_gas_used: String = callback_gas_used.to_string();
                 let result = sqlx::query("UPDATE request SET state = $1, last_updated_at = $2, reveal_block_number = $3, reveal_tx_hash = $4, provider_random_number = $5, gas_used = $6, callback_failed = $7, callback_return_value = $8, callback_gas_used = $9 WHERE network_id = $10 AND sequence = $11 AND provider = $12 AND request_tx_hash = $13")
                     .bind("Completed")
-                    .bind(new_status.last_updated_at.timestamp())
+                    .bind(new_status.last_updated_at.timestamp_millis())
                     .bind(reveal_block_number)
                     .bind(reveal_tx_hash)
                     .bind(provider_random_number)
@@ -383,7 +383,7 @@ impl History {
                     .map(|provider_random_number| provider_random_number.encode_hex());
                 sqlx::query("UPDATE request SET state = $1, last_updated_at = $2, info = $3, provider_random_number = $4 WHERE network_id = $5 AND sequence = $6 AND provider = $7 AND request_tx_hash = $8 AND state = 'Pending'")
                     .bind("Failed")
-                    .bind(new_status.last_updated_at.timestamp())
+                    .bind(new_status.last_updated_at.timestamp_millis())
                     .bind(reason)
                     .bind(provider_random_number)
                     .bind(network_id)
@@ -553,8 +553,8 @@ impl<'a> RequestQueryBuilder<'a> {
 
         // Now bind all parameters in order
         let mut query = sqlx::query_as::<_, RequestRow>(&sql)
-            .bind(self.min_timestamp.timestamp())
-            .bind(self.max_timestamp.timestamp());
+            .bind(self.min_timestamp.timestamp_millis())
+            .bind(self.max_timestamp.timestamp_millis());
 
         match &self.search {
             Some(SearchField::TxHash(tx_hash)) => {
@@ -635,8 +635,8 @@ impl<'a> RequestQueryBuilder<'a> {
 
         // Now bind all parameters in order
         let mut query = sqlx::query_scalar::<_, i64>(&sql)
-            .bind(self.min_timestamp.timestamp())
-            .bind(self.max_timestamp.timestamp());
+            .bind(self.min_timestamp.timestamp_millis())
+            .bind(self.max_timestamp.timestamp_millis());
 
         match &self.search {
             Some(SearchField::TxHash(tx_hash)) => {
