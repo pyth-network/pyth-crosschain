@@ -3,8 +3,8 @@
 //! eliminating WebSocket overhead.
 
 use {
-    super::router::{Price, PriceFeedId, Rate},
-    crate::time::TimestampUs,
+    super::router::PriceFeedId,
+    crate::{price::Price, rate::Rate, time::TimestampUs},
     derive_more::derive::From,
     serde::{Deserialize, Serialize},
 };
@@ -184,7 +184,7 @@ fn price_feed_data_v2_serde() {
         price: Some(Price::from_nonzero_mantissa(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
-        funding_rate: Some(Rate(3 * 256 + 7)),
+        funding_rate: Some(Rate::from_mantissa(3 * 256 + 7)),
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedDataV2>(&data2).unwrap(),

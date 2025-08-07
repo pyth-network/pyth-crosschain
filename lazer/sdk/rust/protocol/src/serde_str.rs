@@ -1,6 +1,6 @@
 pub mod option_price {
     use {
-        crate::router::Price,
+        crate::price::Price,
         serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer},
         std::num::NonZeroI64,
     };

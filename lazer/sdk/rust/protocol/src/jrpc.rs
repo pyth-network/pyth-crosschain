@@ -1,4 +1,6 @@
-use crate::router::{Channel, Price, PriceFeedId, Rate};
+use crate::price::Price;
+use crate::rate::Rate;
+use crate::router::{Channel, PriceFeedId};
 use crate::symbol_state::SymbolState;
 use crate::time::TimestampUs;
 use serde::{Deserialize, Serialize};

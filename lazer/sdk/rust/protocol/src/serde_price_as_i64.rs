@@ -1,5 +1,5 @@
 use {
-    crate::router::Price,
+    crate::price::Price,
     serde::{Deserialize, Deserializer, Serialize, Serializer},
     std::num::NonZeroI64,
 };

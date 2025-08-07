@@ -67,7 +67,7 @@ impl From<UpdateParams> for Update {
                 funding_rate_interval,
             } => Update::FundingRateUpdate(FundingRateUpdate {
                 price: price.map(|p| p.mantissa_i64()),
-                rate: Some(rate.0),
+                rate: Some(rate.mantissa()),
                 funding_rate_interval: MessageField::from_option(
                     funding_rate_interval.map(|i| i.into()),
                 ),

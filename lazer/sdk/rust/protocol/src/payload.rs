@@ -1,12 +1,9 @@
 //! Types representing binary encoding of signable payloads and signature envelopes.
 
-use crate::time::DurationUs;
+use crate::{price::Price, rate::Rate, time::DurationUs};
 use {
     super::router::{PriceFeedId, PriceFeedProperty},
-    crate::{
-        router::{ChannelId, Price, Rate},
-        time::TimestampUs,
-    },
+    crate::{router::ChannelId, time::TimestampUs},
     anyhow::bail,
     byteorder::{ByteOrder, ReadBytesExt, WriteBytesExt, BE, LE},
     serde::{Deserialize, Serialize},
@@ -246,7 +243,7 @@ fn write_option_rate<BO: ByteOrder>(
     match value {
         Some(value) => {
             writer.write_u8(1)?;
-            writer.write_i64::<BO>(value.0)
+            writer.write_i64::<BO>(value.mantissa())
         }
         None => {
             writer.write_u8(0)?;
@@ -258,7 +255,7 @@ fn write_option_rate<BO: ByteOrder>(
 fn read_option_rate<BO: ByteOrder>(mut reader: impl Read) -> std::io::Result<Option<Rate>> {
     let present = reader.read_u8()? != 0;
     if present {
-        Ok(Some(Rate(reader.read_i64::<BO>()?)))
+        Ok(Some(Rate::from_mantissa(reader.read_i64::<BO>()?)))
     } else {
         Ok(None)
     }

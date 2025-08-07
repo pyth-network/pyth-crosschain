@@ -1,6 +1,4 @@
-use assert_float_eq::assert_float_absolute_eq;
-
-use crate::router::Price;
+use {super::Price, assert_float_eq::assert_float_absolute_eq};
 
 #[test]
 fn price_constructs() {
