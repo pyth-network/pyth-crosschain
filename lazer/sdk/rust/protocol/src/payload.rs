@@ -1,5 +1,3 @@
-//! Types representing binary encoding of signable payloads and signature envelopes.
-
 use crate::{
     price::Price,
     rate::Rate,

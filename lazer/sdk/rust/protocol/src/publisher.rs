@@ -1,7 +1,3 @@
-//! WebSocket JSON protocol types for API the publisher provides to the router.
-//! Publisher data sourcing may also be implemented in the router process,
-//! eliminating WebSocket overhead.
-
 use {
     crate::{price::Price, rate::Rate, time::TimestampUs, PriceFeedId},
     derive_more::derive::From,

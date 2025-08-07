@@ -2,40 +2,40 @@ use {super::Price, assert_float_eq::assert_float_absolute_eq};
 
 #[test]
 fn price_constructs() {
-    let price = Price::parse_str("42.68", 8).unwrap();
+    let price = Price::parse_str("42.68", -8).unwrap();
     assert_eq!(price.0.get(), 4_268_000_000);
-    assert_float_absolute_eq!(price.to_f64(8).unwrap(), 42.68);
+    assert_float_absolute_eq!(price.to_f64(-8).unwrap(), 42.68);
 
-    let price2 = Price::from_integer(2, 8).unwrap();
+    let price2 = Price::from_integer(2, -8).unwrap();
     assert_eq!(price2.0.get(), 200_000_000);
-    assert_float_absolute_eq!(price2.to_f64(8).unwrap(), 2.);
+    assert_float_absolute_eq!(price2.to_f64(-8).unwrap(), 2.);
 
     let price3 = Price::from_mantissa(123_456).unwrap();
     assert_eq!(price3.0.get(), 123_456);
-    assert_float_absolute_eq!(price3.to_f64(8).unwrap(), 0.001_234_56);
+    assert_float_absolute_eq!(price3.to_f64(-8).unwrap(), 0.001_234_56);
 
-    let price4 = Price::from_f64(42.68, 8).unwrap();
+    let price4 = Price::from_f64(42.68, -8).unwrap();
     assert_eq!(price4.0.get(), 4_268_000_000);
-    assert_float_absolute_eq!(price4.to_f64(8).unwrap(), 42.68);
+    assert_float_absolute_eq!(price4.to_f64(-8).unwrap(), 42.68);
 }
 
 #[test]
 fn price_constructs_negative_mantissa() {
-    let price = Price::parse_str("-42.68", 8).unwrap();
+    let price = Price::parse_str("-42.68", -8).unwrap();
     assert_eq!(price.0.get(), -4_268_000_000);
-    assert_float_absolute_eq!(price.to_f64(8).unwrap(), -42.68);
+    assert_float_absolute_eq!(price.to_f64(-8).unwrap(), -42.68);
 
-    let price2 = Price::from_integer(-2, 8).unwrap();
+    let price2 = Price::from_integer(-2, -8).unwrap();
     assert_eq!(price2.0.get(), -200_000_000);
-    assert_float_absolute_eq!(price2.to_f64(8).unwrap(), -2.);
+    assert_float_absolute_eq!(price2.to_f64(-8).unwrap(), -2.);
 
     let price3 = Price::from_mantissa(-123_456).unwrap();
     assert_eq!(price3.0.get(), -123_456);
-    assert_float_absolute_eq!(price3.to_f64(8).unwrap(), -0.001_234_56);
+    assert_float_absolute_eq!(price3.to_f64(-8).unwrap(), -0.001_234_56);
 
-    let price4 = Price::from_f64(-42.68, 8).unwrap();
+    let price4 = Price::from_f64(-42.68, -8).unwrap();
     assert_eq!(price4.0.get(), -4_268_000_000);
-    assert_float_absolute_eq!(price4.to_f64(8).unwrap(), -42.68);
+    assert_float_absolute_eq!(price4.to_f64(-8).unwrap(), -42.68);
 }
 
 #[test]
@@ -59,42 +59,42 @@ fn price_constructs_zero_exponent() {
 
 #[test]
 fn price_rejects_zero_mantissa() {
-    Price::parse_str("0.0", 8).unwrap_err();
-    Price::from_integer(0, 8).unwrap_err();
+    Price::parse_str("0.0", -8).unwrap_err();
+    Price::from_integer(0, -8).unwrap_err();
     Price::from_mantissa(0).unwrap_err();
-    Price::from_f64(-0.0, 8).unwrap_err();
+    Price::from_f64(-0.0, -8).unwrap_err();
 }
 
 #[test]
 fn price_rejects_too_precise() {
     Price::parse_str("42.68", 0).unwrap_err();
-    Price::parse_str("42.68", 1).unwrap_err();
-    Price::parse_str("42.68", 2).unwrap();
+    Price::parse_str("42.68", -1).unwrap_err();
+    Price::parse_str("42.68", -2).unwrap();
 }
 
 #[test]
 fn price_ops() {
-    let price1 = Price::parse_str("12.34", 8).unwrap();
-    let price2 = Price::parse_str("23.45", 8).unwrap();
+    let price1 = Price::parse_str("12.34", -8).unwrap();
+    let price2 = Price::parse_str("23.45", -8).unwrap();
     assert_float_absolute_eq!(
         price1
             .add_with_same_mantissa(price2)
             .unwrap()
-            .to_f64(8)
+            .to_f64(-8)
             .unwrap(),
         12.34 + 23.45
     );
     assert_float_absolute_eq!(
-        price1.mul_integer(2).unwrap().to_f64(8).unwrap(),
+        price1.mul_integer(2).unwrap().to_f64(-8).unwrap(),
         12.34 * 2.
     );
     assert_float_absolute_eq!(
-        price1.div_integer(2).unwrap().to_f64(8).unwrap(),
+        price1.div_integer(2).unwrap().to_f64(-8).unwrap(),
         12.34 / 2.
     );
 
     assert_float_absolute_eq!(
-        price1.mul_decimal(3456, 2).unwrap().to_f64(8).unwrap(),
+        price1.mul_decimal(3456, -2).unwrap().to_f64(-8).unwrap(),
         12.34 * 34.56
     );
 }

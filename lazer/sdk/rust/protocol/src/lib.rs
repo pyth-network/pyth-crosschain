@@ -13,7 +13,7 @@ pub mod message;
 /// Types describing Lazer's message payload.
 pub mod payload;
 mod price;
-/// Legacy publisher API.
+/// Legacy Websocket API for publishers.
 pub mod publisher;
 mod rate;
 mod serde_price_as_i64;
@@ -67,6 +67,23 @@ pub enum PriceFeedProperty {
     FundingTimestamp,
     FundingRateInterval,
     // More fields may be added later.
+}
+
+enum ExponentFactor {
+    Mul(i64),
+    Div(i64),
+}
+
+impl ExponentFactor {
+    fn get(exponent: i16) -> Option<Self> {
+        if exponent >= 0 {
+            let exponent: u32 = exponent.try_into().ok()?;
+            Some(ExponentFactor::Div(10_i64.checked_pow(exponent)?))
+        } else {
+            let minus_exponent: u32 = exponent.checked_neg()?.try_into().ok()?;
+            Some(ExponentFactor::Mul(10_i64.checked_pow(minus_exponent)?))
+        }
+    }
 }
 
 #[test]
