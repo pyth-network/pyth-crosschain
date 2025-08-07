@@ -84,7 +84,6 @@ message GovernanceInstructionItem {
         CreateShard create_shard = 101;
         AddGovernanceSource add_governance_source = 102;
         UpdateGovernanceSource update_governance_source = 103;
-        RemoveGovernanceSource remove_governance_source = 104;
         SetShardName set_shard_name = 105;
         SetShardGroup set_shard_group = 106;
         ResetLastSequenceNo reset_last_sequence_no = 107;
@@ -94,89 +93,6 @@ message GovernanceInstructionItem {
         AddFeed add_feed = 111;
         UpdateFeed update_feed = 112;
         RemoveFeed remove_feed = 113;
-    }
-}
-
-// Permissions granted to a governance source.
-// bool fields in this message are optional and default to false (no permission).
-message Permissions {
-    enum ShardAction {
-        // Required by protobuf. Instruction will be rejected if this value is encountered.
-        SHARD_ACTION_UNSPECIFIED = 0;
-        // All operations, including operations added in the future.
-        ALL_ACTIONS = 1;
-        CREATE_SHARD = 101;
-        ADD_GOVERNANCE_SOURCE = 102;
-        // All operations under `UpdateGovernanceSource`,
-        // including operations added in the future.
-        UPDATE_GOVERNANCE_SOURCE = 103;
-        REMOVE_GOVERNANCE_SOURCE = 104;
-        SET_SHARD_NAME = 105;
-        SET_SHARD_GROUP = 106;
-        RESET_LAST_SEQUENCE_NO = 107;
-        ADD_PUBLISHER = 108;
-        // All operations under `UpdatePublisher`,
-        // including operations added in the future.
-        UPDATE_PUBLISHER = 109;
-        REMOVE_PUBLISHER = 110;
-        ADD_FEED = 111;
-        // All operations under `UpdateFeed`,
-        // including operations added in the future.
-        UPDATE_FEED = 112;
-        REMOVE_FEED = 113;
-    }
-
-    enum UpdateGovernanceSourceAction {
-        // Required by protobuf. Instruction will be rejected if this value is encountered.
-        UPDATE_GOVERNANCE_SOURCE_ACTION_UNSPECIFIED = 0;
-        SET_GOVERNANCE_SOURCE_PERMISSIONS = 101;
-    }
-
-    enum UpdatePublisherAction {
-        // Required by protobuf. Instruction will be rejected if this value is encountered.
-        UPDATE_PUBLISHER_ACTION_UNSPECIFIED = 0;
-        SET_PUBLISHER_NAME = 101;
-        ADD_PUBLISHER_PUBLIC_KEYS = 102;
-        REMOVE_PUBLISHER_PUBLIC_KEYS = 103;
-        SET_PUBLISHER_PUBLIC_KEYS = 104;
-        SET_PUBLISHER_ACTIVE = 105;
-    }
-
-    enum UpdateFeedAction {
-        // Required by protobuf. Instruction will be rejected if this value is encountered.
-        UPDATE_FEED_ACTION_UNSPECIFIED = 0;
-        UPDATE_FEED_PROPERTIES = 101;
-        UPDATE_FEED_METADATA = 102;
-        ENABLE_FEED_IN_SHARD = 103;
-        DISABLE_FEED_IN_SHARD = 104;
-    }
-
-    repeated ShardAction actions = 1;
-    repeated UpdateGovernanceSourceAction update_governance_source_actions = 2;
-    repeated UpdatePublisherAction update_publisher_actions = 3;
-    repeated UpdateFeedAction update_feed_actions = 4;
-}
-
-// Specifies the way governance transactions are signed and verified.
-message GovernanceSource {
-    // Governance transactions are signed by a single Ed25519 signature.
-    // This will generally be used in development and testing groups.
-    message SingleEd25519 {
-        // [required] Ed25519 public key that signs governance transactions.
-        optional bytes public_key = 1;
-    }
-
-    message WormholeEmitter {
-        // [required] Wormhole emitter address.
-        optional bytes address = 1;
-        // [required] Wormhole emitter chain ID. Restricted to uint16.
-        optional uint32 chain_id = 2;
-    }
-
-    // [required]
-    oneof source {
-        SingleEd25519 single_ed25519 = 1;
-        WormholeEmitter wormhole_emitter = 2;
     }
 }
 
@@ -223,15 +139,6 @@ message UpdateGovernanceSource {
 message SetGovernanceSourcePermissions {
     // [required] Permissions granted to this source. Replaces all previous permissions.
     optional Permissions permissions = 1;
-}
-
-// Removes a governance source. Note that the last sequence number associated with this source
-// will be retained in the state to prevent repeated execution of instructions in case
-// the same source is re-added later.
-message RemoveGovernanceSource {
-    // [required] Governance source that should be deleted. Rejects if there is no such source.
-    // Rejects if the specified source is the same as the source of the current instruction.
-    optional GovernanceSource source = 1;
 }
 
 // Set shard name. This action will be rejected if `GovernanceInstructionItem.shard_names` is empty or contains
