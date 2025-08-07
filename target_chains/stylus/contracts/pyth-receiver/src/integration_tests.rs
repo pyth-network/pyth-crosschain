@@ -8,6 +8,7 @@ mod test {
     use motsu::prelude::*;
     use pythnet_sdk::wire::v1::{AccumulatorUpdateData, Proof};
     use std::time::Duration;
+    use stylus_sdk::types::AddressVM;
     use wormhole_contract::WormholeContract;
 
     const PYTHNET_CHAIN_ID: u16 = 26;
@@ -118,7 +119,11 @@ mod test {
         let result = pyth_contract
             .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
+
         assert!(result.is_ok());
+
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
 
         let price_result = pyth_contract
             .sender(alice)
@@ -169,10 +174,16 @@ mod test {
             .update_price_feeds(update_data1);
         assert!(result1.is_ok());
 
+        assert_eq!(alice.balance(), update_fee2);
+        assert_eq!(pyth_contract.balance(), update_fee1);
+
         let result2 = pyth_contract
             .sender_and_value(alice, update_fee2)
             .update_price_feeds(update_data2);
         assert!(result2.is_ok());
+
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee1 + update_fee2);
 
         let price_result = pyth_contract
             .sender(alice)
@@ -243,6 +254,9 @@ mod test {
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
+
         let price_result = pyth_contract
             .sender(alice)
             .get_price_no_older_than(btc_usd_feed_id(), u64::MAX);
@@ -268,6 +282,9 @@ mod test {
             .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
+
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
 
         let price_result = pyth_contract
             .sender(alice)
@@ -297,6 +314,9 @@ mod test {
             .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
         assert!(result.is_ok());
+
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
 
         let first_price_result = pyth_contract
             .sender(alice)
@@ -339,6 +359,9 @@ mod test {
             .update_price_feeds(update_data);
         assert!(result.is_ok());
 
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
+
         assert!(pyth_contract
             .sender(alice)
             .price_feed_exists(ban_usd_feed_id()));
@@ -380,6 +403,9 @@ mod test {
             .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
 
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
+
         assert!(result.is_ok());
 
         let price_result = pyth_contract
@@ -406,6 +432,9 @@ mod test {
         let result = pyth_contract
             .sender_and_value(alice, update_fee)
             .update_price_feeds(update_data);
+
+        assert_eq!(alice.balance(), U256::ZERO);
+        assert_eq!(pyth_contract.balance(), update_fee);
 
         assert!(result.is_ok());
 

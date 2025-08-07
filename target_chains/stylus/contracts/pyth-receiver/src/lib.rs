@@ -219,16 +219,16 @@ impl PythReceiver {
         &mut self,
         update_data: Vec<Vec<u8>>,
     ) -> Result<(), PythReceiverError> {
-        for data in &update_data {
-            self.update_price_feeds_internal(data.clone(), 0, 0, false)?;
-        }
-
-        let total_fee = self.get_update_fee(update_data)?;
+        let total_fee = self.get_update_fee(update_data.clone())?;
 
         let value = self.vm().msg_value();
 
         if value < total_fee {
             return Err(PythReceiverError::InsufficientFee);
+        }
+
+        for data in &update_data {
+            self.update_price_feeds_internal(data.clone(), 0, 0, false)?;
         }
         Ok(())
     }
