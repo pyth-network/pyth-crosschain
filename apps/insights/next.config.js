@@ -4,8 +4,6 @@ const config = {
     cacheComponents: true,
     reactCompiler: true,
   },
-
-  cacheMaxMemorySize: 200 * 1024 * 1024, // 200MB
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
