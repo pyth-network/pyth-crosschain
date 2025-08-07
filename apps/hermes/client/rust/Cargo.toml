@@ -1,5 +1,5 @@
 [package]
-name = "pyth-hermes-client"
+name = "pyth-hermes-client-rust"
 version = "0.0.1"
 edition = "2021"
 description = "A Rust client for Pyth Hermes"
