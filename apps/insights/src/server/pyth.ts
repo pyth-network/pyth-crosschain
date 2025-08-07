@@ -63,10 +63,6 @@ const _getFeeds = unstable_cache(async (cluster: Cluster, chunk?: number) => {
   for(let i = 0; i < chunksNumber; i++) {
     chunks.push(result.slice(i * MAX_CACHE_SIZE_STRING, (i + 1) * MAX_CACHE_SIZE_STRING));
   }
-  console.log('size',JSON.stringify({
-    chunk: chunks[chunk ?? 0],
-    chunksNumber,
-  }).length)
   return {
     chunk: chunks[chunk ?? 0],
     chunksNumber,
