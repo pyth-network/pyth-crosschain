@@ -1,6 +1,8 @@
 'use server';
-import { unstable_cache } from 'next/cache';
-import { unstable_cacheTag as cacheTag } from 'next/cache'
+
+
+
+import { unstable_cacheTag as cacheTag, unstable_cache } from 'next/cache';
 
 
 export const funcA = async () => {
