@@ -9,7 +9,7 @@ import { Cluster, clients, priceFeedsSchema } from "../services/pyth";
 const getDataCached = cache(async (cluster: Cluster) => {
   return clients[cluster].getData();
 });
-const MAX_CACHE_SIZE_STRING = 2 * 1024 * 1024;
+const MAX_CACHE_SIZE_STRING = 2 * 1024 * 1024 - 510_000; // is the buffer for the returned object and the metadata from next
 
 const getPublishersForFeed = unstable_cache(async (cluster: Cluster, chunk?: number) => {
   const data = await getDataCached(cluster);
@@ -63,6 +63,10 @@ const _getFeeds = unstable_cache(async (cluster: Cluster, chunk?: number) => {
   for(let i = 0; i < chunksNumber; i++) {
     chunks.push(result.slice(i * MAX_CACHE_SIZE_STRING, (i + 1) * MAX_CACHE_SIZE_STRING));
   }
+  console.log('size',JSON.stringify({
+    chunk: chunks[chunk ?? 0],
+    chunksNumber,
+  }).length)
   return {
     chunk: chunks[chunk ?? 0],
     chunksNumber,
