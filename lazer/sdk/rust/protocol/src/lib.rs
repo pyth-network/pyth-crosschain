@@ -69,8 +69,11 @@ pub enum PriceFeedProperty {
     // More fields may be added later.
 }
 
+// Operation and coefficient for converting value to mantissa.
 enum ExponentFactor {
+    // mantissa = value * factor
     Mul(i64),
+    // mantissa = value / factor
     Div(i64),
 }
 
