@@ -3071,7 +3071,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "9.0.0"
+version = "9.1.0"
 dependencies = [
  "anyhow",
  "axum 0.6.20",
@@ -5607,7 +5607,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-hermes-client"
+name = "pyth-hermes-client-rust"
 version = "0.0.1"
 dependencies = [
  "alloy-primitives 0.8.25",

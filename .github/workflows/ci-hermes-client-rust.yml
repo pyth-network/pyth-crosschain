@@ -28,8 +28,8 @@ jobs:
         run: cargo fmt --all -- --check
         if: success() || failure()
       - name: Clippy check
-        run: cargo clippy -p pyth-hermes-client --all-targets -- --deny warnings
+        run: cargo clippy -p pyth-hermes-client-rust --all-targets -- --deny warnings
         if: success() || failure()
       - name: test
-        run: cargo test -p pyth-hermes-client
+        run: cargo test -p pyth-hermes-client-rust
         if: success() || failure()

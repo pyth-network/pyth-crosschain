@@ -6,7 +6,7 @@ on:
       - rust-pyth-hermes-client-v*
 jobs:
   publish-pyth-hermes-client:
-    name: Publish Rust package pyth-hermes-client to crates.io
+    name: Publish Rust package pyth-hermes-client-rust to crates.io
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources

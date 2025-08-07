@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use pyth_hermes_client::{
+use pyth_hermes_client_rust::{
     backoff::HermesExponentialBackoffBuilder,
     client::HermesClientBuilder,
     ws_connection::{HermesClientMessageSubscribe, HermesClientMessageUnsubscribe},
