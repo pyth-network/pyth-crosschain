@@ -3,8 +3,7 @@
 //! eliminating WebSocket overhead.
 
 use {
-    super::router::PriceFeedId,
-    crate::{price::Price, rate::Rate, time::TimestampUs},
+    crate::{price::Price, rate::Rate, time::TimestampUs, PriceFeedId},
     derive_more::derive::From,
     serde::{Deserialize, Serialize},
 };
