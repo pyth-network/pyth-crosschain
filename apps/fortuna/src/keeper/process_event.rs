@@ -181,6 +181,7 @@ pub async fn process_event_with_backoff(
         .get_or_create(&account_label)
         .inc();
 
+    status.last_updated_at = chrono::Utc::now();
     match success {
         Ok(result) => {
             status.state = RequestEntryState::Completed {
