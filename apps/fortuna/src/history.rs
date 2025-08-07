@@ -538,9 +538,9 @@ impl<'a> RequestQueryBuilder<'a> {
             sql.push_str(&format!(" AND state = ${param_count}"));
 
             if *state == StateTag::Completed {
-                sql.push_str(" AND NOT callback_failed");
+                sql.push_str(" AND callback_failed = 0");
             } else if *state == StateTag::CallbackErrored {
-                sql.push_str(" AND callback_failed");
+                sql.push_str(" AND callback_failed = 1");
             }
         }
 
@@ -627,9 +627,9 @@ impl<'a> RequestQueryBuilder<'a> {
             sql.push_str(&format!(" AND state = ${param_count}"));
 
             if *state == StateTag::Completed {
-                sql.push_str(" AND NOT callback_failed");
+                sql.push_str(" AND callback_failed = 0");
             } else if *state == StateTag::CallbackErrored {
-                sql.push_str(" AND callback_failed");
+                sql.push_str(" AND callback_failed = 1");
             }
         }
 
