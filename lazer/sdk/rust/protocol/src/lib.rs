@@ -14,6 +14,8 @@ mod serde_str;
 pub mod subscription;
 pub mod symbol_state;
 pub mod time;
+pub mod price;
+pub mod rate;
 
 pub use crate::{dynamic_value::DynamicValue, feed_kind::FeedKind};
 
