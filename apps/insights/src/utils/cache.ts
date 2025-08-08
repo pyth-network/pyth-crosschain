@@ -2,7 +2,6 @@ import { unstable_cache } from "next/cache";
 import superjson from "superjson";
 
 const MAX_CACHE_SIZE_STRING = 2 * 1024 * 1024 - 510_000; // buffer size, subtracted some of the nextjs overhead added to each cache entry
-const REVALIDATE_TIME = 60 * 60 * 24; // 24 hours
 
 
 type ChunkedCacheResult = {
@@ -49,7 +48,7 @@ export function createChunkedCacheFetcher<T, Args extends unknown[]>(
       };
     },
     [key],
-    { revalidate: REVALIDATE_TIME }
+    { revalidate: false }
   );
 }
 
