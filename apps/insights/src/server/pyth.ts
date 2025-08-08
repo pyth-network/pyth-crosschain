@@ -1,12 +1,32 @@
-import { cache } from 'react';
+import type { PythHttpClientResult } from '@pythnetwork/client/lib/PythHttpClient';
 import type { z } from 'zod';
 
 import { Cluster, clients, priceFeedsSchema } from "../services/pyth";
 import { createChunkedCacheFetcher, fetchAllChunks } from '../utils/cache';
 
-const getDataCached = cache(async (cluster: Cluster) => {
-  return clients[cluster].getData();
-});
+
+type CachedData = {
+  data: PythHttpClientResult;
+  timestamp: number;
+};
+
+const dataCache = new Map<Cluster, CachedData>();
+const CACHE_EXPIRY_MS = 24 * 60 * 60; // 1 day in seconds
+
+const getDataCached = async (cluster: Cluster) => {
+  const now = Date.now();
+  const cached = dataCache.get(cluster);
+  
+  // Check if cache exists and is not expired
+  if (cached && (now - cached.timestamp) < CACHE_EXPIRY_MS * 1000) {
+    return cached.data;
+  }
+  
+  // Fetch fresh data
+  const data = await clients[cluster].getData();
+  dataCache.set(cluster, { data, timestamp: now });
+  return data;
+};
 
 const fetchFeeds = createChunkedCacheFetcher(async (cluster: Cluster) => {
   const unfilteredData = await getDataCached(cluster);
@@ -30,7 +50,7 @@ const fetchFeeds = createChunkedCacheFetcher(async (cluster: Cluster) => {
       }));
   const parsedData = priceFeedsSchema.parse(filteredData);
   return parsedData;
-}, 'getfeeds');
+}, 'getFeeds');
 
 const fetchPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
   const data = await getDataCached(cluster);
@@ -40,7 +60,7 @@ const fetchPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
     result[key] = price?.priceComponents.map(({ publisher }) => publisher.toBase58()) ?? [];
   }
   return result;
-}, 'getpublishers');
+}, 'getPublishers');
 
 export const getFeedsCached = async (cluster: Cluster) => {
   return fetchAllChunks<z.infer<typeof priceFeedsSchema>, [Cluster]>(fetchFeeds,  cluster)
