@@ -42,4 +42,4 @@ const _getPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
 
 export const getPublishersCached = async (cluster: Cluster) => {
   return fetchAllChunks<ReturnType<typeof getPublishers>, [Cluster]>(_getPublishers, cluster);
-};
+}

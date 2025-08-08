@@ -60,7 +60,7 @@ const fetchPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
     result[key] = price?.priceComponents.map(({ publisher }) => publisher.toBase58()) ?? [];
   }
   return result;
-}, 'getPublishers');
+}, 'fetchPublishers');
 
 export const getFeedsCached = async (cluster: Cluster) => {
   return fetchAllChunks<z.infer<typeof priceFeedsSchema>, [Cluster]>(fetchFeeds,  cluster)

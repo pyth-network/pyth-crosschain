@@ -22,6 +22,7 @@ type Props = {
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
+  const start = Date.now();
   const [
     pythnetFeeds,
     pythtestConformanceFeeds,
@@ -33,6 +34,9 @@ export const Publishers = async ({ params }: Props) => {
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
   ]);
+  const end = Date.now();
+  // eslint-disable-next-line no-console
+  console.info(`Publishers took ${(end - start).toString()}ms`);
   const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
   const testFeed = pythtestConformanceFeeds.find(
     (feed) => feed.symbol === symbol,
