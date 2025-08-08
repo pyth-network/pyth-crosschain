@@ -1,7 +1,9 @@
 import { unstable_cache } from "next/cache";
 import superjson from "superjson";
 
-const MAX_CACHE_SIZE_STRING = 2 * 1024 * 1024 - 510_000; // your buffer size
+const MAX_CACHE_SIZE_STRING = 2 * 1024 * 1024 - 510_000; // buffer size, subtracted some of the nextjs overhead added to each cache entry
+const REVALIDATE_TIME = 60 * 60 * 24; // 24 hours
+
 
 type ChunkedCacheResult = {
   chunk: string;
@@ -17,9 +19,9 @@ type CacheFetcher<Args extends unknown[]> = (...args: [...Args, number?]) => Pro
  * @returns a new async function that fetches chunked cached data with the same args plus optional chunk number
  */
 export function createChunkedCacheFetcher<T, Args extends unknown[]>(
-  fetchFullData: (...args: Args) => Promise<T>
+  fetchFullData: (...args: Args) => Promise<T>,
+  key: string,
 ): CacheFetcher<Args> {
-  // chunk number default 0 = first chunk
   return unstable_cache(
     async (...argsWithChunk: [...Args, number?]) => {
       const [args, chunk] = (() => {
@@ -29,8 +31,6 @@ export function createChunkedCacheFetcher<T, Args extends unknown[]>(
         return [argsWithChunk.slice(0, -1) as Args, argsWithChunk.at(-1) ?? 0] as [Args, number];
       })();
 
-      // Fetch fresh full data and serialize it
-      // Could memoize inside this function but using Next's cache instead
       const fullData = await fetchFullData(...args);
       const serialized = superjson.stringify(fullData);
 
@@ -48,8 +48,8 @@ export function createChunkedCacheFetcher<T, Args extends unknown[]>(
         chunksNumber,
       };
     },
-    [],
-    { revalidate: false }
+    [key],
+    { revalidate: REVALIDATE_TIME }
   );
 }
 
@@ -67,13 +67,11 @@ export async function fetchAllChunks<T, Args extends unknown[]>(
   if (chunksNumber <= 1) {
     return superjson.parse(firstChunkData.chunk);
   }
-
   const otherChunks = await Promise.all(
     Array.from({ length: chunksNumber - 1 }, (_, i) => fetcher(...args, i + 1))
   );
 
   const fullString =
     firstChunkData.chunk + otherChunks.map(({ chunk }) => chunk).join("");
-
   return superjson.parse(fullString);
 }
