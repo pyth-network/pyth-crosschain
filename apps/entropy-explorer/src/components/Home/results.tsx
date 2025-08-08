@@ -1,135 +1,84 @@
 "use client";
 
-import { Warning } from "@phosphor-icons/react/dist/ssr/Warning";
 import { EntityList } from "@pythnetwork/component-library/EntityList";
-import { NoResults } from "@pythnetwork/component-library/NoResults";
+import { NoResults as NoResultsImpl } from "@pythnetwork/component-library/NoResults";
 import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
-import { StateType, useData } from "@pythnetwork/component-library/useData";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
-import { ChainIcon } from "connectkit";
+import Image from "next/image";
 import type { ComponentProps } from "react";
-import { Suspense, useMemo } from "react";
-import { useFilter } from "react-aria";
-import * as viemChains from "viem/chains";
+import { useMemo } from "react";
 
 import { mkRequestDrawer } from "./request-drawer";
 import styles from "./results.module.scss";
-import { useQuery } from "./use-query";
 import { EntropyDeployments } from "../../entropy-deployments";
-import { Status, getRequests } from "../../requests";
-import { Address } from "../Address";
+import type { Request } from "../../requests";
+import { Status } from "../../requests";
+import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
+import { ChainSelect } from "./search-controls";
 
-export const Results = () => (
-  <Suspense fallback={<ResultsImpl isLoading />}>
-    <MountedResults />
-  </Suspense>
-);
-
-const MountedResults = () => {
-  const results = useData(["requests"], getRequests, {
-    refreshInterval: 0,
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-  });
-  switch (results.type) {
-    case StateType.Error: {
-      return (
-        <Empty
-          icon={<Warning />}
-          header="Uh oh, we hit an error"
-          body={results.error.message}
-          variant="error"
-        />
-      );
-    }
-    case StateType.NotLoaded:
-    case StateType.Loading: {
-      return <ResultsImpl isLoading />;
-    }
-    case StateType.Loaded: {
-      return (
-        <ResolvedResults
-          data={results.data}
-          isUpdating={results.isValidating}
-        />
-      );
-    }
-  }
-};
-
-type ResolvedResultsProps = {
-  data: Awaited<ReturnType<typeof getRequests>>;
+type Props = {
+  currentPage: Request[];
+  search?: string | undefined;
   isUpdating?: boolean | undefined;
+  now: Date;
+  chain?: keyof typeof EntropyDeployments | undefined;
 };
 
-const ResolvedResults = ({ data, isUpdating }: ResolvedResultsProps) => {
+export const Results = ({
+  currentPage,
+  isUpdating,
+  search,
+  now,
+  chain,
+}: Props) => {
   const drawer = useDrawer();
-  const { search, chain, status } = useQuery();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
   const rows = useMemo(
     () =>
-      data
-        .filter(
-          (request) =>
-            (status === null || status === request.status) &&
-            (chain === null || chain === request.chain) &&
-            (filter.contains(request.requestTxHash, search) ||
-              (request.status !== Status.Pending &&
-                filter.contains(request.callbackTxHash, search)) ||
-              filter.contains(request.sender, search) ||
-              filter.contains(request.sequenceNumber.toString(), search)),
-        )
-        .map((request) => ({
-          id: request.sequenceNumber.toString(),
-          textValue: request.requestTxHash,
-          onAction: () => {
-            drawer.open(mkRequestDrawer(request));
-          },
-          data: {
-            chain: <Chain chain={request.chain} />,
-            timestamp: (
-              <div className={styles.timestamp}>
-                <Timestamp timestamp={request.requestTimestamp} />
-              </div>
-            ),
-            sequenceNumber: (
-              <div className={styles.sequenceNumber}>
-                {request.sequenceNumber}
-              </div>
-            ),
-            sender: (
-              <Address
-                alwaysTruncate
-                chain={request.chain}
-                value={request.sender}
-              />
-            ),
-            requestTxHash: (
-              <Address
-                alwaysTruncate
-                chain={request.chain}
-                value={request.requestTxHash}
-              />
-            ),
-            callbackTxHash: request.status !== Status.Pending && (
-              <Address
-                alwaysTruncate
-                chain={request.chain}
-                value={request.callbackTxHash}
-              />
-            ),
-            status: <StatusComponent status={request.status} />,
-          },
-        })),
-    [data, search, drawer, filter, chain, status],
+      currentPage.map((request) => ({
+        id: request.sequenceNumber.toString(),
+        textValue: request.requestTxHash,
+        onAction: () => {
+          drawer.open(mkRequestDrawer(request, now));
+        },
+        data: {
+          chain: <Chain chain={request.chain} />,
+          timestamp: (
+            <div className={styles.timestamp}>
+              <Timestamp timestamp={request.requestTimestamp} now={now} />
+            </div>
+          ),
+          sequenceNumber: (
+            <div className={styles.sequenceNumber}>
+              {request.sequenceNumber}
+            </div>
+          ),
+          sender: <Account chain={request.chain} value={request.sender} />,
+          requestTxHash: (
+            <Transaction chain={request.chain} value={request.requestTxHash} />
+          ),
+          callbackTxHash: request.status === Status.Complete && (
+            <Transaction chain={request.chain} value={request.callbackTxHash} />
+          ),
+          status: <StatusComponent status={request.status} size="xs" />,
+        },
+      })),
+    [currentPage, drawer, now],
   );
 
-  return <ResultsImpl rows={rows} isUpdating={isUpdating} search={search} />;
+  return (
+    <ResultsImpl
+      rows={rows}
+      search={search}
+      chain={chain}
+      isUpdating={isUpdating}
+    />
+  );
 };
+
+export const ResultsLoading = () => <ResultsImpl isLoading />;
 
 type ResultsImplProps =
   | {
@@ -137,18 +86,19 @@ type ResultsImplProps =
     }
   | {
       isLoading?: false | undefined;
+      chain?: keyof typeof EntropyDeployments | undefined;
       rows: (RowConfig<(typeof defaultProps)["columns"][number]["id"]> & {
         textValue: string;
       })[];
       isUpdating?: boolean | undefined;
-      search: string;
+      search?: string | undefined;
     };
 
 const ResultsImpl = (props: ResultsImplProps) => (
   <>
     <div className={styles.entityList}>
       {!props.isLoading && props.rows.length === 0 ? (
-        <NoResults query={props.search} />
+        <NoResults search={props.search} chain={props.chain} />
       ) : (
         <EntityList
           label={defaultProps.label}
@@ -173,32 +123,48 @@ const ResultsImpl = (props: ResultsImplProps) => (
         : {
             rows: props.rows,
             isUpdating: props.isUpdating,
-            emptyState: <NoResults query={props.search} />,
+            emptyState: <NoResults search={props.search} chain={props.chain} />,
             className: styles.table ?? "",
           })}
     />
   </>
 );
 
-const Empty = (props: ComponentProps<typeof NoResults>) => (
-  <>
-    <NoResults className={styles.entityList} {...props} />
-    <Table
-      className={styles.table ?? ""}
-      rows={[]}
-      emptyState={<NoResults {...props} />}
-      {...defaultProps}
+type NoResultsProps = {
+  search?: string | undefined;
+  chain?: keyof typeof EntropyDeployments | undefined;
+};
+
+const NoResults = ({ search, chain }: NoResultsProps) => {
+  return (
+    <NoResultsImpl
+      query={search ?? ""}
+      body={
+        <>
+          <p>
+            We couldn{"'"}t find any results for your query on{" "}
+            {chain ? EntropyDeployments[chain].name : "any chain"}.
+          </p>
+          <p>Would you like to try your search on a different chain?</p>
+          <ChainSelect
+            className={styles.noResultsChainSelect ?? ""}
+            label="Chain"
+            hideLabel
+            variant="outline"
+            size="sm"
+          />
+        </>
+      }
     />
-  </>
-);
+  );
+};
 
 const Chain = ({ chain }: { chain: keyof typeof EntropyDeployments }) => {
-  // eslint-disable-next-line import/namespace
-  const viemChain = viemChains[chain];
+  const chainInfo = EntropyDeployments[chain];
   return (
     <div className={styles.chain}>
-      <ChainIcon id={viemChain.id} />
-      {viemChain.name}
+      <Image alt="" src={chainInfo.icon} width={20} height={20} />
+      {chainInfo.name}
     </div>
   );
 };
@@ -241,9 +207,9 @@ const defaultProps = {
     },
     {
       id: "status" as const,
-      name: "CALLBACK STATUS",
+      name: "STATUS",
       alignment: "center",
-      width: 25,
+      width: 32,
     },
   ],
 } satisfies Partial<ComponentProps<typeof Table<string>>>;

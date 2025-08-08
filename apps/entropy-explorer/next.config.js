@@ -7,6 +7,13 @@ const config = {
 
   pageExtensions: ["ts", "tsx", "mdx"],
 
+  images: {
+    remotePatterns: [
+      new URL("https://icons.llamao.fi/icons/chains/*?w=20&h=20"),
+      new URL("https://www.tabichain.com/images/new2/tabi.svg"),
+    ],
+  },
+
   logging: {
     fetches: {
       fullUrl: true,

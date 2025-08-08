@@ -15,9 +15,6 @@
 }
 
 .entityList {
-  background: theme.color("background", "primary");
-  border-radius: theme.border-radius("xl");
-
   @include theme.breakpoint("xl") {
     display: none;
   }
@@ -38,4 +35,9 @@
   @include theme.breakpoint("xl") {
     @include theme.text("base", "medium");
   }
+}
+
+.noResultsChainSelect {
+  margin-top: theme.spacing(4);
+  justify-self: center;
 }

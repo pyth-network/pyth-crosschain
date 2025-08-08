@@ -9,24 +9,32 @@ import { truncate } from "../../truncate";
 type Props = {
   value: string;
   chain: keyof typeof EntropyDeployments;
-  alwaysTruncate?: boolean | undefined;
+  isAccount?: boolean | undefined;
 };
 
-export const Address = ({ value, chain, alwaysTruncate }: Props) => {
-  const { explorer } = EntropyDeployments[chain];
+export const Account = (props: Omit<Props, "isAccount">) => (
+  <Address {...props} isAccount />
+);
+
+export const Transaction = (props: Omit<Props, "isAccount">) => (
+  <Address {...props} />
+);
+
+const Address = ({ value, chain, isAccount }: Props) => {
+  const { explorerTxTemplate, explorerAccountTemplate } =
+    EntropyDeployments[chain];
+  const explorerTemplate = isAccount
+    ? explorerAccountTemplate
+    : explorerTxTemplate;
   const truncatedValue = useMemo(() => truncate(value), [value]);
   return (
-    <div
-      data-always-truncate={alwaysTruncate ? "" : undefined}
-      className={styles.address}
-    >
+    <div className={styles.address}>
       <Link
-        href={explorer.replace("$ADDRESS", value)}
+        href={explorerTemplate.replace("$ADDRESS", value)}
         target="_blank"
         rel="noreferrer"
       >
-        <code className={styles.truncated}>{truncatedValue}</code>
-        <code className={styles.full}>{value}</code>
+        <code>{truncatedValue}</code>
       </Link>
       <CopyButton text={value} iconOnly />
     </div>

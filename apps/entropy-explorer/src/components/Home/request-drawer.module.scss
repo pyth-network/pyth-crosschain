@@ -36,6 +36,18 @@
     margin-right: theme.spacing(4);
     position: relative;
 
+    .helpButton {
+      position: absolute;
+      top: theme.spacing(2);
+      right: theme.spacing(2);
+    }
+
+    .failureMessage {
+      overflow: auto;
+      width: 100%;
+      word-break: break-word;
+    }
+
     p {
       margin: 0;
 
