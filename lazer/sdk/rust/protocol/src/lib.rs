@@ -1,21 +1,93 @@
-//! Protocol types.
+//! Lazer type definitions and utilities.
 
+/// Types describing Lazer HTTP and WebSocket APIs.
 pub mod api;
+/// Binary delivery format for WebSocket.
 pub mod binary_update;
 mod dynamic_value;
 mod feed_kind;
+/// Lazer Agent JSON-RPC API.
 pub mod jrpc;
+/// Types describing Lazer's verifiable messages containing signature and payload.
 pub mod message;
+/// Types describing Lazer's message payload.
 pub mod payload;
+mod price;
+/// Legacy Websocket API for publishers.
 pub mod publisher;
-pub mod router;
+mod rate;
 mod serde_price_as_i64;
 mod serde_str;
-pub mod subscription;
-pub mod symbol_state;
+mod symbol_state;
+/// Lazer's types for time representation.
 pub mod time;
 
-pub use crate::{dynamic_value::DynamicValue, feed_kind::FeedKind};
+use derive_more::derive::{From, Into};
+use serde::{Deserialize, Serialize};
+
+pub use crate::{
+    dynamic_value::DynamicValue,
+    feed_kind::FeedKind,
+    price::{Price, PriceError},
+    rate::{Rate, RateError},
+    symbol_state::SymbolState,
+};
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
+pub struct PublisherId(pub u16);
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
+pub struct PriceFeedId(pub u32);
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
+pub struct ChannelId(pub u8);
+
+impl ChannelId {
+    pub const FIXED_RATE_1: ChannelId = ChannelId(1);
+    pub const FIXED_RATE_50: ChannelId = ChannelId(2);
+    pub const FIXED_RATE_200: ChannelId = ChannelId(3);
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PriceFeedProperty {
+    Price,
+    BestBidPrice,
+    BestAskPrice,
+    PublisherCount,
+    Exponent,
+    Confidence,
+    FundingRate,
+    FundingTimestamp,
+    FundingRateInterval,
+    // More fields may be added later.
+}
+
+// Operation and coefficient for converting value to mantissa.
+enum ExponentFactor {
+    // mantissa = value * factor
+    Mul(i64),
+    // mantissa = value / factor
+    Div(i64),
+}
+
+impl ExponentFactor {
+    fn get(exponent: i16) -> Option<Self> {
+        if exponent >= 0 {
+            let exponent: u32 = exponent.try_into().ok()?;
+            Some(ExponentFactor::Div(10_i64.checked_pow(exponent)?))
+        } else {
+            let minus_exponent: u32 = exponent.checked_neg()?.try_into().ok()?;
+            Some(ExponentFactor::Mul(10_i64.checked_pow(minus_exponent)?))
+        }
+    }
+}
 
 #[test]
 fn magics_in_big_endian() {

@@ -1,6 +1,6 @@
 pub mod option_price {
     use {
-        crate::router::Price,
+        crate::price::Price,
         serde::{de::Error, Deserialize, Deserializer, Serialize, Serializer},
         std::num::NonZeroI64,
     };
@@ -10,7 +10,7 @@ pub mod option_price {
         S: Serializer,
     {
         value
-            .map(|price| price.0.get().to_string())
+            .map(|price| price.mantissa_i64().to_string())
             .serialize(serializer)
     }
 
@@ -22,7 +22,7 @@ pub mod option_price {
         if let Some(value) = value {
             let value: i64 = value.parse().map_err(D::Error::custom)?;
             let value = NonZeroI64::new(value).ok_or_else(|| D::Error::custom("zero price"))?;
-            Ok(Some(Price(value)))
+            Ok(Some(Price::from_nonzero_mantissa(value)))
         } else {
             Ok(None)
         }
