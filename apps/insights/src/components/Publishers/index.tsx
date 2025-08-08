@@ -29,7 +29,7 @@ export const Publishers = async () => {
     await Promise.all([
       getPublishersCached(Cluster.Pythnet),
       getPublishersCached(Cluster.PythtestConformance),
-      getOisStatsCached(),
+      getOisStats(),
     ]);
 
   const rankingTime = pythnetPublishers[0]?.timestamp;
@@ -165,8 +165,7 @@ const toTableRow = ({
   };
 };
 
-const getOisStatsCached = async () => {
-  "use cache";
+const getOisStats = async () => {
   const [delState, claimableRewards, distributedRewards, publisherCaps] =
     await Promise.all([
       getDelState(),

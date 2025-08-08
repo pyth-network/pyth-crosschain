@@ -5,17 +5,17 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import {
+  AMPLITUDE_API_KEY,
   ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
-  AMPLITUDE_API_KEY,
 } from "../../config/server";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
-import { getPublishers } from "../../services/clickhouse";
+import { getPublishersCached } from '../../server/clickhouse';
+import { getFeedsCached } from '../../server/pyth';
 import { Cluster } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { SearchButton as SearchButtonImpl } from "./search-button";
-import { getFeedsCached } from '../../server/pyth';
 
 export const TABS = [
   { segment: "", children: "Overview" },
@@ -58,8 +58,7 @@ const SearchButton = async () => {
 };
 
 const getPublishersForSearchDialog = async (cluster: Cluster) => {
-  "use cache";
-  const publishers = await getPublishers(cluster);
+  const publishers = await getPublishersCached(cluster);
   return publishers.map((publisher) => {
     const knownPublisher = lookupPublisher(publisher.key);
 
@@ -76,7 +75,6 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 };
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
-  "use cache";
   const feeds = await getFeedsCached(cluster);
 
   return feeds.map((feed) => ({

@@ -32,7 +32,6 @@ const fetchFeeds = createChunkedCacheFetcher(async (cluster: Cluster) => {
   return parsedData;
 }, 'getfeeds');
 
-
 const fetchPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
   const data = await getDataCached(cluster);
   const result: Record<string, string[]> = {};
