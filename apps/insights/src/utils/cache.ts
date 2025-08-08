@@ -75,3 +75,13 @@ export async function fetchAllChunks<T, Args extends unknown[]>(
     firstChunkData.chunk + otherChunks.map(({ chunk }) => chunk).join("");
   return superjson.parse(fullString);
 }
+
+
+export const timeFunction = async <T>(fn: () => Promise<T>, name: string) => {
+  const start = Date.now();
+  const result = await fn();
+  const end = Date.now();
+  // eslint-disable-next-line no-console
+  console.info(`${name} took ${(end - start).toString()}ms`);
+  return result;
+}

@@ -2,15 +2,16 @@ import type { PythHttpClientResult } from '@pythnetwork/client/lib/PythHttpClien
 import type { z } from 'zod';
 
 import { Cluster, clients, priceFeedsSchema } from "../services/pyth";
-import { createChunkedCacheFetcher, fetchAllChunks } from '../utils/cache';
+import { createChunkedCacheFetcher, fetchAllChunks, timeFunction } from '../utils/cache';
 
 
-type CachedData = {
-  data: PythHttpClientResult;
-  timestamp: number;
+type CacheEntry = {
+  data?: PythHttpClientResult;
+  timestamp?: number;
+  promise?: Promise<PythHttpClientResult>;
 };
 
-const dataCache = new Map<Cluster, CachedData>();
+const dataCache = new Map<Cluster, CacheEntry>();
 const CACHE_EXPIRY_MS = 24 * 60 * 60; // 1 day in seconds
 
 const getDataCached = async (cluster: Cluster) => {
@@ -18,18 +19,35 @@ const getDataCached = async (cluster: Cluster) => {
   const cached = dataCache.get(cluster);
   
   // Check if cache exists and is not expired
-  if (cached && (now - cached.timestamp) < CACHE_EXPIRY_MS * 1000) {
+  if (cached?.data && cached.timestamp && (now - cached.timestamp) < CACHE_EXPIRY_MS * 1000) {
     return cached.data;
   }
   
-  // Fetch fresh data
-  const data = await clients[cluster].getData();
-  dataCache.set(cluster, { data, timestamp: now });
-  return data;
+  // Check if there's already a pending request
+  if (cached?.promise) {
+    return cached.promise;
+  }
+  
+  // eslint-disable-next-line no-console
+  console.log('fetching fresh FULL data');
+  
+  // Create a new promise for the request
+  const promise = clients[cluster].getData().then((data) => {
+    // Store the result in cache
+    dataCache.set(cluster, { data, timestamp: now });
+    return data;
+  });
+  
+  // Store the promise in cache to prevent duplicate requests
+  dataCache.set(cluster, { promise });
+  
+  return promise;
 };
 
 const fetchFeeds = createChunkedCacheFetcher(async (cluster: Cluster) => {
   const unfilteredData = await getDataCached(cluster);
+  // eslint-disable-next-line no-console
+  console.log('fetchFeeds called');
   const filteredData = unfilteredData.symbols
       .filter(
         (symbol) =>
@@ -54,6 +72,8 @@ const fetchFeeds = createChunkedCacheFetcher(async (cluster: Cluster) => {
 
 const fetchPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
   const data = await getDataCached(cluster);
+  // eslint-disable-next-line no-console
+  console.log('fetchPublishers called');
   const result: Record<string, string[]> = {};
   for (const key of data.productPrice.keys()) {
     const price = data.productPrice.get(key);
@@ -63,11 +83,15 @@ const fetchPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
 }, 'fetchPublishers');
 
 export const getFeedsCached = async (cluster: Cluster) => {
-  return fetchAllChunks<z.infer<typeof priceFeedsSchema>, [Cluster]>(fetchFeeds,  cluster)
+  return timeFunction(async () => {
+    return fetchAllChunks<z.infer<typeof priceFeedsSchema>, [Cluster]>(fetchFeeds,  cluster);
+  }, 'getFeedsCached');
 };
 
 export const getPublishersForFeedCached = async (cluster: Cluster, symbol: string) => {
-  const data = await fetchAllChunks<Record<string, string[]>, [Cluster]>(fetchPublishers, cluster);
+  const data = await timeFunction(async () => {
+    return fetchAllChunks<Record<string, string[]>, [Cluster]>(fetchPublishers, cluster);
+  }, 'getPublishersForFeedCached');
   return data[symbol]
 };
 
@@ -75,7 +99,9 @@ export const getFeedsForPublisherCached = async (
   cluster: Cluster,
   publisher: string
 ) => {
-  const data = await getFeedsCached(cluster); 
+  const data = await timeFunction(async () => {
+    return getFeedsCached(cluster);
+  }, 'getFeedsForPublisherCached');
   return priceFeedsSchema.parse(
     data.filter(({ price }) =>
       price.priceComponents.some(
