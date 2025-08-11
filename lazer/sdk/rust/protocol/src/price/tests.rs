@@ -133,6 +133,16 @@ fn price_ops() {
         12.34 * 34.56
     );
 
+    assert_float_absolute_eq!(
+        price1.mul_decimal(34, 2).unwrap().to_f64(-8).unwrap(),
+        12.34 * 3400.0
+    );
+
+    assert_float_absolute_eq!(
+        price1.mul_decimal(34, 0).unwrap().to_f64(-8).unwrap(),
+        12.34 * 34.0
+    );
+
     let price2 = Price::parse_str("42_000", 3).unwrap();
     assert_float_absolute_eq!(
         price2.mul_integer(2).unwrap().to_f64(3).unwrap(),
