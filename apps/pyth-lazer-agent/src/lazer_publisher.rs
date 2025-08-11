@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::config::{CHANNEL_CAPACITY, Config};
 use crate::relayer_session::RelayerSessionTask;
 use anyhow::{Context, Result, bail};
@@ -14,6 +13,7 @@ use pyth_lazer_publisher_sdk::transaction::{
     Ed25519SignatureData, LazerTransaction, SignatureData, SignedLazerTransaction,
 };
 use solana_keypair::read_keypair_file;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -206,17 +206,17 @@ fn deduplicate_feed_updates(feed_updates: &Vec<FeedUpdate>) -> Result<Vec<FeedUp
 #[cfg(test)]
 mod tests {
     use crate::config::{CHANNEL_CAPACITY, Config};
-    use crate::lazer_publisher::{deduplicate_feed_updates, LazerPublisherTask};
+    use crate::lazer_publisher::{LazerPublisherTask, deduplicate_feed_updates};
     use ed25519_dalek::SigningKey;
     use protobuf::well_known_types::timestamp::Timestamp;
     use protobuf::{Message, MessageField};
+    use pyth_lazer_protocol::time::TimestampUs;
     use pyth_lazer_publisher_sdk::publisher_update::feed_update::Update;
     use pyth_lazer_publisher_sdk::publisher_update::{FeedUpdate, PriceUpdate};
     use pyth_lazer_publisher_sdk::transaction::{LazerTransaction, lazer_transaction};
     use std::io::Write;
     use std::path::PathBuf;
     use std::time::Duration;
-    use pyth_lazer_protocol::time::TimestampUs;
     use tempfile::NamedTempFile;
     use tokio::sync::broadcast::error::TryRecvError;
     use tokio::sync::{broadcast, mpsc};
@@ -345,7 +345,10 @@ mod tests {
             test_feed_update(1, TimestampUs::from_millis(6).unwrap(), 10),
         ];
 
-        assert_eq!(deduplicate_feed_updates(&updates).unwrap(), expected_updates);
+        assert_eq!(
+            deduplicate_feed_updates(&updates).unwrap(),
+            expected_updates
+        );
     }
 
     #[test]
@@ -365,6 +368,9 @@ mod tests {
             test_feed_update(2, TimestampUs::from_millis(6).unwrap(), 10),
         ];
 
-        assert_eq!(deduplicate_feed_updates(&updates).unwrap(), expected_updates);
+        assert_eq!(
+            deduplicate_feed_updates(&updates).unwrap(),
+            expected_updates
+        );
     }
 }

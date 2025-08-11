@@ -20,7 +20,7 @@ pub struct Config {
     pub publish_interval_duration: Duration,
     pub history_service_url: Option<Url>,
     #[serde(default)]
-    pub enable_update_deduplication: bool
+    pub enable_update_deduplication: bool,
 }
 
 #[derive(Deserialize, Derivative, Clone, PartialEq)]
