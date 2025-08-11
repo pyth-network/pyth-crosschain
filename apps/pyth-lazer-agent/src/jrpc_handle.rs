@@ -299,6 +299,7 @@ pub mod tests {
             publish_keypair_path: Default::default(),
             publish_interval_duration: Default::default(),
             history_service_url: None,
+            enable_update_deduplication: false,
         };
 
         println!("{:?}", get_metadata(config).await.unwrap());
