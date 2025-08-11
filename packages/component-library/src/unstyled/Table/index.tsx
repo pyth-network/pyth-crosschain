@@ -24,11 +24,11 @@ export const Row = <T extends object>({
   onHoverStart,
   ...props
 }: RowProps<T>) => {
-  const prefetchProps = usePrefetch<HTMLTableRowElement>({
+  const prefetchProps = usePrefetch({
     href: props.href,
     prefetch,
     onHoverStart,
-    ref: ref,
+    ref,
   });
 
   return <BaseRow {...props} {...prefetchProps} />;
