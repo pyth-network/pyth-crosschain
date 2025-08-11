@@ -4,7 +4,7 @@ import { EntropyDeployments, isValidDeployment } from "./entropy-deployments";
 import type { PAGE_SIZE } from "./pages";
 import { DEFAULT_PAGE_SIZE } from "./pages";
 
-const FORTUNA_URL = "https://fortuna-staging.dourolabs.app/";
+const FORTUNA_URL = "https://fortuna.dourolabs.app/";
 
 export type Args = Partial<{
   search: string;
