@@ -9,7 +9,7 @@ import PriceFeedsLight from "./price-feeds-light.svg";
 import PublishersDark from "./publishers-dark.svg";
 import PublishersLight from "./publishers-light.svg";
 import { TabList } from "./tab-list";
-import { getFeedsCached } from "../../server/pyth";
+import { getFeeds } from "../../server/pyth/get-feeds";
 import { Cluster } from "../../services/pyth";
 import {
   totalVolumeTraded,
@@ -24,7 +24,7 @@ import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 
 export const Overview = async () => {
-  const priceFeeds = await getFeedsCached(Cluster.Pythnet);
+  const priceFeeds = await getFeeds(Cluster.Pythnet);
   const today = new Date();
   const feedCounts = [
     ...activeFeeds.map(({ date, numFeeds }) => ({

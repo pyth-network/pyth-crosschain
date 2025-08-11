@@ -1,15 +1,11 @@
+import type { Cache as ACDCache } from "async-cache-dedupe";
+import { createCache } from "async-cache-dedupe";
 import { unstable_cache } from "next/cache";
-import superjson from "superjson";
+import { stringify, parse } from "superjson";
 
-const MAX_CACHE_SIZE_STRING = 2 * 1024 * 1024 - 510_000; // buffer size, subtracted some of the nextjs overhead added to each cache entry
+import { getRedis } from '../config/server';
 
-
-type ChunkedCacheResult = {
-  chunk: string;
-  chunksNumber: number;
-};
-
-type CacheFetcher<Args extends unknown[]> = (...args: [...Args, number?]) => Promise<ChunkedCacheResult>;
+type CacheFetcher<Args extends unknown[]> = (...args: Args) => Promise<string>;
 
 /**
  * Wraps an async function that returns data of type T, and caches it in chunks.
@@ -22,30 +18,12 @@ export function createChunkedCacheFetcher<T, Args extends unknown[]>(
   key: string,
 ): CacheFetcher<Args> {
   return unstable_cache(
-    async (...argsWithChunk: [...Args, number?]) => {
-      const [args, chunk] = (() => {
-        if(argsWithChunk.length === 1) {
-          return [[argsWithChunk[0]], 0] as [Args, number];
-        }
-        return [argsWithChunk.slice(0, -1) as Args, argsWithChunk.at(-1) ?? 0] as [Args, number];
-      })();
-
+    async (...args: Args) => {
       const fullData = await fetchFullData(...args);
-      const serialized = superjson.stringify(fullData);
+      const serialized = stringify(fullData);
 
-      // Break into chunks
-      const chunksNumber = Math.ceil(serialized.length / MAX_CACHE_SIZE_STRING);
-      const chunks = [];
-      for (let i = 0; i < chunksNumber; i++) {
-        const start = i * MAX_CACHE_SIZE_STRING;
-        const end = (i + 1) * MAX_CACHE_SIZE_STRING;
-        chunks.push(serialized.slice(start, end));
-      }
 
-      return {
-        chunk: chunks[chunk] ?? '',
-        chunksNumber,
-      };
+      return serialized;
     },
     [key],
     { revalidate: false }
@@ -61,18 +39,10 @@ export async function fetchAllChunks<T, Args extends unknown[]>(
   fetcher: CacheFetcher<Args>,
   ...args: Args
 ): Promise<T> {
-  const firstChunkData = await fetcher(...args, 0);
-  const chunksNumber = firstChunkData.chunksNumber;
-  if (chunksNumber <= 1) {
-    return superjson.parse(firstChunkData.chunk);
-  }
-  const otherChunks = await Promise.all(
-    Array.from({ length: chunksNumber - 1 }, (_, i) => fetcher(...args, i + 1))
-  );
+  const firstChunkData = await fetcher(...args);
 
-  const fullString =
-    firstChunkData.chunk + otherChunks.map(({ chunk }) => chunk).join("");
-  return superjson.parse(fullString);
+  const fullString = firstChunkData;
+  return parse(fullString);
 }
 
 
@@ -84,3 +54,20 @@ export const timeFunction = async <T>(fn: () => Promise<T>, name: string) => {
   console.info(`${name} took ${(end - start).toString()}ms`);
   return result;
 }
+
+
+// L2-backed cache: in-memory LRU (L1) + Redis (L2)
+export const redisCache: ACDCache = createCache({
+  storage: {
+    type: "redis",
+    options: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      client: await getRedis(),
+    },
+  },
+});
+
+export const memoryOnlyCache: ACDCache = createCache({
+  ttl: 5000,
+  stale: 2000,
+});

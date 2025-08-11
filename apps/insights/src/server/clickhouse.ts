@@ -1,7 +1,7 @@
 
 import { getPublisherAverageScoreHistory, getPublisherRankingHistory, getPublishers, getRankingsByPublisher, getRankingsBySymbol } from "../services/clickhouse";
 import { Cluster } from "../services/pyth";
-import { createChunkedCacheFetcher, fetchAllChunks, timeFunction } from '../utils/cache';
+import { createChunkedCacheFetcher, fetchAllChunks } from '../utils/cache';
 
 
 const _getRankingsBySymbol = createChunkedCacheFetcher(async (symbol: string) => {
@@ -9,9 +9,7 @@ const _getRankingsBySymbol = createChunkedCacheFetcher(async (symbol: string) =>
 }, 'getRankingsBySymbol');
 
 export const getRankingsBySymbolCached = async (symbol: string) => {
-  return timeFunction(async () => {
     return fetchAllChunks<ReturnType<typeof getRankingsBySymbol>, [string]>(_getRankingsBySymbol, symbol);
-  }, 'getRankingsBySymbolCached');
 };
 
 const _getRankingsByPublisher = createChunkedCacheFetcher(async (publisherKey: string) => {
@@ -19,9 +17,7 @@ const _getRankingsByPublisher = createChunkedCacheFetcher(async (publisherKey: s
 }, 'getRankingsByPublisher');
 
 export const getRankingsByPublisherCached = async (publisherKey: string) => {
-  return timeFunction(async () => {
     return fetchAllChunks<ReturnType<typeof getRankingsByPublisher>, [string]>(_getRankingsByPublisher, publisherKey);
-  }, 'getRankingsByPublisherCached');
 };
 
 const _getPublisherAverageScoreHistory = createChunkedCacheFetcher(async (cluster: Cluster, key: string) => {
@@ -29,9 +25,7 @@ const _getPublisherAverageScoreHistory = createChunkedCacheFetcher(async (cluste
 }, 'getPublisherAverageScoreHistory');
 
 export const getPublisherAverageScoreHistoryCached = async (cluster: Cluster, key: string) => {
-  return timeFunction(async () => {
     return fetchAllChunks<ReturnType<typeof getPublisherAverageScoreHistory>, [Cluster, string]>(_getPublisherAverageScoreHistory, cluster, key);
-  }, 'getPublisherAverageScoreHistoryCached');
 };
 
 const _getPublisherRankingHistory = createChunkedCacheFetcher(async (cluster: Cluster, key: string) => {
@@ -39,9 +33,7 @@ const _getPublisherRankingHistory = createChunkedCacheFetcher(async (cluster: Cl
 }, 'getPublisherRankingHistory');
 
 export const getPublisherRankingHistoryCached = async (cluster: Cluster, key: string) => {
-  return timeFunction(async () => {
     return fetchAllChunks<ReturnType<typeof getPublisherRankingHistory>, [Cluster, string]>(_getPublisherRankingHistory, cluster, key);
-  }, 'getPublisherRankingHistoryCached');
 };
 
 const _getPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
@@ -49,7 +41,5 @@ const _getPublishers = createChunkedCacheFetcher(async (cluster: Cluster) => {
 }, 'getPublishers');
 
 export const getPublishersCached = async (cluster: Cluster) => {
-  return timeFunction(async () => {
     return fetchAllChunks<ReturnType<typeof getPublishers>, [Cluster]>(_getPublishers, cluster);
-  }, 'getPublishersCached');
 }

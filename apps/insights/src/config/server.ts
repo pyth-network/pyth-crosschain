@@ -2,6 +2,7 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
+import { Redis } from 'ioredis';
 import "server-only";
 
 /**
@@ -56,3 +57,21 @@ export const SOLANA_RPC =
 
 export const ENABLE_ACCESSIBILITY_REPORTING =
   !IS_PRODUCTION_SERVER && !process.env.DISABLE_ACCESSIBILITY_REPORTING;
+
+
+export async function getRedis(): Promise<Redis> {
+  const host = process.env.REDIS_HOST;
+  const port = process.env.REDIS_PORT;
+  const password = process.env.REDIS_PASSWORD;
+  if (!host || !port) {
+    throw new Error('REDIS_HOST, and REDIS_PORT must be set');
+  }
+  const client = new Redis({ 
+    username: 'default',
+    password: password ?? '',
+    host,
+    port: Number.parseInt(port),
+  });
+  await client.set('test2', Math.random().toString());
+  return client;
+}

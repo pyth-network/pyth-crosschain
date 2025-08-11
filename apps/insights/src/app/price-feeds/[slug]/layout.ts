@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { getFeedsCached } from "../../../server/pyth";
+import { getFeeds } from "../../../server/pyth/get-feeds";
 import { Cluster } from "../../../services/pyth";
 
 export { PriceFeedLayout as default } from "../../../components/PriceFeed/layout";
@@ -20,7 +20,7 @@ export const generateMetadata = async ({
 }: Props): Promise<Metadata> => {
   const [{ slug }, feeds] = await Promise.all([
     params,
-    getFeedsCached(Cluster.Pythnet),
+    getFeeds(Cluster.Pythnet),
   ]);
   const symbol = decodeURIComponent(slug);
   const feed = feeds.find((item) => item.symbol === symbol);

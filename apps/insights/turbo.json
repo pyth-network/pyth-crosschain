@@ -13,7 +13,10 @@
         "SOLANA_RPC",
         "DISABLE_ACCESSIBILITY_REPORTING",
         "NEXT_PUBLIC_PYTHNET_RPC",
-        "NEXT_PUBLIC_PYTHTEST_CONFORMANCE_RPC"
+        "NEXT_PUBLIC_PYTHTEST_CONFORMANCE_RPC",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "REDIS_PASSWORD"
       ]
     },
     "fix:lint": {

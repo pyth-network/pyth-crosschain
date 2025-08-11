@@ -2,7 +2,8 @@ import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
 import { getRankingsBySymbolCached } from '../../server/clickhouse';
-import { getFeedsCached, getPublishersForFeedCached } from "../../server/pyth";
+import { getPublishersForFeedCached } from "../../server/pyth";
+import { getFeeds } from "../../server/pyth/get-feeds";
 import {
   Cluster,
   ClusterToName,
@@ -29,8 +30,8 @@ export const Publishers = async ({ params }: Props) => {
     pythnetPublishers,
     pythtestConformancePublishers,
   ] = await Promise.all([
-    getFeedsCached(Cluster.Pythnet),
-    getFeedsCached(Cluster.PythtestConformance),
+    getFeeds(Cluster.Pythnet),
+    getFeeds(Cluster.PythtestConformance),
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
   ]);
@@ -96,7 +97,7 @@ const getPublishers = async (cluster: Cluster, symbol: string) => {
   ]);
 
   return (
-    publishers?.map((publisher) => {
+    publishers.map((publisher) => {
       const ranking = rankings.find(
         (ranking) =>
           ranking.publisher === publisher &&
@@ -110,6 +111,6 @@ const getPublishers = async (cluster: Cluster, symbol: string) => {
         cluster,
         knownPublisher: lookupPublisher(publisher),
       };
-    }) ?? []
+    })
   );
 };
