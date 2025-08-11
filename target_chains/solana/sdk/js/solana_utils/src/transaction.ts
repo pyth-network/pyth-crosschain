@@ -27,6 +27,11 @@ export const PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET =
   PACKET_DATA_SIZE - 52;
 
 /**
+ * The maximum number of transactions in a Jito bundle.
+ */
+export const JITO_BUNDLE_SIZE = 5;
+
+/**
  * An instruction with some extra information that will be used to build transactions.
  */
 export type InstructionWithEphemeralSigners = {
@@ -46,7 +51,6 @@ export type PriorityFeeConfig = {
   computeUnitPriceMicroLamports?: number;
   tightComputeBudget?: boolean;
   jitoTipLamports?: number;
-  jitoBundleSize?: number;
 };
 
 /**
@@ -188,7 +192,11 @@ export class TransactionBuilder {
             this.transactionInstructions.length - 1
           ].instructions,
           instruction,
-          buildJitoTipInstruction(this.payer, 1),
+          this.transactionInstructions.length % JITO_BUNDLE_SIZE === 0
+            ? buildJitoTipInstruction(this.payer, 1)
+            : ComputeBudgetProgram.setComputeUnitPrice({
+                microLamports: 1,
+              }),
           ComputeBudgetProgram.setComputeUnitLimit({ units: 1 }),
         ],
         true,
@@ -232,9 +240,6 @@ export class TransactionBuilder {
       await this.connection.getLatestBlockhash({ commitment: "confirmed" })
     ).blockhash;
 
-    const jitoBundleSize =
-      args.jitoBundleSize || this.transactionInstructions.length;
-
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
@@ -255,7 +260,7 @@ export class TransactionBuilder {
             }),
           );
         }
-        if (args.jitoTipLamports && index % jitoBundleSize === 0) {
+        if (args.jitoTipLamports && index % JITO_BUNDLE_SIZE === 0) {
           instructionsWithComputeBudget.push(
             buildJitoTipInstruction(this.payer, args.jitoTipLamports),
           );
@@ -297,9 +302,6 @@ export class TransactionBuilder {
   buildLegacyTransactions(
     args: PriorityFeeConfig,
   ): { tx: Transaction; signers: Signer[] }[] {
-    const jitoBundleSize =
-      args.jitoBundleSize || this.transactionInstructions.length;
-
     return this.transactionInstructions.map(
       ({ instructions, signers, computeUnits }, index) => {
         const instructionsWithComputeBudget: TransactionInstruction[] = [
@@ -320,7 +322,7 @@ export class TransactionBuilder {
             }),
           );
         }
-        if (args.jitoTipLamports && index % jitoBundleSize === 0) {
+        if (args.jitoTipLamports && index % JITO_BUNDLE_SIZE === 0) {
           instructionsWithComputeBudget.push(
             buildJitoTipInstruction(this.payer, args.jitoTipLamports),
           );
