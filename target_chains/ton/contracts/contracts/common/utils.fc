@@ -74,6 +74,12 @@ Note:
         }
     }
     
+    ;; Push any remaining data in current_builder after the loop
+    if (current_builder.builder_bits() > 0) {
+        cell current_chunk = current_builder.end_cell();
+        chunk_list~tpush(current_chunk);
+    }
+    
     ;; Build forward chain: first chunk → second chunk → third chunk etc
     cell result = null();
     int chunk_count = chunk_list.tlen();
