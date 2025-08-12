@@ -34,31 +34,6 @@ int keccak256_slice(slice s) inline {
     return keccak256_tuple(slices);
 }
 
-;; Splits a slice into chunks of MAX_BITS bits or less, in reverse order
-(cell, slice) split_into_reverse_chunks(slice data, int size) {
-    cell chunks = null();
-    int total_bits_loaded = 0;
-    builder current_chunk = begin_cell();
-    while ((~ data.slice_empty?()) & (total_bits_loaded < size)) {
-        int bits_to_load = min(min(data.slice_bits(), MAX_BITS - current_chunk.builder_bits()), size - total_bits_loaded);
-        current_chunk = current_chunk.store_slice(data~load_bits(bits_to_load));
-        total_bits_loaded += bits_to_load;
-        if ((current_chunk.builder_bits() == MAX_BITS) | (size - total_bits_loaded == 0)) {
-            slice current_chunk_slice = current_chunk.end_cell().begin_parse();
-            if (cell_null?(chunks)) {
-                chunks = begin_cell().store_slice(current_chunk_slice).end_cell();
-            } else {
-                chunks = begin_cell().store_slice(current_chunk_slice).store_ref(chunks).end_cell();
-            }
-            current_chunk = begin_cell();
-        }
-        if ((data.slice_bits() == 0) & (~ data.slice_refs_empty?())) {
-            data = data~load_ref().begin_parse();
-        }
-    }
-    return (chunks, data);
-}
-
 {-
 This function reads a specified number of bits from the input slice and stores them in a cell structure,
 handling data that may exceed the maximum cell capacity in FunC (1023 bits).
