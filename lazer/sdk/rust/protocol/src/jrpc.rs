@@ -1,8 +1,6 @@
-use crate::rate::Rate;
+use crate::router::{Channel, Price, PriceFeedId, Rate};
 use crate::symbol_state::SymbolState;
 use crate::time::TimestampUs;
-use crate::PriceFeedId;
-use crate::{api::Channel, price::Price};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

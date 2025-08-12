@@ -1,5 +1,5 @@
 use {
-    crate::{api::SubscriptionId, message::Message},
+    crate::{message::Message, subscription::SubscriptionId},
     anyhow::{bail, Context},
     byteorder::{WriteBytesExt, BE, LE},
 };
