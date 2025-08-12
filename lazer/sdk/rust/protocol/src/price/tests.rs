@@ -105,7 +105,7 @@ fn price_ops() {
     let price2 = Price::parse_str("23.45", -8).unwrap();
     assert_float_absolute_eq!(
         price1
-            .add_with_same_mantissa(price2)
+            .add_with_same_exponent(price2)
             .unwrap()
             .to_f64(-8)
             .unwrap(),
@@ -113,7 +113,7 @@ fn price_ops() {
     );
     assert_float_absolute_eq!(
         price1
-            .sub_with_same_mantissa(price2)
+            .sub_with_same_exponent(price2)
             .unwrap()
             .to_f64(-8)
             .unwrap(),
@@ -136,6 +136,11 @@ fn price_ops() {
     assert_float_absolute_eq!(
         price1.mul_decimal(34, 2).unwrap().to_f64(-8).unwrap(),
         12.34 * 3400.0
+    );
+
+    assert_eq!(
+        price1.mul_decimal(34, 2).unwrap().mantissa_i64(),
+        1234000000 * 3400
     );
 
     assert_float_absolute_eq!(
