@@ -31,7 +31,6 @@ export const Publishers = async () => {
       getPublishersCached(Cluster.PythtestConformance),
       getOisStats(),
     ]);
-
   const rankingTime = pythnetPublishers[0]?.timestamp;
   const scoreTime = pythnetPublishers[0]?.scoreTime;
 

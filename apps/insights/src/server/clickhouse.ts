@@ -1,22 +1,47 @@
 import { getPublisherAverageScoreHistory, getPublisherRankingHistory, getPublishers, getRankingsByPublisher, getRankingsBySymbol } from "../services/clickhouse";
-import { Cluster } from "../services/pyth";
+import { redisCache } from '../utils/cache';
 
-export const getRankingsBySymbolCached = async (symbol: string) => {
-    return getRankingsBySymbol(symbol);
-};
+export const getRankingsBySymbolCached = redisCache.define(
+  "getRankingsBySymbol",
+  {
+    ttl: 1000 * 60 * 60 * 24,
+  },
+  getRankingsBySymbol,
+).getRankingsBySymbol;
 
-export const getRankingsByPublisherCached = async (publisherKey: string) => {
-    return getRankingsByPublisher(publisherKey);
-};
+export const getRankingsByPublisherCached = redisCache.define(
+  "getRankingsByPublisher",
+  {
+    ttl: 1000 * 60 * 60 * 24,
+  },
+  getRankingsByPublisher,
+).getRankingsByPublisher;
 
-export const getPublisherAverageScoreHistoryCached = async (cluster: Cluster, key: string) => {
-    return getPublisherAverageScoreHistory(cluster, key);
-};
 
-export const getPublisherRankingHistoryCached = async (cluster: Cluster, key: string) => {
-    return getPublisherRankingHistory(cluster, key);
-};
+export const getPublishersCached = redisCache.define(
+  "getPublishers",
+  {
+    ttl: 1000 * 60 * 60 * 24,
+  },
+  getPublishers,
+).getPublishers;
 
-export const getPublishersCached = async (cluster: Cluster) => {
-    return getPublishers(cluster);
-}
+export const getPublisherAverageScoreHistoryCached = redisCache.define(
+  "getPublisherAverageScoreHistory",
+  {
+    ttl: 1000 * 60 * 60 * 24,
+  },
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  getPublisherAverageScoreHistory,
+).getPublisherAverageScoreHistory as typeof getPublisherAverageScoreHistory;
+
+export const getPublisherRankingHistoryCached = redisCache.define(
+  "getPublisherRankingHistory",
+  {
+    ttl: 1000 * 60 * 60 * 24,
+  },
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  getPublisherRankingHistory,
+).getPublisherRankingHistory as typeof getPublisherRankingHistory;

@@ -1,26 +1,37 @@
+import { parse, } from "superjson";
+import { z } from "zod";
+
+import { PUBLIC_URL, VERCEL_AUTOMATION_BYPASS_SECRET } from '../config/server';
 import { Cluster, priceFeedsSchema } from "../services/pyth";
-import { getFeeds } from './pyth/get-feeds';
-import { getPublishersForCluster } from './pyth/get-publishers-for-cluster';
 
 // Convenience helpers matching your previous functions
 export async function getPublishersForFeedCached(
   cluster: Cluster,
   symbol: string
 ) {
-  const map = await getPublishersForCluster(cluster);
-  return map[symbol] ?? [];
+  const data = await fetch(`${PUBLIC_URL}/api/pyth/get-publishers/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`, {
+    next: {
+      revalidate: 1000 * 60 * 60 * 24,
+    },
+    headers: {
+      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
+    },
+  });
+  return data.json() as Promise<string[]>;
 }
 
 export async function getFeedsForPublisherCached(
   cluster: Cluster,
   publisher: string
 ) {
-  // eslint-disable-next-line no-console
-  console.log('getFeedsForPublisherCached');
-  const data = await getFeeds(cluster);
-  return priceFeedsSchema.parse(
-    data.filter(({ price }) =>
-      price.priceComponents.some((c) => c.publisher === publisher)
-    )
-  );
+  const data = await fetch(`${PUBLIC_URL}/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}?cluster=${cluster.toString()}`, {
+    next: {
+      revalidate: 1000 * 60 * 60 * 24,
+    },
+    headers: {
+      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
+    },
+  });
+  const rawData = await data.text();
+  return parse<z.infer<typeof priceFeedsSchema>>(rawData);
 }

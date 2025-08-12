@@ -2,8 +2,6 @@ import { getPythMetadata } from './get-metadata';
 import { Cluster } from '../../services/pyth';
 import { redisCache } from '../../utils/cache';
 
-
-// Publishers map (plain JSON) → good candidate for Redis
 const _computePublishers = async (cluster: Cluster) => {
   const data = await getPythMetadata(cluster);
   const result: Record<string, string[]> = {};

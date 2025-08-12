@@ -91,6 +91,7 @@ export const Publishers = async ({ params }: Props) => {
 export const PublishersLoading = () => <PublishersCard isLoading />;
 
 const getPublishers = async (cluster: Cluster, symbol: string) => {
+  
   const [publishers, rankings] = await Promise.all([
     getPublishersForFeedCached(cluster, symbol),
     getRankingsBySymbolCached(symbol),
