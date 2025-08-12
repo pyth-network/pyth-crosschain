@@ -5,6 +5,7 @@ import type { PAGE_SIZE } from "./pages";
 import { DEFAULT_PAGE_SIZE } from "./pages";
 
 const FORTUNA_URL = "https://fortuna.dourolabs.app/";
+const FORTUNA_TESTNET_URL = "https://fortuna-staging.dourolabs.app/";
 
 export type Args = Partial<{
   search: string;
@@ -21,7 +22,10 @@ export const getRequests = async ({
   pageSize = DEFAULT_PAGE_SIZE,
   page,
 }: Args): Promise<Result> => {
-  const url = new URL("/v1/logs", FORTUNA_URL);
+  const baseUrl = chain && isValidDeployment(chain) && EntropyDeployments[chain].isTestnet 
+    ? FORTUNA_TESTNET_URL 
+    : FORTUNA_URL;
+  const url = new URL("/v1/logs", baseUrl);
   url.searchParams.set("min_timestamp", new Date("2023-10-01").toISOString());
   url.searchParams.set("max_timestamp", new Date("2033-10-01").toISOString());
   url.searchParams.set("limit", pageSize.toString());
