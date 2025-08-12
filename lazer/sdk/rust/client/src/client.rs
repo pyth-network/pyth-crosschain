@@ -51,7 +51,7 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use backoff::ExponentialBackoff;
-use pyth_lazer_protocol::api::{SubscribeRequest, SubscriptionId};
+use pyth_lazer_protocol::subscription::{SubscribeRequest, SubscriptionId};
 use tokio::sync::mpsc::{self, error::TrySendError};
 use tracing::{error, warn};
 use ttl_cache::TtlCache;

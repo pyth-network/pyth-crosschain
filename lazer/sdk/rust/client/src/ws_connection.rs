@@ -4,8 +4,8 @@ use anyhow::Result;
 use derive_more::From;
 use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use pyth_lazer_protocol::{
-    api::{ErrorResponse, SubscribeRequest, UnsubscribeRequest, WsRequest, WsResponse},
     binary_update::BinaryWsUpdate,
+    subscription::{ErrorResponse, Request, Response, SubscribeRequest, UnsubscribeRequest},
 };
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use url::Url;
@@ -32,7 +32,7 @@ pub struct PythLazerWSConnection {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, From)]
 pub enum AnyResponse {
-    Json(WsResponse),
+    Json(Response),
     Binary(BinaryWsUpdate),
 }
 
@@ -84,13 +84,13 @@ impl PythLazerWSConnection {
                 .try_filter_map(|msg| async {
                     let r: Result<Option<AnyResponse>> = match msg {
                         Message::Text(text) => {
-                            Ok(Some(serde_json::from_str::<WsResponse>(&text)?.into()))
+                            Ok(Some(serde_json::from_str::<Response>(&text)?.into()))
                         }
                         Message::Binary(data) => {
                             Ok(Some(BinaryWsUpdate::deserialize_slice(&data)?.into()))
                         }
                         Message::Close(_) => Ok(Some(
-                            WsResponse::Error(ErrorResponse {
+                            Response::Error(ErrorResponse {
                                 error: "WebSocket connection closed".to_string(),
                             })
                             .into(),
@@ -103,7 +103,7 @@ impl PythLazerWSConnection {
         Ok(response_stream)
     }
 
-    pub async fn send_request(&mut self, request: WsRequest) -> Result<()> {
+    pub async fn send_request(&mut self, request: Request) -> Result<()> {
         if let Some(sender) = &mut self.ws_sender {
             let msg = serde_json::to_string(&request)?;
             sender.send(Message::Text(msg)).await?;
@@ -118,7 +118,7 @@ impl PythLazerWSConnection {
     /// # Arguments
     /// * `request` - A subscription request containing feed IDs and parameters
     pub async fn subscribe(&mut self, request: SubscribeRequest) -> Result<()> {
-        let request = WsRequest::Subscribe(request);
+        let request = Request::Subscribe(request);
         self.send_request(request).await
     }
 
@@ -127,7 +127,7 @@ impl PythLazerWSConnection {
     /// # Arguments
     /// * `subscription_id` - The ID of the subscription to cancel
     pub async fn unsubscribe(&mut self, request: UnsubscribeRequest) -> Result<()> {
-        let request = WsRequest::Unsubscribe(request);
+        let request = Request::Unsubscribe(request);
         self.send_request(request).await
     }
 

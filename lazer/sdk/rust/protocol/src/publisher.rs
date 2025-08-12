@@ -1,5 +1,10 @@
+//! WebSocket JSON protocol types for API the publisher provides to the router.
+//! Publisher data sourcing may also be implemented in the router process,
+//! eliminating WebSocket overhead.
+
 use {
-    crate::{price::Price, rate::Rate, time::TimestampUs, PriceFeedId},
+    super::router::{Price, PriceFeedId, Rate},
+    crate::time::TimestampUs,
     derive_more::derive::From,
     serde::{Deserialize, Serialize},
 };
@@ -99,11 +104,9 @@ fn price_feed_data_v1_serde() {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs::from_micros(2),
         publisher_timestamp_us: TimestampUs::from_micros(3),
-        price: Some(Price::from_nonzero_mantissa(4.try_into().unwrap())),
-        best_bid_price: Some(Price::from_nonzero_mantissa(5.try_into().unwrap())),
-        best_ask_price: Some(Price::from_nonzero_mantissa(
-            (2 * 256 + 6).try_into().unwrap(),
-        )),
+        price: Some(Price(4.try_into().unwrap())),
+        best_bid_price: Some(Price(5.try_into().unwrap())),
+        best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedDataV1>(&data).unwrap(),
@@ -123,7 +126,7 @@ fn price_feed_data_v1_serde() {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs::from_micros(2),
         publisher_timestamp_us: TimestampUs::from_micros(3),
-        price: Some(Price::from_nonzero_mantissa(4.try_into().unwrap())),
+        price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
     };
@@ -150,11 +153,9 @@ fn price_feed_data_v2_serde() {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs::from_micros(2),
         publisher_timestamp_us: TimestampUs::from_micros(3),
-        price: Some(Price::from_nonzero_mantissa(4.try_into().unwrap())),
-        best_bid_price: Some(Price::from_nonzero_mantissa(5.try_into().unwrap())),
-        best_ask_price: Some(Price::from_nonzero_mantissa(
-            (2 * 256 + 6).try_into().unwrap(),
-        )),
+        price: Some(Price(4.try_into().unwrap())),
+        best_bid_price: Some(Price(5.try_into().unwrap())),
+        best_ask_price: Some(Price((2 * 256 + 6).try_into().unwrap())),
         funding_rate: None,
     };
     assert_eq!(
@@ -176,10 +177,10 @@ fn price_feed_data_v2_serde() {
         price_feed_id: PriceFeedId(1),
         source_timestamp_us: TimestampUs::from_micros(2),
         publisher_timestamp_us: TimestampUs::from_micros(3),
-        price: Some(Price::from_nonzero_mantissa(4.try_into().unwrap())),
+        price: Some(Price(4.try_into().unwrap())),
         best_bid_price: None,
         best_ask_price: None,
-        funding_rate: Some(Rate::from_mantissa(3 * 256 + 7)),
+        funding_rate: Some(Rate(3 * 256 + 7)),
     };
     assert_eq!(
         bincode::deserialize::<PriceFeedDataV2>(&data2).unwrap(),

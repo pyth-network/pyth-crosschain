@@ -1,5 +1,5 @@
 use {
-    crate::price::Price,
+    crate::router::Price,
     serde::{Deserialize, Deserializer, Serialize, Serializer},
     std::num::NonZeroI64,
 };
@@ -9,7 +9,7 @@ where
     S: Serializer,
 {
     value
-        .map_or(0i64, |price| price.mantissa_i64())
+        .map_or(0i64, |price| price.0.get())
         .serialize(serializer)
 }
 
@@ -18,5 +18,5 @@ where
     D: Deserializer<'de>,
 {
     let value = i64::deserialize(deserializer)?;
-    Ok(NonZeroI64::new(value).map(Price::from_nonzero_mantissa))
+    Ok(NonZeroI64::new(value).map(Price))
 }
