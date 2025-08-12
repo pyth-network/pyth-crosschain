@@ -75,6 +75,8 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 };
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
+  // eslint-disable-next-line no-console
+  console.log('getFeedsForSearchDialog');
   const feeds = await getFeeds(cluster);
 
   return feeds.map((feed) => ({

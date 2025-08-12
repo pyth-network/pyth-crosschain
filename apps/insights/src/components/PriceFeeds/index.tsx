@@ -290,6 +290,8 @@ const FeaturedFeedsCard = <T extends ElementType>({
 );
 
 const getPriceFeeds = async () => {
+  // eslint-disable-next-line no-console
+  console.log('getPriceFeeds');
   const priceFeeds = await getFeeds(Cluster.Pythnet);
   const activeFeeds = priceFeeds.filter((feed) => isActive(feed));
   const comingSoon = priceFeeds.filter((feed) => !isActive(feed));

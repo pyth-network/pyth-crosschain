@@ -1,6 +1,10 @@
+// disable file
+//  @typescript-eslint/no-unused-vars
+import { z } from 'zod';
+
 
 import { getPythMetadata } from './get-metadata';
-import { Cluster, priceFeedsSchema } from '../../services/pyth';
+import { Cluster, priceFeedsSchema } from "../../services/pyth";
 import { redisCache } from '../../utils/cache';
 
 
@@ -32,17 +36,23 @@ const _getFeeds = async (cluster: Cluster) => {
   return priceFeedsSchema.parse(filtered);
 };
 
-export const getFeeds = redisCache.define(
+
+export const getFeedsCached = redisCache.define(
   "getFeeds",
   {
     ttl: 1000 * 60 * 60 * 24,
-    references: (cluster: Cluster) => {
-      return[`pyth:feeds:${cluster.toString()}`];
-    },
   },
   _getFeeds,
 ).getFeeds;
 
+
+
+
+export const getFeeds = async (cluster: Cluster): Promise<z.infer<typeof priceFeedsSchema>> => {
+  // eslint-disable-next-line no-console
+  console.log('getFeeds function called');
+  return getFeedsCached(cluster);
+};
 
 // const _getFeedsBySymbol = async (cluster: Cluster, symbol: string) => {
 //   const feeds = await getFeeds(cluster);
@@ -51,5 +61,8 @@ export const getFeeds = redisCache.define(
 
 // export const getFeedsBySymbol = redisCache.define(
 //   "getFeedsBySymbol",
+//   {
+//     ttl: 1000 * 60 * 60 * 24,
+//   },
 //   _getFeedsBySymbol,
 // ).getFeedsBySymbol;

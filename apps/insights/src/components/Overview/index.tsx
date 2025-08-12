@@ -24,6 +24,8 @@ import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 
 export const Overview = async () => {
+  // eslint-disable-next-line no-console
+  console.log('overview');
   const priceFeeds = await getFeeds(Cluster.Pythnet);
   const today = new Date();
   const feedCounts = [

@@ -31,6 +31,7 @@ const getEnvOrDefault = (key: string, defaultValue: string) =>
  * Indicates that this server is the live customer-facing production server.
  */
 export const IS_PRODUCTION_SERVER = process.env.VERCEL_ENV === "production";
+export const IS_PREVIEW_SERVER = process.env.VERCEL_ENV === "preview";
 
 const defaultInProduction = IS_PRODUCTION_SERVER
   ? getEnvOrDefault
@@ -59,19 +60,35 @@ export const ENABLE_ACCESSIBILITY_REPORTING =
   !IS_PRODUCTION_SERVER && !process.env.DISABLE_ACCESSIBILITY_REPORTING;
 
 
-export async function getRedis(): Promise<Redis> {
+let redisClient: Redis | undefined;
+
+export function getRedis(): Redis {
   const host = process.env.REDIS_HOST;
   const port = process.env.REDIS_PORT;
   const password = process.env.REDIS_PASSWORD;
   if (!host || !port) {
     throw new Error('REDIS_HOST, and REDIS_PORT must be set');
   }
-  const client = new Redis({ 
+  redisClient ??= new Redis({ 
     username: 'default',
     password: password ?? '',
     host,
     port: Number.parseInt(port),
-  });
-  await client.set('test2', Math.random().toString());
-  return client;
+    });
+  return redisClient;
 }
+
+export const PUBLIC_URL = (() => {
+  if (IS_PRODUCTION_SERVER) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL!}`;
+  } else if (IS_PREVIEW_SERVER) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars
+    return `https://${process.env.VERCEL_URL!}`;
+  } else {
+    return `http://localhost:3003`;
+  }
+})();
+
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars
+export const VERCEL_AUTOMATION_BYPASS_SECRET = process.env.VERCEL_AUTOMATION_BYPASS_SECRET!;

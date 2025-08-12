@@ -15,6 +15,8 @@ export async function getFeedsForPublisherCached(
   cluster: Cluster,
   publisher: string
 ) {
+  // eslint-disable-next-line no-console
+  console.log('getFeedsForPublisherCached');
   const data = await getFeeds(cluster);
   return priceFeedsSchema.parse(
     data.filter(({ price }) =>
