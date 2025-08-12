@@ -192,7 +192,7 @@ export class TransactionBuilder {
             this.transactionInstructions.length - 1
           ].instructions,
           instruction,
-          this.transactionInstructions.length % JITO_BUNDLE_SIZE === 0
+          this.transactionInstructions.length % JITO_BUNDLE_SIZE === 0 // This transaction may be the first of a Jito bundle, so we leave room for a Jito tip transfer.
             ? buildJitoTipInstruction(this.payer, 1)
             : ComputeBudgetProgram.setComputeUnitPrice({
                 microLamports: 1,
