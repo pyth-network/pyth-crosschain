@@ -39,6 +39,8 @@ impl HermesResilientWSConnection {
         let (request_sender, mut request_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let mut task = HermesWSConnectionTask::new(endpoint, backoff, timeout);
 
+        println!("new resilient WebSocket connection to {}", task.endpoint);
+
         tokio::spawn(async move {
             if let Err(e) = task.run(sender, &mut request_receiver).await {
                 error!("Resilient WebSocket connection task failed: {}", e);
@@ -81,6 +83,10 @@ impl HermesWSConnectionTask {
     ) -> Result<()> {
         loop {
             let start_time = Instant::now();
+            println!(
+                "Run Resilient WebSocket connection task to {}",
+                self.endpoint
+            );
             if let Err(e) = self.start(response_sender.clone(), request_receiver).await {
                 // If a connection was working for BACKOFF_RESET_DURATION
                 // and timeout + 1sec, it was considered successful therefore reset the backoff
@@ -93,7 +99,10 @@ impl HermesWSConnectionTask {
                 let delay = self.backoff.next_backoff();
                 match delay {
                     Some(d) => {
-                        info!("WebSocket connection failed: {}. Retrying in {:?}", e, d);
+                        info!(
+                            "WebSocket connection to {} failed: {}. Retrying in {:?}",
+                            self.endpoint, e, d
+                        );
                         tokio::time::sleep(d).await;
                     }
                     None => {
@@ -122,6 +131,8 @@ impl HermesWSConnectionTask {
                 .await?;
         }
 
+        let mut cnt = 0;
+
         loop {
             let timeout_response = tokio::time::timeout(self.timeout, stream.next());
 
@@ -130,6 +141,12 @@ impl HermesWSConnectionTask {
                     match response {
                         Ok(Some(response)) => match response {
                             Ok(response) => {
+                                // println!("Sending from {:?}", self.endpoint.as_str());
+                                if cnt % 10000 == 0 {
+                                    println!("Sent {} messages from {:?}", cnt, self.endpoint.as_str());
+                                }
+                                cnt += 1;
+
                                 sender
                                     .send(response)
                                     .await
@@ -148,7 +165,7 @@ impl HermesWSConnectionTask {
                     }
                 }
                 Some(request) = request_receiver.recv() => {
-                   self.handle_request(&mut ws_connection,request).await?;
+                   self.handle_request(&mut ws_connection, request).await?;
                 }
             }
         }
