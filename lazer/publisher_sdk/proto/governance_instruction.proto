@@ -235,7 +235,7 @@ message AddFeed {
     // [required]
     optional uint32 min_publishers = 103;
     // [required]
-    optional google.protobuf.Duration min_rate = 104;
+    optional Channel min_channel = 104;
     // [required]
     optional google.protobuf.Duration expiry_time = 105;
     // [required]
@@ -282,7 +282,7 @@ message UpdateFeedProperties {
     // [optional]
     optional uint32 min_publishers = 103;
     // [optional]
-    optional google.protobuf.Duration min_rate = 104;
+    optional Channel min_channel = 104;
     // [optional]
     optional google.protobuf.Duration expiry_time = 105;
     // [optional]
