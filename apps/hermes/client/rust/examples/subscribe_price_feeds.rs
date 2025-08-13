@@ -108,10 +108,10 @@ async fn main() -> anyhow::Result<()> {
                         //     now - *time,
                         //     id
                         // );
-                        if now - *time > 2 && *time > 0 {
-                            println!("delayed update for {} : {}", id, now - *time);
-                            break;
-                        }
+                        // if now - *time > 2 && *time > 0 {
+                        //     println!("delayed update for {} : {}", id, now - *time);
+                        //     break;
+                        // }
                     }
 
                     let entity = map.get_mut(&price_feed.id).unwrap();
