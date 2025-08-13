@@ -13,7 +13,6 @@ use pyth_lazer_publisher_sdk::transaction::{
     Ed25519SignatureData, LazerTransaction, SignatureData, SignedLazerTransaction,
 };
 use solana_keypair::read_keypair_file;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -133,11 +132,10 @@ impl LazerPublisherTask {
             return Ok(());
         }
 
-        let updates = if self.config.enable_update_deduplication {
-            deduplicate_feed_updates(&self.pending_updates.drain(..).collect())?
-        } else {
-            self.pending_updates.drain(..).collect()
-        };
+        let mut updates = self.pending_updates.drain(..).collect();
+        if self.config.enable_update_deduplication {
+            deduplicate_feed_updates(&mut updates);
+        }
 
         let publisher_update = PublisherUpdate {
             updates,
@@ -180,27 +178,9 @@ impl LazerPublisherTask {
     }
 }
 
-fn deduplicate_feed_updates(feed_updates: &Vec<FeedUpdate>) -> Result<Vec<FeedUpdate>> {
-    let mut deduped_feed_updates = Vec::new();
-    let mut last_feed_update = HashMap::new();
-
-    // assume that feed_updates is already sorted by ts (within feed_update_id groups)
-    for feed_update in feed_updates {
-        let feed_id = feed_update.feed_id.context("feed_id is required")?;
-
-        if let Some(update) = feed_update.update.as_ref() {
-            if let Some(last_update) = last_feed_update.get(&feed_id) {
-                if update == last_update {
-                    continue;
-                }
-            }
-
-            deduped_feed_updates.push(feed_update.clone());
-            last_feed_update.insert(feed_id, update.clone());
-        }
-    }
-
-    Ok(deduped_feed_updates)
+fn deduplicate_feed_updates(feed_updates: &mut Vec<FeedUpdate>) {
+    // assume that feed_updates is already sorted by timestamp for each feed_update.feed_id
+    feed_updates.dedup_by_key(|feed_update| (feed_update.feed_id, feed_update.update.clone()));
 }
 
 #[cfg(test)]
@@ -330,7 +310,7 @@ mod tests {
         //   - (6, 10)
         // we should only return (1, 10), (4, 15), (6, 10)
 
-        let updates = vec![
+        let updates = &mut vec![
             test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(2).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(3).unwrap(), 10),
@@ -345,15 +325,13 @@ mod tests {
             test_feed_update(1, TimestampUs::from_millis(6).unwrap(), 10),
         ];
 
-        assert_eq!(
-            deduplicate_feed_updates(&updates).unwrap(),
-            expected_updates
-        );
+        deduplicate_feed_updates(updates);
+        assert_eq!(updates.to_vec(), expected_updates);
     }
 
     #[test]
     fn test_deduplicate_feed_updates_multiple_feeds() {
-        let updates = vec![
+        let updates = &mut vec![
             test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(2).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(3).unwrap(), 10),
@@ -368,9 +346,7 @@ mod tests {
             test_feed_update(2, TimestampUs::from_millis(6).unwrap(), 10),
         ];
 
-        assert_eq!(
-            deduplicate_feed_updates(&updates).unwrap(),
-            expected_updates
-        );
+        deduplicate_feed_updates(updates);
+        assert_eq!(updates.to_vec(), expected_updates);
     }
 }
