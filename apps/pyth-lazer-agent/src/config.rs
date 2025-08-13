@@ -19,6 +19,8 @@ pub struct Config {
     #[serde(with = "humantime_serde", default = "default_publish_interval")]
     pub publish_interval_duration: Duration,
     pub history_service_url: Option<Url>,
+    #[serde(default)]
+    pub enable_update_deduplication: bool,
 }
 
 #[derive(Deserialize, Derivative, Clone, PartialEq)]
