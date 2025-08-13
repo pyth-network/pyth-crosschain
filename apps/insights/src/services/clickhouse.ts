@@ -183,8 +183,7 @@ export const getYesterdaysPrices = async (symbols: string[]) =>
   );
 
 export const getPublisherRankingHistory = async (
-  cluster: Cluster,
-  key: string,
+  { cluster, key }: { cluster: Cluster; key: string }
 ) =>
   safeQuery(
     z.array(
@@ -288,8 +287,7 @@ export const getFeedPriceHistory = async (
   );
 
 export const getPublisherAverageScoreHistory = async (
-  cluster: Cluster,
-  key: string,
+  { cluster, key }: { cluster: Cluster; key: string }
 ) =>
   safeQuery(
     z.array(

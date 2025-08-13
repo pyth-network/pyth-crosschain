@@ -63,27 +63,20 @@ export const ENABLE_ACCESSIBILITY_REPORTING =
 let redisClient: Redis | undefined;
 
 export function getRedis(): Redis {
-  const host = process.env.REDIS_HOST;
-  const port = process.env.REDIS_PORT;
-  const password = process.env.REDIS_PASSWORD;
-  if (!host || !port) {
-    throw new Error('REDIS_HOST, and REDIS_PORT must be set');
+  const url = process.env.REDIS_URL;
+  if (!url) {
+    throw new Error('REDIS_URL must be set');
   }
   if(redisClient) {
     return redisClient;
   }
-  redisClient = new Redis({ 
-    username: 'default',
-    password: password ?? '',
-    host,
-    port: Number.parseInt(port),
-    });
+  redisClient = new Redis(url);
   return redisClient;
 }
 
 export const PUBLIC_URL = (() => {
   if (IS_PRODUCTION_SERVER) {
-    
+
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL!}`;
   } else if (IS_PREVIEW_SERVER) {
     return `https://${process.env.VERCEL_URL!}`;

@@ -45,6 +45,7 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
+import { getPublisherAverageScoreHistory, getPublisherRankingHistory } from '../../services/clickhouse';
 
 type Props = {
   children: ReactNode;
@@ -150,10 +151,7 @@ const RankingCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const rankingHistory = await getPublisherRankingHistoryCached(
-    cluster,
-    publisherKey,
-  );
+  const rankingHistory = await getPublisherRankingHistoryCached({ cluster, key: publisherKey });
   return <RankingCardImpl rankingHistory={rankingHistory} />;
 };
 
@@ -234,10 +232,8 @@ const ScoreCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const averageScoreHistory = await getPublisherAverageScoreHistoryCached(
-    cluster,
-    publisherKey,
-  );
+  const averageScoreHistory = await getPublisherAverageScoreHistoryCached({ cluster, key: publisherKey });
+  
   return <ScoreCardImpl averageScoreHistory={averageScoreHistory} />;
 };
 
