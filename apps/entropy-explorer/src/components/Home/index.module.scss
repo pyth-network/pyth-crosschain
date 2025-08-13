@@ -27,6 +27,10 @@
       width: 100%;
 
       @include theme.breakpoint("lg") {
+        width: theme.spacing(80);
+      }
+
+      @include theme.breakpoint("xl") {
         width: theme.spacing(100);
       }
     }

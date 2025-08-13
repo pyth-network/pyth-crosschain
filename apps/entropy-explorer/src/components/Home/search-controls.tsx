@@ -10,15 +10,19 @@ import type { ComponentProps } from "react";
 import { Suspense, useCallback, useMemo, useTransition } from "react";
 import { useCollator } from "react-aria";
 
-import {
-  EntropyDeployments,
-  isValidDeployment,
-} from "../../entropy-deployments";
+import type { ChainSlug } from "../../entropy-deployments";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "../../pages";
 import { Status, StatusParams } from "../../requests";
 import type { ConstrainedOmit } from "../../type-utils";
 import { Status as StatusComponent } from "../Status";
-import styles from "./search-controls.module.scss";
+import { ChainTag } from "./chain-tag";
+import {
+  EntropyDeployments,
+  CHAIN_LABELS,
+  getChainName,
+  isSpecialChainKey,
+  parseChainSlug,
+} from "../../entropy-deployments";
 
 export const SearchBar = (props: ComponentProps<typeof ResolvedSearchBar>) => (
   <Suspense fallback={<SearchInput isPending {...props} />}>
@@ -173,10 +177,6 @@ const parseStatus = (value: string) => {
 const serializeStatus = (value: ReturnType<typeof parseStatus>) =>
   value === "all" ? "" : StatusParams[value];
 
-type Deployment =
-  | ReturnType<typeof entropyDeploymentsByNetwork>[number]
-  | { id: "all" };
-
 export const ChainSelect = (
   props: ComponentProps<typeof ResolvedChainSelect>,
 ) => (
@@ -187,16 +187,16 @@ export const ChainSelect = (
 
 const ResolvedChainSelect = (
   props: ConstrainedOmit<
-    SelectProps<Deployment>,
+    SelectProps<{ id: ChainSlug }>,
     keyof ReturnType<typeof useChainSelect>
   >,
 ) => <Select {...useChainSelect()} {...props} />;
 
 const useChainSelect = () => {
-  const chain = useSearchParam({
+  const chain = useSearchParam<ChainSlug>({
     paramName: "chain",
-    parse: parseChain,
-    defaultValue: "all",
+    parse: parseChainSlug,
+    defaultValue: "all-mainnet",
     serialize: toString,
   });
   const collator = useCollator();
@@ -205,48 +205,43 @@ const useChainSelect = () => {
     selectedKey: chain.value,
     onSelectionChange: chain.onChange,
     isPending: chain.isTransitioning,
-    buttonLabel:
-      chain.value === "all"
-        ? "All Chains"
-        : EntropyDeployments[chain.value].name,
+    buttonLabel: getChainName(chain.value),
     optionGroups: useMemo(
       () => [
         {
-          name: "ALL",
-          options: [{ id: "all" as const }],
-          hideLabel: true,
-        },
-        {
           name: "MAINNET",
-          options: entropyDeploymentsByNetwork(collator, false),
+          options: [
+            { id: "all-mainnet" as const },
+            ...entropyDeploymentsByNetwork(collator, false),
+          ],
         },
         {
           name: "TESTNET",
-          options: entropyDeploymentsByNetwork(collator, true),
+          options: [
+            { id: "all-testnet" as const },
+            ...entropyDeploymentsByNetwork(collator, true),
+          ],
         },
       ],
       [collator],
     ),
     show: useCallback(
-      (chain: Deployment) =>
-        chain.id === "all" ? (
-          "All Chains"
+      (chain: { id: ChainSlug }) =>
+        isSpecialChainKey(chain.id) ? (
+          CHAIN_LABELS[chain.id]
         ) : (
-          <div className={styles.chainSelectItem}>
-            <Image alt={chain.name} src={chain.icon} width={20} height={20} />
-            {chain.name}
-          </div>
+          <ChainTag chain={EntropyDeployments[chain.id]} />
         ),
       [],
     ),
     textValue: useCallback(
-      (chain: Deployment) => (chain.id === "all" ? "All" : chain.name),
+      (chain: { id: ChainSlug }) => getChainName(chain.id),
       [],
     ),
-    ...(chain.value !== "all" && {
+    ...(!isSpecialChainKey(chain.value) && {
       icon: (
         <Image
-          alt={EntropyDeployments[chain.value].name}
+          alt=""
           src={EntropyDeployments[chain.value].icon}
           width={20}
           height={20}
@@ -264,7 +259,7 @@ const entropyDeploymentsByNetwork = (
     .map(([slug, chain]) => {
       return {
         ...chain,
-        id: Number.parseInt(slug, 10) as keyof typeof EntropyDeployments,
+        id: slug as keyof typeof EntropyDeployments,
       };
     })
     .filter((chain) => chain.isTestnet === isTestnet)
@@ -275,15 +270,6 @@ const parseInt = (value: string) => Number.parseInt(value, 10);
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 const toString = <T extends { toString: () => string }>(value: T) =>
   value.toString();
-
-const parseChain = (value: string) => {
-  if (value === "all") {
-    return "all";
-  } else {
-    const parsedId = Number.parseInt(value, 10);
-    return isValidDeployment(parsedId) ? parsedId : "all";
-  }
-};
 
 const useSearchParam = <T,>({
   paramName,

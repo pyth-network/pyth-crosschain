@@ -13,7 +13,6 @@ import { useNumberFormatter } from "react-aria";
 import TimeAgo from "react-timeago";
 
 import styles from "./request-drawer.module.scss";
-import { EntropyDeployments } from "../../entropy-deployments";
 import { getErrorDetails } from "../../errors";
 import type {
   Request,
@@ -25,6 +24,7 @@ import { truncate } from "../../truncate";
 import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
+import { ChainTag } from "./chain-tag";
 
 export const mkRequestDrawer = (
   request: Request,
@@ -97,6 +97,11 @@ const RequestDrawerBody = ({
           },
         ]}
         rows={[
+          {
+            id: "chain",
+            field: "Chain",
+            value: <ChainTag chain={request.chain} />,
+          },
           {
             id: "requestTimestamp",
             field: "Request Timestamp",
@@ -244,8 +249,7 @@ const RequestDrawerBody = ({
 };
 
 const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
-  const deployment = EntropyDeployments[request.chain];
-  const retryCommand = `cast send ${deployment.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${request.provider} ${request.sequenceNumber.toString()} ${request.userContribution} ${request.randomNumber} -r ${deployment.rpc} --private-key <YOUR_PRIVATE_KEY>`;
+  const retryCommand = `cast send ${request.chain.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${request.provider} ${request.sequenceNumber.toString()} ${request.userContribution} ${request.randomNumber} -r ${request.chain.rpc} --private-key <YOUR_PRIVATE_KEY>`;
 
   return (
     <>
@@ -268,7 +272,7 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
           Help
         </Button>
         <div className={styles.failureMessage}>
-          <CallbackFailureMessage reason={request.returnValue} />
+          <FailureMessage reason={request.returnValue} />
         </div>
       </InfoBox>
       <InfoBox
@@ -288,7 +292,7 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
             marginTop: "16px",
           }}
         >
-          <CopyButton text={retryCommand}>Copy Forge Command</CopyButton>
+          <CopyButton text={retryCommand}>Copy Cast Command</CopyButton>
           <Button
             size="sm"
             variant="ghost"
@@ -327,7 +331,7 @@ const RevealFailedInfo = ({ request }: { request: FailedRequest }) => (
       Help
     </Button>
     <div className={styles.failureMessage}>
-      <CallbackFailureMessage reason={request.reason} />
+      <FailureMessage reason={request.reason} />
     </div>
   </InfoBox>
 );
@@ -340,7 +344,7 @@ const getHelpLink = (reason: string) => {
   );
 };
 
-const CallbackFailureMessage = ({ reason }: { reason: string }) => {
+const FailureMessage = ({ reason }: { reason: string }) => {
   const details = getErrorDetails(reason);
   return details ? (
     <>
@@ -350,6 +354,8 @@ const CallbackFailureMessage = ({ reason }: { reason: string }) => {
       </p>
     </>
   ) : (
-    reason
+    <>
+      <b>Error response:</b> {reason}
+    </>
   );
 };
