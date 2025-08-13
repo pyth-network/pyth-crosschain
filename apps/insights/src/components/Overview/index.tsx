@@ -9,7 +9,7 @@ import PriceFeedsLight from "./price-feeds-light.svg";
 import PublishersDark from "./publishers-dark.svg";
 import PublishersLight from "./publishers-light.svg";
 import { TabList } from "./tab-list";
-import { getFeeds } from "../../server/pyth/get-feeds";
+import { getFeedsCached } from "../../server/pyth/get-feeds";
 import { Cluster } from "../../services/pyth";
 import {
   totalVolumeTraded,
@@ -24,10 +24,9 @@ import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 
 export const Overview = async () => {
-  // eslint-disable-next-line no-console
-  console.log('overview');
-  const priceFeeds = await getFeeds(Cluster.Pythnet);
+  const priceFeeds = await getFeedsCached(Cluster.Pythnet);
   const today = new Date();
+
   const feedCounts = [
     ...activeFeeds.map(({ date, numFeeds }) => ({
       x: date,
@@ -40,6 +39,7 @@ export const Overview = async () => {
       y: priceFeeds.length,
     },
   ];
+
   return (
     <div className={styles.overview}>
       <h1 className={styles.header}>Overview</h1>

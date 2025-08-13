@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 import { getPythMetadata } from './get-metadata';
 import { Cluster, priceFeedsSchema } from "../../services/pyth";
 import { redisCache } from '../../utils/cache';
@@ -33,7 +31,3 @@ export const getFeedsCached = redisCache.define(
   "getFeeds",
   _getFeeds,
 ).getFeeds;
-
-export const getFeeds = async (cluster: Cluster): Promise<z.infer<typeof priceFeedsSchema>> => {
-  return getFeedsCached(cluster);
-};

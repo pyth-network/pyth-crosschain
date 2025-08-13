@@ -11,7 +11,7 @@ import {
 } from "../../config/server";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { getPublishersCached } from '../../server/clickhouse';
-import { getFeeds } from '../../server/pyth/get-feeds';
+import { getFeedsCached } from '../../server/pyth/get-feeds';
 import { Cluster } from "../../services/pyth";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
@@ -75,9 +75,7 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 };
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
-  // eslint-disable-next-line no-console
-  console.log('getFeedsForSearchDialog');
-  const feeds = await getFeeds(cluster);
+  const feeds = await getFeedsCached(cluster);
 
   return feeds.map((feed) => ({
     symbol: feed.symbol,

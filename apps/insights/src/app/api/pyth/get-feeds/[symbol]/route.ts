@@ -8,12 +8,15 @@ export const GET = async (request: Request, { params }: { params: Promise<{ symb
   const { symbol } = await params;
   const { searchParams } = new URL(request.url);
   const cluster = Number.parseInt(searchParams.get("cluster") ?? Cluster.Pythnet.toString()) as Cluster;
+
   // check if cluster is valid
   if (cluster && !Object.values(Cluster).includes(cluster)) {
     return NextResponse.json({ error: "Invalid cluster" }, { status: 400 });
   }
+  
   const feeds = await getFeedsCached(cluster);
   const feed = feeds.find((feed) => feed.symbol === symbol);
+  
   return new Response(stringify(feed), {
     headers: {
       'Content-Type': 'application/json',

@@ -47,7 +47,7 @@ export const getFeedsCached = async (cluster: Cluster) => {
     },
   });
   const dataJson = await data.text();
-  const feeds: z.infer<typeof priceFeedsSchema> = parse(dataJson);
+  const feeds: Omit<z.infer<typeof priceFeedsSchema>[0], "price">[] = parse(dataJson);
   return feeds;
 }
 
@@ -64,6 +64,7 @@ export const getFeedForSymbolCached = async ({symbol, cluster = Cluster.Pythnet}
   if(!data.ok) {
     return undefined;
   }
+
   const dataJson = await data.text();
   const feed: z.infer<typeof priceFeedsSchema>[0] = parse(dataJson);
   return feed;

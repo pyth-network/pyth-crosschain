@@ -23,7 +23,6 @@ export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
   
-  const start = Date.now();
   const [
     feed,
     testFeed,
@@ -35,9 +34,7 @@ export const Publishers = async ({ params }: Props) => {
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
   ]);
-  const end = Date.now();
-  // eslint-disable-next-line no-console
-  console.info(`Publishers took ${(end - start).toString()}ms`);
+
   const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
   const metricsTime = pythnetPublishers.find(
     (publisher) => publisher.ranking !== undefined,

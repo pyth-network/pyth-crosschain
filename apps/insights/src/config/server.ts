@@ -1,6 +1,6 @@
 // Disable the following rule because this file is the intended place to declare
 // and load all env variables.
-/* eslint-disable n/no-process-env */
+/* eslint-disable n/no-process-env, @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars */
 
 import { Redis } from 'ioredis';
 import "server-only";
@@ -83,15 +83,13 @@ export function getRedis(): Redis {
 
 export const PUBLIC_URL = (() => {
   if (IS_PRODUCTION_SERVER) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars
+    
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL!}`;
   } else if (IS_PREVIEW_SERVER) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars
     return `https://${process.env.VERCEL_URL!}`;
   } else {
     return `http://localhost:3003`;
   }
 })();
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars
 export const VERCEL_AUTOMATION_BYPASS_SECRET = process.env.VERCEL_AUTOMATION_BYPASS_SECRET!;
