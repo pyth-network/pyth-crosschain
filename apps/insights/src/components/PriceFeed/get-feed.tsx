@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { parse } from "superjson";
 import { z } from "zod";
 
@@ -24,7 +25,7 @@ export const getFeed = async (params: Promise<{ slug: string }>) => {
 
   return {
     feeds,
-    feed,
+    feed: feed ?? notFound(),
     symbol,
   } as const;
 };

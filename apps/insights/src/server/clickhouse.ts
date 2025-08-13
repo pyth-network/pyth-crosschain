@@ -22,11 +22,11 @@ export const getPublisherAverageScoreHistoryCached = redisCache.define(
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   getPublisherAverageScoreHistory,
-).getPublisherAverageScoreHistory
+).getPublisherAverageScoreHistory as typeof getPublisherAverageScoreHistory;
 
 export const getPublisherRankingHistoryCached = redisCache.define(
   "getPublisherRankingHistory",
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   getPublisherRankingHistory,
-).getPublisherRankingHistory
+).getPublisherRankingHistory as typeof getPublisherRankingHistory;
