@@ -1,6 +1,6 @@
 import { getPythMetadata } from './get-metadata';
 import { Cluster } from '../../services/pyth';
-import { redisCache } from '../../utils/cache';
+import { DEFAULT_CACHE_TTL, redisCache } from '../../utils/cache';
 
 const _computePublishers = async (cluster: Cluster) => {
   const data = await getPythMetadata(cluster);
@@ -16,7 +16,7 @@ const _computePublishers = async (cluster: Cluster) => {
 export const getPublishersForCluster = redisCache.define(
   "getPublishersForCluster",
   {
-    ttl: 1000 * 60 * 60 * 24,
+    ttl: DEFAULT_CACHE_TTL,
   },
   _computePublishers,
 ).getPublishersForCluster;

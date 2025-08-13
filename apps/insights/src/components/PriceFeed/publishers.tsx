@@ -2,8 +2,7 @@ import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
 import { getRankingsBySymbolCached } from '../../server/clickhouse';
-import { getPublishersForFeedCached } from "../../server/pyth";
-import { getFeeds } from "../../server/pyth/get-feeds";
+import { getFeedForSymbolCached, getPublishersForFeedCached } from "../../server/pyth";
 import {
   Cluster,
   ClusterToName,
@@ -23,25 +22,22 @@ type Props = {
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
+  
   const start = Date.now();
   const [
-    pythnetFeeds,
-    pythtestConformanceFeeds,
+    feed,
+    testFeed,
     pythnetPublishers,
     pythtestConformancePublishers,
   ] = await Promise.all([
-    getFeeds(Cluster.Pythnet),
-    getFeeds(Cluster.PythtestConformance),
+    getFeedForSymbolCached({symbol, cluster: Cluster.Pythnet}),
+    getFeedForSymbolCached({symbol, cluster: Cluster.PythtestConformance}),
     getPublishers(Cluster.Pythnet, symbol),
     getPublishers(Cluster.PythtestConformance, symbol),
   ]);
   const end = Date.now();
   // eslint-disable-next-line no-console
   console.info(`Publishers took ${(end - start).toString()}ms`);
-  const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
-  const testFeed = pythtestConformanceFeeds.find(
-    (feed) => feed.symbol === symbol,
-  );
   const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
   const metricsTime = pythnetPublishers.find(
     (publisher) => publisher.ranking !== undefined,

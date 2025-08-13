@@ -69,7 +69,10 @@ export function getRedis(): Redis {
   if (!host || !port) {
     throw new Error('REDIS_HOST, and REDIS_PORT must be set');
   }
-  redisClient ??= new Redis({ 
+  if(redisClient) {
+    return redisClient;
+  }
+  redisClient = new Redis({ 
     username: 'default',
     password: password ?? '',
     host,

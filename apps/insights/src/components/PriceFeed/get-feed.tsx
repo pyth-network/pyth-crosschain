@@ -2,12 +2,14 @@ import { parse } from "superjson";
 import { z } from "zod";
 
 import { PUBLIC_URL, VERCEL_AUTOMATION_BYPASS_SECRET } from '../../config/server';
+import { getFeedForSymbolCached } from '../../server/pyth';
 import { Cluster, priceFeedsSchema } from "../../services/pyth";
+import { DEFAULT_CACHE_TTL } from '../../utils/cache';
 
 export const getFeed = async (params: Promise<{ slug: string }>) => {
   const data = await fetch(`${PUBLIC_URL}/api/pyth/get-feeds?cluster=${Cluster.Pythnet.toString()}&excludePriceComponents=true`, {
     next: {
-      revalidate: 1000 * 60 * 60 * 24,
+      revalidate: DEFAULT_CACHE_TTL,
     },
     headers: {
       'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
@@ -18,20 +20,11 @@ export const getFeed = async (params: Promise<{ slug: string }>) => {
 
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
-  const feed = await fetch(`${PUBLIC_URL}/api/pyth/get-feeds/${encodeURIComponent(symbol)}`, {
-    next: {
-      revalidate: 1000 * 60 * 60 * 24,
-    },
-     headers: {
-      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
-    },
-  });
-  const feedJson = await feed.text();
-  const feedData: z.infer<typeof priceFeedsSchema>[0] = parse(feedJson);
+  const feed = await getFeedForSymbolCached({symbol, cluster: Cluster.Pythnet});
 
   return {
     feeds,
-    feed: feedData,
+    feed,
     symbol,
   } as const;
 };

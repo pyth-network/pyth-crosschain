@@ -1,6 +1,6 @@
 
 import { clients, Cluster } from '../../services/pyth';
-import { memoryOnlyCache } from '../../utils/cache';
+import { DEFAULT_CACHE_TTL, memoryOnlyCache } from '../../utils/cache';
 
 const _getPythMetadata = async (cluster: Cluster) => {
   // Fetch fresh data from Pyth client
@@ -9,7 +9,7 @@ const _getPythMetadata = async (cluster: Cluster) => {
 
 export const getPythMetadata = memoryOnlyCache.define(
   "getPythMetadata",
-  {ttl: 1000 * 60 * 60 * 24},
+  {ttl: DEFAULT_CACHE_TTL},
   _getPythMetadata,
 ).getPythMetadata;
 

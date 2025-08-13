@@ -1,15 +1,21 @@
 import type { Cache as ACDCache } from "async-cache-dedupe";
 import { createCache } from "async-cache-dedupe";
-import { serialize, deserialize } from "superjson";
+import { stringify, parse } from "superjson";
 
 import { getRedis } from '../config/server';
 
-// L2-backed cache: in-memory LRU (L1) + Redis (L2)
+const transformer = {
+  serialize: stringify,
+  deserialize: parse,
+};
+
+export const DEFAULT_CACHE_TTL = 86_400; // 24 hours
+export const DEFAULT_CACHE_STALE = 86_400; // 24 hours
+
 export const redisCache: ACDCache = createCache({
-  transformer: {
-    serialize,
-    deserialize,
-  },
+  transformer,
+  stale: DEFAULT_CACHE_STALE,
+  ttl: DEFAULT_CACHE_TTL,
   storage: {
     type: "redis",
     options: {
@@ -19,6 +25,6 @@ export const redisCache: ACDCache = createCache({
 });
 
 export const memoryOnlyCache: ACDCache = createCache({
-  ttl: 5000,
-  stale: 2000,
+  ttl: DEFAULT_CACHE_TTL,
+  stale: DEFAULT_CACHE_STALE,
 });
