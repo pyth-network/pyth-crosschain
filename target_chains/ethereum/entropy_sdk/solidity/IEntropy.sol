@@ -52,7 +52,8 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
     // `entropyCallback` will be run with the provider's default gas limit (see `getProviderInfo(provider).defaultGasLimit`).
-    // If your callback needs additional gas, please use `requestWithCallbackAndGasLimit`.
+    // If your callback needs additional gas, please use the function `requestv2` from `IEntropyV2` interface 
+    // with gasLimit as the input parameter.
     //
     // This method will revert unless the caller provides a sufficient fee (at least `getFee(provider)`) as msg.value.
     // Note that excess value is *not* refunded to the caller.
