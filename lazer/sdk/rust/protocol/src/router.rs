@@ -175,6 +175,7 @@ pub enum PriceFeedProperty {
     Confidence,
     FundingRate,
     FundingTimestamp,
+    FundingRateInterval,
     // More fields may be added later.
 }
 
@@ -525,6 +526,9 @@ pub struct ParsedFeedPayload {
     #[serde(default)]
     pub funding_timestamp: Option<TimestampUs>,
     // More fields may be added later.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub funding_rate_interval: Option<DurationUs>,
 }
 
 impl ParsedFeedPayload {
@@ -544,6 +548,7 @@ impl ParsedFeedPayload {
             confidence: None,
             funding_rate: None,
             funding_timestamp: None,
+            funding_rate_interval: None,
         };
         for &property in properties {
             match property {
@@ -571,6 +576,9 @@ impl ParsedFeedPayload {
                 PriceFeedProperty::FundingTimestamp => {
                     output.funding_timestamp = data.funding_timestamp;
                 }
+                PriceFeedProperty::FundingRateInterval => {
+                    output.funding_rate_interval = data.funding_rate_interval;
+                }
             }
         }
         output
@@ -591,6 +599,7 @@ impl ParsedFeedPayload {
             confidence: data.confidence,
             funding_rate: data.funding_rate,
             funding_timestamp: data.funding_timestamp,
+            funding_rate_interval: data.funding_rate_interval,
         }
     }
 }

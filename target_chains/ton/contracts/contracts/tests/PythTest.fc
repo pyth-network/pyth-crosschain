@@ -18,14 +18,17 @@
         return ();
     }
 
+    ;; Get sender address from message
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);  ;; load flags
+    if (flags & 1) {
+        return ();
+    }
+    slice sender_address = cs~load_msg_addr();  ;; load sender address
+
     int op = in_msg_body~load_uint(32);
     cell data = in_msg_body~load_ref();
     slice data_slice = data.begin_parse();
-
-    ;; Get sender address from message
-    slice cs = in_msg_full.begin_parse();
-    cs~skip_bits(4);  ;; skip flags
-    slice sender_address = cs~load_msg_addr();  ;; load sender address
 
     if (op == OP_UPDATE_GUARDIAN_SET) {
         update_guardian_set(data_slice);

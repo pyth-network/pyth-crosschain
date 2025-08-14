@@ -3,10 +3,7 @@
 use {
     crate::{
         api::ChainId,
-        chain::reader::{
-            self, BlockNumber, BlockStatus, EntropyReader, EntropyRequestInfo,
-            RequestedWithCallbackEvent,
-        },
+        chain::reader::{self, BlockNumber, BlockStatus, EntropyReader, RequestedV2Event},
         config::EthereumConfig,
         eth_utils::{
             eth_gas_oracle::EthProviderOracle,
@@ -283,6 +280,7 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
                 block_number: request.block_number,
                 use_blockhash: request.use_blockhash,
                 callback_status: reader::RequestCallbackStatus::try_from(request.callback_status)?,
+                gas_limit_10k: request.gas_limit_1_0k,
             }))
         }
     }
@@ -306,8 +304,8 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
         from_block: BlockNumber,
         to_block: BlockNumber,
         provider: Address,
-    ) -> Result<Vec<RequestedWithCallbackEvent>> {
-        let mut event = self.requested_with_callback_filter();
+    ) -> Result<Vec<RequestedV2Event>> {
+        let mut event = self.requested_2_filter();
         event.filter = event
             .filter
             .address(self.address())
@@ -315,24 +313,15 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .to_block(to_block)
             .topic1(provider);
 
-        let res: Vec<(RequestedWithCallbackFilter, LogMeta)> = event.query_with_meta().await?;
+        let res: Vec<(Requested2Filter, LogMeta)> = event.query_with_meta().await?;
         Ok(res
             .into_iter()
-            .map(|(r, meta)| RequestedWithCallbackEvent {
+            .map(|(r, meta)| RequestedV2Event {
                 sequence_number: r.sequence_number,
-                user_random_number: r.user_random_number,
-                provider_address: r.request.provider,
-                requestor: r.requestor,
-                request: EntropyRequestInfo {
-                    provider: r.request.provider,
-                    sequence_number: r.request.sequence_number,
-                    num_hashes: r.request.num_hashes,
-                    commitment: r.request.commitment,
-                    block_number: r.request.block_number,
-                    requester: r.request.requester,
-                    use_blockhash: r.request.use_blockhash,
-                    is_request_with_callback: r.request.is_request_with_callback,
-                },
+                user_random_number: r.user_contribution,
+                provider_address: r.provider,
+                sender: r.caller,
+                gas_limit: r.gas_limit,
                 log_meta: meta,
             })
             .filter(|r| r.provider_address == provider)

@@ -42,6 +42,7 @@ pub enum PayloadPropertyValue {
     Confidence(Option<Price>),
     FundingRate(Option<Rate>),
     FundingTimestamp(Option<TimestampUs>),
+    FundingRateInterval(Option<DurationUs>),
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -99,6 +100,11 @@ impl PayloadData {
                             PriceFeedProperty::FundingTimestamp => {
                                 PayloadPropertyValue::FundingTimestamp(feed.funding_timestamp)
                             }
+                            PriceFeedProperty::FundingRateInterval => {
+                                PayloadPropertyValue::FundingRateInterval(
+                                    feed.funding_rate_interval,
+                                )
+                            }
                         })
                         .collect(),
                 })
@@ -148,6 +154,10 @@ impl PayloadData {
                         writer.write_u8(PriceFeedProperty::FundingTimestamp as u8)?;
                         write_option_timestamp::<BO>(&mut writer, *timestamp)?;
                     }
+                    &PayloadPropertyValue::FundingRateInterval(interval) => {
+                        writer.write_u8(PriceFeedProperty::FundingRateInterval as u8)?;
+                        write_option_duration::<BO>(&mut writer, interval)?;
+                    }
                 }
             }
         }
@@ -196,6 +206,10 @@ impl PayloadData {
                     PayloadPropertyValue::FundingRate(read_option_rate::<BO>(&mut reader)?)
                 } else if property == PriceFeedProperty::FundingTimestamp as u8 {
                     PayloadPropertyValue::FundingTimestamp(read_option_timestamp::<BO>(
+                        &mut reader,
+                    )?)
+                } else if property == PriceFeedProperty::FundingRateInterval as u8 {
+                    PayloadPropertyValue::FundingRateInterval(read_option_interval::<BO>(
                         &mut reader,
                     )?)
                 } else {
@@ -272,6 +286,33 @@ fn read_option_timestamp<BO: ByteOrder>(
     let present = reader.read_u8()? != 0;
     if present {
         Ok(Some(TimestampUs::from_micros(reader.read_u64::<BO>()?)))
+    } else {
+        Ok(None)
+    }
+}
+
+fn write_option_duration<BO: ByteOrder>(
+    mut writer: impl Write,
+    value: Option<DurationUs>,
+) -> std::io::Result<()> {
+    match value {
+        Some(value) => {
+            writer.write_u8(1)?;
+            writer.write_u64::<BO>(value.as_micros())
+        }
+        None => {
+            writer.write_u8(0)?;
+            Ok(())
+        }
+    }
+}
+
+fn read_option_interval<BO: ByteOrder>(
+    mut reader: impl Read,
+) -> std::io::Result<Option<DurationUs>> {
+    let present = reader.read_u8()? != 0;
+    if present {
+        Ok(Some(DurationUs::from_micros(reader.read_u64::<BO>()?)))
     } else {
         Ok(None)
     }

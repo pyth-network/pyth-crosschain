@@ -1,0 +1,30 @@
+[package]
+name = "pyth-hermes-client-rust"
+version = "0.0.1"
+edition = "2021"
+description = "A Rust client for Pyth Hermes"
+license = "Apache-2.0"
+
+[dependencies]
+pyth-sdk = { version = "0.8.0" }
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
+futures-util = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+url = "2.4"
+derive_more = { version = "1.0.0", features = ["from"] }
+backoff = { version = "0.4.0", features = ["futures", "tokio"] }
+ttl_cache = "0.5.1"
+
+
+[dev-dependencies]
+bincode = "1.3.3"
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
+hex = "0.4.3"
+libsecp256k1 = "0.7.1"
+bs58 = "0.5.1"
+alloy-primitives = "0.8.19"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }

@@ -122,7 +122,6 @@ export default {
       jitoTipLamports,
       dynamicJitoTips,
       maxJitoTipLamports,
-      jitoBundleSize,
       updatesPerJitoBundle,
       addressLookupTableAccount,
       treasuryId,
@@ -230,7 +229,6 @@ export default {
         dynamicJitoTips,
         maxJitoTipLamports,
         jitoClients,
-        jitoBundleSize,
         updatesPerJitoBundle,
         // Set max retry time to pushing frequency, since we want to stop retrying before the next push attempt
         pushingFrequency * 1000,

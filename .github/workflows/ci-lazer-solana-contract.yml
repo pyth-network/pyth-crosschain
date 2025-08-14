@@ -36,19 +36,12 @@ jobs:
           run_install: true
       - name: Install Solana Cli
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.21/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
-      - name: Set Solana Cli version
-        run: agave-install init 1.18.26
       - name: Create Solana key
         run: solana-keygen new --no-bip39-passphrase
       - name: Install Anchor
-        run: |
-          rustup install 1.79.0
-          # anchor requires nightly for ABI generation and it's broken for more recent nightly versions
-          rustup install nightly-2025-04-15
-          # This anchor version doesn't build with newer Rust
-          RUSTFLAGS= cargo +1.79.0 install --git https://github.com/coral-xyz/anchor --tag v0.30.1 --locked anchor-cli
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 --locked anchor-cli
       - name: Run anchor tests
         run: pnpm run test:anchor
       - name: check Cargo.toml formatting

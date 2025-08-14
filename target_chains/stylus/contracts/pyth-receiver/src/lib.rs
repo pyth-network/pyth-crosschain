@@ -80,6 +80,7 @@ pub struct PythReceiver {
     pub governance_data_source_index: StorageUint<32, 1>,
     pub latest_price_info: StorageMap<FixedBytes<32>, PriceFeedStorage>,
     pub transaction_fee_in_wei: StorageU256,
+    pub initialized: StorageBool,
 }
 
 #[public]
@@ -94,7 +95,10 @@ impl PythReceiver {
         governance_emitter_chain_id: u16,
         governance_emitter_address: [u8; 32],
         governance_initial_sequence: u64,
-    ) {
+    ) -> Result<(), PythReceiverError> {
+        if self.initialized.get() {
+            return Err(PythReceiverError::AlreadyInitialized.into());
+        }
         self.wormhole.set(wormhole);
         self.single_update_fee_in_wei.set(single_update_fee_in_wei);
         self.valid_time_period_seconds
@@ -123,6 +127,8 @@ impl PythReceiver {
 
             self.is_valid_data_source.setter(data_source_key).set(true);
         }
+        self.initialized.set(true);
+        Ok(())
     }
 
     pub fn price_feed_exists(&self, id: [u8; 32]) -> bool {
@@ -213,16 +219,16 @@ impl PythReceiver {
         &mut self,
         update_data: Vec<Vec<u8>>,
     ) -> Result<(), PythReceiverError> {
-        for data in &update_data {
-            self.update_price_feeds_internal(data.clone(), 0, 0, false)?;
-        }
-
-        let total_fee = self.get_update_fee(update_data)?;
+        let total_fee = self.get_update_fee(update_data.clone())?;
 
         let value = self.vm().msg_value();
 
         if value < total_fee {
             return Err(PythReceiverError::InsufficientFee);
+        }
+
+        for data in &update_data {
+            self.update_price_feeds_internal(data.clone(), 0, 0, false)?;
         }
         Ok(())
     }

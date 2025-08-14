@@ -4,7 +4,7 @@ import { useNumberFormatter } from "react-aria";
 export const usePriceFormatter = () => {
   const bigNumberFormatter = useNumberFormatter({ maximumFractionDigits: 2 });
   const smallNumberFormatter = useNumberFormatter({
-    maximumSignificantDigits: 5,
+    maximumSignificantDigits: 6,
   });
   const format = useCallback(
     (n: number) =>

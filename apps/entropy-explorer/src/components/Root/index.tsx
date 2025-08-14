@@ -2,7 +2,6 @@ import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 
-import { EvmProvider } from "./evm-provider";
 import {
   ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
@@ -23,7 +22,7 @@ export const Root = ({ children }: Props) => (
       label: "Entropy Docs",
       href: "https://docs.pyth.network/entropy",
     }}
-    providers={[EvmProvider, NuqsAdapter]}
+    providers={[NuqsAdapter]}
   >
     {children}
   </AppShell>

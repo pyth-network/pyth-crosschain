@@ -34,11 +34,16 @@ export const NoResults = ({ className, onClearSearch, ...props }: Props) => (
       <h3 className={styles.header}>
         {"header" in props ? props.header : "No results found"}
       </h3>
-      <p className={styles.body}>
-        {"body" in props
-          ? props.body
-          : `We couldn't find any results for ${props.query === "" ? "your query" : `"${props.query}"`}.`}
-      </p>
+      <div className={styles.body}>
+        {"body" in props ? (
+          props.body
+        ) : (
+          <p>
+            We couldn{"'"}t find any results for{" "}
+            {props.query === "" ? "your query" : `"${props.query}"`}.
+          </p>
+        )}
+      </div>
     </div>
     {onClearSearch && (
       <Button variant="outline" size="sm" onPress={onClearSearch}>

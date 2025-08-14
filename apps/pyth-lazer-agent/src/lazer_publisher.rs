@@ -132,8 +132,13 @@ impl LazerPublisherTask {
             return Ok(());
         }
 
+        let mut updates = self.pending_updates.drain(..).collect();
+        if self.config.enable_update_deduplication {
+            deduplicate_feed_updates(&mut updates);
+        }
+
         let publisher_update = PublisherUpdate {
-            updates: self.pending_updates.drain(..).collect(),
+            updates,
             publisher_timestamp: MessageField::some(Timestamp::now()),
             special_fields: Default::default(),
         };
@@ -173,13 +178,19 @@ impl LazerPublisherTask {
     }
 }
 
+fn deduplicate_feed_updates(feed_updates: &mut Vec<FeedUpdate>) {
+    // assume that feed_updates is already sorted by timestamp for each feed_update.feed_id
+    feed_updates.dedup_by_key(|feed_update| (feed_update.feed_id, feed_update.update.clone()));
+}
+
 #[cfg(test)]
 mod tests {
     use crate::config::{CHANNEL_CAPACITY, Config};
-    use crate::lazer_publisher::LazerPublisherTask;
+    use crate::lazer_publisher::{LazerPublisherTask, deduplicate_feed_updates};
     use ed25519_dalek::SigningKey;
     use protobuf::well_known_types::timestamp::Timestamp;
     use protobuf::{Message, MessageField};
+    use pyth_lazer_protocol::time::TimestampUs;
     use pyth_lazer_publisher_sdk::publisher_update::feed_update::Update;
     use pyth_lazer_publisher_sdk::publisher_update::{FeedUpdate, PriceUpdate};
     use pyth_lazer_publisher_sdk::transaction::{LazerTransaction, lazer_transaction};
@@ -212,6 +223,18 @@ mod tests {
         temp_file
     }
 
+    fn test_feed_update(feed_id: u32, timestamp: TimestampUs, price: i64) -> FeedUpdate {
+        FeedUpdate {
+            feed_id: Some(feed_id),
+            source_timestamp: MessageField::some(timestamp.into()),
+            update: Some(Update::PriceUpdate(PriceUpdate {
+                price: Some(price),
+                ..PriceUpdate::default()
+            })),
+            special_fields: Default::default(),
+        }
+    }
+
     #[tokio::test]
     async fn test_lazer_exporter_task() {
         let signing_key_file = get_private_key_file();
@@ -224,6 +247,7 @@ mod tests {
             publish_keypair_path: PathBuf::from(signing_key_file.path()),
             publish_interval_duration: Duration::from_millis(25),
             history_service_url: None,
+            enable_update_deduplication: false,
         };
 
         let (relayer_sender, mut relayer_receiver) = broadcast::channel(CHANNEL_CAPACITY);
@@ -273,5 +297,56 @@ mod tests {
             }
             _ => panic!("channel should have a transaction waiting"),
         }
+    }
+
+    #[test]
+    fn test_deduplicate_feed_updates() {
+        // let's consider a batch containing updates for a single feed. the updates are (ts, price):
+        //   - (1, 10)
+        //   - (2, 10)
+        //   - (3, 10)
+        //   - (4, 15)
+        //   - (5, 15)
+        //   - (6, 10)
+        // we should only return (1, 10), (4, 15), (6, 10)
+
+        let updates = &mut vec![
+            test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(2).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(3).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(4).unwrap(), 15),
+            test_feed_update(1, TimestampUs::from_millis(5).unwrap(), 15),
+            test_feed_update(1, TimestampUs::from_millis(6).unwrap(), 10),
+        ];
+
+        let expected_updates = vec![
+            test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(4).unwrap(), 15),
+            test_feed_update(1, TimestampUs::from_millis(6).unwrap(), 10),
+        ];
+
+        deduplicate_feed_updates(updates);
+        assert_eq!(updates.to_vec(), expected_updates);
+    }
+
+    #[test]
+    fn test_deduplicate_feed_updates_multiple_feeds() {
+        let updates = &mut vec![
+            test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(2).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(3).unwrap(), 10),
+            test_feed_update(2, TimestampUs::from_millis(4).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(5).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(6).unwrap(), 10),
+        ];
+
+        let expected_updates = vec![
+            test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
+            test_feed_update(2, TimestampUs::from_millis(4).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(6).unwrap(), 10),
+        ];
+
+        deduplicate_feed_updates(updates);
+        assert_eq!(updates.to_vec(), expected_updates);
     }
 }

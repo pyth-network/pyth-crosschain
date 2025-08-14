@@ -1,0 +1,35 @@
+name: "Hermes Client Rust Test Suite"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - .github/workflows/ci-hermes-client-rust.yml
+      - apps/hermes/client/rust/**
+
+jobs:
+  lazer-rust-test-suite:
+    name: Hermes Client Rust Test Suite
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: apps/hermes/client/rust/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: install taplo
+        run: cargo install --locked taplo-cli@0.9.3
+      - name: check Cargo.toml formatting
+        run: find . -name Cargo.toml -exec taplo fmt --check --diff {} \;
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy -p pyth-hermes-client-rust --all-targets -- --deny warnings
+        if: success() || failure()
+      - name: test
+        run: cargo test -p pyth-hermes-client-rust
+        if: success() || failure()

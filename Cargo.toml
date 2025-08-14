@@ -6,6 +6,7 @@ members = [
     "apps/fortuna",
     "apps/pyth-lazer-agent",
     "apps/quorum",
+    "apps/hermes/client/rust",
     "lazer/publisher_sdk/rust",
     "lazer/sdk/rust/client",
     "lazer/sdk/rust/protocol",

@@ -39,21 +39,12 @@ mod revelation;
 pub type ChainId = String;
 pub type NetworkId = u64;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema, sqlx::Type)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub enum StateTag {
     Pending,
-    Completed,
     Failed,
-}
-
-impl std::fmt::Display for StateTag {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            StateTag::Pending => write!(f, "Pending"),
-            StateTag::Completed => write!(f, "Completed"),
-            StateTag::Failed => write!(f, "Failed"),
-        }
-    }
+    Completed,
+    CallbackErrored,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelSet)]

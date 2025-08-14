@@ -1,4 +1,4 @@
-#![allow(unexpected_cfgs)] // anchor macro triggers it
+#![allow(deprecated, unexpected_cfgs)] // anchor macro triggers it
 
 mod signature;
 
