@@ -2,12 +2,12 @@
 import { clients, Cluster } from '../../services/pyth';
 import { memoryOnlyCache } from '../../utils/cache';
 
-const _getPythMetadata = async (cluster: Cluster) => {
+const getPythMetadata = async (cluster: Cluster) => {
   return clients[cluster].getData();
 };
 
-export const getPythMetadata = memoryOnlyCache.define(
+export const getPythMetadataCached = memoryOnlyCache.define(
   "getPythMetadata",
-  _getPythMetadata,
+  getPythMetadata,
 ).getPythMetadata;
 

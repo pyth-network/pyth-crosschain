@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getPublishersForCluster } from "../../../../../server/pyth/get-publishers-for-cluster";
+import { getPublishersForClusterCached } from "../../../../../server/pyth/get-publishers-for-cluster";
 import { Cluster } from "../../../../../services/pyth";
 
 export const GET = async (request: Request, { params }: { params: Promise<{ symbol: string }> }) => {
@@ -18,7 +18,7 @@ export const GET = async (request: Request, { params }: { params: Promise<{ symb
     return NextResponse.json({ error: "Symbol is required" }, { status: 400 });
   }
 
-  const map = await getPublishersForCluster(cluster);
-  
+  const map = await getPublishersForClusterCached(cluster);
+
   return NextResponse.json(map[symbol] ?? []);
 };

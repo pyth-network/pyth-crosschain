@@ -1,9 +1,9 @@
-import { getPythMetadata } from './get-metadata';
+import { getPythMetadataCached } from './get-metadata';
 import { Cluster } from '../../services/pyth';
 import { redisCache } from '../../utils/cache';
 
-const _computePublishers = async (cluster: Cluster) => {
-  const data = await getPythMetadata(cluster);
+const getPublishersForCluster = async (cluster: Cluster) => {
+  const data = await getPythMetadataCached(cluster);
   const result: Record<string, string[]> = {};
   for (const key of data.productPrice.keys()) {
     const price = data.productPrice.get(key);
@@ -13,7 +13,7 @@ const _computePublishers = async (cluster: Cluster) => {
   return result;
 };
 
-export const getPublishersForCluster = redisCache.define(
+export const getPublishersForClusterCached = redisCache.define(
   "getPublishersForCluster",
-  _computePublishers,
+  getPublishersForCluster,
 ).getPublishersForCluster;
