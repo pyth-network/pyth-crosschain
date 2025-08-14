@@ -45,7 +45,6 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
-import { getPublisherAverageScoreHistory, getPublisherRankingHistory } from '../../services/clickhouse';
 
 type Props = {
   children: ReactNode;
