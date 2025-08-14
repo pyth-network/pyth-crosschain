@@ -16,7 +16,8 @@
         "DISABLE_ACCESSIBILITY_REPORTING",
         "NEXT_PUBLIC_PYTHNET_RPC",
         "NEXT_PUBLIC_PYTHTEST_CONFORMANCE_RPC",
-        "REDIS_URL"
+        "REDIS_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL"
       ]
     },
     "fix:lint": {

@@ -1,6 +1,6 @@
 // Disable the following rule because this file is the intended place to declare
 // and load all env variables.
-/* eslint-disable n/no-process-env, @typescript-eslint/no-non-null-assertion, turbo/no-undeclared-env-vars */
+/* eslint-disable n/no-process-env */
 
 import { Redis } from 'ioredis';
 import "server-only";
@@ -63,10 +63,7 @@ export const ENABLE_ACCESSIBILITY_REPORTING =
 let redisClient: Redis | undefined;
 
 export function getRedis(): Redis {
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    throw new Error('REDIS_URL must be set');
-  }
+  const url = demand("REDIS_URL");
   if(redisClient) {
     return redisClient;
   }
@@ -76,13 +73,14 @@ export function getRedis(): Redis {
 
 export const PUBLIC_URL = (() => {
   if (IS_PRODUCTION_SERVER) {
-
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL!}`;
+    const productionUrl = demand("VERCEL_PROJECT_PRODUCTION_URL");
+    return `https://${productionUrl}`;
   } else if (IS_PREVIEW_SERVER) {
-    return `https://${process.env.VERCEL_URL!}`;
+    const previewUrl = demand("VERCEL_URL");
+    return `https://${previewUrl}`;
   } else {
     return `http://localhost:3003`;
   }
 })();
 
-export const VERCEL_AUTOMATION_BYPASS_SECRET = process.env.VERCEL_AUTOMATION_BYPASS_SECRET!;
+export const VERCEL_AUTOMATION_BYPASS_SECRET = demand("VERCEL_AUTOMATION_BYPASS_SECRET");
