@@ -86,15 +86,15 @@ async fn main() -> anyhow::Result<()> {
                         .price_service_receive_time
                         .unwrap();
 
-                    if price_feed.id
-                        == "374c080d60c3d055199df45e3c54accd5f04f190f61cd050dae28dd2519871a6"
-                    {
-                        println!(
-                            "Received price feed: {:?} at time: {}",
-                            price_feed.clone(),
-                            current_time
-                        );
-                    }
+                    // if price_feed.id
+                    //     == "374c080d60c3d055199df45e3c54accd5f04f190f61cd050dae28dd2519871a6"
+                    // {
+                    //     println!(
+                    //         "Received price feed: {:?} at time: {}",
+                    //         price_feed.clone(),
+                    //         current_time
+                    //     );
+                    // }
 
                     if price_feed.price.price == 0 {
                         // println!(
@@ -118,7 +118,7 @@ async fn main() -> anyhow::Result<()> {
                         //     now - *time,
                         //     id
                         // );
-                        if now - *time > 2 && *time > 0 && id == "374c080d60c3d055199df45e3c54accd5f04f190f61cd050dae28dd2519871a6" {
+                        if now - *time > 2 && *time > 0 {
                             println!("delayed update for {} : {}", id, now - *time);
                             break;
                         }
