@@ -1,6 +1,6 @@
 [package]
 name = "pyth-lazer-client"
-version = "2.1.0"
+version = "4.0.0"
 edition = "2021"
 description = "A Rust client for Pyth Lazer"
 license = "Apache-2.0"
