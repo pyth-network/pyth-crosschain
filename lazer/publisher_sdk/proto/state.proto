@@ -3,10 +3,19 @@ package pyth_lazer;
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 import "dynamic_value.proto";
 
+
 // All optional fields should always be set unless documented otherwise.
+
+message Channel {
+    oneof kind {
+        google.protobuf.Duration rate = 1;
+        google.protobuf.Empty real_time = 2;
+    }
+}
 
 // State of a Pyth Lazer shard.
 //
@@ -92,9 +101,9 @@ message Feed {
     optional sint32 exponent = 102;
     // [required] Minimal number of publisher prices required to produce an aggregate.
     optional uint32 min_publishers = 103;
-    // [required] Minimal rate of aggregation performed by the aggregator for this feed.
+    // [required] Minimal channel of aggregation performed by the aggregator for this feed.
     // Cannot be lower than the shard's top level `State.min_rate`.
-    optional google.protobuf.Duration min_rate = 104;
+    optional Channel min_channel = 104;
     // [required] Time after which the publisher update is discarded.
     optional google.protobuf.Duration expiry_time = 105;
     // [required] Market schedule in Pythnet format.

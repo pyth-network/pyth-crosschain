@@ -114,3 +114,36 @@ impl From<state::FeedKind> for FeedKind {
         }
     }
 }
+
+impl TryFrom<state::Channel> for pyth_lazer_protocol::router::Channel {
+    type Error = anyhow::Error;
+
+    fn try_from(value: state::Channel) -> Result<Self, Self::Error> {
+        Ok(match value.kind {
+            Some(kind) => match kind {
+                state::channel::Kind::Rate(rate) => {
+                    pyth_lazer_protocol::router::Channel::FixedRate(rate.try_into()?)
+                }
+                state::channel::Kind::RealTime(_) => pyth_lazer_protocol::router::Channel::RealTime,
+            },
+            None => pyth_lazer_protocol::router::Channel::FixedRate(
+                pyth_lazer_protocol::router::FixedRate::MIN,
+            ),
+        })
+    }
+}
+
+impl From<pyth_lazer_protocol::router::Channel> for state::Channel {
+    fn from(value: pyth_lazer_protocol::router::Channel) -> Self {
+        let mut result = state::Channel::new();
+        match value {
+            pyth_lazer_protocol::router::Channel::FixedRate(rate) => {
+                result.set_rate(rate.into());
+            }
+            pyth_lazer_protocol::router::Channel::RealTime => {
+                result.set_real_time(::protobuf::well_known_types::empty::Empty::new());
+            }
+        };
+        result
+    }
+}
