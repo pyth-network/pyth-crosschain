@@ -16,9 +16,9 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import {
+  getPublishers,
   getPublisherRankingHistory,
   getPublisherAverageScoreHistory,
-  getPublishers,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
 import { ClusterToName, parseCluster, Cluster } from "../../services/pyth";
@@ -150,10 +150,10 @@ const RankingCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const rankingHistory = await getPublisherRankingHistory(
+  const rankingHistory = await getPublisherRankingHistory({
     cluster,
-    publisherKey,
-  );
+    key: publisherKey,
+  });
   return <RankingCardImpl rankingHistory={rankingHistory} />;
 };
 
@@ -234,10 +234,11 @@ const ScoreCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const averageScoreHistory = await getPublisherAverageScoreHistory(
+  const averageScoreHistory = await getPublisherAverageScoreHistory({
     cluster,
-    publisherKey,
-  );
+    key: publisherKey,
+  });
+
   return <ScoreCardImpl averageScoreHistory={averageScoreHistory} />;
 };
 

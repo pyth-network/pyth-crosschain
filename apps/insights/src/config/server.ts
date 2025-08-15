@@ -2,6 +2,7 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
+import { Redis } from "ioredis";
 import "server-only";
 
 /**
@@ -30,6 +31,7 @@ const getEnvOrDefault = (key: string, defaultValue: string) =>
  * Indicates that this server is the live customer-facing production server.
  */
 export const IS_PRODUCTION_SERVER = process.env.VERCEL_ENV === "production";
+export const IS_PREVIEW_SERVER = process.env.VERCEL_ENV === "preview";
 
 const defaultInProduction = IS_PRODUCTION_SERVER
   ? getEnvOrDefault
@@ -56,3 +58,30 @@ export const SOLANA_RPC =
 
 export const ENABLE_ACCESSIBILITY_REPORTING =
   !IS_PRODUCTION_SERVER && !process.env.DISABLE_ACCESSIBILITY_REPORTING;
+
+let redisClient: Redis | undefined;
+
+export function getRedis(): Redis {
+  const url = demand("REDIS_URL");
+  if (redisClient) {
+    return redisClient;
+  }
+  redisClient = new Redis(url);
+  return redisClient;
+}
+
+export const PUBLIC_URL = (() => {
+  if (IS_PRODUCTION_SERVER) {
+    const productionUrl = demand("VERCEL_PROJECT_PRODUCTION_URL");
+    return `https://${productionUrl}`;
+  } else if (IS_PREVIEW_SERVER) {
+    const previewUrl = demand("VERCEL_URL");
+    return `https://${previewUrl}`;
+  } else {
+    return `http://localhost:3003`;
+  }
+})();
+
+export const VERCEL_AUTOMATION_BYPASS_SECRET = demand(
+  "VERCEL_AUTOMATION_BYPASS_SECRET",
+);

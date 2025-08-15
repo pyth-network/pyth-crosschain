@@ -1,13 +1,12 @@
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 
-import { getRankingsBySymbol } from "../../services/clickhouse";
 import {
-  Cluster,
-  ClusterToName,
-  getFeeds,
-  getPublishersForFeed,
-} from "../../services/pyth";
+  getFeedForSymbolRequest,
+  getPublishersForFeedRequest,
+} from "../../server/pyth";
+import { getRankingsBySymbol } from "../../services/clickhouse";
+import { Cluster, ClusterToName } from "../../services/pyth";
 import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
@@ -22,21 +21,15 @@ type Props = {
 export const Publishers = async ({ params }: Props) => {
   const { slug } = await params;
   const symbol = decodeURIComponent(slug);
-  const [
-    pythnetFeeds,
-    pythtestConformanceFeeds,
-    pythnetPublishers,
-    pythtestConformancePublishers,
-  ] = await Promise.all([
-    getFeeds(Cluster.Pythnet),
-    getFeeds(Cluster.PythtestConformance),
-    getPublishers(Cluster.Pythnet, symbol),
-    getPublishers(Cluster.PythtestConformance, symbol),
-  ]);
-  const feed = pythnetFeeds.find((feed) => feed.symbol === symbol);
-  const testFeed = pythtestConformanceFeeds.find(
-    (feed) => feed.symbol === symbol,
-  );
+
+  const [feed, testFeed, pythnetPublishers, pythtestConformancePublishers] =
+    await Promise.all([
+      getFeedForSymbolRequest({ symbol, cluster: Cluster.Pythnet }),
+      getFeedForSymbolRequest({ symbol, cluster: Cluster.PythtestConformance }),
+      getPublishers(Cluster.Pythnet, symbol),
+      getPublishers(Cluster.PythtestConformance, symbol),
+    ]);
+
   const publishers = [...pythnetPublishers, ...pythtestConformancePublishers];
   const metricsTime = pythnetPublishers.find(
     (publisher) => publisher.ranking !== undefined,
@@ -87,25 +80,23 @@ export const PublishersLoading = () => <PublishersCard isLoading />;
 
 const getPublishers = async (cluster: Cluster, symbol: string) => {
   const [publishers, rankings] = await Promise.all([
-    getPublishersForFeed(cluster, symbol),
+    getPublishersForFeedRequest(cluster, symbol),
     getRankingsBySymbol(symbol),
   ]);
 
-  return (
-    publishers?.map((publisher) => {
-      const ranking = rankings.find(
-        (ranking) =>
-          ranking.publisher === publisher &&
-          ranking.cluster === ClusterToName[cluster],
-      );
+  return publishers.map((publisher) => {
+    const ranking = rankings.find(
+      (ranking) =>
+        ranking.publisher === publisher &&
+        ranking.cluster === ClusterToName[cluster],
+    );
 
-      return {
-        ranking,
-        publisher,
-        status: getStatus(ranking),
-        cluster,
-        knownPublisher: lookupPublisher(publisher),
-      };
-    }) ?? []
-  );
+    return {
+      ranking,
+      publisher,
+      status: getStatus(ranking),
+      cluster,
+      knownPublisher: lookupPublisher(publisher),
+    };
+  });
 };

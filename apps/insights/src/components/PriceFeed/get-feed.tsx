@@ -1,20 +1,21 @@
 import { notFound } from "next/navigation";
 
-import { Cluster, getFeeds } from "../../services/pyth";
+import { getFeedForSymbolRequest, getFeedsRequest } from "../../server/pyth";
+import { Cluster } from "../../services/pyth";
 
 export const getFeed = async (params: Promise<{ slug: string }>) => {
-  "use cache";
+  const feeds = await getFeedsRequest(Cluster.Pythnet);
 
-  const [{ slug }, feeds] = await Promise.all([params, getPythnetFeeds()]);
+  const { slug } = await params;
   const symbol = decodeURIComponent(slug);
+  const feed = await getFeedForSymbolRequest({
+    symbol,
+    cluster: Cluster.Pythnet,
+  });
+
   return {
     feeds,
-    feed: feeds.find((item) => item.symbol === symbol) ?? notFound(),
+    feed: feed ?? notFound(),
     symbol,
   } as const;
-};
-
-const getPythnetFeeds = async () => {
-  "use cache";
-  return getFeeds(Cluster.Pythnet);
 };

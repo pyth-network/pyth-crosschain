@@ -9,7 +9,8 @@ import PriceFeedsLight from "./price-feeds-light.svg";
 import PublishersDark from "./publishers-dark.svg";
 import PublishersLight from "./publishers-light.svg";
 import { TabList } from "./tab-list";
-import { Cluster, getFeeds } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
+import { getFeeds } from "../../services/pyth/get-feeds";
 import {
   totalVolumeTraded,
   activeChains,
@@ -25,6 +26,7 @@ import { FormattedNumber } from "../FormattedNumber";
 export const Overview = async () => {
   const priceFeeds = await getFeeds(Cluster.Pythnet);
   const today = new Date();
+
   const feedCounts = [
     ...activeFeeds.map(({ date, numFeeds }) => ({
       x: date,
@@ -37,6 +39,7 @@ export const Overview = async () => {
       y: priceFeeds.length,
     },
   ];
+
   return (
     <div className={styles.overview}>
       <h1 className={styles.header}>Overview</h1>

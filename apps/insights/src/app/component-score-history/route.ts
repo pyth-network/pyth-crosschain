@@ -16,13 +16,13 @@ export const GET = async (req: NextRequest) => {
   );
   if (parsed.success) {
     const { cluster, publisherKey, symbol, from, to } = parsed.data;
-    const data = await getFeedScoreHistory(
+    const data = await getFeedScoreHistory({
       cluster,
       publisherKey,
       symbol,
       from,
       to,
-    );
+    });
     return Response.json(data);
   } else {
     return new Response(fromError(parsed.error).toString(), {

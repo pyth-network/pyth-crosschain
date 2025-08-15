@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { Cluster, getFeeds } from "../../../services/pyth";
+import { Cluster } from "../../../services/pyth";
+import { getFeeds } from "../../../services/pyth/get-feeds";
 
 export { PriceFeedLayout as default } from "../../../components/PriceFeed/layout";
 

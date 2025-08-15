@@ -3,7 +3,6 @@ const config = {
     useCache: true,
     reactCompiler: true,
   },
-
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],

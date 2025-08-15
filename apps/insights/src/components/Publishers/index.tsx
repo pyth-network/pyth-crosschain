@@ -31,7 +31,6 @@ export const Publishers = async () => {
       getPublishers(Cluster.PythtestConformance),
       getOisStats(),
     ]);
-
   const rankingTime = pythnetPublishers[0]?.timestamp;
   const scoreTime = pythnetPublishers[0]?.scoreTime;
 
@@ -173,7 +172,6 @@ const getOisStats = async () => {
       getDistributedRewards(),
       getPublisherCaps(),
     ]);
-
   return {
     totalStaked:
       sumDelegations(delState.delState) + sumDelegations(delState.selfDelState),
