@@ -44,7 +44,7 @@ The agent takes a single `--config` CLI option, pointing at
 `config/config.toml` by default. Configuration is currently minimal:
 
 ```toml
-relayer_urls = ["wss://relayer.pyth-lazer-staging.dourolabs.app/v1/transaction", "wss://relayer-1.pyth-lazer-staging.dourolabs.app/v1/transaction"]
+relayer_urls = ["wss://relayer-0.pyth-lazer.dourolabs.app/v1/transaction", "wss://relayer-1.pyth-lazer.dourolabs.app/v1/transaction"]
 publish_keypair_path = "/path/to/keypair.json"
 authorization_token = "your_token"
 listen_address = "0.0.0.0:8910"
