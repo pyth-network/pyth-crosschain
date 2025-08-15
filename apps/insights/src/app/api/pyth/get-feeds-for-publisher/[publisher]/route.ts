@@ -1,7 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { stringify } from "superjson";
+import { z } from "zod";
+import { parseSearchParams } from "zod-search-params";
 
-import { Cluster, parseCluster } from "../../../../../services/pyth";
+import {
+  Cluster,
+  CLUSTER_NAMES,
+  ClusterToName,
+  toCluster,
+} from "../../../../../services/pyth";
 import { getFeeds } from "../../../../../services/pyth/get-feeds";
 
 export const GET = async (
@@ -9,20 +16,21 @@ export const GET = async (
   { params }: { params: Promise<{ publisher: string }> },
 ) => {
   const { publisher } = await params;
-  const clusterName = request.nextUrl.searchParams.get("cluster");
+  const searchParams = request.nextUrl.searchParams;
+  const parsedSearchParams = parseSearchParams(queryParamsSchema, searchParams);
 
-  const cluster =
-    clusterName === null ? Cluster.Pythnet : parseCluster(clusterName);
-
-  if (cluster === undefined) {
-    return NextResponse.json({ error: "Invalid Cluster" }, { status: 400 });
+  if (!parsedSearchParams) {
+    return new Response("Invalid params", {
+      status: 400,
+    });
   }
 
+  const { cluster } = parsedSearchParams;
+
   if (!publisher) {
-    return NextResponse.json(
-      { error: "Publisher is required" },
-      { status: 400 },
-    );
+    return new Response("Publisher is required", {
+      status: 400,
+    });
   }
 
   const feeds = await getFeeds(cluster);
@@ -37,3 +45,10 @@ export const GET = async (
     },
   });
 };
+
+const queryParamsSchema = z.object({
+  cluster: z
+    .enum(CLUSTER_NAMES)
+    .transform((value) => toCluster(value))
+    .default(ClusterToName[Cluster.Pythnet]),
+});

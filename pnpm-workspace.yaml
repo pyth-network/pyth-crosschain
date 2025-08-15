@@ -156,6 +156,7 @@ catalog:
   zod: ^3.24.2
   zod-validation-error: ^3.4.0
   async-cache-dedupe: ^3.0.0
+  zod-search-params: ^0.1.6
 
 onlyBuiltDependencies:
   - "@apollo/protobufjs"

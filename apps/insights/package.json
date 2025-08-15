@@ -46,7 +46,8 @@
     "superjson": "catalog:",
     "swr": "catalog:",
     "zod": "catalog:",
-    "zod-validation-error": "catalog:"
+    "zod-validation-error": "catalog:",
+    "zod-search-params": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

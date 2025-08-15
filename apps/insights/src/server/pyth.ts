@@ -2,7 +2,7 @@ import { parse } from "superjson";
 import { z } from "zod";
 
 import { PUBLIC_URL, VERCEL_AUTOMATION_BYPASS_SECRET } from "../config/server";
-import { Cluster, priceFeedsSchema } from "../services/pyth";
+import { Cluster, ClusterToName, priceFeedsSchema } from "../services/pyth";
 import { DEFAULT_CACHE_TTL } from "../utils/cache";
 
 export async function getPublishersForFeedRequest(
@@ -10,7 +10,7 @@ export async function getPublishersForFeedRequest(
   symbol: string,
 ) {
   const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-publishers/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`,
+    `${PUBLIC_URL}/api/pyth/get-publishers/${encodeURIComponent(symbol)}?cluster=${ClusterToName[cluster]}`,
     {
       next: {
         revalidate: DEFAULT_CACHE_TTL,
@@ -30,7 +30,7 @@ export async function getFeedsForPublisherRequest(
   publisher: string,
 ) {
   const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}?cluster=${cluster.toString()}`,
+    `${PUBLIC_URL}/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}?cluster=${ClusterToName[cluster]}`,
     {
       next: {
         revalidate: DEFAULT_CACHE_TTL,
@@ -48,7 +48,7 @@ export async function getFeedsForPublisherRequest(
 
 export const getFeedsRequest = async (cluster: Cluster) => {
   const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-feeds?cluster=${cluster.toString()}&excludePriceComponents=true`,
+    `${PUBLIC_URL}/api/pyth/get-feeds?cluster=${ClusterToName[cluster]}&excludePriceComponents=true`,
     {
       next: {
         revalidate: DEFAULT_CACHE_TTL,
@@ -76,7 +76,7 @@ export const getFeedForSymbolRequest = async ({
   cluster?: Cluster;
 }): Promise<z.infer<typeof priceFeedsSchema>[0] | undefined> => {
   const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-feeds/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`,
+    `${PUBLIC_URL}/api/pyth/get-feeds/${encodeURIComponent(symbol)}?cluster=${ClusterToName[cluster]}`,
     {
       next: {
         revalidate: DEFAULT_CACHE_TTL,
