@@ -155,6 +155,7 @@ catalog:
   wagmi: ^2.14.16
   zod: ^3.24.2
   zod-validation-error: ^3.4.0
+  async-cache-dedupe: ^3.0.0
 
 onlyBuiltDependencies:
   - "@apollo/protobufjs"

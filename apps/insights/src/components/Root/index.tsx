@@ -10,9 +10,9 @@ import {
   GOOGLE_ANALYTICS_ID,
 } from "../../config/server";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
-import { getPublishersCached } from '../../server/clickhouse';
-import { getFeedsCached } from '../../server/pyth/get-feeds';
+import { getPublishers } from "../../services/clickhouse";
 import { Cluster } from "../../services/pyth";
+import { getFeeds } from "../../services/pyth/get-feeds";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { SearchButton as SearchButtonImpl } from "./search-button";
@@ -58,7 +58,7 @@ const SearchButton = async () => {
 };
 
 const getPublishersForSearchDialog = async (cluster: Cluster) => {
-  const publishers = await getPublishersCached(cluster);
+  const publishers = await getPublishers(cluster);
   return publishers.map((publisher) => {
     const knownPublisher = lookupPublisher(publisher.key);
 
@@ -75,7 +75,7 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 };
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
-  const feeds = await getFeedsCached(cluster);
+  const feeds = await getFeeds(cluster);
 
   return feeds.map((feed) => ({
     symbol: feed.symbol,

@@ -7,7 +7,7 @@ import type { PythPriceCallback } from "@pythnetwork/client/lib/PythConnection";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
-import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../config/isomorphic";
+import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../../config/isomorphic";
 
 export enum Cluster {
   Pythnet,
@@ -88,9 +88,11 @@ export const priceFeedsSchema = z.array(
       minPublishers: z.number(),
       lastSlot: z.bigint(),
       validSlot: z.bigint(),
-      priceComponents: z.array(z.object({
-        publisher: z.string(),
-      })),
+      priceComponents: z.array(
+        z.object({
+          publisher: z.string(),
+        }),
+      ),
     }),
   }),
 );

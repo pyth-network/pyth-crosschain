@@ -1,30 +1,39 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { stringify } from "superjson";
 
-import { getFeedsCached } from '../../../../../server/pyth/get-feeds';
-import { Cluster } from "../../../../../services/pyth";
+import { Cluster, parseCluster } from "../../../../../services/pyth";
+import { getFeeds } from "../../../../../services/pyth/get-feeds";
 
-export const GET = async (request: Request, { params }: { params: Promise<{ publisher: string }> }) => {
+export const GET = async (
+  request: NextRequest,
+  { params }: { params: Promise<{ publisher: string }> },
+) => {
   const { publisher } = await params;
-  const { searchParams } = new URL(request.url);
-  const cluster = Number.parseInt(searchParams.get("cluster") ?? Cluster.Pythnet.toString()) as Cluster;
+  const clusterName = request.nextUrl.searchParams.get("cluster");
 
-  // check if cluster is valid
-  if (cluster && !Object.values(Cluster).includes(cluster)) {
-    return NextResponse.json({ error: "Invalid cluster" }, { status: 400 });
+  const cluster =
+    clusterName === null ? Cluster.Pythnet : parseCluster(clusterName);
+
+  if (cluster === undefined) {
+    return NextResponse.json({ error: "Invalid Cluster" }, { status: 400 });
   }
 
   if (!publisher) {
-    return NextResponse.json({ error: "Publisher is required" }, { status: 400 });
-  } 
+    return NextResponse.json(
+      { error: "Publisher is required" },
+      { status: 400 },
+    );
+  }
 
-  const feeds = await getFeedsCached(cluster);
+  const feeds = await getFeeds(cluster);
 
-  const filteredFeeds = feeds.filter((feed) => feed.price.priceComponents.some((c) => c.publisher === publisher));
-  
+  const filteredFeeds = feeds.filter((feed) =>
+    feed.price.priceComponents.some((c) => c.publisher === publisher),
+  );
+
   return new Response(stringify(filteredFeeds), {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };

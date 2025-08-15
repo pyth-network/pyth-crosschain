@@ -1,14 +1,14 @@
-import { getPythMetadataCached } from './get-metadata';
-import { Cluster, priceFeedsSchema } from "../../services/pyth";
-import { redisCache } from '../../utils/cache';
+import { Cluster, priceFeedsSchema } from ".";
+import { getPythMetadataCached } from "./get-metadata";
+import { redisCache } from "../../utils/cache";
 
-const getFeeds = async (cluster: Cluster) => {
+const _getFeeds = async (cluster: Cluster) => {
   const unfilteredData = await getPythMetadataCached(cluster);
   const filtered = unfilteredData.symbols
     .filter(
       (symbol) =>
         unfilteredData.productFromSymbol.get(symbol)?.display_symbol !==
-        undefined
+        undefined,
     )
     .map((symbol) => ({
       symbol,
@@ -26,8 +26,4 @@ const getFeeds = async (cluster: Cluster) => {
   return priceFeedsSchema.parse(filtered);
 };
 
-
-export const getFeedsCached = redisCache.define(
-  "getFeeds",
-  getFeeds,
-).getFeeds;
+export const getFeeds = redisCache.define("getFeeds", _getFeeds).getFeeds;

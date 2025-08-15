@@ -1,33 +1,35 @@
 import { NextResponse } from "next/server";
-import { stringify } from 'superjson';
-import type { z } from 'zod';
+import { stringify } from "superjson";
 
-import { getFeedsCached } from "../../../../server/pyth/get-feeds";
-import { Cluster, priceFeedsSchema } from "../../../../services/pyth";
+import { Cluster } from "../../../../services/pyth";
+import { getFeeds } from "../../../../services/pyth/get-feeds";
 
 export const GET = async (request: Request) => {
   // get cluster from query params
   const { searchParams } = new URL(request.url);
-  const excludePriceComponents = searchParams.get("excludePriceComponents") === "true";
-  const cluster = Number.parseInt(searchParams.get("cluster") ?? Cluster.Pythnet.toString()) as Cluster;
+  const excludePriceComponents =
+    searchParams.get("excludePriceComponents") === "true";
+  const cluster = Number.parseInt(
+    searchParams.get("cluster") ?? Cluster.Pythnet.toString(),
+  ) as Cluster;
 
   // check if cluster is valid
   if (cluster && !Object.values(Cluster).includes(cluster)) {
     return NextResponse.json({ error: "Invalid cluster" }, { status: 400 });
   }
 
-  let feeds = await getFeedsCached(cluster) as Omit<z.infer<typeof priceFeedsSchema>[number], 'price'>[];
-  
-  if(excludePriceComponents) {
-    feeds = feeds.map((feed) => ({
-      ...feed,
-      price: undefined,
-    }));
-  }
-  
-  return new Response(stringify(feeds), {
+  const feeds = await getFeeds(cluster);
+  const filteredFeeds = excludePriceComponents
+    ? feeds.map((feed) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { price, ...rest } = feed;
+        return rest;
+      })
+    : feeds;
+
+  return new Response(stringify(filteredFeeds), {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 };

@@ -2,7 +2,7 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
-import { Redis } from 'ioredis';
+import { Redis } from "ioredis";
 import "server-only";
 
 /**
@@ -59,12 +59,11 @@ export const SOLANA_RPC =
 export const ENABLE_ACCESSIBILITY_REPORTING =
   !IS_PRODUCTION_SERVER && !process.env.DISABLE_ACCESSIBILITY_REPORTING;
 
-
 let redisClient: Redis | undefined;
 
 export function getRedis(): Redis {
   const url = demand("REDIS_URL");
-  if(redisClient) {
+  if (redisClient) {
     return redisClient;
   }
   redisClient = new Redis(url);
@@ -83,4 +82,6 @@ export const PUBLIC_URL = (() => {
   }
 })();
 
-export const VERCEL_AUTOMATION_BYPASS_SECRET = demand("VERCEL_AUTOMATION_BYPASS_SECRET");
+export const VERCEL_AUTOMATION_BYPASS_SECRET = demand(
+  "VERCEL_AUTOMATION_BYPASS_SECRET",
+);

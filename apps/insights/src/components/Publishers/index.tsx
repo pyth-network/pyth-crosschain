@@ -7,7 +7,7 @@ import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 
 import styles from "./index.module.scss";
 import { PublishersCard } from "./publishers-card";
-import { getPublishersCached } from "../../server/clickhouse";
+import { getPublishers } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
 import { Cluster } from "../../services/pyth";
 import {
@@ -27,8 +27,8 @@ const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
 export const Publishers = async () => {
   const [pythnetPublishers, pythtestConformancePublishers, oisStats] =
     await Promise.all([
-      getPublishersCached(Cluster.Pythnet),
-      getPublishersCached(Cluster.PythtestConformance),
+      getPublishers(Cluster.Pythnet),
+      getPublishers(Cluster.PythtestConformance),
       getOisStats(),
     ]);
   const rankingTime = pythnetPublishers[0]?.timestamp;
@@ -149,7 +149,7 @@ const toTableRow = ({
   permissionedFeeds,
   activeFeeds,
   averageScore,
-}: Awaited<ReturnType<typeof getPublishersCached>>[number]) => {
+}: Awaited<ReturnType<typeof getPublishers>>[number]) => {
   const knownPublisher = lookupPublisher(key);
   return {
     id: key,

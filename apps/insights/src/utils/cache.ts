@@ -2,7 +2,7 @@ import type { Cache as ACDCache } from "async-cache-dedupe";
 import { createCache } from "async-cache-dedupe";
 import { stringify, parse } from "superjson";
 
-import { getRedis } from '../config/server';
+import { getRedis } from "../config/server";
 
 const transformer = {
   serialize: stringify,

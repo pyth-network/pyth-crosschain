@@ -16,10 +16,10 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import {
-  getPublishersCached,
-  getPublisherRankingHistoryCached,
-  getPublisherAverageScoreHistoryCached,
-} from "../../server/clickhouse";
+  getPublishers,
+  getPublisherRankingHistory,
+  getPublisherAverageScoreHistory,
+} from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
 import { ClusterToName, parseCluster, Cluster } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
@@ -150,7 +150,10 @@ const RankingCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const rankingHistory = await getPublisherRankingHistoryCached({ cluster, key: publisherKey });
+  const rankingHistory = await getPublisherRankingHistory({
+    cluster,
+    key: publisherKey,
+  });
   return <RankingCardImpl rankingHistory={rankingHistory} />;
 };
 
@@ -231,8 +234,11 @@ const ScoreCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const averageScoreHistory = await getPublisherAverageScoreHistoryCached({ cluster, key: publisherKey });
-  
+  const averageScoreHistory = await getPublisherAverageScoreHistory({
+    cluster,
+    key: publisherKey,
+  });
+
   return <ScoreCardImpl averageScoreHistory={averageScoreHistory} />;
 };
 
@@ -333,7 +339,7 @@ const ActiveFeedsCard = async ({
   publisherKey: string;
 }) => {
   const [publishers, priceFeeds] = await Promise.all([
-    getPublishersCached(cluster),
+    getPublishers(cluster),
     getPriceFeeds(cluster, publisherKey),
   ]);
   const publisher = publishers.find(

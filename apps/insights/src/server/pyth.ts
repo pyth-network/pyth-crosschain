@@ -1,71 +1,98 @@
-import { parse, } from "superjson";
+import { parse } from "superjson";
 import { z } from "zod";
 
-import { PUBLIC_URL, VERCEL_AUTOMATION_BYPASS_SECRET } from '../config/server';
+import { PUBLIC_URL, VERCEL_AUTOMATION_BYPASS_SECRET } from "../config/server";
 import { Cluster, priceFeedsSchema } from "../services/pyth";
 import { DEFAULT_CACHE_TTL } from "../utils/cache";
 
-// Convenience helpers matching your previous functions
-export async function getPublishersForFeedCached(
+export async function getPublishersForFeedRequest(
   cluster: Cluster,
-  symbol: string
+  symbol: string,
 ) {
-  const data = await fetch(`${PUBLIC_URL}/api/pyth/get-publishers/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`, {
-    next: {
-      revalidate: DEFAULT_CACHE_TTL,
+  const data = await fetch(
+    `${PUBLIC_URL}/api/pyth/get-publishers/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`,
+    {
+      next: {
+        revalidate: DEFAULT_CACHE_TTL,
+      },
+      headers: {
+        // this is a way to bypass vercel protection for the internal api route
+        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+      },
     },
-    headers: {
-      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
-    },
-  });
-  return data.json() as Promise<string[]>;
+  );
+  const parsedData: unknown = await data.json();
+  return z.array(z.string()).parse(parsedData);
 }
 
-export async function getFeedsForPublisherCached(
+export async function getFeedsForPublisherRequest(
   cluster: Cluster,
-  publisher: string
+  publisher: string,
 ) {
-  const data = await fetch(`${PUBLIC_URL}/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}?cluster=${cluster.toString()}`, {
-    next: {
-      revalidate: DEFAULT_CACHE_TTL,
+  const data = await fetch(
+    `${PUBLIC_URL}/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}?cluster=${cluster.toString()}`,
+    {
+      next: {
+        revalidate: DEFAULT_CACHE_TTL,
+      },
+      headers: {
+        // this is a way to bypass vercel protection for the internal api route
+        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+      },
     },
-    headers: {
-      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
-    },
-  });
+  );
   const rawData = await data.text();
-  return parse<z.infer<typeof priceFeedsSchema>>(rawData);
+  const parsedData = parse(rawData);
+  return priceFeedsSchema.parse(parsedData);
 }
 
-export const getFeedsCached = async (cluster: Cluster) => {
-  const data = await fetch(`${PUBLIC_URL}/api/pyth/get-feeds?cluster=${cluster.toString()}&excludePriceComponents=true`, {
-    next: {
-      revalidate: DEFAULT_CACHE_TTL,
+export const getFeedsRequest = async (cluster: Cluster) => {
+  const data = await fetch(
+    `${PUBLIC_URL}/api/pyth/get-feeds?cluster=${cluster.toString()}&excludePriceComponents=true`,
+    {
+      next: {
+        revalidate: DEFAULT_CACHE_TTL,
+      },
+      headers: {
+        // this is a way to bypass vercel protection for the internal api route
+        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+      },
     },
-    headers: {
-      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
-    },
-  });
-  const dataJson = await data.text();
-  const feeds: Omit<z.infer<typeof priceFeedsSchema>[0], "price">[] = parse(dataJson);
-  return feeds;
-}
+  );
+  const rawData = await data.text();
+  const parsedData = parse(rawData);
 
-export const getFeedForSymbolCached = async ({symbol, cluster = Cluster.Pythnet}: {symbol: string, cluster?: Cluster}): Promise<z.infer<typeof priceFeedsSchema>[0] | undefined> => {
-  const data = await fetch(`${PUBLIC_URL}/api/pyth/get-feeds/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`, {
-    next: {
-      revalidate: DEFAULT_CACHE_TTL,
+  return priceFeedsSchema.element
+    .omit({ price: true })
+    .array()
+    .parse(parsedData);
+};
+
+export const getFeedForSymbolRequest = async ({
+  symbol,
+  cluster = Cluster.Pythnet,
+}: {
+  symbol: string;
+  cluster?: Cluster;
+}): Promise<z.infer<typeof priceFeedsSchema>[0] | undefined> => {
+  const data = await fetch(
+    `${PUBLIC_URL}/api/pyth/get-feeds/${encodeURIComponent(symbol)}?cluster=${cluster.toString()}`,
+    {
+      next: {
+        revalidate: DEFAULT_CACHE_TTL,
+      },
+      headers: {
+        // this is a way to bypass vercel protection for the internal api route
+        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+      },
     },
-    headers: {
-      'x-vercel-protection-bypass': VERCEL_AUTOMATION_BYPASS_SECRET,
-    },
-  });
-  
-  if(!data.ok) {
+  );
+
+  if (!data.ok) {
     return undefined;
   }
 
-  const dataJson = await data.text();
-  const feed: z.infer<typeof priceFeedsSchema>[0] = parse(dataJson);
-  return feed;
-}
+  const rawData = await data.text();
+  const parsedData = parse(rawData);
+  return priceFeedsSchema.element.parse(parsedData);
+};

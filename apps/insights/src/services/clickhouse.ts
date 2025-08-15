@@ -6,10 +6,11 @@ import { z } from "zod";
 
 import { Cluster, ClusterToName } from "./pyth";
 import { CLICKHOUSE } from "../config/server";
+import { redisCache } from "../utils/cache";
 
 const client = createClient(CLICKHOUSE);
 
-export const getPublishers = async (cluster: Cluster) =>
+const _getPublishers = async (cluster: Cluster) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -72,7 +73,7 @@ export const getPublishers = async (cluster: Cluster) =>
     },
   );
 
-export const getRankingsByPublisher = async (publisherKey: string) =>
+const _getRankingsByPublisher = async (publisherKey: string) =>
   safeQuery(rankingsSchema, {
     query: `
       WITH first_rankings AS (
@@ -108,7 +109,7 @@ export const getRankingsByPublisher = async (publisherKey: string) =>
     query_params: { publisherKey },
   });
 
-export const getRankingsBySymbol = async (symbol: string) =>
+const _getRankingsBySymbol = async (symbol: string) =>
   safeQuery(rankingsSchema, {
     query: `
       WITH first_rankings AS (
@@ -159,7 +160,7 @@ const rankingsSchema = z.array(
   }),
 );
 
-export const getYesterdaysPrices = async (symbols: string[]) =>
+const _getYesterdaysPrices = async (symbols: string[]) =>
   safeQuery(
     z.array(
       z.object({
@@ -182,9 +183,13 @@ export const getYesterdaysPrices = async (symbols: string[]) =>
     },
   );
 
-export const getPublisherRankingHistory = async (
-  { cluster, key }: { cluster: Cluster; key: string }
-) =>
+const _getPublisherRankingHistory = async ({
+  cluster,
+  key,
+}: {
+  cluster: Cluster;
+  key: string;
+}) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -208,13 +213,19 @@ export const getPublisherRankingHistory = async (
     },
   );
 
-export const getFeedScoreHistory = async (
-  cluster: Cluster,
-  publisherKey: string,
-  symbol: string,
-  from: string,
-  to: string,
-) =>
+const _getFeedScoreHistory = async ({
+  cluster,
+  publisherKey,
+  symbol,
+  from,
+  to,
+}: {
+  cluster: Cluster;
+  publisherKey: string;
+  symbol: string;
+  from: string;
+  to: string;
+}) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -252,11 +263,15 @@ export const getFeedScoreHistory = async (
     },
   );
 
-export const getFeedPriceHistory = async (
-  cluster: Cluster,
-  publisherKey: string,
-  symbol: string,
-) =>
+const _getFeedPriceHistory = async ({
+  cluster,
+  publisherKey,
+  symbol,
+}: {
+  cluster: Cluster;
+  publisherKey: string;
+  symbol: string;
+}) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -286,9 +301,13 @@ export const getFeedPriceHistory = async (
     },
   );
 
-export const getPublisherAverageScoreHistory = async (
-  { cluster, key }: { cluster: Cluster; key: string }
-) =>
+export const _getPublisherAverageScoreHistory = async ({
+  cluster,
+  key,
+}: {
+  cluster: Cluster;
+  key: string;
+}) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -316,7 +335,13 @@ export const getPublisherAverageScoreHistory = async (
     },
   );
 
-export const getHistoricalPrices = async (symbol: string, until: string) =>
+const _getHistoricalPrices = async ({
+  symbol,
+  until,
+}: {
+  symbol: string;
+  until: string;
+}) =>
   safeQuery(
     z.array(
       z.strictObject({
@@ -351,3 +376,48 @@ const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
 
   return schema.parse(result.data);
 };
+
+export const getRankingsBySymbol = redisCache.define(
+  "getRankingsBySymbol",
+  _getRankingsBySymbol,
+).getRankingsBySymbol;
+
+export const getRankingsByPublisher = redisCache.define(
+  "getRankingsByPublisher",
+  _getRankingsByPublisher,
+).getRankingsByPublisher;
+
+export const getPublishers = redisCache.define(
+  "getPublishers",
+  _getPublishers,
+).getPublishers;
+
+export const getPublisherAverageScoreHistory = redisCache.define(
+  "getPublisherAverageScoreHistory",
+  _getPublisherAverageScoreHistory,
+).getPublisherAverageScoreHistory;
+
+export const getPublisherRankingHistory = redisCache.define(
+  "getPublisherRankingHistory",
+  _getPublisherRankingHistory,
+).getPublisherRankingHistory;
+
+export const getFeedScoreHistory = redisCache.define(
+  "getFeedScoreHistory",
+  _getFeedScoreHistory,
+).getFeedScoreHistory;
+
+export const getHistoricalPrices = redisCache.define(
+  "getHistoricalPrices",
+  _getHistoricalPrices,
+).getHistoricalPrices;
+
+export const getFeedPriceHistory = redisCache.define(
+  "getFeedPriceHistory",
+  _getFeedPriceHistory,
+).getFeedPriceHistory;
+
+export const getYesterdaysPrices = redisCache.define(
+  "getYesterdaysPrices",
+  _getYesterdaysPrices,
+).getYesterdaysPrices;

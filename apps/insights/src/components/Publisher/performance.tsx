@@ -15,7 +15,7 @@ import type { ReactNode, ComponentProps } from "react";
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
 import { TopFeedsTable } from "./top-feeds-table";
-import { getPublishersCached } from "../../server/clickhouse";
+import { getPublishers } from "../../services/clickhouse";
 import type { Cluster } from "../../services/pyth";
 import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
@@ -48,7 +48,7 @@ export const Performance = async ({ params }: Props) => {
     notFound();
   }
   const [publishers, priceFeeds] = await Promise.all([
-    getPublishersCached(parsedCluster),
+    getPublishers(parsedCluster),
     getPriceFeeds(parsedCluster, key),
   ]);
   const slicedPublishers = sliceAround(
