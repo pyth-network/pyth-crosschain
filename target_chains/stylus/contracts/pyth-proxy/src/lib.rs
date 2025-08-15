@@ -27,16 +27,14 @@ impl PythProxy {
         implementation: Address,
         initial_owner: Address,
     ) -> Result<(), upgradeable::Error> {
-        self.upgradeable_beacon.constructor(implementation, initial_owner)
+        self.upgradeable_beacon
+            .constructor(implementation, initial_owner)
     }
 }
 
 #[public]
 impl IUpgradeableBeacon for PythProxy {
-    fn upgrade_to(
-        &mut self,
-        new_implementation: Address,
-    ) -> Result<(), Vec<u8>> {
+    fn upgrade_to(&mut self, new_implementation: Address) -> Result<(), Vec<u8>> {
         Ok(self.upgradeable_beacon.upgrade_to(new_implementation)?)
     }
 }
@@ -54,10 +52,7 @@ impl IOwnable for PythProxy {
         self.upgradeable_beacon.owner()
     }
 
-    fn transfer_ownership(
-        &mut self,
-        new_owner: Address,
-    ) -> Result<(), Vec<u8>> {
+    fn transfer_ownership(&mut self, new_owner: Address) -> Result<(), Vec<u8>> {
         self.upgradeable_beacon.transfer_ownership(new_owner)
     }
 
