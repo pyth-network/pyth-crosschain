@@ -33,9 +33,7 @@ export const Root = ({ children }: Props) => (
     enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
     providers={[NuqsAdapter, LivePriceDataProvider]}
     tabs={TABS}
-    extraCta={
-      <SearchButton />
-    }
+    extraCta={<SearchButton />}
   >
     {children}
   </AppShell>
