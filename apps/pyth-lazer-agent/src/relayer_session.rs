@@ -145,6 +145,10 @@ impl RelayerSessionTask {
                 // Handle messages from the relayers, such as errors if we send a bad update
                 msg = relayer_ws_receiver.next() => {
                     match msg {
+                        Some(Ok(TungsteniteMessage::Ping(payload))) => {
+                            tracing::debug!("Received a Ping from relayer {}", self.url);
+                            relayer_ws_session.ws_sender.send(TungsteniteMessage::Pong(payload)).await?
+                        }
                         Some(Ok(msg)) => {
                             tracing::debug!("Received a message from relayer: {msg:?}");
                         }
