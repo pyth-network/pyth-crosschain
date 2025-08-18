@@ -2,16 +2,16 @@ import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
-import { Suspense } from "react";
 
 import {
+  AMPLITUDE_API_KEY,
   ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
-  AMPLITUDE_API_KEY,
 } from "../../config/server";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { getPublishers } from "../../services/clickhouse";
-import { Cluster, getFeeds } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
+import { getFeeds } from "../../services/pyth/get-feeds";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { SearchButton as SearchButtonImpl } from "./search-button";
@@ -34,11 +34,7 @@ export const Root = ({ children }: Props) => (
     enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
     providers={[NuqsAdapter, LivePriceDataProvider]}
     tabs={TABS}
-    extraCta={
-      <Suspense fallback={<SearchButtonImpl isLoading />}>
-        <SearchButton />
-      </Suspense>
-    }
+    extraCta={<SearchButton />}
   >
     {children}
   </AppShell>
@@ -57,7 +53,6 @@ const SearchButton = async () => {
 };
 
 const getPublishersForSearchDialog = async (cluster: Cluster) => {
-  "use cache";
   const publishers = await getPublishers(cluster);
   return publishers.map((publisher) => {
     const knownPublisher = lookupPublisher(publisher.key);
@@ -75,7 +70,6 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 };
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
-  "use cache";
   const feeds = await getFeeds(cluster);
 
   return feeds.map((feed) => ({

@@ -12,6 +12,7 @@ use {
     rust_decimal::{prelude::FromPrimitive, Decimal},
     serde::{de::Error, Deserialize, Serialize},
     std::{
+        cmp::Ordering,
         fmt::Display,
         num::NonZeroI64,
         ops::{Add, Deref, DerefMut, Div, Sub},
@@ -206,9 +207,24 @@ pub enum JsonBinaryEncoding {
     Hex,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, From)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From)]
 pub enum Channel {
     FixedRate(FixedRate),
+    RealTime,
+}
+
+impl PartialOrd for Channel {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let rate_left = match self {
+            Channel::FixedRate(rate) => rate.duration().as_micros(),
+            Channel::RealTime => FixedRate::MIN.duration().as_micros(),
+        };
+        let rate_right = match other {
+            Channel::FixedRate(rate) => rate.duration().as_micros(),
+            Channel::RealTime => FixedRate::MIN.duration().as_micros(),
+        };
+        Some(rate_left.cmp(&rate_right))
+    }
 }
 
 impl Serialize for Channel {
@@ -217,15 +233,11 @@ impl Serialize for Channel {
         S: serde::Serializer,
     {
         match self {
-            Channel::FixedRate(fixed_rate) => {
-                if *fixed_rate == FixedRate::MIN {
-                    return serializer.serialize_str("real_time");
-                }
-                serializer.serialize_str(&format!(
-                    "fixed_rate@{}ms",
-                    fixed_rate.duration().as_millis()
-                ))
-            }
+            Channel::FixedRate(fixed_rate) => serializer.serialize_str(&format!(
+                "fixed_rate@{}ms",
+                fixed_rate.duration().as_millis()
+            )),
+            Channel::RealTime => serializer.serialize_str("real_time"),
         }
     }
 }
@@ -233,7 +245,7 @@ impl Serialize for Channel {
 pub mod channel_ids {
     use super::ChannelId;
 
-    pub const FIXED_RATE_1: ChannelId = ChannelId(1);
+    pub const REAL_TIME: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
 }
@@ -241,10 +253,10 @@ pub mod channel_ids {
 impl Display for Channel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Channel::FixedRate(fixed_rate) => match *fixed_rate {
-                FixedRate::MIN => write!(f, "real_time"),
-                rate => write!(f, "fixed_rate@{}ms", rate.duration().as_millis()),
-            },
+            Channel::FixedRate(fixed_rate) => {
+                write!(f, "fixed_rate@{}ms", fixed_rate.duration().as_millis())
+            }
+            Channel::RealTime => write!(f, "real_time"),
         }
     }
 }
@@ -253,11 +265,11 @@ impl Channel {
     pub fn id(&self) -> ChannelId {
         match self {
             Channel::FixedRate(fixed_rate) => match fixed_rate.duration().as_millis() {
-                1 => channel_ids::FIXED_RATE_1,
                 50 => channel_ids::FIXED_RATE_50,
                 200 => channel_ids::FIXED_RATE_200,
                 _ => panic!("unknown channel: {self:?}"),
             },
+            Channel::RealTime => channel_ids::REAL_TIME,
         }
     }
 }
@@ -271,7 +283,7 @@ fn id_supports_all_fixed_rates() {
 
 fn parse_channel(value: &str) -> Option<Channel> {
     if value == "real_time" {
-        Some(Channel::FixedRate(FixedRate::MIN))
+        Some(Channel::RealTime)
     } else if let Some(rest) = value.strip_prefix("fixed_rate@") {
         let ms_value = rest.strip_suffix("ms")?;
         Some(Channel::FixedRate(FixedRate::from_millis(
@@ -298,9 +310,6 @@ pub struct FixedRate {
 }
 
 impl FixedRate {
-    pub const RATE_1_MS: Self = Self {
-        rate: DurationUs::from_millis_u32(1),
-    };
     pub const RATE_50_MS: Self = Self {
         rate: DurationUs::from_millis_u32(50),
     };
@@ -312,7 +321,7 @@ impl FixedRate {
     // - Values are sorted.
     // - 1 second contains a whole number of each interval.
     // - all intervals are divisable by the smallest interval.
-    pub const ALL: [Self; 3] = [Self::RATE_1_MS, Self::RATE_50_MS, Self::RATE_200_MS];
+    pub const ALL: [Self; 2] = [Self::RATE_50_MS, Self::RATE_200_MS];
     pub const MIN: Self = Self::ALL[0];
 
     pub fn from_millis(millis: u32) -> Option<Self> {

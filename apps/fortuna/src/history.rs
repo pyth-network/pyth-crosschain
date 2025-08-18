@@ -51,6 +51,7 @@ pub enum RequestEntryState {
         /// the error code and any additional returned data. Note that "" often indicates an out-of-gas error.
         /// If the callback returns more than 256 bytes, only the first 256 bytes of the callback return value are included.
         /// NOTE: This field is the raw bytes returned from the callback, not hex-decoded. The client should decode it as needed.
+        #[schema(example = "0x4e487b710000000000000000000000000000000000000000000000000000000000000011", value_type = String)]
         callback_return_value: Bytes,
         /// How much gas the callback used.
         #[schema(example = "567890", value_type = String)]

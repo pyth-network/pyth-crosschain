@@ -19,12 +19,25 @@
   .body {
     @include theme.max-width;
 
+    .statusSelect {
+      width: theme.spacing(44);
+    }
+
     .searchBar {
       width: 100%;
 
       @include theme.breakpoint("lg") {
+        width: theme.spacing(80);
+      }
+
+      @include theme.breakpoint("xl") {
         width: theme.spacing(100);
       }
+    }
+
+    .cardBody {
+      background: theme.color("background", "primary");
+      border-radius: theme.border-radius("xl");
     }
   }
 }

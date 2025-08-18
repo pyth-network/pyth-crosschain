@@ -7,7 +7,7 @@ import type { PythPriceCallback } from "@pythnetwork/client/lib/PythConnection";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
-import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../config/isomorphic";
+import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../../config/isomorphic";
 
 export enum Cluster {
   Pythnet,
@@ -56,57 +56,12 @@ const mkClient = (cluster: Cluster) =>
     getPythProgramKeyForCluster(ClusterToName[cluster]),
   );
 
-const clients = {
+export const clients = {
   [Cluster.Pythnet]: mkClient(Cluster.Pythnet),
   [Cluster.PythtestConformance]: mkClient(Cluster.PythtestConformance),
 } as const;
 
-export const getPublishersForFeed = async (
-  cluster: Cluster,
-  symbol: string,
-) => {
-  const data = await clients[cluster].getData();
-  return data.productPrice
-    .get(symbol)
-    ?.priceComponents.map(({ publisher }) => publisher.toBase58());
-};
-
-export const getFeeds = async (cluster: Cluster) => {
-  const data = await clients[cluster].getData();
-  return priceFeedsSchema.parse(
-    data.symbols.map((symbol) => ({
-      symbol,
-      product: data.productFromSymbol.get(symbol),
-      price: data.productPrice.get(symbol),
-    })),
-  );
-};
-
-export const getFeedsForPublisher = async (
-  cluster: Cluster,
-  publisher: string,
-) => {
-  const data = await clients[cluster].getData();
-  return priceFeedsSchema.parse(
-    data.symbols
-      .filter(
-        (symbol) =>
-          data.productFromSymbol.get(symbol)?.display_symbol !== undefined,
-      )
-      .map((symbol) => ({
-        symbol,
-        product: data.productFromSymbol.get(symbol),
-        price: data.productPrice.get(symbol),
-      }))
-      .filter(({ price }) =>
-        price?.priceComponents.some(
-          (component) => component.publisher.toBase58() === publisher,
-        ),
-      ),
-  );
-};
-
-const priceFeedsSchema = z.array(
+export const priceFeedsSchema = z.array(
   z.object({
     symbol: z.string(),
     product: z.object({
@@ -133,6 +88,11 @@ const priceFeedsSchema = z.array(
       minPublishers: z.number(),
       lastSlot: z.bigint(),
       validSlot: z.bigint(),
+      priceComponents: z.array(
+        z.object({
+          publisher: z.string(),
+        }),
+      ),
     }),
   }),
 );

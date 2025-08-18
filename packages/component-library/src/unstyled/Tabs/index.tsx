@@ -12,12 +12,10 @@ type TabProps = ComponentProps<typeof BaseTab> & {
 };
 
 export const Tab = ({ ref, prefetch, onHoverStart, ...props }: TabProps) => {
-  const prefetchProps = usePrefetch<HTMLAnchorElement>({
+  const prefetchProps = usePrefetch({
     href: props.href,
     prefetch,
     onHoverStart,
-    // TODO Figure this out...
-    // @ts-expect-error It doesn't look like refs are getting passed through correctly...
     ref,
   });
 

@@ -267,17 +267,15 @@ const SearchDialogContents = ({
             className={styles.listbox ?? ""}
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus={false}
-            // @ts-expect-error looks like react-aria isn't exposing this
-            // property in the typescript types correctly...
             shouldFocusOnHover
-            emptyState={
+            renderEmptyState={() => (
               <NoResults
                 query={search}
                 onClearSearch={() => {
                   setSearch("");
                 }}
               />
-            }
+            )}
           >
             {(result) => (
               <ListBoxItem

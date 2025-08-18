@@ -64,7 +64,7 @@ export const Header = ({
           Support
         </Button>
         {extraCta}
-        <MobileMenu className={styles.mobileMenu} />
+        <MobileMenu className={styles.mobileMenu} mainCta={mainCta} />
         <Button
           href={mainCta?.href ?? "https://docs.pyth.network"}
           size="sm"
@@ -80,7 +80,13 @@ export const Header = ({
   </header>
 );
 
-const MobileMenu = ({ className }: { className?: string | undefined }) => (
+const MobileMenu = ({
+  className,
+  mainCta,
+}: {
+  className?: string | undefined;
+  mainCta: Props["mainCta"];
+}) => (
   <Button
     className={className ?? ""}
     beforeIcon={<List />}
@@ -91,14 +97,14 @@ const MobileMenu = ({ className }: { className?: string | undefined }) => (
     drawer={{
       hideHeading: true,
       title: "Menu",
-      contents: <MobileMenuContents />,
+      contents: <MobileMenuContents mainCta={mainCta} />,
     }}
   >
     Menu
   </Button>
 );
 
-const MobileMenuContents = () => (
+const MobileMenuContents = ({ mainCta }: { mainCta: Props["mainCta"] }) => (
   <div className={styles.mobileMenuContents}>
     <div className={styles.buttons}>
       <Button
@@ -111,12 +117,12 @@ const MobileMenuContents = () => (
         Support
       </Button>
       <Button
-        href="https://docs.pyth.network"
+        href={mainCta?.href ?? "https://docs.pyth.network"}
         size="md"
         rounded
         target="_blank"
       >
-        Dev Docs
+        {mainCta?.label ?? "Dev Docs"}
       </Button>
     </div>
     <div className={styles.theme}>

@@ -10,15 +10,18 @@ import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import buttonStyles from "../Button/index.module.scss";
 import { Select } from "../Select/index.jsx";
+import { Spinner } from "../Spinner/index.jsx";
 import { Toolbar } from "../unstyled/Toolbar/index.jsx";
 
 type Props = {
   numPages: number;
   currentPage: number;
   onPageChange: (newPage: number) => void;
+  isPageTransitioning?: boolean | undefined;
   pageSize: number;
   pageSizeOptions: number[];
   onPageSizeChange: (newPageSize: number) => void;
+  isPageSizeTransitioning?: boolean | undefined;
   mkPageLink?: ((page: number) => string) | undefined;
   className?: string | undefined;
 };
@@ -26,10 +29,12 @@ type Props = {
 export const Paginator = ({
   numPages,
   currentPage,
+  isPageTransitioning,
   pageSize,
   pageSizeOptions,
   onPageChange,
   onPageSizeChange,
+  isPageSizeTransitioning,
   mkPageLink,
   className,
 }: Props) => (
@@ -38,6 +43,7 @@ export const Paginator = ({
       pageSize={pageSize}
       pageSizeOptions={pageSizeOptions}
       onPageSizeChange={onPageSizeChange}
+      isPending={isPageSizeTransitioning}
     />
     {numPages > 1 && (
       <PaginatorToolbar
@@ -45,6 +51,7 @@ export const Paginator = ({
         numPages={numPages}
         onPageChange={onPageChange}
         mkPageLink={mkPageLink}
+        isPending={isPageTransitioning}
       />
     )}
   </div>
@@ -54,12 +61,14 @@ type PageSizeSelectProps = {
   pageSize: number;
   pageSizeOptions: number[];
   onPageSizeChange: (newPageSize: number) => void;
+  isPending?: boolean | undefined;
 };
 
 const PageSizeSelect = ({
   pageSize,
   onPageSizeChange,
   pageSizeOptions,
+  isPending,
 }: PageSizeSelectProps) => (
   <Select
     className={styles.pageSizeSelect ?? ""}
@@ -71,6 +80,7 @@ const PageSizeSelect = ({
     show={(value) => `${value.id.toString()} per page`}
     variant="ghost"
     size="sm"
+    isPending={isPending ?? false}
   />
 );
 
@@ -79,6 +89,7 @@ type PaginatorProps = {
   currentPage: number;
   onPageChange: (newPage: number) => void;
   mkPageLink: ((page: number) => string) | undefined;
+  isPending?: boolean | undefined;
 };
 
 const PaginatorToolbar = ({
@@ -86,6 +97,7 @@ const PaginatorToolbar = ({
   currentPage,
   onPageChange,
   mkPageLink,
+  isPending,
 }: PaginatorProps) => {
   const first = useMemo(
     () =>
@@ -105,6 +117,13 @@ const PaginatorToolbar = ({
 
   return (
     <Toolbar aria-label="Page" className={styles.paginatorToolbar ?? ""}>
+      {isPending && (
+        <Spinner
+          isIndeterminate
+          label="Loading page..."
+          className={styles.spinner ?? ""}
+        />
+      )}
       <PageSelector
         hideText
         beforeIcon={<CaretLeft />}

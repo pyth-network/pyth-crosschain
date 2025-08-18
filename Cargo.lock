@@ -3071,7 +3071,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "9.1.2"
+version = "9.2.0"
 dependencies = [
  "anyhow",
  "axum 0.6.20",
@@ -5633,7 +5633,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "backoff",
@@ -5669,7 +5669,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "2.0.1"
+version = "4.0.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5682,7 +5682,7 @@ dependencies = [
  "futures-util",
  "hex",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol 0.10.2",
+ "pyth-lazer-protocol 0.12.0",
  "serde",
  "serde_json",
  "tokio",
@@ -5715,7 +5715,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.10.2"
+version = "0.12.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5753,13 +5753,13 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.5.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "fs-err",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.10.2",
+ "pyth-lazer-protocol 0.12.0",
  "serde_json",
 ]
 

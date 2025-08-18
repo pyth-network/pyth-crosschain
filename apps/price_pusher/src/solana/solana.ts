@@ -167,7 +167,6 @@ export class SolanaPricePusherJito implements IPricePusher {
     private dynamicJitoTips: boolean,
     private maxJitoTipLamports: number,
     private searcherClients: SearcherClient[],
-    private jitoBundleSize: number,
     private updatesPerJitoBundle: number,
     private maxRetryTimeMs: number,
     private addressLookupTableAccount?: AddressLookupTableAccount,
@@ -237,7 +236,6 @@ export class SolanaPricePusherJito implements IPricePusher {
       const transactions = await transactionBuilder.buildVersionedTransactions({
         jitoTipLamports: cappedJitoTip,
         tightComputeBudget: true,
-        jitoBundleSize: this.jitoBundleSize,
       });
 
       await sendTransactionsJito(
