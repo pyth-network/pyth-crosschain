@@ -2,7 +2,6 @@ import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
-import { Suspense } from "react";
 
 import {
   AMPLITUDE_API_KEY,
@@ -35,11 +34,7 @@ export const Root = ({ children }: Props) => (
     enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
     providers={[NuqsAdapter, LivePriceDataProvider]}
     tabs={TABS}
-    extraCta={
-      <Suspense fallback={<SearchButtonImpl isLoading />}>
-        <SearchButton />
-      </Suspense>
-    }
+    extraCta={<SearchButton />}
   >
     {children}
   </AppShell>
