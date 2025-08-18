@@ -201,7 +201,7 @@ export const ResolvedPriceComponentsCard = <
       }
     },
     {
-      defaultPageSize: 20,
+      defaultPageSize: 50,
       defaultSort: "name",
       defaultDescending: false,
     },
