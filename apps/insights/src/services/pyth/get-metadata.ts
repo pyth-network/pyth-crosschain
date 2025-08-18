@@ -1,5 +1,5 @@
 import { clients, Cluster } from ".";
-import { memoryOnlyCache } from "../../utils/cache";
+import { memoryOnlyCache } from "../../cache";
 
 const getPythMetadata = async (cluster: Cluster) => {
   return clients[cluster].getData();
