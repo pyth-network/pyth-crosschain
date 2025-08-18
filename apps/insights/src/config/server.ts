@@ -2,12 +2,13 @@
 // and load all env variables.
 /* eslint-disable n/no-process-env */
 
+import { Redis } from "ioredis";
 import "server-only";
 
 /**
  * Throw if the env var `key` is not set (at either runtime or build time).
  */
-const demand = (key: string): string => {
+export const demand = (key: string): string => {
   const value = process.env[key];
   if (value === undefined || value === "") {
     throw new MissingEnvironmentError(key);
@@ -30,6 +31,7 @@ const getEnvOrDefault = (key: string, defaultValue: string) =>
  * Indicates that this server is the live customer-facing production server.
  */
 export const IS_PRODUCTION_SERVER = process.env.VERCEL_ENV === "production";
+export const IS_PREVIEW_SERVER = process.env.VERCEL_ENV === "preview";
 
 const defaultInProduction = IS_PRODUCTION_SERVER
   ? getEnvOrDefault
@@ -56,3 +58,23 @@ export const SOLANA_RPC =
 
 export const ENABLE_ACCESSIBILITY_REPORTING =
   !IS_PRODUCTION_SERVER && !process.env.DISABLE_ACCESSIBILITY_REPORTING;
+
+let redisClient: Redis | undefined;
+
+export function getRedis(): Redis {
+  const url = demand("REDIS_URL");
+  if (redisClient) {
+    return redisClient;
+  }
+  redisClient = new Redis(url);
+  return redisClient;
+}
+
+export const VERCEL_AUTOMATION_BYPASS_SECRET = demand(
+  "VERCEL_AUTOMATION_BYPASS_SECRET",
+);
+
+export const VERCEL_REQUEST_HEADERS = {
+  // this is a way to bypass vercel protection for the internal api route
+  "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+};
