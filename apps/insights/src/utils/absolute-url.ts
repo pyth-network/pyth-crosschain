@@ -1,11 +1,5 @@
 import { headers } from "next/headers";
 
-import {
-  demand,
-  IS_PREVIEW_SERVER,
-  IS_PRODUCTION_SERVER,
-} from "../config/server";
-
 /**
  * Returns an absolute URL for the given pathname.
  *
