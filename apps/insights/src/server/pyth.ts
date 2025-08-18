@@ -1,26 +1,26 @@
 import { parse } from "superjson";
 import { z } from "zod";
 
-import { PUBLIC_URL, VERCEL_AUTOMATION_BYPASS_SECRET } from "../config/server";
+import { VERCEL_REQUEST_HEADERS } from "../config/server";
 import { Cluster, ClusterToName, priceFeedsSchema } from "../services/pyth";
+import { absoluteUrl } from "../utils/absolute-url";
 import { DEFAULT_CACHE_TTL } from "../utils/cache";
 
 export async function getPublishersForFeedRequest(
   cluster: Cluster,
   symbol: string,
 ) {
-  const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-publishers/${encodeURIComponent(symbol)}?cluster=${ClusterToName[cluster]}`,
-    {
-      next: {
-        revalidate: DEFAULT_CACHE_TTL,
-      },
-      headers: {
-        // this is a way to bypass vercel protection for the internal api route
-        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
-      },
-    },
+  const url = await absoluteUrl(
+    `/api/pyth/get-publishers/${encodeURIComponent(symbol)}`,
   );
+  url.searchParams.set("cluster", ClusterToName[cluster]);
+
+  const data = await fetch(url, {
+    next: {
+      revalidate: DEFAULT_CACHE_TTL,
+    },
+    headers: VERCEL_REQUEST_HEADERS,
+  });
   const parsedData: unknown = await data.json();
   return z.array(z.string()).parse(parsedData);
 }
@@ -29,36 +29,33 @@ export async function getFeedsForPublisherRequest(
   cluster: Cluster,
   publisher: string,
 ) {
-  const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}?cluster=${ClusterToName[cluster]}`,
-    {
-      next: {
-        revalidate: DEFAULT_CACHE_TTL,
-      },
-      headers: {
-        // this is a way to bypass vercel protection for the internal api route
-        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
-      },
-    },
+  const url = await absoluteUrl(
+    `/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}`,
   );
+  url.searchParams.set("cluster", ClusterToName[cluster]);
+
+  const data = await fetch(url, {
+    next: {
+      revalidate: DEFAULT_CACHE_TTL,
+    },
+    headers: VERCEL_REQUEST_HEADERS,
+  });
   const rawData = await data.text();
   const parsedData = parse(rawData);
   return priceFeedsSchema.parse(parsedData);
 }
 
 export const getFeedsRequest = async (cluster: Cluster) => {
-  const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-feeds?cluster=${ClusterToName[cluster]}&excludePriceComponents=true`,
-    {
-      next: {
-        revalidate: DEFAULT_CACHE_TTL,
-      },
-      headers: {
-        // this is a way to bypass vercel protection for the internal api route
-        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
-      },
+  const url = await absoluteUrl(`/api/pyth/get-feeds`);
+  url.searchParams.set("cluster", ClusterToName[cluster]);
+  url.searchParams.set("excludePriceComponents", "true");
+
+  const data = await fetch(url, {
+    next: {
+      revalidate: DEFAULT_CACHE_TTL,
     },
-  );
+    headers: VERCEL_REQUEST_HEADERS,
+  });
   const rawData = await data.text();
   const parsedData = parse(rawData);
 
@@ -74,19 +71,18 @@ export const getFeedForSymbolRequest = async ({
 }: {
   symbol: string;
   cluster?: Cluster;
-}): Promise<z.infer<typeof priceFeedsSchema>[0] | undefined> => {
-  const data = await fetch(
-    `${PUBLIC_URL}/api/pyth/get-feeds/${encodeURIComponent(symbol)}?cluster=${ClusterToName[cluster]}`,
-    {
-      next: {
-        revalidate: DEFAULT_CACHE_TTL,
-      },
-      headers: {
-        // this is a way to bypass vercel protection for the internal api route
-        "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
-      },
-    },
+}): Promise<z.infer<typeof priceFeedsSchema.element> | undefined> => {
+  const url = await absoluteUrl(
+    `/api/pyth/get-feeds/${encodeURIComponent(symbol)}`,
   );
+  url.searchParams.set("cluster", ClusterToName[cluster]);
+
+  const data = await fetch(url, {
+    next: {
+      revalidate: DEFAULT_CACHE_TTL,
+    },
+    headers: VERCEL_REQUEST_HEADERS,
+  });
 
   if (!data.ok) {
     return undefined;

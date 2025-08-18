@@ -8,7 +8,7 @@ import "server-only";
 /**
  * Throw if the env var `key` is not set (at either runtime or build time).
  */
-const demand = (key: string): string => {
+export const demand = (key: string): string => {
   const value = process.env[key];
   if (value === undefined || value === "") {
     throw new MissingEnvironmentError(key);
@@ -70,18 +70,11 @@ export function getRedis(): Redis {
   return redisClient;
 }
 
-export const PUBLIC_URL = (() => {
-  if (IS_PRODUCTION_SERVER) {
-    const productionUrl = demand("VERCEL_PROJECT_PRODUCTION_URL");
-    return `https://${productionUrl}`;
-  } else if (IS_PREVIEW_SERVER) {
-    const previewUrl = demand("VERCEL_URL");
-    return `https://${previewUrl}`;
-  } else {
-    return `http://localhost:3003`;
-  }
-})();
-
 export const VERCEL_AUTOMATION_BYPASS_SECRET = demand(
   "VERCEL_AUTOMATION_BYPASS_SECRET",
 );
+
+export const VERCEL_REQUEST_HEADERS = {
+  // this is a way to bypass vercel protection for the internal api route
+  "x-vercel-protection-bypass": VERCEL_AUTOMATION_BYPASS_SECRET,
+};
