@@ -31,6 +31,31 @@ public struct Feed has copy, drop {
     funding_timestamp: Option<Option<u64>>,
 }
 
+/// Create a new Feed with the specified parameters
+public fun new(
+    feed_id: u32,
+    price: Option<Option<I64>>,
+    best_bid_price: Option<Option<I64>>,
+    best_ask_price: Option<Option<I64>>,
+    publisher_count: Option<u16>,
+    exponent: Option<I16>,
+    confidence: Option<Option<I64>>,
+    funding_rate: Option<Option<I64>>,
+    funding_timestamp: Option<Option<u64>>,
+): Feed {
+    Feed {
+        feed_id,
+        price,
+        best_bid_price,
+        best_ask_price,
+        publisher_count,
+        exponent,
+        confidence,
+        funding_rate,
+        funding_timestamp,
+    }
+}
+
 /// Get the feed ID
 public fun feed_id(feed: &Feed): u32 {
     feed.feed_id
@@ -74,4 +99,49 @@ public fun funding_rate(feed: &Feed): Option<Option<I64>> {
 /// Get the funding timestamp
 public fun funding_timestamp(feed: &Feed): Option<Option<u64>> {
     feed.funding_timestamp
+}
+
+/// Set the feed ID
+public fun set_feed_id(feed: &mut Feed, feed_id: u32) {
+    feed.feed_id = feed_id;
+}
+
+/// Set the price
+public fun set_price(feed: &mut Feed, price: Option<Option<I64>>) {
+    feed.price = price;
+}
+
+/// Set the best bid price
+public fun set_best_bid_price(feed: &mut Feed, best_bid_price: Option<Option<I64>>) {
+    feed.best_bid_price = best_bid_price;
+}
+
+/// Set the best ask price
+public fun set_best_ask_price(feed: &mut Feed, best_ask_price: Option<Option<I64>>) {
+    feed.best_ask_price = best_ask_price;
+}
+
+/// Set the publisher count
+public fun set_publisher_count(feed: &mut Feed, publisher_count: Option<u16>) {
+    feed.publisher_count = publisher_count;
+}
+
+/// Set the exponent
+public fun set_exponent(feed: &mut Feed, exponent: Option<I16>) {
+    feed.exponent = exponent;
+}
+
+/// Set the confidence interval
+public fun set_confidence(feed: &mut Feed, confidence: Option<Option<I64>>) {
+    feed.confidence = confidence;
+}
+
+/// Set the funding rate
+public fun set_funding_rate(feed: &mut Feed, funding_rate: Option<Option<I64>>) {
+    feed.funding_rate = funding_rate;
+}
+
+/// Set the funding timestamp
+public fun set_funding_timestamp(feed: &mut Feed, funding_timestamp: Option<Option<u64>>) {
+    feed.funding_timestamp = funding_timestamp;
 }

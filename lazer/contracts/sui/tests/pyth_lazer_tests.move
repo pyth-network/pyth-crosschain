@@ -1,27 +1,9 @@
-/*
-#[test_only]
-module pyth_lazer::pyth_lazer_tests;
-// uncomment this line to import the module
-// use pyth_lazer::pyth_lazer;
-
-const ENotImplemented: u64 = 0;
-
-#[test]
-fun test_pyth_lazer() {
-    // pass
-}
-
-#[test, expected_failure(abort_code = ::pyth_lazer::pyth_lazer_tests::ENotImplemented)]
-fun test_pyth_lazer_fail() {
-    abort ENotImplemented
-}
-*/
-
-
 #[test_only]
 module pyth_lazer::pyth_lazer_tests;
 use pyth_lazer::pyth_lazer::parse_and_validate_update;
-use pyth_lazer::update::Update;
+use pyth_lazer::channel::new_fixed_rate_200ms;
+use pyth_lazer::i16::{Self};
+use pyth_lazer::i64::{Self};
 
 #[test]
 public fun test_parse_and_validate_update() {
@@ -73,40 +55,40 @@ public fun test_parse_and_validate_update() {
 
     // If we reach this point, the function worked correctly
     // (no assertion failures in parse_and_validate_update)
-    assert!(update.timestamp == 1753787555800000, 0);
-    // assert!(channel == Channel::FixedRate200ms, 0);
-    // assert!(vector::length(&feeds) == 3, 0);
+    assert!(update.timestamp() == 1753787555800000, 0);
+    assert!(update.channel() == new_fixed_rate_200ms(), 0);
+    assert!(vector::length(&update.feeds()) == 3, 0);
 
-    // let feed_1 = vector::borrow(&feeds, 0);
-    // assert!(feed_1.feed_id == 1, 0);
-    // assert!(feed_1.price == option::some(option::some(i64::from_u64(11838353875029))), 0);
-    // assert!(feed_1.best_bid_price == option::some(option::some(i64::from_u64(11838047151903))), 0);
-    // assert!(feed_1.best_ask_price == option::some(option::some(i64::from_u64(11839270720540))), 0);
-    // assert!(feed_1.exponent == option::some(i16::new(8, true)), 0);
-    // assert!(feed_1.publisher_count == option::none(), 0);
-    // assert!(feed_1.confidence == option::none(), 0);
-    // assert!(feed_1.funding_rate == option::some(option::none()), 0);
-    // assert!(feed_1.funding_timestamp == option::some(option::none()), 0);
+    let feed_1 = vector::borrow(&update.feeds(), 0);
+    assert!(feed_1.feed_id() == 1, 0);
+    assert!(feed_1.price() == option::some(option::some(i64::from_u64(11838353875029))), 0);
+    assert!(feed_1.best_bid_price() == option::some(option::some(i64::from_u64(11838047151903))), 0);
+    assert!(feed_1.best_ask_price() == option::some(option::some(i64::from_u64(11839270720540))), 0);
+    assert!(feed_1.exponent() == option::some(i16::new(8, true)), 0);
+    assert!(feed_1.publisher_count() == option::none(), 0);
+    assert!(feed_1.confidence() == option::none(), 0);
+    assert!(feed_1.funding_rate() == option::some(option::none()), 0);
+    assert!(feed_1.funding_timestamp() == option::some(option::none()), 0);
 
-    // let feed_2 = vector::borrow(&feeds, 1);
-    // assert!(feed_2.feed_id == 2, 0);
-    // assert!(feed_2.price == option::some(option::some(i64::from_u64(382538699314))), 0);
-    // assert!(feed_2.best_bid_price == option::some(option::some(i64::from_u64(382520831095))), 0);
-    // assert!(feed_2.best_ask_price == option::some(option::some(i64::from_u64(382561500067))), 0);
-    // assert!(feed_2.exponent == option::some(i16::new(8, true)), 0);
-    // assert!(feed_2.publisher_count == option::none(), 0);
-    // assert!(feed_2.confidence == option::none(), 0);
-    // assert!(feed_2.funding_rate == option::some(option::none()), 0);
-    // assert!(feed_2.funding_timestamp == option::some(option::none()), 0);
+    let feed_2 = vector::borrow(&update.feeds(), 1);
+    assert!(feed_2.feed_id() == 2, 0);
+    assert!(feed_2.price() == option::some(option::some(i64::from_u64(382538699314))), 0);
+    assert!(feed_2.best_bid_price() == option::some(option::some(i64::from_u64(382520831095))), 0);
+    assert!(feed_2.best_ask_price() == option::some(option::some(i64::from_u64(382561500067))), 0);
+    assert!(feed_2.exponent() == option::some(i16::new(8, true)), 0);
+    assert!(feed_2.publisher_count() == option::none(), 0);
+    assert!(feed_2.confidence() == option::none(), 0);
+    assert!(feed_2.funding_rate() == option::some(option::none()), 0);
+    assert!(feed_2.funding_timestamp() == option::some(option::none()), 0);
 
-    // let feed_3 = vector::borrow(&feeds, 2);
-    // assert!(feed_3.feed_id == 112, 0);
-    // assert!(feed_3.price == option::some(option::some(i64::from_u64(118856300000000000))), 0);
-    // assert!(feed_3.best_bid_price == option::some(option::none()), 0);
-    // assert!(feed_3.best_ask_price == option::some(option::none()), 0);
-    // assert!(feed_3.exponent == option::some(i16::new(12, true)), 0);
-    // assert!(feed_3.publisher_count == option::none(), 0);
-    // assert!(feed_3.confidence == option::none(), 0);
-    // assert!(feed_3.funding_rate == option::some(option::some(i64::from_u64(100000000))), 0);
-    // assert!(feed_3.funding_timestamp == option::some(option::some(1753776000000000)), 0);
+    let feed_3 = vector::borrow(&update.feeds(), 2);
+    assert!(feed_3.feed_id() == 112, 0);
+    assert!(feed_3.price() == option::some(option::some(i64::from_u64(118856300000000000))), 0);
+    assert!(feed_3.best_bid_price() == option::some(option::none()), 0);
+    assert!(feed_3.best_ask_price() == option::some(option::none()), 0);
+    assert!(feed_3.exponent() == option::some(i16::new(12, true)), 0);
+    assert!(feed_3.publisher_count() == option::none(), 0);
+    assert!(feed_3.confidence() == option::none(), 0);
+    assert!(feed_3.funding_rate() == option::some(option::some(i64::from_u64(100000000))), 0);
+    assert!(feed_3.funding_timestamp() == option::some(option::some(1753776000000000)), 0);
 }

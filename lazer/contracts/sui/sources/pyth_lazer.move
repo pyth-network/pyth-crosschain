@@ -1,8 +1,10 @@
 module pyth_lazer::pyth_lazer;
 
-use pyth_lazer::i16::{Self, I16};
-use pyth_lazer::i64::{Self, I64};
-use pyth_lazer::update::Update;
+use pyth_lazer::i16::Self;
+use pyth_lazer::i64::Self;
+use pyth_lazer::update::{Self, Update};
+use pyth_lazer::feed::{Self, Feed};
+use pyth_lazer::channel::Self;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
 
@@ -47,15 +49,15 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
     let timestamp = cursor.peel_u64();
     let channel_value = cursor.peel_u8();
     let channel = if (channel_value == 0) {
-        Channel::Invalid
+        channel::new_invalid()
     } else if (channel_value == 1) {
-        Channel::RealTime
+        channel::new_real_time()
     } else if (channel_value == 2) {
-        Channel::FixedRate50ms
+        channel::new_fixed_rate_50ms()
     } else if (channel_value == 3) {
-        Channel::FixedRate200ms
+        channel::new_fixed_rate_200ms()
     } else {
-        Channel::Invalid // Default to Invalid for unknown values
+        channel::new_invalid() // Default to Invalid for unknown values
     };
 
     let mut feeds = vector::empty<Feed>();
@@ -65,17 +67,17 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
 
     while (feed_i < feed_count) {
         let feed_id = cursor.peel_u32();
-        let mut feed = Feed {
-            feed_id: feed_id,
-            price: option::none(),
-            best_bid_price: option::none(),
-            best_ask_price: option::none(),
-            publisher_count: option::none(),
-            exponent: option::none(),
-            confidence: option::none(),
-            funding_rate: option::none(),
-            funding_timestamp: option::none(),
-        };
+        let mut feed = feed::new(
+            feed_id,
+            option::none(),
+            option::none(),
+            option::none(),
+            option::none(),
+            option::none(),
+            option::none(),
+            option::none(),
+            option::none()
+        );
 
         let properties_count = cursor.peel_u8();
         let mut properties_i = 0;
@@ -86,53 +88,53 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
             if (property_id == 0) {
                 let price = cursor.peel_u64();
                 if (price != 0) {
-                    feed.price = option::some(option::some(i64::from_u64(price)));
+                    feed.set_price(option::some(option::some(i64::from_u64(price))));
                 } else {
-                    feed.price = option::some(option::none());
+                    feed.set_price(option::some(option::none()));
                 }
             } else if (property_id == 1) {
                 let best_bid_price = cursor.peel_u64();
                 if (best_bid_price != 0) {
-                    feed.best_bid_price = option::some(option::some(i64::from_u64(best_bid_price)));
+                    feed.set_best_bid_price(option::some(option::some(i64::from_u64(best_bid_price))));
                 } else {
-                    feed.best_bid_price = option::some(option::none());
+                    feed.set_best_bid_price(option::some(option::none()));
                 }
             } else if (property_id == 2) {
                 let best_ask_price = cursor.peel_u64();
                 if (best_ask_price != 0) {
-                    feed.best_ask_price = option::some(option::some(i64::from_u64(best_ask_price)));
+                    feed.set_best_ask_price(option::some(option::some(i64::from_u64(best_ask_price))));
                 } else {
-                    feed.best_ask_price = option::some(option::none());
+                    feed.set_best_ask_price(option::some(option::none()));
                 }
             } else if (property_id == 3) {
                 let publisher_count = cursor.peel_u16();
-                feed.publisher_count = option::some(publisher_count);
+                feed.set_publisher_count(option::some(publisher_count));
             } else if (property_id == 4) {
                 let exponent = cursor.peel_u16();
-                feed.exponent = option::some(i16::from_u16(exponent));
+                feed.set_exponent(option::some(i16::from_u16(exponent)));
             } else if (property_id == 5) {
                 let confidence = cursor.peel_u64();
                 if (confidence != 0) {
-                    feed.confidence = option::some(option::some(i64::from_u64(confidence)));
+                    feed.set_confidence(option::some(option::some(i64::from_u64(confidence))));
                 } else {
-                    feed.confidence = option::some(option::none());
+                    feed.set_confidence(option::some(option::none()));
                 }
             } else if (property_id == 6) {
                 let exists = cursor.peel_u8();
                 if (exists == 1) {
                     let funding_rate = cursor.peel_u64();
-                    feed.funding_rate = option::some(option::some(i64::from_u64(funding_rate)));
+                    feed.set_funding_rate(option::some(option::some(i64::from_u64(funding_rate))));
                 } else {
-                    feed.funding_rate = option::some(option::none());
+                    feed.set_funding_rate(option::some(option::none()));
                 }
             } else if (property_id == 7) {
                 let exists = cursor.peel_u8();
 
                 if (exists == 1) {
                     let funding_timestamp = cursor.peel_u64();
-                    feed.funding_timestamp = option::some(option::some(funding_timestamp));
+                    feed.set_funding_timestamp(option::some(option::some(funding_timestamp)));
                 } else {
-                    feed.funding_timestamp = option::some(option::none());
+                    feed.set_funding_timestamp(option::some(option::none()));
                 }
             } else {
                 // When we have an unknown property, we do not know its length, and therefore
@@ -151,9 +153,5 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
     let remaining_bytes = cursor.into_remainder_bytes();
     assert!(remaining_bytes.length() == 0, 0);
 
-    Update {
-        timestamp: timestamp,
-        channel: channel,
-        feeds: feeds,
-    }
+    update::new(timestamp, channel, feeds)
 }

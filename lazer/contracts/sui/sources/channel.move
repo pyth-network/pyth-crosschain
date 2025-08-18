@@ -7,6 +7,26 @@ public enum Channel has copy, drop {
     FixedRate200ms,
 }
 
+/// Create a new Invalid channel
+public fun new_invalid(): Channel {
+    Channel::Invalid
+}
+
+/// Create a new RealTime channel
+public fun new_real_time(): Channel {
+    Channel::RealTime
+}
+
+/// Create a new FixedRate50ms channel
+public fun new_fixed_rate_50ms(): Channel {
+    Channel::FixedRate50ms
+}
+
+/// Create a new FixedRate200ms channel
+public fun new_fixed_rate_200ms(): Channel {
+    Channel::FixedRate200ms
+}
+
 /// Check if the channel is Invalid
 public fun is_invalid(channel: &Channel): bool {
     match (channel) {

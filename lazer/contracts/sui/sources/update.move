@@ -14,6 +14,14 @@ public struct Update has copy, drop {
     feeds: vector<Feed>,
 }
 
+public fun new(
+    timestamp: u64,
+    channel: Channel,
+    feeds: vector<Feed>
+): Update {
+    Update { timestamp, channel, feeds }
+}
+
 /// Get the timestamp of the update
 public fun timestamp(update: &Update): u64 {
     update.timestamp
