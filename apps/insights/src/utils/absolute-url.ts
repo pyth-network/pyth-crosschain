@@ -30,20 +30,11 @@ export async function absoluteUrl(pathname: string) {
     // if we have a host and a proto, we can construct the origin
     if (host && proto) origin = `${proto}://${host}`;
   } catch {
-    // headers() is unavailable
+    throw new Error("Headers are not available in this context. Please check where are you calling this function from.");
   }
 
-  // Fallbacks for requests where headers() is not available
   if (!origin) {
-    if (IS_PRODUCTION_SERVER) {
-      const productionUrl = demand("VERCEL_PROJECT_PRODUCTION_URL");
-      origin = `https://${productionUrl}`;
-    } else if (IS_PREVIEW_SERVER) {
-      const previewUrl = demand("VERCEL_URL");
-      origin = `https://${previewUrl}`;
-    } else {
-      origin = "http://localhost:3003";
-    }
+    throw new Error("No origin found! This should never happen.");
   }
 
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
