@@ -1,17 +1,18 @@
 import { parse } from "superjson";
 import { z } from "zod";
 
+import { DEFAULT_CACHE_TTL } from "../cache";
 import { VERCEL_REQUEST_HEADERS } from "../config/server";
+import { getHost } from "../get-host";
 import { Cluster, ClusterToName, priceFeedsSchema } from "../services/pyth";
-import { absoluteUrl } from "../utils/absolute-url";
-import { DEFAULT_CACHE_TTL } from "../utils/cache";
 
 export async function getPublishersForFeedRequest(
   cluster: Cluster,
   symbol: string,
 ) {
-  const url = await absoluteUrl(
+  const url = new URL(
     `/api/pyth/get-publishers/${encodeURIComponent(symbol)}`,
+    await getHost(),
   );
   url.searchParams.set("cluster", ClusterToName[cluster]);
 
@@ -29,8 +30,9 @@ export async function getFeedsForPublisherRequest(
   cluster: Cluster,
   publisher: string,
 ) {
-  const url = await absoluteUrl(
+  const url = new URL(
     `/api/pyth/get-feeds-for-publisher/${encodeURIComponent(publisher)}`,
+    await getHost(),
   );
   url.searchParams.set("cluster", ClusterToName[cluster]);
 
@@ -46,7 +48,7 @@ export async function getFeedsForPublisherRequest(
 }
 
 export const getFeedsRequest = async (cluster: Cluster) => {
-  const url = await absoluteUrl(`/api/pyth/get-feeds`);
+  const url = new URL(`/api/pyth/get-feeds`, await getHost());
   url.searchParams.set("cluster", ClusterToName[cluster]);
   url.searchParams.set("excludePriceComponents", "true");
 
@@ -72,8 +74,9 @@ export const getFeedForSymbolRequest = async ({
   symbol: string;
   cluster?: Cluster;
 }): Promise<z.infer<typeof priceFeedsSchema.element> | undefined> => {
-  const url = await absoluteUrl(
+  const url = new URL(
     `/api/pyth/get-feeds/${encodeURIComponent(symbol)}`,
+    await getHost(),
   );
   url.searchParams.set("cluster", ClusterToName[cluster]);
 

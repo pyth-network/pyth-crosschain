@@ -5,8 +5,8 @@ import type { ZodSchema, ZodTypeDef } from "zod";
 import { z } from "zod";
 
 import { Cluster, ClusterToName } from "./pyth";
+import { redisCache } from "../cache";
 import { CLICKHOUSE } from "../config/server";
-import { redisCache } from "../utils/cache";
 
 const client = createClient(CLICKHOUSE);
 

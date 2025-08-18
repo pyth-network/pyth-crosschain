@@ -1,6 +1,6 @@
 import { Cluster } from ".";
 import { getPythMetadataCached } from "./get-metadata";
-import { redisCache } from "../../utils/cache";
+import { redisCache } from "../../cache";
 
 const _getPublishersForCluster = async (cluster: Cluster) => {
   const data = await getPythMetadataCached(cluster);
