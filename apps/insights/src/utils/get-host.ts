@@ -18,11 +18,13 @@ export const getHost = async () => {
 
     return `${proto}://${host}`;
   }
-}
+};
 
 class NoHostError extends Error {
   constructor() {
-    super("Request had neither an `x-forwarded-host` header nor a `host` header");
+    super(
+      "Request had neither an `x-forwarded-host` header nor a `host` header",
+    );
     this.name = "NoHostError";
   }
 }

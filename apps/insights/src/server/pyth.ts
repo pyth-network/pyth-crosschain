@@ -48,10 +48,7 @@ export async function getFeedsForPublisherRequest(
 }
 
 export const getFeedsRequest = async (cluster: Cluster) => {
-  const url = new URL(
-    `/api/pyth/get-feeds`,
-    await getHost(),
-  );
+  const url = new URL(`/api/pyth/get-feeds`, await getHost());
   url.searchParams.set("cluster", ClusterToName[cluster]);
   url.searchParams.set("excludePriceComponents", "true");
 
