@@ -45,11 +45,12 @@ export const AMPLITUDE_API_KEY = defaultInProduction(
   "AMPLITUDE_API_KEY",
   "6faa78c51eff33087eb19f0f3dc76f33",
 );
+
 export const CLICKHOUSE = {
   url:
     process.env.CLICKHOUSE_URL ??
     "https://ryf56suqpb.eu-west-2.aws.clickhouse.cloud:8443",
-  username: process.env.CLICKHOUSE_USERNAME ?? "ui_user",
+  username: process.env.CLICKHOUSE_USERNAME ?? "insights",
   password: demand("CLICKHOUSE_PASSWORD"),
 };
 
