@@ -17,15 +17,19 @@ jobs:
         working-directory: lazer/contracts/sui/
     steps:
       - uses: actions/checkout@v4
-      - name: Download Sui CLI binary
+      - name: Install Sui CLI (binary)
         run: |
           set -euo pipefail
-          SUI_VERSION="1.30.0"
-          ARCHIVE="sui-ubuntu-x86_64-${SUI_VERSION}.tgz"
-          URL="https://github.com/MystenLabs/sui/releases/download/cli-v${SUI_VERSION}/${ARCHIVE}"
-          curl -L -o "$ARCHIVE" "$URL"
-          tar -xzf "$ARCHIVE"
-          sudo mv sui /usr/local/bin/sui
+          CHANNEL="testnet"
+          SUI_VERSION="v1.54.0"
+          ARCHIVE="sui-${CHANNEL}-${SUI_VERSION}-ubuntu-x86_64.tgz"
+          URL="https://github.com/MystenLabs/sui/releases/download/${CHANNEL}-${SUI_VERSION}/${ARCHIVE}"
+          echo "Downloading ${URL}"
+          curl -fsSL -o "${ARCHIVE}" "${URL}"
+          tar -xzf "${ARCHIVE}"
+          BIN_PATH="$(find . -maxdepth 2 -type f -name sui | head -n 1)"
+          chmod +x "${BIN_PATH}"
+          sudo mv "${BIN_PATH}" /usr/local/bin/sui
           sui --version
       - name: Run tests
         run: sui move test
