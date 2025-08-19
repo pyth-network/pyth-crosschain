@@ -1,15 +1,22 @@
 module pyth_lazer::state;
 
-
-
 const ED25519_PUBKEY_LEN: u64 = 32;
 const E_INVALID_PUBKEY_LEN: u64 = 1;
+const E_SIGNER_NOT_FOUND: u64 = 2;
 
+
+/// A trusted signer is comprised of a pubkey and an expiry time.
+/// A signer's signature should only be trusted up to timestamp `expires_at`.
 public struct TrustedSignerInfo has copy, drop, store {
     public_key: vector<u8>,
     expires_at: u64,
 }
 
+/// Lazer State consists of the current set of trusted signers.
+/// By verifying that a price update was signed by one of these public keys,
+/// you can validate the authenticity of a Lazer price update.
+///
+/// The trusted signers are subject to rotations and expiry.
 public struct State has key, store {
     id: UID,
     trusted_signers: vector<TrustedSignerInfo>,
@@ -22,18 +29,25 @@ public(package) fun new(ctx: &mut TxContext): State {
     }
 }
 
+/// Get the trusted signer's public key
 public fun public_key(info: &TrustedSignerInfo): &vector<u8> {
     &info.public_key
 }
 
+/// Get the trusted signer's expiry timestamp
 public fun expires_at(info: &TrustedSignerInfo): u64 {
     info.expires_at
 }
 
+/// Get the list of trusted signers
 public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
     &s.trusted_signers
 }
 
+/// Upsert a trusted signer's information or remove them.
+/// - If the trusted signer pubkey already exists, the expires_at will be updated.
+///   - If the expired_at is set to zero, the trusted signer will be removed.
+/// - If the pubkey isn't found, it is added as a new trusted signer with the given expires_at.
 public(package) fun update_trusted_signer(s: &mut State, pubkey: vector<u8>, expires_at: u64) {
     assert!(vector::length(&pubkey) as u64 == ED25519_PUBKEY_LEN, E_INVALID_PUBKEY_LEN);
 
@@ -44,7 +58,8 @@ public(package) fun update_trusted_signer(s: &mut State, pubkey: vector<u8>, exp
             // Remove by swapping with last (order not preserved), discard removed value
             let _ = vector::swap_remove(&mut s.trusted_signers, idx);
         } else {
-            option::destroy_none(maybe_idx)
+            option::destroy_none(maybe_idx);
+            abort E_SIGNER_NOT_FOUND
         };
         return
     };
@@ -57,7 +72,7 @@ public(package) fun update_trusted_signer(s: &mut State, pubkey: vector<u8>, exp
         option::destroy_none(maybe_idx);
         vector::push_back(
             &mut s.trusted_signers,
-            TrustedSignerInfo { public_key: pubkey, expires_at }
+            TrustedSignerInfo { public_key: pubkey, expires_at },
         )
     }
 }
@@ -109,9 +124,16 @@ public fun test_update_existing_signer_expiry() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
 
-
-    update_trusted_signer(&mut s, x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a", 1000);
-    update_trusted_signer(&mut s, x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a", 2000);
+    update_trusted_signer(
+        &mut s,
+        x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
+        1000,
+    );
+    update_trusted_signer(
+        &mut s,
+        x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
+        2000,
+    );
 
     let signers_ref = get_trusted_signers(&s);
     assert!(vector::length(signers_ref) == 1, 110);
@@ -127,9 +149,16 @@ public fun test_remove_signer_by_zero_expiry() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
 
-
-    update_trusted_signer(&mut s, x"0707070707070707070707070707070707070707070707070707070707070707", 999);
-    update_trusted_signer(&mut s, x"0707070707070707070707070707070707070707070707070707070707070707", 0);
+    update_trusted_signer(
+        &mut s,
+        x"0707070707070707070707070707070707070707070707070707070707070707",
+        999,
+    );
+    update_trusted_signer(
+        &mut s,
+        x"0707070707070707070707070707070707070707070707070707070707070707",
+        0,
+    );
 
     let signers_ref = get_trusted_signers(&s);
     assert!(vector::length(signers_ref) == 0, 120);
@@ -145,6 +174,22 @@ public fun test_invalid_pubkey_length_rejected() {
 
     let short_pk = x"010203";
     update_trusted_signer(&mut s, short_pk, 1);
+    let State { id, trusted_signers } = s;
+    let _ = trusted_signers;
+    object::delete(id);
+}
+
+#[test, expected_failure(abort_code = E_SIGNER_NOT_FOUND)]
+public fun test_remove_nonexistent_signer_fails() {
+    let mut ctx = tx_context::dummy();
+    let mut s = new_for_test(&mut ctx);
+
+    // Try to remove a signer that doesn't exist by setting expires_at to 0
+    update_trusted_signer(
+        &mut s,
+        x"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        0,
+    );
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
