@@ -11,6 +11,7 @@ import {
   EXTENDED_PYTH_ABI,
   WORMHOLE_ABI,
   PULSE_UPGRADEABLE_ABI,
+  LAZER_ABI,
 } from "./evm_abis";
 
 /**
@@ -962,6 +963,45 @@ export class EvmLazerContract extends Storable {
     return new EvmLazerContract(chain as EvmChain, parsed.address);
   }
 
+  getContract() {
+    const web3 = this.chain.getWeb3();
+    return new web3.eth.Contract(LAZER_ABI, this.address);
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return await contract.methods.version().call();
+  }
+
+  async getOwner(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.owner().call();
+  }
+
+
+  
+  async generateUpdateTrustedSignerPayload(
+    trustedSigner: string,
+    expiresAt: number,
+  ): Promise<Buffer> {
+    // Executor contract is the owner of the PythLazer contract
+    const executorAddress = await this.getOwner();
+    const web3 = this.chain.getWeb3();
+    const executorContract = new web3.eth.Contract(
+      EXECUTOR_ABI,
+      executorAddress,
+    );
+    const data = executorContract.methods.updateTrustedSigner(
+      trustedSigner,
+      expiresAt,
+    ).encodeABI();
+    return this.chain.generateExecutorPayload(
+      executorAddress,
+      this.address,
+      data,
+    );
+  }
+
   /**
    * Updates the trusted signer for the PythLazer contract
    * @param trustedSigner The address of the trusted signer
@@ -974,21 +1014,7 @@ export class EvmLazerContract extends Storable {
     privateKey: PrivateKey,
   ): Promise<void> {
     const web3 = this.chain.getWeb3();
-    const contract = new web3.eth.Contract(
-      [
-        {
-          inputs: [
-            { name: "trustedSigner", type: "address" },
-            { name: "expiresAt", type: "uint256" },
-          ],
-          name: "updateTrustedSigner",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-      ],
-      this.address,
-    );
+    const contract = this.getContract();
 
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
     const gasEstimate = await contract.methods
