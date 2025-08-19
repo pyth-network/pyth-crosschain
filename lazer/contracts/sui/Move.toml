@@ -1,0 +1,12 @@
+[package]
+name = "pyth_lazer"
+edition = "2024.beta"
+
+[dependencies]
+
+[addresses]
+pyth_lazer = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]
