@@ -20,7 +20,7 @@
       transition-duration: 100ms;
       transition-timing-function: linear;
     }
-    
+
     &[data-rounded] {
       border-radius: theme.border-radius("full");
 
@@ -28,7 +28,7 @@
         border-radius: theme.border-radius("full");
       }
     }
-    
+
     &[data-selected] {
       color: theme.color("button", "solid", "foreground");
       pointer-events: none;
@@ -45,7 +45,6 @@
             "hover"
           );
         }
-
 
         &[data-pressed] .bubble {
           background-color: theme.color(
