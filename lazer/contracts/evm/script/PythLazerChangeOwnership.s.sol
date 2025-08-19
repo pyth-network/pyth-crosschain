@@ -30,7 +30,7 @@ contract PythLazerChangeOwnership is Script {
         address(0xACeA761c27A909d4D3895128EBe6370FDE2dF481);
 
     // Private key of the current owner, loaded from environment variable
-    uint256 public OLD_OWNER_PRIVATE_KEY = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    uint256 public OLD_OWNER_PRIVATE_KEY = vm.envUint("PK");
     // Current owner address, derived from private key
     address public OLD_OWNER = vm.addr(OLD_OWNER_PRIVATE_KEY);
     // Address of the new owner (should be the deployed executor contract)
@@ -47,18 +47,23 @@ contract PythLazerChangeOwnership is Script {
 
         // Get the PythLazer contract instance at the proxy address
         PythLazer lazer = PythLazer(LAZER_PROXY_ADDRESS);
+
         // Start broadcasting transactions as the old owner
         vm.startBroadcast(OLD_OWNER_PRIVATE_KEY);
+
         // Ensure the current owner matches the expected old owner
         require(lazer.owner() == OLD_OWNER, "Old owner mismatch");
+
         // Transfer ownership to the new owner (executor contract)
         lazer.transferOwnership(NEW_OWNER);
         console.log("Ownership transferred");
+
         // Log the new owner for verification
         console.log(
             "New Lazer owner: %s",
             PythLazer(LAZER_PROXY_ADDRESS).owner()
         );
+
         // Stop broadcasting
         vm.stopBroadcast();
     }
