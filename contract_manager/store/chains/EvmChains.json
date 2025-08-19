@@ -246,7 +246,7 @@
   {
     "id": "polygon",
     "mainnet": true,
-    "rpcUrl": "https://polygon-rpc.com",
+    "rpcUrl": "http://127.0.0.1:8545",
     "networkId": 137,
     "type": "EvmChain",
     "nativeToken": "MATIC"

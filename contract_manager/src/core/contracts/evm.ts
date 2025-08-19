@@ -926,3 +926,85 @@ export class EvmPulseContract extends Storable {
     );
   }
 }
+
+export class EvmLazerContract extends Storable {
+  static type = "EvmLazerContract";
+
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return EvmLazerContract.type;
+  }
+
+  toJson(): { type: string; address: string } {
+    return {
+      type: EvmLazerContract.type,
+      address: this.address,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string },
+  ): EvmLazerContract {
+    if (parsed.type !== EvmLazerContract.type) {
+      throw new Error("Invalid type");
+    }
+    return new EvmLazerContract(chain as EvmChain, parsed.address);
+  }
+
+  /**
+   * Updates the trusted signer for the PythLazer contract
+   * @param trustedSigner The address of the trusted signer
+   * @param expiresAt The expiration timestamp for the signer
+   * @param privateKey The private key to sign the transaction
+   */
+  async updateTrustedSigner(
+    trustedSigner: string,
+    expiresAt: number,
+    privateKey: PrivateKey,
+  ): Promise<void> {
+    const web3 = this.chain.getWeb3();
+    const contract = new web3.eth.Contract(
+      [
+        {
+          inputs: [
+            { name: "trustedSigner", type: "address" },
+            { name: "expiresAt", type: "uint256" },
+          ],
+          name: "updateTrustedSigner",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      this.address,
+    );
+
+    const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+    const gasEstimate = await contract.methods
+      .updateTrustedSigner(trustedSigner, expiresAt)
+      .estimateGas({ from: account.address });
+
+    const tx = await contract.methods
+      .updateTrustedSigner(trustedSigner, expiresAt)
+      .send({
+        from: account.address,
+        gas: Math.floor(gasEstimate * 1.2), // 20% buffer
+      });
+
+    console.log(
+      `✅ Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
+    );
+    console.log(`Transaction hash: ${tx.transactionHash}`);
+  }
+}
