@@ -1,16 +1,9 @@
 module pyth_lazer::state;
 
 const ED25519_PUBKEY_LEN: u64 = 32;
-const E_INVALID_PUBKEY_LEN: u64 = 1;
-const E_SIGNER_NOT_FOUND: u64 = 2;
+const EInvalidPubkeyLen: u64 = 1;
+const ESignerNotFound: u64 = 2;
 
-
-/// A trusted signer is comprised of a pubkey and an expiry time.
-/// A signer's signature should only be trusted up to timestamp `expires_at`.
-public struct TrustedSignerInfo has copy, drop, store {
-    public_key: vector<u8>,
-    expires_at: u64,
-}
 
 /// Lazer State consists of the current set of trusted signers.
 /// By verifying that a price update was signed by one of these public keys,
@@ -20,6 +13,13 @@ public struct TrustedSignerInfo has copy, drop, store {
 public struct State has key, store {
     id: UID,
     trusted_signers: vector<TrustedSignerInfo>,
+}
+
+/// A trusted signer is comprised of a pubkey and an expiry time.
+/// A signer's signature should only be trusted up to timestamp `expires_at`.
+public struct TrustedSignerInfo has copy, drop, store {
+    public_key: vector<u8>,
+    expires_at: u64,
 }
 
 public(package) fun new(ctx: &mut TxContext): State {
@@ -49,7 +49,7 @@ public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
 ///   - If the expired_at is set to zero, the trusted signer will be removed.
 /// - If the pubkey isn't found, it is added as a new trusted signer with the given expires_at.
 public(package) fun update_trusted_signer(s: &mut State, pubkey: vector<u8>, expires_at: u64) {
-    assert!(vector::length(&pubkey) as u64 == ED25519_PUBKEY_LEN, E_INVALID_PUBKEY_LEN);
+    assert!(vector::length(&pubkey) as u64 == ED25519_PUBKEY_LEN, EInvalidPubkeyLen);
 
     let mut maybe_idx = find_signer_index(&s.trusted_signers, &pubkey);
     if (expires_at == 0) {
@@ -59,7 +59,7 @@ public(package) fun update_trusted_signer(s: &mut State, pubkey: vector<u8>, exp
             let _ = vector::swap_remove(&mut s.trusted_signers, idx);
         } else {
             option::destroy_none(maybe_idx);
-            abort E_SIGNER_NOT_FOUND
+            abort ESignerNotFound
         };
         return
     };
@@ -167,7 +167,7 @@ public fun test_remove_signer_by_zero_expiry() {
     object::delete(id);
 }
 
-#[test, expected_failure(abort_code = E_INVALID_PUBKEY_LEN)]
+#[test, expected_failure(abort_code = EInvalidPubkeyLen)]
 public fun test_invalid_pubkey_length_rejected() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
@@ -179,7 +179,7 @@ public fun test_invalid_pubkey_length_rejected() {
     object::delete(id);
 }
 
-#[test, expected_failure(abort_code = E_SIGNER_NOT_FOUND)]
+#[test, expected_failure(abort_code = ESignerNotFound)]
 public fun test_remove_nonexistent_signer_fails() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);

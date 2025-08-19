@@ -1,6 +1,6 @@
 [package]
 name = "pyth_lazer"
-version = "0.0.1"
+version = "0.0.0"
 edition = "2024.beta"
 
 [addresses]
