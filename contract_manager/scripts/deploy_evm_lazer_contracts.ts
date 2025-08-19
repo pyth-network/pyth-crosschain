@@ -41,7 +41,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { execSync } from "child_process";
-import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { DefaultStore } from "../src/node/utils/store";
 import { EvmChain } from "../src/core/chains";
@@ -175,13 +174,10 @@ async function deployPythLazerContract(
  * @param address The deployed contract address
  */
 function updateContractsFile(chain: EvmChain, address: string): void {
-  const contractsJsonPath = join(
-    __dirname,
-    "../store/contracts/EvmLazerContracts.json",
-  );
-
-  DefaultStore.lazer_contracts[`${chain.getId()}_${address}`] =
-    new EvmLazerContract(chain, address);
+  console.log(`Updating contracts file for ${chain.getId()}`);
+  // FIXME: This is not working as expected. The contract is not being saved to the store.
+  const lazerContract = new EvmLazerContract(chain, address);
+  DefaultStore.lazer_contracts[lazerContract.getId()] = lazerContract;
   DefaultStore.saveAllContracts();
 
   console.log(`\nUpdated EvmLazerContracts.json with new deployment`);
