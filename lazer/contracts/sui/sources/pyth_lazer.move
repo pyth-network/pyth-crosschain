@@ -22,6 +22,17 @@ const PAYLOAD_MAGIC: u32 = 2479346549;
 /// Initializes the module. Called at publish time. 
 /// Creates and shares the singular State object.
 /// Creates the singular AdminCapability and transfers it to the deployer.
+public entry fun admin_update_trusted_signer(
+    cap: admin::AdminCapability,
+    s: &mut state::State,
+    pubkey: vector<u8>,
+    expires_at: u64,
+    ctx: &mut TxContext,
+) {
+    state::update_trusted_signer(&cap, s, pubkey, expires_at);
+    transfer::public_transfer(cap, tx_context::sender(ctx));
+}
+
 fun init(ctx: &mut TxContext) {
     let s = state::new(ctx);
     transfer::public_share_object(s);
