@@ -213,6 +213,7 @@ const _getPublisherRankingHistory = async ({
     },
   );
 
+// note that this is not cached as the `from`/`to` params are unix timestamps
 export const getFeedScoreHistory = async ({
   cluster,
   publisherKey,
@@ -335,7 +336,8 @@ export const _getPublisherAverageScoreHistory = async ({
     },
   );
 
-const _getHistoricalPrices = async ({
+// note that this is not cached as the `until` param is a unix timestamp
+export const getHistoricalPrices = async ({
   symbol,
   until,
 }: {
@@ -401,11 +403,6 @@ export const getPublisherRankingHistory = redisCache.define(
   "getPublisherRankingHistory",
   _getPublisherRankingHistory,
 ).getPublisherRankingHistory;
-
-export const getHistoricalPrices = redisCache.define(
-  "getHistoricalPrices",
-  _getHistoricalPrices,
-).getHistoricalPrices;
 
 export const getFeedPriceHistory = redisCache.define(
   "getFeedPriceHistory",
