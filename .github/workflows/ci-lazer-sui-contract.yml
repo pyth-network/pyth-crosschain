@@ -1,0 +1,38 @@
+name: "Lazer Sui contract test"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - lazer/contracts/sui/**
+      - .github/workflows/ci-lazer-sui-contract.yml
+
+jobs:
+  lazer-sui-contract-test:
+    name: Lazer Sui contract test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lazer/contracts/sui/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Sui CLI (binary)
+        run: |
+          set -euo pipefail
+          # Using the latest stable mainnet Sui CLI binary pinned for reproducibility.
+          # To bump: update SUI_VERSION to the latest mainnet tag (format: mainnet-vX.Y.Z).
+          # Asset naming: sui-mainnet-vX.Y.Z-ubuntu-x86_64.tgz under tag mainnet-vX.Y.Z.
+          CHANNEL="mainnet"
+          SUI_VERSION="v1.53.2"
+          ARCHIVE="sui-${CHANNEL}-${SUI_VERSION}-ubuntu-x86_64.tgz"
+          URL="https://github.com/MystenLabs/sui/releases/download/${CHANNEL}-${SUI_VERSION}/${ARCHIVE}"
+          echo "Downloading ${URL}"
+          curl -fsSL -o "${ARCHIVE}" "${URL}"
+          tar -xzf "${ARCHIVE}"
+          BIN_PATH="$(find . -maxdepth 2 -type f -name sui | head -n 1)"
+          chmod +x "${BIN_PATH}"
+          sudo mv "${BIN_PATH}" /usr/local/bin/sui
+          sui --version
+      - name: Run tests
+        run: sui move test
