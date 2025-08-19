@@ -9,15 +9,6 @@ use pyth_lazer::state;
 use pyth_lazer::admin;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
-use sui::transfer;
-use sui::tx_context::{Self, TxContext};
-
-fun init(ctx: &mut TxContext) {
-    let s = state::new(ctx);
-    transfer::public_share_object(s);
-    let cap = admin::mint(ctx);
-    transfer::public_transfer(cap, tx_context::sender(ctx));
-}
 
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
@@ -25,11 +16,18 @@ const PAYLOAD_MAGIC: u32 = 2479346549;
 
 
 // TODO:
-// initializer
-// administration -> admin cap, upgrade cap, governance?
-// storage module -> trusted signers, update fee?, treasury?
 // error handling
 // standalone verify signature function
+
+/// Initializes the module. Called at publish time. 
+/// Creates and shares the singular State object.
+/// Creates the singular AdminCapability and transfers it to the deployer.
+fun init(ctx: &mut TxContext) {
+    let s = state::new(ctx);
+    transfer::public_share_object(s);
+    let cap = admin::mint(ctx);
+    transfer::public_transfer(cap, tx_context::sender(ctx));
+}
 
 /// Parse the Lazer update message and validate the signature.
 ///

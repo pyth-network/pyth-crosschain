@@ -1,8 +1,5 @@
 module pyth_lazer::admin;
 
-use sui::tx_context::TxContext;
-use sui::object;
-
 public struct AdminCapability has key, store {
     id: UID,
 }
