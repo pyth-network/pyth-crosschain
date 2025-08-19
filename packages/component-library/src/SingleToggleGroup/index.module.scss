@@ -20,8 +20,10 @@
       transition-duration: 100ms;
       transition-timing-function: linear;
     }
+    
     &[data-rounded] {
       border-radius: theme.border-radius("full");
+
       .bubble {
         border-radius: theme.border-radius("full");
       }
