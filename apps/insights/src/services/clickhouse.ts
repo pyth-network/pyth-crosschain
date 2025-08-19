@@ -213,7 +213,7 @@ const _getPublisherRankingHistory = async ({
     },
   );
 
-const _getFeedScoreHistory = async ({
+export const getFeedScoreHistory = async ({
   cluster,
   publisherKey,
   symbol,
@@ -401,11 +401,6 @@ export const getPublisherRankingHistory = redisCache.define(
   "getPublisherRankingHistory",
   _getPublisherRankingHistory,
 ).getPublisherRankingHistory;
-
-export const getFeedScoreHistory = redisCache.define(
-  "getFeedScoreHistory",
-  _getFeedScoreHistory,
-).getFeedScoreHistory;
 
 export const getHistoricalPrices = redisCache.define(
   "getHistoricalPrices",
