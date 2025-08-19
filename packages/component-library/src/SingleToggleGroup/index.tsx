@@ -66,7 +66,7 @@ export const SingleToggleGroup = ({
           )}
           data-size="sm"
           data-variant="ghost"
-          data-rounded={rounded ? true : undefined}
+          data-rounded={rounded ? "" : undefined}
           {...toggleButton}
         >
           {(args) => (
