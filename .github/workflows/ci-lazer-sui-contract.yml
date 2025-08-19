@@ -17,13 +17,15 @@ jobs:
         working-directory: lazer/contracts/sui/
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          rustflags: ""
-      - name: Install Sui CLI
+      - name: Download Sui CLI binary
         run: |
-          cargo +1.79.0 install -f sui --locked \
-            --git https://github.com/MystenLabs/sui.git \
-            --rev 041c5f2bae2fe52079e44b70514333532d69f4e6
+          set -euo pipefail
+          SUI_VERSION="1.30.0"
+          ARCHIVE="sui-ubuntu-x86_64-${SUI_VERSION}.tgz"
+          URL="https://github.com/MystenLabs/sui/releases/download/cli-v${SUI_VERSION}/${ARCHIVE}"
+          curl -L -o "$ARCHIVE" "$URL"
+          tar -xzf "$ARCHIVE"
+          sudo mv sui /usr/local/bin/sui
+          sui --version
       - name: Run tests
         run: sui move test
