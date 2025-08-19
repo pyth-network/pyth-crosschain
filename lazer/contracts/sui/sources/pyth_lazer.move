@@ -5,8 +5,19 @@ use pyth_lazer::i64::Self;
 use pyth_lazer::update::{Self, Update};
 use pyth_lazer::feed::{Self, Feed};
 use pyth_lazer::channel::Self;
+use pyth_lazer::state;
+use pyth_lazer::admin;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
+use sui::transfer;
+use sui::tx_context::{Self, TxContext};
+
+fun init(ctx: &mut TxContext) {
+    let s = state::new(ctx);
+    transfer::public_share_object(s);
+    let cap = admin::mint(ctx);
+    transfer::public_transfer(cap, tx_context::sender(ctx));
+}
 
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
