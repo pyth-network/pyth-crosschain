@@ -1,5 +1,8 @@
 module pyth_lazer::state;
 
+use pyth_lazer::admin::AdminCapability;
+use pyth_lazer::admin;
+
 const ED25519_PUBKEY_LEN: u64 = 32;
 const EInvalidPubkeyLen: u64 = 1;
 const ESignerNotFound: u64 = 2;
@@ -48,7 +51,7 @@ public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
 /// - If the trusted signer pubkey already exists, the expires_at will be updated.
 ///   - If the expired_at is set to zero, the trusted signer will be removed.
 /// - If the pubkey isn't found, it is added as a new trusted signer with the given expires_at.
-public(package) fun update_trusted_signer(s: &mut State, pubkey: vector<u8>, expires_at: u64) {
+public(package) fun update_trusted_signer(_admin: &AdminCapability, s: &mut State, pubkey: vector<u8>, expires_at: u64) {
     assert!(vector::length(&pubkey) as u64 == ED25519_PUBKEY_LEN, EInvalidPubkeyLen);
 
     let mut maybe_idx = find_signer_index(&s.trusted_signers, &pubkey);
@@ -102,11 +105,12 @@ public fun new_for_test(ctx: &mut TxContext): State {
 public fun test_add_new_signer() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
 
     let pk = x"0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
     let expiry: u64 = 123;
 
-    update_trusted_signer(&mut s, pk, expiry);
+    update_trusted_signer(&admin_cap, &mut s, pk, expiry);
 
     let signers_ref = get_trusted_signers(&s);
     assert!(vector::length(signers_ref) == 1, 100);
@@ -117,19 +121,23 @@ public fun test_add_new_signer() {
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
+    admin::destroy_for_test(admin_cap);
 }
 
 #[test]
 public fun test_update_existing_signer_expiry() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
 
     update_trusted_signer(
+        &admin_cap,
         &mut s,
         x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
         1000,
     );
     update_trusted_signer(
+        &admin_cap,
         &mut s,
         x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
         2000,
@@ -142,19 +150,23 @@ public fun test_update_existing_signer_expiry() {
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
+    admin::destroy_for_test(admin_cap);
 }
 
 #[test]
 public fun test_remove_signer_by_zero_expiry() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
 
     update_trusted_signer(
+        &admin_cap,
         &mut s,
         x"0707070707070707070707070707070707070707070707070707070707070707",
         999,
     );
     update_trusted_signer(
+        &admin_cap,
         &mut s,
         x"0707070707070707070707070707070707070707070707070707070707070707",
         0,
@@ -165,27 +177,32 @@ public fun test_remove_signer_by_zero_expiry() {
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
+    admin::destroy_for_test(admin_cap);
 }
 
 #[test, expected_failure(abort_code = EInvalidPubkeyLen)]
 public fun test_invalid_pubkey_length_rejected() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
 
     let short_pk = x"010203";
-    update_trusted_signer(&mut s, short_pk, 1);
+    update_trusted_signer(&admin_cap, &mut s, short_pk, 1);
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
+    admin::destroy_for_test(admin_cap);
 }
 
 #[test, expected_failure(abort_code = ESignerNotFound)]
 public fun test_remove_nonexistent_signer_fails() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
 
     // Try to remove a signer that doesn't exist by setting expires_at to 0
     update_trusted_signer(
+        &admin_cap,
         &mut s,
         x"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         0,
@@ -193,4 +210,5 @@ public fun test_remove_nonexistent_signer_fails() {
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
+    admin::destroy_for_test(admin_cap);
 }
