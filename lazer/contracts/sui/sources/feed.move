@@ -34,7 +34,7 @@ public struct Feed has copy, drop {
 }
 
 /// Create a new Feed with the specified parameters
-public fun new(
+public(package) fun new(
     feed_id: u32,
     price: Option<Option<I64>>,
     best_bid_price: Option<Option<I64>>,
