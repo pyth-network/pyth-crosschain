@@ -70,6 +70,7 @@ public fun test_parse_and_verify_le_ecdsa_update() {
     assert!(feed_1.confidence() == option::none(), 0);
     assert!(feed_1.funding_rate() == option::some(option::none()), 0);
     assert!(feed_1.funding_timestamp() == option::some(option::none()), 0);
+    assert!(feed_1.funding_rate_interval() == option::some(option::none()), 0);
 
     let feed_2 = vector::borrow(&update.feeds(), 1);
     assert!(feed_2.feed_id() == 2, 0);
@@ -81,6 +82,7 @@ public fun test_parse_and_verify_le_ecdsa_update() {
     assert!(feed_2.confidence() == option::none(), 0);
     assert!(feed_2.funding_rate() == option::some(option::none()), 0);
     assert!(feed_2.funding_timestamp() == option::some(option::none()), 0);
+    assert!(feed_2.funding_rate_interval() == option::some(option::none()), 0);
 
     let feed_3 = vector::borrow(&update.feeds(), 2);
     assert!(feed_3.feed_id() == 112, 0);
