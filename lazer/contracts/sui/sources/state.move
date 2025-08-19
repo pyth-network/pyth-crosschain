@@ -1,9 +1,5 @@
 module pyth_lazer::state;
 
-use std::vector;
-use std::option::{Self, Option};
-use sui::object::{Self, UID};
-use sui::tx_context::{Self, TxContext};
 
 
 const ED25519_PUBKEY_LEN: u64 = 32;
@@ -113,7 +109,6 @@ public fun test_update_existing_signer_expiry() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
 
-    let pk = x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a";
 
     update_trusted_signer(&mut s, x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a", 1000);
     update_trusted_signer(&mut s, x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a", 2000);
@@ -132,7 +127,6 @@ public fun test_remove_signer_by_zero_expiry() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
 
-    let pk = x"0707070707070707070707070707070707070707070707070707070707070707";
 
     update_trusted_signer(&mut s, x"0707070707070707070707070707070707070707070707070707070707070707", 999);
     update_trusted_signer(&mut s, x"0707070707070707070707070707070707070707070707070707070707070707", 0);
