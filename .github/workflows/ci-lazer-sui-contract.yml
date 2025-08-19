@@ -1,0 +1,29 @@
+name: "Lazer Sui contract test"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - lazer/contracts/sui/**
+      - .github/workflows/ci-lazer-sui-contract.yml
+
+jobs:
+  lazer-sui-contract-test:
+    name: Lazer Sui contract test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lazer/contracts/sui/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          rustflags: ""
+      - name: Install Sui CLI
+        run: |
+          cargo +1.79.0 install -f sui --locked \
+            --git https://github.com/MystenLabs/sui.git \
+            --rev 041c5f2bae2fe52079e44b70514333532d69f4e6
+      - name: Run tests
+        run: sui move test
