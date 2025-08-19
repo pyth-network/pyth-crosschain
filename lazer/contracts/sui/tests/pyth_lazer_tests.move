@@ -10,60 +10,61 @@ public fun test_parse_and_verify_le_ecdsa_update() {
     /*
     The test data is from the Lazer subscription:
     > Request
-    {"subscriptionId": 1, "type": "subscribe", "priceFeedIds": [1, 2, 112], "properties": ["price", "bestBidPrice", "bestAskPrice", "exponent", "fundingRate", "fundingTimestamp"], "chains": ["leEcdsa"], "channel": "fixed_rate@200ms", "jsonBinaryEncoding": "hex"}
+    {"subscriptionId": 1, "type": "subscribe", "priceFeedIds": [1, 2, 112], "properties": ["price", "bestBidPrice", "bestAskPrice", "exponent", "fundingRate", "fundingTimestamp", "fundingRateInterval"], "chains": ["leEcdsa"], "channel": "fixed_rate@200ms", "jsonBinaryEncoding": "hex"}
     < Response
     {
         "type": "streamUpdated",
         "subscriptionId": 1,
         "parsed": {
-            "timestampUs": "1753787555800000",
+            "timestampUs": "1755625313400000",
             "priceFeeds": [
                 {
                     "priceFeedId": 1,
-                    "price": "11838353875029",
-                    "bestBidPrice": "11838047151903",
-                    "bestAskPrice": "11839270720540",
+                    "price": "11350721594969",
+                    "bestBidPrice": "11350696257890",
+                    "bestAskPrice": "11350868428965",
                     "exponent": -8
                 },
                 {
                     "priceFeedId": 2,
-                    "price": "382538699314",
-                    "bestBidPrice": "382520831095",
-                    "bestAskPrice": "382561500067",
+                    "price": "417775510136",
+                    "bestBidPrice": "417771266475",
+                    "bestAskPrice": "417782074042",
                     "exponent": -8
                 },
                 {
                     "priceFeedId": 112,
-                    "price": "118856300000000000",
+                    "price": "113747064619385816",
                     "exponent": -12,
-                    "fundingRate": 100000000,
-                    "fundingTimestamp": 1753776000000000
+                    "fundingRate": 31670000,
+                    "fundingTimestamp": 1755619200000000,
+                    "fundingRateInterval": 28800000000
                 }
             ]
         },
         "leEcdsa": {
             "encoding": "hex",
-            "data": "e4bd474daafa101a7cdc2f4af22f5735aa3278f7161ae15efa9eac3851ca437e322fde467c9475497e1297499344826fe1209f6de234dce35bdfab8bf6b073be12a07cb201930075d3c793c063467c0f3b0600030301000000060055a0e054c40a0000011f679842c40a0000021c94868bc40a000004f8ff0600070002000000060032521511590000000177ac04105900000002a33b71125900000004f8ff060007007000000006000038d1d42c43a60101000000000000000002000000000000000004f4ff060100e1f50500000000070100e07ecb0c3b0600"
+            "data": "e4bd474d42e3c9c3477b30f2c5527ebe2fb2c8adadadacaddfa7d95243b80fb8f0d813b453e587f140cf40a1120d75f1ffee8ad4337267e4fcbd23eabb2a555804f85ec101a10075d3c793c0f4295fbb3c060003030100000007005986bacb520a00000162e937ca520a000002a5087bd4520a000004f8ff06000700080002000000070078625c456100000001aba11b456100000002ba8ac0456100000004f8ff060007000800700000000700d8c3e1445a1c940101000000000000000002000000000000000004f4ff0601f03ee30100000000070100e0c6f2b93c0600080100209db406000000"
         }
     }
     */
 
     let hex_message =
-        x"e4bd474daafa101a7cdc2f4af22f5735aa3278f7161ae15efa9eac3851ca437e322fde467c9475497e1297499344826fe1209f6de234dce35bdfab8bf6b073be12a07cb201930075d3c793c063467c0f3b0600030301000000060055a0e054c40a0000011f679842c40a0000021c94868bc40a000004f8ff0600070002000000060032521511590000000177ac04105900000002a33b71125900000004f8ff060007007000000006000038d1d42c43a60101000000000000000002000000000000000004f4ff060100e1f50500000000070100e07ecb0c3b0600";
+        x"e4bd474d42e3c9c3477b30f2c5527ebe2fb2c8adadadacaddfa7d95243b80fb8f0d813b453e587f140cf40a1120d75f1ffee8ad4337267e4fcbd23eabb2a555804f85ec101a10075d3c793c0f4295fbb3c060003030100000007005986bacb520a00000162e937ca520a000002a5087bd4520a000004f8ff06000700080002000000070078625c456100000001aba11b456100000002ba8ac0456100000004f8ff060007000800700000000700d8c3e1445a1c940101000000000000000002000000000000000004f4ff0601f03ee30100000000070100e0c6f2b93c0600080100209db406000000";
 
     let update = parse_and_verify_le_ecdsa_update(hex_message);
 
     // If we reach this point, the function worked correctly
     // (no assertion failures in parse_and_validate_update)
-    assert!(update.timestamp() == 1753787555800000, 0);
+    assert!(update.timestamp() == 1755625313400000, 0);
     assert!(update.channel() == new_fixed_rate_200ms(), 0);
     assert!(vector::length(&update.feeds()) == 3, 0);
 
     let feed_1 = vector::borrow(&update.feeds(), 0);
     assert!(feed_1.feed_id() == 1, 0);
-    assert!(feed_1.price() == option::some(option::some(i64::from_u64(11838353875029))), 0);
-    assert!(feed_1.best_bid_price() == option::some(option::some(i64::from_u64(11838047151903))), 0);
-    assert!(feed_1.best_ask_price() == option::some(option::some(i64::from_u64(11839270720540))), 0);
+    assert!(feed_1.price() == option::some(option::some(i64::from_u64(11350721594969))), 0);
+    assert!(feed_1.best_bid_price() == option::some(option::some(i64::from_u64(11350696257890))), 0);
+    assert!(feed_1.best_ask_price() == option::some(option::some(i64::from_u64(11350868428965))), 0);
     assert!(feed_1.exponent() == option::some(i16::new(8, true)), 0);
     assert!(feed_1.publisher_count() == option::none(), 0);
     assert!(feed_1.confidence() == option::none(), 0);
@@ -72,9 +73,9 @@ public fun test_parse_and_verify_le_ecdsa_update() {
 
     let feed_2 = vector::borrow(&update.feeds(), 1);
     assert!(feed_2.feed_id() == 2, 0);
-    assert!(feed_2.price() == option::some(option::some(i64::from_u64(382538699314))), 0);
-    assert!(feed_2.best_bid_price() == option::some(option::some(i64::from_u64(382520831095))), 0);
-    assert!(feed_2.best_ask_price() == option::some(option::some(i64::from_u64(382561500067))), 0);
+    assert!(feed_2.price() == option::some(option::some(i64::from_u64(417775510136))), 0);
+    assert!(feed_2.best_bid_price() == option::some(option::some(i64::from_u64(417771266475))), 0);
+    assert!(feed_2.best_ask_price() == option::some(option::some(i64::from_u64(417782074042))), 0);
     assert!(feed_2.exponent() == option::some(i16::new(8, true)), 0);
     assert!(feed_2.publisher_count() == option::none(), 0);
     assert!(feed_2.confidence() == option::none(), 0);
@@ -83,12 +84,13 @@ public fun test_parse_and_verify_le_ecdsa_update() {
 
     let feed_3 = vector::borrow(&update.feeds(), 2);
     assert!(feed_3.feed_id() == 112, 0);
-    assert!(feed_3.price() == option::some(option::some(i64::from_u64(118856300000000000))), 0);
+    assert!(feed_3.price() == option::some(option::some(i64::from_u64(113747064619385816))), 0);
     assert!(feed_3.best_bid_price() == option::some(option::none()), 0);
     assert!(feed_3.best_ask_price() == option::some(option::none()), 0);
     assert!(feed_3.exponent() == option::some(i16::new(12, true)), 0);
     assert!(feed_3.publisher_count() == option::none(), 0);
     assert!(feed_3.confidence() == option::none(), 0);
-    assert!(feed_3.funding_rate() == option::some(option::some(i64::from_u64(100000000))), 0);
-    assert!(feed_3.funding_timestamp() == option::some(option::some(1753776000000000)), 0);
+    assert!(feed_3.funding_rate() == option::some(option::some(i64::from_u64(31670000))), 0);
+    assert!(feed_3.funding_timestamp() == option::some(option::some(1755619200000000)), 0);
+    assert!(feed_3.funding_rate_interval() == option::some(option::some(28800000000)), 0);
 }

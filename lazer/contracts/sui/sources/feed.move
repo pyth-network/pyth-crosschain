@@ -4,7 +4,7 @@ use pyth_lazer::i16::I16;
 use pyth_lazer::i64::I64;
 
 /// The feed struct is based on the Lazer rust protocol definition defined here:
-/// https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/types.rs#L10
+/// https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/payload.rs
 ///
 /// Some fields in Lazer are optional, as in Lazer might return None for them due to some conditions (for example,
 /// not having enough publishers to calculate the price) and that is why they are represented as Option<Option<T>>.
@@ -29,6 +29,8 @@ public struct Feed has copy, drop {
     funding_rate: Option<Option<I64>>,
     /// Timestamp when the funding rate was last updated
     funding_timestamp: Option<Option<u64>>,
+    /// How often the funding rate and funding payments are calculated, in microseconds
+    funding_rate_interval: Option<Option<u64>>,
 }
 
 /// Create a new Feed with the specified parameters
@@ -42,6 +44,7 @@ public fun new(
     confidence: Option<Option<I64>>,
     funding_rate: Option<Option<I64>>,
     funding_timestamp: Option<Option<u64>>,
+    funding_rate_interval: Option<Option<u64>>,
 ): Feed {
     Feed {
         feed_id,
@@ -53,6 +56,7 @@ public fun new(
         confidence,
         funding_rate,
         funding_timestamp,
+        funding_rate_interval
     }
 }
 
@@ -101,6 +105,11 @@ public fun funding_timestamp(feed: &Feed): Option<Option<u64>> {
     feed.funding_timestamp
 }
 
+/// Get the funding rate interval
+public fun funding_rate_interval(feed: &Feed): Option<Option<u64>> {
+    feed.funding_rate_interval
+}
+
 /// Set the feed ID
 public(package) fun set_feed_id(feed: &mut Feed, feed_id: u32) {
     feed.feed_id = feed_id;
@@ -144,4 +153,9 @@ public(package) fun set_funding_rate(feed: &mut Feed, funding_rate: Option<Optio
 /// Set the funding timestamp
 public(package) fun set_funding_timestamp(feed: &mut Feed, funding_timestamp: Option<Option<u64>>) {
     feed.funding_timestamp = funding_timestamp;
+}
+
+/// Set the funding rate interval
+public(package) fun set_funding_rate_interval(feed: &mut Feed, funding_rate_interval: Option<Option<u64>>) {
+    feed.funding_rate_interval = funding_rate_interval;
 }

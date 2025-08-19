@@ -1,4 +1,4 @@
-/// Adopted from pyth::i64, adapted for i16
+/// Adapted from pyth::i64, modified for i16
 
 module pyth_lazer::i16;
 

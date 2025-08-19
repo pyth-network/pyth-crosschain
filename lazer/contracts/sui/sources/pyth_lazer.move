@@ -85,6 +85,7 @@ public fun parse_and_verify_le_ecdsa_update(update: vector<u8>): Update {
             option::none(),
             option::none(),
             option::none(),
+            option::none(),
             option::none()
         );
 
@@ -144,6 +145,15 @@ public fun parse_and_verify_le_ecdsa_update(update: vector<u8>): Update {
                     feed.set_funding_timestamp(option::some(option::some(funding_timestamp)));
                 } else {
                     feed.set_funding_timestamp(option::some(option::none()));
+                }
+            } else if (property_id == 8) {
+                let exists = cursor.peel_u8();
+
+                if (exists == 1) {
+                    let funding_rate_interval = cursor.peel_u64();
+                    feed.set_funding_rate_interval(option::some(option::some(funding_rate_interval)));
+                } else {
+                    feed.set_funding_rate_interval(option::some(option::none()));
                 }
             } else {
                 // When we have an unknown property, we do not know its length, and therefore
