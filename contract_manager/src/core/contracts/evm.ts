@@ -978,8 +978,6 @@ export class EvmLazerContract extends Storable {
     return contract.methods.owner().call();
   }
 
-
-  
   async generateUpdateTrustedSignerPayload(
     trustedSigner: string,
     expiresAt: number,
@@ -991,10 +989,9 @@ export class EvmLazerContract extends Storable {
       EXECUTOR_ABI,
       executorAddress,
     );
-    const data = executorContract.methods.updateTrustedSigner(
-      trustedSigner,
-      expiresAt,
-    ).encodeABI();
+    const data = executorContract.methods
+      .updateTrustedSigner(trustedSigner, expiresAt)
+      .encodeABI();
     return this.chain.generateExecutorPayload(
       executorAddress,
       this.address,
