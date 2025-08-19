@@ -1279,5 +1279,19 @@
     "rpcUrl": "https://rpc.camp.raas.gelato.cloud",
     "networkId": 484,
     "type": "EvmChain"
+  },
+  {
+    "id": "ethereal_devnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc-ethereal-devnet-0.t.conduit.xyz/",
+    "networkId": 13374201,
+    "type": "EvmChain"
+  },
+  {
+    "id": "ethereal_testnet_v2",
+    "mainnet": false,
+    "rpcUrl": "https://rpc-ethereal-testnet-0.t.conduit.xyz",
+    "networkId": 13374202,
+    "type": "EvmChain"
   }
 ]
