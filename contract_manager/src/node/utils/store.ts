@@ -123,6 +123,7 @@ export class Store {
     contracts.push(...Object.values(this.entropy_contracts));
     contracts.push(...Object.values(this.wormhole_contracts));
     contracts.push(...Object.values(this.executor_contracts));
+    contracts.push(...Object.values(this.lazer_contracts));
     for (const contract of contracts) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
