@@ -1,12 +1,12 @@
 #[test_only]
 module pyth_lazer::pyth_lazer_tests;
-use pyth_lazer::pyth_lazer::parse_and_validate_update;
+use pyth_lazer::pyth_lazer::parse_and_verify_le_ecdsa_update;
 use pyth_lazer::channel::new_fixed_rate_200ms;
 use pyth_lazer::i16::{Self};
 use pyth_lazer::i64::{Self};
 
 #[test]
-public fun test_parse_and_validate_update() {
+public fun test_parse_and_verify_le_ecdsa_update() {
     /*
     The test data is from the Lazer subscription:
     > Request
@@ -51,7 +51,7 @@ public fun test_parse_and_validate_update() {
     let hex_message =
         x"e4bd474daafa101a7cdc2f4af22f5735aa3278f7161ae15efa9eac3851ca437e322fde467c9475497e1297499344826fe1209f6de234dce35bdfab8bf6b073be12a07cb201930075d3c793c063467c0f3b0600030301000000060055a0e054c40a0000011f679842c40a0000021c94868bc40a000004f8ff0600070002000000060032521511590000000177ac04105900000002a33b71125900000004f8ff060007007000000006000038d1d42c43a60101000000000000000002000000000000000004f4ff060100e1f50500000000070100e07ecb0c3b0600";
 
-    let update = parse_and_validate_update(hex_message);
+    let update = parse_and_verify_le_ecdsa_update(hex_message);
 
     // If we reach this point, the function worked correctly
     // (no assertion failures in parse_and_validate_update)

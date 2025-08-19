@@ -8,15 +8,23 @@ use pyth_lazer::channel::Self;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
 
+const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
 const PAYLOAD_MAGIC: u32 = 2479346549;
 
+
+// TODO:
+// initializer
+// administration -> admin cap, upgrade cap, governance?
+// storage module -> trusted signers, update fee?, treasury?
+// error handling
+// standalone verify signature function
 
 /// Parse the Lazer update message and validate the signature.
 ///
 /// The parsing logic is based on the Lazer rust protocol definition defined here:
 /// https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/rust/protocol
-public fun parse_and_validate_update(update: vector<u8>): Update {
+public fun parse_and_verify_le_ecdsa_update(update: vector<u8>): Update {
     let mut cursor = bcs::new(update);
 
     let magic = cursor.peel_u32();
@@ -25,7 +33,7 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
     let mut signature = vector::empty<u8>();
 
     let mut sig_i = 0;
-    while (sig_i < 65) {
+    while (sig_i < SECP256K1_SIG_LEN) {
         signature.push_back(cursor.peel_u8());
         sig_i = sig_i + 1;
     };
@@ -40,6 +48,7 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
     let pubkey = secp256k1_ecrecover(&signature, &payload, 0);
 
     // Lazer signer pubkey
+    // FIXME: validate against trusted signer set in storage
     assert!(pubkey == x"03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b", 0);
 
     let mut cursor = bcs::new(payload);
@@ -139,7 +148,7 @@ public fun parse_and_validate_update(update: vector<u8>): Update {
             } else {
                 // When we have an unknown property, we do not know its length, and therefore
                 // we cannot ignore it and parse the next properties.
-                abort 0
+                abort 0 // FIXME: return more granular error messages
             };
 
             properties_i = properties_i + 1;
