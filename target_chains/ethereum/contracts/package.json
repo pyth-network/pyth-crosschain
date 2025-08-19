@@ -23,7 +23,7 @@
     "migrate": "truffle migrate",
     "receiver-submit-guardian-sets": "truffle exec scripts/receiverSubmitGuardianSetUpgrades.js",
     "verify": "truffle run verify $npm_config_module@$npm_config_contract_address --network $npm_config_network",
-    "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git --no-commit",
+    "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git",
     "coverage": "./coverage.sh",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
