@@ -19,16 +19,16 @@
  * EXAMPLES:
  *
  * Deploy only:
- *   node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key>
+ *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key>
  *
  * Deploy with verification:
- *   node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --verify --etherscan-api-key <key>
+ *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --verify --etherscan-api-key <key>
  *
  * Update trusted signer only (requires existing contract):
- *   node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --deploy false --update-signer 0x123... --expires-at 1735689600
+ *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --deploy false --update-signer 0x123... --expires-at 1735689600
  *
  * Deploy and update trusted signer in one command:
- *   node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --update-signer 0x123... --expires-at 1735689600
+ *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --update-signer 0x123... --expires-at 1735689600
  *
  * NOTES:
  * - The --deploy flag defaults to true if no other flags are specified
@@ -175,7 +175,6 @@ async function deployPythLazerContract(
  */
 function updateContractsFile(chain: EvmChain, address: string): void {
   console.log(`Updating contracts file for ${chain.getId()}`);
-  // FIXME: This is not working as expected. The contract is not being saved to the store.
   const lazerContract = new EvmLazerContract(chain, address);
   DefaultStore.lazer_contracts[lazerContract.getId()] = lazerContract;
   DefaultStore.saveAllContracts();
@@ -213,11 +212,6 @@ async function updateTrustedSigner(
   expiresAt: number,
   privateKey: PrivateKey,
 ): Promise<void> {
-  console.log(`Updating trusted signer on ${chain.getId()}...`);
-  console.log(`Contract: ${contractAddress}`);
-  console.log(`Trusted Signer: ${trustedSigner}`);
-  console.log(`Expires At: ${new Date(expiresAt * 1000).toISOString()}`);
-
   const contract = getOrCreateLazerContract(chain, contractAddress);
   await contract.updateTrustedSigner(trustedSigner, expiresAt, privateKey);
 }
@@ -288,7 +282,7 @@ export async function main() {
 
     // Step 2: Update trusted signer if requested
     if (argv["update-signer"] && argv["expires-at"]) {
-      console.log(`Updating trusted signer on ${chain.getId()}...`);
+      console.log(`\nUpdating trusted signer on ${chain.getId()}...`);
       console.log(`Signer Address: ${argv["update-signer"]}`);
       console.log(
         `Expires At: ${new Date(argv["expires-at"] * 1000).toISOString()}`,
@@ -320,13 +314,13 @@ export async function main() {
         toPrivateKey(argv["private-key"]),
       );
 
-      console.log(`✅ Trusted signer updated successfully`);
+      console.log(`\n✅ Trusted signer updated successfully`);
     }
 
     // Summary
     console.log(`\n Operation Summary:`);
     if (argv.deploy && argv["update-signer"]) {
-      console.log(`✅ Contract deployed at: ${deployedAddress}`);
+      console.log(`\n✅ Contract deployed at: ${deployedAddress}`);
       console.log(`Trusted signer updated: ${argv["update-signer"]}`);
       console.log(
         `Expires at: ${new Date(argv["expires-at"]! * 1000).toISOString()}`,

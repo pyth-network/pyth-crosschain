@@ -946,10 +946,11 @@ export class EvmLazerContract extends Storable {
     return EvmLazerContract.type;
   }
 
-  toJson(): { type: string; address: string } {
+  toJson() {
     return {
-      type: EvmLazerContract.type,
+      chain: this.chain.getId(),
       address: this.address,
+      type: EvmLazerContract.type,
     };
   }
 
