@@ -20,6 +20,9 @@ jobs:
       - name: Install Sui CLI (binary)
         run: |
           set -euo pipefail
+          # Using the latest stable mainnet Sui CLI binary pinned for reproducibility.
+          # To bump: update SUI_VERSION to the latest mainnet tag (format: mainnet-vX.Y.Z).
+          # Asset naming: sui-mainnet-vX.Y.Z-ubuntu-x86_64.tgz under tag mainnet-vX.Y.Z.
           CHANNEL="mainnet"
           SUI_VERSION="v1.53.2"
           ARCHIVE="sui-${CHANNEL}-${SUI_VERSION}-ubuntu-x86_64.tgz"
