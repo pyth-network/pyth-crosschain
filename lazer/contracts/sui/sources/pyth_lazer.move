@@ -10,6 +10,10 @@ use pyth_lazer::admin;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
 
+use sui::transfer;
+use sui::tx_context::{Self, TxContext};
+use sui::types;
+
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
 const PAYLOAD_MAGIC: u32 = 2479346549;
@@ -19,14 +23,17 @@ const PAYLOAD_MAGIC: u32 = 2479346549;
 // error handling
 // standalone verify signature function
 
-/// Initializes the module. Called at publish time. 
+// One-Time Witness for the pyth_lazer module. Constructed once by the VM at publish time.
+// Docs: https://move-book.com/programmability/one-time-witness
+public struct PYTH_LAZER has drop {}
+
+/// Initializes the module. Called at publish time.
 /// Creates and shares the singular State object.
-/// Creates the singular AdminCapability and transfers it to the deployer.
-fun init(ctx: &mut TxContext) {
+/// AdminCap is created and transferred in admin::init via a One-Time Witness.
+fun init(otw: PYTH_LAZER, ctx: &mut TxContext) {
+    assert!(types::is_one_time_witness(&otw), 1);
     let s = state::new(ctx);
     transfer::public_share_object(s);
-    let cap = admin::mint(ctx);
-    transfer::public_transfer(cap, tx_context::sender(ctx));
 }
 
 /// Parse the Lazer update message and validate the signature.
