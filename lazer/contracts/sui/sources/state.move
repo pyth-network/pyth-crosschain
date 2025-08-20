@@ -1,6 +1,6 @@
 module pyth_lazer::state;
 
-use pyth_lazer::admin::AdminCapability;
+use pyth_lazer::admin::AdminCap;
 use pyth_lazer::admin;
 
 const ED25519_PUBKEY_LEN: u64 = 32;
@@ -47,11 +47,11 @@ public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
     &s.trusted_signers
 }
 
-/// Upsert a trusted signer's information or remove them. Can only be called by the AdminCapability holder.
+/// Upsert a trusted signer's information or remove them. Can only be called by the AdminCap holder.
 /// - If the trusted signer pubkey already exists, the expires_at will be updated.
 ///   - If the expired_at is set to zero, the trusted signer will be removed.
 /// - If the pubkey isn't found, it is added as a new trusted signer with the given expires_at.
-public(package) fun update_trusted_signer(_: &AdminCapability, s: &mut State, pubkey: vector<u8>, expires_at: u64) {
+public fun update_trusted_signer(_: &AdminCap, s: &mut State, pubkey: vector<u8>, expires_at: u64) {
     assert!(vector::length(&pubkey) as u64 == ED25519_PUBKEY_LEN, EInvalidPubkeyLen);
 
     let mut maybe_idx = find_signer_index(&s.trusted_signers, &pubkey);
