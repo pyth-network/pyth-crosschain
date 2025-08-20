@@ -1,0 +1,62 @@
+[
+  {
+    "chain": "sepolia",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "ethereal_testnet",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "ethereal_testnet_v2",
+    "address": "0x4D4772F06c595F69FB57039599a180536FDE8245",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "soneium_minato_testnet",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "sonic_blaze_testnet",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "optimism_sepolia",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "soneium",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "base_sepolia",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "base",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "polynomial_testnet",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "polynomial",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "ethereal_devnet",
+    "address": "0x4D4772F06c595F69FB57039599a180536FDE8245",
+    "type": "EvmLazerContract"
+  }
+]
