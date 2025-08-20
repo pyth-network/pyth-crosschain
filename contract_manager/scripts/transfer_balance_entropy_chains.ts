@@ -157,7 +157,12 @@ async function transferOnChain(
       transferAmountEth = transferAmount;
     } else {
       // transferRatio is guaranteed to be defined at this point
-      transferAmountEth = (balanceEth - gasCostEth) * transferRatio!;
+      if (transferRatio === undefined) {
+        throw new Error(
+          "Transfer ratio must be defined when amount is not specified",
+        );
+      }
+      transferAmountEth = (balanceEth - gasCostEth) * transferRatio;
     }
 
     // Round to 10 decimal places to avoid Web3 conversion errors
@@ -299,7 +304,12 @@ function getSelectedChains(argv: {
     );
     selectedChains = [];
 
-    for (const chainId of argv.chain!) {
+    if (!argv.chain) {
+      throw new Error(
+        "Chain argument must be defined for specific chain selection",
+      );
+    }
+    for (const chainId of argv.chain) {
       if (!entropyChainIds.has(chainId)) {
         throw new Error(
           `Chain ${chainId} does not have entropy contracts deployed`,
@@ -360,7 +370,10 @@ async function main() {
   if (argv.amount !== undefined) {
     transferMethod = `${argv.amount} ETH (fixed amount)`;
   } else {
-    transferMethod = `${(argv.ratio! * 100).toFixed(1)}% of available balance`;
+    if (argv.ratio === undefined) {
+      throw new Error("Ratio must be defined when amount is not specified");
+    }
+    transferMethod = `${(argv.ratio * 100).toFixed(1)}% of available balance`;
   }
 
   console.log(`\nConfiguration:`);
