@@ -1005,6 +1005,7 @@ export class EvmLazerContract extends Storable {
    * @param trustedSigner The address of the trusted signer
    * @param expiresAt The expiration timestamp for the signer
    * @param privateKey The private key to sign the transaction
+   * @note The privateKey should be the owner of the Lazer contract. It's not possible to run this function if the executor contract is the owner.
    */
   async updateTrustedSigner(
     trustedSigner: string,
