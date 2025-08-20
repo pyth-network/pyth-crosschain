@@ -41,7 +41,7 @@ To deploy the contracts, you'll need to set up your environment variables and us
 1. Copy the environment template and fill in your values:
 
 ```bash
-cp deploy.env.example .env
+cp .env.template .env
 # Edit .env with your configuration
 ```
 

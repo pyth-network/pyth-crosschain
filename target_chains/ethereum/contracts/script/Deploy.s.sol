@@ -31,7 +31,7 @@ contract DeployScript is Script {
 
     function deployWormhole() internal returns (address) {
         // Read environment variables
-        bytes32[] memory initialSigners = abi.decode(vm.parseJson(vm.envString("INIT_SIGNERS")), (bytes32[]));
+        address[] memory initialSigners = vm.envAddress("INIT_SIGNERS", ",");
         uint16 chainId = uint16(vm.envUint("INIT_CHAIN_ID"));
         uint16 governanceChainId = uint16(vm.envUint("INIT_GOV_CHAIN_ID"));
         bytes32 governanceContract = vm.envBytes32("INIT_GOV_CONTRACT");
@@ -49,7 +49,7 @@ contract DeployScript is Script {
 
         // Encode initialization data
         bytes memory initData = abi.encodeWithSignature(
-            "setup(address,bytes32[],uint16,uint16,bytes32)",
+            "setup(address,address[],uint16,uint16,bytes32)",
             address(implementation),
             initialSigners,
             chainId,
@@ -109,4 +109,5 @@ contract DeployScript is Script {
         
         return address(pythProxy);
     }
+
 }
