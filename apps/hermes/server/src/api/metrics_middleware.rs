@@ -48,6 +48,7 @@ impl ApiMetrics {
         {
             let requests = new.requests.clone();
             let latencies = new.latencies.clone();
+            let sse_broadcast_latency = new.sse_broadcast_latency.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -71,7 +72,7 @@ impl ApiMetrics {
                     (
                         "sse_broadcast_latency_seconds",
                         "Latency from Hermes receive_time to SSE send in seconds",
-                        new.sse_broadcast_latency.clone(),
+                        sse_broadcast_latency,
                     ),
                 )
                 .await;

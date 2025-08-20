@@ -106,6 +106,7 @@ impl WsMetrics {
 
         {
             let interactions = new.interactions.clone();
+            let ws_broadcast_latency = new.broadcast_latency.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -123,7 +124,7 @@ impl WsMetrics {
                     (
                         "ws_broadcast_latency_seconds",
                         "Latency from Hermes receive_time to WS send in seconds",
-                        new.broadcast_latency.clone(),
+                        ws_broadcast_latency,
                     ),
                 )
                 .await;
