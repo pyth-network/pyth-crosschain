@@ -176,14 +176,14 @@ contract PythLazerDeployScript is Script {
     }
 
     function run() public {
-        address impl = deployImplementation("tazer:impl");
-        deployProxy("tazer:proxy", impl);
+        address impl = deployImplementation("lazer:impl");
+        deployProxy("lazer:proxy", impl);
     }
 
     function migrate() public {
         // Deploys new version and updates proxy to use new address
-        address proxyAddress = getProxyAddress("tazer:proxy");
-        address newImpl = deployImplementation("tazer:impl");
+        address proxyAddress = getProxyAddress("lazer:proxy");
+        address newImpl = deployImplementation("lazer:impl");
         bytes memory migrateCall = abi.encodeWithSignature("migrate()");
         vm.startBroadcast();
         UUPSUpgradeable proxy = UUPSUpgradeable(proxyAddress);
