@@ -430,17 +430,6 @@ where
             .map(|u| u.price_feed.get_price_unchecked().publish_time)
             .min();
 
-        let batch_min_received_at = updates
-            .price_feeds
-            .iter()
-            .filter_map(|u| u.received_at)
-            .min();
-        let batch_min_publish_time = updates
-            .price_feeds
-            .iter()
-            .map(|u| u.price_feed.get_price_unchecked().publish_time)
-            .min();
-
         for update in updates.price_feeds {
             let config = self
                 .price_feeds_with_config
@@ -454,7 +443,6 @@ where
                     continue;
                 }
             }
-
 
             let message = serde_json::to_string(&ServerMessage::PriceUpdate {
                 price_feed: RpcPriceFeed::from_price_feed_update(

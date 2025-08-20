@@ -206,7 +206,6 @@ where
         return Ok(None);
     }
 
-
     let price_update_data = price_feeds_with_update_data.update_data;
     let encoded_data: Vec<String> = price_update_data
         .into_iter()
