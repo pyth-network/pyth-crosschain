@@ -26,7 +26,7 @@ use {
     nonzero_ext::nonzero,
     prometheus_client::{
         encoding::{EncodeLabelSet, EncodeLabelValue},
-        metrics::{counter::Counter, family::Family},
+        metrics::{counter::Counter, family::Family, histogram::Histogram},
     },
     pyth_sdk::PriceIdentifier,
     serde::{Deserialize, Serialize},
@@ -85,6 +85,8 @@ pub struct Labels {
 
 pub struct WsMetrics {
     pub interactions: Family<Labels, Counter>,
+    pub publish_to_receive_latency: Histogram,
+    pub receive_to_ws_send_latency: Histogram,
 }
 
 impl WsMetrics {
@@ -93,20 +95,58 @@ impl WsMetrics {
         S: Metrics,
         S: Send + Sync + 'static,
     {
+        let publish_to_receive_latency = Histogram::new(
+            [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0].into_iter(),
+        );
+        let receive_to_ws_send_latency = Histogram::new(
+            [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0].into_iter(),
+        );
         let new = Self {
             interactions: Family::default(),
+            publish_to_receive_latency: publish_to_receive_latency.clone(),
+            receive_to_ws_send_latency: receive_to_ws_send_latency.clone(),
         };
 
         {
             let interactions = new.interactions.clone();
 
+            tokio::spawn({
+                let state = state.clone();
+                async move {
+                    Metrics::register(
+                        &*state,
+                        (
+                            "ws_interactions",
+                            "Total number of websocket interactions",
+                            interactions,
+                        ),
+                    )
+                    .await;
+                }
+            });
+
+            tokio::spawn({
+                let state = state.clone();
+                async move {
+                    Metrics::register(
+                        &*state,
+                        (
+                            "publish_to_receive_latency",
+                            "Latency from publish_time to receive_time (seconds)",
+                            publish_to_receive_latency,
+                        ),
+                    )
+                    .await;
+                }
+            });
+
             tokio::spawn(async move {
                 Metrics::register(
                     &*state,
                     (
-                        "ws_interactions",
-                        "Total number of websocket interactions",
-                        interactions,
+                        "receive_to_ws_send_latency",
+                        "Latency from receive_time to WebSocket send time (seconds)",
+                        receive_to_ws_send_latency,
                     ),
                 )
                 .await;
@@ -414,6 +454,8 @@ where
                     continue;
                 }
             }
+            let received_at_opt = update.received_at;
+            let publish_time = update.price_feed.get_price_unchecked().publish_time;
 
             let message = serde_json::to_string(&ServerMessage::PriceUpdate {
                 price_feed: RpcPriceFeed::from_price_feed_update(
@@ -425,6 +467,7 @@ where
 
             // Close the connection if rate limit is exceeded and the ip is not whitelisted.
             // If the ip address is None no rate limiting is applied.
+
             if let Some(ip_addr) = self.ip_addr {
                 if !self
                     .ws_state
@@ -465,8 +508,7 @@ where
                 }
             }
 
-            // `sender.feed` buffers a message to the client but does not flush it, so we can send
-            // multiple messages and flush them all at once.
+
             self.sender.feed(message.into()).await?;
 
             self.ws_state

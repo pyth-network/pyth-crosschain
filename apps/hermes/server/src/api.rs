@@ -23,6 +23,7 @@ pub struct ApiState<S> {
     pub state: Arc<S>,
     pub ws: Arc<ws::WsState>,
     pub metrics: Arc<metrics_middleware::ApiMetrics>,
+    pub sse_metrics: Arc<crate::api::rest::SseMetrics>,
 }
 
 /// Manually implement `Clone` as the derive macro will try and slap `Clone` on
@@ -33,6 +34,7 @@ impl<S> Clone for ApiState<S> {
             state: self.state.clone(),
             ws: self.ws.clone(),
             metrics: self.metrics.clone(),
+            sse_metrics: self.sse_metrics.clone(),
         }
     }
 }
@@ -50,6 +52,7 @@ impl<S> ApiState<S> {
                 requester_ip_header_name,
                 state.clone(),
             )),
+            sse_metrics: Arc::new(crate::api::rest::SseMetrics::new(state.clone())),
             state,
         }
     }

@@ -22,8 +22,50 @@ use {
     std::{convert::Infallible, time::Duration},
     tokio::{sync::broadcast, time::Instant},
     tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
+    prometheus_client::metrics::histogram::Histogram,
     utoipa::IntoParams,
+    std::sync::Arc,
+    crate::state::metrics::Metrics,
 };
+
+
+pub struct SseMetrics {
+    pub receive_to_sse_send_latency: Histogram,
+}
+
+impl SseMetrics {
+    pub fn new<S>(state: Arc<S>) -> Self
+    where
+        S: Metrics,
+        S: Send + Sync + 'static,
+    {
+        let receive_to_sse_send_latency = Histogram::new(
+            [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0].into_iter(),
+        );
+
+        let new = Self {
+            receive_to_sse_send_latency: receive_to_sse_send_latency.clone(),
+        };
+
+        {
+
+            tokio::spawn(async move {
+                Metrics::register(
+                    &*state,
+                    (
+                        "receive_to_sse_send_latency",
+                        "Latency from receive_time to SSE send time (seconds)",
+                        receive_to_sse_send_latency,
+                    ),
+                )
+                .await;
+            });
+        }
+
+        new
+    }
+}
+
 
 // Constants
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
@@ -173,8 +215,34 @@ where
     )
     .await?;
 
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .and_then(|d| i64::try_from(d.as_secs()).ok());
+
+    for pf in &price_feeds_with_update_data.price_feeds {
+        if let Some(received_at) = pf.received_at {
+            let publish_time = pf.price_feed.get_price_unchecked().publish_time;
+            let pub_to_recv = (received_at - publish_time).max(0) as f64;
+            state
+                .ws
+                .metrics
+                .publish_to_receive_latency
+                .observe(pub_to_recv);
+
+            if let Some(now) = now_secs {
+                let recv_to_send = (now - received_at).max(0) as f64;
+                state
+                    .sse_metrics
+                    .receive_to_sse_send_latency
+                    .observe(recv_to_send);
+            }
+        }
+    }
+
     let mut parsed_price_updates: Vec<ParsedPriceUpdate> = price_feeds_with_update_data
         .price_feeds
+
         .into_iter()
         .map(|price_feed| price_feed.into())
         .collect();
