@@ -367,6 +367,16 @@ where
         // we can build the message states
         let message_states = build_message_states(accumulator_messages, wormhole_merkle_state)?;
 
+        {
+            let mut data = self.into().data.write().await;
+            for ms in &message_states {
+                let publish = ms.message.publish_time() as f64;
+                let receive = ms.received_at as f64;
+                let latency = receive - publish;
+                data.metrics.observe_publish_to_receive(latency);
+            }
+        }
+
         let message_state_keys = message_states
             .iter()
             .map(|message_state| message_state.key())

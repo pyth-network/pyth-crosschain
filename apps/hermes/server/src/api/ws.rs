@@ -85,6 +85,7 @@ pub struct Labels {
 
 pub struct WsMetrics {
     pub interactions: Family<Labels, Counter>,
+    pub broadcast_latency: prometheus_client::metrics::histogram::Histogram,
 }
 
 impl WsMetrics {
@@ -95,6 +96,12 @@ impl WsMetrics {
     {
         let new = Self {
             interactions: Family::default(),
+            broadcast_latency: prometheus_client::metrics::histogram::Histogram::new(
+                [
+                    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+                ]
+                .into_iter(),
+            ),
         };
 
         {
@@ -107,6 +114,16 @@ impl WsMetrics {
                         "ws_interactions",
                         "Total number of websocket interactions",
                         interactions,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "ws_broadcast_latency_seconds",
+                        "Latency from Hermes receive_time to WS send in seconds",
+                        new.broadcast_latency.clone(),
                     ),
                 )
                 .await;
@@ -413,6 +430,18 @@ where
                 if !config.allow_out_of_order {
                     continue;
                 }
+            }
+
+            let now_secs = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0);
+            if let Some(received_at) = update.received_at {
+                let latency = now_secs - (received_at as f64);
+                self.ws_state
+                    .metrics
+                    .broadcast_latency
+                    .observe(latency.max(0.0));
             }
 
             let message = serde_json::to_string(&ServerMessage::PriceUpdate {
