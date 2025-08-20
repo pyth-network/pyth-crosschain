@@ -206,19 +206,6 @@ where
         return Ok(None);
     }
 
-    let now_secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs_f64())
-        .unwrap_or(0.0);
-    for pu in &parsed_price_updates {
-        if let Some(receive_time) = pu.metadata.proof_available_time {
-            let latency = now_secs - (receive_time as f64);
-            state
-                .metrics
-                .sse_broadcast_latency
-                .observe(latency.max(0.0));
-        }
-    }
 
     let price_update_data = price_feeds_with_update_data.update_data;
     let encoded_data: Vec<String> = price_update_data
@@ -229,6 +216,19 @@ where
         encoding,
         data: encoded_data,
     };
+
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or(0.0);
+    for pu in &parsed_price_updates {
+        if let Some(receive_time) = pu.metadata.proof_available_time {
+            state
+                .metrics
+                .sse_broadcast_latency
+                .observe((now_secs - (receive_time as f64)).max(0.0));
+        }
+    }
 
     Ok(Some(PriceUpdate {
         binary: binary_price_update,

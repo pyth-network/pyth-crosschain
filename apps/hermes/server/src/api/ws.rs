@@ -419,6 +419,28 @@ where
             }
         };
 
+        let batch_min_received_at = updates
+            .price_feeds
+            .iter()
+            .filter_map(|u| u.received_at)
+            .min();
+        let batch_min_publish_time = updates
+            .price_feeds
+            .iter()
+            .map(|u| u.price_feed.get_price_unchecked().publish_time)
+            .min();
+
+        let batch_min_received_at = updates
+            .price_feeds
+            .iter()
+            .filter_map(|u| u.received_at)
+            .min();
+        let batch_min_publish_time = updates
+            .price_feeds
+            .iter()
+            .map(|u| u.price_feed.get_price_unchecked().publish_time)
+            .min();
+
         for update in updates.price_feeds {
             let config = self
                 .price_feeds_with_config
@@ -433,17 +455,6 @@ where
                 }
             }
 
-            let now_secs = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs_f64())
-                .unwrap_or(0.0);
-            if let Some(received_at) = update.received_at {
-                let latency = now_secs - (received_at as f64);
-                self.ws_state
-                    .metrics
-                    .broadcast_latency
-                    .observe(latency.max(0.0));
-            }
 
             let message = serde_json::to_string(&ServerMessage::PriceUpdate {
                 price_feed: RpcPriceFeed::from_price_feed_update(
@@ -510,6 +521,21 @@ where
         }
 
         self.sender.flush().await?;
+        let now_secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs_f64())
+            .unwrap_or(0.0);
+        if let Some(min_recv) = batch_min_received_at {
+            self.ws_state
+                .metrics
+                .broadcast_latency
+                .observe((now_secs - (min_recv as f64)).max(0.0));
+        } else if let Some(min_pub) = batch_min_publish_time {
+            self.ws_state
+                .metrics
+                .broadcast_latency
+                .observe((now_secs - (min_pub as f64)).max(0.0));
+        }
         Ok(())
     }
 
@@ -518,8 +544,7 @@ where
         let maybe_client_message = match message {
             Message::Close(_) => {
                 // Closing the connection. We don't remove it from the subscribers
-                // list, instead when the Subscriber struct is dropped the channel
-                // to subscribers list will be closed and it will eventually get
+
                 // removed.
                 tracing::trace!(id = self.id, "Subscriber Closed Connection.");
                 self.ws_state
