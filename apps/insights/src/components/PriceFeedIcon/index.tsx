@@ -1,4 +1,3 @@
-import Generic from "cryptocurrency-icons/svg/color/generic.svg";
 import type { ComponentProps, ComponentType } from "react";
 
 import Commodities from "./commodities.svg";
@@ -26,17 +25,22 @@ export const PriceFeedIcon = ({ assetClass, symbol, ...props }: Props) => {
     return Icon ? (
       <Icon width="100%" height="100%" viewBox="0 0 32 32" {...props} />
     ) : (
-      <GenericIcon assetClass={assetClass} {...props} />
+      <GenericIcon assetClass="Crypto" {...props} />
     );
   } else {
-    return <GenericIcon assetClass={assetClass} {...props} />;
+    return assetClassHasIcon(assetClass) ? (
+      <GenericIcon assetClass={assetClass} {...props} />
+    ) : // eslint-disable-next-line unicorn/no-null
+    null;
   }
 };
 
-type GenericProps = ComponentProps<"svg"> & { assetClass: string };
+type GenericProps = ComponentProps<"svg"> & {
+  assetClass: keyof typeof ASSET_CLASS_TO_ICON;
+};
 
 const GenericIcon = ({ assetClass, ...props }: GenericProps) => {
-  const Icon = ASSET_CLASS_TO_ICON[assetClass] ?? Generic;
+  const Icon = ASSET_CLASS_TO_ICON[assetClass];
   return (
     <Icon
       width="100%"
@@ -55,7 +59,7 @@ type SVGProps = ComponentProps<"svg">;
 type SVGComponent = ComponentType<SVGProps>;
 type SVGRecord = Record<string, SVGComponent>;
 
-const ASSET_CLASS_TO_ICON: Record<string, SVGComponent> = {
+const ASSET_CLASS_TO_ICON = {
   Commodities,
   "Crypto Index": CryptoIndex,
   "Crypto Redemption Rate": CryptoRedemptionRate,
@@ -64,4 +68,9 @@ const ASSET_CLASS_TO_ICON: Record<string, SVGComponent> = {
   FX: Fx,
   Metal,
   Rates,
-};
+} as const;
+
+const assetClassHasIcon = (
+  assetClass: string,
+): assetClass is keyof typeof ASSET_CLASS_TO_ICON =>
+  Object.keys(ASSET_CLASS_TO_ICON).includes(assetClass);
