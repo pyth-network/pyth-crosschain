@@ -41,7 +41,7 @@
     "react-dom": "catalog:",
     "react-markdown": "catalog:",
     "shiki": "catalog:",
-    "viem": "catalog:",
+    "viem": "^2.34.0",
     "wagmi": "catalog:",
     "zod": "catalog:"
   },
