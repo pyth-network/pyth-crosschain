@@ -1283,7 +1283,7 @@
   {
     "id": "ethereal_devnet",
     "mainnet": false,
-    "rpcUrl": "http://127.0.0.1:8545",
+    "rpcUrl": "https://rpc-ethereal-devnet-0.t.conduit.xyz/",
     "networkId": 13374201,
     "type": "EvmChain"
   },
