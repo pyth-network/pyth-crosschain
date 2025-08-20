@@ -63,6 +63,7 @@ npm run deploy
 ```
 
 The deployment script will:
+
 - Deploy the Wormhole contracts (Setup, Implementation, and Wormhole proxy)
 - Deploy the Pyth contracts (PythUpgradable with ERC1967 proxy)
 - Configure all necessary parameters from environment variables
@@ -90,6 +91,7 @@ GOVERNANCE_DATA=0x... npm run create-governance-vaa
 ```
 
 This script creates a properly signed governance VAA for local testing. You can customize it with environment variables:
+
 - `TIMESTAMP` - VAA timestamp (defaults to current block timestamp)
 - `NONCE` - VAA nonce (defaults to 0)
 - `EMITTER_CHAIN_ID` - Chain ID of the emitter (defaults to 1)

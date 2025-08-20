@@ -9,6 +9,7 @@ This guide shows the **recommended Foundry-native approaches** for reading envir
 **Use Case:** Arrays of addresses, numbers, or simple types
 
 **Environment Format:**
+
 ```bash
 # Multiple addresses
 INIT_SIGNERS=0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5,0x025ceeba2ab2a27d53d963393999eeebe83dc4ae
@@ -21,11 +22,12 @@ NETWORKS=ethereum,polygon,bsc
 ```
 
 **Solidity Code:**
+
 ```solidity
 // Read address array
 address[] memory signers = vm.envAddress("INIT_SIGNERS", ",");
 
-// Read uint array  
+// Read uint array
 uint256[] memory chainIds = vm.envUint("CHAIN_IDS", ",");
 
 // Convert addresses to bytes32 if needed
@@ -36,6 +38,7 @@ for (uint i = 0; i < signers.length; i++) {
 ```
 
 **✅ Advantages:**
+
 - Native Foundry support
 - Clean, readable format
 - No parsing needed
@@ -46,6 +49,7 @@ for (uint i = 0; i < signers.length; i++) {
 **Use Case:** Complex nested data structures
 
 **Environment Format:**
+
 ```bash
 # Simple array
 INIT_SIGNERS='["0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5","0x025ceeba2ab2a27d53d963393999eeebe83dc4ae"]'
@@ -55,6 +59,7 @@ CONFIG='{"guardians":["0x..."],"chainId":1,"enabled":true}'
 ```
 
 **Solidity Code:**
+
 ```solidity
 // Simple array
 string memory signersJson = vm.envString("INIT_SIGNERS");
@@ -68,6 +73,7 @@ bool enabled = abi.decode(vm.parseJson(configJson, ".enabled"), (bool));
 ```
 
 **⚠️ Requirements:**
+
 - JSON must be properly formatted
 - Use single quotes in .env files to prevent shell parsing issues
 - May need escaping for complex nested structures
@@ -77,6 +83,7 @@ bool enabled = abi.decode(vm.parseJson(configJson, ".enabled"), (bool));
 **Use Case:** When you have a known, small number of values
 
 **Environment Format:**
+
 ```bash
 GUARDIAN_1=0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5
 GUARDIAN_2=0x025ceeba2ab2a27d53d963393999eeebe83dc4ae
@@ -84,6 +91,7 @@ GUARDIAN_COUNT=2
 ```
 
 **Solidity Code:**
+
 ```solidity
 uint256 guardianCount = vm.envUint("GUARDIAN_COUNT");
 bytes32[] memory guardians = new bytes32[](guardianCount);
@@ -96,6 +104,7 @@ for (uint i = 0; i < guardianCount; i++) {
 ```
 
 **✅ Advantages:**
+
 - Most reliable
 - Easy to debug
 - No parsing issues
@@ -106,7 +115,7 @@ for (uint i = 0; i < guardianCount; i++) {
 ```solidity
 // Basic types
 vm.envString("KEY")          // string
-vm.envAddress("KEY")         // address  
+vm.envAddress("KEY")         // address
 vm.envUint("KEY")            // uint256
 vm.envInt("KEY")             // int256
 vm.envBytes32("KEY")         // bytes32
@@ -144,6 +153,7 @@ for (uint i = 0; i < signerAddresses.length; i++) {
 ```
 
 **Environment Format:**
+
 ```bash
 INIT_SIGNERS=0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5,0x025ceeba2ab2a27d53d963393999eeebe83dc4ae
 ```

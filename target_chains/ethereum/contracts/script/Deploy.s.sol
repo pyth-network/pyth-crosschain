@@ -59,7 +59,7 @@ contract DeployScript is Script {
 
         // Deploy Wormhole proxy
         Wormhole wormhole = new Wormhole(address(setup), initData);
-        
+
         return address(wormhole);
     }
 
@@ -69,8 +69,12 @@ contract DeployScript is Script {
         bytes32 pyth2WormholeEmitter = vm.envBytes32("SOLANA_EMITTER");
         uint16 governanceChainId = uint16(vm.envUint("GOVERNANCE_CHAIN_ID"));
         bytes32 governanceEmitter = vm.envBytes32("GOVERNANCE_EMITTER");
-        uint64 governanceInitialSequence = uint64(vm.envOr("GOVERNANCE_INITIAL_SEQUENCE", uint256(0)));
-        uint256 validTimePeriodSeconds = vm.envUint("VALID_TIME_PERIOD_SECONDS");
+        uint64 governanceInitialSequence = uint64(
+            vm.envOr("GOVERNANCE_INITIAL_SEQUENCE", uint256(0))
+        );
+        uint256 validTimePeriodSeconds = vm.envUint(
+            "VALID_TIME_PERIOD_SECONDS"
+        );
         uint256 singleUpdateFeeInWei = vm.envUint("SINGLE_UPDATE_FEE_IN_WEI");
 
         console.log("pyth2WormholeChainId:", pyth2WormholeChainId);
@@ -83,12 +87,15 @@ contract DeployScript is Script {
 
         // Deploy PythUpgradable implementation
         PythUpgradable pythImpl = new PythUpgradable();
-        console.log("PythUpgradable implementation deployed at:", address(pythImpl));
+        console.log(
+            "PythUpgradable implementation deployed at:",
+            address(pythImpl)
+        );
 
         // Prepare initialization data
         uint16[] memory dataSourceChainIds = new uint16[](1);
         dataSourceChainIds[0] = pyth2WormholeChainId;
-        
+
         bytes32[] memory dataSourceEmitterAddresses = new bytes32[](1);
         dataSourceEmitterAddresses[0] = pyth2WormholeEmitter;
 
@@ -105,9 +112,11 @@ contract DeployScript is Script {
         );
 
         // Deploy ERC1967 proxy
-        ERC1967Proxy pythProxy = new ERC1967Proxy(address(pythImpl), pythInitData);
-        
+        ERC1967Proxy pythProxy = new ERC1967Proxy(
+            address(pythImpl),
+            pythInitData
+        );
+
         return address(pythProxy);
     }
-
 }

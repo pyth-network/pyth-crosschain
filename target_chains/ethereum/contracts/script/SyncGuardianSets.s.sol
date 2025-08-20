@@ -20,11 +20,14 @@ contract SyncGuardianSetsScript is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address wormholeAddress = vm.envAddress("WORMHOLE_ADDRESS");
-        
+
         vm.startBroadcast(deployerPrivateKey);
 
-        console.log("Syncing guardian sets for Wormhole contract at:", wormholeAddress);
-        
+        console.log(
+            "Syncing guardian sets for Wormhole contract at:",
+            wormholeAddress
+        );
+
         // Get the current guardian set index before syncing
         IWormhole wormholeReader = IWormhole(wormholeAddress);
         Governance wormholeGov = Governance(wormholeAddress);
@@ -33,7 +36,12 @@ contract SyncGuardianSetsScript is Script {
 
         // Submit each guardian set upgrade VAA starting from the current index
         for (uint i = initialIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
-            console.log("Submitting guardian set upgrade VAA", i + 1, "of", MAINNET_UPGRADE_VAAS.length);
+            console.log(
+                "Submitting guardian set upgrade VAA",
+                i + 1,
+                "of",
+                MAINNET_UPGRADE_VAAS.length
+            );
             bytes memory vaaBytes = vm.parseBytes(MAINNET_UPGRADE_VAAS[i]);
             wormholeGov.submitNewGuardianSet(vaaBytes);
             console.log("Successfully submitted VAA", i + 1);
@@ -42,9 +50,14 @@ contract SyncGuardianSetsScript is Script {
         // Check the final guardian set index
         uint32 finalIndex = wormholeReader.getCurrentGuardianSetIndex();
         console.log("Final guardian set index:", finalIndex);
-        
+
         if (finalIndex > initialIndex) {
-            console.log("Successfully updated guardian set from index", initialIndex, "to", finalIndex);
+            console.log(
+                "Successfully updated guardian set from index",
+                initialIndex,
+                "to",
+                finalIndex
+            );
         } else {
             console.log("Guardian set was already up to date");
         }
