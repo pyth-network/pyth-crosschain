@@ -34,27 +34,70 @@ npm run coverage
 
 Open `coverage/index.html` in your web browser to see the results.
 
-### Governance tests
+## Deployment
 
-There is a separate test suite executed by truffle for testing governance messages and contract upgrades. You can run ganache-cli as a blockchain instance and test it manually. To do the latter, run the following commands in the `contracts` folder:
+To deploy the contracts, you'll need to set up your environment variables and use the Foundry deployment script.
 
-1. Spawn a new network on a seperate terminal (do not close it while running tests):
-
-```bash
-pnpm dlx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --host=0.0.0.0
-```
-
-2. deploy the contracts:
+1. Copy the environment template and fill in your values:
 
 ```bash
-cp .env.test .env && pnpm exec truffle compile --all && pnpm exec truffle migrate --network development
+cp deploy.env.example .env
+# Edit .env with your configuration
 ```
 
-3. Run the test suite:
+2. Deploy to a local network (for testing):
 
 ```bash
-npm run test-contract
+# Start a local node
+anvil
+
+# In another terminal, deploy the contracts
+npm run deploy-local
 ```
+
+3. Deploy to a live network:
+
+```bash
+# Make sure your .env file has the correct RPC_URL and PRIVATE_KEY
+npm run deploy
+```
+
+The deployment script will:
+- Deploy the Wormhole contracts (Setup, Implementation, and Wormhole proxy)
+- Deploy the Pyth contracts (PythUpgradable with ERC1967 proxy)
+- Configure all necessary parameters from environment variables
+
+### Guardian Set Sync
+
+After deploying Wormhole contracts on mainnet, you need to sync the guardian sets to match the current mainnet state:
+
+```bash
+# Set WORMHOLE_ADDRESS in your .env file to the deployed Wormhole contract address
+npm run sync-guardian-sets
+```
+
+This script submits the pre-configured mainnet guardian set upgrade VAAs to bring your contract up to date with the current mainnet guardian set.
+
+### Utility Scripts
+
+Additional utility scripts are available for testing and development:
+
+#### Create Governance VAA (for testing)
+
+```bash
+# Create a governance VAA for localnet testing
+GOVERNANCE_DATA=0x... npm run create-governance-vaa
+```
+
+This script creates a properly signed governance VAA for local testing. You can customize it with environment variables:
+- `TIMESTAMP` - VAA timestamp (defaults to current block timestamp)
+- `NONCE` - VAA nonce (defaults to 0)
+- `EMITTER_CHAIN_ID` - Chain ID of the emitter (defaults to 1)
+- `EMITTER_ADDRESS` - Address of the emitter (defaults to test address)
+- `SEQUENCE` - VAA sequence number (defaults to 0)
+- `GOVERNANCE_DATA` - The governance payload data (required)
+- `GUARDIAN_SET_INDEX` - Guardian set index (defaults to 0)
+- `CONSISTENCY_LEVEL` - Consistency level (defaults to 32)
 
 ### Gas Benchmarks
 
