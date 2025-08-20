@@ -10,6 +10,10 @@ public struct AdminCap has key, store {
 /// See: https://move-book.com/programmability/one-time-witness
 public struct ADMIN has drop {}
 
+
+/// Initializes the module. Called at publish time.
+/// Creates and transfers ownership of the singular AdminCap capability to the deployer.
+/// Only the AdminCap owner can update the trusted signers.
 fun init(otw: ADMIN, ctx: &mut TxContext) {
     assert!(types::is_one_time_witness(&otw), 1);
     let cap = AdminCap { id: object::new(ctx) };
