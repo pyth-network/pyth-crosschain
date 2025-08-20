@@ -1,16 +1,13 @@
 module pyth_lazer::admin;
-
-use sui::tx_context::{Self, TxContext};
-use sui::object;
-use sui::transfer;
 use sui::types;
 
 public struct AdminCap has key, store {
     id: UID,
 }
 
-// One-Time Witness for the admin module. Constructed by the VM once at publish time.
-// Docs: https://move-book.com/programmability/one-time-witness
+/// The `ADMIN` resource serves as the one-time witness.
+/// It has the `drop` ability, allowing it to be consumed immediately after use.
+/// See: https://move-book.com/programmability/one-time-witness
 public struct ADMIN has drop {}
 
 fun init(otw: ADMIN, ctx: &mut TxContext) {

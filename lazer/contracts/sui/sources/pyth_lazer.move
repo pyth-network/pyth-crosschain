@@ -6,12 +6,8 @@ use pyth_lazer::update::{Self, Update};
 use pyth_lazer::feed::{Self, Feed};
 use pyth_lazer::channel::Self;
 use pyth_lazer::state;
-use pyth_lazer::admin;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
-
-use sui::transfer;
-use sui::tx_context::{Self, TxContext};
 use sui::types;
 
 const SECP256K1_SIG_LEN: u32 = 65;
@@ -23,8 +19,9 @@ const PAYLOAD_MAGIC: u32 = 2479346549;
 // error handling
 // standalone verify signature function
 
-// One-Time Witness for the pyth_lazer module. Constructed once by the VM at publish time.
-// Docs: https://move-book.com/programmability/one-time-witness
+/// The `PYTH_LAZER` resource serves as the one-time witness.
+/// It has the `drop` ability, allowing it to be consumed immediately after use.
+/// See: https://move-book.com/programmability/one-time-witness
 public struct PYTH_LAZER has drop {}
 
 /// Initializes the module. Called at publish time.
