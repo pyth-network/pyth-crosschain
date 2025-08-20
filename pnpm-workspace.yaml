@@ -151,7 +151,7 @@ catalog:
   typedoc: ^0.26.8
   typescript: ^5.8.2
   vercel: ^41.4.1
-  viem: ^2.24.3
+  viem: ^2.34.0
   wagmi: ^2.14.16
   zod: ^3.24.2
   zod-validation-error: ^3.4.0
