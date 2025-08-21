@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: Apache 2
 
-// NOTE: These tests were migrated from target_chains/ethereum/contracts/test/pyth.js but exclude the Wormhole-specific tests,
-// which remain in the original JavaScript test file.
-
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";

@@ -47,7 +47,7 @@ To deploy the contracts, you'll need to set up your environment variables and us
 1. Copy the environment template and fill in your values:
 
 ```bash
-cp .env.template .env
+cp .env.test .env
 # Edit .env with your configuration
 ```
 
@@ -86,7 +86,7 @@ After deploying Wormhole contracts on mainnet, you need to sync the guardian set
 
 ```bash
 # Set WORMHOLE_ADDRESS in your .env file to the deployed Wormhole contract address
-npm run sync-guardian-sets
+npm run receiver-submit-guardian-sets
 ```
 
 This script submits the pre-configured mainnet guardian set upgrade VAAs to bring your contract up to date with the current mainnet guardian set.
