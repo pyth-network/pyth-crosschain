@@ -96,10 +96,16 @@ impl WsMetrics {
         S: Send + Sync + 'static,
     {
         let publish_to_receive_latency = Histogram::new(
-            [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0].into_iter(),
+            [
+                0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0,
+            ]
+            .into_iter(),
         );
         let receive_to_ws_send_latency = Histogram::new(
-            [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0].into_iter(),
+            [
+                0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0,
+            ]
+            .into_iter(),
         );
         let new = Self {
             interactions: Family::default(),
@@ -503,11 +509,29 @@ where
                         )
                         .await?;
                     self.sender.close().await?;
+                    if let Some(received_at) = received_at_opt {
+                        let pub_to_recv = (received_at - publish_time).max(0) as f64;
+                        self.ws_state
+                            .metrics
+                            .publish_to_receive_latency
+                            .observe(pub_to_recv);
+
+                        let now_secs = std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .ok()
+                            .and_then(|d| i64::try_from(d.as_secs()).ok())
+                            .unwrap_or(received_at);
+                        let recv_to_send = (now_secs - received_at).max(0) as f64;
+                        self.ws_state
+                            .metrics
+                            .receive_to_ws_send_latency
+                            .observe(recv_to_send);
+                    }
+
                     self.closed = true;
                     return Ok(());
                 }
             }
-
 
             self.sender.feed(message.into()).await?;
 

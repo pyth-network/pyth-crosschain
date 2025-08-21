@@ -1,4 +1,5 @@
 use {
+    crate::state::metrics::Metrics,
     crate::{
         api::{
             rest::{validate_price_ids, RestError},
@@ -16,18 +17,16 @@ use {
         response::sse::{Event, KeepAlive, Sse},
     },
     futures::Stream,
+    prometheus_client::metrics::histogram::Histogram,
     pyth_sdk::PriceIdentifier,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
+    std::sync::Arc,
     std::{convert::Infallible, time::Duration},
     tokio::{sync::broadcast, time::Instant},
     tokio_stream::{wrappers::BroadcastStream, StreamExt as _},
-    prometheus_client::metrics::histogram::Histogram,
     utoipa::IntoParams,
-    std::sync::Arc,
-    crate::state::metrics::Metrics,
 };
-
 
 pub struct SseMetrics {
     pub receive_to_sse_send_latency: Histogram,
@@ -40,7 +39,10 @@ impl SseMetrics {
         S: Send + Sync + 'static,
     {
         let receive_to_sse_send_latency = Histogram::new(
-            [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0].into_iter(),
+            [
+                0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0,
+            ]
+            .into_iter(),
         );
 
         let new = Self {
@@ -48,7 +50,6 @@ impl SseMetrics {
         };
 
         {
-
             tokio::spawn(async move {
                 Metrics::register(
                     &*state,
@@ -65,7 +66,6 @@ impl SseMetrics {
         new
     }
 }
-
 
 // Constants
 const MAX_CONNECTION_DURATION: Duration = Duration::from_secs(24 * 60 * 60); // 24 hours
@@ -242,7 +242,6 @@ where
 
     let mut parsed_price_updates: Vec<ParsedPriceUpdate> = price_feeds_with_update_data
         .price_feeds
-
         .into_iter()
         .map(|price_feed| price_feed.into())
         .collect();
