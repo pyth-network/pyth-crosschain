@@ -510,6 +510,7 @@ where
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_secs_f64())
                 .unwrap_or(0.0);
+            // Histogram only accepts f64. The conversion is safe (never panics), but very large values lose precision.
             let latency = now_secs - (min_received_at as f64);
             self.ws_state
                 .metrics
