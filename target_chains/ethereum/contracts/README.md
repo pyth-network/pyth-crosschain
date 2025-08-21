@@ -6,11 +6,11 @@ This directory contains The Pyth contract on Ethereum and utilities to deploy it
 
 The contracts are built and tested using Foundry. You can either:
 
-1. **Use the setup script (recommended)**: 
-Go to the `contracts` directory and Run `npm run setup` to automatically install Foundry v0.3.0 AND all forge dependencies.
+1. **Use the setup script (recommended)**:
+   Go to the `contracts` directory and Run `npm run setup` to automatically install Foundry v0.3.0 AND all forge dependencies.
 
-2. **Manual installation**: 
-a) Follow the [Foundry installation instructions](https://book.getfoundry.sh/getting-started/installation) and install version v0.3.0.
+2. **Manual installation**:
+   a) Follow the [Foundry installation instructions](https://book.getfoundry.sh/getting-started/installation) and install version v0.3.0.
 
 b) Next, from the `contracts` directory, run the following command to install forge dependencies:
 
@@ -24,8 +24,6 @@ Next, run the following command from the repo root to install required dependenc
 pnpm i
 pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 ```
-
-
 
 ## Testing
 
