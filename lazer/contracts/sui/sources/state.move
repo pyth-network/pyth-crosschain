@@ -1,12 +1,10 @@
 module pyth_lazer::state;
 
-use pyth_lazer::admin::AdminCap;
-use pyth_lazer::admin;
+use pyth_lazer::admin::{Self, AdminCap};
 
-const ED25519_PUBKEY_LEN: u64 = 32;
+const SECP256K1_COMPRESSED_PUBKEY_LEN: u64 = 33;
 const EInvalidPubkeyLen: u64 = 1;
 const ESignerNotFound: u64 = 2;
-
 
 /// Lazer State consists of the current set of trusted signers.
 /// By verifying that a price update was signed by one of these public keys,
@@ -18,7 +16,7 @@ public struct State has key, store {
     trusted_signers: vector<TrustedSignerInfo>,
 }
 
-/// A trusted signer is comprised of a pubkey and an expiry time.
+/// A trusted signer is comprised of a pubkey and an expiry timestamp (seconds since Unix epoch).
 /// A signer's signature should only be trusted up to timestamp `expires_at`.
 public struct TrustedSignerInfo has copy, drop, store {
     public_key: vector<u8>,
@@ -37,7 +35,7 @@ public fun public_key(info: &TrustedSignerInfo): &vector<u8> {
     &info.public_key
 }
 
-/// Get the trusted signer's expiry timestamp
+/// Get the trusted signer's expiry timestamp (seconds since Unix epoch)
 public fun expires_at(info: &TrustedSignerInfo): u64 {
     info.expires_at
 }
@@ -52,7 +50,7 @@ public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
 ///   - If the expired_at is set to zero, the trusted signer will be removed.
 /// - If the pubkey isn't found, it is added as a new trusted signer with the given expires_at.
 public fun update_trusted_signer(_: &AdminCap, s: &mut State, pubkey: vector<u8>, expires_at: u64) {
-    assert!(vector::length(&pubkey) as u64 == ED25519_PUBKEY_LEN, EInvalidPubkeyLen);
+    assert!(vector::length(&pubkey) as u64 == SECP256K1_COMPRESSED_PUBKEY_LEN, EInvalidPubkeyLen);
 
     let mut maybe_idx = find_signer_index(&s.trusted_signers, &pubkey);
     if (expires_at == 0) {
@@ -80,12 +78,12 @@ public fun update_trusted_signer(_: &AdminCap, s: &mut State, pubkey: vector<u8>
     }
 }
 
-fun find_signer_index(signers: &vector<TrustedSignerInfo>, target: &vector<u8>): Option<u64> {
+public fun find_signer_index(signers: &vector<TrustedSignerInfo>, public_key: &vector<u8>): Option<u64> {
     let len = vector::length(signers);
     let mut i: u64 = 0;
     while (i < (len as u64)) {
         let info_ref = vector::borrow(signers, i);
-        if (*public_key(info_ref) == *target) {
+        if (*public_key(info_ref) == *public_key) {
             return option::some(i)
         };
         i = i + 1
@@ -101,13 +99,20 @@ public fun new_for_test(ctx: &mut TxContext): State {
     }
 }
 
+#[test_only]
+public fun destroy_for_test(s: State) {
+    let State { id, trusted_signers } = s;
+    let _ = trusted_signers;
+    object::delete(id);
+}
+
 #[test]
 public fun test_add_new_signer() {
     let mut ctx = tx_context::dummy();
     let mut s = new_for_test(&mut ctx);
     let admin_cap = admin::mint_for_test(&mut ctx);
 
-    let pk = x"0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
+    let pk = x"030102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
     let expiry: u64 = 123;
 
     update_trusted_signer(&admin_cap, &mut s, pk, expiry);
@@ -117,7 +122,7 @@ public fun test_add_new_signer() {
     let info = vector::borrow(signers_ref, 0);
     assert!(expires_at(info) == 123, 101);
     let got_pk = public_key(info);
-    assert!(vector::length(got_pk) == (ED25519_PUBKEY_LEN as u64), 102);
+    assert!(vector::length(got_pk) == (SECP256K1_COMPRESSED_PUBKEY_LEN as u64), 102);
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
     object::delete(id);
@@ -133,13 +138,13 @@ public fun test_update_existing_signer_expiry() {
     update_trusted_signer(
         &admin_cap,
         &mut s,
-        x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
+        x"032a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
         1000,
     );
     update_trusted_signer(
         &admin_cap,
         &mut s,
-        x"2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
+        x"032a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
         2000,
     );
 
@@ -162,13 +167,13 @@ public fun test_remove_signer_by_zero_expiry() {
     update_trusted_signer(
         &admin_cap,
         &mut s,
-        x"0707070707070707070707070707070707070707070707070707070707070707",
+        x"030707070707070707070707070707070707070707070707070707070707070707",
         999,
     );
     update_trusted_signer(
         &admin_cap,
         &mut s,
-        x"0707070707070707070707070707070707070707070707070707070707070707",
+        x"030707070707070707070707070707070707070707070707070707070707070707",
         0,
     );
 
@@ -204,7 +209,7 @@ public fun test_remove_nonexistent_signer_fails() {
     update_trusted_signer(
         &admin_cap,
         &mut s,
-        x"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        x"03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         0,
     );
     let State { id, trusted_signers } = s;
