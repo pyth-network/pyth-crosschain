@@ -446,6 +446,7 @@ where
                 .await?
             }
         };
+        let mut pending_latency: Vec<(i64, i64)> = Vec::new();
 
         for update in updates.price_feeds {
             let config = self
@@ -462,6 +463,10 @@ where
             }
             let received_at_opt = update.received_at;
             let publish_time = update.price_feed.get_price_unchecked().publish_time;
+
+            if let Some(received_at) = received_at_opt {
+                pending_latency.push((received_at, publish_time));
+            }
 
             let message = serde_json::to_string(&ServerMessage::PriceUpdate {
                 price_feed: RpcPriceFeed::from_price_feed_update(
@@ -509,25 +514,6 @@ where
                         )
                         .await?;
                     self.sender.close().await?;
-                    if let Some(received_at) = received_at_opt {
-                        let pub_to_recv = (received_at - publish_time).max(0) as f64;
-                        self.ws_state
-                            .metrics
-                            .publish_to_receive_latency
-                            .observe(pub_to_recv);
-
-                        let now_secs = std::time::SystemTime::now()
-                            .duration_since(std::time::UNIX_EPOCH)
-                            .ok()
-                            .and_then(|d| i64::try_from(d.as_secs()).ok())
-                            .unwrap_or(received_at);
-                        let recv_to_send = (now_secs - received_at).max(0) as f64;
-                        self.ws_state
-                            .metrics
-                            .receive_to_ws_send_latency
-                            .observe(recv_to_send);
-                    }
-
                     self.closed = true;
                     return Ok(());
                 }
@@ -546,6 +532,26 @@ where
         }
 
         self.sender.flush().await?;
+
+        let now_secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .ok()
+            .and_then(|d| i64::try_from(d.as_secs()).ok());
+        if let Some(now) = now_secs {
+            for (received_at, publish_time) in pending_latency {
+                let pub_to_recv = (received_at - publish_time).max(0) as f64;
+                self.ws_state
+                    .metrics
+                    .publish_to_receive_latency
+                    .observe(pub_to_recv);
+                let recv_to_send = (now - received_at).max(0) as f64;
+                self.ws_state
+                    .metrics
+                    .receive_to_ws_send_latency
+                    .observe(recv_to_send);
+            }
+        }
+
         Ok(())
     }
 
