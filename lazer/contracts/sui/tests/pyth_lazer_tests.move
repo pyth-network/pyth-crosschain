@@ -6,7 +6,7 @@ use pyth_lazer::admin;
 use pyth_lazer::channel::new_fixed_rate_200ms;
 use pyth_lazer::i16;
 use pyth_lazer::i64;
-use pyth_lazer::pyth_lazer::{parse_and_verify_ecdsa_update, verify_ecdsa_message, ESignerNotTrusted, ESignerExpired};
+use pyth_lazer::pyth_lazer::{parse_and_verify_le_ecdsa_update, verify_le_ecdsa_message, ESignerNotTrusted, ESignerExpired};
 use pyth_lazer::state;
 use sui::clock;
 
@@ -58,7 +58,7 @@ The test data above is from the Lazer subscription:
 */
 
 #[test]
-public fun test_parse_and_verify_ecdsa_update() {
+public fun test_parse_and_verify_le_ecdsa_update() {
     let mut ctx = tx_context::dummy();
     let mut s = state::new_for_test(&mut ctx);
     let admin_cap = admin::mint_for_test(&mut ctx);
@@ -69,7 +69,7 @@ public fun test_parse_and_verify_ecdsa_update() {
     let expiry_time = 2000000000000000; // Far in the future
     state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey, expiry_time);
 
-    let update = parse_and_verify_ecdsa_update(&s, &clock, TEST_LAZER_UPDATE);
+    let update = parse_and_verify_le_ecdsa_update(&s, &clock, TEST_LAZER_UPDATE);
 
     // If we reach this point, the function successfully verified & parsed the payload (no assertion failures)
     // Validate that the fields have correct values
@@ -126,7 +126,7 @@ public fun test_parse_and_verify_ecdsa_update() {
 }
 
 #[test]
-public fun test_verify_ecdsa_message_success() {
+public fun test_verify_le_ecdsa_message_success() {
     let mut ctx = tx_context::dummy();
     let mut s = state::new_for_test(&mut ctx);
     let admin_cap = admin::mint_for_test(&mut ctx);
@@ -137,7 +137,7 @@ public fun test_verify_ecdsa_message_success() {
     state::update_trusted_signer(&admin_cap, &mut s, TEST_TRUSTED_SIGNER_PUBKEY, expiry_time);
 
     // This should succeed
-    verify_ecdsa_message(&s, &clock,  &TEST_SIGNATURE, &TEST_PAYLOAD);
+    verify_le_ecdsa_message(&s, &clock,  &TEST_SIGNATURE, &TEST_PAYLOAD);
 
     // Clean up
     state::destroy_for_test(s);
@@ -146,14 +146,14 @@ public fun test_verify_ecdsa_message_success() {
 }
 
 #[test, expected_failure(abort_code = ESignerNotTrusted)]
-public fun test_verify_ecdsa_message_untrusted_signer() {
+public fun test_verify_le_ecdsa_message_untrusted_signer() {
     let mut ctx = tx_context::dummy();
     let mut s = state::new_for_test(&mut ctx);
     let admin_cap = admin::mint_for_test(&mut ctx);
     let clock = clock::create_for_testing(&mut ctx);
 
     // Don't add any trusted signers - this should fail with ESignerNotTrusted
-    verify_ecdsa_message(&s, &clock,  &TEST_SIGNATURE, &TEST_PAYLOAD);
+    verify_le_ecdsa_message(&s, &clock,  &TEST_SIGNATURE, &TEST_PAYLOAD);
     
     // Add signers that don't match the signature
     let trusted_pubkey1 = x"03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; 
@@ -162,7 +162,7 @@ public fun test_verify_ecdsa_message_untrusted_signer() {
     state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey2, 1000000000000000);
 
     // This should still fail with ESignerNotTrusted since the signature doesn't match any of the signers
-    verify_ecdsa_message(&s, &clock,  &TEST_SIGNATURE, &TEST_PAYLOAD);
+    verify_le_ecdsa_message(&s, &clock,  &TEST_SIGNATURE, &TEST_PAYLOAD);
     
     // Clean up
     state::destroy_for_test(s);
@@ -171,7 +171,7 @@ public fun test_verify_ecdsa_message_untrusted_signer() {
 }
 
 #[test, expected_failure(abort_code = ESignerExpired)]
-public fun test_verify_ecdsa_message_expired_signer() {
+public fun test_verify_le_ecdsa_message_expired_signer() {
     let mut ctx = tx_context::dummy();
     let mut s = state::new_for_test(&mut ctx);
     let admin_cap = admin::mint_for_test(&mut ctx);
@@ -190,7 +190,7 @@ public fun test_verify_ecdsa_message_expired_signer() {
     state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey, expiry_time);
 
     // This should fail with ESignerExpired
-    verify_ecdsa_message(&s, &clock,  &signature, &payload);
+    verify_le_ecdsa_message(&s, &clock,  &signature, &payload);
 
     // Clean up
     state::destroy_for_test(s);
@@ -199,7 +199,7 @@ public fun test_verify_ecdsa_message_expired_signer() {
 }
 
 #[test]
-public fun test_verify_ecdsa_message_multiple_signers() {
+public fun test_verify_le_ecdsa_message_multiple_signers() {
     let mut ctx = tx_context::dummy();
     let mut s = state::new_for_test(&mut ctx);
     let admin_cap = admin::mint_for_test(&mut ctx);
@@ -220,7 +220,7 @@ public fun test_verify_ecdsa_message_multiple_signers() {
     state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey2, expiry_time);
 
     // This should succeed because trusted_pubkey2 matches the signature
-    verify_ecdsa_message(&s, &clock,  &signature, &payload);
+    verify_le_ecdsa_message(&s, &clock,  &signature, &payload);
 
     // Clean up
     state::destroy_for_test(s);

@@ -15,12 +15,12 @@ const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
 const PAYLOAD_MAGIC: u32 = 2479346549;
 
 // Error codes
+const EInvalidUpdate: u64 = 1;
 const ESignerNotTrusted: u64 = 2;
 const ESignerExpired: u64 = 3;
 
 // TODO:
 // error handling
-// standalone verify signature function
 
 /// The `PYTH_LAZER` resource serves as the one-time witness.
 /// It has the `drop` ability, allowing it to be consumed immediately after use.
@@ -35,22 +35,22 @@ fun init(_: PYTH_LAZER, ctx: &mut TxContext) {
     transfer::public_share_object(s);
 }
 
-/// Verify ECDSA message signature against trusted signers.
+/// Verify LE ECDSA message signature against trusted signers.
 ///
 /// This function recovers the public key from the signature and payload,
 /// then checks if the recovered public key is in the trusted signers list
 /// and has not expired.
 ///
 /// # Arguments
-/// * `signature` - The ECDSA signature bytes
+/// * `s` - The pyth_lazer::state::State
+/// * `clock` - The sui::clock::Clock
+/// * `signature` - The ECDSA signature bytes (little endian)
 /// * `payload` - The message payload that was signed
-/// * `s` - The state containing trusted signers
-/// * `timestamp` - The current timestamp to check against signer expiry
 ///
 /// # Errors
 /// * `ESignerNotTrusted` - The recovered public key is not in the trusted signers list
 /// * `ESignerExpired` - The signer's certificate has expired
-public fun verify_ecdsa_message(
+public fun verify_le_ecdsa_message(
     s: &State,
     clock: &Clock,
     signature: &vector<u8>,
@@ -73,12 +73,23 @@ public fun verify_ecdsa_message(
     }
 }
 
-/// Parse the Lazer update message and validate the signature.
-///
+/// Parse the Lazer update message and validate the signature within.
 /// The parsing logic is based on the Lazer rust protocol definition defined here:
 /// https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/rust/protocol
-public fun parse_and_verify_ecdsa_update(s: &State, clock: &Clock, update: vector<u8>): Update {
+///
+/// # Arguments
+/// * `s` - The pyth_lazer::state::State
+/// * `clock` - The sui::clock::Clock
+/// * `update` - The LeEcdsa formatted Lazer update
+///
+/// # Errors
+/// * `EInvalidUpdate` - Failed to parse the update according to the protocol definition
+/// * `ESignerNotTrusted` - The recovered public key is not in the trusted signers list
+public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: vector<u8>): Update {
     let mut cursor = bcs::new(update);
+
+    // TODO: introduce helper functions to check data len before peeling. allows us to return more
+    // granular error messages.
 
     let magic = cursor.peel_u32();
     assert!(magic == UPDATE_MESSAGE_MAGIC, 0);
@@ -104,7 +115,7 @@ public fun parse_and_verify_ecdsa_update(s: &State, clock: &Clock, update: vecto
     let timestamp = cursor.peel_u64();
 
     // Verify the signature against trusted signers
-    verify_ecdsa_message(s, clock, &signature, &payload);
+    verify_le_ecdsa_message(s, clock, &signature, &payload);
 
     let channel_value = cursor.peel_u8();
     let channel = if (channel_value == 0) {
@@ -214,7 +225,7 @@ public fun parse_and_verify_ecdsa_update(s: &State, clock: &Clock, update: vecto
             } else {
                 // When we have an unknown property, we do not know its length, and therefore
                 // we cannot ignore it and parse the next properties.
-                abort 0 // FIXME: return more granular error messages
+                abort EInvalidUpdate // FIXME: return more granular error messages
             };
 
             properties_i = properties_i + 1;
