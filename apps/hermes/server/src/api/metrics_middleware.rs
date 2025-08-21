@@ -18,6 +18,7 @@ use {
 pub struct ApiMetrics {
     pub requests: Family<Labels, Counter>,
     pub latencies: Family<Labels, Histogram>,
+    pub sse_broadcast_latency: Histogram,
 }
 
 impl ApiMetrics {
@@ -36,11 +37,18 @@ impl ApiMetrics {
                     .into_iter(),
                 )
             }),
+            sse_broadcast_latency: Histogram::new(
+                [
+                    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+                ]
+                .into_iter(),
+            ),
         };
 
         {
             let requests = new.requests.clone();
             let latencies = new.latencies.clone();
+            let sse_broadcast_latency = new.sse_broadcast_latency.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -55,6 +63,16 @@ impl ApiMetrics {
                         "api_request_latency_seconds",
                         "API request latency in seconds",
                         latencies,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "sse_broadcast_latency_seconds",
+                        "Latency from Hermes receive_time to SSE send in seconds",
+                        sse_broadcast_latency,
                     ),
                 )
                 .await;

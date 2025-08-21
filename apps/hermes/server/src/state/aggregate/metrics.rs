@@ -34,6 +34,7 @@ struct ObservedSlotLabels {
 pub struct Metrics {
     observed_slot: Family<ObservedSlotLabels, Counter>,
     observed_slot_latency: Family<ObservedSlotLabels, Histogram>,
+    publish_to_receive_latency: Histogram,
     first_observed_time_of_slot: BTreeMap<Slot, Instant>,
     newest_observed_slot: HashMap<Event, Slot>,
 }
@@ -50,6 +51,12 @@ impl Metrics {
                     .into_iter(),
                 )
             }),
+            publish_to_receive_latency: Histogram::new(
+                [
+                    0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.3, 1.7, 2.0, 3.0, 5.0, 10.0, 20.0,
+                ]
+                .into_iter(),
+            ),
             first_observed_time_of_slot: BTreeMap::new(),
             newest_observed_slot: HashMap::new(),
         };
@@ -69,9 +76,23 @@ impl Metrics {
                 "Latency of observed slots in seconds",
                 observed_slot_latency,
             );
+
+            metrics_registry.register(
+                "publish_to_receive_latency_seconds",
+                "Latency from message publish_time to Hermes receive_time in seconds",
+                new.publish_to_receive_latency.clone(),
+            );
         }
 
         new
+    }
+
+    pub fn observe_publish_to_receive(&mut self, latency_secs: i64) {
+        // Histogram only accepts f64. The conversion is safe (never panics), but very large values lose precision.
+        let latency_secs = latency_secs as f64;
+        if latency_secs.is_finite() && latency_secs >= 0.0 {
+            self.publish_to_receive_latency.observe(latency_secs);
+        }
     }
 
     /// Observe a slot and event. An event at a slot should be observed only once.
