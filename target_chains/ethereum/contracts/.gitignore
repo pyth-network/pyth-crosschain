@@ -11,3 +11,4 @@ artifacts
 lcov.info
 filtered-lcov.info
 coverage
+broadcast/*
