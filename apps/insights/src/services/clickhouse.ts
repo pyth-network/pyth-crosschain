@@ -388,9 +388,6 @@ export const getHistory = async ({
 }) => {
 
   // Calculate interval parameters based on range
-  const start = (range === "1H" || range === "1D") ? "1" : (range === "1W") ? "7" : "30";
-  const range_unit = range === "1H" ? "HOUR" : "DAY";
-  const interval_number = range === "1H" ? 5 : 1;
   const interval_unit = range === "1H" ? "SECOND" : (range === "1D") ? "MINUTE" : "HOUR";
 
   let additional_cluster_clause = "";
@@ -400,7 +397,7 @@ export const getHistory = async ({
 
       const query = `
       SELECT
-        toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL {interval_number: UInt32} ${interval_unit})) AS timestamp,
+        toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL 1 ${interval_unit})) AS timestamp,
         argMin(price, slot) AS openPrice,
         min(price) AS lowPrice,
         argMax(price, slot) AS closePrice,
@@ -418,8 +415,8 @@ export const getHistory = async ({
     AND (version = 2)
     AND (publishTime > fromUnixTimestamp(toInt64({from: String})))
     AND (publishTime <= fromUnixTimestamp(toInt64({until: String})))
-    AND (time > (fromUnixTimestamp(toInt64({from: String})) - INTERVAL 5 SECOND))
-    AND (time <= (fromUnixTimestamp(toInt64({until: String})) + INTERVAL 5 SECOND))
+    AND (time > (fromUnixTimestamp(toInt64({from: String}))))
+    AND (time <= (fromUnixTimestamp(toInt64({until: String}))))
     AND (publisher = {publisher: String})
     AND (status = 1)
     GROUP BY timestamp
@@ -449,8 +446,6 @@ console.log(query)
       base_quote_symbol: symbol.split(".")[-1],
       from,
       until,
-      start,
-      interval_number,
     },
   });
   console.log("from", new Date(from * 1000), from, "until", new Date(until * 1000), until, data[0], data[data.length - 1]);

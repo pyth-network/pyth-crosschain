@@ -64,6 +64,35 @@ const fetchHistory = async ({ symbol, range, cluster, from, until }: { symbol: s
   return fetch(url).then(async (data) => historySchema.parse(await data.json()));
 }
 
+// const checkPriceData = (data: {time: UTCTimestamp}[]) => {
+//   const chartData = [...data].sort((a, b) => a.time - b.time);
+//   if(chartData.length < 2) {
+//     return;
+//   }
+//   const firstElement = chartData.at(-2);
+//   const secondElement = chartData.at(-1);
+//   if(!firstElement || !secondElement ) {
+//     return;
+//   }
+//   const detectedInterval = secondElement.time - firstElement.time
+//   for(let i = 0; i < chartData.length - 1; i++) {
+//     const currentElement = chartData[i];
+//     const nextElement = chartData[i + 1];
+//     if(!currentElement || !nextElement) {
+//       return;
+//     }
+//     const interval = nextElement.time - currentElement.time
+//     if(interval !== detectedInterval) {
+//       console.warn("Price chartData is not consistent", {
+//         current: currentElement,
+//         next: nextElement,
+//         detectedInterval,
+//       });
+//     }
+//   }
+//   return detectedInterval;
+// }
+
 const useChartElem = (symbol: string, feedId: string) => {
   const logger = useLogger();
   const { current } = useLivePriceData(Cluster.Pythnet, feedId);
@@ -80,9 +109,9 @@ const [interval] = useQueryState(
     if (!isBackfilling.current && earliestDateRef.current) {
       isBackfilling.current = true;
       // seconds to date
-      console.log("backfilling", new Date(Number(earliestDateRef.current) * 1000));
       const range = interval === "Live" ? "1H" : interval;
-      fetchHistory({ symbol, range, cluster: "pythnet", from: earliestDateRef.current - 100n, until: earliestDateRef.current -2n })
+      console.log("backfilling", new Date(Number(earliestDateRef.current) * 1000), {from: earliestDateRef.current - 100n, until: earliestDateRef.current});
+      fetchHistory({ symbol, range, cluster: "pythnet", from: earliestDateRef.current - 100n, until: earliestDateRef.current })
         .then((data) => {
           const firstPoint = data[0];
           if (firstPoint) {
@@ -109,28 +138,28 @@ const [interval] = useQueryState(
                 value: price,
               }))
             });
-            chartRef.current.price.setData([
-              ...convertedData.map(({ time, price }) => ({
+            const newPriceData = [...convertedData.map(({ time, price }) => ({
                 time,
                 value: price,
               })),
-              ...chartRef.current.price.data(),
-            ]);
-
-            chartRef.current.confidenceHigh.setData([
-              ...convertedData.map(({ time, price, confidence }) => ({
+              ...chartRef.current.price.data(),]
+            const newConfidenceHighData = [...convertedData.map(({ time, price, confidence }) => ({
                 time,
                 value: price + confidence,
               })),
-              ...chartRef.current.confidenceHigh.data(),
-            ]);
-            chartRef.current.confidenceLow.setData([
-              ...convertedData.map(({ time, price, confidence }) => ({
+              ...chartRef.current.confidenceHigh.data(),]
+            const newConfidenceLowData = [...convertedData.map(({ time, price, confidence }) => ({
+              time,
+              value: price - confidence,
+            })), ...chartRef.current.confidenceLow.data(),]
+            checkPriceData(convertedData.map(({ time, price }) => ({
                 time,
-                value: price - confidence,
-              })),
-              ...chartRef.current.confidenceLow.data(),
-            ]);
+                value: price,
+              })));
+            console.log(newPriceData)
+            chartRef.current.price.setData(newPriceData);
+            chartRef.current.confidenceHigh.setData(newConfidenceHighData);
+            chartRef.current.confidenceLow.setData(newConfidenceLowData);
           }
           isBackfilling.current = false;
         })
