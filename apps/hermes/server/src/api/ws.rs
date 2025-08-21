@@ -420,7 +420,9 @@ where
         };
 
         // Capture the minimum receive_time from the updates batch
-        let min_received_at = updates.price_feeds.iter()
+        let min_received_at = updates
+            .price_feeds
+            .iter()
             .filter_map(|update| update.received_at)
             .min();
 
