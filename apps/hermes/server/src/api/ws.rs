@@ -419,6 +419,11 @@ where
             }
         };
 
+        // Capture the minimum receive_time from the updates batch
+        let min_received_at = updates.price_feeds.iter()
+            .filter_map(|update| update.received_at)
+            .min();
+
         for update in updates.price_feeds {
             let config = self
                 .price_feeds_with_config
@@ -431,18 +436,6 @@ where
                 if !config.allow_out_of_order {
                     continue;
                 }
-            }
-
-            let now_secs = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs_f64())
-                .unwrap_or(0.0);
-            if let Some(received_at) = update.received_at {
-                let latency = now_secs - (received_at as f64);
-                self.ws_state
-                    .metrics
-                    .broadcast_latency
-                    .observe(latency.max(0.0));
             }
 
             let message = serde_json::to_string(&ServerMessage::PriceUpdate {
@@ -510,6 +503,20 @@ where
         }
 
         self.sender.flush().await?;
+
+        // Record latency from receive to ws send after flushing
+        if let Some(min_received_at) = min_received_at {
+            let now_secs = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0);
+            let latency = now_secs - (min_received_at as f64);
+            self.ws_state
+                .metrics
+                .broadcast_latency
+                .observe(latency.max(0.0));
+        }
+
         Ok(())
     }
 
