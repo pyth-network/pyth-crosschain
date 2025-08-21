@@ -183,6 +183,8 @@ const _getYesterdaysPrices = async (symbols: string[]) =>
     },
   );
 
+
+
 const _getPublisherRankingHistory = async ({
   cluster,
   key,
@@ -369,13 +371,99 @@ export const getHistoricalPrices = async ({
     },
   );
 
+
+// Main history function
+export const getHistory = async ({
+  symbol,
+  range,
+  cluster,
+  from,
+  until,
+}: {
+  symbol: string;
+  range: "1H" | "1D" | "1W" | "1M";
+  cluster: "pythnet" | "pythtest-conformance";
+  from: number;
+  until: number;
+}) => {
+
+  // Calculate interval parameters based on range
+  const start = (range === "1H" || range === "1D") ? "1" : (range === "1W") ? "7" : "30";
+  const range_unit = range === "1H" ? "HOUR" : "DAY";
+  const interval_number = range === "1H" ? 5 : 1;
+  const interval_unit = range === "1H" ? "SECOND" : (range === "1D") ? "MINUTE" : "HOUR";
+
+  let additional_cluster_clause = "";
+  if (cluster === "pythtest-conformance") {
+    additional_cluster_clause = " OR (cluster = 'pythtest')";
+  }
+
+      const query = `
+      SELECT
+        toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL {interval_number: UInt32} ${interval_unit})) AS timestamp,
+        argMin(price, slot) AS openPrice,
+        min(price) AS lowPrice,
+        argMax(price, slot) AS closePrice,
+        max(price) AS highPrice,
+        avg(price) AS avgPrice,
+        avg(confidence) AS avgConfidence,
+        avg(emaPrice) AS avgEmaPrice,
+        avg(emaConfidence) AS avgEmaConfidence,
+        min(slot) AS startSlot,
+        max(slot) AS endSlot
+    FROM prices
+    FINAL
+    WHERE ((symbol = {symbol: String}) OR (symbol = {base_quote_symbol: String}))
+    AND ((cluster = {cluster: String})${additional_cluster_clause})
+    AND (version = 2)
+    AND (publishTime > fromUnixTimestamp(toInt64({from: String})))
+    AND (publishTime <= fromUnixTimestamp(toInt64({until: String})))
+    AND (time > (fromUnixTimestamp(toInt64({from: String})) - INTERVAL 5 SECOND))
+    AND (time <= (fromUnixTimestamp(toInt64({until: String})) + INTERVAL 5 SECOND))
+    AND (publisher = {publisher: String})
+    AND (status = 1)
+    GROUP BY timestamp
+    ORDER BY timestamp ASC
+    SETTINGS do_not_merge_across_partitions_select_final=1
+    `;
+console.log(query)
+  const data = await safeQuery(z.array(
+  z.object({
+    timestamp: z.number(),
+    openPrice: z.number(),
+    lowPrice: z.number(),
+    closePrice: z.number(),
+    highPrice: z.number(),
+    avgPrice: z.number(),
+    avgConfidence: z.number(),
+    avgEmaPrice: z.number(),
+    avgEmaConfidence: z.number(),
+    startSlot: z.string(),
+    endSlot: z.string(),
+  })), {
+    query,
+    query_params: {
+      symbol,
+      cluster,
+      publisher: "",
+      base_quote_symbol: symbol.split(".")[-1],
+      from,
+      until,
+      start,
+      interval_number,
+    },
+  });
+  console.log("from", new Date(from * 1000), from, "until", new Date(until * 1000), until, data[0], data[data.length - 1]);
+
+  return data;
+};
+
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,
   query: Omit<Parameters<typeof client.query>[0], "format">,
 ) => {
   const rows = await client.query({ ...query, format: "JSON" });
   const result = await rows.json();
-
   return schema.parse(result.data);
 };
 

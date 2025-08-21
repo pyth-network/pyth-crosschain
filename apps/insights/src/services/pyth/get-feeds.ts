@@ -22,8 +22,8 @@ const _getFeeds = async (cluster: Cluster) => {
               publisher: publisher.toBase58(),
             })) ?? [],
       },
-    }));
-  return priceFeedsSchema.parse(filtered);
+    }))
+  return priceFeedsSchema.parse(filtered)
 };
 
 export const getFeeds = redisCache.define("getFeeds", _getFeeds).getFeeds;

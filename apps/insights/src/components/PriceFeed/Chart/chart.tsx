@@ -10,9 +10,11 @@ import { useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 
 import styles from "./chart.module.scss";
-import { useLivePriceData } from "../../hooks/use-live-price-data";
-import { usePriceFormatter } from "../../hooks/use-price-formatter";
-import { Cluster } from "../../services/pyth";
+import { useLivePriceData } from "../../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../../hooks/use-price-formatter";
+import { Cluster } from "../../../services/pyth";
+import { parseAsStringEnum, useQueryState } from 'nuqs';
+import { INTERVAL_NAMES } from './chart-toolbar';
 
 type Props = {
   symbol: string;
@@ -37,6 +39,30 @@ const useChart = (symbol: string, feedId: string) => {
   useChartColors(chartContainerRef, chartRef);
   return chartContainerRef;
 };
+const historySchema = z.array(
+  z.object({
+    timestamp: z.number(),
+    openPrice: z.number(),
+    lowPrice: z.number(),
+    closePrice: z.number(),
+    highPrice: z.number(),
+    avgPrice: z.number(),
+    avgConfidence: z.number(),
+    avgEmaPrice: z.number(),
+    avgEmaConfidence: z.number(),
+    startSlot: z.string(),
+    endSlot: z.string(),
+  }));
+const fetchHistory = async ({ symbol, range, cluster, from, until }: { symbol: string, range: string, cluster: string, from: bigint, until: bigint }) => {
+  const url = new URL("/api/pyth/get-history", globalThis.location.origin);
+  url.searchParams.set("symbol", symbol);
+  url.searchParams.set("range", range);
+  url.searchParams.set("cluster", cluster);
+  url.searchParams.set("from", from.toString());
+  url.searchParams.set("until", until.toString());
+  console.log("fetching history", {from: new Date(Number(from) * 1000), until: new Date(Number(until) * 1000)}, url.toString());
+  return fetch(url).then(async (data) => historySchema.parse(await data.json()));
+}
 
 const useChartElem = (symbol: string, feedId: string) => {
   const logger = useLogger();
@@ -46,15 +72,17 @@ const useChartElem = (symbol: string, feedId: string) => {
   const earliestDateRef = useRef<bigint | undefined>(undefined);
   const isBackfilling = useRef(false);
   const priceFormatter = usePriceFormatter();
-
+const [interval] = useQueryState(
+    "interval",
+    parseAsStringEnum(Object.values(INTERVAL_NAMES)).withDefault("Live"),
+  );
   const backfillData = useCallback(() => {
     if (!isBackfilling.current && earliestDateRef.current) {
       isBackfilling.current = true;
-      const url = new URL("/historical-prices", globalThis.location.origin);
-      url.searchParams.set("symbol", symbol);
-      url.searchParams.set("until", earliestDateRef.current.toString());
-      fetch(url)
-        .then(async (data) => historicalDataSchema.parse(await data.json()))
+      // seconds to date
+      console.log("backfilling", new Date(Number(earliestDateRef.current) * 1000));
+      const range = interval === "Live" ? "1H" : interval;
+      fetchHistory({ symbol, range, cluster: "pythnet", from: earliestDateRef.current - 100n, until: earliestDateRef.current -2n })
         .then((data) => {
           const firstPoint = data[0];
           if (firstPoint) {
@@ -65,12 +93,22 @@ const useChartElem = (symbol: string, feedId: string) => {
             chartRef.current.resolution === Resolution.Tick
           ) {
             const convertedData = data.map(
-              ({ timestamp, price, confidence }) => ({
-                time: getLocalTimestamp(new Date(timestamp * 1000)),
-                price,
-                confidence,
+              ({ timestamp, avgPrice, avgConfidence }) => ({
+                time: getLocalTimestamp(new Date(timestamp*1000)),
+                price: avgPrice,
+                confidence: avgConfidence,
               }),
             );
+            console.log("convertedData",   
+              {current: chartRef?.current?.price.data().map(({ time, value }) => ({
+                time: new Date(time*1000),
+                value,
+              })),
+              converted: convertedData.map(({ time, price }) => ({
+                time: new Date(time*1000),
+                value: price,
+              }))
+            });
             chartRef.current.price.setData([
               ...convertedData.map(({ time, price }) => ({
                 time,
@@ -78,6 +116,7 @@ const useChartElem = (symbol: string, feedId: string) => {
               })),
               ...chartRef.current.price.data(),
             ]);
+
             chartRef.current.confidenceHigh.setData([
               ...convertedData.map(({ time, price, confidence }) => ({
                 time,
@@ -192,14 +231,6 @@ type ChartRefContents = {
       resolution: Exclude<Resolution, Resolution.Tick>;
       series: ISeriesApi<"Candlestick">;
     }
-);
-
-const historicalDataSchema = z.array(
-  z.strictObject({
-    timestamp: z.number(),
-    price: z.number(),
-    confidence: z.number(),
-  }),
 );
 
 const priceFormat = {
