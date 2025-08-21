@@ -11,9 +11,10 @@
     "prettier-plugin-solidity": "catalog:"
   },
   "scripts": {
+    "setup-foundry": "./setup-foundry.sh",
+    "setup": "npm run setup-foundry && npm run install-forge-deps",
     "build": "forge build",
     "test": "forge test",
-    "test-contract": "forge test",
     "deploy": "forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast --verify",
     "deploy-local": "forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast",
     "sync-guardian-sets": "forge script script/SyncGuardianSets.s.sol --rpc-url $RPC_URL --broadcast",
