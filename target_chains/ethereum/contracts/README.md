@@ -4,7 +4,19 @@ This directory contains The Pyth contract on Ethereum and utilities to deploy it
 
 ## Installation
 
-The contracts are built and tested using Foundry. Follow the [Foundry installation instructions](https://book.getfoundry.sh/getting-started/installation) to install it if you do not already have it.
+The contracts are built and tested using Foundry. You can either:
+
+1. **Use the setup script (recommended)**: 
+Go to the `contracts` directory and Run `npm run setup` to automatically install Foundry v0.3.0 AND all forge dependencies.
+
+2. **Manual installation**: 
+a) Follow the [Foundry installation instructions](https://book.getfoundry.sh/getting-started/installation) and install version v0.3.0.
+
+b) Next, from the `contracts` directory, run the following command to install forge dependencies:
+
+```
+npm run install-forge-deps
+```
 
 Next, run the following command from the repo root to install required dependencies for the contract:
 
@@ -13,11 +25,7 @@ pnpm i
 pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 ```
 
-Next, from the `contracts` directory, run the following command to install forge dependencies:
 
-```
-npm run install-forge-deps
-```
 
 ## Testing
 
@@ -34,7 +42,7 @@ npm run coverage
 
 Open `coverage/index.html` in your web browser to see the results.
 
-## Deployment
+## Deployment and Governance tests
 
 To deploy the contracts, you'll need to set up your environment variables and use the Foundry deployment script.
 
@@ -55,7 +63,13 @@ anvil
 npm run deploy-local
 ```
 
-3. Deploy to a live network:
+3. Run the test suite:
+
+```bash
+npm run test
+```
+
+4. Deploy to a live network:
 
 ```bash
 # Make sure your .env file has the correct RPC_URL and PRIVATE_KEY
