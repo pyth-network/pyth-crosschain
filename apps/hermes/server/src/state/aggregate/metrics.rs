@@ -87,7 +87,9 @@ impl Metrics {
         new
     }
 
-    pub fn observe_publish_to_receive(&mut self, latency_secs: f64) {
+    pub fn observe_publish_to_receive(&mut self, latency_secs: i64) {
+        // Histogram only accepts f64. The conversion is safe (never panics), but very large values lose precision.
+        let latency_secs = latency_secs as f64;
         if latency_secs.is_finite() && latency_secs >= 0.0 {
             self.publish_to_receive_latency.observe(latency_secs);
         }

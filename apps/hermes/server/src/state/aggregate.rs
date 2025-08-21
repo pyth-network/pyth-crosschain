@@ -370,8 +370,8 @@ where
         {
             let mut data = self.into().data.write().await;
             for ms in &message_states {
-                let publish = ms.message.publish_time() as f64;
-                let receive = ms.received_at as f64;
+                let publish = ms.message.publish_time();
+                let receive = ms.received_at;
                 let latency = receive - publish;
                 data.metrics.observe_publish_to_receive(latency);
             }
