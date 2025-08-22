@@ -25,4 +25,4 @@ rpc_url="${RPC_URL}"
 local = "http://localhost:8545"
 
 [etherscan]
-base_sepolia = { key = "${ETHERSCAN_API_KEY}" }
+etherscan_api_key = { key = "${ETHERSCAN_API_KEY}" }

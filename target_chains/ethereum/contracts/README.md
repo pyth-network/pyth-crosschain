@@ -57,6 +57,9 @@ cp .env.test .env
 # Start a local node
 anvil
 
+# Anvil shows a list of default accounts and their corresponding private keys. 
+# Fetch any one of the private key from the anvil terminal and update in .env file.
+
 # In another terminal, deploy the contracts
 npm run deploy-local
 ```
@@ -79,6 +82,13 @@ The deployment script will:
 - Deploy the Wormhole contracts (Setup, Implementation, and Wormhole proxy)
 - Deploy the Pyth contracts (PythUpgradable with ERC1967 proxy)
 - Configure all necessary parameters from environment variables
+
+5. Deploy and Verify the contracts (on live network)
+
+```bash
+# Make sure your .env file has the correct ETHERSCAN_API_KEY
+npm run deploy-and-verify
+```
 
 ### Guardian Set Sync
 
