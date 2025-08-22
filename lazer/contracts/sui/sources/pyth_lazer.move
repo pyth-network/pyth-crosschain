@@ -8,7 +8,6 @@ use pyth_lazer::channel::Self;
 use pyth_lazer::state;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
-use sui::types;
 
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
@@ -28,7 +27,6 @@ public struct PYTH_LAZER has drop {}
 /// Creates and shares the singular State object.
 /// AdminCap is created and transferred in admin::init via a One-Time Witness.
 fun init(otw: PYTH_LAZER, ctx: &mut TxContext) {
-    assert!(types::is_one_time_witness(&otw), 1);
     let s = state::new(ctx);
     transfer::public_share_object(s);
 }

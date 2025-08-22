@@ -15,7 +15,6 @@ public struct ADMIN has drop {}
 /// Creates and transfers ownership of the singular AdminCap capability to the deployer.
 /// Only the AdminCap owner can update the trusted signers.
 fun init(otw: ADMIN, ctx: &mut TxContext) {
-    assert!(types::is_one_time_witness(&otw), 1);
     let cap = AdminCap { id: object::new(ctx) };
     transfer::public_transfer(cap, tx_context::sender(ctx));
 }
