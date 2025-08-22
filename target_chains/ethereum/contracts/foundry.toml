@@ -19,3 +19,10 @@ ignored_warnings_from = [
     "node_modules/",
     "/home/runner/work/pyth-crosschain/pyth-crosschain/node_modules",
 ]
+
+[rpc_endpoints]
+rpc_url="${RPC_URL}"
+local = "http://localhost:8545"
+
+[etherscan]
+base_sepolia = { key = "${ETHERSCAN_API_KEY}" }
