@@ -26,7 +26,7 @@ public struct PYTH_LAZER has drop {}
 /// Initializes the module. Called at publish time.
 /// Creates and shares the singular State object.
 /// AdminCap is created and transferred in admin::init via a One-Time Witness.
-fun init(otw: PYTH_LAZER, ctx: &mut TxContext) {
+fun init(_: PYTH_LAZER, ctx: &mut TxContext) {
     let s = state::new(ctx);
     transfer::public_share_object(s);
 }
