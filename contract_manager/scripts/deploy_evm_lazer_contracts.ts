@@ -323,7 +323,7 @@ export async function main() {
       console.log(`\n✅ Contract deployed at: ${deployedAddress}`);
       console.log(`Trusted signer updated: ${argv["update-signer"]}`);
       console.log(
-        `Expires at: ${new Date(argv["expires-at"]! * 1000).toISOString()}`,
+        `Expires at: ${new Date((argv["expires-at"] ?? 0) * 1000).toISOString()}`,
       );
     } else if (argv.deploy) {
       console.log(`Contract deployed at ${deployedAddress}`);

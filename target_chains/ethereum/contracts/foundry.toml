@@ -21,8 +21,7 @@ ignored_warnings_from = [
 ]
 
 [rpc_endpoints]
-rpc_url="${RPC_URL}"
+testnet="${RPC_URL}"
 local = "http://localhost:8545"
 
-[etherscan]
-etherscan_api_key = { key = "${ETHERSCAN_API_KEY}" }
+etherscan_api_key="${ETHERSCAN_API_KEY}"

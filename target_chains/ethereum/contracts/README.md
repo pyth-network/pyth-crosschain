@@ -57,7 +57,7 @@ cp .env.test .env
 # Start a local node
 anvil
 
-# Anvil shows a list of default accounts and their corresponding private keys. 
+# Anvil shows a list of default accounts and their corresponding private keys.
 # Fetch any one of the private key from the anvil terminal and update in .env file.
 
 # In another terminal, deploy the contracts
