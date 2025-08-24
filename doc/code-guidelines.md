@@ -76,7 +76,7 @@
       ```tsx
       function handleEvent(e) {
           // Many inlined state tracking vars. Not much better than globals.
-          var latstPythNetupdateTime = DateTime.now();
+          var latestPythNetUpdateTime = DateTime.now();
           var clientsWaiting         = {};
           var ...
 
@@ -110,7 +110,7 @@
       // main.ts
       const { db } = require('db');
       function() {
-          initDb(); // Databaes not passed, implies global use.
+          initDb(); // Database not passed, implies global use.
       }
 
       ```
