@@ -7,8 +7,8 @@ use pyth_lazer::i64;
 use pyth_lazer::state::{Self, State};
 use pyth_lazer::update::{Self, Update};
 use sui::bcs;
-use sui::ecdsa_k1::secp256k1_ecrecover;
 use sui::clock::Clock;
+use sui::ecdsa_k1::secp256k1_ecrecover;
 
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
@@ -50,7 +50,7 @@ fun init(_: PYTH_LAZER, ctx: &mut TxContext) {
 /// # Errors
 /// * `ESignerNotTrusted` - The recovered public key is not in the trusted signers list
 /// * `ESignerExpired` - The signer's certificate has expired
-public fun verify_le_ecdsa_message(
+public(package) fun verify_le_ecdsa_message(
     s: &State,
     clock: &Clock,
     signature: &vector<u8>,
@@ -62,7 +62,7 @@ public fun verify_le_ecdsa_message(
     // Check if the recovered pubkey is in the trusted signers list
     let trusted_signers = state::get_trusted_signers(s);
     let mut maybe_idx = state::find_signer_index(trusted_signers, &pubkey);
-    
+
     if (option::is_some(&maybe_idx)) {
         let idx = option::extract(&mut maybe_idx);
         let found_signer = &trusted_signers[idx];
