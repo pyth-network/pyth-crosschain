@@ -5,21 +5,22 @@ import { useResizeObserver, useMountEffect } from "@react-hookz/web";
 import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 import { LineSeries, LineStyle, createChart } from "lightweight-charts";
 import { useTheme } from "next-themes";
+import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type { RefObject } from "react";
 import { useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 
+import { INTERVAL_NAMES } from './chart-toolbar';
 import styles from "./chart.module.scss";
 import { useLivePriceData } from "../../../hooks/use-live-price-data";
 import { usePriceFormatter } from "../../../hooks/use-price-formatter";
 import { Cluster } from "../../../services/pyth";
-import { parseAsStringEnum, useQueryState } from 'nuqs';
-import { INTERVAL_NAMES } from './chart-toolbar';
 
 type Props = {
   symbol: string;
   feedId: string;
 };
+
 
 export const Chart = ({ symbol, feedId }: Props) => {
   const chartContainerRef = useChart(symbol, feedId);
@@ -64,34 +65,34 @@ const fetchHistory = async ({ symbol, range, cluster, from, until }: { symbol: s
   return fetch(url).then(async (data) => historySchema.parse(await data.json()));
 }
 
-// const checkPriceData = (data: {time: UTCTimestamp}[]) => {
-//   const chartData = [...data].sort((a, b) => a.time - b.time);
-//   if(chartData.length < 2) {
-//     return;
-//   }
-//   const firstElement = chartData.at(-2);
-//   const secondElement = chartData.at(-1);
-//   if(!firstElement || !secondElement ) {
-//     return;
-//   }
-//   const detectedInterval = secondElement.time - firstElement.time
-//   for(let i = 0; i < chartData.length - 1; i++) {
-//     const currentElement = chartData[i];
-//     const nextElement = chartData[i + 1];
-//     if(!currentElement || !nextElement) {
-//       return;
-//     }
-//     const interval = nextElement.time - currentElement.time
-//     if(interval !== detectedInterval) {
-//       console.warn("Price chartData is not consistent", {
-//         current: currentElement,
-//         next: nextElement,
-//         detectedInterval,
-//       });
-//     }
-//   }
-//   return detectedInterval;
-// }
+const checkPriceData = (data: {time: UTCTimestamp}[]) => {
+  const chartData = [...data].sort((a, b) => a.time - b.time);
+  if(chartData.length < 2) {
+    return;
+  }
+  const firstElement = chartData.at(-2);
+  const secondElement = chartData.at(-1);
+  if(!firstElement || !secondElement ) {
+    return;
+  }
+  const detectedInterval = secondElement.time - firstElement.time
+  for(let i = 0; i < chartData.length - 1; i++) {
+    const currentElement = chartData[i];
+    const nextElement = chartData[i + 1];
+    if(!currentElement || !nextElement) {
+      return;
+    }
+    const interval = nextElement.time - currentElement.time
+    if(interval !== detectedInterval) {
+      console.warn("Price chartData is not consistent", {
+        current: currentElement,
+        next: nextElement,
+        detectedInterval,
+      });
+    }
+  }
+  return detectedInterval;
+}
 
 const useChartElem = (symbol: string, feedId: string) => {
   const logger = useLogger();
@@ -101,17 +102,26 @@ const useChartElem = (symbol: string, feedId: string) => {
   const earliestDateRef = useRef<bigint | undefined>(undefined);
   const isBackfilling = useRef(false);
   const priceFormatter = usePriceFormatter();
-const [interval] = useQueryState(
+  const [interval] = useQueryState(
     "interval",
     parseAsStringEnum(Object.values(INTERVAL_NAMES)).withDefault("Live"),
   );
+  useEffect(() => {
+    if(interval !== "Live") {
+      backfillData();
+    }
+  }, [interval]);
+
   const backfillData = useCallback(() => {
-    if (!isBackfilling.current && earliestDateRef.current) {
+    console.log(earliestDateRef)
+    const { from, until } = backfillIntervals({ interval, earliestDate: earliestDateRef.current });
+    
+    if (!isBackfilling.current) {
       isBackfilling.current = true;
       // seconds to date
       const range = interval === "Live" ? "1H" : interval;
-      console.log("backfilling", new Date(Number(earliestDateRef.current) * 1000), {from: earliestDateRef.current - 100n, until: earliestDateRef.current});
-      fetchHistory({ symbol, range, cluster: "pythnet", from: earliestDateRef.current - 100n, until: earliestDateRef.current })
+      console.log("backfilling", {from: new Date(Number(from) * 1000), until: new Date(Number(until) * 1000)});
+      fetchHistory({ symbol, range, cluster: "pythnet", from, until })
         .then((data) => {
           const firstPoint = data[0];
           if (firstPoint) {
@@ -128,16 +138,16 @@ const [interval] = useQueryState(
                 confidence: avgConfidence,
               }),
             );
-            console.log("convertedData",   
-              {current: chartRef?.current?.price.data().map(({ time, value }) => ({
-                time: new Date(time*1000),
-                value,
-              })),
-              converted: convertedData.map(({ time, price }) => ({
-                time: new Date(time*1000),
-                value: price,
-              }))
-            });
+            // console.log("convertedData",   
+            //   {current: chartRef?.current?.price.data().map(({ time, value }) => ({
+            //     time: new Date(time*1000),
+            //     value,
+            //   })),
+            //   converted: convertedData.map(({ time, price }) => ({
+            //     time: new Date(time*1000),
+            //     value: price,
+            //   }))
+            // });
             const newPriceData = [...convertedData.map(({ time, price }) => ({
                 time,
                 value: price,
@@ -156,7 +166,6 @@ const [interval] = useQueryState(
                 time,
                 value: price,
               })));
-            console.log(newPriceData)
             chartRef.current.price.setData(newPriceData);
             chartRef.current.confidenceHigh.setData(newConfidenceHighData);
             chartRef.current.confidenceLow.setData(newConfidenceLowData);
@@ -167,7 +176,7 @@ const [interval] = useQueryState(
           logger.error("Error fetching historical prices", error);
         });
     }
-  }, [logger, symbol]);
+  }, [logger, symbol, interval]);
 
   useMountEffect(() => {
     const chartElem = chartContainerRef.current;
@@ -217,6 +226,10 @@ const [interval] = useQueryState(
   });
 
   useEffect(() => {
+    // don't live update if the interval is not set to live
+    if(interval !== "Live") {
+      return;
+    }
     if (current && chartRef.current) {
       earliestDateRef.current ??= current.timestamp;
       const { price, confidence } = current.aggregate;
@@ -361,3 +374,37 @@ const getLocalTimestamp = (date: Date): UTCTimestamp =>
     date.getSeconds(),
     date.getMilliseconds(),
   ) / 1000) as UTCTimestamp;
+
+  const backfillIntervals = ({ interval, earliestDate } : { 
+    interval: typeof INTERVAL_NAMES[keyof typeof INTERVAL_NAMES],
+    earliestDate: bigint | undefined,
+  }) => {
+    const until = earliestDate ?? BigInt(Math.floor(Date.now() / 1000));
+    let from;
+
+    switch (interval) {
+    case '1H': {
+      from = until - 3600n;
+    break;
+    }
+    case '1D': {
+      from = until - 86_400n; // seconds in a day
+    
+    break;
+    }
+    case '1W': {
+      from = until - 604_800n; // seconds in a week
+    
+    break;
+    }
+    case '1M': {
+      from = until - 2_592_000n;
+    
+    break;
+    }
+    default: {
+      from = until - 100n;
+    }
+    }
+    return { from, until };
+  }

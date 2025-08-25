@@ -388,7 +388,7 @@ export const getHistory = async ({
 }) => {
 
   // Calculate interval parameters based on range
-  const interval_unit = range === "1H" ? "SECOND" : (range === "1D") ? "MINUTE" : "HOUR";
+  const interval_unit = range === "1H" ? "SECOND" : (range === "1D") ? "HOUR" : "DAY";
 
   let additional_cluster_clause = "";
   if (cluster === "pythtest-conformance") {
