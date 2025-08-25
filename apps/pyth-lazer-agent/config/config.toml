@@ -3,3 +3,6 @@ publish_keypair_path = "/path/to/solana/id.json"
 listen_address = "0.0.0.0:8910"
 publish_interval_duration = "25ms"
 enable_update_deduplication = true
+# Publishers with existing tokens may still need to provide them. Please confirm with the Lazer team.
+# New publishers will not need this line.
+# authorization_token = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-pblr"
