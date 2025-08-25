@@ -1,5 +1,4 @@
 module pyth_lazer::admin;
-use sui::types;
 
 public struct AdminCap has key, store {
     id: UID,
@@ -9,7 +8,6 @@ public struct AdminCap has key, store {
 /// It has the `drop` ability, allowing it to be consumed immediately after use.
 /// See: https://move-book.com/programmability/one-time-witness
 public struct ADMIN has drop {}
-
 
 /// Initializes the module. Called at publish time.
 /// Creates and transfers ownership of the singular AdminCap capability to the deployer.
