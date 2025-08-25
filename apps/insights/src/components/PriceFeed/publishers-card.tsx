@@ -9,6 +9,8 @@ import { Cluster } from "../../services/pyth";
 import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PublisherTag } from "../PublisherTag";
+import { useLivePriceData } from '../../hooks/use-live-price-data';
+import { Status } from '../../status';
 
 type PublishersCardProps =
   | { isLoading: true }
@@ -29,7 +31,7 @@ type ResolvedPublishersCardProps = {
   symbol: string;
   displaySymbol: string;
   assetClass: string;
-  publishers: Omit<PriceComponent, "symbol" | "displaySymbol" | "assetClass">[];
+  publishers: Omit<PriceComponent, "status" | "symbol" | "displaySymbol" | "assetClass">[];
   metricsTime?: Date | undefined;
 };
 
@@ -38,6 +40,7 @@ const ResolvedPublishersCard = ({
   ...props
 }: ResolvedPublishersCardProps) => {
   const logger = useLogger();
+const data = useLivePriceData(Cluster.Pythnet, publishers[0]?.feedKey);
 
   const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
     "includeTestFeeds",
@@ -63,11 +66,26 @@ const ResolvedPublishersCard = ({
     [includeTestFeeds, publishers],
   );
 
+  const publishersWithStatus = useMemo(() => {
+    const currentSlot = data.current?.validSlot;
+    const isInactive = (publishSlot: number, currentSlot: number) => publishSlot < currentSlot - 100;
+
+    return publishersFilteredByCluster.map((publisher) => {
+      const lastPublishedSlot = data.current?.priceComponents.find((price) => price.publisher.toString() === publisher.publisherKey.toString())?.latest.publishSlot;
+      const isPublisherInactive = isInactive(Number(lastPublishedSlot ?? 0), Number(currentSlot ?? 0));
+
+      return {
+      ...publisher,
+      status: isPublisherInactive ? Status.Down : Status.Live,
+      };
+    });
+  }, [publishersFilteredByCluster, data]);
+
   return (
     <PublishersCardImpl
       includeTestFeeds={includeTestFeeds}
       updateIncludeTestFeeds={updateIncludeTestFeeds}
-      publishers={publishersFilteredByCluster}
+      publishers={publishersWithStatus}
       {...props}
     />
   );
