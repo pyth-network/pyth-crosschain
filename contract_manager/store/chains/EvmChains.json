@@ -1293,5 +1293,12 @@
     "rpcUrl": "https://rpc-ethereal-testnet-0.t.conduit.xyz",
     "networkId": 13374202,
     "type": "EvmChain"
+  },
+  {
+    "id": "fluent_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.testnet.fluent.xyz/",
+    "networkId": 20994,
+    "type": "EvmChain"
   }
 ]

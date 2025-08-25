@@ -9,7 +9,6 @@ public struct AdminCap has key, store {
 /// See: https://move-book.com/programmability/one-time-witness
 public struct ADMIN has drop {}
 
-
 /// Initializes the module. Called at publish time.
 /// Creates and transfers ownership of the singular AdminCap capability to the deployer.
 /// Only the AdminCap owner can update the trusted signers.

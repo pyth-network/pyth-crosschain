@@ -11,6 +11,7 @@ import {
   EXTENDED_PYTH_ABI,
   WORMHOLE_ABI,
   PULSE_UPGRADEABLE_ABI,
+  LAZER_ABI,
 } from "./evm_abis";
 
 /**
@@ -924,5 +925,111 @@ export class EvmPulseContract extends Storable {
       this.address,
       data,
     );
+  }
+}
+
+export class EvmLazerContract extends Storable {
+  static type = "EvmLazerContract";
+
+  constructor(
+    public chain: EvmChain,
+    public address: string,
+  ) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.address}`;
+  }
+
+  getType(): string {
+    return EvmLazerContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      address: this.address,
+      type: EvmLazerContract.type,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string },
+  ): EvmLazerContract {
+    if (parsed.type !== EvmLazerContract.type) {
+      throw new Error("Invalid type");
+    }
+    return new EvmLazerContract(chain as EvmChain, parsed.address);
+  }
+
+  getContract() {
+    const web3 = this.chain.getWeb3();
+    return new web3.eth.Contract(LAZER_ABI, this.address);
+  }
+
+  async getVersion(): Promise<string> {
+    const contract = this.getContract();
+    return await contract.methods.version().call();
+  }
+
+  async getOwner(): Promise<string> {
+    const contract = this.getContract();
+    return contract.methods.owner().call();
+  }
+
+  async generateUpdateTrustedSignerPayload(
+    trustedSigner: string,
+    expiresAt: number,
+  ): Promise<Buffer> {
+    // Executor contract is the owner of the PythLazer contract
+    const executorAddress = await this.getOwner();
+    const web3 = this.chain.getWeb3();
+    const executorContract = new web3.eth.Contract(
+      EXECUTOR_ABI,
+      executorAddress,
+    );
+    const data = executorContract.methods
+      .updateTrustedSigner(trustedSigner, expiresAt)
+      .encodeABI();
+    return this.chain.generateExecutorPayload(
+      executorAddress,
+      this.address,
+      data,
+    );
+  }
+
+  /**
+   * Updates the trusted signer for the PythLazer contract
+   * @param trustedSigner The address of the trusted signer
+   * @param expiresAt The expiration timestamp for the signer
+   * @param privateKey The private key to sign the transaction
+   * @note The privateKey should be the owner of the Lazer contract. It's not possible to run this function if the executor contract is the owner.
+   */
+  async updateTrustedSigner(
+    trustedSigner: string,
+    expiresAt: number,
+    privateKey: PrivateKey,
+  ): Promise<void> {
+    const web3 = this.chain.getWeb3();
+    const contract = this.getContract();
+
+    const account = web3.eth.accounts.privateKeyToAccount(privateKey);
+    const gasEstimate = await contract.methods
+      .updateTrustedSigner(trustedSigner, expiresAt)
+      .estimateGas({ from: account.address });
+
+    const tx = await contract.methods
+      .updateTrustedSigner(trustedSigner, expiresAt)
+      .send({
+        from: account.address,
+        gas: Math.floor(gasEstimate * 1.2), // 20% buffer
+      });
+
+    console.log(
+      `✅ Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
+    );
+    console.log(`Transaction hash: ${tx.transactionHash}`);
   }
 }

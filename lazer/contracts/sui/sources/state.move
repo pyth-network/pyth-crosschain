@@ -78,7 +78,10 @@ public fun update_trusted_signer(_: &AdminCap, s: &mut State, pubkey: vector<u8>
     }
 }
 
-public fun find_signer_index(signers: &vector<TrustedSignerInfo>, public_key: &vector<u8>): Option<u64> {
+public fun find_signer_index(
+    signers: &vector<TrustedSignerInfo>,
+    public_key: &vector<u8>,
+): Option<u64> {
     let len = vector::length(signers);
     let mut i: u64 = 0;
     while (i < (len as u64)) {
