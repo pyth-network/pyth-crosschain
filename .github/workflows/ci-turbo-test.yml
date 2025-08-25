@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
       - uses: actions/setup-node@v4
         with:
           node-version-file: "package.json"
@@ -25,10 +26,17 @@ jobs:
       # precompiled binary isn't found.
       - name: Install libusb
         run: sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev libudev-dev
+      # Install Foundry for Ethereum contract tests
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v0.3.0
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           run_install: true
+      - name: Install Forge dependencies
+        run: cd target_chains/ethereum/contracts && pnpm run install-forge-deps
       - name: Cache for Turbo
         uses: rharkor/caching-for-turbo@v1.5
       - name: Test
