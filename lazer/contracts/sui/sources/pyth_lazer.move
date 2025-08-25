@@ -5,6 +5,7 @@ use pyth_lazer::i64::Self;
 use pyth_lazer::update::{Self, Update};
 use pyth_lazer::feed::{Self, Feed};
 use pyth_lazer::channel::Self;
+use pyth_lazer::state;
 use sui::bcs;
 use sui::ecdsa_k1::secp256k1_ecrecover;
 
@@ -14,11 +15,21 @@ const PAYLOAD_MAGIC: u32 = 2479346549;
 
 
 // TODO:
-// initializer
-// administration -> admin cap, upgrade cap, governance?
-// storage module -> trusted signers, update fee?, treasury?
 // error handling
 // standalone verify signature function
+
+/// The `PYTH_LAZER` resource serves as the one-time witness.
+/// It has the `drop` ability, allowing it to be consumed immediately after use.
+/// See: https://move-book.com/programmability/one-time-witness
+public struct PYTH_LAZER has drop {}
+
+/// Initializes the module. Called at publish time.
+/// Creates and shares the singular State object.
+/// AdminCap is created and transferred in admin::init via a One-Time Witness.
+fun init(_: PYTH_LAZER, ctx: &mut TxContext) {
+    let s = state::new(ctx);
+    transfer::public_share_object(s);
+}
 
 /// Parse the Lazer update message and validate the signature.
 ///
