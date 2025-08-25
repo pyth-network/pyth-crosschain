@@ -10,28 +10,28 @@ export const Status = ({ status }: { status: StatusType }) => (
 
 const getVariant = (status: StatusType) => {
   switch (status) {
-    case StatusType.Active: {
+    case StatusType.Live: {
       return "success";
     }
-    case StatusType.Inactive: {
+    case StatusType.Down: {
       return "error";
     }
-    case StatusType.Unranked: {
-      return "disabled";
-    }
+    // case StatusType.Unranked: {
+    //   return "disabled";
+    // }
   }
 };
 
 const getText = (status: StatusType) => {
   switch (status) {
-    case StatusType.Active: {
-      return "Active";
+    case StatusType.Live: {
+      return "Live";
     }
-    case StatusType.Inactive: {
-      return "Inactive";
+    case StatusType.Down: {
+      return "Down";
     }
-    case StatusType.Unranked: {
-      return "Unranked";
-    }
+    // case StatusType.Unranked: {
+    //   return "Unranked";
+    // }
   }
 };

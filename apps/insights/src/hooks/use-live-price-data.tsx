@@ -35,7 +35,7 @@ export const LivePriceDataProvider = (props: LivePriceDataProviderProps) => {
   return <LivePriceDataContext value={priceData} {...props} />;
 };
 
-export const useLivePriceData = (cluster: Cluster, feedKey: string) => {
+export const useLivePriceData = (cluster: Cluster, feedKey?: string) => {
   const { addSubscription, removeSubscription } =
     useLivePriceDataContext()[cluster];
 
@@ -45,6 +45,9 @@ export const useLivePriceData = (cluster: Cluster, feedKey: string) => {
   }>({ current: undefined, prev: undefined });
 
   useEffect(() => {
+    if(!feedKey) {
+      return;
+    }
     addSubscription(feedKey, setData);
     return () => {
       removeSubscription(feedKey, setData);

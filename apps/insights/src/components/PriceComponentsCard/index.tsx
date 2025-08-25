@@ -120,6 +120,7 @@ export const ResolvedPriceComponentsCard = <
   const logger = useLogger();
   const collator = useCollator();
   const filter = useFilter({ sensitivity: "base", usage: "search" });
+
   const { selectComponent } = usePriceComponentDrawer({
     components: priceComponents,
     identifiesPublisher,

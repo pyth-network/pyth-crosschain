@@ -37,8 +37,6 @@ const _getPublishers = async (cluster: Cluster) =>
               publisher,
               time,
               avg(final_score) AS averageScore,
-              countIf(uptime_score >= 0.5) AS activeFeeds,
-              countIf(uptime_score < 0.5) AS inactiveFeeds
             FROM publisher_quality_ranking
             WHERE cluster = {cluster:String}
             AND time = (
