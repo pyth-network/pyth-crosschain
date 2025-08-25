@@ -21,7 +21,34 @@ shift
 
 if [ "$version" = "latest" ]; then
   echo "Deploying latest version"
-  stdoutputdir="../target_chains/ethereum/contracts/build/contracts"
+  # Create a temporary directory for flattened contract artifacts
+  contracts_dir="out/contracts"
+  mkdir -p "$contracts_dir"
+  
+  echo "Copying contract artifacts from Foundry output structure..."
+  
+  # List of required contracts for EVM deployment
+  contracts=(
+    "PythUpgradable"
+    "ERC1967Proxy" 
+    "ReceiverSetup"
+    "WormholeReceiver"
+    "ReceiverImplementation"
+  )
+  
+  # Copy each contract artifact
+  for contract in "${contracts[@]}"; do
+    source_file="./out/${contract}.sol/${contract}.json"
+    dest_file="$contracts_dir/${contract}.json"
+    
+    if [ -f "$source_file" ]; then
+      cp "$source_file" "$dest_file"
+      echo "✓ Copied ${contract}.json"
+    else
+      echo "Warning: ${contract}.json not found at $source_file"
+    fi
+  done
+  stdoutputdir="$(pwd)/$contracts_dir"
 else
   # make sure version has format of vX.Y.Z
   if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -47,7 +74,15 @@ echo "=========== Deploying the contracts ==========="
 pnpm --filter=@pythnetwork/contract-manager exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir $stdoutputdir --private-key $PK --chain "$@"
 
 echo "=========== Cleaning up ==========="
-rm -rf $tmpdir
+if [ -n "${tmpdir:-}" ]; then
+  rm -rf $tmpdir
+fi
+
+# Clean up the contracts directory if we created it for the latest version
+if [ "$version" = "latest" ]; then
+  rm -rf "out/contracts"
+  echo "Cleaned up contracts directory"
+fi
 
 if [ "$version" != "latest" ]; then
     echo "Verify the contracts by using the std-input artifacts of the contracts in https://github.com/pyth-network/pyth-crosschain/releases/tag/pyth-evm-contract-$version"
