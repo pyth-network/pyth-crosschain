@@ -2,7 +2,10 @@ module pyth_lazer::pyth_lazer;
 
 use pyth_lazer::channel;
 use pyth_lazer::feed::{Self, Feed};
-use pyth_lazer::state;
+use pyth_lazer::state::{Self, State};
+use pyth_lazer::i64::{Self};
+use pyth_lazer::i16::{Self};
+use pyth_lazer::update::{Self, Update};
 use sui::bcs;
 use sui::clock::Clock;
 use sui::ecdsa_k1::secp256k1_ecrecover;
