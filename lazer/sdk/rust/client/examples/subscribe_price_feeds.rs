@@ -4,15 +4,16 @@ use base64::Engine;
 use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
 use pyth_lazer_client::client::PythLazerClientBuilder;
 use pyth_lazer_client::ws_connection::AnyResponse;
+use pyth_lazer_protocol::api::{
+    Channel, DeliveryFormat, Format, JsonBinaryEncoding, SubscriptionParams, SubscriptionParamsRepr,
+};
+use pyth_lazer_protocol::api::{SubscribeRequest, SubscriptionId, WsResponse};
 use pyth_lazer_protocol::message::{
     EvmMessage, LeEcdsaMessage, LeUnsignedMessage, Message, SolanaMessage,
 };
 use pyth_lazer_protocol::payload::PayloadData;
-use pyth_lazer_protocol::router::{
-    Channel, DeliveryFormat, FixedRate, Format, JsonBinaryEncoding, PriceFeedId, PriceFeedProperty,
-    SubscriptionParams, SubscriptionParamsRepr,
-};
-use pyth_lazer_protocol::subscription::{Response, SubscribeRequest, SubscriptionId};
+use pyth_lazer_protocol::time::FixedRate;
+use pyth_lazer_protocol::{PriceFeedId, PriceFeedProperty};
 use tokio::pin;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::EnvFilter;
@@ -109,7 +110,7 @@ async fn main() -> anyhow::Result<()> {
         // The stream gives us base64-encoded binary messages. We need to decode, parse, and verify them.
         match msg {
             AnyResponse::Json(msg) => match msg {
-                Response::StreamUpdated(update) => {
+                WsResponse::StreamUpdated(update) => {
                     println!("Received a JSON update for {:?}", update.subscription_id);
                     if let Some(evm_data) = update.payload.evm {
                         // Decode binary data
