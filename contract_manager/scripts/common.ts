@@ -35,7 +35,14 @@ export async function deployIfNotCached(
   const key = cacheKey ?? `${chain.getId()}-${artifactName}`;
   return runIfNotCached(key, async () => {
     const artifact = JSON.parse(
-      readFileSync(join(config.jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`), "utf8"),
+      readFileSync(
+        join(
+          config.jsonOutputDir,
+          `${artifactName}.sol`,
+          `${artifactName}.json`,
+        ),
+        "utf8",
+      ),
     );
 
     // Handle bytecode which can be either a string or an object with an 'object' property
@@ -74,7 +81,10 @@ export function getWeb3Contract(
   address: string,
 ): Contract {
   const artifact = JSON.parse(
-    readFileSync(join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`), "utf8"),
+    readFileSync(
+      join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`),
+      "utf8",
+    ),
   );
   const web3 = new Web3();
   return new web3.eth.Contract(artifact["abi"], address);
