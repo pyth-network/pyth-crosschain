@@ -9,7 +9,7 @@ const transformer = {
   deserialize: parse,
 };
 
-export const DEFAULT_CACHE_TTL = 86_400; // 24 hours
+export const DEFAULT_CACHE_TTL = 3600; // 1 hour
 export const DEFAULT_CACHE_STALE = 86_400; // 24 hours
 
 export const redisCache: ACDCache = createCache({

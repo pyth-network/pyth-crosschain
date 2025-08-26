@@ -3,8 +3,8 @@ use crate::publisher_update::{FeedUpdate, FundingRateUpdate, PriceUpdate};
 use crate::state::FeedState;
 use ::protobuf::MessageField;
 use pyth_lazer_protocol::jrpc::{FeedUpdateParams, UpdateParams};
-use pyth_lazer_protocol::symbol_state::SymbolState;
 use pyth_lazer_protocol::FeedKind;
+use pyth_lazer_protocol::SymbolState;
 
 pub mod transaction_envelope {
     pub use crate::protobuf::transaction_envelope::*;
@@ -56,9 +56,9 @@ impl From<UpdateParams> for Update {
                 best_bid_price,
                 best_ask_price,
             } => Update::PriceUpdate(PriceUpdate {
-                price: Some(price.0.into()),
-                best_bid_price: best_bid_price.map(|p| p.0.into()),
-                best_ask_price: best_ask_price.map(|p| p.0.into()),
+                price: Some(price.mantissa_i64()),
+                best_bid_price: best_bid_price.map(|p| p.mantissa_i64()),
+                best_ask_price: best_ask_price.map(|p| p.mantissa_i64()),
                 special_fields: Default::default(),
             }),
             UpdateParams::FundingRateUpdate {
@@ -66,8 +66,8 @@ impl From<UpdateParams> for Update {
                 rate,
                 funding_rate_interval,
             } => Update::FundingRateUpdate(FundingRateUpdate {
-                price: price.map(|p| p.0.into()),
-                rate: Some(rate.0),
+                price: price.map(|p| p.mantissa_i64()),
+                rate: Some(rate.mantissa()),
                 funding_rate_interval: MessageField::from_option(
                     funding_rate_interval.map(|i| i.into()),
                 ),
@@ -115,32 +115,32 @@ impl From<state::FeedKind> for FeedKind {
     }
 }
 
-impl TryFrom<state::Channel> for pyth_lazer_protocol::router::Channel {
+impl TryFrom<state::Channel> for pyth_lazer_protocol::api::Channel {
     type Error = anyhow::Error;
 
     fn try_from(value: state::Channel) -> Result<Self, Self::Error> {
         Ok(match value.kind {
             Some(kind) => match kind {
                 state::channel::Kind::Rate(rate) => {
-                    pyth_lazer_protocol::router::Channel::FixedRate(rate.try_into()?)
+                    pyth_lazer_protocol::api::Channel::FixedRate(rate.try_into()?)
                 }
-                state::channel::Kind::RealTime(_) => pyth_lazer_protocol::router::Channel::RealTime,
+                state::channel::Kind::RealTime(_) => pyth_lazer_protocol::api::Channel::RealTime,
             },
-            None => pyth_lazer_protocol::router::Channel::FixedRate(
-                pyth_lazer_protocol::router::FixedRate::MIN,
+            None => pyth_lazer_protocol::api::Channel::FixedRate(
+                pyth_lazer_protocol::time::FixedRate::MIN,
             ),
         })
     }
 }
 
-impl From<pyth_lazer_protocol::router::Channel> for state::Channel {
-    fn from(value: pyth_lazer_protocol::router::Channel) -> Self {
+impl From<pyth_lazer_protocol::api::Channel> for state::Channel {
+    fn from(value: pyth_lazer_protocol::api::Channel) -> Self {
         let mut result = state::Channel::new();
         match value {
-            pyth_lazer_protocol::router::Channel::FixedRate(rate) => {
+            pyth_lazer_protocol::api::Channel::FixedRate(rate) => {
                 result.set_rate(rate.into());
             }
-            pyth_lazer_protocol::router::Channel::RealTime => {
+            pyth_lazer_protocol::api::Channel::RealTime => {
                 result.set_real_time(::protobuf::well_known_types::empty::Empty::new());
             }
         };

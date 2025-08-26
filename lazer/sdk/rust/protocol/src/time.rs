@@ -486,3 +486,94 @@ pub mod duration_us_serde_humantime {
         value.into_inner().try_into().map_err(D::Error::custom)
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct FixedRate {
+    rate: DurationUs,
+}
+
+impl FixedRate {
+    pub const RATE_50_MS: Self = Self {
+        rate: DurationUs::from_millis_u32(50),
+    };
+    pub const RATE_200_MS: Self = Self {
+        rate: DurationUs::from_millis_u32(200),
+    };
+
+    // Assumptions (tested below):
+    // - Values are sorted.
+    // - 1 second contains a whole number of each interval.
+    // - all intervals are divisable by the smallest interval.
+    pub const ALL: [Self; 2] = [Self::RATE_50_MS, Self::RATE_200_MS];
+    pub const MIN: Self = Self::ALL[0];
+
+    pub fn from_millis(millis: u32) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|v| v.rate.as_millis() == u64::from(millis))
+    }
+
+    pub fn duration(self) -> DurationUs {
+        self.rate
+    }
+}
+
+impl TryFrom<DurationUs> for FixedRate {
+    type Error = anyhow::Error;
+
+    fn try_from(value: DurationUs) -> Result<Self, Self::Error> {
+        Self::ALL
+            .into_iter()
+            .find(|v| v.rate == value)
+            .with_context(|| format!("unsupported rate: {value:?}"))
+    }
+}
+
+impl TryFrom<&ProtobufDuration> for FixedRate {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &ProtobufDuration) -> Result<Self, Self::Error> {
+        let duration = DurationUs::try_from(value)?;
+        Self::try_from(duration)
+    }
+}
+
+impl TryFrom<ProtobufDuration> for FixedRate {
+    type Error = anyhow::Error;
+
+    fn try_from(duration: ProtobufDuration) -> anyhow::Result<Self> {
+        TryFrom::<&ProtobufDuration>::try_from(&duration)
+    }
+}
+
+impl From<FixedRate> for DurationUs {
+    fn from(value: FixedRate) -> Self {
+        value.rate
+    }
+}
+
+impl From<FixedRate> for ProtobufDuration {
+    fn from(value: FixedRate) -> Self {
+        value.rate.into()
+    }
+}
+
+#[test]
+fn fixed_rate_values() {
+    assert!(
+        FixedRate::ALL.windows(2).all(|w| w[0] < w[1]),
+        "values must be unique and sorted"
+    );
+    for value in FixedRate::ALL {
+        assert_eq!(
+            1_000_000 % value.duration().as_micros(),
+            0,
+            "1 s must contain whole number of intervals"
+        );
+        assert_eq!(
+            value.duration().as_micros() % FixedRate::MIN.duration().as_micros(),
+            0,
+            "the interval's borders must be a subset of the minimal interval's borders"
+        );
+    }
+}
