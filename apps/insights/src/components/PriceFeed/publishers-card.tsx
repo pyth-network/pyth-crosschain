@@ -2,15 +2,15 @@
 
 import { Switch } from "@pythnetwork/component-library/Switch";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { parseAsBoolean, useQueryState } from "nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 
+import { useLivePriceData } from "../../hooks/use-live-price-data";
 import { Cluster } from "../../services/pyth";
 import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PublisherTag } from "../PublisherTag";
-import { useLivePriceData } from '../../hooks/use-live-price-data';
-import { Status } from '../../status';
+import { getStatus } from "../Status";
 
 type PublishersCardProps =
   | { isLoading: true }
@@ -31,7 +31,10 @@ type ResolvedPublishersCardProps = {
   symbol: string;
   displaySymbol: string;
   assetClass: string;
-  publishers: Omit<PriceComponent, "status" | "symbol" | "displaySymbol" | "assetClass">[];
+  publishers: Omit<
+    PriceComponent,
+    "status" | "symbol" | "displaySymbol" | "assetClass"
+  >[];
   metricsTime?: Date | undefined;
 };
 
@@ -40,7 +43,7 @@ const ResolvedPublishersCard = ({
   ...props
 }: ResolvedPublishersCardProps) => {
   const logger = useLogger();
-const data = useLivePriceData(Cluster.Pythnet, publishers[0]?.feedKey);
+  const data = useLivePriceData(Cluster.Pythnet, publishers[0]?.feedKey);
 
   const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
     "includeTestFeeds",
@@ -67,16 +70,10 @@ const data = useLivePriceData(Cluster.Pythnet, publishers[0]?.feedKey);
   );
 
   const publishersWithStatus = useMemo(() => {
-    const currentSlot = data.current?.validSlot;
-    const isInactive = (publishSlot: number, currentSlot: number) => publishSlot < currentSlot - 100;
-
     return publishersFilteredByCluster.map((publisher) => {
-      const lastPublishedSlot = data.current?.priceComponents.find((price) => price.publisher.toString() === publisher.publisherKey.toString())?.latest.publishSlot;
-      const isPublisherInactive = isInactive(Number(lastPublishedSlot ?? 0), Number(currentSlot ?? 0));
-
       return {
-      ...publisher,
-      status: isPublisherInactive ? Status.Down : Status.Live,
+        ...publisher,
+        status: getStatus(data.current, publisher.publisherKey),
       };
     });
   }, [publishersFilteredByCluster, data]);
@@ -93,10 +90,14 @@ const data = useLivePriceData(Cluster.Pythnet, publishers[0]?.feedKey);
 
 type PublishersCardImplProps =
   | { isLoading: true }
-  | (ResolvedPublishersCardProps & {
+  | (Omit<ResolvedPublishersCardProps, 'publishers'> & {
       isLoading?: false | undefined;
       includeTestFeeds: boolean;
       updateIncludeTestFeeds: (newValue: boolean) => void;
+       publishers: Omit<
+    PriceComponent,
+   "symbol" | "displaySymbol" | "assetClass"
+  >[];
     });
 
 const PublishersCardImpl = (props: PublishersCardImplProps) => (

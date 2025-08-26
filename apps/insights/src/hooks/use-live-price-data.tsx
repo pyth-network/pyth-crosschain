@@ -45,7 +45,7 @@ export const useLivePriceData = (cluster: Cluster, feedKey?: string) => {
   }>({ current: undefined, prev: undefined });
 
   useEffect(() => {
-    if(!feedKey) {
+    if (!feedKey) {
       return;
     }
     addSubscription(feedKey, setData);

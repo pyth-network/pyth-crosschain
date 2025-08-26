@@ -19,10 +19,7 @@ const _getPublishers = async (cluster: Cluster) =>
         permissionedFeeds: z
           .string()
           .transform((value) => Number.parseInt(value, 10)),
-        activeFeeds: z
-          .string()
-          .transform((value) => Number.parseInt(value, 10)),
-        inactiveFeeds: z
+        unpermissionedFeeds: z
           .string()
           .transform((value) => Number.parseInt(value, 10)),
         averageScore: z.number(),
@@ -36,7 +33,7 @@ const _getPublishers = async (cluster: Cluster) =>
             SELECT
               publisher,
               time,
-              avg(final_score) AS averageScore,
+              avg(final_score) AS averageScore
             FROM publisher_quality_ranking
             WHERE cluster = {cluster:String}
             AND time = (
@@ -53,8 +50,7 @@ const _getPublishers = async (cluster: Cluster) =>
             publisher AS key,
             rank,
             LENGTH(symbols) AS permissionedFeeds,
-            activeFeeds,
-            inactiveFeeds,
+            (SELECT count(symbol) FROM symbols WHERE cluster = {cluster:String}) - LENGTH(symbols) AS unpermissionedFeeds,
             score_data.averageScore,
             score_data.time as scoreTime
           FROM publishers_ranking

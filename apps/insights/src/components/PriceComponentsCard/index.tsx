@@ -75,7 +75,7 @@ export type PriceComponent = {
   deviationScore: number | undefined;
   stalledScore: number | undefined;
   cluster: Cluster;
-  status: StatusType;
+  status?: StatusType;
   feedKey: string;
   publisherKey: string;
   name: ReactNode;
@@ -187,6 +187,9 @@ export const ResolvedPriceComponentsCard = <
         }
 
         case "status": {
+          if(a.status === undefined || b.status === undefined) {
+            return 0;
+          }
           const resultByStatus = b.status - a.status;
           const result =
             resultByStatus === 0
@@ -267,7 +270,9 @@ export const ResolvedPriceComponentsCard = <
               cluster={component.cluster}
             />
           ),
-          status: <StatusComponent status={component.status} />,
+          status: component.status !== undefined && (
+            <StatusComponent status={component.status} />
+          ),
         },
       })),
     [paginatedItems, props.extraColumns, selectComponent],

@@ -8,7 +8,6 @@ import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
-import { useLivePriceData } from '../../hooks/use-live-price-data';
 
 type Props = {
   params: Promise<{

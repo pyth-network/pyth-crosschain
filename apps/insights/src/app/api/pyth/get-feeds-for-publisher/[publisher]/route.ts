@@ -38,7 +38,6 @@ export const GET = async (
   const filteredFeeds = feeds.filter((feed) =>
     feed.price.priceComponents.some((c) => c.publisher === publisher),
   );
-console.log({filteredFeeds: filteredFeeds.length, feeds: feeds.length})
   return new Response(stringify(filteredFeeds), {
     headers: {
       "Content-Type": "application/json",
