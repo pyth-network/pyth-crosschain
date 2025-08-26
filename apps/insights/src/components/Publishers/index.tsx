@@ -33,6 +33,8 @@ export const Publishers = async () => {
     ]);
   const rankingTime = pythnetPublishers[0]?.timestamp;
   const scoreTime = pythnetPublishers[0]?.scoreTime;
+  // eslint-disable-next-line no-console
+  console.log({ pythnetPublishers, pythtestConformancePublishers });
 
   return (
     <div className={styles.publishers}>

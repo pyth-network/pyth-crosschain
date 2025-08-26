@@ -174,8 +174,8 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
         fields={[
           { id: "ranking", name: "Ranking" },
           { id: "averageScore", name: "Average Score" },
-          { id: "permissionedFeeds", name: "Permissioned Feeds" },
-          { id: "unpermissionedFeeds", name: "Unpermissioned Feeds" },
+          { id: "permissionedFeeds", name: "Permissioned" },
+          { id: "unpermissionedFeeds", name: "Unpermissioned" },
         ]}
         {...(props.isLoading
           ? { isLoading: true }

@@ -11,7 +11,6 @@ export const Status = ({ status }: { status: StatusType }) => (
     {getText(status)}
   </StatusComponent>
 );
-
 export const StatusLive = ({
   cluster,
   feedKey,
@@ -22,7 +21,9 @@ export const StatusLive = ({
   publisherKey: string;
 }) => {
   const status = useGetStatus(cluster, feedKey, publisherKey);
-
+  if (!status) {
+    return;
+  }
   return <Status status={status} />;
 };
 
@@ -42,7 +43,7 @@ export const getStatus = (
   publisherKey: string,
 ) => {
   if (!currentPriceData) {
-    return StatusType.Unknown;
+    return;
   }
   const lastPublishedSlot = currentPriceData.priceComponents.find(
     (price) => price.publisher.toString() === publisherKey,
@@ -61,9 +62,6 @@ const getVariant = (status: StatusType) => {
     case StatusType.Down: {
       return "error";
     }
-    case StatusType.Unknown: {
-      return "disabled";
-    }
   }
 };
 
@@ -74,9 +72,6 @@ const getText = (status: StatusType) => {
     }
     case StatusType.Down: {
       return "Down";
-    }
-    case StatusType.Unknown: {
-      return "Unknown";
     }
   }
 };
