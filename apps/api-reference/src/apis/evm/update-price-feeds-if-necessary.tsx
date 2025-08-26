@@ -38,7 +38,7 @@ export const updatePriceFeedsIfNecessary = writeApi<
   ### Error Response
 
   The above method can return the following error response:
-  - \`NoFreshUpdate\`: The provided update is not fresh enough to apply. It means the provided \`publishTime\` is not equal to corresponding corresponding price id in \`updateData\`.
+  - \`NoFreshUpdate\`: The provided update is not fresh enough to apply. It means the provided \`publishTime\` is not equal to corresponding price id in \`updateData\`.
   - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
   - \`InsufficientFee\`: The fee provided is less than the required fee. Try calling [getUpdateFee](getUpdateFee) to get the required fee.
   `,
