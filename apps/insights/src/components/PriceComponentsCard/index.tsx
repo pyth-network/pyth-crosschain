@@ -187,7 +187,7 @@ export const ResolvedPriceComponentsCard = <
         }
 
         case "status": {
-          if(a.status === undefined || b.status === undefined) {
+          if (a.status === undefined || b.status === undefined) {
             return 0;
           }
           const resultByStatus = b.status - a.status;

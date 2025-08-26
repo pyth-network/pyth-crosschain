@@ -75,8 +75,8 @@ type PriceFeedsCardProps =
       metricsTime?: Date | undefined;
     };
 
-const PriceFeedsCard = (props: PriceFeedsCardProps) =>
-<PriceComponentsCard
+const PriceFeedsCard = (props: PriceFeedsCardProps) => (
+  <PriceComponentsCard
     label="Price Feeds"
     searchPlaceholder="Feed symbol"
     nameLoadingSkeleton={<PriceFeedTag isLoading />}
@@ -102,4 +102,5 @@ const PriceFeedsCard = (props: PriceFeedsCardProps) =>
             ),
           })),
         })}
-        />
+  />
+);

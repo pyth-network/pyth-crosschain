@@ -90,14 +90,14 @@ const ResolvedPublishersCard = ({
 
 type PublishersCardImplProps =
   | { isLoading: true }
-  | (Omit<ResolvedPublishersCardProps, 'publishers'> & {
+  | (Omit<ResolvedPublishersCardProps, "publishers"> & {
       isLoading?: false | undefined;
       includeTestFeeds: boolean;
       updateIncludeTestFeeds: (newValue: boolean) => void;
-       publishers: Omit<
-    PriceComponent,
-   "symbol" | "displaySymbol" | "assetClass"
-  >[];
+      publishers: Omit<
+        PriceComponent,
+        "symbol" | "displaySymbol" | "assetClass"
+      >[];
     });
 
 const PublishersCardImpl = (props: PublishersCardImplProps) => (
