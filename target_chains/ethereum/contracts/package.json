@@ -19,7 +19,6 @@
     "deploy-and-verify": "forge script script/Deploy.s.sol --rpc-url testnet --broadcast --verify",
     "deploy-local": "ETHERSCAN_API_KEY= forge script script/Deploy.s.sol --slow  --rpc-url local --broadcast -vvvv",
     "receiver-submit-guardian-sets": "forge script script/ReceiverSubmitGuardianSetUpgrades.s.sol --rpc-url $RPC_URL --broadcast",
-    "create-governance-vaa": "forge script script/CreateLocalnetGovernanceVaa.s.sol",
     "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git",
     "coverage": "./coverage.sh",
     "test:format": "prettier --check .",

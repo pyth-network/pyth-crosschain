@@ -101,28 +101,6 @@ npm run receiver-submit-guardian-sets
 
 This script submits the pre-configured mainnet guardian set upgrade VAAs to bring your contract up to date with the current mainnet guardian set.
 
-### Utility Scripts
-
-Additional utility scripts are available for testing and development:
-
-#### Create Governance VAA (for testing)
-
-```bash
-# Create a governance VAA for localnet testing
-GOVERNANCE_DATA=0x... npm run create-governance-vaa
-```
-
-This script creates a properly signed governance VAA for local testing. You can customize it with environment variables:
-
-- `TIMESTAMP` - VAA timestamp (defaults to current block timestamp)
-- `NONCE` - VAA nonce (defaults to 0)
-- `EMITTER_CHAIN_ID` - Chain ID of the emitter (defaults to 1)
-- `EMITTER_ADDRESS` - Address of the emitter (defaults to test address)
-- `SEQUENCE` - VAA sequence number (defaults to 0)
-- `GOVERNANCE_DATA` - The governance payload data (required)
-- `GUARDIAN_SET_INDEX` - Guardian set index (defaults to 0)
-- `CONSISTENCY_LEVEL` - Consistency level (defaults to 32)
-
 ### Gas Benchmarks
 
 You can use foundry to run gas benchmark tests (which can be found in the `forge-test` directory). To run the tests with gas report
