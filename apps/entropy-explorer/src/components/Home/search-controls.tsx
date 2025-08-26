@@ -53,7 +53,22 @@ const useSearchBar = () => {
 };
 
 export const Paginator = (props: ComponentProps<typeof ResolvedPaginator>) => (
-  <Suspense fallback={<PaginatorImpl isPending {...props} />}>
+  <Suspense
+    fallback={
+      <PaginatorImpl
+        numPages={1}
+        currentPage={1}
+        onPageChange={() => {}} // eslint-disable-line @typescript-eslint/no-empty-function
+        pageSize={10}
+        pageSizeOptions={[10, 25, 50]}
+        onPageSizeChange={() => {}} // eslint-disable-line @typescript-eslint/no-empty-function
+        isPageTransitioning={true}
+        isPageSizeTransitioning={true}
+        className={props.className}
+        mkPageLink={props.mkPageLink}
+      />
+    }
+  >
     <ResolvedPaginator {...props} />
   </Suspense>
 );
