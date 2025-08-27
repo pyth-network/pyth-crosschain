@@ -45,7 +45,6 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
-import ConformanceReports from './conformance-reports';
 
 type Props = {
   children: ReactNode;
@@ -79,16 +78,15 @@ export const PublisherLayout = async ({ children, params }: Props) => {
           </div>
           <div className={styles.titleRow}>
             <PublisherTag
-            cluster={parsedCluster}
-            publisherKey={key}
-            {...(knownPublisher && {
-              name: knownPublisher.name,
-              icon: <PublisherIcon knownPublisher={knownPublisher} />,
-            })}
-          />
-          <ConformanceReports/>
+              cluster={parsedCluster}
+              publisherKey={key}
+              {...(knownPublisher && {
+                name: knownPublisher.name,
+                icon: <PublisherIcon knownPublisher={knownPublisher} />,
+              })}
+            />
           </div>
-          
+
           <Cards className={styles.stats ?? ""}>
             <Suspense fallback={<RankingCardImpl isLoading />}>
               <RankingCard cluster={parsedCluster} publisherKey={key} />
