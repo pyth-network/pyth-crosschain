@@ -70,9 +70,9 @@ The general process for creating a new release is:
 4. Publish the release. This step will automatically trigger a GitHub Action to build the package and release it. This step will e.g., publish packages to NPM, or build and push docker images.
    - Note that when publishing a public package, you should prune the auto-generated GitHub release notes to only include changes relevant to the release. Otherwise, the changelog will include commits from unrelated projects in the monorepo since the previous release.
 
-Note that all javascript packages are released together using a tag of the form `pyth-js-v<number>`. (The `number` is arbitrary.)
-If you have a javascript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
-and it will be excluded from the publishing workflow. If you are creating a new public javascript package, you should add
+Note that all JavaScript packages are released together using a tag of the form `pyth-js-v<number>`. (The `number` is arbitrary.)
+If you have a JavaScript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
+and it will be excluded from the publishing workflow. If you are creating a new public JavaScript package, you should add
 the following config option to `package.json`:
 
 ```
@@ -83,7 +83,7 @@ the following config option to `package.json`:
 
 ### Typescript Monorepo
 
-All of the typescript / javascript packages in this repository are part of a
+All of the typescript / JavaScript packages in this repository are part of a
 [turborepo](https://turbo.build/repo/docs) monorepo.
 
 #### Setting up
@@ -159,7 +159,7 @@ New packages should be configured with a few requirements in mind:
      as an example for doing this correctly.
 
    - Ensure you have set a `main` and `types` property on your `package.json`
-     pointing to your cjs entrypoint for use in older javascript environments.
+     pointing to your cjs entrypoint for use in older JavaScript environments.
 
    - Ensure you configure the `files` property on your `package.json` to include
      all output files and to exclude source files & tooling configuration. This
