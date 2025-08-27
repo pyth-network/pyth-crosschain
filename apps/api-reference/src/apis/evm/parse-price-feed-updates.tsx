@@ -48,6 +48,8 @@ export const parsePriceFeedUpdates = writeApi<
       type: ParameterType.HexArray,
       description:
         "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
+      defaultValue:
+        "0x504e41550100000003b801000000040d00cea20e5677f66ed178e9410ddd8280617c06921916e8fd4b71e597d7f6c6d0a14daf3bb3e1a0d8c9e051c8d0................",
     },
     {
       name: "priceId",
@@ -58,17 +60,20 @@ export const parsePriceFeedUpdates = writeApi<
       name: "minPublishTime",
       type: ParameterType.Int,
       description: "The minimum timestamp for each returned feed.",
+      defaultValue: "1721765108",
     },
     {
       name: "maxPublishTime",
       type: ParameterType.Int,
       description: "The maximum timestamp for each returned feed.",
+      defaultValue: "1721765108",
     },
     {
       name: "fee",
       type: ParameterType.Int,
       description:
         "The update fee in wei. This fee is sent as the value of the transaction.",
+      defaultValue: "1",
     },
   ],
   valueParam: "fee",
