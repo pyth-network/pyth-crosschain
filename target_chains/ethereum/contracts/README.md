@@ -4,19 +4,25 @@ This directory contains The Pyth contract on Ethereum and utilities to deploy it
 
 ## Installation
 
-The contracts are built and tested using Foundry. Follow the [Foundry installation instructions](https://book.getfoundry.sh/getting-started/installation) to install it if you do not already have it.
+The contracts are built and tested using Foundry. You can either:
+
+1. **Use the setup script (recommended)**:
+   Go to the `contracts` directory and Run `npm run setup` to automatically install Foundry v0.3.0 AND all forge dependencies.
+
+2. **Manual installation**:
+   a) Follow the [Foundry installation instructions](https://book.getfoundry.sh/getting-started/installation) and install version v0.3.0.
+
+b) Next, from the `contracts` directory, run the following command to install forge dependencies:
+
+```
+npm run install-forge-deps
+```
 
 Next, run the following command from the repo root to install required dependencies for the contract:
 
 ```
 pnpm i
 pnpm turbo build --filter @pythnetwork/pyth-evm-contract
-```
-
-Next, from the `contracts` directory, run the following command to install forge dependencies:
-
-```
-npm run install-forge-deps
 ```
 
 ## Testing
@@ -34,27 +40,66 @@ npm run coverage
 
 Open `coverage/index.html` in your web browser to see the results.
 
-### Governance tests
+## Deployment and Governance tests
 
-There is a separate test suite executed by truffle for testing governance messages and contract upgrades. You can run ganache-cli as a blockchain instance and test it manually. To do the latter, run the following commands in the `contracts` folder:
+To deploy the contracts, you'll need to set up your environment variables and use the Foundry deployment script.
 
-1. Spawn a new network on a seperate terminal (do not close it while running tests):
+1. Copy the environment template and fill in your values:
 
 ```bash
-pnpm dlx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --host=0.0.0.0
+cp .env.test .env
+# Edit .env with your configuration
 ```
 
-2. deploy the contracts:
+2. Deploy to a local network (for testing):
 
 ```bash
-cp .env.test .env && pnpm exec truffle compile --all && pnpm exec truffle migrate --network development
+# Start a local node
+anvil
+
+# Anvil shows a list of default accounts and their corresponding private keys.
+# Fetch any one of the private key from the anvil terminal and update in .env file.
+
+# In another terminal, deploy the contracts
+npm run deploy-local
 ```
 
 3. Run the test suite:
 
 ```bash
-npm run test-contract
+npm run test
 ```
+
+4. Deploy to a live network:
+
+```bash
+# Make sure your .env file has the correct RPC_URL and PRIVATE_KEY
+npm run deploy
+```
+
+The deployment script will:
+
+- Deploy the Wormhole contracts (Setup, Implementation, and Wormhole proxy)
+- Deploy the Pyth contracts (PythUpgradable with ERC1967 proxy)
+- Configure all necessary parameters from environment variables
+
+5. Deploy and Verify the contracts (on live network)
+
+```bash
+# Make sure your .env file has the correct ETHERSCAN_API_KEY
+npm run deploy-and-verify
+```
+
+### Guardian Set Sync
+
+After deploying Wormhole contracts on mainnet, you need to sync the guardian sets to match the current mainnet state:
+
+```bash
+# Set WORMHOLE_ADDRESS in your .env file to the deployed Wormhole contract address
+npm run receiver-submit-guardian-sets
+```
+
+This script submits the pre-configured mainnet guardian set upgrade VAAs to bring your contract up to date with the current mainnet guardian set.
 
 ### Gas Benchmarks
 
