@@ -36,11 +36,10 @@ import { z } from "zod";
 
 import styles from "./index.module.scss";
 import { Cluster, ClusterToName } from "../../services/pyth";
-import type { Status } from "../../status";
 import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
-import { Status as StatusComponent } from "../Status";
+import { StatusLive } from "../Status";
 
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
@@ -58,7 +57,6 @@ type PriceComponent = {
   feedKey: string;
   score: number | undefined;
   rank: number | undefined;
-  status: Status;
   identifiesPublisher?: boolean | undefined;
   firstEvaluation?: Date | undefined;
   cluster: Cluster;
@@ -134,16 +132,20 @@ export const usePriceComponentDrawer = ({
           <RouterProvider navigate={navigate}>
             <HeadingExtra
               identifiesPublisher={identifiesPublisher}
-              status={component.status}
               cluster={component.cluster}
               publisherKey={component.publisherKey}
               symbol={component.symbol}
+              feedKey={component.feedKey}
             />
           </RouterProvider>
         ),
         headingAfter: (
           <div className={styles.badges}>
-            <StatusComponent status={component.status} />
+            <StatusLive
+              cluster={component.cluster}
+              feedKey={component.feedKey}
+              publisherKey={component.publisherKey}
+            />
           </div>
         ),
         contents: (
@@ -264,18 +266,22 @@ export const usePriceComponentDrawer = ({
 };
 
 type HeadingExtraProps = {
-  status: Status;
   identifiesPublisher?: boolean | undefined;
   cluster: Cluster;
   publisherKey: string;
   symbol: string;
+  feedKey: string;
 };
 
-const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
+const HeadingExtra = ({ feedKey, ...props }: HeadingExtraProps) => {
   return (
     <>
       <div className={styles.bigScreenBadges}>
-        <StatusComponent status={status} />
+        <StatusLive
+          cluster={props.cluster}
+          feedKey={feedKey}
+          publisherKey={props.publisherKey}
+        />
       </div>
       <OpenButton
         variant="ghost"
