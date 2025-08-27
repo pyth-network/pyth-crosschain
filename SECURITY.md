@@ -2,7 +2,7 @@
 
 ## Bug Bounty Program
 
-Pyth operates a self hosted [bug bounty program](https://pyth.network/bounty) to financially incentivize independent researchers (with up to $500,000 USDC) for finding and responsibly disclosing security issues.
+Pyth operates a self-hosted [bug bounty program](https://pyth.network/bounty) to financially incentivize independent researchers (with up to $500,000 USDC) for finding and responsibly disclosing security issues.
 
 - **Scopes**
   - [Pyth Oracle](https://github.com/pyth-network/pyth-client/tree/main/program)
@@ -25,12 +25,12 @@ We engage 3rd party firms to conduct independent security audits of Pyth. At any
 As these 3rd party audits are completed and issues are sufficiently addressed, we make those audit reports public.
 
 - **[April 27, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_04_27/pyth2wormhole_zellic.pdf)**
-  - **Scope**: _pyth-crosschain (formerly known as pyth2wormhole))_
+  - **Scope**: _pyth-crosschain (formerly known as pyth2wormhole)_
 - **[October 10, 2022 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2022_10_10/pyth_aptos.pdf)**
   - **Scope**: _pyth-crosschain-aptos contracts_
 - **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_11_01/pyth.pdf)**
   - **Scope**: _pyth-crosschain-evm contracts_
-- **[December 12, 2022 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2023_07_27/pyth_sui_audit_final.pdf)**
+- **[December 12, 2022 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2023_07_27/pyth_sui_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-sui contracts_
 - **[December 13, 2022 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2022_12_13/pyth-crosschain-governance.pdf)**
   - **Scope**: _pyth-crosschain-governance contracts_
@@ -48,7 +48,7 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain pythnet validator, message_buffer/remote_executor/oracle contracts, merkle tree library, xc_admin_frontend_
 - **[January 18, 2024 - Trail of Bits](https://github.com/pyth-network/audit-reports/blob/main/2024_01_23/Pyth%20Data%20Association%20-%20Entropy%20-%20Comprehensive%20Report.pdf)**
   - **Scope**: _pyth-crosschain-entropy contracts and fortuna web service_
-- **[April 25, 2024 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_solana_pull_oracle_audit_final.pdf)**
+- **[April 25, 2024 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_solana_pull_oracle_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-solana contracts_
 - **[July 12, 2024 - Nethermind](https://github.com/pyth-network/audit-reports/blob/main/2024_07_12/pyth_starknet_pull_oracle_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-starknet contracts_
