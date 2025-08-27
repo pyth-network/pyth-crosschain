@@ -9,7 +9,7 @@ Pulse replaces the service formerly known as "scheduler" or "price pusher," and 
 ## Build and Test
 
 Run `forge build` to build the contracts and `forge test` to run the contract unit tests.
-The unit tests live in the `../../forge-test` directory.
+The unit tests live in the `../../test` directory.
 
 Gas benchmarks that cover the most frequent usage patterns are in `PulseSchedulerGasBenchmark.t.sol`. Run the benchmark with -vv to to see the gas usage for the operations under test, without setup costs.
 
