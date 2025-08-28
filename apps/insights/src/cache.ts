@@ -11,8 +11,8 @@ const transformer = {
 
 /**
  * - API routes will be cached for 1 hour
- * - Cached function will be cached for 10 minutes, 
- * If the function is called within 1 hour, it will 
+ * - Cached function will be cached for 10 minutes,
+ * If the function is called within 1 hour, it will
  * still be served from the cache, but also fetch the latest data
  */
 export const DEFAULT_NEXT_FETCH_TTL = 3600; // 1 hour
