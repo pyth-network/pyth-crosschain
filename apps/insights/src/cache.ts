@@ -9,26 +9,24 @@ const transformer = {
   deserialize: parse,
 };
 
-// export const DEFAULT_CACHE_TTL = 3600; // 1 hour
-// export const DEFAULT_CACHE_STALE = 86_400; // 24 hours
-
-
-export const DEFAULT_CACHE_TTL = 60; // 1 minute
-export const DEFAULT_CACHE_STALE = 60; // 1 minute
+/**
+ * - API routes will be cached for 1hour
+ * - Cached function will be cached for 10 minutes, 
+ * but if the function is called within 1 hour, it will 
+ * still be served from the cache but also fetch the latest data
+ */
+export const DEFAULT_NEXT_FETCH_TTL = 3600; // 1 hour
+export const DEFAULT_REDIS_CACHE_TTL = 60 * 10; // 10 minutes
+export const DEFAULT_REDIS_CACHE_STALE = 3600; // 1 hour
 
 export const redisCache: ACDCache = createCache({
   transformer,
-  stale: DEFAULT_CACHE_STALE,
-  ttl: DEFAULT_CACHE_TTL,
+  stale: DEFAULT_REDIS_CACHE_STALE,
+  ttl: DEFAULT_REDIS_CACHE_TTL,
   storage: {
     type: "redis",
     options: {
       client: getRedis(),
     },
   },
-});
-
-export const memoryOnlyCache: ACDCache = createCache({
-  ttl: DEFAULT_CACHE_TTL,
-  stale: DEFAULT_CACHE_STALE,
 });

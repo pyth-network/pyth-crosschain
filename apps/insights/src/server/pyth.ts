@@ -1,7 +1,7 @@
 import { parse } from "superjson";
 import { z } from "zod";
 
-import { DEFAULT_CACHE_TTL } from "../cache";
+import { DEFAULT_NEXT_CACHE_TTL } from "../cache";
 import { VERCEL_REQUEST_HEADERS } from "../config/server";
 import { getHost } from "../get-host";
 import { Cluster, ClusterToName, priceFeedsSchema } from "../services/pyth";
@@ -18,7 +18,7 @@ export async function getPublishersForFeedRequest(
 
   const data = await fetch(url, {
     next: {
-      revalidate: DEFAULT_CACHE_TTL,
+      revalidate: DEFAULT_NEXT_CACHE_TTL,
     },
     headers: VERCEL_REQUEST_HEADERS,
   });
@@ -38,7 +38,7 @@ export async function getFeedsForPublisherRequest(
 
   const data = await fetch(url, {
     next: {
-      revalidate: DEFAULT_CACHE_TTL,
+      revalidate: DEFAULT_NEXT_CACHE_TTL,
     },
     headers: VERCEL_REQUEST_HEADERS,
   });
@@ -54,7 +54,7 @@ export const getFeedsRequest = async (cluster: Cluster) => {
 
   const data = await fetch(url, {
     next: {
-      revalidate: DEFAULT_CACHE_TTL,
+      revalidate: DEFAULT_NEXT_CACHE_TTL,
     },
     headers: VERCEL_REQUEST_HEADERS,
   });
@@ -82,7 +82,7 @@ export const getFeedForSymbolRequest = async ({
 
   const data = await fetch(url, {
     next: {
-      revalidate: DEFAULT_CACHE_TTL,
+      revalidate: DEFAULT_NEXT_CACHE_TTL,
     },
     headers: VERCEL_REQUEST_HEADERS,
   });
