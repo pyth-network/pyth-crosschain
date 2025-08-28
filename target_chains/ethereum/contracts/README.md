@@ -28,7 +28,7 @@ pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 ## Testing
 
 Run `forge build` to build the contracts and `forge test` to run the contract unit tests.
-The unit tests live in the `forge-test` directory.
+The unit tests live in the `test` directory.
 
 ### Code Coverage
 
