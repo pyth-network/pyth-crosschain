@@ -3123,7 +3123,6 @@ name = "pyth-solana-receiver-sdk"
 version = "0.6.1"
 dependencies = [
  "anchor-lang",
- "bytemuck_derive",
  "hex",
  "pythnet-sdk",
  "solana-program",
