@@ -1,5 +1,7 @@
 "use client";
 
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
+import { Button } from "@pythnetwork/component-library/Button";
 import DefaultSearchDialog from "fumadocs-ui/components/dialog/search-default";
 import { useState } from "react";
 
@@ -8,20 +10,17 @@ export const SearchButton = () => {
 
   return (
     <>
-      <button
+      <Button
         onClick={() => {
           setOpen(true);
         }}
-        style={{
-          background: "transparent",
-          border: "1px solid #ccc",
-          padding: "8px 16px",
-          borderRadius: "6px",
-          cursor: "pointer",
-        }}
+        variant="outline"
+        size="sm"
+        rounded
+        beforeIcon={<MagnifyingGlass size={16} />}
       >
         Search
-      </button>
+      </Button>
       <DefaultSearchDialog
         open={open}
         onOpenChange={setOpen}
