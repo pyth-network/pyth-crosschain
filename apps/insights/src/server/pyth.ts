@@ -93,5 +93,7 @@ export const getFeedForSymbolRequest = async ({
 
   const rawData = await data.text();
   const parsedData = parse(rawData);
-  return priceFeedsSchema.element.parse(parsedData);
+  return parsedData === undefined
+    ? undefined
+    : priceFeedsSchema.element.parse(parsedData);
 };

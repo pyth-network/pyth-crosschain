@@ -24,16 +24,16 @@ pub struct Rate(i64);
 
 impl Rate {
     pub fn from_integer(value: i64, exponent: i16) -> Result<Self, RateError> {
-        let value = match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
+        let mantissa = match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
             ExponentFactor::Mul(coef) => value.checked_mul(coef).ok_or(RateError::Overflow)?,
             ExponentFactor::Div(coef) => value.checked_div(coef).ok_or(RateError::Overflow)?,
         };
-        Ok(Self(value))
+        Ok(Self(mantissa))
     }
 
     pub fn parse_str(value: &str, exponent: i16) -> Result<Self, RateError> {
         let value: Decimal = value.parse()?;
-        let value = match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
+        let mantissa = match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
             ExponentFactor::Mul(coef) => value
                 .checked_mul(Decimal::from_i64(coef).ok_or(RateError::Overflow)?)
                 .ok_or(RateError::Overflow)?,
@@ -41,11 +41,11 @@ impl Rate {
                 .checked_div(Decimal::from_i64(coef).ok_or(RateError::Overflow)?)
                 .ok_or(RateError::Overflow)?,
         };
-        if !value.is_integer() {
+        if !mantissa.is_integer() {
             return Err(RateError::TooPrecise);
         }
-        let value: i64 = value.try_into().map_err(|_| RateError::Overflow)?;
-        Ok(Self(value))
+        let mantissa: i64 = mantissa.try_into().map_err(|_| RateError::Overflow)?;
+        Ok(Self(mantissa))
     }
 
     pub const fn from_mantissa(mantissa: i64) -> Self {
@@ -54,7 +54,7 @@ impl Rate {
 
     pub fn from_f64(value: f64, exponent: i16) -> Result<Self, RateError> {
         let value = Decimal::from_f64(value).ok_or(RateError::Overflow)?;
-        let value = match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
+        let mantissa = match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
             ExponentFactor::Mul(coef) => value
                 .checked_mul(Decimal::from_i64(coef).ok_or(RateError::Overflow)?)
                 .ok_or(RateError::Overflow)?,
@@ -62,8 +62,8 @@ impl Rate {
                 .checked_div(Decimal::from_i64(coef).ok_or(RateError::Overflow)?)
                 .ok_or(RateError::Overflow)?,
         };
-        let value: i64 = value.try_into().map_err(|_| RateError::Overflow)?;
-        Ok(Self(value))
+        let mantissa: i64 = mantissa.try_into().map_err(|_| RateError::Overflow)?;
+        Ok(Self(mantissa))
     }
 
     pub fn mantissa(self) -> i64 {
@@ -72,7 +72,7 @@ impl Rate {
 
     pub fn to_f64(self, exponent: i16) -> Result<f64, RateError> {
         match ExponentFactor::get(exponent).ok_or(RateError::Overflow)? {
-            // Mul/div is reversed for this conversion
+            // Mul/div is reversed for converting mantissa to value
             ExponentFactor::Mul(coef) => Ok(self.0 as f64 / coef as f64),
             ExponentFactor::Div(coef) => Ok(self.0 as f64 * coef as f64),
         }

@@ -1,6 +1,7 @@
 export const priceFeeds = {
   updateFrequency: "400ms",
   featuredFeeds: [
+    "ECO.US.GDP",
     "Crypto.ARC/USD",
     "Crypto.CDXUSD/USD",
     "Equity.GB.CSPX/USD",

@@ -4,8 +4,8 @@ evm_version = "paris"
 optimizer = true
 optimizer_runs = 200
 src = 'contracts'
-# Tests are in the forge-test directory
-test = 'forge-test'
+# Tests are in the test directory
+test = 'test'
 
 libs = ['lib', 'node_modules']
 

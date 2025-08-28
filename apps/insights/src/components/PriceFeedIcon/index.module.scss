@@ -42,4 +42,9 @@
     background: theme.pallette-color("emerald", 300);
     fill: theme.pallette-color("stone", 700);
   }
+
+  &[data-asset-class="ECO"] {
+    background: theme.pallette-color("sky", 200);
+    fill: theme.pallette-color("sky", 800);
+  }
 }
