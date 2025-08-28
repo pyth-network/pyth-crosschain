@@ -5,9 +5,12 @@ import { source } from "../source";
 
 export const baseOptions: BaseLayoutProps = {
   nav: {
-    enabled: false,
+    enabled: true,
   },
   themeSwitch: {
+    enabled: true,
+  },
+  searchToggle: {
     enabled: false,
   },
 };
@@ -16,20 +19,6 @@ export const docsOptions: DocsLayoutProps = {
   ...baseOptions,
   tree: source.pageTree,
   sidebar: {
-    tabs: {
-      transform(option, node) {
-        const meta = source.getNodeMeta(node);
-        if (!meta || !node.icon) return option;
-
-        return {
-          ...option,
-          icon: (
-            <div className="[&_svg]:size-6.5 md:[&_svg]:size-5">
-              {node.icon}
-            </div>
-          ),
-        };
-      },
-    },
+    tabs: false,
   },
 };
