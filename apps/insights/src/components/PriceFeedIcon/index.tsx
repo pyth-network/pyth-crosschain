@@ -4,6 +4,7 @@ import Commodities from "./commodities.svg";
 import CryptoIndex from "./crypto-index.svg";
 import CryptoRedemptionRate from "./crypto-redemption-rate.svg";
 import Crypto from "./crypto.svg";
+import Eco from "./eco.svg";
 import Equity from "./equity.svg";
 import Fx from "./fx.svg";
 import { icons } from "./icons";
@@ -19,19 +20,25 @@ type Props = Omit<SVGProps, keyof OwnProps | "width" | "height" | "viewBox"> &
   OwnProps;
 
 export const PriceFeedIcon = ({ assetClass, symbol, ...props }: Props) => {
-  if (assetClass === "Crypto") {
-    const firstPart = symbol.split(".")[1]?.split("/")[0];
-    const Icon = firstPart ? (icons as SVGRecord)[firstPart] : undefined;
-    return Icon ? (
-      <Icon width="100%" height="100%" viewBox="0 0 32 32" {...props} />
-    ) : (
-      <GenericIcon assetClass="Crypto" {...props} />
-    );
-  } else {
-    return assetClassHasIcon(assetClass) ? (
-      <GenericIcon assetClass={assetClass} {...props} />
-    ) : // eslint-disable-next-line unicorn/no-null
-    null;
+  switch (assetClass) {
+    case "Crypto": {
+      const firstPart = symbol.split(".")[1]?.split("/")[0];
+      const Icon = firstPart ? (icons as SVGRecord)[firstPart] : undefined;
+      return Icon ? (
+        <Icon width="100%" height="100%" viewBox="0 0 32 32" {...props} />
+      ) : (
+        <GenericIcon assetClass="Crypto" {...props} />
+      );
+    }
+    case "Crypto NAV": {
+      return <GenericIcon assetClass="Crypto" {...props} />;
+    }
+    default: {
+      return assetClassHasIcon(assetClass) ? (
+        <GenericIcon assetClass={assetClass} {...props} />
+      ) : // eslint-disable-next-line unicorn/no-null
+      null;
+    }
   }
 };
 
@@ -64,6 +71,7 @@ const ASSET_CLASS_TO_ICON = {
   "Crypto Index": CryptoIndex,
   "Crypto Redemption Rate": CryptoRedemptionRate,
   Crypto,
+  ECO: Eco,
   Equity,
   FX: Fx,
   Metal,
