@@ -6,6 +6,8 @@ import "./EntropyEventsV2.sol";
 import "./EntropyStructsV2.sol";
 import "./IEntropyV2.sol";
 
+/// @notice DEPRECATED: This interface is deprecated. Please use IEntropyV2 instead for new implementations.
+/// IEntropyV2 provides better callback handling and improved functionality.
 interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
     // and initial commitment. Re-registering the same provider rotates the provider's commitment (and updates
@@ -38,16 +40,21 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // their chosen provider (the exact method for doing so will depend on the provider) to retrieve the provider's
     // number. The user should then call fulfillRequest to construct the final random number.
     //
+    // WARNING: This method does NOT invoke a user callback. If you need callback functionality,
+    // use requestV2 from the IEntropyV2 interface instead.
+    //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
     // Note that excess value is *not* refunded to the caller.
-    function request(
-        address provider,
-        bytes32 userCommitment,
-        bool useBlockHash
-    ) external payable returns (uint64 assignedSequenceNumber);
+    function request(address provider, bytes32 userCommitment, bool useBlockHash)
+        external
+        payable
+        returns (uint64 assignedSequenceNumber);
 
     // Request a random number. The method expects the provider address and a secret random number
     // in the arguments. It returns a sequence number.
+    //
+    // DEPRECATED: This method is deprecated. Please use requestV2 from the IEntropyV2 interface instead,
+    // which provides better callback handling and gas limit control.
     //
     // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
@@ -57,10 +64,10 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     //
     // This method will revert unless the caller provides a sufficient fee (at least `getFee(provider)`) as msg.value.
     // Note that excess value is *not* refunded to the caller.
-    function requestWithCallback(
-        address provider,
-        bytes32 userRandomNumber
-    ) external payable returns (uint64 assignedSequenceNumber);
+    function requestWithCallback(address provider, bytes32 userRandomNumber)
+        external
+        payable
+        returns (uint64 assignedSequenceNumber);
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
     // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
@@ -69,12 +76,9 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
     // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
     // If you need to use the returned random number more than once, you are responsible for storing it.
-    function reveal(
-        address provider,
-        uint64 sequenceNumber,
-        bytes32 userRevelation,
-        bytes32 providerRevelation
-    ) external returns (bytes32 randomNumber);
+    function reveal(address provider, uint64 sequenceNumber, bytes32 userRevelation, bytes32 providerRevelation)
+        external
+        returns (bytes32 randomNumber);
 
     // Fulfill a request for a random number. This method validates the provided userRandomness
     // and provider's revelation against the corresponding commitment in the in-flight request. If both values are validated
@@ -93,30 +97,22 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
         bytes32 providerRevelation
     ) external;
 
-    function getProviderInfo(
-        address provider
-    ) external view returns (EntropyStructs.ProviderInfo memory info);
+    function getProviderInfo(address provider) external view returns (EntropyStructs.ProviderInfo memory info);
 
-    function getRequest(
-        address provider,
-        uint64 sequenceNumber
-    ) external view returns (EntropyStructs.Request memory req);
+    function getRequest(address provider, uint64 sequenceNumber)
+        external
+        view
+        returns (EntropyStructs.Request memory req);
 
     // Get the fee charged by provider for a request with the default gasLimit (`request` or `requestWithCallback`).
     // If you are calling any of the `requestV2` methods, please use `getFeeV2`.
     function getFee(address provider) external view returns (uint128 feeAmount);
 
-    function getAccruedPythFees()
-        external
-        view
-        returns (uint128 accruedPythFeesInWei);
+    function getAccruedPythFees() external view returns (uint128 accruedPythFeesInWei);
 
     function setProviderFee(uint128 newFeeInWei) external;
 
-    function setProviderFeeAsFeeManager(
-        address provider,
-        uint128 newFeeInWei
-    ) external;
+    function setProviderFeeAsFeeManager(address provider, uint128 newFeeInWei) external;
 
     function setProviderUri(bytes calldata newUri) external;
 
@@ -135,19 +131,13 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
 
     // Advance the provider commitment and increase the sequence number.
     // This is used to reduce the `numHashes` required for future requests which leads to reduced gas usage.
-    function advanceProviderCommitment(
-        address provider,
-        uint64 advancedSequenceNumber,
-        bytes32 providerRevelation
-    ) external;
+    function advanceProviderCommitment(address provider, uint64 advancedSequenceNumber, bytes32 providerRevelation)
+        external;
 
-    function constructUserCommitment(
-        bytes32 userRandomness
-    ) external pure returns (bytes32 userCommitment);
+    function constructUserCommitment(bytes32 userRandomness) external pure returns (bytes32 userCommitment);
 
-    function combineRandomValues(
-        bytes32 userRandomness,
-        bytes32 providerRandomness,
-        bytes32 blockHash
-    ) external pure returns (bytes32 combinedRandomness);
+    function combineRandomValues(bytes32 userRandomness, bytes32 providerRandomness, bytes32 blockHash)
+        external
+        pure
+        returns (bytes32 combinedRandomness);
 }
