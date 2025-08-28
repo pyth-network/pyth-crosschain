@@ -18,7 +18,6 @@ import {
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
-import ConformanceReports from "./conformance-reports";
 import { getFeed } from "./get-feed";
 import styles from "./header.module.scss";
 import { PriceFeedSelect } from "./price-feed-select";
@@ -175,14 +174,6 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
         >
           Reference Data
         </Button>
-        <ConformanceReports
-          isLoading={props.isLoading}
-          {...(!props.isLoading && {
-            symbol: props.feed.symbol,
-            cluster: Cluster.Pythnet,
-            publisher: props.feed.product.price_account,
-          })}
-        />
       </div>
     </div>
     <Cards>

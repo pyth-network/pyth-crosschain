@@ -15,32 +15,33 @@ import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useMountEffect } from "@react-hookz/web";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useQueryState, parseAsString } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import {
   Suspense,
-  useState,
   useCallback,
   useMemo,
-  useTransition,
   useRef,
+  useState,
+  useTransition,
 } from "react";
 import {
   RouterProvider,
   useDateFormatter,
   useNumberFormatter,
 } from "react-aria";
-import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
+import { Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 import { z } from "zod";
 
-import styles from "./index.module.scss";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
-import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
+import ConformanceReport from "../ConformanceReport/conformance-report";
+import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
+import styles from "./index.module.scss";
 
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
@@ -274,6 +275,11 @@ type HeadingExtraProps = {
 const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
   return (
     <>
+      <ConformanceReport
+        symbol={props.symbol}
+        publisher={props.publisherKey}
+        cluster={ClusterToName[props.cluster]}
+      />
       <div className={styles.bigScreenBadges}>
         <StatusComponent status={status} />
       </div>

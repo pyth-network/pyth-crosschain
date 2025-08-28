@@ -45,6 +45,7 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
+import ConformanceReport from "../ConformanceReport/conformance-report";
 
 type Props = {
   children: ReactNode;
@@ -84,6 +85,10 @@ export const PublisherLayout = async ({ children, params }: Props) => {
                 name: knownPublisher.name,
                 icon: <PublisherIcon knownPublisher={knownPublisher} />,
               })}
+            />
+            <ConformanceReport
+              publisher={key}
+              cluster={ClusterToName[parsedCluster]}
             />
           </div>
 
