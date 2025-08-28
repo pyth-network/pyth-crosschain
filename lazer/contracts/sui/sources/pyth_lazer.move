@@ -96,13 +96,11 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
         sig_i = sig_i + 1;
     };
 
-    // Parse payload length
+    // Parse expected payload length and get remaining bytes as payload
     let payload_len = cursor.peel_u16();
-
-    // Get remaining bytes as payload
     let payload = cursor.into_remainder_bytes();
 
-    // Validate payload length
+    // Validate expectedpayload length
     assert!((payload_len as u64) == payload.length(), EInvalidPayloadLength);
 
     // Parse payload
@@ -113,6 +111,5 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
     // Verify the signature against trusted signers
     verify_le_ecdsa_message(s, clock, &signature, &payload);
 
-    // Parse the actual update data using the update module
     update::parse_from_cursor(payload_cursor)
 }
