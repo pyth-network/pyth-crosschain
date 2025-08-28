@@ -40,7 +40,7 @@ const ConformanceReport = (props: ConformanceReportProps) => {
       return;
     }
     if (props.symbol && props.publisher) {
-      await downloadReportForFeed({
+      return downloadReportForFeed({
         symbol: props.symbol,
         publisher: props.publisher,
         timeframe,
@@ -49,7 +49,7 @@ const ConformanceReport = (props: ConformanceReportProps) => {
     }
 
     if (props.publisher) {
-      await downloadReportForPublisher({
+      return downloadReportForPublisher({
         publisher: props.publisher,
         cluster: props.cluster,
         interval: timeframe,

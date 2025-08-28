@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import { WEB_API_BASE_URL } from "./constants";
+import type { Interval } from "./types";
 import { useDownloadBlob } from "../../hooks/use-download-blob";
 import { CLUSTER_NAMES } from "../../services/pyth";
 
@@ -19,7 +20,7 @@ export const useDownloadReportForFeed = () => {
     }: {
       symbol: string;
       publisher: string;
-      timeframe: string;
+      timeframe: Interval;
       cluster: (typeof CLUSTER_NAMES)[number];
     }) => {
       const url = new URL("/metrics/conformance", WEB_API_BASE_URL);
