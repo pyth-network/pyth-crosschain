@@ -22,11 +22,8 @@ export const TRANSFORMS: Partial<
   [ParameterType.IntArray]: (value) => [value],
 };
 
-export const getPlaceHolder = <Name extends string>(
-  parameter: Parameter<Name>,
-) => {
-  return parameter.defaultValue ?? PLACEHOLDERS[parameter.type];
-};
+export const getPlaceHolder = (parameter: Parameter<string>): string =>
+  parameter.defaultValue ?? PLACEHOLDERS[parameter.type];
 
 export const PLACEHOLDERS: Record<ParameterType, string> = {
   [ParameterType.PriceFeedId]:
