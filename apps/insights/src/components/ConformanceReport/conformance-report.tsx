@@ -13,13 +13,14 @@ import type { Interval } from "./types";
 import { INTERVALS } from "./types";
 import { useDownloadReportForFeed } from "./use-download-report-for-feed";
 import { useDownloadReportForPublisher } from "./use-download-report-for-publisher";
+import { CLUSTER_NAMES } from "../../services/pyth";
 
 type ConformanceReportProps =
   | { isLoading: true }
   | {
       isLoading?: false | undefined;
       symbol?: string;
-      cluster: "pythnet" | "pythtest-conformance";
+      cluster: (typeof CLUSTER_NAMES)[number];
       publisher?: string;
     };
 
@@ -31,6 +32,9 @@ const ConformanceReport = (props: ConformanceReportProps) => {
   const downloadReportForPublisher = useDownloadReportForPublisher();
   const logger = useLogger();
 
+  /**
+   * Download the conformance report for the given symbol or publisher
+   */
   const downloadReport = async () => {
     if (props.isLoading) {
       return;

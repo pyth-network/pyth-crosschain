@@ -2,6 +2,7 @@ import { useCallback } from "react";
 
 import { WEB_API_BASE_URL } from "./constants";
 import { useDownloadBlob } from "../../hooks/use-download-blob";
+import { CLUSTER_NAMES } from "../../services/pyth";
 
 const PYTHTEST_CONFORMANCE_REFERENCE_PUBLISHER =
   "HUZu4xMSHbxTWbkXR6jkGdjvDPJLjrpSNXSoUFBRgjWs";
@@ -19,7 +20,7 @@ export const useDownloadReportForFeed = () => {
       symbol: string;
       publisher: string;
       timeframe: string;
-      cluster: string;
+      cluster: (typeof CLUSTER_NAMES)[number];
     }) => {
       const url = new URL("/metrics/conformance", WEB_API_BASE_URL);
       url.searchParams.set("symbol", symbol);

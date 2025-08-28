@@ -16,6 +16,7 @@ import { WEB_API_BASE_URL } from "./constants";
 import type { Interval } from "./types";
 import { useDownloadBlob } from "../../hooks/use-download-blob";
 import { priceFeedsSchema } from "../../schemas/pyth";
+import { CLUSTER_NAMES } from "../../services/pyth";
 
 // If interval is 'daily', set interval_days=1
 // If interval is 'weekly', get the previous Sunday and set interval_days=7
@@ -62,7 +63,7 @@ const getRankingDateAndIntervalDays = (date: Date, interval: Interval) => {
   }
 };
 
-const getFeeds = async (cluster: string) => {
+const getFeeds = async (cluster: (typeof CLUSTER_NAMES)[number]) => {
   const url = new URL(`/api/pyth/get-feeds`, globalThis.window.origin);
   url.searchParams.set("cluster", cluster);
   const data = await fetch(url);
@@ -89,7 +90,7 @@ const PublisherQuantityScoreSchema = z.object({
 });
 
 const fetchRankingData = async (
-  cluster: string,
+  cluster: (typeof CLUSTER_NAMES)[number],
   publisher: string,
   interval: Interval,
 ) => {
@@ -140,6 +141,14 @@ const csvHeaders = [
   "final_score",
 ];
 
+const symbolsSort = (a: string, b: string) => {
+  const aSplit = a.split(".");
+  const bSplit = b.split(".");
+  const aLast = aSplit.at(-1);
+  const bLast = bSplit.at(-1);
+  return aLast?.localeCompare(bLast ?? "") ?? 0;
+};
+
 export const useDownloadReportForPublisher = () => {
   const download = useDownloadBlob();
 
@@ -150,7 +159,7 @@ export const useDownloadReportForPublisher = () => {
       interval,
     }: {
       publisher: string;
-      cluster: string;
+      cluster: (typeof CLUSTER_NAMES)[number];
       interval: Interval;
     }) => {
       const [rankingData, allFeeds] = await Promise.all([
@@ -176,11 +185,13 @@ export const useDownloadReportForPublisher = () => {
         };
       };
 
-      const activePriceFeeds = rankingData.quantityRankData[0]?.symbols ?? [];
+      const activePriceFeeds =
+        rankingData.quantityRankData[0]?.symbols.sort(symbolsSort) ?? [];
 
       const allSymbols = allFeeds
-        .flatMap((feed) => feed.symbol)
+        .map((feed) => feed.symbol)
         .filter((symbol: string) => symbol && !symbol.includes("NULL"));
+
       // filter out inactive price feeds
       const inactivePriceFeeds = allSymbols
         .filter((symbol) => {
@@ -191,13 +202,8 @@ export const useDownloadReportForPublisher = () => {
             meta.price.numComponentPrices > 0
           );
         })
-        .sort((a, b) => {
-          const aSplit = a.split(".");
-          const bSplit = b.split(".");
-          const aLast = aSplit.at(-1);
-          const bLast = bSplit.at(-1);
-          return aLast?.localeCompare(bLast ?? "") ?? 0;
-        });
+        .sort(symbolsSort);
+
       const data = [
         ...activePriceFeeds.map((feed) => ({
           ...getPriceFeedData(feed),
@@ -212,6 +218,7 @@ export const useDownloadReportForPublisher = () => {
             : "unpermissioned",
         })),
       ];
+
       const csv = stringifyCsv(data, { header: true, columns: csvHeaders });
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
       download(blob, `${publisher}-${cluster}-price-feeds.csv`);
