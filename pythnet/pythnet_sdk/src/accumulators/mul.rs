@@ -8,7 +8,7 @@ use crate::{
 /// A multiplication based Accumulator
 ///
 /// This accumulator relies on the quasi-commutative nature of the multiplication operator. It's
-/// here mostly as a an example to gain intuition for how accumulators should function. This
+/// here mostly as an example to gain intuition for how accumulators should function. This
 /// implementation relies on the fact that `/` can be used to "remove" an element but typically an
 /// accumulator cannot rely on having a shortcut, and must re-accumulate sans the element being
 /// proved to be a member.
