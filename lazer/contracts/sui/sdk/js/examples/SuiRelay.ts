@@ -2,8 +2,8 @@ import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { SuiLazerClient } from "../src/client.js";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
-import { Ed25519Keypair } from "@mysten/sui/cryptography";
-import { fromB64 } from "@mysten/bcs";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { fromB64 } from "@mysten/sui/utils";
 
 type Args = {
   nodeUrl: string;
@@ -70,8 +70,7 @@ async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined, ti
     jsonBinaryEncoding: "hex",
   } as const;
 
-  // @ts-ignore
-  lazer.send?.(JSON.stringify(subscription));
+  (lazer as any).send?.(JSON.stringify(subscription));
 
   return new Promise<Buffer>((resolve, reject) => {
     const timeout = setTimeout(() => {

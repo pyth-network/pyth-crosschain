@@ -54,7 +54,7 @@ Run:
 
 ```
 pnpm -F @pythnetwork/pyth-lazer-sui-js build
-pnpm -F @pythnetwork/pyth-lazer-sui-js example:sui-relay -- --nodeUrl <SUI_NODE_URL> --packageId <PYTH_LAZER_PACKAGE_ID> --stateObjectId <STATE_OBJECT_ID> --lazerUrl wss://<LAZER_WS_URL> [--token <TOKEN>] [--timeoutMs <ms>]
+pnpm -F @pythnetwork/pyth-lazer-sui-js example:sui-relay -- --nodeUrl <SUI_NODE_URL> --packageId <PYTH_LAZER_PACKAGE_ID> --stateObjectId <STATE_OBJECT_ID> --lazerUrl wss://<LAZER_WS_URL> [--token <TOKEN>] [--timeoutMs <ms>] --secretKeyBase64 <BASE64-ED25519-SECRET>
 ```
 
 ## Notes
