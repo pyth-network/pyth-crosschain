@@ -6,7 +6,7 @@ use pyth_lazer::admin;
 use pyth_lazer::channel::new_fixed_rate_200ms;
 use pyth_lazer::i16;
 use pyth_lazer::i64;
-use pyth_lazer::pyth_lazer::{parse_and_verify_le_ecdsa_update, verify_le_ecdsa_message, ESignerNotTrusted, ESignerExpired};
+use pyth_lazer::pyth_lazer::{parse_and_verify_le_ecdsa_update, verify_le_ecdsa_message, ESignerNotTrusted, ESignerExpired, EInvalidMagic, EInvalidPayloadLength};
 use pyth_lazer::state;
 use sui::clock;
 
@@ -221,6 +221,115 @@ public fun test_verify_le_ecdsa_message_multiple_signers() {
 
     // This should succeed because trusted_pubkey2 matches the signature
     verify_le_ecdsa_message(&s, &clock,  &signature, &payload);
+
+    // Clean up
+    state::destroy_for_test(s);
+    admin::destroy_for_test(admin_cap);
+    clock::destroy_for_testing(clock);
+}
+
+// === NEGATIVE PARSING TESTS ===
+
+#[test, expected_failure(abort_code = EInvalidMagic)]
+public fun test_parse_invalid_update_magic() {
+    let mut ctx = tx_context::dummy();
+    let mut s = state::new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2000000000000000; // Far in the future
+    state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey, expiry_time);
+
+    // Create update with invalid magic (first 4 bytes corrupted)
+    let mut invalid_update = TEST_LAZER_UPDATE;
+    *vector::borrow_mut(&mut invalid_update, 0) = 0xFF; // Corrupt the magic
+
+    // This should fail with EInvalidMagic
+    parse_and_verify_le_ecdsa_update(&s, &clock, invalid_update);
+
+    // Clean up
+    state::destroy_for_test(s);
+    admin::destroy_for_test(admin_cap);
+    clock::destroy_for_testing(clock);
+}
+
+#[test, expected_failure(abort_code = EInvalidMagic)]
+public fun test_parse_invalid_payload_magic() {
+    let mut ctx = tx_context::dummy();
+    let mut s = state::new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2000000000000000; // Far in the future
+    state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey, expiry_time);
+
+    // Create update with invalid payload magic
+    // The payload magic starts at byte 69 (4 bytes magic + 65 bytes signature + 2 payload length)
+    let mut invalid_update = TEST_LAZER_UPDATE;
+    *vector::borrow_mut(&mut invalid_update, 71) = 0xFF; // Corrupt the payload magic
+
+    // This corrupts the payload magic, so expect EInvalidMagic
+    parse_and_verify_le_ecdsa_update(&s, &clock, invalid_update);
+
+    // Clean up
+    state::destroy_for_test(s);
+    admin::destroy_for_test(admin_cap);
+    clock::destroy_for_testing(clock);
+}
+
+#[test, expected_failure(abort_code = EInvalidPayloadLength)]
+public fun test_parse_invalid_payload_length() {
+    let mut ctx = tx_context::dummy();
+    let mut s = state::new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2000000000000000; // Far in the future
+    state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey, expiry_time);
+
+    // Create update with wrong payload length 
+    // Layout: magic(4) + signature(65) + payload_len(2) + payload...
+    // So payload length is at bytes 69-70
+    let mut invalid_update = TEST_LAZER_UPDATE;
+    *vector::borrow_mut(&mut invalid_update, 69) = 0xFF; // Set payload length too high
+
+    // This should fail with EInvalidPayloadLength because payload length validation happens before signature verification
+    parse_and_verify_le_ecdsa_update(&s, &clock, invalid_update);
+
+    // Clean up
+    state::destroy_for_test(s);
+    admin::destroy_for_test(admin_cap);
+    clock::destroy_for_testing(clock);
+}
+
+#[test, expected_failure(abort_code = 0, location = sui::bcs)]
+public fun test_parse_truncated_data() {
+    let mut ctx = tx_context::dummy();
+    let mut s = state::new_for_test(&mut ctx);
+    let admin_cap = admin::mint_for_test(&mut ctx);
+    let clock = clock::create_for_testing(&mut ctx);
+
+    // Add the trusted signer
+    let trusted_pubkey = TEST_TRUSTED_SIGNER_PUBKEY;
+    let expiry_time = 2000000000000000; // Far in the future
+    state::update_trusted_signer(&admin_cap, &mut s, trusted_pubkey, expiry_time);
+
+    // Create truncated update (only first 50 bytes)
+    let mut truncated_update = vector::empty<u8>();
+    let mut i = 0;
+    while (i < 50) {
+        vector::push_back(&mut truncated_update, *vector::borrow(&TEST_LAZER_UPDATE, i));
+        i = i + 1;
+    };
+
+    // This should fail with BCS EOutOfRange error when trying to read beyond available data
+    parse_and_verify_le_ecdsa_update(&s, &clock, truncated_update);
 
     // Clean up
     state::destroy_for_test(s);
