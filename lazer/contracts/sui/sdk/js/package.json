@@ -21,9 +21,10 @@
     "buffer": "^6.0.3"
   },
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "^18.11.18",
-    "eslint": "^8.14.0",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
