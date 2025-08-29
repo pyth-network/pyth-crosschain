@@ -1,3 +1,1 @@
-/* eslint-disable import/no-default-export */
-import config from "@cprussin/eslint-config";
-export default config;
+module.exports = require("@cprussin/eslint-config");
