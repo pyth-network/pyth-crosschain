@@ -8,8 +8,8 @@ import styles from "./index.module.scss";
 
 
 type OwnProps = {
-  largeScreenText?: ReactNode | undefined;
-  smallScreenText?: ReactNode | undefined;
+  largeScreenContent?: ReactNode;
+  smallScreenContent?: ReactNode;
 };
 
 type Props =  Pick<
@@ -20,8 +20,8 @@ type Props =  Pick<
   
 export const SearchButton = ({
   beforeIcon,
-  largeScreenText,
-  smallScreenText,
+  largeScreenContent,
+  smallScreenContent,
   ...props
 }: Props) => {
   return (
@@ -35,7 +35,7 @@ export const SearchButton = ({
       
       {...props}
     >
-      {largeScreenText}
+      {largeScreenContent}
     </Button>
     <Button
       className={styles.smallScreenSearchButton ?? ""}
@@ -46,7 +46,7 @@ export const SearchButton = ({
       rounded
       {...props}
     >
-      {smallScreenText}
+      {smallScreenContent}
     </Button>
   </div>
   );

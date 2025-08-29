@@ -39,8 +39,8 @@ export default meta;
 
 export const SearchButton = {
   args: {
-    largeScreenText: "Search",
-    smallScreenText: "Search",
+    largeScreenContent: "Search",
+    smallScreenContent: "Search",
     size: "sm",
   },
 } satisfies StoryObj<typeof SearchButtonComponent>;

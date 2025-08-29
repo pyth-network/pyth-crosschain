@@ -78,8 +78,8 @@ const SearchButtonImpl = (
   <SearchButtonComponent
     size="sm"
     {...props}
-    smallScreenText={<SearchShortcutText />}
-    largeScreenText={<SearchShortcutText />}
+    smallScreenContent={<SearchShortcutText />}
+    largeScreenContent={<SearchShortcutText />}
   />
 );
 
