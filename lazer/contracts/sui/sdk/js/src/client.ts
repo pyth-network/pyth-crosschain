@@ -2,12 +2,10 @@ import { bcs } from "@mysten/sui/bcs";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
-import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
 
 export type ObjectId = string;
-type LazerClientConfig = Parameters<typeof PythLazerClient.create>[0];
 
 export class SuiLazerClient {
   constructor(public provider: SuiClient) {}
@@ -30,23 +28,5 @@ export class SuiLazerClient {
       ],
     });
     return updateObj;
-  }
-
-  static async getLeEcdsaUpdate(config: LazerClientConfig): Promise<Buffer> {
-    const lazer = await PythLazerClient.create(config);
-    return new Promise<Buffer>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        lazer.shutdown();
-        reject(new Error("Timed out waiting for leEcdsa update"));
-      }, 5000);
-      lazer.addMessageListener((event) => {
-        if (event.type === "binary" && event.value.leEcdsa) {
-          clearTimeout(timeout);
-          const buf = event.value.leEcdsa;
-          lazer.shutdown();
-          resolve(buf);
-        }
-      });
-    });
   }
 }

@@ -16,7 +16,6 @@ pnpm turbo build
 ```ts
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import type { WebSocketPoolConfig } from "@pythnetwork/pyth-lazer-sdk";
 import { SuiLazerClient } from "@pythnetwork/pyth-lazer-sui-js";
 
 // Prepare Mysten Sui client
@@ -25,13 +24,9 @@ const provider = new SuiClient({ url: "<sui-fullnode-url>" });
 // Create SDK client
 const client = new SuiLazerClient(provider);
 
-// Get a Lazer leEcdsa payload (example using a single sample)
-const config: WebSocketPoolConfig = {
-  urls: ["wss://lazer.example.ws/stream"],
-  token: "<optional-token>",
-  numConnections: 3,
-};
-const leEcdsa: Buffer = await SuiLazerClient.getLeEcdsaUpdate(config);
+// Obtain a Lazer leEcdsa payload using @pythnetwork/pyth-lazer-sdk.
+// See examples/SuiRelay.ts for a runnable end-to-end example.
+const leEcdsa: Buffer = /* fetch via @pythnetwork/pyth-lazer-sdk */ Buffer.from([]);
 
 // Build transaction calling parse_and_verify_le_ecdsa_update
 const tx = new Transaction();
@@ -45,15 +40,21 @@ const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
   updateBytes: leEcdsa,
 });
 
-// You can now chain more Move calls that consume `updateVal` if desired.
 // Sign and execute the transaction using your signer.
+```
 
-// Example (pseudocode):
-// const result = await provider.signAndExecuteTransaction({
-//   signer,
-//   transaction: tx,
-//   options: { showEffects: true, showEvents: true },
-// });
+## Runnable example
+
+A runnable example is provided at `examples/SuiRelay.ts`. It:
+- connects to Lazer via `@pythnetwork/pyth-lazer-sdk`,
+- fetches a single `leEcdsa` payload,
+- composes a Sui transaction calling `parse_and_verify_le_ecdsa_update`.
+
+Run:
+
+```
+pnpm -F @pythnetwork/pyth-lazer-sui-js build
+pnpm -F @pythnetwork/pyth-lazer-sui-js example:sui-relay -- --nodeUrl <SUI_NODE_URL> --packageId <PYTH_LAZER_PACKAGE_ID> --stateObjectId <STATE_OBJECT_ID> --lazerUrl wss://<LAZER_WS_URL> [--token <TOKEN>] [--timeoutMs <ms>]
 ```
 
 ## Notes
@@ -63,7 +64,6 @@ const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
 - You must supply:
   - `packageId`: the published `pyth_lazer` package address
   - `stateObjectId`: the shared `pyth_lazer::state::State` object id
-- TODO: Provide automatic packageId resolution to the latest package
 
 ## References
 
