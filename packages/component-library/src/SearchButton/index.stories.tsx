@@ -4,7 +4,6 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SearchButton as SearchButtonComponent } from "./index.jsx";
 import { SIZES } from "../Button/index.jsx";
 
-
 const iconControl = {
   control: "select",
   options: Object.keys(icons),
@@ -19,7 +18,7 @@ const iconControl = {
 const meta = {
   component: SearchButtonComponent,
   argTypes: {
-     size: {
+    size: {
       control: "inline-radio",
       options: SIZES,
       table: {
@@ -32,7 +31,6 @@ const meta = {
         category: "Contents",
       },
     },
-   
   },
 } satisfies Meta<typeof SearchButtonComponent>;
 export default meta;
