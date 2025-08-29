@@ -22,6 +22,12 @@
       margin-bottom: -#{theme.spacing(2)};
     }
 
+    .titleRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
     .stats {
       .activeDate {
         color: theme.color("muted");

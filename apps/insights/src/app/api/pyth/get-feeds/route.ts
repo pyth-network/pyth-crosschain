@@ -37,5 +37,5 @@ export const GET = async (request: NextRequest) => {
 
 const queryParamsSchema = z.object({
   cluster: z.enum(CLUSTER_NAMES).transform((value) => toCluster(value)),
-  excludePriceComponents: z.boolean(),
+  excludePriceComponents: z.boolean().optional().default(false),
 });

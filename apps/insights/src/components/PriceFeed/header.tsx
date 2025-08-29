@@ -5,23 +5,23 @@ import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Suspense } from "react";
 
-import styles from "./header.module.scss";
-import { PriceFeedSelect } from "./price-feed-select";
-import { ReferenceData } from "./reference-data";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { Cards } from "../Cards";
 import { Explain } from "../Explain";
 import { FeedKey } from "../FeedKey";
-import { LivePrice, LiveConfidence, LiveLastUpdated } from "../LivePrices";
+import { LiveConfidence, LiveLastUpdated, LivePrice } from "../LivePrices";
 import {
-  YesterdaysPricesProvider,
   PriceFeedChangePercent,
+  YesterdaysPricesProvider,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
 import { getFeed } from "./get-feed";
+import styles from "./header.module.scss";
+import { PriceFeedSelect } from "./price-feed-select";
+import { ReferenceData } from "./reference-data";
 
 type Props = {
   params: Promise<{
