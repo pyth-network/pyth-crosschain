@@ -12,7 +12,6 @@ const transformer = {
 // export const DEFAULT_CACHE_TTL = 3600; // 1 hour
 // export const DEFAULT_CACHE_STALE = 86_400; // 24 hours
 
-
 export const DEFAULT_CACHE_TTL = 60; // 1 minute
 export const DEFAULT_CACHE_STALE = 60; // 1 minute
 

@@ -1,0 +1,17 @@
+@use "../theme";
+
+.searchButton {
+  .largeScreenSearchButton {
+    display: none;
+
+    @include theme.breakpoint("md") {
+      display: inline-flex;
+    }
+  }
+
+  .smallScreenSearchButton {
+    @include theme.breakpoint("md") {
+      display: none;
+    }
+  }
+}
