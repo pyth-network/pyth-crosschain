@@ -30,7 +30,7 @@ function parseArgs(argv: string[]): Args {
   }
   if (!res.nodeUrl || !res.packageId || !res.stateObjectId || !res.lazerUrls?.length) {
     throw new Error(
-      "Usage: tsx examples/SuiRelay.ts --nodeUrl <URL> --packageId <ID> --stateObjectId <ID> (--lazerUrl <WSS>|--lazerUrls <WSS1,WSS2,...>) [--token <TOKEN>] [--timeoutMs <ms>] --secretKeyBase64 <BASE64-ED25519-SECRET>"
+      "Usage: tsx examples/FetchAndVerifyUpdate.ts --nodeUrl <URL> --packageId <ID> --stateObjectId <ID> (--lazerUrl <WSS>|--lazerUrls <WSS1,WSS2,...>) [--token <TOKEN>] [--timeoutMs <ms>] --secretKeyBase64 <BASE64-ED25519-SECRET>"
     );
   }
   return {

@@ -14,7 +14,8 @@
     "fix": "pnpm prettier --write src && pnpm eslint --fix src --ext .ts",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "example:fetch-and-verify": "tsx examples/FetchAndVerifyUpdate.ts"
   },
   "dependencies": {
     "@mysten/sui": "^1.3.0",

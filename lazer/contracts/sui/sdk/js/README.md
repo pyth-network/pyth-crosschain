@@ -25,7 +25,7 @@ const provider = new SuiClient({ url: "<sui-fullnode-url>" });
 const client = new SuiLazerClient(provider);
 
 // Obtain a Lazer leEcdsa payload using @pythnetwork/pyth-lazer-sdk.
-// See examples/SuiRelay.ts for a runnable end-to-end example.
+// See examples/FetchAndVerifyUpdate.ts for a runnable end-to-end example.
 const leEcdsa: Buffer = /* fetch via @pythnetwork/pyth-lazer-sdk */ Buffer.from([]);
 
 // Build transaction calling parse_and_verify_le_ecdsa_update
@@ -45,7 +45,7 @@ const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
 
 ## Runnable example
 
-A runnable example is provided at `examples/SuiRelay.ts`. It:
+A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 - connects to Lazer via `@pythnetwork/pyth-lazer-sdk`,
 - fetches a single `leEcdsa` payload,
 - composes a Sui transaction calling `parse_and_verify_le_ecdsa_update`.
@@ -54,7 +54,7 @@ Run:
 
 ```
 pnpm -F @pythnetwork/pyth-lazer-sui-js build
-pnpm -F @pythnetwork/pyth-lazer-sui-js example:sui-relay -- --nodeUrl <SUI_NODE_URL> --packageId <PYTH_LAZER_PACKAGE_ID> --stateObjectId <STATE_OBJECT_ID> --lazerUrl wss://<LAZER_WS_URL> [--token <TOKEN>] [--timeoutMs <ms>] --secretKeyBase64 <BASE64-ED25519-SECRET>
+pnpm -F @pythnetwork/pyth-lazer-sui-js example:fetch-and-verify -- --nodeUrl <SUI_NODE_URL> --packageId <PYTH_LAZER_PACKAGE_ID> --stateObjectId <STATE_OBJECT_ID> --lazerUrl wss://<LAZER_WS_URL> [--token <TOKEN>] [--timeoutMs <ms>] --secretKeyBase64 <BASE64-ED25519-SECRET>
 ```
 
 ## Notes
