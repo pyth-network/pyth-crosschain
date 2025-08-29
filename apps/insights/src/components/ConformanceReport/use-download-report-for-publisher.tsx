@@ -15,7 +15,7 @@ import { z } from "zod";
 import { WEB_API_BASE_URL } from "./constants";
 import type { Interval } from "./types";
 import { useDownloadBlob } from "../../hooks/use-download-blob";
-import { priceFeedsSchema } from "../../schemas/pyth";
+import { priceFeedsSchema } from "../../schemas/pyth/price-feeds-schema";
 import { CLUSTER_NAMES } from "../../services/pyth";
 
 // If interval is 'daily', set interval_days=1
@@ -72,7 +72,7 @@ const getFeeds = async (cluster: (typeof CLUSTER_NAMES)[number]) => {
   return priceFeedsSchema.element.array().parse(parsedData);
 };
 
-const PublisherQualityScoreSchema = z.object({
+const publisherQualityScoreSchema = z.object({
   symbol: z.string(),
   uptime_score: z.string(),
   deviation_penalty: z.string(),
@@ -82,7 +82,7 @@ const PublisherQualityScoreSchema = z.object({
   final_score: z.string(),
 });
 
-const PublisherQuantityScoreSchema = z.object({
+const publisherQuantityScoreSchema = z.object({
   numSymbols: z.number(),
   rank: z.number(),
   symbols: z.array(z.string()),
@@ -98,10 +98,7 @@ const fetchRankingData = async (
     new Date(),
     interval,
   );
-  const quantityRankUrl = new URL(
-    `/publisher_ranking?publisher=${publisher}&cluster=${cluster}`,
-    WEB_API_BASE_URL,
-  );
+  const quantityRankUrl = new URL(`/publisher_ranking`, WEB_API_BASE_URL);
   quantityRankUrl.searchParams.set("cluster", cluster);
   quantityRankUrl.searchParams.set("publisher", publisher);
   const qualityRankUrl = new URL(
@@ -119,12 +116,12 @@ const fetchRankingData = async (
   ]);
 
   return {
-    quantityRankData: PublisherQuantityScoreSchema.array().parse(
-      await quantityRankRes.json(),
-    ),
-    qualityRankData: PublisherQualityScoreSchema.array().parse(
-      await qualityRankRes.json(),
-    ),
+    quantityRankData: publisherQuantityScoreSchema
+      .array()
+      .parse(await quantityRankRes.json()),
+    qualityRankData: publisherQualityScoreSchema
+      .array()
+      .parse(await qualityRankRes.json()),
   };
 };
 const csvHeaders = [

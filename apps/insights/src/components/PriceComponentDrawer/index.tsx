@@ -42,6 +42,8 @@ import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 import styles from "./index.module.scss";
+import type { Interval } from "../ConformanceReport/types";
+import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
 
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
@@ -273,13 +275,23 @@ type HeadingExtraProps = {
 };
 
 const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
+  const downloadReportForFeed = useDownloadReportForFeed();
+
+  const handleDownloadReport = useCallback(
+    (timeframe: Interval) => {
+      return downloadReportForFeed({
+        symbol: props.symbol,
+        publisher: props.publisherKey,
+        timeframe,
+        cluster: ClusterToName[props.cluster],
+      });
+    },
+    [downloadReportForFeed, props.cluster, props.publisherKey, props.symbol],
+  );
+
   return (
     <>
-      <ConformanceReport
-        symbol={props.symbol}
-        publisher={props.publisherKey}
-        cluster={ClusterToName[props.cluster]}
-      />
+      <ConformanceReport onClick={handleDownloadReport} />
       <div className={styles.bigScreenBadges}>
         <StatusComponent status={status} />
       </div>

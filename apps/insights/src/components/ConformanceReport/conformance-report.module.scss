@@ -1,4 +1,6 @@
+@use "@pythnetwork/component-library/theme";
+
 .conformanceReport {
   display: flex;
-  gap: 0.5rem;
+  gap: theme.spacing(2);
 }

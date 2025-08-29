@@ -4,7 +4,7 @@ import { z } from "zod";
 import { DEFAULT_CACHE_TTL } from "../cache";
 import { VERCEL_REQUEST_HEADERS } from "../config/server";
 import { getHost } from "../get-host";
-import { priceFeedsSchema } from "../schemas/pyth";
+import { priceFeedsSchema } from "../schemas/pyth/price-feeds-schema";
 import { Cluster, ClusterToName } from "../services/pyth";
 
 export async function getPublishersForFeedRequest(

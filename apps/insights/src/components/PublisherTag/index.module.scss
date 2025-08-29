@@ -28,7 +28,7 @@
   .name {
     color: theme.color("heading");
 
-    @include theme.text("lg", "medium");
+    @include theme.text("base", "medium");
   }
 
   .publisherKey,
