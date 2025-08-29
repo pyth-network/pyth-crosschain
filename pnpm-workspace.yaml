@@ -46,6 +46,8 @@ packages:
   - lazer/sdk/js
   - lazer/sdk/js-solana
 
+  - lazer/contracts/sui/sdk/js
+
 catalog:
   "@amplitude/analytics-browser": ^2.13.0
   "@amplitude/plugin-autocapture-browser": ^1.0.0

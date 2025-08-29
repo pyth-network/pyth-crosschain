@@ -1,0 +1,34 @@
+{
+  "name": "@pythnetwork/pyth-lazer-sui-js",
+  "version": "0.1.0",
+  "description": "TypeScript SDK to compose Sui PTBs for Pyth Lazer Sui contract",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist",
+    "fix": "pnpm prettier --write . && pnpm eslint --fix .",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@mysten/sui": "^1.3.0",
+    "@pythnetwork/pyth-lazer-sdk": "workspace:*",
+    "buffer": "^6.0.3"
+  },
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@types/node": "^18.11.18",
+    "eslint": "^8.14.0",
+    "prettier": "catalog:",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
