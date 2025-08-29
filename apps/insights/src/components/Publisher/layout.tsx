@@ -21,7 +21,12 @@ import {
   getPublisherAverageScoreHistory,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
-import { ClusterToName, parseCluster, Cluster } from "../../services/pyth";
+import {
+  ClusterToName,
+  parseCluster,
+  Cluster,
+  CLUSTER_NAMES,
+} from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
 import { Cards } from "../Cards";
 import { ChangePercent } from "../ChangePercent";
@@ -45,9 +50,7 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
-import ConformanceReport from "../ConformanceReport/conformance-report";
-import type { Interval } from "../ConformanceReport/types";
-import { useDownloadReportForPublisher } from "../ConformanceReport/use-download-report-for-publisher";
+import { PublisherConformanceReport } from "./publisher-conformance-report";
 
 type Props = {
   children: ReactNode;
@@ -107,16 +110,6 @@ const PublisherHeader = ({
 }) => {
   const knownPublisher = lookup(publisherKey);
 
-  const downloadReportForPublisher = useDownloadReportForPublisher();
-
-  const handleDownloadReport = (interval: Interval) => {
-    return downloadReportForPublisher({
-      publisher: publisherKey,
-      cluster: ClusterToName[cluster],
-      interval,
-    });
-  };
-
   return (
     <section className={styles.header}>
       <div className={styles.breadcrumbRow}>
@@ -139,7 +132,10 @@ const PublisherHeader = ({
             icon: <PublisherIcon knownPublisher={knownPublisher} />,
           })}
         />
-        <ConformanceReport onClick={handleDownloadReport} />
+        <PublisherConformanceReport
+          publisherKey={publisherKey}
+          cluster={CLUSTER_NAMES[cluster]}
+        />
       </div>
 
       <Cards className={styles.stats ?? ""}>
