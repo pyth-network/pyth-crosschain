@@ -4,12 +4,17 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
-    "outDir": "./dist",
+    "outDir": "./lib",
     "rootDir": "src",
     "module": "commonjs",
     "target": "esnext",
     "strict": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
 }

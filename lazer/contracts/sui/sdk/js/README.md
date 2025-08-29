@@ -1,10 +1,6 @@
 # Pyth Lazer Sui JS SDK
 
-This package helps you build a Sui Programmable Transaction that calls the Lazer contract function `pyth_lazer::pyth_lazer::parse_and_verify_le_ecdsa_update` with a Lazer `leEcdsa` payload.
-
-- Compose with `SuiClient` from `@mysten/sui/client`
-- Fetch Lazer updates from `@pythnetwork/pyth-lazer-sdk`
-- No package upgrade handling; you must provide `packageId` and `stateObjectId`
+This package helps you build a Sui Programmable Transaction to parse and verify a Lazer price payload on Sui.
 
 ## Install (in monorepo)
 
@@ -67,11 +63,10 @@ const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
 - You must supply:
   - `packageId`: the published `pyth_lazer` package address
   - `stateObjectId`: the shared `pyth_lazer::state::State` object id
-- We intentionally do not resolve the latest package id automatically.
+- TODO: Provide automatic packageId resolution to the latest package
 
 ## References
 
 - Pyth Lazer Sui contract: `lazer/contracts/sui/`
 - Lazer JS SDK (data source): `lazer/sdk/js/`
-- Pyth Sui JS SDK (reference patterns): `target_chains/sui/sdk/js`
 - Mysten Sui TS SDK docs: https://sdk.mystenlabs.com/typescript/transaction-building/basics

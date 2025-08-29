@@ -45,7 +45,6 @@ packages:
   - lazer/contracts/solana
   - lazer/sdk/js
   - lazer/sdk/js-solana
-
   - lazer/contracts/sui/sdk/js
 
 catalog:
