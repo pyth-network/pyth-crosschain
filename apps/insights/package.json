@@ -32,6 +32,8 @@
     "bs58": "catalog:",
     "clsx": "catalog:",
     "cryptocurrency-icons": "catalog:",
+    "date-fns": "catalog:",
+    "csv-stringify": "catalog:",
     "dnum": "catalog:",
     "ioredis": "^5.7.0",
     "lightweight-charts": "catalog:",
@@ -46,8 +48,8 @@
     "superjson": "catalog:",
     "swr": "catalog:",
     "zod": "catalog:",
-    "zod-validation-error": "catalog:",
-    "zod-search-params": "catalog:"
+    "zod-search-params": "catalog:",
+    "zod-validation-error": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

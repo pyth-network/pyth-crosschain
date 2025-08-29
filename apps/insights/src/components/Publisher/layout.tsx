@@ -13,7 +13,7 @@ import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Suspense } from "react";
+import { Suspense, useCallback } from "react";
 
 import {
   getPublishers,
@@ -45,6 +45,9 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
+import ConformanceReport from "../ConformanceReport/conformance-report";
+import type { Interval } from "../ConformanceReport/types";
+import { useDownloadReportForPublisher } from "../ConformanceReport/use-download-report-for-publisher";
 
 type Props = {
   children: ReactNode;
@@ -61,46 +64,9 @@ export const PublisherLayout = async ({ children, params }: Props) => {
   if (parsedCluster === undefined) {
     notFound();
   } else {
-    const knownPublisher = lookup(key);
     return (
       <div className={styles.publisherLayout}>
-        <section className={styles.header}>
-          <div className={styles.breadcrumbRow}>
-            <Breadcrumbs
-              className={styles.breadcrumbs ?? ""}
-              label="Breadcrumbs"
-              items={[
-                { href: "/", label: "Home" },
-                { href: "/publishers", label: "Publishers" },
-                { label: <PublisherKey publisherKey={key} /> },
-              ]}
-            />
-          </div>
-          <PublisherTag
-            cluster={parsedCluster}
-            publisherKey={key}
-            {...(knownPublisher && {
-              name: knownPublisher.name,
-              icon: <PublisherIcon knownPublisher={knownPublisher} />,
-            })}
-          />
-          <Cards className={styles.stats ?? ""}>
-            <Suspense fallback={<RankingCardImpl isLoading />}>
-              <RankingCard cluster={parsedCluster} publisherKey={key} />
-            </Suspense>
-            <Suspense fallback={<ScoreCardImpl isLoading />}>
-              <ScoreCard cluster={parsedCluster} publisherKey={key} />
-            </Suspense>
-            <Suspense fallback={<ActiveFeedsCardImpl isLoading />}>
-              <ActiveFeedsCard cluster={parsedCluster} publisherKey={key} />
-            </Suspense>
-            {parsedCluster === Cluster.Pythnet && (
-              <Suspense fallback={<OisPoolCardImpl isLoading />}>
-                <OisPoolCard publisherKey={key} />
-              </Suspense>
-            )}
-          </Cards>
-        </section>
+        <PublisherHeader cluster={parsedCluster} publisherKey={key} />
         <TabRoot>
           <Tabs
             label="Price Feed Navigation"
@@ -130,6 +96,73 @@ export const PublisherLayout = async ({ children, params }: Props) => {
       </div>
     );
   }
+};
+
+const PublisherHeader = ({
+  cluster,
+  publisherKey,
+}: {
+  cluster: Cluster;
+  publisherKey: string;
+}) => {
+  const knownPublisher = lookup(publisherKey);
+
+  const downloadReportForPublisher = useDownloadReportForPublisher();
+
+  const handleDownloadReport = useCallback(
+    (interval: Interval) => {
+      return downloadReportForPublisher({
+        publisher: publisherKey,
+        cluster: ClusterToName[cluster],
+        interval,
+      });
+    },
+    [publisherKey, cluster, downloadReportForPublisher],
+  );
+
+  return (
+    <section className={styles.header}>
+      <div className={styles.breadcrumbRow}>
+        <Breadcrumbs
+          className={styles.breadcrumbs ?? ""}
+          label="Breadcrumbs"
+          items={[
+            { href: "/", label: "Home" },
+            { href: "/publishers", label: "Publishers" },
+            { label: <PublisherKey publisherKey={publisherKey} /> },
+          ]}
+        />
+      </div>
+      <div className={styles.titleRow}>
+        <PublisherTag
+          cluster={cluster}
+          publisherKey={publisherKey}
+          {...(knownPublisher && {
+            name: knownPublisher.name,
+            icon: <PublisherIcon knownPublisher={knownPublisher} />,
+          })}
+        />
+        <ConformanceReport onClick={handleDownloadReport} />
+      </div>
+
+      <Cards className={styles.stats ?? ""}>
+        <Suspense fallback={<RankingCardImpl isLoading />}>
+          <RankingCard cluster={cluster} publisherKey={publisherKey} />
+        </Suspense>
+        <Suspense fallback={<ScoreCardImpl isLoading />}>
+          <ScoreCard cluster={cluster} publisherKey={publisherKey} />
+        </Suspense>
+        <Suspense fallback={<ActiveFeedsCardImpl isLoading />}>
+          <ActiveFeedsCard cluster={cluster} publisherKey={publisherKey} />
+        </Suspense>
+        {cluster === Cluster.Pythnet && (
+          <Suspense fallback={<OisPoolCardImpl isLoading />}>
+            <OisPoolCard publisherKey={publisherKey} />
+          </Suspense>
+        )}
+      </Cards>
+    </section>
+  );
 };
 
 const NumFeeds = async ({
