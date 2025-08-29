@@ -4,15 +4,9 @@ module pyth_lazer::channel;
 const EInvalidChannel: u64 = 1;
 
 public enum Channel has copy, drop {
-    Invalid,
     RealTime,
     FixedRate50ms,
     FixedRate200ms,
-}
-
-/// Create a new Invalid channel
-public fun new_invalid(): Channel {
-    Channel::Invalid
 }
 
 /// Create a new RealTime channel
@@ -32,9 +26,7 @@ public fun new_fixed_rate_200ms(): Channel {
 
 /// Parse channel from a channel value byte
 public fun from_u8(channel_value: u8): Channel {
-    if (channel_value == 0) {
-        new_invalid()
-    } else if (channel_value == 1) {
+    if (channel_value == 1) {
         new_real_time()
     } else if (channel_value == 2) {
         new_fixed_rate_50ms()
@@ -42,14 +34,6 @@ public fun from_u8(channel_value: u8): Channel {
         new_fixed_rate_200ms()
     } else {
         abort EInvalidChannel
-    }
-}
-
-/// Check if the channel is Invalid
-public fun is_invalid(channel: &Channel): bool {
-    match (channel) {
-        Channel::Invalid => true,
-        _ => false,
     }
 }
 
