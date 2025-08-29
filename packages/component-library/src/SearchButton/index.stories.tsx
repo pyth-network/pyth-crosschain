@@ -1,7 +1,6 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { MagnifyingGlass } from '@phosphor-icons/react/dist/ssr';
 import { SearchButton as SearchButtonComponent } from "./index.jsx";
 import { SIZES } from "../Button/index.jsx";
 
@@ -29,7 +28,6 @@ const meta = {
     },
     beforeIcon: {
       ...iconControl,
-      defaultValue: <MagnifyingGlass />,
       table: {
         category: "Contents",
       },
@@ -44,6 +42,5 @@ export const SearchButton = {
     largeScreenText: "Search",
     smallScreenText: "Search",
     size: "sm",
-    beforeIcon: <MagnifyingGlass />,
   },
 } satisfies StoryObj<typeof SearchButtonComponent>;
