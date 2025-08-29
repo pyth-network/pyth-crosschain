@@ -13,7 +13,7 @@ import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Suspense, useCallback } from "react";
+import { Suspense } from "react";
 
 import {
   getPublishers,
@@ -109,16 +109,13 @@ const PublisherHeader = ({
 
   const downloadReportForPublisher = useDownloadReportForPublisher();
 
-  const handleDownloadReport = useCallback(
-    (interval: Interval) => {
-      return downloadReportForPublisher({
-        publisher: publisherKey,
-        cluster: ClusterToName[cluster],
-        interval,
-      });
-    },
-    [publisherKey, cluster, downloadReportForPublisher],
-  );
+  const handleDownloadReport = (interval: Interval) => {
+    return downloadReportForPublisher({
+      publisher: publisherKey,
+      cluster: ClusterToName[cluster],
+      interval,
+    });
+  };
 
   return (
     <section className={styles.header}>
