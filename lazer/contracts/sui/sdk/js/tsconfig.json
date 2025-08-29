@@ -1,4 +1,15 @@
 {
-  "extends": "@cprussin/tsconfig/base.json",
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "src",
+    "module": "commonjs",
+    "target": "esnext",
+    "strict": true
+  },
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
