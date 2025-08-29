@@ -25,28 +25,28 @@ type Props = {
 };
 
 export const Root = ({ children }: Props) => (
-  <AppShell
-    appName="Developer Hub"
-    amplitudeApiKey={AMPLITUDE_API_KEY}
-    googleAnalyticsId={GOOGLE_ANALYTICS_ID}
-    enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-    extraCta={<SearchButton />}
-    mainCta={{
-      label: "Insights",
-      href: "https://insights.pyth.network/",
+  <FumadocsRootProvider
+    search={{
+      enabled: true,
+      options: {
+        api: "/api/search",
+      },
     }}
-    providers={[NuqsAdapter]}
-    tabs={TABS}
   >
-    <FumadocsRootProvider
-      search={{
-        enabled: true,
-        options: {
-          api: "/api/search",
-        },
+    <AppShell
+      appName="Developer Hub"
+      amplitudeApiKey={AMPLITUDE_API_KEY}
+      googleAnalyticsId={GOOGLE_ANALYTICS_ID}
+      enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
+      extraCta={<SearchButton />}
+      mainCta={{
+        label: "Insights",
+        href: "https://insights.pyth.network/",
       }}
+      providers={[NuqsAdapter]}
+      tabs={TABS}
     >
       {children}
-    </FumadocsRootProvider>
-  </AppShell>
+    </AppShell>
+  </FumadocsRootProvider>
 );
