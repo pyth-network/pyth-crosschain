@@ -13,7 +13,12 @@ export const SearchButton = () => {
 
   return (
     <>
-    <SearchButtonComponent size='sm' smallScreenText="Search" largeScreenText="Search" onClick={handleSearch} />
+      <SearchButtonComponent
+        size="sm"
+        smallScreenContent="Search"
+        largeScreenContent="Search"
+        onClick={handleSearch}
+      />
       <DefaultSearchDialog
         open={open}
         onOpenChange={setOpen}
