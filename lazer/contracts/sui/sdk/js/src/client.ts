@@ -1,12 +1,13 @@
+import { bcs } from "@mysten/sui/bcs";
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
-import { bcs } from "@mysten/sui/bcs";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
 
 export type ObjectId = string;
+type LazerClientConfig = Parameters<typeof PythLazerClient.create>[0];
 
 export class SuiLazerClient {
   constructor(public provider: SuiClient) {}
@@ -24,17 +25,14 @@ export class SuiLazerClient {
         tx.object(stateObjectId),
         tx.object(SUI_CLOCK_OBJECT_ID),
         tx.pure(
-          bcs
-            .vector(bcs.U8)
-            .serialize(Array.from(updateBytes), { maxSize: MAX_ARGUMENT_SIZE })
-            .toBytes(),
+          bcs.vector(bcs.U8).serialize([...updateBytes], { maxSize: MAX_ARGUMENT_SIZE }).toBytes(),
         ),
       ],
     });
     return updateObj;
   }
 
-  static async getLeEcdsaUpdate(config: any): Promise<Buffer> {
+  static async getLeEcdsaUpdate(config: LazerClientConfig): Promise<Buffer> {
     const lazer = await PythLazerClient.create(config);
     return new Promise<Buffer>((resolve, reject) => {
       const timeout = setTimeout(() => {
