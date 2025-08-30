@@ -1,50 +1,12 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { SuiLazerClient } from "../src/client.js";
-import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+import { PythLazerClient, Request } from "@pythnetwork/pyth-lazer-sdk";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { fromB64 } from "@mysten/sui/utils";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
-type Args = {
-  nodeUrl: string;
-  packageId: string;
-  stateObjectId: string;
-  lazerUrls: string[];
-  token?: string;
-  timeoutMs: number;
-  secretKeyBase64?: string;
-};
-
-function parseArgs(argv: string[]): Args {
-  const res: Partial<Args> = {};
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === "--nodeUrl" && argv[i + 1]) res.nodeUrl = argv[++i];
-    else if (arg === "--packageId" && argv[i + 1]) res.packageId = argv[++i];
-    else if (arg === "--stateObjectId" && argv[i + 1]) res.stateObjectId = argv[++i];
-    else if (arg === "--lazerUrl" && argv[i + 1]) res.lazerUrls = [argv[++i]];
-    else if (arg === "--lazerUrls" && argv[i + 1]) res.lazerUrls = argv[++i].split(",");
-    else if (arg === "--token" && argv[i + 1]) res.token = argv[++i];
-    else if (arg === "--timeoutMs" && argv[i + 1]) res.timeoutMs = parseInt(argv[++i], 10);
-    else if (arg === "--secretKeyBase64" && argv[i + 1]) res.secretKeyBase64 = argv[++i];
-  }
-  if (!res.nodeUrl || !res.packageId || !res.stateObjectId || !res.lazerUrls?.length) {
-    throw new Error(
-      "Usage: tsx examples/FetchAndVerifyUpdate.ts --nodeUrl <URL> --packageId <ID> --stateObjectId <ID> (--lazerUrl <WSS>|--lazerUrls <WSS1,WSS2,...>) [--token <TOKEN>] [--timeoutMs <ms>] --secretKeyBase64 <BASE64-ED25519-SECRET>"
-    );
-  }
-  return {
-    nodeUrl: res.nodeUrl!,
-    packageId: res.packageId!,
-    stateObjectId: res.stateObjectId!,
-    lazerUrls: res.lazerUrls!,
-    token: res.token,
-    timeoutMs: res.timeoutMs ?? 5000,
-    secretKeyBase64: res.secretKeyBase64,
-  };
-}
-
-async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined, timeoutMs: number) {
+async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined) {
   const config: Parameters<typeof PythLazerClient.create>[0] = {
     urls,
     token: token ?? "",
@@ -52,34 +14,27 @@ async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined, ti
   };
   const lazer = await PythLazerClient.create(config);
 
-  const subscription = {
+  const subscription: Request = {
     subscriptionId: 1,
     type: "subscribe",
-    priceFeedIds: [1, 2, 112],
+    priceFeedIds: [1],
     properties: [
       "price",
       "bestBidPrice",
       "bestAskPrice",
       "exponent",
-      "fundingRate",
-      "fundingTimestamp",
-      "fundingRateInterval",
     ],
-    chains: ["leEcdsa"],
+    formats: ["leEcdsa"],
     channel: "fixed_rate@200ms",
+    deliveryFormat: "binary",
     jsonBinaryEncoding: "hex",
-  } as const;
+  };
 
-  (lazer as any).send?.(JSON.stringify(subscription));
+  lazer.subscribe(subscription)
 
-  return new Promise<Buffer>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      lazer.shutdown();
-      reject(new Error("Timed out waiting for leEcdsa update"));
-    }, timeoutMs);
+  return new Promise<Buffer>((resolve, _) => {
     lazer.addMessageListener((event) => {
       if (event.type === "binary" && event.value.leEcdsa) {
-        clearTimeout(timeout);
         const buf = event.value.leEcdsa;
         lazer.shutdown();
         resolve(buf);
@@ -89,14 +44,50 @@ async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined, ti
 }
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const args = await yargs(hideBin(process.argv))
+    .option("fullnodeUrl", {
+      type: "string",
+      description: "URL of the full Sui node RPC endpoint. e.g: https://fullnode.testnet.sui.io:443",
+      demandOption: true,
+    })
+    .option("packageId", {
+      type: "string",
+      description: "Lazer contract package ID",
+      demandOption: true,
+    })
+    .option("stateObjectId", {
+      type: "string",
+      description: "Lazer contract shared State object ID",
+      demandOption: true,
+    })
+    .option("lazerUrls", {
+      type: "string",
+      description: "Comma-separated Lazer WebSocket URLs",
+      default: "wss://pyth-lazer-0.dourolabs.app/v1/stream,wss://pyth-lazer-1.dourolabs.app/v1/stream",
+    })
+    .option("token", {
+      type: "string",
+      description: "Lazer authentication token",
+    })
+    .help()
+    .parseAsync();
 
-  const provider = new SuiClient({ url: args.nodeUrl });
+  if (process.env.SUI_KEY === undefined) {
+    throw new Error(`SUI_KEY environment variable should be set to your Sui private key in hex format.`);
+  }
+
+  const lazerUrls = args.lazerUrls.split(",");
+
+  const provider = new SuiClient({ url: args.fullnodeUrl });
   const client = new SuiLazerClient(provider);
 
-  const updateBytes = await getOneLeEcdsaUpdate(args.lazerUrls, args.token, args.timeoutMs);
+  // Fetch the Lazer update
+  const updateBytes = await getOneLeEcdsaUpdate(lazerUrls, args.token);
 
+  // Build the Sui transaction
   const tx = new Transaction();
+
+  // Add the parse and verify call
   client.addParseAndVerifyLeEcdsaUpdateCall({
     tx,
     packageId: args.packageId,
@@ -104,18 +95,15 @@ async function main() {
     updateBytes,
   });
 
-  if (!args.secretKeyBase64) {
-    console.log("Built transaction; to execute, provide --secretKeyBase64 with an Ed25519 secret key.");
-    return;
-  }
+  // You can add more calls to the transaction that consume the parsed update here
 
-  const secretKey = fromB64(args.secretKeyBase64);
-  const keypair = Ed25519Keypair.fromSecretKey(secretKey);
+  const wallet = Ed25519Keypair.fromSecretKey(
+    Buffer.from(process.env.SUI_KEY, "hex"),
+  );
   const res = await provider.signAndExecuteTransaction({
-    signer: keypair,
+    signer: wallet,
     transaction: tx,
     options: { showEffects: true, showEvents: true },
-    requestType: "WaitForLocalExecution",
   });
 
   console.log("Execution result:", JSON.stringify(res, null, 2));
