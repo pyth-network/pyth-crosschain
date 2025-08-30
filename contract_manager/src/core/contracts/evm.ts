@@ -411,6 +411,11 @@ export class EvmEntropyContract extends Storable {
       from: address,
     });
   }
+
+  async getAccruedPythFees(): Promise<string> {
+    const contract = this.getContract();
+    return await contract.methods.getAccruedPythFees().call();
+  }
 }
 
 export class EvmExecutorContract extends Storable {
