@@ -2,7 +2,7 @@
 
 ## Bug Bounty Program
 
-Pyth operates a self hosted [bug bounty program](https://pyth.network/bounty) to financially incentivize independent researchers (with up to $500,000 USDC) for finding and responsibly disclosing security issues.
+Pyth operates a self-hosted [bug bounty program](https://pyth.network/bounty) to financially incentivize independent researchers (with up to $500,000 USDC) for finding and responsibly disclosing security issues.
 
 - **Scopes**
   - [Pyth Oracle](https://github.com/pyth-network/pyth-client/tree/main/program)
@@ -25,12 +25,12 @@ We engage 3rd party firms to conduct independent security audits of Pyth. At any
 As these 3rd party audits are completed and issues are sufficiently addressed, we make those audit reports public.
 
 - **[April 27, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_04_27/pyth2wormhole_zellic.pdf)**
-  - **Scope**: _pyth-crosschain (formerly known as pyth2wormhole))_
+  - **Scope**: _pyth-crosschain (formerly known as pyth2wormhole)_
 - **[October 10, 2022 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2022_10_10/pyth_aptos.pdf)**
   - **Scope**: _pyth-crosschain-aptos contracts_
 - **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_11_01/pyth.pdf)**
   - **Scope**: _pyth-crosschain-evm contracts_
-- **[December 12, 2022 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2023_07_27/pyth_sui_audit_final.pdf)**
+- **[December 12, 2022 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2023_07_27/pyth_sui_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-sui contracts_
 - **[December 13, 2022 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2022_12_13/pyth-crosschain-governance.pdf)**
   - **Scope**: _pyth-crosschain-governance contracts_
@@ -48,13 +48,13 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain pythnet validator, message_buffer/remote_executor/oracle contracts, merkle tree library, xc_admin_frontend_
 - **[January 18, 2024 - Trail of Bits](https://github.com/pyth-network/audit-reports/blob/main/2024_01_23/Pyth%20Data%20Association%20-%20Entropy%20-%20Comprehensive%20Report.pdf)**
   - **Scope**: _pyth-crosschain-entropy contracts and fortuna web service_
-- **[April 25, 2024 - Ottersec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_solana_pull_oracle_audit_final.pdf)**
+- **[April 25, 2024 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2024_04_25/pyth_solana_pull_oracle_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-solana contracts_
 - **[July 12, 2024 - Nethermind](https://github.com/pyth-network/audit-reports/blob/main/2024_07_12/pyth_starknet_pull_oracle_audit_final.pdf)**
   - **Scope**: _pyth-crosschain-starknet contracts_
-- **[Jan 17, 2025 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2025_01_17/pyth_lazer_solana_audit_final.pdf)**
+- **[January 17, 2025 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2025_01_17/pyth_lazer_solana_audit_final.pdf)**
   - **Scope**: _pyth-lazer solana contract_
-- **[Feb 12, 2025 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2025_02_12/pyth_lazer_evm_audit_final.pdf)**
+- **[February 12, 2025 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2025_02_12/pyth_lazer_evm_audit_final.pdf)**
   - **Scope**: _pyth-lazer evm contract_
 
 ## Social Media Monitoring
@@ -63,11 +63,11 @@ The Pyth project maintains a social media monitoring program to stay abreast of 
 
 These developments include monitoring services like Twitter for key phrases and patterns such that the Pyth project is informed of a compromise or vulnerability in a dependency that could negatively affect Pyth or its users.
 
-In the case of a large ecosystem development that requires response, the Pyth project will engage its security incident response program.
+In the case of a large ecosystem development that requires a response, the Pyth project will engage its security incident response program.
 
 ## Incident Response
 
-The Pyth project maintains an incident response program to respond to vulnerabilities or active threats to Pyth, its users, or the ecosystems it's connected to. Pyth can be made aware about a security event from a variety of different sources (eg. bug bounty program, audit finding, security monitoring, social media, etc.)
+The Pyth project maintains an incident response program to respond to vulnerabilities or active threats to Pyth, its users, or the ecosystems it's connected to. Pyth can be made aware about a security event from a variety of different sources (e.g. bug bounty program, audit finding, security monitoring, social media, etc.)
 
 When a Pyth project contributor becomes aware of a security event, that contributor immediately holds the role of [incident commander](https://en.wikipedia.org/wiki/Incident_commander) for the issue until they hand off to a more appropriate incident commander. A contributor does not need to be a "security person" or have any special privileges to hold the role of incident commander, they simply need to be responsible, communicate effectively, and maintain the following obligations to manage the incident to completion.
 
@@ -75,8 +75,8 @@ The role of the incident commander for Pyth includes the following minimum oblig
 
 - Understand what is going on, the severity, and advance the state of the incident.
 - Identify and contact the relevant responders needed to address the issue.
-- Identify what actions are needed for containment (eg. security patch, contracts deployed, governance ceremony).
-- Establish a dedicated real-time communication channel for responders to coordinate (eg. Slack, Telegram, Signal, or Zoom).
+- Identify what actions are needed for containment (e.g. security patch, contracts deployed, governance ceremony).
+- Establish a dedicated real-time communication channel for responders to coordinate (e.g. Slack, Telegram, Signal, or Zoom).
 - Establish a private incident document, where the problem, timeline, actions, artifacts, lessons learned, etc. can be tracked and shared with responders.
 - When an incident is over, host a [retrospective](https://en.wikipedia.org/wiki/Retrospective) with key responders to understand how things could be handled better in the future (this is a no blame session, the goal is objectively about improving Pyth's readiness and response capability in the future).
 - Create issues in relevant ticket trackers for actions based on lessons learned.
