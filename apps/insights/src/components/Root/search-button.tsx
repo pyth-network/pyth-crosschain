@@ -8,7 +8,6 @@ import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { SearchButton as SearchButtonComponent } from "@pythnetwork/component-library/SearchButton";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import {
   ListLayout,
   Virtualizer,
@@ -23,7 +22,7 @@ import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCollator, useFilter, useIsSSR } from "react-aria";
+import { useCollator, useFilter } from "react-aria";
 
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
@@ -74,14 +73,7 @@ const ResolvedSearchButton = (props: ResolvedSearchButtonProps) => {
 
 const SearchButtonImpl = (
   props: Omit<ButtonProps<typeof UnstyledButton>, "children">,
-) => (
-  <SearchButtonComponent
-    size="sm"
-    {...props}
-    smallScreenContent={<SearchShortcutText />}
-    largeScreenContent={<SearchShortcutText />}
-  />
-);
+) => <SearchButtonComponent size="sm" {...props} />;
 
 const useSearchDrawer = ({ feeds, publishers }: ResolvedSearchButtonProps) => {
   const drawer = useDrawer();
@@ -133,16 +125,6 @@ const useSearchHotkey = (openSearchDrawer: () => void) => {
       globalThis.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
-};
-
-const SearchShortcutText = () => {
-  const isSSR = useIsSSR();
-  return isSSR ? <Skeleton width={7} /> : <SearchTextImpl />;
-};
-
-const SearchTextImpl = () => {
-  const isMac = useMemo(() => navigator.userAgent.includes("Mac"), []);
-  return isMac ? "⌘ K" : "Ctrl K";
 };
 
 type SearchDialogContentsProps = ResolvedSearchButtonProps;
