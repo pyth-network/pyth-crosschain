@@ -196,12 +196,11 @@ const SearchDialogContents = ({
       ...publisher,
     }));
 
-    // console.log({ filteredFeeds: [...filteredFeeds], filteredPublishers: [...filteredPublishers] })
     if (type === ResultType.PriceFeed) {
-      return [...filteredFeeds];
+      return filteredFeeds;
     }
     if (type === ResultType.Publisher) {
-      return [...filteredPublishers];
+      return filteredPublishers;
     }
     return [...filteredFeeds, ...filteredPublishers];
   }, [feeds, publishers, search, type]);

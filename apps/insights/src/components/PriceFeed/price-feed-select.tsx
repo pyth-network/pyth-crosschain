@@ -56,7 +56,7 @@ type ResolvedPriceFeedSelect = {
     symbol: string;
     displaySymbol: string;
     assetClass: string;
-    key: string;
+    key: string; // price_account
     description: string;
     icon: ReactNode;
   }[];
@@ -70,7 +70,7 @@ const ResolvedPriceFeedSelect = ({
   const filteredAndSortedFeeds = useMemo(
     () =>
       matchSorter(feeds, search, {
-        keys: ["displaySymbol", "symbol", "description"],
+        keys: ["displaySymbol", "symbol", "description", 'key'],
       }),
     [feeds, search],
   );
