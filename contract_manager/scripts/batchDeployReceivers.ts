@@ -15,7 +15,7 @@ import Web3 from "web3";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import * as fs from "fs";
 
-const { getDefaultConfig } = require("./contractManagerConfig");
+const { getDefaultConfig } = require("../../target_chains/ethereum/contracts/scripts/contractManagerConfig");
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -46,7 +46,14 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function memoize(key: string, fn: () => Promise<any>) {
-  const path = `./cache/${key}.json`;
+  const cacheDir = './cache';
+  const path = `${cacheDir}/${key}.json`;
+  
+  // Ensure cache directory exists
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  }
+  
   if (fs.existsSync(path)) {
     return JSON.parse(fs.readFileSync(path).toString());
   }
