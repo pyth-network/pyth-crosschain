@@ -16,9 +16,9 @@ import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
 import clsx from "clsx";
+import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { useCollator, useFilter } from "react-aria";
 
 import styles from "./price-feed-select.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
@@ -66,29 +66,14 @@ const ResolvedPriceFeedSelect = ({
   feeds,
   ...props
 }: ResolvedPriceFeedSelect) => {
-  const collator = useCollator();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [search, setSearch] = useState("");
-  const filteredFeeds = useMemo(
+  const filteredAndSortedFeeds = useMemo(
     () =>
-      search === ""
-        ? feeds
-        : feeds.filter(
-            ({ displaySymbol, assetClass, key }) =>
-              filter.contains(displaySymbol, search) ||
-              filter.contains(assetClass, search) ||
-              filter.contains(key, search),
-          ),
-    [feeds, search, filter],
+      matchSorter(feeds, search, {
+        keys: ["displaySymbol", "symbol", "description"],
+      }),
+    [feeds, search],
   );
-  const sortedFeeds = useMemo(
-    () =>
-      filteredFeeds.toSorted((a, b) =>
-        collator.compare(a.displaySymbol, b.displaySymbol),
-      ),
-    [filteredFeeds, collator],
-  );
-
   return (
     <PriceFeedSelectImpl
       menu={
@@ -109,7 +94,7 @@ const ResolvedPriceFeedSelect = ({
             </SearchField>
             <Virtualizer layout={new ListLayout()}>
               <ListBox
-                items={sortedFeeds}
+                items={filteredAndSortedFeeds}
                 className={styles.listbox ?? ""}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus={false}
@@ -120,7 +105,9 @@ const ResolvedPriceFeedSelect = ({
                     className={styles.priceFeed ?? ""}
                     href={`/price-feeds/${encodeURIComponent(symbol)}`}
                     data-is-first={
-                      symbol === sortedFeeds[0]?.symbol ? "" : undefined
+                      symbol === filteredAndSortedFeeds[0]?.symbol
+                        ? ""
+                        : undefined
                     }
                     prefetch={false}
                   >
