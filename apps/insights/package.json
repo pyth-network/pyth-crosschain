@@ -37,6 +37,7 @@
     "dnum": "catalog:",
     "ioredis": "^5.7.0",
     "lightweight-charts": "catalog:",
+    "match-sorter": "catalog:",
     "motion": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
