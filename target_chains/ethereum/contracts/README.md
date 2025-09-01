@@ -90,7 +90,6 @@ The deployment script will:
 npm run deploy-and-verify
 ```
 
-
 ### Gas Benchmarks
 
 You can use foundry to run gas benchmark tests (which can be found in the `forge-test` directory). To run the tests with gas report
