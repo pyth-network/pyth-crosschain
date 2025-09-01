@@ -90,17 +90,6 @@ The deployment script will:
 npm run deploy-and-verify
 ```
 
-### Guardian Set Sync
-
-After deploying Wormhole contracts on mainnet, you need to sync the guardian sets to match the current mainnet state:
-
-```bash
-# Set WORMHOLE_ADDRESS in your .env file to the deployed Wormhole contract address
-npm run receiver-submit-guardian-sets
-```
-
-This script submits the pre-configured mainnet guardian set upgrade VAAs to bring your contract up to date with the current mainnet guardian set.
-
 ### Gas Benchmarks
 
 You can use foundry to run gas benchmark tests (which can be found in the `forge-test` directory). To run the tests with gas report
