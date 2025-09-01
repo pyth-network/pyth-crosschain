@@ -15,7 +15,7 @@ import Web3 from "web3";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import * as fs from "fs";
 
-const { getDefaultConfig } = require("../../target_chains/ethereum/contracts/scripts/contractManagerConfig");
+import { getDefaultConfig } from "../../target_chains/ethereum/contracts/scripts/contractManagerConfig";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -45,10 +45,13 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-async function memoize(key: string, fn: () => Promise<any>) {
-  const cacheDir = '../../target_chains/ethereum/contracts/cache';
+async function memoize(
+  key: string,
+  fn: () => Promise<string>,
+): Promise<string> {
+  const cacheDir = "../../target_chains/ethereum/contracts/cache";
   const path = `${cacheDir}/${key}.json`;
-  
+
   if (fs.existsSync(path)) {
     return JSON.parse(fs.readFileSync(path).toString());
   }
@@ -61,11 +64,14 @@ async function main() {
   const argv = await parser.argv;
   const privateKey = argv["private-key"];
   const network = argv["network"];
-  const setupInfo = require(argv["contract"] + "/ReceiverSetup.json");
-  const implementationInfo = require(
-    argv["contract"] + "/ReceiverImplementation.json",
+
+  const setupInfo = await import(argv["contract"] + "/ReceiverSetup.json");
+  const implementationInfo = await import(
+    argv["contract"] + "/ReceiverImplementation.json"
   );
-  const receiverInfo = require(argv["contract"] + "/WormholeReceiver.json");
+  const receiverInfo = await import(
+    argv["contract"] + "/WormholeReceiver.json"
+  );
 
   const payloads: Buffer[] = [];
   for (const chain of Object.values(DefaultStore.chains)) {
