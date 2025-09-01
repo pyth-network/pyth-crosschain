@@ -70,7 +70,7 @@ const ResolvedPriceFeedSelect = ({
   const filteredAndSortedFeeds = useMemo(
     () =>
       matchSorter(feeds, search, {
-        keys: ["displaySymbol", "symbol", "description", 'key'],
+        keys: ["displaySymbol", "symbol", "description", "key"],
       }),
     [feeds, search],
   );
