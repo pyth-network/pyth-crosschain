@@ -46,13 +46,8 @@ const parser = yargs(hideBin(process.argv))
   });
 
 async function memoize(key: string, fn: () => Promise<any>) {
-  const cacheDir = './cache';
+  const cacheDir = '../../target_chains/ethereum/contracts/cache';
   const path = `${cacheDir}/${key}.json`;
-  
-  // Ensure cache directory exists
-  if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
-  }
   
   if (fs.existsSync(path)) {
     return JSON.parse(fs.readFileSync(path).toString());
