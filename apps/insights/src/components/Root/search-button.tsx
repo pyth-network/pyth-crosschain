@@ -181,13 +181,13 @@ const SearchDialogContents = ({
   const results = useMemo(() => {
     const filteredFeeds = matchSorter(feeds, search, {
       keys: ["displaySymbol", "symbol", "description", "priceAccount"],
-    })
-      .entries()
-      .map(([symbol, feed]) => ({
-        type: ResultType.PriceFeed as const,
-        id: symbol,
-        ...feed,
-      }));
+    }).map(({ symbol, ...feed }) => ({
+      type: ResultType.PriceFeed as const,
+      id: symbol,
+      symbol,
+      ...feed,
+    }));
+
     const filteredPublishers = matchSorter(publishers, search, {
       keys: ["publisherKey", "name"],
     }).map((publisher) => ({
@@ -197,10 +197,10 @@ const SearchDialogContents = ({
     }));
 
     if (type === ResultType.PriceFeed) {
-      return [...filteredFeeds];
+      return filteredFeeds;
     }
     if (type === ResultType.Publisher) {
-      return [...filteredPublishers];
+      return filteredPublishers;
     }
     return [...filteredFeeds, ...filteredPublishers];
   }, [feeds, publishers, search, type]);
