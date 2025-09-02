@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Lazer SDK Browser/Worker Example</title>
+    <style>
+      body { font-family: sans-serif; }
+      #logs { background: #f5f5f5; padding: 8px; white-space: pre-wrap; }
+      .ok { color: #0a0; }
+      .err { color: #a00; }
+    </style>
+  </head>
+  <body>
+    <h1>Lazer SDK Browser/Worker Example</h1>
+    <p>Build the SDK (pnpm --filter @pythnetwork/pyth-lazer-sdk run build:esm), then serve this folder over HTTP and click Start.</p>
+    <button id="start">Start Worker Test</button>
+    <div id="logs"></div>
+    <script>
+      const logs = document.getElementById("logs");
+      function log(msg, cls) {
+        const d = document.createElement("div");
+        if (cls) d.className = cls;
+        d.textContent = msg;
+        logs.appendChild(d);
+      }
+      document.getElementById("start").onclick = () => {
+        const w = new Worker("./worker.js", { type: "module" });
+        w.onmessage = (e) => {
+          const { type } = e.data || {};
+          if (type === "env") {
+            const { isNode, hasWebSocket } = e.data;
+            log(`Worker env -> isNode: ${String(isNode)}, hasWebSocket: ${String(hasWebSocket)}`);
+          } else if (type === "ws_url") {
+            log(`Worker WebSocket URL: ${e.data.url}`);
+          } else if (type === "ready") {
+            log("Worker connected", "ok");
+          } else if (type === "msg") {
+            log(`Worker message: type=${e.data.msgType}, sample=${e.data.sample}`);
+          } else if (type === "done") {
+            log("Worker done", "ok");
+          } else if (type === "error") {
+            const s = e.data.stack ? `\n${e.data.stack}` : "";
+            log(`Worker error: ${e.data.error}${s}`, "err");
+          }
+        };
+        w.onerror = (err) => log("Worker onerror: " + err.message, "err");
+        const url = new URL(location.href);
+        const token = url.searchParams.get("token") || "gr6DS1uhFL7dUrcrboueU4ykRk2XhOfT3GO-demo";
+        const ws = url.searchParams.get("url") || "wss://pyth-lazer-0.dourolabs.app/v1/stream";
+        w.postMessage({ cmd: "start", token, urls: [ws] });
+      };
+    </script>
+  </body>
+</html>
