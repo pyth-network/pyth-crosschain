@@ -27,7 +27,11 @@
       2) copy ../dist/esm into ./sdk (as ./sdk/index.js, etc.).
       Serve this folder over HTTP and click Start.
     </p>
-    <button id="start">Start Worker Test</button>
+    <div style="margin: 8px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <label>URL <input id="ws" size="60" value="wss://pyth-lazer-0.dourolabs.app/v1/stream" /></label>
+      <label>Token <input id="token" size="60" value="gr6DS1uhFL7dUrcrboueU4ykRk2XhOfT3GO-demo" /></label>
+      <button id="start">Start Worker Test</button>
+    </div>
     <div id="logs"></div>
     <script>
       const logs = document.getElementById("logs");
@@ -37,6 +41,12 @@
         d.textContent = msg;
         logs.appendChild(d);
       }
+      const params = new URL(location.href).searchParams;
+      const wsInput = document.getElementById("ws");
+      const tokenInput = document.getElementById("token");
+      wsInput.value = params.get("url") || wsInput.value;
+      tokenInput.value = params.get("token") || tokenInput.value;
+
       document.getElementById("start").onclick = () => {
         const w = new Worker("./worker.js", { type: "module" });
         w.onmessage = (e) => {
@@ -58,9 +68,8 @@
           }
         };
         w.onerror = (err) => log("Worker onerror: " + err.message, "err");
-        const url = new URL(location.href);
-        const token = url.searchParams.get("token") || "gr6DS1uhFL7dUrcrboueU4ykRk2XhOfT3GO-demo";
-        const ws = url.searchParams.get("url") || "wss://pyth-lazer-0.dourolabs.app/v1/stream";
+        const ws = wsInput.value.trim();
+        const token = tokenInput.value.trim();
         w.postMessage({ cmd: "start", token, urls: [ws] });
       };
     </script>
