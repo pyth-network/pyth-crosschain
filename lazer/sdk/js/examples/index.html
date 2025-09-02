@@ -9,10 +9,24 @@
       .ok { color: #0a0; }
       .err { color: #a00; }
     </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "isomorphic-ws": "./isomorphic-ws.js",
+          "@isaacs/ttlcache": "./ttlcache.js",
+          "ts-log": "./ts-log.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <h1>Lazer SDK Browser/Worker Example</h1>
-    <p>Build the SDK (pnpm --filter @pythnetwork/pyth-lazer-sdk run build:esm), then serve this folder over HTTP and click Start.</p>
+    <p>
+      Build the SDK (pnpm --filter @pythnetwork/pyth-lazer-sdk run build:esm), then either:
+      1) copy ../dist/esm into ./dist/esm (preferred), or
+      2) copy ../dist/esm into ./sdk (as ./sdk/index.js, etc.).
+      Serve this folder over HTTP and click Start.
+    </p>
     <button id="start">Start Worker Test</button>
     <div id="logs"></div>
     <script>

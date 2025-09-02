@@ -16,7 +16,12 @@ self.onmessage = async (evt) => {
       if (k in OrigWS) self.WebSocket[k] = OrigWS[k];
     }
 
-    const mod = await import("../dist/esm/index.js");
+    let mod;
+    try {
+      mod = await import("./dist/esm/index.js");
+    } catch {
+      mod = await import("./sdk/index.js");
+    }
     const { PythLazerClient } = mod;
 
     const logger = {
@@ -34,7 +39,7 @@ self.onmessage = async (evt) => {
       onError: (e) => self.postMessage({ type: "error", error: String(e) }),
     });
 
-    client.onMessage((msg) => {
+    client.addMessageListener((msg) => {
       self.postMessage({ type: "msg", msgType: typeof msg, sample: typeof msg === "string" ? msg.slice(0, 100) : "binary" });
     });
 
