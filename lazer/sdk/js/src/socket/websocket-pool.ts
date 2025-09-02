@@ -58,17 +58,38 @@ export class WebSocketPool {
     const pool = new WebSocketPool(logger);
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
+    const isBrowser =
+      typeof globalThis !== "undefined" &&
+      (globalThis as { document?: unknown }).document !== undefined;
+
     for (let i = 0; i < numConnections; i++) {
-      const url = config.urls[i % config.urls.length];
-      if (!url) {
+      const baseUrl = config.urls[i % config.urls.length];
+      if (!baseUrl) {
         throw new Error(`URLs must not be null or empty`);
       }
-      const wsOptions = {
-        ...config.rwsConfig?.wsOptions,
-        headers: {
-          Authorization: `Bearer ${config.token}`,
-        },
-      };
+
+      let url = baseUrl;
+      let wsOptions: ResilientWebSocketConfig["wsOptions"] =
+        config.rwsConfig?.wsOptions;
+
+      if (isBrowser) {
+        const u = new URL(baseUrl);
+        u.searchParams.set("ACCESS_TOKEN", config.token);
+        url = u.toString();
+        wsOptions = undefined;
+      } else {
+        const baseOpts = (wsOptions ?? {}) as {
+          headers?: Record<string, string>;
+        };
+        wsOptions = {
+          ...baseOpts,
+          headers: {
+            ...baseOpts.headers,
+            Authorization: `Bearer ${config.token}`,
+          },
+        };
+      }
+
       const rws = new ResilientWebSocket({
         ...config.rwsConfig,
         endpoint: url,

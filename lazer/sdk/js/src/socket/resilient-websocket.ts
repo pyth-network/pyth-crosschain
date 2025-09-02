@@ -106,7 +106,11 @@ export class ResilientWebSocket {
       this.retryTimeout = undefined;
     }
 
-    this.wsClient = new WebSocket(this.endpoint, this.wsOptions);
+    const isBrowser =
+      typeof globalThis !== "undefined" &&
+      (globalThis as { document?: unknown }).document !== undefined;
+    const wsSecondArg = isBrowser ? undefined : this.wsOptions;
+    this.wsClient = new WebSocket(this.endpoint, wsSecondArg);
 
     this.wsClient.addEventListener("open", () => {
       this.logger.info("WebSocket connection established");
