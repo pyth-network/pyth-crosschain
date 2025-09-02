@@ -58,9 +58,10 @@ export class WebSocketPool {
     const pool = new WebSocketPool(logger);
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
-    const isBrowser =
-      typeof globalThis !== "undefined" &&
-      (globalThis as { document?: unknown }).document !== undefined;
+    const isNode =
+      typeof process !== "undefined" &&
+      !!(process as unknown as { versions?: { node?: string } }).versions?.node;
+    const isBrowser = !isNode;
 
     for (let i = 0; i < numConnections; i++) {
       const baseUrl = config.urls[i % config.urls.length];
@@ -76,7 +77,6 @@ export class WebSocketPool {
         const u = new URL(baseUrl);
         u.searchParams.set("ACCESS_TOKEN", config.token);
         url = u.toString();
-        wsOptions = undefined;
       } else {
         const baseOpts = (wsOptions ?? {}) as {
           headers?: Record<string, string>;
