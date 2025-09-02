@@ -28,6 +28,8 @@ Serve this folder over HTTP (pick one):
 
 Run:
 - Open the served index.html in your browser
+- Enter your Lazer URL and ACCESS_TOKEN in the input fields (no defaults are provided)
+- Optionally, you can prefill via query params ?url=...&token=...
 - Click "Start Worker Test"
 
 Expected:
