@@ -83,54 +83,49 @@ async function fetchAccruedFees(
 function formatResults(results: FeeResult[], showEth: boolean): void {
   console.log("\n=== Accrued Entropy DAO Fees Summary ===\n");
 
-  const mainnetResults = results.filter((r) => r.isMainnet);
-  const testnetResults = results.filter((r) => !r.isMainnet);
-
-  if (mainnetResults.length > 0) {
-    console.log("MAINNET CHAINS:");
-    console.log("─".repeat(80));
-    for (const result of mainnetResults) {
-      if (result.error) {
-        console.log(`${result.chainId.padEnd(20)} | ERROR: ${result.error}`);
-      } else {
-        const feesDisplay =
-          showEth && result.accruedFeesEth
-            ? `${result.accruedFees.padStart(20)} Wei (${result.accruedFeesEth} ETH)`
-            : `${result.accruedFees.padStart(20)} Wei`;
-        console.log(`${result.chainId.padEnd(20)} | ${feesDisplay}`);
-      }
-    }
-    console.log("");
-  }
-
-  if (testnetResults.length > 0) {
-    console.log("TESTNET CHAINS:");
-    console.log("─".repeat(80));
-    for (const result of testnetResults) {
-      if (result.error) {
-        console.log(`${result.chainId.padEnd(20)} | ERROR: ${result.error}`);
-      } else {
-        const feesDisplay =
-          showEth && result.accruedFeesEth
-            ? `${result.accruedFees.padStart(20)} Wei (${result.accruedFeesEth} ETH)`
-            : `${result.accruedFees.padStart(20)} Wei`;
-        console.log(`${result.chainId.padEnd(20)} | ${feesDisplay}`);
-      }
-    }
-    console.log("");
-  }
+  const successfulResults = results.filter((r) => !r.error);
+  const failedResults = results.filter((r) => r.error);
 
   // Summary statistics
-  const successfulResults = results.filter((r) => !r.error);
-
   console.log("SUMMARY:");
   console.log("─".repeat(40));
   console.log(`Total Chains Checked: ${results.length}`);
   console.log(`Successful Queries:   ${successfulResults.length}`);
-  console.log(
-    `Failed Queries:       ${results.length - successfulResults.length}`,
-  );
+  console.log(`Failed Queries:       ${failedResults.length}`);
   console.log("");
+
+  if (successfulResults.length > 0) {
+    console.log("Successful Queries:");
+    console.table(
+      successfulResults.map((r) => {
+        const baseData = {
+          Chain: r.chainId,
+          Network: r.isMainnet ? "Mainnet" : "Testnet",
+          "Fees (Wei)": r.accruedFees,
+        };
+
+        if (showEth && r.accruedFeesEth) {
+          return {
+            ...baseData,
+            "Fees (ETH)": r.accruedFeesEth,
+          };
+        }
+
+        return baseData;
+      }),
+    );
+  }
+
+  if (failedResults.length > 0) {
+    console.log("\nFailed Queries:");
+    console.table(
+      failedResults.map((r) => ({
+        Chain: r.chainId,
+        Network: r.isMainnet ? "Mainnet" : "Testnet",
+        Error: r.error,
+      })),
+    );
+  }
 }
 
 async function main() {
