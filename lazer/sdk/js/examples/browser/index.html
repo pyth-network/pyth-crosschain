@@ -28,8 +28,8 @@
       Serve this folder over HTTP and click Start.
     </p>
     <div style="margin: 8px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-      <label>URL <input id="ws" size="60" value="wss://pyth-lazer-0.dourolabs.app/v1/stream" /></label>
-      <label>Token <input id="token" size="60" value="gr6DS1uhFL7dUrcrboueU4ykRk2XhOfT3GO-demo" /></label>
+      <label>URL <input id="ws" size="60" placeholder="wss://.../v1/stream" /></label>
+      <label>Token <input id="token" size="60" placeholder="your access token" /></label>
       <button id="start">Start Worker Test</button>
     </div>
     <div id="logs"></div>
@@ -44,8 +44,10 @@
       const params = new URL(location.href).searchParams;
       const wsInput = document.getElementById("ws");
       const tokenInput = document.getElementById("token");
-      wsInput.value = params.get("url") || wsInput.value;
-      tokenInput.value = params.get("token") || tokenInput.value;
+      const qpUrl = params.get("url");
+      const qpToken = params.get("token");
+      if (qpUrl) wsInput.value = qpUrl;
+      if (qpToken) tokenInput.value = qpToken;
 
       document.getElementById("start").onclick = () => {
         const w = new Worker("./worker.js", { type: "module" });
