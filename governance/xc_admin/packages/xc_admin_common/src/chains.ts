@@ -115,6 +115,7 @@ export const RECEIVER_CHAINS = {
   mezo: 60084,
   iota_sui_mainnet: 60085,
   camp_network: 60086,
+  spiderman: 60087,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
