@@ -2,6 +2,7 @@ export type Parameter<Name extends string> = {
   name: Name;
   type: ParameterType;
   description: string;
+  defaultValue?: string; // Optional default value for the parameter
 };
 
 export enum ParameterType {
@@ -20,6 +21,9 @@ export const TRANSFORMS: Partial<
   [ParameterType.HexArray]: (value) => [value],
   [ParameterType.IntArray]: (value) => [value],
 };
+
+export const getPlaceHolder = (parameter: Parameter<string>): string =>
+  parameter.defaultValue ?? PLACEHOLDERS[parameter.type];
 
 export const PLACEHOLDERS: Record<ParameterType, string> = {
   [ParameterType.PriceFeedId]:
