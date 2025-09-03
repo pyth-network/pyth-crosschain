@@ -20,29 +20,29 @@ Express Relay is a priority auction which enables better orderflow mechanisms th
 To integrate with Express Relay, you can integrate as a protocol (to power token swaps) or as a searcher.
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-  <a href="./integrate-as-protocol" className="block group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">Integrate as a Protocol</h3>
-    </div>
-    <p className="text-gray-600 dark:text-gray-400">Power token swaps and recapture MEV with Express Relay integration</p>
-  </a>
+  <IntegrationCard
+    href="./integrate-as-protocol"
+    colorScheme="blue"
+    title="Integrate as a Protocol"
+    description="Power token swaps and recapture MEV with Express Relay integration"
+    icon={
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    }
+  />
 
-  <a href="./integrate-as-searcher" className="block group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-        <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">Integrate as a Searcher</h3>
-    </div>
-    <p className="text-gray-600 dark:text-gray-400">Access unified orderflow opportunities across DeFi protocols</p>
-  </a>
+  <IntegrationCard
+    href="./integrate-as-searcher"
+    colorScheme="green"
+    title="Integrate as a Searcher"
+    description="Access unified orderflow opportunities across DeFi protocols"
+    icon={
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    }
+  />
 </div>
 
 ## Learn
@@ -50,15 +50,15 @@ To integrate with Express Relay, you can integrate as a protocol (to power token
 To learn more about Express Relay, refer to the following resources:
 
 <div className="mt-8">
-  <a href="./how-express-relay-works" className="block group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-    <div className="flex items-center gap-3 mb-3">
-      <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-        <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">How Express Relay Works</h3>
-    </div>
-    <p className="text-gray-600 dark:text-gray-400">Understand the mechanics behind Express Relay's priority auction system</p>
-  </a>
+  <IntegrationCard
+    href="./how-express-relay-works"
+    colorScheme="purple"
+    title="How Express Relay Works"
+    description="Understand the mechanics behind Express Relay's priority auction system"
+    icon={
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    }
+  />
 </div>
