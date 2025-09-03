@@ -272,6 +272,8 @@ The following metrics are available:
 - **pyth_price_last_published_time** (Gauge): The last published time of a price feed in unix timestamp, labeled by price_id and alias
 - **pyth_price_update_attempts_total** (Counter): Total number of price update attempts with their trigger condition and status, labeled by price_id, alias, trigger, and status
 - **pyth_price_feeds_total** (Gauge): Total number of price feeds being monitored
+- **pyth_source_price** (Gauge): Latest price value from Pyth source, labeled by price_id and alias
+- **pyth_target_price** (Gauge): Latest price value from target chain, labeled by price_id and alias
 - **pyth_wallet_balance** (Gauge): Current wallet balance of the price pusher in native token units, labeled by wallet_address and network
 
 ### Configuration
@@ -343,6 +345,30 @@ pyth_wallet_balance
 pyth_wallet_balance < 0.1
 ```
 
+7. Monitor current source price values:
+
+```
+pyth_source_price
+```
+
+8. Monitor current target price values:
+
+```
+pyth_target_price
+```
+
+9. Compare source vs target price differences:
+
+```
+abs(pyth_source_price - pyth_target_price) / pyth_source_price * 100
+```
+
+10. Detect significant price deviations (>1%):
+
+```
+abs(pyth_source_price - pyth_target_price) / pyth_source_price * 100 > 1
+```
+
 ### Dashboard
 
 The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-dashboard.sample.json`) that provides monitoring of your price pusher operations. The dashboard includes the following panels:
@@ -353,6 +379,8 @@ The docker-compose setup includes a pre-configured Grafana dashboard (`grafana-d
 - **Price Feeds List**: A table listing all configured price feeds with their details.
 - **Successful Updates (Current Range)**: Graph showing the number of successful price updates over the current range with timeline.
 - **Update Conditions Distribution**: Pie chart showing the distribution of update conditions (YES/NO/EARLY) over the selected time range.
+- **Source vs Target Price Values**: Graphs showing current price values from both Pyth source and target chains for comparison.
+- **Price Deviation Monitoring**: Panels to track price differences between source and target chains.
 - **Wallet Balance**: Current balance of your wallet in native token units.
 - **Wallet Balance Over Time**: Graph tracking your wallet balance over time to monitor consumption.
 - **Failed Updates (Current Range)**: Graph showing the number of failed price updates over the current range with timeline.
