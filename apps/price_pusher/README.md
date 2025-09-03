@@ -211,12 +211,12 @@ and the on-chain Pyth contract and deciding whether to push a new price. You can
 
 ### Example
 
-For example, to push `BTC/USD` and `BNB/USD` prices on Fantom testnet, run the following command:
+For example, to push `BTC/USD` and `BNB/USD` prices on Sonic blaze testnet, run the following command:
 
 ```sh
 pnpm run dev evm \
-  --endpoint https://endpoints.omniatech.io/v1/fantom/testnet/public \
-  --pyth-contract-address 0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb \
+  --endpoint https://rpc.blaze.soniclabs.com \
+  --pyth-contract-address 0x2880aB155794e7179c9eE2e38200202908C17B43 \
   --price-service-endpoint https://hermes.pyth.network \
   --mnemonic-file "./mnemonic" \
   --price-config-file "./price-config.stable.sample.yaml" \
