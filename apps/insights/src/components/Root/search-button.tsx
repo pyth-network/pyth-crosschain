@@ -22,7 +22,6 @@ import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCollator, useFilter } from "react-aria";
 
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
