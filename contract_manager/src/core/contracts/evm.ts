@@ -358,32 +358,13 @@ export class EvmEntropyContract extends Storable {
     return await contract.methods.getFee(provider).call();
   }
 
-  async requestRandomness(
-    userRandomNumber: string,
-    provider: string,
-    senderPrivateKey: PrivateKey,
-    withCallback?: boolean,
-  ) {
+  async requestRandomness(senderPrivateKey: PrivateKey) {
     const web3 = this.chain.getWeb3();
-    const userCommitment = web3.utils.keccak256(userRandomNumber);
     const contract = new web3.eth.Contract(EXTENDED_ENTROPY_ABI, this.address);
-    const fee = await contract.methods.getFee(provider).call();
+    const fee = await contract.methods.getFeeV2().call();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
-
-    let transactionObject;
-    if (withCallback) {
-      transactionObject = contract.methods.requestWithCallback(
-        provider,
-        userCommitment,
-      );
-    } else {
-      const useBlockHash = false;
-      transactionObject = contract.methods.request(
-        provider,
-        userCommitment,
-        useBlockHash,
-      );
-    }
+    const transactionObject = contract.methods.requestV2();
+    console.log(`Requesting randomness with fee: ${fee}`);
 
     return this.chain.estiamteAndSendTransaction(transactionObject, {
       from: address,

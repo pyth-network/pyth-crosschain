@@ -38,13 +38,8 @@ async function testLatency(
   provider?: string,
 ) {
   provider = provider || (await contract.getDefaultProvider());
-  const userRandomNumber = contract.generateUserRandomNumber();
-  const requestResponse = await contract.requestRandomness(
-    userRandomNumber,
-    provider,
-    privateKey,
-    true, // with callback
-  );
+  console.log(`Using provider: ${provider}`);
+  const requestResponse = await contract.requestRandomness(privateKey);
   console.log(`Request tx hash  : ${requestResponse.transactionHash}`);
   // Read the sequence number for the request from the transaction events.
   const sequenceNumber =
