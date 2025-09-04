@@ -53,7 +53,7 @@ const useSearchBar = () => {
 };
 
 export const Paginator = (props: ComponentProps<typeof ResolvedPaginator>) => (
-  <Suspense fallback={<Paginator {...props} />}>
+  <Suspense>
     <ResolvedPaginator {...props} />
   </Suspense>
 );
