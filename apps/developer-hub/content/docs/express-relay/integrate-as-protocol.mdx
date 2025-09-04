@@ -19,7 +19,7 @@ import { Client } from "@pythnetwork/express-relay-js";
 
 const client = new Client(
   { baseUrl: "https://per-mainnet.dourolabs.app" },
-  undefined // Default WebSocket options
+  undefined, // Default WebSocket options
 );
 ```
 
@@ -33,14 +33,14 @@ The example below shows how you can construct a quote request for a USDC → WSO
 const userWallet = new PublicKey("<INPUT USER PUBKEY>");
 
 const quoteRequest = {
-    chainId: "solana",
-    inputTokenMint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC mint
-    outputTokenMint: new PublicKey("So11111111111111111111111111111111111111112"), // WSOL mint
-    specifiedTokenAmount: {
-      side: "input",
-      amount: 100_000_000,
-    },
-    userWallet,
+  chainId: "solana",
+  inputTokenMint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC mint
+  outputTokenMint: new PublicKey("So11111111111111111111111111111111111111112"), // WSOL mint
+  specifiedTokenAmount: {
+    side: "input",
+    amount: 100_000_000,
+  },
+  userWallet,
 };
 
 const quote = await client.getQuote(quoteRequest);
@@ -56,9 +56,9 @@ Below is an example showing how the frontend can submit the signed quote transac
 
 ```typescript
 const submitQuote = {
-    chainId: "solana",
-    referenceId: quote.referenceId,
-    userSignature: signature,
+  chainId: "solana",
+  referenceId: quote.referenceId,
+  userSignature: signature,
 };
 
 const txSubmitted = await client.submitQuote(submitQuote);
