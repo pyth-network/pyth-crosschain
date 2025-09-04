@@ -1,20 +1,3 @@
 {
-  "extends": "../../../../../tsconfig.base.json",
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "outDir": "./lib",
-    "rootDir": "src",
-    "module": "commonjs",
-    "target": "esnext",
-    "strict": true
-  },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "lib"
-  ]
+  "extends": "@cprussin/tsconfig/base.json"
 }

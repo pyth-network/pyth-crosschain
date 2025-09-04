@@ -1,20 +1,21 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiLazerClient } from "../src/client";
-import { PythLazerClient, Request } from "@pythnetwork/pyth-lazer-sdk";
+import { addParseAndVerifyLeEcdsaUpdateCall } from "../src/client.js";
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+import type { Request as SubscriptionRequest } from "@pythnetwork/pyth-lazer-sdk";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined) {
-  const config: Parameters<typeof PythLazerClient.create>[0] = {
-    urls,
-    token: token ?? "",
-    numConnections: 1,
-  };
-  const lazer = await PythLazerClient.create(config);
+async function getOneLeEcdsaUpdate(urls: string[], token: string) {
 
-  const subscription: Request = {
+  const lazer = await PythLazerClient.create({
+    urls,
+    token,
+    numConnections: 1,
+  });
+
+  const subscription: SubscriptionRequest = {
     subscriptionId: 1,
     type: "subscribe",
     priceFeedIds: [1],
@@ -63,13 +64,15 @@ async function main() {
       demandOption: true,
     })
     .option("lazerUrls", {
-      type: "string",
-      description: "Comma-separated Lazer WebSocket URLs",
-      default: "wss://pyth-lazer-0.dourolabs.app/v1/stream,wss://pyth-lazer-1.dourolabs.app/v1/stream",
+      type: "array",
+      string: true,
+      description: "Lazer WebSocket URLs",
+      default: ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"],
     })
     .option("token", {
       type: "string",
       description: "Lazer authentication token",
+      demandOption: true,
     })
     .help()
     .parseAsync();
@@ -78,19 +81,17 @@ async function main() {
     throw new Error(`SUI_KEY environment variable should be set to your Sui private key in hex format.`);
   }
 
-  const lazerUrls = args.lazerUrls.split(",");
 
   const provider = new SuiClient({ url: args.fullnodeUrl });
-  const client = new SuiLazerClient(provider);
 
   // Fetch the price update
-  const updateBytes = await getOneLeEcdsaUpdate(lazerUrls, args.token);
+  const updateBytes = await getOneLeEcdsaUpdate(args.lazerUrls, args.token);
 
   // Build the Sui transaction
   const tx = new Transaction();
 
   // Add the parse and verify call
-  client.addParseAndVerifyLeEcdsaUpdateCall({
+  addParseAndVerifyLeEcdsaUpdateCall({
     tx,
     packageId: args.packageId,
     stateObjectId: args.stateObjectId,

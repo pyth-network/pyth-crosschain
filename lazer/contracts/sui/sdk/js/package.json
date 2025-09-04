@@ -4,34 +4,42 @@
   "description": "TypeScript SDK for the Pyth Lazer Sui contract",
   "license": "Apache-2.0",
   "type": "module",
-  "main": "lib/index.js",
-  "module": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/esm/client.js",
+  "types": "./dist/esm/client.d.ts",
+  "engines": {
+    "node": "22"
+  },
+  "exports": {
+    "./*": {
+      "types": "./dist/esm/client.d.ts",
+      "default": "./dist/esm/client.js"
+    }
+  },
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "clean": "rimraf lib",
-    "fix": "pnpm prettier --write src && pnpm eslint --fix src --ext .ts",
-    "lint": "eslint src --ext .ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prepublishOnly": "pnpm build",
+    "build:cjs": "tsc --project tsconfig.build.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "test:format": "prettier --check .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:types": "tsc",
     "example:fetch-and-verify": "tsx examples/FetchAndVerifyUpdate.ts"
   },
   "dependencies": {
-    "@mysten/sui": "^1.3.0",
+    "@mysten/sui": "catalog:",
     "@pythnetwork/pyth-lazer-sdk": "workspace:*",
-    "@types/yargs": "^17.0.33",
-    "buffer": "^6.0.3",
-    "yargs": "^18.0.0"
+    "@types/yargs": "catalog:",
+    "buffer": "catalog:",
+    "yargs": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
-    "@types/node": "^18.11.18",
+    "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "rimraf": "^5.0.5",
-    "typescript": "^5.3.3"
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"
