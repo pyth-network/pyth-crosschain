@@ -46,6 +46,8 @@ message State {
     repeated Publisher publishers = 8;
     // List of governance sources.
     repeated GovernanceSourceState governance_sources = 9;
+    // Currently active feature flags. Feature flags influence the aggregator's behavior.
+    repeated string feature_flags = 10;
 }
 
 // An item of the state describing a publisher.
@@ -58,6 +60,8 @@ message Publisher {
     repeated bytes public_keys = 3;
     // [required] If true, the publisher is active, i.e. it's allowed to publish updates.
     optional bool is_active = 4;
+    // IDs of the feeds for which the publisher's price will be included in the aggregate.
+    repeated uint32 allowed_feed_ids = 5;
 }
 
 enum FeedState {
@@ -112,6 +116,8 @@ message Feed {
     optional FeedState state = 107;
     // [required] Feed kind.
     optional FeedKind kind = 108;
+    // [required] Current aggregated data of the feed.
+    optional FeedDataFields aggregated_data = 109;
 
 
     // [required] Feed status in the current shard. Disabled feeds will not be visible in
@@ -158,16 +164,21 @@ message FeedData {
     optional google.protobuf.Timestamp source_timestamp = 1;
     // [required] Timestamp of the publisher.
     optional google.protobuf.Timestamp publisher_timestamp = 2;
+    // [required] Values of the data fields.
+    optional FeedDataFields fields = 3;
+}
+
+message FeedDataFields {
     // [optional] Best executable price. Can be absent if no data is available. Never present for funding rate feeds.
-    optional int64 price = 3;
+    optional int64 price = 1;
     // [optional] Best bid price. Can be absent if no data is available. Never present for funding rate feeds.
-    optional int64 best_bid_price = 4;
+    optional int64 best_bid_price = 2;
     // [optional] Best ask price. Can be absent if no data is available. Never present for funding rate feeds.
-    optional int64 best_ask_price = 5;
+    optional int64 best_ask_price = 3;
     // [optional] Funding rate. Can be absent if no data is available. Can only be present for funding rate feeds.
-    optional int64 funding_rate = 6;
+    optional int64 funding_rate = 4;
     // [optional] Funding rate interval. Can be absent if no data is available. Can only be present for funding rate feeds.
-    optional google.protobuf.Duration funding_rate_interval = 7;
+    optional google.protobuf.Duration funding_rate_interval = 5;
 }
 
 // State associated with a governance source.
@@ -206,6 +217,8 @@ message Permissions {
         // including operations added in the future.
         UPDATE_FEED = 112;
         REMOVE_FEED = 113;
+        ADD_FEATURE_FLAG = 114;
+        REMOVE_FEATURE_FLAG = 115;
     }
 
     enum UpdateGovernanceSourceAction {
@@ -222,6 +235,9 @@ message Permissions {
         REMOVE_PUBLISHER_PUBLIC_KEYS = 103;
         SET_PUBLISHER_PUBLIC_KEYS = 104;
         SET_PUBLISHER_ACTIVE = 105;
+        ADD_PUBLISHER_ALLOWED_FEED_IDS = 106;
+        REMOVE_PUBLISHER_ALLOWED_FEED_IDS = 107;
+        SET_PUBLISHER_ALLOWED_FEED_IDS = 108;
     }
 
     enum UpdateFeedAction {

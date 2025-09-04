@@ -93,6 +93,8 @@ message GovernanceInstructionItem {
         AddFeed add_feed = 111;
         UpdateFeed update_feed = 112;
         RemoveFeed remove_feed = 113;
+        AddFeatureFlag add_feature_flag = 114;
+        RemoveFeatureFlag remove_feature_flag = 115;
     }
 }
 
@@ -187,6 +189,9 @@ message UpdatePublisher {
         RemovePublisherPublicKeys remove_publisher_public_keys = 103;
         SetPublisherPublicKeys set_publisher_public_keys = 104;
         SetPublisherActive set_publisher_active = 105;
+        AddPublisherAllowedFeedIds add_publisher_allowed_feed_ids = 106;
+        RemovePublisherAllowedFeedIds remove_publisher_allowed_feed_ids = 107;
+        SetPublisherAllowedFeedIds set_publisher_allowed_feed_ids = 108;
     }
 }
 
@@ -215,6 +220,24 @@ message RemovePublisherPublicKeys {
 // Remove all existing public keys and add new keys (if specified).
 message SetPublisherPublicKeys {
     repeated bytes public_keys = 1;
+}
+
+// Allow publisher to publish for the specified feeds.
+message AddPublisherAllowedFeedIds {
+    // Must not be empty.
+    repeated bytes allowed_feed_ids_to_add = 1;
+}
+
+// Disallow publisher to publish for the specified feeds.
+message RemovePublisherAllowedFeedIds {
+    // Must not be empty.
+    repeated bytes allowed_feed_ids_to_remove = 1;
+}
+
+// Allow publisher to publish for only the specified feeds.
+// Remove all previous allowances.
+message SetPublisherAllowedFeedIds {
+    repeated bytes allowed_feed_ids = 1;
 }
 
 message SetPublisherActive {
@@ -325,4 +348,16 @@ message DisableFeedInShard {
     // the feed will be disabled immediately when this
     // governance instruction is processed.
     optional google.protobuf.Timestamp disable_in_shard_timestamp = 1;
+}
+
+// Add a new feature flag.
+message AddFeatureFlag {
+    // [required] Feature flag to add.
+    optional string feature_flag = 1;
+}
+
+// Remove a feature flag.
+message RemoveFeatureFlag {
+    // [required] Feature flag to remove.
+    optional string feature_flag = 1;
 }
