@@ -1,0 +1,86 @@
+---
+title: Set Custom Gas Limits
+description: How to set custom gas limits for Entropy callbacks
+---
+
+# Set Custom Gas Limits
+
+By default, Pyth Entropy uses a predefined gas limit for callback functions. However, you may need to adjust this limit based on the complexity of your callback implementation.
+
+## When to Use Custom Gas Limits
+
+### Use Higher Gas Limits When:
+
+- Your callback function performs complex calculations
+- You need to update multiple storage variables
+- Your callback interacts with other contracts
+- You're implementing complex game logic
+
+### Use Lower Gas Limits When:
+
+- Your callback function is simple (e.g., just stores a single value)
+- You want to optimize for cost
+- You want to prevent potential gas griefing
+
+## Implementation
+
+### Using EntropyV2 Interface
+
+```solidity
+import "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
+
+contract MyContract is IEntropyConsumer {
+    IEntropyV2 entropy;
+
+    function requestWithCustomGas() external payable {
+        uint32 customGasLimit = 200000; // Adjust based on your needs
+
+        // Get fee for custom gas limit
+        uint256 fee = entropy.getFeeV2(customGasLimit);
+        require(msg.value >= fee, "Insufficient fee");
+
+        // Request with custom gas limit
+        uint64 sequenceNumber = entropy.requestV2{value: fee}(customGasLimit);
+    }
+}
+```
+
+### Full Control Request
+
+```solidity
+function requestWithFullControl() external payable {
+    address provider = entropy.getDefaultProvider();
+    uint32 gasLimit = 150000;
+    bytes32 userRandomNumber = keccak256(abi.encode(block.timestamp, msg.sender));
+
+    uint256 fee = entropy.getFeeV2(provider, gasLimit);
+    require(msg.value >= fee, "Insufficient fee");
+
+    uint64 sequenceNumber = entropy.requestV2{value: fee}(
+        provider,
+        gasLimit,
+        userRandomNumber
+    );
+}
+```
+
+## Gas Limit Constraints
+
+Each network has different gas limit constraints:
+
+| Network   | Min Gas Limit | Max Gas Limit | Default |
+| --------- | ------------- | ------------- | ------- |
+| Ethereum  | 50,000        | 100,000       | 100,000 |
+| Arbitrum  | 50,000        | 100,000       | 100,000 |
+| Avalanche | 50,000        | 100,000       | 100,000 |
+| Base      | 50,000        | 100,000       | 100,000 |
+| BNB Chain | 50,000        | 100,000       | 100,000 |
+| Optimism  | 50,000        | 100,000       | 100,000 |
+| Polygon   | 50,000        | 100,000       | 100,000 |
+
+## Best Practices
+
+1. **Test your callback function** to estimate gas usage before setting custom limits
+2. **Add a buffer** of 10-20% to your estimated gas usage for safety
+3. **Use the minimum necessary** gas limit to reduce costs
+4. **Consider network differences** - some networks may have different gas costs for similar operations

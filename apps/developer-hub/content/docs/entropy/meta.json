@@ -1,7 +1,24 @@
 {
   "root": true,
-  "title": "Entropy",
-  "description": "Random numbers for smart contracts",
-  "icon": "Shuffle",
-  "pages": ["index", "---Guides---", "how-to-guides"]
+  "title": "Pyth Entropy",
+  "description": "Random number Generator for Ethereum smart contracts",
+  "icon": "DiceSix",
+  "pages": [
+    "index",
+    "generate-random-numbers",
+    "create-your-first-entropy-app",
+    "protocol-design",
+    "contract-addresses",
+    "best-practices",
+    "fees",
+    "current-fees",
+    "error-codes",
+    "debug-callback-failures",
+    "examples",
+    "request-callback-variants",
+    "set-custom-gas-limits",
+    "whats-new-entropyv2",
+    "---Guides---",
+    "how-to-guides"
+  ]
 }

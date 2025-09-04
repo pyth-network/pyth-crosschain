@@ -1,0 +1,55 @@
+---
+title: What's New in Entropy v2
+description: New features and improvements in Entropy v2
+---
+
+# What's New in Entropy v2
+
+Entropy v2 introduces several improvements and new features to make random number generation more flexible and efficient.
+
+## Key Improvements
+
+### 1. Multiple Request Variants
+
+Entropy v2 provides multiple ways to request random numbers:
+
+- **Basic Request**: Simplest implementation with default settings
+- **Custom Gas Limit**: Specify gas limits for complex callbacks
+- **Custom Provider**: Choose specific entropy providers
+- **Full Control**: Specify all parameters (provider, gas limit, user random number)
+
+### 2. Improved Fee Structure
+
+The new version offers more granular fee calculation:
+
+```solidity
+// Get fee for default provider and gas limit
+uint256 basicFee = entropy.getFeeV2();
+
+// Get fee for custom gas limit
+uint256 customGasFee = entropy.getFeeV2(gasLimit);
+
+// Get fee for specific provider and gas limit
+uint256 providerFee = entropy.getFeeV2(provider, gasLimit);
+```
+
+### 3. Better Error Handling
+
+Enhanced error messages and more specific error codes help developers debug issues more effectively.
+
+### 4. Gas Optimization
+
+Improved contract efficiency reduces overall gas costs for entropy requests.
+
+## Migration Guide
+
+If you're upgrading from Entropy v1 to v2:
+
+1. Update your imports to use `IEntropyV2`
+2. Replace `request()` calls with `requestV2()`
+3. Update fee calculation to use `getFeeV2()`
+4. Test thoroughly with the new interface
+
+## Backward Compatibility
+
+Entropy v2 maintains backward compatibility with v1 for existing applications. However, we recommend migrating to v2 for new applications to take advantage of the improved features.
