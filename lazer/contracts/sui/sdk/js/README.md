@@ -1,6 +1,6 @@
 # Pyth Lazer Sui JS SDK
 
-This package helps you build a Sui Programmable Transaction to parse and verify a Pyth Lazer price update on Sui.
+This package provides utilities to create a Sui Programmable Transaction to parse & verify a Pyth Lazer price update on-chain.
 
 ## Build
 
@@ -60,7 +60,7 @@ const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
 
 ## Notes
 
-- Automatic `packageId` management is coming soon. The Lazer contract doesn't support upgradeability yet. 
+- FIXME: Automatic `packageId` management is coming soon. The Lazer contract doesn't support upgradeability yet. 
 
 ## References
 

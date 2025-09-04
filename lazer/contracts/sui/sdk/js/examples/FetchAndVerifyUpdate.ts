@@ -36,6 +36,8 @@ async function getOneLeEcdsaUpdate(urls: string[], token: string | undefined) {
     lazer.addMessageListener((event) => {
       if (event.type === "binary" && event.value.leEcdsa) {
         const buf = event.value.leEcdsa;
+
+        // For the purposes of this example, we only need one update.
         lazer.shutdown();
         resolve(buf);
       }
@@ -81,7 +83,7 @@ async function main() {
   const provider = new SuiClient({ url: args.fullnodeUrl });
   const client = new SuiLazerClient(provider);
 
-  // Fetch the Lazer update
+  // Fetch the price update
   const updateBytes = await getOneLeEcdsaUpdate(lazerUrls, args.token);
 
   // Build the Sui transaction
