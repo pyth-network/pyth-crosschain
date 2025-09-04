@@ -1,6 +1,6 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiLazerClient } from "../src/client.js";
+import { SuiLazerClient } from "../src/client";
 import { PythLazerClient, Request } from "@pythnetwork/pyth-lazer-sdk";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import yargs from "yargs";
