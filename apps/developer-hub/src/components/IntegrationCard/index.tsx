@@ -31,7 +31,6 @@ export const IntegrationCard = ({
   description,
   colorScheme = "blue",
 }: IntegrationCardProps) => {
-
   const colors = colorClasses[colorScheme];
 
   return (

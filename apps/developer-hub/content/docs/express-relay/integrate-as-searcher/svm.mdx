@@ -27,7 +27,7 @@ const handleOpportunity = async (opportunity: Opportunity) => {
 const client = new Client(
   { baseUrl: "https://per-mainnet.dourolabs.app" },
   undefined, // Default WebSocket options
-  handleOpportunity
+  handleOpportunity,
 );
 
 async function main() {
@@ -99,11 +99,11 @@ The server responds with opportunities in the following format:
 
 ```json
 {
-  "order": "UxMUbQAsjrfQUp5stVwMJ6Mucq7VWTvt4ICe69BJ8lVXqwM+0sysV8OqZTdM0W4p...",      // The Limo order to be executed, encoded in base64
-  "order_address": "DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5",                     // Address of the order account
-  "program": "limo",                                                                   // Identifier of the program that the order exists in
+  "order": "UxMUbQAsjrfQUp5stVwMJ6Mucq7VWTvt4ICe69BJ8lVXqwM+0sysV8OqZTdM0W4p...", // The Limo order to be executed, encoded in base64
+  "order_address": "DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5", // Address of the order account
+  "program": "limo", // Identifier of the program that the order exists in
   "chain_id": "development-solana",
-  "version": "v1"                                                                      // Opportunity format version
+  "version": "v1" // Opportunity format version
 }
 ```
 
@@ -171,12 +171,12 @@ async def construct_bid(self, opportunity: Dict[str, Any]) -> Dict[str, Any]:
     """
     order = opportunity["order"]
     order_address = opportunity["order_address"]
-    
+
     # Calculate bid amount and construct fulfillment transaction
     bid_amount, transaction = await self.fulfill_limo_order(
         order, order_address, self.searcher_keypair, self.bid_amount_lamports
     )
-    
+
     return {
         "amount": str(bid_amount),
         "transaction": transaction,
@@ -215,7 +215,7 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d '{
     "amount": "1000000",
-    "transaction": "...", 
+    "transaction": "...",
     "chain_id": "solana",
     "valid_until": "2024-05-30T13:23:00.000Z"
   }'
@@ -251,7 +251,7 @@ Implement proper error handling for common scenarios:
 try {
   const bidResponse = await client.submitBid(bid);
 } catch (error) {
-  if (error.code === 'NETWORK_ERROR') {
+  if (error.code === "NETWORK_ERROR") {
     // Retry submission
     console.log("Network error, retrying...");
   }
@@ -268,7 +268,7 @@ const handleOpportunity = async (opportunity: Opportunity) => {
       console.log("Invalid opportunity, skipping");
       return;
     }
-    
+
     const bid = await generateBid(opportunity);
     await client.submitBid(bid);
   } catch (error) {
