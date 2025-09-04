@@ -4,8 +4,6 @@
   "description": "TypeScript SDK for the Pyth Lazer Sui contract",
   "license": "Apache-2.0",
   "type": "module",
-  "main": "./dist/esm/client.js",
-  "types": "./dist/esm/client.d.ts",
   "engines": {
     "node": "22"
   },
