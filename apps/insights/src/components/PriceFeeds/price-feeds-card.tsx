@@ -14,24 +14,25 @@ import type {
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useQueryState, parseAsString } from "nuqs";
+import { matchSorter } from "match-sorter";
+import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
-import { useFilter, useCollator } from "react-aria";
+import { useCollator } from "react-aria";
 
-import styles from "./price-feeds-card.module.scss";
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { FeedKey } from "../FeedKey";
 import {
-  SKELETON_WIDTH,
-  LivePrice,
   LiveConfidence,
+  LivePrice,
   LiveValue,
+  SKELETON_WIDTH,
 } from "../LivePrices";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
+import styles from "./price-feeds-card.module.scss";
 
 type Props = {
   id: string;
@@ -56,7 +57,6 @@ export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
 const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
   const logger = useLogger();
   const collator = useCollator();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [assetClass, setAssetClass] = useQueryState(
     "assetClass",
     parseAsString.withDefault(""),
@@ -83,13 +83,18 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     mkPageLink,
   } = useQueryParamFilterPagination(
     feedsFilteredByAssetClass,
-    (priceFeed, search) => filter.contains(priceFeed.displaySymbol, search),
+    () => true,
     (a, b, { column, direction }) => {
       const field = column === "assetClass" ? "assetClass" : "displaySymbol";
       return (
         (direction === "descending" ? -1 : 1) *
         collator.compare(a[field], b[field])
       );
+    },
+    (items, search) => {
+      return matchSorter(items, search, {
+        keys: ["displaySymbol", "symbol", "description", "key"],
+      });
     },
     { defaultSort: "priceFeedName" },
   );
