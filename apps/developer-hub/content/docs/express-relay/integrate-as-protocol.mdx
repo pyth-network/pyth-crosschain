@@ -1,0 +1,106 @@
+---
+title: "Integrate as a Protocol"
+description: >-
+  Learn how frontends can integrate Express Relay to empower token swapping with better pricing and MEV recapture.
+---
+
+# How to Integrate Express Relay Swaps
+
+This guide will explain how frontends can integrate Express Relay to empower swapping.
+
+<div className="steps-container mt-8">
+  <div className="step">
+    <div className="step-header">
+      <div className="step-number">1</div>
+      <h3>Install the Express Relay SDK</h3>
+    </div>
+    <div className="step-content">
+      <p>Pyth provides a <a href="https://www.npmjs.com/package/@pythnetwork/express-relay-js" target="_blank" rel="noopener noreferrer">Typescript SDK</a> to help developers integrate Express Relay into their frontends.</p>
+      
+      <p>You can install the SDK via npm or yarn. You can invoke the SDK client as below:</p>
+
+      ```typescript
+      import { Client } from "@pythnetwork/express-relay-js";
+
+      const client = new Client(
+        { baseUrl: "https://per-mainnet.dourolabs.app" },
+        undefined // Default WebSocket options
+      );
+      ```
+    </div>
+
+  </div>
+
+  <div className="step">
+    <div className="step-header">
+      <div className="step-number">2</div>
+      <h3>Request a Quote</h3>
+    </div>
+    <div className="step-content">
+      <p>You can request a quote by calling the <a href="https://github.com/pyth-network/per/blob/281de989db887aaf568fed39315a76acc16548fa/sdk/js/src/index.ts#L501-L506" target="_blank" rel="noopener noreferrer"><strong>getQuote</strong></a> SDK method.</p>
+
+      <p>The example below shows how you can construct a quote request for a USDC → WSOL swap, with 100 USDC provided as input by the user:</p>
+
+      ```typescript
+      const userWallet = new PublicKey("<INPUT USER PUBKEY>");
+
+      const quoteRequest = {
+          chainId: "solana",
+          inputTokenMint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC mint
+          outputTokenMint: new PublicKey("So11111111111111111111111111111111111111112"), // WSOL mint
+          specifiedTokenAmount: {
+            side: "input",
+            amount: 100_000_000,
+          },
+          userWallet,
+      };
+
+      const quote = await client.getQuote(quoteRequest);
+      ```
+
+      <p><strong>quote</strong> contains the full details, including the amount the searcher is quoting and the transaction that the user needs to sign. It also contains an <strong>expirationTime</strong>; after this time, the transaction will no longer succeed on chain, so you should request a new quote a few seconds before the <strong>expirationTime</strong>.</p>
+    </div>
+
+  </div>
+
+  <div className="step">
+    <div className="step-header">
+      <div className="step-number">3</div>
+      <h3>Submit User Signature to the Express Relay Server</h3>
+    </div>
+    <div className="step-content">
+      <p>Once you show the quote to the user, the user should sign the transaction if they wish to engage in the swap. The frontend can pass this signature along to the Express Relay server, which will handle aggregating all the required signatures for the transaction and submitting it to the RPC node.</p>
+
+      <p>Below is an example showing how the frontend can submit the signed quote transaction to the server using the <a href="https://github.com/pyth-network/per/blob/358eedc1f9072cdfc3418fba309697580f2474f9/sdk/js/src/index.ts#L537-L542" target="_blank" rel="noopener noreferrer"><strong>submitQuote</strong></a> method. The response from the <strong>getQuote</strong> method includes a field called <strong>referenceId</strong>, which the frontend should use in its submission of the user signature.</p>
+
+      ```typescript
+      const submitQuote = {
+          chainId: "solana",
+          referenceId: quote.referenceId,
+          userSignature: signature,
+      };
+
+      const txSubmitted = await client.submitQuote(submitQuote);
+      ```
+
+      <p><strong>submitQuote</strong> returns the fully signed transaction that the server submitted to the RPC node.</p>
+    </div>
+
+  </div>
+</div>
+
+## Additional Resources
+
+You may find these additional resources helpful for integrating Express Relay as a frontend.
+
+### Contract Addresses
+
+The [Contract Addresses](./contract-addresses) page lists the relevant addresses for Express Relay integration.
+
+### Error Codes
+
+The [Error Codes](./errors) page lists the error codes returned by Express Relay.
+
+### API Reference
+
+The [API Reference](https://per-mainnet.dourolabs.app/docs) provides detailed information on Express Relay APIs.
