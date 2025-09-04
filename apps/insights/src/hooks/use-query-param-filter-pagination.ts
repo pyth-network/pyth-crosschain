@@ -14,8 +14,9 @@ import { useCallback, useMemo } from "react";
 
 export const useQueryParamFilterPagination = <T>(
   items: T[],
-  predicate: (item: T, term: string) => boolean,
+  predicate: (item: T, search: string) => boolean,
   doSort: (a: T, b: T, descriptor: SortDescriptor) => number,
+  doMutate: (items: T[], search: string) => T[],
   options?: {
     defaultPageSize?: number | undefined;
     defaultSort?: string | undefined;
@@ -100,9 +101,13 @@ export const useQueryParamFilterPagination = <T>(
     [filteredItems, sortDescriptor, doSort],
   );
 
+  const mutatedItems = useMemo(() => {
+    return doMutate(sortedItems, search);
+  }, [doMutate, sortedItems, search]);
+
   const paginatedItems = useMemo(
-    () => sortedItems.slice((page - 1) * pageSize, page * pageSize),
-    [page, pageSize, sortedItems],
+    () => mutatedItems.slice((page - 1) * pageSize, page * pageSize),
+    [page, pageSize, mutatedItems],
   );
 
   const numPages = useMemo(
