@@ -17,7 +17,10 @@ export function addParseAndVerifyLeEcdsaUpdateCall(opts: {
       tx.object(stateObjectId),
       tx.object(SUI_CLOCK_OBJECT_ID),
       tx.pure(
-        bcs.vector(bcs.U8).serialize([...updateBytes], { maxSize: MAX_ARGUMENT_SIZE }).toBytes(),
+        bcs
+          .vector(bcs.U8)
+          .serialize([...updateBytes], { maxSize: MAX_ARGUMENT_SIZE })
+          .toBytes(),
       ),
     ],
   });

@@ -1,14 +1,14 @@
 import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
-import { addParseAndVerifyLeEcdsaUpdateCall } from "../src/client.js";
-import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
-import type { Request as SubscriptionRequest } from "@pythnetwork/pyth-lazer-sdk";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import type { Request as SubscriptionRequest } from "@pythnetwork/pyth-lazer-sdk";
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-async function getOneLeEcdsaUpdate(urls: string[], token: string) {
+import { addParseAndVerifyLeEcdsaUpdateCall } from "../src/client.js";
 
+async function getOneLeEcdsaUpdate(urls: string[], token: string) {
   const lazer = await PythLazerClient.create({
     urls,
     token,
@@ -19,21 +19,16 @@ async function getOneLeEcdsaUpdate(urls: string[], token: string) {
     subscriptionId: 1,
     type: "subscribe",
     priceFeedIds: [1],
-    properties: [
-      "price",
-      "bestBidPrice",
-      "bestAskPrice",
-      "exponent",
-    ],
+    properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
     formats: ["leEcdsa"],
     channel: "fixed_rate@200ms",
     deliveryFormat: "binary",
     jsonBinaryEncoding: "hex",
   };
 
-  lazer.subscribe(subscription)
+  lazer.subscribe(subscription);
 
-  return new Promise<Buffer>((resolve, _) => {
+  return new Promise<Buffer>((resolve) => {
     lazer.addMessageListener((event) => {
       if (event.type === "binary" && event.value.leEcdsa) {
         const buf = event.value.leEcdsa;
@@ -50,7 +45,8 @@ async function main() {
   const args = await yargs(hideBin(process.argv))
     .option("fullnodeUrl", {
       type: "string",
-      description: "URL of the full Sui node RPC endpoint. e.g: https://fullnode.testnet.sui.io:443",
+      description:
+        "URL of the full Sui node RPC endpoint. e.g: https://fullnode.testnet.sui.io:443",
       demandOption: true,
     })
     .option("packageId", {
@@ -67,9 +63,12 @@ async function main() {
       type: "array",
       string: true,
       description: "Lazer WebSocket URLs",
-      default: ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"],
+      default: [
+        "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+        "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+      ],
     })
-    .option("token", {
+    .option("lazerToken", {
       type: "string",
       description: "Lazer authentication token",
       demandOption: true,
@@ -77,15 +76,18 @@ async function main() {
     .help()
     .parseAsync();
 
+  // Defined as a dependency in turbo.json
+  // eslint-disable-next-line n/no-process-env
   if (process.env.SUI_KEY === undefined) {
-    throw new Error(`SUI_KEY environment variable should be set to your Sui private key in hex format.`);
+    throw new Error(
+      `SUI_KEY environment variable should be set to your Sui private key in hex format.`,
+    );
   }
-
 
   const provider = new SuiClient({ url: args.fullnodeUrl });
 
   // Fetch the price update
-  const updateBytes = await getOneLeEcdsaUpdate(args.lazerUrls, args.token);
+  const updateBytes = await getOneLeEcdsaUpdate(args.lazerUrls, args.lazerToken);
 
   // Build the Sui transaction
   const tx = new Transaction();
@@ -98,9 +100,10 @@ async function main() {
     updateBytes,
   });
 
-  // You can add more calls to the transaction that consume the parsed update here
+  // --- You can add more calls to the transaction that consume the parsed update here ---
 
   const wallet = Ed25519Keypair.fromSecretKey(
+    // eslint-disable-next-line n/no-process-env
     Buffer.from(process.env.SUI_KEY, "hex"),
   );
   const res = await provider.signAndExecuteTransaction({
@@ -109,10 +112,8 @@ async function main() {
     options: { showEffects: true, showEvents: true },
   });
 
-  console.log("Execution result:", JSON.stringify(res, null, 2));
+  // eslint-disable-next-line no-console
+  console.log("Execution result:", JSON.stringify(res, undefined, 2));
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+await main();

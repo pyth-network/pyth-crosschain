@@ -10,7 +10,7 @@
     "node": "22"
   },
   "exports": {
-    "./*": {
+    ".": {
       "types": "./dist/esm/client.d.ts",
       "default": "./dist/esm/client.js"
     }
@@ -24,7 +24,7 @@
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "example:fetch-and-verify": "tsx examples/FetchAndVerifyUpdate.ts"
+    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts"
   },
   "dependencies": {
     "@mysten/sui": "catalog:",
