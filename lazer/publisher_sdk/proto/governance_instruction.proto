@@ -176,6 +176,8 @@ message AddPublisher {
     repeated bytes public_keys = 3;
     // [required] If true, the publisher is active, i.e. it's allowed to publish updates.
     optional bool is_active = 4;
+    // IDs of the feeds for which the publisher's price will be included in the aggregate.
+    repeated uint32 allowed_feed_ids = 5;
 }
 
 message UpdatePublisher {
