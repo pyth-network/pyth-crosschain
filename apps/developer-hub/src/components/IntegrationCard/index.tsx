@@ -6,6 +6,24 @@ type IntegrationCardProps = {
   colorScheme?: "blue" | "green" | "purple";
 };
 
+const colorClasses = {
+  blue: {
+    bg: "bg-blue-100 dark:bg-blue-900",
+    text: "text-blue-600 dark:text-blue-400",
+    hoverText: "group-hover:text-blue-600 dark:group-hover:text-blue-400",
+  },
+  green: {
+    bg: "bg-green-100 dark:bg-green-900",
+    text: "text-green-600 dark:text-green-400",
+    hoverText: "group-hover:text-green-600 dark:group-hover:text-green-400",
+  },
+  purple: {
+    bg: "bg-purple-100 dark:bg-purple-900",
+    text: "text-purple-600 dark:text-purple-400",
+    hoverText: "group-hover:text-purple-600 dark:group-hover:text-purple-400",
+  },
+};
+
 export const IntegrationCard = ({
   href,
   icon,
@@ -13,24 +31,6 @@ export const IntegrationCard = ({
   description,
   colorScheme = "blue",
 }: IntegrationCardProps) => {
-  const colorClasses = {
-    blue: {
-      bg: "bg-blue-100 dark:bg-blue-900",
-      text: "text-blue-600 dark:text-blue-400",
-      hoverText: "group-hover:text-blue-600 dark:group-hover:text-blue-400",
-    },
-    green: {
-      bg: "bg-green-100 dark:bg-green-900",
-      text: "text-green-600 dark:text-green-400",
-      hoverText: "group-hover:text-green-600 dark:group-hover:text-green-400",
-    },
-    purple: {
-      bg: "bg-purple-100 dark:bg-purple-900",
-      text: "text-purple-600 dark:text-purple-400",
-      hoverText: "group-hover:text-purple-600 dark:group-hover:text-purple-400",
-    },
-  };
-
   const colors = colorClasses[colorScheme];
 
   return (
