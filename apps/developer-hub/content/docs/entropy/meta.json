@@ -4,21 +4,22 @@
   "description": "Random number Generator for Ethereum smart contracts",
   "icon": "DiceSix",
   "pages": [
+    "---Introduction---",
     "index",
-    "generate-random-numbers",
-    "create-your-first-entropy-app",
-    "protocol-design",
+    "whats-new-entropyv2",
+    "---How-To Guides---",
+    "generate-random-numbers-evm",
+    "set-custom-gas-limits",
+    "debug-callback-failures",
+    "---Reference Material---",
     "contract-addresses",
     "best-practices",
     "fees",
+    "protocol-design",
     "current-fees",
     "error-codes",
-    "debug-callback-failures",
     "examples",
     "request-callback-variants",
-    "set-custom-gas-limits",
-    "whats-new-entropyv2",
-    "---Guides---",
-    "how-to-guides"
+    "create-your-first-entropy-app"
   ]
 }
