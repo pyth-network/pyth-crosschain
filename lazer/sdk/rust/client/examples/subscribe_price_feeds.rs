@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use base64::Engine;
 use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
-use pyth_lazer_client::client::PythLazerStreamClientBuilder;
+use pyth_lazer_client::stream_client::PythLazerStreamClientBuilder;
 use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::api::{
     Channel, DeliveryFormat, Format, JsonBinaryEncoding, SubscriptionParams, SubscriptionParamsRepr,
