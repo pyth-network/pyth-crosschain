@@ -4,7 +4,7 @@ description: Learn how to integrate Pyth Entropy to generate random numbers in y
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 
 This guide explains how to integrate Pyth Entropy into EVM Contracts to generate on-chain random numbers.
 The intended audience for this guide is developers of any application that needs on-chain randomness, such as NFT mints or games.
@@ -26,9 +26,11 @@ npm install @pythnetwork/entropy-sdk-solidity
 
 Then add the following line to your `remappings.txt` file:
 
-<DynamicCodeBlock lang="text" 
-code={`@pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
-`} />
+<DynamicCodeBlock
+  lang="text"
+  code={`@pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
+`}
+/>
 
 </Tab>
 </Tabs>
@@ -49,11 +51,11 @@ import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 // @param entropyAddress The address of the entropy contract.
 contract YourContract is IEntropyConsumer {
-  IEntropyV2 public entropy;
+IEntropyV2 public entropy;
 
-  constructor(address entropyAddress) {
-    entropy = IEntropyV2(entropyAddress);
-  }
+constructor(address entropyAddress) {
+entropy = IEntropyV2(entropyAddress);
+}
 }
 `} />
 
@@ -78,7 +80,7 @@ These methods use the default randomness provider ([see here](#randomness-provid
 code={`function requestRandomNumber() external payable {
   uint256 fee = entropy.getFeeV2();
 
-  uint64 sequenceNumber = entropy.requestV2{ value: fee }();
+uint64 sequenceNumber = entropy.requestV2{ value: fee }();
 }
 `} />
 
@@ -100,43 +102,44 @@ import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyCons
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 contract YourContract is IEntropyConsumer {
-  IEntropyV2 entropy;
+IEntropyV2 entropy;
 
-  // @param entropyAddress The address of the entropy contract.
-  constructor(address entropyAddress) {
-    entropy = IEntropyV2(entropyAddress);
-  }
+// @param entropyAddress The address of the entropy contract.
+constructor(address entropyAddress) {
+entropy = IEntropyV2(entropyAddress);
+}
 
-  function requestRandomNumber() external payable {
-    // Get the fee for the request
-    uint256 fee = entropy.getFeeV2();
+function requestRandomNumber() external payable {
+// Get the fee for the request
+uint256 fee = entropy.getFeeV2();
 
     // Request the random number with the callback
     uint64 sequenceNumber = entropy.requestV2{ value: fee }();
     // Store the sequence number to identify the callback request
-  }
 
-  // @param sequenceNumber The sequence number of the request.
-  // @param provider The address of the provider that generated the random number. If your app uses multiple providers, you can use this argument to distinguish which one is calling the app back.
-  // @param randomNumber The generated random number.
-  // This method is called by the entropy contract when a random number is generated.
-  // This method **must** be implemented on the same contract that requested the random number.
-  // This method should **never** return an error -- if it returns an error, then the keeper will not be able to invoke the callback.
-  // If you are having problems receiving the callback, the most likely cause is that the callback is erroring.
-  // See the callback debugging guide here to identify the error https://docs.pyth.network/entropy/debug-callback-failures
-  function entropyCallback(
-    uint64 sequenceNumber,
-    address provider,
-    bytes32 randomNumber
-  ) internal override {
-    // Implement your callback logic here.
-  }
+}
 
-  // This method is required by the IEntropyConsumer interface.
-  // It returns the address of the entropy contract which will call the callback.
-  function getEntropy() internal view override returns (address) {
-    return address(entropy);
-  }
+// @param sequenceNumber The sequence number of the request.
+// @param provider The address of the provider that generated the random number. If your app uses multiple providers, you can use this argument to distinguish which one is calling the app back.
+// @param randomNumber The generated random number.
+// This method is called by the entropy contract when a random number is generated.
+// This method **must** be implemented on the same contract that requested the random number.
+// This method should **never** return an error -- if it returns an error, then the keeper will not be able to invoke the callback.
+// If you are having problems receiving the callback, the most likely cause is that the callback is erroring.
+// See the callback debugging guide here to identify the error https://docs.pyth.network/entropy/debug-callback-failures
+function entropyCallback(
+uint64 sequenceNumber,
+address provider,
+bytes32 randomNumber
+) internal override {
+// Implement your callback logic here.
+}
+
+// This method is required by the IEntropyConsumer interface.
+// It returns the address of the entropy contract which will call the callback.
+function getEntropy() internal view override returns (address) {
+return address(entropy);
+}
 }
 `} />
 
@@ -180,6 +183,8 @@ a keeper service for fullfilling requests.
 
 You can get the default provider's address by calling the [`getDefaultProvider`](https://github.com/pyth-network/pyth-crosschain/blob/f8ebeb6af31d98f94ce73edade6da2ebab7b2456/target_chains/ethereum/entropy_sdk/solidity/IEntropy.sol#L94) method:
 
-<DynamicCodeBlock lang="solidity" 
-code={`address provider = entropy.getDefaultProvider();
-`} />
+<DynamicCodeBlock
+  lang="solidity"
+  code={`address provider = entropy.getDefaultProvider();
+`}
+/>
