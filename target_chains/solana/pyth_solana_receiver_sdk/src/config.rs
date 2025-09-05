@@ -26,8 +26,7 @@ pub mod tests {
     use {
         super::DataSource,
         crate::config::Config,
-        anchor_lang::{AnchorSerialize, Discriminator},
-        solana_program::pubkey::Pubkey,
+        anchor_lang::prelude::*
     };
 
     #[test]
@@ -55,7 +54,7 @@ pub mod tests {
             32 + 1 + 32 + 32 + 4 + 1 + 33 + 1 + 33 + 8 + 1
         );
         assert!(
-            Config::discriminator().len() + test_config.try_to_vec().unwrap().len() <= Config::LEN
+            Config::DISCRIMINATOR.len() + test_config.try_to_vec().unwrap().len() <= Config::LEN
         );
     }
 }

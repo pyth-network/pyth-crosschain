@@ -323,15 +323,14 @@ pub mod tests {
             error::GetPriceError,
             price_update::{Price, PriceUpdateV2, TwapPrice, TwapUpdate, VerificationLevel},
         },
-        anchor_lang::Discriminator,
+        anchor_lang::{prelude::*, solana_program::borsh0_10},
         pythnet_sdk::messages::PriceFeedMessage,
-        solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
     };
 
     #[test]
     fn check_size() {
         assert!(
-            PriceUpdateV2::discriminator().len() + borsh0_10::get_packed_len::<PriceUpdateV2>()
+            PriceUpdateV2::DISCRIMINATOR.len() + borsh0_10::get_packed_len::<PriceUpdateV2>()
                 == PriceUpdateV2::LEN
         );
     }
