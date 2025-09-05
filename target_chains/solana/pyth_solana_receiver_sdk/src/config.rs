@@ -1,4 +1,4 @@
-use {anchor_lang::prelude::*, anchor_lang::solana_program::pubkey::Pubkey};
+use anchor_lang::prelude::*;
 
 #[account]
 #[derive(Debug, PartialEq)]

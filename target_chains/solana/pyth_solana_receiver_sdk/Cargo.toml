@@ -13,10 +13,8 @@ name = "pyth_solana_receiver_sdk"
 
 
 [dependencies]
-anchor-lang = ">=0.28.0"
+anchor-lang = "^0.31.0"
 hex = ">=0.4.3"
-# bytemuck_derive = "<=1.8.1" # After this version, MSRV 1.84 is required.
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.1.0", features = [
     "solana-program",
 ] }
-# solana-program = ">=1.16.0"
