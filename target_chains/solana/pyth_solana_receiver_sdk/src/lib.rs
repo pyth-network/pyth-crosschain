@@ -2,10 +2,10 @@
 #![allow(clippy::result_large_err)]
 
 use {
+    anchor_lang::solana_program::{pubkey, pubkey::Pubkey},
     anchor_lang::{declare_id, prelude::*},
     borsh::{BorshDeserialize, BorshSerialize},
     pythnet_sdk::wire::v1::MerklePriceUpdate,
-    solana_program::{pubkey, pubkey::Pubkey},
 };
 
 pub mod config;

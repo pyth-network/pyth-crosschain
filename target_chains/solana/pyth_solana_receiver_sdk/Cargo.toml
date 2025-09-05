@@ -1,6 +1,6 @@
 [package]
 name = "pyth-solana-receiver-sdk"
-version = "0.6.1"
+version = "1.0.0"
 description = "SDK for the Pyth Solana Receiver program"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pyth-crosschain"
@@ -15,8 +15,8 @@ name = "pyth_solana_receiver_sdk"
 [dependencies]
 anchor-lang = ">=0.28.0"
 hex = ">=0.4.3"
-bytemuck_derive = "<=1.8.1" # After this version, MSRV 1.84 is required.
+# bytemuck_derive = "<=1.8.1" # After this version, MSRV 1.84 is required.
 pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.1.0", features = [
     "solana-program",
 ] }
-solana-program = ">=1.16.0"
+# solana-program = ">=1.16.0"
