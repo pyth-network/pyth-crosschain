@@ -7,6 +7,7 @@ import { dummyLogger } from "ts-log";
 import type { Request, Response } from "../protocol.js";
 import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
 import { ResilientWebSocket } from "./resilient-websocket.js";
+import type { ClientRequestArgs } from "node:http";
 
 /**
  * Detects if the code is running in a regular DOM or Web Worker context.
@@ -49,7 +50,7 @@ function isBrowser(): boolean {
 function addAuthentication(
   url: string,
   token: string,
-  wsOptions: any = {}
+  wsOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined = {}
 ): { endpoint: string; wsOptions: any } {
   if (isBrowser()) {
     // Browser: Add token as query parameter
@@ -58,7 +59,7 @@ function addAuthentication(
 
     // For browsers, we need to filter out any options that aren't valid for WebSocket constructor
     // Browser WebSocket constructor only accepts protocols as second parameter
-    const browserWsOptions = wsOptions.protocols ? wsOptions.protocols : undefined;
+    const browserWsOptions = wsOptions.protocol ? wsOptions.protocol : undefined;
 
     return {
       endpoint: urlObj.toString(),
