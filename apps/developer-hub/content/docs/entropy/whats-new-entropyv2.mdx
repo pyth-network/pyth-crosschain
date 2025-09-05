@@ -3,6 +3,7 @@ title: What's New in Entropy v2
 description: New features and improvements in Entropy v2
 icon: Sparkle
 ---
+import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
 
 ## Key Improvements
 
@@ -23,8 +24,7 @@ Each of these request types is described in more detail with examples in [Reques
 
 The new version offers more granular fee calculation:
 
-```solidity
-// Get fee for default provider and gas limit
+<DynamicCodeBlock lang="solidity" code={`// Get fee for default provider and gas limit
 uint256 basicFee = entropy.getFeeV2();
 
 // Get fee for custom gas limit
@@ -32,7 +32,7 @@ uint256 customGasFee = entropy.getFeeV2(gasLimit);
 
 // Get fee for specific provider and gas limit
 uint256 providerFee = entropy.getFeeV2(provider, gasLimit);
-```
+`} />
 
 ### 3. Enhanced Callback Status
 

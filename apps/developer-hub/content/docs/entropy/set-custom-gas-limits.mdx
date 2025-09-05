@@ -4,8 +4,9 @@ description: How to set custom gas limits for Entropy callbacks
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
+import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
 
-Custom gas limits are useful when your callback function requires more gas than the default provider limit, or when you want to optimize gas costs for simpler callbacks.
+Custom gas limits are useful when your callback function requires more gas than the [default provider limit]TODO(../contract-addresses), or when you want to optimize gas costs for simpler callbacks.
 
 ## Prerequisites
 
@@ -30,8 +31,8 @@ You might need custom gas limits in these scenarios:
 
 Instead of the basic `requestV2()` method, use the variant that accepts a `gasLimit` parameter:
 
-```solidity copy
-function requestRandomNumberWithCustomGas(
+<DynamicCodeBlock lang="solidity" 
+code={`function requestRandomNumberWithCustomGas(
   uint32 customGasLimit
 ) external payable {
   // Calculate the fee for the custom gas limit
@@ -42,26 +43,25 @@ function requestRandomNumberWithCustomGas(
 
   // Store the sequence number for tracking if needed
 }
-
-```
+`} />
 
 ### 2. Calculate Fees with Custom Gas Limit
 
 When using custom gas limits, you must use the `getFeeV2` variant that accepts a `gasLimit` parameter:
 
-```solidity copy
-// Get fee for custom gas limit
+<DynamicCodeBlock lang="solidity" 
+code={`// Get fee for custom gas limit
 uint256 fee = entropy.getFeeV2(customGasLimit);
 
 // NOT: uint256 fee = entropy.getFeeV2(); // This uses default gas limit
-```
+`} />
 
 ### 3. Complete Example
 
 Here's a complete example showing how to implement custom gas limits:
 
-```solidity copy
-pragma solidity ^0.8.0;
+<DynamicCodeBlock lang="solidity" 
+code={`pragma solidity ^0.8.0;
 
 import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
@@ -120,18 +120,17 @@ contract CustomGasLimitExample is IEntropyConsumer {
     return address(entropy);
   }
 }
-
-```
+`} />
 
 ## Gas Limit Constraints
 
 When setting custom gas limits, be aware of these constraints:
 
-<Callout type="info" title="Gas Limit Rules">
-  - Gas limits are automatically rounded up to the nearest multiple of 10,000. -
-  Example: 19,000 becomes 20,000, 25,500 becomes 30,000. - The minimum gas limit
-  is the provider's configured default limit. - The maximum gas limit is
-  655,350,000 (uint16.max × 10,000).
+<Callout variant="info" header="Gas Limit Rules">
+Gas limits are automatically rounded up to the nearest multiple of **10,000**. 
+Example: 19,000 becomes 20,000 25,500 becomes 30,000. The minimum gas limit
+is the provider's configured default limit. The maximum gas limit is
+655,350,000 (`uint16.max` \* 10,000).
 </Callout>
 
 ### Recommended Gas Limits
@@ -147,44 +146,44 @@ When setting custom gas limits, be aware of these constraints:
 
 Test your callback function to determine the actual gas usage:
 
-```solidity copy
-// In your tests, measure gas usage
+<DynamicCodeBlock lang="solidity" 
+code={`// In your tests, measure gas usage
 uint256 gasStart = gasleft();
 // Your callback logic here
 uint256 gasUsed = gasStart - gasleft();
 console.log("Gas used:", gasUsed);
-```
+`} />
 
 ### 2. Add Safety Buffer
 
 Always add a safety buffer to your estimated gas usage:
 
-```solidity copy
-uint32 estimatedGas = 150000;
+<DynamicCodeBlock lang="solidity" 
+code={`uint32 estimatedGas = 150000;
 uint32 safetyBuffer = 20000;
 uint32 customGasLimit = estimatedGas + safetyBuffer;
-```
+`} />
 
 ### 3. Handle Gas Limit Errors
 
 Be prepared to handle cases where your gas limit is insufficient:
 
-<Callout type="warning" emoji="⚠️">
-  If your callback runs out of gas, the entropy provider will not be able to
-  complete the callback. Always test your gas limits thoroughly and include
-  adequate safety margins.
+<Callout variant="warning">
+If your callback **runs out of gas**, the entropy provider will **not** be able to
+complete the callback. Always test your gas limits thoroughly and include
+adequate safety margins.
 </Callout>
 
 ### 4. Consider Fee Implications
 
 Higher gas limits result in higher fees. Balance your gas needs with cost considerations:
 
-```solidity copy
-// Compare fees for different gas limits
+<DynamicCodeBlock lang="solidity" 
+code={`// Compare fees for different gas limits
 uint256 defaultFee = entropy.getFeeV2();
 uint256 customFee = entropy.getFeeV2(customGasLimit);
 uint256 additionalCost = customFee - defaultFee;
-```
+`} />
 
 ## Troubleshooting
 

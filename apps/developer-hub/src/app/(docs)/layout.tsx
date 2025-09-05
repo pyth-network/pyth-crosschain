@@ -5,7 +5,7 @@ import { docsOptions } from "../../config/layout.config";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <DocsLayout {...docsOptions} containerProps={{ role: "none" }}>
+    <DocsLayout {...docsOptions}>
       {children}
     </DocsLayout>
   );

@@ -4,6 +4,7 @@ description: Learn how to integrate Pyth Entropy to generate random numbers in y
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
+import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
 
 This guide explains how to integrate Pyth Entropy into EVM Contracts to generate on-chain random numbers.
 The intended audience for this guide is developers of any application that needs on-chain randomness, such as NFT mints or games.
@@ -15,21 +16,19 @@ Install the SDK using your package manager:
 
 <Tabs items={['hardhat', 'foundry']}>
 <Tab value="hardhat">
-```shell copy
-npm install @pythnetwork/entropy-sdk-solidity
-```
+<DynamicCodeBlock lang="shell" 
+code={`npm install @pythnetwork/entropy-sdk-solidity`} />
 </Tab>
 <Tab value="foundry">
-```shell copy
-npm init -y
+<DynamicCodeBlock lang="shell" code={`npm init -y
 npm install @pythnetwork/entropy-sdk-solidity
-```
+`} />
 
 Then add the following line to your `remappings.txt` file:
 
-```text copy
-@pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
-```
+<DynamicCodeBlock lang="text" 
+code={`@pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
+`} />
 
 </Tab>
 </Tabs>
@@ -44,8 +43,8 @@ The Solidity SDK exports two interfaces:
   Consult the current [Entropy contract addresses](../contract-addresses) to find the address on your chain.
   Once you have a contract address, instantiate an `console.log("IEntropyV2"){:bash}` contract in your solidity contract:
 
-```solidity copy
-import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
+<DynamicCodeBlock lang="solidity" 
+code={`import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 // @param entropyAddress The address of the entropy contract.
@@ -56,8 +55,7 @@ contract YourContract is IEntropyConsumer {
     entropy = IEntropyV2(entropyAddress);
   }
 }
-
-```
+`} />
 
 ## Usage
 
@@ -65,7 +63,7 @@ To generate a random number, follow these steps.
 
 <Steps>
 <Step>
-### 1. Request a number from Entropy
+### Request a number from Entropy
 
 Invoke the [`requestV2`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropy.sol#L83) method of the `IEntropyV2` interface.
 The `console.log("requestV2"){:bash}` method requires paying a fee in native gas tokens which is configured per-provider.
@@ -76,14 +74,13 @@ However, you should use the on-chain method [`getFeeV2`](https://github.com/pyth
 
 These methods use the default randomness provider ([see here](#randomness-providers) for more info on providers).
 
-```solidity copy
-function requestRandomNumber() external payable {
+<DynamicCodeBlock lang="solidity" 
+code={`function requestRandomNumber() external payable {
   uint256 fee = entropy.getFeeV2();
 
   uint64 sequenceNumber = entropy.requestV2{ value: fee }();
 }
-
-```
+`} />
 
 This method returns a sequence number and emits a [`Requested`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/EntropyEventsV2.sol#L30) event. You can store this sequence number to identify the request in next step.
 
@@ -94,10 +91,10 @@ Please see the method documentation in the [IEntropyV2 interface](https://github
 </Step>
 <Step>
 
-### 2. Implement the Entropy callback
+### Implement the Entropy callback
 
-```solidity {31-45} copy
-pragma solidity ^0.8.0;
+<DynamicCodeBlock lang="solidity" 
+code={`pragma solidity ^0.8.0;
 
 import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
@@ -141,15 +138,14 @@ contract YourContract is IEntropyConsumer {
     return address(entropy);
   }
 }
-
-```
+`} />
 
 </Step>
 </Steps>
 
 When the final random number is ready to use, the entropyCallback function will be called by the Entropy contract. This will happen in a separate transaction submitted by the requested provider.
 
-<Callout type="info">
+<Callout variant="warning">
   The `entropyCallback` function on your contract should **never** return an
   error. If it returns an error, the keeper will not be able to invoke the
   callback. If you are having problems receiving the callback, please see
@@ -184,6 +180,6 @@ a keeper service for fullfilling requests.
 
 You can get the default provider's address by calling the [`getDefaultProvider`](https://github.com/pyth-network/pyth-crosschain/blob/f8ebeb6af31d98f94ce73edade6da2ebab7b2456/target_chains/ethereum/entropy_sdk/solidity/IEntropy.sol#L94) method:
 
-```solidity copy
-address provider = entropy.getDefaultProvider();
-```
+<DynamicCodeBlock lang="solidity" 
+code={`address provider = entropy.getDefaultProvider();
+`} />

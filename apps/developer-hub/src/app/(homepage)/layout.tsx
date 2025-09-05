@@ -5,7 +5,7 @@ import { baseOptions } from "../../config/layout.config";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <HomeLayout {...baseOptions} role="none">
+    <HomeLayout {...baseOptions}>
       {children}
     </HomeLayout>
   );
