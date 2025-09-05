@@ -168,9 +168,6 @@ catalogs:
     bs58:
       specifier: ^6.0.0
       version: 6.0.0
-    buffer:
-      specifier: ^6.0.3
-      version: 6.0.3
     class-variance-authority:
       specifier: ^0.7.1
       version: 0.7.1
@@ -2001,9 +1998,6 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 17.0.33
-      buffer:
-        specifier: 'catalog:'
-        version: 6.0.3
       yargs:
         specifier: 'catalog:'
         version: 18.0.0

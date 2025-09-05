@@ -7,10 +7,19 @@
   "engines": {
     "node": "22"
   },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "types": "./dist/esm/client.d.ts",
-      "default": "./dist/esm/client.js"
+      "import": {
+        "types": "./dist/esm/client.d.ts",
+        "default": "./dist/esm/client.js"
+      },
+      "require": {
+        "types": "./dist/cjs/client.d.ts",
+        "default": "./dist/cjs/client.js"
+      }
     }
   },
   "sideEffects": false,
@@ -28,7 +37,6 @@
     "@mysten/sui": "catalog:",
     "@pythnetwork/pyth-lazer-sdk": "workspace:*",
     "@types/yargs": "catalog:",
-    "buffer": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
