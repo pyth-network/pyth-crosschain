@@ -27,7 +27,7 @@ wormhole-raw-vaas = { version = "0.1.3", features = [
     "ruint",
     "on-chain",
 ], default-features = false }
-pyth-solana-receiver-sdk = { path = "../../pyth_solana_receiver_sdk" }
+pyth-solana-receiver-sdk = "0.6.1" # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
 rand = "0.8.5"
 
 [dev-dependencies]

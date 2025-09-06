@@ -19,4 +19,4 @@ serde_wormhole = { workspace = true }
 hex = "0.4.3"
 borsh = "0.9.3"                                                                                   # Old version of borsh needed for wormhole-solana
 wormhole-core-bridge-solana = { workspace = true }
-pyth-solana-receiver-sdk = { path = "../pyth_solana_receiver_sdk" }
+pyth-solana-receiver-sdk = "0.6.1"  # This is the highest version of pyth-solana-receiver-sdk that is compatible with the anchor-lang version used in the contract (0.28.0)
