@@ -1,7 +1,10 @@
 [workspace]
 members = ["programs/*", "cli/", "program_simulator/", "common_test_utils"]
 
-exclude = ["programs/pyth-price-store", "pyth_solana_receiver_sdk"]
+exclude = [
+    "programs/pyth-price-store",
+    "pyth_solana_receiver_sdk",
+] # pyth_solana_receiver_sdk is excluded because it uses a later anchor-lang version than the contract
 
 [profile.release]
 overflow-checks = true
@@ -24,4 +27,4 @@ solana-sdk = "1.16.20"
 solana-client = "1.16.20"
 
 [patch.crates-io]
-pythnet-sdk = { path = "../../pythnet/pythnet_sdk" }
+pythnet-sdk = { path = "../../pythnet/pythnet_sdk" } # Avoid clashing modules, use the local pythnet_sdk instead of the one from crates.io, (which is brought in by `pyth-solana-receiver-sdk==0.6.1`)
