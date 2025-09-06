@@ -41,7 +41,7 @@ jobs:
         run: cargo-test-sbf
         if: success() || failure()
       - name: Run sdk tests
-        # Skip doctests with --lib since the workspace is currently broken (pyth-solana-receiver-sdk supports a later anchor-lang version)
-        run: cargo test --lib --package pyth-solana-receiver-sdk
+        # Skip doctests with --lib since they are currently broken
+        run: cargo test --package pyth-solana-receiver-sdk
         working-directory: target_chains/solana/pyth_solana_receiver_sdk
         if: success() || failure()
