@@ -329,10 +329,10 @@ pub mod tests {
 
     #[test]
     fn check_size() {
-        assert!(
-            PriceUpdateV2::DISCRIMINATOR.len() + borsh0_10::get_packed_len::<PriceUpdateV2>()
-                == PriceUpdateV2::LEN
-        );
+        #[allow(deprecated)]
+        // TODO: borsh0_10 is deprecated, v1::get_packed_len should be used in the future
+        let len = PriceUpdateV2::DISCRIMINATOR.len() + borsh0_10::get_packed_len::<PriceUpdateV2>();
+        assert_eq!(len, PriceUpdateV2::LEN);
     }
 
     #[test]
