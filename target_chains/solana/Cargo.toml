@@ -22,3 +22,6 @@ solana-program = "1.16.20"
 solana-program-test = "1.16.20"
 solana-sdk = "1.16.20"
 solana-client = "1.16.20"
+
+[patch.crates-io]
+pythnet-sdk = { path = "../../pythnet/pythnet_sdk" }

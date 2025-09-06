@@ -1031,7 +1031,7 @@ dependencies = [
  "pyth-sdk-solana",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk",
- "pythnet-sdk 2.3.1",
+ "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
@@ -3024,7 +3024,7 @@ dependencies = [
  "program-simulator",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk",
- "pythnet-sdk 2.3.1",
+ "pythnet-sdk",
  "serde_wormhole",
  "solana-program",
  "solana-sdk",
@@ -3085,7 +3085,7 @@ dependencies = [
  "common-test-utils",
  "program-simulator",
  "pyth-solana-receiver-sdk",
- "pythnet-sdk 2.3.1",
+ "pythnet-sdk",
  "rand 0.8.5",
  "serde_wormhole",
  "solana-program",
@@ -3108,7 +3108,7 @@ dependencies = [
  "hex",
  "pyth-solana-receiver",
  "pyth-solana-receiver-sdk",
- "pythnet-sdk 2.3.1",
+ "pythnet-sdk",
  "serde_wormhole",
  "shellexpand",
  "solana-client",
@@ -3127,7 +3127,7 @@ dependencies = [
  "anchor-lang",
  "bytemuck_derive",
  "hex",
- "pythnet-sdk 2.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pythnet-sdk",
  "solana-program",
 ]
 
@@ -3153,27 +3153,6 @@ dependencies = [
  "solana-program",
  "thiserror",
  "wormhole-vaas-serde",
-]
-
-[[package]]
-name = "pythnet-sdk"
-version = "2.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "498d20fd330277697aaee92f341bdabdb4695b10e05f054157a18ad8b7746a17"
-dependencies = [
- "anchor-lang",
- "bincode",
- "borsh 0.10.3",
- "bytemuck",
- "byteorder",
- "fast-math",
- "hex",
- "rustc_version",
- "serde",
- "sha3 0.10.6",
- "slow_primes",
- "solana-program",
- "thiserror",
 ]
 
 [[package]]
