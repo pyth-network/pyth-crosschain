@@ -42,4 +42,5 @@ jobs:
         if: success() || failure()
       - name: Run sdk tests
         run: cargo test --package pyth-solana-receiver-sdk
+        working-directory: target_chains/solana/pyth_solana_receiver_sdk
         if: success() || failure()

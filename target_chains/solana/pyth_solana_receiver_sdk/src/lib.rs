@@ -5,7 +5,6 @@ use {
     anchor_lang::{declare_id, prelude::*},
     borsh::{BorshDeserialize, BorshSerialize},
     pythnet_sdk::wire::v1::MerklePriceUpdate,
-    solana_program::{pubkey, pubkey::Pubkey},
 };
 
 pub mod config;
