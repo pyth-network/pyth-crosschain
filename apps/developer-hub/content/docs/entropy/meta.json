@@ -7,6 +7,8 @@
     "---Introduction---",
     "index",
     "whats-new-entropyv2",
+    "---Tutorials---",
+    "create-your-first-entropy-app",
     "---How-To Guides---",
     "generate-random-numbers-evm",
     "set-custom-gas-limits",
@@ -21,7 +23,6 @@
     "[Fortuna API Reference](https://fortuna.dourolabs.app/docs/)",
     "---Understanding Entropy---",
     "protocol-design",
-    "fees",
-    "create-your-first-entropy-app"
+    "fees"
   ]
 }
