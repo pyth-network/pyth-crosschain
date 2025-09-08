@@ -13,6 +13,7 @@ use pyth_lazer_publisher_sdk::transaction::{
     Ed25519SignatureData, LazerTransaction, SignatureData, SignedLazerTransaction,
 };
 use solana_keypair::read_keypair_file;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -132,9 +133,10 @@ impl LazerPublisherTask {
             return Ok(());
         }
 
-        let mut updates = self.pending_updates.drain(..).collect();
+        let mut updates: Vec<FeedUpdate> = self.pending_updates.drain(..).collect();
+        updates.sort();
         if self.config.enable_update_deduplication {
-            deduplicate_feed_updates(&mut updates);
+            updates = deduplicate_feed_updates(&updates)?;
         }
 
         let publisher_update = PublisherUpdate {
@@ -178,9 +180,17 @@ impl LazerPublisherTask {
     }
 }
 
-fn deduplicate_feed_updates(feed_updates: &mut Vec<FeedUpdate>) {
-    // assume that feed_updates is already sorted by timestamp for each feed_update.feed_id
-    feed_updates.dedup_by_key(|feed_update| (feed_update.feed_id, feed_update.update.clone()));
+/// For each feed, keep the latest data. Among updates with the same data, keep the one with the earliest timestamp.
+/// Assumes the input is sorted by timestamp ascending.
+fn deduplicate_feed_updates(sorted_feed_updates: &Vec<FeedUpdate>) -> Result<Vec<FeedUpdate>> {
+    let mut deduped_feed_updates = HashMap::new();
+    for update in sorted_feed_updates {
+        let entry = deduped_feed_updates.entry(update.feed_id).or_insert(update);
+        if entry.update != update.update {
+            *entry = update;
+        }
+    }
+    Ok(deduped_feed_updates.into_values().cloned().collect())
 }
 
 #[cfg(test)]
@@ -308,25 +318,28 @@ mod tests {
         //   - (4, 15)
         //   - (5, 15)
         //   - (6, 10)
-        // we should only return (1, 10), (4, 15), (6, 10)
+        //   - (7, 10)
+        // we should only return (6, 10)
 
-        let updates = &mut vec![
+        let updates = &vec![
             test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(2).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(3).unwrap(), 10),
             test_feed_update(1, TimestampUs::from_millis(4).unwrap(), 15),
             test_feed_update(1, TimestampUs::from_millis(5).unwrap(), 15),
             test_feed_update(1, TimestampUs::from_millis(6).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(7).unwrap(), 10),
         ];
 
-        let expected_updates = vec![
-            test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
-            test_feed_update(1, TimestampUs::from_millis(4).unwrap(), 15),
-            test_feed_update(1, TimestampUs::from_millis(6).unwrap(), 10),
-        ];
+        let expected_updates = vec![test_feed_update(
+            1,
+            TimestampUs::from_millis(6).unwrap(),
+            10,
+        )];
 
-        deduplicate_feed_updates(updates);
-        assert_eq!(updates.to_vec(), expected_updates);
+        let mut deduped_updates = deduplicate_feed_updates(updates).unwrap();
+        deduped_updates.sort();
+        assert_eq!(deduped_updates, expected_updates);
     }
 
     #[test]
@@ -342,11 +355,38 @@ mod tests {
 
         let expected_updates = vec![
             test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
-            test_feed_update(2, TimestampUs::from_millis(4).unwrap(), 15),
             test_feed_update(2, TimestampUs::from_millis(6).unwrap(), 10),
         ];
 
-        deduplicate_feed_updates(updates);
-        assert_eq!(updates.to_vec(), expected_updates);
+        let mut deduped_updates = deduplicate_feed_updates(updates).unwrap();
+        deduped_updates.sort();
+        assert_eq!(deduped_updates, expected_updates);
+    }
+
+    #[test]
+    fn test_deduplicate_feed_updates_multiple_feeds_random_order() {
+        let updates = &mut vec![
+            test_feed_update(1, TimestampUs::from_millis(1).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(2).unwrap(), 20),
+            test_feed_update(1, TimestampUs::from_millis(3).unwrap(), 10),
+            test_feed_update(2, TimestampUs::from_millis(4).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(5).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(6).unwrap(), 10),
+            test_feed_update(1, TimestampUs::from_millis(7).unwrap(), 20),
+            test_feed_update(1, TimestampUs::from_millis(8).unwrap(), 10), // last distinct update for feed 1
+            test_feed_update(1, TimestampUs::from_millis(9).unwrap(), 10),
+            test_feed_update(2, TimestampUs::from_millis(10).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(11).unwrap(), 15),
+            test_feed_update(2, TimestampUs::from_millis(12).unwrap(), 10), // last distinct update for feed 2
+        ];
+
+        let expected_updates = vec![
+            test_feed_update(1, TimestampUs::from_millis(8).unwrap(), 10),
+            test_feed_update(2, TimestampUs::from_millis(12).unwrap(), 10),
+        ];
+
+        let mut deduped_updates = deduplicate_feed_updates(updates).unwrap();
+        deduped_updates.sort();
+        assert_eq!(deduped_updates, expected_updates);
     }
 }

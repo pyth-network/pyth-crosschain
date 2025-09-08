@@ -266,9 +266,9 @@ async fn handle_get_metadata<T: AsyncRead + AsyncWrite + Unpin>(
 
 #[cfg(test)]
 pub mod tests {
+    use pyth_lazer_protocol::{PriceFeedId, SymbolState, api::Channel, time::FixedRate};
+
     use super::*;
-    use pyth_lazer_protocol::router::{Channel, FixedRate, PriceFeedId};
-    use pyth_lazer_protocol::symbol_state::SymbolState;
     use std::net::SocketAddr;
 
     fn gen_test_symbol(name: String, asset_type: String) -> SymbolMetadata {
