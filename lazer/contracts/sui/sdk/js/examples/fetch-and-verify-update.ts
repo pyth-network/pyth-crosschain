@@ -119,4 +119,7 @@ async function main() {
   console.log("Execution result:", JSON.stringify(res, undefined, 2));
 }
 
-await main();
+// eslint-disable-next-line unicorn/prefer-top-level-await
+main().catch((error: unknown) => {
+  throw error;
+});
