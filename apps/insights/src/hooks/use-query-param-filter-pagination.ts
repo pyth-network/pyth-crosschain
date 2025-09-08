@@ -137,6 +137,6 @@ export const useQueryParamFilterPagination = <T>(
     paginatedItems,
     numPages,
     mkPageLink,
-    numResults: filteredItems.length,
+    numResults: mutatedItems.length,
   };
 };
