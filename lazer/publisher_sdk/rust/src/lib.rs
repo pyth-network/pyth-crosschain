@@ -147,3 +147,95 @@ impl From<pyth_lazer_protocol::api::Channel> for state::Channel {
         result
     }
 }
+
+impl Eq for PriceUpdate {}
+
+impl Ord for PriceUpdate {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (self.price, self.best_bid_price, self.best_ask_price).cmp(&(
+            other.price,
+            other.best_bid_price,
+            other.best_ask_price,
+        ))
+    }
+}
+
+impl Eq for FundingRateUpdate {}
+
+impl Ord for FundingRateUpdate {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (
+            self.price,
+            self.rate,
+            self.funding_rate_interval
+                .as_ref()
+                .map(|duration| (duration.seconds, duration.nanos)),
+        )
+            .cmp(&(
+                other.price,
+                other.rate,
+                other
+                    .funding_rate_interval
+                    .as_ref()
+                    .map(|duration| (duration.seconds, duration.nanos)),
+            ))
+    }
+}
+
+impl PartialOrd for FundingRateUpdate {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialOrd for PriceUpdate {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for Update {}
+
+impl Ord for Update {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match (self, other) {
+            (Update::PriceUpdate(a), Update::PriceUpdate(b)) => a.cmp(b),
+            (Update::FundingRateUpdate(a), Update::FundingRateUpdate(b)) => a.cmp(b),
+            (Update::PriceUpdate(_), Update::FundingRateUpdate(_)) => std::cmp::Ordering::Less,
+            (Update::FundingRateUpdate(_), Update::PriceUpdate(_)) => std::cmp::Ordering::Greater,
+        }
+    }
+}
+
+impl PartialOrd for Update {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for FeedUpdate {}
+
+// FeedUpdates are ordered first by source_timestamp, then by feed_id, then by update.
+impl Ord for FeedUpdate {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (
+            &self.source_timestamp.as_ref().map(|t| (t.seconds, t.nanos)),
+            &self.feed_id,
+            &self.update,
+        )
+            .cmp(&(
+                &other
+                    .source_timestamp
+                    .as_ref()
+                    .map(|t| (t.seconds, t.nanos)),
+                &other.feed_id,
+                &other.update,
+            ))
+    }
+}
+
+impl PartialOrd for FeedUpdate {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
