@@ -1,3 +1,5 @@
+import type { ClientRequestArgs } from "node:http";
+
 import TTLCache from "@isaacs/ttlcache";
 import type { ErrorEvent } from "isomorphic-ws";
 import WebSocket from "isomorphic-ws";
@@ -7,7 +9,16 @@ import { dummyLogger } from "ts-log";
 import type { Request, Response } from "../protocol.js";
 import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
 import { ResilientWebSocket } from "./resilient-websocket.js";
-import type { ClientRequestArgs } from "node:http";
+
+/**
+ * Browser global interface for proper typing
+ */
+type BrowserGlobal = {
+  window?: {
+    document?: unknown;
+  };
+  importScripts?: (...urls: string[]) => void;
+}
 
 /**
  * Detects if the code is running in a regular DOM or Web Worker context.
@@ -17,8 +28,8 @@ function isBrowser(): boolean {
   try {
     // Check for browser's window object (DOM context)
     if (typeof globalThis !== "undefined") {
-      const global = globalThis as any;
-      if (global.window && global.window.document) {
+      const global = globalThis as BrowserGlobal;
+      if (global.window?.document) {
         return true;
       }
 
@@ -51,19 +62,16 @@ function addAuthentication(
   url: string,
   token: string,
   wsOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined = {}
-): { endpoint: string; wsOptions: any } {
+): { endpoint: string; wsOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined } {
   if (isBrowser()) {
     // Browser: Add token as query parameter
     const urlObj = new URL(url);
     urlObj.searchParams.set("ACCESS_TOKEN", token);
 
-    // For browsers, we need to filter out any options that aren't valid for WebSocket constructor
-    // Browser WebSocket constructor only accepts protocols as second parameter
-    const browserWsOptions = wsOptions.protocol ? wsOptions.protocol : undefined;
-
+    // For browsers, filter out wsOptions since headers aren't supported
     return {
       endpoint: urlObj.toString(),
-      wsOptions: browserWsOptions,
+      wsOptions: undefined,
     };
   } else {
     // Node.js: Add Authorization header
@@ -72,7 +80,7 @@ function addAuthentication(
       wsOptions: {
         ...wsOptions,
         headers: {
-          ...wsOptions.headers,
+          ...(wsOptions.headers as Record<string, string> | undefined),
           Authorization: `Bearer ${token}`,
         },
       },
