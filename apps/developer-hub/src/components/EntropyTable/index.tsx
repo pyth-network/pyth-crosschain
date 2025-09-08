@@ -63,8 +63,9 @@ const EntropyTableContent = ({
     { id: "gasLimit", name: "Default Gas Limit" },
   ];
 
-  const rows: RowConfig<Col>[] = Object.entries(chains).map(
-    ([chainName, d]) => ({
+  const rows: RowConfig<Col>[] = Object.entries(chains)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([chainName, d]) => ({
       id: chainName,
       data: {
         chain: chainName,
@@ -79,8 +80,7 @@ const EntropyTableContent = ({
         delay: d.delay,
         gasLimit: d.gasLimit,
       },
-    }),
-  );
+    }));
 
   return (
     <Table<Col>

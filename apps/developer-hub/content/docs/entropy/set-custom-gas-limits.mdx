@@ -33,15 +33,15 @@ Instead of the basic `requestV2()` method, use the variant that accepts a `gasLi
 
 <DynamicCodeBlock lang="solidity" 
 code={`function requestRandomNumberWithCustomGas(
-  uint32 customGasLimit
+    uint32 customGasLimit
 ) external payable {
-  // Calculate the fee for the custom gas limit
-  uint256 fee = entropy.getFeeV2(customGasLimit);
+    // Calculate the fee for the custom gas limit
+    uint256 fee = entropy.getFeeV2(customGasLimit);
 
-// Request random number with custom gas limit
-uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
+    // Request random number with custom gas limit
+    uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
 
-// Store the sequence number for tracking if needed
+    // Store the sequence number for tracking if needed
 }
 `} />
 
@@ -67,61 +67,58 @@ import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyCons
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 contract CustomGasLimitExample is IEntropyConsumer {
-IEntropyV2 public entropy;
-mapping(uint64 => bool) public processedRequests;
+    IEntropyV2 public entropy;
+    mapping(uint64 => bool) public processedRequests;
 
-constructor(address entropyAddress) {
-entropy = IEntropyV2(entropyAddress);
-}
-
-// Request with custom gas limit for complex callback
-function requestComplexRandomNumber() external payable {
-uint32 customGasLimit = 200000; // Higher limit for complex operations
-uint256 fee = entropy.getFeeV2(customGasLimit);
-
-    require(msg.value >= fee, "Insufficient fee");
-
-    uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
-    // Store sequence number if needed for tracking
-
-}
-
-// Request with lower gas limit for simple callback
-function requestSimpleRandomNumber() external payable {
-uint32 customGasLimit = 50000; // Lower limit for simple operations
-uint256 fee = entropy.getFeeV2(customGasLimit);
-
-    require(msg.value >= fee, "Insufficient fee");
-
-    uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
-
-}
-
-// Complex callback that requires more gas
-function entropyCallback(
-uint64 sequenceNumber,
-address provider,
-bytes32 randomNumber
-) internal override {
-// Prevent duplicate processing
-require(!processedRequests[sequenceNumber], "Already processed");
-processedRequests[sequenceNumber] = true;
-
-    // Complex operations that require more gas
-    for (uint i = 0; i < 10; i++) {
-      // Simulate complex state changes
-      // This would require more gas than the default limit
+    constructor(address entropyAddress) {
+      entropy = IEntropyV2(entropyAddress);
     }
 
-    // Use the random number for your application logic
-    uint256 randomValue = uint256(randomNumber);
-    // Your application logic here...
+    // Request with custom gas limit for complex callback
+    function requestComplexRandomNumber() external payable {
+      uint32 customGasLimit = 200000; // Higher limit for complex operations
+      uint256 fee = entropy.getFeeV2(customGasLimit);
 
-}
+      require(msg.value >= fee, "Insufficient fee");
 
-function getEntropy() internal view override returns (address) {
-return address(entropy);
-}
+      uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
+      // Store sequence number if needed for tracking
+    }
+
+    // Request with lower gas limit for simple callback
+    function requestSimpleRandomNumber() external payable {
+      uint32 customGasLimit = 50000; // Lower limit for simple operations
+      uint256 fee = entropy.getFeeV2(customGasLimit);
+
+      require(msg.value >= fee, "Insufficient fee");
+
+      uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
+    }
+
+    // Complex callback that requires more gas
+    function entropyCallback(
+    uint64 sequenceNumber,
+    address provider,
+    bytes32 randomNumber
+    ) internal override {
+      // Prevent duplicate processing
+      require(!processedRequests[sequenceNumber], "Already processed");
+      processedRequests[sequenceNumber] = true;
+
+      // Complex operations that require more gas
+      for (uint i = 0; i < 10; i++) {
+          // Simulate complex state changes
+          // This would require more gas than the default limit
+      }
+
+      // Use the random number for your application logic
+      uint256 randomValue = uint256(randomNumber);
+      // Your application logic here...
+    }
+
+    function getEntropy() internal view override returns (address) {
+      return address(entropy);
+    }
 }
 `} />
 
