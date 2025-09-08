@@ -45,6 +45,7 @@ packages:
   - lazer/contracts/solana
   - lazer/sdk/js
   - lazer/sdk/js-solana
+  - lazer/contracts/sui/sdk/js
 
 catalog:
   "@amplitude/analytics-browser": ^2.13.0
@@ -94,7 +95,10 @@ catalog:
   "@types/node": ^22.14.0
   "@types/react": ^19.1.0
   "@types/react-dom": ^19.1.1
+  "@types/yargs": "^17.0.33"
   "@vercel/functions": ^2.0.0
+  "@mysten/sui": "^1.3.0"
+  "yargs": "^18.0.0"
   autoprefixer: ^10.4.21
   babel-plugin-react-compiler: 19.1.0-rc.1
   bcp-47: ^2.1.0
