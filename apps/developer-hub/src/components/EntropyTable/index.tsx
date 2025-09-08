@@ -46,9 +46,6 @@ export const EntropyTable = ({ isMainnet }: { isMainnet: boolean }) => {
     case StateType.Loaded: {
       return <EntropyTableContent chains={state.chains} />;
     }
-    default: {
-      throw new Error(`Unknown state type: ${typeof state}`);
-    }
   }
 };
 

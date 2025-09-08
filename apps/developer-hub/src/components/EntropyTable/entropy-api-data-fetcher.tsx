@@ -12,10 +12,6 @@ const ApiChainConfigSchema = z.object({
   default_fee: z.number(),
 });
 
-type ApiChainConfig = z.infer<typeof ApiChainConfigSchema>;
-
-const entropyDeploymentsSchema = z.array(ApiChainConfigSchema);
-
 export type EntropyDeployment = {
   address: string;
   delay: string;
@@ -26,13 +22,11 @@ export type EntropyDeployment = {
   nativeCurrency?: string;
 };
 
-const getChainData = (network_id: number) => {
+function getChainData(network_id: number) {
   return Object.values(chains).find((chain) => chain.id === network_id);
-};
+}
 
-const transformChainData = (
-  chain: ApiChainConfig,
-): [string, EntropyDeployment] => {
+const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
   const viemChainData = getChainData(chain.network_id);
 
   const configOverride = EntropyDeploymentsConfig[chain.network_id];
@@ -55,18 +49,15 @@ const transformChainData = (
     ...(nativeCurrency ? { nativeCurrency } : {}),
   };
 
-  return [chain.name, deployment];
-};
+  return [chain.name, deployment] as const;
+});
 
-export const fetchEntropyDeployments = async (
+const entropyDeploymentsSchema = z.array(apiChainConfigToEntrySchema);
+
+export async function fetchEntropyDeployments(
   url: string,
-): Promise<Record<string, EntropyDeployment>> => {
-  try {
-    const response = await fetch(url);
-    const apiData = entropyDeploymentsSchema.parse(await response.json());
-
-    return Object.fromEntries(apiData.map((item) => transformChainData(item)));
-  } catch (error_) {
-    throw new Error(String(error_));
-  }
-};
+): Promise<Record<string, EntropyDeployment>> {
+  const response = await fetch(url);
+  const entries = entropyDeploymentsSchema.parse(await response.json());
+  return Object.fromEntries(entries);
+}
