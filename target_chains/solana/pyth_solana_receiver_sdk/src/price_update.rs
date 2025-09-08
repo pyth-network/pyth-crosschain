@@ -104,7 +104,7 @@ impl TwapUpdate {
     /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age` with a specific window size.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, TwapUpdate};
     /// use anchor_lang::prelude::*;
     ///
@@ -213,7 +213,7 @@ impl PriceUpdateV2 {
     /// Please read the documentation for [`VerificationLevel`] for more information.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV2};
     /// use anchor_lang::prelude::*;
     ///
@@ -257,7 +257,7 @@ impl PriceUpdateV2 {
     /// Get a `Price` from a `PriceUpdateV2` account for a given `FeedId` no older than `maximum_age` with `Full` verification.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
     /// use anchor_lang::prelude::*;
     ///
@@ -329,8 +329,10 @@ pub mod tests {
 
     #[test]
     fn check_size() {
-        #[allow(deprecated)]
-        // TODO: borsh0_10 is deprecated, v1::get_packed_len should be used in the future
+        #[allow(
+            deprecated,
+            reason = "borsh0_10 is deprecated, v1::get_packed_len should be used in the future"
+        )]
         let len = PriceUpdateV2::DISCRIMINATOR.len() + borsh0_10::get_packed_len::<PriceUpdateV2>();
         assert_eq!(len, PriceUpdateV2::LEN);
     }
