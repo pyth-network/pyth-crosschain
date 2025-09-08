@@ -5,20 +5,26 @@ icon: DiceSix
 full: true
 ---
 
+import {
+  RocketLaunch,
+  FileText,
+  DiceSix,
+} from "@phosphor-icons/react/dist/ssr";
+
 **Pyth Entropy** is an on-chain random number generator (RNG) designed for developers who need fair, unbiased, and cryptographically secure randomness.
 Whether you're building a blockchain game, NFT mint, lottery, or simulation, Entropy delivers randomness that is:
 
-- **Trustless & verifiable** - built on commit-reveal(TODO: link to commit-reveal).
-- **Low-latency** - randomness available within a few blocks(TODO: link to latency).
-- **Easy to integrate** - Permissionless Integration, Visual Tx Explorer(TODO: link to explorer).
-- **Cost-efficient** - designed for scalable production use(TODO: link to fees).
+- **Trustless & verifiable** - built on [commit-reveal protocol](./entropy/protocol-design).
+- **Low-latency** - randomness available within a [few blocks](./entropy/contract-addresses).
+- **Easy to integrate** - Permissionless Integration, including [Visual Tx Explorer](https://entropy-explorer.pyth.network/).
+- **Cost-efficient** - designed for scalable production use [fees](./entropy/contract-addresses).
 - **Native gas fees** - pay with chain native token.
 
 ## What's New in Entropy v2
 
 Entropy v2 introduces several improvements and new features to make random number generation more flexible and efficient.
 See [What's New in Entropy v2](whats-new-entropyv2) for more details.
-(TODO: This can be displayed in a banner above) (TODO: Add aan infographic here)
+(TODO: Add an infographic here)
 
 ## Getting Started
 
@@ -31,3 +37,29 @@ Please see [How to Generate Random Numbers Using Pyth Entropy](generate-random-n
 - [Contract Addresses/Supported Networks](contract-addresses)
 - [Error Codes](error-codes)
 - [Entropy Debugger](https://entropy-debugger.pyth.network/) - Interactive tool for diagnosing callback issues
+
+## Start Building
+
+<Cards className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <Card
+    href="/entropy/create-your-first-entropy-app"
+    title="Build Your First App"
+    icon={<RocketLaunch size={16} fill="unset" weight="duotone" />}
+  >
+    Step-by-step tutorial to deploy a coin flip using Entropy v2.
+  </Card>
+  <Card
+    href="/entropy/generate-random-numbers-evm"
+    title="Generate Random Numbers"
+    icon={<DiceSix size={16} fill="unset" />}
+  >
+    How-to guide for reading fees and requesting randomness on EVM.
+  </Card>
+  <Card
+    href="/entropy/contract-addresses"
+    title="Contracts & Providers"
+    icon={<FileText size={16} fill="unset" />}
+  >
+    Find Entropy addresses, reveal delays, gas limits, and fees.
+  </Card>
+</Cards>
