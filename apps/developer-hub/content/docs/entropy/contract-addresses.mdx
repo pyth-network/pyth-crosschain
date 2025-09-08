@@ -1,23 +1,15 @@
 ---
 title: Contract Addresses
-description: Entropy contract addresses on different networks
+description: Pyth Entropy contract addresses on EVM networks
 ---
 
-# Entropy Contract Addresses on EVM
+import { EntropyTable } from "../../../src/components/EntropyTable";
 
 ## Mainnets
 
 The Entropy contract is deployed on the following mainnet chains:
 
-| Network   | Contract Address                             | Gas Limit | Provider                                     |
-| --------- | -------------------------------------------- | --------- | -------------------------------------------- |
-| Ethereum  | `0x98046Bd286715D3B0BC227Dd7a956b83D8978603` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
-| Arbitrum  | `0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
-| Avalanche | `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
-| Base      | `0x98046Bd286715D3B0BC227Dd7a956b83D8978603` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
-| BNB Chain | `0x98046Bd286715D3B0BC227Dd7a956b83D8978603` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
-| Optimism  | `0x98046Bd286715D3B0BC227Dd7a956b83D8978603` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
-| Polygon   | `0x98046Bd286715D3B0BC227Dd7a956b83D8978603` | 100,000   | `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506` |
+<EntropyTable isMainnet={true} />
 
 **The default provider for above mainnet chains is `0x52DeaA1c84233F7bb8C8A45baeDE41091c616506`.**
 
@@ -30,18 +22,8 @@ The default provider fulfills the request by sending a transaction with a gas li
 
 The Entropy contract is deployed on the following testnet chains:
 
-| Network          | Contract Address                             | Gas Limit | Provider                                     |
-| ---------------- | -------------------------------------------- | --------- | -------------------------------------------- |
-| Ethereum Sepolia | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
-| Arbitrum Sepolia | `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
-| Avalanche Fuji   | `0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
-| Base Sepolia     | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
-| BNB Testnet      | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
-| Optimism Sepolia | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
-| Polygon Amoy     | `0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c` | 100,000   | `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344` |
+<EntropyTable isMainnet={false} />
 
 **The default provider for above testnet chains is `0x6CC14824Ea2918f5De5C2f75A9Da968ad4BD6344`.**
 
 The default provider on testnet has reveal delays identical to the corresponding mainnet chains to ensure consistent environment.
-
-The default provider fulfills the request by sending a transaction with a gas limit as mentioned in above table. Entropy callbacks the consumer as part of this transaction.

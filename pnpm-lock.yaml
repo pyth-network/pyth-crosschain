@@ -548,6 +548,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.1.0(react@19.1.0)
+      viem:
+        specifier: 'catalog:'
+        version: 2.34.0(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@6.0.3)(zod@3.24.4)
       zod:
         specifier: 'catalog:'
         version: 3.24.4
