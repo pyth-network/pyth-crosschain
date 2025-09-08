@@ -13,13 +13,15 @@
     "debug-callback-failures",
     "---Reference Material---",
     "contract-addresses",
-    "current-fees",
     "best-practices",
-    "fees",
-    "protocol-design",
-    "error-codes",
-    "examples",
     "request-callback-variants",
+    "error-codes",
+    "[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/entropy)",
+    "[Entropy Explorer](https://entropy-explorer.pyth.network/)",
+    "[Fortuna API Reference](https://fortuna.dourolabs.app/docs/)",
+    "---Understanding Entropy---",
+    "protocol-design",
+    "fees",
     "create-your-first-entropy-app"
   ]
 }

@@ -51,11 +51,12 @@ import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 // @param entropyAddress The address of the entropy contract.
 contract YourContract is IEntropyConsumer {
-    IEntropyV2 public entropy;
+IEntropyV2 public entropy;
 
     constructor(address entropyAddress) {
         entropy = IEntropyV2(entropyAddress);
     }
+
 }
 `} />
 
@@ -81,6 +82,7 @@ code={`function requestRandomNumber() external payable {
     uint256 fee = entropy.getFeeV2();
 
     uint64 sequenceNumber = entropy.requestV2{ value: fee }();
+
 }
 `} />
 
@@ -102,7 +104,7 @@ import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyCons
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 contract YourContract is IEntropyConsumer {
-    IEntropyV2 entropy;
+IEntropyV2 entropy;
 
     // @param entropyAddress The address of the entropy contract.
     constructor(address entropyAddress) {
@@ -140,6 +142,7 @@ contract YourContract is IEntropyConsumer {
     function getEntropy() internal view override returns (address) {
         return address(entropy);
     }
+
 }
 `} />
 

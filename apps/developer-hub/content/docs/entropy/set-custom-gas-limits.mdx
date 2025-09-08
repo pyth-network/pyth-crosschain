@@ -42,6 +42,7 @@ code={`function requestRandomNumberWithCustomGas(
     uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
 
     // Store the sequence number for tracking if needed
+
 }
 `} />
 
@@ -67,8 +68,8 @@ import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyCons
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 
 contract CustomGasLimitExample is IEntropyConsumer {
-    IEntropyV2 public entropy;
-    mapping(uint64 => bool) public processedRequests;
+IEntropyV2 public entropy;
+mapping(uint64 => bool) public processedRequests;
 
     constructor(address entropyAddress) {
       entropy = IEntropyV2(entropyAddress);
@@ -119,6 +120,7 @@ contract CustomGasLimitExample is IEntropyConsumer {
     function getEntropy() internal view override returns (address) {
       return address(entropy);
     }
+
 }
 `} />
 
