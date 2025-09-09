@@ -165,10 +165,10 @@ Below is an excerpt of example code. See the full example in the [Typescript SDK
 ```typescript
 import { OpportunitySvm } from "../index";
 import { BidSvm } from "../types";
- 
+
 import * as anchor from "@coral-xyz/anchor";
 import * as limo from "@kamino-finance/limo-sdk";
- 
+
 /**
   * Generates a bid for a given opportunity.
   * The transaction in this bid transfers assets from the searcher's wallet to fulfill the limit order.
@@ -181,7 +181,7 @@ async generateBid(opportunity: OpportunitySvm): Promise<BidSvm> {
     this.connectionSvm,
     order.state.globalConfig
   );
- 
+
   const ixsTakeOrder = await this.generateTakeOrderIxs(limoClient, order);
   const feeInstruction = ComputeBudgetProgram.setComputeUnitPrice({
     microLamports:
@@ -191,9 +191,9 @@ async generateBid(opportunity: OpportunitySvm): Promise<BidSvm> {
     feeInstruction,
     ...ixsTakeOrder
   );
- 
+
   const bidAmount = await this.getBidAmount(order);
- 
+
   const config = await this.getExpressRelayConfig();
   const bid = await this.client.constructSvmBid(
     txRaw,
@@ -206,7 +206,7 @@ async generateBid(opportunity: OpportunitySvm): Promise<BidSvm> {
     config.relayerSigner,
     config.feeReceiverRelayer
   );
- 
+
   bid.transaction.recentBlockhash =
     this.latestChainUpdate[this.chainId].blockhash;
   bid.transaction.sign(this.searcher);
@@ -224,8 +224,8 @@ The bid you construct will look like
   "env": "svm"
 }
 ```
-where the serialized transaction object should contain an Express Relay SubmitBid instruction that specifies the amount you are bidding and the permission details.
 
+where the serialized transaction object should contain an Express Relay SubmitBid instruction that specifies the amount you are bidding and the permission details.
 
 </Tab>
 <Tab value="python">
@@ -234,33 +234,33 @@ Below is an excerpt of example code. See the full example in the [Python SDK](ht
 
 ```python
 import logging
- 
+
 from solders.transaction import Transaction
- 
+
 from express_relay.models.svm import BidSvm
 from express_relay.svm.limo_client import OrderStateAndAddress
- 
+
 DEADLINE = 2**62
 logger = logging.getLogger(__name__)
- 
+
 async def generate_bid(self, opp: OpportunitySvm) -> BidSvm:
     """
     Generates a bid for a given opportunity.
     The transaction in this bid transfers assets from the searcher's wallet to fulfill the limit order.
- 
+
     Args:
         opp: The SVM opportunity to bid on.
     Returns:
         The generated bid object.
     """
     order: OrderStateAndAddress = {"address": opp.order_address, "state": opp.order}
- 
+
     ixs_take_order = await self.generate_take_order_ixs(order)
     bid_amount = await self.get_bid_amount(order)
     router = self.limo_client.get_pda_authority(
         self.limo_client.get_program_id(), order["state"].global_config
     )
- 
+
     submit_bid_ix = self.client.get_svm_submit_bid_instruction(
         searcher=self.private_key.pubkey(),
         router=router,
@@ -282,6 +282,7 @@ async def generate_bid(self, opp: OpportunitySvm) -> BidSvm:
     bid = BidSvm(transaction=transaction, chain_id=self.chain_id)
     return bid
 ```
+
 The bid you construct will look like
 
 ```
@@ -293,8 +294,8 @@ The bid you construct will look like
 }
 
 ```
-where the serialized transaction object should contain an Express Relay SubmitBid instruction that specifies the amount you are bidding and the permission details.
 
+where the serialized transaction object should contain an Express Relay SubmitBid instruction that specifies the amount you are bidding and the permission details.
 
 </Tab>
 </Tabs>
@@ -308,12 +309,11 @@ Searchers can submit their constructed bids to Express Relay via the SDKs, an HT
 
 The code snippet below demonstrates how to submit a bid using the Typescript SDK:
 
-
 ```typescript
 const generateBid = async (opportunity: OpportunitySvm, recentBlockhash: Blockhash): BidSvm => {
     ...
 }
- 
+
 const handleOpportunity = async (opportunity: Opportunity) => {
     ...
     const bid = await this.generateBid(opportunity as OpportunitySvm);
@@ -328,10 +328,10 @@ The code snippet below demonstrates how to submit a bid using the Python SDK:
 
 ```python
 import typing
- 
+
 async def generate_bid(opp: OpportunitySvm) -> BidSvm:
     ...
- 
+
 def opportunity_callback(opportunity: Opportunity):
     bid = await self.assess_opportunity(typing.cast(OpportunitySvm, opp))
     await client.submit_bid(bid, subscribe_to_updates=True)
@@ -376,18 +376,16 @@ A successful response to a bid submission has the following schema:
 
 ```json
 {
-  "id": "1",                                            // Websocket request id
+  "id": "1", // Websocket request id
   "status": "success",
   "result": {
-    "id": "beedbeed-b346-4fa1-8fab-2541a9e1872d",       // Bid id
+    "id": "beedbeed-b346-4fa1-8fab-2541a9e1872d", // Bid id
     "status": "OK"
   }
 }
-
 ```
-Consult Websocket API reference for more details.
 
+Consult Websocket API reference for more details.
 
 </Tab>
 </Tabs>
-
