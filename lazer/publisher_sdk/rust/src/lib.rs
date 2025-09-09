@@ -147,8 +147,3 @@ impl From<pyth_lazer_protocol::api::Channel> for state::Channel {
         result
     }
 }
-
-impl Eq for PriceUpdate {}
-impl Eq for FundingRateUpdate {}
-impl Eq for Update {}
-impl Eq for FeedUpdate {}
