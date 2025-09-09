@@ -198,8 +198,8 @@ export default {
     // Fetch the account lookup table if provided
     const lookupTableAccount = addressLookupTableAccount
       ? await connection
-          .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
-          .then((result) => result.value ?? undefined)
+        .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
+        .then((result) => result.value ?? undefined)
       : undefined;
 
     let solanaPricePusher;
@@ -274,10 +274,14 @@ export default {
 };
 
 export const onBundleResult = (c: SearcherClient, logger: Logger) => {
-  c.onBundleResult(
-    () => undefined,
-    (err) => {
-      logger.error(err, "Error in bundle result");
-    },
-  );
+  try {
+    c.onBundleResult(
+      () => undefined,
+      (err) => {
+        logger.error(err, "Error in bundle result");
+      },
+    );
+  } catch (error) {
+    logger.error(error, "Exception in bundle result");
+  }
 };
