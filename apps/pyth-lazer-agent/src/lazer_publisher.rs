@@ -337,8 +337,7 @@ mod tests {
             10,
         )];
 
-        let mut deduped_updates = deduplicate_feed_updates(updates).unwrap();
-        deduped_updates.sort();
+        let deduped_updates = deduplicate_feed_updates(updates).unwrap();
         assert_eq!(deduped_updates, expected_updates);
     }
 
@@ -359,7 +358,7 @@ mod tests {
         ];
 
         let mut deduped_updates = deduplicate_feed_updates(updates).unwrap();
-        deduped_updates.sort();
+        deduped_updates.sort_by_key(|u| u.feed_id);
         assert_eq!(deduped_updates, expected_updates);
     }
 
@@ -386,7 +385,7 @@ mod tests {
         ];
 
         let mut deduped_updates = deduplicate_feed_updates(updates).unwrap();
-        deduped_updates.sort();
+        deduped_updates.sort_by_key(|u| u.feed_id);
         assert_eq!(deduped_updates, expected_updates);
     }
 }
