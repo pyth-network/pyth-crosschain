@@ -134,7 +134,7 @@ impl LazerPublisherTask {
         }
 
         let mut updates: Vec<FeedUpdate> = self.pending_updates.drain(..).collect();
-        updates.sort();
+        updates.sort_by_key(|u| u.source_timestamp.as_ref().map(|t| (t.seconds, t.nanos)));
         if self.config.enable_update_deduplication {
             updates = deduplicate_feed_updates(&updates)?;
         }
