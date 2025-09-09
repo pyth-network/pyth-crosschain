@@ -3,6 +3,8 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 
+import { IntegrationCard } from "./components/IntegrationCard";
+
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
@@ -10,6 +12,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Tab,
     ...components,
     InfoBox: InfoBox,
+    IntegrationCard,
     // Fuma has a Callout component in `defaultMdxComponents` which we still want to overwrite
     Callout: InfoBox,
   };
