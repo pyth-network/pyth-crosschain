@@ -1,204 +1,31 @@
 ---
-title: "Error Codes"
+title: "SVM Error Codes"
 description: >-
   Reference guide for Express Relay error codes and troubleshooting common issues.
 ---
 
-# Error Codes
-
-This page provides a reference for common error codes you may encounter when integrating with Express Relay, along with explanations and suggested solutions.
-
-## HTTP API Errors
-
-### 400 Bad Request
-
-**Invalid chain_id**
-
-- **Error:** Chain ID is not supported
-- **Solution:** Ensure you're using a supported chain ID (e.g., "solana", "development-solana")
-
-**Invalid transaction format**
-
-- **Error:** Transaction data is not properly encoded
-- **Solution:** Ensure transaction is base64 encoded and properly formatted
-
-**Missing required fields**
-
-- **Error:** Required fields are missing from the request
-- **Solution:** Check that all required parameters are included in your request
-
-### 401 Unauthorized
-
-**Invalid authentication**
-
-- **Error:** Authentication credentials are invalid or missing
-- **Solution:** Verify your API credentials and authentication headers
-
-### 404 Not Found
-
-**Opportunity not found**
-
-- **Error:** The requested opportunity does not exist
-- **Solution:** Check that the opportunity ID is correct and the opportunity hasn't expired
-
-### 429 Too Many Requests
-
-**Rate limit exceeded**
-
-- **Error:** Too many requests sent in a short time period
-- **Solution:** Implement exponential backoff and respect rate limits
-
-### 500 Internal Server Error
-
-**Server error**
-
-- **Error:** Internal server error occurred
-- **Solution:** Retry the request after a brief delay. If the issue persists, contact support
-
-## WebSocket Errors
-
-### Connection Errors
-
-**Connection failed**
-
-- **Error:** Unable to establish WebSocket connection
-- **Solution:** Check network connectivity and WebSocket endpoint URL
-
-**Authentication failed**
-
-- **Error:** WebSocket authentication failed
-- **Solution:** Verify authentication credentials for WebSocket connection
-
-### Subscription Errors
-
-**Invalid subscription**
-
-- **Error:** Subscription parameters are invalid
-- **Solution:** Check that chain_ids array contains valid chain identifiers
-
-**Subscription limit exceeded**
-
-- **Error:** Too many active subscriptions
-- **Solution:** Unsubscribe from unused chains before subscribing to new ones
-
-## Transaction Errors
-
-### Bid Submission Errors
-
-**Insufficient balance**
-
-- **Error:** Insufficient funds to cover bid amount
-- **Solution:** Ensure wallet has sufficient balance for the bid amount plus transaction fees
-
-**Invalid bid amount**
-
-- **Error:** Bid amount is below minimum or above maximum
-- **Solution:** Check bid amount constraints for the specific opportunity
-
-**Permission denied**
-
-- **Error:** Not authorized to submit bid for this opportunity
-- **Solution:** Verify permission key and ensure proper authorization
-
-### On-Chain Execution Errors
-
-**Transaction failed**
-
-- **Error:** Transaction execution failed on-chain
-- **Solution:** Check transaction logs for specific failure reasons
-
-**Transaction expired**
-
-- **Error:** Transaction expired before execution
-- **Solution:** Submit bids with sufficient time before deadline
-
-**Insufficient gas/compute**
-
-- **Error:** Transaction ran out of gas or compute units
-- **Solution:** Increase gas limit or compute unit allocation
-
-## SDK-Specific Errors
-
-### JavaScript SDK Errors
-
-**Network timeout**
-
-- **Error:** Request timed out
-- **Solution:** Increase timeout configuration or check network connectivity
-
-**Invalid configuration**
-
-- **Error:** SDK configuration is invalid
-- **Solution:** Verify baseUrl and other configuration parameters
-
-### Python SDK Errors
-
-**Connection error**
-
-- **Error:** Failed to connect to Express Relay server
-- **Solution:** Check network connectivity and server endpoint
-
-**Serialization error**
-
-- **Error:** Failed to serialize/deserialize data
-- **Solution:** Ensure data types match expected format
-
-## Troubleshooting Tips
-
-### General Guidelines
-
-1. **Check network connectivity** - Ensure your application can reach Express Relay endpoints
-2. **Verify parameters** - Double-check all request parameters for correct format and values
-3. **Monitor rate limits** - Implement proper rate limiting to avoid 429 errors
-4. **Handle timeouts** - Implement retry logic with exponential backoff
-5. **Check logs** - Review both client and server logs for detailed error information
-
-### Getting Help
-
-If you encounter persistent issues:
-
-1. Check the [API documentation](https://per-mainnet.dourolabs.app/docs) for detailed endpoint specifications
-2. Review example implementations in the SDK repositories
-3. Join the community Discord for support and discussion
-4. Contact technical support with detailed error information and reproduction steps
-
-### Common Patterns
-
-**Retry Logic Example**
-
-```typescript
-const maxRetries = 3;
-let retryCount = 0;
-
-while (retryCount < maxRetries) {
-  try {
-    const result = await client.submitBid(bid);
-    return result;
-  } catch (error) {
-    retryCount++;
-    if (retryCount === maxRetries) {
-      throw error;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount));
-  }
-}
-```
-
-**Error Handling Example**
-
-```typescript
-try {
-  const opportunities = await client.getOpportunities();
-} catch (error) {
-  if (error.status === 429) {
-    // Rate limited - wait and retry
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-  } else if (error.status === 500) {
-    // Server error - log and alert
-    console.error("Server error:", error);
-  } else {
-    // Other errors - handle appropriately
-    console.error("Request failed:", error);
-  }
-}
-```
+The following table lists the error codes and their explanations for the ExpressRelay programs. They can be used to identify the cause of a failed transaction or bid.
+
+## ExpressRelay
+
+| Error Code | Name | Description |
+|------------|------|-------------|
+| 6000 | `InvalidPermissionPda` | The permission PDA is invalid |
+| 6001 | `InvalidPermissionKeypair` | The permission keypair is invalid |
+| 6002 | `InvalidRouter` | The router is invalid |
+| 6003 | `DeadlineExceeded` | The bid deadline has been exceeded |
+| 6004 | `InsufficientFee` | The fee is insufficient |
+| 6005 | `InvalidChainId` | The chain ID is invalid |
+| 6006 | `InvalidFeeReceiver` | The fee receiver is invalid |
+| 6007 | `InvalidFeePayer` | The fee payer is invalid |
+| 6008 | `InvalidRelayerSigner` | The relayer signer is invalid |
+| 6009 | `RouterExecutionFailed` | Router execution failed |
+| 6010 | `BidAmountTooLow` | The bid amount is too low |
+| 6011 | `InvalidBidAmount` | The bid amount is invalid |
+| 6012 | `PermissionAccountNotWritable` | The permission account is not writable |
+| 6013 | `InvalidDestination` | The destination is invalid |
+| 6014 | `InvalidMetadata` | The metadata is invalid |
+| 6015 | `InvalidConfigPda` | The config PDA is invalid |
+| 6016 | `InvalidAdmin` | The admin is invalid |
+| 6017 | `FeeSplitOutOfRange` | The fee split is out of range |
+| 6018 | `MaxBidAmountLessThanMinBidAmount` | The maximum bid amount is less than the minimum bid amount |

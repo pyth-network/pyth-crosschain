@@ -4,15 +4,14 @@ description: >-
   Learn how to integrate Express Relay as a searcher on Solana Virtual Machine chains to fulfill market orders and limit orders.
 ---
 
-# SVM Searcher Integration
-
 SVM Express Relay searchers fulfill market order opportunities as well as limit orders on the [Limo](https://solscan.io/account/LiMoM9rMhrdYrfzUCxQppvxCSG1FcrUK9G8uLq4A1GF) program.
 
 ## Step 1: Subscribe to New Opportunities
 
 Express Relay provides searchers with [Typescript](https://github.com/pyth-network/per/tree/358eedc1f9072cdfc3418fba309697580f2474f9/sdk/js) and [Python](https://github.com/pyth-network/per/tree/358eedc1f9072cdfc3418fba309697580f2474f9/sdk/python) SDKs to interact with Express Relay. Searchers can also directly fetch available opportunities via HTTP or subscribe to them via WebSocket.
 
-### Typescript SDK
+<Tabs items={['typescript', 'python', 'http', 'websocket']}>
+<Tab value="typescript">
 
 Pyth provides a Typescript SDK, which allows searchers to subscribe to opportunities:
 
@@ -37,7 +36,20 @@ async function main() {
 main();
 ```
 
-### Python SDK
+The server responds with opportunities in the following format:
+
+```json
+{
+  "order": "UxMUbQAsjrfQUp5stVwMJ6Mucq7VWTvt4ICe69BJ8lVXqwM+0sysV8OqZTdM0W4p...", // The Limo order to be executed, encoded in base64
+  "order_address": "DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5", // Address of the order account
+  "program": "limo", // Identifier of the program that the order exists in
+  "chain_id": "development-solana",
+  "version": "v1" // Opportunity format version
+}
+```
+
+</Tab>
+<Tab value="python">
 
 Pyth provides a Python SDK, which allows searchers to subscribe to opportunities:
 
@@ -68,7 +80,20 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### HTTP API
+The server responds with opportunities in the following format:
+
+```json
+{
+  "order": "UxMUbQAsjrfQUp5stVwMJ6Mucq7VWTvt4ICe69BJ8lVXqwM+0sysV8OqZTdM0W4p...", // The Limo order to be executed, encoded in base64
+  "order_address": "DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5", // Address of the order account
+  "program": "limo", // Identifier of the program that the order exists in
+  "chain_id": "development-solana",
+  "version": "v1" // Opportunity format version
+}
+```
+
+</Tab>
+<Tab value="http">
 
 Searchers can request opportunities through an HTTP **GET** call to the [/v1/opportunities](https://per-mainnet.dourolabs.app/docs#tag/opportunity/operation/get_opportunities) endpoint.
 
@@ -79,7 +104,20 @@ curl -X 'GET' \
 
 Opportunities are short-lived and could be executed in a matter of seconds. So, the above endpoint could return an empty response.
 
-### WebSocket API
+The server responds with opportunities in the following format:
+
+```json
+{
+  "order": "UxMUbQAsjrfQUp5stVwMJ6Mucq7VWTvt4ICe69BJ8lVXqwM+0sysV8OqZTdM0W4p...", // The Limo order to be executed, encoded in base64
+  "order_address": "DUcTi3rDyS5QEmZ4BNRBejtArmDCWaPYGfN44vBJXKL5", // Address of the order account
+  "program": "limo", // Identifier of the program that the order exists in
+  "chain_id": "development-solana",
+  "version": "v1" // Opportunity format version
+}
+```
+
+</Tab>
+<Tab value="websocket">
 
 Searchers can connect to the server via WebSocket to reduce latency and subscribe to various events. The WebSocket endpoint lives at `/v1/ws` (e.g `wss://per-mainnet.dourolabs.app/v1/ws`). Here is a sample JSON payload to subscribe to opportunities:
 
@@ -107,106 +145,202 @@ The server responds with opportunities in the following format:
 }
 ```
 
+</Tab>
+</Tabs>
+
 ## Step 2: Construct the Bid
 
 Searchers should construct a bid by evaluating the fetched opportunity.
 
-> **Warning**: Before constructing the bid, make sure your wallet has the required assets to fulfill the limit order and SOL to pay the bid amount.
+> ⚠️ **Warning**
+> Before constructing the bid, make sure your wallet has the required assets to fulfill the limit order and SOL to pay the bid amount.
 
 See the following examples of how to construct a bid object via the SDKs:
 
-### Typescript SDK
+<Tabs items={['typescript', 'python']}>
+<Tab value="typescript">
 
-Below is an excerpt of example code. See the full example in the [Typescript SDK](https://github.com/pyth-network/per/blob/4be711525948cf24c0ebd4ebab007dc7f51b7069/sdk/js/src/examples/simpleSearcherLimo.ts).
+Below is an excerpt of example code. See the full example in the [Typescript SDK](https://github.com/pyth-network/per/blob/main/sdk/js/src/examples/simpleSearcherLimo.ts).
 
 ```typescript
 import { OpportunitySvm } from "../index";
 import { BidSvm } from "../types";
-
+ 
 import * as anchor from "@coral-xyz/anchor";
 import * as limo from "@kamino-finance/limo-sdk";
-
+ 
 /**
- * Generates a bid for a given opportunity.
- * The transaction in this bid transfers assets from the searcher's wallet to fulfill the limit order.
- * @param opportunity The SVM opportunity to bid on.
- * @returns The generated bid object.
- */
+  * Generates a bid for a given opportunity.
+  * The transaction in this bid transfers assets from the searcher's wallet to fulfill the limit order.
+  * @param opportunity The SVM opportunity to bid on.
+  * @returns The generated bid object.
+  */
 async generateBid(opportunity: OpportunitySvm): Promise<BidSvm> {
   const order = opportunity.order;
   const limoClient = new limo.LimoClient(
     this.connectionSvm,
     order.state.globalConfig
   );
-
-  const { bid: bidAmountLamports, transaction } = await this.fulfillLimoOrder(
-    limoClient,
-    order,
-    this.searcherKeypair,
-    this.bidAmountLamports
+ 
+  const ixsTakeOrder = await this.generateTakeOrderIxs(limoClient, order);
+  const feeInstruction = ComputeBudgetProgram.setComputeUnitPrice({
+    microLamports:
+      this.latestChainUpdate[this.chainId].latestPrioritizationFee,
+  });
+  const txRaw = new anchor.web3.Transaction().add(
+    feeInstruction,
+    ...ixsTakeOrder
   );
-
-  return {
-    amount: bidAmountLamports.toString(),
-    transaction: transaction,
-    valid_until: this.getValidUntil(),
-  };
+ 
+  const bidAmount = await this.getBidAmount(order);
+ 
+  const config = await this.getExpressRelayConfig();
+  const bid = await this.client.constructSvmBid(
+    txRaw,
+    this.searcher.publicKey,
+    getPdaAuthority(limoClient.getProgramID(), order.state.globalConfig),
+    order.address,
+    bidAmount,
+    new anchor.BN(Math.round(Date.now() / 1000 + DAY_IN_SECONDS)),
+    this.chainId,
+    config.relayerSigner,
+    config.feeReceiverRelayer
+  );
+ 
+  bid.transaction.recentBlockhash =
+    this.latestChainUpdate[this.chainId].blockhash;
+  bid.transaction.sign(this.searcher);
+  return bid;
 }
 ```
 
-### Python SDK
+The bid you construct will look like
+
+```
+{
+  // serialized transaction object, in base-64 encoding
+  "transaction": "SGVsbG8sIFdvcmxkIQ==",
+  "chain_id": "solana",
+  "env": "svm"
+}
+```
+where the serialized transaction object should contain an Express Relay SubmitBid instruction that specifies the amount you are bidding and the permission details.
+
+
+</Tab>
+<Tab value="python">
 
 Below is an excerpt of example code. See the full example in the [Python SDK](https://github.com/pyth-network/per/blob/4be711525948cf24c0ebd4ebab007dc7f51b7069/sdk/python/express_relay/examples/simple_searcher_limo.py).
 
 ```python
-import asyncio
-from typing import Dict, Any
-
-from solders.keypair import Keypair  # type: ignore
-from solders.transaction import VersionedTransaction  # type: ignore
-
-async def construct_bid(self, opportunity: Dict[str, Any]) -> Dict[str, Any]:
+import logging
+ 
+from solders.transaction import Transaction
+ 
+from express_relay.models.svm import BidSvm
+from express_relay.svm.limo_client import OrderStateAndAddress
+ 
+DEADLINE = 2**62
+logger = logging.getLogger(__name__)
+ 
+async def generate_bid(self, opp: OpportunitySvm) -> BidSvm:
     """
-    Constructs a bid for the given opportunity.
+    Generates a bid for a given opportunity.
+    The transaction in this bid transfers assets from the searcher's wallet to fulfill the limit order.
+ 
+    Args:
+        opp: The SVM opportunity to bid on.
+    Returns:
+        The generated bid object.
     """
-    order = opportunity["order"]
-    order_address = opportunity["order_address"]
-
-    # Calculate bid amount and construct fulfillment transaction
-    bid_amount, transaction = await self.fulfill_limo_order(
-        order, order_address, self.searcher_keypair, self.bid_amount_lamports
+    order: OrderStateAndAddress = {"address": opp.order_address, "state": opp.order}
+ 
+    ixs_take_order = await self.generate_take_order_ixs(order)
+    bid_amount = await self.get_bid_amount(order)
+    router = self.limo_client.get_pda_authority(
+        self.limo_client.get_program_id(), order["state"].global_config
     )
-
-    return {
-        "amount": str(bid_amount),
-        "transaction": transaction,
-        "valid_until": self.get_valid_until(),
-    }
+ 
+    submit_bid_ix = self.client.get_svm_submit_bid_instruction(
+        searcher=self.private_key.pubkey(),
+        router=router,
+        permission_key=order["address"],
+        bid_amount=bid_amount,
+        deadline=DEADLINE,
+        chain_id=self.chain_id,
+        fee_receiver_relayer=(await self.get_metadata()).fee_receiver_relayer,
+        relayer_signer=(await self.get_metadata()).relayer_signer,
+    )
+    latest_chain_update = self.latest_chain_update[self.chain_id]
+    fee_instruction = set_compute_unit_price(latest_chain_update.latest_prioritization_fee)
+    transaction = Transaction.new_with_payer(
+        [fee_instruction, submit_bid_ix] + ixs_take_order, self.private_key.pubkey()
+    )
+    transaction.partial_sign(
+        [self.private_key], recent_blockhash=latest_chain_update.blockhash
+    )
+    bid = BidSvm(transaction=transaction, chain_id=self.chain_id)
+    return bid
 ```
+The bid you construct will look like
 
-## Step 3: Submit the Bid
+```
+{
+  // serialized transaction object, in base-64 encoding
+  "transaction": "SGVsbG8sIFdvcmxkIQ==",
+  "chain_id": "solana",
+  "env": "svm"
+}
 
-After constructing the bid, searchers should submit it to Express Relay to participate in the auction.
+```
+where the serialized transaction object should contain an Express Relay SubmitBid instruction that specifies the amount you are bidding and the permission details.
 
-### Typescript SDK
+
+</Tab>
+</Tabs>
+
+## Step 3: Submit Bids on Opportunities to Express Relay
+
+Searchers can submit their constructed bids to Express Relay via the SDKs, an HTTP POST request, or a WebSocket connection.
+
+<Tabs items={['typescript', 'python', 'http', 'websocket']}>
+<Tab value="typescript">
+
+The code snippet below demonstrates how to submit a bid using the Typescript SDK:
+
 
 ```typescript
-// Submit the bid to Express Relay
-const bidResponse = await client.submitBid(bid);
-console.log("Bid submitted:", bidResponse);
+const generateBid = async (opportunity: OpportunitySvm, recentBlockhash: Blockhash): BidSvm => {
+    ...
+}
+ 
+const handleOpportunity = async (opportunity: Opportunity) => {
+    ...
+    const bid = await this.generateBid(opportunity as OpportunitySvm);
+    await client.submitBid(bid);
+}
 ```
 
-### Python SDK
+</Tab>
+<Tab value="python">
+
+The code snippet below demonstrates how to submit a bid using the Python SDK:
 
 ```python
-# Submit the bid to Express Relay
-bid_response = await client.submit_bid(bid)
-print(f"Bid submitted: {bid_response}")
+import typing
+ 
+async def generate_bid(opp: OpportunitySvm) -> BidSvm:
+    ...
+ 
+def opportunity_callback(opportunity: Opportunity):
+    bid = await self.assess_opportunity(typing.cast(OpportunitySvm, opp))
+    await client.submit_bid(bid, subscribe_to_updates=True)
 ```
 
-### HTTP API
+</Tab>
+<Tab value="http">
 
-Searchers can submit bids through an HTTP **POST** call to the [/v1/bids](https://per-mainnet.dourolabs.app/docs#tag/bid/operation/post_bid) endpoint.
+Searchers can submit bids through an HTTP **POST** call to the [/v1/bids](https://per-mainnet.dourolabs.app/docs#tag/bid/operation/post_bid) endpoint. This endpoint accepts a JSON payload containing the details of the bid.
 
 ```bash
 curl -X 'POST' \
@@ -214,92 +348,46 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-    "amount": "1000000",
-    "transaction": "...",
     "chain_id": "solana",
-    "valid_until": "2024-05-30T13:23:00.000Z"
+    "transaction": "SGVsbG8sIFdvcmxkIQ=="
   }'
+
 ```
 
-## Step 4: Monitor Bid Results
+</Tab>
+<Tab value="websocket">
 
-After submitting a bid, searchers should monitor whether their bid was accepted and the transaction was successfully executed.
+Searchers can submit bids via Websocket to avoid additional network round-trips and get notified about changes to the bid status.
 
-### Winning Bids
-
-If your bid wins the auction, Express Relay will execute your transaction on-chain. You can monitor the transaction status through:
-
-- **Transaction hash** returned in the bid response
-- **WebSocket notifications** for bid status updates
-- **HTTP polling** of bid status endpoints
-
-### Failed Bids
-
-If your bid is not selected or execution fails, you'll receive appropriate error notifications. Common reasons for bid failure include:
-
-- **Insufficient bid amount** - Another searcher bid higher
-- **Transaction execution failure** - Insufficient funds or invalid transaction
-- **Timeout** - Bid submitted after opportunity expired
-
-## Error Handling
-
-Implement proper error handling for common scenarios:
-
-### Network Errors
-
-```typescript
-try {
-  const bidResponse = await client.submitBid(bid);
-} catch (error) {
-  if (error.code === "NETWORK_ERROR") {
-    // Retry submission
-    console.log("Network error, retrying...");
+```json
+{
+  "id": "1",
+  "method": "post_bid",
+  "params": {
+    "bid": {
+      "chain_id": "solana",
+      "transaction": "SGVsbG8sIFdvcmxkIQ=="
+    }
   }
 }
 ```
 
-### Invalid Opportunities
+A successful response to a bid submission has the following schema:
 
-```typescript
-const handleOpportunity = async (opportunity: Opportunity) => {
-  try {
-    // Validate opportunity before bidding
-    if (!isValidOpportunity(opportunity)) {
-      console.log("Invalid opportunity, skipping");
-      return;
-    }
-
-    const bid = await generateBid(opportunity);
-    await client.submitBid(bid);
-  } catch (error) {
-    console.error("Error processing opportunity:", error);
+```json
+{
+  "id": "1",                                            // Websocket request id
+  "status": "success",
+  "result": {
+    "id": "beedbeed-b346-4fa1-8fab-2541a9e1872d",       // Bid id
+    "status": "OK"
   }
-};
+}
+
 ```
+Consult Websocket API reference for more details.
 
-## Best Practices
 
-### Performance Optimization
+</Tab>
+</Tabs>
 
-- **Use WebSocket connections** for real-time opportunity updates
-- **Implement efficient bid calculation** to minimize latency
-- **Cache frequently used data** like token prices and account information
-
-### Risk Management
-
-- **Set maximum bid amounts** to control potential losses
-- **Implement position limits** to manage overall exposure
-- **Monitor profitability** and adjust strategies accordingly
-
-### Monitoring and Logging
-
-- **Log all opportunities** received for analysis
-- **Track bid success rates** and profitability metrics
-- **Monitor system health** and performance indicators
-
-## Additional Resources
-
-- [Express Relay HTTP API Documentation](../http-api-reference)
-- [WebSocket API Reference](../websocket-api-reference)
-- [Contract Addresses](../contract-addresses)
-- [Error Codes Reference](../errors)

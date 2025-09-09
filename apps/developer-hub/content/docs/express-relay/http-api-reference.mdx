@@ -4,17 +4,10 @@ description: >-
   Complete HTTP API reference for Express Relay endpoints, including opportunities, bids, and configuration.
 ---
 
-# HTTP API Reference
-
-Express Relay provides a comprehensive HTTP API for interacting with the protocol. The API allows you to fetch opportunities, submit bids, and access configuration data.
-
 ## Interactive API Documentation
 
 The complete HTTP API reference is available as an interactive Swagger/OpenAPI documentation:
 
-### 🌐 Live API Documentation
-
-_Interactive API explorer with live examples_
 
 **Production (Mainnet):**  
 [https://per-mainnet.dourolabs.app/docs](https://per-mainnet.dourolabs.app/docs)
@@ -29,97 +22,3 @@ Use the appropriate base URL for your environment:
 - **Production (Mainnet):** https://per-mainnet.dourolabs.app
 - **Staging (Testing):** https://per-staging.dourolabs.app
 
-## Key Endpoints
-
-### Opportunities
-
-**GET /v1/opportunities**
-
-- Retrieve available opportunities for bidding
-- Query parameters: chain_id, mode (live/historical)
-- Returns: Array of opportunity objects
-
-**Example:**
-
-```bash
-curl "https://per-mainnet.dourolabs.app/v1/opportunities?chain_id=solana&mode=live"
-```
-
-### Bids
-
-**POST /v1/bids**
-
-- Submit a bid for an opportunity
-- Request body: JSON with chain_id and transaction (base64 encoded)
-- Returns: Bid status and ID
-
-**Example:**
-
-```bash
-curl -X POST "https://per-mainnet.dourolabs.app/v1/bids" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "chain_id": "solana",
-    "transaction": "SGVsbG8sIFdvcmxkIQ=="
-  }'
-```
-
-### Configuration
-
-**GET /v1/chains**
-
-- Get supported chains and their configurations
-- Returns: Array of supported chain configurations
-
-### WebSocket
-
-**WS /v1/ws**
-
-- Real-time WebSocket connection for opportunities and bid updates
-- See [WebSocket API Reference](./websocket-api-reference) for details
-
-## Authentication
-
-Most Express Relay endpoints are public and don't require authentication. However, some advanced features may require API keys or signed requests.
-
-## Rate Limits
-
-Express Relay implements rate limiting to ensure fair usage:
-
-- Standard endpoints: 100 requests per minute
-- WebSocket connections: 10 concurrent connections per IP
-- Bid submissions: 1000 bids per minute
-
-## Error Handling
-
-All API endpoints return standard HTTP status codes:
-
-- **200** - Success
-- **400** - Bad Request (invalid parameters)
-- **429** - Rate Limit Exceeded
-- **500** - Internal Server Error
-
-Error responses include detailed error messages in JSON format. See the [Error Codes](./errors) page for specific error scenarios and solutions.
-
-## SDKs
-
-Instead of calling the HTTP API directly, consider using the official SDKs:
-
-- **TypeScript/JavaScript:** [@pythnetwork/express-relay-js](https://www.npmjs.com/package/@pythnetwork/express-relay-js)
-- **Python:** Available in the [Express Relay GitHub repository](https://github.com/pyth-network/per/tree/main/sdk/python)
-
-## Examples
-
-For complete integration examples, see:
-
-- [Integrate as a Protocol](./integrate-as-protocol) - Frontend integration guide
-- [Integrate as a Searcher](./integrate-as-searcher) - Searcher integration guide
-
-## Support
-
-If you encounter issues with the API:
-
-1. Check the [Error Codes](./errors) page for common issues
-2. Review the interactive API documentation for parameter requirements
-3. Join the Pyth Discord for community support
-4. Contact technical support for persistent issues
