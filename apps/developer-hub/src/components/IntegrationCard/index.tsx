@@ -5,7 +5,7 @@ type IntegrationCardProps = {
   icon: React.ReactNode;
   title: string;
   description: string;
-  colorScheme?: "blue" | "green" | "purple";
+  colorScheme?: "blue" | "green" | "purple" | "yellow";
   external?: boolean;
   showArrow?: boolean;
 };
@@ -26,6 +26,11 @@ const colorClasses = {
     text: "text-purple-600 dark:text-purple-400",
     hoverText: "group-hover:text-purple-600 dark:group-hover:text-purple-400",
   },
+  yellow: {
+    bg: "bg-yellow-100 dark:bg-yellow-900",
+    text: "text-yellow-600 dark:text-yellow-400",
+    hoverText: "group-hover:text-yellow-600 dark:group-hover:text-yellow-400",
+  },
 };
 
 export function IntegrationCard({
@@ -45,7 +50,9 @@ export function IntegrationCard({
 
   return (
     <Wrapper
-      {...(wrapperProps as { href: string } | { href: string; target: string; rel: string })}
+      {...(wrapperProps as
+        | { href: string }
+        | { href: string; target: string; rel: string })}
       className="not-prose group no-underline grid h-full grid-rows-[auto_1fr] gap-3 rounded-xl border bg-[var(--color-fd-card)] border-[var(--color-fd-border)] p-5 md:p-6 shadow-sm outline-none transition-colors hover:border-[var(--color-fd-accent)] focus-visible:ring-2 focus-visible:ring-[var(--color-fd-accent)]"
       aria-label={title}
     >
@@ -55,7 +62,11 @@ export function IntegrationCard({
         >
           <div className={`h-4 w-4 ${colors.text}`}>{icon}</div>
         </div>
-        <h3 className={`m-0 text-base font-semibold text-[var(--color-fd-foreground)] ${colors.hoverText}`}>{title}</h3>
+        <h3
+          className={`m-0 text-base font-semibold text-[var(--color-fd-foreground)] ${colors.hoverText}`}
+        >
+          {title}
+        </h3>
         {showArrow && (
           <span
             className="ml-auto translate-x-0 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-1 group-hover:opacity-100"
@@ -65,7 +76,9 @@ export function IntegrationCard({
           </span>
         )}
       </div>
-      <p className="m-0 text-sm text-[var(--color-fd-muted-foreground)] line-clamp-2">{description}</p>
+      <p className="m-0 text-sm text-[var(--color-fd-muted-foreground)] line-clamp-2">
+        {description}
+      </p>
     </Wrapper>
   );
 }
