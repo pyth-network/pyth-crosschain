@@ -40,26 +40,26 @@ Please see [How to Generate Random Numbers Using Pyth Entropy](generate-random-n
 
 ## Start Building
 
-<Cards className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-  <Card
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <IntegrationCard
     href="/entropy/create-your-first-entropy-app"
     title="Build Your First App"
-    icon={<RocketLaunch size={16} fill="unset" weight="duotone" />}
-  >
-    Step-by-step tutorial to deploy a coin flip using Entropy v2.
-  </Card>
-  <Card
+    description="Step-by-step tutorial to deploy a coin flip using Entropy v2."
+    icon={<RocketLaunch size={16} />}
+    colorScheme="blue"
+  />
+  <IntegrationCard
     href="/entropy/generate-random-numbers-evm"
     title="Generate Random Numbers"
-    icon={<DiceSix size={16} fill="unset" />}
-  >
-    How-to guide for reading fees and requesting randomness on EVM.
-  </Card>
-  <Card
+    description="How-to guide for reading fees and requesting randomness on EVM."
+    icon={<DiceSix size={16} />}
+    colorScheme="green"
+  />
+  <IntegrationCard
     href="/entropy/contract-addresses"
     title="Contracts & Providers"
-    icon={<FileText size={16} fill="unset" />}
-  >
-    Find Entropy addresses, reveal delays, gas limits, and fees.
-  </Card>
-</Cards>
+    description="Find Entropy addresses, reveal delays, gas limits, and fees."
+    icon={<FileText size={16} />}
+    colorScheme="purple"
+  />
+</div>

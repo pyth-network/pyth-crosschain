@@ -1,9 +1,13 @@
+import Link from "next/link";
+
 type IntegrationCardProps = {
   href: string;
   icon: React.ReactNode;
   title: string;
   description: string;
   colorScheme?: "blue" | "green" | "purple";
+  external?: boolean;
+  showArrow?: boolean;
 };
 
 const colorClasses = {
@@ -24,33 +28,44 @@ const colorClasses = {
   },
 };
 
-export const IntegrationCard = ({
+export function IntegrationCard({
   href,
   icon,
   title,
   description,
   colorScheme = "blue",
-}: IntegrationCardProps) => {
+  external,
+  showArrow = true,
+}: IntegrationCardProps) {
   const colors = colorClasses[colorScheme];
+  const Wrapper = external ? "a" : Link;
+  const wrapperProps = external
+    ? { href, target: "_blank", rel: "noopener noreferrer" }
+    : { href };
 
   return (
-    <a
-      href={href}
-      className="block group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+    <Wrapper
+      {...(wrapperProps as { href: string } | { href: string; target: string; rel: string })}
+      className="not-prose group no-underline grid h-full grid-rows-[auto_1fr] gap-3 rounded-xl border bg-[var(--color-fd-card)] border-[var(--color-fd-border)] p-5 md:p-6 shadow-sm outline-none transition-colors hover:border-[var(--color-fd-accent)] focus-visible:ring-2 focus-visible:ring-[var(--color-fd-accent)]"
+      aria-label={title}
     >
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3">
         <div
-          className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}
+          className={`flex h-8 w-8 items-center justify-center rounded-md ${colors.bg}`}
         >
-          <div className={`w-4 h-4 ${colors.text}`}>{icon}</div>
+          <div className={`h-4 w-4 ${colors.text}`}>{icon}</div>
         </div>
-        <h3
-          className={`text-lg font-semibold text-gray-900 dark:text-white ${colors.hoverText}`}
-        >
-          {title}
-        </h3>
+        <h3 className={`m-0 text-base font-semibold text-[var(--color-fd-foreground)] ${colors.hoverText}`}>{title}</h3>
+        {showArrow && (
+          <span
+            className="ml-auto translate-x-0 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-1 group-hover:opacity-100"
+            aria-hidden="true"
+          >
+            →
+          </span>
+        )}
       </div>
-      <p className="text-gray-600 dark:text-gray-400">{description}</p>
-    </a>
+      <p className="m-0 text-sm text-[var(--color-fd-muted-foreground)] line-clamp-2">{description}</p>
+    </Wrapper>
   );
-};
+}
