@@ -7,6 +7,18 @@ import {
   Shuffle,
   DiceSix,
   Sparkle,
+  RocketLaunch,
+  FileText,
+  MagnifyingGlass,
+  Shield,
+  Gauge,
+  Bug,
+  ShieldCheck,
+  ArrowsClockwise,
+  WarningCircle,
+  Code,
+  Book,
+  CurrencyDollar,
 } from "@phosphor-icons/react/dist/ssr";
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
@@ -22,6 +34,18 @@ const icons: Record<string, React.ComponentType> = {
   Shuffle,
   DiceSix,
   Sparkle,
+  RocketLaunch,
+  FileText,
+  MagnifyingGlass,
+  Shield,
+  Gauge,
+  Bug,
+  ShieldCheck,
+  ArrowsClockwise,
+  WarningCircle,
+  Code,
+  Book,
+  CurrencyDollar,
 };
 
 export const source = loader({

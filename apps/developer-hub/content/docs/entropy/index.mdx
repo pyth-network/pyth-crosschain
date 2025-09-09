@@ -9,6 +9,7 @@ import {
   RocketLaunch,
   FileText,
   DiceSix,
+  MagnifyingGlass,
 } from "@phosphor-icons/react/dist/ssr";
 
 **Pyth Entropy** is an on-chain random number generator (RNG) designed for developers who need fair, unbiased, and cryptographically secure randomness.
@@ -24,19 +25,6 @@ Whether you're building a blockchain game, NFT mint, lottery, or simulation, Ent
 
 Entropy v2 introduces several improvements and new features to make random number generation more flexible and efficient.
 See [What's New in Entropy v2](whats-new-entropyv2) for more details.
-(TODO: Add an infographic here)
-
-## Getting Started
-
-Using Pyth Entropy is permissionless and developers can integrate in a few minutes.
-Please see [How to Generate Random Numbers Using Pyth Entropy](generate-random-numbers) to start integrating Pyth Entropy into your application.
-
-## Reference Material
-
-- [Protocol design](protocol-design)
-- [Contract Addresses/Supported Networks](contract-addresses)
-- [Error Codes](error-codes)
-- [Entropy Debugger](https://entropy-debugger.pyth.network/) - Interactive tool for diagnosing callback issues
 
 ## Start Building
 
@@ -57,9 +45,23 @@ Please see [How to Generate Random Numbers Using Pyth Entropy](generate-random-n
   />
   <IntegrationCard
     href="/entropy/contract-addresses"
-    title="Contracts & Providers"
+    title="Contract Addresses"
     description="Find Entropy addresses, reveal delays, gas limits, and fees."
     icon={<FileText size={16} />}
     colorScheme="purple"
+  />
+  <IntegrationCard
+    href="/entropy/protocol-design"
+    title="Protocol Design"
+    description="Understanding how Pyth Entropy generates secure random numbers."
+    icon={<FileText size={16} />}
+    colorScheme="purple"
+  />
+  <IntegrationCard
+    href="https://entropy-debugger.pyth.network/"
+    title="Entropy Explorer"
+    description="Interactive tool to diagnose callback issues on-chain."
+    icon={<MagnifyingGlass size={16} />}
+    colorScheme="yellow"
   />
 </div>
