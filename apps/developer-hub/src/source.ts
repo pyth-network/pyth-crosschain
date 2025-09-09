@@ -5,6 +5,8 @@ import {
   Gavel,
   Lightning,
   Shuffle,
+  DiceSix,
+  Sparkle,
 } from "@phosphor-icons/react/dist/ssr";
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
@@ -18,6 +20,8 @@ const icons: Record<string, React.ComponentType> = {
   Gavel,
   Lightning,
   Shuffle,
+  DiceSix,
+  Sparkle,
 };
 
 export const source = loader({

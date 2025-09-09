@@ -29,7 +29,7 @@ if [ "${PYTH_DEPLOY_MODE}" == "devnet" ]; then
     # there is no second fee token pre-deployed in devnet
     fee_token_address2=0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
 elif [ "${PYTH_DEPLOY_MODE}" == "sepolia" ]; then
-    export STARKNET_RPC=https://starknet-sepolia.public.blastapi.io/rpc/v0_6
+    export STARKNET_RPC=https://starknet-sepolia.drpc.org/rpc/v0_6
 
     chain_id=50075 # starknet_sepolia
 
@@ -39,7 +39,7 @@ elif [ "${PYTH_DEPLOY_MODE}" == "sepolia" ]; then
     # ETH
     fee_token_address2=0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
 elif [ "${PYTH_DEPLOY_MODE}" == "mainnet" ]; then
-    export STARKNET_RPC=https://starknet-mainnet.public.blastapi.io/rpc/v0_6
+    export STARKNET_RPC=https://starknet.drpc.org/rpc/v0_6
 
     chain_id=60051 # starknet_mainnet
 

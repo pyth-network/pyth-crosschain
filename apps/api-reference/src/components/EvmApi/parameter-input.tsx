@@ -13,10 +13,10 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 
 import type { Parameter } from "./parameter";
 import {
-  PLACEHOLDERS,
   isValid,
   getValidationError,
   ParameterType,
+  getPlaceHolder,
 } from "./parameter";
 import type { PriceFeed } from "../../use-price-feed-list";
 import {
@@ -93,7 +93,7 @@ const PriceFeedIdInput = <ParameterName extends string>({
         validationError={validationError}
         label={spec.name}
         description={<Markdown inline>{spec.description}</Markdown>}
-        placeholder={PLACEHOLDERS[spec.type]}
+        placeholder={getPlaceHolder(spec)}
         required={true}
       />
       <div className="absolute right-0 top-0 z-50 mt-20 hidden w-full min-w-[34rem] overflow-hidden rounded-lg border border-neutral-400 bg-neutral-100 text-sm shadow focus-visible:border-pythpurple-600 focus-visible:outline-none group-data-[open]:block dark:border-neutral-600 dark:bg-neutral-800 dark:shadow-white/20 dark:focus-visible:border-pythpurple-400">
@@ -221,7 +221,7 @@ const DefaultParameterInput = <ParameterName extends string>({
       validationError={validationError}
       label={spec.name}
       description={<Markdown inline>{spec.description}</Markdown>}
-      placeholder={PLACEHOLDERS[spec.type]}
+      placeholder={getPlaceHolder(spec)}
       required={true}
       value={internalValue}
       onChange={onChangeInput}

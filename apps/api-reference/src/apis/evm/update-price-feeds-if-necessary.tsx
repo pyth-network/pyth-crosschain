@@ -38,7 +38,7 @@ export const updatePriceFeedsIfNecessary = writeApi<
   ### Error Response
 
   The above method can return the following error response:
-  - \`NoFreshUpdate\`: The provided update is not fresh enough to apply. It means the provided \`publishTime\` is not equal to corresponding corresponding price id in \`updateData\`.
+  - \`NoFreshUpdate\`: The provided update is not fresh enough to apply. It means the provided \`publishTime\` is not equal to corresponding price id in \`updateData\`.
   - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
   - \`InsufficientFee\`: The fee provided is less than the required fee. Try calling [getUpdateFee](getUpdateFee) to get the required fee.
   `,
@@ -48,6 +48,8 @@ export const updatePriceFeedsIfNecessary = writeApi<
       type: ParameterType.HexArray,
       description:
         "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
+      defaultValue:
+        "0x504e41550100000003b801000000040d00cea20e5677f66ed178e9410ddd8280617c06921916e8fd4b71e597d7f6c6d0a14daf3bb3e1a0d8c9e051c8d0................",
     },
     {
       name: "priceId",
@@ -59,12 +61,14 @@ export const updatePriceFeedsIfNecessary = writeApi<
       type: ParameterType.IntArray,
       description:
         "The timestamp for each price id that determines whether to apply the update.",
+      defaultValue: "1721765108",
     },
     {
       name: "fee",
       type: ParameterType.Int,
       description:
         "The update fee in wei. This fee is sent as the value of the transaction.",
+      defaultValue: "1",
     },
   ],
   valueParam: "fee",

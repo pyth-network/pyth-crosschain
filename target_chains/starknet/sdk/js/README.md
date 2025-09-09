@@ -52,7 +52,7 @@ import {
 
 // Create a provider for interacting with Starknet RPC.
 const provider = new RpcProvider({
-  nodeUrl: "https://starknet-sepolia.public.blastapi.io/rpc/v0_6",
+  nodeUrl: "https://starknet-sepolia.drpc.org/rpc/v0_6",
 });
 
 // Create a `Contract` instance to interact with a fee token contract on Starknet

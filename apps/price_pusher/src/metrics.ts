@@ -15,6 +15,8 @@ export class PricePusherMetrics {
   public priceFeedsTotal: Gauge<string>;
   public sourceTimestamp: Gauge<string>;
   public configuredTimeDifference: Gauge<string>;
+  public sourcePriceValue: Gauge<string>;
+  public targetPriceValue: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
 
@@ -57,6 +59,20 @@ export class PricePusherMetrics {
     this.configuredTimeDifference = new Gauge({
       name: "pyth_configured_time_difference",
       help: "Configured time difference threshold between source and target chains",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.sourcePriceValue = new Gauge({
+      name: "pyth_source_price",
+      help: "Latest price value from Pyth source",
+      labelNames: ["price_id", "alias"],
+      registers: [this.registry],
+    });
+
+    this.targetPriceValue = new Gauge({
+      name: "pyth_target_price",
+      help: "Latest price value from target chain",
       labelNames: ["price_id", "alias"],
       registers: [this.registry],
     });
@@ -156,6 +172,27 @@ export class PricePusherMetrics {
       { price_id: priceId, alias },
       priceConfigTimeDifference,
     );
+  }
+
+  // Update price values
+  public updatePriceValues(
+    priceId: string,
+    alias: string,
+    sourcePrice: string | undefined,
+    targetPrice: string | undefined,
+  ): void {
+    if (sourcePrice !== undefined) {
+      this.sourcePriceValue.set(
+        { price_id: priceId, alias },
+        Number(sourcePrice),
+      );
+    }
+    if (targetPrice !== undefined) {
+      this.targetPriceValue.set(
+        { price_id: priceId, alias },
+        Number(targetPrice),
+      );
+    }
   }
 
   // Update wallet balance

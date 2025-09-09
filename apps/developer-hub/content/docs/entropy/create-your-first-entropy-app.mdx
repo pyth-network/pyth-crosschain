@@ -1,0 +1,108 @@
+---
+title: Create your first Entropy app on EVM
+description: Build a coin flip application using Pyth Entropy
+---
+
+# Create your first Entropy app on EVM
+
+In this tutorial we will implement and deploy a coin flip contract which will use entropy to generate a random output.
+
+## Preliminaries
+
+Before we start, please make sure you have the following tools installed:
+
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- [Node.js](https://nodejs.org/en/download) (version >= v18.0.0)
+
+## Getting Started
+
+Create a directory named `coin-flip` and initialize a new Foundry project:
+
+```bash
+mkdir coin-flip
+cd coin-flip
+forge init contracts
+```
+
+Install the Pyth Entropy SDK:
+
+```bash
+cd contracts
+npm init -y
+npm install @pythnetwork/entropy-sdk-solidity
+```
+
+Add a `remappings.txt` file to the `contracts` directory:
+
+```text
+@pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
+```
+
+## Smart Contract Implementation
+
+Replace the content of `contracts/src/Counter.sol` with the following coin flip contract:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
+import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
+
+contract CoinFlip is IEntropyConsumer {
+    IEntropy entropy;
+
+    struct FlipRequest {
+        address player;
+        bool isHeads;
+    }
+
+    mapping(uint64 => FlipRequest) public requests;
+    mapping(address => uint256) public results; // 0 = not played, 1 = won, 2 = lost
+
+    constructor(address entropyAddress) {
+        entropy = IEntropy(entropyAddress);
+    }
+
+    function flipCoin(bool isHeads) external payable {
+        uint256 fee = entropy.getFee(entropy.getDefaultProvider());
+        require(msg.value >= fee, "Insufficient fee");
+
+        bytes32 userRandomNumber = keccak256(abi.encode(block.timestamp, msg.sender));
+        uint64 sequenceNumber = entropy.requestWithCallback{value: fee}(
+            entropy.getDefaultProvider(),
+            userRandomNumber
+        );
+
+        requests[sequenceNumber] = FlipRequest(msg.sender, isHeads);
+    }
+
+    function entropyCallback(
+        uint64 sequenceNumber,
+        address,
+        bytes32 randomNumber
+    ) internal override {
+        FlipRequest memory request = requests[sequenceNumber];
+        bool coinIsHeads = uint256(randomNumber) % 2 == 0;
+
+        if (coinIsHeads == request.isHeads) {
+            results[request.player] = 1; // won
+        } else {
+            results[request.player] = 2; // lost
+        }
+    }
+}
+```
+
+## Deployment
+
+Create a deployment script and deploy to Optimism Sepolia testnet. Check the [contract addresses](contract-addresses) page for the Entropy contract address on your chosen network.
+
+## Next Steps
+
+- Add more complex game logic
+- Implement proper error handling
+- Add events for better tracking
+- Consider gas optimization techniques
+
+For a complete example with deployment scripts and frontend integration, see the [Coin Flip example](https://github.com/pyth-network/pyth-examples/tree/main/entropy/coin_flip) in the Pyth examples repository.

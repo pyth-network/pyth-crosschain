@@ -1,0 +1,42 @@
+---
+title: Protocol Design
+description: Understanding how Pyth Entropy generates secure random numbers
+---
+
+# Protocol Design
+
+The Entropy protocol implements a secure 2-party random number generation procedure. The protocol
+is an extension of a simple commit/reveal protocol. The original version has the following steps:
+
+1. Two parties A and B each randomly sample secret contributions to the random number, $x_A$ and $x_B$.
+2. A commits to their number by sharing $h_A = \mathrm{hash}(x_A)$
+3. B reveals $x_B$
+4. A reveals $x_A$
+5. B verifies that $\mathrm{hash}(x_{A}) == h_A$
+6. The random number $r = \mathrm{hash}(x_A, x_B)$
+
+This protocol has the property that the result is random as long as either A or B are honest.
+Honesty means that (1) they draw their value at random, and (2) for A, they keep $x_A$ a secret until
+step 4. Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
+ensure that the result $r$ is random.
+
+Entropy implements a version of this protocol that is optimized for on-chain usage. The
+key difference is that one of the participants (the provider) commits to a sequence of random numbers
+up-front using a hash chain. Users of the protocol then simply grab the next random number in the sequence.
+
+**Setup**: The provider P computes a sequence of $N$ random numbers, $x_i$ for $0 \leq i \leq N-1$:
+
+- $x_{N-1} = \mathrm{random}()$
+- $x_i = \mathrm{hash}(x_{i + 1})$
+
+The provider commits to $x_0$ by posting it to the Entropy contract.
+Each random number in the sequence can then be verified against the previous one in the sequence by hashing it, i.e., $\mathrm{hash}(x_i) = x_{i - 1}$
+
+**Request**: To produce a random number, the following steps occur.
+
+1. The user randomly samples a secret value $x_u$ and sends a request to the Entropy contract containing $\mathrm{hash}(x_u)$.
+2. The Entropy contract stores the request and assigns it a sequence number corresponding to the provider's next random number $x_i$.
+3. The provider fulfills the request by revealing $x_i$ to the Entropy contract.
+4. The Entropy contract verifies that $\mathrm{hash}(x_i) = x_{i-1}$ (the previous commitment), then computes the random number $r = \mathrm{hash}(x_u, x_i)$ and delivers it to the user's callback function.
+
+This approach ensures that the resulting random number is unpredictable as long as either the user or the provider is honest, while being efficiently verifiable on-chain.

@@ -15,31 +15,34 @@ import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useMountEffect } from "@react-hookz/web";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useQueryState, parseAsString } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import {
   Suspense,
-  useState,
   useCallback,
   useMemo,
-  useTransition,
   useRef,
+  useState,
+  useTransition,
 } from "react";
 import {
   RouterProvider,
   useDateFormatter,
   useNumberFormatter,
 } from "react-aria";
-import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
+import { Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 import { z } from "zod";
 
-import styles from "./index.module.scss";
 import { Cluster, ClusterToName } from "../../services/pyth";
-import { LiveConfidence, LivePrice, LiveComponentValue } from "../LivePrices";
+import ConformanceReport from "../ConformanceReport/conformance-report";
+import type { Interval } from "../ConformanceReport/types";
+import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
+import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { StatusLive } from "../Status";
+import styles from "./index.module.scss";
 
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
@@ -273,9 +276,24 @@ type HeadingExtraProps = {
   feedKey: string;
 };
 
-const HeadingExtra = ({ feedKey, ...props }: HeadingExtraProps) => {
+const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
+  const downloadReportForFeed = useDownloadReportForFeed();
+
+  const handleDownloadReport = useCallback(
+    (timeframe: Interval) => {
+      return downloadReportForFeed({
+        symbol: props.symbol,
+        publisher: props.publisherKey,
+        timeframe,
+        cluster: ClusterToName[props.cluster],
+      });
+    },
+    [downloadReportForFeed, props.cluster, props.publisherKey, props.symbol],
+  );
+
   return (
     <>
+      <ConformanceReport onClick={handleDownloadReport} />
       <div className={styles.bigScreenBadges}>
         <StatusLive
           cluster={props.cluster}

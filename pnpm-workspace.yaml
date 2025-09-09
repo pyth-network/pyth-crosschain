@@ -105,6 +105,8 @@ catalog:
   copyfiles: ^2.4.1
   cryptocurrency-icons: ^0.18.1
   css-loader: ^7.1.2
+  date-fns: ^4.1.0
+  csv-stringify: ^6.6.0
   dnum: ^2.14.0
   eslint: ^9.23.0
   framer-motion: ^12.6.3
@@ -116,6 +118,7 @@ catalog:
   jest: ^29.7.0
   lightweight-charts: ^5.0.5
   lucide-react: ^0.487.0
+  match-sorter: ^8.1.0
   modern-normalize: ^3.0.1
   motion: ^12.9.2
   next: ^15.5.0

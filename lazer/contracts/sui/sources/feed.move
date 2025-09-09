@@ -1,7 +1,11 @@
 module pyth_lazer::feed;
 
-use pyth_lazer::i16::I16;
-use pyth_lazer::i64::I64;
+use pyth_lazer::i16::{Self, I16};
+use pyth_lazer::i64::{Self, I64};
+use sui::bcs;
+
+// Error codes for feed parsing
+const EInvalidProperty: u64 = 2;
 
 /// The feed struct is based on the Lazer rust protocol definition defined here:
 /// https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/payload.rs
@@ -56,7 +60,7 @@ public(package) fun new(
         confidence,
         funding_rate,
         funding_timestamp,
-        funding_rate_interval
+        funding_rate_interval,
     }
 }
 
@@ -156,6 +160,115 @@ public(package) fun set_funding_timestamp(feed: &mut Feed, funding_timestamp: Op
 }
 
 /// Set the funding rate interval
-public(package) fun set_funding_rate_interval(feed: &mut Feed, funding_rate_interval: Option<Option<u64>>) {
+public(package) fun set_funding_rate_interval(
+    feed: &mut Feed,
+    funding_rate_interval: Option<Option<u64>>,
+) {
     feed.funding_rate_interval = funding_rate_interval;
+}
+
+/// Parse a feed from a BCS cursor
+public(package) fun parse_from_cursor(cursor: &mut bcs::BCS): Feed {
+    let feed_id = cursor.peel_u32();
+    let mut feed = new(
+        feed_id,
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
+    );
+
+    let properties_count = cursor.peel_u8();
+    let mut properties_i = 0;
+
+    while (properties_i < properties_count) {
+        let property_id = cursor.peel_u8();
+
+        if (property_id == 0) {
+            // Price property
+            let price = cursor.peel_u64();
+            if (price != 0) {
+                feed.set_price(option::some(option::some(i64::from_u64(price))));
+            } else {
+                feed.set_price(option::some(option::none()));
+            }
+        } else if (property_id == 1) {
+            // Best bid price property
+            let best_bid_price = cursor.peel_u64();
+            if (best_bid_price != 0) {
+                feed.set_best_bid_price(
+                    option::some(option::some(i64::from_u64(best_bid_price))),
+                );
+            } else {
+                feed.set_best_bid_price(option::some(option::none()));
+            }
+        } else if (property_id == 2) {
+            // Best ask price property
+            let best_ask_price = cursor.peel_u64();
+            if (best_ask_price != 0) {
+                feed.set_best_ask_price(
+                    option::some(option::some(i64::from_u64(best_ask_price))),
+                );
+            } else {
+                feed.set_best_ask_price(option::some(option::none()));
+            }
+        } else if (property_id == 3) {
+            // Publisher count property
+            let publisher_count = cursor.peel_u16();
+            feed.set_publisher_count(option::some(publisher_count));
+        } else if (property_id == 4) {
+            // Exponent property
+            let exponent = cursor.peel_u16();
+            feed.set_exponent(option::some(i16::from_u16(exponent)));
+        } else if (property_id == 5) {
+            // Confidence property
+            let confidence = cursor.peel_u64();
+            if (confidence != 0) {
+                feed.set_confidence(option::some(option::some(i64::from_u64(confidence))));
+            } else {
+                feed.set_confidence(option::some(option::none()));
+            }
+        } else if (property_id == 6) {
+            // Funding rate property
+            let exists = cursor.peel_bool();
+            if (exists) {
+                let funding_rate = cursor.peel_u64();
+                feed.set_funding_rate(option::some(option::some(i64::from_u64(funding_rate))));
+            } else {
+                feed.set_funding_rate(option::some(option::none()));
+            }
+        } else if (property_id == 7) {
+            // Funding timestamp property
+            let exists = cursor.peel_bool();
+            if (exists) {
+                let funding_timestamp = cursor.peel_u64();
+                feed.set_funding_timestamp(option::some(option::some(funding_timestamp)));
+            } else {
+                feed.set_funding_timestamp(option::some(option::none()));
+            }
+        } else if (property_id == 8) {
+            // Funding rate interval property
+            let exists = cursor.peel_bool();
+            if (exists) {
+                let funding_rate_interval = cursor.peel_u64();
+                feed.set_funding_rate_interval(
+                    option::some(option::some(funding_rate_interval)),
+                );
+            } else {
+                feed.set_funding_rate_interval(option::some(option::none()));
+            }
+        } else {
+            // Unknown property - we cannot safely skip it without knowing its length
+            abort EInvalidProperty
+        };
+
+        properties_i = properties_i + 1;
+    };
+
+    feed
 }

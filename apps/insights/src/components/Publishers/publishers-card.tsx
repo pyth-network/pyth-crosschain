@@ -122,6 +122,7 @@ const ResolvedPublishersCard = ({
         }
       }
     },
+    (items) => items,
     { defaultSort: "ranking" },
   );
 

@@ -71,12 +71,12 @@ const getPublishersForSearchDialog = async (cluster: Cluster) => {
 
 const getFeedsForSearchDialog = async (cluster: Cluster) => {
   const feeds = await getFeeds(cluster);
-
   return feeds.map((feed) => ({
     symbol: feed.symbol,
     displaySymbol: feed.product.display_symbol,
     assetClass: feed.product.asset_type,
     description: feed.product.description,
+    priceAccount: feed.product.price_account,
     icon: (
       <PriceFeedIcon
         assetClass={feed.product.asset_type}

@@ -19,7 +19,7 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
-pyth-lazer-protocol = { path = "../../../../sdk/rust/protocol", version = "0.13.0" }
+pyth-lazer-protocol = { path = "../../../../sdk/rust/protocol", version = "0.14.0" }
 
 anchor-lang = "0.31.1"
 bytemuck = { version = "1.20.0", features = ["derive"] }

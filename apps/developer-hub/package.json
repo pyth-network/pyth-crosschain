@@ -33,6 +33,7 @@
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-dom": "catalog:",
+    "viem": "catalog:",
     "zod": "catalog:",
     "zod-validation-error": "catalog:"
   },
