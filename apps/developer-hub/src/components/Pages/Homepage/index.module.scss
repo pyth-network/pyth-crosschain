@@ -3,6 +3,7 @@
 .pageContainer {
   display: flex;
   min-height: calc(100vh - theme.$header-height);
+
   @include theme.max-width;
 }
 
@@ -18,7 +19,7 @@
   height: calc(100vh - theme.$header-height);
   overflow-y: auto;
 
-  @media (max-width: 1024px) {
+  @media (width <= 1024px) {
     display: none;
   }
 }
@@ -38,7 +39,9 @@
 .introTitle {
   background: theme.color("states", "data", "normal");
   color: theme.color("background", "primary");
+
   @include theme.text("sm", "semibold");
+
   padding: theme.spacing(3) theme.spacing(4);
   border-radius: theme.spacing(2);
   margin-bottom: theme.spacing(6);
@@ -46,6 +49,7 @@
 
 .sectionTitle {
   @include theme.text("lg", "semibold");
+
   color: theme.color("heading");
   margin-bottom: theme.spacing(4);
 }
@@ -62,7 +66,9 @@
   justify-content: space-between;
   padding: theme.spacing(3) 0;
   text-decoration: none;
+
   @include theme.text("base", "normal");
+
   color: theme.color("muted");
   border-bottom: 1px solid theme.color("background", "secondary");
   transition: all 0.2s ease;
@@ -97,7 +103,7 @@
   padding: theme.spacing(6) theme.spacing(8);
   max-width: calc(100% - 280px);
 
-  @media (max-width: 1024px) {
+  @media (width <= 1024px) {
     max-width: 100%;
     padding: theme.spacing(6) theme.spacing(4);
   }
@@ -110,6 +116,7 @@
 
 .title {
   @include theme.text("4xl", "bold");
+
   color: theme.color("heading");
   margin-bottom: theme.spacing(6);
   margin-top: 0;
@@ -117,6 +124,7 @@
 
 .description {
   @include theme.text("lg", "normal");
+
   color: theme.color("muted");
   line-height: 1.6;
   margin-bottom: theme.spacing(8);
@@ -126,7 +134,7 @@
 .link {
   color: theme.color("states", "data", "normal");
   text-decoration: none;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -135,10 +143,11 @@
 // Section styling
 .sectionHeading {
   @include theme.text("2xl", "semibold");
+
   color: theme.color("heading");
   margin-bottom: theme.spacing(6);
   margin-top: theme.spacing(12);
-  
+
   &:first-of-type {
     margin-top: theme.spacing(8);
   }
@@ -146,6 +155,7 @@
 
 .sectionDescription {
   @include theme.text("base", "normal");
+
   color: theme.color("muted");
   margin-bottom: theme.spacing(6);
 }
@@ -175,7 +185,7 @@
   &:hover {
     border-color: theme.color("states", "data", "normal");
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 25px rgb(0 0 0 / 10%);
   }
 }
 
@@ -188,6 +198,7 @@
 
 .productBadge {
   @include theme.text("xs", "semibold");
+
   padding: theme.spacing(1.5) theme.spacing(3);
   border-radius: theme.spacing(3);
   color: white;
@@ -196,12 +207,12 @@
   align-items: center;
   font-size: 11px;
   line-height: 1.2;
-  
+
   &.coreBadge,
   &.randomnessBadge {
     background: theme.color("states", "data", "normal");
   }
-  
+
   &.lazerBadge,
   &.mevBadge {
     background: #8b5cf6; // Purple
@@ -214,12 +225,14 @@
 
 .productTitle {
   @include theme.text("lg", "semibold");
+
   color: theme.color("heading");
   margin-bottom: theme.spacing(3);
 }
 
 .productDescription {
   @include theme.text("sm", "normal");
+
   color: theme.color("muted");
   margin-bottom: theme.spacing(6);
   flex-grow: 1;
@@ -236,7 +249,9 @@
   display: flex;
   align-items: center;
   gap: theme.spacing(3);
+
   @include theme.text("sm", "normal");
+
   color: theme.color("muted");
 
   svg {
@@ -254,7 +269,9 @@
   border: 1px solid theme.color("border");
   border-radius: theme.spacing(2);
   text-decoration: none;
+
   @include theme.text("sm", "semibold");
+
   color: theme.color("heading");
   transition: all 0.2s ease;
   margin-top: auto;
@@ -274,9 +291,10 @@
 .quickStartList {
   list-style-type: disc;
   padding-left: theme.spacing(6);
-  
+
   li {
     @include theme.text("base", "normal");
+
     color: theme.color("muted");
     margin-bottom: theme.spacing(3);
     line-height: 1.6;
@@ -313,18 +331,21 @@
 
 .resourceTitle {
   @include theme.text("lg", "semibold");
+
   color: theme.color("heading");
   margin-bottom: theme.spacing(2);
 }
 
 .resourceDescription {
   @include theme.text("sm", "normal");
+
   color: theme.color("muted");
   margin-bottom: theme.spacing(4);
 }
 
 .resourceLink {
   @include theme.text("sm", "semibold");
+
   color: theme.color("states", "data", "normal");
   text-decoration: none;
 
@@ -341,9 +362,10 @@
 .developerList {
   list-style-type: disc;
   padding-left: theme.spacing(6);
-  
+
   li {
     @include theme.text("base", "normal");
+
     color: theme.color("muted");
     margin-bottom: theme.spacing(3);
     line-height: 1.6;
