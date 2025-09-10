@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use pyth_lazer_client::history_client::{PythLazerHistoryClient, PythLazerHistoryClientConfig};
 use pyth_lazer_protocol::PriceFeedId;
-use tokio::time::sleep;
 use url::Url;
 
 #[tokio::main]
@@ -18,11 +17,16 @@ async fn main() -> anyhow::Result<()> {
         update_interval: Duration::from_secs(5),
         ..Default::default()
     });
-    let symbols = client.all_symbols_metadata_handle().await?;
+    let mut symbols_stream = client.all_symbols_metadata_stream().await?;
 
-    loop {
-        println!("symbols len: {}", symbols.symbols().len());
-        println!("symbol 1: {:?}", symbols.symbols().get(&PriceFeedId(1)));
-        sleep(Duration::from_secs(15)).await;
+    while let Some(symbols) = symbols_stream.recv().await {
+        println!("symbols len: {}", symbols.len());
+        println!(
+            "symbol 1: {:?}",
+            symbols
+                .iter()
+                .find(|feed| feed.pyth_lazer_id == PriceFeedId(1))
+        );
     }
+    Ok(())
 }

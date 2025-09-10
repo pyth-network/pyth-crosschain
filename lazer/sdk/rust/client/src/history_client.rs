@@ -36,7 +36,7 @@ pub struct PythLazerHistoryClientConfig {
     pub request_timeout: Duration,
     /// Path to the cache directory that can be used to provide latest data if history service is unavailable.
     pub cache_dir: Option<PathBuf>,
-    /// Capacity of communication channels created by this client.
+    /// Capacity of communication channels created by this client. It must be above zero.
     #[serde(default = "default_channel_capacity")]
     pub channel_capacity: usize,
 }
@@ -164,14 +164,14 @@ impl PythLazerHistoryClient {
     /// On a successful return, the channel will always contain the initial data that can be fetched
     /// immediately from the returned receiver.
     /// You should continuously poll the receiver to receive updates.
-    ///
-    /// Panics if the buffer capacity is 0.
     pub async fn all_symbols_metadata_stream(
         &self,
-        channel_capacity: usize,
     ) -> anyhow::Result<mpsc::Receiver<Vec<SymbolMetadata>>> {
+        if self.config.channel_capacity == 0 {
+            bail!("channel_capacity cannot be 0");
+        }
         let symbols = self.fetch_symbols_initial().await?;
-        let (sender, receiver) = mpsc::channel(channel_capacity);
+        let (sender, receiver) = mpsc::channel(self.config.channel_capacity);
 
         let previous_symbols = symbols.clone();
         sender
