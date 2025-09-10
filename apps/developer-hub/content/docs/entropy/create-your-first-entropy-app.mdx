@@ -4,8 +4,6 @@ description: Build a coin flip example using Pyth Entropy
 icon: RocketLaunch
 ---
 
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-
 In this tutorial we will implement and deploy a coin flip contract which will use entropy to generate a random output.
 
 ## Preliminaries
@@ -17,46 +15,41 @@ Before we start, please make sure you have the following tools installed:
 
 ## Getting Started
 
-Create a directory named `coin-flip{:bash}` in your filesystem.
-We will use this directory as the working directory for the rest of the tutorial.
-Let's initialize a new project in `coin-flip{:bash}` by running `forge init contracts{:bash}`.
+Create a directory named `coin-flip{:bash}` in your filesystem:
 
-This will create a new directory in `coin-flip{:bash}` named `contracts/src`, which will contain the smart contract code.
-
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 mkdir coin-flip
 cd coin-flip
+```
+
+Let's initialize a new project in `coin-flip{:bash}` by running `forge init contracts{:bash}`:
+
+```bash copy
 forge init contracts
-`}
-/>
+```
 
-Now we will install the Pyth Entropy SDK in the `contracts` directory.
+This will create a new directory in `coin-flip{:bash}` named `contracts/src`, which will contain the smart contract code.
+We will use this directory as the working directory for the rest of the tutorial.
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+Now we will install the Pyth Entropy SDK in the `contracts` directory:
+
+```bash copy
 cd contracts
 npm init -y
 npm install @pythnetwork/entropy-sdk-solidity
-`}
-/>
+```
 
-Add a `remappings.txt` file to `contracts` directory with the following content to tell Foundry where to find the Pyth Entropy SDK.
+Add a `remappings.txt` file to `contracts` directory with the following content to tell Foundry where to find the Pyth Entropy SDK:
 
-<DynamicCodeBlock
-  lang="text"
-  code={`\
+```text copy filename="remappings.txt"
 @pythnetwork/entropy-sdk-solidity/=node_modules/@pythnetwork/entropy-sdk-solidity
-`}
-/>
+```
 
 ## Implementation
 
-Create a new file `CoinFlip.sol{:solidity}` in `contracts/src` directory and add the following code into it to start.
+Create a new file `CoinFlip.sol{:solidity}` in `contracts/src` directory and add the following code into it to start:
 
-<DynamicCodeBlock lang="solidity" code={`\
+```solidity copy filename="CoinFlip.sol"
 // contracts/src/CoinFlip.sol
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
@@ -65,22 +58,22 @@ import "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 
 contract CoinFlip is IEntropyConsumer {
-event FlipRequested(uint64 sequenceNumber);
-event FlipResult(uint64 sequenceNumber, bool isHeads);
+  event FlipRequested(uint64 sequenceNumber);
+  event FlipResult(uint64 sequenceNumber, bool isHeads);
 
-IEntropyV2 entropy;
+  IEntropyV2 entropy;
 
-constructor(address \_entropy) {
-entropy = IEntropyV2(\_entropy);
+  constructor(address \_entropy) {
+    entropy = IEntropyV2(\_entropy);
+  }
+
+  // This method is required by the IEntropyConsumer interface
+  function getEntropy() internal view override returns (address) {
+    return address(entropy);
+  }
 }
 
-// This method is required by the IEntropyConsumer interface
-function getEntropy() internal view override returns (address) {
-return address(entropy);
-}
-}
-
-`} />
+```
 
 The code implements a`CoinFlip` contract which inherits the `IEntropyConsumer` interface.
 We have also defined some events, properties and a constructor to instantiate the contract.
@@ -88,9 +81,9 @@ One of the properties is of type `IEntropyV2` which is an interface imported fro
 
 ### Request a coin flip
 
-Copy the following code into `CoinFlip.sol{:solidity}`.
+Copy the following code into `CoinFlip.sol{:solidity}`:
 
-<DynamicCodeBlock lang="solidity" code={`\
+```solidity copy filename="CoinFlip.sol"
 contract CoinFlip {
   // ... prior code omitted
 
@@ -105,11 +98,9 @@ if (msg.value < requestFee) revert("not enough fees");
 
     // emit event
     emit FlipRequested(sequenceNumber);
-
+    }
 }
-}
-
-`} />
+```
 
 Users will invoke the `request` method to initiate a coin flip, paying a fee in the process.
 The method first retrieves the fee required to request a random number from Entropy.
@@ -118,28 +109,26 @@ Finally, the method emits a `FlipRequested{:bash}` event with a `sequenceNumber`
 
 ### Handle the callback
 
-Copy the following code into `CoinFlip.sol{:solidity}`.
+Copy the following code into `CoinFlip.sol{:solidity}`:
 
-<DynamicCodeBlock lang="solidity" code={`\
+```solidity copy filename="CoinFlip.sol"
 contract CoinFlip {
   // ... prior code omitted
 
 function entropyCallback(
-uint64 sequenceNumber,
-// If your app uses multiple providers, you can use this argument
-// to distinguish which one is calling the app back. This app only
-// uses one provider so this argument is not used.
-address \_providerAddress,
-bytes32 randomNumber
-) internal override {
-bool isHeads = uint256(randomNumber) % 2 == 0;
-
+  uint64 sequenceNumber,
+  // If your app uses multiple providers, you can use this argument
+  // to distinguish which one is calling the app back. This app only
+  // uses one provider so this argument is not used.
+  address \_providerAddress,
+  bytes32 randomNumber
+  ) internal override {
+    bool isHeads = uint256(randomNumber) % 2 == 0;
     emit FlipResult(sequenceNumber, isHeads);
-
+  }
 }
-}
 
-`} />
+```
 
 Implement `entropyCallback` method which is required by the `IEntropyConsumer` Interface. Entropy calls back this method to fulfill a request. Entropy will call back this
 method with the `sequenceNumber` of the request, the `_providerAddress` from which the random number was requested and the generated `randomNumber`.
@@ -149,47 +138,35 @@ Yay! you have successfully implemented a coin flip contract.
 
 ## Deploy
 
-First, create a new wallet
+First, create a new wallet:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 cast wallet new
-`}
-/>
+```
 
-This command will generate a new Ethereum keypair, producing output similar to the following. Note that the address and private key will be different hexadecimal values.
+This command will generate a new Ethereum keypair, producing output similar to the following. Note that the address and private key will be different hexadecimal values:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 Successfully created new keypair.
 Address:     0xB806824fdA4b2b6631e9B87a86d42C9dfd04D129
 Private key: 0x0d510c72fd2279155c717eb433ae598a83cfb34b09c2ada86bc424b481082023
-  `}
-/>
+```
 
 We will export the values from the command above as environment variables to simplify the commands below. We will also export the RPC URL of the network. Run the following commands in your shell substituting the address and private key in the indicated places:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 export ADDRESS=<address from above>
 export PRIVATE_KEY=<your private key from above>
 export RPC_URL="https://sepolia.optimism.io"
-`}
-/>
+```
 
-Next, use the [Superchain Faucet](https://app.optimism.io/faucet?utm_source=docs) to claim some test Sepolia ETH. Paste the address from the command above into the faucet to get your ETH. You can verify that the ETH has arrived in your wallet by running the command
+Next, use the [Superchain Faucet](https://app.optimism.io/faucet?utm_source=docs) to claim some test Sepolia ETH. Paste the address from the command above into the faucet to get your ETH. You can verify that the ETH has arrived in your wallet by running the command
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 cast balance $ADDRESS -r $RPC_URL -e
-`}
-/>
+```
 
-The final step before deploying is to get the arguments for the contract's constructor: the [Entropy contract address](https://docs.pyth.network/entropy/contract-addresses) for Optimism Sepolia and [the Provider address](https://docs.pyth.network/entropy/contract-addresses). We will also export these values as environment variables for convenience:
+The final step before deploying is to get the arguments for the contract's constructor: the [Entropy contract address](./entropy/chainlist) for Optimism Sepolia and [the Provider address](./entropy/chainlist). We will also export these values as environment variables for convenience:
 
 ```bash copy
 export ENTROPY_ADDRESS=0x4821932D0CDd71225A6d914706A621e0389D7061
@@ -197,21 +174,16 @@ export ENTROPY_ADDRESS=0x4821932D0CDd71225A6d914706A621e0389D7061
 
 Finally, let's deploy the contracts. Run the following command:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 forge create src/CoinFlip.sol:CoinFlip \
 --private-key $PRIVATE_KEY \
 --rpc-url $RPC_URL \
 --constructor-args $ENTROPY_ADDRESS
-  `}
-/>
+```
 
 You should see an output similar to:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 [⠢] Compiling...
 [⠔] Compiling 28 files with 0.8.23
 [⠑] Solc 0.8.23 finished in 3.40s
@@ -219,96 +191,89 @@ Compiler run successful!
 Deployer: 0xfa57d0f2CBDA2729273F2a431E4FeDAc656d0402
 Deployed to: 0x8676ba0Dd492AB9813BC21D5Dce318427d1d73ae
 Transaction hash: 0x2178aa6d402c94166a93e81822248d00dd003827675ebd49b3c542970f5a0189
-`}
-/>
+```
 
 Let's export the coin flip contract address as environment variable for later use:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 export COINFLIP_ADDRESS=<Deployed to address from above>
-`}
-/>
+```
 
 Congratulations you have successfully implemented and deployed a CoinFlip contract.
 
 ## Interact from Javascript
 
-Next, let’s interact with the CoinFlip contract from Javascript. Create a new directory inside `coin-flip` named `app`. Run `cd app` to make it your terminal’s working directory — the following commands will need to be run from here.
+Next, let's interact with the CoinFlip contract from Javascript. Create a new directory inside `coin-flip` named `app`. Run `cd app` to make it your terminal’s working directory — the following commands will need to be run from here.
 
-Run the following to initialise a new project and install required libraries.
+Run the following to initialise a new project and install required libraries:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 npm init -y
 npm install web3 @pythnetwork/entropy-sdk-solidity
-`}
-/>
+```
 
-Create a `script.js` file in `app` and add the following code to the script.
+Create a `script.js` file in `app` and add the following code to the script:
 
-<DynamicCodeBlock lang="javascript" code={`\
+```javascript copy filename="script.js"
 const { Web3 } = require("web3");
 const CoinFlipAbi = require("../contracts/out/CoinFlip.sol/CoinFlip.json");
 const EntropyAbi = require("@pythnetwork/entropy-sdk-solidity/abis/IEntropyV2.json");
 
 async function main() {
-const web3 = new Web3(process.env["RPC_URL"]);
-const { address } = web3.eth.accounts.wallet.add(
-process.env["PRIVATE_KEY"]
-)[0];
+  const web3 = new Web3(process.env["RPC_URL"]);
+  const { address } = web3.eth.accounts.wallet.add(
+    process.env["PRIVATE_KEY"],
+  )[0];
 
-web3.eth.defaultBlock = "finalized";
+  web3.eth.defaultBlock = "finalized";
 
-const coinFlipContract = new web3.eth.Contract(
-CoinFlipAbi.abi,
-process.env["COINFLIP_ADDRESS"]
-);
+  const coinFlipContract = new web3.eth.Contract(
+    CoinFlipAbi.abi,
+    process.env["COINFLIP_ADDRESS"],
+  );
 
-const entropyContract = new web3.eth.Contract(
-EntropyAbi,
-process.env["ENTROPY_ADDRESS"]
-);
+  const entropyContract = new web3.eth.Contract(
+    EntropyAbi,
+    process.env["ENTROPY_ADDRESS"],
+  );
 }
 
 main();
-`} />
+```
 
 The code above imports the required libraries and defines a `main` method. In `main` we initialize web3 contracts that help us interact with the coin flip and entropy contracts. At the end, the script calls the main method.
 
 Next, add the following code to the main method to request a flip from the CoinFlip contract.
 
-<DynamicCodeBlock lang="javascript" code={`\
+```javascript copy filename="script.js"
 async main() {
   // ... prior code omitted
 
 // Request a random number
 
-const fee = await entropyContract.methods.getFeeV2().call()
-console.log(\`fee: \${fee}\`);
+  const fee = await entropyContract.methods.getFeeV2().call()
+  console.log("fee: ${fee}");
 
-const requestReceipt = await coinFlipContract.methods
-.request()
-.send({
-value: fee,
-from: address,
-});
+  const requestReceipt = await coinFlipContract.methods
+  .request()
+  .send({
+    value: fee,
+    from: address,
+  });
 
-console.log(\`request tx: \${requestReceipt.transactionHash}\`);
-// Read the sequence number for the request from the transaction events.
-const sequenceNumber =
-requestReceipt.events.FlipRequested.returnValues.sequenceNumber;
-console.log(\`sequence: \${sequenceNumber}\`);
+  console.log("request tx: ${requestReceipt.transactionHash}");
+  // Read the sequence number for the request from the transaction events.
+  const sequenceNumber =
+    requestReceipt.events.FlipRequested.returnValues.sequenceNumber;
+  console.log("sequence: ${sequenceNumber}");
 }
-`} />
+```
 
 The code snippet above generates a random number. The code calls the Entropy contract to get the fee required for requesting a random number. Then it calls the request method of the CoinFlip contract with the `userRandomNumber` as an argument and the required fee. Finally, the code reads the sequenceNumber from the `FlipRequested` event emitted by the CoinFlip contract.
 
-Finally, add the following code snippet to get the flip result.
+Finally, add the following code snippet to get the flip result:
 
-<DynamicCodeBlock lang="javascript" code={`\
+```javascript copy filename="script.js"
 async main() {
   // ... prior code omitted
 
@@ -332,27 +297,24 @@ const currentBlock = await web3.eth.getBlockNumber();
 
     // If the event is found, log the result and stop polling.
     if(event !== undefined) {
-      console.log(\`result: \${event.returnValues.isHeads ? 'Heads' : 'Tails'}\`);
+      console.log("result: ${event.returnValues.isHeads ? 'Heads' : 'Tails'}");
       clearInterval(intervalId);
     }
 
 }, 1000);
 }
-`} />
+```
 
 The code above polls for new `FlipResult` events emitted by the CoinFlip contract. It checks if the event has the same `sequenceNumber` as the request. If it does, it logs the result and stops polling.
 
 That's it, Let's run the script with the command `node script.js` . You should get an output similar to:
 
-<DynamicCodeBlock
-  lang="bash"
-  code={`\
+```bash copy
 fee         : 101
 request tx  : 0xde0dce36a3c149b189aba8b29cad98375a62a811e65efdae28b28524da59cfb6
 sequence    : 42
 result      : Tails
-`}
-/>
+```
 
 Note that: the script can fail due to transient RPC issues. You can run the script again to get the expected result.
 
@@ -362,5 +324,5 @@ Congratulations! You've built your first app using Entropy. In this tutorial, we
 
 You can learn more about Entropy from the following links:
 
-- [Protocol Design](https://docs.pyth.network/entropy/protocol-design)
-- [Best Practices](https://docs.pyth.network/entropy/best-practices)
+- [Protocol Design](./entropy/protocol-design)
+- [How to Transform Entropy Results](./entropy/transform-entropy-results)

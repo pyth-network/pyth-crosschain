@@ -9,12 +9,16 @@ import { Table } from "@pythnetwork/component-library/Table";
 import IEntropyV2 from "@pythnetwork/entropy-sdk-solidity/abis/IEntropyV2.json";
 import { useEffect, useRef, useState } from "react";
 import type { PublicClient, Abi } from "viem";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, formatEther, http, isAddress } from "viem";
 
 import { FORTUNA_API_URLS } from "./constants";
 import type { EntropyDeployment } from "./entropy-api-data-fetcher";
 import { fetchEntropyDeployments } from "./entropy-api-data-fetcher";
 import CopyAddress from "../CopyAddress";
+
+function isValidAddress(address: string): address is `0x${string}` {
+  return isAddress(address);
+}
 
 export const EntropyTable = ({ isMainnet }: { isMainnet: boolean }) => {
   const isLoading = useRef(false);
@@ -70,24 +74,24 @@ const EntropyTableContent = ({
   ];
 
   const rows: RowConfig<Col>[] = Object.entries(chains)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([chainName, d]) => ({
+    .sort(([chainNameA], [chainNameB]) => chainNameA.localeCompare(chainNameB))
+    .map(([chainName, deployment]) => ({
       id: chainName,
       data: {
         chain: chainName,
-        address: d.explorer ? (
+        address: deployment.explorer ? (
           <CopyAddress
-            address={d.address}
-            url={`${d.explorer}/address/${d.address}`}
+            address={deployment.address}
+            url={`${deployment.explorer}/address/${deployment.address}`}
           />
         ) : (
-          <CopyAddress address={d.address} />
+          <CopyAddress address={deployment.address} />
         ),
-        delay: d.delay,
-        gasLimit: d.gasLimit,
+        delay: deployment.delay,
+        gasLimit: deployment.gasLimit,
         fee:
-          formatWeiFixed18(fees[chainName] ?? BigInt(d.default_fee)) +
-          ` ${d.nativeCurrency ?? "ETH"}`,
+          formatEther(fees[chainName] ?? BigInt(deployment.default_fee)) +
+          ` ${deployment.nativeCurrency ?? "ETH"}`,
       },
     }));
 
@@ -160,28 +164,32 @@ function useEntropyFees(
         if (isCancelled) return;
         const batch = entries.slice(i, i + batchSize);
         const results = await Promise.allSettled(
-          batch.map(async ([name, d]) => {
-            if (!d.rpc) return [name, undefined] as const;
+          batch.map(async ([chainName, deployment]) => {
+            if (!deployment.rpc || !isValidAddress(deployment.address)) {
+              return [chainName, undefined] as const;
+            }
             try {
-              const client = getClient(d.rpc);
+              const client = getClient(deployment.rpc);
               const fee = await client.readContract({
-                address: d.address as `0x${string}`,
+                address: deployment.address,
                 abi: IEntropyV2 as unknown as Abi,
                 functionName: "getFeeV2",
                 args: [],
               });
-              return [name, fee] as const;
+              return [chainName, fee] as const;
             } catch {
-              return [name, undefined] as const;
+              return [chainName, undefined] as const;
             }
           }),
         );
 
         const next: Record<string, bigint | undefined> = {};
-        for (const r of results) {
-          if (r.status === "fulfilled") {
-            const [name, fee] = r.value;
-            next[name] = fee as bigint;
+        for (const result of results) {
+          if (result.status === "fulfilled") {
+            const [chainName, fee] = result.value;
+            if (typeof fee === "bigint") {
+              next[chainName] = fee;
+            }
           }
         }
         if (Object.keys(next).length > 0) {
@@ -190,7 +198,10 @@ function useEntropyFees(
       }
     }
 
-    void loadInBatches();
+    loadInBatches().catch((error: unknown) => {
+      // eslint-disable-next-line no-console
+      console.error("Failed to load entropy fees:", error);
+    });
 
     return () => {
       isCancelled = true;
@@ -198,11 +209,4 @@ function useEntropyFees(
   }, [chains]);
 
   return feesByChain;
-}
-
-function formatWeiFixed18(value: bigint): string {
-  const intPart = value / 1_000_000_000_000_000_000n;
-  const fracPart = value % 1_000_000_000_000_000_000n;
-  const fracStr = fracPart.toString().padStart(18, "0");
-  return `${intPart.toString()}.${fracStr}`;
 }

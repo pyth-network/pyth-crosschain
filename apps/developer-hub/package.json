@@ -29,7 +29,7 @@
     "fumadocs-core": "catalog:",
     "fumadocs-mdx": "catalog:",
     "fumadocs-ui": "catalog:",
-    "katex": "^0.16.22",
+    "katex": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
     "nuqs": "catalog:",

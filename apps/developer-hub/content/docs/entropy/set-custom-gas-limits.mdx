@@ -5,13 +5,12 @@ icon: Gauge
 ---
 
 import { Step, Steps } from "fumadocs-ui/components/steps";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 
-Custom gas limits are useful when your callback function requires more gas than the [default provider limit](./entropy/contract-addresses), or when you want to optimize gas costs for simpler callbacks.
+Custom gas limits are useful when your callback function requires more gas than the [default provider limit](./entropy/chainlist), or when you want to optimize gas costs for simpler callbacks.
 
 ## Prerequisites
 
-Before following this guide, you should first complete the basic setup from the [Generate Random Numbers in EVM Contracts](./generate-random-numbers-evm.mdx) guide. This guide builds upon that foundation and assumes you have:
+Before following this guide, you should first complete the basic setup from the [Generate Random Numbers in EVM Contracts](./entropy/generate-random-numbers-evm.mdx) guide. This guide builds upon that foundation and assumes you have:
 
 - Installed the Pyth Entropy Solidity SDK
 - Set up your contract with the `IEntropyConsumer` interface
@@ -32,8 +31,8 @@ You might need custom gas limits in these scenarios:
 
 Instead of the basic `requestV2()` method, use the variant that accepts a `gasLimit` parameter:
 
-<DynamicCodeBlock lang="solidity" 
-code={`function requestRandomNumberWithCustomGas(
+```solidity copy
+function requestRandomNumberWithCustomGas(
     uint32 customGasLimit
 ) external payable {
     // Calculate the fee for the custom gas limit
@@ -43,27 +42,26 @@ code={`function requestRandomNumberWithCustomGas(
     uint64 sequenceNumber = entropy.requestV2{ value: fee }(customGasLimit);
 
     // Store the sequence number for tracking if needed
-
 }
-`} />
+```
 
 ### 2. Calculate Fees with Custom Gas Limit
 
 When using custom gas limits, you must use the `getFeeV2` variant that accepts a `gasLimit` parameter:
 
-<DynamicCodeBlock lang="solidity" 
-code={`// Get fee for custom gas limit
+```solidity copy
+// Get fee for custom gas limit
 uint256 fee = entropy.getFeeV2(customGasLimit);
 
 // NOT: uint256 fee = entropy.getFeeV2(); // This uses default gas limit
-`} />
+```
 
 ### 3. Complete Example
 
 Here's a complete example showing how to implement custom gas limits:
 
-<DynamicCodeBlock lang="solidity" 
-code={`pragma solidity ^0.8.0;
+```solidity copy
+pragma solidity ^0.8.0;
 
 import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
@@ -123,7 +121,7 @@ mapping(uint64 => bool) public processedRequests;
     }
 
 }
-`} />
+```
 
 ## Gas Limit Constraints
 
@@ -149,27 +147,23 @@ When setting custom gas limits, be aware of these constraints:
 
 Test your callback function to determine the actual gas usage:
 
-<DynamicCodeBlock
-  lang="solidity"
-  code={`// In your tests, measure gas usage
+```solidity copy
+// In your tests, measure gas usage
 uint256 gasStart = gasleft();
 // Your callback logic here
 uint256 gasUsed = gasStart - gasleft();
 console.log("Gas used:", gasUsed);
-`}
-/>
+```
 
 ### 2. Add Safety Buffer
 
 Always add a safety buffer to your estimated gas usage:
 
-<DynamicCodeBlock
-  lang="solidity"
-  code={`uint32 estimatedGas = 150000;
+```solidity copy
+uint32 estimatedGas = 150000;
 uint32 safetyBuffer = 20000;
 uint32 customGasLimit = estimatedGas + safetyBuffer;
-`}
-/>
+```
 
 ### 3. Handle Gas Limit Errors
 
@@ -185,14 +179,12 @@ Be prepared to handle cases where your gas limit is insufficient:
 
 Higher gas limits result in higher fees. Balance your gas needs with cost considerations:
 
-<DynamicCodeBlock
-  lang="solidity"
-  code={`// Compare fees for different gas limits
+```solidity copy
+// Compare fees for different gas limits
 uint256 defaultFee = entropy.getFeeV2();
 uint256 customFee = entropy.getFeeV2(customGasLimit);
 uint256 additionalCost = customFee - defaultFee;
-`}
-/>
+```
 
 ## Troubleshooting
 
@@ -202,11 +194,10 @@ If you're experiencing issues with custom gas limits:
 2. **High fees**: Consider optimizing your callback or using a lower gas limit
 3. **Reverts**: Check that your gas limit doesn't exceed the maximum allowed
 
-For more debugging help, see the [Debug Callback Failures](/entropy/debug-callback-failures) guide.
+For more debugging help, see the [Debug Callback Failures](./entropy/debug-callback-failures) guide.
 
 ## Additional Resources
 
-- [Generate Random Numbers in EVM Contracts](/entropy/generate-random-numbers/evm) - Basic setup guide
-- [Best Practices](/entropy/best-practices) - General optimization tips
-- [Current Fees](/entropy/current-fees) - Fee information for different chains
-- [Contract Addresses](/entropy/contract-addresses) - Entropy contract deployments
+- [Generate Random Numbers in EVM Contracts](./entropy/generate-random-numbers-evm) - Basic setup guide
+- [Transform Entropy Results](./entropy/transform-entropy-results) - General optimization tips
+- [Contract Addresses and Fee Details](./entropy/chainlist) - Entropy contract deployments and fee details

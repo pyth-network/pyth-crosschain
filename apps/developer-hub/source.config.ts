@@ -28,6 +28,6 @@ export const docs = defineDocs({
 export default defineConfig({
   mdxOptions: {
     remarkPlugins: [remarkMath],
-    rehypePlugins: (v) => [rehypeKatex, rehypeCode, ...v],
+    rehypePlugins: [rehypeKatex, rehypeCode],
   },
 });
