@@ -122,23 +122,223 @@
   margin-bottom: theme.spacing(8);
 }
 
-.quickStart {
-  margin-top: theme.spacing(8);
-
-  h2 {
-    @include theme.text("2xl", "semibold");
-    color: theme.color("heading");
-    margin-bottom: theme.spacing(4);
-  }
-
-  p {
-    @include theme.text("base", "normal");
-    color: theme.color("muted");
-    margin-bottom: theme.spacing(6);
+// Links
+.link {
+  color: theme.color("states", "data", "normal");
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
   }
 }
 
+// Section styling
+.sectionHeading {
+  @include theme.text("2xl", "semibold");
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(6);
+  margin-top: theme.spacing(12);
+  
+  &:first-of-type {
+    margin-top: theme.spacing(8);
+  }
+}
+
+.sectionDescription {
+  @include theme.text("base", "normal");
+  color: theme.color("muted");
+  margin-bottom: theme.spacing(6);
+}
+
+// Products Section
+.productsSection {
+  margin-bottom: theme.spacing(12);
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: theme.spacing(6);
+  margin-top: theme.spacing(8);
+}
+
+.productCard {
+  background: theme.color("background", "primary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.spacing(3);
+  padding: theme.spacing(6);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: theme.color("states", "data", "normal");
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.productHeader {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(3);
+  margin-bottom: theme.spacing(4);
+}
+
+.productBadge {
+  @include theme.text("xs", "semibold");
+  padding: theme.spacing(1.5) theme.spacing(3);
+  border-radius: theme.spacing(3);
+  color: white;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1.2;
+  
+  &.coreBadge,
+  &.randomnessBadge {
+    background: theme.color("states", "data", "normal");
+  }
+  
+  &.lazerBadge,
+  &.mevBadge {
+    background: #8b5cf6; // Purple
+  }
+}
+
+.productIcon {
+  color: theme.color("muted");
+}
+
+.productTitle {
+  @include theme.text("lg", "semibold");
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(3);
+}
+
+.productDescription {
+  @include theme.text("sm", "normal");
+  color: theme.color("muted");
+  margin-bottom: theme.spacing(6);
+  flex-grow: 1;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+  margin-bottom: theme.spacing(6);
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(3);
+  @include theme.text("sm", "normal");
+  color: theme.color("muted");
+
+  svg {
+    color: theme.color("states", "data", "normal");
+    flex-shrink: 0;
+  }
+}
+
+.productCta {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(2);
+  padding: theme.spacing(3) theme.spacing(4);
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.spacing(2);
+  text-decoration: none;
+  @include theme.text("sm", "semibold");
+  color: theme.color("heading");
+  transition: all 0.2s ease;
+  margin-top: auto;
+
+  &:hover {
+    background: theme.color("states", "data", "normal");
+    color: white;
+    border-color: theme.color("states", "data", "normal");
+  }
+}
+
+// Quick Start Section
+.quickStartSection {
+  margin-bottom: theme.spacing(12);
+}
+
 .quickStartList {
+  list-style-type: disc;
+  padding-left: theme.spacing(6);
+  
+  li {
+    @include theme.text("base", "normal");
+    color: theme.color("muted");
+    margin-bottom: theme.spacing(3);
+    line-height: 1.6;
+
+    strong {
+      color: theme.color("heading");
+    }
+  }
+}
+
+// Additional Resources Section
+.additionalResourcesSection {
+  margin-bottom: theme.spacing(12);
+}
+
+.resourceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: theme.spacing(6);
+  margin-top: theme.spacing(8);
+}
+
+.resourceCard {
+  background: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.spacing(3);
+  padding: theme.spacing(6);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: theme.color("states", "data", "normal");
+  }
+}
+
+.resourceTitle {
+  @include theme.text("lg", "semibold");
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(2);
+}
+
+.resourceDescription {
+  @include theme.text("sm", "normal");
+  color: theme.color("muted");
+  margin-bottom: theme.spacing(4);
+}
+
+.resourceLink {
+  @include theme.text("sm", "semibold");
+  color: theme.color("states", "data", "normal");
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Developer Resources Section
+.developerResourcesSection {
+  margin-bottom: theme.spacing(8);
+}
+
+.developerList {
   list-style-type: disc;
   padding-left: theme.spacing(6);
   
