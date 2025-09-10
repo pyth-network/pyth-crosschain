@@ -4,8 +4,6 @@ description: New features and improvements in Entropy v2
 icon: Sparkle
 ---
 
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-
 ## Key Improvements
 
 Pyth Entropy v2 brings new features and improvements that make random number generation more flexible, efficient, and easier to integrate.
@@ -19,37 +17,18 @@ Entropy v2 provides multiple ways to request random numbers:
 - **Custom Provider**: Choose specific entropy providers
 - **Full Control**: Specify all parameters (provider, gas limit, user random number)
 
-Each of these request types is described in more detail with examples in [Request Callback Variants](request-callback-variants).
+Each of these request types is described in more detail with examples in [Request Callback Variants](./entropy/request-callback-variants).
 
-### 2. Improved Fee Structure
-
-The new version offers more granular fee calculation:
-
-<DynamicCodeBlock lang="solidity" code={`// Get fee for default provider and gas limit
-uint256 basicFee = entropy.getFeeV2();
-
-// Get fee for custom gas limit
-uint256 customGasFee = entropy.getFeeV2(gasLimit);
-
-// Get fee for specific provider and gas limit
-uint256 providerFee = entropy.getFeeV2(provider, gasLimit);
-`} />
-
-### 3. Enhanced Callback Status
+### 2. Enhanced Callback Status
 
 Entropy V2 introduces callback statuses, which allow users to track the status of their callbacks.
 
 [Pyth Dev-Forum Announcement](https://dev-forum.pyth.network/t/announcing-entropy-v2/324#p-649-enhanced-callback-statuses-2) provides more details on enhanced callback statuses.
 
-### 4. Entropy Debugger
+### 3. Entropy Explorer
 
 Entropy V2 includes a public Entropy Explorer, that lets teams easily track the status of their callbacks and re-request them if they fail on-chain.
-
-See [Entropy Explorer](https://entropy-debugger.pyth.network/) to search and debug your callbacks.
-
-### 5. Gas Optimization
-
-Improved contract efficiency reduces overall gas costs for entropy requests.
+See [Entropy Explorer](https://entropy-explorer.pyth.network/) to search and debug your callbacks.
 
 ## Migration Guide
 

@@ -1,5 +1,5 @@
 ---
-title: Contract & Provider Addresses
+title: Chainlist and Fee Details
 description: Pyth Entropy contract addresses on EVM networks
 icon: FileText
 ---
@@ -8,8 +8,10 @@ import { EntropyTable } from "../../../src/components/EntropyTable";
 
 ## Mainnets
 
-> ⚠️ **Warning**
-> The fees for mainnet are dynamically set. Always use the on-chain method `entropy.getFeeV2()` to get the current fee.
+<InfoBox variant="warning">
+  The fees for mainnet are dynamically set. Always use the on-chain method
+  `entropy.getFeeV2()` to get the current fee.
+</InfoBox>
 
 The following tables shows the total fees payable when using the **default provider**.
 Note that the fees shown below will vary over time with prevailing gas prices on each chain.
@@ -28,8 +30,10 @@ Entropy callbacks the consumer as part of this transaction.
 
 ## Testnets
 
-> ℹ️ **Note**
-> The fees for testnets kept deliberately low and different from the mainnet fees.
+<InfoBox variant="info">
+  The fees for testnets kept deliberately low and different from the mainnet
+  fees.
+</InfoBox>
 
 The Entropy contract is deployed on the following testnet chains:
 

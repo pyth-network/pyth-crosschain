@@ -1,4 +1,7 @@
+import { clsx } from "clsx";
 import Link from "next/link";
+
+import styles from "./index.module.scss";
 
 type IntegrationCardProps = {
   href: string;
@@ -10,29 +13,6 @@ type IntegrationCardProps = {
   showArrow?: boolean;
 };
 
-const colorClasses = {
-  blue: {
-    bg: "bg-blue-100 dark:bg-blue-900",
-    text: "text-blue-600 dark:text-blue-400",
-    hoverText: "group-hover:text-blue-600 dark:group-hover:text-blue-400",
-  },
-  green: {
-    bg: "bg-green-100 dark:bg-green-900",
-    text: "text-green-600 dark:text-green-400",
-    hoverText: "group-hover:text-green-600 dark:group-hover:text-green-400",
-  },
-  purple: {
-    bg: "bg-purple-100 dark:bg-purple-900",
-    text: "text-purple-600 dark:text-purple-400",
-    hoverText: "group-hover:text-purple-600 dark:group-hover:text-purple-400",
-  },
-  yellow: {
-    bg: "bg-yellow-100 dark:bg-yellow-900",
-    text: "text-yellow-600 dark:text-yellow-400",
-    hoverText: "group-hover:text-yellow-600 dark:group-hover:text-yellow-400",
-  },
-};
-
 export function IntegrationCard({
   href,
   icon,
@@ -42,43 +22,34 @@ export function IntegrationCard({
   external,
   showArrow = true,
 }: IntegrationCardProps) {
-  const colors = colorClasses[colorScheme];
-  const Wrapper = external ? "a" : Link;
-  const wrapperProps = external
-    ? { href, target: "_blank", rel: "noopener noreferrer" }
-    : { href };
+  const commonProps = {
+    href,
+    className: clsx(styles.card, "group"),
+    "aria-label": title,
+  };
 
-  return (
-    <Wrapper
-      {...(wrapperProps as
-        | { href: string }
-        | { href: string; target: string; rel: string })}
-      className="not-prose group no-underline grid h-full grid-rows-[auto_1fr] gap-3 rounded-xl border bg-[var(--color-fd-card)] border-[var(--color-fd-border)] p-5 md:p-6 shadow-sm outline-none transition-colors hover:border-[var(--color-fd-accent)] focus-visible:ring-2 focus-visible:ring-[var(--color-fd-accent)]"
-      aria-label={title}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className={`flex h-8 w-8 items-center justify-center rounded-md ${colors.bg}`}
-        >
-          <div className={`h-4 w-4 ${colors.text}`}>{icon}</div>
+  const content = (
+    <>
+      <div className={styles.header}>
+        <div className={clsx(styles.iconContainer, styles[colorScheme])}>
+          <div className={clsx(styles.icon, styles[colorScheme])}>{icon}</div>
         </div>
-        <h3
-          className={`m-0 text-base font-semibold text-[var(--color-fd-foreground)] ${colors.hoverText}`}
-        >
-          {title}
-        </h3>
+        <h3 className={clsx(styles.title, styles[colorScheme])}>{title}</h3>
         {showArrow && (
-          <span
-            className="ml-auto translate-x-0 opacity-0 transition-all duration-200 ease-out group-hover:translate-x-1 group-hover:opacity-100"
-            aria-hidden="true"
-          >
+          <span className={styles.arrow} aria-hidden="true">
             →
           </span>
         )}
       </div>
-      <p className="m-0 text-sm text-[var(--color-fd-muted-foreground)] line-clamp-2">
-        {description}
-      </p>
-    </Wrapper>
+      <p className={styles.description}>{description}</p>
+    </>
+  );
+
+  return external ? (
+    <a {...commonProps} target="_blank" rel="noopener noreferrer">
+      {content}
+    </a>
+  ) : (
+    <Link {...commonProps}>{content}</Link>
   );
 }
