@@ -1,5 +1,155 @@
 @use "@pythnetwork/component-library/theme";
 
-.landing {
+.pageContainer {
+  display: flex;
+  min-height: calc(100vh - theme.$header-height);
   @include theme.max-width;
+}
+
+// Left Sidebar Navigation
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid theme.color("border");
+  background: theme.color("background", "primary");
+  padding: theme.spacing(6) 0;
+  position: sticky;
+  top: theme.$header-height;
+  height: calc(100vh - theme.$header-height);
+  overflow-y: auto;
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+}
+
+.sidebarContent {
+  padding: 0 theme.spacing(6);
+}
+
+.navSection {
+  margin-bottom: theme.spacing(8);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.introTitle {
+  background: theme.color("states", "data", "normal");
+  color: theme.color("background", "primary");
+  @include theme.text("sm", "semibold");
+  padding: theme.spacing(3) theme.spacing(4);
+  border-radius: theme.spacing(2);
+  margin-bottom: theme.spacing(6);
+}
+
+.sectionTitle {
+  @include theme.text("lg", "semibold");
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(4);
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: theme.spacing(3) 0;
+  text-decoration: none;
+  @include theme.text("base", "normal");
+  color: theme.color("muted");
+  border-bottom: 1px solid theme.color("background", "secondary");
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: theme.color("heading");
+    padding-left: theme.spacing(2);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span:first-child {
+    flex: 1;
+  }
+}
+
+.navIcon {
+  opacity: 0.6;
+  transition: all 0.2s ease;
+
+  .navItem:hover & {
+    opacity: 1;
+    transform: translateX(theme.spacing(1));
+  }
+}
+
+// Main Content Area
+.mainContent {
+  flex: 1;
+  padding: theme.spacing(6) theme.spacing(8);
+  max-width: calc(100% - 280px);
+
+  @media (max-width: 1024px) {
+    max-width: 100%;
+    padding: theme.spacing(6) theme.spacing(4);
+  }
+}
+
+.contentWrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.title {
+  @include theme.text("4xl", "bold");
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(6);
+  margin-top: 0;
+}
+
+.description {
+  @include theme.text("lg", "normal");
+  color: theme.color("muted");
+  line-height: 1.6;
+  margin-bottom: theme.spacing(8);
+}
+
+.quickStart {
+  margin-top: theme.spacing(8);
+
+  h2 {
+    @include theme.text("2xl", "semibold");
+    color: theme.color("heading");
+    margin-bottom: theme.spacing(4);
+  }
+
+  p {
+    @include theme.text("base", "normal");
+    color: theme.color("muted");
+    margin-bottom: theme.spacing(6);
+  }
+}
+
+.quickStartList {
+  list-style-type: disc;
+  padding-left: theme.spacing(6);
+  
+  li {
+    @include theme.text("base", "normal");
+    color: theme.color("muted");
+    margin-bottom: theme.spacing(3);
+    line-height: 1.6;
+
+    strong {
+      color: theme.color("heading");
+    }
+  }
 }
