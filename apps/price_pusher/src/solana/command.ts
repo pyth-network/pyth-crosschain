@@ -198,8 +198,8 @@ export default {
     // Fetch the account lookup table if provided
     const lookupTableAccount = addressLookupTableAccount
       ? await connection
-        .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
-        .then((result) => result.value ?? undefined)
+          .getAddressLookupTable(new PublicKey(addressLookupTableAccount))
+          .then((result) => result.value ?? undefined)
       : undefined;
 
     let solanaPricePusher;
