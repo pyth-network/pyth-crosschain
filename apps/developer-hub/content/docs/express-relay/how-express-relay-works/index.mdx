@@ -51,12 +51,15 @@ The Express Relay contract collects payment from the Searchers and forwards a sh
 ## Key Components
 
 ### Off-chain Auction Server
+
 The auction server receives bids from searchers and determines winners based on bid amounts and other criteria. It then submits winning transactions to the blockchain in the optimal order.
 
 ### On-chain Smart Contract
+
 The Express Relay smart contract validates that transactions have won the auction and enforces payment collection. It also handles revenue distribution between protocols and other stakeholders.
 
 ### Permission System
+
 Express Relay uses a permission system to ensure only auction winners can execute protected operations. This prevents frontrunning and ensures MEV capture.
 
 ## Benefits for Protocols
@@ -82,7 +85,7 @@ Express Relay also provides advantages for searchers:
 Express Relay is suitable for any protocol with valuable, time-sensitive operations:
 
 - **Lending Protocols**: Liquidations of undercollateralized positions
-- **Perpetual Protocols**: Liquidations and funding rate updates  
+- **Perpetual Protocols**: Liquidations and funding rate updates
 - **DEX Protocols**: Arbitrage opportunities and order book operations
 - **Derivatives Protocols**: Option exercises and settlement operations
 - **Cross-chain Protocols**: Bridge operations and relay transactions
@@ -116,13 +119,13 @@ There are four types of participants in the Express Relay protocol:
     icon={<Gavel size={16} />}
   />
 
-  <IntegrationCard
-    href="./opportunities"
-    colorScheme="green"
-    title="Opportunities"
-    description="Understand available opportunities"
-    icon={<Lightning size={16} />}
-  />
+<IntegrationCard
+  href="./opportunities"
+  colorScheme="green"
+  title="Opportunities"
+  description="Understand available opportunities"
+  icon={<Lightning size={16} />}
+/>
 
   <IntegrationCard
     href="./permissioning"
