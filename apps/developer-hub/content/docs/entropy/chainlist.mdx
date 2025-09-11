@@ -1,11 +1,20 @@
 ---
-title: Contract Addresses
+title: Chainlist and Fee Details
 description: Pyth Entropy contract addresses on EVM networks
+icon: FileText
 ---
 
 import { EntropyTable } from "../../../src/components/EntropyTable";
 
 ## Mainnets
+
+<InfoBox variant="warning">
+  The fees for mainnet are dynamically set. Always use the on-chain method
+  `entropy.getFeeV2()` to get the current fee.
+</InfoBox>
+
+The following tables shows the total fees payable when using the **default provider**.
+Note that the fees shown below will vary over time with prevailing gas prices on each chain.
 
 The Entropy contract is deployed on the following mainnet chains:
 
@@ -16,9 +25,15 @@ The Entropy contract is deployed on the following mainnet chains:
 The default provider on mainnet has a reveal delay to avoid changes on the outcome of the Entropy request because of block reorgs.
 The reveal delay shows how many blocks should be produced after the block including the request transaction in order to reveal and submit a callback transaction.
 
-The default provider fulfills the request by sending a transaction with a gas limit as mentioned in above table. Entropy callbacks the consumer as part of this transaction.
+The default provider fulfills the request by sending a transaction with a gas limit as mentioned in above table or as set by the user in the request.
+Entropy callbacks the consumer as part of this transaction.
 
 ## Testnets
+
+<InfoBox variant="info">
+  The fees for testnets kept deliberately low and different from the mainnet
+  fees.
+</InfoBox>
 
 The Entropy contract is deployed on the following testnet chains:
 

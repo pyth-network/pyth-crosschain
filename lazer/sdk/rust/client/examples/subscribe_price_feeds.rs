@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use base64::Engine;
 use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
-use pyth_lazer_client::client::PythLazerClientBuilder;
+use pyth_lazer_client::stream_client::PythLazerStreamClientBuilder;
 use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::api::{
     Channel, DeliveryFormat, Format, JsonBinaryEncoding, SubscriptionParams, SubscriptionParamsRepr,
@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     // Create and start the client
-    let mut client = PythLazerClientBuilder::new(get_lazer_access_token())
+    let mut client = PythLazerStreamClientBuilder::new(get_lazer_access_token())
         // Optionally override the default endpoints
         .with_endpoints(vec![
             "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
