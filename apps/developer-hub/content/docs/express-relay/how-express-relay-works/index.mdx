@@ -10,15 +10,15 @@ For example, borrow-lending protocols provide bonuses to searchers for liquidati
 Searchers compete for these bonuses by tipping the chain's miners or validators.
 The validators capture most of the value of the liquidation bonus via these tips, so the liquidation bonus is in essence a transfer of wealth from the protocol's users to the validators in the form of tips.
 
-Express Relay solves the problem of MEV by providing protocol developers with an [auction](./how-express-relay-works/auction.mdx) primitive that they can use to prioritize access to valuable protocol operations.
+Express Relay solves the problem of MEV by providing protocol developers with an [auction](./how-express-relay-works/auction) primitive that they can use to prioritize access to valuable protocol operations.
 Developers specify a set of operations in their protocol that must be accessed through Express Relay.
 Searchers then participate in an off-chain auction to access these operations.
 Their bids in the auction are used to determine the order in which their transactions will be executed.
 The winners' transactions are forwarded to the Express Relay smart contract. As part of the transaction, searchers must pay their specified bid.
 The auction profits are then split between the integrated protocol and other participants in Express Relay.
 
-![](./../images/before_express.jpg)
-![](./../images/after_express.jpg)
+![Before Express Relay](./../images/before_express.jpg)
+![After Express Relay](./../images/after_express.jpg)
 
 The diagram above shows how Express Relay changes the MEV landscape for a liquidation.
 In the status quo (above), Searchers tip miners to guarantee that their liquidation transaction lands on-chain and that their transaction directly interacts with the protocol, exposing the liquidation opportunity.
