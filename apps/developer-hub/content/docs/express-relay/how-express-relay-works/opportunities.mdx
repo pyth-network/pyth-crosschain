@@ -18,28 +18,28 @@ Opportunities do not refer to only transactions that use an oracle. In truth, an
 
 Examples of opportunities include:
 
-- **Liquidations** - Undercollateralized positions in lending protocols
-- **Open trade offers** - Limit orders waiting to be filled
-- **NFT mints** - Limited supply token drops
-- **Top-of-block DEX arbitrage** - Price discrepancies between exchanges
+- liquidations
+- open trade offers
+- NFT mints
+- top-of-block DEX arbitrage
 
 ## Opportunity Adapter
 
-The Opportunity Adapter contract enables searchers to engage with opportunities from different protocols without needing to do any bespoke integration work per protocol. Instead of exposing lower-level fields determined by protocols (e.g. amountCollateral, addressBorrower), the Opportunity Adapter abstracts away the semantics of the opportunity and instead [exposes the fundamental traits](https://github.com/pyth-network/per/blob/30c3fc695034f518225f8255ebe8423604e8aca3/contracts/src/opportunity-adapter/Structs.sol#L20-L23) of any opportunity:
+The Opportunity Adapter contract enables searchers to engage with opportunities from different protocols without needing to do any bespoke integration work per protocol. Instead of exposing lower-level fields determined by protocols (e.g. `amountCollateral`, `addressBorrower`), the Opportunity Adapter abstracts away the semantics of the opportunity and instead [exposes the fundamental traits](https://github.com/pyth-network/per/blob/30c3fc695034f518225f8255ebe8423604e8aca3/contracts/src/opportunity-adapter/Structs.sol#L20-L23) of any opportunity:
 
-- The tokens sold by the searcher
-- The tokens bought by the searcher
-- The identity of the searcher executing this opportunity
-- The contract to call and the calldata and value to call with
-- The user's bid
+- the tokens sold by the searcher
+- the tokens bought by the searcher
+- the identity of the searcher executing this opportunity
+- the contract to call and the calldata and value to call with
+- the user's bid
 
 Thus, the Opportunity Adapter unifies the disparate interfaces of different protocols with respect to their different opportunities. This unification in a single interface is what makes Express Relay an opportunity hub connecting protocols and searchers.
 
-To use the Opportunity Adapter workflow, a searcher submits a bid with the target contract set to the **OpportunityAdapterFactory** contract. The factory contract then routes the searcher's transaction to their respective **OpportunityAdapter** contract. Each searcher has their own **OpportunityAdapter** contract per chain that is automatically created for them when they first interact with **OpportunityAdapterFactory**.
+To use the Opportunity Adapter workflow, a searcher submits a bid with the target contract set to the `OpportunityAdapterFactory` contract. The factory contract then routes the searcher's transaction to their respective `OpportunityAdapter` contract. Each searcher has their own `OpportunityAdapter` contract per chain that is automatically created for them when they first interact with `OpportunityAdapterFactory`.
 
 ### Permit2
 
-The **OpportunityAdapter** contract uses the [Permit2](https://github.com/Uniswap/permit2) token approval system, which handles the validation of a searcher's signature. Permit2 enables users to authorize token approvals for specific transaction data. In combination with Permit2, **OpportunityAdapter** allows a searcher to authorize use of their tokens only with a call to a particular contract with specified calldata and conditional on receipt of a set of specified **buyTokens**.
+The `OpportunityAdapter` contract uses the [Permit2](https://github.com/Uniswap/permit2) token approval system, which handles the validation of a searcher's signature. Permit2 enables users to authorize token approvals for specific transaction data. In combination with Permit2, `OpportunityAdapter` allows a searcher to authorize use of their tokens only with a call to a particular contract with specified calldata and conditional on receipt of a set of specified `buyTokens`.
 
 ## Opportunity Server
 
@@ -47,13 +47,8 @@ Once on-chain opportunities arise, searchers can be notified of their existence 
 
 In addition to learning about present opportunities, searchers can also query the opportunity server for data about historical opportunities.
 
-### Before Express Relay
-
-Each searcher must connect to every new protocol with a custom integration, creating integration overhead and friction.
-
-### After Express Relay
-
-Searchers integrate once with Express Relay to access all current and future integrated protocols.
+![Before Searcher](./../images/before_searcher.jpg)
+![After Searcher](./../images/after_searcher.jpg)
 
 The diagrams above illustrate the difference between the nature of integrations pre- and post-Express Relay. In the status quo, each searcher must connect to every new protocol with a custom integration. Similarly, protocols have to court and incentivize individual searchers. This creates a lot of integration overhead and friction for both parties.
 
