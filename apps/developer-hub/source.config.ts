@@ -27,6 +27,26 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
+    rehypeCodeOptions: {
+      langs: [
+        "solidity",
+        "ts",
+        "bash",
+        "js",
+        "json",
+        "md",
+        "mdx",
+        "python",
+        "rust",
+        "sh",
+        "yaml",
+      ],
+      inline: "tailing-curly-colon",
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+    },
     remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeKatex, rehypeCode],
   },

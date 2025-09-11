@@ -14,8 +14,7 @@ import "./global.css";
 
 export const TABS = [
   { segment: "", children: "Home" },
-  { segment: "pyth-core", children: "Pyth Core" },
-  { segment: "lazer", children: "Lazer" },
+  { segment: "price-feeds", children: "Price Feeds" },
   { segment: "express-relay", children: "Express Relay" },
   { segment: "entropy", children: "Entropy" },
 ];
@@ -40,8 +39,8 @@ export const Root = ({ children }: Props) => (
       enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
       extraCta={<SearchButton />}
       mainCta={{
-        label: "Insights",
-        href: "https://insights.pyth.network/",
+        label: "Developer Forum",
+        href: "https://dev-forum.pyth.network/",
       }}
       providers={[NuqsAdapter]}
       tabs={TABS}
