@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "katex/dist/katex.css";
 
 import { Root } from "../components/Root";
 
