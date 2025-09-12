@@ -62,7 +62,7 @@ export const AppShell = ({
 
 type AppBodyProps = Pick<
   ComponentProps<typeof Header>,
-  "appName" | "mainCta" | "extraCta"
+  "appName" | "mainCta" | "extraCta" | "displaySupportButton"
 > & {
   tabs?: Tab[] | undefined;
   children: ReactNode;

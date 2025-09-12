@@ -30,6 +30,7 @@ type Props = ComponentProps<"header"> & {
     | undefined;
   mainMenu?: ReactNode | undefined;
   extraCta?: ReactNode | undefined;
+  displaySupportButton?: boolean | undefined;
 };
 
 export const Header = ({
@@ -38,6 +39,7 @@ export const Header = ({
   mainCta,
   mainMenu,
   extraCta,
+  displaySupportButton = true,
   ...props
 }: Props) => (
   <header className={clsx(styles.header, className)} {...props}>
@@ -53,7 +55,7 @@ export const Header = ({
         {mainMenu}
       </div>
       <div className={styles.rightMenu}>
-        <Button
+        {displaySupportButton && <Button
           variant="ghost"
           size="sm"
           rounded
@@ -63,6 +65,7 @@ export const Header = ({
         >
           Support
         </Button>
+        }
         {extraCta}
         <MobileMenu className={styles.mobileMenu} mainCta={mainCta} />
         <Button
