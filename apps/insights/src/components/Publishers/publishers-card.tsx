@@ -5,7 +5,6 @@ import { Database } from "@phosphor-icons/react/dist/ssr/Database";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Card } from "@pythnetwork/component-library/Card";
 import { EntityList } from "@pythnetwork/component-library/EntityList";
-import { Link } from "@pythnetwork/component-library/Link";
 import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
@@ -27,8 +26,8 @@ import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filte
 import { CLUSTER_NAMES } from "../../services/pyth";
 import {
   ExplainPermissioned,
-  ExplainActive,
   ExplainRanking,
+  ExplainUnpermissioned,
 } from "../Explanations";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
@@ -47,7 +46,7 @@ type Publisher = {
   id: string;
   ranking: number;
   permissionedFeeds: number;
-  activeFeeds: number;
+  unpermissionedFeeds: number;
   averageScore: number;
 } & (
   | { name: string; icon: ReactNode }
@@ -80,7 +79,6 @@ const ResolvedPublishersCard = ({
     "cluster",
     parseAsStringEnum([...CLUSTER_NAMES]).withDefault("pythnet"),
   );
-
   const {
     search,
     sortDescriptor,
@@ -103,7 +101,7 @@ const ResolvedPublishersCard = ({
       switch (column) {
         case "ranking":
         case "permissionedFeeds":
-        case "activeFeeds":
+        case "unpermissionedFeeds":
         case "averageScore": {
           return (
             (direction === "descending" ? -1 : 1) * (a[column] - b[column])
@@ -136,7 +134,7 @@ const ResolvedPublishersCard = ({
           ranking,
           averageScore,
           permissionedFeeds,
-          activeFeeds,
+          unpermissionedFeeds,
           ...publisher
         }) => ({
           id,
@@ -155,15 +153,7 @@ const ResolvedPublishersCard = ({
               />
             ),
             permissionedFeeds,
-            activeFeeds: (
-              <Link
-                href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
-                invert
-                prefetch={false}
-              >
-                {activeFeeds}
-              </Link>
-            ),
+            unpermissionedFeeds,
             averageScore: (
               <Score score={averageScore} width={PUBLISHER_SCORE_WIDTH} />
             ),
@@ -226,7 +216,7 @@ type PublishersCardContentsProps = Pick<Props, "className" | "explainAverage"> &
           | "ranking"
           | "name"
           | "permissionedFeeds"
-          | "activeFeeds"
+          | "unpermissionedFeeds"
           | "averageScore"
         > & { textValue: string })[];
       }
@@ -303,7 +293,7 @@ const PublishersCardContents = ({
       fields={[
         { id: "averageScore", name: "Average Score" },
         { id: "permissionedFeeds", name: "Permissioned Feeds" },
-        { id: "activeFeeds", name: "Active Feeds" },
+        { id: "unpermissionedFeeds", name: "Unpermissioned Feeds" },
       ]}
       isLoading={props.isLoading}
       rows={
@@ -360,11 +350,11 @@ const PublishersCardContents = ({
           allowsSorting: true,
         },
         {
-          id: "activeFeeds",
+          id: "unpermissionedFeeds",
           name: (
             <>
-              ACTIVE
-              <ExplainActive />
+              UNPERMISSIONED
+              <ExplainUnpermissioned />
             </>
           ),
           alignment: "center",

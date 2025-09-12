@@ -7,7 +7,6 @@ import {
 } from "../../server/pyth";
 import { getRankingsBySymbol } from "../../services/clickhouse";
 import { Cluster, ClusterToName } from "../../services/pyth";
-import { getStatus } from "../../status";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { PublishersCard } from "./publishers-card";
@@ -34,7 +33,6 @@ export const Publishers = async ({ params }: Props) => {
   const metricsTime = pythnetPublishers.find(
     (publisher) => publisher.ranking !== undefined,
   )?.ranking?.time;
-
   return feed === undefined ? (
     notFound()
   ) : (
@@ -44,7 +42,7 @@ export const Publishers = async ({ params }: Props) => {
       displaySymbol={feed.product.display_symbol}
       assetClass={feed.product.asset_type}
       publishers={publishers.map(
-        ({ ranking, publisher, status, cluster, knownPublisher }) => ({
+        ({ ranking, publisher, cluster, knownPublisher }) => ({
           id: `${publisher}-${ClusterToName[cluster]}`,
           feedKey:
             cluster === Cluster.Pythnet
@@ -55,7 +53,6 @@ export const Publishers = async ({ params }: Props) => {
           deviationScore: ranking?.deviation_score,
           stalledScore: ranking?.stalled_score,
           cluster,
-          status,
           publisherKey: publisher,
           rank: ranking?.final_rank,
           firstEvaluation: ranking?.first_ranking_time,
@@ -94,7 +91,6 @@ const getPublishers = async (cluster: Cluster, symbol: string) => {
     return {
       ranking,
       publisher,
-      status: getStatus(ranking),
       cluster,
       knownPublisher: lookupPublisher(publisher),
     };
