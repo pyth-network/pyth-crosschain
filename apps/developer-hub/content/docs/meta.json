@@ -1,3 +1,10 @@
 {
-  "pages": ["pyth-core", "lazer", "express-relay", "entropy"]
+  "pages": [
+    "pyth-core",
+    "lazer",
+    "express-relay",
+    "entropy",
+    "whitepaper",
+    "security"
+  ]
 }
