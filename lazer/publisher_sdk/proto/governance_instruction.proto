@@ -45,7 +45,7 @@ message GovernanceInstruction {
     // permanently rejected (e.g. if instruction #3 has been successfully processed before
     // instruction #2 was observed, #2 will always be rejected). Sequence numbers are assigned and
     // tracked separately for each governance source.
-    optional uint32 governance_sequence_no = 5;
+    optional uint64 governance_sequence_no = 5;
 }
 
 // Specifies which shards the governance instruction applies to.
@@ -112,6 +112,9 @@ message CreateShard {
     // Shard ID must be unique across all shards in all groups.
     // (Warning: it's not possible to enforce this rule within a shard!)
     optional uint32 shard_id = 1;
+    // [required] Shard name. Must be unique. Used for governance instruction targeting and
+    // for logs, metrics, etc. Example: "shard1.tokyo.staging.pyth-lazer"
+    optional string shard_name = 4;
     // [required] Group name, e.g. "production", "staging", "testing", etc.
     // Data from shards belonging to the same group can be joined and served to consumers as a whole.
     // Active feed names must be unique within a group, but not across all groups.
@@ -254,7 +257,7 @@ message AddFeed {
     // [required]
     optional DynamicValue.Map metadata = 3;
     // [required]
-    optional string name = 101;
+    optional string symbol = 101;
     // [required]
     optional sint32 exponent = 102;
     // [required]
@@ -301,7 +304,7 @@ message UpdateFeedProperties {
     // [optional]
     optional DynamicValue.Map metadata = 3;
     // [optional]
-    optional string name = 101;
+    optional string symbol = 101;
     // [optional]
     optional sint32 exponent = 102;
     // [optional]
