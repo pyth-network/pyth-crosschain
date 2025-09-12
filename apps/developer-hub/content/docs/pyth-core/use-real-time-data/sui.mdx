@@ -172,8 +172,15 @@ By calling the `updatePriceFeeds` function, the `SuiPythClient` adds the necessa
 
 <div>When Sui contracts are [upgraded](<(https://docs.sui.io/build/package-upgrades)>), the address changes, which makes the old address no longer valid. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to how Pyth upgrades are implemented. (Pyth only allow users to interact with the most recent package version for security reasons).</div>
 
-<div>Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
-You can use `SuiPythClient` to build such transactions and handle all the complexity of updating the price feeds.</div>
+<div>
+  Therefore, you should build a [Sui programmable
+  transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates
+  the price by calling `pyth::update_single_price_feed` at the latest call-site
+  from the client-side and then call a function in your contract that invokes
+  `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
+  You can use `SuiPythClient` to build such transactions and handle all the
+  complexity of updating the price feeds.
+</div>
 
 <div>Consult [Fetch Price Updates](../fetch-price-updates) for more information on how to fetch the `pyth_price_update`.</div>
 </InfoBox>

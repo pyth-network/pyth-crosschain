@@ -31,7 +31,6 @@ pyth-solana-receiver-sdk ="x.y.z" # get the latest version from https://crates.i
 If you are on `v0.30.0{:js}` or any other version, please move to `v0.30.1{:js}`.</div>
 </InfoBox>
 
-
 ### Typescript SDK
 
 Pyth provides two Typescript packages, [@pythnetwork/hermes-client](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/hermes/client/js) and [@pythnetwork/pyth-solana-receiver](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver), for fetching Pyth prices and submitting them to the blockchain respectively.
@@ -60,13 +59,11 @@ pub struct Sample<'info> {
 }
 ```
 
-
 <InfoBox variant="info">
 <div>Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
 Using Anchor with the `Account<'info, PriceUpdateV2>` type will automatically perform this check.
 However, it is the developer's responsibility to perform this check if they are not using Anchor.</div>
 </InfoBox>
-
 
 Next, update the instruction logic to read the price from the price update account:
 
@@ -94,8 +91,10 @@ pub fn sample(ctx: Context<Sample>) -> Result<()> {
   various methods on this struct (such as `get_price_no_older_than`) that users
   can use to implement the necessary checks.</div>
 
-<div>If you choose the price feed account integration (see below), you
-can use an account address check to validate the price feed ID.</div>
+<div>
+  If you choose the price feed account integration (see below), you can use an
+  account address check to validate the price feed ID.
+</div>
 
 </InfoBox>
 
@@ -237,14 +236,16 @@ await pythSolanaReceiver.provider.sendAll(
 The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) contains more information about interacting with the Pyth solana receiver contract, including working examples.
 
 <InfoBox variant="info">
-  <div>Posting and verifying price updates currently requires multiple transactions
-  on Solana. If your usecase requires a single transaction, you can reduce the
-  verification level of the posted price updates by replacing
-  `addPostPriceUpdates` by `addPostPartiallyVerifiedPriceUpdates` in the
-  transaction builder. Please read the
-  [VerificationLevel](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs#L20)
-  docs to understand more about the data integrity tradeoffs when using
-  partially verified price updates.</div>
+  <div>
+    Posting and verifying price updates currently requires multiple transactions
+    on Solana. If your usecase requires a single transaction, you can reduce the
+    verification level of the posted price updates by replacing
+    `addPostPriceUpdates` by `addPostPartiallyVerifiedPriceUpdates` in the
+    transaction builder. Please read the
+    [VerificationLevel](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs#L20)
+    docs to understand more about the data integrity tradeoffs when using
+    partially verified price updates.
+  </div>
 </InfoBox>
 
 ## Time-Weighted Average Price (TWAP)
