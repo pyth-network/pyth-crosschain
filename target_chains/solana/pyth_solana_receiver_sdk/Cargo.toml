@@ -1,6 +1,6 @@
 [package]
 name = "pyth-solana-receiver-sdk"
-version = "1.0.0"
+version = "1.0.1"
 description = "SDK for the Pyth Solana Receiver program"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pyth-crosschain"
