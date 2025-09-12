@@ -168,16 +168,21 @@ const result = await wallet.signAndExecuteTransactionBlock(txBlock);
 By calling the `updatePriceFeeds` function, the `SuiPythClient` adds the necessary transactions to the transaction block to update the price feeds.
 
 <InfoBox variant="warning">
+<div>Your Sui Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed.` In other words, a contract should **never call** the Sui Pyth `pyth::update_single_price_feed` entry point. Instead, it should be called directly from client code (e.g., Typescript or Rust).</div>
 
-Your Sui Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed.` In other words, a contract should **never call** the Sui Pyth `pyth::update_single_price_feed` entry point. Instead, it should be called directly from client code (e.g., Typescript or Rust).
+<div>When Sui contracts are [upgraded](<(https://docs.sui.io/build/package-upgrades)>), the address changes, which makes the old address no longer valid. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to how Pyth upgrades are implemented. (Pyth only allow users to interact with the most recent package version for security reasons).</div>
 
-When Sui contracts are [upgraded](<(https://docs.sui.io/build/package-upgrades)>), the address changes, which makes the old address no longer valid. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to how Pyth upgrades are implemented. (Pyth only allow users to interact with the most recent package version for security reasons).
+<div>
+  Therefore, you should build a [Sui programmable
+  transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates
+  the price by calling `pyth::update_single_price_feed` at the latest call-site
+  from the client-side and then call a function in your contract that invokes
+  `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
+  You can use `SuiPythClient` to build such transactions and handle all the
+  complexity of updating the price feeds.
+</div>
 
-Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
-You can use `SuiPythClient` to build such transactions and handle all the complexity of updating the price feeds.
-
-Consult [Fetch Price Updates](../fetch-price-updates) for more information on how to fetch the `pyth_price_update`.
-
+<div>Consult [Fetch Price Updates](../fetch-price-updates) for more information on how to fetch the `pyth_price_update`.</div>
 </InfoBox>
 
 ## Additional Resources

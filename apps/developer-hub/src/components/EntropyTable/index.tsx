@@ -46,7 +46,7 @@ export const EntropyTable = ({ isMainnet }: { isMainnet: boolean }) => {
     case StateType.Error: {
       return (
         <InfoBox title="Error" variant="error">
-          <p>Failed to fetch the list of entropy contracts.</p>
+          Failed to fetch the list of entropy contracts.
         </InfoBox>
       );
     }
