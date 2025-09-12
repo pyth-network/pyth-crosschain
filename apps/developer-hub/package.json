@@ -28,6 +28,7 @@
     "clsx": "catalog:",
     "fumadocs-core": "catalog:",
     "fumadocs-mdx": "catalog:",
+    "fumadocs-typescript": "^4.0.8",
     "fumadocs-ui": "catalog:",
     "katex": "catalog:",
     "next": "catalog:",

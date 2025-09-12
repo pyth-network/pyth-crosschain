@@ -1,27 +1,27 @@
-// import fs from 'node:fs/promises';
+import fs from 'node:fs/promises';
 
-// import type { InferPageType } from 'fumadocs-core/source';
-// import { remarkInclude } from 'fumadocs-mdx/config';
-// import { remark } from 'remark';
-// import remarkGfm from 'remark-gfm';
-// import remarkMdx from 'remark-mdx';
+import type { InferPageType } from 'fumadocs-core/source';
+import { remarkInclude } from 'fumadocs-mdx/config';
+import { remark } from 'remark';
+import remarkGfm from 'remark-gfm';
+import remarkMdx from 'remark-mdx';
 
-// import { source } from './source';
+import { source } from './source';
 
-// const processor = remark()
-//   .use(remarkMdx)
-//   .use(remarkInclude)
-//   .use(remarkGfm)
+const processor = remark()
+  .use(remarkMdx)
+  .use(remarkInclude)
+  .use(remarkGfm)
 
-// export async function getLLMText(page: InferPageType<typeof source>) {
-//   const processed = await processor.process({
-//     path: page.absolutePath,
-//     value: await fs.readFile(page.absolutePath, 'utf8'),
-//   });
+export async function getLLMText(page: InferPageType<typeof source>) {
+  const processed = await processor.process({
+    path: page.file.path,
+    value: await fs.readFile(page.file.path, 'utf8'),
+  });
 
-//   // note: it doesn't escape frontmatter, it's up to you.
-//   return `# ${page.data.title}
-// URL: ${page.url}
+  // note: it doesn't escape frontmatter, it's up to you.
+  return `# ${page.data.title}
+URL: ${page.url}
 
-// ${processed.value}`;
-// }
+${String(processed.value)}`;
+}
