@@ -96,9 +96,9 @@ message Feed {
     // are not directly used in the aggregator.
     optional DynamicValue.Map metadata = 3;
 
-    // [required] A readable feed name. It must be unique across all feeds in the shard.
+    // [required] A unique string identifier of the feed that captures all the information related to the feed.
     // Used for logs, metrics, feed search API, TradingView API.
-    optional string name = 101;
+    optional string symbol = 101;
     // [required] Exponent applied to all price and rate values for this feed.
     // Actual value is `mantissa * 10 ^ exponent`.
     // Restricted to int16.
