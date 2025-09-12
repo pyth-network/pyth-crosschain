@@ -34,6 +34,7 @@ export const Root = ({ children }: Props) => (
   >
     <AppShell
       appName="Developer Hub"
+      displaySupportButton={false}
       amplitudeApiKey={AMPLITUDE_API_KEY}
       googleAnalyticsId={GOOGLE_ANALYTICS_ID}
       enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}

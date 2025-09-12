@@ -20,5 +20,6 @@ export const docsOptions: DocsLayoutProps = {
   tree: source.pageTree,
   sidebar: {
     tabs: false,
+    collapsible: false,
   },
 };
