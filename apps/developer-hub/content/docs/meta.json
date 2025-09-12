@@ -1,3 +1,3 @@
 {
-  "pages": ["price-feeds", "entropy", "express-relay"]
+  "pages": ["pyth-core", "pyth-token", "express-relay", "entropy"]
 }
