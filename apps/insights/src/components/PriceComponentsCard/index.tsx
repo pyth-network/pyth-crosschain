@@ -10,19 +10,20 @@ import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import type {
-  RowConfig,
   ColumnConfig,
+  RowConfig,
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import clsx from "clsx";
-import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
+import { parseAsBoolean, parseAsStringEnum, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
-import { Fragment, Suspense, useMemo, useCallback } from "react";
-import { useFilter, useCollator } from "react-aria";
+import { Fragment, Suspense, useCallback, useMemo } from "react";
+import { useCollator } from "react-aria";
 
-import styles from "./index.module.scss";
+import { matchSorter } from 'match-sorter';
+import { LivePublishersDataProvider, useLivePublishersData } from '../../hooks/use-live-publishers-data';
 import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import type { StatusName } from "../../status";
@@ -34,11 +35,12 @@ import {
 import { Explain } from "../Explain";
 import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
-import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
+import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
+import styles from "./index.module.scss";
 
 const SCORE_WIDTH = 32;
 
@@ -106,6 +108,19 @@ export const PriceComponentsCard = <
   }
 };
 
+const LiveSlot = ({ feedKey, publisherKey, cluster }: { feedKey: string, publisherKey: string, cluster: Cluster }) => {
+  const publisherData = useLivePublishersData(feedKey);
+  if(!publisherData?.slot) {
+    return <LiveComponentValue
+              feedKey={feedKey}
+              publisherKey={publisherKey}
+              field="publishSlot"
+              cluster={cluster}
+            />
+  }
+  return publisherData.slot;
+};
+
 export const ResolvedPriceComponentsCard = <
   U extends string,
   T extends PriceComponent & Record<U, unknown>,
@@ -119,8 +134,6 @@ export const ResolvedPriceComponentsCard = <
 }) => {
   const logger = useLogger();
   const collator = useCollator();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
-
   const { selectComponent } = usePriceComponentDrawer({
     components: priceComponents,
     identifiesPublisher,
@@ -159,7 +172,7 @@ export const ResolvedPriceComponentsCard = <
     mkPageLink,
   } = useQueryParamFilterPagination(
     componentsFilteredByStatus,
-    (component, search) => filter.contains(component.nameAsString, search),
+    ()=>true,
     (a, b, { column, direction }) => {
       switch (column) {
         case "score":
@@ -204,7 +217,11 @@ export const ResolvedPriceComponentsCard = <
         }
       }
     },
-    (items) => items,
+    (items, search) => {
+      return matchSorter(items, search, {
+        keys: ["nameAsString","feedKey"],
+      });
+    },
     {
       defaultPageSize: 50,
       defaultSort: "name",
@@ -250,12 +267,7 @@ export const ResolvedPriceComponentsCard = <
             />
           ),
           slot: (
-            <LiveComponentValue
-              feedKey={component.feedKey}
-              publisherKey={component.publisherKey}
-              field="publishSlot"
-              cluster={component.cluster}
-            />
+            <LiveSlot feedKey={component.feedKey} publisherKey={component.publisherKey} cluster={component.cluster} />
           ),
           price: (
             <LivePrice
@@ -299,25 +311,27 @@ export const ResolvedPriceComponentsCard = <
   );
 
   return (
-    <PriceComponentsCardContents
-      numResults={numResults}
-      search={search}
-      sortDescriptor={sortDescriptor}
-      numPages={numPages}
-      page={page}
-      pageSize={pageSize}
-      onSearchChange={updateSearch}
-      onSortChange={updateSortDescriptor}
-      onPageSizeChange={updatePageSize}
-      onPageChange={updatePage}
-      mkPageLink={mkPageLink}
-      rows={rows}
-      status={status}
-      onStatusChange={updateStatus}
-      showQuality={showQuality}
-      setShowQuality={updateShowQuality}
-      {...props}
-    />
+    <LivePublishersDataProvider publisherKey={priceComponents[0]!.publisherKey}>
+      <PriceComponentsCardContents
+        numResults={numResults}
+        search={search}
+        sortDescriptor={sortDescriptor}
+        numPages={numPages}
+        page={page}
+        pageSize={pageSize}
+        onSearchChange={updateSearch}
+        onSortChange={updateSortDescriptor}
+        onPageSizeChange={updatePageSize}
+        onPageChange={updatePage}
+        mkPageLink={mkPageLink}
+        rows={rows}
+        status={status}
+        onStatusChange={updateStatus}
+        showQuality={showQuality}
+        setShowQuality={updateShowQuality}
+        {...props}
+      />
+    </LivePublishersDataProvider>
   );
 };
 

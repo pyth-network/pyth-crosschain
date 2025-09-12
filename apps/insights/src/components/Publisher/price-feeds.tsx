@@ -27,7 +27,6 @@ export const PriceFeeds = async ({ params }: Props) => {
   const feeds = await getPriceFeeds(parsedCluster, key);
   const metricsTime = feeds.find((feed) => feed.ranking !== undefined)?.ranking
     ?.time;
-
   return (
     <PriceFeedsCard
       metricsTime={metricsTime}
@@ -47,6 +46,7 @@ export const PriceFeeds = async ({ params }: Props) => {
             }
           />
         ),
+        lastSlot: feed.price.lastSlot,
         score: ranking?.final_score,
         rank: ranking?.final_rank,
         uptimeScore: ranking?.uptime_score,

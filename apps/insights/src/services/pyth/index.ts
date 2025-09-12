@@ -7,6 +7,7 @@ import type { PythPriceCallback } from "@pythnetwork/client/lib/PythConnection";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../../config/isomorphic";
+import { getPythMetadata } from './get-metadata';
 
 export enum Cluster {
   Pythnet,
@@ -79,3 +80,27 @@ export const subscribe = (
   pythConn.onPriceChange(cb);
   return pythConn;
 };
+
+
+// const testWebsocket = () => {
+//   clients[Cluster.Pythnet].getData().then((metadata) => {
+//     console.log(metadata);
+//   });
+//   console.log("Test websocket");
+//   const ws = new WebSocket('ws://0.0.0.0:8080');
+//   ws.onopen = (event) => {
+//     console.log("WebSocket opened");
+//       ws.send(JSON.stringify({"type":"subscribe_publisher","ids":["6DNocjFJjocPLZnKBZyEJAC5o2QaiT5Mx8AkphfxDm5i"],"verbose":true }));
+//   };
+//   ws.onmessage = (event) => {
+//     console.log("WebSocket message received", event.data);
+//   };
+//   ws.onerror = (event) => {
+//     console.log("WebSocket error", event);
+//   };
+//   ws.onclose = (event) => {
+//   console.log(ws);
+//   }
+// }
+
+// testWebsocket();

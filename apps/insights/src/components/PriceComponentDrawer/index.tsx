@@ -37,7 +37,7 @@ import { z } from "zod";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import ConformanceReport from "../ConformanceReport/conformance-report";
 import type { Interval } from "../ConformanceReport/types";
-import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
+import { useDownloadReportForFeed } from '../ConformanceReport/use-download-report-for-feed';
 import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
@@ -276,7 +276,7 @@ type HeadingExtraProps = {
   feedKey: string;
 };
 
-const HeadingExtra = ({ status, ...props }: HeadingExtraProps) => {
+const HeadingExtra = ({ feedKey, ...props }: HeadingExtraProps) => {
   const downloadReportForFeed = useDownloadReportForFeed();
 
   const handleDownloadReport = useCallback(

@@ -14,6 +14,7 @@ import {
 } from "../../hooks/use-live-price-data";
 import { usePriceFormatter } from "../../hooks/use-price-formatter";
 import type { Cluster } from "../../services/pyth";
+import { useLivePublishersData } from '../../hooks/use-live-publishers-data';
 
 export const SKELETON_WIDTH = 20;
 
@@ -210,7 +211,6 @@ export const LiveComponentValue = <T extends keyof PriceComponent["latest"]>({
   cluster,
 }: LiveComponentValueProps<T>) => {
   const { current } = useLivePriceComponent(cluster, feedKey, publisherKey);
-
   return current !== undefined || defaultValue !== undefined ? (
     (current?.latest[field].toString() ?? defaultValue)
   ) : (
