@@ -1,0 +1,6 @@
+{
+  "title": "Metrics",
+  "description": "Pyth network metrics and performance data",
+  "icon": "ChartLine",
+  "pages": ["index", "pyth-dashboard", "publisher-metrics", "kpi"]
+}
