@@ -1,12 +1,8 @@
 ---
-title: "Integrate as a Protocol"
+title: "How to Integrate Express Relay Swaps"
 description: >-
-  Learn how frontends can integrate Express Relay to empower token swapping with better pricing and MEV recapture.
+  This guide will explain how frontends can integrate Express Relay to empower swapping.
 ---
-
-# How to Integrate Express Relay Swaps
-
-This guide will explain how frontends can integrate Express Relay to empower swapping.
 
 ## Step 1: Install the Express Relay SDK
 
@@ -46,7 +42,7 @@ const quoteRequest = {
 const quote = await client.getQuote(quoteRequest);
 ```
 
-**quote** contains the full details, including the amount the searcher is quoting and the transaction that the user needs to sign. It also contains an **expirationTime**; after this time, the transaction will no longer succeed on chain, so you should request a new quote a few seconds before the **expirationTime**.
+_quote_ contains the full details, including the amount the searcher is quoting and the transaction that the user needs to sign. It also contains an _expirationTime_; after this time, the transaction will no longer succeed on chain, so you should request a new quote a few seconds before the _expirationTime_.
 
 ## Step 3: Submit User Signature to the Express Relay Server
 

@@ -1,13 +1,12 @@
 ---
 title: Request Callback Variants
 description: Different ways to request random numbers with Pyth Entropy
+icon: Code
 ---
-
-# Request Callback Variants
 
 The [`IEntropyV2`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol) interface provides multiple variants of the `requestV2` function:
 
-## 1. Basic Request
+## 1. Basic request
 
 ```solidity
 function requestV2() external payable returns (uint64 assignedSequenceNumber);
@@ -31,7 +30,7 @@ function requestBasicRandomNumber() external payable {
 }
 ```
 
-## 2. Request with Gas Limit
+## 2. Request with custom gas limit
 
 ```solidity
 function requestV2(
@@ -59,7 +58,7 @@ function requestWithCustomGas() external payable {
 }
 ```
 
-## 3. Request with Provider
+## 3. Request with custom provider
 
 ```solidity
 function requestV2(
@@ -69,7 +68,7 @@ function requestV2(
 
 This variant allows you to specify a custom entropy provider instead of using the default one.
 
-## 4. Full Custom Request
+## 4. Full custom request
 
 ```solidity
 function requestV2(
@@ -79,4 +78,4 @@ function requestV2(
 ) external payable returns (uint64 assignedSequenceNumber);
 ```
 
-This is the most flexible variant that allows you to specify all parameters: custom provider, gas limit, and user random number.
+This is the most flexible variant that allows you to specify all parameters: custom provider, custom gas limit, and user random number.
