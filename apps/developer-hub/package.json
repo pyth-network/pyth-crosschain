@@ -37,7 +37,10 @@
     "react-aria": "catalog:",
     "react-dom": "catalog:",
     "rehype-katex": "^7.0.1",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "remark-mdx": "^3.1.1",
     "viem": "catalog:",
     "zod": "catalog:",
     "zod-validation-error": "catalog:"
