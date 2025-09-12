@@ -5,29 +5,58 @@ icon: DiceSix
 full: true
 ---
 
+import {
+  RocketLaunch,
+  FileText,
+  DiceSix,
+  MagnifyingGlass,
+} from "@phosphor-icons/react/dist/ssr";
+import { IntegrationCard } from "../../../src/components/IntegrationCard";
+
 **Pyth Entropy** is an on-chain random number generator (RNG) designed for developers who need fair, unbiased, and cryptographically secure randomness.
 Whether you're building a blockchain game, NFT mint, lottery, or simulation, Entropy delivers randomness that is:
 
-- **Trustless & verifiable** - built on commit-reveal(TODO: link to commit-reveal).
-- **Low-latency** - randomness available within a few blocks(TODO: link to latency).
-- **Easy to integrate** - Permissionless Integration, Visual Tx Explorer(TODO: link to explorer).
-- **Cost-efficient** - designed for scalable production use(TODO: link to fees).
+- **Trustless & verifiable** - built on [commit-reveal protocol](./entropy/protocol-design).
+- **Low-latency** - randomness available within a [few blocks](./entropy/chainlist).
+- **Easy to use** - get started in < 5 minutes, no registration required.
+- **Cost-efficient** - designed for scalable production use [fees](./entropy/chainlist).
 - **Native gas fees** - pay with chain native token.
 
 ## What's New in Entropy v2
 
 Entropy v2 introduces several improvements and new features to make random number generation more flexible and efficient.
-See [What's New in Entropy v2](whats-new-entropyv2) for more details.
-(TODO: This can be displayed in a banner above) (TODO: Add aan infographic here)
+See [What's New in Entropy v2](./entropy/whats-new-entropyv2) for more details.
 
-## Getting Started
+## Start Building
 
-Using Pyth Entropy is permissionless and developers can integrate in a few minutes.
-Please see [How to Generate Random Numbers Using Pyth Entropy](generate-random-numbers) to start integrating Pyth Entropy into your application.
-
-## Reference Material
-
-- [Protocol design](protocol-design)
-- [Contract Addresses/Supported Networks](contract-addresses)
-- [Error Codes](error-codes)
-- [Entropy Debugger](https://entropy-debugger.pyth.network/) - Interactive tool for diagnosing callback issues
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <IntegrationCard
+    href="./entropy/generate-random-numbers-evm"
+    title="Quickstart Guide"
+    description="How-to guide for reading fees and requesting randomness on EVM."
+    icon={<DiceSix size={16} />}
+    colorScheme="green"
+  />
+  <IntegrationCard
+    href="./entropy/chainlist"
+    title="Chainlist and Fee Details"
+    description="Find Entropy addresses, reveal delays, gas limits, and fees."
+    icon={<FileText size={16} />}
+    colorScheme="purple"
+  />
+  <IntegrationCard
+    href="./entropy/protocol-design"
+    title="Pyth EntropyProtocol Design"
+    description="Understanding how Pyth Entropy generates secure random numbers."
+    icon={<FileText size={16} />}
+    colorScheme="blue"
+  />
+  <IntegrationCard
+    href="https://entropy-explorer.pyth.network/"
+    title="Entropy Explorer"
+    description="Interactive tool to diagnose callback issues on-chain."
+    icon={<MagnifyingGlass size={16} />}
+    colorScheme="yellow"
+    external={true}
+  />
+</div>

@@ -15,12 +15,12 @@
 //! ## Basic Usage
 //!
 //! ```rust,ignore
-//! use pyth_lazer_client::PythLazerClientBuilder;
+//! use pyth_lazer_client::PythLazerStreamClientBuilder;
 //! use pyth_lazer_protocol::subscription::SubscribeRequest;
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
-//!     let mut client = PythLazerClientBuilder::new("your_access_token".to_string())
+//!     let mut client = PythLazerStreamClientBuilder::new("your_access_token".to_string())
 //!         .with_num_connections(2)
 //!         .build()?;
 //!
@@ -69,7 +69,7 @@ const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// A high-performance client for connecting to Pyth Lazer data streams.
 ///
-/// The `PythLazerClient` maintains multiple WebSocket connections to Pyth Lazer endpoints
+/// The `PythLazerStreamClient` maintains multiple WebSocket connections to Pyth Lazer endpoints
 /// for redundancy. It automatically handles connection management,
 /// message deduplication, and provides a unified stream of price updates.
 ///
@@ -79,7 +79,7 @@ const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 /// - Uses a TTL cache for deduplicating messages across connections
 /// - Provides a single channel for consuming deduplicated messages
 /// - Handles connection failures with exponential backoff
-pub struct PythLazerClient {
+pub struct PythLazerStreamClient {
     endpoints: Vec<Url>,
     access_token: String,
     num_connections: usize,
@@ -89,10 +89,10 @@ pub struct PythLazerClient {
     channel_capacity: usize,
 }
 
-impl PythLazerClient {
+impl PythLazerStreamClient {
     /// Creates a new Pyth Lazer client instance.
     ///
-    /// This is a low-level constructor. Consider using [`PythLazerClientBuilder`] for a more
+    /// This is a low-level constructor. Consider using [`PythLazerStreamClientBuilder`] for a more
     /// convenient way to create clients with sensible defaults.
     ///
     /// # Arguments
@@ -106,7 +106,7 @@ impl PythLazerClient {
     ///
     /// # Returns
     ///
-    /// Returns `Ok(PythLazerClient)` on success, or an error if the configuration is invalid.
+    /// Returns `Ok(PythLazerStreamClient)` on success, or an error if the configuration is invalid.
     ///
     /// # Errors
     ///
@@ -247,7 +247,7 @@ impl PythLazerClient {
     }
 }
 
-/// A builder for creating [`PythLazerClient`] instances with customizable configuration.
+/// A builder for creating [`PythLazerStreamClient`] instances with customizable configuration.
 ///
 /// The builder provides a convenient way to configure a Pyth Lazer client with sensible
 /// defaults while allowing customization of all parameters. It follows the builder pattern
@@ -261,7 +261,7 @@ impl PythLazerClient {
 /// - **Backoff**: Exponential backoff with default settings
 /// - **Channel Capacity**: Uses the default 1000
 ///
-pub struct PythLazerClientBuilder {
+pub struct PythLazerStreamClientBuilder {
     endpoints: Vec<Url>,
     access_token: String,
     num_connections: usize,
@@ -270,7 +270,7 @@ pub struct PythLazerClientBuilder {
     channel_capacity: usize,
 }
 
-impl PythLazerClientBuilder {
+impl PythLazerStreamClientBuilder {
     /// Creates a new builder with default configuration.
     ///
     /// This initializes the builder with sensible defaults for production use:
@@ -368,15 +368,15 @@ impl PythLazerClientBuilder {
         self
     }
 
-    /// Builds the configured [`PythLazerClient`] instance.
+    /// Builds the configured [`PythLazerStreamClient`] instance.
     ///
     /// This consumes the builder and creates a new client with the specified
     /// configuration. The client is ready to use but connections are not
-    /// established until [`PythLazerClient::start`] is called.
+    /// established until [`PythLazerStreamClient::start`] is called.
     ///
     /// # Returns
     ///
-    /// Returns `Ok(PythLazerClient)` on success, or an error if the configuration
+    /// Returns `Ok(PythLazerStreamClient)` on success, or an error if the configuration
     /// is invalid.
     ///
     /// # Errors
@@ -385,8 +385,8 @@ impl PythLazerClientBuilder {
     /// - No endpoints are configured
     /// - Any configuration parameter is invalid
     ///
-    pub fn build(self) -> Result<PythLazerClient> {
-        PythLazerClient::new(
+    pub fn build(self) -> Result<PythLazerStreamClient> {
+        PythLazerStreamClient::new(
             self.endpoints,
             self.access_token,
             self.num_connections,
