@@ -1,4 +1,3 @@
-import { rehypeCode } from "fumadocs-core/mdx-plugins";
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
@@ -27,27 +26,7 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
-    rehypeCodeOptions: {
-      langs: [
-        "solidity",
-        "ts",
-        "bash",
-        "js",
-        "json",
-        "md",
-        "mdx",
-        "python",
-        "rust",
-        "sh",
-        "yaml",
-      ],
-      inline: "tailing-curly-colon",
-      themes: {
-        light: "github-light",
-        dark: "github-dark",
-      },
-    },
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex, rehypeCode],
+    rehypePlugins: (v) => [rehypeKatex, ...v],
   },
 });
