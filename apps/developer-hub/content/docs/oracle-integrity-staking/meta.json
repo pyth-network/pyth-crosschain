@@ -1,0 +1,13 @@
+{
+  "root": true,
+  "title": "Oracle Integrity Staking",
+  "description": "Decentralized staking rewards and slashing mechanisms for data accuracy",
+  "icon": "Shield",
+  "pages": [
+    "index",
+    "mathematical-representation",
+    "reward-examples",
+    "slashing-rulebook",
+    "publisher-quality-ranking"
+  ]
+}

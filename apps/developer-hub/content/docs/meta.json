@@ -1,7 +1,8 @@
 {
   "pages": [
     "pyth-core",
-    "lazer",
+    "pyth-token",
+    "oracle-integrity-staking",
     "express-relay",
     "entropy",
     "whitepaper",

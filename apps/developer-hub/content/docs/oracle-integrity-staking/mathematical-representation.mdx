@@ -1,0 +1,96 @@
+---
+title: "Mathematical Representation"
+description: >-
+  This section outlines the mathematical representation of the Oracle Integrity Staking (OIS) protocol.
+---
+
+As explained in the [implementation](../oracle-integrity-staking#implementation) section, every publisher is assigned a staking pool where they can self-stake and to which other stakers can delegate.
+
+## Pool Cap
+
+The **pool cap** is calculated as follows:
+
+$$
+\large{\text{Pool Cap}: {\bold{C_p}} = M \cdot \sum_{s \in \text{Symbols}_p} \frac{1}{\max(n_s, Z)}}
+$$
+
+Where:
+
+- $M$ is a constant parameter representing the target stake per symbol.
+- $\text{Symbols}_p$ is the set of symbols published by the publisher $p$.
+- $n_s$ be the number of publishers for symbol $s$.
+- $Z$ is a constant parameter to control cap contribution from symbols with a low number of publishers.
+
+This formula ensures that symbols with a lower number of publishers contribute more to the overall cap, while symbols with a higher number of publishers contribute less. This is because the contribution of each symbol is inversely proportional to the number of publishers (or Z, whichever is larger).
+
+## Reward
+
+The reward $R_p$ distributed to each pool is calculated as follows:
+
+$$
+\large{\bold{R_p} = y \cdot \min(S_p, C_p)}
+$$
+
+Where:
+
+- $y$ is the cap to the rate of rewards for any pool
+- $S_p$ be the stake assigned to the publisher p pool , made of self-staked amount $S^{p}_{p}$ and delegated stake $S^{d}_{p}$ , or $S_{p} = S^{p}_{p} + S^{d}_{p}$.
+- $C_p$ be the stake cap for the pool assigned to publisher p.
+
+The total amount of rewards distributed to all pools is bound by the same cap relative to the amount of rewards available to the OIS protocol.
+
+$$
+\large{\sum_{p \in \text{Publishers}} R_p \leq y \cdot \min(N \cdot M, \sum_{p=1}^{P} S_p)}
+$$
+
+Where:
+
+- $N$ is the total number of symbols in the system.
+- $P$ is the total number of publishers in the system.
+
+Whereas the reward component relative to the amount self-staked by the publisher $p$ is defined as:
+
+$$
+\large{\bold{R^{p}_{p}} = y \cdot \min(S^p_p, C_p) = R_p - R^d_p}
+$$
+
+Where:
+
+- $R^d_p$ is the reward component relative to the amount delegated to the publisher $p$.
+
+## Slashing
+
+Slashing is an important aspect of the OIS protocol to ensure the integrity of the system.
+
+The slashed amount for each pool is calculated as follows:
+
+$$
+\large{\bold{SL_p} = w \cdot S_p = w \cdot (S^{p}_{p} + S^{d}_{p})}
+$$
+
+Where:
+
+- $SL_p$ is the slashed amount for the publisher $p$ pool.
+- $w$ is the slashing rate.
+- $S_p$ is the stake assigned to the publisher $p$ pool , made of self-staked amount $S^{p}_{p}$ and delegated stake $S^{d}_{p}$ , or $S_{p} = S^{p}_{p} + S^{d}_{p}$.
+
+Here $SL_p$ is uniformly allocated to both the self-staking publisher and delegators in the pool, pro-rata to their respective stake.
+
+Subsequently, the rewards received by a publisher and delegators into a pool, net of any slashed amounts can be expressed as below:
+
+$$
+\large{\bold{\Pi^p_p} = ( R^p_p + f \cdot R^d_p ) - w \cdot S^p_p}
+$$
+
+$$
+\large{\bold{\Pi^d_p} = R^d_p - ( f \cdot R^d_p + w \cdot S^d_p )}
+$$
+
+Where:
+
+- $\Pi^p_p$ is the net reward received by the publisher $p$ after slashing.
+- $\Pi^d_p$ is the net reward received by the delegators after slashing.
+- $f$ is the delegation fee charged by the pool.
+- $w$ is the slashing rate.
+- $S^p_p$ is the amount self-staked by the publisher $p$.
+- $S^d_p$ is the amount delegated to the publisher $p$.
