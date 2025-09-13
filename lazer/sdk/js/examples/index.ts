@@ -4,7 +4,7 @@
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
-console.debug = () => {};
+console.debug = () => { };
 
 const client = await PythLazerClient.create({
   urls: [
