@@ -25,5 +25,5 @@ Overrides for Fumadocs content. Everything after prose is MDX generated content 
 }
 
 #nd-sidebar {
-   --fd-sidebar-top: var(--header-height) !important;
+  --fd-sidebar-top: var(--header-height) !important;
 }
