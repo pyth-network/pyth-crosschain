@@ -1,6 +1,6 @@
-import { generateFiles } from 'fumadocs-openapi';
+import { generateFiles } from "fumadocs-openapi";
 
-  import { openapi } from '../src/lib/openapi';
+import { openapi } from "../src/lib/openapi";
 
 // const schemas = await openapi.getSchemas();
 
@@ -9,7 +9,7 @@ import { generateFiles } from 'fumadocs-openapi';
 
 void generateFiles({
   input: openapi,
-  output: './content/docs/openapi/(generated)',
-  per: 'file',
+  output: "./content/docs/openapi/(generated)",
+  per: "file",
   includeDescription: true,
 });
