@@ -2,6 +2,7 @@
 
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import { Link } from "@pythnetwork/component-library/Link";
+import { useMemo } from 'react';
 
 import styles from "./index.module.scss";
 
@@ -21,15 +22,17 @@ const CopyAddress = ({
   maxLength?: number;
   url?: string;
 }) => {
+  const formattedAddress = useMemo(() => truncate(address, maxLength), [address, maxLength]);
+  
   return url ? (
     <div className={styles.address}>
       <Link href={url} target="_blank" rel="noreferrer">
-        {truncate(address, maxLength)}
+        {formattedAddress}
       </Link>
       <CopyButton text={address} iconOnly />
     </div>
   ) : (
-    <CopyButton text={address}>{truncate(address, maxLength)}</CopyButton>
+    <CopyButton text={address}>{formattedAddress}</CopyButton>
   );
 };
 
