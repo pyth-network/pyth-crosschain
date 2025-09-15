@@ -301,7 +301,7 @@
     var(--color-steel-900),
     var(--color-steel-50)
   );
-  --color-fd-muted: light-dark(var(--color-steel-100), var(--color-steel-700));
+  --color-fd-muted: light-dark(var(--color-steel-50), var(--color-steel-900));
   --color-fd-muted-foreground: light-dark(
     var(--color-steel-600),
     var(--color-steel-400)
@@ -333,17 +333,4 @@
     var(--color-steel-50)
   );
   --color-fd-ring: light-dark(var(--color-violet-600), var(--color-violet-400));
-}
-
-/* Global typography: tighten line spacing in docs content */
-:where(.prose) {
-  line-height: 1.5;
-}
-
-:where(.prose) :where(p, li) {
-  line-height: 1.5;
-}
-
-:where(.prose) :where(h1, h2, h3, h4, h5, h6) {
-  line-height: 1.2;
 }
