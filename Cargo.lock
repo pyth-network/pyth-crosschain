@@ -5656,7 +5656,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "backoff",
@@ -5687,6 +5687,7 @@ dependencies = [
  "tokio-util",
  "tracing",
  "tracing-subscriber",
+ "ttl_cache",
  "url",
 ]
 
