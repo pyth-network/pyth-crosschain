@@ -1,4 +1,4 @@
-import { AppShell } from "@pythnetwork/component-library/AppShell";
+import { AppBody, AppShellRoot } from "@pythnetwork/component-library/AppShell";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
@@ -24,29 +24,32 @@ type Props = {
 };
 
 export const Root = ({ children }: Props) => (
-  <FumadocsRootProvider
-    search={{
-      enabled: true,
-      options: {
-        api: "/api/search",
-      },
-    }}
+  <AppShellRoot
+    amplitudeApiKey={AMPLITUDE_API_KEY}
+    googleAnalyticsId={GOOGLE_ANALYTICS_ID}
+    enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
+    providers={[NuqsAdapter]}
   >
-    <AppShell
-      appName="Developer Hub"
-      displaySupportButton={false}
-      amplitudeApiKey={AMPLITUDE_API_KEY}
-      googleAnalyticsId={GOOGLE_ANALYTICS_ID}
-      enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-      extraCta={<SearchButton />}
-      mainCta={{
-        label: "Developer Forum",
-        href: "https://dev-forum.pyth.network/",
+    <FumadocsRootProvider
+      search={{
+        enabled: true,
+        options: {
+          api: "/api/search",
+        },
       }}
-      providers={[NuqsAdapter]}
-      tabs={TABS}
     >
-      {children}
-    </AppShell>
-  </FumadocsRootProvider>
+      <AppBody
+        appName="Developer Hub"
+        displaySupportButton={false}
+        extraCta={<SearchButton />}
+        mainCta={{
+          label: "Developer Forum",
+          href: "https://dev-forum.pyth.network/",
+        }}
+        tabs={TABS}
+      >
+        {children}
+      </AppBody>
+    </FumadocsRootProvider>
+  </AppShellRoot>
 );

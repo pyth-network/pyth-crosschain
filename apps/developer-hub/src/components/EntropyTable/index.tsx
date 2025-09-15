@@ -15,6 +15,7 @@ import { FORTUNA_API_URLS } from "./constants";
 import type { EntropyDeployment } from "./entropy-api-data-fetcher";
 import { fetchEntropyDeployments } from "./entropy-api-data-fetcher";
 import CopyAddress from "../CopyAddress";
+import styles from "./index.module.scss";
 
 function isValidAddress(address: string): address is `0x${string}` {
   return isAddress(address);
@@ -64,7 +65,6 @@ const EntropyTableContent = ({
   chains: Record<string, EntropyDeployment>;
 }) => {
   const fees = useEntropyFees(chains);
-
   const columns: ColumnConfig<Col>[] = [
     { id: "chain", name: "Chain", isRowHeader: true },
     { id: "address", name: "Contract" },
@@ -81,11 +81,12 @@ const EntropyTableContent = ({
         chain: chainName,
         address: deployment.explorer ? (
           <CopyAddress
+            maxLength={6}
             address={deployment.address}
             url={`${deployment.explorer}/address/${deployment.address}`}
           />
         ) : (
-          <CopyAddress address={deployment.address} />
+          <CopyAddress maxLength={6} address={deployment.address} />
         ),
         delay: deployment.delay,
         gasLimit: deployment.gasLimit,
@@ -97,6 +98,7 @@ const EntropyTableContent = ({
 
   return (
     <Table<Col>
+      className={styles.table ?? ""}
       label="Entropy deployments"
       columns={columns}
       rows={rows}
