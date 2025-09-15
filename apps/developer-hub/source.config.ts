@@ -48,6 +48,6 @@ export default defineConfig({
       },
     },
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex, rehypeCode],
+    rehypePlugins: (v) => [rehypeKatex, rehypeCode, ...v],
   },
 });

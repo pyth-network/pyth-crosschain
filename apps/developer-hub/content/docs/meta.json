@@ -2,6 +2,7 @@
   "pages": [
     "pyth-core",
     "pyth-token",
+    "oracle-integrity-staking",
     "express-relay",
     "entropy",
     "metrics",
