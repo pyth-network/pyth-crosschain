@@ -1314,5 +1314,12 @@
     "rpcUrl": "http://evmrpc.0g.ai/",
     "networkId": 16661,
     "type": "EvmChain"
+  },
+  {
+    "id": "itsnotreal",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.itsnotreal.lol",
+    "networkId": 1380270412,
+    "type": "EvmChain"
   }
 ]

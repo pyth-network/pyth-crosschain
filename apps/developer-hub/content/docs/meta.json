@@ -1,3 +1,11 @@
 {
-  "pages": ["pyth-core", "pyth-token", "express-relay", "entropy", "metrics"]
+  "pages": [
+    "pyth-core",
+    "pyth-token",
+    "express-relay",
+    "entropy",
+    "metrics",
+    "whitepaper",
+    "security"
+  ]
 }
