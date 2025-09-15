@@ -8,10 +8,8 @@ import { generateFiles } from 'fumadocs-openapi';
 // const fortunaStagingSchema = schemas[fortunaStagingOpenApiUrl];
 
 void generateFiles({
-  per: 'operation',
-  groupBy: 'route',
   input: openapi,
   output: './content/docs/openapi/(generated)',
+  per: 'file',
   includeDescription: true,
-  addGeneratedComment: true,
 });
