@@ -9,7 +9,6 @@ import { notFound } from "next/navigation";
 import { source } from "../../../lib/source";
 import { getMDXComponents } from "../../../mdx-components";
 
-
 export function BasePage(props: { params: { slug: string[] } }) {
   const page = source.getPage(props.params.slug);
   if (!page) notFound();

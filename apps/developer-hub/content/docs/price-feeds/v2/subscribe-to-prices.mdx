@@ -1,0 +1,136 @@
+---
+title: "Subscribe to Price Updates"
+description: "This guide explains how to subscribe to price updates from Pyth Lazer."
+full: false
+index: false
+---
+
+This guide explains how to subscribe to price updates from Pyth Lazer. This guide will also explain various properties and configuration options to customize the price updates.
+
+Subscribing to price updates is a three-step process:
+
+1. **Acquire** an access token.
+2. **Configure** subscription parameters.
+3. **Subscribe** to the price updates via [websocket API](https://pyth-lazer.dourolabs.app/docs).
+
+The websocket server is available at `wss://pyth-lazer.dourolabs.app/v1/stream{:bash}`.
+
+<Steps>
+
+### 1. Acquire an access token
+
+Please fill out [this form](https://tally.so/r/nP2lG5) to contact the Pyth team and get the access token.
+
+Use the access token to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {token}{:bash}`.
+
+### 2. Configure subscription parameters
+
+Lazer supports several request/subscription parameters to customize the received price updates.
+These parameters are configured by sending a subscription message to the webservice.
+A sample request (using the Lazer SDK client -- see step 3) is shown below:
+
+```js copy
+client.send({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],
+  properties: ["price"],
+  chains: ["solana"],
+  channel: "fixed_rate@200ms",
+});
+```
+
+The most significant parameters are:
+
+- `subscriptionId` is an arbitrary numeric identifier for a subscription. It will be returned back in response by the server. It does not affect the signed payload.
+- `priceFeedIds` is the list of price feeds to receive updates for. Data for all price feeds will be present in the signed price updates generated. Refer to the [Price Feed IDs list](./price-feed-ids.mdx) for the supported price feeds.
+- `properties` is the list of properties to retrieve, such as **price**, **bestBidPrice**, **bestAskPrice**, etc.
+- `chains` is the list of chains to receive a signed payload for, such as **evm**, **solana**, etc.
+- `channel` determines the update rate: updates in the **real_time** channel are sent as frequently as possible, while **fixed_rate@200ms** and **fixed_rate@50ms** channels are updated at fixed rates.
+
+There are also a few other configuration parameters -- see the [API documentation](https://pyth-lazer.dourolabs.app/docs) for more details.
+
+Determine the most suitable values for your application -- they will be used in the next step.
+
+### 3. Subscribe to the price updates
+
+To subscribe to the price updates, send a request to the websocket server. The server will respond with a signed price update.
+
+1. Pyth Lazer provides an [SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js) to seamlessly integrate the websocket API into your application.
+   Install it using the following command:
+
+```bash copy
+npm install --save @pythnetwork/pyth-lazer-sdk
+```
+
+2. Then create a [`PythLazerClient`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/js/src/client.ts#L32) object using the URL and the access token requested from the Pyth team in the first step:
+
+```js copy
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  ["wss://pyth-lazer.dourolabs.app/v1/stream"],
+  "YOUR_ACCESS_TOKEN",
+);
+```
+
+3. After the client is created, subscribe to updates (using the configuration parameters from step 2):
+
+```js copy
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],
+  properties: ["price"],
+  chains: ["solana"],
+  channel: "fixed_rate@200ms",
+});
+```
+
+4. Once the connection is established, the server will start sending the price updates to the client:
+
+```js copy
+client.addMessageListener((message) => {
+  console.log(message);
+});
+```
+
+By default, price updates contain the `parsed` field that one can use to easily interpret the price update in their backend or frontend, as well as `evm` and/or `solana` fields that contain data that one should include in the on-chain transaction:
+
+```json copy
+{
+  "type": "streamUpdated",
+  "subscriptionId": 1,
+  "parsed": {
+    "timestampUs": "1730986152400000",
+    "priceFeeds": [
+      {
+        "priceFeedId": 1,
+        "price": "1006900000000"
+      },
+      {
+        "priceFeedId": 2,
+        "price": "2006900000000"
+      }
+    ]
+  },
+  "solana": {
+    "encoding": "hex",
+    "data": "b9011a82d239c094c52016990d6ca2b261dbb1157ad503cbd3ea0679493316150cf3457624d19ec3f6e0a0e94373ab0971e39d939beda15cc02eb3c5454eb700f1f7310df65210bee4fcf5b1cee1e537fabcfd95010297653b94af04d454fc473e94834f2a0075d3c7938094b99e52260600030201000000010000b5ea6fea00000002000000010000c58f44d3010000"
+  }
+}
+```
+
+</Steps>
+
+## Additional Resources
+
+You may find these additional resources helpful for subscribing to price updates from Pyth Lazer.
+
+### Price Feed IDs
+
+Pyth Lazer supports a wide range of price feeds. Consult the [Price Feed IDs](./price-feed-ids.mdx) page for a complete list of supported price feeds.
+
+### Examples
+
+[pyth-lazer-example-js](https://github.com/pyth-network/pyth-examples/tree/main/lazer/js) is a simple example for subscribing to the Pyth Lazer websocket.

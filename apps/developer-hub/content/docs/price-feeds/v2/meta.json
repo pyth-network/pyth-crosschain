@@ -1,0 +1,19 @@
+{
+  "root": true,
+  "title": "Price Feeds V2",
+  "description": "Real-time data from financial institutions",
+  "icon": "ChartLine",
+  "pages": [
+    "index",
+    "getting-started",
+    "---How-To Guides---",
+    "acquire-an-access-token",
+    "subscribe-to-prices",
+    "...integrate-as-a-consumer",
+    "integrate-as-a-publisher",
+    "---Reference Material---",
+    "price-feed-ids",
+    "api-reference",
+    "examples"
+  ]
+}

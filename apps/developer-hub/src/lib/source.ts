@@ -22,9 +22,8 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
-import { transformerOpenAPI } from 'fumadocs-openapi/server';
+import { transformerOpenAPI } from "fumadocs-openapi/server";
 import { createElement } from "react";
-
 
 import { docs } from "../../.source";
 
