@@ -1,9 +1,10 @@
 {
   "pages": [
     "pyth-core",
-    "lazer",
+    "pyth-token",
     "express-relay",
     "entropy",
+    "metrics",
     "whitepaper",
     "security"
   ]
