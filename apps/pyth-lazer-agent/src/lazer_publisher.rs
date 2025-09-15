@@ -149,6 +149,10 @@ impl LazerPublisherTask {
             );
         }
 
+        if updates.is_empty() {
+            return Ok(());
+        }
+
         let publisher_update = PublisherUpdate {
             updates,
             publisher_timestamp: MessageField::some(Timestamp::now()),
@@ -215,9 +219,14 @@ fn deduplicate_feed_updates(
             Some(id) => id,
             None => return false, // drop updates without feed_id
         };
-        if ttl_cache.contains_key(&feed_id) {
-            return false; // drop duplicate updates within TTL
+
+        if let Some(cached_feed) = ttl_cache.get(&feed_id) {
+            if cached_feed.update == update.update {
+                // drop if the same update is already in the cache
+                return false;
+            }
         }
+
         ttl_cache.insert(feed_id, update.clone(), ttl);
         true
     });
