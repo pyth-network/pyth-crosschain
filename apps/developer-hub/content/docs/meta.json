@@ -5,6 +5,7 @@
     "oracle-integrity-staking",
     "express-relay",
     "entropy",
+    "metrics",
     "whitepaper",
     "security"
   ]
