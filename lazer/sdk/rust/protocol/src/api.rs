@@ -224,6 +224,9 @@ impl SubscriptionParams {
         if value.price_feed_ids.is_none() && value.symbols.is_none() {
             return Err("either price feed ids or symbols must be specified");
         }
+        if value.price_feed_ids.is_some() && value.symbols.is_some() {
+            return Err("either price feed ids or symbols must be specified, not both");
+        }
 
         if let Some(ref ids) = value.price_feed_ids {
             if ids.is_empty() {
