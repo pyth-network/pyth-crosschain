@@ -17,7 +17,8 @@ export const baseOptions: BaseLayoutProps = {
 
 export const docsOptions: DocsLayoutProps = {
   ...baseOptions,
-  tree: source.pageTree,
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+  tree: source.pageTree as any,
   sidebar: {
     tabs: false,
     collapsible: false,
