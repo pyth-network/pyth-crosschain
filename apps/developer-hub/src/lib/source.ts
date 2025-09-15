@@ -22,7 +22,9 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
+import { transformerOpenAPI } from 'fumadocs-openapi/server';
 import { createElement } from "react";
+
 
 import { docs } from "../../.source";
 
@@ -54,6 +56,10 @@ export const source = loader({
     return icon ? createElement(icons[icon] ?? FolderSimpleDashed) : undefined;
   },
   source: docs.toFumadocsSource(),
+  pageTree: {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    transformers: [transformerOpenAPI()],
+  },
 });
 
 export type Page = InferPageType<typeof source>;

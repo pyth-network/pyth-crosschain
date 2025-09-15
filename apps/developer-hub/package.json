@@ -17,7 +17,8 @@
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
-    "test:types": "tsc"
+    "test:types": "tsc",
+    "generate:docs": "bun ./scripts/generate-docs.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "catalog:",
@@ -28,7 +29,8 @@
     "clsx": "catalog:",
     "fumadocs-core": "catalog:",
     "fumadocs-mdx": "catalog:",
-    "fumadocs-typescript": "^4.0.8",
+    "fumadocs-openapi": "catalog:",
+    "fumadocs-typescript": "catalog:",
     "fumadocs-ui": "catalog:",
     "katex": "catalog:",
     "next": "catalog:",
@@ -42,6 +44,7 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "remark-mdx": "^3.1.1",
+    "shiki": "catalog:",
     "viem": "catalog:",
     "zod": "catalog:",
     "zod-validation-error": "catalog:"
