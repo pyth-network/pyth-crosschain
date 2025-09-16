@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import Image from "next/image";
 import type { ComponentProps } from "react";
 
 type ImageProps = ComponentProps<typeof Image>;
