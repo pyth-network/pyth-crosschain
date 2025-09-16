@@ -1,5 +1,5 @@
-import type { ComponentProps } from "react";
 import Image from "next/image";
+import type { ComponentProps } from "react";
 
 type ImageProps = ComponentProps<typeof Image>;
 type Props = Omit<ImageProps, "src"> & {
