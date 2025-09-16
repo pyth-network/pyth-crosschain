@@ -1,6 +1,6 @@
 [package]
 name = "pyth-lazer-solana-contract"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 description = "Pyth Lazer Solana contract and SDK."
 license = "Apache-2.0"
