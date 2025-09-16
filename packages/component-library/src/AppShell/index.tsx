@@ -30,12 +30,34 @@ type Tab = ComponentProps<typeof MainNavTabs>["tabs"][number] & {
   children: ReactNode;
 };
 
-type Props = AppBodyProps & {
+type AppShellRootProps = {
   enableAccessibilityReporting: boolean;
   amplitudeApiKey?: string | undefined;
   googleAnalyticsId?: string | undefined;
   providers?: ComponentProps<typeof ComposeProviders>["providers"] | undefined;
+  children: ReactNode;
 };
+
+export const AppShellRoot = ({
+  enableAccessibilityReporting,
+  amplitudeApiKey,
+  googleAnalyticsId,
+  providers,
+  children,
+}: AppShellRootProps) => (
+  <RootProviders providers={providers}>
+    <HtmlWithLang
+      // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
+      suppressHydrationWarning
+      className={clsx(sans.className, styles.html)}
+    >
+      <body className={styles.body}>{children}</body>
+      {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
+      {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}
+      {enableAccessibilityReporting && <ReportAccessibility />}
+    </HtmlWithLang>
+  </RootProviders>
+);
 
 export const AppShell = ({
   enableAccessibilityReporting,
@@ -43,21 +65,15 @@ export const AppShell = ({
   googleAnalyticsId,
   providers,
   ...props
-}: Props) => (
-  <RootProviders providers={providers}>
-    <HtmlWithLang
-      // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
-      suppressHydrationWarning
-      className={clsx(sans.className, styles.html)}
-    >
-      <body className={styles.body}>
-        <AppBody {...props} />
-      </body>
-      {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
-      {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}
-      {enableAccessibilityReporting && <ReportAccessibility />}
-    </HtmlWithLang>
-  </RootProviders>
+}: AppShellRootProps & AppBodyProps) => (
+  <AppShellRoot
+    enableAccessibilityReporting={enableAccessibilityReporting}
+    amplitudeApiKey={amplitudeApiKey}
+    googleAnalyticsId={googleAnalyticsId}
+    providers={providers}
+  >
+    <AppBody {...props} />
+  </AppShellRoot>
 );
 
 type AppBodyProps = Pick<

@@ -36,6 +36,7 @@
   @each $variant in ("neutral", "info", "warning", "error", "data", "success") {
     &[data-variant="#{$variant}"] {
       background-color: theme.color("states", $variant, "background");
+      border: theme.spacing(1) solid theme.color("states", $variant, "normal");
 
       .icon {
         color: theme.color("states", $variant, "normal");
