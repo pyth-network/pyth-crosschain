@@ -1,11 +1,11 @@
 import Image from "next/image";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 import type { ComponentProps } from "react";
 
 type ImageProps = ComponentProps<typeof Image>;
 type Props = Omit<ImageProps, "src"> & {
   darkSrc: string;
   lightSrc: string;
-  alt: string;
 };
 
 const DualModeImage = ({
@@ -15,25 +15,28 @@ const DualModeImage = ({
   alt,
   width = 800,
   height = 600,
+  sizes = "100vw",
   ...props
 }: Props) => {
+  const commonProps = {
+    alt,
+    width,
+    height,
+    sizes,
+    ...props,
+  };
+
   return (
     <>
-      <Image
+      <ImageZoom
         src={lightSrc}
         className={`dark:hidden ${className ?? ""}`}
-        alt={alt}
-        width={width}
-        height={height}
-        {...props}
+        {...commonProps}
       />
-      <Image
+      <ImageZoom
         src={darkSrc}
         className={`hidden dark:block ${className ?? ""}`}
-        alt={alt}
-        width={width}
-        height={height}
-        {...props}
+        {...commonProps}
       />
     </>
   );

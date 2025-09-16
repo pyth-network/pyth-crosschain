@@ -8,7 +8,7 @@ export const baseOptions: BaseLayoutProps = {
     enabled: true,
   },
   themeSwitch: {
-    enabled: true,
+    enabled: false, // Keep this false as the theme switch is handled by the component library
   },
   searchToggle: {
     enabled: false,
