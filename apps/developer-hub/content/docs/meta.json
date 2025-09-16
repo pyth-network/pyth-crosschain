@@ -1,12 +1,3 @@
 {
-  "pages": [
-    "pyth-core",
-    "pyth-token",
-    "oracle-integrity-staking",
-    "express-relay",
-    "entropy",
-    "metrics",
-    "whitepaper",
-    "security"
-  ]
+  "pages": ["price-feeds"]
 }
