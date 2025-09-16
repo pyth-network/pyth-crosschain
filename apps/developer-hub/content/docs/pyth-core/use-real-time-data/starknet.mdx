@@ -116,14 +116,17 @@ Calling pyth.update_price_feeds with this value updates the on-chain Pyth price 
 The pyth_price_update can be fetched from Hermes; Consult [Fetch Price Updates](https://docs.pyth.network/price-feeds/fetch-price-updates) for more information on how to fetch the pyth_price_update.
 
 <InfoBox variant="info">
-  Unlike Ethereum, there is no native token on Starknet. You cannot pass tokens
-  implicitly when calling functions. Moreover, there is no concept of a
-  designated payer account, unlike Solana. In Starknet, all token transfers must
-  be performed explicitly by calling functions on the token's ERC20 contract.
-  Regarding the Pyth contract on Starknet, the caller must approve the fee
-  transfer before calling `update_price_feeds` or using similar methods. You can
-  use **STRK** or **ETH** to pay the fee, but STRK is preferred. The fee is
-  currently set to the minimum possible value (1e-18 STRK, 1 WEI).
+  <div>
+    Unlike Ethereum, there is no native token on Starknet. You cannot pass
+    tokens implicitly when calling functions. Moreover, there is no concept of a
+    designated payer account, unlike Solana. In Starknet, all token transfers
+    must be performed explicitly by calling functions on the token's ERC20
+    contract. Regarding the Pyth contract on Starknet, the caller must approve
+    the fee transfer before calling `update_price_feeds` or using similar
+    methods. You can use **STRK** or **ETH** to pay the fee, but STRK is
+    preferred. The fee is currently set to the minimum possible value (1e-18
+    STRK, 1 WEI).
+  </div>
 </InfoBox>
 
 The code snippet above does the following things:
@@ -159,9 +162,11 @@ const pythUpdate = ByteBuffer.fromBase64(currentPrices[0].vaa);
 ```
 
 <InfoBox variant="info">
-  Price updates must be converted to `ByteBuffer` before being passed on to the
-  Pyth contract on Starknet. Use the `ByteBuffer` type from
-  `@pythnetwork/pyth-starknet-js` package as shown above.
+  <div>
+    Price updates must be converted to `ByteBuffer` before being passed on to
+    the Pyth contract on Starknet. Use the `ByteBuffer` type from
+    `@pythnetwork/pyth-starknet-js` package as shown above.
+  </div>
 </InfoBox>
 
 ## Additional Resources

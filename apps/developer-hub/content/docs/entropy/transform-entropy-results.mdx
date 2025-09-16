@@ -1,0 +1,73 @@
+---
+title: Transform Entropy Results
+description: Best practices for transforming entropy results in your applications
+icon: Book
+---
+
+## Generating random values within a specific range
+
+You can map the random number provided by Entropy into a smaller range using the solidity [modulo operator](https://docs.soliditylang.org/en/latest/types.html#modulo).
+Here is a simple example of how to map a random number provided by Entropy into a range between `minRange` and `maxRange` (inclusive).
+
+```solidity copy
+// Maps a random number into a range between minRange and maxRange (inclusive)
+function mapRandomNumber(
+    bytes32 randomNumber,
+    int256 minRange,
+    int256 maxRange
+) internal pure returns (int256) {
+    require(minRange <= maxRange, "Invalid range");
+
+    uint256 range = uint256(maxRange - minRange + 1);
+    uint256 randomUint = uint256(randomNumber);
+
+    return minRange + int256(randomUint % range);
+
+}
+```
+
+Notice that using the modulo operator can distort the distribution of random numbers if it's not a power of 2. This is
+negligible for small and medium ranges, but it can be noticeable for large ranges.
+For example, if you want to generate a random number between 1 and 52, the probability of having value 5 is approximately
+`10^-77` higher than the probability of having value 50 which is infinitesimal.
+
+## Generating multiple random values in a single transaction
+
+If you need to generate multiple random values in a single transaction, you can hash the random input provided by Entropy with a unique identifier for each random number.
+
+In the following example, `mapRandomNumber` is used to generate 6 random attributes for a character.
+
+```solidity copy
+function generateAttributes(bytes32 randomNumber) internal {
+  int256 strength = mapRandomNumber(
+    keccak256(abi.encodePacked(randomNumber, "strength")),
+    15,
+    20
+  );
+  int256 stamina = mapRandomNumber(
+    keccak256(abi.encodePacked(randomNumber, "stamina")),
+    10,
+    15
+  );
+  int256 agility = mapRandomNumber(
+    keccak256(abi.encodePacked(randomNumber, "agility")),
+    5,
+    15
+  );
+  int256 stealth = mapRandomNumber(
+    keccak256(abi.encodePacked(randomNumber, "stealth")),
+    0,
+    5
+  );
+  int256 positionX = mapRandomNumber(
+    keccak256(abi.encodePacked(randomNumber, "positionX")),
+    -100,
+    100
+  );
+  int256 positionY = mapRandomNumber(
+    keccak256(abi.encodePacked(randomNumber, "positionY")),
+    -100,
+    100
+  );
+}
+```

@@ -6,12 +6,20 @@ import type {
   RowConfig,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
+import IEntropyV2 from "@pythnetwork/entropy-sdk-solidity/abis/IEntropyV2.json";
 import { useEffect, useRef, useState } from "react";
+import type { PublicClient, Abi } from "viem";
+import { createPublicClient, formatEther, http, isAddress } from "viem";
 
 import { FORTUNA_API_URLS } from "./constants";
 import type { EntropyDeployment } from "./entropy-api-data-fetcher";
 import { fetchEntropyDeployments } from "./entropy-api-data-fetcher";
 import CopyAddress from "../CopyAddress";
+import styles from "./index.module.scss";
+
+function isValidAddress(address: string): address is `0x${string}` {
+  return isAddress(address);
+}
 
 export const EntropyTable = ({ isMainnet }: { isMainnet: boolean }) => {
   const isLoading = useRef(false);
@@ -39,7 +47,7 @@ export const EntropyTable = ({ isMainnet }: { isMainnet: boolean }) => {
     case StateType.Error: {
       return (
         <InfoBox title="Error" variant="error">
-          <p>Failed to fetch the list of entropy contracts.</p>
+          Failed to fetch the list of entropy contracts.
         </InfoBox>
       );
     }
@@ -49,41 +57,48 @@ export const EntropyTable = ({ isMainnet }: { isMainnet: boolean }) => {
   }
 };
 
-type Col = "chain" | "address" | "delay" | "gasLimit";
+type Col = "chain" | "address" | "delay" | "gasLimit" | "fee";
 
 const EntropyTableContent = ({
   chains,
 }: {
   chains: Record<string, EntropyDeployment>;
 }) => {
+  const fees = useEntropyFees(chains);
   const columns: ColumnConfig<Col>[] = [
     { id: "chain", name: "Chain", isRowHeader: true },
     { id: "address", name: "Contract" },
     { id: "delay", name: "Reveal Delay" },
     { id: "gasLimit", name: "Default Gas Limit" },
+    { id: "fee", name: "Fee" },
   ];
 
-  const rows: RowConfig<Col>[] = Object.entries(chains).map(
-    ([chainName, d]) => ({
+  const rows: RowConfig<Col>[] = Object.entries(chains)
+    .sort(([chainNameA], [chainNameB]) => chainNameA.localeCompare(chainNameB))
+    .map(([chainName, deployment]) => ({
       id: chainName,
       data: {
         chain: chainName,
-        address: d.explorer ? (
+        address: deployment.explorer ? (
           <CopyAddress
-            address={d.address}
-            url={`${d.explorer}/address/${d.address}`}
+            maxLength={6}
+            address={deployment.address}
+            url={`${deployment.explorer}/address/${deployment.address}`}
           />
         ) : (
-          <CopyAddress address={d.address} />
+          <CopyAddress maxLength={6} address={deployment.address} />
         ),
-        delay: d.delay,
-        gasLimit: d.gasLimit,
+        delay: deployment.delay,
+        gasLimit: deployment.gasLimit,
+        fee:
+          formatEther(fees[chainName] ?? BigInt(deployment.default_fee)) +
+          ` ${deployment.nativeCurrency ?? "ETH"}`,
       },
-    }),
-  );
+    }));
 
   return (
     <Table<Col>
+      className={styles.table ?? ""}
       label="Entropy deployments"
       columns={columns}
       rows={rows}
@@ -120,3 +135,80 @@ const getEntropyDeployments = async (
   const url = isMainnet ? FORTUNA_API_URLS.mainnet : FORTUNA_API_URLS.testnet;
   return await fetchEntropyDeployments(url);
 };
+
+function useEntropyFees(
+  chains: Record<string, EntropyDeployment>,
+): Record<string, bigint | undefined> {
+  const [feesByChain, setFeesByChain] = useState<
+    Record<string, bigint | undefined>
+  >({});
+  const clientsRef = useRef<Map<string, PublicClient>>(new Map());
+
+  function getClient(rpc: string): PublicClient {
+    const cached = clientsRef.current.get(rpc);
+    if (cached) return cached;
+    const client = createPublicClient({
+      transport: http(rpc, { timeout: 10_000, retryCount: 1 }),
+    });
+    clientsRef.current.set(rpc, client);
+    return client;
+  }
+
+  useEffect(() => {
+    const entries = Object.entries(chains);
+    if (entries.length === 0) return;
+
+    let isCancelled = false;
+
+    async function loadInBatches() {
+      const batchSize = 5;
+      for (let i = 0; i < entries.length; i += batchSize) {
+        if (isCancelled) return;
+        const batch = entries.slice(i, i + batchSize);
+        const results = await Promise.allSettled(
+          batch.map(async ([chainName, deployment]) => {
+            if (!deployment.rpc || !isValidAddress(deployment.address)) {
+              return [chainName, undefined] as const;
+            }
+            try {
+              const client = getClient(deployment.rpc);
+              const fee = await client.readContract({
+                address: deployment.address,
+                abi: IEntropyV2 as unknown as Abi,
+                functionName: "getFeeV2",
+                args: [],
+              });
+              return [chainName, fee] as const;
+            } catch {
+              return [chainName, undefined] as const;
+            }
+          }),
+        );
+
+        const next: Record<string, bigint | undefined> = {};
+        for (const result of results) {
+          if (result.status === "fulfilled") {
+            const [chainName, fee] = result.value;
+            if (typeof fee === "bigint") {
+              next[chainName] = fee;
+            }
+          }
+        }
+        if (Object.keys(next).length > 0) {
+          setFeesByChain((prev) => ({ ...prev, ...next }));
+        }
+      }
+    }
+
+    loadInBatches().catch((error: unknown) => {
+      // eslint-disable-next-line no-console
+      console.error("Failed to load entropy fees:", error);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [chains]);
+
+  return feesByChain;
+}

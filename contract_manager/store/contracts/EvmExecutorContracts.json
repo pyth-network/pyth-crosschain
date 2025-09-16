@@ -223,5 +223,10 @@
     "chain": "spiderman",
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "itsnotreal",
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "type": "EvmExecutorContract"
   }
 ]

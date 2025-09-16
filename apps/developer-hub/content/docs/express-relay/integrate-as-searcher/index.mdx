@@ -1,25 +1,11 @@
 ---
-title: "Integrate as a Searcher"
+title: "How to Integrate Express Relay as a Searcher"
 description: >-
-  Integrate once and access all existing and future opportunities across integrated DeFi protocols through Express Relay's bidding system.
+  Express Relay allows searchers to integrate once and access all existing and future opportunities across integrated DeFi protocols. Searchers bid on these opportunities exposed by Express Relay.
 ---
 
 import { IntegrationCard } from "../../../../src/components/IntegrationCard";
 import { Code } from "@phosphor-icons/react/dist/ssr";
-
-# How to Integrate Express Relay as a Searcher
-
-Express Relay allows searchers to integrate once and access all existing and future opportunities across integrated DeFi protocols. Searchers **bid** on these opportunities exposed by Express Relay.
-
-Express Relay exposes different endpoints for interaction, which can be used directly via HTTP, WebSocket, or one of the SDKs for convenience.
-
-## What is a Searcher?
-
-Searchers are sophisticated actors who monitor blockchain networks for profitable opportunities such as arbitrage, liquidations, and MEV extraction. With Express Relay, searchers can:
-
-- **Access unified opportunities** across multiple integrated DeFi protocols
-- **Compete in fair auctions** for the right to fulfill user transactions
-- **Capture value** while providing better execution for users
 
 ## Integration Methods
 
@@ -61,38 +47,14 @@ If your bid wins the auction, execute the opportunity by:
 - **Capturing the bid amount** as compensation for providing the service
 - **Ensuring proper execution** to maintain reputation in the system
 
-## Supported Chains
-
-Searchers can currently integrate with Express Relay on **Solana Virtual Machine (SVM)** chains, with support for additional chains coming soon.
-
 ## Getting Started
-
-Ready to integrate as a searcher? Start with our detailed integration guides:
 
 <div className="mt-8">
   <IntegrationCard
-    href="./svm"
+    href="/express-relay/integrate-as-searcher/svm"
     colorScheme="blue"
     title="Integrate with Express Relay on SVM Chains"
     description="Complete guide for integrating Express Relay on Solana Virtual Machine chains with code examples and best practices"
     icon={<Code size={16} />}
   />
 </div>
-
-## Additional Resources
-
-Explore these resources to enhance your searcher integration:
-
-### API Documentation
-
-- **[WebSocket API Reference](./websocket-api-reference)** - Real-time opportunity streaming
-- **[HTTP API Reference](./http-api-reference)** - REST endpoints for opportunities and bidding
-
-### Technical Resources
-
-- **[Contract Addresses](./contract-addresses)** - Smart contract addresses across supported chains
-- **[Error Codes](./errors)** - Complete list of error codes and troubleshooting guide
-
-### Understanding Express Relay
-
-- **[How Express Relay Works](./how-express-relay-works)** - Deep dive into the auction mechanism and architecture

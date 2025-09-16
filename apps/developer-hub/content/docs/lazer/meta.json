@@ -1,7 +1,0 @@
-{
-  "root": true,
-  "title": "Lazer",
-  "description": "Low latency, highly customizable price oracle",
-  "icon": "Lightning",
-  "pages": ["index", "---Guides---", "how-to-guides"]
-}

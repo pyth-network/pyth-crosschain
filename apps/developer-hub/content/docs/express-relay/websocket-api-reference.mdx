@@ -1,12 +1,9 @@
 ---
 title: "WebSocket API Reference"
 description: >-
-  Complete reference for Express Relay's WebSocket API for subscribing to opportunities and submitting bids with reduced latency.
+  Searchers can connect to the server via WebSocket to reduce latency and subscribe to various events.
 ---
 
-# WebSocket API Reference
-
-Searchers can connect to the server via WebSocket to reduce latency and subscribe to various events.
 The WebSocket endpoint lives at `/v1/ws` (e.g wss://per-mainnet.dourolabs.app/v1/ws).
 
 ## General Format
@@ -113,9 +110,8 @@ A successful response to a bid submission has the following schema:
 
 After submitting your bid via WebSocket, you will receive notifications about the bid status updates in JSON format.
 
-### Status Types
-
-**Pending**
+<Tabs items={['pending', 'submitted', 'lost', 'won', 'failed', 'expired']}>
+<Tab value="pending">
 
 ```json
 // The temporary state which means the auction for this bid is pending.
@@ -131,7 +127,8 @@ After submitting your bid via WebSocket, you will receive notifications about th
 }
 ```
 
-**Submitted**
+</Tab>
+<Tab value="submitted">
 
 ```json
 // The bid won the auction and was submitted to the chain, with the signature
@@ -150,7 +147,8 @@ After submitting your bid via WebSocket, you will receive notifications about th
 }
 ```
 
-**Lost**
+</Tab>
+<Tab value="lost">
 
 ```json
 // The bid did not win the auction and therefore was not submitted.
@@ -165,8 +163,8 @@ After submitting your bid via WebSocket, you will receive notifications about th
 }
 ```
 
-**Won**
-
+</Tab>
+<Tab value="won">
 ```json
 // The final state which means the bid was submitted to the chain and successfully executed.
 {
@@ -181,7 +179,8 @@ After submitting your bid via WebSocket, you will receive notifications about th
 }
 ```
 
-**Failed**
+</Tab>
+<Tab value="failed">
 
 ```json
 // The final state which means the bid was submitted to the chain but failed to execute.
@@ -197,7 +196,8 @@ After submitting your bid via WebSocket, you will receive notifications about th
 }
 ```
 
-**Expired**
+</Tab>
+<Tab value="expired">
 
 ```json
 // The final state which means the bid was submitted to the chain but expired before execution.
@@ -212,3 +212,12 @@ After submitting your bid via WebSocket, you will receive notifications about th
   }
 }
 ```
+
+</Tab>
+</Tabs>
+
+## Connection Persistence
+
+The WebSocket server responds to ping messages according to WebSocket standards.
+
+Additionally, the server periodically sends a ping message to the client to ensure the connection is still active and expects a pong in return.

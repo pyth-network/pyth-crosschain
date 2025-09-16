@@ -27,8 +27,8 @@ pyth-solana-receiver-sdk ="x.y.z" # get the latest version from https://crates.i
 ```
 
 <InfoBox variant="warning">
-At the time of writing, [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) is compatible with Anchor `v0.28.0{:js}`, `v0.29.0{:js}`, and `v0.30.1{:js}`.
-If you are on `v0.30.0{:js}` or any other version, please move to `v0.30.1{:js}`.
+<div>At the time of writing, [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) is compatible with Anchor `v0.28.0{:js}`, `v0.29.0{:js}`, and `v0.30.1{:js}`.
+If you are on `v0.30.0{:js}` or any other version, please move to `v0.30.1{:js}`.</div>
 </InfoBox>
 
 ### Typescript SDK
@@ -60,9 +60,9 @@ pub struct Sample<'info> {
 ```
 
 <InfoBox variant="info">
-Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
+<div>Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
 Using Anchor with the `Account<'info, PriceUpdateV2>` type will automatically perform this check.
-However, it is the developer's responsibility to perform this check if they are not using Anchor.
+However, it is the developer's responsibility to perform this check if they are not using Anchor.</div>
 </InfoBox>
 
 Next, update the instruction logic to read the price from the price update account:
@@ -85,14 +85,16 @@ pub fn sample(ctx: Context<Sample>) -> Result<()> {
 ```
 
 <InfoBox variant="warning">
-  Users must validate the price update for the appropriate **price
+<div>Users must validate the price update for the appropriate **price
   feed** and **timestamp**. `PriceUpdateV2` guarantees that the account contains
   a verified price for _some_ price feed at _some_ point in time. There are
   various methods on this struct (such as `get_price_no_older_than`) that users
-  can use to implement the necessary checks.
+  can use to implement the necessary checks.</div>
 
-If you choose the price feed account integration (see below), you
-can use an account address check to validate the price feed ID.
+<div>
+  If you choose the price feed account integration (see below), you can use an
+  account address check to validate the price feed ID.
+</div>
 
 </InfoBox>
 
@@ -136,18 +138,17 @@ const solUsdPriceFeedAccount = pythSolanaReceiver
 ```
 
 <InfoBox variant="info" icon="ℹ️">
-  The Price Feed Accounts integration assumes that an off-chain process is
+<div>The Price Feed Accounts integration assumes that an off-chain process is
   continuously updating each price feed. The Pyth Data Association sponsors
   price updates for a subset of commonly used price feeds on shard 0. Please see
   [Sponsored Feeds](/price-feeds/sponsored-feeds) for a list of sponsored feeds
-  and their account addresses.
+  and their account addresses.</div>
 
-Additionally, updating a price feed is a
+<div>Additionally, updating a price feed is a
 permissionless operation, and anyone can run this process. Please see [Using
 Scheduler](/price-feeds/schedule-price-updates/using-scheduler) for more
 information. Running the scheduler can help with reliability and update
-feed/shard pairs that are not part of the default schedule.
-
+feed/shard pairs that are not part of the default schedule.</div>
 </InfoBox>
 
 ### Price Update Accounts
@@ -235,14 +236,16 @@ await pythSolanaReceiver.provider.sendAll(
 The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) contains more information about interacting with the Pyth solana receiver contract, including working examples.
 
 <InfoBox variant="info">
-  Posting and verifying price updates currently requires multiple transactions
-  on Solana. If your usecase requires a single transaction, you can reduce the
-  verification level of the posted price updates by replacing
-  `addPostPriceUpdates` by `addPostPartiallyVerifiedPriceUpdates` in the
-  transaction builder. Please read the
-  [VerificationLevel](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs#L20)
-  docs to understand more about the data integrity tradeoffs when using
-  partially verified price updates.
+  <div>
+    Posting and verifying price updates currently requires multiple transactions
+    on Solana. If your usecase requires a single transaction, you can reduce the
+    verification level of the posted price updates by replacing
+    `addPostPriceUpdates` by `addPostPartiallyVerifiedPriceUpdates` in the
+    transaction builder. Please read the
+    [VerificationLevel](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/pyth_solana_receiver_sdk/src/price_update.rs#L20)
+    docs to understand more about the data integrity tradeoffs when using
+    partially verified price updates.
+  </div>
 </InfoBox>
 
 ## Time-Weighted Average Price (TWAP)

@@ -58,5 +58,10 @@
     "chain": "ethereal_devnet",
     "address": "0x4D4772F06c595F69FB57039599a180536FDE8245",
     "type": "EvmLazerContract"
+  },
+  {
+    "chain": "itsnotreal",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
   }
 ]

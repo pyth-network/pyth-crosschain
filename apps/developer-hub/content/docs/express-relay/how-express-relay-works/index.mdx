@@ -4,131 +4,43 @@ description: >-
   Understand how Express Relay eliminates MEV through off-chain auctions and priority mechanisms for protocol operations.
 ---
 
-import { IntegrationCard } from "../../../../src/components/IntegrationCard";
-import { Gavel, Lightning, Shield } from "@phosphor-icons/react/dist/ssr";
+Express Relay allows protocols to eliminate [Maximal Extractable Value](https://www.ledger.com/academy/glossary/maximal-extractable-value-mev) (MEV).
+Many protocols generate MEV on a regular basis.
+For example, borrow-lending protocols provide bonuses to searchers for liquidating undercollateralized loans.
+Searchers compete for these bonuses by tipping the chain's miners or validators.
+The validators capture most of the value of the liquidation bonus via these tips, so the liquidation bonus is in essence a transfer of wealth from the protocol's users to the validators in the form of tips.
 
-# How Express Relay Works
+Express Relay solves the problem of MEV by providing protocol developers with an [auction](./how-express-relay-works/auction) primitive that they can use to prioritize access to valuable protocol operations.
+Developers specify a set of operations in their protocol that must be accessed through Express Relay.
+Searchers then participate in an off-chain auction to access these operations.
+Their bids in the auction are used to determine the order in which their transactions will be executed.
+The winners' transactions are forwarded to the Express Relay smart contract. As part of the transaction, searchers must pay their specified bid.
+The auction profits are then split between the integrated protocol and other participants in Express Relay.
 
-Express Relay is a protocol that allows applications to auction off the right to execute on-chain operations. This protocol allows protocols to eliminate MEV by capturing the value that would otherwise go to validators and sharing it with the protocol's users.
+![Before Express Relay](./../images/before_express.jpg)
+![After Express Relay](./../images/after_express.jpg)
 
-Express Relay consists of two components:
-
-1. **An off-chain auction server** that auctions off the right to execute protocol operations
-2. **An on-chain smart contract** that validates auction results and executes the winning transactions
-
-## The MEV Problem
-
-Many DeFi protocols generate [Maximal Extractable Value](https://www.ledger.com/academy/glossary/maximal-extractable-value-mev) (MEV) on a regular basis. For example, lending protocols provide bonuses to searchers for liquidating undercollateralized loans. Searchers compete for these bonuses by tipping validators to include their transactions first.
-
-The problem with this approach is that validators capture most of the MEV value through these tips, creating a wealth transfer from protocol users to validators.
-
-## The Express Relay Solution
-
-Express Relay solves this problem by moving the auction off-chain, where protocols can capture the MEV and share it with their users.
-
-Here's how it works:
-
-1. **Protocol Integration**: Protocols integrate with Express Relay by wrapping their valuable operations (like liquidations) with permission checks
-2. **Opportunity Detection**: When opportunities arise, they're broadcast to searchers through the Express Relay auction server
-3. **Off-chain Auction**: Searchers submit bids for the right to execute these operations
-4. **On-chain Execution**: The auction server relays winning bids to the Express Relay smart contract, which validates permissions and executes the operations
-5. **Revenue Sharing**: The smart contract collects payments from searchers and distributes them according to predefined splits
-
-### Before Express Relay
-
-Searchers tip miners/validators to guarantee transaction execution, with validators capturing most of the MEV value.
-
-### After Express Relay
-
-Searchers bid in off-chain auctions, with auction profits shared between integrated protocols and Express Relay participants.
-
-The comparison above shows how Express Relay changes the MEV landscape for a liquidation.
+The diagram above shows how Express Relay changes the MEV landscape for a liquidation.
 In the status quo (above), Searchers tip miners to guarantee that their liquidation transaction lands on-chain and that their transaction directly interacts with the protocol, exposing the liquidation opportunity.
 With Express Relay (below), Searchers submit bids for their transaction to the Express Relay auction.
 After the auction, the winning bids are relayed to the blockchain, where the Express Relay smart contract processes the transactions before being forwarded on to the integrated protocol.
 The Express Relay contract collects payment from the Searchers and forwards a share of the revenue back to the integrated protocol.
 
-## Key Components
-
-### Off-chain Auction Server
-The auction server receives bids from searchers and determines winners based on bid amounts and other criteria. It then submits winning transactions to the blockchain in the optimal order.
-
-### On-chain Smart Contract
-The Express Relay smart contract validates that transactions have won the auction and enforces payment collection. It also handles revenue distribution between protocols and other stakeholders.
-
-### Permission System
-Express Relay uses a permission system to ensure only auction winners can execute protected operations. This prevents frontrunning and ensures MEV capture.
-
-## Benefits for Protocols
-
-Express Relay offers several advantages for protocol developers:
-
-- **MEV Recapture**: Convert MEV from validator tips into protocol revenue
-- **Reliable Execution**: Access to a dedicated network of professional searchers
-- **Reduced Complexity**: No need to build custom liquidation infrastructure
-- **Better UX**: Faster execution and lower gas costs for users
-
-## Benefits for Searchers
-
-Express Relay also provides advantages for searchers:
-
-- **Unified Access**: Single integration point for multiple protocols
-- **Fair Competition**: Transparent auction mechanism
-- **Reduced Costs**: Lower gas costs through batch execution
-- **New Opportunities**: Access to exclusive protocol operations
-
 ## Which protocols can use Express Relay?
 
-Express Relay is suitable for any protocol with valuable, time-sensitive operations:
+Any protocol with valuable operations can use Express Relay.
+These operations generate MEV, as the validators control which searchers have the right to access them.
+Express Relay enables protocols to auction access instead of the validators.
+Lending, perps, and derivatives protocols with liquidation mechanisms are clear candidates that can benefit from integration with Express Relay.
 
-- **Lending Protocols**: Liquidations of undercollateralized positions
-- **Perpetual Protocols**: Liquidations and funding rate updates  
-- **DEX Protocols**: Arbitrage opportunities and order book operations
-- **Derivatives Protocols**: Option exercises and settlement operations
-- **Cross-chain Protocols**: Bridge operations and relay transactions
-
-## Integration Requirements
-
-To integrate with Express Relay, protocols need to:
-
-1. **Identify Valuable Operations**: Determine which operations generate MEV
-2. **Add Permission Checks**: Wrap operations with Express Relay permission validation
-3. **Deploy Integration**: Update smart contracts with Express Relay integration
-4. **Configure Revenue Sharing**: Set up distribution of auction proceeds
+Aside from eliminating MEV, protocols that need a stable set of searchers would benefit from using Express Relay.
+Express Relay provides access to a robust network of searchers who are already active in the Express Relay ecosystem.
 
 ## Participants in Express Relay
 
 There are four types of participants in the Express Relay protocol:
 
-- **The Relayer** runs the off-chain auction and forwards winning transactions onto the blockchain.
-- **Protocol developers** integrate their protocol with Express Relay in order to eliminate MEV and gain access to searchers.
-- **Searchers** participate in auctions to access on-chain opportunities such as liquidations.
-- **The Pyth DAO** owns and governs the Express Relay system.
-
-## Learn More
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-  <IntegrationCard
-    href="./auction"
-    colorScheme="blue"
-    title="Auction"
-    description="Learn about the auction mechanism"
-    icon={<Gavel size={16} />}
-  />
-
-  <IntegrationCard
-    href="./opportunities"
-    colorScheme="green"
-    title="Opportunities"
-    description="Understand available opportunities"
-    icon={<Lightning size={16} />}
-  />
-
-  <IntegrationCard
-    href="./permissioning"
-    colorScheme="purple"
-    title="Permissioning"
-    description="Learn about access controls"
-    icon={<Shield size={16} />}
-  />
-</div>
+- The Relayer runs the off-chain auction and forwards winning transactions onto the blockchain.
+- Protocol developers integrate their protocol with Express Relay in order to eliminate MEV and gain access to searchers.
+- Searchers participate in auctions to access on-chain opportunities such as liquidations.
+- The Pyth DAO owns and governs the Express Relay system.
