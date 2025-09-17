@@ -1,24 +1,26 @@
 ---
-title: "Pyth Lazer"
+title: "Pyth Network Price Feeds: Real-Time Data on 100+ Blockchains"
 description: >-
-  Pyth Lazer is a low latency, highly customizable price oracle.
+  Pyth Network provides real-time price feeds for multiple assets from data
+  providers across 100+ blockchains. Integrate these feeds into your
+  applications.
 full: false
 index: true
 ---
 
-Pyth Lazer is a low latency, highly customizable price oracle.
-It offers a customizable set of price feeds, target chains (EVM or Solana) and channels (real time or fixed rate):
+# Introduction
 
-- Real time channels send updates as frequently as they become available;
-- Fixed rate channels send updates at fixed time intervals (you can choose between 50 ms or 200 ms).
+Pyth Network price feeds provide real-time financial market data to smart contract applications on 100+ blockchains.
+Pyth's market data is contributed by over [120+ reputable first-party data providers](https://insights.pyth.network/publishers?utm_source=docs), including some of the biggest exchanges and market making firms in the world.
+Each price feed publishes a [robust aggregate](price-feeds/how-pyth-works/price-aggregation) of these prices multiple times per second.
+The protocol offers over [1300+ price feeds](https://pyth.network/price-feeds/) covering a number of different asset classes, including US equities, commodities, and cryptocurrencies.
 
-The table below shows the difference between Pyth Core and Pyth Lazer:
+Pythnet Price Feeds are available on [100+ blockchain ecosystems](./price-feeds/contract-addresses), and can also be used in off-chain applications.
+They are available on mainnet for most [EVM chains](price-feeds/use-real-time-data/evm.md) -- including Ethereum, BNB, Avalanche, and more --several [Cosmos chains](price-feeds/use-real-time-data/cosmwasm.md), [Solana](https://docs.pyth.network/price-feeds/use-real-time-data/solana),
+[Aptos](price-feeds/use-real-time-data/aptos.md), [Sui](price-feeds/use-real-time-data/sui.md), [Ton](price-feeds/use-real-time-data/ton.md), and [NEAR](price-feeds/use-real-time-data/near.md).
+More ecosystems are coming soon!
 
-|                         | **Pyth Core**                                                                                            | **Pyth Lazer**                                                                                                                      |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Solution Type**       | Stable, secure, and decentralized price data source for a broad spectrum of DeFi or TradFi applications. | **Permissioned** service focused on **ultra-low-latency** price and market data for highly latency-sensitive users.                 |
-| **Frequency**           | 400ms on Pythnet appchain with support for risk mitigation via Benchmarks and confidence intervals.      | **1ms** (**real-time**), 50ms, and 200ms channels, **customizable** frequencies, and throttling support to address different needs. |
-| **Data Types**          | Aggregate price and confidence intervals.                                                                | Aggregate price, bid/ask price, and **customizable** market data (market depth and more).                                           |
-| **Fees**                | On-chain fee per signed cross-chain price update.                                                        | On-chain fee per signed cross-chain price update.                                                                                   |
-| **Update Costs**        | >1,000-byte proofs and complex signature verification.                                                   | **100-byte proofs** and simple signature verification.                                                                              |
-| **Integration Process** | Open and permissionless integration for any Web3 or Web2 protocol.                                       | **Specialized** and **permissioned** solution for protocols prioritizing performance over some elements of decentralization.        |
+Follow the [Getting Started](price-feeds/getting-started.mdx) guide to learn more about Pyth and integrate Pyth Price Feeds into your application.
+
+Developers may also consider using [Benchmarks](../benchmarks) to access historical Pyth prices for both on- and off-chain use.
+These historical prices can be used for settlement or other similar applications.
