@@ -17,7 +17,8 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestPriceRequest {
-    pub price_feed_ids: Vec<PriceFeedId>,
+    pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
     #[serde(alias = "chains")]
@@ -35,7 +36,9 @@ pub struct LatestPriceRequest {
 #[serde(rename_all = "camelCase")]
 pub struct PriceRequest {
     pub timestamp: TimestampUs,
-    pub price_feed_ids: Vec<PriceFeedId>,
+    // Either price feed ids or symbols must be specified.
+    pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     pub formats: Vec<Format>,
     #[serde(default)]
@@ -181,7 +184,9 @@ impl<'de> Deserialize<'de> for Channel {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscriptionParamsRepr {
-    pub price_feed_ids: Vec<PriceFeedId>,
+    // Either price feed ids or symbols must be specified.
+    pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
     #[serde(alias = "chains")]
@@ -195,8 +200,9 @@ pub struct SubscriptionParamsRepr {
     #[serde(default = "default_parsed")]
     pub parsed: bool,
     pub channel: Channel,
-    #[serde(default)]
-    pub ignore_invalid_feed_ids: bool,
+    // "ignoreInvalidFeedIds" was renamed to "ignoreInvalidFeeds". "ignoreInvalidFeedIds" is still supported for compatibility.
+    #[serde(default, alias = "ignoreInvalidFeedIds")]
+    pub ignore_invalid_feeds: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
@@ -215,12 +221,31 @@ impl<'de> Deserialize<'de> for SubscriptionParams {
 
 impl SubscriptionParams {
     pub fn new(value: SubscriptionParamsRepr) -> Result<Self, &'static str> {
-        if value.price_feed_ids.is_empty() {
-            return Err("no price feed ids specified");
+        if value.price_feed_ids.is_none() && value.symbols.is_none() {
+            return Err("either price feed ids or symbols must be specified");
         }
-        if !value.price_feed_ids.iter().all_unique() {
-            return Err("duplicate price feed ids specified");
+        if value.price_feed_ids.is_some() && value.symbols.is_some() {
+            return Err("either price feed ids or symbols must be specified, not both");
         }
+
+        if let Some(ref ids) = value.price_feed_ids {
+            if ids.is_empty() {
+                return Err("no price feed ids specified");
+            }
+            if !ids.iter().all_unique() {
+                return Err("duplicate price feed ids specified");
+            }
+        }
+
+        if let Some(ref symbols) = value.symbols {
+            if symbols.is_empty() {
+                return Err("no symbols specified");
+            }
+            if !symbols.iter().all_unique() {
+                return Err("duplicate symbols specified");
+            }
+        }
+
         if !value.formats.iter().all_unique() {
             return Err("duplicate formats or chains specified");
         }
