@@ -249,7 +249,7 @@ const RequestDrawerBody = ({
 };
 
 const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
-  const retryCommand = `cast send ${request.chain.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${request.provider} ${request.sequenceNumber.toString()} ${request.userContribution} ${request.randomNumber} -r ${request.chain.rpc} --private-key <YOUR_PRIVATE_KEY>`;
+  const retryCommand = `cast send ${request.chain.address} 'revealWithCallback(address, uint64, bytes32, bytes32)' ${request.provider} ${request.sequenceNumber.toString()} ${request.userContribution} ${request.providerContribution} -r ${request.chain.rpc} --private-key <YOUR_PRIVATE_KEY>`;
 
   return (
     <>
