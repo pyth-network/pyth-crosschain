@@ -3,21 +3,22 @@
 import { Card } from "@pythnetwork/component-library/Card";
 import { Label } from "@pythnetwork/component-library/unstyled/Label";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
-import clsx from "clsx";
-import React, { useState, useEffect } from "react";
+import { clsx } from "clsx";
+import { useState, useEffect } from "react";
 
 import styles from "./index.module.scss";
 
-// Simple Math component for inline mathematical expressions
-const MathExpression: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <span className="katex">{children}</span>;
-};
+// Components for mathematical notation
+const MathExpression = ({ children }: { children: React.ReactNode }) => (
+  <span className={clsx(styles.mathExpression)}>{children}</span>
+);
 
 // Component for subscripts and superscripts
-const Sub: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const Sub = ({ children }: { children: React.ReactNode }) => (
   <sub>{children}</sub>
 );
-const Sup: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+
+const Sup = ({ children }: { children: React.ReactNode }) => (
   <sup>{children}</sup>
 );
 
@@ -73,7 +74,8 @@ const RewardSimulator: React.FC = () => {
           <Label htmlFor="publisher-stake">
             Publisher Stake (
             <MathExpression>
-              S<Sub>p</Sub><Sup>p</Sup>
+              S<Sub>p</Sub>
+              <Sup>p</Sup>
             </MathExpression>
             ):
           </Label>
@@ -88,11 +90,13 @@ const RewardSimulator: React.FC = () => {
             min="0"
           />
         </div>
+
         <div className={clsx(styles.inputGroup)}>
           <Label htmlFor="delegator-stake">
             Delegator Stake (
             <MathExpression>
-              S<Sub>p</Sub><Sup>d</Sup>
+              S<Sub>p</Sub>
+              <Sup>d</Sup>
             </MathExpression>
             ):
           </Label>
@@ -107,6 +111,7 @@ const RewardSimulator: React.FC = () => {
             min="0"
           />
         </div>
+
         <div className={clsx(styles.inputGroup)}>
           <Label htmlFor="max-cap">
             Maximum Cap (
@@ -126,6 +131,7 @@ const RewardSimulator: React.FC = () => {
             min="0"
           />
         </div>
+
         <div className={clsx(styles.inputGroup)}>
           <Label htmlFor="delegator-fee">
             Delegator Fee (<MathExpression>f</MathExpression>) (%):
@@ -143,6 +149,7 @@ const RewardSimulator: React.FC = () => {
             step="0.1"
           />
         </div>
+
         <div className={clsx(styles.inputGroup)}>
           <Label htmlFor="reward-rate">
             Reward Rate (<MathExpression>r</MathExpression>) (%):
@@ -161,6 +168,7 @@ const RewardSimulator: React.FC = () => {
           />
         </div>
       </div>
+
       <div className={clsx(styles.resultsSection)}>
         <div className={clsx(styles.resultsGrid)}>
           <div className={clsx(styles.resultGroup)}>
@@ -170,7 +178,8 @@ const RewardSimulator: React.FC = () => {
                 <span className={clsx(styles.resultLabel)}>
                   Publisher Reward (
                   <MathExpression>
-                    R<Sup>p</Sup><Sub>p</Sub>
+                    R<Sup>p</Sup>
+                    <Sub>p</Sub>
                   </MathExpression>
                   ):
                 </span>{" "}
@@ -182,7 +191,8 @@ const RewardSimulator: React.FC = () => {
                 <span className={clsx(styles.resultLabel)}>
                   Delegator Reward (
                   <MathExpression>
-                    R<Sup>d</Sup><Sub>p</Sub>
+                    R<Sup>d</Sup>
+                    <Sub>p</Sub>
                   </MathExpression>
                   ):
                 </span>{" "}
@@ -192,6 +202,7 @@ const RewardSimulator: React.FC = () => {
               </p>
             </div>
           </div>
+
           <div className={clsx(styles.resultGroup)}>
             <h4 className={clsx(styles.resultTitle)}>
               Calculated Reward Rates (Yearly)
@@ -201,7 +212,8 @@ const RewardSimulator: React.FC = () => {
                 <span className={clsx(styles.resultLabel)}>
                   Publisher Rate (
                   <MathExpression>
-                    r<Sup>p</Sup><Sub>p</Sub>
+                    r<Sup>p</Sup>
+                    <Sub>p</Sub>
                   </MathExpression>
                   ):
                 </span>{" "}
@@ -213,7 +225,8 @@ const RewardSimulator: React.FC = () => {
                 <span className={clsx(styles.resultLabel)}>
                   Delegator Rate (
                   <MathExpression>
-                    r<Sup>d</Sup><Sub>p</Sub>
+                    r<Sup>d</Sup>
+                    <Sub>p</Sub>
                   </MathExpression>
                   ):
                 </span>{" "}

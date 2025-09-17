@@ -39,7 +39,7 @@
 .resultsSection {
   border-top: 1px solid var(--color-fd-border);
   margin-top: theme.spacing(6);
-  padding-top: theme.spacing(6);
+  padding: theme.spacing(6) theme.spacing(4) 0;
 }
 
 .resultsGrid {
@@ -67,7 +67,7 @@
 .resultValues {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(2);
+  gap: theme.spacing(1);
 }
 
 .resultItem {
@@ -80,5 +80,6 @@
 }
 
 .resultValue {
-  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
