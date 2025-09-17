@@ -5,6 +5,8 @@ description: >-
   on the Pyth network.
 ---
 
+import DualModeImage from "../../../src/components/DualModeImage";
+
 # Purpose and Scope
 
 This Pyth Slashing Rulebook (this "Rulebook") outlines the Terms & Conditions for slashing PYTH that has been staked for price feed accuracy on the Pyth network. This document develops the rules that the DAO must adhere to when assessing conditions and amounts of slashing.
@@ -108,14 +110,22 @@ The Pythian councile identifies there were 9 active publishers for `FOO/USD` at 
 It was found that 7 of the 9 publishers were influencing the price of `FOO/USD` at the time of the incident.
 The other 2 publishers were found publish price closely to the mediuan of the reference data.
 
-![OIS Slashing Investigation](/images/ois/ois_slashing_investigation_light.png)
+<DualModeImage
+  darkSrc="/images/ois/ois_slashing_investigation_dark.png"
+  lightSrc="/images/ois/ois_slashing_investigation_light.png"
+  alt="OIS Slashing Investigation"
+/>
 
 ### Pythian Council Process for Slashing
 
 - Assume that the Pyth DAO has set the maximum slashable amount at 500 bps of the total stake of each responsible publisher's assigned pool, the maximum amount that can be slashed is $500 \text{ bps} \times 50\text{M} = 2.5\text{M PYTH}$.
 - From the investigation, \$200K of preventable liquidations were identified from on chain data, the Pythian Council could adjust the amount of stake slashed to 500K PYTH or 100bps (assuming PYTH/USD = $0.40).
 
-![Pre Slashing Pool](/images/ois/ois_slashing_pool_pre_light.png)
+<DualModeImage
+  darkSrc="/images/ois/ois_slashing_pool_pre_dark.png"
+  lightSrc="/images/ois/ois_slashing_pool_pre_light.png"
+  alt="Pre Slashing Pool"
+/>
 
 - The 500K PYTH slashed is charged pro-rata to the 7 pools that constitute the stake subject to slashing (i.e. calculated according to the total stake in the 7 pools assigned to the 7 publishers found responsible for the misprint).
 
@@ -123,7 +133,11 @@ The other 2 publishers were found publish price closely to the mediuan of the re
   - The publisher assigned to `pool_1` would see its self-stake slashed 100bps of 6M PYTH, ie. 60K PYTH, resulting in **5.84M** residual self-stake.
   - Delegators to `pool_1` would see their stake slashed by 100bps of 4M PYTH, ie. 40K PYTH, resulting in **3.96M** residual delegated stake.
 
-![Post Slashing Pool](/images/ois/ois_slashing_pool_post_light.png)
+<DualModeImage
+  darkSrc="/images/ois/ois_slashing_pool_post_dark.png"
+  lightSrc="/images/ois/ois_slashing_pool_post_light.png"
+  alt="Post Slashing Pool"
+/>
 
 - The total amount slashed in this example is 500K PYTH. This amount goes to the Pyth DAO treasury. The Pythian Council or the community can propose to the DAO to vote on means to distribute the slashed amount.
 
