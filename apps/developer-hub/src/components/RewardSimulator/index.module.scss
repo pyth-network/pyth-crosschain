@@ -10,7 +10,7 @@
   gap: theme.spacing(6);
   padding: theme.spacing(4);
 
-  @media (width >= 640px) {
+  @include theme.breakpoint("sm") {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -47,7 +47,7 @@
   grid-template-columns: 1fr;
   gap: theme.spacing(6);
 
-  @media (width >= 640px) {
+  @include theme.breakpoint("sm") {
     grid-template-columns: 1fr 1fr;
   }
 }

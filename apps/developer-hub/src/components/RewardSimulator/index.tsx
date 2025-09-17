@@ -3,14 +3,13 @@
 import { Card } from "@pythnetwork/component-library/Card";
 import { Label } from "@pythnetwork/component-library/unstyled/Label";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
-import { clsx } from "clsx";
 import { useState, useEffect } from "react";
 
 import styles from "./index.module.scss";
 
 // Components for mathematical notation
 const MathExpression = ({ children }: { children: React.ReactNode }) => (
-  <span className={clsx(styles.mathExpression)}>{children}</span>
+  <span className={styles.mathExpression}>{children}</span>
 );
 
 // Component for subscripts and superscripts
@@ -35,31 +34,27 @@ const RewardSimulator: React.FC = () => {
   const [delegatorRewardRate, setDelegatorRewardRate] = useState(0);
 
   useEffect(() => {
-    const calculateRewards = () => {
-      const totalStake = publisherStake + delegatorStake;
-      const eligibleAmount = Math.min(totalStake, maxCap);
-      const totalReward = (rewardRate / 100) * eligibleAmount;
+    const totalStake = publisherStake + delegatorStake;
+    const eligibleAmount = Math.min(totalStake, maxCap);
+    const totalReward = (rewardRate / 100) * eligibleAmount;
 
-      const publisherRewardBase =
-        (rewardRate / 100) * Math.min(publisherStake, maxCap);
-      const delegatorRewardBase = totalReward - publisherRewardBase;
+    const publisherRewardBase =
+      (rewardRate / 100) * Math.min(publisherStake, maxCap);
+    const delegatorRewardBase = totalReward - publisherRewardBase;
 
-      const delegatorFeeAmount = (delegatorFee / 100) * delegatorRewardBase;
+    const delegatorFeeAmount = (delegatorFee / 100) * delegatorRewardBase;
 
-      const finalDelegatorReward = delegatorRewardBase - delegatorFeeAmount;
-      const finalPublisherReward = publisherRewardBase + delegatorFeeAmount;
+    const finalDelegatorReward = delegatorRewardBase - delegatorFeeAmount;
+    const finalPublisherReward = publisherRewardBase + delegatorFeeAmount;
 
-      setPublisherReward(Number(finalPublisherReward.toFixed(2)));
-      setDelegatorReward(Number(finalDelegatorReward.toFixed(2)));
-      setPublisherRewardRate(
-        Number(((finalPublisherReward * 100) / publisherStake).toFixed(2)),
-      );
-      setDelegatorRewardRate(
-        Number(((finalDelegatorReward * 100) / delegatorStake).toFixed(2)),
-      );
-    };
-
-    calculateRewards();
+    setPublisherReward(Number(finalPublisherReward.toFixed(2)));
+    setDelegatorReward(Number(finalDelegatorReward.toFixed(2)));
+    setPublisherRewardRate(
+      Number(((finalPublisherReward * 100) / publisherStake).toFixed(2)),
+    );
+    setDelegatorRewardRate(
+      Number(((finalDelegatorReward * 100) / delegatorStake).toFixed(2)),
+    );
   }, [publisherStake, delegatorStake, maxCap, delegatorFee, rewardRate]);
 
   return (
@@ -67,10 +62,10 @@ const RewardSimulator: React.FC = () => {
       variant="secondary"
       title="Reward Simulator"
       nonInteractive
-      className={clsx(styles.card)}
+      className={styles.card}
     >
-      <div className={clsx(styles.inputGrid)}>
-        <div className={clsx(styles.inputGroup)}>
+      <div className={styles.inputGrid}>
+        <div className={styles.inputGroup}>
           <Label htmlFor="publisher-stake">
             Publisher Stake (
             <MathExpression>
@@ -86,12 +81,12 @@ const RewardSimulator: React.FC = () => {
             onChange={(e) => {
               setPublisherStake(Number(e.target.value));
             }}
-            className={clsx(styles.input)}
+            className={styles.input ?? ""}
             min="0"
           />
         </div>
 
-        <div className={clsx(styles.inputGroup)}>
+        <div className={styles.inputGroup}>
           <Label htmlFor="delegator-stake">
             Delegator Stake (
             <MathExpression>
@@ -107,12 +102,12 @@ const RewardSimulator: React.FC = () => {
             onChange={(e) => {
               setDelegatorStake(Number(e.target.value));
             }}
-            className={clsx(styles.input)}
+            className={styles.input ?? ""}
             min="0"
           />
         </div>
 
-        <div className={clsx(styles.inputGroup)}>
+        <div className={styles.inputGroup}>
           <Label htmlFor="max-cap">
             Maximum Cap (
             <MathExpression>
@@ -127,12 +122,12 @@ const RewardSimulator: React.FC = () => {
             onChange={(e) => {
               setMaxCap(Number(e.target.value));
             }}
-            className={clsx(styles.input)}
+            className={styles.input ?? ""}
             min="0"
           />
         </div>
 
-        <div className={clsx(styles.inputGroup)}>
+        <div className={styles.inputGroup}>
           <Label htmlFor="delegator-fee">
             Delegator Fee (<MathExpression>f</MathExpression>) (%):
           </Label>
@@ -143,14 +138,14 @@ const RewardSimulator: React.FC = () => {
             onChange={(e) => {
               setDelegatorFee(Number(e.target.value));
             }}
-            className={clsx(styles.input)}
+            className={styles.input ?? ""}
             min="0"
             max="100"
             step="0.1"
           />
         </div>
 
-        <div className={clsx(styles.inputGroup)}>
+        <div className={styles.inputGroup}>
           <Label htmlFor="reward-rate">
             Reward Rate (<MathExpression>r</MathExpression>) (%):
           </Label>
@@ -161,7 +156,7 @@ const RewardSimulator: React.FC = () => {
             onChange={(e) => {
               setRewardRate(Number(e.target.value));
             }}
-            className={clsx(styles.input)}
+            className={styles.input ?? ""}
             min="0"
             max="100"
             step="0.1"
@@ -169,13 +164,13 @@ const RewardSimulator: React.FC = () => {
         </div>
       </div>
 
-      <div className={clsx(styles.resultsSection)}>
-        <div className={clsx(styles.resultsGrid)}>
-          <div className={clsx(styles.resultGroup)}>
-            <h4 className={clsx(styles.resultTitle)}>Calculated Rewards</h4>
-            <div className={clsx(styles.resultValues)}>
-              <p className={clsx(styles.resultItem)}>
-                <span className={clsx(styles.resultLabel)}>
+      <div className={styles.resultsSection}>
+        <div className={styles.resultsGrid}>
+          <div className={styles.resultGroup}>
+            <h4 className={styles.resultTitle}>Calculated Rewards</h4>
+            <div className={styles.resultValues}>
+              <p className={styles.resultItem}>
+                <span className={styles.resultLabel}>
                   Publisher Reward (
                   <MathExpression>
                     R<Sup>p</Sup>
@@ -183,12 +178,10 @@ const RewardSimulator: React.FC = () => {
                   </MathExpression>
                   ):
                 </span>{" "}
-                <span className={clsx(styles.resultValue)}>
-                  {publisherReward}
-                </span>
+                <span className={styles.resultValue}>{publisherReward}</span>
               </p>
-              <p className={clsx(styles.resultItem)}>
-                <span className={clsx(styles.resultLabel)}>
+              <p className={styles.resultItem}>
+                <span className={styles.resultLabel}>
                   Delegator Reward (
                   <MathExpression>
                     R<Sup>d</Sup>
@@ -196,20 +189,18 @@ const RewardSimulator: React.FC = () => {
                   </MathExpression>
                   ):
                 </span>{" "}
-                <span className={clsx(styles.resultValue)}>
-                  {delegatorReward}
-                </span>
+                <span className={styles.resultValue}>{delegatorReward}</span>
               </p>
             </div>
           </div>
 
-          <div className={clsx(styles.resultGroup)}>
-            <h4 className={clsx(styles.resultTitle)}>
+          <div className={styles.resultGroup}>
+            <h4 className={styles.resultTitle}>
               Calculated Reward Rates (Yearly)
             </h4>
-            <div className={clsx(styles.resultValues)}>
-              <p className={clsx(styles.resultItem)}>
-                <span className={clsx(styles.resultLabel)}>
+            <div className={styles.resultValues}>
+              <p className={styles.resultItem}>
+                <span className={styles.resultLabel}>
                   Publisher Rate (
                   <MathExpression>
                     r<Sup>p</Sup>
@@ -217,12 +208,12 @@ const RewardSimulator: React.FC = () => {
                   </MathExpression>
                   ):
                 </span>{" "}
-                <span className={clsx(styles.resultValue)}>
+                <span className={styles.resultValue}>
                   {publisherRewardRate}%
                 </span>
               </p>
-              <p className={clsx(styles.resultItem)}>
-                <span className={clsx(styles.resultLabel)}>
+              <p className={styles.resultItem}>
+                <span className={styles.resultLabel}>
                   Delegator Rate (
                   <MathExpression>
                     r<Sup>d</Sup>
@@ -230,7 +221,7 @@ const RewardSimulator: React.FC = () => {
                   </MathExpression>
                   ):
                 </span>{" "}
-                <span className={clsx(styles.resultValue)}>
+                <span className={styles.resultValue}>
                   {delegatorRewardRate}%
                 </span>
               </p>
