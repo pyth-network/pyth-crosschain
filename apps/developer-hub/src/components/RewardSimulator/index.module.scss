@@ -1,0 +1,84 @@
+@use "@pythnetwork/component-library/theme";
+
+.card {
+  margin-top: theme.spacing(6);
+}
+
+.inputGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(6);
+  padding: theme.spacing(4);
+
+  @media (width >= 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.input {
+  padding: theme.spacing(2) theme.spacing(3);
+  border: 1px solid var(--color-fd-border);
+  border-radius: theme.border-radius("lg");
+  background-color: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+  transition: all 0.15s ease-in-out;
+
+  &:focus {
+    outline: 2px solid var(--color-fd-accent);
+    outline-offset: -2px;
+    border-color: transparent;
+  }
+}
+
+.resultsSection {
+  border-top: 1px solid var(--color-fd-border);
+  margin-top: theme.spacing(6);
+  padding-top: theme.spacing(6);
+}
+
+.resultsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(6);
+
+  @media (width >= 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.resultGroup {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
+
+.resultTitle {
+  font-size: theme.font-size("lg");
+  font-weight: theme.font-weight("semibold");
+  color: var(--color-fd-foreground);
+}
+
+.resultValues {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.resultItem {
+  font-size: theme.font-size("sm");
+  color: var(--color-fd-muted-foreground);
+}
+
+.resultLabel {
+  font-weight: theme.font-weight("medium");
+}
+
+.resultValue {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+}
