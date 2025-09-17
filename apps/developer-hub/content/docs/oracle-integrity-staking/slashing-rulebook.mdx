@@ -6,6 +6,12 @@ description: >-
 ---
 
 import DualModeImage from "../../../src/components/DualModeImage";
+import OISSlashingInvestigationDark from "./images/ois_slashing_investigation_dark.png";
+import OISSlashingInvestigationLight from "./images/ois_slashing_investigation_light.png";
+import OISSlashingPoolPreDark from "./images/ois_slashing_pool_pre_dark.png";
+import OISSlashingPoolPreLight from "./images/ois_slashing_pool_pre_light.png";
+import OISSlashingPoolPostDark from "./images/ois_slashing_pool_post_dark.png";
+import OISSlashingPoolPostLight from "./images/ois_slashing_pool_post_light.png";
 
 # Purpose and Scope
 
@@ -111,8 +117,8 @@ It was found that 7 of the 9 publishers were influencing the price of `FOO/USD` 
 The other 2 publishers were found publish price closely to the mediuan of the reference data.
 
 <DualModeImage
-  darkSrc="/images/ois/ois_slashing_investigation_dark.png"
-  lightSrc="/images/ois/ois_slashing_investigation_light.png"
+  darkSrc={OISSlashingInvestigationDark}
+  lightSrc={OISSlashingInvestigationLight}
   alt="OIS Slashing Investigation"
 />
 
@@ -122,8 +128,8 @@ The other 2 publishers were found publish price closely to the mediuan of the re
 - From the investigation, \$200K of preventable liquidations were identified from on chain data, the Pythian Council could adjust the amount of stake slashed to 500K PYTH or 100bps (assuming PYTH/USD = $0.40).
 
 <DualModeImage
-  darkSrc="/images/ois/ois_slashing_pool_pre_dark.png"
-  lightSrc="/images/ois/ois_slashing_pool_pre_light.png"
+  darkSrc={OISSlashingPoolPreDark}
+  lightSrc={OISSlashingPoolPreLight}
   alt="Pre Slashing Pool"
 />
 
@@ -134,8 +140,8 @@ The other 2 publishers were found publish price closely to the mediuan of the re
   - Delegators to `pool_1` would see their stake slashed by 100bps of 4M PYTH, ie. 40K PYTH, resulting in **3.96M** residual delegated stake.
 
 <DualModeImage
-  darkSrc="/images/ois/ois_slashing_pool_post_dark.png"
-  lightSrc="/images/ois/ois_slashing_pool_post_light.png"
+  darkSrc={OISSlashingPoolPostDark}
+  lightSrc={OISSlashingPoolPostLight}
   alt="Post Slashing Pool"
 />
 
