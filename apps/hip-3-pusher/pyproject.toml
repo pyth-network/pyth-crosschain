@@ -1,0 +1,15 @@
+[project]
+name = "hip-3-pusher"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "asn1crypto>=1.5.1",
+    "boto3>=1.40.31",
+    "cryptography>=45.0.7",
+    "hyperliquid-python-sdk>=0.19.0",
+    "loguru>=0.7.3",
+    "toml>=0.10.2",
+    "websockets>=15.0.1",
+]
