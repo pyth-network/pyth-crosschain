@@ -23,21 +23,21 @@
 
 .input {
   padding: theme.spacing(2) theme.spacing(3);
-  border: 1px solid var(--color-fd-border);
+  border: 1px solid theme.color("border");
   border-radius: theme.border-radius("lg");
-  background-color: var(--color-fd-background);
-  color: var(--color-fd-foreground);
+  background-color: theme.color("background", "primary");
+  color: theme.color("foreground");
   transition: all 0.15s ease-in-out;
 
   &:focus {
-    outline: 2px solid var(--color-fd-accent);
+    outline: 2px solid theme.color("focus");
     outline-offset: -2px;
     border-color: transparent;
   }
 }
 
 .resultsSection {
-  border-top: 1px solid var(--color-fd-border);
+  border-top: 1px solid theme.color("border");
   margin-top: theme.spacing(6);
   padding: theme.spacing(6) theme.spacing(4) 0;
 }
@@ -61,25 +61,26 @@
 .resultTitle {
   font-size: theme.font-size("lg");
   font-weight: theme.font-weight("semibold");
-  color: var(--color-fd-foreground);
+  color: theme.color("foreground");
 }
 
-.resultValues {
+.resultList {
   display: flex;
   flex-direction: column;
   gap: theme.spacing(1);
+  margin: 0;
 }
 
-.resultItem {
+.resultTerm {
   font-size: theme.font-size("sm");
-  color: var(--color-fd-muted-foreground);
-}
-
-.resultLabel {
+  color: theme.color("muted");
   font-weight: theme.font-weight("medium");
+  margin: 0;
 }
 
 .resultValue {
-  font-family:
-    ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: theme.font-family("monospace");
+  font-size: theme.font-size("sm");
+  margin: 0;
+  margin-bottom: theme.spacing(2);
 }
