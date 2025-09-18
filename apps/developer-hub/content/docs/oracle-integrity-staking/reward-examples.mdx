@@ -5,6 +5,14 @@ description: >-
 ---
 
 import DualModeImage from "../../../src/components/DualModeImage";
+import OISExample1Dark from "./images/OIS_Rewards_Example_Dark_1.png";
+import OISExample1Light from "./images/OIS_Rewards_Example_Light_1.png";
+import OISExample2Dark from "./images/OIS_Rewards_Example_Dark_2.png";
+import OISExample2Light from "./images/OIS_Rewards_Example_Light_2.png";
+import OISExample3Dark from "./images/OIS_Rewards_Example_Dark_3.png";
+import OISExample3Light from "./images/OIS_Rewards_Example_Light_3.png";
+import OISExample4Dark from "./images/OIS_Rewards_Example_Dark_4.png";
+import OISExample4Light from "./images/OIS_Rewards_Example_Light_4.png";
 
 NOTE: All the symbols used in the examples are explained in the [Mathematical Representation](./mathematical-representation) section.
 
@@ -14,8 +22,8 @@ This example takes the case of one pool where the pool has stake from only the p
 
 <br />
 <DualModeImage
-  darkSrc="/images/ois/OIS_Rewards_Example_Dark_1.png"
-  lightSrc="/images/ois/OIS_Rewards_Example_Light_1.png"
+  darkSrc={OISExample1Dark}
+  lightSrc={OISExample1Light}
   alt="Example 1 - Only Publisher Stake"
 />
 
@@ -42,8 +50,8 @@ This example takes the case where the pool has stake from both the publisher and
 
 <br />
 <DualModeImage
-  darkSrc="/images/ois/OIS_Rewards_Example_Dark_2.png"
-  lightSrc="/images/ois/OIS_Rewards_Example_Light_2.png"
+  darkSrc={OISExample2Dark}
+  lightSrc={OISExample2Light}
   alt="Example 2 - Publisher and Delegator Stake"
 />
 
@@ -70,8 +78,8 @@ This example takes the case where the combined stake of both the publisher and t
 
 <br />
 <DualModeImage
-  darkSrc="/images/ois/OIS_Rewards_Example_Dark_3.png"
-  lightSrc="/images/ois/OIS_Rewards_Example_Light_3.png"
+  darkSrc={OISExample3Dark}
+  lightSrc={OISExample3Light}
   alt="Example 3 - Stake Exceeding Cap"
 />
 
@@ -98,8 +106,8 @@ This example demonstrates how the delegation fee affect the reward distribution 
 
 <br />
 <DualModeImage
-  darkSrc="/images/ois/OIS_Rewards_Example_Dark_4.png"
-  lightSrc="/images/ois/OIS_Rewards_Example_Light_4.png"
+  darkSrc={OISExample4Dark}
+  lightSrc={OISExample4Light}
   alt="Example 4 - Delegator Fees"
 />
 
@@ -203,3 +211,11 @@ C_{p_{option2}} &= 100 + 100 \cdot \sum_{s \in \text{\{$s_{6}$,.., $s_{10}$\}}} 
 &= 100 + 50 = 150
 \end{aligned}
 $$
+
+## Reward Calculator
+
+Use the calculator below to calculate publisher and delegator rewards based on your inputs.
+
+import RewardSimulator from "../../../src/components/RewardSimulator";
+
+<RewardSimulator />
