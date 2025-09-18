@@ -2,14 +2,15 @@ import { generateFiles } from "fumadocs-openapi";
 
 import { openapi } from "../src/lib/openapi";
 
-// const schemas = await openapi.getSchemas();
+const outDir = "./content/docs/openapi/operation/route";
 
-// const fortunaSchema = schemas[fortunaOpenApiUrl];
-// const fortunaStagingSchema = schemas[fortunaStagingOpenApiUrl];
+export async function generateDocs() {
+    await generateFiles({
+        input: openapi,
+        output: outDir,
+        per: 'operation',
+        includeDescription: true,
+    });
+}
 
-void generateFiles({
-  input: openapi,
-  output: "./content/docs/openapi/(generated)",
-  per: "file",
-  includeDescription: true,
-});
+await generateDocs();
