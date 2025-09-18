@@ -1,4 +1,5 @@
 from loguru import logger
+import time
 
 from hyperliquid.info import Info
 from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
@@ -28,6 +29,7 @@ class HyperliquidListener:
         :return: None
         """
         ctx = message["data"]["ctx"]
-        self.price_state.latest_oracle_price = ctx["oraclePx"]
-        self.price_state.latest_mark_price = ctx["markPx"]
-        logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", self.price_state.latest_oracle_price, self.price_state.latest_mark_price)
+        self.price_state.hl_oracle_price = ctx["oraclePx"]
+        self.price_state.hl_mark_price = ctx["markPx"]
+        logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", self.price_state.hl_oracle_price, self.price_state.hl_mark_price)
+        self.price_state.latest_hl_timestamp = time.time()

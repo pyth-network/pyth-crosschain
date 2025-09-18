@@ -47,15 +47,21 @@ class Publisher:
     async def run(self):
         while True:
             await asyncio.sleep(self.publish_interval)
-            logger.debug("publish price_state: {}", vars(self.price_state))
 
             oracle_pxs = {}
+            oracle_px = self.price_state.get_current_oracle_price()
+            if not oracle_px:
+                logger.error("No valid oracle price available!")
+                return
+            else:
+                logger.debug("Current oracle price: {}", oracle_px)
+                oracle_pxs[self.market_symbol] = oracle_px
+
             mark_pxs = []
+            #if self.price_state.hl_mark_price:
+            #    mark_pxs.append({self.market_symbol: self.price_state.hl_mark_price})
+
             external_perp_pxs = {}
-            if self.price_state.latest_oracle_price:
-                oracle_pxs[self.market_symbol] = self.price_state.latest_oracle_price
-            if self.price_state.latest_mark_price:
-                mark_pxs.append({self.market_symbol: self.price_state.latest_mark_price})
 
             if self.enable_publish:
                 if self.enable_kms:

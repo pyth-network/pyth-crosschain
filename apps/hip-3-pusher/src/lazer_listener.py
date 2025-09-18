@@ -1,6 +1,7 @@
 import asyncio
 import json
 from loguru import logger
+import time
 import websockets
 
 from price_state import PriceState
@@ -9,11 +10,10 @@ from price_state import PriceState
 class LazerListener:
     """
     Subscribe to Lazer price updates for needed feeds.
-    TODO: Will need to handle specific conversions/factors and exponents.
     """
     def __init__(self, config, price_state: PriceState):
-        self.router_urls = config["lazer"]["router_urls"]
-        self.api_key = config["lazer"]["api_key"]
+        self.lazer_urls = config["lazer"]["lazer_urls"]
+        self.api_key = config["lazer"]["lazer_api_key"]
         self.base_feed_id = config["lazer"]["base_feed_id"]
         self.quote_feed_id = config["lazer"]["quote_feed_id"]
         self.price_state = price_state
@@ -32,7 +32,7 @@ class LazerListener:
         }
 
     async def subscribe_all(self):
-        await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.router_urls))
+        await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.lazer_urls))
 
     async def subscribe_single(self, router_url):
         while True:
@@ -52,7 +52,7 @@ class LazerListener:
             subscribe_request = self.get_subscribe_request(1)
 
             await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent Lazer subscribe request to {}", self.router_urls[0])
+            logger.info("Sent Lazer subscribe request to {}", self.lazer_urls[0])
 
             # listen for updates
             async for message in ws:
@@ -83,5 +83,6 @@ class LazerListener:
                     self.price_state.lazer_base_price = price
                 if feed_id == self.quote_feed_id:
                     self.price_state.lazer_quote_price = price
+            self.price_state.latest_lazer_timestamp = time.time()
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)

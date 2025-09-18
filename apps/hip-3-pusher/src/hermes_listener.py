@@ -1,6 +1,7 @@
 import asyncio
 import json
 from loguru import logger
+import time
 import websockets
 
 from price_state import PriceState
@@ -9,18 +10,17 @@ from price_state import PriceState
 class HermesListener:
     """
     Subscribe to Hermes price updates for needed feeds.
-    TODO: Will need to handle specific conversions/factors and exponents.
     """
     def __init__(self, config, price_state: PriceState):
-        self.urls = config["hermes"]["urls"]
-        self.base_id = config["hermes"]["base_id"]
-        self.quote_id = config["hermes"]["quote_id"]
+        self.hermes_urls = config["hermes"]["hermes_urls"]
+        self.base_feed_id = config["hermes"]["base_feed_id"]
+        self.quote_feed_id = config["hermes"]["quote_feed_id"]
         self.price_state = price_state
 
     def get_subscribe_request(self):
         return {
             "type": "subscribe",
-            "ids": [self.base_id, self.quote_id],
+            "ids": [self.base_feed_id, self.quote_feed_id],
             "verbose": False,
             "binary": True,
             "allow_out_of_order": False,
@@ -28,7 +28,7 @@ class HermesListener:
         }
 
     async def subscribe_all(self):
-        await asyncio.gather(*(self.subscribe_single(url) for url in self.urls))
+        await asyncio.gather(*(self.subscribe_single(url) for url in self.hermes_urls))
 
     async def subscribe_single(self, url):
         while True:
@@ -71,9 +71,10 @@ class HermesListener:
             expo = price_object["expo"]
             publish_time = price_object["publish_time"]
             logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
-            if id == self.base_id:
+            if id == self.base_feed_id:
                 self.price_state.hermes_base_price = price
-            if id == self.quote_id:
+            if id == self.quote_feed_id:
                 self.price_state.hermes_quote_price = price
+            self.price_state.latest_hermes_timestamp = time.time()
         except Exception as e:
             logger.error("parse_hermes_message error: {}", e)

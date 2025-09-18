@@ -1,6 +1,8 @@
 import argparse
 import asyncio
 from loguru import logger
+import os
+import sys
 import toml
 
 from hyperliquid_listener import HyperliquidListener
@@ -23,25 +25,36 @@ def load_config():
     return config
 
 
+def init_logging():
+    logger.remove()
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    # serialize=True if we want json logging
+    logger.add(sys.stderr, level=log_level, serialize=False)
+
+
 async def main():
-    logger.info("Starting hip3-agent...")
+    init_logging()
+    logger.info("Starting hip-3-pusher...")
     config = load_config()
 
-    price_state = PriceState()
+    price_state = PriceState(config)
     publisher = Publisher(config, price_state)
     hyperliquid_listener = HyperliquidListener(config, price_state)
     lazer_listener = LazerListener(config, price_state)
     hermes_listener = HermesListener(config, price_state)
 
-    # TODO: Probably pull this out of the sdk.
+    # TODO: Probably pull this out of the sdk so we can handle reconnects.
     hyperliquid_listener.subscribe()
     await asyncio.gather(
         publisher.run(),
         lazer_listener.subscribe_all(),
         hermes_listener.subscribe_all(),
     )
-    logger.info("Exiting hip3-agent...")
+    logger.info("Exiting hip-3-pusher..")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as e:
+        logger.exception("Uncaught exception, exiting: {}", e)
