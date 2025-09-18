@@ -24,7 +24,7 @@ const Sup = ({ children }: { children: React.ReactNode }) => (
 const RewardSimulator: React.FC = () => {
   const [rewards, setRewards] = useState({
     // These are the initial values for the reward simulator based on default values
-    publisher: 26, 
+    publisher: 26,
     delegator: 24,
     publisherRate: 13,
     delegatorRate: 8,
