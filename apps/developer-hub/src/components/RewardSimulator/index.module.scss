@@ -79,7 +79,7 @@
 }
 
 .resultValue {
-  font-family: var(--font-mono);
+  font-family: theme.font-family("monospace");
   font-size: theme.font-size("sm");
   margin: 0;
   margin-bottom: theme.spacing(2);
