@@ -1,6 +1,6 @@
 {
   "root": true,
-  "title": "Pyth Core",
+  "title": "Price Feeds",
   "description": "Real-time data from financial institutions",
   "icon": "ChartLine",
   "pages": [

@@ -183,7 +183,7 @@ impl PythLazerStreamClient {
                 if seen_updates.contains_key(&cache_key) {
                     continue;
                 }
-                seen_updates.insert(cache_key, response.clone(), DEDUP_TTL);
+                seen_updates.insert(cache_key, true, DEDUP_TTL);
 
                 match sender.try_send(response) {
                     Ok(_) => (),

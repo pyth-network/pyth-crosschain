@@ -1,14 +1,14 @@
 import type { DocsLayoutProps } from "fumadocs-ui/layouts/docs";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
-import { source } from "../source";
+import { source } from "../lib/source";
 
 export const baseOptions: BaseLayoutProps = {
   nav: {
     enabled: true,
   },
   themeSwitch: {
-    enabled: false,
+    enabled: false, // Keep this false as the theme switch is handled by the component library
   },
   searchToggle: {
     enabled: false,

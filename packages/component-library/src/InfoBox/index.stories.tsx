@@ -35,7 +35,7 @@ const meta = {
     },
     variant: {
       control: "select",
-      options: ["Neutral", "Info", "Warning", "Error", "Data", "Success"],
+      options: ["neutral", "info", "warning", "error", "data", "success"],
       description: "The variant of the info box.",
       table: {
         category: "Appearance",

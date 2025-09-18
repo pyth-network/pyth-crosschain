@@ -300,6 +300,7 @@ pub mod tests {
             publish_interval_duration: Default::default(),
             history_service_url: None,
             enable_update_deduplication: false,
+            update_deduplication_ttl: Default::default(),
         };
 
         println!("{:?}", get_metadata(config).await.unwrap());

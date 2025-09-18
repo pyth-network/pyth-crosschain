@@ -2,7 +2,7 @@ export { DocumentationPage as default } from "../../../../components/Pages/Docum
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { source } from "../../../../source";
+import { source } from "../../../../lib/source";
 
 export function generateStaticParams() {
   return source.generateParams();
