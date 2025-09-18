@@ -51,6 +51,10 @@ pub async fn run_api(
     ),
     tags(
     (name = "fortuna", description = "Random number service for the Pyth Entropy protocol")
+    ),
+    servers(
+        (url = "https://fortuna.dourolabs.app", description = "Default Provider for mainnet chains"),
+        (url = "https://fortuna-staging.dourolabs.app", description = "Default Provider for testnet chains")
     )
     )]
     struct ApiDoc;
