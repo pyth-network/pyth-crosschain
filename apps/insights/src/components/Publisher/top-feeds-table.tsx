@@ -6,13 +6,12 @@ import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
-import styles from "./top-feeds-table.module.scss";
 import type { Cluster } from "../../services/pyth";
-import type { Status } from "../../status";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceFeedTag } from "../PriceFeedTag";
 import { Score } from "../Score";
+import styles from "./top-feeds-table.module.scss";
 
 type Props =
   | LoadingTopFeedsTableImplProps
@@ -36,7 +35,6 @@ type ResolvedTopFeedsTableProps = BaseTopFeedsTableImplProps & {
     assetClass: string;
     score: number;
     rank: number;
-    status: Status;
     firstEvaluation: Date;
     icon: ReactNode;
     href: string;

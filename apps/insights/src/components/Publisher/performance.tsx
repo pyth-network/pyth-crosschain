@@ -10,19 +10,15 @@ import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import type { ReactNode, ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-import { getPriceFeeds } from "./get-price-feeds";
-import styles from "./performance.module.scss";
-import { TopFeedsTable } from "./top-feeds-table";
 import { getPublishers } from "../../services/clickhouse";
 import type { Cluster } from "../../services/pyth";
 import { ClusterToName, parseCluster } from "../../services/pyth";
-import { Status } from "../../status";
 import {
-  ExplainActive,
-  ExplainInactive,
   ExplainAverage,
+  ExplainPermissioned,
+  ExplainUnpermissioned,
 } from "../Explanations";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PriceFeedTag } from "../PriceFeedTag";
@@ -30,6 +26,9 @@ import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
+import { getPriceFeeds } from "./get-price-feeds";
+import styles from "./performance.module.scss";
+import { TopFeedsTable } from "./top-feeds-table";
 
 const PUBLISHER_SCORE_WIDTH = 24;
 
@@ -68,22 +67,22 @@ export const Performance = async ({ params }: Props) => {
             {publisher.rank}
           </Ranking>
         ),
-        activeFeeds: (
+        permissionedFeeds: (
           <Link
-            href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
+            href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Permissioned`}
             invert
             prefetch={false}
           >
-            {publisher.activeFeeds}
+            {publisher.permissionedFeeds}
           </Link>
         ),
-        inactiveFeeds: (
+        unpermissionedFeeds: (
           <Link
-            href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Inactive`}
+            href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Unpermissioned`}
             invert
             prefetch={false}
           >
-            {publisher.inactiveFeeds}
+            {publisher.unpermissionedFeeds}
           </Link>
         ),
         averageScore: (
@@ -147,8 +146,8 @@ type PerformanceImplProps =
           typeof Table<
             | "ranking"
             | "averageScore"
-            | "activeFeeds"
-            | "inactiveFeeds"
+            | "permissionedFeeds"
+            | "unpermissionedFeeds"
             | "name"
           >
         >["rows"]
@@ -175,8 +174,8 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
         fields={[
           { id: "ranking", name: "Ranking" },
           { id: "averageScore", name: "Average Score" },
-          { id: "activeFeeds", name: "Active Feeds" },
-          { id: "inactiveFeeds", name: "Inactive Feeds" },
+          { id: "permissionedFeeds", name: "Permissioned" },
+          { id: "unpermissionedFeeds", name: "Unpermissioned" },
         ]}
         {...(props.isLoading
           ? { isLoading: true }
@@ -207,22 +206,22 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
             loadingSkeleton: <PublisherTag isLoading />,
           },
           {
-            id: "activeFeeds",
+            id: "permissionedFeeds",
             name: (
               <>
-                ACTIVE FEEDS
-                <ExplainActive />
+                PERMISSIONED FEEDS
+                <ExplainPermissioned />
               </>
             ),
             alignment: "center",
             width: 30,
           },
           {
-            id: "inactiveFeeds",
+            id: "unpermissionedFeeds",
             name: (
               <>
-                INACTIVE FEEDS
-                <ExplainInactive />
+                UNPERMISSIONED FEEDS
+                <ExplainUnpermissioned />
               </>
             ),
             alignment: "center",
@@ -292,27 +291,23 @@ const getFeedRows = (
     >;
   })[],
 ) =>
-  priceFeeds
-    .filter((feed) => feed.status === Status.Active)
-    .slice(0, 20)
-    .map(({ feed, ranking, status }) => ({
-      key: feed.product.price_account,
-      symbol: feed.symbol,
-      displaySymbol: feed.product.display_symbol,
-      description: feed.product.description,
-      assetClass: feed.product.asset_type,
-      score: ranking.final_score,
-      rank: ranking.final_rank,
-      status,
-      firstEvaluation: ranking.first_ranking_time,
-      icon: (
-        <PriceFeedIcon
-          assetClass={feed.product.asset_type}
-          symbol={feed.symbol}
-        />
-      ),
-      href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
-    }));
+  priceFeeds.slice(0, 20).map(({ feed, ranking }) => ({
+    key: feed.product.price_account,
+    symbol: feed.symbol,
+    displaySymbol: feed.product.display_symbol,
+    description: feed.product.description,
+    assetClass: feed.product.asset_type,
+    score: ranking.final_score,
+    rank: ranking.final_rank,
+    firstEvaluation: ranking.first_ranking_time,
+    icon: (
+      <PriceFeedIcon
+        assetClass={feed.product.asset_type}
+        symbol={feed.symbol}
+      />
+    ),
+    href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
+  }));
 
 const sliceAround = <T,>(
   arr: T[],

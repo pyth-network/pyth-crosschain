@@ -33,6 +33,8 @@ export const Publishers = async () => {
     ]);
   const rankingTime = pythnetPublishers[0]?.timestamp;
   const scoreTime = pythnetPublishers[0]?.scoreTime;
+  // eslint-disable-next-line no-console
+  console.log({ pythnetPublishers, pythtestConformancePublishers });
 
   return (
     <div className={styles.publishers}>
@@ -147,7 +149,7 @@ const toTableRow = ({
   key,
   rank,
   permissionedFeeds,
-  activeFeeds,
+  unpermissionedFeeds,
   averageScore,
 }: Awaited<ReturnType<typeof getPublishers>>[number]) => {
   const knownPublisher = lookupPublisher(key);
@@ -155,7 +157,7 @@ const toTableRow = ({
     id: key,
     ranking: rank,
     permissionedFeeds,
-    activeFeeds,
+    unpermissionedFeeds,
     averageScore,
     ...(knownPublisher && {
       name: knownPublisher.name,

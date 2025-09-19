@@ -2,13 +2,15 @@
 
 import { Switch } from "@pythnetwork/component-library/Switch";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { parseAsBoolean, useQueryState } from "nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 
+import { useLivePriceData } from "../../hooks/use-live-price-data";
 import { Cluster } from "../../services/pyth";
 import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PublisherTag } from "../PublisherTag";
+import { getStatus } from "../Status";
 
 type PublishersCardProps =
   | { isLoading: true }
@@ -29,7 +31,10 @@ type ResolvedPublishersCardProps = {
   symbol: string;
   displaySymbol: string;
   assetClass: string;
-  publishers: Omit<PriceComponent, "symbol" | "displaySymbol" | "assetClass">[];
+  publishers: Omit<
+    PriceComponent,
+    "status" | "symbol" | "displaySymbol" | "assetClass"
+  >[];
   metricsTime?: Date | undefined;
 };
 
@@ -38,6 +43,7 @@ const ResolvedPublishersCard = ({
   ...props
 }: ResolvedPublishersCardProps) => {
   const logger = useLogger();
+  const data = useLivePriceData(Cluster.Pythnet, publishers[0]?.feedKey);
 
   const [includeTestFeeds, setIncludeTestFeeds] = useQueryState(
     "includeTestFeeds",
@@ -63,11 +69,20 @@ const ResolvedPublishersCard = ({
     [includeTestFeeds, publishers],
   );
 
+  const publishersWithStatus = useMemo(() => {
+    return publishersFilteredByCluster.map((publisher) => {
+      return {
+        ...publisher,
+        status: getStatus(data.current, publisher.publisherKey),
+      };
+    });
+  }, [publishersFilteredByCluster, data]);
+
   return (
     <PublishersCardImpl
       includeTestFeeds={includeTestFeeds}
       updateIncludeTestFeeds={updateIncludeTestFeeds}
-      publishers={publishersFilteredByCluster}
+      publishers={publishersWithStatus}
       {...props}
     />
   );
@@ -75,10 +90,14 @@ const ResolvedPublishersCard = ({
 
 type PublishersCardImplProps =
   | { isLoading: true }
-  | (ResolvedPublishersCardProps & {
+  | (Omit<ResolvedPublishersCardProps, "publishers"> & {
       isLoading?: false | undefined;
       includeTestFeeds: boolean;
       updateIncludeTestFeeds: (newValue: boolean) => void;
+      publishers: Omit<
+        PriceComponent,
+        "symbol" | "displaySymbol" | "assetClass"
+      >[];
     });
 
 const PublishersCardImpl = (props: PublishersCardImplProps) => (
