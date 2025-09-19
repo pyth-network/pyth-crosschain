@@ -11,7 +11,7 @@ export async function generateDocs() {
     per: "operation",
     name: (output, document) => {
       // Extract product name from the OpenAPI document info
-      const productName = getProductName(document.info.title || "unknown");
+      const productName = getProductName(document.info.title);
 
       if (output.type === "operation") {
         const operation =
@@ -36,7 +36,7 @@ export async function generateDocs() {
   });
 }
 
-function getProductName(title: string): string {
+function getProductName(title: string) {
   // Match the title to a product name
   const titleLower = title.toLowerCase();
   for (const [name] of Object.entries(products)) {
