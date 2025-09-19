@@ -10,7 +10,7 @@ class Metrics:
     def __init__(self, config):
         # Adapted from opentelemetry-exporter-prometheus example code.
         # Start Prometheus client
-        start_http_server(port=config["prometheus_port"], addr="localhost")
+        start_http_server(port=config["prometheus_port"])
         # Exporter to export metrics to Prometheus
         reader = PrometheusMetricReader()
         # Meter is responsible for creating and recording metrics
