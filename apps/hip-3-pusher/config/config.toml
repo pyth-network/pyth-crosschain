@@ -1,4 +1,5 @@
 stale_price_threshold_seconds = 5
+prometheus_port = 9090
 
 [hyperliquid]
 market_name = ""
@@ -15,7 +16,7 @@ aws_region_name = "ap-northeast-1"
 
 [lazer]
 lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]
-api_key = "lazer_api_key"
+lazer_api_key = "lazer_api_key"
 base_feed_id = 1   # BTC
 base_feed_exponent = -8
 quote_feed_id = 8  # USDT

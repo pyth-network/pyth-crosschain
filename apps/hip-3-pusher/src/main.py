@@ -10,6 +10,7 @@ from lazer_listener import LazerListener
 from hermes_listener import HermesListener
 from price_state import PriceState
 from publisher import Publisher
+from metrics import Metrics
 
 
 def load_config():
@@ -38,7 +39,9 @@ async def main():
     config = load_config()
 
     price_state = PriceState(config)
-    publisher = Publisher(config, price_state)
+    metrics = Metrics(config)
+
+    publisher = Publisher(config, price_state, metrics)
     hyperliquid_listener = HyperliquidListener(config, price_state)
     lazer_listener = LazerListener(config, price_state)
     hermes_listener = HermesListener(config, price_state)
