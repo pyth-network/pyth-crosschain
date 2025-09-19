@@ -467,6 +467,7 @@ pub struct SubscribedResponse {
 #[serde(rename_all = "camelCase")]
 pub struct InvalidFeedSubscriptionDetails {
     pub unknown_ids: Vec<PriceFeedId>,
+    pub unknown_symbols: Vec<String>,
     pub unsupported_channels: Vec<PriceFeedId>,
     pub unstable: Vec<PriceFeedId>,
 }
