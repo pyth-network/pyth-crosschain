@@ -1,3 +1,5 @@
+import type { ClientRequestArgs } from "node:http";
+
 import TTLCache from "@isaacs/ttlcache";
 import type { ErrorEvent } from "isomorphic-ws";
 import WebSocket from "isomorphic-ws";
@@ -7,6 +9,84 @@ import { dummyLogger } from "ts-log";
 import type { Request, Response } from "../protocol.js";
 import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
 import { ResilientWebSocket } from "./resilient-websocket.js";
+
+/**
+ * Browser global interface for proper typing
+ */
+type BrowserGlobal = {
+  window?: {
+    document?: unknown;
+  };
+  importScripts?: (...urls: string[]) => void;
+}
+
+/**
+ * Detects if the code is running in a regular DOM or Web Worker context.
+ * @returns true if running in a DOM or Web Worker context, false if running in Node.js
+ */
+function isBrowser(): boolean {
+  try {
+    // Check for browser's window object (DOM context)
+    if (typeof globalThis !== "undefined") {
+      const global = globalThis as BrowserGlobal;
+      if (global.window?.document) {
+        return true;
+      }
+
+      // Check for Web Worker context (has importScripts but no window)
+      if (typeof global.importScripts === "function" && !global.window) {
+        return true;
+      }
+    }
+
+    // Node.js environment
+    return false;
+  } catch {
+    // If any error occurs, assume Node.js environment
+    return false;
+  }
+}
+
+/**
+ * Adds authentication to either the URL as a query parameter or as an Authorization header.
+ * 
+ * Browsers don't support custom headers for WebSocket connections, so if a browser is detected,
+ * the token is added as a query parameter instead. Else, the token is added as an Authorization header.
+ * 
+ * @param url - The WebSocket URL
+ * @param token - The authentication token
+ * @param wsOptions - Existing WebSocket options
+ * @returns Object containing the modified endpoint and wsOptions
+ */
+function addAuthentication(
+  url: string,
+  token: string,
+  wsOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined = {}
+): { endpoint: string; wsOptions: WebSocket.ClientOptions | ClientRequestArgs | undefined } {
+  if (isBrowser()) {
+    // Browser: Add token as query parameter
+    const urlObj = new URL(url);
+    urlObj.searchParams.set("ACCESS_TOKEN", token);
+
+    // For browsers, filter out wsOptions since headers aren't supported
+    return {
+      endpoint: urlObj.toString(),
+      wsOptions: undefined,
+    };
+  } else {
+    // Node.js: Add Authorization header
+    return {
+      endpoint: url,
+      wsOptions: {
+        ...wsOptions,
+        headers: {
+          ...(wsOptions.headers as Record<string, string> | undefined),
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    };
+  }
+}
 
 const DEFAULT_NUM_CONNECTIONS = 4;
 
@@ -63,15 +143,17 @@ export class WebSocketPool {
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
-      const wsOptions = {
-        ...config.rwsConfig?.wsOptions,
-        headers: {
-          Authorization: `Bearer ${config.token}`,
-        },
-      };
+
+      // Apply authentication based on environment (browser vs Node.js)
+      const { endpoint, wsOptions } = addAuthentication(
+        url,
+        config.token,
+        config.rwsConfig?.wsOptions
+      );
+
       const rws = new ResilientWebSocket({
         ...config.rwsConfig,
-        endpoint: url,
+        endpoint,
         wsOptions,
         logger,
       });
