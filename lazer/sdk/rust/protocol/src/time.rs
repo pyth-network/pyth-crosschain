@@ -499,12 +499,15 @@ impl FixedRate {
     pub const RATE_200_MS: Self = Self {
         rate: DurationUs::from_millis_u32(200),
     };
+    pub const RATE_1000_MS: Self = Self {
+        rate: DurationUs::from_millis_u32(1000),
+    };
 
     // Assumptions (tested below):
     // - Values are sorted.
     // - 1 second contains a whole number of each interval.
     // - all intervals are divisable by the smallest interval.
-    pub const ALL: [Self; 2] = [Self::RATE_50_MS, Self::RATE_200_MS];
+    pub const ALL: [Self; 3] = [Self::RATE_50_MS, Self::RATE_200_MS, Self::RATE_1000_MS];
     pub const MIN: Self = Self::ALL[0];
 
     pub fn from_millis(millis: u32) -> Option<Self> {
