@@ -16,7 +16,8 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LatestPriceRequest {
+pub struct LatestPriceRequestRepr {
+    // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
@@ -32,9 +33,76 @@ pub struct LatestPriceRequest {
     pub channel: Channel,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LatestPriceRequest(LatestPriceRequestRepr);
+
+impl<'de> Deserialize<'de> for LatestPriceRequest {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = LatestPriceRequestRepr::deserialize(deserializer)?;
+        Self::new(value).map_err(Error::custom)
+    }
+}
+
+impl LatestPriceRequest {
+    pub fn new(value: LatestPriceRequestRepr) -> Result<Self, &'static str> {
+        if value.price_feed_ids.is_none() && value.symbols.is_none() {
+            return Err("either price feed ids or symbols must be specified");
+        }
+        if value.price_feed_ids.is_some() && value.symbols.is_some() {
+            return Err("either price feed ids or symbols must be specified, not both");
+        }
+
+        if let Some(ref ids) = value.price_feed_ids {
+            if ids.is_empty() {
+                return Err("no price feed ids specified");
+            }
+            if !ids.iter().all_unique() {
+                return Err("duplicate price feed ids specified");
+            }
+        }
+
+        if let Some(ref symbols) = value.symbols {
+            if symbols.is_empty() {
+                return Err("no symbols specified");
+            }
+            if !symbols.iter().all_unique() {
+                return Err("duplicate symbols specified");
+            }
+        }
+
+        if !value.formats.iter().all_unique() {
+            return Err("duplicate formats or chains specified");
+        }
+        if value.properties.is_empty() {
+            return Err("no properties specified");
+        }
+        if !value.properties.iter().all_unique() {
+            return Err("duplicate properties specified");
+        }
+        Ok(Self(value))
+    }
+}
+
+impl Deref for LatestPriceRequest {
+    type Target = LatestPriceRequestRepr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for LatestPriceRequest {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PriceRequest {
+pub struct PriceRequestRepr {
     pub timestamp: TimestampUs,
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
@@ -48,6 +116,73 @@ pub struct PriceRequest {
     #[serde(default = "default_parsed")]
     pub parsed: bool,
     pub channel: Channel,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PriceRequest(PriceRequestRepr);
+
+impl<'de> Deserialize<'de> for PriceRequest {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = PriceRequestRepr::deserialize(deserializer)?;
+        Self::new(value).map_err(Error::custom)
+    }
+}
+
+impl PriceRequest {
+    pub fn new(value: PriceRequestRepr) -> Result<Self, &'static str> {
+        if value.price_feed_ids.is_none() && value.symbols.is_none() {
+            return Err("either price feed ids or symbols must be specified");
+        }
+        if value.price_feed_ids.is_some() && value.symbols.is_some() {
+            return Err("either price feed ids or symbols must be specified, not both");
+        }
+
+        if let Some(ref ids) = value.price_feed_ids {
+            if ids.is_empty() {
+                return Err("no price feed ids specified");
+            }
+            if !ids.iter().all_unique() {
+                return Err("duplicate price feed ids specified");
+            }
+        }
+
+        if let Some(ref symbols) = value.symbols {
+            if symbols.is_empty() {
+                return Err("no symbols specified");
+            }
+            if !symbols.iter().all_unique() {
+                return Err("duplicate symbols specified");
+            }
+        }
+
+        if !value.formats.iter().all_unique() {
+            return Err("duplicate formats or chains specified");
+        }
+        if value.properties.is_empty() {
+            return Err("no properties specified");
+        }
+        if !value.properties.iter().all_unique() {
+            return Err("duplicate properties specified");
+        }
+        Ok(Self(value))
+    }
+}
+
+impl Deref for PriceRequest {
+    type Target = PriceRequestRepr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for PriceRequest {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
