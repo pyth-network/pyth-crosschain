@@ -27,14 +27,11 @@ class Publisher:
         if config["kms"]["enable_kms"]:
             self.enable_kms = True
             oracle_account = None
-            kms_key_path = config["kms"]["key_path"]
-            kms_key_id = open(kms_key_path, "r").read().strip()
-            self.kms_signer = KMSSigner(kms_key_id, config["kms"]["aws_region_name"], self.use_testnet)
+            self.kms_signer = KMSSigner(config)
         else:
             oracle_pusher_key_path = config["hyperliquid"]["oracle_pusher_key_path"]
             oracle_pusher_key = open(oracle_pusher_key_path, "r").read().strip()
             oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
-            del oracle_pusher_key
             logger.info("oracle pusher local pubkey: {}", oracle_account.address)
 
         url = TESTNET_API_URL if self.use_testnet else MAINNET_API_URL
