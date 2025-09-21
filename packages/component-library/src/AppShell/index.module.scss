@@ -14,7 +14,6 @@
   }
 
   .body {
-    background: black;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
@@ -33,9 +32,7 @@
       background: theme.color("background", "primary");
       border-top-left-radius: calc(var(--offset) * theme.border-radius("xl"));
       border-top-right-radius: calc(var(--offset) * theme.border-radius("xl"));
-      overflow: hidden auto;
-      transform: scale(calc(100% - (var(--offset) * 5%)));
-      height: 100dvh;
+      min-height: 100dvh;
       scrollbar-gutter: stable;
 
       .header {
