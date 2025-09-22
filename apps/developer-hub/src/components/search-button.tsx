@@ -3,6 +3,7 @@
 import { SearchButton as SearchButtonComponent } from "@pythnetwork/component-library/SearchButton";
 import DefaultSearchDialog from "fumadocs-ui/components/dialog/search-default";
 import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 
 export const SearchButton = () => {
   const [open, setOpen] = useState(false);
@@ -19,11 +20,15 @@ export const SearchButton = () => {
         largeScreenContent="Search"
         onClick={handleSearch}
       />
-      <DefaultSearchDialog
-        open={open}
-        onOpenChange={setOpen}
-        api="/api/search"
-      />
+      {open &&
+        createPortal(
+          <DefaultSearchDialog
+            open={open}
+            onOpenChange={setOpen}
+            api="/api/search"
+          />,
+          document.body,
+        )}
     </>
   );
 };
