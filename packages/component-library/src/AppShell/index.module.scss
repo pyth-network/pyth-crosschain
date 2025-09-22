@@ -33,9 +33,9 @@
       background: theme.color("background", "primary");
       border-top-left-radius: calc(var(--offset) * theme.border-radius("xl"));
       border-top-right-radius: calc(var(--offset) * theme.border-radius("xl"));
+      height: 100dvh;
       overflow: hidden auto;
       transform: scale(calc(100% - (var(--offset) * 5%)));
-      height: 100dvh;
       scrollbar-gutter: stable;
 
       .header {

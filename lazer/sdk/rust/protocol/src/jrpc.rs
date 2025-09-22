@@ -19,6 +19,7 @@ pub struct PythLazerAgentJrpcV1 {
 #[serde(rename_all = "snake_case")]
 pub enum JrpcCall {
     PushUpdate(FeedUpdateParams),
+    PushUpdates(Vec<FeedUpdateParams>),
     GetMetadata(GetMetadataParams),
 }
 
