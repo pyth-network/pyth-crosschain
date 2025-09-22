@@ -1,6 +1,164 @@
 ---
-title: "Getting Started with Pyth Lazer"
-description: "Please refer to the how-to guides to get started."
+title: "Getting Started"
+description: "Quickstart guide to get started with Pyth Pro."
 full: false
 index: false
 ---
+
+Pyth Pro is a high-performance, low-latency service that provides real-time financial market data.
+This guide will walk you through setting up and running a basic JavaScript example to subscribe to Pyth Pro price feeds.
+
+## Prerequisites
+
+Before getting started, make sure you have the following installed:
+
+- **Node.js** (version 18 or higher)
+- **pnpm** package manager
+- **Git** for cloning the examples repository
+- A **Pyth Pro Access Token** - see [How to Acquire an Access Token](./acquire-access-token) if you don't have one
+
+
+### Clone the Examples Repository
+
+First, clone the Pyth examples repository which contains the JavaScript SDK example:
+
+```bash copy
+git clone https://github.com/pyth-network/pyth-examples.git
+cd pyth-examples/lazer/js
+```
+
+### Install Dependencies
+
+Install the required dependencies using pnpm:
+
+```bash copy
+pnpm install
+```
+
+This will install `@pythnetwork/pyth-lazer-sdk`, which will be used to subscribe to Pyth Pro prices.
+
+<InfoBox variant="info">
+<div>
+ **Pyth Pro was previously known as Pyth Lazer**. The SDK remains the same.
+</div>
+</InfoBox>
+
+### Configure Your Access Token
+
+Set your Pyth Pro access token as an environment variable:
+
+```bash copy
+export ACCESS_TOKEN=your_actual_token_here
+```
+
+<InfoBox type="warning">
+  Replace `your_actual_token_here` with your actual PythPro access token. If you
+  don't have one, follow the [access token guide](./acquire-access-token) to
+  obtain it.
+</InfoBox>
+
+### Run the Basic WebSocket Example
+
+Now you can run the basic example that demonstrates connecting to Pyth Pro and receiving price updates:
+
+```bash copy
+pnpm run start
+```
+
+This command will subscribe to Pyth Pro updates for two price feeds, receiving streaming updates.
+Each update is then printed to the terminal on receipt.
+You should see output similar to the following:
+
+```bash
+got message: {
+  type: 'json',
+  value: {
+    type: 'streamUpdated',
+    subscriptionId: 1,
+    parsed: { timestampUs: '1758034015200000', priceFeeds: [Array] },
+    solana: {
+      encoding: 'hex',
+      data: 'b9011a82036df6ced259a33949ab9b2c48a61a2d3b0b9436cba24c3ef8a600b72767927d14a459fcc3abce280b3f8194e16e8b32f9322ac0b84a9c0b792e19857962a60180efc1f480c5615af3fb673d42287e993da9fbc3506b6e41dfa32950820c2e6c2a0075d3c79300a3fa30ec3e060003020100000001009053802f790a00000200000001004234106d67000000'
+    }
+  }
+}
+stream updated for subscription 1 : [
+  { priceFeedId: 1, price: '11515604259728' },
+  { priceFeedId: 2, price: '444211409986' }
+]
+got message: {
+  type: 'json',
+  value: {
+    type: 'streamUpdated',
+    subscriptionId: 1,
+    parsed: { timestampUs: '1758034015400000', priceFeeds: [Array] },
+    solana: {
+      encoding: 'hex',
+      data: 'b9011a826f5ff7e25ac4056c4ec3a08c428baf38e7b78c46014296ccbcfd5395c38c9f7bc23865a048401c66788e791f0edc3a6701b0ea4a5399f50ec8b1795757854f0180efc1f480c5615af3fb673d42287e993da9fbc3506b6e41dfa32950820c2e6c2a0075d3c79340b0fd30ec3e060003020100000001005821a32f790a00000200000001004334106d67000000'
+    }
+  }
+}
+stream updated for subscription 1 : [
+  { priceFeedId: 1, price: '11515606540632' },
+  { priceFeedId: 2, price: '444211409987' }
+]
+```
+
+### Understanding the Code
+
+The main example code in `src/index.ts` demonstrates the core Pyth Pro integration pattern:
+
+```typescript
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create({
+  urls: ["wss://pyth-lazer.dourolabs.app/v1/stream"],
+  token: process.env.ACCESS_TOKEN!,
+});
+
+// The message listener is called every time a new message is received.
+client.addMessageListener((message) => {
+  // Add your logic to consume messages here
+  console.log("got message:", message);
+});
+
+// Subscribe to price feeds
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],
+  properties: ["price"],
+  formats: ["solana"],
+  deliveryFormat: "json",
+  channel: "fixed_rate@200ms",
+  jsonBinaryEncoding: "hex",
+});
+```
+
+NOTE: Every property passed to `client.subscribe` are explained in the [API Reference](./websocket-api-reference).
+
+
+## What's Next?
+
+Now that you've successfully run the basic Pyth Pro example, you can explore more advanced integration patterns:
+
+### More Information
+
+Explore additional Pyth Pro capabilities:
+
+- **[Subscribe to Price Updates](./subscribe-price-updates)** - Detailed guide on WebSocket subscriptions and message handling
+- **[Price Feed IDs](./price-feed-ids)** - Complete list of available price feeds and their identifiers
+
+### Blockchain Integration
+
+Learn how to integrate Pyth Pro price feeds into your smart contracts:
+
+- **[Solana Integration](./integrate-as-consumer/svm)** - Build SVM smart contracts that consume Pyth Pro price feeds with cryptographic verification
+- **[EVM Integration](./integrate-as-consumer/evm)** - Integrate Pyth Pro into Ethereum and other EVM-compatible chains
+
+### Example Applications
+
+Check out more comprehensive examples in the [pyth-examples repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer):
+
+- **Solana Examples** - Post price data to Solana smart contracts with Ed25519 and ECDSA verification
+- **EVM Examples** - Smart contract integration for Ethereum-compatible chains

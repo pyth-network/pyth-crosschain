@@ -1,6 +1,6 @@
 {
   "root": true,
-  "title": "Price Feeds V2",
+  "title": "Pyth Pro",
   "description": "Real-time data from financial institutions",
   "icon": "ChartLine",
   "pages": [
