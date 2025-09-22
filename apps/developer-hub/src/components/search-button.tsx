@@ -20,14 +20,15 @@ export const SearchButton = () => {
         largeScreenContent="Search"
         onClick={handleSearch}
       />
-      {open && createPortal(
-        <DefaultSearchDialog
-          open={open}
-          onOpenChange={setOpen}
-          api="/api/search"
-        />,
-        document.body
-      )}
+      {open &&
+        createPortal(
+          <DefaultSearchDialog
+            open={open}
+            onOpenChange={setOpen}
+            api="/api/search"
+          />,
+          document.body,
+        )}
     </>
   );
 };
