@@ -35,8 +35,9 @@ Overrides for Fumadocs content. Everything after prose is MDX generated content 
   padding-inline-start: 0 !important;
 }
 
+/* Hacky fix to get the TOC to be sticky */
 #nd-toc {
-  top: calc(var(--header-height) + 1rem) !important;
+  top: var(--header-height) !important;
   height: max-content;
   position: sticky;
   margin-left: calc(-1 * var(--fd-toc-width));
