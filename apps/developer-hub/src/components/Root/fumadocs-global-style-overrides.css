@@ -37,4 +37,12 @@ Overrides for Fumadocs content. Everything after prose is MDX generated content 
 
 #nd-toc {
   top: calc(var(--header-height) + 1rem) !important;
+  height: max-content;
+  position: sticky;
+  margin-left: calc(-1 * var(--fd-toc-width));
+}
+
+#nd-toc > div {
+  position: relative;
+  left: var(--fd-toc-width);
 }
