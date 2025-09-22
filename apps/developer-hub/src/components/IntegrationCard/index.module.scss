@@ -3,157 +3,157 @@
 .card {
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 0.75rem; // 12px
+  gap: theme.spacing(3);
   height: 100%;
-  padding: 1.25rem; // 20px
-  border: 1px solid var(--color-fd-border);
-  border-radius: 0.75rem; // 12px
-  background-color: var(--color-fd-card);
+  padding: theme.spacing(5);
+  border: theme.spacing(1) solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+  background-color: theme.color("background", "primary");
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
   text-decoration: none;
   outline: none;
   transition: border-color 200ms ease-out;
 
   &:hover {
-    border-color: var(--color-fd-accent);
+    border-color: theme.color("focus");
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px var(--color-fd-accent);
+    box-shadow: 0 0 0 2px theme.color("focus");
   }
 
-  @media (width >= 768px) {
-    padding: 1.5rem; // 24px
+  @include theme.breakpoint("md") {
+    padding: theme.spacing(6);
   }
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 0.75rem; // 12px
+  gap: theme.spacing(3);
 }
 
 .iconContainer {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem; // 32px
-  height: 2rem; // 32px
-  border-radius: 0.375rem; // 6px
+  width: theme.spacing(8);
+  height: theme.spacing(8);
+  border-radius: theme.border-radius("md");
 
   &.blue {
-    background-color: var(--color-blue-100);
+    background-color: theme.pallette-color("blue", 100);
 
     :global(.dark) & {
-      background-color: var(--color-blue-900);
+      background-color: theme.pallette-color("blue", 900);
     }
   }
 
   &.green {
-    background-color: var(--color-green-100);
+    background-color: theme.pallette-color("green", 100);
 
     :global(.dark) & {
-      background-color: var(--color-green-900);
+      background-color: theme.pallette-color("green", 900);
     }
   }
 
   &.purple {
-    background-color: var(--color-purple-100);
+    background-color: theme.pallette-color("purple", 100);
 
     :global(.dark) & {
-      background-color: var(--color-purple-900);
+      background-color: theme.pallette-color("purple", 900);
     }
   }
 
   &.yellow {
-    background-color: var(--color-yellow-100);
+    background-color: theme.pallette-color("yellow", 100);
 
     :global(.dark) & {
-      background-color: var(--color-yellow-900);
+      background-color: theme.pallette-color("yellow", 900);
     }
   }
 }
 
 .icon {
-  width: 1rem; // 16px
-  height: 1rem; // 16px
+  width: theme.spacing(4);
+  height: theme.spacing(4);
 
   &.blue {
-    color: var(--color-blue-600);
+    color: theme.pallette-color("blue", 600);
 
     :global(.dark) & {
-      color: var(--color-blue-400);
+      color: theme.pallette-color("blue", 400);
     }
   }
 
   &.green {
-    color: var(--color-green-600);
+    color: theme.pallette-color("green", 600);
 
     :global(.dark) & {
-      color: var(--color-green-400);
+      color: theme.pallette-color("green", 400);
     }
   }
 
   &.purple {
-    color: var(--color-purple-600);
+    color: theme.pallette-color("purple", 600);
 
     :global(.dark) & {
-      color: var(--color-purple-400);
+      color: theme.pallette-color("purple", 400);
     }
   }
 
   &.yellow {
-    color: var(--color-yellow-600);
+    color: theme.pallette-color("yellow", 600);
 
     :global(.dark) & {
-      color: var(--color-yellow-400);
+      color: theme.pallette-color("yellow", 400);
     }
   }
 }
 
 .title {
   margin: 0;
-  font-size: 1rem; // 16px
-  font-weight: 600;
-  color: var(--color-fd-foreground);
+  font-size: theme.font-size("base");
+  font-weight: theme.font-weight("semibold");
+  color: theme.color("foreground");
 
   &.blue {
     :global(.group:hover) & {
-      color: var(--color-blue-600);
+      color: theme.pallette-color("blue", 600);
     }
 
     :global(.dark .group:hover) & {
-      color: var(--color-blue-400);
+      color: theme.pallette-color("blue", 400);
     }
   }
 
   &.green {
     :global(.group:hover) & {
-      color: var(--color-green-600);
+      color: theme.pallette-color("green", 600);
     }
 
     :global(.dark .group:hover) & {
-      color: var(--color-green-400);
+      color: theme.pallette-color("green", 400);
     }
   }
 
   &.purple {
     :global(.group:hover) & {
-      color: var(--color-purple-600);
+      color: theme.pallette-color("purple", 600);
     }
 
     :global(.dark .group:hover) & {
-      color: var(--color-purple-400);
+      color: theme.pallette-color("purple", 400);
     }
   }
 
   &.yellow {
     :global(.group:hover) & {
-      color: var(--color-yellow-600);
+      color: theme.pallette-color("yellow", 600);
     }
 
     :global(.dark .group:hover) & {
-      color: var(--color-yellow-400);
+      color: theme.pallette-color("yellow", 400);
     }
   }
 }
@@ -168,14 +168,14 @@
 
   :global(.group:hover) & {
     opacity: 1;
-    transform: translateX(0.25rem); // 4px
+    transform: translateX(theme.spacing(1));
   }
 }
 
 .description {
   margin: 0;
-  font-size: 0.875rem; // 14px
-  color: var(--color-fd-muted-foreground);
+  font-size: theme.font-size("sm");
+  color: theme.color("muted");
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
