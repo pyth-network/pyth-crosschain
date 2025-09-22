@@ -1,6 +1,13 @@
+import fetch from "cross-fetch";
 import WebSocket from "isomorphic-ws";
 
-import type { ParsedPayload, Request, Response } from "./protocol.js";
+import type {
+  ParsedPayload,
+  Request,
+  Response,
+  SymbolResponse,
+  SymbolsQueryParams,
+} from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
@@ -20,23 +27,30 @@ export type JsonOrBinaryResponse =
     }
   | { type: "binary"; value: BinaryResponse };
 
+export type LazerClientConfig = WebSocketPoolConfig & {
+  historyServiceUrl?: string;
+};
+
 const UINT16_NUM_BYTES = 2;
 const UINT32_NUM_BYTES = 4;
 const UINT64_NUM_BYTES = 8;
 
 export class PythLazerClient {
-  private constructor(private readonly wsp: WebSocketPool) {}
+  private constructor(
+    private readonly wsp: WebSocketPool,
+    private readonly historyServiceUrl: string,
+  ) {}
 
   /**
    * Creates a new PythLazerClient instance.
-   * @param urls - List of WebSocket URLs of the Pyth Lazer service
-   * @param token - The access token for authentication
-   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
-   * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
+   * @param config - Configuration including WebSocket URLs, token, and optional history service URL
    */
-  static async create(config: WebSocketPoolConfig): Promise<PythLazerClient> {
+  static async create(config: LazerClientConfig): Promise<PythLazerClient> {
     const wsp = await WebSocketPool.create(config);
-    return new PythLazerClient(wsp);
+    const historyServiceUrl =
+      config.historyServiceUrl ??
+      "https://history.pyth-lazer.dourolabs.app/history";
+    return new PythLazerClient(wsp, historyServiceUrl);
   }
 
   /**
@@ -122,5 +136,33 @@ export class PythLazerClient {
 
   shutdown(): void {
     this.wsp.shutdown();
+  }
+
+  /**
+   * Queries the symbols endpoint to get available price feed symbols.
+   * @param params - Optional query parameters to filter symbols
+   * @returns Promise resolving to array of symbol information
+   */
+  async get_symbols(params?: SymbolsQueryParams): Promise<SymbolResponse[]> {
+    const url = new URL(`${this.historyServiceUrl}/v1/symbols`);
+
+    if (params?.query) {
+      url.searchParams.set("query", params.query);
+    }
+    if (params?.asset_type) {
+      url.searchParams.set("asset_type", params.asset_type);
+    }
+
+    try {
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${String(response.status)}`);
+      }
+      return (await response.json()) as SymbolResponse[];
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch symbols: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 }

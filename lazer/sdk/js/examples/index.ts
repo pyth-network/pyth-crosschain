@@ -58,6 +58,36 @@ client.addAllConnectionsDownListener(() => {
   console.error("All connections are down!");
 });
 
+console.info("Querying symbols with 'BTC'...");
+const btcSymbols = await client.get_symbols({
+  query: "BTC",
+  asset_type: "crypto",
+});
+console.info(
+  "Found BTC symbols:",
+  btcSymbols.map((s) => ({ name: s.name, id: s.pyth_lazer_id })),
+);
+
+if (btcSymbols.length > 0) {
+  const btcSymbol = btcSymbols[0];
+  if (btcSymbol) {
+    const btcFeedId = btcSymbol.pyth_lazer_id;
+    console.info(`Subscribing to BTC feed ID: ${String(btcFeedId)}`);
+
+    client.subscribe({
+      type: "subscribe",
+      subscriptionId: 3,
+      priceFeedIds: [btcFeedId],
+      properties: ["price", "confidence"],
+      formats: ["solana"],
+      deliveryFormat: "json",
+      channel: "fixed_rate@200ms",
+      parsed: true,
+      jsonBinaryEncoding: "hex",
+    });
+  }
+}
+
 // Create and remove one or more subscriptions on the fly
 client.subscribe({
   type: "subscribe",
@@ -86,4 +116,7 @@ await new Promise((resolve) => setTimeout(resolve, 10_000));
 
 client.unsubscribe(1);
 client.unsubscribe(2);
+if (btcSymbols.length > 0 && btcSymbols[0]) {
+  client.unsubscribe(3);
+}
 client.shutdown();
