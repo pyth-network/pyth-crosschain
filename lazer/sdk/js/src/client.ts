@@ -11,6 +11,7 @@ import type {
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
+import { DEFAULT_HISTORY_SERVICE_URL } from "./constants.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -22,9 +23,9 @@ export type BinaryResponse = {
 };
 export type JsonOrBinaryResponse =
   | {
-      type: "json";
-      value: Response;
-    }
+    type: "json";
+    value: Response;
+  }
   | { type: "binary"; value: BinaryResponse };
 
 export type LazerClientConfig = WebSocketPoolConfig & {
@@ -39,7 +40,7 @@ export class PythLazerClient {
   private constructor(
     private readonly wsp: WebSocketPool,
     private readonly historyServiceUrl: string,
-  ) {}
+  ) { }
 
   /**
    * Creates a new PythLazerClient instance.
@@ -49,7 +50,7 @@ export class PythLazerClient {
     const wsp = await WebSocketPool.create(config);
     const historyServiceUrl =
       config.historyServiceUrl ??
-      "https://history.pyth-lazer.dourolabs.app/history";
+      DEFAULT_HISTORY_SERVICE_URL;
     return new PythLazerClient(wsp, historyServiceUrl);
   }
 
