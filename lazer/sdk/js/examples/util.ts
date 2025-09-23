@@ -9,7 +9,7 @@ export function renderFeeds(feedData: Map<string, {
     lastUpdate: Date;
 }>) {
     // Clear screen and move cursor to top
-    process.stdout.write('\x1b[2J\x1b[H');
+    process.stdout.write('\u001B[2J\u001B[H');
 
     if (feedData.size === 0) {
         console.log('Waiting for price feed data...\n');
@@ -20,30 +20,30 @@ export function renderFeeds(feedData: Map<string, {
     console.log('━'.repeat(80));
 
     // Sort feeds by ID for consistent display order
-    const sortedFeeds = Array.from(feedData.values()).sort((a, b) => {
+    const sortedFeeds = [...feedData.values()].sort((a, b) => {
         const aId = String(a.priceFeedId);
         const bId = String(b.priceFeedId);
         return aId.localeCompare(bId);
     });
 
-    sortedFeeds.forEach((feed, index) => {
+    for (const [index, feed] of sortedFeeds.entries()) {
         const readablePrice = feed.price * Math.pow(10, feed.exponent);
-        const readableConfidence = feed.confidence !== null ? feed.confidence * Math.pow(10, feed.exponent) : null;
+        const readableConfidence = feed.confidence === null ? null : feed.confidence * Math.pow(10, feed.exponent);
         const timeAgo = Math.round((Date.now() - feed.lastUpdate.getTime()));
 
-        console.log(`\x1b[36m${index + 1}. Feed ID: ${feed.priceFeedId}\x1b[0m`);
-        console.log(`   💰 Price: \x1b[32m$${readablePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\x1b[0m`);
+        console.log(`\u001B[36m${index + 1}. Feed ID: ${feed.priceFeedId}\u001B[0m`);
+        console.log(`   💰 Price: \u001B[32m$${readablePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\u001B[0m`);
 
         if (readableConfidence !== null) {
-            console.log(`   📊 Confidence: \x1b[33m±$${readableConfidence.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\x1b[0m`);
+            console.log(`   📊 Confidence: \u001B[33m±$${readableConfidence.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\u001B[0m`);
         }
 
-        console.log(`   ⏰ Updated: \x1b[90m${timeAgo}ms ago\x1b[0m`);
+        console.log(`   ⏰ Updated: \u001B[90m${timeAgo}ms ago\u001B[0m`);
         console.log('');
-    });
+    }
 
     console.log('━'.repeat(80));
-    console.log(`\x1b[90mLast refresh: ${new Date().toLocaleTimeString()}\x1b[0m`);
+    console.log(`\u001B[90mLast refresh: ${new Date().toLocaleTimeString()}\u001B[0m`);
 }
 
 // Helper function to update price feed data and refresh display
@@ -57,11 +57,11 @@ export function refreshFeedDisplay(response: any, feedData: Map<string, {
     if (response.parsed?.priceFeeds) {
         response.parsed.priceFeeds.forEach((feed: any, index: number) => {
             if (feed.price && feed.exponent !== undefined) {
-                const feedId = feed.priceFeedId !== undefined ? String(feed.priceFeedId) : `feed_${index + 1}`;
+                const feedId = feed.priceFeedId === undefined ? `feed_${index + 1}` : String(feed.priceFeedId);
                 const readableConfidence = feed.confidence ? Number(feed.confidence) : null;
 
                 feedData.set(feedId, {
-                    priceFeedId: feed.priceFeedId !== undefined ? feed.priceFeedId : `feed_${index + 1}`,
+                    priceFeedId: feed.priceFeedId === undefined ? `feed_${index + 1}` : feed.priceFeedId,
                     price: Number(feed.price),
                     confidence: readableConfidence,
                     exponent: feed.exponent,

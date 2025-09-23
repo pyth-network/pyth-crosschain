@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-empty-function */
 
-import { PythLazerClient } from "../src/index.js";
 import { renderFeeds, refreshFeedDisplay } from "./util.js";
+import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
 console.debug = () => { };
@@ -104,7 +104,7 @@ client.unsubscribe(1);
 client.unsubscribe(2);
 client.unsubscribe(3);
 
-process.stdout.write('\x1b[2J\x1b[H');
+process.stdout.write('\u001B[2J\u001B[H');
 console.log('🛑 Shutting down Pyth Lazer demo after 30 seconds...');
 console.log('👋 Goodbye!');
 

@@ -2,6 +2,8 @@ import fetch from "cross-fetch";
 import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
+
+import { DEFAULT_METADATA_SERVICE_URL, DEFAULT_PRICE_SERVICE_URL } from "./constants.js";
 import type {
   ParsedPayload,
   Request,
@@ -15,7 +17,6 @@ import type {
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
-import { DEFAULT_METADATA_SERVICE_URL, DEFAULT_PRICE_SERVICE_URL } from "./constants.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -52,7 +53,7 @@ export class PythLazerClient {
     private readonly priceServiceUrl: string,
     private readonly logger: Logger,
     private readonly wsp?: WebSocketPool,
-  ) { }
+  ) {}
 
   /**
    * Validates that the WebSocket pool is available for streaming operations.

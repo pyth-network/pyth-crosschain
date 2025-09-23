@@ -1,5 +1,5 @@
-import { PythLazerClient } from "../src/index.js";
 import { displayParsedPrices } from "./util.js";
+import { PythLazerClient } from "../src/index.js";
 
 const client = await PythLazerClient.create({ token: "your-token-here", logger: console });
 
@@ -18,7 +18,6 @@ displayParsedPrices(response1);
 // Example 2: Get latest price using symbols
 console.log("\n=== Example 2: Latest ETH price (requested with symbols) ===");
 const response2 = await client.get_latest_price({
-  // symbols: ["Crypto.ETH/USD"],
   priceFeedIds: [2],
   properties: ["price", "confidence", "exponent"],
   formats: [],
@@ -29,10 +28,10 @@ displayParsedPrices(response2);
 
 // Example 3: Get historical price at specific timestamp
 console.log("\n=== Example 3: Historical BTC price at timestamp ===");
-const oneMinAgo = 1754348458565000;
-console.log(`Requesting price from timestamp: ${oneMinAgo} (${new Date(oneMinAgo / 1000).toISOString()})`);
+const timestamp = 1_754_348_458_565_000;
+console.log(`Requesting price from timestamp: ${timestamp} (${new Date(timestamp / 1000).toISOString()})`);
 const response3 = await client.get_price({
-  timestamp: oneMinAgo,
+  timestamp: timestamp,
   priceFeedIds: [1],
   properties: ["price", "confidence", "exponent"],
   formats: [],
