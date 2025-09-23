@@ -12,21 +12,21 @@ export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
 
 export type Request =
   | {
-    type: "subscribe";
-    subscriptionId: number;
-    priceFeedIds: number[];
-    properties: PriceFeedProperty[];
-    formats: Format[];
-    deliveryFormat?: DeliveryFormat;
-    jsonBinaryEncoding?: JsonBinaryEncoding;
-    parsed?: boolean;
-    ignoreInvalidFeedIds?: boolean;
-    channel: Channel;
-  }
+      type: "subscribe";
+      subscriptionId: number;
+      priceFeedIds: number[];
+      properties: PriceFeedProperty[];
+      formats: Format[];
+      deliveryFormat?: DeliveryFormat;
+      jsonBinaryEncoding?: JsonBinaryEncoding;
+      parsed?: boolean;
+      ignoreInvalidFeedIds?: boolean;
+      channel: Channel;
+    }
   | {
-    type: "unsubscribe";
-    subscriptionId: number;
-  };
+      type: "unsubscribe";
+      subscriptionId: number;
+    };
 
 export type ParsedFeedPayload = {
   priceFeedId: number;
@@ -56,37 +56,37 @@ export type InvalidFeedSubscriptionDetails = {
 
 export type Response =
   | {
-    type: "error";
-    error: string;
-  }
+      type: "error";
+      error: string;
+    }
   | {
-    type: "subscribed";
-    subscriptionId: number;
-  }
+      type: "subscribed";
+      subscriptionId: number;
+    }
   | {
-    type: "subscribedWithInvalidFeedIdsIgnored";
-    subscriptionId: number;
-    subscribedFeedIds: number[];
-    ignoredInvalidFeedIds: InvalidFeedSubscriptionDetails;
-  }
+      type: "subscribedWithInvalidFeedIdsIgnored";
+      subscriptionId: number;
+      subscribedFeedIds: number[];
+      ignoredInvalidFeedIds: InvalidFeedSubscriptionDetails;
+    }
   | {
-    type: "unsubscribed";
-    subscriptionId: number;
-  }
+      type: "unsubscribed";
+      subscriptionId: number;
+    }
   | {
-    type: "subscriptionError";
-    subscriptionId: number;
-    error: string;
-  }
+      type: "subscriptionError";
+      subscriptionId: number;
+      error: string;
+    }
   | {
-    type: "streamUpdated";
-    subscriptionId: number;
-    parsed?: ParsedPayload | undefined;
-    evm?: JsonBinaryData | undefined;
-    solana?: JsonBinaryData | undefined;
-    leEcdsa?: JsonBinaryData | undefined;
-    leUnsigned?: JsonBinaryData | undefined;
-  };
+      type: "streamUpdated";
+      subscriptionId: number;
+      parsed?: ParsedPayload | undefined;
+      evm?: JsonBinaryData | undefined;
+      solana?: JsonBinaryData | undefined;
+      leEcdsa?: JsonBinaryData | undefined;
+      leUnsigned?: JsonBinaryData | undefined;
+    };
 
 export const BINARY_UPDATE_FORMAT_MAGIC_LE = 461_928_307;
 

@@ -1,7 +1,12 @@
+/* eslint-disable no-console */
+
 import { displayParsedPrices } from "./util.js";
 import { PythLazerClient } from "../src/index.js";
 
-const client = await PythLazerClient.create({ token: "your-token-here", logger: console });
+const client = await PythLazerClient.create({
+  token: "your-token-here",
+  logger: console,
+});
 
 // Example 1: Get latest price for BTC using feed IDs
 console.log("\n=== Example 1: Latest BTC price (requested with feed ID) ===");
@@ -29,7 +34,9 @@ displayParsedPrices(response2);
 // Example 3: Get historical price at specific timestamp
 console.log("\n=== Example 3: Historical BTC price at timestamp ===");
 const timestamp = 1_754_348_458_565_000;
-console.log(`Requesting price from timestamp: ${timestamp} (${new Date(timestamp / 1000).toISOString()})`);
+console.log(
+  `Requesting price from timestamp: ${timestamp.toString()} (${new Date(timestamp / 1000).toISOString()})`,
+);
 const response3 = await client.get_price({
   timestamp: timestamp,
   priceFeedIds: [1],

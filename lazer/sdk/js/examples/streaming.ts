@@ -2,19 +2,23 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import { renderFeeds, refreshFeedDisplay } from "./util.js";
+import type { JsonUpdate } from "../src/index.js";
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
-console.debug = () => { };
+console.debug = () => {};
 
 // Store feed data for in-place updates
-const feedData = new Map<string, {
-  priceFeedId: string | number;
-  price: number;
-  confidence: number | null;
-  exponent: number;
-  lastUpdate: Date;
-}>();
+const feedData = new Map<
+  string,
+  {
+    priceFeedId: string | number;
+    price: number;
+    confidence: number | undefined;
+    exponent: number;
+    lastUpdate: Date;
+  }
+>();
 
 const client = await PythLazerClient.create({
   token: "your-token-here", // Replace with your actual access token
@@ -38,7 +42,7 @@ client.addMessageListener((message) => {
   switch (message.type) {
     case "json": {
       if (message.value.type == "streamUpdated") {
-        refreshFeedDisplay(message.value, feedData);
+        refreshFeedDisplay(message.value as JsonUpdate, feedData);
       }
       break;
     }
@@ -104,8 +108,8 @@ client.unsubscribe(1);
 client.unsubscribe(2);
 client.unsubscribe(3);
 
-process.stdout.write('\u001B[2J\u001B[H');
-console.log('🛑 Shutting down Pyth Lazer demo after 30 seconds...');
-console.log('👋 Goodbye!');
+process.stdout.write("\u001B[2J\u001B[H");
+console.log("🛑 Shutting down Pyth Lazer demo after 30 seconds...");
+console.log("👋 Goodbye!");
 
 client.shutdown();

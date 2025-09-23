@@ -7,7 +7,10 @@ import { dummyLogger } from "ts-log";
 import type { Request, Response } from "../protocol.js";
 import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
 import { ResilientWebSocket } from "./resilient-websocket.js";
-import { DEFAULT_STREAM_SERVICE_0_URL, DEFAULT_STREAM_SERVICE_1_URL } from "../constants.js";
+import {
+  DEFAULT_STREAM_SERVICE_0_URL,
+  DEFAULT_STREAM_SERVICE_1_URL,
+} from "../constants.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
 
@@ -48,8 +51,15 @@ export class WebSocketPool {
    * @param numConnections - Number of parallel WebSocket connections to maintain (default: 3)
    * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
    */
-  static async create(config: WebSocketPoolConfig, token: string, logger?: Logger  ): Promise<WebSocketPool> {
-    const urls = config.urls ?? [DEFAULT_STREAM_SERVICE_0_URL, DEFAULT_STREAM_SERVICE_1_URL];
+  static async create(
+    config: WebSocketPoolConfig,
+    token: string,
+    logger?: Logger,
+  ): Promise<WebSocketPool> {
+    const urls = config.urls ?? [
+      DEFAULT_STREAM_SERVICE_0_URL,
+      DEFAULT_STREAM_SERVICE_1_URL,
+    ];
     const log = logger ?? dummyLogger;
     const pool = new WebSocketPool(log);
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;

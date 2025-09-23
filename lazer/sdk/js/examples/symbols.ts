@@ -1,6 +1,11 @@
+/* eslint-disable no-console */
+
 import { PythLazerClient } from "../src/index.js";
 
-const client = await PythLazerClient.create({ token: "your-token-here", logger: console });
+const client = await PythLazerClient.create({
+  token: "your-token-here",
+  logger: console,
+});
 
 // Example 1: Get latest price for BTC using feed IDs
 console.log("\n=== Example 1: Search feeds by name/symbol ===");

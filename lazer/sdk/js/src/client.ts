@@ -3,7 +3,10 @@ import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
-import { DEFAULT_METADATA_SERVICE_URL, DEFAULT_PRICE_SERVICE_URL } from "./constants.js";
+import {
+  DEFAULT_METADATA_SERVICE_URL,
+  DEFAULT_PRICE_SERVICE_URL,
+} from "./constants.js";
 import type {
   ParsedPayload,
   Request,
@@ -28,11 +31,10 @@ export type BinaryResponse = {
 };
 export type JsonOrBinaryResponse =
   | {
-    type: "json";
-    value: Response;
-  }
+      type: "json";
+      value: Response;
+    }
   | { type: "binary"; value: BinaryResponse };
-
 
 const UINT16_NUM_BYTES = 2;
 const UINT32_NUM_BYTES = 4;
@@ -56,37 +58,51 @@ export class PythLazerClient {
   ) {}
 
   /**
-   * Validates that the WebSocket pool is available for streaming operations.
+   * Gets the WebSocket pool. If the WebSocket pool is not configured, an error is thrown.
    * @throws Error if WebSocket pool is not configured
+   * @returns The WebSocket pool
    */
-  private validateWebSocketPool(): void {
+  private getWebSocketPool(): WebSocketPool {
     if (!this.wsp) {
-      throw new Error("WebSocket pool is not available. Make sure to provide webSocketPoolConfig when creating the client.");
+      throw new Error(
+        "WebSocket pool is not available. Make sure to provide webSocketPoolConfig when creating the client.",
+      );
     }
+    return this.wsp;
   }
 
   /**
    * Creates a new PythLazerClient instance.
-   * @param config - Configuration including WebSocket URLs, token, metadata service URL, and price service URL
+   * @param config - Configuration including token, metadata service URL, and price service URL, and WebSocket pool configuration
    */
   static async create(config: LazerClientConfig): Promise<PythLazerClient> {
     const token = config.token;
 
     // Collect and remove trailing slash from URLs
-    const metadataServiceUrl =
-      (config.metadataServiceUrl ??
-        DEFAULT_METADATA_SERVICE_URL).replace(/\/+$/, '');
-    const priceServiceUrl =
-      (config.priceServiceUrl ??
-        DEFAULT_PRICE_SERVICE_URL).replace(/\/+$/, '');
+    const metadataServiceUrl = (
+      config.metadataServiceUrl ?? DEFAULT_METADATA_SERVICE_URL
+    ).replace(/\/+$/, "");
+    const priceServiceUrl = (
+      config.priceServiceUrl ?? DEFAULT_PRICE_SERVICE_URL
+    ).replace(/\/+$/, "");
     const logger = config.logger ?? dummyLogger;
 
     // If webSocketPoolConfig is provided, create a WebSocket pool and block until at least one connection is established.
     let wsp: WebSocketPool | undefined;
     if (config.webSocketPoolConfig) {
-      wsp = await WebSocketPool.create(config.webSocketPoolConfig, token, logger);
+      wsp = await WebSocketPool.create(
+        config.webSocketPoolConfig,
+        token,
+        logger,
+      );
     }
-    return new PythLazerClient(token, metadataServiceUrl, priceServiceUrl, logger, wsp);
+    return new PythLazerClient(
+      token,
+      metadataServiceUrl,
+      priceServiceUrl,
+      logger,
+      wsp,
+    );
   }
 
   /**
@@ -96,8 +112,8 @@ export class PythLazerClient {
    * or a binary response containing EVM, Solana, or parsed payload data.
    */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
-    this.validateWebSocketPool();
-    this.wsp!.addMessageListener((data: WebSocket.Data) => {
+    const wsp = this.getWebSocketPool();
+    wsp.addMessageListener((data: WebSocket.Data) => {
       if (typeof data == "string") {
         handler({
           type: "json",
@@ -148,21 +164,21 @@ export class PythLazerClient {
   }
 
   subscribe(request: Request) {
-    this.validateWebSocketPool();
+    const wsp = this.getWebSocketPool();
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
-    this.wsp!.addSubscription(request);
+    wsp.addSubscription(request);
   }
 
   unsubscribe(subscriptionId: number) {
-    this.validateWebSocketPool();
-    this.wsp!.removeSubscription(subscriptionId);
+    const wsp = this.getWebSocketPool();
+    wsp.removeSubscription(subscriptionId);
   }
 
   send(request: Request) {
-    this.validateWebSocketPool();
-    this.wsp!.sendRequest(request);
+    const wsp = this.getWebSocketPool();
+    wsp.sendRequest(request);
   }
 
   /**
@@ -171,13 +187,13 @@ export class PythLazerClient {
    * @param handler - Function to be called when all connections are down
    */
   addAllConnectionsDownListener(handler: () => void): void {
-    this.validateWebSocketPool();
-    this.wsp!.addAllConnectionsDownListener(handler);
+    const wsp = this.getWebSocketPool();
+    wsp.addAllConnectionsDownListener(handler);
   }
 
   shutdown(): void {
-    this.validateWebSocketPool();
-    this.wsp!.shutdown();
+    const wsp = this.getWebSocketPool();
+    wsp.shutdown();
   }
 
   /**
@@ -186,10 +202,13 @@ export class PythLazerClient {
    * @param options - Additional fetch options
    * @returns Promise resolving to the fetch Response
    */
-  private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<globalThis.Response> {
+  private async authenticatedFetch(
+    url: string,
+    options: RequestInit = {},
+  ): Promise<globalThis.Response> {
     const headers = {
-      'Authorization': `Bearer ${this.token}`,
-      ...options.headers,
+      Authorization: `Bearer ${this.token}`,
+      ...(options.headers as Record<string, string>),
     };
 
     return fetch(url, {
@@ -216,7 +235,9 @@ export class PythLazerClient {
     try {
       const response = await this.authenticatedFetch(url.toString());
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${String(response.status)} - ${await response.text()}`);
+        throw new Error(
+          `HTTP error! status: ${String(response.status)} - ${await response.text()}`,
+        );
       }
       return (await response.json()) as SymbolResponse[];
     } catch (error) {
@@ -238,14 +259,16 @@ export class PythLazerClient {
       const body = JSON.stringify(params);
       this.logger.debug("get_latest_price", { url, body });
       const response = await this.authenticatedFetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: body,
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${String(response.status)} - ${await response.text()}`);
+        throw new Error(
+          `HTTP error! status: ${String(response.status)} - ${await response.text()}`,
+        );
       }
       return (await response.json()) as JsonUpdate;
     } catch (error) {
@@ -267,14 +290,16 @@ export class PythLazerClient {
       const body = JSON.stringify(params);
       this.logger.debug("get_price", { url, body });
       const response = await this.authenticatedFetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: body,
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${String(response.status)} - ${await response.text()}`);
+        throw new Error(
+          `HTTP error! status: ${String(response.status)} - ${await response.text()}`,
+        );
       }
       return (await response.json()) as JsonUpdate;
     } catch (error) {
