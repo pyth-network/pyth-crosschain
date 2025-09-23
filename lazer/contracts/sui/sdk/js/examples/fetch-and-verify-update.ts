@@ -1,44 +1,26 @@
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import type { Request as SubscriptionRequest } from "@pythnetwork/pyth-lazer-sdk";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { addParseAndVerifyLeEcdsaUpdateCall } from "../src/client.js";
 
-async function getOneLeEcdsaUpdate(urls: string[], token: string) {
+async function getOneLeEcdsaUpdate(token: string) {
   const lazer = await PythLazerClient.create({
-    urls,
     token,
-    numConnections: 1,
   });
 
-  const subscription: SubscriptionRequest = {
-    subscriptionId: 1,
-    type: "subscribe",
+  const latestPrice = await lazer.get_latest_price({
     priceFeedIds: [1],
     properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
     formats: ["leEcdsa"],
     channel: "fixed_rate@200ms",
-    deliveryFormat: "binary",
     jsonBinaryEncoding: "hex",
-  };
-
-  lazer.subscribe(subscription);
-
-  return new Promise<Uint8Array>((resolve) => {
-    lazer.addMessageListener((event) => {
-      if (event.type === "binary" && event.value.leEcdsa) {
-        const buf = event.value.leEcdsa;
-
-        // For the purposes of this example, we only need one update.
-        lazer.shutdown();
-        resolve(buf);
-      }
-    });
   });
+
+  return latestPrice
 }
 
 async function main() {
@@ -87,8 +69,7 @@ async function main() {
   const provider = new SuiClient({ url: args.fullnodeUrl });
 
   // Fetch the price update
-  const updateBytes = await getOneLeEcdsaUpdate(
-    args.lazerUrls,
+  const update = await getOneLeEcdsaUpdate(
     args.lazerToken,
   );
 
@@ -100,7 +81,7 @@ async function main() {
     tx,
     packageId: args.packageId,
     stateObjectId: args.stateObjectId,
-    updateBytes,
+    updateBytes: Buffer.from(update.leEcdsa?.data ?? "", "hex"),
   });
 
   // --- You can add more calls to the transaction that consume the parsed update here ---

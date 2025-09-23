@@ -6,7 +6,7 @@ import type { JsonUpdate } from "../src/index.js";
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
-console.debug = () => {};
+console.debug = () => { };
 
 // Store feed data for in-place updates
 const feedData = new Map<
@@ -21,7 +21,7 @@ const feedData = new Map<
 >();
 
 const client = await PythLazerClient.create({
-  token: "your-token-here", // Replace with your actual access token
+  token: "ZpIVWYXIXXIPAARXLt50VTRMNjW91UUAnDu-test", // Replace with your actual access token
   logger: console, // Optionally log operations (to the console in this case.)
   webSocketPoolConfig: {
     numConnections: 4, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 4.
@@ -86,7 +86,7 @@ client.subscribe({
   properties: ["price", "exponent", "publisherCount", "confidence"],
   formats: ["evm"],
   deliveryFormat: "json",
-  channel: "fixed_rate@200ms",
+  channel: "fixed_rate@50ms",
   parsed: true,
   jsonBinaryEncoding: "hex",
 });
@@ -97,7 +97,7 @@ client.subscribe({
   properties: ["price", "confidence"],
   formats: ["solana"],
   deliveryFormat: "json",
-  channel: "fixed_rate@200ms",
+  channel: "real_time",
   parsed: true,
   jsonBinaryEncoding: "hex",
 });
