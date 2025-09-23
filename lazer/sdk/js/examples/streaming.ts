@@ -117,6 +117,7 @@ client.unsubscribe(1);
 client.unsubscribe(2);
 client.unsubscribe(3);
 
+// Clear screen and move cursor to top
 process.stdout.write("\u001B[2J\u001B[H");
 console.log("🛑 Shutting down Pyth Lazer demo after 30 seconds...");
 console.log("👋 Goodbye!");
