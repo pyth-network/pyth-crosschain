@@ -50,6 +50,7 @@ export type JsonBinaryData = {
 
 export type InvalidFeedSubscriptionDetails = {
   unknownIds: number[];
+  unknownSymbols: string[];
   unsupportedChannels: number[];
   unstable: number[];
 };
