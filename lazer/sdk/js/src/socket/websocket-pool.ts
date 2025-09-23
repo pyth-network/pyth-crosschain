@@ -12,7 +12,7 @@ import { DEFAULT_STREAM_SERVICE_0_URL, DEFAULT_STREAM_SERVICE_1_URL } from "../c
 const DEFAULT_NUM_CONNECTIONS = 4;
 
 export type WebSocketPoolConfig = {
-  urls: string[];
+  urls?: string[];
   numConnections?: number;
   rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
   onError?: (error: ErrorEvent) => void;
