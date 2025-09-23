@@ -255,6 +255,7 @@ export const RECEIVER_CHAINS = {
   ethereal_devnet: 50128,
   ethereal_testnet_v2: 50129,
   fluent_testnet: 50130,
+  giwa_testnet: 50131,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

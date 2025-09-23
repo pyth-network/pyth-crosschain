@@ -20,7 +20,7 @@
     "error-codes",
     "[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/entropy)",
     "[Entropy Explorer](https://entropy-explorer.pyth.network/)",
-    "[Fortuna API Reference](https://fortuna.dourolabs.app/docs/)",
+    "[Fortuna API Reference](/openapi/fortuna)",
     "---Understanding Entropy---",
     "protocol-design",
     "fees"
