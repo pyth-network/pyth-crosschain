@@ -20,7 +20,7 @@ async function getOneLeEcdsaUpdate(token: string) {
     jsonBinaryEncoding: "hex",
   });
 
-  return latestPrice
+  return latestPrice;
 }
 
 async function main() {
@@ -69,9 +69,7 @@ async function main() {
   const provider = new SuiClient({ url: args.fullnodeUrl });
 
   // Fetch the price update
-  const update = await getOneLeEcdsaUpdate(
-    args.lazerToken,
-  );
+  const update = await getOneLeEcdsaUpdate(args.lazerToken);
 
   // Build the Sui transaction
   const tx = new Transaction();
