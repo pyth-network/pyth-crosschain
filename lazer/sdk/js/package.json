@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Pyth Lazer SDK",
   "publishConfig": {
     "access": "public"
@@ -29,6 +29,7 @@
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
     "example": "node --loader ts-node/esm examples/index.js",
+    "router-example": "node --loader ts-node/esm examples/router-example.js",
     "doc": "typedoc --out docs/typedoc src"
   },
   "devDependencies": {

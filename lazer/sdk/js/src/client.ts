@@ -7,6 +7,9 @@ import type {
   Response,
   SymbolResponse,
   SymbolsQueryParams,
+  LatestPriceRequest,
+  PriceRequest,
+  JsonUpdate,
 } from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
@@ -29,6 +32,7 @@ export type JsonOrBinaryResponse =
 
 export type LazerClientConfig = WebSocketPoolConfig & {
   historyServiceUrl?: string;
+  routerServiceUrl?: string;
 };
 
 const UINT16_NUM_BYTES = 2;
@@ -39,18 +43,22 @@ export class PythLazerClient {
   private constructor(
     private readonly wsp: WebSocketPool,
     private readonly historyServiceUrl: string,
+    private readonly routerServiceUrl: string,
   ) {}
 
   /**
    * Creates a new PythLazerClient instance.
-   * @param config - Configuration including WebSocket URLs, token, and optional history service URL
+   * @param config - Configuration including WebSocket URLs, token, history service URL, and router service URL
    */
   static async create(config: LazerClientConfig): Promise<PythLazerClient> {
     const wsp = await WebSocketPool.create(config);
     const historyServiceUrl =
       config.historyServiceUrl ??
       "https://history.pyth-lazer.dourolabs.app/history";
-    return new PythLazerClient(wsp, historyServiceUrl);
+    const routerServiceUrl =
+      config.routerServiceUrl ??
+      "https://router.pyth-lazer.dourolabs.app";
+    return new PythLazerClient(wsp, historyServiceUrl, routerServiceUrl);
   }
 
   /**
@@ -162,6 +170,81 @@ export class PythLazerClient {
     } catch (error) {
       throw new Error(
         `Failed to fetch symbols: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Queries the latest price endpoint to get current price data.
+   * @param params - Parameters for the latest price request
+   * @returns Promise resolving to JsonUpdate with current price data
+   */
+  async get_latest_price(params: LatestPriceRequest): Promise<JsonUpdate> {
+    const url = new URL(`${this.routerServiceUrl}/v1/latest_price`);
+    
+    if (params.priceFeedIds) {
+      for (const id of params.priceFeedIds) url.searchParams.append('priceFeedIds', id.toString());
+    }
+    if (params.symbols) {
+      for (const symbol of params.symbols) url.searchParams.append('symbols', symbol);
+    }
+    for (const prop of params.properties) url.searchParams.append('properties', prop);
+    for (const format of params.formats) url.searchParams.append('formats', format);
+    if (params.jsonBinaryEncoding) {
+      url.searchParams.set('jsonBinaryEncoding', params.jsonBinaryEncoding);
+    }
+    if (params.parsed !== undefined) {
+      url.searchParams.set('parsed', params.parsed.toString());
+    }
+    url.searchParams.set('channel', params.channel);
+
+    try {
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${String(response.status)}`);
+      }
+      return (await response.json()) as JsonUpdate;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch latest price: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Queries the price endpoint to get historical price data at a specific timestamp.
+   * @param params - Parameters for the price request including timestamp
+   * @returns Promise resolving to JsonUpdate with price data at the specified time
+   */
+  async get_price(params: PriceRequest): Promise<JsonUpdate> {
+    const url = new URL(`${this.routerServiceUrl}/v1/price`);
+    
+    url.searchParams.set('timestamp', params.timestamp);
+    if (params.priceFeedIds) {
+      for (const id of params.priceFeedIds) url.searchParams.append('priceFeedIds', id.toString());
+    }
+    if (params.symbols) {
+      for (const symbol of params.symbols) url.searchParams.append('symbols', symbol);
+    }
+    for (const prop of params.properties) url.searchParams.append('properties', prop);
+    for (const format of params.formats) url.searchParams.append('formats', format);
+    if (params.jsonBinaryEncoding) {
+      url.searchParams.set('jsonBinaryEncoding', params.jsonBinaryEncoding);
+    }
+    if (params.parsed !== undefined) {
+      url.searchParams.set('parsed', params.parsed.toString());
+    }
+    url.searchParams.set('channel', params.channel);
+
+    try {
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${String(response.status)}`);
+      }
+      return (await response.json()) as JsonUpdate;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch price: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
