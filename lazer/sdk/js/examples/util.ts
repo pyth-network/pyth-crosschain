@@ -7,13 +7,14 @@ export function renderFeeds(
   feedData: Map<
     string,
     {
-      priceFeedId: string | number;
+      priceFeedId: number;
       price: number;
       confidence: number | undefined;
       exponent: number;
       lastUpdate: Date;
     }
   >,
+  symbolsMap: Map<number, string>,
 ) {
   // Clear screen and move cursor to top
   process.stdout.write("\u001B[2J\u001B[H");
@@ -41,9 +42,12 @@ export function renderFeeds(
         : feed.confidence * Math.pow(10, feed.exponent);
     const timeAgo = Math.round(Date.now() - feed.lastUpdate.getTime());
 
-    console.log(
-      `\u001B[36m${(index + 1).toString()}. Feed ID: ${feed.priceFeedId.toString()}\u001B[0m`,
-    );
+    const symbolName = symbolsMap.get(Number(feed.priceFeedId));
+    const displayName = symbolName
+      ? `Feed ID: ${feed.priceFeedId.toString()} (${symbolName})`
+      : `Feed ID: ${feed.priceFeedId.toString()}`;
+
+    console.log(`\u001B[36m${(index + 1).toString()}. ${displayName}\u001B[0m`);
     console.log(
       `   💰 Price: \u001B[32m$${readablePrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 8 })}\u001B[0m`,
     );
@@ -72,24 +76,24 @@ export function refreshFeedDisplay(
   feedData: Map<
     string,
     {
-      priceFeedId: string | number;
+      priceFeedId: number;
       price: number;
       confidence: number | undefined;
       exponent: number;
       lastUpdate: Date;
     }
   >,
+  symbolsMap: Map<number, string>,
 ) {
   if (response.parsed?.priceFeeds) {
-    for (const [index, feed] of response.parsed.priceFeeds.entries()) {
+    for (const feed of response.parsed.priceFeeds) {
       if (feed.price && feed.exponent !== undefined) {
-        const feedId = `feed_${(index + 1).toString()}`;
         const readableConfidence = feed.confidence
           ? Number(feed.confidence)
           : undefined;
 
-        feedData.set(feedId, {
-          priceFeedId: `feed_${(index + 1).toString()}`,
+        feedData.set(feed.priceFeedId.toString(), {
+          priceFeedId: feed.priceFeedId,
           price: Number(feed.price),
           confidence: readableConfidence,
           exponent: feed.exponent,
@@ -98,7 +102,7 @@ export function refreshFeedDisplay(
       }
     }
 
-    renderFeeds(feedData);
+    renderFeeds(feedData, symbolsMap);
   }
 }
 

@@ -1,27 +1,29 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable unicorn/prefer-top-level-await */
 
 import { renderFeeds, refreshFeedDisplay } from "./util.js";
 import type { JsonUpdate } from "../src/index.js";
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
-console.debug = () => { };
+console.debug = () => {};
 
 // Store feed data for in-place updates
 const feedData = new Map<
   string,
   {
-    priceFeedId: string | number;
+    priceFeedId: number;
     price: number;
     confidence: number | undefined;
     exponent: number;
     lastUpdate: Date;
   }
 >();
+const symbolsMap = new Map<number, string>();
 
 const client = await PythLazerClient.create({
-  token: "ZpIVWYXIXXIPAARXLt50VTRMNjW91UUAnDu-test", // Replace with your actual access token
+  token: "your-token-here", // Replace with your actual access token
   logger: console, // Optionally log operations (to the console in this case.)
   webSocketPoolConfig: {
     numConnections: 4, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 4.
@@ -37,12 +39,19 @@ const client = await PythLazerClient.create({
   },
 });
 
-// Read and display messages from the Lazer stream
+// Fetch current map of price feeds
+void client.get_symbols().then((symbols) => {
+  for (const symbol of symbols) {
+    symbolsMap.set(symbol.pyth_lazer_id, symbol.symbol);
+  }
+});
+
+// Add a listener to read and display messages from the Lazer stream
 client.addMessageListener((message) => {
   switch (message.type) {
     case "json": {
       if (message.value.type == "streamUpdated") {
-        refreshFeedDisplay(message.value as JsonUpdate, feedData);
+        refreshFeedDisplay(message.value as JsonUpdate, feedData, symbolsMap);
       }
       break;
     }
@@ -65,7 +74,7 @@ client.addAllConnectionsDownListener(() => {
   console.error("All connections are down!");
 });
 
-renderFeeds(feedData);
+renderFeeds(feedData, symbolsMap);
 
 // Create and remove one or more subscriptions on the fly
 client.subscribe({
