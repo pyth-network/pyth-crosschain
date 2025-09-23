@@ -18,12 +18,8 @@ const feedData = new Map<string, {
 
 const client = await PythLazerClient.create({
   token: "your-token-here", // Replace with your actual access token
-  logger: console, // Optionally log socket operations (to the console in this case.)
+  logger: console, // Optionally log operations (to the console in this case.)
   webSocketPoolConfig: {
-    urls: [
-      "wss://pyth-lazer-0.dourolabs.app/v1/stream",
-      "wss://pyth-lazer-1.dourolabs.app/v1/stream",
-    ],
     numConnections: 4, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 4.
     onError: (error) => {
       console.error("WebSocket error:", error);
