@@ -1,6 +1,7 @@
 import fetch from "cross-fetch";
 import WebSocket from "isomorphic-ws";
-
+import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 import type {
   ParsedPayload,
   Request,
@@ -14,7 +15,7 @@ import type {
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
-import { DEFAULT_HISTORY_SERVICE_URL, DEFAULT_ROUTER_SERVICE_URL, DEFAULT_STREAM_SERVICE_0_URL, DEFAULT_STREAM_SERVICE_1_URL } from "./constants.js";
+import { DEFAULT_METADATA_SERVICE_URL, DEFAULT_PRICE_SERVICE_URL } from "./constants.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -36,39 +37,55 @@ const UINT16_NUM_BYTES = 2;
 const UINT32_NUM_BYTES = 4;
 const UINT64_NUM_BYTES = 8;
 
-export type LazerClientConfig = WebSocketPoolConfig & {
-  historyServiceUrl?: string;
-  routerServiceUrl?: string;
-  streamServiceUrls?: string[];
+export type LazerClientConfig = {
+  token: string;
+  metadataServiceUrl?: string;
+  priceServiceUrl?: string;
+  logger?: Logger;
+  webSocketPoolConfig?: WebSocketPoolConfig;
 };
 
 export class PythLazerClient {
   private constructor(
-    private readonly wsp: WebSocketPool,
-    private readonly historyServiceUrl: string,
-    private readonly routerServiceUrl: string,
+    private readonly token: string,
+    private readonly metadataServiceUrl: string,
+    private readonly priceServiceUrl: string,
+    private readonly logger: Logger,
+    private readonly wsp?: WebSocketPool,
   ) { }
 
   /**
+   * Validates that the WebSocket pool is available for streaming operations.
+   * @throws Error if WebSocket pool is not configured
+   */
+  private validateWebSocketPool(): void {
+    if (!this.wsp) {
+      throw new Error("WebSocket pool is not available. Make sure to provide webSocketPoolConfig when creating the client.");
+    }
+  }
+
+  /**
    * Creates a new PythLazerClient instance.
-   * @param config - Configuration including WebSocket URLs, token, history service URL, and router service URL
+   * @param config - Configuration including WebSocket URLs, token, metadata service URL, and price service URL
    */
   static async create(config: LazerClientConfig): Promise<PythLazerClient> {
-    const historyServiceUrl =
-      config.historyServiceUrl ??
-      DEFAULT_HISTORY_SERVICE_URL;
-    const routerServiceUrl =
-      config.routerServiceUrl ??
-      DEFAULT_ROUTER_SERVICE_URL;
-    const streamServiceUrls =
-      config.streamServiceUrls ??
-      [DEFAULT_STREAM_SERVICE_0_URL, DEFAULT_STREAM_SERVICE_1_URL];
+    const token = config.token;
 
-    const wsp = await WebSocketPool.create({
-      ...config,
-      urls: streamServiceUrls,
-    });
-    return new PythLazerClient(wsp, historyServiceUrl, routerServiceUrl);
+    // Collect and remove trailing slash from URLs
+    const metadataServiceUrl =
+      (config.metadataServiceUrl ??
+        DEFAULT_METADATA_SERVICE_URL).replace(/\/+$/, '');
+    const priceServiceUrl =
+      (config.priceServiceUrl ??
+        DEFAULT_PRICE_SERVICE_URL).replace(/\/+$/, '');
+    const logger = config.logger ?? dummyLogger;
+
+    // If webSocketPoolConfig is provided, create a WebSocket pool and block until at least one connection is established.
+    let wsp: WebSocketPool | undefined;
+    if (config.webSocketPoolConfig) {
+      wsp = await WebSocketPool.create(config.webSocketPoolConfig, token, logger);
+    }
+    return new PythLazerClient(token, metadataServiceUrl, priceServiceUrl, logger, wsp);
   }
 
   /**
@@ -78,7 +95,8 @@ export class PythLazerClient {
    * or a binary response containing EVM, Solana, or parsed payload data.
    */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
-    this.wsp.addMessageListener((data: WebSocket.Data) => {
+    this.validateWebSocketPool();
+    this.wsp!.addMessageListener((data: WebSocket.Data) => {
       if (typeof data == "string") {
         handler({
           type: "json",
@@ -129,18 +147,21 @@ export class PythLazerClient {
   }
 
   subscribe(request: Request) {
+    this.validateWebSocketPool();
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
-    this.wsp.addSubscription(request);
+    this.wsp!.addSubscription(request);
   }
 
   unsubscribe(subscriptionId: number) {
-    this.wsp.removeSubscription(subscriptionId);
+    this.validateWebSocketPool();
+    this.wsp!.removeSubscription(subscriptionId);
   }
 
   send(request: Request) {
-    this.wsp.sendRequest(request);
+    this.validateWebSocketPool();
+    this.wsp!.sendRequest(request);
   }
 
   /**
@@ -149,11 +170,31 @@ export class PythLazerClient {
    * @param handler - Function to be called when all connections are down
    */
   addAllConnectionsDownListener(handler: () => void): void {
-    this.wsp.addAllConnectionsDownListener(handler);
+    this.validateWebSocketPool();
+    this.wsp!.addAllConnectionsDownListener(handler);
   }
 
   shutdown(): void {
-    this.wsp.shutdown();
+    this.validateWebSocketPool();
+    this.wsp!.shutdown();
+  }
+
+  /**
+   * Private helper method to make authenticated HTTP requests with Bearer token
+   * @param url - The URL to fetch
+   * @param options - Additional fetch options
+   * @returns Promise resolving to the fetch Response
+   */
+  private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<globalThis.Response> {
+    const headers = {
+      'Authorization': `Bearer ${this.token}`,
+      ...options.headers,
+    };
+
+    return fetch(url, {
+      ...options,
+      headers,
+    });
   }
 
   /**
@@ -162,7 +203,7 @@ export class PythLazerClient {
    * @returns Promise resolving to array of symbol information
    */
   async get_symbols(params?: SymbolsQueryParams): Promise<SymbolResponse[]> {
-    const url = new URL(`${this.historyServiceUrl}/v1/symbols`);
+    const url = new URL(`${this.metadataServiceUrl}/v1/symbols`);
 
     if (params?.query) {
       url.searchParams.set("query", params.query);
@@ -172,7 +213,7 @@ export class PythLazerClient {
     }
 
     try {
-      const response = await fetch(url.toString());
+      const response = await this.authenticatedFetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${String(response.status)} - ${await response.text()}`);
       }
@@ -190,26 +231,18 @@ export class PythLazerClient {
    * @returns Promise resolving to JsonUpdate with current price data
    */
   async get_latest_price(params: LatestPriceRequest): Promise<JsonUpdate> {
-    const url = new URL(`${this.routerServiceUrl}/v1/latest_price`);
-
-    if (params.priceFeedIds) {
-      for (const id of params.priceFeedIds) url.searchParams.append('priceFeedIds', id.toString());
-    }
-    if (params.symbols) {
-      for (const symbol of params.symbols) url.searchParams.append('symbols', symbol);
-    }
-    for (const prop of params.properties) url.searchParams.append('properties', prop);
-    for (const format of params.formats) url.searchParams.append('formats', format);
-    if (params.jsonBinaryEncoding) {
-      url.searchParams.set('jsonBinaryEncoding', params.jsonBinaryEncoding);
-    }
-    if (params.parsed !== undefined) {
-      url.searchParams.set('parsed', params.parsed.toString());
-    }
-    url.searchParams.set('channel', params.channel);
+    const url = `${this.priceServiceUrl}/v1/latest_price`;
 
     try {
-      const response = await fetch(url.toString());
+      const body = JSON.stringify(params);
+      this.logger.debug("get_latest_price", { url, body });
+      const response = await this.authenticatedFetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${String(response.status)} - ${await response.text()}`);
       }
@@ -227,27 +260,18 @@ export class PythLazerClient {
    * @returns Promise resolving to JsonUpdate with price data at the specified time
    */
   async get_price(params: PriceRequest): Promise<JsonUpdate> {
-    const url = new URL(`${this.routerServiceUrl}/v1/price`);
-
-    url.searchParams.set('timestamp', params.timestamp);
-    if (params.priceFeedIds) {
-      for (const id of params.priceFeedIds) url.searchParams.append('priceFeedIds', id.toString());
-    }
-    if (params.symbols) {
-      for (const symbol of params.symbols) url.searchParams.append('symbols', symbol);
-    }
-    for (const prop of params.properties) url.searchParams.append('properties', prop);
-    for (const format of params.formats) url.searchParams.append('formats', format);
-    if (params.jsonBinaryEncoding) {
-      url.searchParams.set('jsonBinaryEncoding', params.jsonBinaryEncoding);
-    }
-    if (params.parsed !== undefined) {
-      url.searchParams.set('parsed', params.parsed.toString());
-    }
-    url.searchParams.set('channel', params.channel);
+    const url = `${this.priceServiceUrl}/v1/price`;
 
     try {
-      const response = await fetch(url.toString());
+      const body = JSON.stringify(params);
+      this.logger.debug("get_price", { url, body });
+      const response = await this.authenticatedFetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${String(response.status)} - ${await response.text()}`);
       }

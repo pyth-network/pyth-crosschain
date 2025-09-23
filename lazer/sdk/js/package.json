@@ -28,8 +28,9 @@
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "example": "node --loader ts-node/esm examples/index.js",
-    "router-example": "node --loader ts-node/esm examples/router-example.js",
+    "example:streaming": "node --loader ts-node/esm examples/streaming.js",
+    "example:history": "node --loader ts-node/esm examples/history.js",
+    "example:symbols": "node --loader ts-node/esm examples/symbols.js",
     "doc": "typedoc --out docs/typedoc src"
   },
   "devDependencies": {
