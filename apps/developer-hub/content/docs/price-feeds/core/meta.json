@@ -1,6 +1,6 @@
 {
   "root": true,
-  "title": "Price Feeds",
+  "title": "Price Feeds Core",
   "description": "Real-time data from financial institutions",
   "icon": "ChartLine",
   "pages": [
