@@ -5,7 +5,7 @@ import time
 import websockets
 
 from config import Config
-from price_state import PriceState
+from price_state import PriceState, PriceUpdate
 
 
 class HermesListener:
@@ -72,10 +72,10 @@ class HermesListener:
             expo = price_object["expo"]
             publish_time = price_object["publish_time"]
             logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
+            now = time.time()
             if id == self.base_feed_id:
-                self.price_state.hermes_base_price = price
+                self.price_state.hermes_base_price = PriceUpdate(price, now)
             if id == self.quote_feed_id:
-                self.price_state.hermes_quote_price = price
-            self.price_state.latest_hermes_timestamp = time.time()
+                self.price_state.hermes_quote_price = PriceUpdate(price, now)
         except Exception as e:
             logger.error("parse_hermes_message error: {}", e)

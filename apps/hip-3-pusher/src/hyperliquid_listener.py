@@ -5,7 +5,7 @@ from loguru import logger
 import time
 
 from config import Config
-from price_state import PriceState
+from price_state import PriceState, PriceUpdate
 
 # This will be in config, but note here.
 # Other RPC providers exist but so far we've seen their support is incomplete.
@@ -51,21 +51,27 @@ class HyperliquidListener:
             async for message in ws:
                 try:
                     data = json.loads(message)
-                    if "ctx" not in message:
-                        # TODO: Should check subscription status response
-                        logger.debug("HL update without ctx: {}", message)
-                        continue
-                    self.parse_hyperliquid_ws_message(data)
+                    channel = data.get("channel", None)
+                    if not channel:
+                        logger.error("No channel in message: {}", data)
+                    elif channel == "subscriptionResponse":
+                        logger.debug("Received subscription response: {}", data)
+                    elif channel == "error":
+                        logger.error("Received Hyperliquid error response: {}", data)
+                    elif channel == "activeAssetCtx":
+                        self.parse_hyperliquid_ws_message(data)
+                    else:
+                        logger.error("Received unknown channel: {}", channel)
                 except json.JSONDecodeError as e:
-                    logger.error("Failed to decode JSON message: {}", e)
+                    logger.error("Failed to decode JSON message: {} error: {}", message, e)
 
     def parse_hyperliquid_ws_message(self, message):
         try:
             ctx = message["data"]["ctx"]
-            self.price_state.hl_oracle_price = ctx["oraclePx"]
-            self.price_state.hl_mark_price = ctx["markPx"]
+            now = time.time()
+            self.price_state.hl_oracle_price = PriceUpdate(ctx["oraclePx"], now)
+            self.price_state.hl_mark_price = PriceUpdate(ctx["markPx"], now)
             logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", self.price_state.hl_oracle_price,
                          self.price_state.hl_mark_price)
-            self.price_state.latest_hl_timestamp = time.time()
         except Exception as e:
             logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", e)

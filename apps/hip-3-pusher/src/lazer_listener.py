@@ -5,7 +5,7 @@ import time
 import websockets
 
 from config import Config
-from price_state import PriceState
+from price_state import PriceState, PriceUpdate
 
 
 class LazerListener:
@@ -75,15 +75,15 @@ class LazerListener:
                 return
             price_feeds = data["parsed"]["priceFeeds"]
             logger.debug("price_feeds: {}", price_feeds)
+            now = time.time()
             for feed_update in price_feeds:
                 feed_id = feed_update.get("priceFeedId", None)
                 price = feed_update.get("price", None)
                 if feed_id is None or price is None:
                     continue
                 if feed_id == self.base_feed_id:
-                    self.price_state.lazer_base_price = price
+                    self.price_state.lazer_base_price = PriceUpdate(price, now)
                 if feed_id == self.quote_feed_id:
-                    self.price_state.lazer_quote_price = price
-            self.price_state.latest_lazer_timestamp = time.time()
+                    self.price_state.lazer_quote_price = PriceUpdate(price, now)
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)

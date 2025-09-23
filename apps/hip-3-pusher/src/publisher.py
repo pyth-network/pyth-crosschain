@@ -68,6 +68,8 @@ class Publisher:
         #    mark_pxs.append({self.market_symbol: self.price_state.hl_mark_price})
 
         external_perp_pxs = {}
+        # TODO: "Each update can change oraclePx and markPx by at most 1%."
+        # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
 
         if self.enable_publish:
             if self.enable_kms:
