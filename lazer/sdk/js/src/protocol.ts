@@ -98,3 +98,63 @@ export const FORMAT_MAGICS_LE = {
   LE_ECDSA: 1_296_547_300,
   LE_UNSIGNED: 1_499_680_012,
 };
+
+export type AssetType =
+  | "crypto"
+  | "fx"
+  | "equity"
+  | "metal"
+  | "rates"
+  | "nav"
+  | "commodity"
+  | "funding-rate";
+
+export type SymbolsQueryParams = {
+  query?: string;
+  asset_type?: AssetType;
+};
+
+export type SymbolResponse = {
+  pyth_lazer_id: number;
+  name: string;
+  symbol: string;
+  description: string;
+  asset_type: string;
+  exponent: number;
+  min_publishers: number;
+  min_channel: string;
+  state: string;
+  schedule: string;
+  cmc_id?: number | null;
+  hermes_id?: string | null;
+  interval?: string | null;
+};
+
+export type LatestPriceRequest = {
+  priceFeedIds?: number[];
+  symbols?: string[];
+  properties: PriceFeedProperty[];
+  formats: Format[];
+  jsonBinaryEncoding?: JsonBinaryEncoding;
+  parsed?: boolean;
+  channel: Channel;
+};
+
+export type PriceRequest = {
+  timestamp: number;
+  priceFeedIds?: number[];
+  symbols?: string[];
+  properties: PriceFeedProperty[];
+  formats: Format[];
+  jsonBinaryEncoding?: JsonBinaryEncoding;
+  parsed?: boolean;
+  channel: Channel;
+};
+
+export type JsonUpdate = {
+  parsed?: ParsedPayload;
+  evm?: JsonBinaryData;
+  solana?: JsonBinaryData;
+  leEcdsa?: JsonBinaryData;
+  leUnsigned?: JsonBinaryData;
+};
