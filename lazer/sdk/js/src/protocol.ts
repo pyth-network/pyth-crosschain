@@ -128,3 +128,32 @@ export type SymbolResponse = {
   hermes_id?: string | null;
   interval?: string | null;
 };
+
+export type LatestPriceRequest = {
+  priceFeedIds?: number[];
+  symbols?: string[];
+  properties: PriceFeedProperty[];
+  formats: Format[];
+  jsonBinaryEncoding?: JsonBinaryEncoding;
+  parsed?: boolean;
+  channel: Channel;
+};
+
+export type PriceRequest = {
+  timestamp: string;
+  priceFeedIds?: number[];
+  symbols?: string[];
+  properties: PriceFeedProperty[];
+  formats: Format[];
+  jsonBinaryEncoding?: JsonBinaryEncoding;
+  parsed?: boolean;
+  channel: Channel;
+};
+
+export type JsonUpdate = {
+  parsed?: ParsedPayload;
+  evm?: JsonBinaryData;
+  solana?: JsonBinaryData;
+  leEcdsa?: JsonBinaryData;
+  leUnsigned?: JsonBinaryData;
+};
