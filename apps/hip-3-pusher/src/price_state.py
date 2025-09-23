@@ -1,6 +1,8 @@
 from loguru import logger
 import time
 
+from config import Config
+
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
 
@@ -8,8 +10,8 @@ class PriceState:
     """
     Maintain latest prices seen across listeners and publisher.
     """
-    def __init__(self, config):
-        self.stale_price_threshold_seconds = config.get("stale_price_threshold_seconds", DEFAULT_STALE_PRICE_THRESHOLD_SECONDS)
+    def __init__(self, config: Config):
+        self.stale_price_threshold_seconds = config.stale_price_threshold_seconds
         now = time.time()
 
         self.hl_oracle_price = None
@@ -17,15 +19,15 @@ class PriceState:
         self.latest_hl_timestamp = now
 
         self.lazer_base_price = None
-        self.lazer_base_exponent = config["lazer"]["base_feed_exponent"]
+        self.lazer_base_exponent = config.lazer.base_feed_exponent
         self.lazer_quote_price = None
-        self.lazer_quote_exponent = config["lazer"]["quote_feed_exponent"]
+        self.lazer_quote_exponent = config.lazer.quote_feed_exponent
         self.latest_lazer_timestamp = now
 
         self.hermes_base_price = None
-        self.hermes_base_exponent = config["hermes"]["base_feed_exponent"]
+        self.hermes_base_exponent = config.hermes.base_feed_exponent
         self.hermes_quote_price = None
-        self.hermes_quote_exponent = config["hermes"]["quote_feed_exponent"]
+        self.hermes_quote_exponent = config.hermes.quote_feed_exponent
         self.latest_hermes_timestamp = now
 
     def get_current_oracle_price(self):

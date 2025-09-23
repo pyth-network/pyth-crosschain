@@ -4,6 +4,7 @@ from loguru import logger
 import time
 import websockets
 
+from config import Config
 from price_state import PriceState
 
 
@@ -11,10 +12,10 @@ class HermesListener:
     """
     Subscribe to Hermes price updates for needed feeds.
     """
-    def __init__(self, config, price_state: PriceState):
-        self.hermes_urls = config["hermes"]["hermes_urls"]
-        self.base_feed_id = config["hermes"]["base_feed_id"]
-        self.quote_feed_id = config["hermes"]["quote_feed_id"]
+    def __init__(self, config: Config, price_state: PriceState):
+        self.hermes_urls = config.hermes.hermes_urls
+        self.base_feed_id = config.hermes.base_feed_id
+        self.quote_feed_id = config.hermes.quote_feed_id
         self.price_state = price_state
 
     def get_subscribe_request(self):

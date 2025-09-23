@@ -10,18 +10,20 @@ from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
 from hyperliquid.utils.signing import get_timestamp_ms, action_hash, construct_phantom_agent, l1_payload
 from loguru import logger
 
+from config import Config
+
 SECP256K1_N_HALF = SECP256K1_N // 2
 
 
 class KMSSigner:
-    def __init__(self, config):
-        use_testnet = config["hyperliquid"]["use_testnet"]
+    def __init__(self, config: Config):
+        use_testnet = config.hyperliquid.use_testnet
         url = TESTNET_API_URL if use_testnet else MAINNET_API_URL
         self.oracle_publisher_exchange: Exchange = Exchange(wallet=None, base_url=url)
         self.client = self._init_client(config)
 
         # Fetch public key once so we can derive address and check recovery id
-        key_path = config["kms"]["key_path"]
+        key_path = config.kms.key_path
         self.key_id = open(key_path, "r").read().strip()
         self.pubkey_der = self.client.get_public_key(KeyId=self.key_id)["PublicKey"]
         # Construct eth address to log
@@ -35,10 +37,10 @@ class KMSSigner:
         logger.info("KMSSigner address: {}", self.address)
 
     def _init_client(self, config):
-        aws_region_name = config["kms"]["aws_region_name"]
-        access_key_id_path = config["kms"]["access_key_id_path"]
+        aws_region_name = config.kms.aws_region_name
+        access_key_id_path = config.kms.access_key_id_path
         access_key_id = open(access_key_id_path, "r").read().strip()
-        secret_access_key_path = config["kms"]["secret_access_key_path"]
+        secret_access_key_path = config.kms.secret_access_key_path
         secret_access_key = open(secret_access_key_path, "r").read().strip()
 
         return boto3.client(

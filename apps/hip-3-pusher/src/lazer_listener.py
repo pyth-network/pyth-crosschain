@@ -4,6 +4,7 @@ from loguru import logger
 import time
 import websockets
 
+from config import Config
 from price_state import PriceState
 
 
@@ -11,11 +12,11 @@ class LazerListener:
     """
     Subscribe to Lazer price updates for needed feeds.
     """
-    def __init__(self, config, price_state: PriceState):
-        self.lazer_urls = config["lazer"]["lazer_urls"]
-        self.api_key = config["lazer"]["lazer_api_key"]
-        self.base_feed_id = config["lazer"]["base_feed_id"]
-        self.quote_feed_id = config["lazer"]["quote_feed_id"]
+    def __init__(self, config: Config, price_state: PriceState):
+        self.lazer_urls = config.lazer.lazer_urls
+        self.api_key = config.lazer.lazer_api_key
+        self.base_feed_id = config.lazer.base_feed_id
+        self.quote_feed_id = config.lazer.quote_feed_id
         self.price_state = price_state
 
     def get_subscribe_request(self, subscription_id: int):
@@ -52,7 +53,7 @@ class LazerListener:
             subscribe_request = self.get_subscribe_request(1)
 
             await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent Lazer subscribe request to {}", self.lazer_urls[0])
+            logger.info("Sent Lazer subscribe request to {}", router_url)
 
             # listen for updates
             async for message in ws:

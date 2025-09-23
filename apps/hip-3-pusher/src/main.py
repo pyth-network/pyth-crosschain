@@ -3,8 +3,9 @@ import asyncio
 from loguru import logger
 import os
 import sys
-import toml
+import tomllib
 
+from config import Config
 from hyperliquid_listener import HyperliquidListener
 from lazer_listener import LazerListener
 from hermes_listener import HermesListener
@@ -21,8 +22,10 @@ def load_config():
         help="hip3-agent config file",
     )
     config_path = parser.parse_args().config
-    with open(config_path, "r") as config_file:
-        config = toml.load(config_file)
+    with open(config_path, "rb") as config_file:
+        config_toml = tomllib.load(config_file)
+        config = Config(**config_toml)
+        logger.debug("Config loaded: {}", config)
     return config
 
 
@@ -46,10 +49,9 @@ async def main():
     lazer_listener = LazerListener(config, price_state)
     hermes_listener = HermesListener(config, price_state)
 
-    # TODO: Probably pull this out of the sdk so we can handle reconnects.
-    hyperliquid_listener.subscribe()
     await asyncio.gather(
         publisher.run(),
+        hyperliquid_listener.subscribe_all(),
         lazer_listener.subscribe_all(),
         hermes_listener.subscribe_all(),
     )
