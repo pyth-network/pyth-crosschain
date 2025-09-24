@@ -74,4 +74,4 @@ class HyperliquidListener:
             logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", self.price_state.hl_oracle_price,
                          self.price_state.hl_mark_price)
         except Exception as e:
-            logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", e)
+            logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", message, e)
