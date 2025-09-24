@@ -1328,5 +1328,12 @@
     "rpcUrl": "https://sepolia-rpc.giwa.io",
     "networkId": 91342,
     "type": "EvmChain"
+  },
+  {
+    "id": "itsnotreal2",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.itsnotreal2.lol",
+    "networkId": 5064014,
+    "type": "EvmChain"
   }
 ]
