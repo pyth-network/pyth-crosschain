@@ -3,14 +3,16 @@ from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 
+from config import Config
+
 METER_NAME = "hip3pusher"
 
 
 class Metrics:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         # Adapted from opentelemetry-exporter-prometheus example code.
         # Start Prometheus client
-        start_http_server(port=config["prometheus_port"])
+        start_http_server(port=config.prometheus_port)
         # Exporter to export metrics to Prometheus
         reader = PrometheusMetricReader()
         # Meter is responsible for creating and recording metrics

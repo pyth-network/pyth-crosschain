@@ -4,18 +4,19 @@ from loguru import logger
 import time
 import websockets
 
-from price_state import PriceState
+from config import Config
+from price_state import PriceState, PriceUpdate
 
 
 class LazerListener:
     """
     Subscribe to Lazer price updates for needed feeds.
     """
-    def __init__(self, config, price_state: PriceState):
-        self.lazer_urls = config["lazer"]["lazer_urls"]
-        self.api_key = config["lazer"]["lazer_api_key"]
-        self.base_feed_id = config["lazer"]["base_feed_id"]
-        self.quote_feed_id = config["lazer"]["quote_feed_id"]
+    def __init__(self, config: Config, price_state: PriceState):
+        self.lazer_urls = config.lazer.lazer_urls
+        self.api_key = config.lazer.lazer_api_key
+        self.base_feed_id = config.lazer.base_feed_id
+        self.quote_feed_id = config.lazer.quote_feed_id
         self.price_state = price_state
 
     def get_subscribe_request(self, subscription_id: int):
@@ -52,7 +53,7 @@ class LazerListener:
             subscribe_request = self.get_subscribe_request(1)
 
             await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent Lazer subscribe request to {}", self.lazer_urls[0])
+            logger.info("Sent Lazer subscribe request to {}", router_url)
 
             # listen for updates
             async for message in ws:
@@ -74,15 +75,15 @@ class LazerListener:
                 return
             price_feeds = data["parsed"]["priceFeeds"]
             logger.debug("price_feeds: {}", price_feeds)
+            now = time.time()
             for feed_update in price_feeds:
                 feed_id = feed_update.get("priceFeedId", None)
                 price = feed_update.get("price", None)
                 if feed_id is None or price is None:
                     continue
                 if feed_id == self.base_feed_id:
-                    self.price_state.lazer_base_price = price
+                    self.price_state.lazer_base_price = PriceUpdate(price, now)
                 if feed_id == self.quote_feed_id:
-                    self.price_state.lazer_quote_price = price
-            self.price_state.latest_lazer_timestamp = time.time()
+                    self.price_state.lazer_quote_price = PriceUpdate(price, now)
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)

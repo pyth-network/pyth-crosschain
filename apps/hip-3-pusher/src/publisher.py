@@ -7,6 +7,7 @@ from eth_account.signers.local import LocalAccount
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
 
+from config import Config
 from kms_signer import KMSSigner
 from metrics import Metrics
 from price_state import PriceState
@@ -18,30 +19,27 @@ class Publisher:
 
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions
     """
-    def __init__(self, config: dict, price_state: PriceState, metrics: Metrics):
-        self.publish_interval = float(config["hyperliquid"]["publish_interval"])
+    def __init__(self, config: Config, price_state: PriceState, metrics: Metrics):
+        self.publish_interval = float(config.hyperliquid.publish_interval)
         self.kms_signer = None
         self.enable_kms = False
-        self.use_testnet = config["hyperliquid"].get("use_testnet", True)
+        self.use_testnet = config.hyperliquid.use_testnet
 
-        if config["kms"]["enable_kms"]:
+        if config.kms.enable_kms:
             self.enable_kms = True
             oracle_account = None
-            kms_key_path = config["kms"]["key_path"]
-            kms_key_id = open(kms_key_path, "r").read().strip()
-            self.kms_signer = KMSSigner(kms_key_id, config["kms"]["aws_region_name"], self.use_testnet)
+            self.kms_signer = KMSSigner(config)
         else:
-            oracle_pusher_key_path = config["hyperliquid"]["oracle_pusher_key_path"]
+            oracle_pusher_key_path = config.hyperliquid.oracle_pusher_key_path
             oracle_pusher_key = open(oracle_pusher_key_path, "r").read().strip()
             oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
-            del oracle_pusher_key
             logger.info("oracle pusher local pubkey: {}", oracle_account.address)
 
         url = TESTNET_API_URL if self.use_testnet else MAINNET_API_URL
         self.oracle_publisher_exchange: Exchange = Exchange(wallet=oracle_account, base_url=url)
-        self.market_name = config["hyperliquid"]["market_name"]
-        self.market_symbol = config["hyperliquid"]["market_symbol"]
-        self.enable_publish = config["hyperliquid"].get("enable_publish", False)
+        self.market_name = config.hyperliquid.market_name
+        self.market_symbol = config.hyperliquid.market_symbol
+        self.enable_publish = config.hyperliquid.enable_publish
 
         self.price_state = price_state
         self.metrics = metrics
@@ -70,6 +68,8 @@ class Publisher:
         #    mark_pxs.append({self.market_symbol: self.price_state.hl_mark_price})
 
         external_perp_pxs = {}
+        # TODO: "Each update can change oraclePx and markPx by at most 1%."
+        # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
 
         if self.enable_publish:
             if self.enable_kms:
