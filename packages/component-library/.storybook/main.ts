@@ -14,17 +14,10 @@ const config = {
   ],
 
   features: {
-    backgroundsStoryGlobals: true,
+    backgrounds: true,
   },
-
+  
   addons: [
-    {
-      name: "@storybook/addon-essentials",
-      options: {
-        backgrounds: false,
-        measure: false,
-      },
-    },
     "@storybook/addon-themes",
     {
       name: "@storybook/addon-styling-webpack",
