@@ -6,6 +6,7 @@ import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { Chart } from "./chart";
 import styles from "./chart-page.module.scss";
 import { getFeed } from "../get-feed";
+import { ChartToolbar } from "./chart-toolbar";
 
 type Props = {
   params: Promise<{
@@ -26,7 +27,7 @@ type ChartPageImplProps =
     });
 
 const ChartPageImpl = (props: ChartPageImplProps) => (
-  <Card title="Chart" className={styles.chartCard}>
+  <Card title="Chart" className={styles.chartCard} toolbar={<ChartToolbar />}>
     <div className={styles.chart}>
       {props.isLoading ? (
         <div className={styles.spinnerContainer}>
