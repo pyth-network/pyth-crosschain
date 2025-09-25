@@ -2,6 +2,7 @@ stale_price_threshold_seconds = 5
 prometheus_port = 9090
 
 [hyperliquid]
+hyperliquid_ws_urls = ["wss://api.hyperliquid-testnet.xyz/ws"]
 market_name = ""
 market_symbol = "BTC"
 use_testnet = false
@@ -11,7 +12,9 @@ enable_publish = false
 
 [kms]
 enable_kms = false
-key_path = "/path/to/kms_key.txt"
+key_path = "/path/to/aws_kms_key_id.txt"
+access_key_id_path = "/path/to/aws_access_key_id.txt"
+secret_access_key_path = "/path/to/aws_secret_access_key.txt"
 aws_region_name = "ap-northeast-1"
 
 [lazer]
