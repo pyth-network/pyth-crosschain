@@ -336,15 +336,49 @@ export const _getPublisherAverageScoreHistory = async ({
     },
   );
 
-// note that this is not cached as the `until` param is a unix timestamp
+type ResolutionUnit = "SECOND" | "MINUTE" | "HOUR" | "DAY";
+type Resolution = `${number} ${ResolutionUnit}`;
+// note that this is not cached as `from` and `to` params are unix timestamps
 export const getHistoricalPrices = async ({
   symbol,
-  until,
+  from,
+  to,
+  publisher = "",
+  resolution = "1 MINUTE",
+  cluster = "pythnet",
 }: {
   symbol: string;
-  until: string;
-}) =>
-  safeQuery(
+  from: number;
+  to: number;
+  publisher: string | undefined;
+  // TODO fhqvst Should we prevent fetching second-resolution data?
+  resolution?: Resolution;
+  cluster?: "pythnet" | "pythtest";
+}) => {
+  const queryParams: Record<string, number | string | string[]> = {
+    symbol,
+    from,
+    to,
+  };
+
+  const publisherClause = publisher
+    ? "AND publisher = {publisher: String}"
+    : "";
+  const clusterClause =
+    cluster === "pythtest"
+      ? "cluster IN {clusters: Array(String)}"
+      : "cluster = {cluster: String}";
+
+  if (publisher) {
+    queryParams.publisher = publisher;
+  }
+  if (cluster === "pythtest") {
+    queryParams.clusters = ["pythnet", "pythtest-conformance"];
+  } else {
+    queryParams.cluster = "pythnet";
+  }
+
+  return safeQuery(
     z.array(
       z.strictObject({
         timestamp: z.number(),
@@ -354,20 +388,24 @@ export const getHistoricalPrices = async ({
     ),
     {
       query: `
-          SELECT toUnixTimestamp(time) AS timestamp, avg(price) AS price, avg(confidence) AS confidence
+          SELECT toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL ${resolution})) AS timestamp, avg(price) AS price, avg(confidence) AS confidence
           FROM prices
-          WHERE cluster = 'pythnet'
-          AND symbol = {symbol: String}
-          AND version = 2
-          AND time > fromUnixTimestamp(toInt64({until: String})) - INTERVAL 5 MINUTE
-          AND time < fromUnixTimestamp(toInt64({until: String}))
-          AND publisher = ''
-          GROUP BY time
-          ORDER BY time ASC
+          PREWHERE
+            ${clusterClause}
+            AND symbol = {symbol: String}
+            ${publisherClause}
+            AND version = 2
+          WHERE
+            publishTime >= toDateTime({from: UInt32})
+            AND publishTime < toDateTime({to: UInt32})
+            /* AND toDate(time) BETWEEN toDate(toDateTime({from: UInt32})) AND toDate(toDateTime({to: UInt32})) */
+          GROUP BY timestamp
+          ORDER BY timestamp ASC
         `,
-      query_params: { symbol, until },
+      query_params: queryParams,
     },
   );
+};
 
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,
