@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+STALE_TIMEOUT_SECONDS = 5
+
 
 class KMSConfig(BaseModel):
     enable_kms: bool
