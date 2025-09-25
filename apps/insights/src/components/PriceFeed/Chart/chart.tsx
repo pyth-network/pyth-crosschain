@@ -2,14 +2,36 @@
 
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useResizeObserver, useMountEffect } from "@react-hookz/web";
-import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
-import { LineSeries, LineStyle, createChart } from "lightweight-charts";
+import {
+  startOfMinute,
+  startOfHour,
+  startOfDay,
+  startOfSecond,
+} from "date-fns";
+import type {
+  IChartApi,
+  ISeriesApi,
+  LineData,
+  UTCTimestamp,
+  WhitespaceData,
+} from "lightweight-charts";
+import {
+  AreaSeries,
+  LineSeries,
+  LineStyle,
+  createChart,
+} from "lightweight-charts";
 import { useTheme } from "next-themes";
 import type { RefObject } from "react";
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
 
 import styles from "./chart.module.scss";
+import {
+  lookbackToMilliseconds,
+  useChartLookback,
+  useChartResolution,
+} from "./use-chart-toolbar";
 import { useLivePriceData } from "../../../hooks/use-live-price-data";
 import { usePriceFormatter } from "../../../hooks/use-price-formatter";
 import { Cluster } from "../../../services/pyth";
@@ -40,168 +62,290 @@ const useChart = (symbol: string, feedId: string) => {
 
 const useChartElem = (symbol: string, feedId: string) => {
   const logger = useLogger();
-  const { current } = useLivePriceData(Cluster.Pythnet, feedId);
+  const [lookback] = useChartLookback();
+  const [resolution] = useChartResolution();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
-  const earliestDateRef = useRef<bigint | undefined>(undefined);
   const isBackfilling = useRef(false);
   const priceFormatter = usePriceFormatter();
+  const resolutionRef = useRef(resolution);
+  const abortControllerRef = useRef<AbortController | undefined>(undefined);
 
-  const backfillData = useCallback(() => {
-    if (!isBackfilling.current && earliestDateRef.current) {
+  useEffect(() => {
+    resolutionRef.current = resolution;
+  }, [resolution]);
+
+  const { current: livePriceData } = useLivePriceData(Cluster.Pythnet, feedId);
+
+  const didResetVisibleRange = useRef(false);
+  const didLoadInitialData = useRef(false);
+
+  // Update the chart with the historical and live price data
+  useEffect(() => {
+    // Historical
+    if (!chartRef.current || !didLoadInitialData.current || !livePriceData) {
+      return;
+    }
+
+    // Update last data point
+    const { price, confidence } = livePriceData.aggregate;
+    const timestampMs = startOfResolution(
+      new Date(Number(livePriceData.timestamp) * 1000),
+      resolution,
+    );
+
+    const time = (timestampMs / 1000) as UTCTimestamp;
+
+    const priceData: LineData = { time, value: price };
+    const confidenceHighData: LineData = { time, value: price + confidence };
+    const confidenceLowData: LineData = { time, value: price - confidence };
+
+    const lastDataPoint = chartRef.current.price.data().at(-1);
+
+    if (lastDataPoint && lastDataPoint.time > priceData.time) {
+      return;
+    }
+
+    chartRef.current.confidenceHigh.update(confidenceHighData);
+    chartRef.current.confidenceLow.update(confidenceLowData);
+    chartRef.current.price.update(priceData);
+  }, [livePriceData, resolution]);
+
+  function maybeResetVisibleRange() {
+    if (chartRef.current === undefined || didResetVisibleRange.current) {
+      return;
+    }
+    const data = chartRef.current.price.data();
+    const first = data.at(0);
+    const last = data.at(-1);
+    if (!first || !last) {
+      return;
+    }
+    chartRef.current.chart
+      .timeScale()
+      .setVisibleRange({ from: first.time, to: last.time });
+    didResetVisibleRange.current = true;
+  }
+
+  const fetchHistoricalData = useCallback(
+    function fetchHistoricalData({
+      from,
+      to,
+      resolution,
+    }: {
+      from: number;
+      to: number;
+      resolution: string;
+    }) {
+      if (isBackfilling.current) {
+        return;
+      }
       isBackfilling.current = true;
       const url = new URL("/historical-prices", globalThis.location.origin);
       url.searchParams.set("symbol", symbol);
-      url.searchParams.set("until", earliestDateRef.current.toString());
-      fetch(url)
+      url.searchParams.set("from", from.toString());
+      url.searchParams.set("to", to.toString());
+      url.searchParams.set("resolution", resolution);
+      url.searchParams.set("cluster", "pythnet");
+
+      abortControllerRef.current = new AbortController();
+      abortControllerRef.current.signal.addEventListener("abort", () => {
+        isBackfilling.current = false;
+      });
+
+      fetch(url, { signal: abortControllerRef.current.signal })
         .then(async (data) => historicalDataSchema.parse(await data.json()))
         .then((data) => {
-          const firstPoint = data[0];
-          if (firstPoint) {
-            earliestDateRef.current = BigInt(firstPoint.timestamp);
+          if (!chartRef.current) {
+            return;
           }
-          if (
-            chartRef.current &&
-            chartRef.current.resolution === Resolution.Tick
-          ) {
-            const convertedData = data.map(
-              ({ timestamp, price, confidence }) => ({
-                time: getLocalTimestamp(new Date(timestamp * 1000)),
-                price,
-                confidence,
-              }),
-            );
-            chartRef.current.price.setData([
-              ...convertedData.map(({ time, price }) => ({
-                time,
-                value: price,
-              })),
-              ...chartRef.current.price.data(),
-            ]);
-            chartRef.current.confidenceHigh.setData([
-              ...convertedData.map(({ time, price, confidence }) => ({
-                time,
-                value: price + confidence,
-              })),
-              ...chartRef.current.confidenceHigh.data(),
-            ]);
-            chartRef.current.confidenceLow.setData([
-              ...convertedData.map(({ time, price, confidence }) => ({
-                time,
-                value: price - confidence,
-              })),
-              ...chartRef.current.confidenceLow.data(),
-            ]);
-          }
-          isBackfilling.current = false;
+
+          // Get the current historical price data
+          const currentHistoricalPriceData = chartRef.current.price
+            .data()
+            .filter((d) => isLineData(d));
+          const currentHistoricalConfidenceHighData =
+            chartRef.current.confidenceHigh.data().filter((d) => isLineData(d));
+          const currentHistoricalConfidenceLowData =
+            chartRef.current.confidenceLow.data().filter((d) => isLineData(d));
+
+          const newHistoricalPriceData = data.map((d) => ({
+            time: Number(d.timestamp) as UTCTimestamp,
+            value: d.price,
+          }));
+          const newHistoricalConfidenceHighData = data.map((d) => ({
+            time: Number(d.timestamp) as UTCTimestamp,
+            value: d.price + d.confidence,
+          }));
+          const newHistoricalConfidenceLowData = data.map((d) => ({
+            time: Number(d.timestamp) as UTCTimestamp,
+            value: d.price - d.confidence,
+          }));
+
+          // Combine the current and new historical price data
+          const mergedPriceData = mergeData(
+            currentHistoricalPriceData,
+            newHistoricalPriceData,
+          );
+          const mergedConfidenceHighData = mergeData(
+            currentHistoricalConfidenceHighData,
+            newHistoricalConfidenceHighData,
+          );
+          const mergedConfidenceLowData = mergeData(
+            currentHistoricalConfidenceLowData,
+            newHistoricalConfidenceLowData,
+          );
+
+          // Set the new historical price data and (maybe) reset the visible range
+          chartRef.current.price.setData(mergedPriceData);
+          chartRef.current.confidenceHigh.setData(mergedConfidenceHighData);
+          chartRef.current.confidenceLow.setData(mergedConfidenceLowData);
+          maybeResetVisibleRange();
+          didLoadInitialData.current = true;
         })
         .catch((error: unknown) => {
+          if (error instanceof Error && error.name === "AbortError") {
+            return;
+          }
           logger.error("Error fetching historical prices", error);
+        })
+        .finally(() => {
+          isBackfilling.current = false;
         });
-    }
-  }, [logger, symbol]);
+    },
+    [symbol, chartRef, logger],
+  );
 
   useMountEffect(() => {
     const chartElem = chartContainerRef.current;
     if (chartElem === null) {
       throw new Error("Chart element was null on mount");
-    } else {
-      const chart = createChart(chartElem, {
-        layout: {
-          attributionLogo: false,
-          background: { color: "transparent" },
-        },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: true,
-        },
-        localization: {
-          priceFormatter: priceFormatter.format,
-        },
-      });
-
-      const price = chart.addSeries(LineSeries, { priceFormat });
-
-      chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-        if (
-          range && // if (range.to - range.from > 1000) {
-          //   console.log("DECREASE RESOLUTION");
-          // } else if (range.to - range.from < 100) {
-          //   console.log("INCREASE RESOLUTION");
-          // } else if (range.from < 10) {
-          range.from < 10
-        ) {
-          backfillData();
-        }
-      });
-
-      chartRef.current = {
-        resolution: Resolution.Tick,
-        chart,
-        confidenceHigh: chart.addSeries(LineSeries, confidenceConfig),
-        confidenceLow: chart.addSeries(LineSeries, confidenceConfig),
-        price,
-      };
-      return () => {
-        chart.remove();
-      };
     }
+    if (chartRef.current) {
+      chartRef.current.chart.remove();
+    }
+    const chart = createChart(chartElem, {
+      layout: {
+        attributionLogo: false,
+        background: { color: "transparent" },
+      },
+      grid: {
+        horzLines: {
+          color: "transparent",
+        },
+        vertLines: {
+          color: "transparent",
+        },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
+      localization: {
+        priceFormatter: priceFormatter.format,
+      },
+    });
+
+    const confidenceHigh = chart.addSeries(AreaSeries, confidenceConfig);
+    const confidenceLow = chart.addSeries(AreaSeries, confidenceConfig);
+    const price = chart.addSeries(LineSeries, { priceFormat });
+
+    chart.timeScale().subscribeVisibleTimeRangeChange((range) => {
+      if (!range || !didLoadInitialData.current) {
+        return;
+      }
+      const { from, to } = range;
+      const first = chartRef.current?.price.data().at(0);
+
+      if (!from || !to || !first) {
+        return;
+      }
+
+      const fromMs = Number(from) * 1000;
+      const toMs = Number(to) * 1000;
+      const firstMs = Number(first.time) * 1000;
+
+      const visibleRangeMs = toMs - fromMs;
+
+      const remainingDataMs = fromMs - firstMs;
+      const threshold = visibleRangeMs * 0.1;
+
+      const newToMs = firstMs;
+      const newFromMs = startOfResolution(
+        new Date(newToMs - visibleRangeMs),
+        resolutionRef.current,
+      );
+
+      // When we're getting close to the earliest data, we need to backfill more
+      if (remainingDataMs <= threshold) {
+        fetchHistoricalData({
+          from: newFromMs / 1000,
+          to: newToMs / 1000,
+          resolution: resolutionRef.current,
+        });
+      }
+    });
+
+    chartRef.current = {
+      chart,
+      confidenceHigh,
+      confidenceLow,
+      price,
+    };
+
+    return () => {
+      chart.remove();
+    };
   });
 
   useEffect(() => {
-    if (current && chartRef.current) {
-      earliestDateRef.current ??= current.timestamp;
-      const { price, confidence } = current.aggregate;
-      const time = getLocalTimestamp(
-        new Date(Number(current.timestamp * 1000n)),
-      );
-      if (chartRef.current.resolution === Resolution.Tick) {
-        chartRef.current.price.update({ time, value: price });
-        chartRef.current.confidenceHigh.update({
-          time,
-          value: price + confidence,
-        });
-        chartRef.current.confidenceLow.update({
-          time,
-          value: price - confidence,
-        });
-      }
+    if (!chartRef.current) {
+      return;
     }
-  }, [current]);
+
+    const now = new Date();
+    const to = startOfResolution(now, resolution);
+    const from = startOfResolution(
+      new Date(now.getTime() - lookbackToMilliseconds(lookback)),
+      resolution,
+    );
+
+    didResetVisibleRange.current = false;
+    didLoadInitialData.current = false;
+    chartRef.current.price.setData([]);
+    chartRef.current.confidenceHigh.setData([]);
+    chartRef.current.confidenceLow.setData([]);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort("Reset visible range");
+      abortControllerRef.current = undefined;
+    }
+
+    fetchHistoricalData({
+      from: from / 1000,
+      to: to / 1000,
+      resolution,
+    });
+  }, [lookback, resolution, fetchHistoricalData]);
 
   return { chartRef, chartContainerRef };
 };
 
-enum Resolution {
-  Tick,
-  Minute,
-  Hour,
-  Day,
-}
-
 type ChartRefContents = {
   chart: IChartApi;
-} & (
-  | {
-      resolution: Resolution.Tick;
-      confidenceHigh: ISeriesApi<"Line">;
-      confidenceLow: ISeriesApi<"Line">;
-      price: ISeriesApi<"Line">;
-    }
-  | {
-      resolution: Exclude<Resolution, Resolution.Tick>;
-      series: ISeriesApi<"Candlestick">;
-    }
-);
+} & {
+  confidenceHigh: ISeriesApi<"Area">;
+  confidenceLow: ISeriesApi<"Area">;
+  price: ISeriesApi<"Line">;
+};
 
 const historicalDataSchema = z.array(
   z.strictObject({
-    timestamp: z.number(),
+    timestamp: z.number().transform(BigInt),
     price: z.number(),
     confidence: z.number(),
   }),
 );
-
 const priceFormat = {
   type: "price",
   precision: 5,
@@ -247,39 +391,44 @@ const applyColors = (
   chart.applyOptions({
     grid: {
       horzLines: {
-        color: colors.border,
+        visible: false,
       },
       vertLines: {
-        color: colors.border,
+        visible: false,
       },
     },
     layout: {
       textColor: colors.muted,
     },
     timeScale: {
-      borderColor: colors.muted,
+      borderColor: colors.border,
     },
     rightPriceScale: {
-      borderColor: colors.muted,
+      borderColor: colors.border,
     },
   });
-  if (series.resolution === Resolution.Tick) {
-    series.confidenceHigh.applyOptions({
-      color: colors.chartNeutral,
-    });
-    series.confidenceLow.applyOptions({
-      color: colors.chartNeutral,
-    });
-    series.price.applyOptions({
-      color: colors.chartPrimary,
-    });
-  }
+  series.confidenceHigh.applyOptions({
+    lineColor: colors.chartConfidence,
+    priceLineColor: colors.chartConfidence,
+    topColor: colors.chartConfidence,
+    bottomColor: colors.chartConfidence,
+  });
+  series.confidenceLow.applyOptions({
+    lineColor: colors.chartConfidence,
+    priceLineColor: colors.chartConfidence,
+    topColor: colors.background,
+    bottomColor: colors.background,
+  });
+  series.price.applyOptions({
+    color: colors.chartPrimary,
+  });
 };
 
 const getColors = (container: HTMLDivElement, resolvedTheme: string) => {
   const style = getComputedStyle(container);
 
   return {
+    background: style.getPropertyValue(`--chart-background-${resolvedTheme}`),
     border: style.getPropertyValue(`--border-${resolvedTheme}`),
     muted: style.getPropertyValue(`--muted-${resolvedTheme}`),
     chartNeutral: style.getPropertyValue(
@@ -288,16 +437,54 @@ const getColors = (container: HTMLDivElement, resolvedTheme: string) => {
     chartPrimary: style.getPropertyValue(
       `--chart-series-primary-${resolvedTheme}`,
     ),
+    chartConfidence: style.getPropertyValue(
+      `--chart-series-muted-${resolvedTheme}`,
+    ),
   };
 };
 
-const getLocalTimestamp = (date: Date): UTCTimestamp =>
-  (Date.UTC(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    date.getHours(),
-    date.getMinutes(),
-    date.getSeconds(),
-    date.getMilliseconds(),
-  ) / 1000) as UTCTimestamp;
+function isLineData(data: LineData | WhitespaceData): data is LineData {
+  return "time" in data && "value" in data;
+}
+
+/**
+ * Merge (and sort) two arrays of line data, deduplicating by time
+ */
+function mergeData(as: LineData[], bs: LineData[]) {
+  const unique = new Map<number, LineData>();
+
+  // TODO fhqvst Can optimize with while's
+  for (const a of as) {
+    unique.set(a.time as number, a);
+  }
+  for (const b of bs) {
+    unique.set(b.time as number, b);
+  }
+  return [...unique.values()].sort(
+    (a, b) => (a.time as number) - (b.time as number),
+  );
+}
+
+/**
+ * Convert a date to the start of the given resolution, i.e. 1s = startOfSecond, 1m = startOfMinute, etc.
+ */
+function startOfResolution(date: Date, resolution: string) {
+  switch (resolution) {
+    case "1s": {
+      return startOfSecond(date).getTime();
+    }
+    case "1m":
+    case "5m": {
+      return startOfMinute(date).getTime();
+    }
+    case "1H": {
+      return startOfHour(date).getTime();
+    }
+    case "1D": {
+      return startOfDay(date).getTime();
+    }
+    default: {
+      throw new Error(`Unknown resolution: ${resolution}`);
+    }
+  }
+}
