@@ -15,8 +15,9 @@ const config = {
 
   features: {
     backgrounds: true,
+    measure: false,
   },
-  
+
   addons: [
     "@storybook/addon-themes",
     {
