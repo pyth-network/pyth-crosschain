@@ -10,9 +10,9 @@ import { useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 
 import styles from "./chart.module.scss";
-import { useLivePriceData } from "../../hooks/use-live-price-data";
-import { usePriceFormatter } from "../../hooks/use-price-formatter";
-import { Cluster } from "../../services/pyth";
+import { useLivePriceData } from "../../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../../hooks/use-price-formatter";
+import { Cluster } from "../../../services/pyth";
 
 type Props = {
   symbol: string;
