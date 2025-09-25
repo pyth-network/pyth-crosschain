@@ -4,8 +4,8 @@ from loguru import logger
 import time
 import websockets
 
-from config import Config
-from price_state import PriceState, PriceUpdate
+from pusher.config import Config
+from pusher.price_state import PriceState, PriceUpdate
 
 
 class LazerListener:

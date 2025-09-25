@@ -14,3 +14,8 @@ dependencies = [
     "prometheus-client~=0.23.1",
     "websockets~=15.0.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]

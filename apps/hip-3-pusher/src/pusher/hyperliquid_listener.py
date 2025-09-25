@@ -4,8 +4,8 @@ import websockets
 from loguru import logger
 import time
 
-from config import Config
-from price_state import PriceState, PriceUpdate
+from pusher.config import Config
+from pusher.price_state import PriceState, PriceUpdate
 
 # This will be in config, but note here.
 # Other RPC providers exist but so far we've seen their support is incomplete.
