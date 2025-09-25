@@ -3,9 +3,11 @@ import json
 from loguru import logger
 import time
 import websockets
+from tenacity import retry, retry_if_exception_type, wait_exponential
 
-from config import Config
-from price_state import PriceState, PriceUpdate
+from pusher.config import Config, STALE_TIMEOUT_SECONDS
+from pusher.exception import StaleConnection
+from pusher.price_state import PriceState, PriceUpdate
 
 
 class LazerListener:
@@ -35,14 +37,13 @@ class LazerListener:
     async def subscribe_all(self):
         await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.lazer_urls))
 
+    @retry(
+        retry=retry_if_exception_type((StaleConnection, websockets.ConnectionClosed)),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        reraise=True,
+    )
     async def subscribe_single(self, router_url):
-        while True:
-            try:
-                await self.subscribe_single_inner(router_url)
-            except websockets.ConnectionClosed:
-                logger.error("Connection to {} closed; retrying", router_url)
-            except Exception as e:
-                logger.exception("Error on {}: {}", router_url, e)
+        return await self.subscribe_single_inner(router_url)
 
     async def subscribe_single_inner(self, router_url):
         headers = {
@@ -56,12 +57,19 @@ class LazerListener:
             logger.info("Sent Lazer subscribe request to {}", router_url)
 
             # listen for updates
-            async for message in ws:
+            while True:
                 try:
+                    message = await asyncio.wait_for(ws.recv(), timeout=STALE_TIMEOUT_SECONDS)
                     data = json.loads(message)
                     self.parse_lazer_message(data)
+                except asyncio.TimeoutError:
+                    raise StaleConnection(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
+                except websockets.ConnectionClosed:
+                    raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {}", e)
+                except Exception as e:
+                    logger.error("Unexpected exception: {}", e)
 
     def parse_lazer_message(self, data):
         """

@@ -3,9 +3,11 @@ import json
 from loguru import logger
 import time
 import websockets
+from tenacity import retry, retry_if_exception_type, wait_exponential
 
-from config import Config
-from price_state import PriceState, PriceUpdate
+from pusher.config import Config, STALE_TIMEOUT_SECONDS
+from pusher.exception import StaleConnection
+from pusher.price_state import PriceState, PriceUpdate
 
 
 class HermesListener:
@@ -31,14 +33,13 @@ class HermesListener:
     async def subscribe_all(self):
         await asyncio.gather(*(self.subscribe_single(url) for url in self.hermes_urls))
 
+    @retry(
+        retry=retry_if_exception_type((StaleConnection, websockets.ConnectionClosed)),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        reraise=True,
+    )
     async def subscribe_single(self, url):
-        while True:
-            try:
-                await self.subscribe_single_inner(url)
-            except websockets.ConnectionClosed:
-                logger.error("Connection to {} closed; retrying", url)
-            except Exception as e:
-                logger.exception("Error on {}: {}", url, e)
+        return await self.subscribe_single_inner(url)
 
     async def subscribe_single_inner(self, url):
         async with websockets.connect(url) as ws:
@@ -48,12 +49,19 @@ class HermesListener:
             logger.info("Sent Hermes subscribe request to {}", url)
 
             # listen for updates
-            async for message in ws:
+            while True:
                 try:
+                    message = await asyncio.wait_for(ws.recv(), timeout=STALE_TIMEOUT_SECONDS)
                     data = json.loads(message)
                     self.parse_hermes_message(data)
+                except asyncio.TimeoutError:
+                    raise StaleConnection(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
+                except websockets.ConnectionClosed:
+                    raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {}", e)
+                except Exception as e:
+                    logger.error("Unexpected exception: {}", e)
 
     def parse_hermes_message(self, data):
         """

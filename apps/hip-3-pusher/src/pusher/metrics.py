@@ -3,7 +3,7 @@ from opentelemetry.exporter.prometheus import PrometheusMetricReader
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 
-from config import Config
+from pusher.config import Config
 
 METER_NAME = "hip3pusher"
 

@@ -1,7 +1,7 @@
 from loguru import logger
 import time
 
-from config import Config
+from pusher.config import Config
 
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
