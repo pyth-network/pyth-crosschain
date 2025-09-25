@@ -5,7 +5,7 @@ import { Spinner } from "@pythnetwork/component-library/Spinner";
 
 import { Chart } from "./chart";
 import styles from "./chart-page.module.scss";
-import { getFeed } from "./get-feed";
+import { getFeed } from "../get-feed";
 
 type Props = {
   params: Promise<{
