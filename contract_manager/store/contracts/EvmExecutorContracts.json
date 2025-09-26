@@ -233,5 +233,10 @@
     "chain": "giwa_testnet",
     "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
     "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "itsnotreal2",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmExecutorContract"
   }
 ]
