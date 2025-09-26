@@ -118,7 +118,7 @@ export const RECEIVER_CHAINS = {
   spiderman: 60087,
   zero_gravity: 60088,
   itsnotreal: 60089,
-  batman: 60090,
+  plasma: 60090,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

@@ -1330,7 +1330,7 @@
     "type": "EvmChain"
   },
   {
-    "id": "batman",
+    "id": "plasma",
     "mainnet": true,
     "rpcUrl": "https://rpc.plasma.to/",
     "networkId": 9745,
