@@ -230,19 +230,19 @@ message SetPublisherPublicKeys {
 // Allow publisher to publish for the specified feeds.
 message AddPublisherAllowedFeedIds {
     // Must not be empty.
-    repeated bytes allowed_feed_ids_to_add = 1;
+    repeated uint32 allowed_feed_ids_to_add = 1;
 }
 
 // Disallow publisher to publish for the specified feeds.
 message RemovePublisherAllowedFeedIds {
     // Must not be empty.
-    repeated bytes allowed_feed_ids_to_remove = 1;
+    repeated uint32 allowed_feed_ids_to_remove = 1;
 }
 
 // Allow publisher to publish for only the specified feeds.
 // Remove all previous allowances.
 message SetPublisherAllowedFeedIds {
-    repeated bytes allowed_feed_ids = 1;
+    repeated uint32 allowed_feed_ids = 1;
 }
 
 message SetPublisherActive {
@@ -317,6 +317,8 @@ message UpdateFeedProperties {
     optional string market_schedule = 106;
     // [optional]
     optional FeedState state = 107;
+    // [required]
+    optional FeedKind kind = 108;
     // [optional]
     optional bool is_enabled_in_shard = 201;
 }
