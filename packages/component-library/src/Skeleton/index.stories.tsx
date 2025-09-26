@@ -31,6 +31,17 @@ export const Skeleton = {
   args: {
     label: "Loading",
     width: 20,
-    fill: false,
   },
 } satisfies StoryObj<typeof SkeletonComponent>;
+
+export const SkeletonFill: StoryObj<typeof SkeletonComponent> = {
+  render: (args) => (
+    <div style={{ width: "100vw" }}>
+      <SkeletonComponent {...args} />
+    </div>
+  ),
+  args: {
+    label: "Loading",
+    fill: true,
+  },
+};
