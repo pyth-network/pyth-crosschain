@@ -237,6 +237,7 @@ impl Channel {
             Channel::FixedRate(fixed_rate) => match fixed_rate.duration().as_millis() {
                 50 => ChannelId::FIXED_RATE_50,
                 200 => ChannelId::FIXED_RATE_200,
+                1000 => ChannelId::FIXED_RATE_1000,
                 _ => panic!("unknown channel: {self:?}"),
             },
             Channel::RealTime => ChannelId::REAL_TIME,
