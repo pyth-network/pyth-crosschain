@@ -1,0 +1,17 @@
+@use "../theme";
+
+.tableGrid {
+  --ag-browser-color-scheme: light-dark(light, dark);
+  --ag-background-color: #{theme.color("background", "primary")};
+  --ag-header-background-color: var(--ag-background-color);
+  --ag-foreground-color: #{theme.color("paragraph")};
+  --ag-accent-color: #{theme.color("button", "outline", "background", "active")};
+  --ag-wrapper-border: none;
+  // .ag-row-hover {
+  //   background-color: theme.color("button","outline","background","active");
+  // }
+}
+
+.tableGrid{
+  height: 100%;
+}

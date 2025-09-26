@@ -41,6 +41,7 @@
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
     "@next/third-parties": "catalog:",
+    "ag-grid-react": "catalog:",
     "@react-hookz/web": "catalog:",
     "bcp-47": "catalog:",
     "clsx": "catalog:",
