@@ -27,13 +27,12 @@ export const PriceFeeds = async ({ params }: Props) => {
   const feeds = await getPriceFeeds(parsedCluster, key);
   const metricsTime = feeds.find((feed) => feed.ranking !== undefined)?.ranking
     ?.time;
-
   return (
     <PriceFeedsCard
       metricsTime={metricsTime}
       publisherKey={key}
       cluster={parsedCluster}
-      priceFeeds={feeds.map(({ ranking, feed, status }) => ({
+      priceFeeds={feeds.map(({ ranking, feed }) => ({
         symbol: feed.symbol,
         name: (
           <PriceFeedTag
@@ -47,12 +46,12 @@ export const PriceFeeds = async ({ params }: Props) => {
             }
           />
         ),
+        lastSlot: feed.price.lastSlot,
         score: ranking?.final_score,
         rank: ranking?.final_rank,
         uptimeScore: ranking?.uptime_score,
         deviationScore: ranking?.deviation_score,
         stalledScore: ranking?.stalled_score,
-        status,
         feedKey: feed.product.price_account,
         nameAsString: feed.product.display_symbol,
         id: feed.product.price_account,
@@ -72,7 +71,7 @@ type PriceFeedsCardProps =
       isLoading?: false | undefined;
       publisherKey: string;
       cluster: Cluster;
-      priceFeeds: Omit<PriceComponent, "cluster" | "publisherKey">[];
+      priceFeeds: Omit<PriceComponent, "status" | "cluster" | "publisherKey">[];
       metricsTime?: Date | undefined;
     };
 

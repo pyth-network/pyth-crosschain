@@ -35,8 +35,8 @@ import { ChartCard } from "../ChartCard";
 import { Explain } from "../Explain";
 import {
   ExplainAverage,
-  ExplainActive,
-  ExplainInactive,
+  ExplainPermissioned,
+  ExplainUnpermissioned,
 } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
 import { PublisherIcon } from "../PublisherIcon";
@@ -376,8 +376,8 @@ const ActiveFeedsCard = async ({
     <ActiveFeedsCardImpl
       cluster={cluster}
       publisherKey={publisherKey}
-      activeFeeds={publisher.activeFeeds}
-      inactiveFeeds={publisher.inactiveFeeds}
+      permissionedFeeds={publisher.permissionedFeeds}
+      unpermissionedFeeds={publisher.unpermissionedFeeds}
       allFeeds={priceFeeds.length}
     />
   ) : (
@@ -391,8 +391,8 @@ type ActiveFeedsCardImplProps =
       isLoading?: false | undefined;
       cluster: Cluster;
       publisherKey: string;
-      activeFeeds: number;
-      inactiveFeeds: number;
+      permissionedFeeds: number;
+      unpermissionedFeeds: number;
       allFeeds: number;
     };
 
@@ -400,14 +400,14 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
   <StatCard
     header1={
       <>
-        Active Feeds
-        <ExplainActive />
+        Permissioned
+        <ExplainPermissioned />
       </>
     }
     header2={
       <>
-        <ExplainInactive />
-        Inactive Feeds
+        Unpermissioned
+        <ExplainUnpermissioned />
       </>
     }
     stat1={
@@ -415,10 +415,10 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
         <Skeleton width={10} />
       ) : (
         <Link
-          href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Active`}
+          href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Permissioned`}
           invert
         >
-          {props.activeFeeds}
+          {props.permissionedFeeds}
         </Link>
       )
     }
@@ -427,10 +427,10 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
         <Skeleton width={10} />
       ) : (
         <Link
-          href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Inactive`}
+          href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Unpermissioned`}
           invert
         >
-          {props.inactiveFeeds}
+          {props.unpermissionedFeeds}
         </Link>
       )
     }
@@ -441,7 +441,7 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
         <>
           <FormattedNumber
             maximumFractionDigits={1}
-            value={(100 * props.activeFeeds) / props.allFeeds}
+            value={(100 * props.permissionedFeeds) / props.allFeeds}
           />
           %
         </>
@@ -454,7 +454,7 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
         <>
           <FormattedNumber
             maximumFractionDigits={1}
-            value={(100 * props.inactiveFeeds) / props.allFeeds}
+            value={(100 * props.unpermissionedFeeds) / props.allFeeds}
           />
           %
         </>
@@ -463,9 +463,9 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
   >
     {!props.isLoading && (
       <Meter
-        value={props.activeFeeds}
+        value={props.permissionedFeeds}
         maxValue={props.allFeeds}
-        label="Active Feeds"
+        label="Permissioned Feeds"
       />
     )}
   </StatCard>

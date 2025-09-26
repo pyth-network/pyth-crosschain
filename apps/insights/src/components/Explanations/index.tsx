@@ -24,19 +24,25 @@ export const ExplainPermissioned = ({
   scoreTime,
 }: {
   scoreTime?: Date | undefined;
-}) => {
-  return (
-    <Explain size="xs" title="Permissioned Feeds">
-      <p>
-        This is the number of <b>Price Feeds</b> that a <b>Publisher</b> has
-        permissions to publish to. The publisher is not necessarily pushing data
-        for all the feeds they have access to, and some feeds may not be live
-        yet.
-      </p>
-      {scoreTime && <EvaluationTime scoreTime={scoreTime} />}
-    </Explain>
-  );
-};
+}) => (
+  <Explain size="xs" title="Permissioned Feeds">
+    <p>
+      This is the number of <b>Price Feeds</b> that a <b>Publisher</b> has
+      permissions to publish to. The publisher is not necessarily pushing data
+      for all the feeds they have access to, and some feeds may not be live yet.
+    </p>
+    {scoreTime && <EvaluationTime scoreTime={scoreTime} />}
+  </Explain>
+);
+
+export const ExplainUnpermissioned = () => (
+  <Explain size="xs" title="Unpermissioned Feeds">
+    <p>
+      This is the number of <b>Price Feeds</b> that a <b>Publisher</b> does not
+      have permissions to publish to.
+    </p>
+  </Explain>
+);
 
 export const ExplainAverage = ({
   scoreTime,
@@ -96,31 +102,3 @@ export const EvaluationTime = ({ scoreTime }: { scoreTime: Date }) => {
     </p>
   );
 };
-
-export const ExplainActive = () => (
-  <Explain size="xs" title="Active Feeds">
-    <p>
-      This is the number of feeds which the publisher is permissioned for, where
-      the publisher{"'"}s feed has 50% or better uptime over the last day.
-    </p>
-    <NeitherActiveNorInactiveNote />
-  </Explain>
-);
-
-export const ExplainInactive = () => (
-  <Explain size="xs" title="Inactive Feeds">
-    <p>
-      This is the number of feeds which the publisher is permissioned for, but
-      for which the publisher{"'"}s feed has less than 50% uptime over the last
-      day.
-    </p>
-    <NeitherActiveNorInactiveNote />
-  </Explain>
-);
-
-const NeitherActiveNorInactiveNote = () => (
-  <p>
-    Note that a publisher{"'"}s feed may not be considered either active or
-    inactive if Pyth has not yet calculated quality rankings for it.
-  </p>
-);
