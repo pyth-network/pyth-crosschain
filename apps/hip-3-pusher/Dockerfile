@@ -30,4 +30,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
 # Run the app by default
-CMD ["uv", "run", "src/main.py", "--config", "config/config.toml"]
+CMD ["uv", "run", "-m", "pusher.main", "--config", "config/config.toml"]

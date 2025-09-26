@@ -888,5 +888,10 @@
     "chain": "itsnotreal2",
     "address": "0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13",
     "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "plasma",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
   }
 ]

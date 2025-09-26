@@ -1335,5 +1335,12 @@
     "rpcUrl": "https://rpc.itsnotreal2.lol",
     "networkId": 5064014,
     "type": "EvmChain"
+  },
+  {
+    "id": "plasma",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.plasma.to/",
+    "networkId": 9745,
+    "type": "EvmChain"
   }
 ]

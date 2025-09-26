@@ -10,7 +10,7 @@ from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
 from hyperliquid.utils.signing import get_timestamp_ms, action_hash, construct_phantom_agent, l1_payload
 from loguru import logger
 
-from config import Config
+from pusher.config import Config
 
 SECP256K1_N_HALF = SECP256K1_N // 2
 

@@ -2,10 +2,12 @@ import asyncio
 import json
 import websockets
 from loguru import logger
+from tenacity import retry, retry_if_exception_type, wait_exponential
 import time
 
-from config import Config
-from price_state import PriceState, PriceUpdate
+from pusher.config import Config, STALE_TIMEOUT_SECONDS
+from pusher.exception import StaleConnection
+from pusher.price_state import PriceState, PriceUpdate
 
 # This will be in config, but note here.
 # Other RPC providers exist but so far we've seen their support is incomplete.
@@ -32,14 +34,13 @@ class HyperliquidListener:
     async def subscribe_all(self):
         await asyncio.gather(*(self.subscribe_single(hyperliquid_ws_url) for hyperliquid_ws_url in self.hyperliquid_ws_urls))
 
+    @retry(
+        retry=retry_if_exception_type((StaleConnection, websockets.ConnectionClosed)),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        reraise=True,
+    )
     async def subscribe_single(self, url):
-        while True:
-            try:
-                await self.subscribe_single_inner(url)
-            except websockets.ConnectionClosed:
-                logger.error("Connection to {} closed; retrying", url)
-            except Exception as e:
-                logger.exception("Error on {}: {}", url, e)
+        return await self.subscribe_single_inner(url)
 
     async def subscribe_single_inner(self, url):
         async with websockets.connect(url) as ws:
@@ -48,8 +49,9 @@ class HyperliquidListener:
             logger.info("Sent subscribe request to {}", url)
 
             # listen for updates
-            async for message in ws:
+            while True:
                 try:
+                    message = await asyncio.wait_for(ws.recv(), timeout=STALE_TIMEOUT_SECONDS)
                     data = json.loads(message)
                     channel = data.get("channel", None)
                     if not channel:
@@ -62,8 +64,14 @@ class HyperliquidListener:
                         self.parse_hyperliquid_ws_message(data)
                     else:
                         logger.error("Received unknown channel: {}", channel)
+                except asyncio.TimeoutError:
+                    raise StaleConnection(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
+                except websockets.ConnectionClosed:
+                    raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {} error: {}", message, e)
+                except Exception as e:
+                    logger.error("Unexpected exception: {}", e)
 
     def parse_hyperliquid_ws_message(self, message):
         try:
