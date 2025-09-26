@@ -118,6 +118,8 @@ export const RECEIVER_CHAINS = {
   spiderman: 60087,
   zero_gravity: 60088,
   itsnotreal: 60089,
+  plasma: 60090,
+  itsnotreal2: 60091,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -255,6 +257,7 @@ export const RECEIVER_CHAINS = {
   ethereal_devnet: 50128,
   ethereal_testnet_v2: 50129,
   fluent_testnet: 50130,
+  giwa_testnet: 50131,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

@@ -1,10 +1,12 @@
 import { createOpenAPI } from "fumadocs-openapi/server";
 
-export const fortunaOpenApiUrl =
-  "https://fortuna.dourolabs.app/docs/openapi.json";
-export const fortunaStagingOpenApiUrl =
-  "https://fortuna-staging.dourolabs.app/docs/openapi.json";
+export const products = {
+  fortuna: {
+    name: "fortuna",
+    openApiUrl: "https://fortuna-staging.dourolabs.app/docs/openapi.json",
+  },
+};
 
 export const openapi = createOpenAPI({
-  input: [fortunaOpenApiUrl, fortunaStagingOpenApiUrl],
+  input: Object.values(products).map((product) => product.openApiUrl),
 });

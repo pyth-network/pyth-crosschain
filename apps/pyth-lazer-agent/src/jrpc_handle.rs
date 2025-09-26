@@ -105,6 +105,12 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
             JrpcCall::PushUpdate(request_params) => {
                 handle_push_update(sender, lazer_publisher, request_params, jrpc_request.id).await
             }
+            JrpcCall::PushUpdates(request_params) => {
+                for feed in request_params {
+                    handle_push_update(sender, lazer_publisher, feed, jrpc_request.id).await?;
+                }
+                Ok(())
+            }
             JrpcCall::GetMetadata(request_params) => {
                 if let Some(request_id) = jrpc_request.id {
                     handle_get_metadata(sender, config, request_params, request_id).await

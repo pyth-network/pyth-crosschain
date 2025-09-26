@@ -16,7 +16,8 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LatestPriceRequest {
+pub struct LatestPriceRequestRepr {
+    // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
@@ -32,9 +33,55 @@ pub struct LatestPriceRequest {
     pub channel: Channel,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LatestPriceRequest(LatestPriceRequestRepr);
+
+impl<'de> Deserialize<'de> for LatestPriceRequest {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = LatestPriceRequestRepr::deserialize(deserializer)?;
+        Self::new(value).map_err(Error::custom)
+    }
+}
+
+impl LatestPriceRequest {
+    pub fn new(value: LatestPriceRequestRepr) -> Result<Self, &'static str> {
+        validate_price_feed_ids_or_symbols(&value.price_feed_ids, &value.symbols)?;
+        validate_optional_nonempty_vec_has_unique_elements(
+            &value.price_feed_ids,
+            "no price feed ids specified",
+            "duplicate price feed ids specified",
+        )?;
+        validate_optional_nonempty_vec_has_unique_elements(
+            &value.symbols,
+            "no symbols specified",
+            "duplicate symbols specified",
+        )?;
+        validate_formats(&value.formats)?;
+        validate_properties(&value.properties)?;
+        Ok(Self(value))
+    }
+}
+
+impl Deref for LatestPriceRequest {
+    type Target = LatestPriceRequestRepr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for LatestPriceRequest {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PriceRequest {
+pub struct PriceRequestRepr {
     pub timestamp: TimestampUs,
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
@@ -48,6 +95,52 @@ pub struct PriceRequest {
     #[serde(default = "default_parsed")]
     pub parsed: bool,
     pub channel: Channel,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PriceRequest(PriceRequestRepr);
+
+impl<'de> Deserialize<'de> for PriceRequest {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = PriceRequestRepr::deserialize(deserializer)?;
+        Self::new(value).map_err(Error::custom)
+    }
+}
+
+impl PriceRequest {
+    pub fn new(value: PriceRequestRepr) -> Result<Self, &'static str> {
+        validate_price_feed_ids_or_symbols(&value.price_feed_ids, &value.symbols)?;
+        validate_optional_nonempty_vec_has_unique_elements(
+            &value.price_feed_ids,
+            "no price feed ids specified",
+            "duplicate price feed ids specified",
+        )?;
+        validate_optional_nonempty_vec_has_unique_elements(
+            &value.symbols,
+            "no symbols specified",
+            "duplicate symbols specified",
+        )?;
+        validate_formats(&value.formats)?;
+        validate_properties(&value.properties)?;
+        Ok(Self(value))
+    }
+}
+
+impl Deref for PriceRequest {
+    type Target = PriceRequestRepr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for PriceRequest {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -222,40 +315,19 @@ impl<'de> Deserialize<'de> for SubscriptionParams {
 
 impl SubscriptionParams {
     pub fn new(value: SubscriptionParamsRepr) -> Result<Self, &'static str> {
-        if value.price_feed_ids.is_none() && value.symbols.is_none() {
-            return Err("either price feed ids or symbols must be specified");
-        }
-        if value.price_feed_ids.is_some() && value.symbols.is_some() {
-            return Err("either price feed ids or symbols must be specified, not both");
-        }
-
-        if let Some(ref ids) = value.price_feed_ids {
-            if ids.is_empty() {
-                return Err("no price feed ids specified");
-            }
-            if !ids.iter().all_unique() {
-                return Err("duplicate price feed ids specified");
-            }
-        }
-
-        if let Some(ref symbols) = value.symbols {
-            if symbols.is_empty() {
-                return Err("no symbols specified");
-            }
-            if !symbols.iter().all_unique() {
-                return Err("duplicate symbols specified");
-            }
-        }
-
-        if !value.formats.iter().all_unique() {
-            return Err("duplicate formats or chains specified");
-        }
-        if value.properties.is_empty() {
-            return Err("no properties specified");
-        }
-        if !value.properties.iter().all_unique() {
-            return Err("duplicate properties specified");
-        }
+        validate_price_feed_ids_or_symbols(&value.price_feed_ids, &value.symbols)?;
+        validate_optional_nonempty_vec_has_unique_elements(
+            &value.price_feed_ids,
+            "no price feed ids specified",
+            "duplicate price feed ids specified",
+        )?;
+        validate_optional_nonempty_vec_has_unique_elements(
+            &value.symbols,
+            "no symbols specified",
+            "duplicate symbols specified",
+        )?;
+        validate_formats(&value.formats)?;
+        validate_properties(&value.properties)?;
         Ok(Self(value))
     }
 }
@@ -468,6 +540,7 @@ pub struct SubscribedResponse {
 #[serde(rename_all = "camelCase")]
 pub struct InvalidFeedSubscriptionDetails {
     pub unknown_ids: Vec<PriceFeedId>,
+    pub unknown_symbols: Vec<String>,
     pub unsupported_channels: Vec<PriceFeedId>,
     pub unstable: Vec<PriceFeedId>,
 }
@@ -511,4 +584,54 @@ pub struct StreamUpdatedResponse {
     pub subscription_id: SubscriptionId,
     #[serde(flatten)]
     pub payload: JsonUpdate,
+}
+
+// Common validation functions
+fn validate_price_feed_ids_or_symbols(
+    price_feed_ids: &Option<Vec<PriceFeedId>>,
+    symbols: &Option<Vec<String>>,
+) -> Result<(), &'static str> {
+    if price_feed_ids.is_none() && symbols.is_none() {
+        return Err("either price feed ids or symbols must be specified");
+    }
+    if price_feed_ids.is_some() && symbols.is_some() {
+        return Err("either price feed ids or symbols must be specified, not both");
+    }
+    Ok(())
+}
+
+fn validate_optional_nonempty_vec_has_unique_elements<T>(
+    vec: &Option<Vec<T>>,
+    empty_msg: &'static str,
+    duplicate_msg: &'static str,
+) -> Result<(), &'static str>
+where
+    T: Eq + std::hash::Hash,
+{
+    if let Some(ref items) = vec {
+        if items.is_empty() {
+            return Err(empty_msg);
+        }
+        if !items.iter().all_unique() {
+            return Err(duplicate_msg);
+        }
+    }
+    Ok(())
+}
+
+fn validate_properties(properties: &[PriceFeedProperty]) -> Result<(), &'static str> {
+    if properties.is_empty() {
+        return Err("no properties specified");
+    }
+    if !properties.iter().all_unique() {
+        return Err("duplicate properties specified");
+    }
+    Ok(())
+}
+
+fn validate_formats(formats: &[Format]) -> Result<(), &'static str> {
+    if !formats.iter().all_unique() {
+        return Err("duplicate formats or chains specified");
+    }
+    Ok(())
 }
