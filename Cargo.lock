@@ -5656,7 +5656,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "backoff",
@@ -5674,8 +5674,8 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "protobuf",
- "pyth-lazer-protocol 0.14.0",
- "pyth-lazer-publisher-sdk 0.10.0",
+ "pyth-lazer-protocol 0.15.2",
+ "pyth-lazer-publisher-sdk 0.12.2",
  "reqwest 0.12.23",
  "serde",
  "serde_json",
@@ -5693,7 +5693,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "8.0.1"
+version = "8.2.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5711,7 +5711,7 @@ dependencies = [
  "hex",
  "humantime-serde",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol 0.15.1",
+ "pyth-lazer-protocol 0.16.0",
  "reqwest 0.12.23",
  "serde",
  "serde_json",
@@ -5725,9 +5725,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.14.0"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91b3e69c264b2ad80b5943df86c606daae63b13f93062abcc008c09a9e2e621e"
+checksum = "2ca6d92d185fa8e16521b4ac044fdbd3c4cd492658ab0dc3b417e29e0989e035"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -5746,7 +5746,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.15.1"
+version = "0.16.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5772,27 +5772,27 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.10.0"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98f83b818450d72f6f6db5a9d98e90d2668971da14363820829998290d913f80"
+checksum = "c6e6ce3b7384086c8738d79d22f46b29c7914ab870d3647da43497aea3534f04"
 dependencies = [
  "anyhow",
  "fs-err",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.14.0",
+ "pyth-lazer-protocol 0.15.2",
  "serde_json",
 ]
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.12.1"
+version = "0.13.0"
 dependencies = [
  "anyhow",
  "fs-err",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.15.1",
+ "pyth-lazer-protocol 0.16.0",
  "serde_json",
 ]
 

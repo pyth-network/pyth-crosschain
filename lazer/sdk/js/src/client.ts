@@ -1,6 +1,22 @@
+import fetch from "cross-fetch";
 import WebSocket from "isomorphic-ws";
+import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 
-import type { ParsedPayload, Request, Response } from "./protocol.js";
+import {
+  DEFAULT_METADATA_SERVICE_URL,
+  DEFAULT_PRICE_SERVICE_URL,
+} from "./constants.js";
+import type {
+  ParsedPayload,
+  Request,
+  Response,
+  SymbolResponse,
+  SymbolsQueryParams,
+  LatestPriceRequest,
+  PriceRequest,
+  JsonUpdate,
+} from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
@@ -24,19 +40,69 @@ const UINT16_NUM_BYTES = 2;
 const UINT32_NUM_BYTES = 4;
 const UINT64_NUM_BYTES = 8;
 
+export type LazerClientConfig = {
+  token: string;
+  metadataServiceUrl?: string;
+  priceServiceUrl?: string;
+  logger?: Logger;
+  webSocketPoolConfig?: WebSocketPoolConfig;
+};
+
 export class PythLazerClient {
-  private constructor(private readonly wsp: WebSocketPool) {}
+  private constructor(
+    private readonly token: string,
+    private readonly metadataServiceUrl: string,
+    private readonly priceServiceUrl: string,
+    private readonly logger: Logger,
+    private readonly wsp?: WebSocketPool,
+  ) {}
+
+  /**
+   * Gets the WebSocket pool. If the WebSocket pool is not configured, an error is thrown.
+   * @throws Error if WebSocket pool is not configured
+   * @returns The WebSocket pool
+   */
+  private getWebSocketPool(): WebSocketPool {
+    if (!this.wsp) {
+      throw new Error(
+        "WebSocket pool is not available. Make sure to provide webSocketPoolConfig when creating the client.",
+      );
+    }
+    return this.wsp;
+  }
 
   /**
    * Creates a new PythLazerClient instance.
-   * @param urls - List of WebSocket URLs of the Pyth Lazer service
-   * @param token - The access token for authentication
-   * @param numConnections - The number of parallel WebSocket connections to establish (default: 3). A higher number gives a more reliable stream. The connections will round-robin across the provided URLs.
-   * @param logger - Optional logger to get socket level logs. Compatible with most loggers such as the built-in console and `bunyan`.
+   * @param config - Configuration including token, metadata service URL, and price service URL, and WebSocket pool configuration
    */
-  static async create(config: WebSocketPoolConfig): Promise<PythLazerClient> {
-    const wsp = await WebSocketPool.create(config);
-    return new PythLazerClient(wsp);
+  static async create(config: LazerClientConfig): Promise<PythLazerClient> {
+    const token = config.token;
+
+    // Collect and remove trailing slash from URLs
+    const metadataServiceUrl = (
+      config.metadataServiceUrl ?? DEFAULT_METADATA_SERVICE_URL
+    ).replace(/\/+$/, "");
+    const priceServiceUrl = (
+      config.priceServiceUrl ?? DEFAULT_PRICE_SERVICE_URL
+    ).replace(/\/+$/, "");
+    const logger = config.logger ?? dummyLogger;
+
+    // If webSocketPoolConfig is provided, create a WebSocket pool and block until at least one connection is established.
+    let wsp: WebSocketPool | undefined;
+    if (config.webSocketPoolConfig) {
+      wsp = await WebSocketPool.create(
+        config.webSocketPoolConfig,
+        token,
+        logger,
+      );
+    }
+    return new PythLazerClient(
+      token,
+      metadataServiceUrl,
+      priceServiceUrl,
+      logger,
+      wsp,
+    );
   }
 
   /**
@@ -46,7 +112,8 @@ export class PythLazerClient {
    * or a binary response containing EVM, Solana, or parsed payload data.
    */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
-    this.wsp.addMessageListener((data: WebSocket.Data) => {
+    const wsp = this.getWebSocketPool();
+    wsp.addMessageListener((data: WebSocket.Data) => {
       if (typeof data == "string") {
         handler({
           type: "json",
@@ -97,18 +164,21 @@ export class PythLazerClient {
   }
 
   subscribe(request: Request) {
+    const wsp = this.getWebSocketPool();
     if (request.type !== "subscribe") {
       throw new Error("Request must be a subscribe request");
     }
-    this.wsp.addSubscription(request);
+    wsp.addSubscription(request);
   }
 
   unsubscribe(subscriptionId: number) {
-    this.wsp.removeSubscription(subscriptionId);
+    const wsp = this.getWebSocketPool();
+    wsp.removeSubscription(subscriptionId);
   }
 
   send(request: Request) {
-    this.wsp.sendRequest(request);
+    const wsp = this.getWebSocketPool();
+    wsp.sendRequest(request);
   }
 
   /**
@@ -117,10 +187,125 @@ export class PythLazerClient {
    * @param handler - Function to be called when all connections are down
    */
   addAllConnectionsDownListener(handler: () => void): void {
-    this.wsp.addAllConnectionsDownListener(handler);
+    const wsp = this.getWebSocketPool();
+    wsp.addAllConnectionsDownListener(handler);
   }
 
   shutdown(): void {
-    this.wsp.shutdown();
+    const wsp = this.getWebSocketPool();
+    wsp.shutdown();
+  }
+
+  /**
+   * Private helper method to make authenticated HTTP requests with Bearer token
+   * @param url - The URL to fetch
+   * @param options - Additional fetch options
+   * @returns Promise resolving to the fetch Response
+   */
+  private async authenticatedFetch(
+    url: string,
+    options: RequestInit = {},
+  ): Promise<globalThis.Response> {
+    const headers = {
+      Authorization: `Bearer ${this.token}`,
+      ...(options.headers as Record<string, string>),
+    };
+
+    return fetch(url, {
+      ...options,
+      headers,
+    });
+  }
+
+  /**
+   * Queries the symbols endpoint to get available price feed symbols.
+   * @param params - Optional query parameters to filter symbols
+   * @returns Promise resolving to array of symbol information
+   */
+  async get_symbols(params?: SymbolsQueryParams): Promise<SymbolResponse[]> {
+    const url = new URL(`${this.metadataServiceUrl}/v1/symbols`);
+
+    if (params?.query) {
+      url.searchParams.set("query", params.query);
+    }
+    if (params?.asset_type) {
+      url.searchParams.set("asset_type", params.asset_type);
+    }
+
+    try {
+      const response = await this.authenticatedFetch(url.toString());
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error! status: ${String(response.status)} - ${await response.text()}`,
+        );
+      }
+      return (await response.json()) as SymbolResponse[];
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch symbols: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Queries the latest price endpoint to get current price data.
+   * @param params - Parameters for the latest price request
+   * @returns Promise resolving to JsonUpdate with current price data
+   */
+  async get_latest_price(params: LatestPriceRequest): Promise<JsonUpdate> {
+    const url = `${this.priceServiceUrl}/v1/latest_price`;
+
+    try {
+      const body = JSON.stringify(params);
+      this.logger.debug("get_latest_price", { url, body });
+      const response = await this.authenticatedFetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      });
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error! status: ${String(response.status)} - ${await response.text()}`,
+        );
+      }
+      return (await response.json()) as JsonUpdate;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch latest price: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Queries the price endpoint to get historical price data at a specific timestamp.
+   * @param params - Parameters for the price request including timestamp
+   * @returns Promise resolving to JsonUpdate with price data at the specified time
+   */
+  async get_price(params: PriceRequest): Promise<JsonUpdate> {
+    const url = `${this.priceServiceUrl}/v1/price`;
+
+    try {
+      const body = JSON.stringify(params);
+      this.logger.debug("get_price", { url, body });
+      const response = await this.authenticatedFetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      });
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error! status: ${String(response.status)} - ${await response.text()}`,
+        );
+      }
+      return (await response.json()) as JsonUpdate;
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch price: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 }
