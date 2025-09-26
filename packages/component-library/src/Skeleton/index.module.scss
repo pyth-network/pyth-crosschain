@@ -14,7 +14,7 @@
 .skeleton {
   border-radius: theme.border-radius("lg");
 
-  .fullSkeleton {
+  &.fullSkeleton {
     width: 100%;
   }
 

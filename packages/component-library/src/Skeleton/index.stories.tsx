@@ -28,20 +28,14 @@ const meta = {
 export default meta;
 
 export const Skeleton = {
-  args: {
-    label: "Loading",
-    width: 20,
-  },
-} satisfies StoryObj<typeof SkeletonComponent>;
-
-export const SkeletonFill: StoryObj<typeof SkeletonComponent> = {
   render: (args) => (
-    <div style={{ width: "100vw" }}>
+    <div style={{ width: "100vw", display: "flex", justifyContent: "center" }}>
       <SkeletonComponent {...args} />
     </div>
   ),
   args: {
     label: "Loading",
-    fill: true,
+    fill: false,
+    width: 20,
   },
-};
+} satisfies StoryObj<typeof SkeletonComponent>;

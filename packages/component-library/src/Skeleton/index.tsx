@@ -20,7 +20,8 @@ export const Skeleton = ({
 }: Props) => (
   <span
     data-fill-width={width === undefined ? "" : undefined}
-    {...(width && { style: { "--skeleton-width": width } as CSSProperties })}
+    {...(width &&
+      !fill && { style: { "--skeleton-width": width } as CSSProperties })}
     className={clsx(
       styles.skeleton,
       { [styles.fullSkeleton ?? ""]: fill },
