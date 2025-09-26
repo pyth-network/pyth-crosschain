@@ -1,11 +1,9 @@
 [package]
 name = "Pyth"
 version = "0.0.2"
+edition = "2024"
 
-[dependencies.Sui]
-git = "https://github.com/MystenLabs/sui.git"
-subdir = "crates/sui-framework/packages/sui-framework"
-rev = "041c5f2bae2fe52079e44b70514333532d69f4e6"
+# Sui is replaced with implicit dependency
 
 [dependencies.Wormhole]
 git = "https://github.com/wormhole-foundation/wormhole.git"
