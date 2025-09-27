@@ -219,4 +219,87 @@
       }
     }
   }
+
+  .communityLinkList {
+    display: flex;
+    flex-flow: column nowrap;
+    gap: theme.spacing(4);
+
+    .title {
+      @include theme.text("lg", "medium");
+
+      color: theme.color("heading");
+    }
+
+    .communityGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: theme.spacing(3);
+      width: 100%;
+
+      @include theme.breakpoint("sm") {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: theme.spacing(2);
+      }
+    }
+
+    .communityCard {
+      aspect-ratio: 1;
+      min-height: 160px;
+      padding: theme.spacing(6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgb(0 0 0 / 15%);
+      }
+
+      @include theme.breakpoint("sm") {
+        min-height: 140px;
+        padding: theme.spacing(4);
+      }
+    }
+
+    .communityCardContent {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: theme.spacing(3);
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+    }
+
+    .communityIcon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: theme.spacing(12);
+      height: theme.spacing(12);
+      color: theme.color("states", "data", "normal");
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      @include theme.breakpoint("sm") {
+        width: theme.spacing(10);
+        height: theme.spacing(10);
+      }
+    }
+
+    .communityTitle {
+      @include theme.text("sm", "medium");
+
+      margin: 0;
+      color: theme.color("heading");
+    }
+  }
 }

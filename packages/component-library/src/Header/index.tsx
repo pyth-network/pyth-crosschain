@@ -166,6 +166,22 @@ const LinkList = ({ title, links }: LinkListProps) => (
   </div>
 );
 
+const CommunityLinkList = ({ title, links }: LinkListProps) => (
+  <div className={styles.communityLinkList}>
+    <h3 className={styles.title}>{title}</h3>
+    <div className={styles.communityGrid}>
+      {links.map(({ title, icon, ...link }, i) => (
+        <Card key={i} {...link} className={styles.communityCard ?? ""}>
+          <div className={styles.communityCardContent}>
+            <div className={styles.communityIcon}>{icon}</div>
+            <h4 className={styles.communityTitle}>{title}</h4>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
 export const SupportDrawer = {
   title: "Support",
   bodyClassName: styles.supportDrawer,
@@ -226,7 +242,7 @@ export const SupportDrawer = {
           },
         ]}
       />
-      <LinkList
+      <CommunityLinkList
         title="Community"
         links={socialLinks.map(({ icon, href, name }) => ({
           href,
