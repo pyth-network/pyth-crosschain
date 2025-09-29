@@ -17,10 +17,6 @@ use tokio::{sync::mpsc, time::sleep};
 use tracing::{info, warn};
 use url::Url;
 
-const DEFAULT_URLS: &[&str] = &["https://history.pyth-lazer.dourolabs.app/"];
-const DEFAULT_UPDATE_INTERVAL: Duration = Duration::from_secs(30);
-const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
-
 /// Configuration for the history client.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PythLazerHistoryClientConfig {
@@ -42,10 +38,7 @@ pub struct PythLazerHistoryClientConfig {
 }
 
 fn default_urls() -> Vec<Url> {
-    DEFAULT_URLS
-        .iter()
-        .map(|url| Url::parse(url).unwrap())
-        .collect()
+    vec![Url::parse("https://history.pyth-lazer.dourolabs.app/").unwrap()]
 }
 
 fn default_update_interval() -> Duration {
@@ -82,11 +75,11 @@ pub struct PythLazerHistoryClient {
 impl PythLazerHistoryClient {
     pub fn new(config: PythLazerHistoryClientConfig) -> Self {
         Self {
-            config: Arc::new(config),
             client: reqwest::Client::builder()
-                .timeout(DEFAULT_REQUEST_TIMEOUT)
+                .timeout(config.request_timeout)
                 .build()
                 .expect("failed to initialize reqwest"),
+            config: Arc::new(config),
         }
     }
 
@@ -192,7 +185,7 @@ impl PythLazerHistoryClient {
     ) {
         info!("starting background task for updating symbols");
         loop {
-            sleep(DEFAULT_UPDATE_INTERVAL).await;
+            sleep(self.config.update_interval).await;
             if handle.upgrade().is_none() {
                 info!("symbols handle dropped, stopping background task");
                 return;
@@ -233,7 +226,7 @@ impl PythLazerHistoryClient {
     ) {
         info!("starting background task for updating symbols");
         loop {
-            sleep(DEFAULT_UPDATE_INTERVAL).await;
+            sleep(self.config.update_interval).await;
             if handle.is_closed() {
                 info!("symbols channel closed, stopping background task");
                 return;
