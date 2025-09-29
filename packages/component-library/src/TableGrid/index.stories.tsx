@@ -1,5 +1,8 @@
+import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import type { Meta, StoryObj } from "@storybook/react";
 
+import { Badge } from "../Badge";
+import { dummyRowData } from "./dummy-row-data";
 import { TableGrid as TableGridComponent } from "./index.jsx";
 
 const meta = {
@@ -66,41 +69,52 @@ const meta = {
 } satisfies Meta<typeof TableGridComponent>;
 export default meta;
 
+const args = {
+  colDefs: [
+    {
+      headerName: "ID",
+      field: "id",
+    },
+    {
+      headerName: "PRICE FEED",
+      field: "feed",
+    },
+    {
+      headerName: "PRICE",
+      field: "price",
+      flex: 2,
+      loadingSkeletonWidth: 30,
+    },
+    {
+      headerName: "CONFIDENCE",
+      field: "confidence",
+      loadingSkeletonWidth: 20,
+    },
+  ],
+  rowData: dummyRowData,
+};
+
 export const TableGrid = {
+  args,
+} satisfies StoryObj<typeof TableGridComponent>;
+
+export const PriceFeedsCard = {
+  render: (props) => {
+    return <TableGridComponent {...props} />;
+  },
   args: {
-    colDefs: [
-      {
-        name: "PRICE FEED",
-        field: "feed",
-      },
-      {
-        name: "PRICE",
-        field: "price",
-        fill: true,
-        loadingSkeletonWidth: 30,
-      },
-      {
-        name: "CONFIDENCE",
-        field: "confidence",
-        loadingSkeletonWidth: 20,
-      },
-    ],
-    rowData: [
-      {
-        feed: "BTC/USD",
-          price: "$100,000",
-          confidence: "+/- 5%",
-      },
-      {
-        feed: "ETH/USD",
-          price: "$1,000",
-          confidence: "+/- 10%",
-      },
-      {
-        feed: "SOL/USD",
-          price: "$1,000,000,000",
-          confidence: "+/- 0.1%",
-      },
-    ],
+    ...args,
+    pagination: true,
+    cardProps: {
+      icon: <ChartLine />,
+      title: (
+        <>
+          <span>Price Feeds</span>
+          <Badge style="filled" variant="neutral" size="md">
+            {args.rowData.length}
+          </Badge>
+        </>
+      ),
+    },
   },
 } satisfies StoryObj<typeof TableGridComponent>;

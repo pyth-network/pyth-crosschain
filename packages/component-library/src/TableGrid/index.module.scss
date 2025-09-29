@@ -6,12 +6,12 @@
   --ag-header-background-color: var(--ag-background-color);
   --ag-foreground-color: #{theme.color("paragraph")};
   --ag-accent-color: #{theme.color("button", "outline", "background", "active")};
+  --ag-header-font-size: #{theme.font-size("xs")};
+  --ag-header-font-weight: #{theme.font-weight("medium")};
+  --ag-cell-font-size: #{theme.font-size("xs")};
   --ag-wrapper-border: none;
-  // .ag-row-hover {
-  //   background-color: theme.color("button","outline","background","active");
-  // }
-}
+  --ag-cell-text-color: #{theme.color("paragraph")};
+  --ag-data-font-size: #{theme.font-size("base")};
 
-.tableGrid{
   height: 100%;
 }
