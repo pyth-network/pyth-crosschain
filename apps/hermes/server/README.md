@@ -16,7 +16,7 @@ To set up and run a Hermes node, follow the steps below:
 
 0. **Prerequisites**: Hermes requires a running instance of Pythnet and the Wormhole spy RPC. You can find instructions
    for getting a Pythnet RPC instance from a node provider
-   [here](https://docs.pyth.network/documentation/pythnet-price-feeds/hermes#hermes-node-providers) and instructions
+   [here](https://docs.pyth.network/price-feeds/how-pyth-works/hermes#hermes-node-providers) and instructions
    for running a Wormhole spy RPC instance [here](https://docs.wormhole.com/wormhole/explore-wormhole/spy). We recommend
    using [Beacon](https://github.com/pyth-network/beacon), a highly available rewrite for spy, for production purposes.
 1. **Install Rust 1.82.0**: If you haven't already, you'll need to install Rust. You can
