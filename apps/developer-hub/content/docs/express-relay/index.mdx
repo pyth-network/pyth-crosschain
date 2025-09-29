@@ -1,10 +1,59 @@
 ---
-title: Overview
-description: A placeholder landing page
-icon: CardsThree
+title: "Express Relay"
+description: >-
+  Express Relay enables better orderflow mechanisms that eliminate MEV. Protocol developers can recapture MEV while searchers get unified access to opportunities.
+icon: Gavel
 full: true
 ---
 
-# Take Back Control with Express Relay
+import { IntegrationCard } from "../../../src/components/IntegrationCard";
+import {
+  Files,
+  MagnifyingGlass,
+  Question,
+} from "@phosphor-icons/react/dist/ssr";
 
-Integrate directly with searchers to recapture MEV. Go to market faster. Accelerate your protocol's growth.
+# Introduction
+
+Express Relay is a priority auction which enables better orderflow mechanisms that eliminate [Maximal Extractable Value](https://www.ledger.com/academy/glossary/maximal-extractable-value-mev) (MEV).
+
+- **For Protocol Developers:** Express Relay allows protocols to recapture MEV and access a network of searchers for more competitive pricing than on-chain sources provide.
+  With Express Relay, protocols get access to plug-and-play liquidity.
+
+- **For Searchers:** Express Relay provides easy and unified access to a range of orderflow opportunities across integrated DeFi protocols.
+
+## Integration
+
+To integrate with Express Relay, you can integrate as a protocol (to power token swaps) or as a searcher.
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+  <IntegrationCard
+    href="/express-relay/integrate-as-protocol"
+    colorScheme="blue"
+    title="Integrate as a Protocol"
+    description="Power token swaps and recapture MEV with Express Relay integration"
+    icon={<Files size={16} />}
+  />
+
+  <IntegrationCard
+    href="/express-relay/integrate-as-searcher"
+    colorScheme="green"
+    title="Integrate as a Searcher"
+    description="Access unified orderflow opportunities across DeFi protocols"
+    icon={<MagnifyingGlass size={16} />}
+  />
+</div>
+
+## Learn
+
+To learn more about Express Relay, refer to the following resources:
+
+<div className="mt-8">
+  <IntegrationCard
+    href="/express-relay/how-express-relay-works"
+    colorScheme="purple"
+    title="How Express Relay Works"
+    description="Understand the mechanics behind Express Relay's priority auction system"
+    icon={<Question size={16} />}
+  />
+</div>

@@ -1,0 +1,6 @@
+{
+  "title": "Integrate as a Consumer",
+  "description": "Real-time data from financial institutions",
+  "icon": "ChartLine",
+  "pages": ["on-solana-and-fogo", "on-evm-chains"]
+}

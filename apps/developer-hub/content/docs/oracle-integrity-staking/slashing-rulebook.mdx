@@ -1,0 +1,175 @@
+---
+title: "Slashing Rulebook"
+description: >-
+  Terms & Conditions for slashing PYTH that has been staked for price feed accuracy 
+  on the Pyth network.
+---
+
+import DualModeImage from "../../../src/components/DualModeImage";
+import OISSlashingInvestigationDark from "./images/ois_slashing_investigation_dark.png";
+import OISSlashingInvestigationLight from "./images/ois_slashing_investigation_light.png";
+import OISSlashingPoolPreDark from "./images/ois_slashing_pool_pre_dark.png";
+import OISSlashingPoolPreLight from "./images/ois_slashing_pool_pre_light.png";
+import OISSlashingPoolPostDark from "./images/ois_slashing_pool_post_dark.png";
+import OISSlashingPoolPostLight from "./images/ois_slashing_pool_post_light.png";
+
+# Purpose and Scope
+
+This Pyth Slashing Rulebook (this "Rulebook") outlines the Terms & Conditions for slashing PYTH that has been staked for price feed accuracy on the Pyth network. This document develops the rules that the DAO must adhere to when assessing conditions and amounts of slashing.
+
+## Upholding Pyth Data quality
+
+### Role of Data Publishers
+
+- **Primary Source of Data:** Data publishers are the backbone of Pyth's Price Feeds. They are the primary source of price data for the various assets that the Pyth Network serves data for
+- **Data Collection:** Publishers are responsible for computing price data. This could involve accessing data from exchanges, trading platforms, or other price information sources
+- **Data Submission:** Publishers submit their respective measurement of price to the Pyth Network, ensuring a constant stream of accurate and timely information
+- **Maintaining Data Quality:** The most crucial role of publishers is ensuring the quality and integrity of the data they provide. This involves:
+  - **Reliable Sources:** Sourcing data from the necessary sources to produce high quality measurements of price data
+  - **Data Validation:** Implementing validation processes to verify the accuracy of the data before submission
+  - **Transparency:** Providing transparency into their data sources and methodologies so that users of the Pyth Network can assess the reliability of the data
+  - **Timeliness:** Ensuring data is submitted in a timely manner to reflect real-time market conditions
+
+### Responsibility for Data Quality
+
+Data publishers have a significant responsibility for maintaining data quality within the Pyth Network. This responsibility is not just ethical, but also incentivized through the network's structure:
+
+- **Staking and Slashing:** Publishers can stake PYTH tokens as collateral. In the event of data inaccuracies or inconsistencies, a portion of this stake can be slashed as a penalty. This mechanism ensures that publishers are discouraged from providing inaccurate data
+- **Reputation:** The reputation of data publishers within the Pyth Network is directly linked to the quality of data they provide. Publishers with a track record of providing accurate data are more likely to rank higher and attract more adoption
+
+### Importance of Data Quality
+
+The Pyth Network is designed to provide reliable and trustworthy financial data to decentralized applications and smart contracts. The quality of the data it provides is paramount for the functioning of these applications and the overall success of the network. Therefore, the role of data publishers and their commitment to data quality cannot be overstated.
+
+## Staking
+
+Staking through OIS is a program to enhance the security of price feeds produced by publisher on the Pyth Network.
+
+Per the design of OIS, a pool aligned with a data publisher accepts stake from the publisher itself and from delegators. The additional stake allows such publisher to earn a delegation fee to contribute to the costs of providing data to the Pyth Network. Data publishers compete with one another to increase the number of price feeds they contribute to, and/or increase the quality of data that allows them to be selected to publish and/or enable higher staking cap for the pool each publisher is aligned to.
+
+## Slashing
+
+In the event of a Pyth data inaccuracy that can be verified against independent data references, a portion of the stake can be reduced from the pools aligned with the publishers responsible for the erroneous data.
+
+### Slashing Conditions
+
+A data quality issue happens when the aggregated price from Pyth is deemed inaccurate. Such inaccuracy has to fulfil the following criteria:
+
+- Prevalent prices for the asset(s) in question and related crosses using the most liquid venues at the time of the incident were at least 250 bps away from the price produced by Pyth
+- The price deviation have lasted for at least 60 seconds
+- Confidence Intervals prints from Pyth do not show an abnormal deviation during the misprint
+- The market conditions are normal and the incident is not related to one or many macro events that make the accurate pricing of assets not feasible
+
+### Slashing Calculation and Distribution
+
+If slashing event confirmed, the Pythian Council will process calculation and distribution of the slashed stake according to the following:
+
+- **Stake Slashed**
+  - capped at 5% of the total amount staked (including the amount delegated) into pools associated with publishers identified as directly responsible for poor data quality. distribution of the slashed amount is uniform amongst publishers and delegator(s)
+  - In the case the total amount staked by the stakers responsible for the data quality issue is nil, no slashing takes place
+- **Temporary or Permanent Removal:**
+  - Stakers responsible for more than 4 slashing events per calendar year may be excluded permanently from the network exclusion from the set of stakers and/or publishers
+
+### Slashing Process
+
+#### Evidence Collection & Analysis
+
+- The Pythian Council is tasked by the DAO to review the evidence presented by the protocols impacted by the potential Pyth data misprint
+- The Pythian Council will review the evidence compares the evidence collected for the potential losses and against historical data
+- In the case that the evidence corroborates, the Pythian Council will identify the publishers responsible for the slashing and define a slashable amount, up to 5% of the total amount staked into the pools of the publishers responsible the event
+
+#### Reporting
+
+- The Pythian Council is responsible to report on with reasonable details on the evidence found that led to the slashing event through [forum.pyth.network](http://forum.pyth.network). Such report should include:
+  - a recap of the slashing event and evidence collected
+  - a recap of the impact and the list of stakers impacted
+  - a recap of the slashing amount
+- Such report is deemed definitive and not subject to further discussion in the absence of new evidence
+
+#### Timeline
+
+- The Pythian Council is responsible for analysing and delivering its conclusions within the same epoch when the potential slashing event happened or during the following epoch at the latest
+
+#### Post Slashing
+
+- Stakers continue staking with the residual amount post slashing. No forced unstaking happens post slashing
+- The Pyth DAO controls the slashed amount upon execution of the slashing
+
+## Slashing Example
+
+This section provides a hypothetical scenario of a slashing event.
+
+### Scenario
+
+- Around datetime $t$, the community observes that an abnormal behaviour in the Pyth Price for `FOO/USD`.
+- Community members initiated a discussion on Pyth Forum on the abnormal behaviour and provided reference data for the issue.
+- The Pythian Council confirms the impact through on-chain data and collects reference data to cross-check the Pyth price.
+
+### Investigation Results
+
+- Reference data from 3 independent sources that cover the `FOO/USD` liquidity for the time period around $t$ are collected and analysed.
+- The analysis shows that the Pyth aggregate price for `FOO/USD` was 300 bps away from the median of the three sources for 60 seconds around $t$.
+- The issue was concentrated to `FOO/USD` and no other feed was impacted, nor was the issue found to be related to a macro event beyond `FOO/USD`.
+- The on-chain data reveals a total of $200K of preventable liquidations.
+
+The Pythian councile identifies there were 9 active publishers for `FOO/USD` at the time of the incident $t$.
+It was found that 7 of the 9 publishers were influencing the price of `FOO/USD` at the time of the incident.
+The other 2 publishers were found publish price closely to the mediuan of the reference data.
+
+<DualModeImage
+  darkSrc={OISSlashingInvestigationDark}
+  lightSrc={OISSlashingInvestigationLight}
+  alt="OIS Slashing Investigation"
+/>
+
+### Pythian Council Process for Slashing
+
+- Assume that the Pyth DAO has set the maximum slashable amount at 500 bps of the total stake of each responsible publisher's assigned pool, the maximum amount that can be slashed is $500 \text{ bps} \times 50\text{M} = 2.5\text{M PYTH}$.
+- From the investigation, \$200K of preventable liquidations were identified from on chain data, the Pythian Council could adjust the amount of stake slashed to 500K PYTH or 100bps (assuming PYTH/USD = $0.40).
+
+<DualModeImage
+  darkSrc={OISSlashingPoolPreDark}
+  lightSrc={OISSlashingPoolPreLight}
+  alt="Pre Slashing Pool"
+/>
+
+- The 500K PYTH slashed is charged pro-rata to the 7 pools that constitute the stake subject to slashing (i.e. calculated according to the total stake in the 7 pools assigned to the 7 publishers found responsible for the misprint).
+
+- Assume `pool_1` has 10M staked, made up of **6M self-staked and 4M delegated PYTH**.
+  - The publisher assigned to `pool_1` would see its self-stake slashed 100bps of 6M PYTH, ie. 60K PYTH, resulting in **5.84M** residual self-stake.
+  - Delegators to `pool_1` would see their stake slashed by 100bps of 4M PYTH, ie. 40K PYTH, resulting in **3.96M** residual delegated stake.
+
+<DualModeImage
+  darkSrc={OISSlashingPoolPostDark}
+  lightSrc={OISSlashingPoolPostLight}
+  alt="Post Slashing Pool"
+/>
+
+- The total amount slashed in this example is 500K PYTH. This amount goes to the Pyth DAO treasury. The Pythian Council or the community can propose to the DAO to vote on means to distribute the slashed amount.
+
+### Timeline for Slashing
+
+Assuming datetime $t$ happened during $\text{epoch}_t$ (7-day period from Thursday 0:00 UTC to Wednesday 23:59:59 UTC of the following week), the investigation and slashing are concluded by the end of the epoch following $\text{epoch}_t$ (or $\text{epoch}_t + 1$).
+
+## Change Process
+
+The Pyth DAO is responsible for implementing procedures for proposing, reviewing, approving, and adopting changes to the rules, policies, or procedures related to this Rulebook.
+
+### Change Proposal
+
+1. **Initiation:** Any interested party in the Pyth DAO may propose a change to this Rulebook through the Pyth DAO Forum via the existing Pyth Improvement Proposal (PIP) process defined in the Pyth Constitution
+2. **Submission:** Proposed changes should be submitted through the standard governance system for the Pyth DAO members to vote on
+3. **Content:** an Operational PIP for making changes to this Rulebook should include:
+   - Abstract - that summarises the PIP
+   - Rationale - that explains why the Pyth community should implement the PIP and how it aligns with community's mission and values
+   - Key Terms - a detailed description of the technical and/or commercial terms associated with the PIP
+   - Implementation Plan - steps envisioned to implement the PIP, including resources needed for each step and timelines. The implementation plan may include binding on-chain actions that will automatically execute when the PIP passes.
+
+### Review and Approval
+
+The decision on whether to approve a PIP related to this Rulebook remains with the Pyth DAO. A simple majority is required to approve Operational PIPs that make amendments to this Rulebook and its associated procedures.
+
+### Implementation
+
+1. **Effective Date:** Approved changes will become effective from the time they are approved or on the specified date
+2. **Transition Period:** If necessary, a transition period may be established to allow the Pyth DAO and the Pythian Council to adjust to the new rules or procedures

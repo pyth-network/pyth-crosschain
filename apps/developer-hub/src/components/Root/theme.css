@@ -301,7 +301,7 @@
     var(--color-steel-900),
     var(--color-steel-50)
   );
-  --color-fd-muted: light-dark(var(--color-stone-700), var(--color-steel-400));
+  --color-fd-muted: light-dark(var(--color-steel-50), var(--color-steel-900));
   --color-fd-muted-foreground: light-dark(
     var(--color-steel-600),
     var(--color-steel-400)

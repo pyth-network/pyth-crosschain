@@ -3,14 +3,14 @@
     "id": "starknet_sepolia",
     "wormholeChainName": "starknet_sepolia",
     "mainnet": false,
-    "rpcUrl": "https://starknet-sepolia.public.blastapi.io/",
+    "rpcUrl": "https://starknet-sepolia.drpc.org",
     "type": "StarknetChain"
   },
   {
     "id": "starknet_mainnet",
     "wormholeChainName": "starknet",
     "mainnet": true,
-    "rpcUrl": "https://starknet-mainnet.public.blastapi.io/",
+    "rpcUrl": "https://starknet.drpc.org",
     "type": "StarknetChain"
   }
 ]

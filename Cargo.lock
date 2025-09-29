@@ -418,6 +418,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 
 [[package]]
+name = "arc-swap"
+version = "1.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f7f8c3906b62b754cd5326047894316021dcfe5a194c8ea52bdd94934a3457"
+
+[[package]]
 name = "argus"
 version = "0.1.0"
 dependencies = [
@@ -790,6 +796,17 @@ name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
+
+[[package]]
+name = "atomicwrites"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ef1bb8d1b645fe38d51dfc331d720fb5fc2c94b440c76cc79c80ff265ca33e3"
+dependencies = [
+ "rustix 0.38.44",
+ "tempfile",
+ "windows-sys 0.52.0",
+]
 
 [[package]]
 name = "atty"
@@ -3077,7 +3094,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "9.2.0"
+version = "9.2.1"
 dependencies = [
  "anyhow",
  "axum 0.6.20",
@@ -5639,7 +5656,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.4.1"
+version = "0.5.1"
 dependencies = [
  "anyhow",
  "backoff",
@@ -5657,9 +5674,9 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "protobuf",
- "pyth-lazer-protocol 0.10.1",
- "pyth-lazer-publisher-sdk 0.3.0",
- "reqwest 0.12.22",
+ "pyth-lazer-protocol 0.15.2",
+ "pyth-lazer-publisher-sdk 0.12.2",
+ "reqwest 0.12.23",
  "serde",
  "serde_json",
  "soketto",
@@ -5670,25 +5687,32 @@ dependencies = [
  "tokio-util",
  "tracing",
  "tracing-subscriber",
+ "ttl_cache",
  "url",
 ]
 
 [[package]]
 name = "pyth-lazer-client"
-version = "5.0.0"
+version = "8.2.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
+ "arc-swap",
+ "atomicwrites",
  "backoff",
  "base64 0.22.1",
  "bincode 1.3.3",
  "bs58",
  "derive_more 1.0.0",
  "ed25519-dalek 2.1.1",
+ "fs-err",
+ "futures",
  "futures-util",
  "hex",
+ "humantime-serde",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol 0.13.0",
+ "pyth-lazer-protocol 0.16.0",
+ "reqwest 0.12.23",
  "serde",
  "serde_json",
  "tokio",
@@ -5701,9 +5725,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.10.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d321e49be0315d68f07d097d240701a05e003e05eff5ac9f2d0457d4a606dd92"
+checksum = "2ca6d92d185fa8e16521b4ac044fdbd3c4cd492658ab0dc3b417e29e0989e035"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -5717,11 +5741,12 @@ dependencies = [
  "rust_decimal",
  "serde",
  "serde_json",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.13.0"
+version = "0.16.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5747,27 +5772,27 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.3.0"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bebeacbc58d9e0143e03a397b08becbed1dacf5baad6a245bc00f74ca5cc50d"
+checksum = "c6e6ce3b7384086c8738d79d22f46b29c7914ab870d3647da43497aea3534f04"
 dependencies = [
  "anyhow",
  "fs-err",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.10.1",
+ "pyth-lazer-protocol 0.15.2",
  "serde_json",
 ]
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.8.0"
+version = "0.13.0"
 dependencies = [
  "anyhow",
  "fs-err",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.13.0",
+ "pyth-lazer-protocol 0.16.0",
  "serde_json",
 ]
 
@@ -6262,9 +6287,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.22"
+version = "0.12.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbc931937e6ca3a06e3b6c0aa7841849b160a90351d6ab467a8b9b9959767531"
+checksum = "d429f34c8092b2d42c7c93cec323bb4adeb7c67698f70839adec842ec10c7ceb"
 dependencies = [
  "async-compression",
  "base64 0.22.1",
@@ -6317,7 +6342,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "http 1.3.1",
- "reqwest 0.12.22",
+ "reqwest 0.12.23",
  "serde",
  "thiserror 1.0.69",
  "tower-service",
@@ -8081,7 +8106,7 @@ dependencies = [
  "crossbeam-channel",
  "gethostname",
  "log",
- "reqwest 0.12.22",
+ "reqwest 0.12.23",
  "solana-cluster-type",
  "solana-sha256-hasher",
  "solana-time-utils",
@@ -8569,7 +8594,7 @@ dependencies = [
  "futures",
  "indicatif",
  "log",
- "reqwest 0.12.22",
+ "reqwest 0.12.23",
  "reqwest-middleware",
  "semver 1.0.26",
  "serde",
@@ -8604,7 +8629,7 @@ checksum = "362b2f6fd7ea69f9bb87fc3e2da6faf4a8f530011f1c5edad2454a1a79b59ada"
 dependencies = [
  "anyhow",
  "jsonrpc-core",
- "reqwest 0.12.22",
+ "reqwest 0.12.23",
  "reqwest-middleware",
  "serde",
  "serde_derive",

@@ -6,8 +6,8 @@ import {
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 
+import { source } from "../../../lib/source";
 import { getMDXComponents } from "../../../mdx-components";
-import { source } from "../../../source";
 
 export function BasePage(props: { params: { slug: string[] } }) {
   const page = source.getPage(props.params.slug);

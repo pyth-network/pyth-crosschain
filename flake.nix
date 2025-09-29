@@ -51,6 +51,7 @@
             pkgs.cli
             pkgs.git
             pkgs.libusb1
+            pkgs.udev
             pkgs.nodejs
             pkgs.pkg-config
             pkgs.pnpm

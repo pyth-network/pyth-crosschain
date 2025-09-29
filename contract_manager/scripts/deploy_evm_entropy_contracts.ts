@@ -21,7 +21,7 @@ import {
   topupAccountsIfNecessary,
   DefaultAddresses,
 } from "./common";
-import { getOrDeployExecutorContract } from "./deploy_evm_executor";
+import { getOrDeployExecutorContract } from "./deploy_evm_executor_contracts";
 
 interface DeploymentConfig extends BaseDeployConfig {
   type: DeploymentType;

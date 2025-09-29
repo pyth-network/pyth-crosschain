@@ -188,5 +188,15 @@
     "chain": "hyperevm_testnet",
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "spiderman",
+    "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "giwa_testnet",
+    "address": "0x0708325268dF9F66270F1401206434524814508b",
+    "type": "EvmEntropyContract"
   }
 ]

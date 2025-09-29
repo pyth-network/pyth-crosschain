@@ -1,0 +1,44 @@
+---
+title: What's New in Entropy v2
+description: New features and improvements in Entropy v2
+icon: Sparkle
+---
+
+## Key Improvements
+
+Pyth Entropy v2 brings new features and improvements that make random number generation more flexible, efficient, and easier to integrate.
+
+### 1. Multiple Request Variants
+
+Entropy v2 provides multiple ways to request random numbers:
+
+- **Basic Request**: Simplest implementation with default settings
+- **Custom Gas Limit**: Specify gas limits for complex callbacks
+- **Custom Provider**: Choose specific entropy providers
+- **Full Control**: Specify all parameters (provider, gas limit, user random number)
+
+Each of these request types is described in more detail with examples in [Request Callback Variants](./entropy/request-callback-variants).
+
+### 2. Enhanced Callback Status
+
+Entropy V2 introduces callback statuses, which allow users to track the status of their callbacks.
+
+[Pyth Dev-Forum Announcement](https://dev-forum.pyth.network/t/announcing-entropy-v2/324#p-649-enhanced-callback-statuses-2) provides more details on enhanced callback statuses.
+
+### 3. Entropy Explorer
+
+Entropy V2 includes a public Entropy Explorer, that lets teams easily track the status of their callbacks and re-request them if they fail on-chain.
+See [Entropy Explorer](https://entropy-explorer.pyth.network/) to search and debug your callbacks.
+
+## Migration Guide
+
+If you're upgrading from Entropy v1 to v2:
+
+1. Update your imports to use [`IEntropyV2`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol).
+2. Replace `request()` calls with [`requestV2()`](https://github.com/pyth-network/pyth-crosschain/blob/f5402df8e44158c519496bcd2fac5d3afe856a0e/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol#L26)
+3. Update fee calculation to use [`getFeeV2()`](https://github.com/pyth-network/pyth-crosschain/blob/f5402df8e44158c519496bcd2fac5d3afe856a0e/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol#L135)
+4. Test thoroughly with the new interface
+
+## Backward Compatibility
+
+Entropy v2 maintains backward compatibility with v1 for existing applications. However, we recommend migrating to v2 for new applications to take advantage of the improved features.

@@ -1,0 +1,221 @@
+---
+title: "Reward Examples"
+description: >-
+  This reference page provides examples of various scenarios to illustrate the Mathematical Representations of OIS.
+---
+
+import DualModeImage from "../../../src/components/DualModeImage";
+import OISExample1Dark from "./images/OIS_Rewards_Example_Dark_1.png";
+import OISExample1Light from "./images/OIS_Rewards_Example_Light_1.png";
+import OISExample2Dark from "./images/OIS_Rewards_Example_Dark_2.png";
+import OISExample2Light from "./images/OIS_Rewards_Example_Light_2.png";
+import OISExample3Dark from "./images/OIS_Rewards_Example_Dark_3.png";
+import OISExample3Light from "./images/OIS_Rewards_Example_Light_3.png";
+import OISExample4Dark from "./images/OIS_Rewards_Example_Dark_4.png";
+import OISExample4Light from "./images/OIS_Rewards_Example_Light_4.png";
+
+NOTE: All the symbols used in the examples are explained in the [Mathematical Representation](./mathematical-representation) section.
+
+## Example 1: Only Publisher Stake
+
+This example takes the case of one pool where the pool has stake from only the publisher.
+
+<br />
+<DualModeImage
+  darkSrc={OISExample1Dark}
+  lightSrc={OISExample1Light}
+  alt="Example 1 - Only Publisher Stake"
+/>
+
+$$
+\begin{aligned}
+{S^p_p} &= 100 \\
+{S^d_p} &= 0 \\
+{S_p} &= {S^p_p} + {S^d_p} = 100 + 0 = 100 \\
+{C}_p &= 500 \\
+\text{Total Amount eligible for Rewards} \quad{E_p} &= \min({S}_p, {C}_p) = \min(500, 100) = 100 \\
+\text{Annual Rate of Rewards} \quad{r} &= 10\% \\
+
+\text{Total Rewards for one year} \quad{R_p} &= {r} \times {E_p} = 10\% \times 100 = 10 \\
+\text{Publisher Rewards} \quad{R^p_p} &= {r} \times \min({S^p_p}, {C}_p) = 10\% \times 100 = 10 \\
+\text{Delegator Rewards} \quad{R^d_p} &= {R_p} - {R^p_p} = 10 - 10 = 0 \\
+\text{Effective Publisher APY} \quad{r^p_p} &= \frac{R^p_p}{S^p_p} = \frac{10}{100} = 10\% \\
+\text{Effective Delegator APY} \quad{r^d_p} &= \frac{R^d_p}{S^d_p} = 0\% \\
+\end{aligned}
+$$
+
+## Example 2: Publisher and Delegator Stake
+
+This example takes the case where the pool has stake from both the publisher and the delegator.
+
+<br />
+<DualModeImage
+  darkSrc={OISExample2Dark}
+  lightSrc={OISExample2Light}
+  alt="Example 2 - Publisher and Delegator Stake"
+/>
+
+$$
+\begin{aligned}
+{S^p_p} &= 100 \\
+{S^d_p} &= 100 \\
+{S_p} &= {S^p_p} + {S^d_p} = 100 + 100 = 200 \\
+{C}_p &= 500 \\
+\text{Total Amount eligible for Rewards} \quad{E_p} &= \min({S}_p, {C}_p) = \min(500, 200) = 200 \\
+\text{Annual Rate of Rewards} \quad{r} &= 10\% \\
+
+\text{Total Rewards for one year} \quad{R_p} &= {r} \times {E_p} = 10\% \times 200 = 20 \\
+\text{Publisher Rewards} \quad{R^p_p} &= {r} \times \min({S^p_p}, {C}_p) = 10\% \times 100 = 10 \\
+\text{Delegator Rewards} \quad{R^d_p} &= {R_p} - {R^p_p} = 20 - 10 = 10 \\
+\text{Effective Publisher APY} \quad{r^p_p} &= \frac{R^p_p}{S^p_p} = \frac{10}{100} = 10\% \\
+\text{Effective Delegator APY} \quad{r^d_p} &= \frac{R^d_p}{S^d_p} = \frac{10}{100} = 10\% \\
+\end{aligned}
+$$
+
+## Example 3: Publisher and Delegator Stake more than the Cap
+
+This example takes the case where the combined stake of both the publisher and the delegator exceeds the cap.
+
+<br />
+<DualModeImage
+  darkSrc={OISExample3Dark}
+  lightSrc={OISExample3Light}
+  alt="Example 3 - Stake Exceeding Cap"
+/>
+
+$$
+\begin{aligned}
+{S^p_p} &= 300 \\
+{S^d_p} &= 300 \\
+{S_p} &= {S^p_p} + {S^d_p} = 300 + 300 = 600 \\
+{C}_p &= 500 \\
+\text{Total Amount eligible for Rewards} \quad{E_p} &= \min({S}_p, {C}_p) = \min(500, 600) = 500 \\
+\text{Annual Rate of Rewards} \quad{r} &= 10\% \\
+
+\text{Total Rewards for one year} \quad{R_p} &= {r} \times {E_p} = 10\% \times 500 = 50 \\
+\text{Publisher Rewards} \quad{R^p_p} &= {r} \times \min({S^p_p}, {C}_p) = 10\% \times 300 = 30 \\
+\text{Delegator Rewards} \quad{R^d_p} &= {R_p} - {R^p_p} = 50 - 30 = 20 \\
+\text{Effective Publisher APY} \quad{r^p_p} &= \frac{R^p_p}{S^p_p} = \frac{30}{300} = 10\% \\
+\text{Effective Delegator APY} \quad{r^d_p} &= \frac{R^d_p}{S^d_p} = \frac{20}{300} = 6.67\% \\
+\end{aligned}
+$$
+
+## Example 4: Introducing Delegator Fees
+
+This example demonstrates how the delegation fee affect the reward distribution between the publisher and the delegator.
+
+<br />
+<DualModeImage
+  darkSrc={OISExample4Dark}
+  lightSrc={OISExample4Light}
+  alt="Example 4 - Delegator Fees"
+/>
+
+$$
+\begin{aligned}
+\quad{S^p_p} &= 200 \\
+\quad{S^d_p} &= 300 \\
+\quad{S_p} &= {S^p_p} + {S^d_p} = 200 + 300 = 500 \\
+\quad{C}_p &= 500 \\
+\quad{E_p} &= \min({S}_p, {C}_p) = \min(500, 500) = 500 \\
+\quad{r} &= 10\% \\
+\quad{f} &= 2\% \\
+
+\quad{R_p} &= {r} \times {E_p} = 10\% \times 500 = 50 \\
+\quad{R^p_p} &= {r} \times \min({S^p_p}, {C}_p) = 10\% \times 200 = 20 \\
+\quad{R^d_p} &= {R_p} - {R^p_p} = 50 - 20 = 30 \\
+\text{Fee paid by Delegator} \quad{F^d_p} &= {f} \times {R^d_p} = 2\% \times 30 = 0.6 \\
+\text{Final Delegator Rewards} \quad{R^d_p} &= {R^d_p} - {F^d_p} = 30 - 0.6 = 29.4 \\
+\text{Total Publisher Rewards} \quad{R^p_p} &= {R^p_p} + {F^d_p} = 20 + 0.6 = 20.6 \\
+\text{Effective Publisher APY} \quad{r^p_p} &= \frac{R^p_p}{S^p_p} = \frac{20.6}{200} = 10.3\% \\
+\text{Effective Delegator APY} \quad{r^d_p} &= \frac{R^d_p}{S^d_p} = \frac{29.4}{300} = 9.8\% \\
+\end{aligned}
+$$
+
+In the example, the delegator pays a 2\% fee on their rewards to the publisher. This fee is deducted from the delegator's reward and added to the publisher's reward.
+
+## Example 5: Slashing event on the pool
+
+This example demonstrates the impact of a slashing event on the staked PYTH tokens and rewards distributed to both the publisher and the delegator.
+
+$$
+\begin{aligned}
+\quad{S^p_p} &= 300 \\
+\quad{S^d_p} &= 200 \\
+\quad{S_p} &= {S^p_p} + {S^d_p} = 300 + 200 = 500 \\
+
+\text{Maximum slashing rate}\quad{z} &= 5\% \\
+
+\text{Publisher Stake post slashing}\quad{S^p_p} &= (1 - 5\%) \times 300 = 285 \\
+\text{Delegator Stake post slashing}\quad{S^d_p} &= (1 - 5\%) \times 200 = 190 \\
+
+\end{aligned}
+$$
+
+In this example, the stake is uniformly slashed by 5\%, affecting both the publisher and the delegator. Slashing impact the total stake into the pool, regardless of the Cap.
+
+Checkout out the detailed slashing example at [Slashing Rulebook](./slashing-rulebook#slashing-example)
+
+## Example 6: Increasing the cap of the pool
+
+This example shows how a publisher can increase the cap of the pool assigned to them.
+As described in the [Mathematical Representation](./mathematical-representation#pool-cap), the cap is calculated as:
+
+$$
+\large{{\bold{C_p}} = M \cdot \sum_{s \in \text{Symbols}_p} \frac{1}{\max(n_s, Z)}}
+$$
+
+In this scenario, let's assume that
+
+- The constant parameter representing the target stake per symbol $M$ is 100
+- The constant parameter to control cap contribution $Z$ is 5
+- Current symbols published are \{$s_{1}$,.., $s_{5}$\} where for every symbol currently published $n_s$ = 5 (for i = 1 .. 5 $n_{s_i}$ = 5)
+
+The cap of the pool is calculated as follows:
+
+$$
+\begin{aligned}
+\quad{C_p} &= M \cdot \sum_{s \in \text{\{$s_{1}$,.., $s_{5}$\}}} \frac{1}{\max(n_s, Z)} \\
+&= 100 \cdot \sum_{s \in \text{\{$s_{1}$,.., $s_{5}$\}}} \frac{1}{\max(5, 5)} \\
+&= 100 \cdot \sum_{s \in \text{\{$s_{1}$,.., $s_{5}$\}}} \frac{1}{5} \\
+&= 100 \cdot 1 = 100 \\
+\end{aligned}
+$$
+
+Here publisher has 2 options to increase the cap of the pool assigned to it.
+
+### Option 1: Publish new symbol with a low number of publishers
+
+Assume the publisher decides to publish a new symbol with only 3 publishers, $n_{s_{low}}$ = 3.
+
+The new pool cap would change as the sum of the current cap from the 5 symbols published plus the cap gained from publishing $s_{low}$ (where $n_{s_{low}}$ = 3 + 1 = 4)
+
+$$
+\begin{aligned}
+C_{p_{option1}} &= 100 + 100 \cdot \frac{1}{\max(4, 5)} \\
+&= 100 + 100 \cdot \frac{1}{5} \\
+&= 100 + 20 = 120
+\end{aligned}
+$$
+
+### Option 2: Publish additional symbols where the cap of 32 publishers is not reached
+
+Assuming there is room to publish 5 more symbols \{$s_{6}$,.., $s_{10}$\} where each have currently 9 publishers ( for i = 6 .. 10 $n_{s_i}$ = 9)
+
+The new pool cap would change as the sum of the current cap from the 5 symbols published plus the cap gained from publishing the additional symbols \{$s_{6}$,.., $s_{10}$\} (where for i = 6 .. 10 $n_{s_i}$ = 10)
+
+$$
+\begin{aligned}
+C_{p_{option2}} &= 100 + 100 \cdot \sum_{s \in \text{\{$s_{6}$,.., $s_{10}$\}}} \frac{1}{\max(10, 5)} \\
+&= 100 + 100 \cdot 5 \cdot \frac{1}{10} \\
+&= 100 + 50 = 150
+\end{aligned}
+$$
+
+## Reward Calculator
+
+Use the calculator below to calculate publisher and delegator rewards based on your inputs.
+
+import RewardSimulator from "../../../src/components/RewardSimulator";
+
+<RewardSimulator />

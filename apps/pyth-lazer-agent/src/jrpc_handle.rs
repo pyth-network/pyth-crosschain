@@ -105,6 +105,12 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
             JrpcCall::PushUpdate(request_params) => {
                 handle_push_update(sender, lazer_publisher, request_params, jrpc_request.id).await
             }
+            JrpcCall::PushUpdates(request_params) => {
+                for feed in request_params {
+                    handle_push_update(sender, lazer_publisher, feed, jrpc_request.id).await?;
+                }
+                Ok(())
+            }
             JrpcCall::GetMetadata(request_params) => {
                 if let Some(request_id) = jrpc_request.id {
                     handle_get_metadata(sender, config, request_params, request_id).await
@@ -266,9 +272,9 @@ async fn handle_get_metadata<T: AsyncRead + AsyncWrite + Unpin>(
 
 #[cfg(test)]
 pub mod tests {
+    use pyth_lazer_protocol::{PriceFeedId, SymbolState, api::Channel, time::FixedRate};
+
     use super::*;
-    use pyth_lazer_protocol::router::{Channel, FixedRate, PriceFeedId};
-    use pyth_lazer_protocol::symbol_state::SymbolState;
     use std::net::SocketAddr;
 
     fn gen_test_symbol(name: String, asset_type: String) -> SymbolMetadata {
@@ -300,6 +306,7 @@ pub mod tests {
             publish_interval_duration: Default::default(),
             history_service_url: None,
             enable_update_deduplication: false,
+            update_deduplication_ttl: Default::default(),
         };
 
         println!("{:?}", get_metadata(config).await.unwrap());

@@ -1,0 +1,32 @@
+---
+title: "Permissioning"
+description: >-
+  Learn how Express Relay uses permission IDs and keys to manage access control and distinguish between different opportunities.
+---
+
+`permissionId` is a `bytes` object that represents the unique identifier of a position within the protocol. `permissionId` allows the system to distinguish between bids competing on different opportunities and thereby run more scoped and efficient auctions.
+
+Each borrower has a unique position for some protocols, so the borrower address uniquely identifies a position.
+In other protocols, each borrower might have multiple positions, distinguished by the address of the collateral asset or by a `uint256` ID number.
+In those cases, the information set that uniquely identifies a position would include multiple fields.
+
+`permissionId` can be the concatenation of all these fields in bytes format. You can call `abi.encode(){:solidity}` to concatenate these fields together.
+
+For example, if a protocol featured a unique position per borrower, then it could form `permissionId` as
+
+```solidity
+bytes memory permissionId = abi.encode(borrowerAddress);
+```
+
+On the other hand, if a protocol allowed a borrower to open as many new positions as they wanted, denoted by an identifier `uint256 positionId{:solidity}`, then it could form `permissionId` as
+
+```solidity
+bytes memory permissionId = abi.encode(borrowerAddress, positionId);
+```
+
+The Express Relay contract uses the `permissionId` to toggle permissions for interacting with the protocol.
+This toggling is checked within the protocol's code to ensure that the current transaction is within the context of Express Relay so that the recaptured value can be returned to the protocol. In particular, the Express Relay contract checks the toggling of the `permissionKey`, which is the concatenation of the protocol address and the `permissionId`:
+
+```solidity
+bytes memory permissionKey = abi.encode(protocolAddress, permissionId);
+```

@@ -1,0 +1,33 @@
+stale_price_threshold_seconds = 5
+prometheus_port = 9090
+
+[hyperliquid]
+hyperliquid_ws_urls = ["wss://api.hyperliquid-testnet.xyz/ws"]
+market_name = ""
+market_symbol = "BTC"
+use_testnet = false
+oracle_pusher_key_path = "/path/to/oracle_pusher_key.txt"
+publish_interval = 3.0
+enable_publish = false
+
+[kms]
+enable_kms = false
+key_path = "/path/to/aws_kms_key_id.txt"
+access_key_id_path = "/path/to/aws_access_key_id.txt"
+secret_access_key_path = "/path/to/aws_secret_access_key.txt"
+aws_region_name = "ap-northeast-1"
+
+[lazer]
+lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]
+lazer_api_key = "lazer_api_key"
+base_feed_id = 1   # BTC
+base_feed_exponent = -8
+quote_feed_id = 8  # USDT
+quote_feed_exponent = -8
+
+[hermes]
+hermes_urls = ["wss://hermes.pyth.network/ws"]
+base_feed_id = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"   # BTC
+base_feed_exponent = -8
+quote_feed_id = "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"  # USDT
+quote_feed_exponent = -8

@@ -28,7 +28,7 @@ pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 ## Testing
 
 Run `forge build` to build the contracts and `forge test` to run the contract unit tests.
-The unit tests live in the `forge-test` directory.
+The unit tests live in the `test` directory.
 
 ### Code Coverage
 
@@ -89,17 +89,6 @@ The deployment script will:
 # Make sure your .env file has the correct ETHERSCAN_API_KEY
 npm run deploy-and-verify
 ```
-
-### Guardian Set Sync
-
-After deploying Wormhole contracts on mainnet, you need to sync the guardian sets to match the current mainnet state:
-
-```bash
-# Set WORMHOLE_ADDRESS in your .env file to the deployed Wormhole contract address
-npm run receiver-submit-guardian-sets
-```
-
-This script submits the pre-configured mainnet guardian set upgrade VAAs to bring your contract up to date with the current mainnet guardian set.
 
 ### Gas Benchmarks
 

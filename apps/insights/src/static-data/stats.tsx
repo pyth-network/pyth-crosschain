@@ -40,6 +40,10 @@ export const totalVolumeTraded = [
   { date: new Date("27 Feb '25"), volume: 92_160_000_000 },
   { date: new Date("28 Feb '25"), volume: 75_250_000_000 },
   { date: new Date("29 Apr '25"), volume: 67_140_000_000 },
+  { date: new Date("31 May '25"), volume: 82_640_000_000 },
+  { date: new Date("29 Jun '25"), volume: 89_670_000_000 },
+  { date: new Date("29 Jul '25"), volume: 94_930_000_000 },
+  { date: new Date("29 Aug '25"), volume: 99_440_000_000 },
 ];
 
 export const activeChains = [
@@ -74,6 +78,10 @@ export const activeChains = [
   { date: new Date("30 Jan '25"), chains: 97 },
   { date: new Date("27 Feb '25"), chains: 100 },
   { date: new Date("29 Apr '25"), chains: 101 },
+  { date: new Date("31 May '25"), chains: 104 },
+  { date: new Date("30 Jun '25"), chains: 105 },
+  { date: new Date("31 Jul '25"), chains: 107 },
+  { date: new Date("31 Aug '25"), chains: 107 },
 ];
 
 export const activePublishers = [

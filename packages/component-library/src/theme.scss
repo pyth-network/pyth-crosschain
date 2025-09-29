@@ -30,6 +30,21 @@ $font-weight: (
   @return map-get-strict($font-weight, $weight);
 }
 
+$font-family: (
+  "monospace": (
+    "ui-monospace",
+    "sfmono-regular",
+    "consolas",
+    "Liberation Mono",
+    "menlo",
+    "monospace",
+  ),
+);
+
+@function font-family($family) {
+  @return map-get-strict($font-family, $family);
+}
+
 $font-size: (
   "xxs": 0.6875rem,
   "xs": 0.75rem,

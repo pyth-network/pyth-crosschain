@@ -1,0 +1,22 @@
+---
+title: Error Codes
+description: On chain error codes from the Pyth Entropy EVM contracts
+icon: Bug
+---
+
+The following table contains the errors used in the Pyth Network's Entropy [EVM contracts](https://github.com/pyth-network/pyth-crosschain/blob/d290f4ec47a73636cf77711f5f68c3455bb8a8ca/target_chains/ethereum/contracts/contracts/entropy/Entropy.sol).
+This information is derived from [EntropyErrors.sol](https://github.com/pyth-network/pyth-crosschain/blob/d290f4ec47a73636cf77711f5f68c3455bb8a8ca/target_chains/ethereum/entropy_sdk/solidity/EntropyErrors.sol)
+in the Pyth EntropySDK and can be used to decode error codes programmatically.
+
+| Error Codes | Error                       | Error Description                                         |
+| ----------- | --------------------------- | --------------------------------------------------------- |
+| 0xd82dd966  | AssertionFailure()          | Contract invariant failed.                                |
+| 0xda041bdf  | ProviderAlreadyRegistered() | Provider already registered.                              |
+| 0xdf51c431  | NoSuchProvider()            | Requested Provider does not exist.                        |
+| 0xc4237352  | NoSuchRequest()             | Request does not exist or the request has been fulfilled. |
+| 0x3e515085  | OutOfRandomness()           | Provider is out of committed random numbers.              |
+| 0x025dbdd4  | InsufficientFee()           | Request fee is insufficient.                              |
+| 0xb8be1a8d  | IncorrectRevelation()       | Revelation does not match commitment.                     |
+| 0x2763cc69  | RequestAlreadyRevealed()    | Request has already been revealed.                        |
+| 0xdb8b95b8  | RevealTooEarly()            | Reveal delay has not passed.                              |
+| 0x8f4eb604  | RandomnessNotRevealed()     | Random number has not been revealed.                      |

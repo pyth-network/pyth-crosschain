@@ -1,0 +1,53 @@
+{
+  "name": "@pythnetwork/pyth-lazer-sui-js",
+  "version": "0.1.1",
+  "description": "TypeScript SDK for the Pyth Lazer Sui contract",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": "22"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/client.d.ts",
+        "default": "./dist/esm/client.js"
+      },
+      "require": {
+        "types": "./dist/cjs/client.d.ts",
+        "default": "./dist/cjs/client.js"
+      }
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build:cjs": "tsc --project tsconfig.build.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "fix:format": "prettier --write .",
+    "fix:lint": "eslint --fix .",
+    "test:format": "prettier --check .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:types": "tsc",
+    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts"
+  },
+  "dependencies": {
+    "@mysten/sui": "catalog:",
+    "@pythnetwork/pyth-lazer-sdk": "workspace:*",
+    "@types/yargs": "catalog:",
+    "yargs": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

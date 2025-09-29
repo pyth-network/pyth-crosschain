@@ -2,7 +2,7 @@
   {
     "id": "linea_goerli",
     "mainnet": false,
-    "rpcUrl": "https://linea-goerli.blastapi.io/$ENV_BLAST_API_KEY",
+    "rpcUrl": "https://rpc.goerli.linea.build",
     "networkId": 59140,
     "type": "EvmChain"
   },
@@ -102,7 +102,7 @@
   {
     "id": "fantom_testnet",
     "mainnet": false,
-    "rpcUrl": "https://fantom-testnet.blastapi.io/$ENV_BLAST_API_KEY",
+    "rpcUrl": "https://fantom.api.onfinality.io/public",
     "networkId": 4002,
     "type": "EvmChain"
   },
@@ -123,7 +123,7 @@
   {
     "id": "mumbai",
     "mainnet": false,
-    "rpcUrl": "https://polygon-testnet.blastapi.io/$ENV_BLAST_API_KEY",
+    "rpcUrl": "https://polygon-mumbai.api.onfinality.io/public",
     "networkId": 80001,
     "type": "EvmChain"
   },
@@ -401,7 +401,7 @@
   {
     "id": "sepolia",
     "mainnet": false,
-    "rpcUrl": "https://eth-sepolia.public.blastapi.io",
+    "rpcUrl": "https://sepolia.drpc.org",
     "networkId": 11155111,
     "type": "EvmChain"
   },
@@ -1299,6 +1299,48 @@
     "mainnet": false,
     "rpcUrl": "https://rpc.testnet.fluent.xyz/",
     "networkId": 20994,
+    "type": "EvmChain"
+  },
+  {
+    "id": "spiderman",
+    "mainnet": true,
+    "rpcUrl": "https://rpc-mainnet.spiderman.com/rpc/",
+    "networkId": 143,
+    "type": "EvmChain"
+  },
+  {
+    "id": "zero_gravity",
+    "mainnet": true,
+    "rpcUrl": "http://evmrpc.0g.ai/",
+    "networkId": 16661,
+    "type": "EvmChain"
+  },
+  {
+    "id": "itsnotreal",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.itsnotreal.lol",
+    "networkId": 1380270412,
+    "type": "EvmChain"
+  },
+  {
+    "id": "giwa_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://sepolia-rpc.giwa.io",
+    "networkId": 91342,
+    "type": "EvmChain"
+  },
+  {
+    "id": "itsnotreal2",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.itsnotreal2.lol",
+    "networkId": 5064014,
+    "type": "EvmChain"
+  },
+  {
+    "id": "plasma",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.plasma.to/",
+    "networkId": 9745,
     "type": "EvmChain"
   }
 ]

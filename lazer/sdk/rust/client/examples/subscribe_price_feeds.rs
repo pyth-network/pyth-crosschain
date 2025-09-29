@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use base64::Engine;
 use pyth_lazer_client::backoff::PythLazerExponentialBackoffBuilder;
-use pyth_lazer_client::client::PythLazerClientBuilder;
+use pyth_lazer_client::stream_client::PythLazerStreamClientBuilder;
 use pyth_lazer_client::ws_connection::AnyResponse;
 use pyth_lazer_protocol::api::{
     Channel, DeliveryFormat, Format, JsonBinaryEncoding, SubscriptionParams, SubscriptionParamsRepr,
@@ -36,7 +36,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     // Create and start the client
-    let mut client = PythLazerClientBuilder::new(get_lazer_access_token())
+    let mut client = PythLazerStreamClientBuilder::new(get_lazer_access_token())
         // Optionally override the default endpoints
         .with_endpoints(vec![
             "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
@@ -56,11 +56,12 @@ async fn main() -> anyhow::Result<()> {
     pin!(stream);
 
     let subscription_requests = vec![
-        // Example subscription: Parsed JSON feed targeting Solana
+        // Example subscription: Parsed JSON feed targeting Solana, specified by price feed ids
         SubscribeRequest {
             subscription_id: SubscriptionId(1),
             params: SubscriptionParams::new(SubscriptionParamsRepr {
-                price_feed_ids: vec![PriceFeedId(1), PriceFeedId(2)],
+                price_feed_ids: Some(vec![PriceFeedId(1), PriceFeedId(2)]),
+                symbols: None,
                 properties: vec![
                     PriceFeedProperty::Price,
                     PriceFeedProperty::Exponent,
@@ -72,15 +73,20 @@ async fn main() -> anyhow::Result<()> {
                 json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: true,
                 channel: Channel::FixedRate(FixedRate::RATE_200_MS),
-                ignore_invalid_feed_ids: false,
+                ignore_invalid_feeds: false,
             })
             .expect("invalid subscription params"),
         },
-        // Example subscription: binary feed targeting Solana and EVM
+        // Example subscription: binary feed targeting Solana and EVM, specified by price feed symbols
         SubscribeRequest {
             subscription_id: SubscriptionId(2),
             params: SubscriptionParams::new(SubscriptionParamsRepr {
-                price_feed_ids: vec![PriceFeedId(3), PriceFeedId(4)],
+                price_feed_ids: None,
+                symbols: Some(vec![
+                    "Crypto.BTC/USD".to_string(),
+                    "Crypto.ETH/USD".to_string(),
+                    "Crypto.PYTH/USD".to_string(),
+                ]),
                 properties: vec![
                     PriceFeedProperty::Price,
                     PriceFeedProperty::Exponent,
@@ -92,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
                 json_binary_encoding: JsonBinaryEncoding::Base64,
                 parsed: false,
                 channel: Channel::FixedRate(FixedRate::RATE_50_MS),
-                ignore_invalid_feed_ids: false,
+                ignore_invalid_feeds: false,
             })
             .expect("invalid subscription params"),
         },

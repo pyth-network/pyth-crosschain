@@ -1,6 +1,6 @@
 [package]
 name = "pyth-lazer-protocol"
-version = "0.13.0"
+version = "0.16.0"
 edition = "2021"
 description = "Pyth Lazer SDK - protocol types."
 license = "Apache-2.0"
