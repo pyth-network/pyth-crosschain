@@ -1,1 +1,1 @@
-export { Homepage as default } from "../../components/Pages/Homepage";
+export { PriceFeedsLandingPage as default } from "../../components/Pages/PriceFeedsLandingPage";
