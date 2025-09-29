@@ -22,10 +22,10 @@ export const Skeleton = ({
     data-fill-width={width === undefined ? "" : undefined}
     {...(width &&
       !fill && { style: { "--skeleton-width": width } as CSSProperties })}
+    data-fill={fill ? "" : undefined}
     className={clsx(
       styles.skeleton,
-      { [styles.fullSkeleton ?? ""]: fill },
-      { [className ?? ""]: fill },
+      className,
     )}
   >
     <span className={clsx(styles.skeletonInner, className)} {...props}>
