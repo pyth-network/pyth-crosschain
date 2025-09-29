@@ -288,7 +288,6 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           onPageChange={props.onPageChange}
           pageSize={props.pageSize}
           onPageSizeChange={props.onPageSizeChange}
-          pageSizeOptions={[10, 20, 30, 40, 50]}
           mkPageLink={props.mkPageLink}
         />
       ),
