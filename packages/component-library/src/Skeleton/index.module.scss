@@ -11,12 +11,12 @@
   }
 }
 
-.fullSkeleton {
-  display: inline-block;
-}
-
 .skeleton {
   border-radius: theme.border-radius("lg");
+
+  &[data-fill] {
+    width: 100%;
+  }
 
   .skeletonInner {
     display: inline flow-root;
