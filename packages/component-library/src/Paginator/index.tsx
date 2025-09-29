@@ -19,19 +19,21 @@ type Props = {
   onPageChange: (newPage: number) => void;
   isPageTransitioning?: boolean | undefined;
   pageSize: number;
-  pageSizeOptions: number[];
+  pageSizeOptions?: number[];
   onPageSizeChange: (newPageSize: number) => void;
   isPageSizeTransitioning?: boolean | undefined;
   mkPageLink?: ((page: number) => string) | undefined;
   className?: string | undefined;
 };
 
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+
 export const Paginator = ({
   numPages,
   currentPage,
   isPageTransitioning,
   pageSize,
-  pageSizeOptions,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   onPageChange,
   onPageSizeChange,
   isPageSizeTransitioning,
