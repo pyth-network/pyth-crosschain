@@ -4,20 +4,17 @@
   max-width: 80rem; /* ~ max-w-7xl */
   margin-left: auto;
   margin-right: auto;
-  padding-left: theme.spacing(4); /* px-4 */
-  padding-right: theme.spacing(4);
-  padding-top: theme.spacing(8); /* py-8 */
-  padding-bottom: theme.spacing(8);
+  padding: theme.spacing(8) theme.spacing(4) theme.spacing(8) theme.spacing(4); /* px-4 */ /* py-8 */
 }
 
-@media (min-width: 640px) {
+@media (width >= 640px) {
   .container {
     padding-left: theme.spacing(6); /* sm:px-6 */
     padding-right: theme.spacing(6);
   }
 }
 
-@media (min-width: 1024px) {
+@media (width >= 1024px) {
   .container {
     padding-left: theme.spacing(8); /* lg:px-8 */
     padding-right: theme.spacing(8);
@@ -63,7 +60,7 @@
   margin-bottom: theme.spacing(12); /* mb-12 */
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .gridTwo {
     grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
   }
@@ -76,7 +73,7 @@
   margin-top: theme.spacing(8); /* mt-8 */
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .gridThree {
     grid-template-columns: repeat(3, minmax(0, 1fr)); /* md:grid-cols-3 */
   }
