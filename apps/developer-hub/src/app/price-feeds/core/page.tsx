@@ -1,7 +1,5 @@
-import { CoreLandingPage } from "../../../components/Pages/CoreLandingPage"
+import { CoreLandingPage } from "../../../components/Pages/CoreLandingPage";
 
 export default function Page() {
-  return <CoreLandingPage />
+  return <CoreLandingPage />;
 }
-
-
