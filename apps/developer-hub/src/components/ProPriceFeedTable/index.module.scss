@@ -1,0 +1,12 @@
+.table {
+  overflow-x: auto;
+}
+
+// Description is a long text that can be wrapped and broken into multiple lines
+.description {
+  max-width: 32ch;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: inline-block;
+}
