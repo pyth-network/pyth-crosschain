@@ -5,7 +5,10 @@ full: false
 index: false
 ---
 
-This guide explains how to subscribe to price updates from Pyth Lazer. This guide will also explain various properties and configuration options to customize the price updates.
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+This guide explains how to subscribe to price updates from Pyth Lazer.
+This guide will also explain various properties and configuration options to customize the price updates.
 
 Subscribing to price updates is a three-step process:
 
@@ -16,6 +19,7 @@ Subscribing to price updates is a three-step process:
 The websocket server is available at `wss://pyth-lazer.dourolabs.app/v1/stream{:bash}`.
 
 <Steps>
+<Step>
 
 ### 1. Acquire an access token
 
@@ -23,6 +27,8 @@ Please fill out [this form](https://tally.so/r/nP2lG5) to contact the Pyth team 
 
 Use the access token to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {token}{:bash}`.
 
+</Step>
+<Step>
 ### 2. Configure subscription parameters
 
 Lazer supports several request/subscription parameters to customize the received price updates.
@@ -52,6 +58,8 @@ There are also a few other configuration parameters -- see the [API documentatio
 
 Determine the most suitable values for your application -- they will be used in the next step.
 
+</Step>
+<Step>
 ### 3. Subscribe to the price updates
 
 To subscribe to the price updates, send a request to the websocket server. The server will respond with a signed price update.
@@ -121,6 +129,7 @@ By default, price updates contain the `parsed` field that one can use to easily 
 }
 ```
 
+</Step>
 </Steps>
 
 ## Additional Resources
