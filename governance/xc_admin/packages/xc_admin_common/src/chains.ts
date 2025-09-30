@@ -117,7 +117,7 @@ export const RECEIVER_CHAINS = {
   camp_network: 60086,
   spiderman: 60087,
   zero_gravity: 60088,
-  itsnotreal: 60089,
+  itsnotreal: 60089, // Deprecated
   plasma: 60090,
   itsnotreal2: 60091,
 
