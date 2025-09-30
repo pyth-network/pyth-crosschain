@@ -14,13 +14,13 @@ import type {
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { matchSorter } from "match-sorter";
 import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 import { useCollator } from "react-aria";
 
-import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { FeedKey } from "../FeedKey";
