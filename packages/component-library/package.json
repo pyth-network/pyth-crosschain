@@ -14,6 +14,10 @@
     "./useData": {
       "types": "./dist/esm/useData/index.d.ts",
       "default": "./dist/esm/useData/index.js"
+    }, 
+    "./useQueryParamsPagination": {
+      "types": "./dist/esm/useQueryParamsPagination/index.d.ts",
+      "default": "./dist/esm/useQueryParamsPagination/index.js"
     },
     "./theme": "./dist/esm/theme.scss"
   },
