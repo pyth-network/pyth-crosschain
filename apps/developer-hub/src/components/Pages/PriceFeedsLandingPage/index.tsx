@@ -10,16 +10,15 @@ import {
   CurrencyDollar as MoneyWavyIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
+import styles from "./index.module.scss";
 import { ProductCard } from "../../ProductCard";
 
 export function PriceFeedsLandingPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
-          Price Feeds
-        </h1>
-        <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-4xl">
+    <div className={styles.container}>
+      <div className={styles.section}>
+        <h1 className={styles.title}>Price Feeds</h1>
+        <p className={styles.lead}>
           Pyth Price Feeds deliver real-time financial market data sources from
           120+ first-party providers. These providers include leading exchanges,
           banks, trading firms, and market makers. Additionally, Pyth Price data
@@ -27,16 +26,14 @@ export function PriceFeedsLandingPage() {
         </p>
       </div>
 
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
-          Product Options
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300 mb-8">
+      <div className={styles.section}>
+        <h2 className={styles.h2}>Product Options</h2>
+        <p className={styles.body}>
           Pyth offers two main versions of price feeds, each optimized for
           different use cases:
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mb-12">
+        <div className={styles.gridTwo}>
           <ProductCard
             badge="Pro"
             badgeColor="bg-blue-600"
@@ -114,66 +111,46 @@ export function PriceFeedsLandingPage() {
         </div>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
-          Additional Resources
-        </h2>
+      <div className={styles.sectionTop}>
+        <h2 className={styles.h2}>Additional Resources</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold mb-2 text-lightForeground dark:text-white">
-              Price Feed IDs
-            </h3>
-            <p className="text-gray-700 dark:text-light mb-4">
+        <div className={styles.gridThree}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Price Feed IDs</h3>
+            <p className={styles.cardText}>
               Complete list of price feed IDs for both Pro and Core.
             </p>
-            <a
-              href="./price-feeds/core/price-feeds"
-              className="text-lightLinks dark:text-darkLinks hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-            >
+            <a href="./price-feeds/core/price-feeds" className={styles.link}>
               Pyth Core IDs →
             </a>
-            <span className="mx-2 text-gray-400">|</span>
-            <a
-              href="./price-feeds/pro/price-feed-ids"
-              className="text-lightLinks dark:text-darkLinks hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-            >
+            <span className={styles.divider}>|</span>
+            <a href="./price-feeds/pro/price-feed-ids" className={styles.link}>
               Pyth Pro IDs →
             </a>
           </div>
 
-          <div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold mb-2 text-lightForeground dark:text-white">
-              API Reference
-            </h3>
-            <p className="text-gray-700 dark:text-light mb-4">
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>API Reference</h3>
+            <p className={styles.cardText}>
               Complete API documentation for both Pro and Core.
             </p>
-            <a
-              href="./price-feeds/core/api-reference"
-              className="text-lightLinks dark:text-darkLinks hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-            >
+            <a href="./price-feeds/core/api-reference" className={styles.link}>
               Core APIs →
             </a>
-            <span className="mx-2 text-gray-400">|</span>
-            <a
-              href="./price-feeds/pro/api-reference"
-              className="text-lightLinks dark:text-darkLinks hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-            >
+            <span className={styles.divider}>|</span>
+            <a href="./price-feeds/pro/api-reference" className={styles.link}>
               Pro API →
             </a>
           </div>
 
-          <div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold mb-2 text-lightForeground dark:text-white">
-              Examples
-            </h3>
-            <p className="text-gray-700 dark:text-light mb-4">
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Examples</h3>
+            <p className={styles.cardText}>
               Sample applications and integration examples.
             </p>
             <a
               href="https://github.com/pyth-network/pyth-examples"
-              className="text-lightLinks dark:text-darkLinks hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+              className={styles.link}
             >
               View Examples →
             </a>

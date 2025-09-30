@@ -1,16 +1,13 @@
 "use client";
 import { InfoBox } from "@pythnetwork/component-library/InfoBox";
 import { Spinner } from "@pythnetwork/component-library/Spinner";
-import type {
-  ColumnConfig,
-  RowConfig,
-} from "@pythnetwork/component-library/Table";
+import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { PriceFeedsProPriceIdMetadata } from "./fetcher";
+import { PRICE_FEEDS_PRO_COLUMNS } from "./constants";
 import { fetchPriceFeedsProPriceIdMetadata } from "./fetcher";
 import styles from "./index.module.scss";
 
@@ -26,7 +23,9 @@ enum PriceFeedsProPriceIdStateType {
 const PriceFeedsProPriceIdState = {
   NotLoaded: () => ({ type: PriceFeedsProPriceIdStateType.NotLoaded as const }),
   Loading: () => ({ type: PriceFeedsProPriceIdStateType.Loading as const }),
-  Loaded: (priceFeeds: PriceFeedsProPriceIdMetadata[]) => ({
+  Loaded: (
+    priceFeeds: Awaited<ReturnType<typeof fetchPriceFeedsProPriceIdMetadata>>,
+  ) => ({
     type: PriceFeedsProPriceIdStateType.Loaded as const,
     priceFeeds,
   }),
@@ -75,7 +74,7 @@ type Col =
 const LoadedPriceFeedsProPriceIdTable = ({
   priceFeeds,
 }: {
-  priceFeeds: PriceFeedsProPriceIdMetadata[];
+  priceFeeds: Awaited<ReturnType<typeof fetchPriceFeedsProPriceIdMetadata>>;
 }) => {
   const [searchRaw, setSearchRaw] = useState("");
   const [search, setSearch] = useState("");
@@ -105,23 +104,12 @@ const LoadedPriceFeedsProPriceIdTable = ({
     });
   }, [priceFeeds, search]);
 
-  const columns: ColumnConfig<Col>[] = [
-    { id: "assetType", name: "Asset Type", isRowHeader: true },
-    { id: "description", name: "Description" },
-    { id: "name", name: "Name" },
-    { id: "symbol", name: "Symbol" },
-    { id: "proId", name: "Pyth Pro Id" },
-    { id: "exponent", name: "Exponent" },
-  ];
-
   const rows: RowConfig<Col>[] = filteredFeeds.map((priceFeed) => ({
     id: `${String(priceFeed.pyth_lazer_id)}-${priceFeed.symbol}`,
     data: {
       assetType: priceFeed.asset_type,
       description: (
-        <span className={styles.description ?? ""}>
-          {priceFeed.description}
-        </span>
+        <span className={styles.description}>{priceFeed.description}</span>
       ),
       name: priceFeed.name,
       symbol: priceFeed.symbol,
@@ -144,9 +132,9 @@ const LoadedPriceFeedsProPriceIdTable = ({
       <Table<Col>
         className={styles.table ?? ""}
         label="Pyth Pro price feed IDs"
-        columns={columns}
+        columns={PRICE_FEEDS_PRO_COLUMNS}
         rows={rows}
-        isLoading={false}
+        isLoading={true}
         rounded
         fill
         stickyHeader="top"

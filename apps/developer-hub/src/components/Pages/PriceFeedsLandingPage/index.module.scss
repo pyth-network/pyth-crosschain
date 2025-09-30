@@ -1,0 +1,123 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  max-width: 80rem; /* ~ max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: theme.spacing(4); /* px-4 */
+  padding-right: theme.spacing(4);
+  padding-top: theme.spacing(8); /* py-8 */
+  padding-bottom: theme.spacing(8);
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: theme.spacing(6); /* sm:px-6 */
+    padding-right: theme.spacing(6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: theme.spacing(8); /* lg:px-8 */
+    padding-right: theme.spacing(8);
+  }
+}
+
+.section {
+  margin-bottom: theme.spacing(12); /* mb-12 */
+}
+
+.title {
+  font-size: 2.25rem; /* text-4xl */
+  line-height: 2.5rem;
+  font-weight: 700; /* font-bold */
+  color: theme.color("foreground");
+  margin-bottom: theme.spacing(6); /* mb-6 */
+}
+
+.lead {
+  font-size: 1.125rem; /* text-lg */
+  line-height: 1.75rem; /* leading-relaxed-ish */
+  color: theme.color("muted");
+  max-width: 56rem; /* max-w-4xl */
+}
+
+.h2 {
+  font-size: 1.5rem; /* text-2xl */
+  line-height: 2rem;
+  font-weight: 700;
+  color: theme.color("foreground");
+  margin-bottom: theme.spacing(8); /* mb-8 */
+}
+
+.body {
+  color: theme.color("muted");
+  margin-bottom: theme.spacing(8); /* mb-8 */
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(8); /* gap-8 */
+  margin-bottom: theme.spacing(12); /* mb-12 */
+}
+
+@media (min-width: 768px) {
+  .gridTwo {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* md:grid-cols-2 */
+  }
+}
+
+.gridThree {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(6); /* gap-6 */
+  margin-top: theme.spacing(8); /* mt-8 */
+}
+
+@media (min-width: 768px) {
+  .gridThree {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* md:grid-cols-3 */
+  }
+}
+
+.card {
+  padding: theme.spacing(6); /* p-6 */
+  background: theme.color("secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg"); /* rounded-lg */
+}
+
+.cardTitle {
+  font-size: 1.125rem; /* text-lg */
+  line-height: 1.75rem;
+  font-weight: 600; /* font-semibold */
+  margin-bottom: theme.spacing(2); /* mb-2 */
+  color: theme.color("foreground");
+}
+
+.cardText {
+  color: theme.color("muted");
+  margin-bottom: theme.spacing(4); /* mb-4 */
+}
+
+.link {
+  color: theme.color("accent");
+  font-weight: 500; /* font-medium */
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-blue-800);
+}
+
+.divider {
+  margin-left: theme.spacing(2); /* mx-2 -> left */
+  margin-right: theme.spacing(2); /* right */
+  color: var(--color-gray-400);
+}
+
+.sectionTop {
+  margin-top: theme.spacing(8); /* mt-8 */
+}
