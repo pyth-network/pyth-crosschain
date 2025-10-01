@@ -1,10 +1,10 @@
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Fragment } from "react";
 
 import styles from "./index.module.scss";
-import { omitKeys } from "../../omit-keys";
+import { Skeleton } from "../Skeleton/index.jsx";
+import { omitKeys } from "../omit-keys";
 
 type OwnProps =
   | { isLoading: true }
@@ -17,9 +17,9 @@ type OwnProps =
 
 type Props = Omit<ComponentProps<"div">, keyof OwnProps> & OwnProps;
 
-export const PriceFeedTag = ({ className, ...props }: Props) => (
+export const SymbolPairTag = ({ className, ...props }: Props) => (
   <div
-    className={clsx(styles.priceFeedTag, className)}
+    className={clsx(styles.symbolPairTag, className)}
     data-loading={props.isLoading ? "" : undefined}
     {...omitKeys(props, ["displaySymbol", "description", "isLoading"])}
   >
@@ -33,7 +33,7 @@ export const PriceFeedTag = ({ className, ...props }: Props) => (
         {props.isLoading ? (
           <Skeleton width={30} />
         ) : (
-          <FeedName displaySymbol={props.displaySymbol} />
+          <SymbolName displaySymbol={props.displaySymbol} />
         )}
       </div>
       <div className={styles.description}>
@@ -47,7 +47,7 @@ export const PriceFeedTag = ({ className, ...props }: Props) => (
   </div>
 );
 
-const FeedName = ({ displaySymbol }: { displaySymbol: string }) => {
+const SymbolName = ({ displaySymbol }: { displaySymbol: string }) => {
   const [firstPart, ...rest] = displaySymbol.split("/");
   return (
     <>

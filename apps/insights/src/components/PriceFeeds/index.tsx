@@ -8,6 +8,7 @@ import { Button } from "@pythnetwork/component-library/Button";
 import type { Props as CardProps } from "@pythnetwork/component-library/Card";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { TabList } from "@pythnetwork/component-library/TabList";
 import {
   TabPanel as UnstyledTabPanel,
@@ -30,7 +31,6 @@ import {
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
-import { PriceFeedTag } from "../PriceFeedTag";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -260,7 +260,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
           href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}
         >
           <div className={styles.feedCardContents}>
-            <PriceFeedTag
+            <SymbolPairTag
               displaySymbol={feed.product.display_symbol}
               description={feed.product.description}
               icon={

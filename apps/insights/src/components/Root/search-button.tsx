@@ -8,6 +8,7 @@ import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { SearchButton as SearchButtonComponent } from "@pythnetwork/component-library/SearchButton";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import {
   ListLayout,
   Virtualizer,
@@ -25,7 +26,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherTag } from "../PublisherTag";
 import { Score } from "../Score";
 import styles from "./search-button.module.scss";
@@ -241,7 +241,7 @@ const SearchDialogContents = ({
               >
                 <div className={styles.smallScreen}>
                   {result.type === ResultType.PriceFeed ? (
-                    <PriceFeedTag
+                    <SymbolPairTag
                       className={styles.itemTag}
                       displaySymbol={result.displaySymbol}
                       description={result.description}
@@ -316,7 +316,7 @@ const SearchDialogContents = ({
                   </div>
                   {result.type === ResultType.PriceFeed ? (
                     <>
-                      <PriceFeedTag
+                      <SymbolPairTag
                         displaySymbol={result.displaySymbol}
                         description={result.description}
                         icon={result.icon}

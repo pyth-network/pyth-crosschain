@@ -8,6 +8,7 @@ import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import type {
   RowConfig,
   SortDescriptor,
@@ -30,7 +31,6 @@ import {
   LiveValue,
   SKELETON_WIDTH,
 } from "../LivePrices";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
 import styles from "./price-feeds-card.module.scss";
 
@@ -137,7 +137,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
               <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
             ),
             priceFeedName: (
-              <PriceFeedTag
+              <SymbolPairTag
                 description={description}
                 displaySymbol={displaySymbol}
                 icon={icon}
@@ -296,7 +296,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     <EntityList
       label="Price Feeds"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<PriceFeedTag isLoading />}
+      headerLoadingSkeleton={<SymbolPairTag isLoading />}
       fields={[
         { id: "assetClass", name: "Asset Class" },
         { id: "priceFeedId", name: "Price Feed ID" },
@@ -331,7 +331,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           name: "PRICE FEED",
           isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: <PriceFeedTag isLoading />,
+          loadingSkeleton: <SymbolPairTag isLoading />,
           allowsSorting: true,
         },
         {
