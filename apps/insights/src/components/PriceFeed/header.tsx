@@ -3,6 +3,7 @@ import { Breadcrumbs } from "@pythnetwork/component-library/Breadcrumbs";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { Suspense } from "react";
 
 import { Cluster } from "../../services/pyth";
@@ -16,7 +17,6 @@ import {
   YesterdaysPricesProvider,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
 import { getFeed } from "./get-feed";
 import styles from "./header.module.scss";
@@ -93,7 +93,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
                 })),
             })}
       >
-        <PriceFeedTag
+        <SymbolPairTag
           {...(props.isLoading
             ? { isLoading: true }
             : {
@@ -108,7 +108,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
               })}
         />
       </PriceFeedSelect>
-      <PriceFeedTag
+      <SymbolPairTag
         className={styles.priceFeedTag}
         {...(props.isLoading
           ? { isLoading: true }

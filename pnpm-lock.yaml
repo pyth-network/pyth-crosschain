@@ -2260,6 +2260,9 @@ importers:
       copyfiles:
         specifier: 'catalog:'
         version: 2.4.1
+      cryptocurrency-icons:
+        specifier: 'catalog:'
+        version: 0.18.1
       css-loader:
         specifier: 'catalog:'
         version: 7.1.2(webpack@5.98.0(@swc/core@1.13.2)(esbuild@0.25.9))

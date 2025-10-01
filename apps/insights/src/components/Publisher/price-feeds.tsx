@@ -1,3 +1,4 @@
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { notFound } from "next/navigation";
 
 import { getPriceFeeds } from "./get-price-feeds";
@@ -7,7 +8,6 @@ import { AssetClassBadge } from "../AssetClassBadge";
 import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PriceFeedIcon } from "../PriceFeedIcon";
-import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   params: Promise<{
@@ -36,7 +36,7 @@ export const PriceFeeds = async ({ params }: Props) => {
       priceFeeds={feeds.map(({ ranking, feed, status }) => ({
         symbol: feed.symbol,
         name: (
-          <PriceFeedTag
+          <SymbolPairTag
             displaySymbol={feed.product.display_symbol}
             description={feed.product.description}
             icon={
@@ -80,7 +80,7 @@ const PriceFeedsCard = (props: PriceFeedsCardProps) => (
   <PriceComponentsCard
     label="Price Feeds"
     searchPlaceholder="Feed symbol"
-    nameLoadingSkeleton={<PriceFeedTag isLoading />}
+    nameLoadingSkeleton={<SymbolPairTag isLoading />}
     extraColumns={[
       {
         id: "assetClassBadge",

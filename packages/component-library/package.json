@@ -79,6 +79,7 @@
     "autoprefixer": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "copyfiles": "catalog:",
+    "cryptocurrency-icons": "catalog:",
     "css-loader": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",

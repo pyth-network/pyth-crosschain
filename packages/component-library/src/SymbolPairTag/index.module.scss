@@ -1,6 +1,6 @@
-@use "@pythnetwork/component-library/theme";
+@use "../theme";
 
-.priceFeedTag {
+.symbolPairTag {
   display: flex;
   flex-flow: row nowrap;
   gap: theme.spacing(3);
