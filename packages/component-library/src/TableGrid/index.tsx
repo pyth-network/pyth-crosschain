@@ -1,21 +1,23 @@
-import type { ColDef } from "ag-grid-community";
 import {
   AllCommunityModule,
+  ClientSideRowModelModule,
   ModuleRegistry,
+  TextFilterModule,
   themeQuartz,
 } from "ag-grid-community";
-import type { AgGridReactProps } from "ag-grid-react"; // React Data Grid Component
 import { AgGridReact } from "ag-grid-react";
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 
-import type { Props as CardProps } from "../Card";
 import { Card } from "../Card";
 import { Paginator } from "../Paginator";
 import { Skeleton } from "../Skeleton";
+import { useMediaQueryBreakpoint } from '../useMediaQuery';
+import { FullWidthCellRenderer } from './full-width-cell-renderer';
 import styles from "./index.module.scss";
-
+import type { TableGridProps } from './table-grid-props';
 // Register all Community features
-ModuleRegistry.registerModules([AllCommunityModule]);
+ModuleRegistry.registerModules([AllCommunityModule,  TextFilterModule,
+  ClientSideRowModelModule,]);
 
 const SkeletonCellRenderer = (props: { value?: unknown }) => {
   if (!props.value) {
@@ -23,18 +25,6 @@ const SkeletonCellRenderer = (props: { value?: unknown }) => {
   }
   return <span>{props.value}</span>;
 };
-
-type ExtendedColDef<TData> = ColDef<TData> & {
-  loadingSkeletonWidth?: number;
-};
-
-export type TableGridProps<TData extends Record<string, unknown>> = {
-  rowData: TData[];
-  colDefs: ExtendedColDef<TData>[];
-  isLoading?: boolean;
-  cardProps?: Omit<CardProps<"div">, "children" | "footer"> & { nonInteractive?: true };
-  pagination?: boolean;
-} & Omit<AgGridReactProps<TData>, "rowData" | "defaultColDef" | "columnDefs">;
 
 export const TableGrid = forwardRef(<TData extends Record<string, unknown>>({
   rowData,
@@ -48,20 +38,34 @@ export const TableGrid = forwardRef(<TData extends Record<string, unknown>>({
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-    useImperativeHandle(ref, () => gridRef.current);
+  useImperativeHandle(ref, () => gridRef.current);
 
-  const defaultColDef = useMemo<ColDef>(() => {
+  const defaultColDef = useMemo(() => {
     return {
       cellRenderer: SkeletonCellRenderer,
       flex: 1,
     };
   }, []);
 
-  const emptyRowData = useMemo(() => {
-    // create dummy row matching the shape of colDefs
-    return [colDefs.map(() => ({ value: undefined }))];
-  }, [colDefs]);
+  const isLargeScreen = useMediaQueryBreakpoint("md");
+  useEffect(() => {
+    if(!gridRef.current?.api) return;  
+    gridRef.current.api.redrawRows();
+    gridRef.current.api.resetRowHeights()
+    gridRef.current.api.onRowHeightChanged(); 
+  }, [isLargeScreen]);
 
+  const mappedColDefs = useMemo(() => {
+    return colDefs.map((colDef) => {
+      return {
+        ...colDef,
+        cellRenderer: isLoading ? SkeletonCellRenderer : colDef.cellRenderer,
+      };
+    });
+  }, [colDefs, isLoading]);
+
+  const fullWidthCellRendererComponent = useMemo(() => FullWidthCellRenderer(colDefs), [colDefs]);
+  
   const onPaginationChanged = useCallback(() => {
     if (gridRef.current?.api) {
       const api = gridRef.current.api;
@@ -70,21 +74,26 @@ export const TableGrid = forwardRef(<TData extends Record<string, unknown>>({
       setTotalPages(api.paginationGetTotalPages());
     }
   }, []);
-
   const onPageChange = useCallback((newPage: number) => {
     gridRef.current?.api.paginationGoToPage(newPage - 1);
   }, []);
-
   const tableGrid = (
       <AgGridReact<TData>
         className={styles.tableGrid}
         ref={gridRef}
-        rowData={isLoading ? emptyRowData : rowData}
+        // @ts-expect-error empty row data
+        rowData={isLoading ? [[]] : rowData}
         defaultColDef={defaultColDef}
-        columnDefs={colDefs}
+        columnDefs={mappedColDefs}
         theme={themeQuartz}
         domLayout="autoHeight"
-        pagination={pagination ?? false}
+        fullWidthCellRenderer={fullWidthCellRendererComponent}
+        getRowHeight={() => {
+    if (!isLargeScreen) {
+      return 100;
+    }
+  }}
+  isFullWidthRow={() => !isLargeScreen}   pagination={pagination ?? false}
         paginationPageSize={pageSize}
         suppressPaginationPanel
         onPaginationChanged={onPaginationChanged}

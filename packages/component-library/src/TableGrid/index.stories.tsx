@@ -11,17 +11,12 @@ const meta = {
     layout: "padded",
   },
   argTypes: {
-    columns: {
+    colDefs: {
       table: {
         disable: true,
       },
     },
-    rows: {
-      table: {
-        disable: true,
-      },
-    },
-    renderEmptyState: {
+    rowData: {
       table: {
         disable: true,
       },
@@ -31,15 +26,9 @@ const meta = {
         disable: true,
       },
     },
-    label: {
+    cardProps: {
       table: {
-        category: "Accessibility",
-      },
-    },
-    isUpdating: {
-      control: "boolean",
-      table: {
-        category: "State",
+        category: "Outer Card",
       },
     },
     isLoading: {
@@ -48,26 +37,20 @@ const meta = {
         category: "State",
       },
     },
-    fill: {
-      control: "boolean",
-      table: {
-        category: "Variant",
-      },
-    },
-    rounded: {
-      control: "boolean",
-      table: {
-        category: "Variant",
-      },
-    },
-    dependencies: {
-      table: {
-        disable: true,
-      },
-    },
   },
 } satisfies Meta<typeof TableGridComponent>;
 export default meta;
+
+export const PriceCellRenderer = ({ value }: { value: number }) =>  (
+    <span>
+      {`$${value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`}
+    </span>
+  );
+
+export const ConfidenceCellRenderer = ({ value }: { value: number }) =>  <span>{`+/- ${value.toFixed(2)}%`}</span>;
 
 const args = {
   colDefs: [
@@ -83,12 +66,15 @@ const args = {
       headerName: "PRICE",
       field: "price",
       flex: 2,
-      loadingSkeletonWidth: 30,
+      cellRenderer: PriceCellRenderer,
     },
     {
       headerName: "CONFIDENCE",
       field: "confidence",
-      loadingSkeletonWidth: 20,
+      cellRenderer: ConfidenceCellRenderer,
+      context: {
+        loadingSkeletonWidth: 20,
+      }
     },
   ],
   rowData: dummyRowData,

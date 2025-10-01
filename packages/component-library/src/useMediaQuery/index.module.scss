@@ -1,0 +1,9 @@
+@use "../theme";
+
+:export {
+  breakpointSm: #{theme.map-get-strict(theme.$breakpoints, "sm")};
+  breakpointMd: #{theme.map-get-strict(theme.$breakpoints, "md")};
+  breakpointLg: #{theme.map-get-strict(theme.$breakpoints, "lg")};
+  breakpointXl: #{theme.map-get-strict(theme.$breakpoints, "xl")};
+  breakpoint2Xl: #{theme.map-get-strict(theme.$breakpoints, "2xl")};
+}
