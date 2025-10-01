@@ -31,9 +31,9 @@ export type BinaryResponse = {
 };
 export type JsonOrBinaryResponse =
   | {
-    type: "json";
-    value: Response;
-  }
+      type: "json";
+      value: Response;
+    }
   | { type: "binary"; value: BinaryResponse };
 
 const UINT16_NUM_BYTES = 2;
@@ -55,7 +55,7 @@ export class PythLazerClient {
     private readonly priceServiceUrl: string,
     private readonly logger: Logger,
     private readonly wsp?: WebSocketPool,
-  ) { }
+  ) {}
 
   /**
    * Gets the WebSocket pool. If the WebSocket pool is not configured, an error is thrown.

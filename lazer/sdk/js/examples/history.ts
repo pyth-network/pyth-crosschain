@@ -37,7 +37,7 @@ const timestamp = 1_754_348_458_565_000;
 console.log(
   `Requesting price from timestamp: ${timestamp.toString()} (${new Date(timestamp / 1000).toISOString()})`,
 );
-const response3 = await client.get_price({
+const response3 = await client.getPrice({
   timestamp: timestamp,
   priceFeedIds: [1],
   properties: ["price", "confidence", "exponent"],
