@@ -222,7 +222,7 @@ export class PythLazerClient {
    * @param params - Optional query parameters to filter symbols
    * @returns Promise resolving to array of symbol information
    */
-  async get_symbols(params?: SymbolsQueryParams): Promise<SymbolResponse[]> {
+  async getSymbols(params?: SymbolsQueryParams): Promise<SymbolResponse[]> {
     const url = new URL(`${this.metadataServiceUrl}/v1/symbols`);
 
     if (params?.query) {
@@ -252,12 +252,12 @@ export class PythLazerClient {
    * @param params - Parameters for the latest price request
    * @returns Promise resolving to JsonUpdate with current price data
    */
-  async get_latest_price(params: LatestPriceRequest): Promise<JsonUpdate> {
+  async getLatestPrice(params: LatestPriceRequest): Promise<JsonUpdate> {
     const url = `${this.priceServiceUrl}/v1/latest_price`;
 
     try {
       const body = JSON.stringify(params);
-      this.logger.debug("get_latest_price", { url, body });
+      this.logger.debug("getLatestPrice", { url, body });
       const response = await this.authenticatedFetch(url, {
         method: "POST",
         headers: {
@@ -283,12 +283,12 @@ export class PythLazerClient {
    * @param params - Parameters for the price request including timestamp
    * @returns Promise resolving to JsonUpdate with price data at the specified time
    */
-  async get_price(params: PriceRequest): Promise<JsonUpdate> {
+  async getPrice(params: PriceRequest): Promise<JsonUpdate> {
     const url = `${this.priceServiceUrl}/v1/price`;
 
     try {
       const body = JSON.stringify(params);
-      this.logger.debug("get_price", { url, body });
+      this.logger.debug("getPrice", { url, body });
       const response = await this.authenticatedFetch(url, {
         method: "POST",
         headers: {

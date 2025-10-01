@@ -7,6 +7,7 @@ import { EntityList } from "@pythnetwork/component-library/EntityList";
 import { Link } from "@pythnetwork/component-library/Link";
 import type { Variant as NoResultsVariant } from "@pythnetwork/component-library/NoResults";
 import { NoResults } from "@pythnetwork/component-library/NoResults";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
@@ -25,7 +26,6 @@ import {
   ExplainAverage,
 } from "../Explanations";
 import { PriceFeedIcon } from "../PriceFeedIcon";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
@@ -365,7 +365,7 @@ const TopFeedsCard = ({
       <TopFeedsTable
         label={`${title} Feeds`}
         publisherScoreWidth={PUBLISHER_SCORE_WIDTH}
-        nameLoadingSkeleton={<PriceFeedTag isLoading />}
+        nameLoadingSkeleton={<SymbolPairTag isLoading />}
         {...(props.isLoading
           ? { isLoading: true }
           : {

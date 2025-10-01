@@ -16,6 +16,7 @@ import type {
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum, parseAsBoolean } from "nuqs";
 import type { ReactNode } from "react";
@@ -23,7 +24,6 @@ import { Fragment, Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./index.module.scss";
-import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import type { StatusName } from "../../status";
 import {

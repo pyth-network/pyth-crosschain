@@ -40,7 +40,7 @@ const client = await PythLazerClient.create({
 });
 
 // Fetch current map of price feeds
-void client.get_symbols().then((symbols) => {
+void client.getSymbols().then((symbols) => {
   for (const symbol of symbols) {
     symbolsMap.set(symbol.pyth_lazer_id, symbol.symbol);
   }

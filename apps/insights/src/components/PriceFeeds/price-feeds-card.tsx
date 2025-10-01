@@ -8,19 +8,20 @@ import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import type {
   RowConfig,
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { matchSorter } from "match-sorter";
 import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 import { useCollator } from "react-aria";
 
-import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { FeedKey } from "../FeedKey";
@@ -30,7 +31,6 @@ import {
   LiveValue,
   SKELETON_WIDTH,
 } from "../LivePrices";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
 import styles from "./price-feeds-card.module.scss";
 
@@ -137,7 +137,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
               <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
             ),
             priceFeedName: (
-              <PriceFeedTag
+              <SymbolPairTag
                 description={description}
                 displaySymbol={displaySymbol}
                 icon={icon}
@@ -296,7 +296,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     <EntityList
       label="Price Feeds"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<PriceFeedTag isLoading />}
+      headerLoadingSkeleton={<SymbolPairTag isLoading />}
       fields={[
         { id: "assetClass", name: "Asset Class" },
         { id: "priceFeedId", name: "Price Feed ID" },
@@ -331,7 +331,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           name: "PRICE FEED",
           isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: <PriceFeedTag isLoading />,
+          loadingSkeleton: <SymbolPairTag isLoading />,
           allowsSorting: true,
         },
         {

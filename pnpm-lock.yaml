@@ -2193,6 +2193,9 @@ importers:
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      nuqs:
+        specifier: 'catalog:'
+        version: 2.4.1(next@15.5.0(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1))(react@19.1.0)
       pino:
         specifier: 'catalog:'
         version: 9.6.0
@@ -2269,6 +2272,9 @@ importers:
       copyfiles:
         specifier: 'catalog:'
         version: 2.4.1
+      cryptocurrency-icons:
+        specifier: 'catalog:'
+        version: 0.18.1
       css-loader:
         specifier: 'catalog:'
         version: 7.1.2(webpack@5.98.0(@swc/core@1.13.2)(esbuild@0.25.9))

@@ -3,6 +3,7 @@
 import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -10,7 +11,6 @@ import { useCollator, useFilter } from "react-aria";
 
 import styles from "./coming-soon-list.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { PriceFeedTag } from "../PriceFeedTag";
 
 type Props = {
   comingSoonFeeds: {
@@ -65,7 +65,7 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
           href: `/price-feeds/${encodeURIComponent(symbol)}`,
           data: {
             priceFeedName: (
-              <PriceFeedTag
+              <SymbolPairTag
                 description={description}
                 displaySymbol={displaySymbol}
                 icon={icon}

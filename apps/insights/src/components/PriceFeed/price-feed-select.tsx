@@ -1,9 +1,10 @@
 "use client";
 
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import {
-  Virtualizer,
   ListLayout,
+  Virtualizer,
 } from "@pythnetwork/component-library/Virtualizer";
 import { Button } from "@pythnetwork/component-library/unstyled/Button";
 import { Dialog } from "@pythnetwork/component-library/unstyled/Dialog";
@@ -20,9 +21,8 @@ import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
-import styles from "./price-feed-select.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { PriceFeedTag } from "../PriceFeedTag";
+import styles from "./price-feed-select.module.scss";
 
 type Props = {
   className: string | undefined;
@@ -111,7 +111,7 @@ const ResolvedPriceFeedSelect = ({
                     }
                     prefetch={false}
                   >
-                    <PriceFeedTag
+                    <SymbolPairTag
                       displaySymbol={displaySymbol}
                       description={description}
                       icon={icon}
