@@ -99,7 +99,7 @@ If you don't use nix at all, then install the required system packages:
   [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js version.
 - [pnpm](https://pnpm.io/) -- match the version to the version specified in
   `package.json`; you can experiment with
-  [corepack](https://nodejs.org/api/corepack.html) to manage your pnpm version
+  [corepack](https://github.com/nodejs/corepack#readme) to manage your pnpm version
   for you.
 
 #### Common tasks
