@@ -10,7 +10,7 @@ const client = await PythLazerClient.create({
 
 // Example 1: Get latest price for BTC using feed IDs
 console.log("\n=== Example 1: Latest BTC price (requested with feed ID) ===");
-const response1 = await client.get_latest_price({
+const response1 = await client.getLatestPrice({
   priceFeedIds: [1],
   properties: ["price", "confidence", "exponent"],
   formats: [],
@@ -22,7 +22,7 @@ displayParsedPrices(response1);
 
 // Example 2: Get latest price using symbols
 console.log("\n=== Example 2: Latest ETH price (requested with symbols) ===");
-const response2 = await client.get_latest_price({
+const response2 = await client.getLatestPrice({
   priceFeedIds: [2],
   properties: ["price", "confidence", "exponent"],
   formats: [],
@@ -37,7 +37,7 @@ const timestamp = 1_754_348_458_565_000;
 console.log(
   `Requesting price from timestamp: ${timestamp.toString()} (${new Date(timestamp / 1000).toISOString()})`,
 );
-const response3 = await client.get_price({
+const response3 = await client.getPrice({
   timestamp: timestamp,
   priceFeedIds: [1],
   properties: ["price", "confidence", "exponent"],

@@ -12,7 +12,7 @@ async function getOneLeEcdsaUpdate(token: string) {
     token,
   });
 
-  const latestPrice = await lazer.get_latest_price({
+  const latestPrice = await lazer.getLatestPrice({
     priceFeedIds: [1],
     properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
     formats: ["leEcdsa"],
