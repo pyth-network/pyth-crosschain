@@ -5,10 +5,7 @@ STALE_TIMEOUT_SECONDS = 5
 
 class KMSConfig(BaseModel):
     enable_kms: bool
-    aws_region_name: str
     key_path: str
-    access_key_id_path: str
-    secret_access_key_path: str
 
 
 class LazerConfig(BaseModel):

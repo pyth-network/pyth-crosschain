@@ -37,17 +37,9 @@ class KMSSigner:
         logger.info("KMSSigner address: {}", self.address)
 
     def _init_client(self, config):
-        aws_region_name = config.kms.aws_region_name
-        access_key_id_path = config.kms.access_key_id_path
-        access_key_id = open(access_key_id_path, "r").read().strip()
-        secret_access_key_path = config.kms.secret_access_key_path
-        secret_access_key = open(secret_access_key_path, "r").read().strip()
-
+        # AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY should be set as environment variables
         return boto3.client(
             "kms",
-            region_name=aws_region_name,
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
             # can specify an endpoint for e.g. LocalStack
             # endpoint_url="http://localhost:4566"
         )
