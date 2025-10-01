@@ -105,10 +105,10 @@ If you don't use nix at all, then install the required system packages:
 #### Common tasks
 
 The following tasks are the most common ways to interact with the monorepo.
-Thanks to [turborepo](https://turbo.build/repo/docs), these tasks will
+Thanks to [turborepo](https://turborepo.com/docs), these tasks will
 coordinate building any needed dependencies, and task execution will be cached
 and will only re-run as necessary. For any of the following tasks, you can pass
-[any valid `turbo run` option](https://turbo.build/repo/docs/reference/run)
+[any valid `turbo run` option](https://turborepo.com/docs/reference/run)
 after `--`, for instance you could run `pnpm test -- --concurrency 2`.
 
 - `pnpm turbo test`: Run all unit tests, integration tests, linting, and format
