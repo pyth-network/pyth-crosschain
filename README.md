@@ -52,7 +52,7 @@ Please install the following tools in order to work in this repository:
 
 ### Pull requests
 
-Use the [Conventional Commits](https://www.conventionalcommits.org) format for your commit messages and PR titles.
+Use the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format for your commit messages and PR titles.
 In the PR description, please include a summary of the changes and any relevant context. Also, please make sure
 to update the package versions following the [Semantic Versioning](https://semver.org/) rules.
 
@@ -84,7 +84,7 @@ the following config option to `package.json`:
 ### Typescript Monorepo
 
 All of the typescript / javascript packages in this repository are part of a
-[turborepo](https://turbo.build/repo/docs) monorepo.
+[turborepo](https://turborepo.com/docs) monorepo.
 
 #### Setting up
 
