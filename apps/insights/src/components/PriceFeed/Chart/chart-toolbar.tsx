@@ -15,6 +15,8 @@ import {
   useChartResolution,
 } from "./use-chart-toolbar";
 
+const ENABLE_RESOLUTION_SELECTOR = false;
+
 export const ChartToolbar = () => {
   const logger = useLogger();
   const [lookback, setLookback] = useChartLookback();
@@ -55,6 +57,11 @@ export const ChartToolbar = () => {
     },
     [logger, setResolution, setLookback],
   );
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!ENABLE_RESOLUTION_SELECTOR) {
+    return;
+  }
 
   return (
     <>
