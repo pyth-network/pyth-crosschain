@@ -13,9 +13,6 @@ enable_publish = false
 [kms]
 enable_kms = false
 key_path = "/path/to/aws_kms_key_id.txt"
-access_key_id_path = "/path/to/aws_access_key_id.txt"
-secret_access_key_path = "/path/to/aws_secret_access_key.txt"
-aws_region_name = "ap-northeast-1"
 
 [lazer]
 lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]
