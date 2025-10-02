@@ -450,7 +450,7 @@ function isLineData(data: LineData | WhitespaceData): data is LineData {
 /**
  * Merge (and sort) two arrays of line data, deduplicating by time
  */
-function mergeData(as: LineData[], bs: LineData[]) {
+export function mergeData(as: LineData[], bs: LineData[]) {
   const unique = new Map<number, LineData>();
 
   // TODO fhqvst Can optimize with while's
@@ -468,7 +468,7 @@ function mergeData(as: LineData[], bs: LineData[]) {
 /**
  * Convert a date to the start of the given resolution, i.e. 1s = startOfSecond, 1m = startOfMinute, etc.
  */
-function startOfResolution(date: Date, resolution: string) {
+export function startOfResolution(date: Date, resolution: string) {
   switch (resolution) {
     case "1s": {
       return startOfSecond(date).getTime();
