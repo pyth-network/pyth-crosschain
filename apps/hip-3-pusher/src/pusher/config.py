@@ -6,7 +6,7 @@ STALE_TIMEOUT_SECONDS = 5
 
 class KMSConfig(BaseModel):
     enable_kms: bool
-    key_path: str
+    aws_kms_key_id_path: str
 
 
 class LazerConfig(BaseModel):

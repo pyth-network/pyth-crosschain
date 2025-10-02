@@ -32,12 +32,12 @@ class KMSSigner:
 
         # AWS client and public key load
         self.client = _init_client()
-        self._load_public_key(config.kms.key_path)
+        self._load_public_key(config.kms.aws_kms_key_id_path)
 
     def _load_public_key(self, key_path: str):
         # Fetch public key once so we can derive address and check recovery id
-        self.key_id = Path(key_path).read_text().strip()
-        pubkey_der = self.client.get_public_key(KeyId=self.key_id)["PublicKey"]
+        self.aws_kms_key_id = Path(key_path).read_text().strip()
+        pubkey_der = self.client.get_public_key(KeyId=self.aws_kms_key_id)["PublicKey"]
         self.pubkey = serialization.load_der_public_key(pubkey_der)
         self._construct_pubkey_address_and_bytes()
 
@@ -103,7 +103,7 @@ class KMSSigner:
     def sign_message(self, message_hash: bytes) -> dict:
         # Send message hash to KMS for signing
         resp = self.client.sign(
-            KeyId=self.key_id,
+            KeyId=self.aws_kms_key_id,
             Message=message_hash,
             MessageType="DIGEST",
             SigningAlgorithm="ECDSA_SHA_256",  # required for secp256k1
