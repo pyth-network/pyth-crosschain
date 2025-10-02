@@ -1335,5 +1335,19 @@
     "rpcUrl": "https://rpc.plasma.to/",
     "networkId": 9745,
     "type": "EvmChain"
+  },
+  {
+    "id": "injective_evm",
+    "mainnet": true,
+    "rpcUrl": "https://sentry.evm-rpc.injective.network/",
+    "networkId": 1776,
+    "type": "EvmChain"
+  },
+  {
+    "id": "sonic_evm_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.testnet.soniclabs.com",
+    "networkId": 14601,
+    "type": "EvmChain"
   }
 ]
