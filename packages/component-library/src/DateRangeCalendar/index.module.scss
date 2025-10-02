@@ -1,0 +1,189 @@
+@use "../theme";
+
+.dateRangeCalendar {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(4);
+  color: theme.color("paragraph");
+  font-size: theme.font-size("sm");
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: theme.spacing(2);
+}
+
+.heading {
+  font-size: theme.font-size("lg");
+  font-weight: theme.font-weight("semibold");
+  text-align: center;
+  flex: 1;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: theme.spacing(8);
+  height: theme.spacing(8);
+  border-radius: theme.border-radius("lg");
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: theme.color("paragraph");
+  transition-property: background-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  font-size: theme.spacing(4);
+  -webkit-tap-highlight-color: transparent;
+
+  &[data-hovered] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-pressed] {
+    background-color: theme.color("button", "outline", "background", "active");
+  }
+
+  &[data-disabled] {
+    cursor: not-allowed;
+  }
+}
+
+.calendars {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: theme.spacing(6);
+}
+
+.calendar {
+  display: table;
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  td {
+    padding: theme.spacing(0.5) 0;
+  }
+
+  td:first-child .cell {
+    border-top-left-radius: theme.border-radius("lg");
+    border-bottom-left-radius: theme.border-radius("lg");
+  }
+
+  td:last-child .cell {
+    border-top-right-radius: theme.border-radius("lg");
+    border-bottom-right-radius: theme.border-radius("lg");
+  }
+}
+
+.calendarHeader {
+  display: table-header-group;
+}
+
+.dayHeader {
+  display: table-cell;
+  text-align: center;
+  font-size: theme.font-size("xs");
+  font-weight: theme.font-weight("medium");
+  color: theme.color("muted");
+  padding: theme.spacing(2);
+  width: theme.spacing(10);
+}
+
+.calendarBody {
+  display: table-row-group;
+}
+
+.cell {
+  display: table-cell;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  color: theme.color("button", "outline", "foreground");
+  padding: theme.spacing(1);
+
+  .cellContent {
+    border-radius: theme.border-radius("lg");
+  }
+
+  &[data-outside-month] {
+      display: none;
+  }
+
+  &[data-today] {
+    .cellContent {
+      border: 1px solid theme.color("button", "outline", "border");
+    }
+  }
+
+  &[data-outside-month] {
+    .cellContent {
+      color: theme.color("muted");
+    }
+  }
+
+  &[data-disabled] {
+    .cellContent {
+      background: theme.color("button", "disabled", "background");
+      color: theme.color("button", "disabled", "foreground");
+      cursor: not-allowed;
+    }
+  }
+
+  &[data-unavailable] {
+    .cellContent {
+      text-decoration: line-through;
+      color: theme.color("states", "error", "normal");
+      cursor: not-allowed;
+    }
+  }
+
+  &[data-selected] {
+    background-color: theme.color("background", "card-highlight");
+  }
+
+  &[data-hovered] {
+    .cellContent {
+      background-color: theme.color("button", "outline", "background", "hover");
+    }
+  }
+
+  &[data-selection-start],
+  &[data-selection-end] {
+    .cellContent {
+      background-color: theme.color("button", "primary", "background", "normal");
+      color: theme.color("button", "primary", "foreground");
+    }
+  }
+
+  &[data-selection-start] {
+    border-top-left-radius: theme.border-radius("lg");
+    border-bottom-left-radius: theme.border-radius("lg");
+  }
+
+  &[data-selection-end] {
+    border-top-right-radius: theme.border-radius("lg");
+    border-bottom-right-radius: theme.border-radius("lg");
+  }
+
+  &[data-focused] {
+    .cellContent {
+      outline: 2px solid theme.color("focus");
+      outline-offset: 2px;
+      border-radius: theme.border-radius("lg");
+    }
+  }
+}
+
+.cellContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: theme.spacing(9);
+  height: theme.spacing(9);
+  transition: 100ms;
+}
+
+
