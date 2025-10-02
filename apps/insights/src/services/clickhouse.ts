@@ -359,11 +359,9 @@ export const getHistoricalPrices = async ({
     symbol,
     from,
     to,
+    publisher,
   };
 
-  const publisherClause = publisher
-    ? "AND publisher = {publisher: String}"
-    : "";
   const clusterClause =
     cluster === "pythtest"
       ? "cluster IN {clusters: Array(String)}"
@@ -392,13 +390,12 @@ export const getHistoricalPrices = async ({
           FROM prices
           PREWHERE
             ${clusterClause}
+            AND publisher = {publisher: String}
             AND symbol = {symbol: String}
-            ${publisherClause}
             AND version = 2
           WHERE
             publishTime >= toDateTime({from: UInt32})
             AND publishTime < toDateTime({to: UInt32})
-            /* AND toDate(time) BETWEEN toDate(toDateTime({from: UInt32})) AND toDate(toDateTime({to: UInt32})) */
           GROUP BY timestamp
           ORDER BY timestamp ASC
         `,
