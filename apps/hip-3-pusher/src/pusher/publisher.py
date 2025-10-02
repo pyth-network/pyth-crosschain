@@ -5,7 +5,6 @@ from pathlib import Path
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from hyperliquid.exchange import Exchange
-from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
 
 from pusher.config import Config
 from pusher.kms_signer import KMSSigner
@@ -22,7 +21,7 @@ class Publisher:
     def __init__(self, config: Config, price_state: PriceState, metrics: Metrics):
         self.publish_interval = float(config.hyperliquid.publish_interval)
         self.use_testnet = config.hyperliquid.use_testnet
-        self.push_urls = [TESTNET_API_URL if self.use_testnet else MAINNET_API_URL] + config.hyperliquid.backup_push_urls
+        self.push_urls = config.hyperliquid.push_urls
 
         self.kms_signer = None
         self.enable_kms = False

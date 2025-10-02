@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from hyperliquid.utils.constants import MAINNET_API_URL, TESTNET_API_URL
+from pydantic import BaseModel, model_validator
 from typing import Optional
 
 STALE_TIMEOUT_SECONDS = 5
@@ -28,13 +29,19 @@ class HermesConfig(BaseModel):
 
 class HyperliquidConfig(BaseModel):
     hyperliquid_ws_urls: list[str]
-    backup_push_urls: Optional[list[str]] = Field(default_factory=list)
+    push_urls: Optional[list[str]] = None
     market_name: str
     market_symbol: str
     use_testnet: bool
     oracle_pusher_key_path: str
     publish_interval: float
     enable_publish: bool
+
+    @model_validator(mode="after")
+    def set_default_urls(self):
+        if self.push_urls is None:
+            self.push_urls = [TESTNET_API_URL] if self.use_testnet else [MAINNET_API_URL]
+        return self
 
 
 class Config(BaseModel):
