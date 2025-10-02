@@ -1,0 +1,211 @@
+@use "../theme";
+
+.dateRangePicker {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(1);
+}
+
+.labelText {
+  font-size: theme.font-size("sm");
+  font-weight: theme.font-weight("medium");
+  color: theme.color("paragraph");
+
+  &[data-hidden] {
+    @include theme.sr-only;
+  }
+}
+
+.popover {
+  min-width: max-content;
+  background-color: theme.color("background", "modal");
+  border-radius: theme.border-radius("xl");
+  border: 1px solid theme.color("border");
+  color: theme.color("paragraph");
+  box-shadow:
+    0 4px 6px -4px rgb(from black r g b / 10%),
+    0 10px 15px -3px rgb(from black r g b / 10%);
+  outline: none;
+
+  &[data-placement="top"] {
+    --origin: translateY(8px);
+
+    transform-origin: bottom;
+  }
+
+  &[data-placement="bottom"] {
+    --origin: translateY(-8px);
+
+    transform-origin: top;
+  }
+
+  &[data-entering] {
+    animation: popover-slide 200ms;
+  }
+
+  &[data-exiting] {
+    animation: popover-slide 200ms reverse ease-in;
+  }
+}
+
+.dialog {
+  display: flex;
+  gap: 0;
+  outline: none;
+  padding: 0;
+}
+
+.presets {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(1);
+  padding: theme.spacing(4);
+  border-right: 1px solid theme.color("border");
+  min-width: theme.spacing(48);
+  background-color: theme.color("background", "secondary");
+  border-top-left-radius: theme.border-radius("xl");
+  border-bottom-left-radius: theme.border-radius("xl");
+}
+
+.presetsLabel {
+  font-size: theme.font-size("xxs");
+  font-weight: theme.font-weight("medium");
+  color: theme.color("muted");
+  padding: theme.spacing(2) theme.spacing(3);
+  line-height: theme.spacing(4);
+}
+
+.presetButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: theme.spacing(2) theme.spacing(3);
+  border-radius: theme.border-radius("lg");
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: theme.font-size("sm");
+  color: theme.color("paragraph");
+  transition-property: background-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  text-align: left;
+  gap: theme.spacing(2);
+  -webkit-tap-highlight-color: transparent;
+
+  &[data-hovered] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-pressed] {
+    background-color: theme.color("button", "outline", "background", "active");
+  }
+
+  &[data-selected] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+}
+
+.checkIcon {
+  width: theme.spacing(4);
+  height: theme.spacing(4);
+  color: theme.color("button", "primary", "background", "normal");
+  flex-shrink: 0;
+}
+
+.content {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(4);
+  padding: theme.spacing(4);
+  padding-top: theme.spacing(5);
+}
+
+.footer {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(4);
+}
+
+.includeTimeSwitch {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+
+  &[data-focused] .switchIndicator {
+    outline: 2px solid theme.color("focus");
+    outline-offset: 2px;
+  }
+}
+
+.switchIndicator {
+  width: theme.spacing(11);
+  height: theme.spacing(6);
+  border-radius: theme.border-radius("full");
+  background-color: theme.color("border");
+  position: relative;
+  transition: background-color 200ms;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: theme.spacing(0.5);
+    left: theme.spacing(0.5);
+    width: theme.spacing(5);
+    height: theme.spacing(5);
+    border-radius: theme.border-radius("full");
+    background-color: theme.color("background", "modal");
+    transition: transform 200ms;
+  }
+
+  .includeTimeSwitch[data-selected] & {
+    background-color: theme.color("button", "primary", "background", "normal");
+
+    &::before {
+      transform: translateX(theme.spacing(5));
+    }
+  }
+}
+
+.switchLabel {
+  font-size: theme.font-size("sm");
+  color: theme.color("paragraph");
+  user-select: none;
+}
+
+.timeFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: theme.spacing(3);
+  align-items: end;
+}
+
+.nowButton {
+  height: theme.spacing(10);
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  gap: theme.spacing(2);
+  justify-content: flex-end;
+  padding-top: theme.spacing(2);
+  border-top: 1px solid theme.color("border");
+}
+
+@keyframes popover-slide {
+  from {
+    transform: var(--origin);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+
