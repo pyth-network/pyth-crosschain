@@ -7,7 +7,6 @@ from eth_keys.backends.native.ecdsa import N as SECP256K1_N
 from eth_keys.datatypes import Signature
 from eth_utils import keccak, to_hex
 from hyperliquid.exchange import Exchange
-from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
 from hyperliquid.utils.signing import get_timestamp_ms, action_hash, construct_phantom_agent, l1_payload
 from loguru import logger
 from pathlib import Path
@@ -27,10 +26,9 @@ def _init_client():
 
 
 class KMSSigner:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, publisher_exchanges: list[Exchange]):
         self.use_testnet = config.hyperliquid.use_testnet
-        url = TESTNET_API_URL if self.use_testnet else MAINNET_API_URL
-        self.oracle_publisher_exchange: Exchange = Exchange(wallet=None, base_url=url)
+        self.publisher_exchanges = publisher_exchanges
 
         # AWS client and public key load
         self.client = _init_client()
@@ -79,11 +77,20 @@ class KMSSigner:
             nonce=timestamp,
             is_mainnet= self.use_testnet,
         )
-        return self.oracle_publisher_exchange._post_action(
-            action=action,
-            signature=signature,
-            nonce=timestamp,
-        )
+        return self._send_update(action, signature, timestamp)
+
+    def _send_update(self, action, signature, timestamp):
+        for exchange in self.publisher_exchanges:
+            try:
+                return exchange._post_action(
+                    action=action,
+                    signature=signature,
+                    nonce=timestamp,
+                )
+            except Exception as e:
+                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, e)
+
+        return None
 
     def sign_l1_action(self, action, nonce, is_mainnet):
         hash = action_hash(action, vault_address=None, nonce=nonce, expires_after=None)

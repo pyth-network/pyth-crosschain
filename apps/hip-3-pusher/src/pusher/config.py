@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional
 
 STALE_TIMEOUT_SECONDS = 5
 
@@ -27,6 +28,7 @@ class HermesConfig(BaseModel):
 
 class HyperliquidConfig(BaseModel):
     hyperliquid_ws_urls: list[str]
+    backup_push_urls: Optional[list[str]] = Field(default_factory=list)
     market_name: str
     market_symbol: str
     use_testnet: bool
