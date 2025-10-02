@@ -1,5 +1,6 @@
 import asyncio
 from loguru import logger
+from pathlib import Path
 
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
@@ -30,7 +31,7 @@ class Publisher:
             self.kms_signer = KMSSigner(config)
         else:
             oracle_pusher_key_path = config.hyperliquid.oracle_pusher_key_path
-            oracle_pusher_key = open(oracle_pusher_key_path, "r").read().strip()
+            oracle_pusher_key = Path(oracle_pusher_key_path).read_text().strip()
             oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
             logger.info("oracle pusher local pubkey: {}", oracle_account.address)
 
@@ -42,6 +43,7 @@ class Publisher:
 
         self.price_state = price_state
         self.metrics = metrics
+        self.metrics_labels = {"dex": self.market_name}
 
     async def run(self):
         while True:
@@ -56,17 +58,17 @@ class Publisher:
         oracle_px = self.price_state.get_current_oracle_price()
         if not oracle_px:
             logger.error("No valid oracle price available")
-            self.metrics.no_oracle_price_counter.add(1)
+            self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
             return
         else:
             logger.debug("Current oracle price: {}", oracle_px)
             oracle_pxs[self.market_symbol] = oracle_px
 
         mark_pxs = []
-        #if self.price_state.hl_mark_price:
-        #    mark_pxs.append({self.market_symbol: self.price_state.hl_mark_price})
-
         external_perp_pxs = {}
+        if self.price_state.hl_mark_price:
+            external_perp_pxs[self.market_symbol] = self.price_state.hl_mark_price.price
+
         # TODO: "Each update can change oraclePx and markPx by at most 1%."
         # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
 
@@ -90,7 +92,7 @@ class Publisher:
             logger.debug("publish: push response: {} {}", push_response, type(push_response))
             status = push_response.get("status", "")
             if status == "ok":
-                self.metrics.successful_push_counter.add(1)
+                self.metrics.successful_push_counter.add(1, self.metrics_labels)
             elif status == "err":
-                self.metrics.failed_push_counter.add(1)
+                self.metrics.failed_push_counter.add(1, self.metrics_labels)
                 logger.error("publish: publish error: {}", push_response)

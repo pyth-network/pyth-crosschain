@@ -17,9 +17,7 @@ class Metrics:
         reader = PrometheusMetricReader()
         # Meter is responsible for creating and recording metrics
         set_meter_provider(MeterProvider(metric_readers=[reader]))
-        # TODO: sync version number and add?
         self.meter = get_meter_provider().get_meter(METER_NAME)
-
         self._init_metrics()
 
     def _init_metrics(self):
@@ -35,5 +33,3 @@ class Metrics:
             name="hip_3_pusher_failed_push_count",
             description="Number of failed push attempts",
         )
-
-        # TODO: labels/attributes
