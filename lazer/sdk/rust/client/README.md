@@ -17,7 +17,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-pyth-lazer-client = "8.2.1"
+pyth-lazer-client = "8.2.2"
 pyth-lazer-protocol = "0.16.0"
 tokio = { version = "1", features = ["full"] }
 ```
