@@ -25,6 +25,7 @@ class Publisher:
         self.publish_interval = float(config.hyperliquid.publish_interval)
         self.use_testnet = config.hyperliquid.use_testnet
         self.push_urls = config.hyperliquid.push_urls
+        logger.info("push urls: {}", self.push_urls)
 
         self.kms_signer = None
         self.enable_kms = False

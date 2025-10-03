@@ -79,7 +79,7 @@ class KMSSigner:
         signature = self.sign_l1_action(
             action=action,
             nonce=timestamp,
-            is_mainnet= self.use_testnet,
+            is_mainnet=not self.use_testnet,
         )
         return self._send_update(action, signature, timestamp)
 
