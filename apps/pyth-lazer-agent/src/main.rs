@@ -12,7 +12,7 @@ mod http_server;
 mod jrpc_handle;
 mod lazer_publisher;
 mod publisher_handle;
-mod relayer_session;
+pub mod relayer_session;
 mod websocket_utils;
 
 #[derive(Parser, Deserialize)]
