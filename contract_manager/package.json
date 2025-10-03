@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/contract-manager",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
   "exports": {
@@ -86,12 +86,9 @@
     "starknet": "^6.9.0",
     "ts-node": "catalog:",
     "typescript": "catalog:",
-    "viem": "^2.23.5",
-    "web3": "^1.8.2",
-    "web3-eth-contract": "^1.8.2"
+    "viem": "^2.23.5"
   },
   "devDependencies": {
-    "@types/web3": "^1.2.2",
     "@types/node": "catalog:",
     "eslint": "^8.0.0",
     "prettier": "catalog:",

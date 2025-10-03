@@ -46,43 +46,64 @@ async function testLatency(
     true, // with callback
   );
   console.log(`Request tx hash  : ${requestResponse.transactionHash}`);
-  // Read the sequence number for the request from the transaction events.
-  const sequenceNumber =
-    requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber;
+
+  // Read the sequence number for the request from the transaction events
+  const publicClient = contract.chain.getPublicClient();
+  const entropyContract = contract.getContract();
+  const receipt = await publicClient.getTransactionReceipt({
+    hash: requestResponse.transactionHash as `0x${string}`,
+  });
+
+  const requestLogs = await publicClient.getContractEvents({
+    address: contract.address as `0x${string}`,
+    abi: entropyContract.abi,
+    eventName: "RequestedWithCallback",
+    fromBlock: receipt.blockNumber,
+    toBlock: receipt.blockNumber,
+  });
+
+  if (requestLogs.length === 0) {
+    throw new Error("No RequestedWithCallback event found in transaction");
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sequenceNumber = (requestLogs[0] as any).args.sequenceNumber;
   console.log(`sequence         : ${sequenceNumber}`);
 
   const startTime = Date.now();
-
-  const fromBlock = requestResponse.blockNumber;
-  const web3 = contract.chain.getWeb3();
-  const entropyContract = contract.getContract();
+  const fromBlock = receipt.blockNumber;
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    const currentBlock = await web3.eth.getBlockNumber();
+    const currentBlock = await publicClient.getBlockNumber();
 
     if (fromBlock > currentBlock) {
       continue;
     }
 
-    const events = await entropyContract.getPastEvents("RevealedWithCallback", {
+    const events = await publicClient.getContractEvents({
+      address: contract.address as `0x${string}`,
+      abi: entropyContract.abi,
+      eventName: "RevealedWithCallback",
       fromBlock: fromBlock,
       toBlock: currentBlock,
     });
 
     const event = events.find(
-      (event) => event.returnValues.request[1] == sequenceNumber,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (event) => (event as any).args.request[1] == sequenceNumber,
     );
 
     if (event !== undefined) {
-      console.log(`Random number    : ${event.returnValues.randomNumber}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log(`Random number    : ${(event as any).args.randomNumber}`);
       const endTime = Date.now();
       console.log(`Fortuna Latency  : ${endTime - startTime}ms`);
       console.log(
-        `Revealed after   : ${
-          currentBlock - requestResponse.blockNumber
-        } blocks`,
+        `Revealed after   : ${Number(
+          currentBlock - receipt.blockNumber,
+        )} blocks`,
       );
       break;
     }

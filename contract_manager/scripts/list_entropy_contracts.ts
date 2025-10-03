@@ -2,7 +2,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore } from "../src/node/utils/store";
 import { ENTROPY_DEFAULT_KEEPER } from "../src/core/contracts";
-import Web3 from "web3";
+import { formatEther } from "viem";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
@@ -34,9 +34,13 @@ async function main() {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     try {
       const provider = await contract.getDefaultProvider();
-      const w3 = contract.getChain().getWeb3();
-      const balance = await w3.eth.getBalance(provider);
-      const keeperBalance = await w3.eth.getBalance(keeperAddress);
+      const client = contract.getChain().getPublicClient();
+      const balance = await client.getBalance({
+        address: provider as `0x${string}`,
+      });
+      const keeperBalance = await client.getBalance({
+        address: keeperAddress as `0x${string}`,
+      });
       let version = "unknown";
       try {
         version = await contract.getVersion();
@@ -52,8 +56,8 @@ async function main() {
         owner,
         provider,
         feeManager: providerInfo.feeManager,
-        balance: Web3.utils.fromWei(balance),
-        keeperBalance: Web3.utils.fromWei(keeperBalance),
+        balance: formatEther(balance),
+        keeperBalance: formatEther(keeperBalance),
         seq: providerInfo.sequenceNumber,
         version,
       });

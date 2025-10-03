@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
-  getWeb3Contract,
+  getViemContract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
 } from "./common";
@@ -81,7 +81,8 @@ async function deployPriceFeedContracts(
     config.type,
   );
 
-  const pythImplContract = getWeb3Contract(
+  const pythImplContract = getViemContract(
+    chain,
     config.jsonOutputDir,
     "PythUpgradable",
     pythImplAddr,
