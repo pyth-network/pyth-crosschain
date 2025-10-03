@@ -1,5 +1,5 @@
 from hyperliquid.utils.constants import MAINNET_API_URL, TESTNET_API_URL
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, FilePath, model_validator
 from typing import Optional
 
 STALE_TIMEOUT_SECONDS = 5
@@ -7,7 +7,7 @@ STALE_TIMEOUT_SECONDS = 5
 
 class KMSConfig(BaseModel):
     enable_kms: bool
-    aws_kms_key_id_path: str
+    aws_kms_key_id_path: FilePath
 
 
 class LazerConfig(BaseModel):
@@ -33,7 +33,7 @@ class HyperliquidConfig(BaseModel):
     market_name: str
     market_symbol: str
     use_testnet: bool
-    oracle_pusher_key_path: str
+    oracle_pusher_key_path: FilePath
     publish_interval: float
     enable_publish: bool
 

@@ -49,7 +49,7 @@ class Publisher:
             try:
                 self.publish()
             except Exception as e:
-                logger.exception("Publisher.publish() exception: {}", e)
+                logger.exception("Publisher.publish() exception: {}", repr(e))
 
     def publish(self):
         oracle_pxs = {}
@@ -98,7 +98,7 @@ class Publisher:
                     external_perp_pxs=external_perp_pxs,
                 )
             except Exception as e:
-                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, e)
+                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
         return None
 

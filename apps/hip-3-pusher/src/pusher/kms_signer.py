@@ -32,7 +32,11 @@ class KMSSigner:
 
         # AWS client and public key load
         self.client = _init_client()
-        self._load_public_key(config.kms.aws_kms_key_id_path)
+        try:
+            self._load_public_key(config.kms.aws_kms_key_id_path)
+        except Exception as e:
+            logger.exception("Failed to load public key from KMS; it might be incorrectly configured; error: {}", repr(e))
+            exit()
 
     def _load_public_key(self, key_path: str):
         # Fetch public key once so we can derive address and check recovery id
@@ -88,7 +92,7 @@ class KMSSigner:
                     nonce=timestamp,
                 )
             except Exception as e:
-                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, e)
+                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
         return None
 
