@@ -36,7 +36,7 @@ class KMSSigner:
             self._load_public_key(config.kms.aws_kms_key_id_path)
         except Exception as e:
             logger.exception("Failed to load public key from KMS; it might be incorrectly configured; error: {}", repr(e))
-            exit()
+            raise Exception("Failed to load public key from KMS") from e
 
     def _load_public_key(self, key_path: str):
         # Fetch public key once so we can derive address and check recovery id
