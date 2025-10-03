@@ -122,8 +122,12 @@ async function main() {
 
   await topupEntropyAccountsIfNecessary(chain, deploymentConfig);
 
+  const maskedDeploymentConfig = {
+    ...deploymentConfig,
+    privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
+  };
   console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`,
+    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, null, 2)}\n`,
   );
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);
