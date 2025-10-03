@@ -6,7 +6,7 @@ from tenacity import retry, retry_if_exception_type, wait_exponential
 import time
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
-from pusher.exception import StaleConnection
+from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceState, PriceUpdate
 
 # This will be in config, but note here.
@@ -35,7 +35,7 @@ class HyperliquidListener:
         await asyncio.gather(*(self.subscribe_single(hyperliquid_ws_url) for hyperliquid_ws_url in self.hyperliquid_ws_urls))
 
     @retry(
-        retry=retry_if_exception_type((StaleConnection, websockets.ConnectionClosed)),
+        retry=retry_if_exception_type((StaleConnectionError, websockets.ConnectionClosed)),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         reraise=True,
     )
@@ -65,7 +65,7 @@ class HyperliquidListener:
                     else:
                         logger.error("Received unknown channel: {}", channel)
                 except asyncio.TimeoutError:
-                    raise StaleConnection(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
+                    raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
                 except websockets.ConnectionClosed:
                     raise
                 except json.JSONDecodeError as e:

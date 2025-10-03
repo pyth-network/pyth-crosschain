@@ -6,51 +6,61 @@ from eth_keys.backends.native.ecdsa import N as SECP256K1_N
 from eth_keys.datatypes import Signature
 from eth_utils import keccak, to_hex
 from hyperliquid.exchange import Exchange
-from hyperliquid.utils.constants import TESTNET_API_URL, MAINNET_API_URL
 from hyperliquid.utils.signing import get_timestamp_ms, action_hash, construct_phantom_agent, l1_payload
 from loguru import logger
+from pathlib import Path
 
 from pusher.config import Config
+from pusher.exception import PushError
 
 SECP256K1_N_HALF = SECP256K1_N // 2
 
 
-class KMSSigner:
-    def __init__(self, config: Config):
-        use_testnet = config.hyperliquid.use_testnet
-        url = TESTNET_API_URL if use_testnet else MAINNET_API_URL
-        self.oracle_publisher_exchange: Exchange = Exchange(wallet=None, base_url=url)
-        self.client = self._init_client(config)
+def _init_client():
+    # AWS_DEFAULT_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY should be set as environment variables
+    return boto3.client(
+        "kms",
+        # can specify an endpoint for e.g. LocalStack
+        # endpoint_url="http://localhost:4566"
+    )
 
+
+class KMSSigner:
+    def __init__(self, config: Config, publisher_exchanges: list[Exchange]):
+        self.use_testnet = config.hyperliquid.use_testnet
+        self.publisher_exchanges = publisher_exchanges
+
+        # AWS client and public key load
+        self.client = _init_client()
+        try:
+            self._load_public_key(config.kms.aws_kms_key_id_path)
+        except Exception as e:
+            logger.exception("Failed to load public key from KMS; it might be incorrectly configured; error: {}", repr(e))
+            exit()
+
+    def _load_public_key(self, key_path: str):
         # Fetch public key once so we can derive address and check recovery id
-        key_path = config.kms.key_path
-        self.key_id = open(key_path, "r").read().strip()
-        self.pubkey_der = self.client.get_public_key(KeyId=self.key_id)["PublicKey"]
+        self.aws_kms_key_id = Path(key_path).read_text().strip()
+        pubkey_der = self.client.get_public_key(KeyId=self.aws_kms_key_id)["PublicKey"]
+        self.pubkey = serialization.load_der_public_key(pubkey_der)
+        self._construct_pubkey_address_and_bytes()
+
+    def _construct_pubkey_address_and_bytes(self):
         # Construct eth address to log
-        pub = serialization.load_der_public_key(self.pubkey_der)
-        numbers = pub.public_numbers()
+        numbers = self.pubkey.public_numbers()
         x = numbers.x.to_bytes(32, "big")
         y = numbers.y.to_bytes(32, "big")
         uncompressed = b"\x04" + x + y
-        self.public_key_bytes = uncompressed
         self.address = "0x" + keccak(uncompressed[1:])[-20:].hex()
-        logger.info("KMSSigner address: {}", self.address)
+        logger.info("public key loaded from KMS: {}", self.address)
 
-    def _init_client(self, config):
-        aws_region_name = config.kms.aws_region_name
-        access_key_id_path = config.kms.access_key_id_path
-        access_key_id = open(access_key_id_path, "r").read().strip()
-        secret_access_key_path = config.kms.secret_access_key_path
-        secret_access_key = open(secret_access_key_path, "r").read().strip()
-
-        return boto3.client(
-            "kms",
-            region_name=aws_region_name,
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
-            # can specify an endpoint for e.g. LocalStack
-            # endpoint_url="http://localhost:4566"
+        # Parse KMS public key into uncompressed secp256k1 bytes
+        pubkey_bytes = self.pubkey.public_bytes(
+            serialization.Encoding.X962,
+            serialization.PublicFormat.UncompressedPoint,
         )
+        # Strip leading 0x04 (uncompressed point indicator)
+        self.raw_pubkey_bytes = pubkey_bytes[1:]
 
     def set_oracle(self, dex, oracle_pxs, all_mark_pxs, external_perp_pxs):
         timestamp = get_timestamp_ms()
@@ -67,15 +77,24 @@ class KMSSigner:
             },
         }
         signature = self.sign_l1_action(
-            action,
-            timestamp,
-            self.oracle_publisher_exchange.base_url == MAINNET_API_URL,
+            action=action,
+            nonce=timestamp,
+            is_mainnet=not self.use_testnet,
         )
-        return self.oracle_publisher_exchange._post_action(
-            action,
-            signature,
-            timestamp,
-        )
+        return self._send_update(action, signature, timestamp)
+
+    def _send_update(self, action, signature, timestamp):
+        for exchange in self.publisher_exchanges:
+            try:
+                return exchange._post_action(
+                    action=action,
+                    signature=signature,
+                    nonce=timestamp,
+                )
+            except Exception as e:
+                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
+
+        raise PushError("all push endpoints failed")
 
     def sign_l1_action(self, action, nonce, is_mainnet):
         hash = action_hash(action, vault_address=None, nonce=nonce, expires_after=None)
@@ -88,7 +107,7 @@ class KMSSigner:
     def sign_message(self, message_hash: bytes) -> dict:
         # Send message hash to KMS for signing
         resp = self.client.sign(
-            KeyId=self.key_id,
+            KeyId=self.aws_kms_key_id,
             Message=message_hash,
             MessageType="DIGEST",
             SigningAlgorithm="ECDSA_SHA_256",  # required for secp256k1
@@ -99,20 +118,12 @@ class KMSSigner:
         # Ethereum requires low-s form
         if s > SECP256K1_N_HALF:
             s = SECP256K1_N - s
-        # Parse KMS public key into uncompressed secp256k1 bytes
-        # TODO: Pull this into init
-        pubkey = serialization.load_der_public_key(self.pubkey_der)
-        pubkey_bytes = pubkey.public_bytes(
-            serialization.Encoding.X962,
-            serialization.PublicFormat.UncompressedPoint,
-        )
-        # Strip leading 0x04 (uncompressed point indicator)
-        raw_pubkey_bytes = pubkey_bytes[1:]
+
         # Try both recovery ids
         for v in (0, 1):
             sig_obj = Signature(vrs=(v, r, s))
             recovered_pub = sig_obj.recover_public_key_from_msg_hash(message_hash)
-            if recovered_pub.to_bytes() == raw_pubkey_bytes:
+            if recovered_pub.to_bytes() == self.raw_pubkey_bytes:
                 return {
                     "r": to_hex(r),
                     "s": to_hex(s),

@@ -62,4 +62,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        logger.exception("Uncaught exception, exiting: {}", e)
+        logger.exception("Uncaught exception, exiting; error: {}", repr(e))

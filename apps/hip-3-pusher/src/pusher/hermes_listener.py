@@ -6,7 +6,7 @@ import websockets
 from tenacity import retry, retry_if_exception_type, wait_exponential
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
-from pusher.exception import StaleConnection
+from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceState, PriceUpdate
 
 
@@ -34,7 +34,7 @@ class HermesListener:
         await asyncio.gather(*(self.subscribe_single(url) for url in self.hermes_urls))
 
     @retry(
-        retry=retry_if_exception_type((StaleConnection, websockets.ConnectionClosed)),
+        retry=retry_if_exception_type((StaleConnectionError, websockets.ConnectionClosed)),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         reraise=True,
     )
@@ -55,7 +55,7 @@ class HermesListener:
                     data = json.loads(message)
                     self.parse_hermes_message(data)
                 except asyncio.TimeoutError:
-                    raise StaleConnection(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
+                    raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
                 except websockets.ConnectionClosed:
                     raise
                 except json.JSONDecodeError as e:

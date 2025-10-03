@@ -8,14 +8,12 @@ market_symbol = "BTC"
 use_testnet = false
 oracle_pusher_key_path = "/path/to/oracle_pusher_key.txt"
 publish_interval = 3.0
+publish_timeout = 5.0
 enable_publish = false
 
 [kms]
 enable_kms = false
-key_path = "/path/to/aws_kms_key_id.txt"
-access_key_id_path = "/path/to/aws_access_key_id.txt"
-secret_access_key_path = "/path/to/aws_secret_access_key.txt"
-aws_region_name = "ap-northeast-1"
+aws_kms_key_id_path = "/path/to/aws_kms_key_id.txt"
 
 [lazer]
 lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]

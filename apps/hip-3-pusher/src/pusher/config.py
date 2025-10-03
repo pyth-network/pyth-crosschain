@@ -1,14 +1,13 @@
-from pydantic import BaseModel
+from hyperliquid.utils.constants import MAINNET_API_URL, TESTNET_API_URL
+from pydantic import BaseModel, FilePath, model_validator
+from typing import Optional
 
 STALE_TIMEOUT_SECONDS = 5
 
 
 class KMSConfig(BaseModel):
     enable_kms: bool
-    aws_region_name: str
-    key_path: str
-    access_key_id_path: str
-    secret_access_key_path: str
+    aws_kms_key_id_path: FilePath
 
 
 class LazerConfig(BaseModel):
@@ -30,12 +29,20 @@ class HermesConfig(BaseModel):
 
 class HyperliquidConfig(BaseModel):
     hyperliquid_ws_urls: list[str]
+    push_urls: Optional[list[str]] = None
     market_name: str
     market_symbol: str
     use_testnet: bool
-    oracle_pusher_key_path: str
+    oracle_pusher_key_path: FilePath
     publish_interval: float
+    publish_timeout: float
     enable_publish: bool
+
+    @model_validator(mode="after")
+    def set_default_urls(self):
+        if self.push_urls is None:
+            self.push_urls = [TESTNET_API_URL] if self.use_testnet else [MAINNET_API_URL]
+        return self
 
 
 class Config(BaseModel):
