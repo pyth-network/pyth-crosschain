@@ -44,6 +44,7 @@
     "@amplitude/analytics-browser": "catalog:",
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
+    "@internationalized/date": "catalog:",
     "@next/third-parties": "catalog:",
     "@react-hookz/web": "catalog:",
     "bcp-47": "catalog:",
