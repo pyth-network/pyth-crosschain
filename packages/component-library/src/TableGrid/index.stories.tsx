@@ -1,7 +1,9 @@
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import type { Meta, StoryObj } from "@storybook/react";
+import BtcIcon from "cryptocurrency-icons/svg/color/btc.svg";
 
 import { Badge } from "../Badge";
+import { SymbolPairTag } from "../SymbolPairTag";
 import { dummyRowData } from "./dummy-row-data";
 import { TableGrid as TableGridComponent } from "./index.jsx";
 
@@ -41,16 +43,36 @@ const meta = {
 } satisfies Meta<typeof TableGridComponent>;
 export default meta;
 
-export const PriceCellRenderer = ({ value }: { value: number }) =>  (
-    <span>
-      {`$${value.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`}
-    </span>
-  );
+const PriceCellRenderer = ({ value }: { value: number }) => (
+  <span style={{ height: "100%", display: "flex", alignItems: "center" }}>
+    {`$${value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`}
+  </span>
+);
 
-export const ConfidenceCellRenderer = ({ value }: { value: number }) =>  <span>{`+/- ${value.toFixed(2)}%`}</span>;
+const ConfidenceCellRenderer = ({ value }: { value: number }) => (
+  <span
+    style={{ height: "100%", display: "flex", alignItems: "center" }}
+  >{`+/- ${value.toFixed(2)}%`}</span>
+);
+
+const FeedCellRenderer = ({ value }: { value: string }) => (
+  <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+    <SymbolPairTag
+      displaySymbol={value}
+      icon={<BtcIcon />}
+      description={value}
+    />
+  </div>
+);
+
+const FeedCellRendererLoading = () => (
+  <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
+    <SymbolPairTag isLoading />
+  </div>
+);
 
 const args = {
   colDefs: [
@@ -61,22 +83,23 @@ const args = {
     {
       headerName: "PRICE FEED",
       field: "feed",
+      cellRenderer: FeedCellRenderer,
+      loadingCellRenderer: FeedCellRendererLoading,
+      flex: 2,
     },
     {
       headerName: "PRICE",
       field: "price",
-      flex: 2,
+      flex: 3,
       cellRenderer: PriceCellRenderer,
     },
     {
       headerName: "CONFIDENCE",
       field: "confidence",
       cellRenderer: ConfidenceCellRenderer,
-      context: {
-        loadingSkeletonWidth: 20,
-      }
     },
   ],
+  rowHeight: 70,
   rowData: dummyRowData,
 };
 
