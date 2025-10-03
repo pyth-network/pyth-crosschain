@@ -1113,6 +1113,16 @@ contract EntropyTest is Test, EntropyTestUtils, EntropyEvents, EntropyEventsV2 {
             userRandomNumber
         );
 
+        // If the callback reverts, the Entropy reveal also reverts unless
+        // provided enough gas to pass on.
+        vm.expectRevert();
+        random.revealWithCallback{gas: defaultGasLimit - 1000}(
+            provider1,
+            assignedSequenceNumber,
+            userRandomNumber,
+            provider1Proofs[assignedSequenceNumber]
+        );
+
         // On the first attempt, the transaction should succeed and emit CallbackFailed event.
         bytes memory revertReason = abi.encodeWithSelector(
             0x08c379a0,
