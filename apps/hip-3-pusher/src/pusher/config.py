@@ -7,7 +7,7 @@ STALE_TIMEOUT_SECONDS = 5
 
 class KMSConfig(BaseModel):
     enable_kms: bool
-    aws_kms_key_id_path: FilePath
+    aws_kms_key_id_path: Optional[FilePath] = None
 
 
 class LazerConfig(BaseModel):
@@ -33,7 +33,7 @@ class HyperliquidConfig(BaseModel):
     market_name: str
     market_symbol: str
     use_testnet: bool
-    oracle_pusher_key_path: FilePath
+    oracle_pusher_key_path: Optional[FilePath] = None
     publish_interval: float
     publish_timeout: float
     enable_publish: bool
