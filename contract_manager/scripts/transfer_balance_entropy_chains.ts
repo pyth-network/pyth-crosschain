@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { DefaultStore } from "../src/node/utils/store";
 import { PrivateKey, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
-import Web3 from "web3";
+import { isAddress, formatEther, parseEther } from "viem";
 
 interface TransferResult {
   chain: string;
@@ -109,14 +109,16 @@ async function transferOnChain(
   transferAmount?: number,
   transferRatio?: number,
 ): Promise<TransferResult> {
-  const web3 = chain.getWeb3();
-  const signer = web3.eth.accounts.privateKeyToAccount(sourcePrivateKey);
-  const sourceAddress = signer.address;
+  const publicClient = chain.getPublicClient();
+  const walletClient = chain.getWalletClient(sourcePrivateKey);
+  const sourceAddress = walletClient.account!.address;
 
   try {
     // Get balance
-    const balanceWei = await web3.eth.getBalance(sourceAddress);
-    const balanceEth = Number(web3.utils.fromWei(balanceWei, "ether"));
+    const balanceWei = await publicClient.getBalance({
+      address: sourceAddress,
+    });
+    const balanceEth = Number(formatEther(balanceWei));
 
     console.log(`\n${chain.getId()}: Checking balance for ${sourceAddress}`);
     console.log(`   Balance: ${balanceEth.toFixed(6)} ETH`);
@@ -138,18 +140,15 @@ async function transferOnChain(
     }
 
     // Calculate gas costs
-    const gasPrice = await web3.eth.getGasPrice();
-    const estimatedGas = await web3.eth.estimateGas({
-      from: sourceAddress,
-      to: destinationAddress,
-      value: "1", // Minimal value for estimation
+    const gasPrice = await publicClient.getGasPrice();
+    const estimatedGas = await publicClient.estimateGas({
+      account: sourceAddress,
+      to: destinationAddress as `0x${string}`,
+      value: 1n, // Minimal value for estimation
     });
 
-    const gasCostWei =
-      BigInt(estimatedGas) * BigInt(gasPrice) * BigInt(gasMultiplier);
-    const gasCostEth = Number(
-      web3.utils.fromWei(gasCostWei.toString(), "ether"),
-    );
+    const gasCostWei = estimatedGas * gasPrice * BigInt(gasMultiplier);
+    const gasCostEth = Number(formatEther(gasCostWei));
 
     // Calculate transfer amount
     let transferAmountEth: number;
@@ -199,10 +198,7 @@ async function transferOnChain(
       };
     }
 
-    const transferAmountWei = web3.utils.toWei(
-      transferAmountEth.toString(),
-      "ether",
-    );
+    const transferAmountWei = parseEther(transferAmountEth.toString());
 
     console.log(`   Transfer amount: ${transferAmountEth.toFixed(6)} ETH`);
     console.log(`   Estimated gas cost: ${gasCostEth.toFixed(6)} ETH`);
@@ -224,23 +220,24 @@ async function transferOnChain(
     }
 
     // Perform the transfer
-    web3.eth.accounts.wallet.add(signer);
-
     console.log(`   Executing transfer...`);
-    const tx = await web3.eth.sendTransaction({
-      from: sourceAddress,
-      to: destinationAddress,
+    const hash = await walletClient.sendTransaction({
+      to: destinationAddress as `0x${string}`,
       value: transferAmountWei,
-      gas: Number(estimatedGas) * gasMultiplier,
+      gas: estimatedGas * BigInt(gasMultiplier),
       gasPrice: gasPrice,
     });
 
+    await publicClient.waitForTransactionReceipt({ hash });
+
     // Get updated balance
-    const newBalanceWei = await web3.eth.getBalance(sourceAddress);
-    const newBalanceEth = Number(web3.utils.fromWei(newBalanceWei, "ether"));
+    const newBalanceWei = await publicClient.getBalance({
+      address: sourceAddress,
+    });
+    const newBalanceEth = Number(formatEther(newBalanceWei));
 
     console.log(`   Transfer successful!`);
-    console.log(`   Transaction hash: ${tx.transactionHash}`);
+    console.log(`   Transaction hash: ${hash}`);
     console.log(`   New balance: ${newBalanceEth.toFixed(6)} ETH`);
 
     return {
@@ -251,7 +248,7 @@ async function transferOnChain(
       originalBalance: balanceEth.toFixed(6),
       transferAmount: transferAmountEth.toFixed(6),
       remainingBalance: newBalanceEth.toFixed(6),
-      transactionHash: tx.transactionHash,
+      transactionHash: hash,
     };
   } catch (error) {
     console.log(`   Transfer failed: ${error}`);
@@ -339,7 +336,7 @@ async function main() {
   const argv = await parser.argv;
 
   // Validate inputs
-  if (!Web3.utils.isAddress(argv.destinationAddress)) {
+  if (!isAddress(argv.destinationAddress)) {
     throw new Error("Invalid destination address format");
   }
 

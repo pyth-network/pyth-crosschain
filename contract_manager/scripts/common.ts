@@ -1,8 +1,8 @@
 import { DefaultStore } from "../src/node/utils/store";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import Web3 from "web3";
-import { Contract } from "web3-eth-contract";
+import { getContract, encodeFunctionData, formatEther, parseEther } from "viem";
+import type { Abi } from "viem";
 import { InferredOptionType } from "yargs";
 import { PrivateKey, getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
@@ -75,19 +75,24 @@ export async function deployIfNotCached(
   });
 }
 
-export function getWeb3Contract(
+export function getViemContract(
+  chain: EvmChain,
   jsonOutputDir: string,
   artifactName: string,
   address: string,
-): Contract {
+) {
   const artifact = JSON.parse(
     readFileSync(
       join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`),
       "utf8",
     ),
   );
-  const web3 = new Web3();
-  return new web3.eth.Contract(artifact["abi"], address);
+  const client = chain.getPublicClient();
+  return getContract({
+    address: address as `0x${string}`,
+    abi: artifact["abi"] as Abi,
+    client,
+  });
 }
 
 export const COMMON_DEPLOY_OPTIONS = {
@@ -306,23 +311,28 @@ export async function deployWormholeContract(
   );
 
   // Craft the init data for the proxy contract
-  const setupContract = getWeb3Contract(
-    config.jsonOutputDir,
-    "ReceiverSetup",
-    receiverSetupAddr,
+  const artifact = JSON.parse(
+    readFileSync(
+      join(config.jsonOutputDir, "ReceiverSetup.sol", "ReceiverSetup.json"),
+      "utf8",
+    ),
   );
 
   const { wormholeConfig } = getDefaultDeploymentConfig(config.type);
 
-  const initData = setupContract.methods
-    .setup(
+  const initData = encodeFunctionData({
+    abi: artifact["abi"] as Abi,
+    functionName: "setup",
+    args: [
       receiverImplAddr,
-      wormholeConfig.initialGuardianSet.map((addr: string) => "0x" + addr),
+      wormholeConfig.initialGuardianSet.map(
+        (addr: string) => ("0x" + addr) as `0x${string}`,
+      ),
       chain.getWormholeChainId(),
       wormholeConfig.governanceChainId,
-      "0x" + wormholeConfig.governanceContract,
-    )
-    .encodeABI();
+      ("0x" + wormholeConfig.governanceContract) as `0x${string}`,
+    ],
+  });
 
   const wormholeReceiverAddr = await deployIfNotCached(
     cacheFile,
@@ -384,36 +394,31 @@ export async function topupAccountsIfNecessary(
     const accountAddress = chain.isMainnet()
       ? defaultAddresses.mainnet
       : defaultAddresses.testnet;
-    const web3 = chain.getWeb3();
-    const balance = Number(
-      web3.utils.fromWei(await web3.eth.getBalance(accountAddress), "ether"),
-    );
-    console.log(`${accountName} balance: ${balance} ETH`);
-    if (balance < minBalance) {
+    const publicClient = chain.getPublicClient();
+    const walletClient = chain.getWalletClient(deploymentConfig.privateKey);
+    const balance = await publicClient.getBalance({
+      address: accountAddress as `0x${string}`,
+    });
+    const balanceEth = Number(formatEther(balance));
+    console.log(`${accountName} balance: ${balanceEth} ETH`);
+    if (balanceEth < minBalance) {
       console.log(
         `Balance is less than ${minBalance}. Topping up the ${accountName} address...`,
       );
-      const signer = web3.eth.accounts.privateKeyToAccount(
-        deploymentConfig.privateKey,
-      );
-      web3.eth.accounts.wallet.add(signer);
-      const estimatedGas = await web3.eth.estimateGas({
-        from: signer.address,
-        to: accountAddress,
-        value: web3.utils.toWei(`${minBalance}`, "ether"),
+      const topupValue = parseEther(minBalance.toString());
+      const estimatedGas = await publicClient.estimateGas({
+        account: walletClient.account!,
+        to: accountAddress as `0x${string}`,
+        value: topupValue,
       });
 
-      const tx = await web3.eth.sendTransaction({
-        from: signer.address,
-        to: accountAddress,
-        gas: estimatedGas * deploymentConfig.gasMultiplier,
-        value: web3.utils.toWei(`${minBalance}`, "ether"),
+      const hash = await walletClient.sendTransaction({
+        to: accountAddress as `0x${string}`,
+        gas: estimatedGas * BigInt(deploymentConfig.gasMultiplier),
+        value: topupValue,
       });
 
-      console.log(
-        `Topped up the ${accountName} address. Tx: `,
-        tx.transactionHash,
-      );
+      console.log(`Topped up the ${accountName} address. Tx: `, hash);
     }
   }
 }
