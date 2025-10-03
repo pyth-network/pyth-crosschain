@@ -893,5 +893,10 @@
     "chain": "sonic_evm_testnet",
     "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
     "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "injective_evm",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmWormholeContract"
   }
 ]
