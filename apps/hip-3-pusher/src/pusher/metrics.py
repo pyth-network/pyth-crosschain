@@ -33,3 +33,8 @@ class Metrics:
             name="hip_3_pusher_failed_push_count",
             description="Number of failed push attempts",
         )
+        self.push_interval_histogram = self.meter.create_histogram(
+            name="hip_3_pusher_push_interval",
+            description="Interval between push requests (seconds)",
+            unit="s",
+        )

@@ -1,4 +1,6 @@
 import asyncio
+import time
+
 from loguru import logger
 from pathlib import Path
 
@@ -46,6 +48,7 @@ class Publisher:
         self.price_state = price_state
         self.metrics = metrics
         self.metrics_labels = {"dex": self.market_name}
+        self.last_push_time = time.time()
 
     async def run(self):
         while True:
@@ -98,6 +101,8 @@ class Publisher:
         else:
             logger.debug("push disabled")
 
+        self._record_push_interval_metric()
+
     def _send_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
         for exchange in self.publisher_exchanges:
             try:
@@ -120,3 +125,10 @@ class Publisher:
         elif status == "err":
             self.metrics.failed_push_counter.add(1, self.metrics_labels)
             logger.error("publish: publish error: {}", response)
+
+    def _record_push_interval_metric(self):
+        now = time.time()
+        push_interval = now - self.last_push_time
+        self.metrics.push_interval_histogram.record(push_interval, self.metrics_labels)
+        self.last_push_time = now
+        logger.debug("Push interval: {}", push_interval)
