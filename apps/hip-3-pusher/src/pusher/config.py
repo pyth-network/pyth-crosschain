@@ -35,6 +35,7 @@ class HyperliquidConfig(BaseModel):
     use_testnet: bool
     oracle_pusher_key_path: FilePath
     publish_interval: float
+    publish_timeout: float
     enable_publish: bool
 
     @model_validator(mode="after")

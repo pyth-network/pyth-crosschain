@@ -7,6 +7,7 @@ from eth_account.signers.local import LocalAccount
 from hyperliquid.exchange import Exchange
 
 from pusher.config import Config
+from pusher.exception import PushError
 from pusher.kms_signer import KMSSigner
 from pusher.metrics import Metrics
 from pusher.price_state import PriceState
@@ -30,7 +31,10 @@ class Publisher:
             oracle_pusher_key = Path(config.hyperliquid.oracle_pusher_key_path).read_text().strip()
             oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
             logger.info("oracle pusher local pubkey: {}", oracle_account.address)
-        self.publisher_exchanges = [Exchange(wallet=oracle_account, base_url=url) for url in self.push_urls]
+        self.publisher_exchanges = [Exchange(wallet=oracle_account,
+                                             base_url=url,
+                                             timeout=config.hyperliquid.publish_timeout)
+                                    for url in self.push_urls]
         if config.kms.enable_kms:
             self.enable_kms = True
             self.kms_signer = KMSSigner(config, self.publisher_exchanges)
@@ -70,23 +74,29 @@ class Publisher:
         # TODO: "Each update can change oraclePx and markPx by at most 1%."
         # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
 
-        push_response = None
         if self.enable_publish:
-            if self.enable_kms:
-                push_response = self.kms_signer.set_oracle(
-                    dex=self.market_name,
-                    oracle_pxs=oracle_pxs,
-                    all_mark_pxs=mark_pxs,
-                    external_perp_pxs=external_perp_pxs,
-                )
-            else:
-                push_response = self._send_update(
-                    oracle_pxs=oracle_pxs,
-                    all_mark_pxs=mark_pxs,
-                    external_perp_pxs=external_perp_pxs,
-                )
-
-        self._handle_response(push_response)
+            try:
+                if self.enable_kms:
+                    push_response = self.kms_signer.set_oracle(
+                        dex=self.market_name,
+                        oracle_pxs=oracle_pxs,
+                        all_mark_pxs=mark_pxs,
+                        external_perp_pxs=external_perp_pxs,
+                    )
+                else:
+                    push_response = self._send_update(
+                        oracle_pxs=oracle_pxs,
+                        all_mark_pxs=mark_pxs,
+                        external_perp_pxs=external_perp_pxs,
+                    )
+                self._handle_response(push_response)
+            except PushError:
+                logger.error("All push attempts failed")
+                self.metrics.failed_push_counter.add(1, self.metrics_labels)
+            except Exception as e:
+                logger.exception("Unexpected exception in push request: {}", repr(e))
+        else:
+            logger.debug("push disabled")
 
     def _send_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
         for exchange in self.publisher_exchanges:
@@ -100,14 +110,9 @@ class Publisher:
             except Exception as e:
                 logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
-        return None
+        raise PushError("all push endpoints failed")
 
     def _handle_response(self, response):
-        if response is None:
-            logger.error("Push API call failed")
-            self.metrics.failed_push_counter.add(1, self.metrics_labels)
-            return
-
         logger.debug("publish: push response: {} {}", response, type(response))
         status = response.get("status")
         if status == "ok":

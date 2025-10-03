@@ -8,6 +8,7 @@ market_symbol = "BTC"
 use_testnet = false
 oracle_pusher_key_path = "/path/to/oracle_pusher_key.txt"
 publish_interval = 3.0
+publish_timeout = 5.0
 enable_publish = false
 
 [kms]

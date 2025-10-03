@@ -1,4 +1,3 @@
-
 import boto3
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
@@ -12,6 +11,7 @@ from loguru import logger
 from pathlib import Path
 
 from pusher.config import Config
+from pusher.exception import PushError
 
 SECP256K1_N_HALF = SECP256K1_N // 2
 
@@ -94,7 +94,7 @@ class KMSSigner:
             except Exception as e:
                 logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
-        return None
+        raise PushError("all push endpoints failed")
 
     def sign_l1_action(self, action, nonce, is_mainnet):
         hash = action_hash(action, vault_address=None, nonce=nonce, expires_after=None)

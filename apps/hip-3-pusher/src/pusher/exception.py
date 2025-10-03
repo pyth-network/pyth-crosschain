@@ -1,2 +1,6 @@
-class StaleConnection(Exception):
+class StaleConnectionError(Exception):
+    pass
+
+
+class PushError(Exception):
     pass
