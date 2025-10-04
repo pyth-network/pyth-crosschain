@@ -42,7 +42,7 @@ Fortuna is an off-chain service which can be used by [Entropy](https://pyth.netw
 Please install the following tools in order to work in this repository:
 
 - [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) to manage your node version, then run `nvm use 22` to ensure you are using node version 22.
-- [Foundry](https://book.getfoundry.sh/getting-started/installation) in order to use `forge` for Ethereum contract development
+- [Foundry](https://getfoundry.sh/introduction/installation/) in order to use `forge` for Ethereum contract development
 - [Solana CLI](https://solana.com/docs/intro/installation) for working with Solana programs.
   - After installing, please run `solana keygen new` to generate a local private key.
 - [Anchor](https://www.anchor-lang.com/docs/installation) for developing Solana programs.
@@ -52,7 +52,7 @@ Please install the following tools in order to work in this repository:
 
 ### Pull requests
 
-Use the [Conventional Commits](https://www.conventionalcommits.org) format for your commit messages and PR titles.
+Use the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format for your commit messages and PR titles.
 In the PR description, please include a summary of the changes and any relevant context. Also, please make sure
 to update the package versions following the [Semantic Versioning](https://semver.org/) rules.
 
@@ -84,7 +84,7 @@ the following config option to `package.json`:
 ### Typescript Monorepo
 
 All of the typescript / javascript packages in this repository are part of a
-[turborepo](https://turbo.build/repo/docs) monorepo.
+[turborepo](https://turborepo.com/docs) monorepo.
 
 #### Setting up
 
@@ -99,16 +99,16 @@ If you don't use nix at all, then install the required system packages:
   [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js version.
 - [pnpm](https://pnpm.io/) -- match the version to the version specified in
   `package.json`; you can experiment with
-  [corepack](https://nodejs.org/api/corepack.html) to manage your pnpm version
+  [corepack](https://github.com/nodejs/corepack#readme) to manage your pnpm version
   for you.
 
 #### Common tasks
 
 The following tasks are the most common ways to interact with the monorepo.
-Thanks to [turborepo](https://turbo.build/repo/docs), these tasks will
+Thanks to [turborepo](https://turborepo.com/docs), these tasks will
 coordinate building any needed dependencies, and task execution will be cached
 and will only re-run as necessary. For any of the following tasks, you can pass
-[any valid `turbo run` option](https://turbo.build/repo/docs/reference/run)
+[any valid `turbo run` option](https://turborepo.com/docs/reference/run)
 after `--`, for instance you could run `pnpm test -- --concurrency 2`.
 
 - `pnpm turbo test`: Run all unit tests, integration tests, linting, and format
