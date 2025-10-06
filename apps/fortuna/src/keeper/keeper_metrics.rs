@@ -35,6 +35,7 @@ pub struct KeeperMetrics {
     pub requests_processed_success: Family<AccountLabel, Counter>,
     pub requests_processed_failure: Family<AccountLabel, Counter>,
     pub requests_reprocessed: Family<AccountLabel, Counter>,
+    pub request_failovers_triggered: Family<AccountLabel, Counter>,
     pub reveals: Family<AccountLabel, Counter>,
     pub request_duration_ms: Family<AccountLabel, Histogram>,
     pub retry_count: Family<AccountLabel, Histogram>,
@@ -66,6 +67,7 @@ impl Default for KeeperMetrics {
             requests_processed_success: Family::default(),
             requests_processed_failure: Family::default(),
             requests_reprocessed: Family::default(),
+            request_failovers_triggered: Family::default(),
             reveals: Family::default(),
             request_duration_ms: Family::new_with_constructor(|| {
                 Histogram::new(vec![
@@ -187,6 +189,12 @@ impl KeeperMetrics {
         );
 
         writable_registry.register(
+            "request_failovers_triggered",
+            "Number of requests where backup replica performed failover",
+            keeper_metrics.request_failovers_triggered.clone(),
+        );
+
+        writable_registry.register(
             "request_duration_ms",
             "Time taken to process each successful callback request in milliseconds",
             keeper_metrics.request_duration_ms.clone(),
@@ -297,6 +305,9 @@ impl KeeperMetrics {
             .requests_processed_failure
             .get_or_create(&account_label);
         let _ = self.requests_reprocessed.get_or_create(&account_label);
+        let _ = self
+            .request_failovers_triggered
+            .get_or_create(&account_label);
         let _ = self.reveals.get_or_create(&account_label);
         let _ = self.request_duration_ms.get_or_create(&account_label);
         let _ = self.retry_count.get_or_create(&account_label);

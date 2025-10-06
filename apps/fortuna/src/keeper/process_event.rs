@@ -91,6 +91,15 @@ pub async fn process_event_with_backoff(
                     );
                 }
             }
+
+            let account_label = AccountLabel {
+                chain_id: chain_state.id.clone(),
+                address: chain_state.provider_address.to_string(),
+            };
+            metrics
+                .request_failovers_triggered
+                .get_or_create(&account_label)
+                .inc();
         }
     }
 
