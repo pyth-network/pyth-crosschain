@@ -190,7 +190,7 @@ impl KeeperMetrics {
 
         writable_registry.register(
             "request_failovers_triggered",
-            "Number of requests where backup replica performed failover",
+            "Number of requests where backup replica attemped to fulfill the request",
             keeper_metrics.request_failovers_triggered.clone(),
         );
 
