@@ -10,6 +10,8 @@ mod feed_kind;
 pub mod jrpc;
 /// Types describing Lazer's verifiable messages containing signature and payload.
 pub mod message;
+/// Types describing Lazer's feed & asset metadata catalog APIs.
+pub mod metadata;
 /// Types describing Lazer's message payload.
 pub mod payload;
 mod price;
@@ -28,6 +30,7 @@ use serde::{Deserialize, Serialize};
 pub use crate::{
     dynamic_value::DynamicValue,
     feed_kind::FeedKind,
+    metadata::{AssetClass, AssetResponseV3, FeedResponseV3, InstrumentType},
     price::{Price, PriceError},
     rate::{Rate, RateError},
     symbol_state::SymbolState,
