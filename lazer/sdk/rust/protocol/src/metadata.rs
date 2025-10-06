@@ -69,10 +69,10 @@ pub struct FeedResponseV3 {
     /// Example: `"USD"`
     pub quote_asset_id: String,
     /// The pricing context.
-    /// Example: `InstrumentType::Spot`
+    /// Example: `"spot"`
     pub instrument_type: InstrumentType,
     /// Aggregator or producer of the prices.
-    /// Examples: `"pyth"` for our aggregations, `"binance"` for their funding rates
+    /// Examples: `"pyth"`, `"binance"`
     pub source: String,
     /// The trading schedule of the feed's market, in Pythnet format.
     /// Example: `"America/New_York;O,O,O,O,O,O,O;"`
@@ -87,10 +87,10 @@ pub struct FeedResponseV3 {
     /// Example: `3`
     pub min_publishers: i32,
     /// Status of the feed.
-    /// Example: `SymbolState::Active`
+    /// Example: `"active"`
     pub state: SymbolState,
     /// High-level asset class. One of crypto, fx, equity, metal, rates, nav, commodity, funding-rate.
-    /// Example: `AssetClass::Crypto`
+    /// Example: `"crypto"`
     pub asset_type: AssetClass,
     /// CoinMarketCap asset identifier.
     /// Example: `"123"`
@@ -125,7 +125,7 @@ pub struct AssetResponseV3 {
     /// Example: `"Bitcoin"`
     pub full_name: String,
     /// High-level asset class.
-    /// Example: `AssetClass::Crypto`
+    /// Example: `"crypto"`
     pub class: AssetClass,
     /// More granular categorization within class.
     /// Example: `"stablecoin"`
