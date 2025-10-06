@@ -1,11 +1,13 @@
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import type { Meta, StoryObj } from "@storybook/react";
 import BtcIcon from "cryptocurrency-icons/svg/color/btc.svg";
+import { useRef } from "react";
 
 import { Badge } from "../Badge";
 import { SymbolPairTag } from "../SymbolPairTag";
 import { dummyRowData } from "./dummy-row-data";
 import { TableGrid as TableGridComponent } from "./index.jsx";
+import { AgGridReact } from "ag-grid-react";
 
 const meta = {
   component: TableGridComponent,
@@ -106,10 +108,14 @@ const args = {
 export const TableGrid = {
   args,
 } satisfies StoryObj<typeof TableGridComponent>;
-
+const Comp = () => {
+  const gridRef = useRef<AgGridReact<typeof args.rowData>>(null);
+  console.log(gridRef, args,'args');
+  return <TableGridComponent  {...args} ref={gridRef}/>;
+};
 export const PriceFeedsCard = {
   render: (props) => {
-    return <TableGridComponent {...props} />;
+    return <Comp {...props} />;
   },
   args: {
     ...args,

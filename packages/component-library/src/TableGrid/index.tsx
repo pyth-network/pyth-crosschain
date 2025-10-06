@@ -7,8 +7,9 @@ import {
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import {
+  type ForwardedRef,
   forwardRef,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useImperativeHandle,
   useMemo,
@@ -46,13 +47,14 @@ export const TableGrid = forwardRef(
       pagination,
       ...props
     }: TableGridProps<TData>,
-    ref: React.Ref<AgGridReact<TData> | null>,
+    ref: ForwardedRef<AgGridReact<TData>>,
   ) => {
     const gridRef = useRef<AgGridReact<TData>>(null);
     const [pageSize, setPageSize] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    useImperativeHandle(ref, () => gridRef.current);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    useImperativeHandle(ref, () => gridRef.current!);
 
     const defaultColDef = useMemo(() => {
       return {
@@ -89,7 +91,6 @@ export const TableGrid = forwardRef(
     const tableGrid = (
       <AgGridReact<TData>
         className={styles.tableGrid}
-        ref={gridRef}
         // @ts-expect-error empty row data
         rowData={isLoading ? [[]] : rowData}
         defaultColDef={defaultColDef}
@@ -100,6 +101,7 @@ export const TableGrid = forwardRef(
         paginationPageSize={pageSize}
         suppressPaginationPanel
         onPaginationChanged={onPaginationChanged}
+        ref={gridRef}
         {...props}
       />
     );
