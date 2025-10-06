@@ -13,7 +13,6 @@ import type {
   ISeriesApi,
   LineData,
   UTCTimestamp,
-  WhitespaceData,
 } from "lightweight-charts";
 import {
   AreaSeries,
@@ -28,8 +27,8 @@ import { z } from "zod";
 
 import styles from "./chart.module.scss";
 import {
-  lookbackToMilliseconds,
-  useChartLookback,
+  quickSelectWindowToMilliseconds,
+  useChartQuickSelectWindow,
   useChartResolution,
 } from "./use-chart-toolbar";
 import { useLivePriceData } from "../../../hooks/use-live-price-data";
@@ -62,18 +61,13 @@ const useChart = (symbol: string, feedId: string) => {
 
 const useChartElem = (symbol: string, feedId: string) => {
   const logger = useLogger();
-  const [lookback] = useChartLookback();
+  const [quickSelectWindow] = useChartQuickSelectWindow();
   const [resolution] = useChartResolution();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
   const isBackfilling = useRef(false);
   const priceFormatter = usePriceFormatter();
-  const resolutionRef = useRef(resolution);
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
-
-  useEffect(() => {
-    resolutionRef.current = resolution;
-  }, [resolution]);
 
   const { current: livePriceData } = useLivePriceData(Cluster.Pythnet, feedId);
 
@@ -154,31 +148,33 @@ const useChartElem = (symbol: string, feedId: string) => {
       });
 
       fetch(url, { signal: abortControllerRef.current.signal })
-        .then(async (data) => historicalDataSchema.parse(await data.json()))
-        .then((data) => {
+        .then((rawData) => rawData.json())
+        .then((jsonData) => {
           if (!chartRef.current) {
             return;
           }
 
+          const data = historicalDataSchema.parse(jsonData);
+
           // Get the current historical price data
-          const currentHistoricalPriceData = chartRef.current.price
-            .data()
-            .filter((d) => isLineData(d));
+          // Note that .data() returns (WhitespaceData | LineData)[], hence the type cast
+          const currentHistoricalPriceData =
+            chartRef.current.price.data() as LineData[];
           const currentHistoricalConfidenceHighData =
-            chartRef.current.confidenceHigh.data().filter((d) => isLineData(d));
+            chartRef.current.confidenceHigh.data() as LineData[];
           const currentHistoricalConfidenceLowData =
-            chartRef.current.confidenceLow.data().filter((d) => isLineData(d));
+            chartRef.current.confidenceLow.data() as LineData[];
 
           const newHistoricalPriceData = data.map((d) => ({
-            time: Number(d.timestamp) as UTCTimestamp,
+            time: d.time,
             value: d.price,
           }));
           const newHistoricalConfidenceHighData = data.map((d) => ({
-            time: Number(d.timestamp) as UTCTimestamp,
+            time: d.time,
             value: d.price + d.confidence,
           }));
           const newHistoricalConfidenceLowData = data.map((d) => ({
-            time: Number(d.timestamp) as UTCTimestamp,
+            time: d.time,
             value: d.price - d.confidence,
           }));
 
@@ -273,7 +269,7 @@ const useChartElem = (symbol: string, feedId: string) => {
       const newToMs = firstMs;
       const newFromMs = startOfResolution(
         new Date(newToMs - visibleRangeMs),
-        resolutionRef.current,
+        resolution,
       );
 
       // When we're getting close to the earliest data, we need to backfill more
@@ -281,7 +277,7 @@ const useChartElem = (symbol: string, feedId: string) => {
         fetchHistoricalData({
           from: newFromMs / 1000,
           to: newToMs / 1000,
-          resolution: resolutionRef.current,
+          resolution,
         });
       }
     });
@@ -306,7 +302,9 @@ const useChartElem = (symbol: string, feedId: string) => {
     const now = new Date();
     const to = startOfResolution(now, resolution);
     const from = startOfResolution(
-      new Date(now.getTime() - lookbackToMilliseconds(lookback)),
+      new Date(
+        now.getTime() - quickSelectWindowToMilliseconds(quickSelectWindow),
+      ),
       resolution,
     );
 
@@ -326,7 +324,7 @@ const useChartElem = (symbol: string, feedId: string) => {
       to: to / 1000,
       resolution,
     });
-  }, [lookback, resolution, fetchHistoricalData]);
+  }, [quickSelectWindow, resolution, fetchHistoricalData]);
 
   return { chartRef, chartContainerRef };
 };
@@ -340,11 +338,17 @@ type ChartRefContents = {
 };
 
 const historicalDataSchema = z.array(
-  z.strictObject({
-    timestamp: z.number().transform(BigInt),
-    price: z.number(),
-    confidence: z.number(),
-  }),
+  z
+    .strictObject({
+      timestamp: z.number(),
+      price: z.number(),
+      confidence: z.number(),
+    })
+    .transform((d) => ({
+      time: Number(d.timestamp) as UTCTimestamp,
+      price: d.price,
+      confidence: d.confidence,
+    })),
 );
 const priceFormat = {
   type: "price",
@@ -443,17 +447,12 @@ const getColors = (container: HTMLDivElement, resolvedTheme: string) => {
   };
 };
 
-function isLineData(data: LineData | WhitespaceData): data is LineData {
-  return "time" in data && "value" in data;
-}
-
 /**
  * Merge (and sort) two arrays of line data, deduplicating by time
  */
 export function mergeData(as: LineData[], bs: LineData[]) {
   const unique = new Map<number, LineData>();
 
-  // TODO fhqvst Can optimize with while's
   for (const a of as) {
     unique.set(a.time as number, a);
   }

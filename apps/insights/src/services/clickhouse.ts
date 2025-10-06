@@ -345,36 +345,20 @@ export const getHistoricalPrices = async ({
   to,
   publisher = "",
   resolution = "1 MINUTE",
-  cluster = "pythnet",
 }: {
   symbol: string;
   from: number;
   to: number;
   publisher: string | undefined;
-  // TODO fhqvst Should we prevent fetching second-resolution data?
   resolution?: Resolution;
-  cluster?: "pythnet" | "pythtest";
 }) => {
   const queryParams: Record<string, number | string | string[]> = {
     symbol,
     from,
     to,
     publisher,
+    cluster: "pythnet",
   };
-
-  const clusterClause =
-    cluster === "pythtest"
-      ? "cluster IN {clusters: Array(String)}"
-      : "cluster = {cluster: String}";
-
-  if (publisher) {
-    queryParams.publisher = publisher;
-  }
-  if (cluster === "pythtest") {
-    queryParams.clusters = ["pythnet", "pythtest-conformance"];
-  } else {
-    queryParams.cluster = "pythnet";
-  }
 
   return safeQuery(
     z.array(
@@ -389,7 +373,7 @@ export const getHistoricalPrices = async ({
           SELECT toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL ${resolution})) AS timestamp, avg(price) AS price, avg(confidence) AS confidence
           FROM prices
           PREWHERE
-            ${clusterClause}
+            cluster = {cluster: String}
             AND publisher = {publisher: String}
             AND symbol = {symbol: String}
             AND version = 2

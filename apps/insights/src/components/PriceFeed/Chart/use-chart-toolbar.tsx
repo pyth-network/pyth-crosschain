@@ -3,13 +3,13 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 export const RESOLUTIONS = ["1s", "1m", "5m", "1H", "1D"] as const;
 export type Resolution = (typeof RESOLUTIONS)[number];
 
-export const LOOKBACKS = ["1m", "1H", "1D", "1W", "1M"] as const;
-export type Lookback = (typeof LOOKBACKS)[number];
+export const QUICK_SELECT_WINDOWS = ["1m", "1H", "1D", "1W", "1M"] as const;
+export type QuickSelectWindow = (typeof QUICK_SELECT_WINDOWS)[number];
 
-export function useChartLookback() {
+export function useChartQuickSelectWindow() {
   return useQueryState(
-    "lookback",
-    parseAsStringLiteral(LOOKBACKS).withDefault("1m"),
+    "quickSelectWindow",
+    parseAsStringLiteral(QUICK_SELECT_WINDOWS).withDefault("1m"),
   );
 }
 
@@ -20,9 +20,14 @@ export function useChartResolution() {
   );
 }
 
-// TODO fhqvst Clean this up - it's confusing
-export function lookbackToMilliseconds(lookback: Lookback): number {
-  switch (lookback) {
+/**
+ * Converts a quick select window string (e.g., "1m", "1H", "1D") to its equivalent duration in milliseconds.
+ * Used to determine the time range for chart data based on user selection.
+ */
+export function quickSelectWindowToMilliseconds(
+  quickSelectWindow: QuickSelectWindow,
+): number {
+  switch (quickSelectWindow) {
     case "1m": {
       return 60_000;
     }
@@ -41,7 +46,10 @@ export function lookbackToMilliseconds(lookback: Lookback): number {
   }
 }
 
-export const RESOLUTION_TO_LOOKBACK: Record<Resolution, Lookback> = {
+export const RESOLUTION_TO_QUICK_SELECT_WINDOW: Record<
+  Resolution,
+  QuickSelectWindow
+> = {
   "1s": "1m",
   "1m": "1H",
   "5m": "1D",
@@ -49,7 +57,10 @@ export const RESOLUTION_TO_LOOKBACK: Record<Resolution, Lookback> = {
   "1D": "1M",
 };
 
-export const LOOKBACK_TO_RESOLUTION: Record<Lookback, Resolution> = {
+export const QUICK_SELECT_WINDOW_TO_RESOLUTION: Record<
+  QuickSelectWindow,
+  Resolution
+> = {
   "1m": "1s",
   "1H": "1m",
   "1D": "5m",

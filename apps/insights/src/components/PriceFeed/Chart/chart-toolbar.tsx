@@ -5,13 +5,13 @@ import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useCallback } from "react";
 import type { Key } from "react-aria";
 
-import type { Lookback, Resolution } from "./use-chart-toolbar";
+import type { QuickSelectWindow, Resolution } from "./use-chart-toolbar";
 import {
-  LOOKBACK_TO_RESOLUTION,
-  LOOKBACKS,
-  RESOLUTION_TO_LOOKBACK,
+  QUICK_SELECT_WINDOW_TO_RESOLUTION,
+  QUICK_SELECT_WINDOWS,
+  RESOLUTION_TO_QUICK_SELECT_WINDOW,
   RESOLUTIONS,
-  useChartLookback,
+  useChartQuickSelectWindow,
   useChartResolution,
 } from "./use-chart-toolbar";
 
@@ -19,43 +19,38 @@ const ENABLE_RESOLUTION_SELECTOR = false;
 
 export const ChartToolbar = () => {
   const logger = useLogger();
-  const [lookback, setLookback] = useChartLookback();
+  const [quickSelectWindow, setQuickSelectWindow] = useChartQuickSelectWindow();
   const [resolution, setResolution] = useChartResolution();
 
-  const handleLookbackChange = useCallback(
-    (newValue: Key) => {
-      if (!isLookback(newValue)) {
-        throw new TypeError("Invalid lookback");
-      }
-      const lookback: Lookback = newValue;
-      setLookback(lookback).catch((error: unknown) => {
-        logger.error("Failed to update lookback", error);
+  const handleResolutionChanged = useCallback(
+    (resolution: Resolution) => {
+      setResolution(resolution).catch((error: unknown) => {
+        logger.error("Failed to update resolution", error);
       });
-      setResolution(LOOKBACK_TO_RESOLUTION[lookback]).catch(
+      setQuickSelectWindow(RESOLUTION_TO_QUICK_SELECT_WINDOW[resolution]).catch(
+        (error: unknown) => {
+          logger.error("Failed to update quick select window", error);
+        },
+      );
+    },
+    [logger, setResolution, setQuickSelectWindow],
+  );
+
+  const handleQuickSelectWindowChange = useCallback(
+    (quickSelectWindow: Key) => {
+      if (!isQuickSelectWindow(quickSelectWindow)) {
+        throw new TypeError("Invalid quick select window");
+      }
+      setQuickSelectWindow(quickSelectWindow).catch((error: unknown) => {
+        logger.error("Failed to update quick select window", error);
+      });
+      setResolution(QUICK_SELECT_WINDOW_TO_RESOLUTION[quickSelectWindow]).catch(
         (error: unknown) => {
           logger.error("Failed to update resolution", error);
         },
       );
     },
-    [logger, setLookback, setResolution],
-  );
-
-  const handleResolutionChanged = useCallback(
-    (newValue: Key) => {
-      if (!isResolution(newValue)) {
-        throw new TypeError("Invalid resolution");
-      }
-      const resolution: Resolution = newValue;
-      setResolution(resolution).catch((error: unknown) => {
-        logger.error("Failed to update resolution", error);
-      });
-      setLookback(RESOLUTION_TO_LOOKBACK[resolution]).catch(
-        (error: unknown) => {
-          logger.error("Failed to update lookback", error);
-        },
-      );
-    },
-    [logger, setResolution, setLookback],
+    [logger, setQuickSelectWindow, setResolution],
   );
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -78,25 +73,18 @@ export const ChartToolbar = () => {
         variant="outline"
       />
       <SingleToggleGroup
-        selectedKey={lookback}
-        onSelectionChange={handleLookbackChange}
+        selectedKey={quickSelectWindow}
+        onSelectionChange={handleQuickSelectWindowChange}
         rounded
-        items={[
-          { id: "1m", children: "1m" },
-          { id: "1H", children: "1H" },
-          { id: "1D", children: "1D" },
-          { id: "1W", children: "1W" },
-          { id: "1M", children: "1M" },
-        ]}
+        items={QUICK_SELECT_WINDOWS.map((quickSelectWindow) => ({
+          id: quickSelectWindow,
+          children: quickSelectWindow,
+        }))}
       />
     </>
   );
 };
 
-function isLookback(value: Key): value is Lookback {
-  return LOOKBACKS.includes(value as Lookback);
-}
-
-function isResolution(value: Key): value is Resolution {
-  return RESOLUTIONS.includes(value as Resolution);
+function isQuickSelectWindow(value: Key): value is QuickSelectWindow {
+  return QUICK_SELECT_WINDOWS.includes(value as QuickSelectWindow);
 }

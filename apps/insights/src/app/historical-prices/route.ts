@@ -9,7 +9,6 @@ const queryParamsSchema = z.object({
     .string()
     .nullable()
     .transform((value) => value ?? undefined),
-  cluster: z.enum(["pythnet", "pythtest"]),
   from: z.string().transform(Number),
   to: z.string().transform(Number),
   resolution: z.enum(["1s", "1m", "5m", "1H", "1D"]).transform((value) => {
@@ -48,11 +47,9 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const { symbol, publisher, cluster, from, to, resolution } = parsed.data;
+  const { symbol, publisher, from, to, resolution } = parsed.data;
 
-  try {
-    checkMaxDataPointsInvariant(from, to, resolution);
-  } catch {
+  if (getNumDataPoints(to, from, resolution) > MAX_DATA_POINTS) {
     return new Response("Unsupported resolution for date range", {
       status: 400,
     });
@@ -63,7 +60,6 @@ export async function GET(req: NextRequest) {
     from,
     to,
     publisher,
-    cluster,
     resolution,
   });
 
@@ -71,9 +67,9 @@ export async function GET(req: NextRequest) {
 }
 
 const MAX_DATA_POINTS = 3000;
-function checkMaxDataPointsInvariant(
-  from: number,
+function getNumDataPoints(
   to: number,
+  from: number,
   resolution: "1 SECOND" | "1 MINUTE" | "5 MINUTE" | "1 HOUR" | "1 DAY",
 ) {
   let diff = to - from;
@@ -96,7 +92,5 @@ function checkMaxDataPointsInvariant(
     }
   }
 
-  if (diff > MAX_DATA_POINTS) {
-    throw new Error("Unsupported resolution for date range");
-  }
+  return diff;
 }
