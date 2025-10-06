@@ -1,0 +1,7 @@
+@use "../theme";
+
+:export {
+  @each $name, $breakpoint in theme.$breakpoints {
+    breakpoint-#{$name}: $breakpoint;
+  }
+}
