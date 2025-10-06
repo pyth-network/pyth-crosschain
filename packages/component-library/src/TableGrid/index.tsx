@@ -59,7 +59,7 @@ export const TableGrid = <TData extends Record<string, unknown>>({
     return colDefs.map((colDef) => {
       return {
         ...colDef,
-        // the types in ag-grid are `any` for the cellRenderers
+        // the types in ag-grid are `any` for the cellRenderers which is throwing an error here
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         cellRenderer: isLoading
           ? (colDef.loadingCellRenderer ?? SkeletonCellRenderer)
@@ -69,13 +69,13 @@ export const TableGrid = <TData extends Record<string, unknown>>({
   }, [colDefs, isLoading]);
 
   const onPaginationChanged = useCallback(() => {
-    if (gridRef.current?.api) {
-      const api = gridRef.current.api;
-      setPageSize(api.paginationGetPageSize());
-      setCurrentPage(api.paginationGetCurrentPage() + 1);
-      setTotalPages(api.paginationGetTotalPages());
-    }
+    const api = gridRef.current?.api;
+    if (!api) return;
+    setPageSize(api.paginationGetPageSize());
+    setCurrentPage(api.paginationGetCurrentPage() + 1);
+    setTotalPages(api.paginationGetTotalPages());
   }, []);
+
   const onPageChange = useCallback((newPage: number) => {
     gridRef.current?.api.paginationGoToPage(newPage - 1);
   }, []);
@@ -83,7 +83,7 @@ export const TableGrid = <TData extends Record<string, unknown>>({
   const tableGrid = (
     <AgGridReact<TData>
       className={styles.tableGrid}
-      // @ts-expect-error empty row data
+      // @ts-expect-error empty row data, which is throwing an error here btu required to display 1 row in the loading state
       rowData={isLoading ? [[]] : rowData}
       defaultColDef={defaultColDef}
       columnDefs={mappedColDefs}
