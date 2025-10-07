@@ -40,12 +40,24 @@ async function main() {
   const payloads: Buffer[] = [];
   for (const chain of selectedChains) {
     const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
+    // Normalize Foundry artifact bytecode which may be a string or an object { object: "..." }
+    let bytecode: string = (artifact as any)["bytecode"]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (
+      typeof bytecode === "object" &&
+      bytecode !== null &&
+      "object" in (bytecode as unknown as Record<string, unknown>)
+    ) {
+      bytecode = (bytecode as unknown as { object: string }).object;
+    }
+    if (!bytecode.startsWith("0x")) {
+      bytecode = `0x${bytecode}`;
+    }
     console.log("Deploying contract to", chain.getId());
     const address = await runIfNotCached(`deploy-${chain.getId()}`, () => {
       return chain.deploy(
         toPrivateKey(argv["private-key"]),
         artifact["abi"],
-        artifact["bytecode"],
+        bytecode,
         [],
       );
     });

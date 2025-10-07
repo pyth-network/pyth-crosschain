@@ -67,6 +67,18 @@ async function main() {
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
       const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
+      // Normalize Foundry artifact bytecode which may be a string or an object { object: "..." }
+      let bytecode: string = (artifact as any)["bytecode"]; // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (
+        typeof bytecode === "object" &&
+        bytecode !== null &&
+        "object" in (bytecode as unknown as Record<string, unknown>)
+      ) {
+        bytecode = (bytecode as unknown as { object: string }).object;
+      }
+      if (!bytecode.startsWith("0x")) {
+        bytecode = `0x${bytecode}`;
+      }
       console.log("Deploying contract to", contract.chain.getId());
       try {
         const address = await runIfNotCached(
@@ -75,7 +87,7 @@ async function main() {
             return contract.chain.deploy(
               toPrivateKey(argv["private-key"]),
               artifact["abi"],
-              artifact["bytecode"],
+              bytecode,
               [],
               2,
             );
