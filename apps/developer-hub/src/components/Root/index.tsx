@@ -1,14 +1,7 @@
-import { AppBody, AppShellRoot } from "@pythnetwork/component-library/AppShell";
+import { RootProviders } from "@pythnetwork/component-library/AppShell";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
-
-import {
-  AMPLITUDE_API_KEY,
-  ENABLE_ACCESSIBILITY_REPORTING,
-  GOOGLE_ANALYTICS_ID,
-} from "../../config/server";
-import { SearchButton } from "../search-button";
 
 import "./global.css";
 
@@ -24,21 +17,19 @@ type Props = {
 };
 
 export const Root = ({ children }: Props) => (
-  <AppShellRoot
-    amplitudeApiKey={AMPLITUDE_API_KEY}
-    googleAnalyticsId={GOOGLE_ANALYTICS_ID}
-    enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-    providers={[NuqsAdapter]}
-  >
-    <FumadocsRootProvider
-      search={{
-        enabled: true,
-        options: {
-          api: "/api/search",
-        },
-      }}
-    >
-      <AppBody
+  <html lang="en">
+    <body>
+      <RootProviders providers={[NuqsAdapter]}>
+        <FumadocsRootProvider
+          search={{
+            enabled: true,
+            options: {
+              api: "/api/search",
+            },
+          }}
+        >
+          {/* commenting out the app body because we don't have the app shell anymore
+          <AppBody
         appName="Developer Hub"
         displaySupportButton={false}
         extraCta={<SearchButton />}
@@ -47,9 +38,11 @@ export const Root = ({ children }: Props) => (
           href: "https://dev-forum.pyth.network/",
         }}
         tabs={TABS}
-      >
-        {children}
-      </AppBody>
-    </FumadocsRootProvider>
-  </AppShellRoot>
+      > */}
+          {children}
+          {/* </AppBody> */}
+        </FumadocsRootProvider>
+      </RootProviders>
+    </body>
+  </html>
 );
