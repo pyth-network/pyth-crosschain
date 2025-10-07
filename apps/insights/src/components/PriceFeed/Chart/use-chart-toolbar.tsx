@@ -20,6 +20,21 @@ export function useChartResolution() {
   );
 }
 
+const ONE_SECOND_IN_MS = 1000;
+const ONE_MINUTE_IN_MS = 60 * ONE_SECOND_IN_MS;
+const ONE_HOUR_IN_MS = 60 * ONE_MINUTE_IN_MS;
+const ONE_DAY_IN_MS = 24 * ONE_HOUR_IN_MS;
+const ONE_WEEK_IN_MS = 7 * ONE_DAY_IN_MS;
+const ONE_MONTH_IN_MS = 30 * ONE_DAY_IN_MS;
+
+const QUICK_SELECT_WINDOW_TO_MS: Record<QuickSelectWindow, number> = {
+  "1m": ONE_MINUTE_IN_MS,
+  "1H": ONE_HOUR_IN_MS,
+  "1D": ONE_DAY_IN_MS,
+  "1W": ONE_WEEK_IN_MS,
+  "1M": ONE_MONTH_IN_MS,
+};
+
 /**
  * Converts a quick select window string (e.g., "1m", "1H", "1D") to its equivalent duration in milliseconds.
  * Used to determine the time range for chart data based on user selection.
@@ -27,23 +42,7 @@ export function useChartResolution() {
 export function quickSelectWindowToMilliseconds(
   quickSelectWindow: QuickSelectWindow,
 ): number {
-  switch (quickSelectWindow) {
-    case "1m": {
-      return 60_000;
-    }
-    case "1H": {
-      return 3_600_000;
-    }
-    case "1D": {
-      return 86_400_000;
-    }
-    case "1W": {
-      return 604_800_000;
-    }
-    case "1M": {
-      return 2_629_746_000;
-    }
-  }
+  return QUICK_SELECT_WINDOW_TO_MS[quickSelectWindow];
 }
 
 export const RESOLUTION_TO_QUICK_SELECT_WINDOW: Record<

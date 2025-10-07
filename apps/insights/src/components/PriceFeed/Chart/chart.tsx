@@ -157,7 +157,8 @@ const useChartElem = (symbol: string, feedId: string) => {
           const data = historicalDataSchema.parse(jsonData);
 
           // Get the current historical price data
-          // Note that .data() returns (WhitespaceData | LineData)[], hence the type cast
+          // Note that .data() returns (WhitespaceData | LineData)[], hence the type cast.
+          // We never populate the chart with WhitespaceData, so the type cast is safe.
           const currentHistoricalPriceData =
             chartRef.current.price.data() as LineData[];
           const currentHistoricalConfidenceHighData =

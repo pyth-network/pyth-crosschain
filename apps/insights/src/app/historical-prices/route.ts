@@ -67,30 +67,18 @@ export async function GET(req: NextRequest) {
 }
 
 const MAX_DATA_POINTS = 3000;
-function getNumDataPoints(
-  to: number,
-  from: number,
-  resolution: "1 SECOND" | "1 MINUTE" | "5 MINUTE" | "1 HOUR" | "1 DAY",
-) {
-  let diff = to - from;
-  switch (resolution) {
-    case "1 MINUTE": {
-      diff = diff / 60;
-      break;
-    }
-    case "5 MINUTE": {
-      diff = diff / 60 / 5;
-      break;
-    }
-    case "1 HOUR": {
-      diff = diff / 3600;
-      break;
-    }
-    case "1 DAY": {
-      diff = diff / 86_400;
-      break;
-    }
-  }
 
-  return diff;
-}
+type Resolution = "1 SECOND" | "1 MINUTE" | "5 MINUTE" | "1 HOUR" | "1 DAY";
+const ONE_MINUTE_IN_SECONDS = 60;
+const ONE_HOUR_IN_SECONDS = 60 * ONE_MINUTE_IN_SECONDS;
+
+const SECONDS_IN_ONE_PERIOD: Record<Resolution, number> = {
+  "1 SECOND": 1,
+  "1 MINUTE": ONE_MINUTE_IN_SECONDS,
+  "5 MINUTE": 5 * ONE_MINUTE_IN_SECONDS,
+  "1 HOUR": ONE_HOUR_IN_SECONDS,
+  "1 DAY": 24 * ONE_HOUR_IN_SECONDS,
+};
+
+const getNumDataPoints = (from: number, to: number, resolution: Resolution) =>
+  (to - from) / SECONDS_IN_ONE_PERIOD[resolution];
