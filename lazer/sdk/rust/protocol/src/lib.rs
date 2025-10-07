@@ -21,6 +21,8 @@ mod rate;
 mod serde_price_as_i64;
 mod serde_str;
 mod symbol_state;
+/// Validated symbol type for `source.instrument_type.base/quote` format.
+pub mod symbol_v3;
 /// Lazer's types for time representation.
 pub mod time;
 
@@ -34,6 +36,7 @@ pub use crate::{
     price::{Price, PriceError},
     rate::{Rate, RateError},
     symbol_state::SymbolState,
+    symbol_v3::SymbolV3,
 };
 
 #[derive(

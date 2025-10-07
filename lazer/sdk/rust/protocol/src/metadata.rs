@@ -1,20 +1,25 @@
 //! Types describing Lazer's metadata APIs.
 
+use crate::time::TimestampUs;
 use crate::FeedKind;
-use crate::{symbol_state::SymbolState, PriceFeedId};
+use crate::{symbol_state::SymbolState, PriceFeedId, SymbolV3};
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumString};
 
 /// The pricing context or type of instrument for a feed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display, EnumString)]
 #[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 pub enum InstrumentType {
     /// Spot price
     Spot,
     /// Redemption rate
     #[serde(rename = "redemptionrate")]
+    #[strum(serialize = "redemptionrate")]
     RedemptionRate,
     /// Funding rate
     #[serde(rename = "fundingrate")]
+    #[strum(serialize = "fundingrate")]
     FundingRate,
     /// Future price
     Future,
@@ -58,7 +63,7 @@ pub struct FeedResponseV3 {
     /// Unique human-readable identifier for a feed.
     /// Format: `source.instrument_type.base/quote`
     /// Examples: `"pyth.spot.btc/usd"`, `"pyth.redemptionrate.alp/usd"`, `"binance.fundingrate.btc/usdt"`, `"pyth.future.emz5/usd"`
-    pub symbol: String,
+    pub symbol: SymbolV3,
     /// Description of the feed pair.
     /// Example: `"Pyth Network Aggregate Price for spot BTC/USD"`
     pub description: String,
@@ -106,7 +111,7 @@ pub struct FeedResponseV3 {
     /// ISO datetime after which the feed will no longer produce prices because the underlying market has expired.
     /// Example: `"2025-10-03T11:08:10.089998603Z"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub feed_expiry: Option<String>,
+    pub feed_expiry: Option<TimestampUs>,
     /// The nature of the data produced by the feed.
     /// Examples: `"price"`, `"fundingRate"`
     pub feed_kind: FeedKind,
@@ -134,5 +139,84 @@ pub struct AssetResponseV3 {
     /// Primary or canonical listing exchange, when applicable.
     /// Example: `"NASDAQ"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub listing_exchange: Option<String>,
+    pub primary_exchange: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_instrument_type_roundtrip() {
+        let types = vec![
+            InstrumentType::Spot,
+            InstrumentType::RedemptionRate,
+            InstrumentType::FundingRate,
+            InstrumentType::Future,
+            InstrumentType::Nav,
+            InstrumentType::Twap,
+        ];
+
+        for instrument_type in types {
+            let string_repr = instrument_type.to_string();
+            let parsed = string_repr.parse::<InstrumentType>().unwrap();
+            assert_eq!(parsed, instrument_type);
+        }
+
+        // Test invalid values
+        assert!("invalid".parse::<InstrumentType>().is_err());
+        assert!("SPOT".parse::<InstrumentType>().is_err()); // case sensitive
+    }
+
+    #[test]
+    fn test_feed_response_v3_roundtrip() {
+        use crate::{symbol_state::SymbolState, FeedKind, PriceFeedId};
+
+        let symbol = SymbolV3::new(
+            "pyth".to_string(),
+            InstrumentType::Spot,
+            "btc".to_string(),
+            "usd".to_string(),
+        );
+
+        let feed_response = FeedResponseV3 {
+            id: PriceFeedId(1),
+            name: "Bitcoin / US Dollar".to_string(),
+            symbol,
+            description: "Pyth Network Aggregate Price for spot BTC/USD".to_string(),
+            base_asset_id: "BTC".to_string(),
+            quote_asset_id: "USD".to_string(),
+            instrument_type: InstrumentType::Spot,
+            source: "pyth".to_string(),
+            schedule: "America/New_York;O,O,O,O,O,O,O;".to_string(),
+            exponent: -8,
+            update_interval_seconds: 10,
+            min_publishers: 3,
+            state: SymbolState::Stable,
+            asset_type: AssetClass::Crypto,
+            cmc_id: Some("1".to_string()),
+            pythnet_id: "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+                .to_string(),
+            nasdaq_symbol: None,
+            feed_expiry: None,
+            feed_kind: FeedKind::Price,
+        };
+
+        // Test JSON serialization
+        let json =
+            serde_json::to_string(&feed_response).expect("Failed to serialize FeedResponseV3");
+        assert!(json.contains("\"symbol\":\"pyth.spot.btc/usd\""));
+
+        // Test JSON deserialization
+        let deserialized: FeedResponseV3 =
+            serde_json::from_str(&json).expect("Failed to deserialize FeedResponseV3");
+        assert_eq!(deserialized.symbol.as_string(), "pyth.spot.btc/usd");
+        assert_eq!(deserialized.symbol.source, "pyth");
+        assert_eq!(deserialized.symbol.instrument_type, InstrumentType::Spot);
+        assert_eq!(deserialized.symbol.base, "btc");
+        assert_eq!(deserialized.symbol.quote, "usd");
+
+        // Ensure the entire structure matches
+        assert_eq!(deserialized, feed_response);
+    }
 }
