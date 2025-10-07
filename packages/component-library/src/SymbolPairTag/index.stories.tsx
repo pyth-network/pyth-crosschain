@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import CryptoIcon from "cryptocurrency-icons/svg/color/btc.svg";
+import BtcIcon from "cryptocurrency-icons/svg/color/btc.svg";
 
 import { SymbolPairTag as SymbolPairTagComponent } from "./index.jsx";
 const meta = {
@@ -29,7 +29,7 @@ export const SymbolPairTag = {
   args: {
     displaySymbol: "BTC/USD",
     isLoading: false,
-    icon: <CryptoIcon width="100%" height="100%" viewBox="0 0 32 32" />,
+    icon: <BtcIcon width="100%" height="100%" viewBox="0 0 32 32" />,
     description: "Bitcoin",
   },
 } satisfies StoryObj<typeof SymbolPairTagComponent>;

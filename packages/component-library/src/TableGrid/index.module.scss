@@ -1,0 +1,28 @@
+@use "../theme";
+
+.tableGrid {
+  --ag-browser-color-scheme: light-dark(light, dark);
+  --ag-background-color: #{theme.color("background", "primary")};
+  --ag-header-background-color: var(--ag-background-color);
+  --ag-foreground-color: #{theme.color("paragraph")};
+  --ag-accent-color: #{theme.color("button", "outline", "background", "active")};
+  --ag-header-font-size: #{theme.font-size("xs")};
+  --ag-header-font-weight: #{theme.font-weight("medium")};
+  --ag-cell-font-size: #{theme.font-size("xs")};
+  --ag-wrapper-border: none;
+  --ag-cell-text-color: #{theme.color("paragraph")};
+  --ag-data-font-size: #{theme.font-size("base")};
+
+  height: 100%;
+}
+
+.defaultCellContainer {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.skeletonContainer {
+  height: theme.spacing(10);
+  width: 100%;
+}
