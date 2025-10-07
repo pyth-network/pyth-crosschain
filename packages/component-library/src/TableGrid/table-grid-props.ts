@@ -9,8 +9,7 @@ type ExtendedColDef<TData> = ColDef<TData> & {
 
 export type TableGridProps<TData extends Record<string, unknown>> = {
   rowData: TData[];
-  colDefs: ExtendedColDef<TData>[];
-  isLoading?: boolean;
+  columnDefs: ExtendedColDef<TData>[];
   cardProps?: Omit<CardProps<"div">, "children" | "footer"> & {
     nonInteractive?: true;
   };

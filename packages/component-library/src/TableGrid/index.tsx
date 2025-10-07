@@ -35,10 +35,15 @@ const SkeletonCellRenderer = (props: { value?: ReactNode }) => {
   return <div className={styles.defaultCellContainer}>{props.value}</div>;
 };
 
+const DEFAULT_COL_DEF = {
+  cellRenderer: SkeletonCellRenderer,
+  flex: 1,
+};
+
 export const TableGrid = <TData extends Record<string, unknown>>({
   rowData,
-  colDefs,
-  isLoading,
+  columnDefs,
+  loading,
   cardProps,
   pagination,
   ...props
@@ -48,25 +53,18 @@ export const TableGrid = <TData extends Record<string, unknown>>({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const defaultColDef = useMemo(() => {
-    return {
-      cellRenderer: SkeletonCellRenderer,
-      flex: 1,
-    };
-  }, []);
-
   const mappedColDefs = useMemo(() => {
-    return colDefs.map((colDef) => {
+    return columnDefs.map((colDef) => {
       return {
         ...colDef,
         // the types in ag-grid are `any` for the cellRenderers which is throwing an error here
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        cellRenderer: isLoading
+        cellRenderer: loading
           ? (colDef.loadingCellRenderer ?? SkeletonCellRenderer)
           : colDef.cellRenderer,
       };
     });
-  }, [colDefs, isLoading]);
+  }, [columnDefs, loading]);
 
   const onPaginationChanged = useCallback(() => {
     const api = gridRef.current?.api;
@@ -84,8 +82,8 @@ export const TableGrid = <TData extends Record<string, unknown>>({
     <AgGridReact<TData>
       className={styles.tableGrid}
       // @ts-expect-error empty row data, which is throwing an error here btu required to display 1 row in the loading state
-      rowData={isLoading ? [[]] : rowData}
-      defaultColDef={defaultColDef}
+      rowData={loading ? [[]] : rowData}
+      defaultColDef={DEFAULT_COL_DEF}
       columnDefs={mappedColDefs}
       theme={themeQuartz}
       domLayout="autoHeight"

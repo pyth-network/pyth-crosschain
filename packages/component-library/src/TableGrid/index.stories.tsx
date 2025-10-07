@@ -13,7 +13,7 @@ const meta = {
     layout: "padded",
   },
   argTypes: {
-    colDefs: {
+    columnDefs: {
       table: {
         disable: true,
       },
@@ -33,7 +33,7 @@ const meta = {
         category: "Outer Card",
       },
     },
-    isLoading: {
+    loading: {
       control: "boolean",
       table: {
         category: "State",
@@ -75,7 +75,7 @@ const FeedCellRendererLoading = () => (
 );
 
 const args = {
-  colDefs: [
+  columnDefs: [
     {
       headerName: "ID",
       field: "id",
