@@ -44,6 +44,7 @@
     "@amplitude/analytics-browser": "catalog:",
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
+    "@internationalized/date": "catalog:",
     "@next/third-parties": "catalog:",
     "ag-grid-community": "catalog:",
     "ag-grid-react": "catalog:",

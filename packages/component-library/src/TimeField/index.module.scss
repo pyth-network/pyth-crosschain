@@ -1,0 +1,100 @@
+@use "../theme";
+
+.timeField {
+  display: flex;
+  flex-flow: column nowrap;
+  gap: theme.spacing(1);
+
+  &[data-label-hidden] .label {
+    @include theme.sr-only;
+  }
+}
+
+.label {
+  font-size: theme.font-size("sm");
+  font-weight: theme.font-weight("medium");
+  color: theme.color("paragraph");
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+  padding: 0 theme.spacing(3);
+  height: theme.spacing(10);
+  background-color: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  transition-property: border-color, outline-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  outline: theme.spacing(1) solid transparent;
+  outline-offset: 0;
+
+  &:has(.input[data-focus-within]) {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+}
+
+.icon {
+  width: theme.spacing(4);
+  height: theme.spacing(4);
+  color: theme.color("muted");
+  flex-shrink: 0;
+}
+
+.input {
+  display: flex;
+  flex: 1;
+  gap: theme.spacing(1);
+  outline: none;
+  font-size: theme.font-size("sm");
+  font-variant-numeric: tabular-nums;
+}
+
+.segment {
+  padding: theme.spacing(0.5) theme.spacing(1);
+  border-radius: theme.border-radius("md");
+  color: theme.color("paragraph");
+  outline: none;
+
+  &[data-placeholder] {
+    color: theme.color("muted");
+  }
+
+  &[data-type="literal"] {
+    padding: 0;
+    color: theme.color("muted");
+  }
+
+  &[data-focused] {
+    background-color: theme.color("button", "primary", "background", "normal");
+    color: theme.color("button", "primary", "foreground");
+  }
+}
+
+.clearButton {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: theme.color("muted");
+  transition: color 100ms linear;
+  -webkit-tap-highlight-color: transparent;
+
+  &[data-hovered] {
+    color: theme.color("paragraph");
+  }
+}
+
+.clearIcon {
+  width: theme.spacing(4);
+  height: theme.spacing(4);
+}
+
+
