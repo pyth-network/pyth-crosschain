@@ -20,6 +20,8 @@ import { Card } from "../Card/index.jsx";
 import { Link } from "../Link/index.jsx";
 import type { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
 
+export { default as Logo } from "./logo.svg";
+
 type Props = ComponentProps<"header"> & {
   appName: string;
   mainCta?:
@@ -239,3 +241,5 @@ export const SupportDrawer = {
     </>
   ),
 };
+
+export { default as HeaderLogo } from "./logo.svg";
