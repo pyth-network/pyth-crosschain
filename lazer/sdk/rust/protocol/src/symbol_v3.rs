@@ -1,31 +1,30 @@
 //! SymbolV3 type for validated symbol strings.
 
-use crate::InstrumentType;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
-/// A validated symbol that conforms to the format `source.instrument_type.base/quote`.
+/// A symbol that conforms to the format `source.instrument_type.base[/quote]`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct SymbolV3 {
     /// The data source (e.g., "pyth", "binance")
     pub source: String,
-    /// The instrument type
-    pub instrument_type: InstrumentType,
-    /// The base asset (e.g., "btc", "alp")
+    /// The instrument type (e.g., "spot", "redemptionrate", "fundingrate")
+    pub instrument_type: String,
+    /// The base asset ID (e.g., "btc", "alp")
     pub base: String,
-    /// The quote asset (e.g., "usd", "usdt")
-    pub quote: String,
+    /// The quote asset ID (e.g., "usd", "usdt"), optional
+    pub quote: Option<String>,
 }
 
 impl SymbolV3 {
     /// Creates a new SymbolV3 from components.
     pub fn new(
         source: String,
-        instrument_type: InstrumentType,
+        instrument_type: String,
         base: String,
-        quote: String,
+        quote: Option<String>,
     ) -> Self {
         Self {
             source,
@@ -35,12 +34,15 @@ impl SymbolV3 {
         }
     }
 
-    /// Returns the symbol as a string in the format `source.instrument_type.base/quote`.
+    /// Returns the symbol as a string in the format `source.instrument_type.base[/quote]`.
     pub fn as_string(&self) -> String {
-        format!(
-            "{}.{}.{}/{}",
-            self.source, self.instrument_type, self.base, self.quote
-        )
+        match &self.quote {
+            Some(quote) => format!(
+                "{}.{}.{}/{}",
+                self.source, self.instrument_type, self.base, quote
+            ),
+            None => format!("{}.{}.{}", self.source, self.instrument_type, self.base),
+        }
     }
 }
 
@@ -78,35 +80,43 @@ impl FromStr for SymbolV3 {
         }
 
         let source = parts[0].to_string();
-        let instrument_type_str = parts[1];
+        let instrument_type = parts[1].to_string();
         let base_quote_part = parts[2];
-
-        // Parse instrument type using its FromStr implementation
-        let instrument_type = instrument_type_str
-            .parse::<InstrumentType>()
-            .map_err(|e| format!("Invalid instrument type '{}': {}", instrument_type_str, e))?;
 
         // Split base/quote part
         let base_quote: Vec<&str> = base_quote_part.split('/').collect();
-        if base_quote.len() != 2 {
-            return Err(format!(
-                "Invalid base/quote format: expected format 'base/quote', got '{}'",
-                base_quote_part
-            ));
-        }
 
-        let base = base_quote[0].to_string();
-        let quote = base_quote[1].to_string();
+        let (base, quote) = match base_quote.len() {
+            1 => {
+                // No quote provided
+                (base_quote[0].to_string(), None)
+            }
+            2 => {
+                // Quote provided
+                let base = base_quote[0].to_string();
+                let quote_str = base_quote[1].to_string();
+                if quote_str.is_empty() {
+                    return Err("Quote asset cannot be empty when slash is present".to_string());
+                }
+                (base, Some(quote_str))
+            }
+            _ => {
+                return Err(format!(
+                    "Invalid base/quote format: expected format 'base' or 'base/quote', got '{}'",
+                    base_quote_part
+                ));
+            }
+        };
 
         // Validate that parts are not empty
         if source.is_empty() {
             return Err("Source cannot be empty".to_string());
         }
+        if instrument_type.is_empty() {
+            return Err("Instrument type cannot be empty".to_string());
+        }
         if base.is_empty() {
             return Err("Base asset cannot be empty".to_string());
-        }
-        if quote.is_empty() {
-            return Err("Quote asset cannot be empty".to_string());
         }
 
         Ok(Self::new(source, instrument_type, base, quote))
@@ -118,205 +128,124 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_valid_symbol_parsing() {
-        // Test various valid symbol formats
-        let test_cases = vec![
+    fn test_parsing_and_roundtrip() {
+        // Test parsing with quote
+        let cases_with_quote = vec![
+            ("pyth.spot.btc/usd", "pyth", "spot", "btc", "usd"),
             (
-                "pyth.spot.btc/usd",
-                "pyth",
-                InstrumentType::Spot,
-                "btc",
-                "usd",
+                "binance.fundingrate.eth/usdt",
+                "binance",
+                "fundingrate",
+                "eth",
+                "usdt",
             ),
             (
                 "pyth.redemptionrate.alp/usd",
                 "pyth",
-                InstrumentType::RedemptionRate,
+                "redemptionrate",
                 "alp",
                 "usd",
             ),
-            (
-                "binance.fundingrate.btc/usdt",
-                "binance",
-                InstrumentType::FundingRate,
-                "btc",
-                "usdt",
-            ),
-            (
-                "pyth.future.emz5/usd",
-                "pyth",
-                InstrumentType::Future,
-                "emz5",
-                "usd",
-            ),
-            (
-                "exchange.nav.asset/quote",
-                "exchange",
-                InstrumentType::Nav,
-                "asset",
-                "quote",
-            ),
-            (
-                "source.twap.base/quote",
-                "source",
-                InstrumentType::Twap,
-                "base",
-                "quote",
-            ),
         ];
 
-        for (symbol_str, expected_source, expected_instrument, expected_base, expected_quote) in
-            test_cases
-        {
-            let symbol: SymbolV3 = symbol_str
-                .parse()
-                .expect(&format!("Failed to parse: {}", symbol_str));
-
-            assert_eq!(symbol.source, expected_source);
-            assert_eq!(symbol.instrument_type, expected_instrument);
-            assert_eq!(symbol.base, expected_base);
-            assert_eq!(symbol.quote, expected_quote);
-
-            // Test round-trip conversion
-            assert_eq!(symbol.as_string(), symbol_str);
-            assert_eq!(symbol.to_string(), symbol_str);
+        for (input, source, instrument, base, quote) in cases_with_quote {
+            let symbol: SymbolV3 = input.parse().expect("Failed to parse");
+            assert_eq!(symbol.source, source);
+            assert_eq!(symbol.instrument_type, instrument);
+            assert_eq!(symbol.base, base);
+            assert_eq!(symbol.quote, Some(quote.to_string()));
+            assert_eq!(symbol.as_string(), input);
+            assert_eq!(symbol.to_string(), input);
         }
-    }
 
-    #[test]
-    fn test_invalid_symbol_parsing() {
-        let invalid_cases = vec![
-            // Wrong number of parts
-            "pyth.spot",
-            "pyth.spot.btc.usd.extra",
-            "pyth",
-            "",
-            // Invalid instrument type
-            "pyth.invalid.btc/usd",
-            "pyth.SPOT.btc/usd", // case sensitive
-            // Missing slash in base/quote
-            "pyth.spot.btcusd",
-            "pyth.spot.btc-usd",
-            // Empty components
-            ".spot.btc/usd",
-            "pyth..btc/usd",
-            "pyth.spot./usd",
-            "pyth.spot.btc/",
-            "pyth.spot.btc/",
-            // Multiple slashes
-            "pyth.spot.btc/usd/extra",
+        // Test parsing without quote
+        let cases_without_quote = vec![
+            ("pyth.redemptionrate.alp", "pyth", "redemptionrate", "alp"),
+            ("pyth.nav.fund", "pyth", "nav", "fund"),
+            ("source.index.btc", "source", "index", "btc"),
         ];
 
-        for invalid_symbol in invalid_cases {
+        for (input, source, instrument, base) in cases_without_quote {
+            let symbol: SymbolV3 = input.parse().expect("Failed to parse");
+            assert_eq!(symbol.source, source);
+            assert_eq!(symbol.instrument_type, instrument);
+            assert_eq!(symbol.base, base);
+            assert_eq!(symbol.quote, None);
+            assert_eq!(symbol.as_string(), input);
+            assert_eq!(symbol.to_string(), input);
+        }
+
+        // Test invalid formats
+        let invalid = vec![
+            "pyth.spot",               // Missing base
+            "pyth.spot.btc.usd.extra", // Too many parts
+            "pyth",                    // Too few parts
+            "",                        // Empty
+            ".spot.btc/usd",           // Empty source
+            "pyth..btc/usd",           // Empty instrument
+            "pyth.spot./usd",          // Empty base
+            "pyth.spot.btc/",          // Empty quote with slash
+            "pyth.spot.",              // Empty base with dot
+            "pyth.spot.btc/usd/extra", // Multiple slashes
+        ];
+
+        for input in invalid {
             assert!(
-                invalid_symbol.parse::<SymbolV3>().is_err(),
+                input.parse::<SymbolV3>().is_err(),
                 "Expected parsing to fail for: {}",
-                invalid_symbol
+                input
             );
         }
     }
 
     #[test]
-    fn test_symbol_construction() {
-        let symbol = SymbolV3::new(
+    fn test_construction_and_display() {
+        // With quote
+        let with_quote = SymbolV3::new(
             "pyth".to_string(),
-            InstrumentType::Spot,
+            "spot".to_string(),
             "btc".to_string(),
-            "usd".to_string(),
+            Some("usd".to_string()),
         );
+        assert_eq!(with_quote.as_string(), "pyth.spot.btc/usd");
 
-        assert_eq!(symbol.source, "pyth");
-        assert_eq!(symbol.instrument_type, InstrumentType::Spot);
-        assert_eq!(symbol.base, "btc");
-        assert_eq!(symbol.quote, "usd");
-        assert_eq!(symbol.as_string(), "pyth.spot.btc/usd");
+        // Without quote
+        let without_quote = SymbolV3::new(
+            "pyth".to_string(),
+            "redemptionrate".to_string(),
+            "alp".to_string(),
+            None,
+        );
+        assert_eq!(without_quote.as_string(), "pyth.redemptionrate.alp");
     }
 
     #[test]
-    fn test_symbol_serialization() {
-        let symbol = SymbolV3::new(
+    fn test_serialization() {
+        // Test with quote
+        let symbol_with_quote = SymbolV3::new(
             "pyth".to_string(),
-            InstrumentType::FundingRate,
-            "eth".to_string(),
-            "usd".to_string(),
+            "spot".to_string(),
+            "btc".to_string(),
+            Some("usd".to_string()),
         );
+        let json = serde_json::to_string(&symbol_with_quote).unwrap();
+        assert_eq!(json, "\"pyth.spot.btc/usd\"");
+        let deserialized: SymbolV3 = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized, symbol_with_quote);
 
-        // Test JSON serialization
-        let json = serde_json::to_string(&symbol).expect("Failed to serialize");
-        assert_eq!(json, "\"pyth.fundingrate.eth/usd\"");
-
-        // Test JSON deserialization
-        let deserialized: SymbolV3 = serde_json::from_str(&json).expect("Failed to deserialize");
-        assert_eq!(deserialized, symbol);
-    }
-
-    #[test]
-    fn test_symbol_deserialization_invalid() {
-        // Test that invalid JSON strings fail to deserialize
-        let invalid_json = "\"invalid.format\"";
-        assert!(serde_json::from_str::<SymbolV3>(invalid_json).is_err());
-    }
-
-    #[test]
-    fn test_instrument_type_string_mapping() {
-        let test_cases = vec![
-            (InstrumentType::Spot, "spot"),
-            (InstrumentType::RedemptionRate, "redemptionrate"),
-            (InstrumentType::FundingRate, "fundingrate"),
-            (InstrumentType::Future, "future"),
-            (InstrumentType::Nav, "nav"),
-            (InstrumentType::Twap, "twap"),
-        ];
-
-        for (instrument_type, expected_str) in test_cases {
-            let symbol = SymbolV3::new(
-                "test".to_string(),
-                instrument_type,
-                "base".to_string(),
-                "quote".to_string(),
-            );
-
-            let symbol_str = symbol.as_string();
-            assert!(
-                symbol_str.contains(expected_str),
-                "Expected symbol '{}' to contain '{}'",
-                symbol_str,
-                expected_str
-            );
-        }
-    }
-
-    #[test]
-    fn test_symbol_equality_and_hash() {
-        let symbol1 = SymbolV3::new(
+        // Test without quote
+        let symbol_without_quote = SymbolV3::new(
             "pyth".to_string(),
-            InstrumentType::Spot,
-            "btc".to_string(),
-            "usd".to_string(),
+            "nav".to_string(),
+            "fund".to_string(),
+            None,
         );
+        let json = serde_json::to_string(&symbol_without_quote).unwrap();
+        assert_eq!(json, "\"pyth.nav.fund\"");
+        let deserialized: SymbolV3 = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized, symbol_without_quote);
 
-        let symbol2 = SymbolV3::new(
-            "pyth".to_string(),
-            InstrumentType::Spot,
-            "btc".to_string(),
-            "usd".to_string(),
-        );
-
-        let symbol3 = SymbolV3::new(
-            "binance".to_string(),
-            InstrumentType::Spot,
-            "btc".to_string(),
-            "usd".to_string(),
-        );
-
-        assert_eq!(symbol1, symbol2);
-        assert_ne!(symbol1, symbol3);
-
-        // Test that equal symbols have the same hash
-        use std::collections::HashSet;
-        let mut set = HashSet::new();
-        set.insert(symbol1.clone());
-        assert!(set.contains(&symbol2));
-        assert!(!set.contains(&symbol3));
+        // Test invalid deserialization
+        assert!(serde_json::from_str::<SymbolV3>("\"invalid.format\"").is_err());
     }
 }

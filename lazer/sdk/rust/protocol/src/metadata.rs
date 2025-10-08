@@ -4,22 +4,20 @@ use crate::time::TimestampUs;
 use crate::FeedKind;
 use crate::{symbol_state::SymbolState, PriceFeedId, SymbolV3};
 use serde::{Deserialize, Serialize};
-use strum::{Display, EnumString};
 
 /// The pricing context or type of instrument for a feed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display, EnumString)]
+/// This is an internal type and should not be used by clients as it is non-exhaustive.
+/// The API response can evolve to contain additional variants that are not listed here.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-#[strum(serialize_all = "lowercase")]
 pub enum InstrumentType {
     /// Spot price
     Spot,
     /// Redemption rate
     #[serde(rename = "redemptionrate")]
-    #[strum(serialize = "redemptionrate")]
     RedemptionRate,
     /// Funding rate
     #[serde(rename = "fundingrate")]
-    #[strum(serialize = "fundingrate")]
     FundingRate,
     /// Future price
     Future,
@@ -30,6 +28,8 @@ pub enum InstrumentType {
 }
 
 /// High-level asset class.
+/// This is an internal type and should not be used by clients as it is non-exhaustive.
+/// The API response can evolve to contain additional variants that are not listed here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum AssetClass {
@@ -43,12 +43,8 @@ pub enum AssetClass {
     Metal,
     /// Rates
     Rates,
-    /// Net Asset Value
-    Nav,
     /// Commodity
     Commodity,
-    /// Funding rate
-    FundingRate,
 }
 
 /// Feed metadata as returned by the v3 metadata API.
@@ -73,9 +69,9 @@ pub struct FeedResponseV3 {
     /// The Asset ID of the quote asset.
     /// Example: `"USD"`
     pub quote_asset_id: String,
-    /// The pricing context.
+    /// The pricing context. Should be one of the values in the InstrumentType enum.
     /// Example: `"spot"`
-    pub instrument_type: InstrumentType,
+    pub instrument_type: String,
     /// Aggregator or producer of the prices.
     /// Examples: `"pyth"`, `"binance"`
     pub source: String,
@@ -95,8 +91,9 @@ pub struct FeedResponseV3 {
     /// Example: `"active"`
     pub state: SymbolState,
     /// High-level asset class. One of crypto, fx, equity, metal, rates, nav, commodity, funding-rate.
+    /// Should be one of the values in the AssetClass enum.
     /// Example: `"crypto"`
-    pub asset_type: AssetClass,
+    pub asset_type: String,
     /// CoinMarketCap asset identifier.
     /// Example: `"123"`
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -131,7 +128,7 @@ pub struct AssetResponseV3 {
     pub full_name: String,
     /// High-level asset class.
     /// Example: `"crypto"`
-    pub class: AssetClass,
+    pub class: String,
     /// More granular categorization within class.
     /// Example: `"stablecoin"`
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -147,36 +144,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_instrument_type_roundtrip() {
-        let types = vec![
-            InstrumentType::Spot,
-            InstrumentType::RedemptionRate,
-            InstrumentType::FundingRate,
-            InstrumentType::Future,
-            InstrumentType::Nav,
-            InstrumentType::Twap,
-        ];
-
-        for instrument_type in types {
-            let string_repr = instrument_type.to_string();
-            let parsed = string_repr.parse::<InstrumentType>().unwrap();
-            assert_eq!(parsed, instrument_type);
-        }
-
-        // Test invalid values
-        assert!("invalid".parse::<InstrumentType>().is_err());
-        assert!("SPOT".parse::<InstrumentType>().is_err()); // case sensitive
-    }
-
-    #[test]
     fn test_feed_response_v3_roundtrip() {
         use crate::{symbol_state::SymbolState, FeedKind, PriceFeedId};
 
         let symbol = SymbolV3::new(
             "pyth".to_string(),
-            InstrumentType::Spot,
+            "spot".to_string(),
             "btc".to_string(),
-            "usd".to_string(),
+            Some("usd".to_string()),
         );
 
         let feed_response = FeedResponseV3 {
@@ -186,14 +161,14 @@ mod tests {
             description: "Pyth Network Aggregate Price for spot BTC/USD".to_string(),
             base_asset_id: "BTC".to_string(),
             quote_asset_id: "USD".to_string(),
-            instrument_type: InstrumentType::Spot,
+            instrument_type: "spot".to_string(),
             source: "pyth".to_string(),
             schedule: "America/New_York;O,O,O,O,O,O,O;".to_string(),
             exponent: -8,
             update_interval_seconds: 10,
             min_publishers: 3,
             state: SymbolState::Stable,
-            asset_type: AssetClass::Crypto,
+            asset_type: "crypto".to_string(),
             cmc_id: Some("1".to_string()),
             pythnet_id: "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
                 .to_string(),
@@ -212,9 +187,9 @@ mod tests {
             serde_json::from_str(&json).expect("Failed to deserialize FeedResponseV3");
         assert_eq!(deserialized.symbol.as_string(), "pyth.spot.btc/usd");
         assert_eq!(deserialized.symbol.source, "pyth");
-        assert_eq!(deserialized.symbol.instrument_type, InstrumentType::Spot);
+        assert_eq!(deserialized.symbol.instrument_type, "spot");
         assert_eq!(deserialized.symbol.base, "btc");
-        assert_eq!(deserialized.symbol.quote, "usd");
+        assert_eq!(deserialized.symbol.quote, Some("usd".to_string()));
 
         // Ensure the entire structure matches
         assert_eq!(deserialized, feed_response);
