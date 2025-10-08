@@ -102,8 +102,7 @@ impl FromStr for SymbolV3 {
             }
             _ => {
                 return Err(format!(
-                    "Invalid base/quote format: expected format 'base' or 'base/quote', got '{}'",
-                    base_quote_part
+                    "Invalid base/quote format: expected format 'base' or 'base/quote', got '{base_quote_part}'"
                 ));
             }
         };
@@ -192,8 +191,7 @@ mod tests {
         for input in invalid {
             assert!(
                 input.parse::<SymbolV3>().is_err(),
-                "Expected parsing to fail for: {}",
-                input
+                "Expected parsing to fail for: {input}"
             );
         }
     }
