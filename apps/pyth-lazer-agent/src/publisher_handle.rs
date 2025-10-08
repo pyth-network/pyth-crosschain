@@ -124,11 +124,21 @@ async fn try_handle_publisher(
                     Ok((data, _)) => FeedUpdate {
                         feed_id: Some(data.price_feed_id.0),
                         source_timestamp: MessageField::some(data.source_timestamp_us.into()),
-                        update: Some(Update::FundingRateUpdate(FundingRateUpdate {
-                            price: data.price.map(|p| p.mantissa_i64()),
-                            rate: data.funding_rate.map(|r| r.mantissa()),
-                            ..FundingRateUpdate::default()
-                        })),
+                        update: if data.funding_rate.is_some() {
+                            Some(Update::FundingRateUpdate(FundingRateUpdate {
+                                price: data.price.map(|p| p.mantissa_i64()),
+                                rate: data.funding_rate.map(|r| r.mantissa()),
+                                funding_rate_interval: MessageField::none(),
+                                special_fields: Default::default(),
+                            }))
+                        } else {
+                            Some(Update::PriceUpdate(PriceUpdate {
+                                price: data.price.map(|p| p.mantissa_i64()),
+                                best_bid_price: data.best_bid_price.map(|p| p.mantissa_i64()),
+                                best_ask_price: data.best_ask_price.map(|p| p.mantissa_i64()),
+                                special_fields: Default::default(),
+                            }))
+                        },
                         special_fields: Default::default(),
                     },
                     Err(err) => {
