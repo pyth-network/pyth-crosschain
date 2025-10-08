@@ -557,19 +557,31 @@ export class EvmChain extends Chain {
     deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
     gasMultiplier = 1,
     gasPriceMultiplier = 1,
+    manualGasLimit?: number,
   ): Promise<string> {
     const web3 = this.getWeb3();
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(signer);
     const contract = new web3.eth.Contract(abi);
     const deployTx = contract.deploy({ data: bytecode, arguments: deployArgs });
-    const gas = Math.trunc(
-      (await deployTx.estimateGas({ from: signer.address })) * gasMultiplier,
-    );
+    
+    console.log(`[DEBUG] Deployer address: ${signer.address}`);
+    const deployerBalance = await web3.eth.getBalance(signer.address);
+    console.log(`[DEBUG] Deployer balance: ${deployerBalance} wei (${Number(deployerBalance) / 1e18} ETH)`);
+    
+    const gas = manualGasLimit
+      ? manualGasLimit
+      : Math.trunc(
+          (await deployTx.estimateGas({ from: signer.address })) * gasMultiplier,
+        );
+    console.log(`[DEBUG] Gas limit: ${gas} (manual: ${manualGasLimit ? 'yes' : 'no'})`);
+    
     const gasPrice = Math.trunc(
       Number(await this.getGasPrice()) * gasPriceMultiplier,
     );
-    const deployerBalance = await web3.eth.getBalance(signer.address);
+    console.log(`[DEBUG] Gas price: ${gasPrice} wei`);
+    console.log(`[DEBUG] Total cost: ${BigInt(gas) * BigInt(gasPrice)} wei (${Number(BigInt(gas) * BigInt(gasPrice)) / 1e18} ETH)`);
+    
     const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
     if (gasDiff > 0n) {
       throw new Error(
