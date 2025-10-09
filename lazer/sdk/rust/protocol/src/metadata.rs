@@ -2,7 +2,7 @@
 
 use crate::time::{DurationUs, TimestampUs};
 use crate::FeedKind;
-use crate::{symbol_state::SymbolState, PriceFeedId, SymbolV3};
+use crate::{symbol_state::SymbolState, PriceFeedId};
 use serde::{Deserialize, Serialize};
 
 /// The pricing context or type of instrument for a feed.
@@ -59,7 +59,7 @@ pub struct FeedResponseV3 {
     /// Unique human-readable identifier for a feed.
     /// Format: `source.instrument_type.base/quote`
     /// Examples: `"pyth.spot.btc/usd"`, `"pyth.redemptionrate.alp/usd"`, `"binance.fundingrate.btc/usdt"`, `"pyth.future.emz5/usd"`
-    pub symbol: SymbolV3,
+    pub symbol: String,
     /// Description of the feed pair.
     /// Example: `"Pyth Network Aggregate Price for spot BTC/USD"`
     pub description: String,
@@ -143,10 +143,14 @@ pub struct AssetResponseV3 {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use crate::SymbolV3;
+
     use super::*;
 
     #[test]
-    fn test_feed_response_v3_roundtrip() {
+    fn test_feed_response_v3_json_serde_roundtrip() {
         use crate::{symbol_state::SymbolState, FeedKind, PriceFeedId};
 
         let symbol = SymbolV3::new(
@@ -159,7 +163,7 @@ mod tests {
         let feed_response = FeedResponseV3 {
             id: PriceFeedId(1),
             name: "Bitcoin / US Dollar".to_string(),
-            symbol,
+            symbol: symbol.as_string(),
             description: "Pyth Network Aggregate Price for spot BTC/USD".to_string(),
             base_asset_id: "BTC".to_string(),
             quote_asset_id: Some("USD".to_string()),
@@ -182,18 +186,25 @@ mod tests {
         // Test JSON serialization
         let json =
             serde_json::to_string(&feed_response).expect("Failed to serialize FeedResponseV3");
-        assert!(json.contains("\"symbol\":\"pyth.spot.btc/usd\""));
+        let expected_json = r#"{"id":1,"name":"Bitcoin / US Dollar","symbol":"pyth.spot.btc/usd","description":"Pyth Network Aggregate Price for spot BTC/USD","base_asset_id":"BTC","quote_asset_id":"USD","instrument_type":"spot","source":"pyth","schedule":"America/New_York;O,O,O,O,O,O,O;","exponent":-8,"update_interval":10000000,"min_publishers":3,"state":"stable","asset_type":"crypto","cmc_id":1,"pythnet_id":"e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43","feed_kind":"price"}"#;
+        assert_eq!(
+            json, expected_json,
+            "Serialized JSON does not match expected output"
+        );
 
         // Test JSON deserialization
         let deserialized: FeedResponseV3 =
             serde_json::from_str(&json).expect("Failed to deserialize FeedResponseV3");
-        assert_eq!(deserialized.symbol.as_string(), "pyth.spot.btc/usd");
-        assert_eq!(deserialized.symbol.source, "pyth");
-        assert_eq!(deserialized.symbol.instrument_type, "spot");
-        assert_eq!(deserialized.symbol.base, "btc");
-        assert_eq!(deserialized.symbol.quote, Some("usd".to_string()));
 
         // Ensure the entire structure matches
         assert_eq!(deserialized, feed_response);
+
+        // Test SymbolV3 deserialization
+        assert_eq!(deserialized.symbol, "pyth.spot.btc/usd");
+        let symbol = SymbolV3::from_str(&deserialized.symbol).unwrap();
+        assert_eq!(symbol.source, "pyth");
+        assert_eq!(symbol.instrument_type, "spot");
+        assert_eq!(symbol.base, "btc");
+        assert_eq!(symbol.quote, Some("usd".to_string()));
     }
 }
