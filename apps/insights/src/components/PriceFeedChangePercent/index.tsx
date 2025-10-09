@@ -1,5 +1,6 @@
 "use client";
 
+import { PriceStatus } from "@pythnetwork/client";
 import { StateType, useData } from "@pythnetwork/component-library/useData";
 import type { ComponentProps } from "react";
 import { createContext, use } from "react";
@@ -109,15 +110,19 @@ const PriceFeedChangePercentLoaded = ({
 }: PriceFeedChangePercentLoadedProps) => {
   const { current } = useLivePriceData(Cluster.Pythnet, feedKey);
 
-  return current === undefined ? (
-    <ChangePercent className={className} isLoading />
-  ) : (
-    <ChangePercent
-      className={className}
-      currentValue={current.aggregate.price}
-      previousValue={priorPrice}
-    />
-  );
+  if (current === undefined) {
+    return <ChangePercent className={className} isLoading />;
+  } else if (current.status === PriceStatus.Trading) {
+    return (
+      <ChangePercent
+        className={className}
+        currentValue={current.aggregate.price}
+        previousValue={priorPrice}
+      />
+    );
+  } else {
+    return "-";
+  }
 };
 
 class YesterdaysPricesNotInitializedError extends Error {
