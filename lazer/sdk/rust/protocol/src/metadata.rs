@@ -81,13 +81,14 @@ pub struct FeedResponseV3 {
     pub schedule: String,
     /// Power-of-ten exponent. Scale the `price` mantissa value by `10^exponent` to get the decimal representation.
     /// Example: `-8`
-    pub exponent: i32,
+    pub exponent: i16,
     /// Funding rate interval. Only applies to feeds with instrument type `funding_rate`.
     /// Example: `10`
-    pub update_interval: DurationUs,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub update_interval: Option<DurationUs>,
     /// The minimum number of publishers contributing component prices to the aggregate price.
     /// Example: `3`
-    pub min_publishers: u32,
+    pub min_publishers: u16,
     /// Status of the feed.
     /// Example: `"active"`
     pub state: SymbolState,
@@ -98,7 +99,7 @@ pub struct FeedResponseV3 {
     /// CoinMarketCap asset identifier.
     /// Example: `"123"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cmc_id: Option<String>,
+    pub cmc_id: Option<u32>,
     /// Pythnet feed identifier. 32 bytes, represented in hex.
     /// Example: `"e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"`
     pub pythnet_id: String,
@@ -166,11 +167,11 @@ mod tests {
             source: "pyth".to_string(),
             schedule: "America/New_York;O,O,O,O,O,O,O;".to_string(),
             exponent: -8,
-            update_interval: DurationUs::from_secs_u32(10),
+            update_interval: Some(DurationUs::from_secs_u32(10)),
             min_publishers: 3,
             state: SymbolState::Stable,
             asset_type: "crypto".to_string(),
-            cmc_id: Some("1".to_string()),
+            cmc_id: Some(1),
             pythnet_id: "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
                 .to_string(),
             nasdaq_symbol: None,
