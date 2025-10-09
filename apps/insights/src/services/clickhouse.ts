@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@clickhouse/client";
+import { PriceStatus } from "@pythnetwork/client";
 import type { ZodSchema, ZodTypeDef } from "zod";
 import { z } from "zod";
 
@@ -366,11 +367,12 @@ export const getHistoricalPrices = async ({
         timestamp: z.number(),
         price: z.number(),
         confidence: z.number(),
+        status: z.nativeEnum(PriceStatus),
       }),
     ),
     {
       query: `
-          SELECT toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL ${resolution})) AS timestamp, avg(price) AS price, avg(confidence) AS confidence
+          SELECT toUnixTimestamp(toStartOfInterval(publishTime, INTERVAL ${resolution})) AS timestamp, avg(price) AS price, avg(confidence) AS confidence, status
           FROM prices
           PREWHERE
             cluster = {cluster: String}
@@ -380,7 +382,7 @@ export const getHistoricalPrices = async ({
           WHERE
             publishTime >= toDateTime({from: UInt32})
             AND publishTime < toDateTime({to: UInt32})
-          GROUP BY timestamp
+          GROUP BY timestamp, status
           ORDER BY timestamp ASC
         `,
       query_params: queryParams,

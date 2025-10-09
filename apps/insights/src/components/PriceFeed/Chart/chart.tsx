@@ -1,5 +1,6 @@
 "use client";
 
+import { PriceStatus } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useResizeObserver, useMountEffect } from "@react-hookz/web";
 import {
@@ -12,7 +13,9 @@ import type {
   IChartApi,
   ISeriesApi,
   LineData,
+  Time,
   UTCTimestamp,
+  WhitespaceData,
 } from "lightweight-charts";
 import {
   AreaSeries,
@@ -68,6 +71,12 @@ const useChartElem = (symbol: string, feedId: string) => {
   const isBackfilling = useRef(false);
   const priceFormatter = usePriceFormatter();
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
+  // Lightweight charts has [a
+  // bug](https://github.com/tradingview/lightweight-charts/issues/1649) where
+  // it does not properly return whitespace data back to us.  So we use this ref
+  // to manually keep track of whitespace data so we can merge it at the
+  // appropriate times.
+  const whitespaceData = useRef<Set<WhitespaceData>>(new Set());
 
   const { current: livePriceData } = useLivePriceData(Cluster.Pythnet, feedId);
 
@@ -81,8 +90,6 @@ const useChartElem = (symbol: string, feedId: string) => {
       return;
     }
 
-    // Update last data point
-    const { price, confidence } = livePriceData.aggregate;
     const timestampMs = startOfResolution(
       new Date(Number(livePriceData.timestamp) * 1000),
       resolution,
@@ -90,35 +97,51 @@ const useChartElem = (symbol: string, feedId: string) => {
 
     const time = (timestampMs / 1000) as UTCTimestamp;
 
-    const priceData: LineData = { time, value: price };
-    const confidenceHighData: LineData = { time, value: price + confidence };
-    const confidenceLowData: LineData = { time, value: price - confidence };
+    if (livePriceData.status === PriceStatus.Trading) {
+      // Update last data point
+      const { price, confidence } = livePriceData.aggregate;
 
-    const lastDataPoint = chartRef.current.price.data().at(-1);
+      const priceData: LineData = { time, value: price };
+      const confidenceHighData: LineData = { time, value: price + confidence };
+      const confidenceLowData: LineData = { time, value: price - confidence };
 
-    if (lastDataPoint && lastDataPoint.time > priceData.time) {
-      return;
+      const lastDataPoint = mergeData(chartRef.current.price.data(), [
+        ...whitespaceData.current,
+      ]).at(-1);
+
+      if (lastDataPoint && lastDataPoint.time > priceData.time) {
+        return;
+      }
+
+      chartRef.current.confidenceHigh.update(confidenceHighData);
+      chartRef.current.confidenceLow.update(confidenceLowData);
+      chartRef.current.price.update(priceData);
+    } else {
+      chartRef.current.price.update({ time });
+      chartRef.current.confidenceHigh.update({ time });
+      chartRef.current.confidenceLow.update({ time });
+      whitespaceData.current.add({ time });
     }
-
-    chartRef.current.confidenceHigh.update(confidenceHighData);
-    chartRef.current.confidenceLow.update(confidenceLowData);
-    chartRef.current.price.update(priceData);
   }, [livePriceData, resolution]);
 
   function maybeResetVisibleRange() {
     if (chartRef.current === undefined || didResetVisibleRange.current) {
       return;
     }
-    const data = chartRef.current.price.data();
-    const first = data.at(0);
-    const last = data.at(-1);
-    if (!first || !last) {
-      return;
+    const data = mergeData(chartRef.current.price.data(), [
+      ...whitespaceData.current,
+    ]);
+    if (data.length > 0) {
+      const first = data.at(0);
+      const last = data.at(-1);
+      if (!first || !last) {
+        return;
+      }
+      chartRef.current.chart
+        .timeScale()
+        .setVisibleRange({ from: first.time, to: last.time });
+      didResetVisibleRange.current = true;
     }
-    chartRef.current.chart
-      .timeScale()
-      .setVisibleRange({ from: first.time, to: last.time });
-    didResetVisibleRange.current = true;
   }
 
   const fetchHistoricalData = useCallback(
@@ -159,37 +182,49 @@ const useChartElem = (symbol: string, feedId: string) => {
           // Get the current historical price data
           // Note that .data() returns (WhitespaceData | LineData)[], hence the type cast.
           // We never populate the chart with WhitespaceData, so the type cast is safe.
-          const currentHistoricalPriceData =
-            chartRef.current.price.data() as LineData[];
+          const currentHistoricalPriceData = chartRef.current.price.data();
           const currentHistoricalConfidenceHighData =
-            chartRef.current.confidenceHigh.data() as LineData[];
+            chartRef.current.confidenceHigh.data();
           const currentHistoricalConfidenceLowData =
-            chartRef.current.confidenceLow.data() as LineData[];
+            chartRef.current.confidenceLow.data();
 
           const newHistoricalPriceData = data.map((d) => ({
             time: d.time,
-            value: d.price,
+            ...(d.status === PriceStatus.Trading && {
+              value: d.price,
+            }),
           }));
           const newHistoricalConfidenceHighData = data.map((d) => ({
             time: d.time,
-            value: d.price + d.confidence,
+            ...(d.status === PriceStatus.Trading && {
+              value: d.price + d.confidence,
+            }),
           }));
           const newHistoricalConfidenceLowData = data.map((d) => ({
             time: d.time,
-            value: d.price - d.confidence,
+            ...(d.status === PriceStatus.Trading && {
+              value: d.price - d.confidence,
+            }),
           }));
 
           // Combine the current and new historical price data
+          const whitespaceDataAsArray = [...whitespaceData.current];
           const mergedPriceData = mergeData(
-            currentHistoricalPriceData,
+            mergeData(currentHistoricalPriceData, whitespaceDataAsArray),
             newHistoricalPriceData,
           );
           const mergedConfidenceHighData = mergeData(
-            currentHistoricalConfidenceHighData,
+            mergeData(
+              currentHistoricalConfidenceHighData,
+              whitespaceDataAsArray,
+            ),
             newHistoricalConfidenceHighData,
           );
           const mergedConfidenceLowData = mergeData(
-            currentHistoricalConfidenceLowData,
+            mergeData(
+              currentHistoricalConfidenceLowData,
+              whitespaceDataAsArray,
+            ),
             newHistoricalConfidenceLowData,
           );
 
@@ -199,6 +234,12 @@ const useChartElem = (symbol: string, feedId: string) => {
           chartRef.current.confidenceLow.setData(mergedConfidenceLowData);
           maybeResetVisibleRange();
           didLoadInitialData.current = true;
+
+          for (const point of data) {
+            if (point.status !== PriceStatus.Trading) {
+              whitespaceData.current.add({ time: point.time });
+            }
+          }
         })
         .catch((error: unknown) => {
           if (error instanceof Error && error.name === "AbortError") {
@@ -252,7 +293,9 @@ const useChartElem = (symbol: string, feedId: string) => {
         return;
       }
       const { from, to } = range;
-      const first = chartRef.current?.price.data().at(0);
+      const first = mergeData(chartRef.current?.price.data() ?? [], [
+        ...whitespaceData.current,
+      ]).at(0);
 
       if (!from || !to || !first) {
         return;
@@ -344,11 +387,13 @@ const historicalDataSchema = z.array(
       timestamp: z.number(),
       price: z.number(),
       confidence: z.number(),
+      status: z.nativeEnum(PriceStatus),
     })
     .transform((d) => ({
       time: Number(d.timestamp) as UTCTimestamp,
       price: d.price,
       confidence: d.confidence,
+      status: d.status,
     })),
 );
 const priceFormat = {
@@ -451,18 +496,27 @@ const getColors = (container: HTMLDivElement, resolvedTheme: string) => {
 /**
  * Merge (and sort) two arrays of line data, deduplicating by time
  */
-export function mergeData(as: LineData[], bs: LineData[]) {
-  const unique = new Map<number, LineData>();
+export function mergeData(
+  as: readonly (LineData | WhitespaceData)[],
+  bs: (LineData | WhitespaceData)[],
+) {
+  const unique = new Map<Time, LineData | WhitespaceData>();
 
   for (const a of as) {
-    unique.set(a.time as number, a);
+    unique.set(a.time, a);
   }
   for (const b of bs) {
-    unique.set(b.time as number, b);
+    unique.set(b.time, b);
   }
-  return [...unique.values()].sort(
-    (a, b) => (a.time as number) - (b.time as number),
-  );
+  return [...unique.values()].sort((a, b) => {
+    if (typeof a.time === "number" && typeof b.time === "number") {
+      return a.time - b.time;
+    } else {
+      throw new TypeError(
+        "Invariant failed: unexpected time type encountered, all time values must be of type UTCTimestamp",
+      );
+    }
+  });
 }
 
 /**
