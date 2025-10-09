@@ -1,6 +1,6 @@
 //! Types describing Lazer's metadata APIs.
 
-use crate::time::TimestampUs;
+use crate::time::{DurationUs, TimestampUs};
 use crate::FeedKind;
 use crate::{symbol_state::SymbolState, PriceFeedId, SymbolV3};
 use serde::{Deserialize, Serialize};
@@ -68,7 +68,8 @@ pub struct FeedResponseV3 {
     pub base_asset_id: String,
     /// The Asset ID of the quote asset.
     /// Example: `"USD"`
-    pub quote_asset_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quote_asset_id: Option<String>,
     /// The pricing context. Should be one of the values in the InstrumentType enum.
     /// Example: `"spot"`
     pub instrument_type: String,
@@ -83,10 +84,10 @@ pub struct FeedResponseV3 {
     pub exponent: i32,
     /// Funding rate interval. Only applies to feeds with instrument type `funding_rate`.
     /// Example: `10`
-    pub update_interval_seconds: i32,
+    pub update_interval: DurationUs,
     /// The minimum number of publishers contributing component prices to the aggregate price.
     /// Example: `3`
-    pub min_publishers: i32,
+    pub min_publishers: u32,
     /// Status of the feed.
     /// Example: `"active"`
     pub state: SymbolState,
@@ -160,12 +161,12 @@ mod tests {
             symbol,
             description: "Pyth Network Aggregate Price for spot BTC/USD".to_string(),
             base_asset_id: "BTC".to_string(),
-            quote_asset_id: "USD".to_string(),
+            quote_asset_id: Some("USD".to_string()),
             instrument_type: "spot".to_string(),
             source: "pyth".to_string(),
             schedule: "America/New_York;O,O,O,O,O,O,O;".to_string(),
             exponent: -8,
-            update_interval_seconds: 10,
+            update_interval: DurationUs::from_secs_u32(10),
             min_publishers: 3,
             state: SymbolState::Stable,
             asset_type: "crypto".to_string(),
