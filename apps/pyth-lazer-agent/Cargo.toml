@@ -7,7 +7,7 @@ license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [dependencies]
-pyth-lazer-publisher-sdk = "0.16.0"
+pyth-lazer-publisher-sdk = "0.16.1"
 pyth-lazer-protocol = "0.18.1"
 
 anyhow = "1.0.98"
