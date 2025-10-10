@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/entropy-sdk-solidity",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Generate secure random numbers with Pyth Entropy",
   "type": "module",
   "repository": {

@@ -18,7 +18,7 @@ contract MockEntropy is IEntropyV2 {
         defaultProvider = _defaultProvider;
 
         providers[_defaultProvider].sequenceNumber = 1;
-        providers[_defaultProvider].feeInWei = 0;
+        providers[_defaultProvider].feeInWei = 1;
         providers[_defaultProvider].defaultGasLimit = 100000;
     }
 
@@ -63,7 +63,7 @@ contract MockEntropy is IEntropyV2 {
 
         if (providerInfo.sequenceNumber == 0) {
             providerInfo.sequenceNumber = 1;
-            providerInfo.feeInWei = 0;
+            providerInfo.feeInWei = 1;
             providerInfo.defaultGasLimit = 100000;
         }
 

@@ -192,7 +192,7 @@ contract MockEntropyTest is Test {
         EntropyStructsV2.ProviderInfo memory info = entropy.getProviderInfoV2(
             provider
         );
-        assertEq(info.feeInWei, 0, "Fee should be 0");
+        assertEq(info.feeInWei, 1, "Fee should be 1");
         assertEq(
             info.defaultGasLimit,
             100000,
