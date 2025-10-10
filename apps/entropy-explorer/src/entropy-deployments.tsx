@@ -496,6 +496,16 @@ export const EntropyDeployments = {
     isTestnet: true,
     chainId: 168_587_773,
   },
+  "sonic-testnet": {
+    address: "0x8D254a21b3C86D32F7179855531CE99164721933",
+    name: "Sonic Testnet",
+    rpc: "https://rpc.testnet.soniclabs.com",
+    explorerTxTemplate: "https://testnet.sonicscan.org/txs/$ADDRESS",
+    explorerAccountTemplate: "https://testnet.sonicscan.org/address/$ADDRESS",
+    icon: "https://icons.llamao.fi/icons/chains/rsz_sonic.jpg?w=20&h=20",
+    isTestnet: true,
+    chainId: 14_601,
+  },
 } as const satisfies Record<string, EntropyDeployment>;
 
 export const isValidDeploymentSlug = (

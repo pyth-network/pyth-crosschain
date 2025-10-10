@@ -6,12 +6,22 @@ use crate::{api::Channel, price::Price};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default, Eq, PartialEq)]
+#[serde(untagged)]
+pub enum JrpcId {
+    String(String),
+    Int(i64),
+    #[default]
+    Null,
+}
+
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct PythLazerAgentJrpcV1 {
     pub jsonrpc: JsonRpcVersion,
     #[serde(flatten)]
     pub params: JrpcCall,
-    pub id: Option<i64>,
+    #[serde(default)]
+    pub id: JrpcId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -81,14 +91,14 @@ pub enum JrpcResponse<T> {
 pub struct JrpcSuccessResponse<T> {
     pub jsonrpc: JsonRpcVersion,
     pub result: T,
-    pub id: i64,
+    pub id: JrpcId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct JrpcErrorResponse {
     pub jsonrpc: JsonRpcVersion,
     pub error: JrpcErrorObject,
-    pub id: Option<i64>,
+    pub id: JrpcId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -184,7 +194,89 @@ mod tests {
                     best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_push_update_price_string_id() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 124214124124,
+
+            "update": {
+              "type": "price",
+              "price": 1234567890,
+              "best_bid_price": 1234567891,
+              "best_ask_price": 1234567892
+            }
+          },
+          "id": "b6bb54a0-ea8d-439d-97a7-3b06befa0e76"
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs::from_micros(124214124124),
+                update: UpdateParams::PriceUpdate {
+                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
+                    best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
+                },
+            }),
+            id: JrpcId::String("b6bb54a0-ea8d-439d-97a7-3b06befa0e76".to_string()),
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_push_update_price_null_id() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 124214124124,
+
+            "update": {
+              "type": "price",
+              "price": 1234567890,
+              "best_bid_price": 1234567891,
+              "best_ask_price": 1234567892
+            }
+          },
+          "id": null
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs::from_micros(124214124124),
+                update: UpdateParams::PriceUpdate {
+                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
+                    best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
+                },
+            }),
+            id: JrpcId::Null,
         };
 
         assert_eq!(
@@ -224,7 +316,7 @@ mod tests {
                     best_ask_price: Some(Price::from_integer(5432, 0).unwrap()),
                 },
             }),
-            id: None,
+            id: JrpcId::Null,
         };
 
         assert_eq!(
@@ -263,7 +355,7 @@ mod tests {
                     best_ask_price: None,
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -304,7 +396,7 @@ mod tests {
                     funding_rate_interval: Duration::from_secs(28800).into(),
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -342,7 +434,7 @@ mod tests {
                     funding_rate_interval: None,
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -371,7 +463,7 @@ mod tests {
                 names: Some(vec!["BTC/USD".to_string()]),
                 asset_types: Some(vec!["crypto".to_string()]),
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -397,7 +489,7 @@ mod tests {
                 names: None,
                 asset_types: None,
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -431,7 +523,37 @@ mod tests {
                     message: "Internal error".to_string(),
                     data: None,
                 },
-                id: Some(2),
+                id: JrpcId::Int(2),
+            }
+        );
+    }
+
+    #[test]
+    fn test_response_format_error_string_id() {
+        let response = serde_json::from_str::<JrpcErrorResponse>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "62b627dc-5599-43dd-b2c2-9c4d30f4fdb4",
+              "error": {
+                "message": "Internal error",
+                "code": -32603
+              }
+            }
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            response,
+            JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: JrpcId::String("62b627dc-5599-43dd-b2c2-9c4d30f4fdb4".to_string())
             }
         );
     }
@@ -454,7 +576,30 @@ mod tests {
             JrpcSuccessResponse::<String> {
                 jsonrpc: JsonRpcVersion::V2,
                 result: "success".to_string(),
-                id: 2,
+                id: JrpcId::Int(2),
+            }
+        );
+    }
+
+    #[test]
+    pub fn test_response_format_success_string_id() {
+        let response = serde_json::from_str::<JrpcSuccessResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "62b627dc-5599-43dd-b2c2-9c4d30f4fdb4",
+              "result": "success"
+            }
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            response,
+            JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: JrpcId::String("62b627dc-5599-43dd-b2c2-9c4d30f4fdb4".to_string()),
             }
         );
     }
@@ -476,7 +621,7 @@ mod tests {
             JrpcResponse::Success(JrpcSuccessResponse::<String> {
                 jsonrpc: JsonRpcVersion::V2,
                 result: "success".to_string(),
-                id: 2,
+                id: JrpcId::Int(2),
             })
         );
 
@@ -502,7 +647,55 @@ mod tests {
                     message: "Internal error".to_string(),
                     data: None,
                 },
-                id: Some(3),
+                id: JrpcId::Int(3),
+            })
+        );
+    }
+
+    #[test]
+    pub fn test_parse_response_string_id() {
+        let success_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "id-2",
+              "result": "success"
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            success_response,
+            JrpcResponse::Success(JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: JrpcId::String("id-2".to_string()),
+            })
+        );
+
+        let error_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "id-3",
+              "error": {
+                "code": -32603,
+                "message": "Internal error"
+              }
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            error_response,
+            JrpcResponse::Error(JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: JrpcId::String("id-3".to_string()),
             })
         );
     }
