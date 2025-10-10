@@ -101,7 +101,7 @@
       .trademarkDisclaimerHeader {
         @include theme.text("sm", "medium");
 
-        margin-bottom: theme.spacing(2);
+        margin: theme.spacing(2) 0;
       }
 
       .trademarkDisclaimerBody {

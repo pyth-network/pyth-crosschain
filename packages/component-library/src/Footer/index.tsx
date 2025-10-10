@@ -35,6 +35,20 @@ export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
     </div>
     <div className={styles.trademarkDisclaimer}>
       <div className={styles.trademarkDisclaimerContent}>
+        <h3 className={styles.trademarkDisclaimerHeader}>DISCLAIMER</h3>
+        <p className={styles.trademarkDisclaimerBody}>
+          Pyth Price Feeds are provided on an &quot;AS IS,&quot; &quot;WITH ALL
+          FAULTS,&quot; and &quot;AS AVAILABLE&quot; basis, without any
+          warranties or representations of any kind. Please read the following
+          important disclaimer before using them.{" "}
+          <Link
+            href="https://www.pyth.network/legal/disclaimer-for-pyth-network-price-feeds"
+            target="_blank"
+          >
+            Read disclaimer
+          </Link>
+          .
+        </p>
         <h3 className={styles.trademarkDisclaimerHeader}>
           TRADEMARK DISCLAIMER
         </h3>
