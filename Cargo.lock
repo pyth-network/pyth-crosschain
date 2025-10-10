@@ -5693,7 +5693,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "8.4.0"
+version = "8.4.1"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5786,7 +5786,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.16.0"
+version = "0.16.1"
 dependencies = [
  "anyhow",
  "fs-err",
