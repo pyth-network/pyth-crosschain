@@ -6,12 +6,22 @@ use crate::{api::Channel, price::Price};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+#[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
+#[serde(untagged)]
+pub enum JrpcId {
+    String(String),
+    Int(i64),
+    #[default]
+    Null,
+}
+
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct PythLazerAgentJrpcV1 {
     pub jsonrpc: JsonRpcVersion,
     #[serde(flatten)]
     pub params: JrpcCall,
-    pub id: Option<i64>,
+    #[serde(default)]
+    pub id: JrpcId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -184,7 +194,89 @@ mod tests {
                     best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_push_update_price_string_id() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 124214124124,
+
+            "update": {
+              "type": "price",
+              "price": 1234567890,
+              "best_bid_price": 1234567891,
+              "best_ask_price": 1234567892
+            }
+          },
+          "id": "b6bb54a0-ea8d-439d-97a7-3b06befa0e76"
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs::from_micros(124214124124),
+                update: UpdateParams::PriceUpdate {
+                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
+                    best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
+                },
+            }),
+            id: JrpcId::String("b6bb54a0-ea8d-439d-97a7-3b06befa0e76".to_string()),
+        };
+
+        assert_eq!(
+            serde_json::from_str::<PythLazerAgentJrpcV1>(json).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_push_update_price_null_id() {
+        let json = r#"
+        {
+          "jsonrpc": "2.0",
+          "method": "push_update",
+          "params": {
+            "feed_id": 1,
+            "source_timestamp": 124214124124,
+
+            "update": {
+              "type": "price",
+              "price": 1234567890,
+              "best_bid_price": 1234567891,
+              "best_ask_price": 1234567892
+            }
+          },
+          "id": null
+        }
+        "#;
+
+        let expected = PythLazerAgentJrpcV1 {
+            jsonrpc: JsonRpcVersion::V2,
+            params: PushUpdate(FeedUpdateParams {
+                feed_id: PriceFeedId(1),
+                source_timestamp: TimestampUs::from_micros(124214124124),
+                update: UpdateParams::PriceUpdate {
+                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
+                    best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
+                },
+            }),
+            id: JrpcId::Null,
         };
 
         assert_eq!(
@@ -224,7 +316,7 @@ mod tests {
                     best_ask_price: Some(Price::from_integer(5432, 0).unwrap()),
                 },
             }),
-            id: None,
+            id: JrpcId::Null,
         };
 
         assert_eq!(
@@ -263,7 +355,7 @@ mod tests {
                     best_ask_price: None,
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -304,7 +396,7 @@ mod tests {
                     funding_rate_interval: Duration::from_secs(28800).into(),
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -342,7 +434,7 @@ mod tests {
                     funding_rate_interval: None,
                 },
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -371,7 +463,7 @@ mod tests {
                 names: Some(vec!["BTC/USD".to_string()]),
                 asset_types: Some(vec!["crypto".to_string()]),
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
@@ -397,7 +489,7 @@ mod tests {
                 names: None,
                 asset_types: None,
             }),
-            id: Some(1),
+            id: JrpcId::Int(1),
         };
 
         assert_eq!(
