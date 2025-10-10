@@ -1,8 +1,7 @@
 //! Types describing Lazer's metadata APIs.
 
 use crate::time::{DurationUs, TimestampUs};
-use crate::FeedKind;
-use crate::{symbol_state::SymbolState, PriceFeedId};
+use crate::PriceFeedId;
 use serde::{Deserialize, Serialize};
 
 /// The pricing context or type of instrument for a feed.
@@ -91,7 +90,7 @@ pub struct FeedResponseV3 {
     pub min_publishers: u16,
     /// Status of the feed.
     /// Example: `"active"`
-    pub state: SymbolState,
+    pub state: String,
     /// High-level asset class. One of crypto, fx, equity, metal, rates, nav, commodity, funding-rate.
     /// Should be one of the values in the AssetClass enum.
     /// Example: `"crypto"`
@@ -113,7 +112,7 @@ pub struct FeedResponseV3 {
     pub feed_expiry: Option<TimestampUs>,
     /// The nature of the data produced by the feed.
     /// Examples: `"price"`, `"fundingRate"`
-    pub feed_kind: FeedKind,
+    pub feed_kind: String,
 }
 
 /// Asset metadata as returned by the v3 metadata API.
@@ -151,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_feed_response_v3_json_serde_roundtrip() {
-        use crate::{symbol_state::SymbolState, FeedKind, PriceFeedId};
+        use crate::PriceFeedId;
 
         let symbol = SymbolV3::new(
             "pyth".to_string(),
@@ -173,14 +172,14 @@ mod tests {
             exponent: -8,
             update_interval: Some(DurationUs::from_secs_u32(10)),
             min_publishers: 3,
-            state: SymbolState::Stable,
+            state: "stable".to_string(),
             asset_type: "crypto".to_string(),
             cmc_id: Some(1),
             pythnet_id: "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
                 .to_string(),
             nasdaq_symbol: None,
             feed_expiry: None,
-            feed_kind: FeedKind::Price,
+            feed_kind: "price".to_string(),
         };
 
         // Test JSON serialization
