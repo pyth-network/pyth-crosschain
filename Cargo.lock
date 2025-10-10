@@ -5693,7 +5693,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-client"
-version = "8.4.1"
+version = "8.4.2"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5711,7 +5711,7 @@ dependencies = [
  "hex",
  "humantime-serde",
  "libsecp256k1 0.7.2",
- "pyth-lazer-protocol 0.18.1",
+ "pyth-lazer-protocol 0.19.0",
  "reqwest 0.12.23",
  "serde",
  "serde_json",
@@ -5746,7 +5746,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.18.1"
+version = "0.19.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
@@ -5767,6 +5767,7 @@ dependencies = [
  "rust_decimal",
  "serde",
  "serde_json",
+ "strum 0.27.2",
  "thiserror 2.0.12",
 ]
 
@@ -5786,13 +5787,13 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-publisher-sdk"
-version = "0.16.1"
+version = "0.16.2"
 dependencies = [
  "anyhow",
  "fs-err",
  "protobuf",
  "protobuf-codegen",
- "pyth-lazer-protocol 0.18.1",
+ "pyth-lazer-protocol 0.19.0",
  "serde_json",
 ]
 
@@ -9673,6 +9674,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "strum"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af23d6f6c1a224baef9d3f61e287d2761385a5b88fdab4eb4c6f11aeb54c4bcf"
+dependencies = [
+ "strum_macros 0.27.2",
+]
+
+[[package]]
 name = "strum_macros"
 version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9695,6 +9705,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustversion",
+ "syn 2.0.104",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7695ce3845ea4b33927c055a39dc438a45b059f7c1b3d91d38d10355fb8cbca7"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
  "syn 2.0.104",
 ]
 

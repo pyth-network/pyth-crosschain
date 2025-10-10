@@ -10,6 +10,8 @@ mod feed_kind;
 pub mod jrpc;
 /// Types describing Lazer's verifiable messages containing signature and payload.
 pub mod message;
+/// Types describing Lazer's feed & asset metadata catalog APIs.
+pub mod metadata;
 /// Types describing Lazer's message payload.
 pub mod payload;
 mod price;
@@ -19,6 +21,8 @@ mod rate;
 mod serde_price_as_i64;
 mod serde_str;
 mod symbol_state;
+/// Validated symbol type for `source.instrument_type.base/quote` format.
+pub mod symbol_v3;
 /// Lazer's types for time representation.
 pub mod time;
 
@@ -28,9 +32,11 @@ use serde::{Deserialize, Serialize};
 pub use crate::{
     dynamic_value::DynamicValue,
     feed_kind::FeedKind,
+    metadata::{AssetClass, AssetResponseV3, FeedResponseV3, InstrumentType},
     price::{Price, PriceError},
     rate::{Rate, RateError},
     symbol_state::SymbolState,
+    symbol_v3::SymbolV3,
 };
 
 #[derive(
