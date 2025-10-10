@@ -91,14 +91,14 @@ pub enum JrpcResponse<T> {
 pub struct JrpcSuccessResponse<T> {
     pub jsonrpc: JsonRpcVersion,
     pub result: T,
-    pub id: i64,
+    pub id: JrpcId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct JrpcErrorResponse {
     pub jsonrpc: JsonRpcVersion,
     pub error: JrpcErrorObject,
-    pub id: Option<i64>,
+    pub id: JrpcId,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
@@ -523,7 +523,37 @@ mod tests {
                     message: "Internal error".to_string(),
                     data: None,
                 },
-                id: Some(2),
+                id: JrpcId::Int(2),
+            }
+        );
+    }
+
+    #[test]
+    fn test_response_format_error_string_id() {
+        let response = serde_json::from_str::<JrpcErrorResponse>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "62b627dc-5599-43dd-b2c2-9c4d30f4fdb4",
+              "error": {
+                "message": "Internal error",
+                "code": -32603
+              }
+            }
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            response,
+            JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: JrpcId::String("62b627dc-5599-43dd-b2c2-9c4d30f4fdb4".to_string())
             }
         );
     }
@@ -546,7 +576,30 @@ mod tests {
             JrpcSuccessResponse::<String> {
                 jsonrpc: JsonRpcVersion::V2,
                 result: "success".to_string(),
-                id: 2,
+                id: JrpcId::Int(2),
+            }
+        );
+    }
+
+    #[test]
+    pub fn test_response_format_success_string_id() {
+        let response = serde_json::from_str::<JrpcSuccessResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "62b627dc-5599-43dd-b2c2-9c4d30f4fdb4",
+              "result": "success"
+            }
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            response,
+            JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: JrpcId::String("62b627dc-5599-43dd-b2c2-9c4d30f4fdb4".to_string()),
             }
         );
     }
@@ -568,7 +621,7 @@ mod tests {
             JrpcResponse::Success(JrpcSuccessResponse::<String> {
                 jsonrpc: JsonRpcVersion::V2,
                 result: "success".to_string(),
-                id: 2,
+                id: JrpcId::Int(2),
             })
         );
 
@@ -594,7 +647,55 @@ mod tests {
                     message: "Internal error".to_string(),
                     data: None,
                 },
-                id: Some(3),
+                id: JrpcId::Int(3),
+            })
+        );
+    }
+
+    #[test]
+    pub fn test_parse_response_string_id() {
+        let success_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "id-2",
+              "result": "success"
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            success_response,
+            JrpcResponse::Success(JrpcSuccessResponse::<String> {
+                jsonrpc: JsonRpcVersion::V2,
+                result: "success".to_string(),
+                id: JrpcId::String("id-2".to_string()),
+            })
+        );
+
+        let error_response = serde_json::from_str::<JrpcResponse<String>>(
+            r#"
+            {
+              "jsonrpc": "2.0",
+              "id": "id-3",
+              "error": {
+                "code": -32603,
+                "message": "Internal error"
+              }
+            }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            error_response,
+            JrpcResponse::Error(JrpcErrorResponse {
+                jsonrpc: JsonRpcVersion::V2,
+                error: JrpcErrorObject {
+                    code: -32603,
+                    message: "Internal error".to_string(),
+                    data: None,
+                },
+                id: JrpcId::String("id-3".to_string()),
             })
         );
     }
