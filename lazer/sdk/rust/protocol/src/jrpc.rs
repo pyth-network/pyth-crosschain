@@ -6,7 +6,7 @@ use crate::{api::Channel, price::Price};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-#[derive(Serialize, Deserialize, Debug, Default, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum JrpcId {
     String(String),
