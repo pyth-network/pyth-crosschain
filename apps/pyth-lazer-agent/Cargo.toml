@@ -1,14 +1,14 @@
 [package]
 name = "pyth-lazer-agent"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2024"
 description = "Pyth Lazer Agent"
 license = "Apache-2.0"
 repository = "https://github.com/pyth-network/pyth-crosschain"
 
 [dependencies]
-pyth-lazer-publisher-sdk = "0.12.1"
-pyth-lazer-protocol = "0.15.1"
+pyth-lazer-publisher-sdk = "0.16.1"
+pyth-lazer-protocol = "0.18.1"
 
 anyhow = "1.0.98"
 backoff = "0.4.0"
