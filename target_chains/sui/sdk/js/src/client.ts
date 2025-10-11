@@ -2,7 +2,7 @@ import { SuiClient } from "@mysten/sui/client";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
-import { HexString } from "@pythnetwork/price-service-client";
+import { HexString } from "@pythnetwork/hermes-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
