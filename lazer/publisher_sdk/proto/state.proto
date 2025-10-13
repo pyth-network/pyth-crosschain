@@ -166,14 +166,11 @@ message FeedPublisherData {
     optional int64 funding_rate = 4;
     // [optional] Funding rate interval. Can be absent if no data is available. Can only be present for funding rate feeds.
     optional google.protobuf.Duration funding_rate_interval = 5;
-    // [optional] Timestamp of the funding. Can be absent if no data is available.
-    // Can only be present for funding rate feeds.
-    optional google.protobuf.Timestamp funding_timestamp = 6;
     // [required] Timestamp provided by the source of data that the publisher uses (e.g. an exchange).
     // If no such timestamp is available, it should be set to the same value as `publisher_timestamp`.
-    optional google.protobuf.Timestamp source_timestamp = 7;
+    optional google.protobuf.Timestamp source_timestamp = 6;
     // [required] Timestamp of the publisher.
-    optional google.protobuf.Timestamp publisher_timestamp = 8;
+    optional google.protobuf.Timestamp publisher_timestamp = 7;
 }
 
 // Aggregate data derived from all accepted publisher updates.
