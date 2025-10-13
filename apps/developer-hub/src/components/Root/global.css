@@ -1,5 +1,43 @@
 @import "tailwindcss";
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
-@import "./theme.css"; /*this overrides the default colors to match the pyth branding */
+/* @import "./theme.css"; this overrides the default colors to match the pyth branding */
 /* @import "./fumadocs-global-style-overrides.css"; */
+
+.light {
+  --color-fd-background: hsla(0, 16%, 96%, 1);
+  --color-fd-foreground: hsla(0, 16%, 5%, 1);
+  --color-fd-muted: hsla(0, 16%, 90%, 1);
+  --color-fd-muted-foreground: rgba(30, 30, 30, 0.564);
+  --color-fd-popover: hsl(0, 0%, 98%);
+  --color-fd-popover-foreground: hsl(0, 0%, 15.1%);
+  --color-fd-card: hsla(0, 16%, 94%, 1);
+  --color-fd-card-foreground: hsl(0, 0%, 8%);
+  --color-fd-border: hsla(0, 12%, 85%, 1);
+  --color-fd-primary: hsla(263, 70%, 50%, 1);
+  --color-fd-primary-foreground: hsl(204, 90%, 51%);
+  --color-fd-secondary: hsl(0, 0%, 93.1%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 0%);
+  --color-fd-accent: hsla(0, 0%, 0%, 0.054);
+  --color-fd-accent-foreground: hsl(0, 0%, 0%);
+  --color-fd-ring: hsla(263, 70%, 50%, 1);
+}
+
+.dark {
+  --color-fd-background: hsl(240, 4%, 11%);
+  --color-fd-foreground: hsl(250, 18%, 87%);
+  --color-fd-muted: hsl(0, 3%, 6%);
+  --color-fd-muted-foreground: hsla(250, 18%, 87%, 0.571);
+  --color-fd-popover: hsl(0, 0%, 9%);
+  --color-fd-popover-foreground: hsl(0, 0%, 82%);
+  --color-fd-card: hsl(240, 2%, 9%);
+  --color-fd-card-foreground: hsl(0, 0%, 98%);
+  --color-fd-border: hsla(240, 18%, 86%, 0.085);
+  --color-fd-primary: rgb(197, 157, 254);
+  --color-fd-primary-foreground: hsl(139, 91%, 18%);
+  --color-fd-secondary: hsl(0, 0%, 12.9%);
+  --color-fd-secondary-foreground: hsl(250, 18%, 87%);
+  --color-fd-accent: hsla(0, 0%, 100%, 0.079);
+  --color-fd-accent-foreground: hsl(250, 18%, 87%);
+  --color-fd-ring: hsla(262, 83%, 58%, 1);
+}
