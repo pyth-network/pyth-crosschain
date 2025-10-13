@@ -179,6 +179,14 @@ message FeedDataFields {
     optional int64 funding_rate = 4;
     // [optional] Funding rate interval. Can be absent if no data is available. Can only be present for funding rate feeds.
     optional google.protobuf.Duration funding_rate_interval = 5;
+    // [required] Number of publishers that were included in the aggregate.
+    optional uint64 publisher_count = 6;
+    // [optional] Confidence interval for the `price` field. Can be absent if no data is available.
+    // Never present for funding rate feeds.
+    optional int64 confidence = 7;
+    // [optional] Timestamp of the funding. Can be absent if no data is available.
+    // Can only be present for funding rate feeds.
+    optional google.protobuf.Timestamp funding_timestamp = 8;
 }
 
 // State associated with a governance source.
