@@ -1,7 +1,7 @@
 import {
-    HermesClient,
-    HexString,
-    PriceUpdate,
+  HermesClient,
+  HexString,
+  PriceUpdate,
 } from "@pythnetwork/hermes-client";
 import { Buffer } from "buffer";
 
@@ -16,7 +16,12 @@ export class SuiPriceServiceConnection extends HermesClient {
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<Buffer[]> {
     // Fetch the latest price feed update VAAs from the price service
-    const updateData: PriceUpdate = await this.getLatestPriceUpdates(priceIds, { encoding: "base64", parsed: false });
-    return updateData.binary.data.map((update) => Buffer.from(update, "base64"));
+    const updateData: PriceUpdate = await this.getLatestPriceUpdates(priceIds, {
+      encoding: "base64",
+      parsed: false,
+    });
+    return updateData.binary.data.map((update) =>
+      Buffer.from(update, "base64"),
+    );
   }
 }
