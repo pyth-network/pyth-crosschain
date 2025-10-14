@@ -117,8 +117,7 @@ message Feed {
     // [required] Feed kind.
     optional FeedKind kind = 108;
     // [required] Current aggregated data of the feed.
-    optional FeedDataFields aggregated_data = 109;
-
+    optional FeedAggregateData aggregated_data = 109;
 
     // [required] Feed status in the current shard. Disabled feeds will not be visible in
     // the consumer API for the current shard. This setting should only be used
@@ -136,8 +135,6 @@ message Feed {
     // [optional] If present, the aggregator will disable the feed in the current shard
     // at the specified instant.
     optional google.protobuf.Timestamp disable_in_shard_timestamp = 203;
-
-    // TODO: list of permissioned publisher IDs.
 }
 
 // A part of the feed state related to a particular publisher.
@@ -154,21 +151,11 @@ message FeedPublisherState {
     optional google.protobuf.Timestamp last_publisher_timestamp = 3;
     // [optional] Data of the last update received from this publisher to this feed.
     // Can be absent if no update was ever received or if the last update was deemed no longer relevant.
-    optional FeedData last_feed_data = 4;
+    optional FeedPublisherData last_feed_data = 4;
 }
 
 // Data provided by a publisher for a certain feed.
-message FeedData {
-    // [required] Timestamp provided by the source of data that the publisher uses (e.g. an exchange).
-    // If no such timestamp is available, it should be set to the same value as `publisher_timestamp`.
-    optional google.protobuf.Timestamp source_timestamp = 1;
-    // [required] Timestamp of the publisher.
-    optional google.protobuf.Timestamp publisher_timestamp = 2;
-    // [required] Values of the data fields.
-    optional FeedDataFields fields = 3;
-}
-
-message FeedDataFields {
+message FeedPublisherData {
     // [optional] Best executable price. Can be absent if no data is available. Never present for funding rate feeds.
     optional int64 price = 1;
     // [optional] Best bid price. Can be absent if no data is available. Never present for funding rate feeds.
@@ -179,6 +166,33 @@ message FeedDataFields {
     optional int64 funding_rate = 4;
     // [optional] Funding rate interval. Can be absent if no data is available. Can only be present for funding rate feeds.
     optional google.protobuf.Duration funding_rate_interval = 5;
+    // [required] Timestamp provided by the source of data that the publisher uses (e.g. an exchange).
+    // If no such timestamp is available, it should be set to the same value as `publisher_timestamp`.
+    optional google.protobuf.Timestamp source_timestamp = 6;
+    // [required] Timestamp of the publisher.
+    optional google.protobuf.Timestamp publisher_timestamp = 7;
+}
+
+// Aggregate data derived from all accepted publisher updates.
+message FeedAggregateData {
+    // [optional] Best executable price. Can be absent if no data is available. Never present for funding rate feeds.
+    optional int64 price = 1;
+    // [optional] Best bid price. Can be absent if no data is available. Never present for funding rate feeds.
+    optional int64 best_bid_price = 2;
+    // [optional] Best ask price. Can be absent if no data is available. Never present for funding rate feeds.
+    optional int64 best_ask_price = 3;
+    // [optional] Funding rate. Can be absent if no data is available. Can only be present for funding rate feeds.
+    optional int64 funding_rate = 4;
+    // [optional] Funding rate interval. Can be absent if no data is available. Can only be present for funding rate feeds.
+    optional google.protobuf.Duration funding_rate_interval = 5;
+    // [optional] Timestamp of the funding. Can be absent if no data is available.
+    // Can only be present for funding rate feeds.
+    optional google.protobuf.Timestamp funding_timestamp = 6;
+    // [required] Number of publishers that were included in the aggregate.
+    optional uint64 publisher_count = 7;
+    // [optional] Confidence interval for the `price` field. Can be absent if no data is available.
+    // Never present for funding rate feeds.
+    optional int64 confidence = 8;
 }
 
 // State associated with a governance source.
