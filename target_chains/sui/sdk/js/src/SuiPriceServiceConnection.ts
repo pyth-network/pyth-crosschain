@@ -1,10 +1,11 @@
 import {
-  PriceServiceConnection,
+  HermesClient,
   HexString,
-} from "@pythnetwork/price-service-client";
+  PriceUpdate,
+} from "@pythnetwork/hermes-client";
 import { Buffer } from "buffer";
 
-export class SuiPriceServiceConnection extends PriceServiceConnection {
+export class SuiPriceServiceConnection extends HermesClient {
   /**
    * Gets price update data (either batch price attestation VAAs or accumulator messages, depending on the chosen endpoint), which then
    * can be submitted to the Pyth contract to update the prices. This will throw an axios error if there is a network problem or
@@ -15,7 +16,12 @@ export class SuiPriceServiceConnection extends PriceServiceConnection {
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<Buffer[]> {
     // Fetch the latest price feed update VAAs from the price service
-    const latestVaas = await this.getLatestVaas(priceIds);
-    return latestVaas.map((vaa) => Buffer.from(vaa, "base64"));
+    const updateData: PriceUpdate = await this.getLatestPriceUpdates(priceIds, {
+      encoding: "base64",
+      parsed: false,
+    });
+    return updateData.binary.data.map((update) =>
+      Buffer.from(update, "base64"),
+    );
   }
 }
