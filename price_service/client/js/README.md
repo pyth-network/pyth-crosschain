@@ -1,3 +1,7 @@
+> **⚠️ DEPRECATION NOTICE**
+>
+> This package is deprecated and is no longer maintained. Please use [@pythnetwork/hermes-client](https://www.npmjs.com/package/@pythnetwork/hermes-client) instead.
+
 # Price Service Client
 
 [Pyth Network](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities.
