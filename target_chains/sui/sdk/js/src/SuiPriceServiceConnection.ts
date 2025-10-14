@@ -16,7 +16,7 @@ export class SuiPriceServiceConnection extends HermesClient {
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<Buffer[]> {
     // Fetch the latest price feed update VAAs from the price service
-    const latestVaas: PriceUpdate = await this.getLatestPriceUpdates(priceIds, { encoding: "base64", parsed: false });
-    return latestVaas.binary.data.map((vaa) => Buffer.from(vaa, "base64"));
+    const updateData: PriceUpdate = await this.getLatestPriceUpdates(priceIds, { encoding: "base64", parsed: false });
+    return updateData.binary.data.map((update) => Buffer.from(update, "base64"));
   }
 }
