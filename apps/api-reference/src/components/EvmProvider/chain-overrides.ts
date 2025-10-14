@@ -74,4 +74,42 @@ export const chainOverrides: readonly Chain[] = [
       },
     },
   }),
+  defineChain({
+    id: 484,
+    name: "Camp",
+    nativeCurrency: {
+      name: "CAMP",
+      symbol: "CAMP",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: { http: ["https://rpc.camp.raas.gelato.cloud"] },
+    },
+    testnet: false,
+    blockExplorers: {
+      default: {
+        name: "Campscout",
+        url: "https://camp.cloud.blockscout.com/",
+      },
+    },
+  }),
+  defineChain({
+    id: 31_612,
+    name: "Mezo",
+    nativeCurrency: {
+      name: "BTC",
+      symbol: "BTC",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: { http: ["https://jsonrpc-mezo.boar.network"] },
+    },
+    testnet: false,
+    blockExplorers: {
+      default: {
+        name: "Mezo Explorer",
+        url: "https://explorer.mezo.org/",
+      },
+    },
+  }),
 ];
