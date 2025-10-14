@@ -10,7 +10,7 @@ export const getPriceUnsafe = readApi<"id">({
 
   **This function may return a price from arbitrarily far in the past.** It is the
   caller's responsibility to check the returned \`publishTime\` to ensure that the
-  update is recent enough for their use case. If you need the latest price, update the price using [\`updatePriceFeeds()\`](updatePriceFeeds) and then call [\`getPrice()\`](getPrice).
+  update is recent enough for their use case. If you need the latest price, update the price using [\`updatePriceFeeds()\`](updatePriceFeeds) and then call [\`getPriceNoOlderThan()\`](getPriceNoOlderThan).
 
   The price object contains the following fields:
   1. \`price\`: The latest price of the price feed.

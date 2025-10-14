@@ -23,9 +23,9 @@ const CHAIN_TO_NAME = {
 const MENU = Object.fromEntries(
   Object.entries(apis).map(([chain, methods]) => [
     chain,
-    Object.entries(methods).map(([name]) => ({
-      name,
-      href: `/price-feeds/${chain}/${name}`,
+    Object.entries(methods).map(([methodKey, methodValue]) => ({
+      name: (methodValue as { name: string }).name,
+      href: `/price-feeds/${chain}/${methodKey}`,
     })),
   ]),
 );

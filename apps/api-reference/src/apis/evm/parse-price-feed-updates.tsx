@@ -24,7 +24,7 @@ export const parsePriceFeedUpdates = writeApi<
 
   Use this function if you want to use a Pyth price for a fixed time and not the most
   recent price; otherwise, consider using [updatePriceFeeds](update-price-feeds)
-  followed by [getPrice](get-price) or one of its variants.
+  followed by [getPriceNoOlderThan](get-price-no-older-than) or one of its variants.
 
   Unlike [updatePriceFeeds](updatePriceFeeds), calling this function will **not** update the on-chain price.
 
