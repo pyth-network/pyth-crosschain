@@ -1,0 +1,35 @@
+# Push Feeds
+
+The Pyth Data Association **pushes** price updates for various feeds on some networks.
+These feeds are updated at a specific heartbeat rate or when the price changes by a specific percentage.
+Applications can depend on receiving updates for these feeds, without having to pull them explicitly.
+
+The feeds can vary by network. Please see the relevant section below for the network of interest.
+
+- [EVM](push-feeds/evm)
+- [Solana](push-feeds/solana)
+- [Fogo](push-feeds/fogo)
+- [Aptos](push-feeds/aptos)
+- [Movement](push-feeds/movement)
+- [Sui](push-feeds/sui)
+
+<Callout variant="info">
+  Deviation thresholds can be customized to fit builders' needs, and additional
+  feeds can be requested for this list. If you need custom thresholds or would
+  like to see additional feeds, please fill in this
+  [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+<Callout variant="info">
+  Push feeds are subject to change with prior notice. Please refer to the [dev-
+  forum](https://dev-forum.pyth.network/c/announcements/6) for the latest
+  changes.
+</Callout>
+
+<Callout variant="info">
+  DISCLAIMER: While the Pyth Data Association strives to deliver timely updates,
+  these push feeds may occasionally experience delays in updates caused by chain
+  halts, gas estimations and other issues. Applications are advised to run their
+  own price-pusher. Find out how you can run your own price-pusher
+  [here](/price-feeds/schedule-price-updates/using-price-pusher).
+</Callout>
