@@ -17,7 +17,5 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Tab,
     ...components,
     InfoBox: InfoBox,
-    // Fuma has a Callout component in `defaultMdxComponents` which we still want to overwrite
-    Callout: InfoBox,
   };
 }
