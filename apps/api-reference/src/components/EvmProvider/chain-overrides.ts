@@ -1,5 +1,5 @@
-import { defineChain } from "viem";
 import type { Chain } from "viem";
+import { defineChain } from "viem";
 
 /**
  * Chain overrides for chains that are not available in viem's built-in chain list.
@@ -10,10 +10,10 @@ import type { Chain } from "viem";
  * 2. Add a new defineChain entry with the following required fields:
  *    - id: chainId. id in EvmChains.json is the name
  *    - name: Chain display name
- *    - nativeCurrency: { name, symbol, decimals }
- *    - rpcUrls: { default: { http: ['...'] } }
+ *    - nativeCurrency: \{ name, symbol, decimals \}
+ *    - rpcUrls: \{ default: \{ http: ['...'] \} \}
  *    - testnet: true/false (optional, defaults to false for mainnet)
- *    - blockExplorers: { default: { name, url } } (optional)
+ *    - blockExplorers: \{ default: \{ name, url \} \} (optional)
  */
 export const chainOverrides: readonly Chain[] = [
   // Example chain override (remove or replace with actual chains):
@@ -75,4 +75,3 @@ export const chainOverrides: readonly Chain[] = [
     },
   }),
 ];
-

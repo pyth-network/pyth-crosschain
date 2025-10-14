@@ -11,10 +11,18 @@ import type { ReactNode } from "react";
 import * as chains from "viem/chains";
 import { WagmiProvider, createConfig, http, useChainId } from "wagmi";
 
+import { chainOverrides } from "./chain-overrides";
 import { metadata } from "../../metadata";
 
 const CHAINS = allEvmChainIds
-  .map((id) => Object.values(chains).find((chain) => chain.id === id))
+  .map((id) => {
+    // First, check if we have an override for this chain
+    const overrideChain = chainOverrides.find((chain) => chain.id === id);
+    if (overrideChain) return overrideChain;
+
+    // Fall back to viem's built-in chains
+    return Object.values(chains).find((chain) => chain.id === id);
+  })
   .filter((chain) => chain !== undefined) as unknown as readonly [
   chains.Chain,
   ...chains.Chain[],
