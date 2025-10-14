@@ -3293,7 +3293,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.14.0"
+version = "0.18.1"
 dependencies = [
  "anyhow",
  "byteorder",
@@ -3312,7 +3312,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-solana-contract"
-version = "0.6.0"
+version = "0.7.1"
 dependencies = [
  "anchor-lang",
  "bytemuck",
