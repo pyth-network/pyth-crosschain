@@ -13,7 +13,15 @@ import {
   EvmExecute,
 } from "@pythnetwork/xc-admin-common";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
-import Web3 from "web3";
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  type PublicClient,
+  type WalletClient,
+  type Chain as ViemChain,
+} from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import {
   CosmwasmExecutor,
   CosmwasmQuerier,
@@ -455,19 +463,48 @@ export class EvmChain extends Chain {
   }
 
   /**
-   * Returns a web3 provider for this chain
+   * Returns a viem public client for this chain
    */
-  getWeb3(): Web3 {
-    return new Web3(parseRpcUrl(this.rpcUrl));
+  getPublicClient(): PublicClient {
+    return createPublicClient({
+      transport: http(parseRpcUrl(this.rpcUrl)),
+    });
   }
 
-  getViemDefaultWeb3(): Web3 {
-    for (const chain of Object.values(chains)) {
-      if (chain.id === this.networkId) {
-        return new Web3(chain.rpcUrls.default.http[0]);
-      }
+  /**
+   * Returns a viem wallet client for this chain with the given private key
+   */
+  getWalletClient(privateKey: PrivateKey): WalletClient {
+    const account = privateKeyToAccount(privateKey as `0x${string}`);
+    return createWalletClient({
+      account,
+      chain: this.getViemChain(),
+      transport: http(parseRpcUrl(this.rpcUrl)),
+    });
+  }
+
+  /**
+   * Returns the viem chain config for this chain
+   */
+  private getViemChain(): ViemChain {
+    const viemChain = Object.values(chains).find(
+      (chain) => chain.id === this.networkId,
+    );
+    if (!viemChain) {
+      return {
+        id: this.networkId,
+        name: this.id,
+        nativeCurrency: {
+          name: this.nativeToken,
+          symbol: this.nativeToken,
+          decimals: 18,
+        },
+        rpcUrls: {
+          default: { http: [parseRpcUrl(this.rpcUrl)] },
+        },
+      } as ViemChain;
     }
-    throw new Error(`Chain with id ${this.networkId} not found in Viem`);
+    return viemChain;
   }
 
   /**
@@ -518,28 +555,40 @@ export class EvmChain extends Chain {
   }
 
   async getGasPrice() {
-    const web3 = this.getWeb3();
-    let gasPrice = await web3.eth.getGasPrice();
+    const client = this.getPublicClient();
+    let gasPrice = await client.getGasPrice();
     // some testnets have inaccuarte gas prices that leads to transactions not being mined, we double it since it's free!
     if (!this.isMainnet()) {
-      gasPrice = (BigInt(gasPrice) * 2n).toString();
+      gasPrice = gasPrice * 2n;
     }
-    return gasPrice;
+    return gasPrice.toString();
   }
 
   async estiamteAndSendTransaction(
-    transactionObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    txParams: { from?: string; value?: string },
+    contract: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    functionName: string,
+    args: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+    txParams: { from: string; value?: string },
+    privateKey: PrivateKey,
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;
-    const gasEstimate = await transactionObject.estimateGas(txParams);
-    // Some networks like Filecoin do not support the normal transaction type and need a type 2 transaction.
-    // To send a type 2 transaction, remove the ``gasPrice`` field.
-    return transactionObject.send({
-      gas: gasEstimate * GAS_ESTIMATE_MULTIPLIER,
-      gasPrice: Number(await this.getGasPrice()),
-      ...txParams,
+    const walletClient = this.getWalletClient(privateKey);
+    const publicClient = this.getPublicClient();
+
+    const { request } = await contract.simulate[functionName](args, {
+      account: walletClient.account,
+      value: txParams.value ? BigInt(txParams.value) : undefined,
     });
+
+    const gasEstimate = request.gas || 0n;
+    const hash = await walletClient.writeContract({
+      ...request,
+      gas: gasEstimate * BigInt(GAS_ESTIMATE_MULTIPLIER),
+      gasPrice: BigInt(await this.getGasPrice()),
+    });
+
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    return receipt;
   }
 
   /**
@@ -558,23 +607,38 @@ export class EvmChain extends Chain {
     gasMultiplier = 1,
     gasPriceMultiplier = 1,
   ): Promise<string> {
-    const web3 = this.getWeb3();
-    const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
-    web3.eth.accounts.wallet.add(signer);
-    const contract = new web3.eth.Contract(abi);
-    const deployTx = contract.deploy({ data: bytecode, arguments: deployArgs });
-    const gas = Math.trunc(
-      (await deployTx.estimateGas({ from: signer.address })) * gasMultiplier,
+    const walletClient = this.getWalletClient(privateKey);
+    const publicClient = this.getPublicClient();
+
+    if (!walletClient.account) {
+      throw new Error("Wallet client account is not defined");
+    }
+
+    const deployerBalance = await publicClient.getBalance({
+      address: walletClient.account.address,
+    });
+
+    const gasPrice = BigInt(
+      Math.trunc(Number(await this.getGasPrice()) * gasPriceMultiplier),
     );
-    const gasPrice = Math.trunc(
-      Number(await this.getGasPrice()) * gasPriceMultiplier,
+
+    const gas = BigInt(
+      Math.trunc(
+        Number(
+          await publicClient.estimateGas({
+            account: walletClient.account,
+            data: bytecode as `0x${string}`,
+            to: null,
+          }),
+        ) * gasMultiplier,
+      ),
     );
-    const deployerBalance = await web3.eth.getBalance(signer.address);
-    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
+    const gasDiff = gas * gasPrice - deployerBalance;
+
     if (gasDiff > 0n) {
       throw new Error(
         `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
-          BigInt(gas) * BigInt(gasPrice)
+          gas * gasPrice
         } wei, but only have ${deployerBalance} wei. We need ${
           Number(gasDiff) / 10 ** 18
         } ETH more.`,
@@ -582,31 +646,40 @@ export class EvmChain extends Chain {
     }
 
     try {
-      const deployedContract = await deployTx.send({
-        from: signer.address,
+      const hash = await walletClient.deployContract({
+        abi,
+        bytecode: bytecode as `0x${string}`,
+        args: deployArgs,
+        account: walletClient.account!,
+        chain: this.getViemChain(),
         gas,
-        gasPrice: gasPrice.toString(),
+        gasPrice,
       });
-      return deployedContract.options.address;
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (!receipt.contractAddress) {
+        throw new Error(
+          "Contract deployment failed: no contract address returned",
+        );
+      }
+      return receipt.contractAddress;
     } catch (e) {
-      // RPC errors often have useful information in the non-primary message field. Log the whole error
-      // to simplify identifying the problem.
       console.log(`Error deploying contract: ${JSON.stringify(e)}`);
       throw e;
     }
   }
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const web3 = this.getWeb3();
-    const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
-    return signer.address;
+    const account = privateKeyToAccount(privateKey as `0x${string}`);
+    return account.address;
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    const web3 = this.getWeb3();
-    const balance = await web3.eth.getBalance(
-      await this.getAccountAddress(privateKey),
-    );
+    const client = this.getPublicClient();
+    const address = await this.getAccountAddress(privateKey);
+    const balance = await client.getBalance({
+      address: address as `0x${string}`,
+    });
     return Number(balance) / 10 ** 18;
   }
 }

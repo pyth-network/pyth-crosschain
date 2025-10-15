@@ -4,6 +4,7 @@ import { DefaultStore } from "../src/node/utils/store";
 import { EvmChain } from "../src/core/chains";
 import { EvmEntropyContract } from "../src/core/contracts";
 import { findEntropyContract } from "./common";
+import { formatEther } from "viem";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -57,8 +58,7 @@ async function fetchAccruedFees(
     let accruedFeesEth: string | undefined;
 
     if (showEth) {
-      const web3 = contract.getChain().getWeb3();
-      accruedFeesEth = web3.utils.fromWei(accruedFeesWei, "ether");
+      accruedFeesEth = formatEther(BigInt(accruedFeesWei));
     }
 
     return {
