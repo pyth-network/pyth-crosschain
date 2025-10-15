@@ -105,6 +105,45 @@ describe("Test http endpoints", () => {
     expect(vaa.length).toBeGreaterThan(0);
     expect(vaaPublishTime).toBeGreaterThanOrEqual(publishTime10SecAgo);
   });
+
+  test("Get latest price updates works", async () => {
+    const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT, {
+      priceFeedRequestConfig: { binary: true },
+    });
+
+    const ids = await connection.getPriceFeedIds();
+    expect(ids.length).toBeGreaterThan(0);
+
+    const update = await connection.getLatestPriceUpdates(
+      ids.slice(0, 10),
+    );
+
+    expect(update.binary.data.length).toBeGreaterThan(0);
+    expect(update.parsed).toBeDefined();
+    expect(update.parsed!.length).toBeGreaterThanOrEqual(0);
+  });
+
+  test("Get price updates works", async () => {
+    const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT, {
+      priceFeedRequestConfig: { binary: true },
+    });
+
+    const ids = await connection.getPriceFeedIds();
+    expect(ids.length).toBeGreaterThan(0);
+
+    const publishTime10SecAgo = Math.floor(new Date().getTime() / 1000) - 10;
+    const update = await connection.getPriceUpdates(
+      ids.slice(0, 10),
+      publishTime10SecAgo
+    );
+
+    expect(update.binary.data.length).toBeGreaterThan(0);
+    expect(update.parsed).toBeDefined();
+    expect(update.parsed!.length).toBeGreaterThanOrEqual(0);
+    for (const parsedUpdate of update.parsed!) {
+      expect(parsedUpdate.price.publish_time).toBeGreaterThanOrEqual(publishTime10SecAgo)
+    }
+  });
 });
 
 describe("Test websocket endpoints", () => {
