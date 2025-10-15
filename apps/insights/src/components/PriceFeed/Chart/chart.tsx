@@ -160,12 +160,17 @@ const useChartElem = (symbol: string, feedId: string) => {
         return;
       }
       isBackfilling.current = true;
-      const url = new URL("/historical-prices", globalThis.location.origin);
+
+      const url = new URL(
+        "https://benchmarks.pyth.network/v1/shims/tradingview/history",
+      );
       url.searchParams.set("symbol", symbol);
       url.searchParams.set("from", from.toString());
       url.searchParams.set("to", to.toString());
-      url.searchParams.set("resolution", resolution);
-      url.searchParams.set("cluster", "pythnet");
+      url.searchParams.set(
+        "resolution",
+        mapResolutionToBenchmarksApi(resolution),
+      );
 
       abortControllerRef.current = new AbortController();
       abortControllerRef.current.signal.addEventListener("abort", () => {
@@ -179,7 +184,15 @@ const useChartElem = (symbol: string, feedId: string) => {
             return;
           }
 
-          const data = historicalDataSchema.parse(jsonData);
+          const benchmarkData = benchmarksApiResponseSchema.parse(jsonData);
+
+          // Transform OHLC data to our format using close prices
+          const data = benchmarkData.t.map((timestamp, i) => ({
+            time: timestamp as UTCTimestamp,
+            price: benchmarkData.c[i], // Use close price
+            confidence: 0, // No confidence data from benchmarks API
+            status: PriceStatus.Trading,
+          }));
 
           // Get the current historical price data
           // Note that .data() returns (WhitespaceData | LineData)[], hence the type cast.
@@ -196,16 +209,17 @@ const useChartElem = (symbol: string, feedId: string) => {
               value: d.price,
             }),
           }));
+          // we have no confidence data, set confidence bands to match the price
           const newHistoricalConfidenceHighData = data.map((d) => ({
             time: d.time,
             ...(d.status === PriceStatus.Trading && {
-              value: d.price + d.confidence,
+              value: d.price,
             }),
           }));
           const newHistoricalConfidenceLowData = data.map((d) => ({
             time: d.time,
             ...(d.status === PriceStatus.Trading && {
-              value: d.price - d.confidence,
+              value: d.price,
             }),
           }));
 
@@ -394,21 +408,15 @@ type ChartRefContents = {
   price: ISeriesApi<"Line">;
 };
 
-const historicalDataSchema = z.array(
-  z
-    .strictObject({
-      timestamp: z.number(),
-      price: z.number(),
-      confidence: z.number(),
-      status: z.nativeEnum(PriceStatus),
-    })
-    .transform((d) => ({
-      time: Number(d.timestamp) as UTCTimestamp,
-      price: d.price,
-      confidence: d.confidence,
-      status: d.status,
-    })),
-);
+const benchmarksApiResponseSchema = z.object({
+  s: z.string(), // status
+  t: z.array(z.number()), // timestamp
+  o: z.array(z.number()), // open
+  h: z.array(z.number()), // high
+  l: z.array(z.number()), // low
+  c: z.array(z.number()), // close
+  v: z.array(z.number()), // volume
+});
 const priceFormat = {
   type: "price",
   precision: 5,
@@ -420,6 +428,30 @@ const confidenceConfig = {
   lineStyle: LineStyle.Dashed,
   lineWidth: 1,
 } as const;
+
+/**
+ * Map our internal resolution format to the benchmarks API resolution format
+ */
+function mapResolutionToBenchmarksApi(resolution: string): string {
+  switch (resolution) {
+    case "1s":
+    case "1m": {
+      return "1";
+    }
+    case "5m": {
+      return "5";
+    }
+    case "1H": {
+      return "60";
+    }
+    case "1D": {
+      return "1D";
+    }
+    default: {
+      throw new Error(`Unknown resolution: ${resolution}`);
+    }
+  }
+}
 
 const useChartResize = (
   chartContainerRef: RefObject<HTMLDivElement | null>,
