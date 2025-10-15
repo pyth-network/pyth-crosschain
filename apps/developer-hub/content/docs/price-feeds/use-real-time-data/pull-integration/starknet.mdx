@@ -4,7 +4,8 @@ description: "Consume Pyth Network prices in Starknet applications using Cairo s
 icon: "Star"
 ---
 
-import { Callout, Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Use Real-Time Data in Starknet Contracts
 
@@ -22,20 +23,20 @@ pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", tag = "pyt
 Pyth also provides a javascript SDK to interact with the Pyth contract on Starknet. You can install it using the following command:
 
 <Tabs items={["npm", "yarn"]}>
-  <Tabs.Tab>
+  <Tab value="npm">
 
 ```sh copy
 npm install --save @pythnetwork/pyth-starknet-js
 ```
 
-  </Tabs.Tab>
-  <Tabs.Tab>
+  </Tab>
+  <Tab value="yarn">
 
 ```sh copy
 yarn add @pythnetwork/pyth-starknet-js
 ```
 
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 ## Write Contract Code

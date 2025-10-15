@@ -4,7 +4,8 @@ description: "Consume Pyth Network prices in Fuel applications using smart contr
 icon: "Fire"
 ---
 
-import { Callout, Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Use Real-Time Data in Fuel Contracts
 
@@ -22,8 +23,8 @@ pyth_interface = { git = "https://github.com/pyth-network/pyth-crosschain", tag 
 Pyth also provides a javascript SDK to interact with the Pyth contract on Fuel. You can install it using the following command:
 
 <Tabs items={["npm", "yarn"]}>
-  <Tabs.Tab>```npm install --save @pythnetwork/pyth-fuel-js ```</Tabs.Tab>
-  <Tabs.Tab>```yarn add @pythnetwork/pyth-fuel-js ```</Tabs.Tab>
+  <Tab value="npm">```npm install --save @pythnetwork/pyth-fuel-js ```</Tab>
+  <Tab value="yarn">```yarn add @pythnetwork/pyth-fuel-js ```</Tab>
 </Tabs>
 
 ## Write Contract Code

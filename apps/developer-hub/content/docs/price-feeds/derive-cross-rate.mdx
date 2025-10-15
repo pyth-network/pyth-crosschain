@@ -4,7 +4,8 @@ description: "Learn how to combine two price feeds to create synthetic cross rat
 icon: "arrows-cross"
 ---
 
-import { Callout, Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # Derive Cross Rate
 
@@ -12,7 +13,7 @@ This guide shows how to combine two price feeds to derive a cross rate. These ar
 Cross rates or Synthetic Price feeds are useful for trading pairs that are not directly supported by Pyth.
 
 <Tabs items={["EVM", "SVM"]}>
-<Tabs.Tab>
+<Tab value="EVM">
 ### EVM
 
 For example, if you want to trade the price of **`ETH/EUR{:jsx}`**, which is not directly supported by Pyth, you can combine the price of **`ETH/USD{:jsx}`** and **`EUR/USD{:jsx}`** to derive the price of **`ETH/EUR{:jsx}`**.
@@ -103,9 +104,9 @@ The [How to use real-time data in EVM contracts](./use-real-time-data/evm) guide
 
 The [Price Feed IDs](./price-feeds.mdx) page lists the price feed IDs for each asset supported by Pyth.
 
-</Tabs.Tab>
+</Tab>
 
-<Tabs.Tab>
+<Tab value="SVM">
 ### SVM
 
 The Pyth Rust SDK provides [`get_price_in_quote`](https://github.com/pyth-network/pyth-sdk-rs/blob/d6598dcf8b556cd97bb597661cdc012398371be1/pyth-sdk/src/price.rs#L90) function to combine two price feeds.
@@ -121,6 +122,6 @@ let btc_eth: Price = btc_usd.get_price_in_quote(&eth_usd, -8);
 println!("BTC/ETH price: ({} +- {}) x 10^{}", price.price, price.conf, price.expo);
 ```
 
-</Tabs.Tab>
+</Tab>
 
 </Tabs>

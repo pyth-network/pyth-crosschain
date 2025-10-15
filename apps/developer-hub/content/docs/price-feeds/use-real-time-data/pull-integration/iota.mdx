@@ -4,7 +4,8 @@ description: "Consume Pyth Network prices in IOTA applications using smart contr
 icon: "Circle"
 ---
 
-import { Callout, Tabs } from "nextra/components";
+import { Callout } from "nextra/components";
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Use Real-Time Data in IOTA Contracts
 
@@ -15,7 +16,7 @@ This guide explains how to use real-time Pyth data in IOTA applications.
 Use the following dependency in your `Move.toml` file to use the latest Pyth IOTA package and its dependencies:
 
 <Tabs items={['IOTA Testnet', 'IOTA Mainnet']}>
-<Tabs.Tab>
+<Tab value="IOTA Testnet">
 
 ```sh copy
 [dependencies.Pyth]
@@ -34,8 +35,8 @@ subdir = "crates/iota-framework/packages/iota-framework"
 rev = "751c23caf24efd071463b9ffd07eabcb15f44f31"
 ```
 
-</Tabs.Tab>
-<Tabs.Tab>
+</Tab>
+<Tab value="IOTA Mainnet">
 
 ```sh copy
 [dependencies.Pyth]
@@ -54,13 +55,13 @@ subdir = "crates/iota-framework/packages/iota-framework"
 rev = "751c23caf24efd071463b9ffd07eabcb15f44f31"
 ```
 
-</Tabs.Tab>
+</Tab>
 </Tabs>
 
 Pyth also provides a javascript SDK to construct transaction blocks that update price feeds:
 
 <Tabs items={["IOTA"]}>
-  <Tabs.Tab>
+  <Tab value="IOTA">
     ```sh
     # NPM
     npm install --save @pythnetwork/pyth-iota-js
@@ -69,7 +70,7 @@ Pyth also provides a javascript SDK to construct transaction blocks that update 
     yarn add @pythnetwork/pyth-iota-js
     ```
 
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 ## Write Contract Code

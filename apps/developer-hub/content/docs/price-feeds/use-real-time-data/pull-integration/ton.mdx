@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in TON applications using smart contra
 icon: "Diamond"
 ---
 
-import { Tabs } from "nextra/components";
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Use Real-Time Data in TON Contracts
 
@@ -15,20 +15,20 @@ This guide explains how to use real-time Pyth data in TON applications.
 Install the Pyth TON SDK and other necessary dependencies using npm:
 
 <Tabs items={["npm", "yarn"]}>
-  <Tabs.Tab>
+  <Tab value="npm">
 
 ```sh copy
 npm install @pythnetwork/pyth-ton-js @pythnetwork/hermes-client @ton/core @ton/ton @ton/crypto
 ```
 
-  </Tabs.Tab>
-  <Tabs.Tab>
+  </Tab>
+  <Tab value="yarn">
 
 ```sh copy
 yarn add @pythnetwork/pyth-ton-js @pythnetwork/hermes-client @ton/core @ton/ton @ton/crypto
 ```
 
-  </Tabs.Tab>
+  </Tab>
 </Tabs>
 
 ## Write Contract Code

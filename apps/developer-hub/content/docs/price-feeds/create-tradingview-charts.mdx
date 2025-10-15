@@ -4,7 +4,7 @@ description: "Integrate TradingView charts with Pyth price data using widgets or
 icon: "chart-bar"
 ---
 
-import { Tab, Tabs } from "nextra-theme-docs";
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Create TradingView Charts
 
@@ -35,7 +35,7 @@ When deciding between the two, consider the user experience you want to provide,
 1. Add the following script(s) from [TradingView](https://www.tradingview.com/widget/advanced-chart/) to your website depending on your framework:
 
 <Tabs items={['html', 'jsx']}>
-    <Tab>
+    <Tab value="html">
         ```html copy
         <!-- TradingView Widget BEGIN -->
         <div class="tradingview-widget-container">
@@ -63,7 +63,7 @@ When deciding between the two, consider the user experience you want to provide,
         <!-- TradingView Widget END -->
         ```
     </Tab>
-    <Tab>
+    <Tab value="jsx">
         ```jsx copy
         // TradingViewWidget.jsx
 
