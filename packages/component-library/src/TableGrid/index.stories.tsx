@@ -1,6 +1,5 @@
 import { ChartLine } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import type { Meta, StoryObj } from "@storybook/react";
-import BtcIcon from "cryptocurrency-icons/svg/color/btc.svg";
 
 import { Badge } from "../Badge";
 import { SymbolPairTag } from "../SymbolPairTag";
@@ -60,11 +59,7 @@ const ConfidenceCellRenderer = ({ value }: { value: number }) => (
 
 const FeedCellRenderer = ({ value }: { value: string }) => (
   <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-    <SymbolPairTag
-      displaySymbol={value}
-      icon={<BtcIcon />}
-      description={value}
-    />
+    <SymbolPairTag displaySymbol={value} icon={undefined} description={value} />
   </div>
 );
 

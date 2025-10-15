@@ -1,6 +1,3 @@
-import Btc from "cryptocurrency-icons/svg/color/btc.svg";
-import Eth from "cryptocurrency-icons/svg/color/eth.svg";
-
 import {
   BTCUSD,
   ETHUSD,
@@ -54,12 +51,10 @@ export const updatePriceFeeds = writeApi<"updateData" | "fee">({
   examples: [
     {
       name: "Latest BTC/USD update data",
-      icon: Btc,
       parameters: (ctx) => getParams(BTCUSD, ctx),
     },
     {
       name: "Latest ETH/USD update data",
-      icon: Eth,
       parameters: (ctx) => getParams(ETHUSD, ctx),
     },
   ],

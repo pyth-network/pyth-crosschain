@@ -108,7 +108,6 @@ catalog:
   clsx: ^2.1.1
   connectkit: ^1.9.0
   copyfiles: ^2.4.1
-  cryptocurrency-icons: ^0.18.1
   css-loader: ^7.1.2
   date-fns: ^4.1.0
   csv-stringify: ^6.6.0

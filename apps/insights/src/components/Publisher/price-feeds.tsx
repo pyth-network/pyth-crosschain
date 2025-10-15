@@ -39,12 +39,7 @@ export const PriceFeeds = async ({ params }: Props) => {
           <SymbolPairTag
             displaySymbol={feed.product.display_symbol}
             description={feed.product.description}
-            icon={
-              <PriceFeedIcon
-                assetClass={feed.product.asset_type}
-                symbol={feed.symbol}
-              />
-            }
+            icon={<PriceFeedIcon assetClass={feed.product.asset_type} />}
           />
         ),
         score: ranking?.final_score,
