@@ -305,12 +305,7 @@ const getFeedRows = (
       rank: ranking.final_rank,
       status,
       firstEvaluation: ranking.first_ranking_time,
-      icon: (
-        <PriceFeedIcon
-          assetClass={feed.product.asset_type}
-          symbol={feed.symbol}
-        />
-      ),
+      icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
       href: `/price-feeds/${encodeURIComponent(feed.symbol)}`,
     }));
 
