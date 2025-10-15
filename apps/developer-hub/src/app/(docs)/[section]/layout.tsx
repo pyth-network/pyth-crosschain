@@ -5,15 +5,14 @@ import type { ReactNode } from "react";
 
 import { docsOptions } from "../../../config/layout.config";
 
-export default function Layout({
+export default async function Layout({
   children,
   params,
 }: {
   children: ReactNode;
-  params: { section: string };
+  params: Promise<{ section: string }>;
 }) {
-  const { section } = params;
-  const options = { ...docsOptions };
+  const { section } = await params;
 
   return (
     <>
@@ -37,7 +36,7 @@ export default function Layout({
           </span>
         </Banner>
       )}
-      <DocsLayout {...options}>{children}</DocsLayout>
+      <DocsLayout {...docsOptions}>{children}</DocsLayout>
     </>
   );
 }
