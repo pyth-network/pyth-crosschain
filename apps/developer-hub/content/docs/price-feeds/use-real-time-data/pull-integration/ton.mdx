@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in TON applications using smart contra
 icon: "Diamond"
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # How to Use Real-Time Data in TON Contracts
 
@@ -91,7 +91,7 @@ async function main() {
   const priceIds = [BTC_PRICE_FEED_ID];
   const latestPriceUpdates = await hermesClient.getLatestPriceUpdates(
     priceIds,
-    { encoding: "hex" }
+    { encoding: "hex" },
   );
   console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0].price);
   // Prepare update data
@@ -113,7 +113,7 @@ async function main() {
   await contract.sendUpdatePriceFeeds(
     provider.sender(key.secretKey),
     updateData,
-    totalFee
+    totalFee,
   );
   console.log("Price feeds updated successfully.");
 }

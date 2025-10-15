@@ -90,14 +90,14 @@ async function getHermesPriceData(priceId, network) {
 
     // Fetch the price data from the Hermes API
     const response = await axios.get(
-      `${url}/v2/updates/price/latest?ids[]=${priceId}`
+      `${url}/v2/updates/price/latest?ids[]=${priceId}`,
     );
 
     return response.data.binary.data[0];
   } catch (error) {
     console.error(
       "Error:",
-      error.response ? error.response.data : error.message
+      error.response ? error.response.data : error.message,
     );
   }
 }
@@ -198,7 +198,7 @@ const nearConnect = (sender, network) => ({
   signer: getSignerFromKeystore(
     sender,
     network,
-    new UnencryptedFileSystemKeyStore(join(homedir(), ".near-credentials"))
+    new UnencryptedFileSystemKeyStore(join(homedir(), ".near-credentials")),
   ),
 });
 
@@ -241,7 +241,7 @@ async function updatePythContractPriceFeeds(network) {
   });
 
   console.log(
-    `Transaction 👉 https://testnet.nearblocks.io/txns/${result.outcome.transaction.hash}`
+    `Transaction 👉 https://testnet.nearblocks.io/txns/${result.outcome.transaction.hash}`,
   );
   return result;
 }

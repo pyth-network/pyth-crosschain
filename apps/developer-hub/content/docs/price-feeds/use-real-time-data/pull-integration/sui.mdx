@@ -4,7 +4,7 @@ description: "Integrate Pyth Network real-time price data in Sui Move contracts 
 icon: "Drop"
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # How to Use Real-Time Data in Sui Contracts
 
@@ -142,7 +142,7 @@ const connection = new SuiPriceServiceConnection(
     priceFeedRequestConfig: {
       binary: true,
     },
-  }
+  },
 );
 const priceIDs = [
   // You can find the IDs of prices at https://docs.pyth.network/price-feeds/price-feeds
@@ -163,7 +163,7 @@ const wormholeTestnetStateId =
 const pythClient = new SuiPythClient(
   suiClient,
   pythTestnetStateId,
-  wormholeTestnetStateId
+  wormholeTestnetStateId,
 );
 
 const transaction = new Transaction();
@@ -173,7 +173,7 @@ const transaction = new Transaction();
 const priceInfoObjectIds = await pythClient.updatePriceFeeds(
   transaction,
   priceUpdateData,
-  priceIDs
+  priceIDs,
 );
 
 let suiPriceObjectId = priceInfoObjectIds[0];
@@ -193,7 +193,7 @@ transaction.moveCall({
 transaction.setGasBudget(1000000000);
 
 const keypair = Ed25519Keypair.fromSecretKey(
-  process.env.ADMIN_SECRET_KEY!.toLowerCase()
+  process.env.ADMIN_SECRET_KEY!.toLowerCase(),
 );
 const result = await suiClient.signAndExecuteTransaction({
   transaction,

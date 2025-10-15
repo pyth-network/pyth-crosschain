@@ -4,7 +4,6 @@ description: "Deploy your Pyth price feed contract to OP Sepolia testnet and int
 icon: "rocket"
 ---
 
-
 # Deploy your Pyth App
 
 In this part of the tutorial, we will learn to deploy the `MyFirstPythContract.sol` contract and fetch the latest price from Pyth network.
@@ -250,7 +249,7 @@ async function run() {
 
   const hash = await contract.write.updateAndMint(
     [[`0x${priceFeedUpdateData.binary.data[0]}`]] as any,
-    { value: parseEther("0.0005") }
+    { value: parseEther("0.0005") },
   );
   console.log("Transaction hash:");
   console.log(hash);
