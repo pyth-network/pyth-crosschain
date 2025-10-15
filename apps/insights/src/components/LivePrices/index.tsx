@@ -43,9 +43,17 @@ const LiveAggregatePrice = ({
   if (current === undefined) {
     return <Price />;
   } else if (current.status === PriceStatus.Trading) {
-    return <Price current={current.price} prev={prev?.price} />;
+    return (
+      <Price
+        current={current.price}
+        prev={prev?.price}
+        exponent={current.exponent}
+      />
+    );
   } else {
-    return <Price current={current.previousPrice} />;
+    return (
+      <Price current={current.previousPrice} exponent={current.exponent} />
+    );
   }
 };
 
@@ -58,20 +66,28 @@ const LiveComponentPrice = ({
   publisherKey: string;
   cluster: Cluster;
 }) => {
-  const { prev, current } = useLivePriceComponent(
+  const { prev, current, exponent } = useLivePriceComponent(
     cluster,
     feedKey,
     publisherKey,
   );
-  return <Price current={current?.latest.price} prev={prev?.latest.price} />;
+  return (
+    <Price
+      current={current?.latest.price}
+      prev={prev?.latest.price}
+      exponent={exponent}
+    />
+  );
 };
 
 const Price = ({
   prev,
   current,
+  exponent,
 }: {
   prev?: number | undefined;
   current?: number | undefined;
+  exponent?: number | undefined;
 }) =>
   current === undefined ? (
     <Skeleton width={SKELETON_WIDTH} />
@@ -80,7 +96,7 @@ const Price = ({
       className={styles.price}
       data-direction={prev ? getChangeDirection(prev, current) : "flat"}
     >
-      <FormattedPriceValue n={current} />
+      <FormattedPriceValue n={current} exponent={exponent} />
     </span>
   );
 
@@ -114,6 +130,7 @@ const LiveAggregateConfidence = ({
           ? current.confidence
           : current.previousConfidence)
       }
+      exponent={current?.exponent}
     />
   );
 };
@@ -128,24 +145,42 @@ const LiveComponentConfidence = ({
   cluster: Cluster;
 }) => {
   const { current } = useLivePriceComponent(cluster, feedKey, publisherKey);
-  return <Confidence confidence={current?.latest.confidence} />;
+  const { current: priceData } = useLivePriceData(cluster, feedKey);
+  return (
+    <Confidence
+      confidence={current?.latest.confidence}
+      exponent={priceData?.exponent}
+    />
+  );
 };
 
-const Confidence = ({ confidence }: { confidence?: number | undefined }) => (
+const Confidence = ({
+  confidence,
+  exponent,
+}: {
+  confidence?: number | undefined;
+  exponent?: number | undefined;
+}) => (
   <span className={styles.confidence}>
     <PlusMinus className={styles.plusMinus} />
     {confidence === undefined ? (
       <Skeleton width={SKELETON_WIDTH} />
     ) : (
       <span>
-        <FormattedPriceValue n={confidence} />
+        <FormattedPriceValue n={confidence} exponent={exponent} />
       </span>
     )}
   </span>
 );
 
-const FormattedPriceValue = ({ n }: { n: number }) => {
-  const formatter = usePriceFormatter();
+const FormattedPriceValue = ({
+  n,
+  exponent,
+}: {
+  n: number;
+  exponent?: number | undefined;
+}) => {
+  const formatter = usePriceFormatter(exponent);
 
   return useMemo(() => formatter.format(n), [n, formatter]);
 };

@@ -69,7 +69,6 @@ const useChartElem = (symbol: string, feedId: string) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
   const isBackfilling = useRef(false);
-  const priceFormatter = usePriceFormatter();
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
   // Lightweight charts has [a
   // bug](https://github.com/tradingview/lightweight-charts/issues/1649) where
@@ -79,6 +78,9 @@ const useChartElem = (symbol: string, feedId: string) => {
   const whitespaceData = useRef<Set<WhitespaceData>>(new Set());
 
   const { current: livePriceData } = useLivePriceData(Cluster.Pythnet, feedId);
+  const priceFormatter = usePriceFormatter(livePriceData?.exponent, {
+    subscriptZeros: false,
+  });
 
   const didResetVisibleRange = useRef(false);
   const didLoadInitialData = useRef(false);
@@ -369,6 +371,17 @@ const useChartElem = (symbol: string, feedId: string) => {
       resolution,
     });
   }, [quickSelectWindow, resolution, fetchHistoricalData]);
+
+  // Update the chart's price formatter when the exponent becomes available
+  useEffect(() => {
+    if (chartRef.current && livePriceData?.exponent !== undefined) {
+      chartRef.current.chart.applyOptions({
+        localization: {
+          priceFormatter: priceFormatter.format,
+        },
+      });
+    }
+  }, [livePriceData?.exponent, priceFormatter]);
 
   return { chartRef, chartContainerRef };
 };
