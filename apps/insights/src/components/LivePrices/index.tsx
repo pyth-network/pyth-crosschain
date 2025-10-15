@@ -2,6 +2,7 @@
 
 import { PlusMinus } from "@phosphor-icons/react/dist/ssr/PlusMinus";
 import type { PriceData, PriceComponent } from "@pythnetwork/client";
+import { PriceStatus } from "@pythnetwork/client";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
@@ -39,9 +40,13 @@ const LiveAggregatePrice = ({
   cluster: Cluster;
 }) => {
   const { prev, current } = useLivePriceData(cluster, feedKey);
-  return (
-    <Price current={current?.aggregate.price} prev={prev?.aggregate.price} />
-  );
+  if (current === undefined) {
+    return <Price />;
+  } else if (current.status === PriceStatus.Trading) {
+    return <Price current={current.price} prev={prev?.price} />;
+  } else {
+    return <Price current={current.previousPrice} />;
+  }
 };
 
 const LiveComponentPrice = ({
@@ -101,7 +106,16 @@ const LiveAggregateConfidence = ({
   cluster: Cluster;
 }) => {
   const { current } = useLivePriceData(cluster, feedKey);
-  return <Confidence confidence={current?.aggregate.confidence} />;
+  return (
+    <Confidence
+      confidence={
+        current &&
+        (current.status === PriceStatus.Trading
+          ? current.confidence
+          : current.previousConfidence)
+      }
+    />
+  );
 };
 
 const LiveComponentConfidence = ({
@@ -153,7 +167,13 @@ export const LiveLastUpdated = ({
   });
   const formattedTimestamp = useMemo(() => {
     if (current) {
-      const timestamp = new Date(Number(current.timestamp * 1000n));
+      const timestamp = new Date(
+        Number(
+          (current.status === PriceStatus.Trading
+            ? current.timestamp
+            : current.previousTimestamp) * 1000n,
+        ),
+      );
       return isToday(timestamp)
         ? formatterWithoutDate.format(timestamp)
         : formatterWithDate.format(timestamp);
