@@ -1,0 +1,117 @@
+---
+title: "Use Historic Price Data (Benchmarks)"
+description: "Access historical price data using Pyth Benchmarks API for contract settlement, backtesting, and analytics."
+icon: "chart-line"
+---
+
+import { Callout, Steps } from "nextra/components";
+
+# Use Historic Price Data (Benchmarks)
+
+This guide shows you how to integrate **Pyth Benchmarks to access historical price data** for your applications.
+The Pyth Benchmarks API is available on all Pythnet chains.
+
+<Callout type="info" emoji="ℹ️">
+  This guide uses the term **Benchmarks** to refer to the historical price data
+  service.
+</Callout>
+
+## Overview
+
+Pyth Benchmarks allows you to query historical prices at specific points in time. This is useful for:
+
+- **Contract Settlement**: Use historical prices for options, futures, or other derivative settlements.
+- **Backtesting**: Test trading strategies with historical market data.
+- **Audit & Compliance**: Verify past prices for regulatory requirements.
+- **Analytics**: Analyze price movements and market behavior over time.
+
+Pyth Benchmarks can be used in two ways to fetch historical prices:
+
+1. Fetching historical prices from Benchmarks API
+2. Verifying historical prices on-chain
+
+<Steps>
+
+### 1. Fetching Historical Prices from Benchmarks API
+
+Fetching historical prices from the [Benchmarks API](https://benchmarks.pyth.network/docs#/Updates/price_updates_timestamp_route_v1_updates_price__timestamp__get) is the most straightforward way to get historical prices.
+Moreover, [Hermes also extends the Benchmarks API to allow you to fetch historical prices](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates).
+
+Benchmarks APIs expose two endpoints to fetch historical prices:
+
+- [`/v1/updates/price/{timestamp}`](https://benchmarks.pyth.network/docs#/): Returns the price for all price feeds passed as query parameters at a given time.
+- [`/v1/updates/price/{timestamp}/{interval}`](https://benchmarks.pyth.network/docs#/): Returns the price for the price feed passed as query parameter at a given time and with the specified interval.
+
+<Callout type="info" emoji="ℹ️">
+
+Time interval in seconds added to the provided timestamp for the requested price updates.
+For example, if the timestamp is 1716400000 and the **interval is 60,** this function will return price updates from time 1716400000 to 1716400060, inclusive of both. **The time interval should not exceed 60 seconds.**
+
+</Callout>
+
+### 2. Verifying Historical Prices on EVM Chains
+
+Verifying Historical Prices on-chain is very similar to verifying real-time prices on-chain.
+After fetching the price updates in the previous step, you need to pass the price update to the [`parsePriceFeedUpdates`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) function on the Pyth contract instead of the [`updatePriceFeeds`](https://api-reference.pyth.network/price-feeds/evm/updatePriceFeeds) function.
+
+```solidity copy
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+
+contract HistoricalPriceConsumer {
+    IPyth public pyth;
+
+    constructor(address _pyth) {
+        pyth = IPyth(_pyth);
+    }
+
+    function settleWithHistoricalPrice(
+        bytes[] calldata priceUpdate,
+        uint256 priceId,
+        uint256 minPublishTime,
+        uint256 maxPublishTime,
+    ) external {
+        // The parsePriceFeedUpdates function requires a fee to be paid.
+        // The fee is the same as the fee for the updatePriceFeeds function.
+        uint fee = pyth.getUpdateFee(priceUpdate);
+        PythStructs.Price memory price = pyth.parsePriceFeedUpdates{value: fee}(
+            priceUpdate,
+            priceId,
+            minPublishTime,
+            maxPublishTime,
+        );
+
+        // Use the historical price for settlement
+        uint256 settlementPrice = uint256(price.price);
+        // ... settlement logic
+    }
+}
+```
+
+The code snippet above does the following things differently from the [verifying real-time prices on-chain](./use-real-time-data.mdx):
+
+- It calls the `parsePriceFeedUpdates` function instead of the `updatePriceFeeds` function.
+- It passes the price id to the `parsePriceFeedUpdates` function as well. The price feed id is needed to identify if the price update belongs to the price feed.
+- It passes the **min publish time** and **max publish time** to the `parsePriceFeedUpdates` function. The min publish time and max publish time are the time range of the price update. If the price update is not within the time range, the function will revert with `PriceFeedNotFoundWithinRange`.
+
+Refer to the [parsePriceFeedUpdates](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) function for more details.
+
+</Steps>
+
+## Additional Resources
+
+### API Reference
+
+- [Benchmark API Documentation](https://benchmarks.pyth.network/docs)
+- Explore the [Pyth on-chain API documentation](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) to learn more about parsing price updates on EVM chains.
+
+### TradingView Integration
+
+- [TradingView integration](./create-tradingview-charts) for visualization.
+
+### Rate Limits
+
+- Benchmarks API has the same rate limits as the [Hermes API](./rate-limits).

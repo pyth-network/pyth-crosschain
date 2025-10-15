@@ -1,0 +1,268 @@
+[
+  {
+    "alias": "AFSUI/USD",
+    "id": "17cd845b16e874485b2684f8b8d1517d744105dbb904eec30222717f4bc9ee0d",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "AUSD/USD",
+    "id": "d9912df360b5b7f21a122f15bdd5e27f62ce5e72bd316c291f7c86620e07fb2a",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "BLUB/USD",
+    "id": "5fc11ffe4975b624be495be038da30e30bee2004d8ae6282b5364577ef4ca92c",
+    "time_difference": 60,
+    "price_deviation": 3,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "BLUE/USD",
+    "id": "04cfeb7b143eb9c48e9b074125c1a3447b85f59c31164dc20c1beaa6f21f2b6b",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "BNB/USD",
+    "id": "2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "BTC/USD",
+    "id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "BUCK/USD",
+    "id": "fdf28a46570252b25fd31cb257973f865afc5ca2f320439e45d95e0394bc7382",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "CETUS/USD",
+    "id": "e5b274b2611143df055d6e7cd8d93fe1961716bcd4dca1cad87a83bc1e78c1ef",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "DEEP/USD",
+    "id": "29bdd5248234e33bd93d3b81100b5fa32eaa5997843847e2c2cb16d7c6d9f7ff",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "DMC/USD",
+    "id": "8abfa63ae82ca2fbc271861375e497166d8792580fb7c2ffcf014d2a131433f0",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "DOGE/USD",
+    "id": "dcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "ETH/USD",
+    "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "FDUSD/USD",
+    "id": "ccdc1a08923e2e4f4b1e6ea89de6acbc5fe1948e9706f5604b8cb50bc1ed3979",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "FUD/USD",
+    "id": "6a4090703da959247727f2b490eb21aea95c8684ecfac675f432008830890c75",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HAEDAL/USD",
+    "id": "e67d98cc1fbd94f569d5ba6c3c3c759eb3ffc5d2b28e64538a53ae13efad8fd1",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HASUI/USD",
+    "id": "6120ffcf96395c70aa77e72dcb900bf9d40dccab228efca59a17b90ce423d5e8",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HIPPO/USD",
+    "id": "f2c5249856da2fbe0221e163b3fed678dd6f76515ab933292dfb4f15a1de8f8c",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "IKA/USD",
+    "id": "2b529621fa6e2c8429f623ba705572aa64175d7768365ef829df6a12c9f365f4",
+    "time_difference": 60,
+    "price_deviation": 3,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "LBTC/USD",
+    "id": "8f257aab6e7698bb92b15511915e593d6f8eae914452f781874754b03d0c612b",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "LOFI/USD",
+    "id": "82eebc2c47490ba9c0f9bc35ea9fb57a7e2bbf69b84a04ea2a3525153b8090ea",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "MUSD/USD",
+    "id": "2ee09cdb656959379b9262f89de5ff3d4dfed0dd34c072b3e22518496a65249c",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "NAVX/USD",
+    "id": "88250f854c019ef4f88a5c073d52a18bb1c6ac437033f5932cd017d24917ab46",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "NS/USD",
+    "id": "bb5ff26e47a3a6cc7ec2fce1db996c2a145300edc5acaabe43bf9ff7c5dd5d32",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "SCA/USD",
+    "id": "7e17f0ac105abe9214deb9944c30264f5986bf292869c6bd8e8da3ccd92d79bc",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "SEND/USD",
+    "id": "7d19b607c945f7edf3a444289c86f7b58dcd8b18df82deadf925074807c99b59",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "SOL/USD",
+    "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "STSUI/USD",
+    "id": "0b3eae8cb6e221e7388a435290e0f2211172563f94769077b7f4c4c6a11eea76",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "SUI/USD",
+    "id": "23d7315113f5b1d3ba7a83604c44b94d79f4fd69af77f804fc7f920a6dc65744",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "TRX/USD",
+    "id": "67aed5a24fdad045475e7195c98a98aea119c763f272d4523f5bac93a4f33c2b",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "TURBOS/USD",
+    "id": "f9c2e890443dd995d0baafc08eea3358be1ffb874f93f99c30b3816c460bbac3",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDC/USD",
+    "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDT/USD",
+    "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDY/USD",
+    "id": "e393449f6aff8a4b6d3e1165a7c9ebec103685f3b41e60db4277b5b6d10e7326",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "VSUI/USD",
+    "id": "57ff7100a282e4af0c91154679c5dae2e5dcacb93fd467ea9cb7e58afdcfde27",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WAL/USD",
+    "id": "eba0732395fae9dec4bae12e52760b35fc1c5671e2da8b449c9af4efe5d54341",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "XAUM/USD.RR",
+    "id": "d7db067954e28f51a96fd50c6d51775094025ced2d60af61ec9803e553471c88",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "UP/USD",
+    "id": "c591a547856b091560b120ee14b165a84ca58eca23b2ab635df641340bde1f10",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "XRP/USD",
+    "id": "ec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8",
+    "time_difference": 60,
+    "price_deviation": 0.5,
+    "confidence_ratio": 100
+  }
+]

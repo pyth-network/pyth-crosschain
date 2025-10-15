@@ -1,0 +1,155 @@
+---
+title: "How to Create TradingView Charts"
+description: "Integrate TradingView charts with Pyth price data using widgets or the charting library for custom trading interfaces."
+icon: "chart-bar"
+---
+
+import { Tab, Tabs } from "nextra-theme-docs";
+
+# How to Create TradingView Charts
+
+The TradingView integration allows users to view Pyth prices on their own website. All Pyth prices made available through the TradingView integration are originating from [Pythnet](/price-feeds/how-pyth-works/pythnet).
+
+## Choosing an Implementation Method for TradingView Integration
+
+There are primarily two methods to integrate TradingView with your website to display Pyth prices:
+
+### 1. Using the TradingView Widget
+
+- **Advantages**:
+  - **Simplicity**: This is a plug-and-play solution which allows for quick integration. You won't need to engage in complex setup processes or handle any backend configurations.
+- **Disadvantages**:
+  - **Limited Customization**: The widget comes as-is, and while you can change basic parameters like the `symbol` or `theme`, more advanced customizations are restricted.
+
+### 2. Using the Datafeed URL with Charting Library
+
+- **Advantages**:
+  - **Deep Customization**: Suited for those who need a deeper level of integration and customization. By utilizing the UDF-compatible URL, you can tailor the look, feel, and functionality of the chart to better fit your application's needs.
+- **Disadvantages**:
+  - **Added Complexity**: Integrating the Charting Library requires more technical know-how and potentially more time compared to the simpler widget integration.
+
+When deciding between the two, consider the user experience you want to provide, the technical expertise at hand, and the time you can allocate to the integration. For a rapid deployment with minimal adjustments, the TradingView Widget is the way to go. If you need more control and are prepared for a deeper dive into the implementation, the Datafeed URL with the Charting Library would be your best choice.
+
+## TradingView Widget
+
+1. Add the following script(s) from [TradingView](https://www.tradingview.com/widget/advanced-chart/) to your website depending on your framework:
+
+<Tabs items={['html', 'jsx']}>
+    <Tab>
+        ```html copy
+        <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container">
+            <div id="tradingview"></div>
+            <script
+                type="text/javascript"
+                src="https://s3.tradingview.com/tv.js"
+            ></script>
+            <script type="text/javascript">
+                new TradingView.widget({
+                autosize: true,
+                symbol: "PYTH:BTCUSD",
+                interval: "D",
+                timezone: "Etc/UTC",
+                theme: "light",
+                style: "1",
+                locale: "en",
+                toolbar_bg: "#f1f3f6",
+                enable_publishing: false,
+                allow_symbol_change: true,
+                container_id: "tradingview",
+            });
+            </script>
+        </div>
+        <!-- TradingView Widget END -->
+        ```
+    </Tab>
+    <Tab>
+        ```jsx copy
+        // TradingViewWidget.jsx
+
+        import React, { useEffect, useRef } from "react";
+
+        let tvScriptLoadingPromise;
+
+        export default function TradingViewWidget() {
+        const onLoadScriptRef = useRef();
+
+        useEffect(() => {
+        onLoadScriptRef.current = createWidget;
+
+        if (!tvScriptLoadingPromise) {
+        tvScriptLoadingPromise = new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.id = "tradingview-widget-loading-script";
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.type = "text/javascript";
+        script.onload = resolve;
+
+        document.head.appendChild(script);
+    });
+    }
+
+        tvScriptLoadingPromise.then(
+        () => onLoadScriptRef.current && onLoadScriptRef.current()
+        );
+
+        return () => (onLoadScriptRef.current = null);
+
+        function createWidget() {
+        if (document.getElementById("tradingview") && "TradingView" in window) {
+        new window.TradingView.widget({
+        autosize: true,
+        symbol: "PYTH:BTCUSD",
+        interval: "D",
+        timezone: "Etc/UTC",
+        theme: "light",
+        style: "1",
+        locale: "en",
+        toolbar_bg: "#f1f3f6",
+        enable_publishing: false,
+        allow_symbol_change: true,
+        container_id: "tradingview",
+    });
+    }
+    }
+
+    }, []);
+
+        return (
+
+        <div className="tradingview-widget-container">
+        <div id="tradingview" />
+        </div>
+        ); }
+
+        ```
+    </Tab>
+
+</Tabs>
+
+2. Replace the `symbol` parameter with the Pyth symbol you want to display. For example, to display the price of Ethereum, use `symbol: "PYTH:ETHUSD"`.
+
+3. Replace the `interval` parameter with the time interval you want to display. For example, to display the price of Ethereum in 1-minute intervals, use `interval: "1"`. Possible resolutions are daily (D or 1D, 2D ... ), weekly (1W, 2W ...), monthly (1M, 2M...) and an intra-day resolution – minutes(1, 2 ...).
+
+4. Replace the `timezone` parameter with the timezone you want to display. For example, to display the price of Ethereum in the Eastern Time Zone, use `timezone: "America/New_York"`.
+
+5. Replace the `theme` parameter with the theme you want to display. For example, to display the price of Ethereum in dark mode, use `theme: "dark"`.
+
+6. There is a fully working open-source example of the TradingView integration by one of Pyth's contributors [here](https://github.com/cctdaniel/pyth-tv-example). The example application is deployed [here](https://pyth-tv-example.vercel.app/).
+
+Note: The TradingView plug-and-play widget does not allow for much customization. If you want to customize the widget, you can use the [TradingView Charting Library](https://www.tradingview.com/HTML5-stock-forex-bitcoin-charting-library/). Please see the next section for more details.
+
+## Using Datafeed URL with Charting Library
+
+We also provide a UDF-compatible URL that follows the [TradingView UDF spec](https://www.tradingview.com/charting-library-docs/latest/connecting_data/UDF). You can implement your own datafeed utilizing the API or use the built-in UDF adapter with the API. If you need a step-by-step guide, refer to the [How to connect data via Datafeed API](https://www.tradingview.com/charting-library-docs/latest/tutorials/implement_datafeed_tutorial/) tutorial, or you can reference the example [here](https://github.com/cctdaniel/pyth-tv-charting-lib), the main files that may be of interest are: [datafeed.js](https://github.com/cctdaniel/pyth-tv-charting-lib/blob/main/src/utils/datafeed.js) and [streaming.js](https://github.com/cctdaniel/pyth-tv-charting-lib/blob/main/src/utils/streaming.js).
+
+The datafeed URL is [here](https://benchmarks.pyth.network/v1/shims/tradingview) and documentation can be found [here](https://benchmarks.pyth.network/redoc)
+
+### Example
+
+- Symbol Info: https://benchmarks.pyth.network/v1/shims/tradingview/symbol_info
+- History: https://benchmarks.pyth.network/v1/shims/tradingview/history?symbol=Crypto.ETH/USD&resolution=1&from=1690338541&to=1690338741
+- Stream of prices: https://benchmarks.pyth.network/v1/shims/tradingview/streaming
+- Config: https://benchmarks.pyth.network/v1/shims/tradingview/config
+- Symbols: https://benchmarks.pyth.network/v1/shims/tradingview/symbols?symbol=Crypto.BTC/USD
+- Search: https://benchmarks.pyth.network/v1/shims/tradingview/search?query=bitcoin

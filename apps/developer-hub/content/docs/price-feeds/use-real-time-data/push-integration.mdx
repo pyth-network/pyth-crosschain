@@ -1,0 +1,77 @@
+---
+title: "Push Integration"
+description: "Use real-time price data with push integration across various blockchain ecosystems including EVM, Solana, and Aptos"
+icon: "ArrowCircleUp"
+---
+
+# How to Use Real-Time Data using Push Integration
+
+This guide will walk you through the steps to use real-time price data using push integration in various ecosystems.
+
+To use the push integration, developers first need to ensure the feeds used by their application are being updated on-chain.
+Refer to the [Push Feeds page](../push-feeds) to see which feeds are being updated on each blockchain.
+If your feeds are not listed there, you have several options:
+
+- **Request Feeds**: Fill out [this form](https://tally.so/r/nGz2jj) to request the feeds you need. This is the fastest and simplest way to get your feeds pushed on chain.
+- **Run Price Pusher**: Set up and run a [Price Pusher](/price-feeds/schedule-price-updates/using-price-pusher) to automate the process of updating the on-chain price
+
+To use real-time price data using push feeds, developers can use the following code snippet based on the ecosystem:
+
+### EVM
+
+Developers building on EVM chains can use push feeds to consume real-time price data by reading the price from the Pyth oracle smart contract.
+
+```solidity copy
+PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);
+```
+
+Developers only need to pass the price feed ID to the above method from the [Push Feeds list](../push-feeds).
+
+Sample code snippet:
+
+```solidity {30-31} copy
+pragma solidity ^0.8.0;
+
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+
+contract SomeContract {
+  IPyth pyth;
+
+  /**
+   * @param pythContract The address of the Pyth contract
+   */
+  constructor(address pythContract) {
+    // The IPyth interface from pyth-sdk-solidity provides the methods to interact with the Pyth contract.
+    // Instantiate it with the Pyth contract address from https://docs.pyth.network/price-feeds/contract-addresses/evm
+    pyth = IPyth(pythContract);
+  }
+
+  /**
+   * This method is an example of how to interact with the Pyth contract using Push Integration.
+   */
+  function exampleMethod() public {
+    // Read the current price from a price feed if it is less than 60 seconds old.
+    // Each price feed (e.g., ETH/USD) is identified by a price feed ID.
+    // The complete list of feed IDs is available at https://docs.pyth.network/price-feeds/price-feeds
+    bytes32 priceFeedId = 0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace; // ETH/USD
+    PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);
+  }
+}
+
+```
+
+### SVM
+
+Developers building on SVM chains can use Price Feed Accounts to integrate Pyth using push integration.
+The [SVM guide](../use-real-time-data/solana#price-feed-accounts) explains in detail how to integrate Pyth using Price Feed Accounts.
+
+### Aptos
+
+Developers building on Aptos can use push feeds to consume real-time price data by reading the price from the Pyth Oracle smart contract on Aptos.
+
+```rust copy
+let btc_price_identifier = x"e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
+let btc_usd_price_id = price_identifier::from_byte_vec(btc_price_identifier);
+pyth::get_price(btc_usd_price_id)
+```

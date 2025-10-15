@@ -1,0 +1,12 @@
+{
+  "evm": {
+    "title": "EVM ↗",
+    "href": "https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan",
+    "newWindow": true
+  },
+  "hermes": {
+    "title": "Hermes ↗",
+    "href": "https://hermes.pyth.network/docs/",
+    "newWindow": true
+  }
+}

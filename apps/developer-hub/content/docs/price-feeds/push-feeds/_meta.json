@@ -1,0 +1,8 @@
+{
+  "evm": "EVM",
+  "solana": "Solana",
+  "fogo": "Fogo",
+  "aptos": "Aptos",
+  "movement": "Movement",
+  "sui": "Sui"
+}

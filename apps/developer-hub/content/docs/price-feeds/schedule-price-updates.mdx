@@ -1,0 +1,31 @@
+---
+title: "How To Schedule Price Updates"
+description: "Learn how to automate Pyth price feed updates using Adrastia, Gelato, or Price Pusher for reliable on-chain price data."
+icon: "clock"
+---
+
+import { Callout } from "nextra/components";
+
+# How To Schedule Price Updates
+
+The following guides explain how to schedule Pyth price updates to occur at regular intervals.
+As a pull oracle, Pyth's users are typically responsible for updating the state of on-chain feeds.
+Please see [What is a Pull Oracle?](/price-feeds/pull-updates) to learn more about pull updates.
+
+The Pyth Data Association sponsors regular on-chain updates for some price feeds.
+See [Sponsored Feeds](/price-feeds/sponsored-feeds) for the current list of feeds and their update parameters.
+If you would like to see additional feeds on this list, please [contact the association via this form](https://tally.so/r/nGz2jj).
+
+There are also three different tools to schedule price updates:
+
+- [Adrastia's Pyth Price Feed Updater](schedule-price-updates/using-adrastia) is a white-glove service that automates price updates based on time and price deviations, supporting any EVM chain.
+- [Gelato](schedule-price-updates/using-gelato) provides a turnkey automation solution for scheduled updates.
+- [Price Pusher](schedule-price-updates/using-price-pusher) is a service that developers can run to trigger price updates when certain time or price change conditions are met.
+
+For developers comparing these three options, Adrastia and Gelato are simpler, in that they do not require you to operate a service.
+
+<Callout type="info" emoji="ℹ️">
+  Deviation thresholds are fully configurable, limited only by Pythnet’s update
+  speed. Please be aware: Lower thresholds and more frequent updates increase
+  on-chain transactions, which raises costs.
+</Callout>

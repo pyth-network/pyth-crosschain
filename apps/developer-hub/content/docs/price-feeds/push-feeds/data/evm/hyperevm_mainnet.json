@@ -1,0 +1,303 @@
+[
+  {
+    "alias": "BTC/USD",
+    "id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "ETH/USD",
+    "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDC/USD",
+    "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDT/USD",
+    "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HYPE/USD",
+    "id": "4279e31cc369bbcc2faf022b382b080e32a8e689ff20fbc530d2a603eb6cd98b",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WSTETH/USD",
+    "id": "6df640f3b8963d8f8358f791f352b8364513f6ab1cca5ed3f1f7b5448980e784",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WSTETH/STETH.RR",
+    "id": "f59ead01ed0faba85332a1e2feae8ddb14a1c94ebac259f1c982c92fc7ce333e",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WBTC/USD",
+    "id": "c9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WETH/USD",
+    "id": "9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDE/USD",
+    "id": "6ec879b1e9963de5ee97e9c8710b742d6228252a5e2ca12d4ae81d7fe5ee8c5d",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "SUSDE/USD",
+    "id": "ca3ba9a619a4b3755c10ac7d5e760275aa95e9823d38a84fedd416856cdba37c",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "SUSDE/USDE.RR",
+    "id": "271c64ce459937abf721d42552035713b6c58f80eeceab716a624607fda4b10f",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WSTHYPE/STHYPE.RR",
+    "id": "1a78b5829a99f1d2897917dae2a02266c0210535a995a2e9d0692613bbc89e27",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "LHYPE/USD",
+    "id": "9e3cadc2a8a0ebfd765b34d5ee5de77a4add3114672fc0b8d3ad09ac56940069",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "FHYPE/HYPE.RR",
+    "id": "8f749681c078ce4ef65cd220994f25735b80264fca4386dd57b31eacf7e4610b",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDXL/USD",
+    "id": "e10593860e9ee1c204e4f9569e877502f098dd1a4d84cc5bad06f23f77dcbfe2",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "MHYPE/HYPE.RR",
+    "id": "e35aebd2d35795acaa2b0e59f3b498510e8ef334986d151d1502adb9e26234f7",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "FEUSD/USD",
+    "id": "7f2e9a7365eb634c543e9ca72683a9cf778cdc16ee5b8bca73abe6d08c1410d5",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "MHYPE/USD",
+    "id": "a7fb4cdafed5130e8731b8da7c9208881f24e9b671bb92438b1fbf361d578112",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "STHYPE/USD",
+    "id": "068cd0617cbdd1dda615ed2b5ab4fe07d2e9f46347f5e785484844aa10d22dc5",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "UETH/USD",
+    "id": "08c73e187b45ecb2ab8375b975865d3c4a225fef1ccc7f326ad6eec66a24567a",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "UBTC/USD",
+    "id": "42bfb26778f3504a9f359a92c731f77d0c24aed9b7745276e3ad0c2d840b74c2",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "CMETH/METH.RR",
+    "id": "cef5ad3be493afef85e77267cb0c07d048f3d54055409a34782996607e48cf0a",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "METH/ETH.RR",
+    "id": "ee279eeb2fec830e3f535ad4d6524eb35eb1c6890cb1afc0b64554d08c88727e",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USR/USD.RR",
+    "id": "512a79cc65f49531f0bbb72956353e79ecdc1e4a6e5241847196c1f9a11d8a52",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USOL/USD",
+    "id": "974c7a77dbace44d229be17fc176975e06404b004476aeaff37641818cb0c55a",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "BUDDY/USD",
+    "id": "ac2adf4571a391da22a2d39e8c5eb32ceecd6ab38c386a9194d669deece74dee",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "XAU/USD",
+    "id": "765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDHL/USD",
+    "id": "1497fb795ae65533d36d147b1b88c8b7226866a201589904c13acd314f694799",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "UFART/USD",
+    "id": "a210f55ff119d315002b5dc4f763b4e4114197028e45d6aca16498ab1433fb6d",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USH/USD",
+    "id": "eaa30c1ef2d9f4fde45d6e699bfda5187b3de200ea4cbab25d676b260ab728c1",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HWHLP/USDC",
+    "id": "d136d4fd8d5f41c42339bcaf79954cfc2d50a33b129a990f8a2087d73cadade9",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WHLP/USDC",
+    "id": "b94c49af07479932872c63126f6bdee78140be7a953435e3815c8e1b204a0a04",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "STLOOP/LOOP",
+    "id": "1d99073631da1f959284bae0be4d027cfd41c98f4b6a95d20ccf4208a3a4b1f1",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HLP0/USDC.RR",
+    "id": "aa388e24e74d5dd12145f74fad3180266f78ed08c0a2f47c60583fdb612587ba",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "KHYPE/HYPE.RR",
+    "id": "983b7cabc6fab548e15a5b05500da9b99c1682107b3e2ff289344116c10ac02c",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "WSTUSR/USR.RR",
+    "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "RLP/USD.RR",
+    "id": "796bcb684fdfbba2b071c165251511ab61f08c8949afd9e05665a26f69d9a839",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "KHYPE/USD",
+    "id": "2837a61ae8165c018b0e406ac32b1527270e57b81f0069260afbef71b9cf8ffe",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "HAHYPE/HYPE.RR",
+    "id": "19aec77cb70be18c66df7afd33da651d7b376fd26f7c06f2e8b77536c820a281",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "APE/USD",
+    "id": "15add95022ae13563a11992e727c91bdb6b55bc183d9d747436c80a483d8c864",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "USDH/USD",
+    "id": "f364e785775b4cb2f159ea823f8b5b9b669a4c221a3f845e518ba0e09611c553",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  },
+  {
+    "alias": "THBILL/USDC.RR",
+    "id": "5b1bc5a579deba54dbaa9bc1c5b2e2b3f116d8d5ec27fbb3b9dc140a78e9f1e2",
+    "time_difference": 3600,
+    "price_deviation": 1,
+    "confidence_ratio": 100
+  }
+]

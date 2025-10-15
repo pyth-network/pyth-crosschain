@@ -1,0 +1,6 @@
+{
+  "title": "Create Your First Pyth App",
+  "icon": "MyIcon",
+  "pages": ["index", "evm"],
+  "defaultOpen": true
+}
