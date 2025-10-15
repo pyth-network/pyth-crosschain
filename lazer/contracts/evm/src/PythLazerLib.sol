@@ -2,29 +2,16 @@
 pragma solidity ^0.8.13;
 
 import {PythLazer} from "./PythLazer.sol";
+import {PythLazerStructs} from "./PythLazerStructs.sol";
 
 library PythLazerLib {
-    enum PriceFeedProperty {
-        Price,
-        BestBidPrice,
-        BestAskPrice,
-        PublisherCount,
-        Exponent
-    }
-
-    enum Channel {
-        Invalid,
-        RealTime,
-        FixedRate50,
-        FixedRate200
-    }
 
     function parsePayloadHeader(
         bytes calldata update
     )
         public
         pure
-        returns (uint64 timestamp, Channel channel, uint8 feedsLen, uint16 pos)
+        returns (uint64 timestamp, PythLazerStructs.Channel channel, uint8 feedsLen, uint16 pos)
     {
         uint32 FORMAT_MAGIC = 2479346549;
 
@@ -36,7 +23,7 @@ library PythLazerLib {
         }
         timestamp = uint64(bytes8(update[pos:pos + 8]));
         pos += 8;
-        channel = Channel(uint8(update[pos]));
+        channel = PythLazerStructs.Channel(uint8(update[pos]));
         pos += 1;
         feedsLen = uint8(update[pos]);
         pos += 1;
@@ -60,8 +47,8 @@ library PythLazerLib {
     function parseFeedProperty(
         bytes calldata update,
         uint16 pos
-    ) public pure returns (PriceFeedProperty property, uint16 new_pos) {
-        property = PriceFeedProperty(uint8(update[pos]));
+    ) public pure returns (PythLazerStructs.PriceFeedProperty property, uint16 new_pos) {
+        property = PythLazerStructs.PriceFeedProperty(uint8(update[pos]));
         pos += 1;
         new_pos = pos;
     }
