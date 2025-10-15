@@ -48,6 +48,8 @@ message State {
     repeated GovernanceSourceState governance_sources = 9;
     // Currently active feature flags. Feature flags influence the aggregator's behavior.
     repeated string feature_flags = 10;
+    // [required] Timestamp of the last real-time update processed by the shard.
+    optional google.protobuf.Timestamp last_real_time_update_timestamp = 11;
 }
 
 // An item of the state describing a publisher.
