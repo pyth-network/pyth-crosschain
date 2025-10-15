@@ -72,6 +72,7 @@ export const useLivePriceComponent = (
     prev: prev?.priceComponents.find((component) =>
       component.publisher.equals(publisherKey),
     ),
+    exponent: current?.exponent,
   };
 };
 
