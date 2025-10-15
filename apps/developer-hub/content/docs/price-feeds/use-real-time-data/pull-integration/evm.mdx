@@ -4,7 +4,7 @@ description: "Integrate Pyth Network real-time price data in EVM-based smart con
 icon: "Cube"
 ---
 
-import { Callout } from "nextra/components";
+
 
 # How to Use Real-Time Data in EVM Contracts
 
@@ -12,7 +12,7 @@ This guide explains how to use real-time Pyth data in EVM contracts using the pu
 
 For an interactive playground to explore the methods supported by the Pyth contract, see the [EVM API reference](../../api-reference).
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   If you want to use real-time price data using the push integration instead, you can use the following code snippet:
   ```solidity copy
   PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);

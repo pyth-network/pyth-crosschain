@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in Fuel applications using smart contr
 icon: "Fire"
 ---
 
-import { Callout } from "nextra/components";
+
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Use Real-Time Data in Fuel Contracts
@@ -88,7 +88,7 @@ The `update_data` argument contains verified prices from Pyth.
 Calling `pyth_contract.update_price_feeds` with this value updates the on-chain Pyth price and ensures your application has recent price data.
 The `update_data` can be fetched from Hermes; Consult [Fetch Price Updates](https://docs.pyth.network/price-feeds/fetch-price-updates) for more information on how to fetch the `update_data`.
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   Regarding the Pyth contract on Fuel, the caller must pay the fee in the base
   asset for functions like `update_price_feeds`. The fee is currently set to the
   minimum possible value (1 wei).

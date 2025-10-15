@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in Stacks applications using Clarity s
 icon: "Stack"
 ---
 
-import { Callout } from "nextra/components";
+
 
 # How to Use Real-Time Data in Stacks applications
 
@@ -17,7 +17,7 @@ This guide explains how to use real-time Pyth data in [Clarity](https://clarity-
 The Pyth protocol integration for Stacks is available as a Beta on both testnet and mainnet networks, to help developers test, give feedback, and ensure the reliability and stability of the integration.
 Unlike other smart contract languages, there is no importing modules into Clarity smart contracts for certain security reasons. So the Pyth integration on Stacks is implemented as its own set of Clarity contracts where developers will invoke a `contract-call?` to the main Pyth Clarity [contract](https://explorer.hiro.so/txid/SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4?chain=mainnet).
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   Currently, the Pyth protocol integration is currently maintained by Trust
   Machines. It currently supports real-time price feeds for BTC, STX, ETH, and
   USDC. To request more price feeds, open an issue in Trust Machine's Pyth
@@ -28,7 +28,7 @@ Unlike other smart contract languages, there is no importing modules into Clarit
 
 For our example, we will imagine a contract that mints an NFT in exchange for $100 of sBTC. In order to determine the USD value of a user's sBTC amount, we'll need to use Pyth. Since market pricing for sBTC isn't supported currently, we'll use the price data from the BTC/USD price feed.
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   The maintained Pyth integration contract for Stacks is called
   [`.pyth-oracle-v4`](https://explorer.hiro.so/txid/SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4?chain=mainnet).
   This contract serves as the main entry point for updating and getting price
@@ -115,7 +115,7 @@ We can then determine the USD amount of sBTC the user owns and decide if it is e
 )
 ```
 
-<Callout type="warning" emoji="⚠️">
+<Callout type="warning">
   The `verify-and-update-price-feeds` of the `.pyth-oracle-v4` contract applies
   a fee of 1 uSTX, or 1 micro-stx, which is 0.000001 STX.
 </Callout>

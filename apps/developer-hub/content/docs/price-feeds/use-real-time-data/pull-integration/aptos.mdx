@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in Aptos applications using Move smart
 icon: "Coins"
 ---
 
-import { Callout } from "nextra/components";
+
 
 # How to Use Real-Time Data in Aptos Contracts
 
@@ -61,7 +61,7 @@ module example::example {
 
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   The `pyth_price_update` argument contains verified prices from Pyth. Calling
   `pyth::update_price_feeds` with this value updates the on-chain Pyth price and
   ensures your application has recent price data. The pyth_price_update can be

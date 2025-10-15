@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in Solana applications using price upd
 icon: "Lightning"
 ---
 
-import { Callout } from "nextra/components";
+
 
 # How to Use Real-Time Data in Solana Programs
 
@@ -24,7 +24,7 @@ Add this crate to the dependencies section of your `Cargo.toml` file:
 pyth-solana-receiver-sdk ="x.y.z" # get the latest version from https://crates.io/crates/pyth-solana-receiver-sdk
 ```
 
-<Callout type="warning" emoji="⚓">
+<Callout type="warning">
 At the time of writing, [pyth-solana-receiver-sdk](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/pyth_solana_receiver_sdk) is compatible with Anchor `v0.28.0{:js}`, `v0.29.0{:js}`, `v0.30.1{:js}` and `v0.31.1{:js}`.
 If you are on any other version, please move to `v0.31.1{:js}`. This [repository](https://github.com/guibescos/anchor-pyth/tree/main/programs/anchor-pyth) has a branch for each of these versions containing a minimal working Solana program.
 </Callout>
@@ -57,7 +57,7 @@ pub struct Sample<'info> {
 }
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
 Users must ensure that the account passed to their instruction is owned by the Pyth Pull Oracle program.
 Using Anchor with the `Account<'info, PriceUpdateV2>` type will automatically perform this check.
 However, it is the developer's responsibility to perform this check if they are not using Anchor.
@@ -82,7 +82,7 @@ pub fn sample(ctx: Context<Sample>) -> Result<()> {
 }
 ```
 
-<Callout type="warning" emoji="⚠️">
+<Callout type="warning">
   Users must validate the price update for the appropriate **price
   feed** and **timestamp**. `PriceUpdateV2` guarantees that the account contains
   a verified price for _some_ price feed at _some_ point in time. There are
@@ -133,7 +133,7 @@ const solUsdPriceFeedAccount = pythSolanaReceiver
   .toBase58();
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   The Price Feed Accounts integration assumes that an off-chain process is
   continuously updating each price feed. The Pyth Data Association sponsors
   price updates for a subset of commonly used price feeds on shard 0. Please see
@@ -232,7 +232,7 @@ await pythSolanaReceiver.provider.sendAll(
 
 The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) contains more information about interacting with the Pyth solana receiver contract, including working examples.
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   Posting and verifying price updates currently requires multiple transactions
   on Solana. If your usecase requires a single transaction, you can reduce the
   verification level of the posted price updates by replacing

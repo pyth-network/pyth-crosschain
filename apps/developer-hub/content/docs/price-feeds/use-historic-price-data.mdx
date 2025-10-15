@@ -4,14 +4,14 @@ description: "Access historical price data using Pyth Benchmarks API for contrac
 icon: "chart-line"
 ---
 
-import { Callout, Steps } from "nextra/components";
+import { Steps } from "nextra/components";
 
 # Use Historic Price Data (Benchmarks)
 
 This guide shows you how to integrate **Pyth Benchmarks to access historical price data** for your applications.
 The Pyth Benchmarks API is available on all Pythnet chains.
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   This guide uses the term **Benchmarks** to refer to the historical price data
   service.
 </Callout>
@@ -42,7 +42,7 @@ Benchmarks APIs expose two endpoints to fetch historical prices:
 - [`/v1/updates/price/{timestamp}`](https://benchmarks.pyth.network/docs#/): Returns the price for all price feeds passed as query parameters at a given time.
 - [`/v1/updates/price/{timestamp}/{interval}`](https://benchmarks.pyth.network/docs#/): Returns the price for the price feed passed as query parameter at a given time and with the specified interval.
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
 
 Time interval in seconds added to the provided timestamp for the requested price updates.
 For example, if the timestamp is 1716400000 and the **interval is 60,** this function will return price updates from time 1716400000 to 1716400060, inclusive of both. **The time interval should not exceed 60 seconds.**

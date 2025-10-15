@@ -4,7 +4,7 @@ description: "Consume Pyth Network prices in Starknet applications using Cairo s
 icon: "Star"
 ---
 
-import { Callout } from "nextra/components";
+
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 # How to Use Real-Time Data in Starknet Contracts
@@ -127,7 +127,7 @@ The pyth_price_update argument contains verified prices from Pyth.
 Calling pyth.update_price_feeds with this value updates the on-chain Pyth price and ensures your application has recent price data.
 The pyth_price_update can be fetched from Hermes; Consult [Fetch Price Updates](https://docs.pyth.network/price-feeds/fetch-price-updates) for more information on how to fetch the pyth_price_update.
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   Unlike Ethereum, there is no native token on Starknet. You cannot pass tokens
   implicitly when calling functions. Moreover, there is no concept of a
   designated payer account, unlike Solana. In Starknet, all token transfers must
@@ -170,7 +170,7 @@ const currentPrices = await connection.getLatestPriceFeeds([priceId]);
 const pythUpdate = ByteBuffer.fromBase64(currentPrices[0].vaa);
 ```
 
-<Callout type="info" emoji="ℹ️">
+<Callout type="info">
   Price updates must be converted to `ByteBuffer` before being passed on to the
   Pyth contract on Starknet. Use the `ByteBuffer` type from
   `@pythnetwork/pyth-starknet-js` package as shown above.
