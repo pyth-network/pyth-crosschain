@@ -5,6 +5,7 @@ import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
+import { CustomSocketClosureCodes } from "../protocol.js";
 import { envIsServiceOrWebWorker } from "../util/env-util.js";
 
 const DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
@@ -164,7 +165,8 @@ export class ResilientWebSocket {
     }
 
     this.heartbeatTimeout = setTimeout(() => {
-      this.logger.warn("Connection timed out. Reconnecting...");
+      const warnMsg = "Connection timed out. Reconnecting...";
+      this.logger.warn(warnMsg);
       if (this.wsClient) {
         if (typeof this.wsClient.terminate === "function") {
           this.wsClient.terminate();
@@ -172,7 +174,10 @@ export class ResilientWebSocket {
           // terminate is an implementation detail of the node-friendly
           // https://www.npmjs.com/package/ws package, but is not a native WebSocket API,
           // so we have to use the close method
-          this.wsClient.close();
+          this.wsClient.close(
+            CustomSocketClosureCodes.CLIENT_TIMEOUT_BUT_RECONNECTING,
+            warnMsg,
+          );
         }
       }
       this.handleReconnect();
