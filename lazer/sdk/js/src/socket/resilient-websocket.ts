@@ -111,7 +111,7 @@ export class ResilientWebSocket {
     // browser constructor supports a different 2nd argument for the constructor,
     // so we need to ensure it's not included if we're running in that environment:
     // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#protocols
-    this.wsClient = new WebSocket(this.endpoint, envIsServiceOrWebWorker() ? this.wsOptions : undefined);
+    this.wsClient = new WebSocket(this.endpoint, envIsServiceOrWebWorker() ? undefined : this.wsOptions);
 
     this.wsClient.addEventListener("open", () => {
       this.logger.info("WebSocket connection established");
