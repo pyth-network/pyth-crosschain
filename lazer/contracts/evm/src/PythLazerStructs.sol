@@ -22,14 +22,14 @@ library PythLazerStructs {
     }
 
     struct Feed {
-        // Slot 1: 4 + 4 + 8 + 8 + 8 = 32 bytes (fully packed ✓)
+        // Slot 1: 4 + 4 + 8 + 8 + 8 = 32 bytes (fully packed)
         uint32 feedId;
         uint32 existsFlags;  // Bitmap: bit 0-31 for up to 32 properties
         int64 price;
         int64 bestBidPrice;
         int64 bestAskPrice;
         
-        // Slot 2: 8 + 8 + 8 + 8 = 32 bytes (fully packed ✓)
+        // Slot 2: 8 + 8 + 8 + 8 = 32 bytes (fully packed)
         int64 confidence;
         int64 fundingRate;
         uint64 fundingTimestamp;

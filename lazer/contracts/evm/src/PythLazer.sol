@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {PythLazerLib} from "./PythLazerLib.sol";
+import {PythLazerStructs} from "./PythLazerStructs.sol";
 
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[100] internal trustedSigners;
@@ -103,6 +105,57 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         if (!isValidSigner(signer)) {
             revert("invalid signer");
         }
+    }
+
+    /// @notice Verify signature and parse update into structured data
+    /// @dev Combines verifyUpdate() with parseUpdateFromPayload() for convenience and safety
+    /// @param update The complete update message (EVM format with signature)
+    /// @return payload The verified payload bytes
+    /// @return signer The address of the signer
+    /// @return parsedUpdate The parsed Update struct with all feeds and properties
+    function verifyAndParseUpdate(
+        bytes calldata update
+    ) external payable returns (
+        bytes calldata payload,
+        address signer,
+        PythLazerStructs.Update memory parsedUpdate
+    ) {
+        // Require fee and refund excess
+        require(msg.value >= verification_fee, "Insufficient fee provided");
+        if (msg.value > verification_fee) {
+            payable(msg.sender).transfer(msg.value - verification_fee);
+        }
+
+        if (update.length < 71) {
+            revert("input too short");
+        }
+        uint32 EVM_FORMAT_MAGIC = 706910618;
+
+        uint32 evm_magic = uint32(bytes4(update[0:4]));
+        if (evm_magic != EVM_FORMAT_MAGIC) {
+            revert("invalid evm magic");
+        }
+        uint16 payload_len = uint16(bytes2(update[69:71]));
+        if (update.length < 71 + payload_len) {
+            revert("input too short");
+        }
+        payload = update[71:71 + payload_len];
+        bytes32 hash = keccak256(payload);
+        (signer, , ) = ECDSA.tryRecover(
+            hash,
+            uint8(update[68]) + 27,
+            bytes32(update[4:36]),
+            bytes32(update[36:68])
+        );
+        if (signer == address(0)) {
+            revert("invalid signature");
+        }
+        if (!isValidSigner(signer)) {
+            revert("invalid signer");
+        }
+
+        // Parse the verified payload
+        parsedUpdate = PythLazerLib.parseUpdateFromPayload(payload);
     }
 
     function version() public pure returns (string memory) {
