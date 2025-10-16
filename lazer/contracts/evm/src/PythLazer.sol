@@ -115,11 +115,15 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     /// @return parsedUpdate The parsed Update struct with all feeds and properties
     function verifyAndParseUpdate(
         bytes calldata update
-    ) external payable returns (
-        bytes calldata payload,
-        address signer,
-        PythLazerStructs.Update memory parsedUpdate
-    ) {
+    )
+        external
+        payable
+        returns (
+            bytes calldata payload,
+            address signer,
+            PythLazerStructs.Update memory parsedUpdate
+        )
+    {
         (payload, signer) = verifyUpdate(update);
 
         // Parse the verified payload
