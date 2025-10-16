@@ -192,7 +192,7 @@ library PythLazerLib {
     }
 
 
-       // Helper functions for existence checks
+    // Helper functions for existence checks
 
     /// @notice Check if price exists
     function hasPrice(PythLazerStructs.Feed memory feed) public pure returns (bool) {
