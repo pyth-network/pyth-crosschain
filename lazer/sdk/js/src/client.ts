@@ -31,9 +31,9 @@ export type BinaryResponse = {
 };
 export type JsonOrBinaryResponse =
   | {
-    type: "json";
-    value: Response;
-  }
+      type: "json";
+      value: Response;
+    }
   | { type: "binary"; value: BinaryResponse };
 
 const UINT16_NUM_BYTES = 2;
@@ -55,7 +55,7 @@ export class PythLazerClient {
     private readonly priceServiceUrl: string,
     private readonly logger: Logger,
     private readonly wsp?: WebSocketPool,
-  ) { }
+  ) {}
 
   /**
    * Gets the WebSocket pool. If the WebSocket pool is not configured, an error is thrown.
@@ -123,7 +123,9 @@ export class PythLazerClient {
       }
       const buffData = await IsomorphicBuffer.fromWebsocketData(data);
       let pos = 0;
-      const magic = buffData.subarray(pos, pos + UINT32_NUM_BYTES).readUint32LE();
+      const magic = buffData
+        .subarray(pos, pos + UINT32_NUM_BYTES)
+        .readUint32LE();
       pos += UINT32_NUM_BYTES;
       if (magic != BINARY_UPDATE_FORMAT_MAGIC_LE) {
         throw new Error("binary update format magic mismatch");
@@ -136,7 +138,9 @@ export class PythLazerClient {
 
       const value: BinaryResponse = { subscriptionId };
       while (pos < buffData.length) {
-        const len = buffData.subarray(pos, pos + UINT16_NUM_BYTES).readUint16BE();
+        const len = buffData
+          .subarray(pos, pos + UINT16_NUM_BYTES)
+          .readUint16BE();
         pos += UINT16_NUM_BYTES;
         const magic = buffData
           .subarray(pos, pos + UINT32_NUM_BYTES)

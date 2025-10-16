@@ -28,7 +28,9 @@ export class ResilientWebSocket {
   private maxRetryDelayMs: number;
   private logAfterRetryCount: number;
 
-  wsClient: undefined | WebSocket;
+  wsClient:
+    | undefined
+    | (Omit<WebSocket, "terminate"> & Partial<Pick<WebSocket, "terminate">>);
   wsUserClosed = false;
   private wsFailedAttempts: number;
   private heartbeatTimeout?: NodeJS.Timeout | undefined;
@@ -111,7 +113,10 @@ export class ResilientWebSocket {
     // browser constructor supports a different 2nd argument for the constructor,
     // so we need to ensure it's not included if we're running in that environment:
     // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#protocols
-    this.wsClient = new WebSocket(this.endpoint, envIsServiceOrWebWorker() ? undefined : this.wsOptions);
+    this.wsClient = new WebSocket(
+      this.endpoint,
+      envIsServiceOrWebWorker() ? undefined : this.wsOptions,
+    );
 
     this.wsClient.addEventListener("open", () => {
       this.logger.info("WebSocket connection established");
@@ -160,7 +165,16 @@ export class ResilientWebSocket {
 
     this.heartbeatTimeout = setTimeout(() => {
       this.logger.warn("Connection timed out. Reconnecting...");
-      this.wsClient?.terminate();
+      if (this.wsClient) {
+        if (typeof this.wsClient.terminate === "function") {
+          this.wsClient.terminate();
+        } else {
+          // terminate is an implementation detail of the node-friendly
+          // https://www.npmjs.com/package/ws package, but is not a native WebSocket API,
+          // so we have to use the close method
+          this.wsClient.close();
+        }
+      }
       this.handleReconnect();
     }, this.heartbeatTimeoutDurationMs);
   }
@@ -189,8 +203,8 @@ export class ResilientWebSocket {
     if (this.shouldLogRetry()) {
       this.logger.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
-        String(this.retryDelayMs()) +
-        "ms.",
+          String(this.retryDelayMs()) +
+          "ms.",
       );
     }
 

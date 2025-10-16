@@ -1,13 +1,17 @@
 // we create this local-only type, which has assertions made to indicate
 // that we do not know and cannot guarantee which JS environment we are in
-const g = globalThis as Partial<{ self: typeof globalThis.self; window: typeof globalThis.window }>
+const g = globalThis as Partial<{
+  self: typeof globalThis.self;
+  window: typeof globalThis.window;
+}>;
 
 /**
  * Detects if this code is running within any Service or WebWorker context.
  * @returns true if in a worker of some kind, false if otherwise
  */
 export function envIsServiceOrWebWorker() {
-  const possiblyInAWorker = typeof WorkerGlobalScope !== 'undefined' && g.self !== undefined;
+  const possiblyInAWorker =
+    typeof WorkerGlobalScope !== "undefined" && g.self !== undefined;
   return possiblyInAWorker && g.self instanceof WorkerGlobalScope;
 }
 
@@ -22,7 +26,7 @@ export function envIsBrowser() {
 /**
  * a convenience method that returns whether or not
  * this code is executing in some type of browser-centric environment
- * 
+ *
  * @returns true if in the browser's main UI thread or in a worker, false if otherwise
  */
 export function envIsBrowserOrWorker() {

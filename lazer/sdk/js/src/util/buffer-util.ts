@@ -2,22 +2,24 @@
 // a global, top-level import. we disable this rule because we need this
 // imported from our installed dependency
 // eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer as BrowserBuffer } from 'buffer';
+import { Buffer as BrowserBuffer } from "buffer";
 
-import type { Data } from 'isomorphic-ws';
+import type { Data } from "isomorphic-ws";
 
-const { Buffer: PossibleBuiltInBuffer } = globalThis as Partial<{ Buffer: typeof Buffer }>;
+const { Buffer: PossibleBuiltInBuffer } = globalThis as Partial<{
+  Buffer: typeof Buffer;
+}>;
 
 const BufferClassToUse = PossibleBuiltInBuffer ?? BrowserBuffer;
 
 export class IsomorphicBuffer extends BufferClassToUse {
   /**
- * given a relatively unknown websocket frame data object,
- * returns a valid Buffer instance that is safe to use
- * isomorphically in any JS runtime environment
- */
+   * given a relatively unknown websocket frame data object,
+   * returns a valid Buffer instance that is safe to use
+   * isomorphically in any JS runtime environment
+   */
   static async fromWebsocketData(data: Data) {
-    if (typeof data === 'string') {
+    if (typeof data === "string") {
       return BufferClassToUse.from(new TextEncoder().encode(data).buffer);
     }
     if (data instanceof Blob) {
@@ -33,6 +35,8 @@ export class IsomorphicBuffer extends BufferClassToUse {
       }
       return BufferClassToUse.from(arrBuffer);
     }
-    throw new TypeError("unexpected event data type found when IsomorphicBuffer.fromWebsocketData() called");
+    throw new TypeError(
+      "unexpected event data type found when IsomorphicBuffer.fromWebsocketData() called",
+    );
   }
 }

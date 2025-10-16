@@ -15,7 +15,9 @@ import { envIsBrowserOrWorker, IsomorphicBuffer } from "../util/index.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
 
-type WebSocketOnMessageCallback = (data: WebSocket.Data) => void | Promise<void>;
+type WebSocketOnMessageCallback = (
+  data: WebSocket.Data,
+) => void | Promise<void>;
 
 export type WebSocketPoolConfig = {
   urls?: string[];
@@ -72,7 +74,7 @@ export class WebSocketPool {
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
-      const wsOptions: ResilientWebSocketConfig['wsOptions'] = {
+      const wsOptions: ResilientWebSocketConfig["wsOptions"] = {
         ...config.rwsConfig?.wsOptions,
       };
 
@@ -81,7 +83,7 @@ export class WebSocketPool {
         // doesn't support sending headers in the initial upgrade request,
         // so we add the token as a query param, which the server already supports
         const parsedUrl = new URL(url);
-        parsedUrl.searchParams.set('ACCESS_TOKEN', token);
+        parsedUrl.searchParams.set("ACCESS_TOKEN", token);
         url = parsedUrl.toString();
       } else {
         // we are in a server-side javascript runtime context
@@ -119,7 +121,7 @@ export class WebSocketPool {
         rws.onError = config.onError;
       }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
-      rws.onMessage = data => {
+      rws.onMessage = (data) => {
         void pool.dedupeHandler(data);
       };
       pool.rwsPool.push(rws);
@@ -162,12 +164,12 @@ export class WebSocketPool {
    * multiple connections before forwarding to registered handlers
    */
   dedupeHandler = async (data: WebSocket.Data): Promise<void> => {
-    let cacheKey = '';
-    if (typeof data === 'string') {
+    let cacheKey = "";
+    if (typeof data === "string") {
       cacheKey = data;
     } else {
       const buff = await IsomorphicBuffer.fromWebsocketData(data);
-      cacheKey = buff.toString('hex');
+      cacheKey = buff.toString("hex");
     }
 
     if (this.cache.has(cacheKey)) {
@@ -181,8 +183,7 @@ export class WebSocketPool {
       this.handleErrorMessages(data);
     }
 
-    await Promise.all(this.messageListeners.map(handler => handler(data)));
-
+    await Promise.all(this.messageListeners.map((handler) => handler(data)));
   };
 
   sendRequest(request: Request) {
