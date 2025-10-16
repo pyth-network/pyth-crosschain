@@ -1,0 +1,858 @@
+--- ./sources/batch_price_attestation.move
++++ ./sources/batch_price_attestation.move
+@@ -24 +24 @@
+-    struct BatchPriceAttestation {
++    public struct BatchPriceAttestation {
+@@ -31 +31 @@
+-    struct Header {
++    public struct Header {
+@@ -85 +85 @@
+-        let cur = cursor::new(bytes);
++        let mut cur = cursor::new(bytes);
+@@ -90 +90 @@
+-        let price_infos = vector::empty();
++        let mut price_infos = vector::empty();
+@@ -92 +92 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -140 +140 @@
+-        let current_price = pyth::price::new(price, conf, expo, publish_time);
++        let mut current_price = pyth::price::new(price, conf, expo, publish_time);
+@@ -148 +148 @@
+-        let ema_timestamp = publish_time;
++        let mut ema_timestamp = publish_time;
+@@ -168 +168 @@
+-        let test = test_scenario::begin(@0x1234);
++        let mut test = test_scenario::begin(@0x1234);
+@@ -181 +181 @@
+-        let test = test_scenario::begin(@0x1234);
++        let mut test = test_scenario::begin(@0x1234);
+--- ./sources/data_source.move
++++ ./sources/data_source.move
+@@ -10,9 +10,9 @@
+-    friend pyth::state;
+-    friend pyth::set_data_sources;
+-    friend pyth::pyth;
+-    friend pyth::set_governance_data_source;
+-    friend pyth::governance;
+-    #[test_only]
+-    friend pyth::pyth_tests;
+-    #[test_only]
+-    friend pyth::set_data_sources_tests;
++    /* friend pyth::state; */
++    /* friend pyth::set_data_sources; */
++    /* friend pyth::pyth; */
++    /* friend pyth::set_governance_data_source; */
++    /* friend pyth::governance; */
++    /* #[test_only] */
++    /* friend pyth::pyth_tests; */
++    /* #[test_only] */
++    /* friend pyth::set_data_sources_tests; */
+@@ -24 +24 @@
+-    struct DataSource has copy, drop, store {
++    public struct DataSource has copy, drop, store {
+@@ -29 +29 @@
+-    public(friend) fun new_data_source_registry(parent_id: &mut UID, ctx: &mut TxContext) {
++    public(package) fun new_data_source_registry(parent_id: &mut UID, ctx: &mut TxContext) {
+@@ -41 +41 @@
+-    public(friend) fun add(parent_id: &mut UID, data_source: DataSource) {
++    public(package) fun add(parent_id: &mut UID, data_source: DataSource) {
+@@ -52 +52 @@
+-    public(friend) fun empty(parent_id: &mut UID){
++    public(package) fun empty(parent_id: &mut UID){
+@@ -63 +63 @@
+-    public(friend) fun new(emitter_chain: u64, emitter_address: ExternalAddress): DataSource {
++    public(package) fun new(emitter_chain: u64, emitter_address: ExternalAddress): DataSource {
+--- ./sources/deserialize.move
++++ ./sources/deserialize.move
+@@ -50 +50 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -62 +62 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -74 +74 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -86 +86 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -99 +99 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -111 +111 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -123 +123 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+@@ -135 +135 @@
+-        let cursor = cursor::new(input);
++        let mut cursor = cursor::new(input);
+--- ./sources/event.move
++++ ./sources/event.move
+@@ -5,2 +5,2 @@
+-    friend pyth::pyth;
+-    friend pyth::state;
++    /* friend pyth::pyth; */
++    /* friend pyth::state; */
+@@ -8 +8 @@
+-    struct PythInitializationEvent has copy, drop {}
++    public struct PythInitializationEvent has copy, drop {}
+@@ -11 +11 @@
+-    struct PriceFeedUpdateEvent has copy, store, drop {
++    public struct PriceFeedUpdateEvent has copy, store, drop {
+@@ -18 +18 @@
+-    public(friend) fun emit_price_feed_update(price_feed: PriceFeed, timestamp: u64 /* in seconds */) {
++    public(package) fun emit_price_feed_update(price_feed: PriceFeed, timestamp: u64 /* in seconds */) {
+@@ -27 +27 @@
+-    public(friend) fun emit_pyth_initialization_event() {
++    public(package) fun emit_pyth_initialization_event() {
+--- ./sources/governance/contract_upgrade.move
++++ ./sources/governance/contract_upgrade.move
+@@ -22 +22 @@
+-    friend pyth::migrate;
++    /* friend pyth::migrate; */
+@@ -31 +31 @@
+-    struct ContractUpgraded has drop, copy {
++    public struct ContractUpgraded has drop, copy {
+@@ -36 +36 @@
+-    struct UpgradeContract {
++    public struct UpgradeContract {
+@@ -66 +66 @@
+-    public(friend) fun take_upgrade_digest(receipt: WormholeVAAVerificationReceipt): Bytes32 {
++    public(package) fun take_upgrade_digest(receipt: WormholeVAAVerificationReceipt): Bytes32 {
+@@ -104 +104 @@
+-    public(friend) fun take_digest(governance_payload: vector<u8>): Bytes32 {
++    public(package) fun take_digest(governance_payload: vector<u8>): Bytes32 {
+@@ -119 +119 @@
+-        let cur = cursor::new(payload);
++        let mut cur = cursor::new(payload);
+--- ./sources/governance/governance.move
++++ ./sources/governance/governance.move
+@@ -21 +21 @@
+-    struct WormholeVAAVerificationReceipt{
++    public struct WormholeVAAVerificationReceipt{
+--- ./sources/governance/governance_action.move
++++ ./sources/governance/governance_action.move
+@@ -12 +12 @@
+-    struct GovernanceAction has copy, drop {
++    public struct GovernanceAction has copy, drop {
+--- ./sources/governance/governance_instruction.move
++++ ./sources/governance/governance_instruction.move
+@@ -13 +13 @@
+-    struct GovernanceInstruction {
++    public struct GovernanceInstruction {
+@@ -27 +27 @@
+-        let cursor = cursor::new(bytes);
++        let mut cursor = cursor::new(bytes);
+--- ./sources/governance/set_data_sources.move
++++ ./sources/governance/set_data_sources.move
+@@ -12 +12 @@
+-    friend pyth::governance;
++    /* friend pyth::governance; */
+@@ -14 +14 @@
+-    struct DataSources {
++    public struct DataSources {
+@@ -18 +18 @@
+-    public(friend) fun execute(
++    public(package) fun execute(
+@@ -28 +28 @@
+-        let cursor = cursor::new(bytes);
++        let mut cursor = cursor::new(bytes);
+@@ -31 +31 @@
+-        let sources = vector::empty();
++        let mut sources = vector::empty();
+@@ -33 +33 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -75 +75 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -77 +77 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+--- ./sources/governance/set_fee_recipient.move
++++ ./sources/governance/set_fee_recipient.move
+@@ -9 +9 @@
+-    friend pyth::governance;
++    /* friend pyth::governance; */
+@@ -11 +11 @@
+-    struct PythFeeRecipient {
++    public struct PythFeeRecipient {
+@@ -15 +15 @@
+-    public(friend) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>) {
++    public(package) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>) {
+@@ -21 +21 @@
+-        let cur = cursor::new(payload);
++        let mut cur = cursor::new(payload);
+--- ./sources/governance/set_governance_data_source.move
++++ ./sources/governance/set_governance_data_source.move
+@@ -10 +10 @@
+-    friend pyth::governance;
++    /* friend pyth::governance; */
+@@ -12 +12 @@
+-    struct GovernanceDataSource {
++    public struct GovernanceDataSource {
+@@ -18 +18 @@
+-    public(friend) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
++    public(package) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
+@@ -25 +25 @@
+-        let cursor = cursor::new(bytes);
++        let mut cursor = cursor::new(bytes);
+--- ./sources/governance/set_stale_price_threshold.move
++++ ./sources/governance/set_stale_price_threshold.move
+@@ -7 +7 @@
+-    friend pyth::governance;
++    /* friend pyth::governance; */
+@@ -9 +9 @@
+-    struct StalePriceThreshold {
++    public struct StalePriceThreshold {
+@@ -13 +13 @@
+-    public(friend) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>) {
++    public(package) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>) {
+@@ -19 +19 @@
+-        let cursor = cursor::new(bytes);
++        let mut cursor = cursor::new(bytes);
+@@ -50 +50 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -52 +52 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+--- ./sources/governance/set_update_fee.move
++++ ./sources/governance/set_update_fee.move
+@@ -9 +9 @@
+-    friend pyth::governance;
++    /* friend pyth::governance; */
+@@ -13 +13 @@
+-    struct UpdateFee {
++    public struct UpdateFee {
+@@ -18 +18 @@
+-    public(friend) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
++    public(package) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
+@@ -26 +26 @@
+-        let cursor = cursor::new(bytes);
++        let mut cursor = cursor::new(bytes);
+@@ -63 +63 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -65 +65 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+--- ./sources/hot_potato_vector.move
++++ ./sources/hot_potato_vector.move
+@@ -6,3 +6,3 @@
+-    friend pyth::pyth;
+-    #[test_only]
+-    friend pyth::pyth_tests;
++    /* friend pyth::pyth; */
++    /* #[test_only] */
++    /* friend pyth::pyth_tests; */
+@@ -11 +11 @@
+-    struct HotPotatoVector<T: copy + drop> {
++    public struct HotPotatoVector<T: copy + drop> {
+@@ -21 +21 @@
+-    public(friend) fun new<T: copy + drop>(vec: vector<T>): HotPotatoVector<T> {
++    public(package) fun new<T: copy + drop>(vec: vector<T>): HotPotatoVector<T> {
+@@ -35 +35 @@
+-    public(friend) fun borrow<T: copy + drop>(potato: &HotPotatoVector<T>, i: u64): &T {
++    public(package) fun borrow<T: copy + drop>(potato: &HotPotatoVector<T>, i: u64): &T {
+@@ -39 +39 @@
+-    public(friend) fun pop_back<T: copy + drop>(hot_potato_vector: HotPotatoVector<T>): (T, HotPotatoVector<T>) {
++    public(package) fun pop_back<T: copy + drop>(mut hot_potato_vector: HotPotatoVector<T>): (T, HotPotatoVector<T>) {
+@@ -45 +45 @@
+-    struct A has copy, drop {
++    public struct A has copy, drop {
+@@ -51 +51 @@
+-        let vec_of_a = vector::empty<A>();
++        let mut vec_of_a = vector::empty<A>();
+@@ -57 +57 @@
+-        let (b, hot_potato) = pop_back<A>(hot_potato);
++        let (mut b, mut hot_potato) = pop_back<A>(hot_potato);
+--- ./sources/i64.move
++++ ./sources/i64.move
+@@ -14 +14 @@
+-    struct I64 has copy, drop, store {
++    public struct I64 has copy, drop, store {
+@@ -19,2 +19,2 @@
+-    public fun new(magnitude: u64, negative: bool): I64 {
+-        let max_magnitude = MAX_POSITIVE_MAGNITUDE;
++    public fun new(magnitude: u64, mut negative: bool): I64 {
++        let mut max_magnitude = MAX_POSITIVE_MAGNITUDE;
+--- ./sources/merkle_tree.move
++++ ./sources/merkle_tree.move
+@@ -22,2 +22,2 @@
+-        let hash_prefix = vector::empty<u8>();
+-        let i = 0;
++        let mut hash_prefix = vector::empty<u8>();
++        let mut i = 0;
+@@ -37,2 +37,2 @@
+-        let v = vector<u8>[MERKLE_LEAF_PREFIX];
+-        let i = 0;
++        let mut v = vector<u8>[MERKLE_LEAF_PREFIX];
++        let mut i = 0;
+@@ -47,2 +47,2 @@
+-        childA: Bytes20,
+-        childB: Bytes20
++        mut childA: Bytes20,
++        mut childB: Bytes20
+@@ -58,2 +58,2 @@
+-        let v = vector<u8>[MERKLE_NODE_PREFIX];
+-        let i = 0;
++        let mut v = vector<u8>[MERKLE_NODE_PREFIX];
++        let mut i = 0;
+@@ -64 +64 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -78 +78 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -106,2 +106,2 @@
+-        let current_digest: Bytes20 = leaf_hash(&leaf_data);
+-        let proofSize: u8 = deserialize::deserialize_u8(encoded_proof);
++        let mut current_digest: Bytes20 = leaf_hash(&leaf_data);
++        let mut proofSize: u8 = deserialize::deserialize_u8(encoded_proof);
+@@ -142 +142 @@
+-        let tree = vector::empty<Bytes20>();
++        let mut tree = vector::empty<Bytes20>();
+@@ -149 +149 @@
+-        let i: u64 = 0;
++        let mut i: u64 = 0;
+@@ -156 +156 @@
+-        let j: u64 = 0;
++        let mut j: u64 = 0;
+@@ -163 +163 @@
+-        let k: u8 = depth;
++        let mut k: u8 = depth;
+@@ -167 +167 @@
+-            let i: u64 = 0;
++            let mut i: u64 = 0;
+@@ -180,2 +180,2 @@
+-        let proofs = vector::empty<u8>();
+-        let i: u64 = 0;
++        let mut proofs = vector::empty<u8>();
++        let mut i: u64 = 0;
+@@ -183 +183 @@
+-            let cur_proof = vector::empty<u8>();
++            let mut cur_proof = vector::empty<u8>();
+@@ -185 +185 @@
+-            let idx = (1 << depth) + i;
++            let mut idx = (1 << depth) + i;
+@@ -202,3 +202,3 @@
+-        let x = bytes20::new(x"0000000000000000000000000000000000001000");
+-        let y = bytes20::new(x"0000000000000000000000000000000000000001");
+-        let res = greater_than(&x, &y);
++        let mut x = bytes20::new(x"0000000000000000000000000000000000001000");
++        let mut y = bytes20::new(x"0000000000000000000000000000000000000001");
++        let mut res = greater_than(&x, &y);
+@@ -241 +241 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -246 +246 @@
+-        let proofs_cursor = cursor::new(proofs);
++        let mut proofs_cursor = cursor::new(proofs);
+@@ -256 +256 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -264 +264 @@
+-        let proofs_cursor = cursor::new(proofs);
++        let mut proofs_cursor = cursor::new(proofs);
+@@ -276 +276 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -288 +288 @@
+-        let proofs_cursor = cursor::new(proofs);
++        let mut proofs_cursor = cursor::new(proofs);
+@@ -304 +304 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -309 +309 @@
+-        let proofs_cursor = cursor::new(proofs);
++        let mut proofs_cursor = cursor::new(proofs);
+@@ -321 +321 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -329 +329 @@
+-        let proofs_cursor = cursor::new(proofs);
++        let mut proofs_cursor = cursor::new(proofs);
+@@ -345 +345 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -357 +357 @@
+-        let proofs_cursor = cursor::new(proofs);
++        let mut proofs_cursor = cursor::new(proofs);
+@@ -376 +376 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+@@ -387 +387 @@
+-        let messages = vector::empty<vector<u8>>();
++        let mut messages = vector::empty<vector<u8>>();
+--- ./sources/migrate.move
++++ ./sources/migrate.move
+@@ -20 +20 @@
+-    struct MigrateComplete has drop, copy {
++    public struct MigrateComplete has drop, copy {
+--- ./sources/price.move
++++ ./sources/price.move
+@@ -12 +12 @@
+-    struct Price has copy, drop, store {
++    public struct Price has copy, drop, store {
+--- ./sources/price_feed.move
++++ ./sources/price_feed.move
+@@ -6 +6 @@
+-    struct PriceFeed has copy, drop, store {
++    public struct PriceFeed has copy, drop, store {
+--- ./sources/price_identifier.move
++++ ./sources/price_identifier.move
+@@ -7 +7 @@
+-    struct PriceIdentifier has copy, drop, store {
++    public struct PriceIdentifier has copy, drop, store {
+--- ./sources/price_info.move
++++ ./sources/price_info.move
+@@ -18,2 +18,2 @@
+-    friend pyth::pyth;
+-    friend pyth::state;
++    /* friend pyth::pyth; */
++    /* friend pyth::state; */
+@@ -23 +23 @@
+-    struct PriceInfoObject has key, store {
++    public struct PriceInfoObject has key, store {
+@@ -29 +29 @@
+-    struct PriceInfo has copy, drop, store {
++    public struct PriceInfo has copy, drop, store {
+@@ -37 +37 @@
+-    public(friend) fun new_price_info_registry(parent_id: &mut UID, ctx: &mut TxContext) {
++    public(package) fun new_price_info_registry(parent_id: &mut UID, ctx: &mut TxContext) {
+@@ -49 +49 @@
+-    public(friend) fun add(parent_id: &mut UID, price_identifier: PriceIdentifier, id: ID) {
++    public(package) fun add(parent_id: &mut UID, price_identifier: PriceIdentifier, id: ID) {
+@@ -118 +118 @@
+-    public(friend) fun new_price_info_object(
++    public(package) fun new_price_info_object(
+@@ -145,2 +145,2 @@
+-        let scenario = test_scenario::begin(@pyth);
+-        let uid = object::new(ctx(&mut scenario));
++        let mut scenario = test_scenario::begin(@pyth);
++        let mut uid = object::new(ctx(&mut scenario));
+@@ -213 +213 @@
+-    public(friend) fun update_price_info_object(
++    public(package) fun update_price_info_object(
+--- ./sources/price_status.move
++++ ./sources/price_status.move
+@@ -11 +11 @@
+-    struct PriceStatus has copy, drop, store {
++    public struct PriceStatus has copy, drop, store {
+--- ./sources/pyth.move
++++ ./sources/pyth.move
+@@ -34,2 +34,2 @@
+-    #[test_only]
+-    friend pyth::pyth_tests;
++    /* #[test_only] */
++    /* friend pyth::pyth_tests; */
+@@ -77,2 +77,2 @@
+-        let sources = vector::empty();
+-        let i = 0;
++        let mut sources = vector::empty();
++        let mut i = 0;
+@@ -113 +113 @@
+-        let accumulator_message_cursor = cursor::new(accumulator_message);
++        let mut accumulator_message_cursor = cursor::new(accumulator_message);
+@@ -130 +130 @@
+-        verified_vaas: vector<VAA>,
++        mut verified_vaas: vector<VAA>,
+@@ -165 +165 @@
+-    fun create_and_share_price_feeds_using_verified_price_infos(latest_only: &LatestOnly, pyth_state: &mut PythState, price_infos: vector<PriceInfo>, ctx: &mut TxContext){
++    fun create_and_share_price_feeds_using_verified_price_infos(latest_only: &LatestOnly, pyth_state: &mut PythState, mut price_infos: vector<PriceInfo>, ctx: &mut TxContext){
+@@ -213 +213 @@
+-        let accumulator_message_cursor = cursor::new(accumulator_message);
++        let mut accumulator_message_cursor = cursor::new(accumulator_message);
+@@ -225 +225 @@
+-        verified_vaas: vector<VAA>,
++        mut verified_vaas: vector<VAA>,
+@@ -230 +230 @@
+-        let price_updates = vector::empty<PriceInfo>();
++        let mut price_updates = vector::empty<PriceInfo>();
+@@ -243 +243 @@
+-            let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(cur_vaa), clock));
++            let mut price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(cur_vaa), clock));
+@@ -281,2 +281,2 @@
+-        let i = 0;
+-        let found = false;
++        let mut i = 0;
++        let mut found = false;
+@@ -306 +306 @@
+-    public(friend) fun update_cache(
++    public(package) fun update_cache(
+@@ -460,3 +460,3 @@
+-        let verified_vaas_reversed = vector::empty<VAA>();
+-        let test_vaas = test_vaas_;
+-        let i = 0;
++        let mut verified_vaas_reversed = vector::empty<VAA>();
++        let mut test_vaas = test_vaas_;
++        let mut i = 0;
+@@ -469 +469 @@
+-        let verified_vaas = vector::empty<VAA>();
++        let mut verified_vaas = vector::empty<VAA>();
+@@ -483 +483 @@
+-        let cursor = cursor::new(accumulator_message);
++        let mut cursor = cursor::new(accumulator_message);
+@@ -516 +516 @@
+-        let scenario = test_scenario::begin(DEPLOYER);
++        let mut scenario = test_scenario::begin(DEPLOYER);
+@@ -630 +630 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -653 +653 @@
+-        let (scenario, test_coins, _clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, 0);
++        let (mut scenario, test_coins, _clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, 0);
+@@ -684 +684 @@
+-        let (scenario, test_coins, clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
++        let (mut scenario, test_coins, clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
+@@ -688 +688 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -707 +707 @@
+-    #[expected_failure(abort_code = pyth::pyth::E_INVALID_DATA_SOURCE)]
++    #[expected_failure(abort_code = ::pyth::pyth::E_INVALID_DATA_SOURCE)]
+@@ -718 +718 @@
+-        let (scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, 50, 0);
++        let (mut scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, 50, 0);
+@@ -721 +721 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -753 +753 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, mut test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -756 +756 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -758 +758 @@
+-        let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
++        let mut verified_vaas = get_verified_test_vaas(&worm_state, &clock);
+@@ -777 +777 @@
+-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+@@ -794 +794 @@
+-        let vec = create_price_infos_hot_potato(
++        let mut vec = create_price_infos_hot_potato(
+@@ -847 +847 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -851 +851 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -853 +853 @@
+-        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_SINGLE_FEED, &clock);
++        let mut verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_SINGLE_FEED, &clock);
+@@ -873 +873 @@
+-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+@@ -877 +877 @@
+-        let auth_price_infos = pyth::create_authenticated_price_infos_using_accumulator(
++        let mut auth_price_infos = pyth::create_authenticated_price_infos_using_accumulator(
+@@ -909 +909 @@
+-    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_PROOF)]
++    #[expected_failure(abort_code = ::pyth::accumulator::E_INVALID_PROOF)]
+@@ -912 +912 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -916 +916 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -943 +943 @@
+-    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_PROOF)]
++    #[expected_failure(abort_code = ::pyth::accumulator::E_INVALID_PROOF)]
+@@ -946 +946 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -950 +950 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -976 +976 @@
+-    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_ACCUMULATOR_PAYLOAD)]
++    #[expected_failure(abort_code = ::pyth::accumulator::E_INVALID_ACCUMULATOR_PAYLOAD)]
+@@ -979 +979 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -983 +983 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1009 +1009 @@
+-    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_WORMHOLE_MESSAGE)]
++    #[expected_failure(abort_code = ::pyth::accumulator::E_INVALID_WORMHOLE_MESSAGE)]
+@@ -1012 +1012 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -1016 +1016 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1047 +1047 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -1051 +1051 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1115 +1115 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, mut coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -1119 +1119 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1121 +1121 @@
+-        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
++        let mut verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
+@@ -1143 +1143 @@
+-        let auth_price_infos = pyth::create_authenticated_price_infos_using_accumulator(
++        let mut auth_price_infos = pyth::create_authenticated_price_infos_using_accumulator(
+@@ -1150 +1150 @@
+-        let idx = 0;
++        let mut idx = 0;
+@@ -1155 +1155 @@
+-            let price_info_object = take_shared<PriceInfoObject>(&scenario);
++            let mut price_info_object = take_shared<PriceInfoObject>(&scenario);
+@@ -1179 +1179 @@
+-    #[expected_failure(abort_code = pyth::pyth::E_INSUFFICIENT_FEE)]
++    #[expected_failure(abort_code = ::pyth::pyth::E_INSUFFICIENT_FEE)]
+@@ -1185 +1185 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, coins_to_mint);
++        let (mut scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, coins_to_mint);
+@@ -1188 +1188 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1190 +1190 @@
+-        let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
++        let mut verified_vaas = get_verified_test_vaas(&worm_state, &clock);
+@@ -1209 +1209 @@
+-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+@@ -1226 +1226 @@
+-        let vec = create_price_infos_hot_potato(
++        let mut vec = create_price_infos_hot_potato(
+@@ -1258 +1258 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -1261 +1261 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1275,4 +1275,4 @@
+-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+-        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
+-        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
+-        let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
+@@ -1282 +1282 @@
+-        let price_info_object_vec = vector[
++        let mut price_info_object_vec = vector[
+@@ -1314 +1314 @@
+-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
++        let (mut scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+@@ -1317 +1317 @@
+-        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
++        let (mut pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+@@ -1329 +1329 @@
+-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
++        let mut price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+@@ -1353 +1353 @@
+-        let latest_only = pyth::state::create_latest_only_for_test();
++        let latest_only = ::pyth::state::create_latest_only_for_test();
+@@ -1381 +1381 @@
+-        let latest_only = pyth::state::create_latest_only_for_test();
++        let latest_only = ::pyth::state::create_latest_only_for_test();
+@@ -1409 +1409 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
+@@ -1415 +1415 @@
+-        let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
++        let mut cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
+@@ -1421 +1421 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -1440 +1440 @@
+-        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
++        let (mut scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
+@@ -1448 +1448 @@
+-        let test_accumulator_3_msgs_modified = TEST_ACCUMULATOR_3_MSGS;
++        let mut test_accumulator_3_msgs_modified = TEST_ACCUMULATOR_3_MSGS;
+@@ -1451 +1451 @@
+-        let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
++        let mut cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
+@@ -1457 +1457 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -1481 +1481 @@
+-        let i = 0;
++        let mut i = 0;
+@@ -1485 +1485 @@
+-        let expected: vector<PriceInfo> = vector[];
++        let mut expected: vector<PriceInfo> = vector[];
+--- ./sources/pyth_accumulator.move
++++ ./sources/pyth_accumulator.move
+@@ -25,3 +25,3 @@
+-    friend pyth::pyth;
+-    #[test_only]
+-    friend pyth::pyth_tests;
++    /* friend pyth::pyth; */
++    /* #[test_only] */
++    /* friend pyth::pyth_tests; */
+@@ -32 +32 @@
+-    public(friend) fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, vaa_payload: vector<u8>, clock: &Clock): vector<PriceInfo> {
++    public(package) fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, vaa_payload: vector<u8>, clock: &Clock): vector<PriceInfo> {
+@@ -64 +64 @@
+-        let msg_payload_cursor = cursor::new(message);
++        let mut msg_payload_cursor = cursor::new(message);
+@@ -105,2 +105,2 @@
+-        let update_size = deserialize::deserialize_u8(cursor);
+-        let price_info_updates: vector<PriceInfo> = vector[];
++        let mut update_size = deserialize::deserialize_u8(cursor);
++        let mut price_info_updates: vector<PriceInfo> = vector[];
+@@ -110 +110 @@
+-            let message_cur = cursor::new(message);
++            let mut message_cur = cursor::new(message);
+--- ./sources/set.move
++++ ./sources/set.move
+@@ -8 +8 @@
+-    struct Unit has store, copy, drop {}
++    public struct Unit has store, copy, drop {}
+@@ -12 +12 @@
+-    struct Set<A: store + copy + drop> has store {
++    public struct Set<A: store + copy + drop> has store {
+--- ./sources/setup.move
++++ ./sources/setup.move
+@@ -10,3 +10,3 @@
+-    friend pyth::pyth;
+-    #[test_only]
+-    friend pyth::pyth_tests;
++    /* friend pyth::pyth; */
++    /* #[test_only] */
++    /* friend pyth::pyth_tests; */
+@@ -17 +17 @@
+-    struct DeployerCap has key, store {
++    public struct DeployerCap has key, store {
+@@ -45 +45 @@
+-    public(friend) fun init_and_share_state(
++    public(package) fun init_and_share_state(
+--- ./sources/state.move
++++ ./sources/state.move
+@@ -17,13 +17,13 @@
+-    friend pyth::pyth;
+-    #[test_only]
+-    friend pyth::pyth_tests;
+-    friend pyth::governance_action;
+-    friend pyth::set_update_fee;
+-    friend pyth::set_stale_price_threshold;
+-    friend pyth::set_data_sources;
+-    friend pyth::governance;
+-    friend pyth::set_governance_data_source;
+-    friend pyth::migrate;
+-    friend pyth::contract_upgrade;
+-    friend pyth::set_fee_recipient;
+-    friend pyth::setup;
++    /* friend pyth::pyth; */
++    /* #[test_only] */
++    /* friend pyth::pyth_tests; */
++    /* friend pyth::governance_action; */
++    /* friend pyth::set_update_fee; */
++    /* friend pyth::set_stale_price_threshold; */
++    /* friend pyth::set_data_sources; */
++    /* friend pyth::governance; */
++    /* friend pyth::set_governance_data_source; */
++    /* friend pyth::migrate; */
++    /* friend pyth::contract_upgrade; */
++    /* friend pyth::set_fee_recipient; */
++    /* friend pyth::setup; */
+@@ -36 +36 @@
+-    struct LatestOnly has drop {}
++    public struct LatestOnly has drop {}
+@@ -43 +43 @@
+-    struct State has key, store {
++    public struct State has key, store {
+@@ -56 +56 @@
+-    public(friend) fun new(
++    public(package) fun new(
+@@ -58 +58 @@
+-        sources: vector<DataSource>,
++        mut sources: vector<DataSource>,
+@@ -64 +64 @@
+-        let uid = object::new(ctx);
++        let mut uid = object::new(ctx);
+@@ -187 +187 @@
+-    public(friend) fun assert_latest_only(self: &State): LatestOnly {
++    public(package) fun assert_latest_only(self: &State): LatestOnly {
+@@ -196 +196 @@
+-    public(friend) fun set_fee_recipient(
++    public(package) fun set_fee_recipient(
+@@ -207 +207 @@
+-    public(friend) fun borrow_mut_consumed_vaas(
++    public(package) fun borrow_mut_consumed_vaas(
+@@ -221 +221 @@
+-    public(friend) fun borrow_mut_consumed_vaas_unchecked(
++    public(package) fun borrow_mut_consumed_vaas_unchecked(
+@@ -227 +227 @@
+-    public(friend) fun current_package(_: &LatestOnly, self: &State): ID {
++    public(package) fun current_package(_: &LatestOnly, self: &State): ID {
+@@ -231 +231 @@
+-    public(friend) fun set_data_sources(_: &LatestOnly, s: &mut State, new_sources: vector<DataSource>) {
++    public(package) fun set_data_sources(_: &LatestOnly, s: &mut State, mut new_sources: vector<DataSource>) {
+@@ -240 +240 @@
+-    public(friend) fun register_price_info_object(_: &LatestOnly, s: &mut State, price_identifier: PriceIdentifier, id: ID) {
++    public(package) fun register_price_info_object(_: &LatestOnly, s: &mut State, price_identifier: PriceIdentifier, id: ID) {
+@@ -244 +244 @@
+-    public(friend) fun set_governance_data_source(_: &LatestOnly, s: &mut State, source: DataSource) {
++    public(package) fun set_governance_data_source(_: &LatestOnly, s: &mut State, source: DataSource) {
+@@ -248 +248 @@
+-    public(friend) fun set_last_executed_governance_sequence(_: &LatestOnly, s: &mut State, sequence: u64) {
++    public(package) fun set_last_executed_governance_sequence(_: &LatestOnly, s: &mut State, sequence: u64) {
+@@ -255 +255 @@
+-    public(friend) fun set_last_executed_governance_sequence_unchecked(s: &mut State, sequence: u64) {
++    public(package) fun set_last_executed_governance_sequence_unchecked(s: &mut State, sequence: u64) {
+@@ -259 +259 @@
+-    public(friend) fun set_base_update_fee(_: &LatestOnly, s: &mut State, fee: u64) {
++    public(package) fun set_base_update_fee(_: &LatestOnly, s: &mut State, fee: u64) {
+@@ -263 +263 @@
+-    public(friend) fun set_stale_price_threshold_secs(_: &LatestOnly, s: &mut State, threshold_secs: u64) {
++    public(package) fun set_stale_price_threshold_secs(_: &LatestOnly, s: &mut State, threshold_secs: u64) {
+@@ -287 +287 @@
+-    public(friend) fun authorize_upgrade(
++    public(package) fun authorize_upgrade(
+@@ -301 +301 @@
+-    public(friend) fun commit_upgrade(
++    public(package) fun commit_upgrade(
+@@ -311 +311 @@
+-    public(friend) fun migrate_version(self: &mut State) {
++    public(package) fun migrate_version(self: &mut State) {
+@@ -322 +322 @@
+-    public(friend) fun assert_authorized_digest(
++    public(package) fun assert_authorized_digest(
+@@ -342 +342 @@
+-    public(friend) fun migrate__v__0_1_1(self: &mut State) {
++    public(package) fun migrate__v__0_1_1(self: &mut State) {
+@@ -402 +402 @@
+-    struct CurrentDigest has store, drop, copy {}
++    public struct CurrentDigest has store, drop, copy {}
+--- ./sources/version_control.move
++++ ./sources/version_control.move
+@@ -21 +21 @@
+-    public(friend) fun current_version(): V__0_1_2 {
++    public(package) fun current_version(): V__0_1_2 {
+@@ -25 +25 @@
+-    public(friend) fun previous_version(): V__0_1_1 {
++    public(package) fun previous_version(): V__0_1_1 {
+@@ -41 +41 @@
+-    struct V__0_1_2 has store, drop, copy {}
++    public struct V__0_1_2 has store, drop, copy {}
+@@ -51 +51 @@
+-    struct V__0_1_1 has store, drop, copy {}
++    public struct V__0_1_1 has store, drop, copy {}
+@@ -54 +54 @@
+-    struct V__DUMMY has store, drop, copy {}
++    public struct V__DUMMY has store, drop, copy {}
+@@ -62 +62 @@
+-    friend pyth::state;
++    /* friend pyth::state; */
+@@ -70 +70 @@
+-    struct V__MIGRATED has store, drop, copy {}
++    public struct V__MIGRATED has store, drop, copy {}
