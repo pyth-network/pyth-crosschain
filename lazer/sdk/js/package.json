@@ -2,6 +2,9 @@
   "name": "@pythnetwork/pyth-lazer-sdk",
   "version": "4.0.0",
   "description": "Pyth Lazer SDK",
+  "engines": {
+    "node": ">=20"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -61,7 +64,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@isaacs/ttlcache": "^1.4.1",
-    "cross-fetch": "^4.0.0",
+    "buffer": "^6.0.3",
     "isomorphic-ws": "^5.0.0",
     "ts-log": "^2.2.7",
     "ws": "^8.18.0"

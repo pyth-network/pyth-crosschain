@@ -11,8 +11,11 @@ import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
 } from "../constants.js";
+import { envIsBrowserOrWorker, IsomorphicBuffer } from "../util/index.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
+
+type WebSocketOnMessageCallback = (data: WebSocket.Data) => void | Promise<void>;
 
 export type WebSocketPoolConfig = {
   urls?: string[];
@@ -25,7 +28,7 @@ export class WebSocketPool {
   rwsPool: ResilientWebSocket[];
   private cache: TTLCache<string, boolean>;
   private subscriptions: Map<number, Request>; // id -> subscription Request
-  private messageListeners: ((event: WebSocket.Data) => void)[];
+  private messageListeners: WebSocketOnMessageCallback[];
   private allConnectionsDownListeners: (() => void)[];
   private wasAllDown = true;
   private checkConnectionStatesInterval: NodeJS.Timeout;
@@ -65,16 +68,28 @@ export class WebSocketPool {
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
     for (let i = 0; i < numConnections; i++) {
-      const url = urls[i % urls.length];
+      let url = urls[i % urls.length];
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
-      const wsOptions = {
+      const wsOptions: ResilientWebSocketConfig['wsOptions'] = {
         ...config.rwsConfig?.wsOptions,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       };
+
+      if (envIsBrowserOrWorker()) {
+        // we are in a browser environment where the websocket protocol
+        // doesn't support sending headers in the initial upgrade request,
+        // so we add the token as a query param, which the server already supports
+        const parsedUrl = new URL(url);
+        parsedUrl.searchParams.set('ACCESS_TOKEN', token);
+        url = parsedUrl.toString();
+      } else {
+        // we are in a server-side javascript runtime context
+        wsOptions.headers = {
+          Authorization: `Bearer ${token}`,
+        };
+      }
+
       const rws = new ResilientWebSocket({
         ...config.rwsConfig,
         endpoint: url,
@@ -104,7 +119,9 @@ export class WebSocketPool {
         rws.onError = config.onError;
       }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
-      rws.onMessage = pool.dedupeHandler;
+      rws.onMessage = data => {
+        void pool.dedupeHandler(data);
+      };
       pool.rwsPool.push(rws);
       rws.startWebSocket();
     }
@@ -144,11 +161,14 @@ export class WebSocketPool {
    * Handles incoming websocket messages by deduplicating identical messages received across
    * multiple connections before forwarding to registered handlers
    */
-  dedupeHandler = (data: WebSocket.Data): void => {
-    const cacheKey =
-      typeof data === "string"
-        ? data
-        : Buffer.from(data as Buffer).toString("hex");
+  dedupeHandler = async (data: WebSocket.Data): Promise<void> => {
+    let cacheKey = '';
+    if (typeof data === 'string') {
+      cacheKey = data;
+    } else {
+      const buff = await IsomorphicBuffer.fromWebsocketData(data);
+      cacheKey = buff.toString('hex');
+    }
 
     if (this.cache.has(cacheKey)) {
       this.logger.debug("Dropping duplicate message");
@@ -161,9 +181,8 @@ export class WebSocketPool {
       this.handleErrorMessages(data);
     }
 
-    for (const handler of this.messageListeners) {
-      handler(data);
-    }
+    await Promise.all(this.messageListeners.map(handler => handler(data)));
+
   };
 
   sendRequest(request: Request) {
@@ -189,7 +208,7 @@ export class WebSocketPool {
     this.sendRequest(request);
   }
 
-  addMessageListener(handler: (data: WebSocket.Data) => void): void {
+  addMessageListener(handler: WebSocketOnMessageCallback): void {
     this.messageListeners.push(handler);
   }
 

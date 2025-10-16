@@ -5,6 +5,8 @@ import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
+import { envIsServiceOrWebWorker } from "../util/env-util.js";
+
 const DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
 const DEFAULT_MAX_RETRY_DELAY_MS = 1000; // 1 second'
 const DEFAULT_LOG_AFTER_RETRY_COUNT = 10;
@@ -106,7 +108,10 @@ export class ResilientWebSocket {
       this.retryTimeout = undefined;
     }
 
-    this.wsClient = new WebSocket(this.endpoint, this.wsOptions);
+    // browser constructor supports a different 2nd argument for the constructor,
+    // so we need to ensure it's not included if we're running in that environment:
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#protocols
+    this.wsClient = new WebSocket(this.endpoint, envIsServiceOrWebWorker() ? this.wsOptions : undefined);
 
     this.wsClient.addEventListener("open", () => {
       this.logger.info("WebSocket connection established");
@@ -184,8 +189,8 @@ export class ResilientWebSocket {
     if (this.shouldLogRetry()) {
       this.logger.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
-          String(this.retryDelayMs()) +
-          "ms.",
+        String(this.retryDelayMs()) +
+        "ms.",
       );
     }
 
