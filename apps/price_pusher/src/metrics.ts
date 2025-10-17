@@ -19,6 +19,8 @@ export class PricePusherMetrics {
   public targetPriceValue: Gauge<string>;
   // Wallet metrics
   public walletBalance: Gauge<string>;
+  // gas price
+  public gasPrice: Gauge<string>;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -82,6 +84,13 @@ export class PricePusherMetrics {
       name: "pyth_wallet_balance",
       help: "Current wallet balance of the price pusher in native token units",
       labelNames: ["wallet_address", "network"],
+      registers: [this.registry],
+    });
+
+    this.gasPrice = new Gauge({
+      name: "pyth_gas_price",
+      help: "Gas price estimate for this chain",
+      labelNames: ["network"],
       registers: [this.registry],
     });
 
@@ -211,5 +220,13 @@ export class PricePusherMetrics {
     this.logger.debug(
       `Updated wallet balance metric: ${walletAddress} = ${balanceNum}`,
     );
+  }
+
+  public updateGasPrice(network: string, gasPrice: bigint | number): void {
+    // Convert to number for compatibility with prometheus
+    const gasPriceNum =
+      typeof gasPrice === "bigint" ? Number(gasPrice) : gasPrice;
+    this.gasPrice.set({ network }, gasPriceNum);
+    this.logger.debug(`Updated gas price metric: ${network} = ${gasPriceNum}`);
   }
 }

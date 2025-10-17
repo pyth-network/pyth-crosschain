@@ -32,6 +32,7 @@ import {
 
 import { PythContract } from "./pyth-contract";
 import { SuperWalletClient } from "./super-wallet";
+import { PricePusherMetrics } from "../metrics";
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
@@ -135,9 +136,13 @@ export class EvmPricePusher implements IPricePusher {
     private overrideGasPriceMultiplier: number,
     private overrideGasPriceMultiplierCap: number,
     private updateFeeMultiplier: number,
+    private network: string,
+    private disablePush: boolean,
+    private useRecentGasPriceEstimate: boolean,
     private gasLimit?: number,
     private customGasStation?: CustomGasStation,
     private gasPrice?: number,
+    private metrics?: PricePusherMetrics,
   ) {}
 
   // The pubTimes are passed here to use the values that triggered the push.
@@ -191,8 +196,11 @@ export class EvmPricePusher implements IPricePusher {
       this.gasPrice ??
       Number(
         await (this.customGasStation?.getCustomGasPrice() ??
-          this.client.getGasPrice()),
+          (this.useRecentGasPriceEstimate
+            ? this.getMedianRecentGasPrice()
+            : this.client.getGasPrice())),
       );
+    this.metrics?.updateGasPrice(this.network, gasPrice);
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
     if (this.pusherAddress === undefined) {
@@ -258,11 +266,13 @@ export class EvmPricePusher implements IPricePusher {
 
       this.logger.debug({ request }, "Simulated request successfully");
 
-      const hash = await this.client.writeContract(request);
-
-      this.logger.info({ hash }, "Price update sent");
-
-      this.waitForTransactionReceipt(hash);
+      if (!this.disablePush) {
+        const hash = await this.client.writeContract(request);
+        this.logger.info({ hash }, "Price update sent");
+        this.waitForTransactionReceipt(hash);
+      } else {
+        this.logger.debug("Push disabled, not attempting");
+      }
     } catch (err: any) {
       this.logger.debug({ err }, "Simulating or sending transactions failed.");
 
@@ -422,5 +432,34 @@ export class EvmPricePusher implements IPricePusher {
       ignoreInvalidPriceIds: true,
     });
     return response.binary.data;
+  }
+
+  async getMedianRecentGasPrice(blockCount = 5): Promise<bigint> {
+    this.logger.info({ blockCount });
+    const { baseFeePerGas, reward } = await this.client.getFeeHistory({
+      blockCount,
+      rewardPercentiles: [50],
+      blockTag: "latest",
+    });
+    this.logger.info({ baseFeePerGas, reward }, "feeHistory");
+    // remove the next block base fee
+    const trimmedBaseFees = baseFeePerGas.slice(0, -1);
+    const gasPrices = trimmedBaseFees.map((base, i) => {
+      const medianTip = reward?.[i]?.[0] ?? 0n;
+      return base + medianTip;
+    });
+    this.logger.info({ gasPrices }, "gasPrices:");
+
+    if (gasPrices.length === 0) {
+      return 0n;
+    } else {
+      const sorted = [...gasPrices].sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      );
+      const medianIndex = Math.floor(sorted.length / 2);
+      const medianPrice = sorted[medianIndex];
+      this.logger.info({ medianPrice }, "medianPrice:");
+      return medianPrice;
+    }
   }
 }

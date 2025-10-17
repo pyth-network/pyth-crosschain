@@ -68,6 +68,12 @@ export default {
       type: "number",
       required: false,
     } as Options,
+    "use-recent-gas-price-estimate": {
+      description: "Use gas price based on recent blocks",
+      type: "boolean",
+      required: false,
+      default: false,
+    } as Options,
     "update-fee-multiplier": {
       description:
         "Multiplier for the fee to update the price. It is useful in networks " +
@@ -76,6 +82,12 @@ export default {
       type: "number",
       required: false,
       default: 1,
+    } as Options,
+    "disable-push": {
+      description: "Dry run without pushing",
+      type: "boolean",
+      required: false,
+      default: false,
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -104,11 +116,13 @@ export default {
       overrideGasPriceMultiplierCap,
       gasLimit,
       gasPrice,
+      useRecentGasPriceEstimate,
       updateFeeMultiplier,
       logLevel,
       controllerLogLevel,
       enableMetrics,
       metricsPort,
+      disablePush,
     } = argv;
 
     const logger = pino({
@@ -151,6 +165,7 @@ export default {
     );
 
     const client = await createClient(endpoint, mnemonic);
+    const network = await client.getChainId().then((id) => id.toString());
     const pythContract = createPythContract(client, pythContractAddress);
 
     logger.info(
@@ -185,6 +200,9 @@ export default {
       overrideGasPriceMultiplier,
       overrideGasPriceMultiplierCap,
       updateFeeMultiplier,
+      network,
+      disablePush,
+      useRecentGasPriceEstimate,
       gasLimit,
       gasStation,
       gasPrice,
@@ -207,7 +225,7 @@ export default {
       const balanceTracker = createEvmBalanceTracker({
         client,
         address: client.account.address,
-        network: await client.getChainId().then((id) => id.toString()),
+        network,
         updateInterval: pushingFrequency,
         metrics,
         logger,
