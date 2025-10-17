@@ -111,7 +111,10 @@ export class WebSocketPool {
       }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
       rws.onMessage = (data) => {
-        void pool.dedupeHandler(data);
+        pool.dedupeHandler(data).catch((error: unknown) => {
+          const errMsg = `An error occurred in the WebSocket pool's dedupeHandler: ${error instanceof Error ? error.message : String(error)}`;
+          throw new Error(errMsg);
+        });
       };
       pool.rwsPool.push(rws);
       rws.startWebSocket();
