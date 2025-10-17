@@ -19,7 +19,7 @@ import type {
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
-import { IsomorphicBuffer } from "./util/index.js";
+import { bufferFromWebsocketData } from "./util/buffer-util.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -121,7 +121,7 @@ export class PythLazerClient {
         });
         return;
       }
-      const buffData = await IsomorphicBuffer.fromWebsocketData(data);
+      const buffData = await bufferFromWebsocketData(data);
       let pos = 0;
       const magic = buffData
         .subarray(pos, pos + UINT32_NUM_BYTES)

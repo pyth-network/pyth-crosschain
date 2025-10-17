@@ -6,37 +6,33 @@ import { Buffer as BrowserBuffer } from "buffer";
 
 import type { Data } from "isomorphic-ws";
 
-const { Buffer: PossibleBuiltInBuffer } = globalThis as Partial<{
-  Buffer: typeof Buffer;
-}>;
+const BufferClassToUse =
+  "Buffer" in globalThis ? globalThis.Buffer : BrowserBuffer;
 
-const BufferClassToUse = PossibleBuiltInBuffer ?? BrowserBuffer;
-
-export class IsomorphicBuffer extends BufferClassToUse {
-  /**
-   * given a relatively unknown websocket frame data object,
-   * returns a valid Buffer instance that is safe to use
-   * isomorphically in any JS runtime environment
-   */
-  static async fromWebsocketData(data: Data) {
-    if (typeof data === "string") {
-      return BufferClassToUse.from(new TextEncoder().encode(data).buffer);
-    }
-    if (data instanceof Blob) {
-      // let the uncaught promise exception bubble up if there's an issue
-      return BufferClassToUse.from(await data.arrayBuffer());
-    }
-    if (data instanceof ArrayBuffer) return BufferClassToUse.from(data);
-    if (Buffer.isBuffer(data)) {
-      const arrBuffer = new ArrayBuffer(data.length);
-      const v = new Uint8Array(arrBuffer);
-      for (const [i, item] of data.entries()) {
-        v[i] = item;
-      }
-      return BufferClassToUse.from(arrBuffer);
-    }
-    throw new TypeError(
-      "unexpected event data type found when IsomorphicBuffer.fromWebsocketData() called",
-    );
+/**
+ * given a relatively unknown websocket frame data object,
+ * returns a valid Buffer instance that is safe to use
+ * isomorphically in any JS runtime environment
+ */
+export async function bufferFromWebsocketData(data: Data): Promise<Buffer> {
+  if (typeof data === "string") {
+    return BufferClassToUse.from(new TextEncoder().encode(data).buffer);
   }
+
+  if (data instanceof BufferClassToUse) return data;
+
+  if (data instanceof Blob) {
+    // let the uncaught promise exception bubble up if there's an issue
+    return BufferClassToUse.from(await data.arrayBuffer());
+  }
+
+  if (data instanceof ArrayBuffer) return BufferClassToUse.from(data);
+
+  if (Array.isArray(data)) {
+    // an array of buffers is highly unlikely, but it is a possibility
+    // indicated by the WebSocket Data interface
+    return BufferClassToUse.concat(data);
+  }
+
+  return data;
 }

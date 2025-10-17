@@ -29,11 +29,12 @@ export type ResilientWebSocketConfig = {
  * and falling back to using the https://www.npmjs.com/package/ws package, this
  * means there are API differences between the native WebSocket (the one in a web browser)
  * and the server-side version from the "ws" package.
- * 
+ *
  * This type creates a WebSocket type reference we use to indicate the unknown
  * nature of the env in which is code is run.
  */
-type UnsafeWebSocket = (Omit<WebSocket, "terminate"> & Partial<Pick<WebSocket, "terminate">>);
+type UnsafeWebSocket = Omit<WebSocket, "terminate"> &
+  Partial<Pick<WebSocket, "terminate">>;
 
 export class ResilientWebSocket {
   private endpoint: string;
@@ -220,8 +221,8 @@ export class ResilientWebSocket {
     if (this.shouldLogRetry()) {
       this.logger.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
-        String(this.retryDelayMs()) +
-        "ms.",
+          String(this.retryDelayMs()) +
+          "ms.",
       );
     }
 
