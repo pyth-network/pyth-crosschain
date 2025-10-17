@@ -23,6 +23,7 @@ pub struct Config {
     pub enable_update_deduplication: bool,
     #[serde(with = "humantime_serde", default = "default_update_deduplication_ttl")]
     pub update_deduplication_ttl: Duration,
+    pub proxy_url: Option<Url>,
 }
 
 #[derive(Deserialize, Derivative, Clone, PartialEq)]

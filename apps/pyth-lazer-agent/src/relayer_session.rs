@@ -1,6 +1,7 @@
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use backoff::ExponentialBackoffBuilder;
 use backoff::backoff::Backoff;
+use base64::Engine;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use http::HeaderValue;
@@ -9,12 +10,13 @@ use pyth_lazer_publisher_sdk::transaction::SignedLazerTransaction;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::select;
 use tokio::sync::broadcast;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::{
-    MaybeTlsStream, WebSocketStream, connect_async_with_config,
+    MaybeTlsStream, WebSocketStream, client_async, connect_async_with_config,
     tungstenite::Message as TungsteniteMessage,
 };
 use url::Url;
@@ -22,17 +24,135 @@ use url::Url;
 type RelayerWsSender = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, TungsteniteMessage>;
 type RelayerWsReceiver = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
-async fn connect_to_relayer(url: Url, token: &str) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
-    tracing::info!("connecting to the relayer at {}", url);
-    let mut req = url.clone().into_client_request()?;
+async fn connect_through_proxy(
+    proxy_url: &Url,
+    target_url: &Url,
+    token: &str,
+) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
+    tracing::info!(
+        "connecting to the relayer at {} via proxy {}",
+        target_url,
+        proxy_url
+    );
+
+    let proxy_host = proxy_url.host_str().context("Proxy URL must have a host")?;
+    let proxy_port = proxy_url
+        .port()
+        .unwrap_or(if proxy_url.scheme() == "https" {
+            443
+        } else {
+            80
+        });
+
+    let proxy_addr = format!("{}:{}", proxy_host, proxy_port);
+    let mut stream = TcpStream::connect(&proxy_addr)
+        .await
+        .context(format!("Failed to connect to proxy at {}", proxy_addr))?;
+
+    let target_host = target_url
+        .host_str()
+        .context("Target URL must have a host")?;
+    let target_port = target_url
+        .port()
+        .unwrap_or(if target_url.scheme() == "wss" {
+            443
+        } else {
+            80
+        });
+
+    let mut connect_request = format!(
+        "CONNECT {}:{} HTTP/1.1\r\nHost: {}:{}\r\n",
+        target_host, target_port, target_host, target_port
+    );
+
+    let username = proxy_url.username();
+    if !username.is_empty() {
+        let password = proxy_url.password().unwrap_or("");
+        let credentials = format!("{}:{}", username, password);
+        let encoded = base64::engine::general_purpose::STANDARD.encode(credentials.as_bytes());
+        connect_request = format!(
+            "{}Proxy-Authorization: Basic {}\r\n",
+            connect_request, encoded
+        );
+    }
+
+    connect_request = format!("{}\r\n", connect_request);
+
+    stream
+        .write_all(connect_request.as_bytes())
+        .await
+        .context("Failed to send CONNECT request to proxy")?;
+
+    let mut response = vec![0u8; 1024];
+    let n = stream
+        .read(&mut response)
+        .await
+        .context("Failed to read CONNECT response from proxy")?;
+
+    let response_str = String::from_utf8_lossy(&response[..n]);
+
+    if !response_str.starts_with("HTTP/1.1 200") && !response_str.starts_with("HTTP/1.0 200") {
+        bail!(
+            "Proxy CONNECT failed: {}",
+            response_str.lines().next().unwrap_or("Unknown error")
+        );
+    }
+
+    tracing::info!("Successfully connected through proxy");
+
+    let mut req = target_url.clone().into_client_request()?;
     let headers = req.headers_mut();
     headers.insert(
         "Authorization",
-        HeaderValue::from_str(&format!("Bearer {token}"))?,
+        HeaderValue::from_str(&format!("Bearer {}", token))?,
     );
-    let (ws_stream, _) = connect_async_with_config(req, None, true).await?;
-    tracing::info!("connected to the relayer at {}", url);
+
+    let maybe_tls_stream = if target_url.scheme() == "wss" {
+        let tls_connector = tokio_native_tls::native_tls::TlsConnector::builder()
+            .build()
+            .context("Failed to build TLS connector")?;
+        let tokio_connector = tokio_native_tls::TlsConnector::from(tls_connector);
+        let domain = target_host;
+        let tls_stream = tokio_connector
+            .connect(domain, stream)
+            .await
+            .context("Failed to establish TLS connection")?;
+
+        MaybeTlsStream::NativeTls(tls_stream)
+    } else {
+        MaybeTlsStream::Plain(stream)
+    };
+
+    let (ws_stream, _) = client_async(req, maybe_tls_stream)
+        .await
+        .context("Failed to complete WebSocket handshake")?;
+
+    tracing::info!(
+        "WebSocket connection established to relayer at {}",
+        target_url
+    );
     Ok(ws_stream.split())
+}
+
+async fn connect_to_relayer(
+    url: Url,
+    token: &str,
+    proxy_url: Option<&Url>,
+) -> Result<(RelayerWsSender, RelayerWsReceiver)> {
+    if let Some(proxy) = proxy_url {
+        connect_through_proxy(proxy, &url, token).await
+    } else {
+        tracing::info!("connecting to the relayer at {}", url);
+        let mut req = url.clone().into_client_request()?;
+        let headers = req.headers_mut();
+        headers.insert(
+            "Authorization",
+            HeaderValue::from_str(&format!("Bearer {token}"))?,
+        );
+        let (ws_stream, _) = connect_async_with_config(req, None, true).await?;
+        tracing::info!("connected to the relayer at {}", url);
+        Ok(ws_stream.split())
+    }
 }
 
 struct RelayerWsSession {
@@ -58,11 +178,11 @@ impl RelayerWsSession {
 }
 
 pub struct RelayerSessionTask {
-    // connection state
     pub url: Url,
     pub token: String,
     pub receiver: broadcast::Receiver<SignedLazerTransaction>,
     pub is_ready: Arc<AtomicBool>,
+    pub proxy_url: Option<Url>,
 }
 
 impl RelayerSessionTask {
@@ -108,10 +228,8 @@ impl RelayerSessionTask {
     }
 
     pub async fn run_relayer_connection(&mut self) -> Result<()> {
-        // Establish relayer connection
-        // Relayer will drop the connection if no data received in 5s
         let (relayer_ws_sender, mut relayer_ws_receiver) =
-            connect_to_relayer(self.url.clone(), &self.token).await?;
+            connect_to_relayer(self.url.clone(), &self.token, self.proxy_url.as_ref()).await?;
         let mut relayer_ws_session = RelayerWsSession {
             ws_sender: relayer_ws_sender,
         };
@@ -236,11 +354,11 @@ mod tests {
         let (relayer_sender, relayer_receiver) = broadcast::channel(RELAYER_CHANNEL_CAPACITY);
 
         let mut relayer_session_task = RelayerSessionTask {
-            // connection state
             url: Url::parse("ws://127.0.0.1:12346").unwrap(),
             token: "token1".to_string(),
             receiver: relayer_receiver,
             is_ready: Arc::new(AtomicBool::new(false)),
+            proxy_url: None,
         };
         tokio::spawn(async move { relayer_session_task.run().await });
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;

@@ -1,6 +1,6 @@
 [package]
 name = "pyth-lazer-agent"
-version = "0.6.1"
+version = "0.7.0"
 edition = "2024"
 description = "Pyth Lazer Agent"
 license = "Apache-2.0"
@@ -32,6 +32,7 @@ serde_json = "1.0.140"
 soketto = { version = "0.8.1", features = ["http"] }
 solana-keypair = "2.2.1"
 tokio = { version = "1.44.1", features = ["full"] }
+tokio-native-tls = "0.3.1"
 tokio-tungstenite = { version = "0.26.2", features = ["native-tls", "url"] }
 tokio-util = { version = "0.7.14", features = ["compat"] }
 tracing = "0.1.41"

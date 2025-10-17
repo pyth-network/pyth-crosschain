@@ -5656,7 +5656,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "backoff",
@@ -5683,6 +5683,7 @@ dependencies = [
  "solana-keypair",
  "tempfile",
  "tokio",
+ "tokio-native-tls",
  "tokio-tungstenite 0.26.2",
  "tokio-util",
  "tracing",
