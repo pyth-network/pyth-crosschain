@@ -21,6 +21,20 @@ export type ResilientWebSocketConfig = {
   logAfterRetryCount?: number;
 };
 
+/**
+ * the isomorphic-ws package ships with some slightly-erroneous typings.
+ * namely, it returns a WebSocket with typings that indicate the "terminate()" function
+ * is available on all platforms.
+ * Given that, under the hood, it is using the globalThis.WebSocket class, if it's available,
+ * and falling back to using the https://www.npmjs.com/package/ws package, this
+ * means there are API differences between the native WebSocket (the one in a web browser)
+ * and the server-side version from the "ws" package.
+ * 
+ * This type creates a WebSocket type reference we use to indicate the unknown
+ * nature of the env in which is code is run.
+ */
+type UnsafeWebSocket = (Omit<WebSocket, "terminate"> & Partial<Pick<WebSocket, "terminate">>);
+
 export class ResilientWebSocket {
   private endpoint: string;
   private wsOptions?: ClientOptions | ClientRequestArgs | undefined;
@@ -29,9 +43,7 @@ export class ResilientWebSocket {
   private maxRetryDelayMs: number;
   private logAfterRetryCount: number;
 
-  wsClient:
-    | undefined
-    | (Omit<WebSocket, "terminate"> & Partial<Pick<WebSocket, "terminate">>);
+  wsClient: UnsafeWebSocket | undefined;
   wsUserClosed = false;
   private wsFailedAttempts: number;
   private heartbeatTimeout?: NodeJS.Timeout | undefined;
@@ -208,8 +220,8 @@ export class ResilientWebSocket {
     if (this.shouldLogRetry()) {
       this.logger.error(
         "Connection closed unexpectedly or because of timeout. Reconnecting after " +
-          String(this.retryDelayMs()) +
-          "ms.",
+        String(this.retryDelayMs()) +
+        "ms.",
       );
     }
 
