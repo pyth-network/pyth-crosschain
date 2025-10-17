@@ -82,7 +82,8 @@ export default {
       type: "number",
       required: false,
       default: 1,
-    } as Options, "disable-push": {
+    } as Options,
+    "disable-push": {
       description: "Dry run without pushing",
       type: "boolean",
       required: false,

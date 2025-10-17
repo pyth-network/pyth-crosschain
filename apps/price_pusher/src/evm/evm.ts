@@ -196,9 +196,9 @@ export class EvmPricePusher implements IPricePusher {
       this.gasPrice ??
       Number(
         await (this.customGasStation?.getCustomGasPrice() ??
-            (this.useRecentGasPriceEstimate
-                ? this.getMedianRecentGasPrice()
-                : this.client.getGasPrice())),
+          (this.useRecentGasPriceEstimate
+            ? this.getMedianRecentGasPrice()
+            : this.client.getGasPrice())),
       );
     this.metrics?.updateGasPrice(this.network, gasPrice);
 
@@ -443,18 +443,20 @@ export class EvmPricePusher implements IPricePusher {
     });
     this.logger.info({ baseFeePerGas, reward }, "feeHistory");
     // remove the next block base fee
-    const trimmedBaseFees = baseFeePerGas.slice(0, -1)
+    const trimmedBaseFees = baseFeePerGas.slice(0, -1);
     const gasPrices = trimmedBaseFees.map((base, i) => {
       const medianTip = reward?.[i]?.[0] ?? 0n;
       return base + medianTip;
-    })
-    this.logger.info({gasPrices}, "gasPrices:");
+    });
+    this.logger.info({ gasPrices }, "gasPrices:");
 
     if (gasPrices.length === 0) {
       return 0n;
     } else {
-      const sorted = [...gasPrices].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-      const medianIndex = Math.floor(sorted.length / 2)
+      const sorted = [...gasPrices].sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+      );
+      const medianIndex = Math.floor(sorted.length / 2);
       const medianPrice = sorted[medianIndex];
       this.logger.info({ medianPrice }, "medianPrice:");
       return medianPrice;

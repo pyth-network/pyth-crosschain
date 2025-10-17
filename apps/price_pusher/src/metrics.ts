@@ -222,19 +222,11 @@ export class PricePusherMetrics {
     );
   }
 
-  public updateGasPrice(
-      network: string,
-      gasPrice: bigint | number,
-  ): void {
+  public updateGasPrice(network: string, gasPrice: bigint | number): void {
     // Convert to number for compatibility with prometheus
     const gasPriceNum =
-        typeof gasPrice === "bigint" ? Number(gasPrice) : gasPrice;
-    this.gasPrice.set(
-        { network },
-        gasPriceNum,
-    );
-    this.logger.debug(
-        `Updated gas price metric: ${network} = ${gasPriceNum}`,
-    );
+      typeof gasPrice === "bigint" ? Number(gasPrice) : gasPrice;
+    this.gasPrice.set({ network }, gasPriceNum);
+    this.logger.debug(`Updated gas price metric: ${network} = ${gasPriceNum}`);
   }
 }
