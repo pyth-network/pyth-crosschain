@@ -10,9 +10,7 @@ const g = globalThis as Partial<{
  * @returns true if in a worker of some kind, false if otherwise
  */
 export function envIsServiceOrWebWorker() {
-  const possiblyInAWorker =
-    typeof WorkerGlobalScope !== "undefined" && g.self !== undefined;
-  return possiblyInAWorker && g.self instanceof WorkerGlobalScope;
+  return typeof WorkerGlobalScope !== "undefined" && g.self instanceof WorkerGlobalScope;
 }
 
 /**
