@@ -50,6 +50,9 @@ authorization_token = "your_token"
 listen_address = "0.0.0.0:8910"
 publish_interval_duration = "25ms"
 enable_update_deduplication = false
+# Optional proxy configuration
+# proxy_url = "http://proxy.example.com:8080"
+# proxy_url = "http://username:password@proxy.example.com:8080"  # With authentication
 ```
 
 - `relayers_urls`: The Lazer team will provide these.
@@ -58,3 +61,4 @@ enable_update_deduplication = false
 - `listen_address`: The local port the agent will be listening on; can be anything you want.
 - `publisher_interval`: The agent will batch and send transaction bundles at this interval. The Lazer team will provide guidance here.
 - `enable_update_deduplication`: The agent will deduplicate updates based inside each batch before sending it to Lazer.
+- `proxy_url` (optional): HTTP/HTTPS proxy URL for WebSocket connections. Supports Basic authentication via URL credentials (e.g., `http://user:pass@proxy:port`).

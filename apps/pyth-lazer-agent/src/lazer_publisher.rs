@@ -80,6 +80,7 @@ impl LazerPublisher {
                 token: authorization_token.clone(),
                 receiver: relayer_sender.subscribe(),
                 is_ready: is_ready.clone(),
+                proxy_url: config.proxy_url.clone(),
             };
             tokio::spawn(async move { task.run().await });
         }
@@ -301,6 +302,7 @@ mod tests {
             history_service_url: None,
             enable_update_deduplication: false,
             update_deduplication_ttl: Default::default(),
+            proxy_url: None,
         };
 
         let (relayer_sender, mut relayer_receiver) = broadcast::channel(CHANNEL_CAPACITY);
