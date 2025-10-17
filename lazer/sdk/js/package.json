@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Pyth Lazer SDK",
   "engines": {
     "node": ">=22"
