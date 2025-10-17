@@ -11,7 +11,7 @@ import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
 } from "../constants.js";
-import { envIsBrowserOrWorker, IsomorphicBuffer } from "../util/index.js";
+import { addAuthTokenToWebSocketUrl, envIsBrowserOrWorker, IsomorphicBuffer } from "../util/index.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
 
@@ -70,27 +70,16 @@ export class WebSocketPool {
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
     for (let i = 0; i < numConnections; i++) {
-      let url = urls[i % urls.length];
+      const baseUrl = urls[i % urls.length];
+      const isBrowser = envIsBrowserOrWorker();
+      const url = isBrowser ? addAuthTokenToWebSocketUrl(baseUrl, token) : baseUrl;
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
       const wsOptions: ResilientWebSocketConfig["wsOptions"] = {
         ...config.rwsConfig?.wsOptions,
+        headers: isBrowser ? undefined : { Authorization: `Bearer ${token}` },
       };
-
-      if (envIsBrowserOrWorker()) {
-        // we are in a browser environment where the websocket protocol
-        // doesn't support sending headers in the initial upgrade request,
-        // so we add the token as a query param, which the server already supports
-        const parsedUrl = new URL(url);
-        parsedUrl.searchParams.set("ACCESS_TOKEN", token);
-        url = parsedUrl.toString();
-      } else {
-        // we are in a server-side javascript runtime context
-        wsOptions.headers = {
-          Authorization: `Bearer ${token}`,
-        };
-      }
 
       const rws = new ResilientWebSocket({
         ...config.rwsConfig,

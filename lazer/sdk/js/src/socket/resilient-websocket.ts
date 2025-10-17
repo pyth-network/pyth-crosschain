@@ -6,7 +6,7 @@ import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
 import { CustomSocketClosureCodes } from "../protocol.js";
-import { envIsServiceOrWebWorker } from "../util/env-util.js";
+import { envIsBrowserOrWorker } from "../util/env-util.js";
 
 const DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
 const DEFAULT_MAX_RETRY_DELAY_MS = 1000; // 1 second'
@@ -128,7 +128,7 @@ export class ResilientWebSocket {
     // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#protocols
     this.wsClient = new WebSocket(
       this.endpoint,
-      envIsServiceOrWebWorker() ? undefined : this.wsOptions,
+      envIsBrowserOrWorker() ? undefined : this.wsOptions,
     );
 
     this.wsClient.addEventListener("open", () => {
