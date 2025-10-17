@@ -56,7 +56,9 @@ library PythLazerLib {
         pure
         returns (PythLazerStructs.PriceFeedProperty property, uint16 new_pos)
     {
-        property = PythLazerStructs.PriceFeedProperty(uint8(update[pos]));
+        uint8 propertyId = uint8(update[pos]);
+        require(propertyId <= 8, "Unknown property");
+        property = PythLazerStructs.PriceFeedProperty(propertyId);
         pos += 1;
         new_pos = pos;
     }
@@ -231,7 +233,8 @@ library PythLazerLib {
                         feed.existsFlags |= PythLazerStructs
                             .FUNDING_INTERVAL_EXISTS;
                 } else {
-                    revert("Unknown property");
+                    // This should never happen due to validation in parseFeedProperty
+                    revert("Unexpected property");
                 }
             }
 
@@ -240,7 +243,7 @@ library PythLazerLib {
         }
 
         // Ensure we consumed all bytes
-        require(pos == payload.length, "Payload not fully consumed");
+        require(pos == payload.length, "Payload has extra unknown bytes");
     }
 
     // Helper functions for existence checks
