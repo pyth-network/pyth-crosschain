@@ -1,4 +1,3 @@
-import fetch from "cross-fetch";
 import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
@@ -20,6 +19,7 @@ import type {
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";
 import { WebSocketPool } from "./socket/websocket-pool.js";
+import { bufferFromWebsocketData } from "./util/buffer-util.js";
 
 export type BinaryResponse = {
   subscriptionId: number;
@@ -113,53 +113,56 @@ export class PythLazerClient {
    */
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
     const wsp = this.getWebSocketPool();
-    wsp.addMessageListener((data: WebSocket.Data) => {
+    wsp.addMessageListener(async (data: WebSocket.Data) => {
       if (typeof data == "string") {
         handler({
           type: "json",
           value: JSON.parse(data) as Response,
         });
-      } else if (Buffer.isBuffer(data)) {
-        let pos = 0;
-        const magic = data.subarray(pos, pos + UINT32_NUM_BYTES).readUint32LE();
-        pos += UINT32_NUM_BYTES;
-        if (magic != BINARY_UPDATE_FORMAT_MAGIC_LE) {
-          throw new Error("binary update format magic mismatch");
-        }
-        // TODO: some uint64 values may not be representable as Number.
-        const subscriptionId = Number(
-          data.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE(),
-        );
-        pos += UINT64_NUM_BYTES;
-
-        const value: BinaryResponse = { subscriptionId };
-        while (pos < data.length) {
-          const len = data.subarray(pos, pos + UINT16_NUM_BYTES).readUint16BE();
-          pos += UINT16_NUM_BYTES;
-          const magic = data
-            .subarray(pos, pos + UINT32_NUM_BYTES)
-            .readUint32LE();
-          if (magic == FORMAT_MAGICS_LE.EVM) {
-            value.evm = data.subarray(pos, pos + len);
-          } else if (magic == FORMAT_MAGICS_LE.SOLANA) {
-            value.solana = data.subarray(pos, pos + len);
-          } else if (magic == FORMAT_MAGICS_LE.LE_ECDSA) {
-            value.leEcdsa = data.subarray(pos, pos + len);
-          } else if (magic == FORMAT_MAGICS_LE.LE_UNSIGNED) {
-            value.leUnsigned = data.subarray(pos, pos + len);
-          } else if (magic == FORMAT_MAGICS_LE.JSON) {
-            value.parsed = JSON.parse(
-              data.subarray(pos + UINT32_NUM_BYTES, pos + len).toString(),
-            ) as ParsedPayload;
-          } else {
-            throw new Error("unknown magic: " + magic.toString());
-          }
-          pos += len;
-        }
-        handler({ type: "binary", value });
-      } else {
-        throw new TypeError("unexpected event data type");
+        return;
       }
+      const buffData = await bufferFromWebsocketData(data);
+      let pos = 0;
+      const magic = buffData
+        .subarray(pos, pos + UINT32_NUM_BYTES)
+        .readUint32LE();
+      pos += UINT32_NUM_BYTES;
+      if (magic != BINARY_UPDATE_FORMAT_MAGIC_LE) {
+        throw new Error("binary update format magic mismatch");
+      }
+      // TODO: some uint64 values may not be representable as Number.
+      const subscriptionId = Number(
+        buffData.subarray(pos, pos + UINT64_NUM_BYTES).readBigInt64BE(),
+      );
+      pos += UINT64_NUM_BYTES;
+
+      const value: BinaryResponse = { subscriptionId };
+      while (pos < buffData.length) {
+        const len = buffData
+          .subarray(pos, pos + UINT16_NUM_BYTES)
+          .readUint16BE();
+        pos += UINT16_NUM_BYTES;
+        const magic = buffData
+          .subarray(pos, pos + UINT32_NUM_BYTES)
+          .readUint32LE();
+        if (magic == FORMAT_MAGICS_LE.EVM) {
+          value.evm = buffData.subarray(pos, pos + len);
+        } else if (magic == FORMAT_MAGICS_LE.SOLANA) {
+          value.solana = buffData.subarray(pos, pos + len);
+        } else if (magic == FORMAT_MAGICS_LE.LE_ECDSA) {
+          value.leEcdsa = buffData.subarray(pos, pos + len);
+        } else if (magic == FORMAT_MAGICS_LE.LE_UNSIGNED) {
+          value.leUnsigned = buffData.subarray(pos, pos + len);
+        } else if (magic == FORMAT_MAGICS_LE.JSON) {
+          value.parsed = JSON.parse(
+            buffData.subarray(pos + UINT32_NUM_BYTES, pos + len).toString(),
+          ) as ParsedPayload;
+        } else {
+          throw new Error(`unknown magic:  ${magic.toString()}`);
+        }
+        pos += len;
+      }
+      handler({ type: "binary", value });
     });
   }
 

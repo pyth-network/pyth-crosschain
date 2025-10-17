@@ -158,3 +158,7 @@ export type JsonUpdate = {
   leEcdsa?: JsonBinaryData;
   leUnsigned?: JsonBinaryData;
 };
+
+export enum CustomSocketClosureCodes {
+  CLIENT_TIMEOUT_BUT_RECONNECTING = 4000,
+}
