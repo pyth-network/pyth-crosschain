@@ -60,8 +60,9 @@ async fn connect_through_proxy(
             80
         });
 
-    let mut connect_request =
-        format!("CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: {target_host}:{target_port}\r\n");
+    let mut connect_request = format!(
+        "CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: {target_host}:{target_port}\r\n"
+    );
 
     let username = proxy_url.username();
     if !username.is_empty() {
@@ -84,11 +85,8 @@ async fn connect_through_proxy(
         .await
         .context("Failed to read CONNECT response from proxy")?;
 
-    let response_str = String::from_utf8_lossy(
-        response
-            .get(..n)
-            .context("Invalid response slice range")?,
-    );
+    let response_str =
+        String::from_utf8_lossy(response.get(..n).context("Invalid response slice range")?);
 
     if !response_str.starts_with("HTTP/1.1 200") && !response_str.starts_with("HTTP/1.0 200") {
         bail!(
