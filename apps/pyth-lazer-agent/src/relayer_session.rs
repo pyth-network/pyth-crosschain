@@ -77,13 +77,14 @@ async fn connect_through_proxy(
     stream
         .write_all(connect_request.as_bytes())
         .await
-        .context("Failed to send CONNECT request to proxy")?;
+        .context(format!(
+            "Failed to send CONNECT request to proxy at {proxy_url}"
+        ))?;
 
     let mut response = vec![0u8; 1024];
-    let n = stream
-        .read(&mut response)
-        .await
-        .context("Failed to read CONNECT response from proxy")?;
+    let n = stream.read(&mut response).await.context(format!(
+        "Failed to read CONNECT response from proxy at {proxy_url}"
+    ))?;
 
     let response_str =
         String::from_utf8_lossy(response.get(..n).context("Invalid response slice range")?);
@@ -95,7 +96,7 @@ async fn connect_through_proxy(
         );
     }
 
-    tracing::info!("Successfully connected through proxy");
+    tracing::info!("Successfully connected through proxy at {}", proxy_url);
 
     let mut req = target_url.clone().into_client_request()?;
     let headers = req.headers_mut();
@@ -125,8 +126,9 @@ async fn connect_through_proxy(
         .context("Failed to complete WebSocket handshake")?;
 
     tracing::info!(
-        "WebSocket connection established to relayer at {}",
-        target_url
+        "WebSocket connection established to relayer at {} via proxy {}",
+        target_url,
+        proxy_url
     );
     Ok(ws_stream.split())
 }
