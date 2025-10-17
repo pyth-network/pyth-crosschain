@@ -44,10 +44,10 @@ async fn connect_through_proxy(
             80
         });
 
-    let proxy_addr = format!("{}:{}", proxy_host, proxy_port);
+    let proxy_addr = format!("{proxy_host}:{proxy_port}");
     let mut stream = TcpStream::connect(&proxy_addr)
         .await
-        .context(format!("Failed to connect to proxy at {}", proxy_addr))?;
+        .context(format!("Failed to connect to proxy at {proxy_addr}"))?;
 
     let target_host = target_url
         .host_str()
@@ -60,23 +60,18 @@ async fn connect_through_proxy(
             80
         });
 
-    let mut connect_request = format!(
-        "CONNECT {}:{} HTTP/1.1\r\nHost: {}:{}\r\n",
-        target_host, target_port, target_host, target_port
-    );
+    let mut connect_request =
+        format!("CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: {target_host}:{target_port}\r\n");
 
     let username = proxy_url.username();
     if !username.is_empty() {
         let password = proxy_url.password().unwrap_or("");
-        let credentials = format!("{}:{}", username, password);
+        let credentials = format!("{username}:{password}");
         let encoded = base64::engine::general_purpose::STANDARD.encode(credentials.as_bytes());
-        connect_request = format!(
-            "{}Proxy-Authorization: Basic {}\r\n",
-            connect_request, encoded
-        );
+        connect_request = format!("{connect_request}Proxy-Authorization: Basic {encoded}\r\n");
     }
 
-    connect_request = format!("{}\r\n", connect_request);
+    connect_request = format!("{connect_request}\r\n");
 
     stream
         .write_all(connect_request.as_bytes())
@@ -89,7 +84,11 @@ async fn connect_through_proxy(
         .await
         .context("Failed to read CONNECT response from proxy")?;
 
-    let response_str = String::from_utf8_lossy(&response[..n]);
+    let response_str = String::from_utf8_lossy(
+        response
+            .get(..n)
+            .context("Invalid response slice range")?,
+    );
 
     if !response_str.starts_with("HTTP/1.1 200") && !response_str.starts_with("HTTP/1.0 200") {
         bail!(
@@ -104,7 +103,7 @@ async fn connect_through_proxy(
     let headers = req.headers_mut();
     headers.insert(
         "Authorization",
-        HeaderValue::from_str(&format!("Bearer {}", token))?,
+        HeaderValue::from_str(&format!("Bearer {token}"))?,
     );
 
     let maybe_tls_stream = if target_url.scheme() == "wss" {
