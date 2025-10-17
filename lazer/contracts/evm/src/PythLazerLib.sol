@@ -203,35 +203,48 @@ library PythLazerLib {
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.FundingRate
                 ) {
-                    (feed.fundingRate, pos) = parseFeedValueInt64(payload, pos);
-                    if (feed.fundingRate != 0)
+                    uint8 exists;
+                    (exists, pos) = parseFeedValueUint8(payload, pos);
+                    if (exists != 0) {
+                        (feed.fundingRate, pos) = parseFeedValueInt64(
+                            payload,
+                            pos
+                        );
                         feed.existsFlags |= PythLazerStructs
                             .FUNDING_RATE_EXISTS;
+                    }
 
                     // Funding Timestamp Property
                 } else if (
                     property ==
                     PythLazerStructs.PriceFeedProperty.FundingTimestamp
                 ) {
-                    (feed.fundingTimestamp, pos) = parseFeedValueUint64(
-                        payload,
-                        pos
-                    );
-                    if (feed.fundingTimestamp != 0)
-                        feed.existsFlags |= PythLazerStructs.FUNDING_TS_EXISTS;
+                    uint8 exists;
+                    (exists, pos) = parseFeedValueUint8(payload, pos);
+                    if (exists != 0) {
+                        (feed.fundingTimestamp, pos) = parseFeedValueUint64(
+                            payload,
+                            pos
+                        );
+                        feed.existsFlags |= PythLazerStructs
+                            .FUNDING_TIMESTAMP_EXISTS;
+                    }
 
                     // Funding Rate Interval Property
                 } else if (
                     property ==
                     PythLazerStructs.PriceFeedProperty.FundingRateInterval
                 ) {
-                    (feed.fundingRateInterval, pos) = parseFeedValueUint64(
-                        payload,
-                        pos
-                    );
-                    if (feed.fundingRateInterval != 0)
+                    uint8 exists;
+                    (exists, pos) = parseFeedValueUint8(payload, pos);
+                    if (exists != 0) {
+                        (feed.fundingRateInterval, pos) = parseFeedValueUint64(
+                            payload,
+                            pos
+                        );
                         feed.existsFlags |= PythLazerStructs
-                            .FUNDING_INTERVAL_EXISTS;
+                            .FUNDING_RATE_INTERVAL_EXISTS;
+                    }
                 } else {
                     // This should never happen due to validation in parseFeedProperty
                     revert("Unexpected property");
@@ -302,7 +315,8 @@ library PythLazerLib {
     function hasFundingTimestamp(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return (feed.existsFlags & PythLazerStructs.FUNDING_TS_EXISTS) != 0;
+        return
+            (feed.existsFlags & PythLazerStructs.FUNDING_TIMESTAMP_EXISTS) != 0;
     }
 
     /// @notice Check if funding rate interval exists
@@ -310,7 +324,8 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
         return
-            (feed.existsFlags & PythLazerStructs.FUNDING_INTERVAL_EXISTS) != 0;
+            (feed.existsFlags &
+                PythLazerStructs.FUNDING_RATE_INTERVAL_EXISTS) != 0;
     }
 
     // Safe getter functions (revert if property doesn't exist)

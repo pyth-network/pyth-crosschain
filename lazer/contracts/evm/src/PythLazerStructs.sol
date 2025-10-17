@@ -45,13 +45,13 @@ library PythLazerStructs {
     }
 
     // Bitmap constants for Feed.existsFlags
-    uint32 constant PRICE_EXISTS = 0x01; // bit 0
-    uint32 constant BEST_BID_EXISTS = 0x02; // bit 1
-    uint32 constant BEST_ASK_EXISTS = 0x04; // bit 2
-    uint32 constant PUBLISHER_COUNT_EXISTS = 0x08; // bit 3
-    uint32 constant EXPONENT_EXISTS = 0x10; // bit 4
-    uint32 constant CONFIDENCE_EXISTS = 0x20; // bit 5
-    uint32 constant FUNDING_RATE_EXISTS = 0x40; // bit 6
-    uint32 constant FUNDING_TS_EXISTS = 0x80; // bit 7
-    uint32 constant FUNDING_INTERVAL_EXISTS = 0x100; // bit 8
+    uint32 constant PRICE_EXISTS = 1 << 0;
+    uint32 constant BEST_BID_EXISTS = 1 << 1;
+    uint32 constant BEST_ASK_EXISTS = 1 << 2;
+    uint32 constant PUBLISHER_COUNT_EXISTS = 1 << 3;
+    uint32 constant EXPONENT_EXISTS = 1 << 4;
+    uint32 constant CONFIDENCE_EXISTS = 1 << 5;
+    uint32 constant FUNDING_RATE_EXISTS = 1 << 6;
+    uint32 constant FUNDING_TIMESTAMP_EXISTS = 1 << 7;
+    uint32 constant FUNDING_RATE_INTERVAL_EXISTS = 1 << 8;
 }
