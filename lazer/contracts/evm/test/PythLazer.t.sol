@@ -135,7 +135,24 @@ contract PythLazerTest is Test {
         uint8 propertyId,
         bytes memory valueBytes
     ) internal pure returns (bytes memory) {
-        return abi.encodePacked(propertyId, valueBytes);
+        // Funding properties (6, 7, 8) need a bool flag before the value
+        if (propertyId >= 6 && propertyId <= 8) {
+            return abi.encodePacked(propertyId, uint8(1), valueBytes);
+        } else {
+            return abi.encodePacked(propertyId, valueBytes);
+        }
+    }
+
+    /// @notice Build a funding property with None value (just the bool flag = 0)
+    /// @param propertyId The property ID (must be 6, 7, or 8)
+    function buildPropertyNone(
+        uint8 propertyId
+    ) internal pure returns (bytes memory) {
+        require(
+            propertyId >= 6 && propertyId <= 8,
+            "Only for funding properties"
+        );
+        return abi.encodePacked(propertyId, uint8(0));
     }
 
     function encodeInt64(int64 value) internal pure returns (bytes memory) {
