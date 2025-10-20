@@ -6,7 +6,13 @@
   },
   {
     "chain": "ton_mainnet",
+    "comment": "This is deprecated, use the new contract address",
     "address": "EQBU6k8HH6yX4Jf3d18swWbnYr31D3PJI7PgjXT-flsKHqql",
+    "type": "TonPriceFeedContract"
+  },
+  {
+    "chain": "ton_mainnet",
+    "address": "EQBgtfuGIzWLiOzpZO48_psYvco4xRtkAbdbmTwy0_o95LtZ",
     "type": "TonPriceFeedContract"
   }
 ]

@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-ton-js",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Pyth Network TON Utilities",
   "homepage": "https://pyth.network",
   "author": {
@@ -27,7 +27,7 @@
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run test:format && git add -A src"
   },
   "keywords": [
     "pyth",

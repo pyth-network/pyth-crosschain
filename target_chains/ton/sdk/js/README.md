@@ -57,9 +57,13 @@ async function main() {
   );
   console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0].price);
 
+  const numUpdates = 1; // Only BTC price
   const updateData = Buffer.from(latestPriceUpdates.binary.data[0], "hex");
   console.log("Update data:", updateData);
 
+  // NOTE: As of 2025/10/19 There's a bug with TON Access (https://ton.access.orbs.network) RPC service where if you provide an
+  // update data buffer with length of more than ~320 then the rpc returns error 404 and the function fails. In this case you can use the
+  // contract.getSingleUpdateFee() method to get the single update fee and multiply it by the number of updates you want to perform.
   const updateFee = await contract.getUpdateFee(updateData);
   console.log("Update fee:", updateFee);
 
@@ -74,7 +78,7 @@ async function main() {
   await contract.sendUpdatePriceFeeds(
     provider.sender(key.secretKey),
     updateData,
-    calculateUpdatePriceFeedsFee(1n) + BigInt(updateFee)
+    calculateUpdatePriceFeedsFee(numUpdates) + BigInt(updateFee)
   );
   console.log("Price feeds updated successfully.");
 
