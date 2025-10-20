@@ -297,6 +297,7 @@ pub mod tests {
             state: SymbolState::Stable,
             hermes_id: None,
             quote_currency: None,
+            nasdaq_symbol: None,
         }
     }
 
