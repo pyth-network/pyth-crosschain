@@ -155,6 +155,7 @@ pub struct SymbolMetadata {
     pub state: SymbolState,
     pub hermes_id: Option<String>,
     pub quote_currency: Option<String>,
+    pub nasdaq_symbol: Option<String>,
 }
 
 #[cfg(test)]
