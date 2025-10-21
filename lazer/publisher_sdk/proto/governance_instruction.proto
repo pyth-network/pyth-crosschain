@@ -95,6 +95,9 @@ message GovernanceInstructionItem {
         RemoveFeed remove_feed = 113;
         AddFeatureFlag add_feature_flag = 114;
         RemoveFeatureFlag remove_feature_flag = 115;
+        AddAsset add_asset = 116;
+        UpdateAsset update_asset = 117;
+        RemoveAsset remove_asset = 118;
     }
 }
 
@@ -367,4 +370,34 @@ message AddFeatureFlag {
 message RemoveFeatureFlag {
     // [required] Feature flag to remove.
     optional string feature_flag = 1;
+}
+
+// Add a new asset. Refer to `Asset` message fields documentation.
+message AddAsset {
+    // [required]
+    optional uint32 asset_id = 1;
+    // [required]
+    optional DynamicValue.Map metadata = 2;
+}
+
+message UpdateAsset {
+    // [required] ID of the asset that is being updated. Rejects if there is no such asset.
+    optional uint32 asset_id = 1;
+    // [required]
+    // Note: when adding a new variant here, update `Permissions` as well.
+    oneof action {
+        UpdateAssetMetadata update_asset_metadata = 101;
+    }
+}
+
+message RemoveAsset {
+    // [required] ID of the asset that is being removed. Rejects if there is no such asset.
+    optional uint32 asset_id = 1;
+}
+
+message UpdateAssetMetadata {
+    // [required] Property name.
+    optional string name = 1;
+    // [optional] Property value. If unset, the property will be removed.
+    optional DynamicValue value = 2;
 }

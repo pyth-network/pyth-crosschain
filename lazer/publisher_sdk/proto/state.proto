@@ -48,6 +48,8 @@ message State {
     repeated GovernanceSourceState governance_sources = 9;
     // Currently active feature flags. Feature flags influence the aggregator's behavior.
     repeated string feature_flags = 10;
+    // List of assets.
+    repeated Asset assets = 11;
 }
 
 // An item of the state describing a publisher.
@@ -195,6 +197,14 @@ message FeedAggregateData {
     optional int64 confidence = 8;
 }
 
+// An item of the state describing an asset.
+message Asset {
+    // [required] ID of the asset.
+    optional uint32 asset_id = 1;
+    // [required] Additional metadata values. These values will be exposed in the APIs.
+    optional DynamicValue.Map metadata = 2;
+}
+
 // State associated with a governance source.
 message GovernanceSourceState {
     // [required]
@@ -233,6 +243,11 @@ message Permissions {
         REMOVE_FEED = 113;
         ADD_FEATURE_FLAG = 114;
         REMOVE_FEATURE_FLAG = 115;
+        ADD_ASSET = 116;
+        // All operations under `UpdateAsset`,
+        // including operations added in the future.
+        UPDATE_ASSET = 117;
+        REMOVE_ASSET = 118;
     }
 
     enum UpdateGovernanceSourceAction {
@@ -263,10 +278,17 @@ message Permissions {
         DISABLE_FEED_IN_SHARD = 104;
     }
 
+    enum UpdateAssetAction {
+        // Required by protobuf. Instruction will be rejected if this value is encountered.
+        UPDATE_ASSET_ACTION_UNSPECIFIED = 0;
+        UPDATE_ASSET_METADATA = 101;
+    }
+
     repeated ShardAction actions = 1;
     repeated UpdateGovernanceSourceAction update_governance_source_actions = 2;
     repeated UpdatePublisherAction update_publisher_actions = 3;
     repeated UpdateFeedAction update_feed_actions = 4;
+    repeated UpdateAssetAction update_asset_actions = 5;
 }
 
 
