@@ -84,12 +84,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
                   description: item.product.description,
                   displaySymbol: item.product.display_symbol,
                   key: item.product.price_account,
-                  icon: (
-                    <PriceFeedIcon
-                      assetClass={item.product.asset_type}
-                      symbol={item.symbol}
-                    />
-                  ),
+                  icon: <PriceFeedIcon assetClass={item.product.asset_type} />,
                 })),
             })}
       >
@@ -100,10 +95,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
                 description: props.feed.product.description,
                 displaySymbol: props.feed.product.display_symbol,
                 icon: (
-                  <PriceFeedIcon
-                    assetClass={props.feed.product.asset_type}
-                    symbol={props.feed.symbol}
-                  />
+                  <PriceFeedIcon assetClass={props.feed.product.asset_type} />
                 ),
               })}
         />
@@ -116,10 +108,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
               description: props.feed.product.description,
               displaySymbol: props.feed.product.display_symbol,
               icon: (
-                <PriceFeedIcon
-                  assetClass={props.feed.product.asset_type}
-                  symbol={props.feed.symbol}
-                />
+                <PriceFeedIcon assetClass={props.feed.product.asset_type} />
               ),
             })}
       />

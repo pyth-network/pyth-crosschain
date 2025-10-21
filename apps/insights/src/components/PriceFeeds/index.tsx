@@ -109,12 +109,7 @@ export const PriceFeeds = async () => {
             assetClass: feed.product.asset_type,
             description: feed.product.description,
             displaySymbol: feed.product.display_symbol,
-            icon: (
-              <PriceFeedIcon
-                assetClass={feed.product.asset_type}
-                symbol={feed.symbol}
-              />
-            ),
+            icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
           }))}
         />
       </section>
@@ -137,12 +132,7 @@ export const PriceFeeds = async () => {
               assetClass: feed.product.asset_type,
               description: feed.product.description,
               displaySymbol: feed.product.display_symbol,
-              icon: (
-                <PriceFeedIcon
-                  assetClass={feed.product.asset_type}
-                  symbol={feed.symbol}
-                />
-              ),
+              icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
             }))}
           />
         </UnstyledTabPanel>
@@ -210,12 +200,7 @@ const FeaturedFeeds = ({
                   description: feed.product.description,
                   displaySymbol: feed.product.display_symbol,
                   symbol: feed.symbol,
-                  icon: (
-                    <PriceFeedIcon
-                      assetClass={feed.product.asset_type}
-                      symbol={feed.symbol}
-                    />
-                  ),
+                  icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
                 }))}
               />
             ),
@@ -263,12 +248,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
             <SymbolPairTag
               displaySymbol={feed.product.display_symbol}
               description={feed.product.description}
-              icon={
-                <PriceFeedIcon
-                  assetClass={feed.product.asset_type}
-                  symbol={feed.symbol}
-                />
-              }
+              icon={<PriceFeedIcon assetClass={feed.product.asset_type} />}
             />
             {showPrices && (
               <div className={styles.prices}>
