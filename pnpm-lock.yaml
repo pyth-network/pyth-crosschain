@@ -180,9 +180,6 @@ catalogs:
     copyfiles:
       specifier: ^2.4.1
       version: 2.4.1
-    cryptocurrency-icons:
-      specifier: ^0.18.1
-      version: 0.18.1
     css-loader:
       specifier: ^7.1.2
       version: 7.1.2
@@ -430,9 +427,6 @@ importers:
       connectkit:
         specifier: 'catalog:'
         version: 1.9.0(@babel/core@7.27.1)(@tanstack/react-query@5.71.5(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react-is@18.3.1)(react@19.1.0)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.4))(wagmi@2.14.16(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.27.1)(@babel/preset-env@7.26.9(@babel/core@7.27.1))(@types/react@19.1.0)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.71.5)(@tanstack/react-query@5.71.5(react@19.1.0))(@types/react@19.1.0)(bufferutil@4.0.9)(encoding@0.1.13)(immer@9.0.21)(ioredis@5.7.0)(react@19.1.0)(typescript@5.8.2)(utf-8-validate@5.0.10)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.8.2)(utf-8-validate@5.0.10)(zod@3.24.4))(zod@3.24.4))
-      cryptocurrency-icons:
-        specifier: 'catalog:'
-        version: 0.18.1
       framer-motion:
         specifier: 'catalog:'
         version: 12.9.2(@emotion/is-prop-valid@1.3.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1009,9 +1003,6 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
-      cryptocurrency-icons:
-        specifier: 'catalog:'
-        version: 0.18.1
       csv-stringify:
         specifier: 'catalog:'
         version: 6.6.0
@@ -2077,9 +2068,9 @@ importers:
       '@isaacs/ttlcache':
         specifier: ^1.4.1
         version: 1.4.1
-      cross-fetch:
-        specifier: ^4.0.0
-        version: 4.1.0(encoding@0.1.13)
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.1(bufferutil@4.0.9)(utf-8-validate@6.0.3))
@@ -2272,9 +2263,6 @@ importers:
       copyfiles:
         specifier: 'catalog:'
         version: 2.4.1
-      cryptocurrency-icons:
-        specifier: 'catalog:'
-        version: 0.18.1
       css-loader:
         specifier: 'catalog:'
         version: 7.1.2(webpack@5.98.0(@swc/core@1.13.2)(esbuild@0.25.9))
@@ -13506,9 +13494,6 @@ packages:
 
   crypto-js@4.2.0:
     resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
-
-  cryptocurrency-icons@0.18.1:
-    resolution: {integrity: sha512-dvR5O8JOmav3559Yb0Igpkia+3vpt/aeNvMu5ZIVUG2Bzpq9wNcOJRIQas49XJrPjtZ98GAEn3aDQO+w7uhS2w==}
 
   css-color-keywords@1.0.0:
     resolution: {integrity: sha512-FyyrDHZKEjXDpNJYvVsV960FiqQyXc/LlYmsxl2BcdMb2WPx0OGRVgTg55rPSyLSNMqP52R9r8geSp7apN3Ofg==}
@@ -40180,8 +40165,6 @@ snapshots:
   crypto-hash@1.3.0: {}
 
   crypto-js@4.2.0: {}
-
-  cryptocurrency-icons@0.18.1: {}
 
   css-color-keywords@1.0.0: {}
 

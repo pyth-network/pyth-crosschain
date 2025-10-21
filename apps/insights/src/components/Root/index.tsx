@@ -77,11 +77,6 @@ const getFeedsForSearchDialog = async (cluster: Cluster) => {
     assetClass: feed.product.asset_type,
     description: feed.product.description,
     priceAccount: feed.product.price_account,
-    icon: (
-      <PriceFeedIcon
-        assetClass={feed.product.asset_type}
-        symbol={feed.symbol}
-      />
-    ),
+    icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
   }));
 };

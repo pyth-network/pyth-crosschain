@@ -11,8 +11,17 @@ import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
 } from "../constants.js";
+import {
+  addAuthTokenToWebSocketUrl,
+  bufferFromWebsocketData,
+  envIsBrowserOrWorker,
+} from "../util/index.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
+
+type WebSocketOnMessageCallback = (
+  data: WebSocket.Data,
+) => void | Promise<void>;
 
 export type WebSocketPoolConfig = {
   urls?: string[];
@@ -25,7 +34,7 @@ export class WebSocketPool {
   rwsPool: ResilientWebSocket[];
   private cache: TTLCache<string, boolean>;
   private subscriptions: Map<number, Request>; // id -> subscription Request
-  private messageListeners: ((event: WebSocket.Data) => void)[];
+  private messageListeners: WebSocketOnMessageCallback[];
   private allConnectionsDownListeners: (() => void)[];
   private wasAllDown = true;
   private checkConnectionStatesInterval: NodeJS.Timeout;
@@ -65,16 +74,19 @@ export class WebSocketPool {
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
 
     for (let i = 0; i < numConnections; i++) {
-      const url = urls[i % urls.length];
+      const baseUrl = urls[i % urls.length];
+      const isBrowser = envIsBrowserOrWorker();
+      const url = isBrowser
+        ? addAuthTokenToWebSocketUrl(baseUrl, token)
+        : baseUrl;
       if (!url) {
         throw new Error(`URLs must not be null or empty`);
       }
-      const wsOptions = {
+      const wsOptions: ResilientWebSocketConfig["wsOptions"] = {
         ...config.rwsConfig?.wsOptions,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: isBrowser ? undefined : { Authorization: `Bearer ${token}` },
       };
+
       const rws = new ResilientWebSocket({
         ...config.rwsConfig,
         endpoint: url,
@@ -104,7 +116,12 @@ export class WebSocketPool {
         rws.onError = config.onError;
       }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
-      rws.onMessage = pool.dedupeHandler;
+      rws.onMessage = (data) => {
+        pool.dedupeHandler(data).catch((error: unknown) => {
+          const errMsg = `An error occurred in the WebSocket pool's dedupeHandler: ${error instanceof Error ? error.message : String(error)}`;
+          throw new Error(errMsg);
+        });
+      };
       pool.rwsPool.push(rws);
       rws.startWebSocket();
     }
@@ -140,15 +157,18 @@ export class WebSocketPool {
     }
   }
 
+  private async constructCacheKeyFromWebsocketData(data: WebSocket.Data) {
+    if (typeof data === "string") return data;
+    const buff = await bufferFromWebsocketData(data);
+    return buff.toString("hex");
+  }
+
   /**
    * Handles incoming websocket messages by deduplicating identical messages received across
    * multiple connections before forwarding to registered handlers
    */
-  dedupeHandler = (data: WebSocket.Data): void => {
-    const cacheKey =
-      typeof data === "string"
-        ? data
-        : Buffer.from(data as Buffer).toString("hex");
+  dedupeHandler = async (data: WebSocket.Data): Promise<void> => {
+    const cacheKey = await this.constructCacheKeyFromWebsocketData(data);
 
     if (this.cache.has(cacheKey)) {
       this.logger.debug("Dropping duplicate message");
@@ -161,9 +181,7 @@ export class WebSocketPool {
       this.handleErrorMessages(data);
     }
 
-    for (const handler of this.messageListeners) {
-      handler(data);
-    }
+    await Promise.all(this.messageListeners.map((handler) => handler(data)));
   };
 
   sendRequest(request: Request) {
@@ -189,7 +207,7 @@ export class WebSocketPool {
     this.sendRequest(request);
   }
 
-  addMessageListener(handler: (data: WebSocket.Data) => void): void {
+  addMessageListener(handler: WebSocketOnMessageCallback): void {
     this.messageListeners.push(handler);
   }
 

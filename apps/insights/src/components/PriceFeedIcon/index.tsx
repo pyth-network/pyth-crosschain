@@ -1,4 +1,4 @@
-import type { ComponentProps, ComponentType } from "react";
+import type { ComponentProps } from "react";
 
 import Commodities from "./commodities.svg";
 import CryptoIndex from "./crypto-index.svg";
@@ -7,29 +7,19 @@ import Crypto from "./crypto.svg";
 import Eco from "./eco.svg";
 import Equity from "./equity.svg";
 import Fx from "./fx.svg";
-import { icons } from "./icons";
 import styles from "./index.module.scss";
 import Metal from "./metal.svg";
 import Rates from "./rates.svg";
 
 type OwnProps = {
   assetClass: string;
-  symbol: string;
 };
 type Props = Omit<SVGProps, keyof OwnProps | "width" | "height" | "viewBox"> &
   OwnProps;
 
-export const PriceFeedIcon = ({ assetClass, symbol, ...props }: Props) => {
+export const PriceFeedIcon = ({ assetClass, ...props }: Props) => {
   switch (assetClass) {
-    case "Crypto": {
-      const firstPart = symbol.split(".")[1]?.split("/")[0];
-      const Icon = firstPart ? (icons as SVGRecord)[firstPart] : undefined;
-      return Icon ? (
-        <Icon width="100%" height="100%" viewBox="0 0 32 32" {...props} />
-      ) : (
-        <GenericIcon assetClass="Crypto" {...props} />
-      );
-    }
+    case "Crypto":
     case "Crypto NAV": {
       return <GenericIcon assetClass="Crypto" {...props} />;
     }
@@ -63,8 +53,6 @@ const GenericIcon = ({ assetClass, ...props }: GenericProps) => {
 };
 
 type SVGProps = ComponentProps<"svg">;
-type SVGComponent = ComponentType<SVGProps>;
-type SVGRecord = Record<string, SVGComponent>;
 
 const ASSET_CLASS_TO_ICON = {
   Commodities,
