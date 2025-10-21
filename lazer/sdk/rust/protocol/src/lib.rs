@@ -37,6 +37,11 @@ pub use crate::{
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
 )]
+pub struct AssetId(pub u32);
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
 pub struct PublisherId(pub u16);
 
 #[derive(
