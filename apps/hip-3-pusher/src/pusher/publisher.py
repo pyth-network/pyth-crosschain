@@ -7,6 +7,7 @@ from pathlib import Path
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from hyperliquid.exchange import Exchange
+from hyperliquid.utils.signing import get_timestamp_ms, sign_multi_sig_l1_action_payload
 
 from pusher.config import Config
 from pusher.exception import PushError
@@ -29,18 +30,27 @@ class Publisher:
 
         self.kms_signer = None
         self.enable_kms = False
-        oracle_account = None
+        self.oracle_account = None
         if not config.kms.enable_kms:
             oracle_pusher_key = Path(config.hyperliquid.oracle_pusher_key_path).read_text().strip()
-            oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
-            logger.info("oracle pusher local pubkey: {}", oracle_account.address)
-        self.publisher_exchanges = [Exchange(wallet=oracle_account,
+            self.oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
+            logger.info("oracle pusher local pubkey: {}", self.oracle_account.address)
+        self.publisher_exchanges = [Exchange(wallet=self.oracle_account,
                                              base_url=url,
                                              timeout=config.hyperliquid.publish_timeout)
                                     for url in self.push_urls]
         if config.kms.enable_kms:
+            # TODO: Add KMS/multisig support
+            if config.multisig.enable_multisig:
+                raise Exception("KMS/multisig not yet supported")
+
             self.enable_kms = True
             self.kms_signer = KMSSigner(config, self.publisher_exchanges)
+
+        if config.multisig.enable_multisig:
+            if not config.multisig.multisig_address:
+                raise Exception("Multisig enabled but missing multisig address")
+            self.multisig_address = config.multisig.multisig_address
 
         self.market_name = config.hyperliquid.market_name
         self.market_symbol = config.hyperliquid.market_symbol
@@ -83,6 +93,12 @@ class Publisher:
                 if self.enable_kms:
                     push_response = self.kms_signer.set_oracle(
                         dex=self.market_name,
+                        oracle_pxs=oracle_pxs,
+                        all_mark_pxs=mark_pxs,
+                        external_perp_pxs=external_perp_pxs,
+                    )
+                elif self.multisig_address:
+                    push_response = self._send_multisig_update(
                         oracle_pxs=oracle_pxs,
                         all_mark_pxs=mark_pxs,
                         external_perp_pxs=external_perp_pxs,
@@ -133,3 +149,43 @@ class Publisher:
         self.metrics.push_interval_histogram.record(push_interval, self.metrics_labels)
         self.last_push_time = now
         logger.debug("Push interval: {}", push_interval)
+
+    def _send_multisig_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
+        for exchange in self.publisher_exchanges:
+            try:
+                return self._send_single_multisig_update(
+                    exchange=exchange,
+                    oracle_pxs=oracle_pxs,
+                    all_mark_pxs=all_mark_pxs,
+                    external_perp_pxs=external_perp_pxs,
+                )
+            except Exception as e:
+                logger.exception("_send_single_multisig_update exception for endpoint: {} error: {}", exchange.base_url, repr(e))
+
+        raise PushError("all push endpoints failed for multisig")
+
+    def _send_single_multisig_update(self, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs):
+        timestamp = get_timestamp_ms()
+        oracle_pxs_wire = sorted(list(oracle_pxs.items()))
+        mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
+        external_perp_pxs_wire = sorted(list(external_perp_pxs.items()))
+        action = {
+            "type": "perpDeploy",
+            "setOracle": {
+                "dex": self.market_name,
+                "oraclePxs": oracle_pxs_wire,
+                "markPxs": mark_pxs_wire,
+                "externalPerpPxs": external_perp_pxs_wire,
+            },
+        }
+        signatures = [sign_multi_sig_l1_action_payload(
+            wallet=self.oracle_account,
+            action=action,
+            is_mainnet=not self.use_testnet,
+            vault_address=None,
+            timestamp=timestamp,
+            expires_after=None,
+            payload_multi_sig_user=self.multisig_address,
+            outer_signer=self.oracle_account.address,
+        )]
+        return exchange.multi_sig(self.multisig_address, action, signatures, timestamp)

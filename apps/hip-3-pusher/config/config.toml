@@ -11,6 +11,10 @@ publish_interval = 3.0
 publish_timeout = 5.0
 enable_publish = false
 
+[multisig]
+enable_multisig = false
+multisig_address = "0x0000000000000000000000000000000000000005"
+
 [kms]
 enable_kms = false
 aws_kms_key_id_path = "/path/to/aws_kms_key_id.txt"

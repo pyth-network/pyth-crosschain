@@ -10,6 +10,11 @@ class KMSConfig(BaseModel):
     aws_kms_key_id_path: Optional[FilePath] = None
 
 
+class MultisigConfig(BaseModel):
+    enable_multisig: bool
+    multisig_address: Optional[str] = None
+
+
 class LazerConfig(BaseModel):
     lazer_urls: list[str]
     lazer_api_key: str
@@ -52,3 +57,4 @@ class Config(BaseModel):
     kms: KMSConfig
     lazer: LazerConfig
     hermes: HermesConfig
+    multisig: MultisigConfig
