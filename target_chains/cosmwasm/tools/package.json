@@ -6,7 +6,7 @@
   "private": "true",
   "scripts": {
     "build": "tsc",
-    "deploy": "ts-node ./src/ci/deploy.ts",
+    "deploy": "tsx ./src/ci/deploy.ts",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
   },
@@ -41,7 +41,7 @@
     "cosmjs-types": "^0.9.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   },
   "engines": {

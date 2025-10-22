@@ -5,7 +5,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "cli": "ts-node src/cli.ts",
+    "cli": "tsx src/cli.ts",
     "build": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
@@ -19,6 +19,7 @@
     "@types/node": "^18.7.21",
     "@types/yargs": "^17.0.13",
     "prettier": "catalog:",
+    "tsx": "catalog:",
     "typescript": "^5.3.3"
   },
   "dependencies": {

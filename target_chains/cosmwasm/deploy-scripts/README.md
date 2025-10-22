@@ -21,7 +21,7 @@
 
    ```
    cd ../../../contract_manager
-   pnpm exec ts-node scripts/update_pricefeed.ts --private-key <YOUR_PRIVATE_KEY_HEX> --contract <CONTRACT_ID> --feed-id <FEED_ID>
+   pnpm exec tsx scripts/update_pricefeed.ts --private-key <YOUR_PRIVATE_KEY_HEX> --contract <CONTRACT_ID> --feed-id <FEED_ID>
    ```
 
 5. Commit the new entries added to contract manager yaml files

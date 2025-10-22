@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
-    "cli": "ts-node src/cli.ts",
+    "cli": "tsx src/cli.ts",
     "build": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
@@ -19,7 +19,7 @@
     "@pythnetwork/price-service-sdk": "^1.2.0",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "yargs": "^17.7.2"
   },

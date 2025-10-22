@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": "true",
   "scripts": {
-    "init-buffer": "pnpm exec ts-node scripts/setup_message_buffer.ts",
+    "init-buffer": "tsx scripts/setup_message_buffer.ts",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
   },
@@ -21,6 +21,7 @@
     "mocha": "^9.0.3",
     "prettier": "catalog:",
     "ts-mocha": "^10.0.0",
+    "tsx": "catalog:",
     "typescript": "^4.3.5"
   },
   "engines": {

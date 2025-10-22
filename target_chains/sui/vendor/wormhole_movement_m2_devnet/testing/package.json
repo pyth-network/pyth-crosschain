@@ -11,7 +11,7 @@
     "mocha": "^10.2.0",
     "prettier": "^2.8.7",
     "ts-mocha": "^10.0.0",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.20.6",
     "typescript": "^5.0.4"
   },
   "devDependencies": {

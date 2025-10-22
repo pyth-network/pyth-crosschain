@@ -42,7 +42,7 @@
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
     "ts-jest": "^29.0.5",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

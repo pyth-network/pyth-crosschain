@@ -6,8 +6,8 @@
     "fix:format": "prettier --write **/*.*",
     "test:format": "prettier --check **/*.*",
     "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" anchor test",
-    "setup": "pnpm ts-node scripts/setup.ts",
-    "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
+    "setup": "tsx scripts/setup.ts",
+    "check-trusted-signer": "tsx scripts/check_trusted_signer.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
@@ -24,7 +24,7 @@
     "mocha": "^9.0.3",
     "prettier": "catalog:",
     "ts-mocha": "^10.0.0",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "yargs": "^17.7.2"
   },

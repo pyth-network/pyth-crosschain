@@ -30,7 +30,7 @@
     "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "ts-node": "catalog:"
+    "tsx": "catalog:"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

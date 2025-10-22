@@ -46,7 +46,7 @@
     "eslint": "catalog:",
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

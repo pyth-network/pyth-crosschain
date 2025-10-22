@@ -26,7 +26,7 @@
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "start": "node lib/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "tsx src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run test:format && pnpm run test:lint && git add -A src"
@@ -55,7 +55,7 @@
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
     "ts-jest": "^29.1.1",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

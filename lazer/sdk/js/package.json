@@ -32,9 +32,9 @@
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "example:streaming": "node --loader ts-node/esm examples/streaming.js",
-    "example:history": "node --loader ts-node/esm examples/history.js",
-    "example:symbols": "node --loader ts-node/esm examples/symbols.js",
+    "example:streaming": "tsx examples/streaming.js",
+    "example:history": "tsx examples/history.js",
+    "example:symbols": "tsx examples/symbols.js",
     "doc": "typedoc --out docs/typedoc src"
   },
   "devDependencies": {
@@ -44,7 +44,7 @@
     "@types/ws": "^8.5.12",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typedoc": "^0.26.8",
     "typescript": "catalog:"
   },

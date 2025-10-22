@@ -9,7 +9,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 // Add a trusted signer or change its expiry time.
 //
 // Example:
-// pnpm ts-node scripts/add_ed25519_signer.ts --url 'https://api.testnet.solana.com' \
+// pnpm tsx scripts/add_ed25519_signer.ts --url 'https://api.testnet.solana.com' \
 //    --keypair-path .../key.json --trusted-signer HaXscpSUcbCLSnPQB8Z7H6idyANxp1mZAXTbHeYpfrJJ \
 //    --expiry-time-seconds 2057930841
 async function main() {

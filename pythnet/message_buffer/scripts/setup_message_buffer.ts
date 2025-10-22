@@ -24,7 +24,7 @@ type PythClusterOrIntegration = PythCluster | "integration";
  * using the integration repo setup
  *
  * run using the following command:
- * `NODE_ENV=<env> yarn ts-node scripts/setup_message_buffer.ts`
+ * `NODE_ENV=<env> pnpm tsx scripts/setup_message_buffer.ts`
  */
 const MESSAGE = Buffer.from("message");
 

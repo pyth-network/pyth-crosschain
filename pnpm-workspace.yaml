@@ -93,7 +93,7 @@ catalog:
   "@tanstack/react-query": ^5.71.5
   "@types/jest": ^29.5.14
   "@types/mdx": ^2.0.13
-  "@types/node": ^22.14.0
+  "@types/node": ^22
   "@types/react": ^19.1.0
   "@types/react-dom": ^19.1.1
   "@types/yargs": "^17.0.33"
@@ -157,7 +157,7 @@ catalog:
   tailwindcss: ^3.0.0
   tailwindcss-animate: ^1.0.7
   tailwindcss-react-aria-components: ^2.0.0
-  ts-node: ^10.9.2
+  tsx: ^4.20.6
   typedoc: ^0.26.8
   typescript: ^5.8.2
   vercel: ^41.4.1

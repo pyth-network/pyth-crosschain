@@ -14,4 +14,4 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "pnpm exec ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
-init-buffer = "anchor build && pnpm exec ts-node ./scripts/setup_message_buffer.ts"
+init-buffer = "anchor build && pnpm tsx ./scripts/setup_message_buffer.ts"

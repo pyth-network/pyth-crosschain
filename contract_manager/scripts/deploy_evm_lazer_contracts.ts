@@ -19,16 +19,16 @@
  * EXAMPLES:
  *
  * Deploy only:
- *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key>
+ *   npx tsx deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key>
  *
  * Deploy with verification:
- *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --verify --etherscan-api-key <key>
+ *   npx tsx deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --verify --etherscan-api-key <key>
  *
  * Update trusted signer only (requires existing contract):
- *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --deploy false --update-signer 0x123... --expires-at 1735689600
+ *   npx tsx deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --deploy false --update-signer 0x123... --expires-at 1735689600
  *
  * Deploy and update trusted signer in one command:
- *   npx ts-node deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --update-signer 0x123... --expires-at 1735689600
+ *   npx tsx deploy_evm_lazer_contracts.ts --chain ethereum --private-key <key> --update-signer 0x123... --expires-at 1735689600
  *
  * NOTES:
  * - The --deploy flag defaults to true if no other flags are specified

@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "usage-example": "ts-node src/examples/usage.ts",
+    "usage-example": "tsx src/examples/usage.ts",
     "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
@@ -44,7 +44,7 @@
     "copyfiles": "^2.4.1",
     "eslint": "^8.14.0",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {
