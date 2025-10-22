@@ -7,7 +7,7 @@ import {
   deployIfNotCached,
   findExecutorContract,
   getOrDeployWormholeContract,
-  getWeb3Contract,
+  getViemContract,
 } from "./common";
 import {
   DeploymentType,
@@ -73,7 +73,8 @@ export async function deployExecutorContracts(
   // Craft the init data for the proxy contract
   const { governanceDataSource } = getDefaultDeploymentConfig(config.type);
 
-  const executorImplContract = getWeb3Contract(
+  const executorImplContract = getViemContract(
+    chain,
     config.jsonOutputDir,
     "ExecutorUpgradable",
     executorImplAddr,
