@@ -157,7 +157,8 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     (newAssetClass: string) => {
       updatePage(1);
       setAssetClass(newAssetClass).catch((error: unknown) => {
-        logger.error("Failed to update asset class", error);
+        logger.error("Failed to update asset class");
+        logger.error(error);
       });
     },
     [updatePage, setAssetClass, logger],

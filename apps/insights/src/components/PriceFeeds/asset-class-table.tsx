@@ -44,7 +44,8 @@ export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
                 logger.error(error);
               });
               setQuery(newQuery).catch((error: unknown) => {
-                logger.error("Failed to update query", error);
+                logger.error("Failed to update query");
+                logger.error(error);
               });
             },
             data: {

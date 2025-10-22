@@ -277,16 +277,18 @@ export const ResolvedPriceComponentsCard = <
     (newStatus: StatusName | "") => {
       updatePage(1);
       setStatus(newStatus).catch((error: unknown) => {
-        logger.error("Failed to update status", error);
+        logger.error("Failed to update status");
+        logger.error(error);
       });
     },
     [updatePage, setStatus, logger],
   );
-
+  
   const updateShowQuality = useCallback(
     (newValue: boolean) => {
       setShowQuality(newValue).catch((error: unknown) => {
-        logger.error("Failed to update show quality", error);
+        logger.error("Failed to update show quality");
+        logger.error(error);
       });
     },
     [setShowQuality, logger],

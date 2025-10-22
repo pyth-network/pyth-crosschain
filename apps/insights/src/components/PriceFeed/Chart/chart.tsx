@@ -245,7 +245,8 @@ const useChartElem = (symbol: string, feedId: string) => {
           if (error instanceof Error && error.name === "AbortError") {
             return;
           }
-          logger.error("Error fetching historical prices", error);
+          logger.error("Error fetching historical prices");
+          logger.error(error);
         })
         .finally(() => {
           isBackfilling.current = false;
@@ -390,7 +391,7 @@ const historicalDataSchema = z.array(
       status: z.nativeEnum(PriceStatus),
     })
     .transform((d) => ({
-      time: Number(d.timestamp) as UTCTimestamp,
+      time: d.timestamp as UTCTimestamp,
       price: d.price,
       confidence: d.confidence,
       status: d.status,

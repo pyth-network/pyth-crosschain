@@ -119,7 +119,8 @@ const usePriceDataForCluster = (cluster: Cluster) => {
           }
         })
         .catch((error: unknown) => {
-          logger.error("Failed to fetch initial prices", error);
+          logger.error("Failed to fetch initial prices");
+          logger.error(error);
         });
     }
 
@@ -144,11 +145,13 @@ const usePriceDataForCluster = (cluster: Cluster) => {
     );
 
     connection.start().catch((error: unknown) => {
-      logger.error("Failed to subscribe to prices", error);
+      logger.error("Failed to subscribe to prices");
+      logger.error(error);
     });
     return () => {
       connection.stop().catch((error: unknown) => {
-        logger.error("Failed to unsubscribe from price updates", error);
+        logger.error("Failed to unsubscribe from price updates");
+        logger.error(error);
       });
     };
   }, [feedKeys, logger, cluster]);

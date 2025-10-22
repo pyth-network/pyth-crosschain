@@ -47,7 +47,8 @@ const ResolvedPublishersCard = ({
   const updateIncludeTestFeeds = useCallback(
     (newValue: boolean) => {
       setIncludeTestFeeds(newValue).catch((error: unknown) => {
-        logger.error("Failed to update show quality", error);
+        logger.error("Failed to update show quality");
+        logger.error(error);
       });
     },
     [setIncludeTestFeeds, logger],

@@ -9,9 +9,9 @@
   },
   "scripts": {
     "fix:format": "prettier --write .",
-    "install:modules": "[ $CI ] && true || bun ci",
+    "install:modules": "[ $CI ] && true || bun install",
     "test:format": "prettier --check .",
-    "turbo": "[ ! -d node_modules ] && bun ci; turbo"
+    "turbo": "[ ! -d node_modules ] && bun install; turbo"
   },
   "devDependencies": {
     "@cprussin/prettier-config": "catalog:",
@@ -213,5 +213,8 @@
     "web3",
     "web3-bzz",
     "web3-shh"
-  ]
+  ],
+  "resolutions": {
+    "rpc-websockets": "7.11.0"
+  }
 }

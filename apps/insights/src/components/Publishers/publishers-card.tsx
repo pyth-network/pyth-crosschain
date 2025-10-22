@@ -177,7 +177,8 @@ const ResolvedPublishersCard = ({
     (newCluster: (typeof CLUSTER_NAMES)[number]) => {
       updatePage(1);
       setCluster(newCluster).catch((error: unknown) => {
-        logger.error("Failed to update asset class", error);
+        logger.error("Failed to update asset class");
+        logger.error(error);
       });
     },
     [updatePage, setCluster, logger],

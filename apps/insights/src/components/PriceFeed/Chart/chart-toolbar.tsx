@@ -25,11 +25,13 @@ export const ChartToolbar = () => {
   const handleResolutionChanged = useCallback(
     (resolution: Resolution) => {
       setResolution(resolution).catch((error: unknown) => {
-        logger.error("Failed to update resolution", error);
+        logger.error("Failed to update resolution");
+        logger.error(error);
       });
       setQuickSelectWindow(RESOLUTION_TO_QUICK_SELECT_WINDOW[resolution]).catch(
         (error: unknown) => {
-          logger.error("Failed to update quick select window", error);
+          logger.error("Failed to update quick select window");
+          logger.error(error);
         },
       );
     },
@@ -42,11 +44,13 @@ export const ChartToolbar = () => {
         throw new TypeError("Invalid quick select window");
       }
       setQuickSelectWindow(quickSelectWindow).catch((error: unknown) => {
-        logger.error("Failed to update quick select window", error);
+        logger.error("Failed to update quick select window");
+        logger.error(error);
       });
       setResolution(QUICK_SELECT_WINDOW_TO_RESOLUTION[quickSelectWindow]).catch(
         (error: unknown) => {
-          logger.error("Failed to update resolution", error);
+          logger.error("Failed to update resolution");
+          logger.error(error);
         },
       );
     },
