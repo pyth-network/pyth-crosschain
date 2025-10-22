@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
   },
   "scripts": {
     "build:vercel": "next build",
@@ -64,5 +65,6 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vercel": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

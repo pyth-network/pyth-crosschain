@@ -25,5 +25,10 @@
   },
   "devDependencies": {
     "@types/yargs": "^17.0.32"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

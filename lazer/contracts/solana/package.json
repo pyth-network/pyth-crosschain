@@ -27,5 +27,10 @@
     "ts-node": "catalog:",
     "typescript": "catalog:",
     "yargs": "^17.7.2"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

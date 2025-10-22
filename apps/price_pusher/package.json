@@ -89,5 +89,10 @@
     "viem": "^2.19.4",
     "yaml": "^2.1.1",
     "yargs": "^17.5.1"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

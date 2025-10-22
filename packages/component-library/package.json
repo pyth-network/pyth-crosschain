@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
   },
   "exports": {
     "./*": {
@@ -96,5 +97,6 @@
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

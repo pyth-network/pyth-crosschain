@@ -52,5 +52,10 @@
     "jest": "^29.3.1",
     "prettier": "catalog:",
     "ts-jest": "^29.0.3"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

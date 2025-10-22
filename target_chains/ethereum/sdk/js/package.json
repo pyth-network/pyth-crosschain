@@ -52,5 +52,10 @@
   "dependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
     "viem": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

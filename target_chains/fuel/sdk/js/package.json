@@ -49,5 +49,10 @@
   },
   "dependencies": {
     "fuels": "^0.96.1"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

@@ -28,5 +28,10 @@
     "ethers": "^5.7.1",
     "js-sha3": "^0.8.0",
     "yargs": "^17.5.1"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

@@ -61,5 +61,10 @@
   "dependencies": {
     "@solana/buffer-layout": "catalog:",
     "@solana/web3.js": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

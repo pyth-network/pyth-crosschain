@@ -3,7 +3,8 @@
   "version": "5.0.0",
   "description": "Pyth Lazer SDK",
   "engines": {
-    "node": ">=22"
+    "node": ">=22",
+    "pnpm": ">=10.19.0"
   },
   "publishConfig": {
     "access": "public"
@@ -68,5 +69,6 @@
     "isomorphic-ws": "^5.0.0",
     "ts-log": "^2.2.7",
     "ws": "^8.18.0"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }
