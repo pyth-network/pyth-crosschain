@@ -16,6 +16,7 @@
     "@cprussin/prettier-config": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
-    "turbo": "^2.5.8"
+    "turbo": "^2.5.8",
+    "tshy": "^3.0.3"
   }
 }

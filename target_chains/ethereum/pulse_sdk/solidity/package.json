@@ -14,7 +14,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "generate-abis IScheduler SchedulerConstants SchedulerErrors SchedulerEvents SchedulerStructs",
+    "build": "tshy",
     "test": "git diff --exit-code abis"
   },
   "keywords": [
@@ -41,5 +41,11 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "tshy": {
+    "project": "tsconfig.build.json"
+  },
+  "files": [
+    "dist/**/*"
+  ]
 }

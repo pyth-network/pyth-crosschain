@@ -30,7 +30,8 @@
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build:docs": "typedoc --out docs/typedoc src"
+    "build:docs": "typedoc --out docs/typedoc src",
+    "build": "tshy"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
@@ -66,5 +67,8 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "tshy": {
+    "project": "tsconfig.build.json"
+  }
 }

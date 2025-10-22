@@ -56,6 +56,7 @@
         "//#install:modules",
         "pull:env",
         "^build",
+        "clean",
         "build:cjs",
         "build:esm"
       ],
@@ -114,6 +115,10 @@
         "!vercel.json"
       ],
       "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "clean": {
+      "cache": false,
+      "outputs": []
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],

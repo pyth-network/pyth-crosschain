@@ -6,7 +6,8 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -17,7 +18,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tshy",
     "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
     "test:unit": "jest",
     "test:lint": "eslint src/ --max-warnings 0",
@@ -33,6 +34,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@types/bn.js": "^5.1.5",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
@@ -51,5 +53,8 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "tshy": {
+    "project": "tsconfig.build.json"
+  }
 }

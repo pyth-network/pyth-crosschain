@@ -13,7 +13,8 @@
     "build:bin": "solcjs --bin MockPyth.sol --base-path . -o build/",
     "fix:format": "prettier --write .",
     "test:format": "prettier --check .",
-    "test": "git diff --exit-code abis"
+    "test": "git diff --exit-code abis",
+    "build": "tshy"
   },
   "keywords": [
     "pyth",
@@ -36,5 +37,14 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "tshy": {
+    "project": "tsconfig.build.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**/*"
+  ]
 }

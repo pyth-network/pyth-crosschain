@@ -9,7 +9,8 @@
   "main": "lib/HermesClient.js",
   "types": "lib/HermesClient.d.ts",
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -30,7 +31,8 @@
     "test:format": "prettier --check \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "build": "tshy"
   },
   "keywords": [
     "pyth",
@@ -60,5 +62,8 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "tshy": {
+    "project": "tsconfig.build.json"
+  }
 }

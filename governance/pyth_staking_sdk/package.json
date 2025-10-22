@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc --noEmit false --incremental false --declaration true --outDir ./dist",
+    "build": "tshy",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
@@ -50,5 +50,8 @@
     "@streamparser/json": "^0.0.22",
     "zod": "catalog:"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "tshy": {
+    "project": "tsconfig.build.json"
+  }
 }
