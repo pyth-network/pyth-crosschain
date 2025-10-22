@@ -30,7 +30,7 @@ import type { Ref } from "react";
 import { useCallback, useMemo, useRef, useEffect, use } from "react";
 import type { HoverEvent, PressEvent } from "react-aria";
 
-type Options<T> = {
+type Options<T extends Element> = {
   href?: UrlObject | string | undefined;
   prefetch?: boolean | undefined;
   onHoverStart?: ((event: HoverEvent) => void) | undefined;

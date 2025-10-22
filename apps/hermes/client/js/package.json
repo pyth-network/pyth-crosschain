@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@zodios/core": "^10.9.6",
+    "ajv": "^8.17.1",
     "eventsource": "^3.0.5",
     "zod": "^3.23.8"
   },
