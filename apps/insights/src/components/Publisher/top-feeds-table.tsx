@@ -1,6 +1,7 @@
 "use client";
 
 import { EntityList } from "@pythnetwork/component-library/EntityList";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
@@ -11,7 +12,6 @@ import type { Cluster } from "../../services/pyth";
 import type { Status } from "../../status";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { Score } from "../Score";
 
 type Props =
@@ -53,7 +53,7 @@ const ResolvedTopFeedsTable = ({
     () =>
       feeds.map((feed) => ({
         name: (
-          <PriceFeedTag
+          <SymbolPairTag
             displaySymbol={feed.displaySymbol}
             description={feed.description}
             icon={feed.icon}

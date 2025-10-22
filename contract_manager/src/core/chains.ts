@@ -563,7 +563,9 @@ export class EvmChain extends Chain {
     web3.eth.accounts.wallet.add(signer);
     const contract = new web3.eth.Contract(abi);
     const deployTx = contract.deploy({ data: bytecode, arguments: deployArgs });
-    const gas = Math.trunc((await deployTx.estimateGas()) * gasMultiplier);
+    const gas = Math.trunc(
+      (await deployTx.estimateGas({ from: signer.address })) * gasMultiplier,
+    );
     const gasPrice = Math.trunc(
       Number(await this.getGasPrice()) * gasPriceMultiplier,
     );

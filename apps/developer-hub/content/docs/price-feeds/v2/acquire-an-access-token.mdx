@@ -1,0 +1,36 @@
+---
+title: "Acquire an Access Token"
+description: "This guide explains how to acquire an access token for Pyth Lazer, which is required to authenticate websocket connections and subscribe to price updates."
+full: false
+index: false
+---
+
+This guide explains how to acquire an access token for Pyth Lazer, which is required to authenticate websocket connections and subscribe to price updates.
+
+## Request Access Token
+
+Please fill out [this form](https://tally.so/r/nP2lG5) to contact the Pyth team and get the access token.
+
+<InfoBox variant="info">
+  Access tokens are required for all Pyth Lazer websocket connections. Make sure
+  to keep your token secure and do not share it publicly.
+</InfoBox>
+
+## Using the Access Token
+
+Once you receive your access token, use it to authenticate the websocket connection by passing it as an `Authorization` header with the value `Bearer {token}`.
+
+### Example Usage
+
+```js copy
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  ["wss://pyth-lazer.dourolabs.app/v1/stream"],
+  "YOUR_ACCESS_TOKEN",
+);
+```
+
+## Next Steps
+
+After acquiring your access token, you can proceed to [subscribe to price updates](./subscribe-price-updates.mdx) using the Pyth Lazer websocket API.

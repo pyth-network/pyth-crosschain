@@ -1,0 +1,20 @@
+---
+title: Fees
+description: Understanding Pyth Entropy fee structure
+icon: CurrencyDollar
+---
+
+The Entropy protocol has been designed to charge fees on a per-request basis. The total fee is
+the sum of the provider fee, which is determined by the individual provider on a per-blockchain
+basis, and the protocol fee, which is subject to Pyth governance decisions also on a per-chain
+basis. These are accessible via the smart contract functions.
+
+Providers can withdraw their fees from the contract whenever they want. The allocation of the fees collected by the Entropy protocol
+is governed by the collective decisions of its governance body. All fees are denominated in the native token
+of the respective blockchain, ensuring a seamless and integrated operation.
+
+Note that protocols integrating with Entropy can pass these fees along to their users. Whenever a user
+submits a transaction that requests a random number, the user can directly pay the entropy fees required
+with the native blockchain token. There are no fees for revealing the random numbers.
+
+You can check the current fees in the [chainlist and fee details](./chainlist) page for each blockchain.

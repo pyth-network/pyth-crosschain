@@ -15,6 +15,10 @@
       "types": "./dist/esm/useData/index.d.ts",
       "default": "./dist/esm/useData/index.js"
     },
+    "./useQueryParamsPagination": {
+      "types": "./dist/esm/useQueryParamsPagination/index.d.ts",
+      "default": "./dist/esm/useQueryParamsPagination/index.js"
+    },
     "./theme": "./dist/esm/theme.scss"
   },
   "scripts": {
@@ -41,12 +45,15 @@
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
     "@next/third-parties": "catalog:",
+    "ag-grid-community": "catalog:",
+    "ag-grid-react": "catalog:",
     "@react-hookz/web": "catalog:",
     "bcp-47": "catalog:",
     "clsx": "catalog:",
     "modern-normalize": "catalog:",
     "motion": "catalog:",
     "next-themes": "catalog:",
+    "nuqs": "catalog:",
     "pino": "catalog:",
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
@@ -62,10 +69,8 @@
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@phosphor-icons/react": "catalog:",
-    "@storybook/addon-essentials": "catalog:",
     "@storybook/addon-styling-webpack": "catalog:",
     "@storybook/addon-themes": "catalog:",
-    "@storybook/blocks": "catalog:",
     "@storybook/nextjs": "catalog:",
     "@storybook/react": "catalog:",
     "@svgr/webpack": "catalog:",

@@ -16,12 +16,17 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import {
+  getPublishers,
   getPublisherRankingHistory,
   getPublisherAverageScoreHistory,
-  getPublishers,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
-import { ClusterToName, parseCluster, Cluster } from "../../services/pyth";
+import {
+  ClusterToName,
+  parseCluster,
+  Cluster,
+  CLUSTER_NAMES,
+} from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
 import { Cards } from "../Cards";
 import { ChangePercent } from "../ChangePercent";
@@ -45,6 +50,7 @@ import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
 import { OisApyHistory } from "./ois-apy-history";
+import { PublisherConformanceReport } from "./publisher-conformance-report";
 
 type Props = {
   children: ReactNode;
@@ -61,46 +67,9 @@ export const PublisherLayout = async ({ children, params }: Props) => {
   if (parsedCluster === undefined) {
     notFound();
   } else {
-    const knownPublisher = lookup(key);
     return (
       <div className={styles.publisherLayout}>
-        <section className={styles.header}>
-          <div className={styles.breadcrumbRow}>
-            <Breadcrumbs
-              className={styles.breadcrumbs ?? ""}
-              label="Breadcrumbs"
-              items={[
-                { href: "/", label: "Home" },
-                { href: "/publishers", label: "Publishers" },
-                { label: <PublisherKey publisherKey={key} /> },
-              ]}
-            />
-          </div>
-          <PublisherTag
-            cluster={parsedCluster}
-            publisherKey={key}
-            {...(knownPublisher && {
-              name: knownPublisher.name,
-              icon: <PublisherIcon knownPublisher={knownPublisher} />,
-            })}
-          />
-          <Cards className={styles.stats ?? ""}>
-            <Suspense fallback={<RankingCardImpl isLoading />}>
-              <RankingCard cluster={parsedCluster} publisherKey={key} />
-            </Suspense>
-            <Suspense fallback={<ScoreCardImpl isLoading />}>
-              <ScoreCard cluster={parsedCluster} publisherKey={key} />
-            </Suspense>
-            <Suspense fallback={<ActiveFeedsCardImpl isLoading />}>
-              <ActiveFeedsCard cluster={parsedCluster} publisherKey={key} />
-            </Suspense>
-            {parsedCluster === Cluster.Pythnet && (
-              <Suspense fallback={<OisPoolCardImpl isLoading />}>
-                <OisPoolCard publisherKey={key} />
-              </Suspense>
-            )}
-          </Cards>
-        </section>
+        <PublisherHeader cluster={parsedCluster} publisherKey={key} />
         <TabRoot>
           <Tabs
             label="Price Feed Navigation"
@@ -132,6 +101,63 @@ export const PublisherLayout = async ({ children, params }: Props) => {
   }
 };
 
+const PublisherHeader = ({
+  cluster,
+  publisherKey,
+}: {
+  cluster: Cluster;
+  publisherKey: string;
+}) => {
+  const knownPublisher = lookup(publisherKey);
+
+  return (
+    <section className={styles.header}>
+      <div className={styles.breadcrumbRow}>
+        <Breadcrumbs
+          className={styles.breadcrumbs ?? ""}
+          label="Breadcrumbs"
+          items={[
+            { href: "/", label: "Home" },
+            { href: "/publishers", label: "Publishers" },
+            { label: <PublisherKey publisherKey={publisherKey} /> },
+          ]}
+        />
+      </div>
+      <div className={styles.titleRow}>
+        <PublisherTag
+          cluster={cluster}
+          publisherKey={publisherKey}
+          {...(knownPublisher && {
+            name: knownPublisher.name,
+            icon: <PublisherIcon knownPublisher={knownPublisher} />,
+          })}
+        />
+        <PublisherConformanceReport
+          publisherKey={publisherKey}
+          cluster={CLUSTER_NAMES[cluster]}
+        />
+      </div>
+
+      <Cards className={styles.stats ?? ""}>
+        <Suspense fallback={<RankingCardImpl isLoading />}>
+          <RankingCard cluster={cluster} publisherKey={publisherKey} />
+        </Suspense>
+        <Suspense fallback={<ScoreCardImpl isLoading />}>
+          <ScoreCard cluster={cluster} publisherKey={publisherKey} />
+        </Suspense>
+        <Suspense fallback={<ActiveFeedsCardImpl isLoading />}>
+          <ActiveFeedsCard cluster={cluster} publisherKey={publisherKey} />
+        </Suspense>
+        {cluster === Cluster.Pythnet && (
+          <Suspense fallback={<OisPoolCardImpl isLoading />}>
+            <OisPoolCard publisherKey={publisherKey} />
+          </Suspense>
+        )}
+      </Cards>
+    </section>
+  );
+};
+
 const NumFeeds = async ({
   cluster,
   publisherKey,
@@ -150,10 +176,10 @@ const RankingCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const rankingHistory = await getPublisherRankingHistory(
+  const rankingHistory = await getPublisherRankingHistory({
     cluster,
-    publisherKey,
-  );
+    key: publisherKey,
+  });
   return <RankingCardImpl rankingHistory={rankingHistory} />;
 };
 
@@ -234,10 +260,11 @@ const ScoreCard = async ({
   cluster: Cluster;
   publisherKey: string;
 }) => {
-  const averageScoreHistory = await getPublisherAverageScoreHistory(
+  const averageScoreHistory = await getPublisherAverageScoreHistory({
     cluster,
-    publisherKey,
-  );
+    key: publisherKey,
+  });
+
   return <ScoreCardImpl averageScoreHistory={averageScoreHistory} />;
 };
 

@@ -12,9 +12,7 @@ interface IEntropyV2 is EntropyEventsV2 {
     /// The `entropyCallback` method on that interface will receive a callback with the returned sequence number and
     /// the generated random number.
     ///
-    /// `entropyCallback` will be run with the `gasLimit` provided to this function.
-    /// The `gasLimit` will be rounded up to a multiple of 10k (e.g., 19000 -> 20000), and furthermore is lower bounded
-    /// by the provider's configured default limit.
+    /// `entropyCallback` will be run with the provider's configured default gas limit.
     ///
     /// This method will revert unless the caller provides a sufficient fee (at least `getFeeV2()`) as msg.value.
     /// Note that the fee can change over time. Callers of this method should explicitly compute `getFeeV2()`

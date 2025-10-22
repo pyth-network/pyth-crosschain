@@ -61,6 +61,12 @@ export class Controller {
             sourceLatestPrice.publishTime,
             priceConfig.timeDifference,
           );
+          this.metrics.updatePriceValues(
+            priceId,
+            alias,
+            sourceLatestPrice.price,
+            targetLatestPrice.price,
+          );
         }
 
         const priceShouldUpdate = shouldUpdate(

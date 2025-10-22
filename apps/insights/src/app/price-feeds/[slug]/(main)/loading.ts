@@ -1,1 +1,1 @@
-export { ChartPageLoading as default } from "../../../../components/PriceFeed/chart-page";
+export { ChartPageLoading as default } from "../../../../components/PriceFeed/Chart/chart-page";

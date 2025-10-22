@@ -3,5 +3,17 @@
   "title": "Express Relay",
   "description": "Eliminate MEV",
   "icon": "Gavel",
-  "pages": ["index", "---Guides---", "how-to-guides"]
+  "pages": [
+    "index",
+    "---How-To Guides---",
+    "integrate-as-protocol",
+    "integrate-as-searcher",
+    "---Reference Material---",
+    "http-api-reference",
+    "websocket-api-reference",
+    "contract-addresses",
+    "errors",
+    "---Understanding Express Relay---",
+    "how-express-relay-works"
+  ]
 }

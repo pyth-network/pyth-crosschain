@@ -89,7 +89,7 @@ async function run() {
   const wallet = Ed25519Keypair.fromSecretKey(
     Buffer.from(process.env.SUI_KEY, "hex"),
   );
-
+  tx.setGasBudget(1000000);
   const result = await provider.signAndExecuteTransaction({
     signer: wallet,
     transaction: tx,

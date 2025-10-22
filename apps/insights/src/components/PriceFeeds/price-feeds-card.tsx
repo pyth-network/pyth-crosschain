@@ -8,30 +8,31 @@ import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import type {
   RowConfig,
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useQueryState, parseAsString } from "nuqs";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
+import { matchSorter } from "match-sorter";
+import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
-import { useFilter, useCollator } from "react-aria";
+import { useCollator } from "react-aria";
 
-import styles from "./price-feeds-card.module.scss";
-import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { FeedKey } from "../FeedKey";
 import {
-  SKELETON_WIDTH,
-  LivePrice,
   LiveConfidence,
+  LivePrice,
   LiveValue,
+  SKELETON_WIDTH,
 } from "../LivePrices";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
+import styles from "./price-feeds-card.module.scss";
 
 type Props = {
   id: string;
@@ -56,7 +57,6 @@ export const PriceFeedsCard = ({ priceFeeds, ...props }: Props) => (
 const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
   const logger = useLogger();
   const collator = useCollator();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [assetClass, setAssetClass] = useQueryState(
     "assetClass",
     parseAsString.withDefault(""),
@@ -83,13 +83,18 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     mkPageLink,
   } = useQueryParamFilterPagination(
     feedsFilteredByAssetClass,
-    (priceFeed, search) => filter.contains(priceFeed.displaySymbol, search),
+    () => true,
     (a, b, { column, direction }) => {
       const field = column === "assetClass" ? "assetClass" : "displaySymbol";
       return (
         (direction === "descending" ? -1 : 1) *
         collator.compare(a[field], b[field])
       );
+    },
+    (items, search) => {
+      return matchSorter(items, search, {
+        keys: ["displaySymbol", "symbol", "description", "key"],
+      });
     },
     { defaultSort: "priceFeedName" },
   );
@@ -132,7 +137,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
               <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
             ),
             priceFeedName: (
-              <PriceFeedTag
+              <SymbolPairTag
                 description={description}
                 displaySymbol={displaySymbol}
                 icon={icon}
@@ -283,7 +288,6 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           onPageChange={props.onPageChange}
           pageSize={props.pageSize}
           onPageSizeChange={props.onPageSizeChange}
-          pageSizeOptions={[10, 20, 30, 40, 50]}
           mkPageLink={props.mkPageLink}
         />
       ),
@@ -292,7 +296,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
     <EntityList
       label="Price Feeds"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<PriceFeedTag isLoading />}
+      headerLoadingSkeleton={<SymbolPairTag isLoading />}
       fields={[
         { id: "assetClass", name: "Asset Class" },
         { id: "priceFeedId", name: "Price Feed ID" },
@@ -327,7 +331,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           name: "PRICE FEED",
           isRowHeader: true,
           alignment: "left",
-          loadingSkeleton: <PriceFeedTag isLoading />,
+          loadingSkeleton: <SymbolPairTag isLoading />,
           allowsSorting: true,
         },
         {

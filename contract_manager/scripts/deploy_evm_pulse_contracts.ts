@@ -148,8 +148,12 @@ async function main() {
 
   await topupPulseAccountsIfNecessary(chain, deploymentConfig);
 
+  const maskedDeploymentConfig = {
+    ...deploymentConfig,
+    privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
+  };
   console.log(
-    `Deployment config: ${JSON.stringify(deploymentConfig, null, 2)}\n`,
+    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, null, 2)}\n`,
   );
 
   console.log(`Deploying pulse contracts on ${chain.getId()}...`);

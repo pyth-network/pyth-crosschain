@@ -182,7 +182,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://app.realms.today/dao/PYTH"
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
                 >
                   Pyth Network Realm
                 </Link>
@@ -223,7 +223,7 @@ export const GovernanceGuide = (
             <Link
               className="underline"
               target="_blank"
-              href="https://app.realms.today/dao/PYTH"
+              href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
             >
               Realms page for the Pyth DAO
             </Link>
@@ -273,7 +273,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://app.realms.today/dao/PYTH"
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
                 >
                   Pyth Network Realm
                 </Link>
@@ -293,7 +293,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://app.realms.today/dao/PYTH"
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
                 >
                   Pyth Network Realm
                 </Link>{" "}

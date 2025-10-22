@@ -3,25 +3,25 @@ import { Breadcrumbs } from "@pythnetwork/component-library/Breadcrumbs";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { Suspense } from "react";
 
-import styles from "./header.module.scss";
-import { PriceFeedSelect } from "./price-feed-select";
-import { ReferenceData } from "./reference-data";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { Cards } from "../Cards";
 import { Explain } from "../Explain";
 import { FeedKey } from "../FeedKey";
-import { LivePrice, LiveConfidence, LiveLastUpdated } from "../LivePrices";
+import { LiveConfidence, LiveLastUpdated, LivePrice } from "../LivePrices";
 import {
-  YesterdaysPricesProvider,
   PriceFeedChangePercent,
+  YesterdaysPricesProvider,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PriceName } from "../PriceName";
 import { getFeed } from "./get-feed";
+import styles from "./header.module.scss";
+import { PriceFeedSelect } from "./price-feed-select";
+import { ReferenceData } from "./reference-data";
 
 type Props = {
   params: Promise<{
@@ -84,31 +84,23 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
                   description: item.product.description,
                   displaySymbol: item.product.display_symbol,
                   key: item.product.price_account,
-                  icon: (
-                    <PriceFeedIcon
-                      assetClass={item.product.asset_type}
-                      symbol={item.symbol}
-                    />
-                  ),
+                  icon: <PriceFeedIcon assetClass={item.product.asset_type} />,
                 })),
             })}
       >
-        <PriceFeedTag
+        <SymbolPairTag
           {...(props.isLoading
             ? { isLoading: true }
             : {
                 description: props.feed.product.description,
                 displaySymbol: props.feed.product.display_symbol,
                 icon: (
-                  <PriceFeedIcon
-                    assetClass={props.feed.product.asset_type}
-                    symbol={props.feed.symbol}
-                  />
+                  <PriceFeedIcon assetClass={props.feed.product.asset_type} />
                 ),
               })}
         />
       </PriceFeedSelect>
-      <PriceFeedTag
+      <SymbolPairTag
         className={styles.priceFeedTag}
         {...(props.isLoading
           ? { isLoading: true }
@@ -116,10 +108,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
               description: props.feed.product.description,
               displaySymbol: props.feed.product.display_symbol,
               icon: (
-                <PriceFeedIcon
-                  assetClass={props.feed.product.asset_type}
-                  symbol={props.feed.symbol}
-                />
+                <PriceFeedIcon assetClass={props.feed.product.asset_type} />
               ),
             })}
       />

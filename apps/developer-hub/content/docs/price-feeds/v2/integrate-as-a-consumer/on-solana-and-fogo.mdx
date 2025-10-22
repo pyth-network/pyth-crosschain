@@ -1,0 +1,284 @@
+---
+title: "On Solana and FOGO"
+description: "This guide explains how to integrate Pyth Lazer into your Solana and FOGO smart contracts."
+full: false
+index: false
+---
+
+This guide is intended to serve users who wants to consume prices from the Pyth Lazer on **Solana and Fogo**.
+
+Integrating with Pyth Lazer in smart contracts as a consumer is a three-step process:
+
+1. **Use** Pyth Lazer SDK into SVM smart contracts to parse the price updates.
+2. **Subscribe** to Pyth Lazer websocket to receive price updates on backend or frontend.
+3. **Include** the price updates into the smart contract transactions.
+
+<Steps>
+
+### Use Pyth Lazer SDK in smart contracts
+
+Pyth Lazer provides a [Solana SDK](https://docs.rs/pyth-lazer-solana-contract/latest/pyth_lazer_solana_contract/),
+which allows consumers to parse and verify the price updates on Solana-compatible chains (such as Fogo).
+
+To start, add the following to your `Cargo.toml` file (please check the current latest version at [crates.io](https://crates.io/crates/pyth-lazer-solana-contract)):
+
+```toml copy
+[dependencies]
+pyth-lazer-solana-contract = { version = "x.y.z", features = ["no-entrypoint"] }
+```
+
+Now you can create an instruction or multiple instructions that will receive Pyth Lazer messages.
+The instruction data sent to your program should include a byte array containing the Pyth Lazer message. The instruction data can also contain any other parameters your contracts may need.
+
+In order to successfully validate the Pyth Lazer message, the instruction needs to receive the following accounts:
+
+- Fee payer account
+- Pyth Lazer program ([`pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt`](https://solscan.io/account/pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt))
+- Pyth Lazer storage account (`3rdJbqfnagQ4yx9HXJViD4zc4xpiSqmFsKpPuSCQVyQL`)
+- Pyth Lazer treasury account (`Gx4MBPb1vqZLJajZmsKLg8fGw9ErhoKsR8LeKcCKFyak`)
+- The standard Solana system program account
+- The standard Solana instructions sysvar account
+
+You may also add any other accounts your contract needs.
+
+<Callout type="info" icon="💡">
+  The code snippets below are part of the full consumer contract example
+  [available on
+  Github](https://github.com/pyth-network/pyth-examples/tree/main/lazer/solana).
+</Callout>
+
+The following code can be used to set up a new instruction within a SVM contract:
+
+```rust copy
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
+pub enum Instruction {
+    //...
+    /// Update price.
+    /// Data: `UpdateArgs` followed by a signed Pyth Lazer update.
+    /// Accounts:
+    /// 1. payer account
+    /// 2. example data account [writable]
+    /// 3. pyth program account [readonly]
+    /// 4. pyth storage account [readonly]
+    /// 5. pyth treasury account [writable]
+    /// 6. system program [readonly]
+    /// 7. instructions sysvar sysvar account [readonly]
+    Update = 1,
+}
+
+/// Inputs to the `Update` instruction. `UpdateArgs` must be followed by a signed Pyth Lazer message.
+#[derive(Debug, Clone, Copy, Zeroable, Pod)]
+#[repr(C, packed)]
+pub struct UpdateArgs {
+    /// Example argument
+    pub hello: u64,
+}
+
+/// Program entrypoint's implementation.
+pub fn process_instruction(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_data: &[u8],
+) -> ProgramResult {
+    // In our example contract, the first byte is the ID of the instruction.
+    let instruction = *instruction_data
+        .first()
+        .ok_or(ProgramError::InvalidInstructionData)?;
+    let instruction =
+        Instruction::from_u8(instruction).ok_or(ProgramError::InvalidInstructionData)?;
+    let instruction_args = &instruction_data[1..];
+
+    match instruction {
+        Instruction::Initialize => {
+            process_initialize_instruction(program_id, accounts, instruction_args)
+        }
+        Instruction::Update => process_update_instruction(program_id, accounts, instruction_args),
+    }
+}
+
+pub fn process_update_instruction(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    instruction_args: &[u8],
+) -> ProgramResult {
+    // Verify accounts passed to the instruction.
+    if accounts.len() != 7 {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    }
+    let payer_account = &accounts[0];
+    let data_account = &accounts[1];
+    let _pyth_program_account = &accounts[2];
+    let pyth_storage_account = &accounts[3];
+    let pyth_treasury_account = &accounts[4];
+    let system_program_account = &accounts[5];
+    let instructions_sysvar_account = &accounts[6];
+    // See below for next steps...
+}
+```
+
+Invoke the Pyth Lazer on-chain program with appropriate arguments to validate the Pyth Lazer signature of the message.
+
+```rust copy
+// We expect the instruction to the built-in ed25519 program to be
+// the first instruction within the transaction.
+let ed25519_instruction_index = 0;
+// We expect our signature to be the first (and only) signature to be checked
+// by the built-in ed25519 program within the transaction.
+let signature_index = 0;
+// Verify Lazer signature.
+invoke(
+    &ProgramInstruction::new_with_bytes(
+        pyth_lazer_solana_contract::ID,
+        &VerifyMessage {
+            message_data: pyth_message.to_vec(),
+            ed25519_instruction_index,
+            signature_index,
+        }
+        .data(),
+        vec![
+            AccountMeta::new(*payer_account.key, true),
+            AccountMeta::new_readonly(*pyth_storage_account.key, false),
+            AccountMeta::new(*pyth_treasury_account.key, false),
+            AccountMeta::new_readonly(*system_program_account.key, false),
+            AccountMeta::new_readonly(*instructions_sysvar_account.key, false),
+        ],
+    ),
+    &[
+        payer_account.clone(),
+        pyth_storage_account.clone(),
+        pyth_treasury_account.clone(),
+        system_program_account.clone(),
+        instructions_sysvar_account.clone(),
+    ],
+)?;
+```
+
+<Callout type="info" icon="💡">
+  Note: When using native ed25519 signatures on SVM, we must use the built-in
+  ed25519 program provided by the SVM runtime. This program can't be invoked
+  from another contract. Instead, it must be called in an explicit instruction
+  within the submitted transaction. This means that the sender of the
+  transaction must include that instruction in the transaction. Our SDK
+  leverages SVM runtime capabilities to ensure the ed25519 program has been
+  correctly called in the transaction.
+</Callout>
+
+Now parse the Pyth Lazer message.
+
+```rust copy
+// Deserialize and use the payload.
+let data = PayloadData::deserialize_slice_le(verified.payload)
+    .map_err(|_| ProgramError::InvalidInstructionData)?;
+
+if data.feeds.is_empty() || data.feeds[0].properties.is_empty() {
+    return Err(ProgramError::InvalidInstructionData);
+}
+```
+
+Now you can update the state according to the contract's logic:
+
+```rust copy
+// Read the data PDA of our example contract.
+let mut state_data = data_account.data.borrow_mut();
+let state =
+    try_from_bytes_mut::<State>(*state_data).map_err(|_| ProgramError::InvalidAccountData)?;
+
+if state.price_feed != data.feeds[0].feed_id.0 {
+    return Err(ProgramError::InvalidInstructionData);
+}
+if data.channel_id != Channel::RealTime.id() {
+    return Err(ProgramError::InvalidInstructionData);
+}
+if data.timestamp_us.0 <= state.latest_timestamp {
+    return Err(ProgramError::AccountAlreadyInitialized);
+}
+let PayloadPropertyValue::Price(Some(price)) = data.feeds[0].properties[0] else {
+    return Err(ProgramError::InvalidInstructionData);
+};
+state.latest_price = price.into_inner().into();
+state.latest_timestamp = data.timestamp_us.0;
+```
+
+<Callout type="info" icon="💡">
+  Pyth Lazer also provides
+  [pyth_lazer_protocol](https://docs.rs/pyth-lazer-protocol/latest/pyth_lazer_protocol/)
+  Rust crate, which allows consumers to parse the price updates off-chain.
+</Callout>
+
+### Subscribe to Pyth Lazer to receive Price Updates
+
+Pyth Lazer provides a websocket endpoint to receive price updates. Moreover, Pyth Lazer also provides a [typescript SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js) to subscribe to the websocket endpoint.
+
+Consult [How to subscribe to price updates from Pyth Lazer](../subscribe-price-updates.mdx) for a complete step-by-step guide.
+
+### Include the price updates into smart contract transactions
+
+Now that you have the price updates, and your smart contract is able to parse the price updates, you can include the price updates into the smart contract transactions by passing the price updates received from the previous step as an argument to the `update_price` method of your smart contract.
+
+In order to execute signature verification, you need to include an instruction for the built-in Solana ed25519 program in your transaction.
+
+<Tabs items={['Rust', 'JS']}>
+  <Tabs.Tab>
+    In Rust, you can leverage helpers provided in the `pyth_lazer_solana_contract` crate:
+
+```rust copy
+// Instruction #0 will be ed25519 instruction;
+// Instruction #1 will be our contract instruction.
+let instruction_index = 1;
+// Total offset of Pyth Lazer update within the instruction data;
+// 1 byte is the instruction type.
+let message_offset = (size_of::<UpdateArgs>() + 1).try_into().unwrap();
+let ed25519_args = pyth_lazer_solana_contract::Ed25519SignatureOffsets::new(
+    &message,
+    instruction_index,
+    message_offset,
+);
+let mut tx = Transaction::new_with_payer(
+    &[
+        Instruction::new_with_bytes(
+            solana_program::ed25519_program::ID,
+            &pyth_lazer_solana_contract::ed25519_program_args(&[ed25519_args]),
+            vec![],
+        ),
+        Instruction::new_with_bytes(
+            pyth_lazer_solana_example::ID,
+            &update_data,
+            vec![
+                AccountMeta::new(payer.pubkey(), true),
+                AccountMeta::new(data_pda_key, false),
+                AccountMeta::new(pyth_lazer_solana_contract::ID, false),
+                AccountMeta::new_readonly(pyth_lazer_solana_contract::STORAGE_ID, false),
+                AccountMeta::new(treasury, false),
+                AccountMeta::new_readonly(system_program::ID, false),
+                AccountMeta::new_readonly(sysvar::instructions::ID, false),
+            ],
+        ),
+    ],
+    Some(&payer.pubkey()),
+);
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+    In TypeScript and JavaScript, you can leverage helpers provided in the `@pythnetwork/pyth-lazer-sdk` NPM package.
+    {/* TODO: add example code */}
+  </Tabs.Tab>
+</Tabs>
+</Steps>
+
+## Additional Resources
+
+You may find these additional resources helpful for integrating Pyth Lazer into your SVM smart contracts.
+
+### Price Feed IDs
+
+Pyth Lazer supports a wide range of price feeds. Consult the [Price Feed IDs](../price-feeds.mdx) page for a complete list of supported price feeds.
+
+### Examples
+
+[pyth-lazer-example-solana](https://github.com/pyth-network/pyth-examples/tree/main/lazer/solana) is a simple example contract that parses and consumes price updates from Pyth Lazer.
+
+[pyth-lazer-example-js](https://github.com/pyth-network/pyth-examples/tree/main/lazer/js) is a simple example for subscribing to the Pyth Lazer websocket.

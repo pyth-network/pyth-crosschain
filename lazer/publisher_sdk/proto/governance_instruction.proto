@@ -45,7 +45,7 @@ message GovernanceInstruction {
     // permanently rejected (e.g. if instruction #3 has been successfully processed before
     // instruction #2 was observed, #2 will always be rejected). Sequence numbers are assigned and
     // tracked separately for each governance source.
-    optional uint32 governance_sequence_no = 5;
+    optional uint64 governance_sequence_no = 5;
 }
 
 // Specifies which shards the governance instruction applies to.
@@ -93,6 +93,11 @@ message GovernanceInstructionItem {
         AddFeed add_feed = 111;
         UpdateFeed update_feed = 112;
         RemoveFeed remove_feed = 113;
+        AddFeatureFlag add_feature_flag = 114;
+        RemoveFeatureFlag remove_feature_flag = 115;
+        AddAsset add_asset = 116;
+        UpdateAsset update_asset = 117;
+        RemoveAsset remove_asset = 118;
     }
 }
 
@@ -110,6 +115,9 @@ message CreateShard {
     // Shard ID must be unique across all shards in all groups.
     // (Warning: it's not possible to enforce this rule within a shard!)
     optional uint32 shard_id = 1;
+    // [required] Shard name. Must be unique. Used for governance instruction targeting and
+    // for logs, metrics, etc. Example: "shard1.tokyo.staging.pyth-lazer"
+    optional string shard_name = 4;
     // [required] Group name, e.g. "production", "staging", "testing", etc.
     // Data from shards belonging to the same group can be joined and served to consumers as a whole.
     // Active feed names must be unique within a group, but not across all groups.
@@ -174,6 +182,8 @@ message AddPublisher {
     repeated bytes public_keys = 3;
     // [required] If true, the publisher is active, i.e. it's allowed to publish updates.
     optional bool is_active = 4;
+    // IDs of the feeds for which the publisher's price will be included in the aggregate.
+    repeated uint32 allowed_feed_ids = 5;
 }
 
 message UpdatePublisher {
@@ -187,6 +197,9 @@ message UpdatePublisher {
         RemovePublisherPublicKeys remove_publisher_public_keys = 103;
         SetPublisherPublicKeys set_publisher_public_keys = 104;
         SetPublisherActive set_publisher_active = 105;
+        AddPublisherAllowedFeedIds add_publisher_allowed_feed_ids = 106;
+        RemovePublisherAllowedFeedIds remove_publisher_allowed_feed_ids = 107;
+        SetPublisherAllowedFeedIds set_publisher_allowed_feed_ids = 108;
     }
 }
 
@@ -217,6 +230,24 @@ message SetPublisherPublicKeys {
     repeated bytes public_keys = 1;
 }
 
+// Allow publisher to publish for the specified feeds.
+message AddPublisherAllowedFeedIds {
+    // Must not be empty.
+    repeated uint32 allowed_feed_ids_to_add = 1;
+}
+
+// Disallow publisher to publish for the specified feeds.
+message RemovePublisherAllowedFeedIds {
+    // Must not be empty.
+    repeated uint32 allowed_feed_ids_to_remove = 1;
+}
+
+// Allow publisher to publish for only the specified feeds.
+// Remove all previous allowances.
+message SetPublisherAllowedFeedIds {
+    repeated uint32 allowed_feed_ids = 1;
+}
+
 message SetPublisherActive {
     // [required]
     optional bool is_active = 1;
@@ -229,13 +260,13 @@ message AddFeed {
     // [required]
     optional DynamicValue.Map metadata = 3;
     // [required]
-    optional string name = 101;
+    optional string symbol = 101;
     // [required]
     optional sint32 exponent = 102;
     // [required]
     optional uint32 min_publishers = 103;
     // [required]
-    optional google.protobuf.Duration min_rate = 104;
+    optional Channel min_channel = 104;
     // [required]
     optional google.protobuf.Duration expiry_time = 105;
     // [required]
@@ -276,19 +307,21 @@ message UpdateFeedProperties {
     // [optional]
     optional DynamicValue.Map metadata = 3;
     // [optional]
-    optional string name = 101;
+    optional string symbol = 101;
     // [optional]
     optional sint32 exponent = 102;
     // [optional]
     optional uint32 min_publishers = 103;
     // [optional]
-    optional google.protobuf.Duration min_rate = 104;
+    optional Channel min_channel = 104;
     // [optional]
     optional google.protobuf.Duration expiry_time = 105;
     // [optional]
     optional string market_schedule = 106;
     // [optional]
     optional FeedState state = 107;
+    // [required]
+    optional FeedKind kind = 108;
     // [optional]
     optional bool is_enabled_in_shard = 201;
 }
@@ -325,4 +358,46 @@ message DisableFeedInShard {
     // the feed will be disabled immediately when this
     // governance instruction is processed.
     optional google.protobuf.Timestamp disable_in_shard_timestamp = 1;
+}
+
+// Add a new feature flag.
+message AddFeatureFlag {
+    // [required] Feature flag to add.
+    optional string feature_flag = 1;
+}
+
+// Remove a feature flag.
+message RemoveFeatureFlag {
+    // [required] Feature flag to remove.
+    optional string feature_flag = 1;
+}
+
+// Add a new asset. Refer to `Asset` message fields documentation.
+message AddAsset {
+    // [required]
+    optional uint32 asset_id = 1;
+    // [required]
+    optional DynamicValue.Map metadata = 2;
+}
+
+message UpdateAsset {
+    // [required] ID of the asset that is being updated. Rejects if there is no such asset.
+    optional uint32 asset_id = 1;
+    // [required]
+    // Note: when adding a new variant here, update `Permissions` as well.
+    oneof action {
+        UpdateAssetMetadata update_asset_metadata = 101;
+    }
+}
+
+message RemoveAsset {
+    // [required] ID of the asset that is being removed. Rejects if there is no such asset.
+    optional uint32 asset_id = 1;
+}
+
+message UpdateAssetMetadata {
+    // [required] Property name.
+    optional string name = 1;
+    // [optional] Property value. If unset, the property will be removed.
+    optional DynamicValue value = 2;
 }

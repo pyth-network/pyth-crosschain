@@ -619,13 +619,12 @@ abstract contract Entropy is IEntropy, EntropyState {
                 );
                 clearRequest(provider, sequenceNumber);
             } else if (
-                ret.length > 0 ||
                 (startingGas * 31) / 32 >
                 uint256(req.gasLimit10k) * TEN_THOUSAND
             ) {
                 // The callback reverted for some reason.
-                // If ret.length > 0, then we know the callback manually triggered a revert, so it's safe to mark it as failed.
-                // If ret.length == 0, then the callback might have run out of gas (though there are other ways to trigger a revert with ret.length == 0).
+                // We don't use ret to condition the behavior here (out-of-gas or other revert), as we have found that some user contracts
+                // catch out-of-gas errors and revert with a different error.
                 // In this case, ensure that the callback was provided with sufficient gas. Technically, 63/64ths of the startingGas is forwarded,
                 // but we're using 31/32 to introduce a margin of safety.
                 emit CallbackFailed(

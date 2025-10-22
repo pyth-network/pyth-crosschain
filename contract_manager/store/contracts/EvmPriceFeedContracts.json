@@ -853,5 +853,40 @@
     "chain": "camp_network",
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "fluent_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "spiderman",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "zero_gravity",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "giwa_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "plasma",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "sonic_evm_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "injective_evm",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmPriceFeedContract"
   }
 ]

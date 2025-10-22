@@ -1,35 +1,34 @@
+import { Logo } from "@pythnetwork/component-library/Header";
 import type { DocsLayoutProps } from "fumadocs-ui/layouts/docs";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
-import { source } from "../source";
+import { source } from "../lib/source";
 
 export const baseOptions: BaseLayoutProps = {
   nav: {
-    enabled: false,
+    enabled: true,
+    title: (
+      <>
+        <Logo width="1em" height="1em" />
+        Developer Hub
+      </>
+    ),
   },
-  themeSwitch: {
-    enabled: false,
-  },
+  // these are commented out because we don't have the app shell anymore
+  // themeSwitch: {
+  //   enabled: false, // Keep this false as the theme switch is handled by the component library
+  // },
+  // searchToggle: {
+  //   enabled: false,
+  // },
 };
 
 export const docsOptions: DocsLayoutProps = {
   ...baseOptions,
   tree: source.pageTree,
   sidebar: {
-    tabs: {
-      transform(option, node) {
-        const meta = source.getNodeMeta(node);
-        if (!meta || !node.icon) return option;
-
-        return {
-          ...option,
-          icon: (
-            <div className="[&_svg]:size-6.5 md:[&_svg]:size-5">
-              {node.icon}
-            </div>
-          ),
-        };
-      },
-    },
+    // these are commented out because we don't have the app shell anymore
+    // tabs: false,
+    // collapsible: false,
   },
 };

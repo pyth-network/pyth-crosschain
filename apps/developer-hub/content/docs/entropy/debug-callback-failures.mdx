@@ -1,0 +1,82 @@
+---
+title: Debug Callback Failures
+description: How to identify and resolve issues with Entropy callbacks
+icon: Bug
+---
+
+This guide explains how to identify and resolve issues with the Entropy callback.
+The intended audience for this guide is developers who have made an Entropy random number request, but their application hasn't received a callback.
+
+> 🔍 **Quick Debug Tool**
+>
+> Use the [Entropy Explorer](https://entropy-explorer.pyth.network/) to quickly diagnose and resolve callback issues.
+
+## Dependencies
+
+This guide uses [Foundry](https://book.getfoundry.sh/getting-started/installation) to submit transactions to the blockchain.
+Please install Foundry before continuing.
+
+## Run the Callback
+
+Developers can run the Entropy callback themselves to see the reason for the failure.
+To run the callback, invoke the `revealWithCallback` function on the Entropy contract on your blockchain.
+The function has the following signature:
+
+```solidity copy
+function revealWithCallback(
+    address provider,
+    uint64 sequenceNumber,
+    bytes32 userContribution,
+    bytes32 providerContribution
+)
+```
+
+This call requires the chain ID, contract address, and four other arguments.
+The chain ID and contract address can be retrieved from [Chainlist and Fee Details](./entropy/chainlist) page.
+Export these values as environment variables for later use:
+
+```bash copy
+export CHAIN_ID=blast
+export ENTROPY_ADDRESS=0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb
+
+```
+
+Three of the other arguments can be retrieved from the request transaction's event logs.
+Look at the event logs of the request transaction in a block explorer.
+You should see a `RequestedWithCallback` event emitted from the Entropy contract.
+
+Copy the following values from the event into environment variables:
+
+```bash copy
+export PROVIDER=0x52DeaA1c84233F7bb8C8A45baeDE41091c616506
+export SEQUENCE_NUMBER=12345
+export USER_RANDOM_NUMBER=0x1234...
+```
+
+The fourth argument (provider contribution) must be retrieved from the provider's API.
+This value becomes available after the reveal delay has passed.
+
+## Common Issues
+
+There are a few common issues that can cause the callback to fail.
+
+### Gas Limit Exceeded
+
+If your callback function uses too much gas, the transaction will fail. Check the gas limit for your chain on the [chainlist](./entropy/chainlist) page and ensure your callback function uses less gas.
+
+> 💡 **Tip**
+> Refer to the [Set Custom Gas Limits](./entropy/set-custom-gas-limits) guide to set a custom gas limit for your callback function.
+
+### Callback Function Errors
+
+Your callback function might contain logic that throws an error. Review your callback implementation for:
+
+- Division by zero
+- Array out of bounds access
+- Failed require statements
+- Insufficient contract balance for operations
+
+### Transaction Timing
+
+Make sure you're attempting the callback after the reveal delay has passed. The reveal delay varies by network and helps prevent MEV attacks.
+Refer to the [chainlist](./entropy/chainlist) page for the reveal delay for each network.

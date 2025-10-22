@@ -12,7 +12,7 @@ import {
   ChainSelect,
   StatusSelect,
 } from "./search-controls";
-import { isValidDeployment } from "../../entropy-deployments";
+import { parseChainSlug } from "../../entropy-deployments";
 import type { Args } from "../../requests";
 import { getRequests, ResultType } from "../../requests";
 
@@ -94,12 +94,7 @@ const Results = async (props: Props) => {
               searchParams.search,
               searchParams.status,
             ].join(",")}
-            chain={
-              searchParams.chain !== undefined &&
-              isValidDeployment(searchParams.chain)
-                ? searchParams.chain
-                : undefined
-            }
+            chain={parseChainSlug(searchParams.chain)}
             search={searchParams.search}
             currentPage={results.currentPage}
             now={new Date()}

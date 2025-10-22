@@ -19,6 +19,10 @@ pub struct Config {
     #[serde(with = "humantime_serde", default = "default_publish_interval")]
     pub publish_interval_duration: Duration,
     pub history_service_url: Option<Url>,
+    #[serde(default)]
+    pub enable_update_deduplication: bool,
+    #[serde(with = "humantime_serde", default = "default_update_deduplication_ttl")]
+    pub update_deduplication_ttl: Duration,
 }
 
 #[derive(Deserialize, Derivative, Clone, PartialEq)]
@@ -34,7 +38,11 @@ impl Debug for AuthorizationToken {
 }
 
 fn default_publish_interval() -> Duration {
-    Duration::from_micros(500)
+    Duration::from_millis(25)
+}
+
+fn default_update_deduplication_ttl() -> Duration {
+    Duration::from_millis(500)
 }
 
 pub fn load_config(config_path: String) -> anyhow::Result<Config> {

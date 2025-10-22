@@ -1,14 +1,20 @@
 import { z } from "zod";
 
-import { EntropyDeployments, isValidDeployment } from "./entropy-deployments";
+import type { ChainSlug, EntropyDeployment } from "./entropy-deployments";
+import {
+  getChainNetworkId,
+  parseChainSlug,
+  EntropyDeployments,
+} from "./entropy-deployments";
 import type { PAGE_SIZE } from "./pages";
 import { DEFAULT_PAGE_SIZE } from "./pages";
 
-const FORTUNA_URL = "https://fortuna-staging.dourolabs.app/";
+const FORTUNA_MAINNET_URL = "https://fortuna.dourolabs.app/";
+const FORTUNA_TESTNET_URL = "https://fortuna-staging.dourolabs.app/";
 
 export type Args = Partial<{
   search: string;
-  chain: number;
+  chain: string;
   status: string;
   pageSize: PAGE_SIZE;
   page: number;
@@ -21,7 +27,9 @@ export const getRequests = async ({
   pageSize = DEFAULT_PAGE_SIZE,
   page,
 }: Args): Promise<Result> => {
-  const url = new URL("/v1/logs", FORTUNA_URL);
+  const chainSlug = parseChainSlug(chain);
+  const networkId = getChainNetworkId(chainSlug);
+  const url = new URL("/v1/logs", getFortunaUrl(chainSlug));
   url.searchParams.set("min_timestamp", new Date("2023-10-01").toISOString());
   url.searchParams.set("max_timestamp", new Date("2033-10-01").toISOString());
   url.searchParams.set("limit", pageSize.toString());
@@ -31,8 +39,8 @@ export const getRequests = async ({
   if (search) {
     url.searchParams.set("query", search);
   }
-  if (chain) {
-    url.searchParams.set("network_id", chain.toString());
+  if (networkId) {
+    url.searchParams.set("network_id", networkId.toString());
   }
   const fortunaStatus = status ? toFortunaStatus(status) : undefined;
   if (fortunaStatus) {
@@ -55,7 +63,7 @@ export const getRequests = async ({
               numPages: Math.ceil(parsed.data.total_results / pageSize),
               currentPage: parsed.data.requests.map((request) => {
                 const common = {
-                  chain: request.network_id,
+                  chain: getChain(request.network_id),
                   gasLimit: request.gas_limit,
                   provider: request.provider,
                   requestTimestamp: request.created_at,
@@ -194,10 +202,7 @@ const fortunaSchema = z.strictObject({
       created_at: z.string().transform((value) => new Date(value)),
       gas_limit: z.number(),
       last_updated_at: z.string().transform((value) => new Date(value)),
-      network_id: z.number().refine(
-        (value) => isValidDeployment(value),
-        (value) => ({ message: `Unrecognized chain id: ${value.toString()}` }),
-      ),
+      network_id: z.number(),
       provider: hexStringSchema,
       request_block_number: z.number(),
       request_tx_hash: hexStringSchema,
@@ -217,7 +222,7 @@ export enum Status {
 }
 
 type BaseArgs = {
-  chain: keyof typeof EntropyDeployments;
+  chain: EntropyDeployment;
   sequenceNumber: number;
   provider: `0x${string}`;
   sender: `0x${string}`;
@@ -289,6 +294,33 @@ const toFortunaStatus = (status: string) => {
     }
     default: {
       return;
+    }
+  }
+};
+
+const getChain = (networkId: number) => {
+  const chain = Object.values(EntropyDeployments).find(
+    (deployment) => deployment.chainId === networkId,
+  );
+  if (chain) {
+    return chain;
+  } else {
+    throw new Error(`Invalid chain id: ${networkId.toString()}`);
+  }
+};
+
+const getFortunaUrl = (chainSlug: ChainSlug) => {
+  switch (chainSlug) {
+    case "all-mainnet": {
+      return FORTUNA_MAINNET_URL;
+    }
+    case "all-testnet": {
+      return FORTUNA_TESTNET_URL;
+    }
+    default: {
+      return EntropyDeployments[chainSlug].isTestnet
+        ? FORTUNA_TESTNET_URL
+        : FORTUNA_MAINNET_URL;
     }
   }
 };

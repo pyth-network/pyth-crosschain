@@ -1,9 +1,10 @@
 "use client";
 
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import {
-  Virtualizer,
   ListLayout,
+  Virtualizer,
 } from "@pythnetwork/component-library/Virtualizer";
 import { Button } from "@pythnetwork/component-library/unstyled/Button";
 import { Dialog } from "@pythnetwork/component-library/unstyled/Dialog";
@@ -16,13 +17,12 @@ import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
 import clsx from "clsx";
+import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { useCollator, useFilter } from "react-aria";
 
-import styles from "./price-feed-select.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { PriceFeedTag } from "../PriceFeedTag";
+import styles from "./price-feed-select.module.scss";
 
 type Props = {
   className: string | undefined;
@@ -56,7 +56,7 @@ type ResolvedPriceFeedSelect = {
     symbol: string;
     displaySymbol: string;
     assetClass: string;
-    key: string;
+    key: string; // price_account
     description: string;
     icon: ReactNode;
   }[];
@@ -66,29 +66,14 @@ const ResolvedPriceFeedSelect = ({
   feeds,
   ...props
 }: ResolvedPriceFeedSelect) => {
-  const collator = useCollator();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
   const [search, setSearch] = useState("");
-  const filteredFeeds = useMemo(
+  const filteredAndSortedFeeds = useMemo(
     () =>
-      search === ""
-        ? feeds
-        : feeds.filter(
-            ({ displaySymbol, assetClass, key }) =>
-              filter.contains(displaySymbol, search) ||
-              filter.contains(assetClass, search) ||
-              filter.contains(key, search),
-          ),
-    [feeds, search, filter],
+      matchSorter(feeds, search, {
+        keys: ["displaySymbol", "symbol", "description", "key"],
+      }),
+    [feeds, search],
   );
-  const sortedFeeds = useMemo(
-    () =>
-      filteredFeeds.toSorted((a, b) =>
-        collator.compare(a.displaySymbol, b.displaySymbol),
-      ),
-    [filteredFeeds, collator],
-  );
-
   return (
     <PriceFeedSelectImpl
       menu={
@@ -109,7 +94,7 @@ const ResolvedPriceFeedSelect = ({
             </SearchField>
             <Virtualizer layout={new ListLayout()}>
               <ListBox
-                items={sortedFeeds}
+                items={filteredAndSortedFeeds}
                 className={styles.listbox ?? ""}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus={false}
@@ -120,11 +105,13 @@ const ResolvedPriceFeedSelect = ({
                     className={styles.priceFeed ?? ""}
                     href={`/price-feeds/${encodeURIComponent(symbol)}`}
                     data-is-first={
-                      symbol === sortedFeeds[0]?.symbol ? "" : undefined
+                      symbol === filteredAndSortedFeeds[0]?.symbol
+                        ? ""
+                        : undefined
                     }
                     prefetch={false}
                   >
-                    <PriceFeedTag
+                    <SymbolPairTag
                       displaySymbol={displaySymbol}
                       description={description}
                       icon={icon}

@@ -1,7 +1,28 @@
 {
   "root": true,
-  "title": "Entropy",
-  "description": "Random numbers for smart contracts",
-  "icon": "Shuffle",
-  "pages": ["index", "---Guides---", "how-to-guides"]
+  "title": "Pyth Entropy",
+  "description": "Random number Generator for Ethereum smart contracts",
+  "icon": "DiceSix",
+  "pages": [
+    "---Introduction---",
+    "index",
+    "whats-new-entropyv2",
+    "---Tutorials---",
+    "create-your-first-entropy-app",
+    "---How-To Guides---",
+    "generate-random-numbers-evm",
+    "set-custom-gas-limits",
+    "debug-callback-failures",
+    "transform-entropy-results",
+    "---Reference Material---",
+    "chainlist",
+    "request-callback-variants",
+    "error-codes",
+    "[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/entropy)",
+    "[Entropy Explorer](https://entropy-explorer.pyth.network/)",
+    "[Fortuna API Reference](/openapi/fortuna)",
+    "---Understanding Entropy---",
+    "protocol-design",
+    "fees"
+  ]
 }

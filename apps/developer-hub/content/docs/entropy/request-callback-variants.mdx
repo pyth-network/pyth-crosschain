@@ -1,0 +1,81 @@
+---
+title: Request Callback Variants
+description: Different ways to request random numbers with Pyth Entropy
+icon: Code
+---
+
+The [`IEntropyV2`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol) interface provides multiple variants of the `requestV2` function:
+
+## 1. Basic request
+
+```solidity
+function requestV2() external payable returns (uint64 assignedSequenceNumber);
+```
+
+This is the simplest variant that requests entropy using the default provider and default gas settings. Uses in-contract PRNG for the user contribution to randomness.
+
+Use this when you want the most straightforward implementation and don't need to customize provider or gas parameters.
+
+### Example
+
+```solidity
+function requestBasicRandomNumber() external payable {
+    // Get the fee for the default provider and gas limit
+    uint256 fee = entropy.getFeeV2();
+
+    require(msg.value >= fee, "Insufficient fee");
+
+    // Request randomness with default settings
+    uint64 sequenceNumber = entropy.requestV2{value: fee}();
+}
+```
+
+## 2. Request with custom gas limit
+
+```solidity
+function requestV2(
+    uint32 gasLimit
+) external payable returns (uint64 assignedSequenceNumber);
+```
+
+This variant allows you to specify a custom gas limit for the callback function execution. Uses in-contract PRNG for the user contribution.
+
+Use this when your `entropyCallback` function has complex logic that requires more gas than the default amount, or when you want to optimize gas usage by setting a lower limit for simple callbacks.
+
+### Example
+
+```solidity
+function requestWithCustomGas() external payable {
+    uint32 customGasLimit = 150000; // Custom gas limit for callback
+
+    // Get fee for the custom gas limit
+    uint256 fee = entropy.getFeeV2(customGasLimit);
+
+    require(msg.value >= fee, "Insufficient fee");
+
+    // Request with custom gas limit
+    uint64 sequenceNumber = entropy.requestV2{value: fee}(customGasLimit);
+}
+```
+
+## 3. Request with custom provider
+
+```solidity
+function requestV2(
+    address provider
+) external payable returns (uint64 assignedSequenceNumber);
+```
+
+This variant allows you to specify a custom entropy provider instead of using the default one.
+
+## 4. Full custom request
+
+```solidity
+function requestV2(
+    address provider,
+    uint32 gasLimit,
+    bytes32 userRandomNumber
+) external payable returns (uint64 assignedSequenceNumber);
+```
+
+This is the most flexible variant that allows you to specify all parameters: custom provider, custom gas limit, and user random number.

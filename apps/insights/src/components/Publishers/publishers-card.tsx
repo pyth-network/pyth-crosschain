@@ -16,6 +16,7 @@ import type {
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import clsx from "clsx";
 import { useQueryState, parseAsStringEnum } from "nuqs";
 import type { ReactNode } from "react";
@@ -23,7 +24,6 @@ import { Suspense, useMemo, useCallback } from "react";
 import { useFilter, useCollator } from "react-aria";
 
 import styles from "./publishers-card.module.scss";
-import { useQueryParamFilterPagination } from "../../hooks/use-query-param-filter-pagination";
 import { CLUSTER_NAMES } from "../../services/pyth";
 import {
   ExplainPermissioned,
@@ -124,6 +124,7 @@ const ResolvedPublishersCard = ({
         }
       }
     },
+    (items) => items,
     { defaultSort: "ranking" },
   );
 
@@ -289,7 +290,6 @@ const PublishersCardContents = ({
           onPageChange={props.onPageChange}
           pageSize={props.pageSize}
           onPageSizeChange={props.onPageSizeChange}
-          pageSizeOptions={[10, 20, 30, 40, 50]}
           mkPageLink={props.mkPageLink}
         />
       ),

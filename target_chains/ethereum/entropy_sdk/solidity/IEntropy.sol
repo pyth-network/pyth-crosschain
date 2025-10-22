@@ -6,6 +6,8 @@ import "./EntropyEventsV2.sol";
 import "./EntropyStructsV2.sol";
 import "./IEntropyV2.sol";
 
+/// @notice DEPRECATED: This interface is deprecated. Please use IEntropyV2 instead for new implementations.
+/// IEntropyV2 provides better callback handling and improved functionality.
 interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
     // and initial commitment. Re-registering the same provider rotates the provider's commitment (and updates
@@ -38,6 +40,9 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // their chosen provider (the exact method for doing so will depend on the provider) to retrieve the provider's
     // number. The user should then call fulfillRequest to construct the final random number.
     //
+    // WARNING: This method does NOT invoke a user callback. If you need callback functionality,
+    // use requestV2 from the IEntropyV2 interface instead.
+    //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
     // Note that excess value is *not* refunded to the caller.
     function request(
@@ -49,10 +54,14 @@ interface IEntropy is EntropyEvents, EntropyEventsV2, IEntropyV2 {
     // Request a random number. The method expects the provider address and a secret random number
     // in the arguments. It returns a sequence number.
     //
+    // DEPRECATED: This method is deprecated. Please use requestV2 from the IEntropyV2 interface instead,
+    // which provides better callback handling and gas limit control.
+    //
     // The address calling this function should be a contract that inherits from the IEntropyConsumer interface.
     // The `entropyCallback` method on that interface will receive a callback with the generated random number.
     // `entropyCallback` will be run with the provider's default gas limit (see `getProviderInfo(provider).defaultGasLimit`).
-    // If your callback needs additional gas, please use `requestWithCallbackAndGasLimit`.
+    // If your callback needs additional gas, please use the function `requestv2` from `IEntropyV2` interface
+    // with gasLimit as the input parameter.
     //
     // This method will revert unless the caller provides a sufficient fee (at least `getFee(provider)`) as msg.value.
     // Note that excess value is *not* refunded to the caller.

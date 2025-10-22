@@ -85,6 +85,7 @@ pub struct Labels {
 
 pub struct WsMetrics {
     pub interactions: Family<Labels, Counter>,
+    pub broadcast_latency: prometheus_client::metrics::histogram::Histogram,
 }
 
 impl WsMetrics {
@@ -95,10 +96,17 @@ impl WsMetrics {
     {
         let new = Self {
             interactions: Family::default(),
+            broadcast_latency: prometheus_client::metrics::histogram::Histogram::new(
+                [
+                    0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0,
+                ]
+                .into_iter(),
+            ),
         };
 
         {
             let interactions = new.interactions.clone();
+            let ws_broadcast_latency = new.broadcast_latency.clone();
 
             tokio::spawn(async move {
                 Metrics::register(
@@ -107,6 +115,16 @@ impl WsMetrics {
                         "ws_interactions",
                         "Total number of websocket interactions",
                         interactions,
+                    ),
+                )
+                .await;
+
+                Metrics::register(
+                    &*state,
+                    (
+                        "ws_broadcast_latency_seconds",
+                        "Latency from Hermes receive_time to WS send in seconds",
+                        ws_broadcast_latency,
                     ),
                 )
                 .await;
@@ -401,6 +419,13 @@ where
             }
         };
 
+        // Capture the minimum receive_time from the updates batch
+        let min_received_at = updates
+            .price_feeds
+            .iter()
+            .filter_map(|update| update.received_at)
+            .min();
+
         for update in updates.price_feeds {
             let config = self
                 .price_feeds_with_config
@@ -480,6 +505,21 @@ where
         }
 
         self.sender.flush().await?;
+
+        // Record latency from receive to ws send after flushing
+        if let Some(min_received_at) = min_received_at {
+            let now_secs = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0);
+            // Histogram only accepts f64. The conversion is safe (never panics), but very large values lose precision.
+            let latency = now_secs - (min_received_at as f64);
+            self.ws_state
+                .metrics
+                .broadcast_latency
+                .observe(latency.max(0.0));
+        }
+
         Ok(())
     }
 

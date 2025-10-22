@@ -8,6 +8,7 @@ import { Button } from "@pythnetwork/component-library/Button";
 import type { Props as CardProps } from "@pythnetwork/component-library/Card";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { TabList } from "@pythnetwork/component-library/TabList";
 import {
   TabPanel as UnstyledTabPanel,
@@ -19,7 +20,8 @@ import { AssetClassTable } from "./asset-class-table";
 import { ComingSoonList } from "./coming-soon-list";
 import styles from "./index.module.scss";
 import { PriceFeedsCard } from "./price-feeds-card";
-import { Cluster, getFeeds } from "../../services/pyth";
+import { Cluster } from "../../services/pyth";
+import { getFeeds } from "../../services/pyth/get-feeds";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
 import { activeChains } from "../../static-data/stats";
 import { Cards } from "../Cards";
@@ -29,7 +31,6 @@ import {
   PriceFeedChangePercent,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
-import { PriceFeedTag } from "../PriceFeedTag";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -108,12 +109,7 @@ export const PriceFeeds = async () => {
             assetClass: feed.product.asset_type,
             description: feed.product.description,
             displaySymbol: feed.product.display_symbol,
-            icon: (
-              <PriceFeedIcon
-                assetClass={feed.product.asset_type}
-                symbol={feed.symbol}
-              />
-            ),
+            icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
           }))}
         />
       </section>
@@ -136,12 +132,7 @@ export const PriceFeeds = async () => {
               assetClass: feed.product.asset_type,
               description: feed.product.description,
               displaySymbol: feed.product.display_symbol,
-              icon: (
-                <PriceFeedIcon
-                  assetClass={feed.product.asset_type}
-                  symbol={feed.symbol}
-                />
-              ),
+              icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
             }))}
           />
         </UnstyledTabPanel>
@@ -209,12 +200,7 @@ const FeaturedFeeds = ({
                   description: feed.product.description,
                   displaySymbol: feed.product.display_symbol,
                   symbol: feed.symbol,
-                  icon: (
-                    <PriceFeedIcon
-                      assetClass={feed.product.asset_type}
-                      symbol={feed.symbol}
-                    />
-                  ),
+                  icon: <PriceFeedIcon assetClass={feed.product.asset_type} />,
                 }))}
               />
             ),
@@ -259,15 +245,10 @@ const FeaturedFeedsCard = <T extends ElementType>({
           href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}
         >
           <div className={styles.feedCardContents}>
-            <PriceFeedTag
+            <SymbolPairTag
               displaySymbol={feed.product.display_symbol}
               description={feed.product.description}
-              icon={
-                <PriceFeedIcon
-                  assetClass={feed.product.asset_type}
-                  symbol={feed.symbol}
-                />
-              }
+              icon={<PriceFeedIcon assetClass={feed.product.asset_type} />}
             />
             {showPrices && (
               <div className={styles.prices}>

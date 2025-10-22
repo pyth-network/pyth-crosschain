@@ -5,12 +5,13 @@ import { NoResults as NoResultsImpl } from "@pythnetwork/component-library/NoRes
 import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
-import Image from "next/image";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
+import { ChainTag } from "./chain-tag";
 import { mkRequestDrawer } from "./request-drawer";
 import styles from "./results.module.scss";
+import type { ChainSlug } from "../../entropy-deployments";
 import { EntropyDeployments } from "../../entropy-deployments";
 import type { Request } from "../../requests";
 import { Status } from "../../requests";
@@ -24,7 +25,7 @@ type Props = {
   search?: string | undefined;
   isUpdating?: boolean | undefined;
   now: Date;
-  chain?: keyof typeof EntropyDeployments | undefined;
+  chain: ChainSlug;
 };
 
 export const Results = ({
@@ -44,7 +45,7 @@ export const Results = ({
           drawer.open(mkRequestDrawer(request, now));
         },
         data: {
-          chain: <Chain chain={request.chain} />,
+          chain: <ChainTag className={styles.chain} chain={request.chain} />,
           timestamp: (
             <div className={styles.timestamp}>
               <Timestamp timestamp={request.requestTimestamp} now={now} />
@@ -86,7 +87,7 @@ type ResultsImplProps =
     }
   | {
       isLoading?: false | undefined;
-      chain?: keyof typeof EntropyDeployments | undefined;
+      chain: ChainSlug;
       rows: (RowConfig<(typeof defaultProps)["columns"][number]["id"]> & {
         textValue: string;
       })[];
@@ -132,7 +133,7 @@ const ResultsImpl = (props: ResultsImplProps) => (
 
 type NoResultsProps = {
   search?: string | undefined;
-  chain?: keyof typeof EntropyDeployments | undefined;
+  chain: ChainSlug;
 };
 
 const NoResults = ({ search, chain }: NoResultsProps) => {
@@ -143,7 +144,7 @@ const NoResults = ({ search, chain }: NoResultsProps) => {
         <>
           <p>
             We couldn{"'"}t find any results for your query on{" "}
-            {chain ? EntropyDeployments[chain].name : "any chain"}.
+            <ChainName chain={chain} />
           </p>
           <p>Would you like to try your search on a different chain?</p>
           <ChainSelect
@@ -159,14 +160,18 @@ const NoResults = ({ search, chain }: NoResultsProps) => {
   );
 };
 
-const Chain = ({ chain }: { chain: keyof typeof EntropyDeployments }) => {
-  const chainInfo = EntropyDeployments[chain];
-  return (
-    <div className={styles.chain}>
-      <Image alt="" src={chainInfo.icon} width={20} height={20} />
-      {chainInfo.name}
-    </div>
-  );
+const ChainName = ({ chain }: { chain: ChainSlug }) => {
+  switch (chain) {
+    case "all-mainnet": {
+      return "any mainnet chain";
+    }
+    case "all-testnet": {
+      return "any testnet chain";
+    }
+    default: {
+      return EntropyDeployments[chain].name;
+    }
+  }
 };
 
 const defaultProps = {
@@ -185,6 +190,7 @@ const defaultProps = {
       name: "SEQUENCE NUMBER",
       alignment: "center",
       width: 20,
+      isRowHeader: true,
     },
     {
       id: "timestamp" as const,

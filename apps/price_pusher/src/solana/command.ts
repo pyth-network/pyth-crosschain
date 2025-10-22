@@ -122,7 +122,6 @@ export default {
       jitoTipLamports,
       dynamicJitoTips,
       maxJitoTipLamports,
-      jitoBundleSize,
       updatesPerJitoBundle,
       addressLookupTableAccount,
       treasuryId,
@@ -230,7 +229,6 @@ export default {
         dynamicJitoTips,
         maxJitoTipLamports,
         jitoClients,
-        jitoBundleSize,
         updatesPerJitoBundle,
         // Set max retry time to pushing frequency, since we want to stop retrying before the next push attempt
         pushingFrequency * 1000,
@@ -276,10 +274,14 @@ export default {
 };
 
 export const onBundleResult = (c: SearcherClient, logger: Logger) => {
-  c.onBundleResult(
-    () => undefined,
-    (err) => {
-      logger.error(err, "Error in bundle result");
-    },
-  );
+  try {
+    c.onBundleResult(
+      () => undefined,
+      (err) => {
+        logger.error(err, "Error in bundle result");
+      },
+    );
+  } catch (error) {
+    logger.error(error, "Exception in bundle result");
+  }
 };

@@ -5,6 +5,9 @@ import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
+import { CustomSocketClosureCodes } from "../protocol.js";
+import { envIsBrowserOrWorker } from "../util/env-util.js";
+
 const DEFAULT_HEARTBEAT_TIMEOUT_DURATION_MS = 5000; // 5 seconds
 const DEFAULT_MAX_RETRY_DELAY_MS = 1000; // 1 second'
 const DEFAULT_LOG_AFTER_RETRY_COUNT = 10;
@@ -18,6 +21,21 @@ export type ResilientWebSocketConfig = {
   logAfterRetryCount?: number;
 };
 
+/**
+ * the isomorphic-ws package ships with some slightly-erroneous typings.
+ * namely, it returns a WebSocket with typings that indicate the "terminate()" function
+ * is available on all platforms.
+ * Given that, under the hood, it is using the globalThis.WebSocket class, if it's available,
+ * and falling back to using the https://www.npmjs.com/package/ws package, this
+ * means there are API differences between the native WebSocket (the one in a web browser)
+ * and the server-side version from the "ws" package.
+ *
+ * This type creates a WebSocket type reference we use to indicate the unknown
+ * nature of the env in which is code is run.
+ */
+type UnsafeWebSocket = Omit<WebSocket, "terminate"> &
+  Partial<Pick<WebSocket, "terminate">>;
+
 export class ResilientWebSocket {
   private endpoint: string;
   private wsOptions?: ClientOptions | ClientRequestArgs | undefined;
@@ -26,7 +44,7 @@ export class ResilientWebSocket {
   private maxRetryDelayMs: number;
   private logAfterRetryCount: number;
 
-  wsClient: undefined | WebSocket;
+  wsClient: UnsafeWebSocket | undefined;
   wsUserClosed = false;
   private wsFailedAttempts: number;
   private heartbeatTimeout?: NodeJS.Timeout | undefined;
@@ -106,7 +124,13 @@ export class ResilientWebSocket {
       this.retryTimeout = undefined;
     }
 
-    this.wsClient = new WebSocket(this.endpoint, this.wsOptions);
+    // browser constructor supports a different 2nd argument for the constructor,
+    // so we need to ensure it's not included if we're running in that environment:
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket#protocols
+    this.wsClient = new WebSocket(
+      this.endpoint,
+      envIsBrowserOrWorker() ? undefined : this.wsOptions,
+    );
 
     this.wsClient.addEventListener("open", () => {
       this.logger.info("WebSocket connection established");
@@ -154,8 +178,21 @@ export class ResilientWebSocket {
     }
 
     this.heartbeatTimeout = setTimeout(() => {
-      this.logger.warn("Connection timed out. Reconnecting...");
-      this.wsClient?.terminate();
+      const warnMsg = "Connection timed out. Reconnecting...";
+      this.logger.warn(warnMsg);
+      if (this.wsClient) {
+        if (typeof this.wsClient.terminate === "function") {
+          this.wsClient.terminate();
+        } else {
+          // terminate is an implementation detail of the node-friendly
+          // https://www.npmjs.com/package/ws package, but is not a native WebSocket API,
+          // so we have to use the close method
+          this.wsClient.close(
+            CustomSocketClosureCodes.CLIENT_TIMEOUT_BUT_RECONNECTING,
+            warnMsg,
+          );
+        }
+      }
       this.handleReconnect();
     }, this.heartbeatTimeoutDurationMs);
   }

@@ -208,5 +208,35 @@
     "chain": "polynomial",
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "ethereal_devnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "ethereal_testnet_v2",
+    "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "spiderman",
+    "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "giwa_testnet",
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "itsnotreal2",
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "chain": "sonic_evm_testnet",
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "type": "EvmExecutorContract"
   }
 ]

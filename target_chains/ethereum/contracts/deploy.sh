@@ -21,7 +21,7 @@ shift
 
 if [ "$version" = "latest" ]; then
   echo "Deploying latest version"
-  stdoutputdir="../target_chains/ethereum/contracts/build/contracts"
+  stdoutputdir="$(pwd)/out"
 else
   # make sure version has format of vX.Y.Z
   if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -47,7 +47,10 @@ echo "=========== Deploying the contracts ==========="
 pnpm --filter=@pythnetwork/contract-manager exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir $stdoutputdir --private-key $PK --chain "$@"
 
 echo "=========== Cleaning up ==========="
-rm -rf $tmpdir
+if [ -n "${tmpdir:-}" ]; then
+  rm -rf $tmpdir
+fi
+
 
 if [ "$version" != "latest" ]; then
     echo "Verify the contracts by using the std-input artifacts of the contracts in https://github.com/pyth-network/pyth-crosschain/releases/tag/pyth-evm-contract-$version"

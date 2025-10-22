@@ -1,7 +1,10 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "2.0.0",
+  "version": "5.0.0",
   "description": "Pyth Lazer SDK",
+  "engines": {
+    "node": ">=22"
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -28,7 +31,9 @@
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "example": "node --loader ts-node/esm examples/index.js",
+    "example:streaming": "node --loader ts-node/esm examples/streaming.js",
+    "example:history": "node --loader ts-node/esm examples/history.js",
+    "example:symbols": "node --loader ts-node/esm examples/symbols.js",
     "doc": "typedoc --out docs/typedoc src"
   },
   "devDependencies": {
@@ -59,6 +64,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@isaacs/ttlcache": "^1.4.1",
+    "buffer": "^6.0.3",
     "isomorphic-ws": "^5.0.0",
     "ts-log": "^2.2.7",
     "ws": "^8.18.0"

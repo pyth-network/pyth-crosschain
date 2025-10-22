@@ -2,22 +2,40 @@
 
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import { Link } from "@pythnetwork/component-library/Link";
+import { useMemo } from "react";
 
-import TruncateToMiddle from "../TruncateToMiddle";
 import styles from "./index.module.scss";
 
-const CopyAddress = ({ address, url }: { address: string; url?: string }) => {
+const truncate = (value: string, maxLength?: number) => {
+  if (!maxLength) {
+    return value;
+  }
+  return `${value.slice(0, maxLength)}...${value.slice(-maxLength)}`;
+};
+
+const CopyAddress = ({
+  address,
+  maxLength,
+  url,
+}: {
+  address: string;
+  maxLength?: number;
+  url?: string;
+}) => {
+  const formattedAddress = useMemo(
+    () => truncate(address, maxLength),
+    [address, maxLength],
+  );
+
   return url ? (
     <div className={styles.address}>
       <Link href={url} target="_blank" rel="noreferrer">
-        <TruncateToMiddle text={address} />
+        {formattedAddress}
       </Link>
       <CopyButton text={address} iconOnly />
     </div>
   ) : (
-    <CopyButton text={address}>
-      <TruncateToMiddle text={address} />
-    </CopyButton>
+    <CopyButton text={address}>{formattedAddress}</CopyButton>
   );
 };
 

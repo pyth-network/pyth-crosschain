@@ -30,6 +30,7 @@ import {
   IotaPriceFeedContract,
   EvmPulseContract,
   EvmExecutorContract,
+  EvmLazerContract,
 } from "../../core/contracts";
 import { Token } from "../../core/token";
 import { PriceFeedContract, Storable } from "../../core/base";
@@ -53,6 +54,7 @@ export class Store {
   public wormhole_contracts: Record<string, WormholeContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
+  public lazer_contracts: Record<string, EvmLazerContract> = {};
 
   constructor(public path: string) {
     this.loadAllChains();
@@ -121,6 +123,7 @@ export class Store {
     contracts.push(...Object.values(this.entropy_contracts));
     contracts.push(...Object.values(this.wormhole_contracts));
     contracts.push(...Object.values(this.executor_contracts));
+    contracts.push(...Object.values(this.lazer_contracts));
     for (const contract of contracts) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
@@ -181,6 +184,7 @@ export class Store {
       [NearWormholeContract.type]: NearWormholeContract,
       [IotaPriceFeedContract.type]: IotaPriceFeedContract,
       [IotaWormholeContract.type]: IotaWormholeContract,
+      [EvmLazerContract.type]: EvmLazerContract,
     };
     this.getJsonFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
@@ -197,7 +201,8 @@ export class Store {
           this.contracts[chainContract.getId()] ||
           this.entropy_contracts[chainContract.getId()] ||
           this.wormhole_contracts[chainContract.getId()] ||
-          this.executor_contracts[chainContract.getId()]
+          this.executor_contracts[chainContract.getId()] ||
+          this.lazer_contracts[chainContract.getId()]
         )
           throw new Error(
             `Multiple contracts with id ${chainContract.getId()} found`,
@@ -208,6 +213,8 @@ export class Store {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else if (chainContract instanceof EvmExecutorContract) {
           this.executor_contracts[chainContract.getId()] = chainContract;
+        } else if (chainContract instanceof EvmLazerContract) {
+          this.lazer_contracts[chainContract.getId()] = chainContract;
         } else {
           this.contracts[chainContract.getId()] = chainContract;
         }

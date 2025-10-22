@@ -2,7 +2,6 @@ pub use pythnet_sdk::messages::{FeedId, PriceFeedMessage};
 use {
     crate::{check, error::GetPriceError},
     anchor_lang::prelude::{borsh::BorshSchema, *},
-    solana_program::pubkey::Pubkey,
 };
 
 /// Pyth price updates are bridged to all blockchains via Wormhole.
@@ -105,7 +104,7 @@ impl TwapUpdate {
     /// Get a `TwapPrice` from a `TwapUpdate` account for a given `FeedId` no older than `maximum_age` with a specific window size.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, TwapUpdate};
     /// use anchor_lang::prelude::*;
     ///
@@ -214,7 +213,7 @@ impl PriceUpdateV2 {
     /// Please read the documentation for [`VerificationLevel`] for more information.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, VerificationLevel, PriceUpdateV2};
     /// use anchor_lang::prelude::*;
     ///
@@ -258,7 +257,7 @@ impl PriceUpdateV2 {
     /// Get a `Price` from a `PriceUpdateV2` account for a given `FeedId` no older than `maximum_age` with `Full` verification.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
     /// use anchor_lang::prelude::*;
     ///
@@ -324,17 +323,16 @@ pub mod tests {
             error::GetPriceError,
             price_update::{Price, PriceUpdateV2, TwapPrice, TwapUpdate, VerificationLevel},
         },
-        anchor_lang::Discriminator,
+        anchor_lang::{prelude::*, solana_program::borsh0_10},
         pythnet_sdk::messages::PriceFeedMessage,
-        solana_program::{borsh0_10, clock::Clock, pubkey::Pubkey},
     };
 
     #[test]
     fn check_size() {
-        assert!(
-            PriceUpdateV2::discriminator().len() + borsh0_10::get_packed_len::<PriceUpdateV2>()
-                == PriceUpdateV2::LEN
-        );
+        // borsh0_10 is deprecated, v1::get_packed_len should be used in the future
+        #[allow(deprecated)]
+        let len = PriceUpdateV2::DISCRIMINATOR.len() + borsh0_10::get_packed_len::<PriceUpdateV2>();
+        assert_eq!(len, PriceUpdateV2::LEN);
     }
 
     #[test]

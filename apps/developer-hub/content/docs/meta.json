@@ -1,3 +1,3 @@
 {
-  "pages": ["pyth-core", "lazer", "express-relay", "entropy"]
+  "pages": ["price-feeds", "express-relay", "entropy"]
 }

@@ -20,6 +20,8 @@ import { Card } from "../Card/index.jsx";
 import { Link } from "../Link/index.jsx";
 import type { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
 
+export { default as Logo } from "./logo.svg";
+
 type Props = ComponentProps<"header"> & {
   appName: string;
   mainCta?:
@@ -30,6 +32,7 @@ type Props = ComponentProps<"header"> & {
     | undefined;
   mainMenu?: ReactNode | undefined;
   extraCta?: ReactNode | undefined;
+  displaySupportButton?: boolean | undefined;
 };
 
 export const Header = ({
@@ -38,6 +41,7 @@ export const Header = ({
   mainCta,
   mainMenu,
   extraCta,
+  displaySupportButton = true,
   ...props
 }: Props) => (
   <header className={clsx(styles.header, className)} {...props}>
@@ -53,16 +57,18 @@ export const Header = ({
         {mainMenu}
       </div>
       <div className={styles.rightMenu}>
-        <Button
-          variant="ghost"
-          size="sm"
-          rounded
-          beforeIcon={<Lifebuoy />}
-          drawer={SupportDrawer}
-          className={styles.supportButton ?? ""}
-        >
-          Support
-        </Button>
+        {displaySupportButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            rounded
+            beforeIcon={<Lifebuoy />}
+            drawer={SupportDrawer}
+            className={styles.supportButton ?? ""}
+          >
+            Support
+          </Button>
+        )}
         {extraCta}
         <MobileMenu className={styles.mobileMenu} mainCta={mainCta} />
         <Button
@@ -235,3 +241,5 @@ export const SupportDrawer = {
     </>
   ),
 };
+
+export { default as HeaderLogo } from "./logo.svg";

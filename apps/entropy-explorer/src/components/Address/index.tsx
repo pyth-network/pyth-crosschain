@@ -3,12 +3,12 @@ import { Link } from "@pythnetwork/component-library/Link";
 import { useMemo } from "react";
 
 import styles from "./index.module.scss";
-import { EntropyDeployments } from "../../entropy-deployments";
+import type { EntropyDeployment } from "../../entropy-deployments";
 import { truncate } from "../../truncate";
 
 type Props = {
   value: string;
-  chain: keyof typeof EntropyDeployments;
+  chain: EntropyDeployment;
   isAccount?: boolean | undefined;
 };
 
@@ -21,11 +21,9 @@ export const Transaction = (props: Omit<Props, "isAccount">) => (
 );
 
 const Address = ({ value, chain, isAccount }: Props) => {
-  const { explorerTxTemplate, explorerAccountTemplate } =
-    EntropyDeployments[chain];
   const explorerTemplate = isAccount
-    ? explorerAccountTemplate
-    : explorerTxTemplate;
+    ? chain.explorerAccountTemplate
+    : chain.explorerTxTemplate;
   const truncatedValue = useMemo(() => truncate(value), [value]);
   return (
     <div className={styles.address}>

@@ -848,5 +848,55 @@
     "chain": "camp_network",
     "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
     "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "ethereal_devnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "ethereal_testnet_v2",
+    "address": "0x66E9cBa5529824a03B5Bc9931d9c63637101D0F7",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "fluent_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "spiderman",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "zero_gravity",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "giwa_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "itsnotreal2",
+    "address": "0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "plasma",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "sonic_evm_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "injective_evm",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmWormholeContract"
   }
 ]

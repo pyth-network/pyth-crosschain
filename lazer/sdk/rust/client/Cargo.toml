@@ -1,12 +1,12 @@
 [package]
 name = "pyth-lazer-client"
-version = "3.0.0"
+version = "8.5.0"
 edition = "2021"
 description = "A Rust client for Pyth Lazer"
 license = "Apache-2.0"
 
 [dependencies]
-pyth-lazer-protocol = { path = "../protocol", version = "0.11.0" }
+pyth-lazer-protocol = { path = "../protocol", version = "0.19.0" }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.20", features = ["native-tls"] }
 futures-util = "0.3"
@@ -15,10 +15,16 @@ serde_json = "1.0"
 base64 = "0.22.1"
 anyhow = "1.0"
 tracing = "0.1"
-url = "2.4"
+url = { version = "2.4", features = ["serde"] }
 derive_more = { version = "1.0.0", features = ["from"] }
 backoff = { version = "0.4.0", features = ["futures", "tokio"] }
 ttl_cache = "0.5.1"
+reqwest = { version = "0.12.23", features = ["json"] }
+arc-swap = "1.7.1"
+futures = "0.3.31"
+humantime-serde = "1.1.1"
+fs-err = "3.1.1"
+atomicwrites = "0.4.4"
 
 
 [dev-dependencies]

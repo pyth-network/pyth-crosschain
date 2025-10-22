@@ -35,7 +35,7 @@ forge snapshot
 Anvil does not come with CreateX by default. It can be deployed or an RPC which has the contract can be forked. The below command forks an RPC with a functional CreateX contract.
 
 ```shell
-anvil --fork-url "https://eth-sepolia.public.blastapi.io"
+anvil --fork-url "https://sepolia.drpc.org"
 ```
 
 ### Deploy

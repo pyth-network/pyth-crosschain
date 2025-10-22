@@ -49,9 +49,10 @@ pub struct PriceFeedId(pub u32);
 pub struct ChannelId(pub u8);
 
 impl ChannelId {
-    pub const FIXED_RATE_1: ChannelId = ChannelId(1);
+    pub const REAL_TIME: ChannelId = ChannelId(1);
     pub const FIXED_RATE_50: ChannelId = ChannelId(2);
     pub const FIXED_RATE_200: ChannelId = ChannelId(3);
+    pub const FIXED_RATE_1000: ChannelId = ChannelId(4);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

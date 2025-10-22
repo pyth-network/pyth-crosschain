@@ -1,17 +1,17 @@
 "use client";
 
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import { Badge } from "@pythnetwork/component-library/Badge";
 import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
 import { NoResults } from "@pythnetwork/component-library/NoResults";
+import { SearchButton as SearchButtonComponent } from "@pythnetwork/component-library/SearchButton";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
-import { Skeleton } from "@pythnetwork/component-library/Skeleton";
+import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import {
-  Virtualizer,
   ListLayout,
+  Virtualizer,
 } from "@pythnetwork/component-library/Virtualizer";
 import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
 import {
@@ -20,16 +20,15 @@ import {
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
-import { useMemo, useCallback, useEffect, useState } from "react";
-import { useIsSSR, useCollator, useFilter } from "react-aria";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import styles from "./search-button.module.scss";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
-import { PriceFeedTag } from "../PriceFeedTag";
 import { PublisherTag } from "../PublisherTag";
 import { Score } from "../Score";
+import styles from "./search-button.module.scss";
 
 const INPUTS = new Set(["input", "select", "button", "textarea"]);
 
@@ -50,6 +49,7 @@ type ResolvedSearchButtonProps = {
     displaySymbol: string;
     assetClass: string;
     description: string;
+    priceAccount: string;
     icon: ReactNode;
   }[];
   publishers: ({
@@ -72,31 +72,7 @@ const ResolvedSearchButton = (props: ResolvedSearchButtonProps) => {
 
 const SearchButtonImpl = (
   props: Omit<ButtonProps<typeof UnstyledButton>, "children">,
-) => (
-  <div className={styles.searchButton}>
-    <Button
-      className={styles.largeScreenSearchButton ?? ""}
-      variant="outline"
-      beforeIcon={<MagnifyingGlass />}
-      size="sm"
-      rounded
-      {...props}
-    >
-      <SearchShortcutText />
-    </Button>
-    <Button
-      className={styles.smallScreenSearchButton ?? ""}
-      hideText
-      variant="ghost"
-      beforeIcon={<MagnifyingGlass />}
-      size="sm"
-      rounded
-      {...props}
-    >
-      Search
-    </Button>
-  </div>
-);
+) => <SearchButtonComponent size="sm" {...props} />;
 
 const useSearchDrawer = ({ feeds, publishers }: ResolvedSearchButtonProps) => {
   const drawer = useDrawer();
@@ -150,16 +126,6 @@ const useSearchHotkey = (openSearchDrawer: () => void) => {
   }, [handleKeyDown]);
 };
 
-const SearchShortcutText = () => {
-  const isSSR = useIsSSR();
-  return isSSR ? <Skeleton width={7} /> : <SearchTextImpl />;
-};
-
-const SearchTextImpl = () => {
-  const isMac = useMemo(() => navigator.userAgent.includes("Mac"), []);
-  return isMac ? "⌘ K" : "Ctrl K";
-};
-
 type SearchDialogContentsProps = ResolvedSearchButtonProps;
 
 const SearchDialogContents = ({
@@ -170,58 +136,38 @@ const SearchDialogContents = ({
   const logger = useLogger();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<ResultType | "">("");
-  const collator = useCollator();
-  const filter = useFilter({ sensitivity: "base", usage: "search" });
   const closeDrawer = useCallback(() => {
     drawer.close().catch((error: unknown) => {
       logger.error(error);
     });
   }, [drawer, logger]);
-  const results = useMemo(
-    () =>
-      [
-        ...(type === ResultType.Publisher
-          ? []
-          : // This is inefficient but Safari doesn't support `Iterator.filter`,
-            // see https://bugs.webkit.org/show_bug.cgi?id=248650
-            [...feeds.entries()]
-              .filter(([, { displaySymbol }]) =>
-                filter.contains(displaySymbol, search),
-              )
-              .map(([symbol, feed]) => ({
-                type: ResultType.PriceFeed as const,
-                id: symbol,
-                ...feed,
-              }))),
-        ...(type === ResultType.PriceFeed
-          ? []
-          : publishers
-              .filter(
-                (publisher) =>
-                  filter.contains(publisher.publisherKey, search) ||
-                  (publisher.name && filter.contains(publisher.name, search)),
-              )
-              .map((publisher) => ({
-                type: ResultType.Publisher as const,
-                id: [
-                  ClusterToName[publisher.cluster],
-                  publisher.publisherKey,
-                ].join(":"),
-                ...publisher,
-              }))),
-      ].sort((a, b) =>
-        collator.compare(
-          a.type === ResultType.PriceFeed
-            ? a.displaySymbol
-            : (a.name ?? a.publisherKey),
-          b.type === ResultType.PriceFeed
-            ? b.displaySymbol
-            : (b.name ?? b.publisherKey),
-        ),
-      ),
-    [feeds, publishers, collator, filter, search, type],
-  );
 
+  const results = useMemo(() => {
+    const filteredFeeds = matchSorter(feeds, search, {
+      keys: ["displaySymbol", "symbol", "description", "priceAccount"],
+    }).map(({ symbol, ...feed }) => ({
+      type: ResultType.PriceFeed as const,
+      id: symbol,
+      symbol,
+      ...feed,
+    }));
+
+    const filteredPublishers = matchSorter(publishers, search, {
+      keys: ["publisherKey", "name"],
+    }).map((publisher) => ({
+      type: ResultType.Publisher as const,
+      id: [ClusterToName[publisher.cluster], publisher.publisherKey].join(":"),
+      ...publisher,
+    }));
+
+    if (type === ResultType.PriceFeed) {
+      return filteredFeeds;
+    }
+    if (type === ResultType.Publisher) {
+      return filteredPublishers;
+    }
+    return [...filteredFeeds, ...filteredPublishers];
+  }, [feeds, publishers, search, type]);
   return (
     <div className={styles.searchDialogContents}>
       <div className={styles.searchBar}>
@@ -267,17 +213,15 @@ const SearchDialogContents = ({
             className={styles.listbox ?? ""}
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus={false}
-            // @ts-expect-error looks like react-aria isn't exposing this
-            // property in the typescript types correctly...
             shouldFocusOnHover
-            emptyState={
+            renderEmptyState={() => (
               <NoResults
                 query={search}
                 onClearSearch={() => {
                   setSearch("");
                 }}
               />
-            }
+            )}
           >
             {(result) => (
               <ListBoxItem
@@ -297,7 +241,7 @@ const SearchDialogContents = ({
               >
                 <div className={styles.smallScreen}>
                   {result.type === ResultType.PriceFeed ? (
-                    <PriceFeedTag
+                    <SymbolPairTag
                       className={styles.itemTag}
                       displaySymbol={result.displaySymbol}
                       description={result.description}
@@ -372,7 +316,7 @@ const SearchDialogContents = ({
                   </div>
                   {result.type === ResultType.PriceFeed ? (
                     <>
-                      <PriceFeedTag
+                      <SymbolPairTag
                         displaySymbol={result.displaySymbol}
                         description={result.description}
                         icon={result.icon}

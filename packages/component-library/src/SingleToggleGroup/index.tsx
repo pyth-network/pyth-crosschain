@@ -14,7 +14,9 @@ type OwnProps = {
   selectedKey?: Key | undefined;
   onSelectionChange?: (newValue: Key) => void;
   items: ComponentProps<typeof ToggleButton>[];
+  rounded?: boolean | undefined;
 };
+
 type Props = Omit<
   ComponentProps<typeof ToggleButtonGroup>,
   keyof OwnProps | "selectionMode" | "selectedKeys"
@@ -26,6 +28,7 @@ export const SingleToggleGroup = ({
   onSelectionChange,
   className,
   items,
+  rounded = false,
   ...props
 }: Props) => {
   const id = useId();
@@ -63,6 +66,7 @@ export const SingleToggleGroup = ({
           )}
           data-size="sm"
           data-variant="ghost"
+          data-rounded={rounded ? "" : undefined}
           {...toggleButton}
         >
           {(args) => (
