@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22",
+    "bun": ">=1.3.1"
   },
   "scripts": {
     "build:vercel": "next build",
@@ -52,5 +53,6 @@
     "stylelint-config-standard-scss": "catalog:",
     "typescript": "catalog:",
     "vercel": "catalog:"
-  }
+  },
+  "packageManager": "bun@1.3.1"
 }
