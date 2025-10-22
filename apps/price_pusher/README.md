@@ -87,14 +87,14 @@ To run the price pusher, please run the following commands, replacing the comman
 
 ```sh
 # Please run the two following commands once from the root of the repo to build the code.
-pnpm install
-pnpm turbo build --filter @pythnetwork/price-pusher
+bun install
+bun turbo build --filter @pythnetwork/price-pusher
 
 # Navigate to the price_pusher folder
 cd apps/price_pusher
 
 # For EVM
-pnpm run start evm --endpoint wss://example-rpc.com \
+bun start evm --endpoint wss://example-rpc.com \
     --pyth-contract-address 0xff1a0f4744e8582DF...... \
     --price-service-endpoint https://example-hermes-rpc.com \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
@@ -107,7 +107,7 @@ pnpm run start evm --endpoint wss://example-rpc.com \
     [--gas-price 160000000]
 
 # For Injective
-pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
+bun start injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-hermes-rpc.com" \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
@@ -119,7 +119,7 @@ pnpm run start injective --grpc-endpoint https://grpc-endpoint.com \
     [--polling-frequency 5]
 
 # For Aptos
-pnpm run start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
+bun start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 \
     --price-service-endpoint "https://example-hermes-rpc.com" \
     --price-config-file "path/to/price-config.beta.sample.yaml" \
@@ -128,7 +128,7 @@ pnpm run start aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     [--polling-frequency 5]
 
 # For Sui
-pnpm run start sui \
+bun start sui \
   --endpoint https://sui-testnet-rpc.allthatnode.com \
   --pyth-package-id 0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44 \
   --pyth-state-id 0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a \
@@ -143,7 +143,7 @@ pnpm run start sui \
   [--num-gas-objects 30]
 
 # For Near
-pnpm run start near \
+bun start near \
   --node-url https://rpc.testnet.near.org \
   --network testnet \
   --account-id payer.testnet \

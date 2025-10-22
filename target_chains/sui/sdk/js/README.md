@@ -4,11 +4,11 @@
 
 ## Installation
 
-### pnpm
+### bun
 
 ```
 cd to crosschain root
-$ pnpm install
+$ bun install
 ```
 
 ## Quickstart
@@ -100,11 +100,11 @@ Now in your contract you can consume the price by calling `pyth::get_price` or o
 
 In order to run the commands, a SUI private key is needed. The commands expects the key to be in the form of hex. You can use `sui keytool convert` to get the hex version of the key, to be used below, if your private key is in the form "suiprivkey...".
 
-You can run this example with `pnpm turbo --filter @pythnetwork/pyth-sui-js run example-relay` from the root of crosschain. Turbo will automatically build any detected dependencies including local ones, and filter is needed to tell it which sub-package to use (Such as this one). A full command that updates prices on Sui testnet looks like:
+You can run this example with `bun turbo --filter @pythnetwork/pyth-sui-js run example-relay` from the root of crosschain. Turbo will automatically build any detected dependencies including local ones, and filter is needed to tell it which sub-package to use (Such as this one). A full command that updates prices on Sui testnet looks like:
 
 ```bash
 export SUI_KEY=YOUR_PRIV_KEY;
-pnpm turbo run example-relay --filter @pythnetwork/pyth-sui-js -- \
+bun turbo run example-relay --filter @pythnetwork/pyth-sui-js -- \
 --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
 --hermes "https://hermes-beta.pyth.network" \
 --full-node "https://fullnode.testnet.sui.io:443" \

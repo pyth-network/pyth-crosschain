@@ -125,7 +125,6 @@ New packages should be configured with a few requirements in mind:
 
 1. You need to make sure `package.json` scripts are named such that that
    turborepo will hook into them at the expected times.
-
    - See [turbo.json](./turbo.json) to see the base configuration and ensure you
      use script names that match the tasks that turborepo is configured to run.
    - You don't need to define scripts for all the tasks that are in the root
@@ -147,7 +146,6 @@ New packages should be configured with a few requirements in mind:
    app](./apps/insights) as a starting point.
 
 3. If you are writing a package that will be published:
-
    - Make sure you are dual-exporting cjs and esm correctly, see [how the lazer
      sdk package builds](./lazer/sdk/js/package.json) (in particular look at the
      `build:cjs` and `build:esm` tasks) for an example for how to do this

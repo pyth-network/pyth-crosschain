@@ -8,7 +8,7 @@ Configure the `Move.toml` file accordingly. The wormhole address should be speci
 
 In order to run the commands, a SUI private key is needed. Often, the private key takes the form of "suiprivkey...". The example expects the key in the form of hex. You can use `sui keytool convert` to get the hex version fo the key, to be used below.
 
-Run the following commands from the root of crosschain to ensure dependencies are correctly installed and built. You can install dependencies in root using `pnpm install`.
+Run the following commands from the root of crosschain to ensure dependencies are correctly installed and built. You can install dependencies in root using `bun install`.
 
 We can deploy the pyth oracle and initialize it with the following command:
 

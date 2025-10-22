@@ -1,0 +1,7 @@
+# a combination of these fields
+# and additional enrichment in the package.json
+# make the install behavior mimic that of PNPM
+# (minus erroring out on engine or runtime differences)
+
+[install]
+linker = "isolated"

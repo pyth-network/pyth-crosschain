@@ -4,7 +4,7 @@
 2. If the wormhole contract is not deployed on the target chain run the following command:
 
    ```
-   pnpm instantiate-wormhole --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain>
+   bun instantiate-wormhole --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain>
    ```
 
    You can re-build the wormhole contract using the scripts given in `wormhole-stub`.
@@ -13,7 +13,7 @@
 3. Deploy the pyth contract:
 
    ```
-   pnpm instantiate-pyth --contract-version <X.Y.Z> --private-key <YOUR_PRIVATE_KEY_HEX> \
+   bun instantiate-pyth --contract-version <X.Y.Z> --private-key <YOUR_PRIVATE_KEY_HEX> \
        --deploy <stable or edge> --wormhole <WORMHOLE_CONTRACT_ADDRESS> --chain <chain>
    ```
 
@@ -21,7 +21,7 @@
 
    ```
    cd ../../../contract_manager
-   pnpm exec ts-node scripts/update_pricefeed.ts --private-key <YOUR_PRIVATE_KEY_HEX> --contract <CONTRACT_ID> --feed-id <FEED_ID>
+   bun scripts/update_pricefeed.ts --private-key <YOUR_PRIVATE_KEY_HEX> --contract <CONTRACT_ID> --feed-id <FEED_ID>
    ```
 
 5. Commit the new entries added to contract manager yaml files
