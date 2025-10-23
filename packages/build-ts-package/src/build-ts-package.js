@@ -116,11 +116,13 @@ export async function buildTsPackage(argv = process.argv) {
     entry: [
       "./src/**/*.ts",
       "./src/**/*.tsx",
+      // ignore all storybook entrypoints
       "!./src/**/*.stories.ts",
       "!./src/**/*.stories.tsx",
-      "!./src/**/*.stories.mdx", // if you use MDX stories
+      "!./src/**/*.stories.mdx",
     ],
     exports: all ? { all: true } : true,
+    // do not attempt to resolve or import CSS, SCSS or SVG files
     external: [/\.s?css$/, /\.svg$/],
     format,
     outDir: outDirPath,

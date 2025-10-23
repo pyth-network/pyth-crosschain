@@ -10,7 +10,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "tshy"
+    "build": "build-ts-package"
   },
   "keywords": [],
   "author": "",
@@ -27,9 +27,6 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  },
   "publishConfig": {
     "access": "public"
   },

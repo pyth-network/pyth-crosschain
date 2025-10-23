@@ -22,14 +22,14 @@
   },
   "scripts": {
     "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
+    "build": "build-ts-package",
     "build:types": "tsc --project tsconfig.build.json",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build:docs": "typedoc --out docs/typedoc src",
-    "build": "tshy"
+    "build:docs": "typedoc --out docs/typedoc src"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
@@ -65,8 +65,5 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  }
+  "packageManager": "pnpm@10.19.0"
 }

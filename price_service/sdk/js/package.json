@@ -18,7 +18,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tshy",
+    "build": "build-ts-package",
     "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
     "test:unit": "jest",
     "test:lint": "eslint src/ --max-warnings 0",
@@ -53,8 +53,5 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  }
+  "packageManager": "pnpm@10.19.0"
 }

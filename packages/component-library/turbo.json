@@ -7,7 +7,6 @@
         "//#install:modules",
         "^build",
         "build:declarations",
-        "build:esm",
         "build:scss",
         "build:svg"
       ]

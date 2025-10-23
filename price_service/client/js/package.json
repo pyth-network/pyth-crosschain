@@ -23,7 +23,7 @@
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "tshy",
+    "build": "build-ts-package",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -63,8 +63,5 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  }
+  "packageManager": "pnpm@10.19.0"
 }

@@ -26,4 +26,3 @@ __pycache__
 .cursorrules
 .corepack
 justfile
-.tshy*

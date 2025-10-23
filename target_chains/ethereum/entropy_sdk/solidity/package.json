@@ -14,7 +14,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "tshy",
+    "build": "build-ts-package",
     "test": "git diff --exit-code abis"
   },
   "keywords": [
@@ -38,9 +38,6 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  },
   "files": [
     "dist/**/*"
   ]

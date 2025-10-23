@@ -7,7 +7,7 @@
       "outputs": ["dist/types/**"]
     },
     "build": {
-      "dependsOn": ["build:types", "build:cjs", "build:esm"]
+      "dependsOn": ["build:types"]
     }
   }
 }

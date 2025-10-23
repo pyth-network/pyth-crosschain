@@ -32,7 +32,7 @@
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
     "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",
-    "build": "tshy"
+    "build": "build-ts-package"
   },
   "dependencies": {
     "@mysten/sui": "catalog:",
@@ -51,8 +51,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  }
+  "packageManager": "pnpm@10.19.0"
 }

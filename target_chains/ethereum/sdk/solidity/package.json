@@ -14,7 +14,7 @@
     "fix:format": "prettier --write .",
     "test:format": "prettier --check .",
     "test": "git diff --exit-code abis",
-    "build": "tshy"
+    "build": "build-ts-package"
   },
   "keywords": [
     "pyth",
@@ -38,9 +38,6 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  },
   "publishConfig": {
     "access": "public"
   },

@@ -32,7 +32,7 @@
     "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src",
-    "build": "tshy"
+    "build": "build-ts-package"
   },
   "keywords": [
     "pyth",
@@ -62,8 +62,5 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  }
+  "packageManager": "pnpm@10.19.0"
 }

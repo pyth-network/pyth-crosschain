@@ -22,7 +22,7 @@
   },
   "scripts": {
     "usage-example": "tsx src/examples/usage.ts",
-    "build": "tshy",
+    "build": "build-ts-package",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
@@ -55,8 +55,5 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0",
-  "tshy": {
-    "project": "tsconfig.build.json"
-  }
+  "packageManager": "pnpm@10.19.0"
 }
