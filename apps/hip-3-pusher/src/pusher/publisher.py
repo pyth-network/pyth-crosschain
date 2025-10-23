@@ -78,12 +78,12 @@ class Publisher:
             return
         else:
             logger.debug("Current oracle price: {}", oracle_px)
-            oracle_pxs[self.market_symbol] = oracle_px
+            oracle_pxs[f"{self.market_name}:{self.market_symbol}"] = oracle_px
 
         mark_pxs = []
         external_perp_pxs = {}
         if self.price_state.hl_mark_price:
-            external_perp_pxs[self.market_symbol] = self.price_state.hl_mark_price.price
+            external_perp_pxs[f"{self.market_name}:{self.market_symbol}"] = self.price_state.hl_mark_price.price
 
         # TODO: "Each update can change oraclePx and markPx by at most 1%."
         # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
