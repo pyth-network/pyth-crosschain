@@ -60,19 +60,23 @@ async fn connect_through_proxy(
             80
         });
 
-    let mut connect_request = format!(
-        "CONNECT {target_host}:{target_port} HTTP/1.1\r\nHost: {target_host}:{target_port}\r\n"
-    );
+    let target_authority = format!("{target_host}:{target_port}");
+    let mut request_parts = vec![format!("CONNECT {target_authority} HTTP/1.1")];
+    request_parts.push(format!("Host: {target_authority}"));
 
     let username = proxy_url.username();
     if !username.is_empty() {
         let password = proxy_url.password().unwrap_or("");
         let credentials = format!("{username}:{password}");
         let encoded = base64::engine::general_purpose::STANDARD.encode(credentials.as_bytes());
-        connect_request = format!("{connect_request}Proxy-Authorization: Basic {encoded}\r\n");
+        request_parts.push(format!("Proxy-Authorization: Basic {encoded}"));
     }
 
-    connect_request = format!("{connect_request}\r\n");
+    request_parts.push("Proxy-Connection: Keep-Alive".to_string());
+    request_parts.push(String::new()); // Empty line to end headers
+    request_parts.push(String::new()); // CRLF to end request
+
+    let connect_request = request_parts.join("\r\n");
 
     stream
         .write_all(connect_request.as_bytes())
@@ -81,18 +85,58 @@ async fn connect_through_proxy(
             "Failed to send CONNECT request to proxy at {proxy_url}"
         ))?;
 
-    let mut response = vec![0u8; 1024];
-    let n = stream.read(&mut response).await.context(format!(
-        "Failed to read CONNECT response from proxy at {proxy_url}"
-    ))?;
+    let mut response_buffer = Vec::new();
+    let mut temp_buf = [0u8; 1024];
+    let mut headers_complete = false;
 
-    let response_str =
-        String::from_utf8_lossy(response.get(..n).context("Invalid response slice range")?);
+    while !headers_complete {
+        let n = stream.read(&mut temp_buf).await.context(format!(
+            "Failed to read CONNECT response from proxy at {proxy_url}"
+        ))?;
 
-    if !response_str.starts_with("HTTP/1.1 200") && !response_str.starts_with("HTTP/1.0 200") {
+        if n == 0 {
+            bail!("Proxy closed connection before sending complete response");
+        }
+
+        response_buffer.extend_from_slice(temp_buf.get(..n).context("Invalid buffer slice")?);
+
+        if response_buffer.windows(4).any(|w| w == b"\r\n\r\n") {
+            headers_complete = true;
+        }
+    }
+
+    let response_str = String::from_utf8_lossy(&response_buffer);
+
+    let status_line = response_str
+        .lines()
+        .next()
+        .context("Empty response from proxy")?;
+
+    let parts: Vec<&str> = status_line.split_whitespace().collect();
+    if parts.len() < 2 {
         bail!(
-            "Proxy CONNECT failed: {}",
-            response_str.lines().next().unwrap_or("Unknown error")
+            "Invalid HTTP response from proxy at {}: {}",
+            proxy_url,
+            status_line
+        );
+    }
+
+    let status_code = parts
+        .get(1)
+        .context("Missing status code in proxy response")?
+        .parse::<u16>()
+        .context("Invalid status code in proxy response")?;
+
+    if status_code != 200 {
+        let status_text = parts
+            .get(2..)
+            .map(|s| s.join(" "))
+            .unwrap_or_else(|| "Unknown".to_string());
+        bail!(
+            "Proxy CONNECT failed with status {} {}: {}",
+            status_code,
+            status_text,
+            status_line
         );
     }
 
