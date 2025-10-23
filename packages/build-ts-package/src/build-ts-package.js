@@ -100,8 +100,8 @@ export async function buildTsPackage(argv = process.argv) {
 
   const outDirPath = path.isAbsolute(outDir) ? outDir : path.join(cwd, outDir);
 
-  /** @type {import('tsdown').Format} */
-  const format = [noCjs ? undefined : "cjs", noEsm ? undefined : "esm"].filter(
+  /** @type {import('tsdown').Format[]} */
+  const formats = [noCjs ? undefined : "cjs", noEsm ? undefined : "esm"].filter(
     (format) => Boolean(format),
   );
 
@@ -111,27 +111,51 @@ export async function buildTsPackage(argv = process.argv) {
     throw new Error(`unable to build ${cwd} because no tsconfig was found`);
   }
 
-  await build({
-    dts: !noDts,
-    entry: [
-      "./src/**/*.ts",
-      "./src/**/*.tsx",
-      // ignore all storybook entrypoints
-      "!./src/**/*.stories.ts",
-      "!./src/**/*.stories.tsx",
-      "!./src/**/*.stories.mdx",
-    ],
-    exports: all ? { all: true } : true,
-    // do not attempt to resolve or import CSS, SCSS or SVG files
-    external: [/\.s?css$/, /\.svg$/],
-    format,
-    outDir: outDirPath,
-    platform: "neutral",
-    plugins: [],
-    tsconfig,
-    unbundle: true,
-    watch,
-  });
+  await Promise.all(
+    formats.map((format) =>
+      build({
+        clean: false,
+        dts: !noDts,
+        entry: [
+          "./src/**/*.ts",
+          "./src/**/*.tsx",
+          // ignore all storybook entrypoints
+          "!./src/**/*.stories.ts",
+          "!./src/**/*.stories.tsx",
+          "!./src/**/*.stories.mdx",
+        ],
+        exports: all ? { all: true } : true,
+        // do not attempt to resolve or import CSS, SCSS or SVG files
+        external: [/\.s?css$/, /\.svg$/],
+        format,
+        outDir: path.join(outDirPath, format),
+        platform: "neutral",
+        tsconfig,
+        unbundle: true,
+        watch,
+      }),
+    ),
+  );
+  // await build({
+  //   dts: !noDts,
+  //   entry: [
+  //     "./src/**/*.ts",
+  //     "./src/**/*.tsx",
+  //     // ignore all storybook entrypoints
+  //     "!./src/**/*.stories.ts",
+  //     "!./src/**/*.stories.tsx",
+  //     "!./src/**/*.stories.mdx",
+  //   ],
+  //   exports: all ? { all: true } : true,
+  //   // do not attempt to resolve or import CSS, SCSS or SVG files
+  //   external: [/\.s?css$/, /\.svg$/],
+  //   format,
+  //   outDir: outDirPath,
+  //   platform: "neutral",
+  //   tsconfig,
+  //   unbundle: true,
+  //   watch,
+  // });
 }
 
 await buildTsPackage();

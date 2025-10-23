@@ -51,12 +51,26 @@
     "//#test:integration": {
       "dependsOn": ["//#install:modules", "^build"]
     },
+    "clean": {
+      "cache": false,
+      "outputs": []
+    },
+    "build:scss": {
+      "outputs": ["dist/esm/**/*.scss"],
+      "cache": false
+    },
+    "build:svg": {
+      "outputs": ["dist/esm/**/*.svg"],
+      "cache": false
+    },
     "build": {
       "dependsOn": [
         "//#install:modules",
         "pull:env",
         "^build",
-        "clean"
+        "clean",
+        "build:scss",
+        "build:svg"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -70,11 +84,7 @@
       "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
     },
     "build:vercel": {
-      "dependsOn": [
-        "//#install:modules",
-        "pull:env",
-        "^build"
-      ],
+      "dependsOn": ["//#install:modules", "pull:env", "^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
@@ -85,10 +95,6 @@
         "!vercel.json"
       ],
       "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
-    },
-    "clean": {
-      "cache": false,
-      "outputs": []
     },
     "fix": {
       "dependsOn": ["fix:lint", "fix:format"],
