@@ -13,16 +13,8 @@
     "dist/**/*"
   ],
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/esm/client.d.ts",
-        "default": "./dist/esm/client.js"
-      },
-      "require": {
-        "types": "./dist/cjs/client.d.ts",
-        "default": "./dist/cjs/client.js"
-      }
-    }
+    ".": "./src/client.ts",
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "scripts": {
@@ -49,7 +41,18 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/client.js",
+        "require": "./dist/cjs/client.cjs",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "main": "./dist/cjs/client.js",
+  "module": "./dist/esm/client.js",
+  "types": "./dist/esm/client.d.ts"
 }

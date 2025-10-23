@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -18,7 +18,40 @@
     "directory": "target_chains/ethereum/sdk/js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./filler": {
+        "import": "./dist/esm/filler.mjs",
+        "require": "./dist/cjs/filler.cjs",
+        "types": "./dist/esm/filler.d.ts"
+      },
+      "./multicall3-bundler": {
+        "import": "./dist/esm/multicall3-bundler.mjs",
+        "require": "./dist/cjs/multicall3-bundler.cjs",
+        "types": "./dist/esm/multicall3-bundler.d.ts"
+      },
+      "./pyth-abi": {
+        "import": "./dist/esm/pyth-abi.mjs",
+        "require": "./dist/cjs/pyth-abi.cjs",
+        "types": "./dist/esm/pyth-abi.d.ts"
+      },
+      "./tracer/debug-trace-call": {
+        "import": "./dist/esm/tracer/debug-trace-call.mjs",
+        "require": "./dist/cjs/tracer/debug-trace-call.cjs",
+        "types": "./dist/esm/tracer/debug-trace-call.d.ts"
+      },
+      "./tracer/trace-call-many": {
+        "import": "./dist/esm/tracer/trace-call-many.mjs",
+        "require": "./dist/cjs/tracer/trace-call-many.cjs",
+        "types": "./dist/esm/tracer/trace-call-many.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "build": "build-ts-package",
@@ -58,5 +91,15 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.mjs",
+  "exports": {
+    ".": "./src/index.ts",
+    "./filler": "./src/filler.ts",
+    "./multicall3-bundler": "./src/multicall3-bundler.ts",
+    "./pyth-abi": "./src/pyth-abi.ts",
+    "./tracer/debug-trace-call": "./src/tracer/debug-trace-call.ts",
+    "./tracer/trace-call-many": "./src/tracer/trace-call-many.ts",
+    "./package.json": "./package.json"
+  }
 }

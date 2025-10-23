@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -18,7 +18,25 @@
     "directory": "target_chains/aptos/sdk/js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./AptosPriceServiceConnection": {
+        "import": "./dist/esm/AptosPriceServiceConnection.mjs",
+        "require": "./dist/cjs/AptosPriceServiceConnection.cjs",
+        "types": "./dist/esm/AptosPriceServiceConnection.d.ts"
+      },
+      "./examples/AptosRelay": {
+        "import": "./dist/esm/examples/AptosRelay.mjs",
+        "require": "./dist/cjs/examples/AptosRelay.cjs",
+        "types": "./dist/esm/examples/AptosRelay.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "build": "build-ts-package",
@@ -62,5 +80,12 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.mjs",
+  "exports": {
+    ".": "./src/index.ts",
+    "./AptosPriceServiceConnection": "./src/AptosPriceServiceConnection.ts",
+    "./examples/AptosRelay": "./src/examples/AptosRelay.ts",
+    "./package.json": "./package.json"
+  }
 }
