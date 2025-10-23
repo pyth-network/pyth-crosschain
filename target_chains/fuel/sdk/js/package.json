@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -18,7 +18,35 @@
     "directory": "target_chains/fuel/sdk/js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./abi/pyth-contract-abi": {
+        "import": "./dist/esm/abi/pyth-contract-abi.mjs",
+        "require": "./dist/cjs/abi/pyth-contract-abi.cjs",
+        "types": "./dist/esm/abi/pyth-contract-abi.d.ts"
+      },
+      "./types": {
+        "import": "./dist/esm/types/index.mjs",
+        "require": "./dist/cjs/types/index.cjs",
+        "types": "./dist/esm/types/index.d.ts"
+      },
+      "./types/PythContract": {
+        "import": "./dist/esm/types/PythContract.mjs",
+        "require": "./dist/cjs/types/PythContract.cjs",
+        "types": "./dist/esm/types/PythContract.d.ts"
+      },
+      "./types/PythContractFactory": {
+        "import": "./dist/esm/types/PythContractFactory.mjs",
+        "require": "./dist/cjs/types/PythContractFactory.cjs",
+        "types": "./dist/esm/types/PythContractFactory.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "usage-example": "tsx src/examples/usage.ts",
@@ -57,5 +85,14 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.mjs",
+  "exports": {
+    ".": "./src/index.ts",
+    "./abi/pyth-contract-abi": "./src/abi/pyth-contract-abi.ts",
+    "./types": "./src/types/index.ts",
+    "./types/PythContract": "./src/types/PythContract.ts",
+    "./types/PythContractFactory": "./src/types/PythContractFactory.ts",
+    "./package.json": "./package.json"
+  }
 }

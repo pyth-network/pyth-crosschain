@@ -7,7 +7,7 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.mjs",
+  "main": "./dist/cjs/index.js",
   "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",

@@ -1,4 +1,6 @@
-import PYTH_CONTRACT_ABI from "./abi/pyth-contract-abi.json";
+export * from "./types";
+export type * from "./types/PythContract";
+export { PYTH_CONTRACT_ABI } from "./abi/pyth-contract-abi";
 
 /** Address of the Pyth contract on Fuel Sepolia (testnet). */
 export const PYTH_CONTRACT_ADDRESS_SEPOLIA =
@@ -11,7 +13,3 @@ export const PYTH_CONTRACT_ADDRESS_MAINNET =
 /** Asset ID of ETH on Fuel. */
 export const FUEL_ETH_ASSET_ID =
   "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
-
-export { PYTH_CONTRACT_ABI };
-export * from "./types";
-export type * from "./types/PythContract";

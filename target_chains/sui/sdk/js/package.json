@@ -6,7 +6,7 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/esm/index.mjs",
+  "main": "./dist/cjs/index.js",
   "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
@@ -20,10 +20,26 @@
   "publishConfig": {
     "access": "public",
     "exports": {
-      ".": "./dist/esm/index.mjs",
-      "./client": "./dist/esm/client.mjs",
-      "./examples/SuiRelay": "./dist/esm/examples/SuiRelay.mjs",
-      "./SuiPriceServiceConnection": "./dist/esm/SuiPriceServiceConnection.mjs",
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./client": {
+        "import": "./dist/esm/client.mjs",
+        "require": "./dist/cjs/client.cjs",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "./examples/SuiRelay": {
+        "import": "./dist/esm/examples/SuiRelay.mjs",
+        "require": "./dist/cjs/examples/SuiRelay.cjs",
+        "types": "./dist/esm/examples/SuiRelay.d.ts"
+      },
+      "./SuiPriceServiceConnection": {
+        "import": "./dist/esm/SuiPriceServiceConnection.mjs",
+        "require": "./dist/cjs/SuiPriceServiceConnection.cjs",
+        "types": "./dist/esm/SuiPriceServiceConnection.d.ts"
+      },
       "./package.json": "./package.json"
     }
   },

@@ -112,6 +112,9 @@
     "ws": "^8.18.0"
   },
   "packageManager": "pnpm@10.19.0",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
@@ -124,8 +127,5 @@
     "./util/env-util": "./src/util/env-util.ts",
     "./util/url-util": "./src/util/url-util.ts",
     "./package.json": "./package.json"
-  },
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.ts",
-  "module": "./dist/esm/index.js"
+  }
 }

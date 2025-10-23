@@ -1,4 +1,4 @@
-import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
+import { HermesClient, type PriceUpdate } from "@pythnetwork/hermes-client";
 import {
   PYTH_CONTRACT_ADDRESS_SEPOLIA,
   PYTH_CONTRACT_ABI,
@@ -28,8 +28,8 @@ async function main() {
   const priceFeedId =
     "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"; // Pyth ETH/USD price feed id
   const previousPrice = (
-    await contract.functions.price_unsafe(priceFeedId).get()
-  ).value;
+    await contract.functions.price_unsafe?.(priceFeedId)?.get()
+  )?.value;
   console.log(
     `Previous price: ${
       previousPrice.price.toNumber() * 10 ** -previousPrice.exponent
@@ -46,33 +46,33 @@ async function main() {
   ]);
   console.log(
     `Current price from Hermes: ${
-      Number(priceUpdates.parsed?.[0].price.price) *
-      10 ** Number(priceUpdates.parsed?.[0].price.expo)
+      Number(priceUpdates.parsed?.[0]?.price.price) *
+      10 ** Number(priceUpdates.parsed?.[0]?.price.expo)
     }`,
   );
 
   const priceFeedUpdateData = arrayify(
-    Buffer.from(priceUpdates.binary.data[0], "hex"),
+    Buffer.from(priceUpdates.binary.data[0] ?? '', "hex"),
   );
 
   // Query the amount of update fee required
   console.log(`Querying update fee...`);
   const updateFee: number = (
-    await contract.functions.update_fee([priceFeedUpdateData]).get()
-  ).value;
+    await contract.functions.update_fee?.([priceFeedUpdateData])?.get()
+  )?.value;
   console.log(`Update fee: ${updateFee}`);
 
   const tx = await contract.functions
-    .update_price_feeds([priceFeedUpdateData])
+    .update_price_feeds?.([priceFeedUpdateData])
     .callParams({
       forward: [updateFee, hexlify(FUEL_ETH_ASSET_ID)],
     })
     .call();
-  console.log(`Transaction confirmed: ${tx.transactionId}`);
+  console.log(`Transaction confirmed: ${tx?.transactionId}`);
 
   const newPrice = (
-    await contract.functions.price_no_older_than(60, priceFeedId).get()
-  ).value;
+    await contract.functions.price_no_older_than?.(60, priceFeedId)?.get()
+  )?.value;
   console.log(
     `New price: ${newPrice.price.toNumber() * 10 ** -newPrice.exponent}`,
   );

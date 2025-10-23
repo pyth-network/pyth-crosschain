@@ -69,10 +69,11 @@ export async function buildTsPackage(argv = process.argv) {
       description: "the CWD to use when building",
       type: "string",
     })
-    .option('exclude', {
+    .option("exclude", {
       default: [],
-      description: 'one or more file exclusion glob patterns. please note, these must be EXCLUSION glob patterns, or they may end up getting picked up by the build',
-      type: 'array',
+      description:
+        "one or more file exclusion glob patterns. please note, these must be EXCLUSION glob patterns, or they may end up getting picked up by the build",
+      type: "array",
     })
     .option("noCjs", {
       default: false,
@@ -145,7 +146,7 @@ export async function buildTsPackage(argv = process.argv) {
         "!./src/**/*.spec.tsx",
         "!./src/**/*.stories.tsx",
         "!./src/**/*.stories.mdx",
-        ...(exclude.map(ex => String(ex))),
+        ...exclude.map((ex) => String(ex)),
       ],
       exports:
         format === "esm" || numFormats <= 1 ? { all, devExports: true } : false,
@@ -170,7 +171,7 @@ export async function buildTsPackage(argv = process.argv) {
       const exportPath = String(pjson.publishConfig.exports[exportKey]);
 
       // skip over all package.json files
-      if (exportPath.includes('package.json')) continue;
+      if (exportPath.includes("package.json")) continue;
 
       // @ts-expect-error - we can definitely index here, so please be silenced!
       pjson.publishConfig.exports[exportKey] = {
@@ -181,7 +182,9 @@ export async function buildTsPackage(argv = process.argv) {
         types: exportPath.replace(path.extname(exportPath), ".d.ts"),
       };
       if (pjson.main) {
-        pjson.main = pjson.main.replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`);
+        pjson.main = pjson.main
+          .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`)
+          .replace(/\.mjs$/, ".js");
       }
     }
 

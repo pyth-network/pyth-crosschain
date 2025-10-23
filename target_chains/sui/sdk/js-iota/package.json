@@ -6,7 +6,7 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.mjs",
+  "main": "./dist/cjs/index.js",
   "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",

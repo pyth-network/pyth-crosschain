@@ -3,7 +3,7 @@
   "version": "1.8.0",
   "description": "Pyth price service SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.mjs",
+  "main": "./dist/cjs/index.js",
   "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
