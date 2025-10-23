@@ -7,6 +7,10 @@ import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
 /**
+ * @typedef {import('tsdown').Format} Format
+ */
+
+/**
  * returns the path of the found tsconfig file
  * or uses the provided override, instead,
  * if it's available
@@ -100,9 +104,10 @@ export async function buildTsPackage(argv = process.argv) {
 
   const outDirPath = path.isAbsolute(outDir) ? outDir : path.join(cwd, outDir);
 
-  /** @type {import('tsdown').Format[]} */
-  const formats = [noCjs ? undefined : "cjs", noEsm ? undefined : "esm"].filter(
-    (format) => Boolean(format),
+  // ESM Must come before CJS, as those typings and such take precedence
+  // when dual publishing.
+  const formats = /** @type {Format[]} */ (
+    [noEsm ? undefined : "esm", noCjs ? undefined : "cjs"].filter(Boolean)
   );
 
   const tsconfig = await findTsconfigFile(cwd, tsconfigOverride);
@@ -111,51 +116,62 @@ export async function buildTsPackage(argv = process.argv) {
     throw new Error(`unable to build ${cwd} because no tsconfig was found`);
   }
 
-  await Promise.all(
-    formats.map((format) =>
-      build({
-        clean: false,
-        dts: !noDts,
-        entry: [
-          "./src/**/*.ts",
-          "./src/**/*.tsx",
-          // ignore all storybook entrypoints
-          "!./src/**/*.stories.ts",
-          "!./src/**/*.stories.tsx",
-          "!./src/**/*.stories.mdx",
-        ],
-        exports: all ? { all: true } : true,
-        // do not attempt to resolve or import CSS, SCSS or SVG files
-        external: [/\.s?css$/, /\.svg$/],
-        format,
-        outDir: path.join(outDirPath, format),
-        platform: "neutral",
-        tsconfig,
-        unbundle: true,
-        watch,
-      }),
-    ),
-  );
-  // await build({
-  //   dts: !noDts,
-  //   entry: [
-  //     "./src/**/*.ts",
-  //     "./src/**/*.tsx",
-  //     // ignore all storybook entrypoints
-  //     "!./src/**/*.stories.ts",
-  //     "!./src/**/*.stories.tsx",
-  //     "!./src/**/*.stories.mdx",
-  //   ],
-  //   exports: all ? { all: true } : true,
-  //   // do not attempt to resolve or import CSS, SCSS or SVG files
-  //   external: [/\.s?css$/, /\.svg$/],
-  //   format,
-  //   outDir: outDirPath,
-  //   platform: "neutral",
-  //   tsconfig,
-  //   unbundle: true,
-  //   watch,
-  // });
+  const pjsonPath = path.join(path.dirname(tsconfig), "package.json");
+
+  const numFormats = formats.length;
+
+  for (const format of formats) {
+    await build({
+      clean: false,
+      dts: !noDts,
+      entry: [
+        "./src/**/*.ts",
+        "./src/**/*.tsx",
+        // ignore all storybook entrypoints
+        "!./src/**/*.stories.ts",
+        "!./src/**/*.stories.tsx",
+        "!./src/**/*.stories.mdx",
+      ],
+      exports:
+        format === "esm" || numFormats <= 1 ? { all, devExports: true } : false,
+      // do not attempt to resolve or import CSS, SCSS or SVG files
+      external: [/\.s?css$/, /\.svg$/],
+      format,
+      outDir: path.join(outDirPath, format),
+      platform: "neutral",
+      tsconfig,
+      unbundle: true,
+      watch,
+    });
+  }
+  if (numFormats > 1) {
+    // we need to manually set the cjs exports, since tsdown
+    // isn't yet capable of doing this for us
+    /** @type {import('type-fest').PackageJson} */
+    const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
+    if (!pjson.publishConfig?.exports) return;
+    for (const exportKey of Object.keys(pjson.publishConfig.exports)) {
+      // @ts-expect-error - we can definitely index here, so please be silenced!
+      const exportPath = String(pjson.publishConfig.exports[exportKey]);
+
+      // skip over all package.json files
+      if (exportPath.includes('package.json')) continue;
+
+      // @ts-expect-error - we can definitely index here, so please be silenced!
+      pjson.publishConfig.exports[exportKey] = {
+        import: exportPath,
+        require: exportPath
+          .replace(path.extname(exportPath), ".cjs")
+          .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`),
+        types: exportPath.replace(path.extname(exportPath), ".d.ts"),
+      };
+      if (pjson.main) {
+        pjson.main = pjson.main.replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`);
+      }
+    }
+
+    await fs.writeFile(pjsonPath, JSON.stringify(pjson, undefined, 2), "utf8");
+  }
 }
 
 await buildTsPackage();

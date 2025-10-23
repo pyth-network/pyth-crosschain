@@ -7,7 +7,60 @@
     "pnpm": ">=10.19.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/index.js",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./client": {
+        "import": "./dist/esm/client.js",
+        "require": "./dist/cjs/client.cjs",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "./constants": {
+        "import": "./dist/esm/constants.js",
+        "require": "./dist/cjs/constants.cjs",
+        "types": "./dist/esm/constants.d.ts"
+      },
+      "./protocol": {
+        "import": "./dist/esm/protocol.js",
+        "require": "./dist/cjs/protocol.cjs",
+        "types": "./dist/esm/protocol.d.ts"
+      },
+      "./socket/resilient-websocket": {
+        "import": "./dist/esm/socket/resilient-websocket.js",
+        "require": "./dist/cjs/socket/resilient-websocket.cjs",
+        "types": "./dist/esm/socket/resilient-websocket.d.ts"
+      },
+      "./socket/websocket-pool": {
+        "import": "./dist/esm/socket/websocket-pool.js",
+        "require": "./dist/cjs/socket/websocket-pool.cjs",
+        "types": "./dist/esm/socket/websocket-pool.d.ts"
+      },
+      "./util": {
+        "import": "./dist/esm/util/index.js",
+        "require": "./dist/cjs/util/index.cjs",
+        "types": "./dist/esm/util/index.d.ts"
+      },
+      "./util/buffer-util": {
+        "import": "./dist/esm/util/buffer-util.js",
+        "require": "./dist/cjs/util/buffer-util.cjs",
+        "types": "./dist/esm/util/buffer-util.d.ts"
+      },
+      "./util/env-util": {
+        "import": "./dist/esm/util/env-util.js",
+        "require": "./dist/cjs/util/env-util.cjs",
+        "types": "./dist/esm/util/env-util.d.ts"
+      },
+      "./util/url-util": {
+        "import": "./dist/esm/util/url-util.js",
+        "require": "./dist/cjs/util/url-util.cjs",
+        "types": "./dist/esm/util/url-util.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "files": [
     "dist/**/*"
@@ -60,19 +113,19 @@
   },
   "packageManager": "pnpm@10.19.0",
   "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/index.d.ts",
-        "default": "./dist/commonjs/index.js"
-      }
-    }
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./constants": "./src/constants.ts",
+    "./protocol": "./src/protocol.ts",
+    "./socket/resilient-websocket": "./src/socket/resilient-websocket.ts",
+    "./socket/websocket-pool": "./src/socket/websocket-pool.ts",
+    "./util": "./src/util/index.ts",
+    "./util/buffer-util": "./src/util/buffer-util.ts",
+    "./util/env-util": "./src/util/env-util.ts",
+    "./util/url-util": "./src/util/url-util.ts",
+    "./package.json": "./package.json"
   },
-  "main": "./dist/commonjs/index.js",
-  "types": "./dist/commonjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/esm/index.d.ts",
   "module": "./dist/esm/index.js"
 }

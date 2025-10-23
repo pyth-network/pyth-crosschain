@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@cprussin/prettier-config": "catalog:",
+    "build-ts-package": "workspace:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
     "turbo": "^2.5.8"

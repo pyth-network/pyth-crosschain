@@ -16,7 +16,8 @@
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
-    "@types/yargs": "catalog:"
+    "@types/yargs": "catalog:",
+    "type-fest": "^5.1.0"
   },
   "dependencies": {
     "tsdown": "^0.15.9",
