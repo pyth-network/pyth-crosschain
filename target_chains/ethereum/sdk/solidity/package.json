@@ -13,8 +13,7 @@
     "build:bin": "solcjs --bin MockPyth.sol --base-path . -o build/",
     "fix:format": "prettier --write .",
     "test:format": "prettier --check .",
-    "test": "git diff --exit-code abis",
-    "build": "build-ts-package"
+    "test": "git diff --exit-code abis"
   },
   "keywords": [
     "pyth",
@@ -32,16 +31,5 @@
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
     "solc": "^0.8.25"
-  },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=10.19.0"
-  },
-  "packageManager": "pnpm@10.19.0",
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist/**/*"
-  ]
+  }
 }

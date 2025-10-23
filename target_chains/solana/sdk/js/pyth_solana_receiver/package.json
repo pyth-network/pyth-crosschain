@@ -3,8 +3,8 @@
   "version": "0.12.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/esm/index.mjs",
+  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -15,7 +15,18 @@
     "directory": "target_chains/solana/sdk/js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": "./dist/esm/index.mjs",
+      "./address": "./dist/esm/address.mjs",
+      "./compute_budget": "./dist/esm/compute_budget.mjs",
+      "./idl/pyth_push_oracle": "./dist/esm/idl/pyth_push_oracle.mjs",
+      "./idl/pyth_solana_receiver": "./dist/esm/idl/pyth_solana_receiver.mjs",
+      "./idl/wormhole_core_bridge_solana": "./dist/esm/idl/wormhole_core_bridge_solana.mjs",
+      "./PythSolanaReceiver": "./dist/esm/PythSolanaReceiver.mjs",
+      "./vaa": "./dist/esm/vaa.mjs",
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "build": "build-ts-package",
@@ -57,5 +68,17 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.mjs",
+  "exports": {
+    ".": "./src/index.ts",
+    "./address": "./src/address.ts",
+    "./compute_budget": "./src/compute_budget.ts",
+    "./idl/pyth_push_oracle": "./src/idl/pyth_push_oracle.ts",
+    "./idl/pyth_solana_receiver": "./src/idl/pyth_solana_receiver.ts",
+    "./idl/wormhole_core_bridge_solana": "./src/idl/wormhole_core_bridge_solana.ts",
+    "./PythSolanaReceiver": "./src/PythSolanaReceiver.ts",
+    "./vaa": "./src/vaa.ts",
+    "./package.json": "./package.json"
+  }
 }

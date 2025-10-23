@@ -2975,6 +2975,9 @@ importers:
         specifier: ^0.96.1
         version: 0.96.1(encoding@0.1.13)
     devDependencies:
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 3.1.2(typescript@5.8.2)
       '@pythnetwork/hermes-client':
         specifier: workspace:*
         version: link:../../../../apps/hermes/client/js

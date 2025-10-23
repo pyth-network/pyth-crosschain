@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.mjs",
+  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -18,7 +18,30 @@
     "directory": "target_chains/sui/sdk/js-iota"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./client": {
+        "import": "./dist/esm/client.mjs",
+        "require": "./dist/cjs/client.cjs",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "./examples/IotaRelay": {
+        "import": "./dist/esm/examples/IotaRelay.mjs",
+        "require": "./dist/cjs/examples/IotaRelay.cjs",
+        "types": "./dist/esm/examples/IotaRelay.d.ts"
+      },
+      "./IotaPriceServiceConnection": {
+        "import": "./dist/esm/IotaPriceServiceConnection.mjs",
+        "require": "./dist/cjs/IotaPriceServiceConnection.cjs",
+        "types": "./dist/esm/IotaPriceServiceConnection.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "build": "build-ts-package",
@@ -63,5 +86,13 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.mjs",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./examples/IotaRelay": "./src/examples/IotaRelay.ts",
+    "./IotaPriceServiceConnection": "./src/IotaPriceServiceConnection.ts",
+    "./package.json": "./package.json"
+  }
 }

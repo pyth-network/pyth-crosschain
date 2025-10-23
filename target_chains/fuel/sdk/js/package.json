@@ -22,7 +22,8 @@
   },
   "scripts": {
     "usage-example": "tsx src/examples/usage.ts",
-    "build": "build-ts-package",
+    "build": "build-ts-package --exclude '!./src/examples/**/**'",
+    "clean": "rm -rf dist/",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
@@ -38,6 +39,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/node": "catalog:",
     "@typescript-eslint/eslint-plugin": "^7.7.0",

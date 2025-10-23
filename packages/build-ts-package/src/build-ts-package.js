@@ -49,6 +49,7 @@ export async function buildTsPackage(argv = process.argv) {
   const {
     all,
     cwd,
+    exclude,
     noCjs,
     noDts,
     noEsm,
@@ -67,6 +68,11 @@ export async function buildTsPackage(argv = process.argv) {
       default: process.cwd(),
       description: "the CWD to use when building",
       type: "string",
+    })
+    .option('exclude', {
+      default: [],
+      description: 'one or more file exclusion glob patterns. please note, these must be EXCLUSION glob patterns, or they may end up getting picked up by the build',
+      type: 'array',
     })
     .option("noCjs", {
       default: false,
@@ -139,6 +145,7 @@ export async function buildTsPackage(argv = process.argv) {
         "!./src/**/*.spec.tsx",
         "!./src/**/*.stories.tsx",
         "!./src/**/*.stories.mdx",
+        ...(exclude.map(ex => String(ex))),
       ],
       exports:
         format === "esm" || numFormats <= 1 ? { all, devExports: true } : false,

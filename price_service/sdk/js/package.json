@@ -3,7 +3,7 @@
   "version": "1.8.0",
   "description": "Pyth price service SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/esm/index.mjs",
+  "main": "./dist/cjs/index.mjs",
   "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
@@ -17,9 +17,21 @@
   "publishConfig": {
     "access": "public",
     "exports": {
-      ".": "./dist/esm/index.mjs",
-      "./AccumulatorUpdateData": "./dist/esm/AccumulatorUpdateData.mjs",
-      "./schemas/PriceFeed": "./dist/esm/schemas/PriceFeed.mjs",
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./AccumulatorUpdateData": {
+        "import": "./dist/esm/AccumulatorUpdateData.mjs",
+        "require": "./dist/cjs/AccumulatorUpdateData.cjs",
+        "types": "./dist/esm/AccumulatorUpdateData.d.ts"
+      },
+      "./schemas/PriceFeed": {
+        "import": "./dist/esm/schemas/PriceFeed.mjs",
+        "require": "./dist/cjs/schemas/PriceFeed.cjs",
+        "types": "./dist/esm/schemas/PriceFeed.d.ts"
+      },
       "./package.json": "./package.json"
     }
   },

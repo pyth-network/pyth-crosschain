@@ -18,7 +18,30 @@
     "directory": "apps/hermes/client/js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      "./examples/HermesClient": {
+        "import": "./dist/esm/examples/HermesClient.mjs",
+        "require": "./dist/cjs/examples/HermesClient.cjs",
+        "types": "./dist/esm/examples/HermesClient.d.ts"
+      },
+      "./HermesClient": {
+        "import": "./dist/esm/HermesClient.mjs",
+        "require": "./dist/cjs/HermesClient.cjs",
+        "types": "./dist/esm/HermesClient.d.ts"
+      },
+      "./utils": {
+        "import": "./dist/esm/utils.mjs",
+        "require": "./dist/cjs/utils.cjs",
+        "types": "./dist/esm/utils.d.ts"
+      },
+      "./zodSchemas": {
+        "import": "./dist/esm/zodSchemas.mjs",
+        "require": "./dist/cjs/zodSchemas.cjs",
+        "types": "./dist/esm/zodSchemas.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "build:typescript": "tsc",
@@ -62,5 +85,12 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "exports": {
+    "./examples/HermesClient": "./src/examples/HermesClient.ts",
+    "./HermesClient": "./src/HermesClient.ts",
+    "./utils": "./src/utils.ts",
+    "./zodSchemas": "./src/zodSchemas.ts",
+    "./package.json": "./package.json"
+  }
 }

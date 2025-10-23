@@ -7,8 +7,8 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.mjs",
+  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -19,7 +19,35 @@
     "directory": "price_service/client/js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": "./dist/esm/index.mjs",
+        "require": "./dist/cjs/index.cjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "./examples/PriceServiceClient": {
+        "import": "./dist/esm/examples/PriceServiceClient.mjs",
+        "require": "./dist/cjs/examples/PriceServiceClient.cjs",
+        "types": "./dist/esm/examples/PriceServiceClient.d.ts"
+      },
+      "./PriceServiceConnection": {
+        "import": "./dist/esm/PriceServiceConnection.mjs",
+        "require": "./dist/cjs/PriceServiceConnection.cjs",
+        "types": "./dist/esm/PriceServiceConnection.d.ts"
+      },
+      "./ResillientWebSocket": {
+        "import": "./dist/esm/ResillientWebSocket.mjs",
+        "require": "./dist/cjs/ResillientWebSocket.cjs",
+        "types": "./dist/esm/ResillientWebSocket.d.ts"
+      },
+      "./utils": {
+        "import": "./dist/esm/utils.mjs",
+        "require": "./dist/cjs/utils.cjs",
+        "types": "./dist/esm/utils.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
@@ -63,5 +91,14 @@
     "node": ">=22",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.mjs",
+  "exports": {
+    ".": "./src/index.ts",
+    "./examples/PriceServiceClient": "./src/examples/PriceServiceClient.ts",
+    "./PriceServiceConnection": "./src/PriceServiceConnection.ts",
+    "./ResillientWebSocket": "./src/ResillientWebSocket.ts",
+    "./utils": "./src/utils.ts",
+    "./package.json": "./package.json"
+  }
 }
