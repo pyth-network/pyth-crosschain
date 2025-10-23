@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "build-ts-package",
+  "description": "builds a typescript package properly, supporting CommonJS and ESM outputs, as well as TypeScript typing generation",
+  "version": "0.0.0",
+  "bin": "./src/build-ts-package.js",
+  "files": [
+    "src/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "fix:format": "prettier . --write",
+    "start": "tsx ./src/build-ts-package.ts"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:"
+  },
+  "dependencies": {
+    "tsdown": "^0.15.9",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "yargs": "catalog:"
+  }
+}

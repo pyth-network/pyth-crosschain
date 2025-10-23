@@ -126,6 +126,7 @@ catalog:
   lightweight-charts: ^5.0.5
   lucide-react: ^0.487.0
   match-sorter: ^8.1.0
+  minimist: ^1.2.8
   modern-normalize: ^3.0.1
   motion: ^12.9.2
   next: ^15.5.0
