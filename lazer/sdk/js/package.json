@@ -60,7 +60,11 @@
   },
   "packageManager": "pnpm@10.19.0",
   "tshy": {
-    "project": "tsconfig.build.json"
+    "project": "tsconfig.build.json",
+    "exports": {
+      "./package.json": "./package.json",
+      ".": "./src/index.ts"
+    }
   },
   "exports": {
     "./package.json": "./package.json",

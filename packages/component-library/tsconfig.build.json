@@ -4,7 +4,7 @@
     "noEmit": false,
     "incremental": false,
     "declaration": true,
-    "emitDeclarationOnly": true
+    "verbatimModuleSyntax": false
   },
   "exclude": ["node_modules", "dist", ".storybook", "**/*.stories.tsx"]
 }

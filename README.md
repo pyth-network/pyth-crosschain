@@ -149,8 +149,19 @@ New packages should be configured with a few requirements in mind:
 3. If you are writing a package that will be published:
 
    - Make sure you are dual-exporting cjs and esm correctly, see [how the lazer
-     sdk package builds](./lazer/sdk/js/package.json) (in particular look at the
-     `build:cjs` and `build:esm` tasks) for an example for how to do this
+     sdk package builds](./lazer/sdk/js/package.json). This should be as simple as ensuring you have a `tsconfig.build.json` that extends from your baseline `tsconfig.json` file like the following:
+
+     ```jsonc
+     {
+       "extends": "./tsconfig.json",
+       "compilerOptions": {
+         "declaration": true, # writes out TypeScript typings for your library consumers
+         "incremental": false, # ensures the whole project is recompiled, instead of only what's changed
+         "noEmit": false, # ensures building actually writes files to disk
+         "verbatimModuleSyntax": false # ensures all import statements are properly written to CommonJS, the classic Node.js module specification
+       }
+     }
+     ```
 
    - Ensure you have properly configured [subpath
      exports](https://nodejs.org/api/packages.html#subpath-exports) to reference
