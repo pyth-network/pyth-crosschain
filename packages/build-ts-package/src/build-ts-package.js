@@ -121,14 +121,22 @@ export async function buildTsPackage(argv = process.argv) {
   const numFormats = formats.length;
 
   for (const format of formats) {
+    console.info(`building ${format} variant in ${cwd}`);
+    console.info(`  tsconfig: ${tsconfig}`);
+
     await build({
       clean: false,
+      cwd,
       dts: !noDts,
       entry: [
         "./src/**/*.ts",
         "./src/**/*.tsx",
         // ignore all storybook entrypoints
         "!./src/**/*.stories.ts",
+        "!./src/**/*.test.ts",
+        "!./src/**/*.test.tsx",
+        "!./src/**/*.spec.ts",
+        "!./src/**/*.spec.tsx",
         "!./src/**/*.stories.tsx",
         "!./src/**/*.stories.mdx",
       ],

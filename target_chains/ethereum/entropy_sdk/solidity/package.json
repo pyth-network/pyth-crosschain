@@ -14,7 +14,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "build-ts-package",
+    "build": "generate-abis IEntropy IEntropyV2 IEntropyConsumer EntropyErrors EntropyEvents EntropyEventsV2 EntropyStructs EntropyStructsV2 EntropyStatusConstants PRNG",
     "test": "git diff --exit-code abis"
   },
   "keywords": [
@@ -32,13 +32,5 @@
     "abi_generator": "workspace:*",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:"
-  },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=10.19.0"
-  },
-  "packageManager": "pnpm@10.19.0",
-  "files": [
-    "dist/**/*"
-  ]
+  }
 }

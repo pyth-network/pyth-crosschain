@@ -17,14 +17,14 @@
     "cli/**/*"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "start:dev": "tsc --project tsconfig.build.json && node cli/run.js",
-    "start:prod": "node cli/run.js"
+    "start:dev": "tsx src/index.ts",
+    "start:prod": "tsx src/index.ts"
   },
   "repository": {
     "type": "git",
