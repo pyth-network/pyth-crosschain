@@ -51,6 +51,7 @@ export async function buildTsPackage(argv = process.argv) {
     cwd,
     exclude,
     noCjs,
+    noDevExports,
     noDts,
     noEsm,
     outDir,
@@ -80,6 +81,11 @@ export async function buildTsPackage(argv = process.argv) {
       description:
         "if true, will not build the CommonJS variant of this package",
       type: "boolean",
+    })
+    .option('noDevExports', {
+      default: false,
+      description: 'if set, will not symlink the uncompiled typescript files during local development. compiled versions will be used, instead.',
+      type: 'boolean',
     })
     .option("noDts", {
       default: false,
@@ -149,7 +155,7 @@ export async function buildTsPackage(argv = process.argv) {
         ...exclude.map((ex) => String(ex)),
       ],
       exports:
-        format === "esm" || numFormats <= 1 ? { all, devExports: true } : false,
+        format === "esm" || numFormats <= 1 ? { all, devExports: !noDevExports } : false,
       // do not attempt to resolve or import CSS, SCSS or SVG files
       external: [/\.s?css$/, /\.svg$/],
       format,
