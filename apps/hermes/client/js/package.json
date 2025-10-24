@@ -7,7 +7,6 @@
   },
   "homepage": "https://pyth.network",
   "files": [
-    "lib/**/*",
     "dist/**/*"
   ],
   "repository": {
@@ -16,38 +15,11 @@
     "directory": "apps/hermes/client/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "[object Object]",
-        "require": ".cjs[object Object]",
-        "types": ".d.ts[object Object]"
-      },
-      "./examples/HermesClient": {
-        "import": "[object Object]",
-        "require": ".cjs[object Object]",
-        "types": ".d.ts[object Object]"
-      },
-      "./HermesClient": {
-        "import": "[object Object]",
-        "require": ".cjs[object Object]",
-        "types": ".d.ts[object Object]"
-      },
-      "./utils": {
-        "import": "[object Object]",
-        "require": ".cjs[object Object]",
-        "types": ".d.ts[object Object]"
-      },
-      "./zodSchemas": {
-        "import": "[object Object]",
-        "require": ".cjs[object Object]",
-        "types": ".d.ts[object Object]"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
+    "build": "build-ts-package",
     "clean": "rm -rf ./dist && rm -rf ./lib",
     "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "tsx src/examples/HermesClient.ts",
@@ -57,8 +29,7 @@
     "test:format": "prettier --check \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src",
-    "build": "build-ts-package"
+    "version": "pnpm run format && git add -A src"
   },
   "keywords": [
     "pyth",
@@ -66,6 +37,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@types/jest": "^29.4.0",
     "@types/node": "^20.14.2",
     "@types/yargs": "^17.0.10",
@@ -91,14 +63,33 @@
   },
   "packageManager": "pnpm@10.19.0",
   "exports": {
-    ".": "./dist/esm/index.mjs",
-    "./examples/HermesClient": "./dist/esm/examples/HermesClient.mjs",
-    "./HermesClient": "./dist/esm/HermesClient.mjs",
-    "./utils": "./dist/esm/utils.mjs",
-    "./zodSchemas": "./dist/esm/zodSchemas.mjs",
+    "./HermesClient": {
+      "import": "./dist/esm/HermesClient.js",
+      "types": "./dist/cjs/HermesClient.d.ts",
+      "require": "./dist/cjs/HermesClient.js"
+    },
+    "./examples/HermesClient": {
+      "import": "./dist/esm/examples/HermesClient.js",
+      "types": "./dist/esm/examples/HermesClient.d.ts"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
+    "./utils": {
+      "import": "./dist/esm/utils.js",
+      "types": "./dist/cjs/utils.d.ts",
+      "require": "./dist/cjs/utils.js"
+    },
+    "./zodSchemas": {
+      "import": "./dist/esm/zodSchemas.js",
+      "types": "./dist/cjs/zodSchemas.d.ts",
+      "require": "./dist/cjs/zodSchemas.js"
+    },
     "./package.json": "./package.json"
   },
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.mjs",
-  "types": "./dist/esm/index.d.mts"
+  "types": "./esm/index.d.ts",
+  "module": "./esm/index.js",
+  "main": "./cjs/index.js"
 }

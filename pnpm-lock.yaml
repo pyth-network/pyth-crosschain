@@ -940,6 +940,9 @@ importers:
         specifier: ^3.23.8
         version: 3.24.2
     devDependencies:
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 3.1.2(typescript@5.9.3)
       '@types/jest':
         specifier: ^29.4.0
         version: 29.5.14

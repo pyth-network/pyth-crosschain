@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { HermesClient, PriceUpdate } from "../HermesClient";
+import { HermesClient, type PriceUpdate } from "../HermesClient";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,6 +91,7 @@ async function run() {
     console.log("Received price update:", event.data);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const priceUpdate = JSON.parse(event.data) as PriceUpdate;
+    console.log("priceUpdate", priceUpdate);
   };
 
   eventSource.onerror = (error: Event) => {
