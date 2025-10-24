@@ -3,8 +3,8 @@
   "version": "0.12.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
+  "main": "./cjs/index.js",
+  "types": "./cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -59,16 +59,48 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./esm/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./address": "./src/address.ts",
-    "./compute_budget": "./src/compute_budget.ts",
-    "./idl/pyth_push_oracle": "./src/idl/pyth_push_oracle.ts",
-    "./idl/pyth_solana_receiver": "./src/idl/pyth_solana_receiver.ts",
-    "./idl/wormhole_core_bridge_solana": "./src/idl/wormhole_core_bridge_solana.ts",
-    "./PythSolanaReceiver": "./src/PythSolanaReceiver.ts",
-    "./vaa": "./src/vaa.ts",
+    "./PythSolanaReceiver": {
+      "import": "./dist/esm/PythSolanaReceiver.js",
+      "types": "./dist/esm/PythSolanaReceiver.d.ts",
+      "require": "./dist/cjs/PythSolanaReceiver.js"
+    },
+    "./address": {
+      "import": "./dist/esm/address.js",
+      "types": "./dist/esm/address.d.ts",
+      "require": "./dist/cjs/address.js"
+    },
+    "./compute_budget": {
+      "import": "./dist/esm/compute_budget.js",
+      "types": "./dist/esm/compute_budget.d.ts",
+      "require": "./dist/cjs/compute_budget.js"
+    },
+    "./idl/pyth_push_oracle": {
+      "import": "./dist/esm/idl/pyth_push_oracle.js",
+      "types": "./dist/esm/idl/pyth_push_oracle.d.ts",
+      "require": "./dist/cjs/idl/pyth_push_oracle.js"
+    },
+    "./idl/pyth_solana_receiver": {
+      "import": "./dist/esm/idl/pyth_solana_receiver.js",
+      "types": "./dist/esm/idl/pyth_solana_receiver.d.ts",
+      "require": "./dist/cjs/idl/pyth_solana_receiver.js"
+    },
+    "./idl/wormhole_core_bridge_solana": {
+      "import": "./dist/esm/idl/wormhole_core_bridge_solana.js",
+      "types": "./dist/esm/idl/wormhole_core_bridge_solana.d.ts",
+      "require": "./dist/cjs/idl/wormhole_core_bridge_solana.js"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
+    "./vaa": {
+      "import": "./dist/esm/vaa.js",
+      "types": "./dist/esm/vaa.d.ts",
+      "require": "./dist/cjs/vaa.js"
+    },
     "./package.json": "./package.json"
   }
 }

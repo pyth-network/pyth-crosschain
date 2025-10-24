@@ -1,17 +1,17 @@
-import { AnchorProvider, IdlAccounts, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, type IdlAccounts, Program } from "@coral-xyz/anchor";
 import {
   AddressLookupTableAccount,
   Connection,
-  Signer,
+  type Signer,
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
 import {
-  PythSolanaReceiver as PythSolanaReceiverProgram,
+  type PythSolanaReceiver as PythSolanaReceiverProgram,
   IDL as Idl,
 } from "./idl/pyth_solana_receiver";
 import {
-  WormholeCoreBridgeSolana,
+  type WormholeCoreBridgeSolana,
   IDL as WormholeCoreBridgeSolanaIdl,
 } from "./idl/wormhole_core_bridge_solana";
 import {
@@ -46,11 +46,11 @@ import {
 } from "./vaa";
 import {
   TransactionBuilder,
-  InstructionWithEphemeralSigners,
-  PriorityFeeConfig,
+  type InstructionWithEphemeralSigners,
+  type PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
 import {
-  PythPushOracle,
+  type PythPushOracle,
   IDL as PythPushOracleIdl,
 } from "./idl/pyth_push_oracle";
 
@@ -374,7 +374,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  async buildVersionedTransactions(
+  override async buildVersionedTransactions(
     args: PriorityFeeConfig,
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     if (this.closeUpdateAccounts) {
@@ -386,7 +386,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  buildLegacyTransactions(
+  override buildLegacyTransactions(
     args: PriorityFeeConfig,
   ): { tx: Transaction; signers: Signer[] }[] {
     if (this.closeUpdateAccounts) {
@@ -465,7 +465,7 @@ export class PythSolanaReceiver {
     this.connection = connection;
     this.wallet = wallet;
     this.provider = new AnchorProvider(this.connection, this.wallet, {
-      commitment: connection.commitment,
+      commitment: connection.commitment!,
     });
     this.receiver = new Program<PythSolanaReceiverProgram>(
       Idl as PythSolanaReceiverProgram,
@@ -482,7 +482,7 @@ export class PythSolanaReceiver {
       pushOracleProgramId,
       this.provider,
     );
-    this.treasuryId = treasuryId;
+    this.treasuryId = treasuryId!;
   }
 
   /**
@@ -668,6 +668,13 @@ export class PythSolanaReceiver {
       parseAccumulatorUpdateData(Buffer.from(data, "base64")),
     );
 
+    if (!startUpdateData) {
+      throw new Error('startUpdateData is nullish');
+    }
+    if (!endUpdateData) {
+      throw new Error('endUpdateData is nullish');
+    }
+
     // Validate that the start and end updates contain the same number of price feeds
     if (startUpdateData.updates.length !== endUpdateData.updates.length) {
       throw new Error(
@@ -693,6 +700,13 @@ export class PythSolanaReceiver {
     for (let i = 0; i < startUpdateData.updates.length; i++) {
       const startUpdate = startUpdateData.updates[i];
       const endUpdate = endUpdateData.updates[i];
+
+      if (!startUpdate) {
+        throw new Error('startUpdate is nullish');
+      }
+      if (!endUpdate) {
+        throw new Error('endUpdate is nullish');
+      }
 
       const twapUpdateKeypair = new Keypair();
       postInstructions.push({

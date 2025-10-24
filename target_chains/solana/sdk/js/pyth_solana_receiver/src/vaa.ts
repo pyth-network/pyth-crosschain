@@ -1,7 +1,7 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
+import type { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 import { Program } from "@coral-xyz/anchor";
-import { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
+import type { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 import {
   CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   INIT_ENCODED_VAA_COMPUTE_BUDGET,
@@ -10,7 +10,7 @@ import {
 } from "./compute_budget";
 import { sha256 } from "@noble/hashes/sha256";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
-import { AccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
+import type { AccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import { getGuardianSetPda } from "./address";
 /**
  * Get the index of the guardian set that signed a VAA
@@ -61,6 +61,10 @@ export function trimSignatures(
   n = DEFAULT_REDUCED_GUARDIAN_SET_SIZE,
 ): Buffer {
   const currentNumSignatures = vaa[5];
+  if (typeof currentNumSignatures !== 'number') {
+    throw new Error('unable to trimSignature() because value being trimmed is not a number');
+  }
+
   if (n > currentNumSignatures) {
     throw new Error(
       "Resulting VAA can't have more signatures than the original VAA",
