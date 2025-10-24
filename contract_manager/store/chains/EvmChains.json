@@ -1349,5 +1349,12 @@
     "rpcUrl": "https://rpc.testnet.soniclabs.com",
     "networkId": 14601,
     "type": "EvmChain"
+  },
+  {
+    "id": "etherlink_new_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://node.shadownet.etherlink.com",
+    "networkId": 127823,
+    "type": "EvmChain"    
   }
 ]
