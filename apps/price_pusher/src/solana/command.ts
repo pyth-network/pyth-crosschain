@@ -1,4 +1,4 @@
-import { Options } from "yargs";
+import type { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
@@ -18,12 +18,12 @@ import {
   searcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
 import pino from "pino";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { filterInvalidPriceItems } from "../utils";
 import { PricePusherMetrics } from "../metrics";
 import { createSolanaBalanceTracker } from "./balance-tracker";
-import { IBalanceTracker } from "../interface";
+import type { IBalanceTracker } from "../interface";
 
 export default {
   command: "solana",
@@ -263,6 +263,7 @@ export default {
       solanaPriceListener,
       solanaPricePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
+      // @ts-expect-error - types aren't narrowed but should be safe
       {
         pushingFrequency,
         metrics,

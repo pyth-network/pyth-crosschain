@@ -1,11 +1,11 @@
 import {
-  CustomGasChainId,
-  TxSpeed,
+  type CustomGasChainId,
+  type TxSpeed,
   verifyValidOption,
   txSpeeds,
   customGasChainIds,
 } from "../utils";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 import { parseGwei } from "viem";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<bigint | undefined>>;
@@ -51,4 +51,5 @@ export function getCustomGasStation(
   if (customGasStation && txSpeed) {
     return new CustomGasStation(logger, customGasStation, txSpeed);
   }
+  return;
 }

@@ -1,12 +1,12 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import {
   BaseBalanceTracker,
-  BaseBalanceTrackerConfig,
-  IBalanceTracker,
+  type BaseBalanceTrackerConfig,
+  type IBalanceTracker,
 } from "../interface";
-import { DurationInSeconds } from "../utils";
+import type { DurationInSeconds } from "../utils";
 import { PricePusherMetrics } from "../metrics";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 
 /**
  * Aptos-specific configuration for balance tracker
@@ -103,6 +103,6 @@ export function createAptosBalanceTracker(
     updateInterval: params.updateInterval,
     metrics: params.metrics,
     logger: params.logger,
-    decimals: params.decimals,
+    decimals: params.decimals ?? 0,
   });
 }

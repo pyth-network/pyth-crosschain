@@ -1,6 +1,6 @@
 import { Registry, Counter, Gauge } from "prom-client";
 import express from "express";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 import { UpdateCondition } from "./price-config";
 
 // Define the metrics we want to track
@@ -86,7 +86,7 @@ export class PricePusherMetrics {
     });
 
     // Setup the metrics endpoint
-    this.server.get("/metrics", async (req, res) => {
+    this.server.get("/metrics", async (_, res) => {
       res.set("Content-Type", this.registry.contentType);
       res.end(await this.registry.metrics());
     });

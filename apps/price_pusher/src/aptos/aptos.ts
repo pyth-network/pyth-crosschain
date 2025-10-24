@@ -96,6 +96,7 @@ export class AptosPricePusher implements IPricePusher {
     private mnemonic: string,
     private overrideGasPriceMultiplier: number,
   ) {
+    this.overrideGasPriceMultiplier;
     this.sequenceNumberLocked = false;
   }
 

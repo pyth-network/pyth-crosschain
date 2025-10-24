@@ -1,6 +1,6 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import fs from "fs";
-import { Options } from "yargs";
+import type { Options } from "yargs";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
@@ -196,6 +196,7 @@ export default {
       evmListener,
       evmPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
+      // @ts-expect-error - types aren't narrowed but this is, allegedly, safe
       {
         pushingFrequency,
         metrics,

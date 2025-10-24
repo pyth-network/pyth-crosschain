@@ -152,7 +152,7 @@ export abstract class BaseBalanceTracker implements IBalanceTracker {
 
   private async startUpdateLoop(): Promise<void> {
     // We're using dynamic import to avoid circular dependencies
-    const { sleep } = await import("./utils");
+    const { sleep } = await import("./utils.js");
 
     // Run in a loop to regularly update the balance
     for (;;) {

@@ -1,11 +1,11 @@
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
   ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
+  type IPricePusher,
+  type PriceInfo,
+  type PriceItem,
 } from "../interface";
-import { DurationInSeconds } from "../utils";
+import type { DurationInSeconds } from "../utils";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   sendTransactions,
@@ -13,7 +13,7 @@ import {
 } from "@pythnetwork/solana-utils";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 import { AddressLookupTableAccount, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
@@ -55,7 +55,7 @@ export class SolanaPriceListener extends ChainPriceListener {
     }
   }
 
-  async start() {
+  override async start() {
     // Frequently check the RPC connection to ensure it is healthy
     setInterval(this.checkHealth.bind(this), 5000);
 

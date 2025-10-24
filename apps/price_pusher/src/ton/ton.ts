@@ -1,17 +1,17 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
+  type IPricePusher,
+  type PriceInfo,
+  type PriceItem,
 } from "../interface";
-import { addLeading0x, DurationInSeconds } from "../utils";
-import { Logger } from "pino";
+import { addLeading0x, type DurationInSeconds } from "../utils";
+import { type Logger } from "pino";
 import {
   Address,
-  ContractProvider,
-  OpenedContract,
-  Sender,
+  type ContractProvider,
+  type OpenedContract,
+  type Sender,
   TonClient,
   WalletContractV4,
 } from "@ton/ton";
@@ -88,7 +88,7 @@ export class TonPricePusher implements IPricePusher {
   async updatePriceFeed(
     priceIds: string[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    pubTimesToPush: number[],
+    _: number[],
   ): Promise<void> {
     if (priceIds.length === 0) {
       return;

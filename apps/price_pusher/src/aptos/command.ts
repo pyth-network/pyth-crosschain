@@ -4,7 +4,7 @@ import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
-import { Options } from "yargs";
+import type { Options } from "yargs";
 import {
   AptosPriceListener,
   AptosPricePusher,
@@ -128,6 +128,7 @@ export default {
       aptosListener,
       aptosPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
+      // @ts-expect-error - allegedly, this is safe to do here, despite having nullish typings
       {
         pushingFrequency,
         metrics,

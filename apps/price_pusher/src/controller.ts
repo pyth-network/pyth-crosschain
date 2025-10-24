@@ -1,8 +1,8 @@
-import { UnixTimestamp } from "@pythnetwork/hermes-client";
-import { DurationInSeconds, sleep } from "./utils";
-import { IPriceListener, IPricePusher } from "./interface";
-import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
-import { Logger } from "pino";
+import type { UnixTimestamp } from "@pythnetwork/hermes-client";
+import { type DurationInSeconds, sleep } from "./utils";
+import type { IPriceListener, IPricePusher } from "./interface";
+import { type PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
+import type { Logger } from "pino";
 import { PricePusherMetrics } from "./metrics";
 
 export class Controller {
@@ -21,7 +21,9 @@ export class Controller {
     },
   ) {
     this.pushingFrequency = config.pushingFrequency;
-    this.metrics = config.metrics;
+    if (config.metrics) {
+      this.metrics = config.metrics;
+    }
 
     // Set the number of price feeds if metrics are enabled
     this.metrics?.setPriceFeedsTotal(this.priceConfigs.length);

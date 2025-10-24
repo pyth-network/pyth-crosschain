@@ -4,7 +4,7 @@ import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
-import { Options } from "yargs";
+import { type Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import pino from "pino";
@@ -170,6 +170,7 @@ export default {
       suiListener,
       suiPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
+      // @ts-expect-error - metrics is not narrowed to be truthy but should be safe to use
       {
         pushingFrequency,
         metrics,

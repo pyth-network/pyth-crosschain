@@ -3,8 +3,8 @@
   "version": "10.2.0",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
+  "main": "./cjs/index.js",
+  "types": "./cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -26,7 +26,7 @@
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
-    "start": "node lib/index.js",
+    "start": "node dist/esm/index.js",
     "dev": "tsx src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
@@ -45,6 +45,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/express": "^4.17.21",
     "@types/jest": "^27.4.1",
@@ -96,41 +97,173 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./esm/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./aptos/aptos": "./src/aptos/aptos.ts",
-    "./aptos/balance-tracker": "./src/aptos/balance-tracker.ts",
-    "./aptos/command": "./src/aptos/command.ts",
-    "./common": "./src/common.ts",
-    "./controller": "./src/controller.ts",
-    "./evm/balance-tracker": "./src/evm/balance-tracker.ts",
-    "./evm/command": "./src/evm/command.ts",
-    "./evm/custom-gas-station": "./src/evm/custom-gas-station.ts",
-    "./evm/evm": "./src/evm/evm.ts",
-    "./evm/pyth-abi": "./src/evm/pyth-abi.ts",
-    "./evm/pyth-contract": "./src/evm/pyth-contract.ts",
-    "./evm/super-wallet": "./src/evm/super-wallet.ts",
-    "./fuel/command": "./src/fuel/command.ts",
-    "./fuel/fuel": "./src/fuel/fuel.ts",
-    "./injective/command": "./src/injective/command.ts",
-    "./injective/injective": "./src/injective/injective.ts",
-    "./interface": "./src/interface.ts",
-    "./metrics": "./src/metrics.ts",
-    "./near/command": "./src/near/command.ts",
-    "./near/near": "./src/near/near.ts",
-    "./options": "./src/options.ts",
-    "./price-config": "./src/price-config.ts",
-    "./pyth-price-listener": "./src/pyth-price-listener.ts",
-    "./solana/balance-tracker": "./src/solana/balance-tracker.ts",
-    "./solana/command": "./src/solana/command.ts",
-    "./solana/solana": "./src/solana/solana.ts",
-    "./sui/balance-tracker": "./src/sui/balance-tracker.ts",
-    "./sui/command": "./src/sui/command.ts",
-    "./sui/sui": "./src/sui/sui.ts",
-    "./ton/command": "./src/ton/command.ts",
-    "./ton/ton": "./src/ton/ton.ts",
-    "./utils": "./src/utils.ts",
+    "./aptos/aptos": {
+      "import": "./dist/esm/aptos/aptos.js",
+      "types": "./dist/esm/aptos/aptos.d.ts",
+      "require": "./dist/cjs/aptos/aptos.js"
+    },
+    "./aptos/balance-tracker": {
+      "import": "./dist/esm/aptos/balance-tracker.js",
+      "types": "./dist/esm/aptos/balance-tracker.d.ts",
+      "require": "./dist/cjs/aptos/balance-tracker.js"
+    },
+    "./aptos/command": {
+      "import": "./dist/esm/aptos/command.js",
+      "types": "./dist/esm/aptos/command.d.ts",
+      "require": "./dist/cjs/aptos/command.js"
+    },
+    "./common": {
+      "import": "./dist/esm/common.js",
+      "types": "./dist/esm/common.d.ts",
+      "require": "./dist/cjs/common.js"
+    },
+    "./controller": {
+      "import": "./dist/esm/controller.js",
+      "types": "./dist/esm/controller.d.ts",
+      "require": "./dist/cjs/controller.js"
+    },
+    "./evm/balance-tracker": {
+      "import": "./dist/esm/evm/balance-tracker.js",
+      "types": "./dist/esm/evm/balance-tracker.d.ts",
+      "require": "./dist/cjs/evm/balance-tracker.js"
+    },
+    "./evm/command": {
+      "import": "./dist/esm/evm/command.js",
+      "types": "./dist/esm/evm/command.d.ts",
+      "require": "./dist/cjs/evm/command.js"
+    },
+    "./evm/custom-gas-station": {
+      "import": "./dist/esm/evm/custom-gas-station.js",
+      "types": "./dist/esm/evm/custom-gas-station.d.ts",
+      "require": "./dist/cjs/evm/custom-gas-station.js"
+    },
+    "./evm/evm": {
+      "import": "./dist/esm/evm/evm.js",
+      "types": "./dist/esm/evm/evm.d.ts",
+      "require": "./dist/cjs/evm/evm.js"
+    },
+    "./evm/pyth-abi": {
+      "import": "./dist/esm/evm/pyth-abi.js",
+      "types": "./dist/esm/evm/pyth-abi.d.ts",
+      "require": "./dist/cjs/evm/pyth-abi.js"
+    },
+    "./evm/pyth-contract": {
+      "import": "./dist/esm/evm/pyth-contract.js",
+      "types": "./dist/esm/evm/pyth-contract.d.ts",
+      "require": "./dist/cjs/evm/pyth-contract.js"
+    },
+    "./evm/super-wallet": {
+      "import": "./dist/esm/evm/super-wallet.js",
+      "types": "./dist/esm/evm/super-wallet.d.ts",
+      "require": "./dist/cjs/evm/super-wallet.js"
+    },
+    "./fuel/command": {
+      "import": "./dist/esm/fuel/command.js",
+      "types": "./dist/esm/fuel/command.d.ts",
+      "require": "./dist/cjs/fuel/command.js"
+    },
+    "./fuel/fuel": {
+      "import": "./dist/esm/fuel/fuel.js",
+      "types": "./dist/esm/fuel/fuel.d.ts",
+      "require": "./dist/cjs/fuel/fuel.js"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
+    "./injective/command": {
+      "import": "./dist/esm/injective/command.js",
+      "types": "./dist/esm/injective/command.d.ts",
+      "require": "./dist/cjs/injective/command.js"
+    },
+    "./injective/injective": {
+      "import": "./dist/esm/injective/injective.js",
+      "types": "./dist/esm/injective/injective.d.ts",
+      "require": "./dist/cjs/injective/injective.js"
+    },
+    "./interface": {
+      "import": "./dist/esm/interface.js",
+      "types": "./dist/esm/interface.d.ts",
+      "require": "./dist/cjs/interface.js"
+    },
+    "./metrics": {
+      "import": "./dist/esm/metrics.js",
+      "types": "./dist/esm/metrics.d.ts",
+      "require": "./dist/cjs/metrics.js"
+    },
+    "./near/command": {
+      "import": "./dist/esm/near/command.js",
+      "types": "./dist/esm/near/command.d.ts",
+      "require": "./dist/cjs/near/command.js"
+    },
+    "./near/near": {
+      "import": "./dist/esm/near/near.js",
+      "types": "./dist/esm/near/near.d.ts",
+      "require": "./dist/cjs/near/near.js"
+    },
+    "./options": {
+      "import": "./dist/esm/options.js",
+      "types": "./dist/esm/options.d.ts",
+      "require": "./dist/cjs/options.js"
+    },
+    "./price-config": {
+      "import": "./dist/esm/price-config.js",
+      "types": "./dist/esm/price-config.d.ts",
+      "require": "./dist/cjs/price-config.js"
+    },
+    "./pyth-price-listener": {
+      "import": "./dist/esm/pyth-price-listener.js",
+      "types": "./dist/esm/pyth-price-listener.d.ts",
+      "require": "./dist/cjs/pyth-price-listener.js"
+    },
+    "./solana/balance-tracker": {
+      "import": "./dist/esm/solana/balance-tracker.js",
+      "types": "./dist/esm/solana/balance-tracker.d.ts",
+      "require": "./dist/cjs/solana/balance-tracker.js"
+    },
+    "./solana/command": {
+      "import": "./dist/esm/solana/command.js",
+      "types": "./dist/esm/solana/command.d.ts",
+      "require": "./dist/cjs/solana/command.js"
+    },
+    "./solana/solana": {
+      "import": "./dist/esm/solana/solana.js",
+      "types": "./dist/esm/solana/solana.d.ts",
+      "require": "./dist/cjs/solana/solana.js"
+    },
+    "./sui/balance-tracker": {
+      "import": "./dist/esm/sui/balance-tracker.js",
+      "types": "./dist/esm/sui/balance-tracker.d.ts",
+      "require": "./dist/cjs/sui/balance-tracker.js"
+    },
+    "./sui/command": {
+      "import": "./dist/esm/sui/command.js",
+      "types": "./dist/esm/sui/command.d.ts",
+      "require": "./dist/cjs/sui/command.js"
+    },
+    "./sui/sui": {
+      "import": "./dist/esm/sui/sui.js",
+      "types": "./dist/esm/sui/sui.d.ts",
+      "require": "./dist/cjs/sui/sui.js"
+    },
+    "./ton/command": {
+      "import": "./dist/esm/ton/command.js",
+      "types": "./dist/esm/ton/command.d.ts",
+      "require": "./dist/cjs/ton/command.js"
+    },
+    "./ton/ton": {
+      "import": "./dist/esm/ton/ton.js",
+      "types": "./dist/esm/ton/ton.d.ts",
+      "require": "./dist/cjs/ton/ton.js"
+    },
+    "./utils": {
+      "import": "./dist/esm/utils.js",
+      "types": "./dist/esm/utils.d.ts",
+      "require": "./dist/cjs/utils.js"
+    },
     "./package.json": "./package.json"
   }
 }
