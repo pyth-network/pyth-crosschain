@@ -95,13 +95,13 @@ export async function buildTsPackage(argv = process.argv) {
 
   const numFormats = formats.length;
 
+  const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
+  // always freshly reset the exports and let the tool take over
+  pjson.exports = {};
+
   for (const format of formats) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
-
-    const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
-    // always freshly reset the exports and let the tool take over
-    pjson.exports = {};
 
     const outDir = numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
 
@@ -126,8 +126,6 @@ export async function buildTsPackage(argv = process.argv) {
       if (numFormats <= 1) return `.${path.sep}${relPath}`;
       return `.${path.sep}${path.join(format, relPath)}`;
     });
-
-    console.info("builtFiles", builtFiles);
 
     const indexFile = builtFiles.find((fp) => {
       const r = /^\.(\/|\\)((cjs|esm)(\/|\\))?index\.(c|m)?js$/;
@@ -166,24 +164,27 @@ export async function buildTsPackage(argv = process.argv) {
         .replaceAll(/\\/g, "/")}`;
 
       // Ensure key object exists
-      exports[key] ??= {};
+      const tempExports = exports[key] ?? {};
 
       // Add require/import entry without nuking the other
       if (format === "cjs") {
-        exports[key].require = fpWithBasename;
+        tempExports.require = fpWithBasename;
       } else {
-        exports[key].import = fpWithBasename;
+        tempExports.import = fpWithBasename;
       }
 
       // Also handle types if present
       if (!noDts && fp.endsWith(".d.ts")) {
-        exports[key].types = fpWithBasename;
+        tempExports.types = fpWithBasename;
       }
+      exports[key] = tempExports;
     }
 
     pjson.exports = exports;
-    await fs.writeFile(pjsonPath, JSON.stringify(pjson, null, 2), "utf8");
   }
+
+  pjson.exports['./package.json'] = './package.json';
+  await fs.writeFile(pjsonPath, JSON.stringify(pjson, null, 2), "utf8");
 }
 
 await buildTsPackage();
