@@ -19,29 +19,29 @@
     "access": "public",
     "exports": {
       ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
+        "import": "[object Object]",
+        "require": ".cjs[object Object]",
+        "types": ".d.ts[object Object]"
       },
       "./examples/HermesClient": {
-        "import": "./dist/esm/examples/HermesClient.mjs",
-        "require": "./dist/cjs/examples/HermesClient.cjs",
-        "types": "./dist/esm/examples/HermesClient.d.ts"
+        "import": "[object Object]",
+        "require": ".cjs[object Object]",
+        "types": ".d.ts[object Object]"
       },
       "./HermesClient": {
-        "import": "./dist/esm/HermesClient.mjs",
-        "require": "./dist/cjs/HermesClient.cjs",
-        "types": "./dist/esm/HermesClient.d.ts"
+        "import": "[object Object]",
+        "require": ".cjs[object Object]",
+        "types": ".d.ts[object Object]"
       },
       "./utils": {
-        "import": "./dist/esm/utils.mjs",
-        "require": "./dist/cjs/utils.cjs",
-        "types": "./dist/esm/utils.d.ts"
+        "import": "[object Object]",
+        "require": ".cjs[object Object]",
+        "types": ".d.ts[object Object]"
       },
       "./zodSchemas": {
-        "import": "./dist/esm/zodSchemas.mjs",
-        "require": "./dist/cjs/zodSchemas.cjs",
-        "types": "./dist/esm/zodSchemas.d.ts"
+        "import": "[object Object]",
+        "require": ".cjs[object Object]",
+        "types": ".d.ts[object Object]"
       },
       "./package.json": "./package.json"
     }
@@ -91,11 +91,11 @@
   },
   "packageManager": "pnpm@10.19.0",
   "exports": {
-    ".": "./src/index.ts",
-    "./examples/HermesClient": "./src/examples/HermesClient.ts",
-    "./HermesClient": "./src/HermesClient.ts",
-    "./utils": "./src/utils.ts",
-    "./zodSchemas": "./src/zodSchemas.ts",
+    ".": "./dist/esm/index.mjs",
+    "./examples/HermesClient": "./dist/esm/examples/HermesClient.mjs",
+    "./HermesClient": "./dist/esm/HermesClient.mjs",
+    "./utils": "./dist/esm/utils.mjs",
+    "./zodSchemas": "./dist/esm/zodSchemas.mjs",
     "./package.json": "./package.json"
   },
   "main": "./dist/cjs/index.js",

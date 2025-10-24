@@ -49,9 +49,9 @@ export async function buildTsPackage(argv = process.argv) {
   const {
     all,
     cwd,
+    devExports,
     exclude,
     noCjs,
-    noDevExports,
     noDts,
     noEsm,
     outDir,
@@ -82,9 +82,9 @@ export async function buildTsPackage(argv = process.argv) {
         "if true, will not build the CommonJS variant of this package",
       type: "boolean",
     })
-    .option('noDevExports', {
+    .option('devExports', {
       default: false,
-      description: 'if set, will not symlink the uncompiled typescript files during local development. compiled versions will be used, instead.',
+      description: 'if set, will symlink the uncompiled typescript files during local development. if not set, compiled versions will be used, instead.',
       type: 'boolean',
     })
     .option("noDts", {
@@ -137,7 +137,8 @@ export async function buildTsPackage(argv = process.argv) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
 
-    await build({
+    /** @type {import('tsdown').Options} */
+    const buildConfig = {
       clean: false,
       cwd,
       dts: !noDts,
@@ -155,16 +156,23 @@ export async function buildTsPackage(argv = process.argv) {
         ...exclude.map((ex) => String(ex)),
       ],
       exports:
-        format === "esm" || numFormats <= 1 ? { all, devExports: !noDevExports } : false,
+        format === "esm" || numFormats <= 1 ? all || devExports ? { all, devExports } : true : false,
       // do not attempt to resolve or import CSS, SCSS or SVG files
       external: [/\.s?css$/, /\.svg$/],
       format,
-      outDir: path.join(outDirPath, format),
+      // if there's only one outputted module format, we just take over the root of ./dist
+      // otherwise, we add the module type to the dist file path
+      outDir: numFormats <= 1 ? outDirPath : path.join(outDirPath, format),
       platform: "neutral",
       tsconfig,
       unbundle: true,
       watch,
-    });
+    };
+
+    console.info('using the following build config:')
+    console.info(buildConfig);
+
+    await build(buildConfig);
   }
   if (numFormats > 1) {
     // we need to manually set the cjs exports, since tsdown

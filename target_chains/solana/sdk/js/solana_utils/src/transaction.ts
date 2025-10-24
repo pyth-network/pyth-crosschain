@@ -4,8 +4,8 @@ import {
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
-  SignatureResult,
-  Signer,
+  type SignatureResult,
+  type Signer,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
@@ -188,9 +188,9 @@ export class TransactionBuilder {
     } else {
       const sizeWithComputeUnits = getSizeOfTransaction(
         [
-          ...this.transactionInstructions[
+          ...(this.transactionInstructions[
             this.transactionInstructions.length - 1
-          ].instructions,
+          ]?.instructions ?? []),
           instruction,
           this.transactionInstructions.length % JITO_BUNDLE_SIZE === 0 // This transaction may be the first of a Jito bundle, so we leave room for a Jito tip transfer.
             ? buildJitoTipInstruction(this.payer, 1)
@@ -205,13 +205,16 @@ export class TransactionBuilder {
       if (sizeWithComputeUnits <= PACKET_DATA_SIZE) {
         this.transactionInstructions[
           this.transactionInstructions.length - 1
-        ].instructions.push(instruction);
+        ]?.instructions.push(instruction);
         this.transactionInstructions[
           this.transactionInstructions.length - 1
-        ].signers.push(...signers);
-        this.transactionInstructions[
+        ]?.signers.push(...signers);
+        const inst = this.transactionInstructions[
           this.transactionInstructions.length - 1
-        ].computeUnits += computeUnits ?? 0;
+        ];
+        if (inst) {
+          inst.computeUnits += computeUnits ?? 0;
+        }
       } else
         this.transactionInstructions.push({
           instructions: [instruction],
@@ -226,7 +229,9 @@ export class TransactionBuilder {
    */
   addInstructions(instructions: InstructionWithEphemeralSigners[]) {
     for (const { instruction, signers, computeUnits } of instructions) {
-      this.addInstruction({ instruction, signers, computeUnits });
+      if (typeof computeUnits === 'number') {
+        this.addInstruction({ instruction, signers, computeUnits });
+      }
     }
   }
 

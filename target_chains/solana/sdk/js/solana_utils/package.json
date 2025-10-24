@@ -3,8 +3,6 @@
   "version": "0.5.0",
   "description": "Utility functions for Solana",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -15,28 +13,10 @@
     "directory": "target_chains/solana/sdk/js/solana_utils"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./jito": {
-        "import": "./dist/esm/jito.mjs",
-        "require": "./dist/cjs/jito.cjs",
-        "types": "./dist/esm/jito.d.ts"
-      },
-      "./transaction": {
-        "import": "./dist/esm/transaction.mjs",
-        "require": "./dist/cjs/transaction.cjs",
-        "types": "./dist/esm/transaction.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package",
+    "build": "build-ts-package --noCjs",
     "test:unit": "jest",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
@@ -52,6 +32,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@solana/wallet-adapter-react": "^0.15.28",
     "@types/jest": "^29.4.0",
     "@types/node": "^22.5.1",
@@ -76,11 +57,13 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
-    ".": "./src/index.ts",
-    "./jito": "./src/jito.ts",
-    "./transaction": "./src/transaction.ts",
+    ".": "./dist/index.mjs",
+    "./jito": "./dist/jito.mjs",
+    "./transaction": "./dist/transaction.mjs",
     "./package.json": "./package.json"
   }
 }
