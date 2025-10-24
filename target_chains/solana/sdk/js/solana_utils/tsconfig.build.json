@@ -3,7 +3,6 @@
   "compilerOptions": {
     "noEmit": false,
     "incremental": false,
-    "declaration": true,
     "verbatimModuleSyntax": false
   }
 }

@@ -78,9 +78,9 @@ export async function sendTransactionsJito(
     signedTransactions.push(tx);
   }
 
-  const firstTransactionSignature = bs58.encode(
+  const firstTransactionSignature = signedTransactions[0]?.signatures[0] ? bs58.encode(
     signedTransactions[0].signatures[0],
-  );
+  ) : '';
 
   const bundle = new Bundle(signedTransactions, 2);
 
@@ -94,7 +94,7 @@ export async function sendTransactionsJito(
       totalAttempts++;
 
       try {
-        await currentClient.sendBundle(bundle);
+        await currentClient?.sendBundle(bundle);
         logger.info(
           { clientIndex: i, totalAttempts },
           `Successfully sent bundle to Jito client after ${totalAttempts} attempts`,

@@ -10,18 +10,17 @@
   "type": "module",
   "scripts": {
     "fix:format": "prettier . --write",
-    "start": "tsx ./src/build-ts-package.ts"
+    "start": "./src/build-ts-package.js"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
-    "type-fest": "^5.1.0"
+    "type-fest": "catalog:"
   },
   "dependencies": {
-    "tsdown": "^0.15.9",
-    "tsx": "catalog:",
+    "fast-glob": "^3.3.3",
     "typescript": "catalog:",
     "yargs": "catalog:"
   }

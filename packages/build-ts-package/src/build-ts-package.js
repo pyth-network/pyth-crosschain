@@ -1,44 +1,26 @@
 #!/usr/bin/env node
 
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
-import { build } from "tsdown";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
-/**
- * @typedef {import('tsdown').Format} Format
- */
+import { findTsconfigFile } from "./find-tsconfig-file.js";
+import { execAsync } from "./exec-async.js";
+
+const DEFAULT_EXCLUSION_PATTERNS = [
+  "!./src/**/*.stories.ts",
+  "!./src/**/*.test.ts",
+  "!./src/**/*.test.tsx",
+  "!./src/**/*.spec.ts",
+  "!./src/**/*.spec.tsx",
+  "!./src/**/*.stories.tsx",
+  "!./src/**/*.stories.mdx",
+];
 
 /**
- * returns the path of the found tsconfig file
- * or uses the provided override, instead,
- * if it's available
- *
- * @param {string} cwd
- * @param {string | undefined | null} tsconfigOverride
+ * @typedef {'cjs' | 'esm'} ModuleType
  */
-async function findTsconfigFile(cwd, tsconfigOverride) {
-  if (tsconfigOverride) {
-    const overridePath = path.isAbsolute(tsconfigOverride)
-      ? tsconfigOverride
-      : path.join(cwd, tsconfigOverride);
-    return overridePath;
-  }
-
-  const locations = [
-    path.join(cwd, "tsconfig.build.json"),
-    path.join(cwd, "tsconfig.json"),
-  ];
-
-  for (const fp of locations) {
-    try {
-      const stat = await fs.stat(fp);
-      if (stat.isFile()) return fp;
-    } catch {}
-  }
-  return null;
-}
 
 /**
  * builds a typescript package, using tsdown and its Node-friendly API
@@ -47,9 +29,7 @@ async function findTsconfigFile(cwd, tsconfigOverride) {
 export async function buildTsPackage(argv = process.argv) {
   const yargs = createCLI(hideBin(argv));
   const {
-    all,
     cwd,
-    devExports,
     exclude,
     noCjs,
     noDts,
@@ -59,12 +39,6 @@ export async function buildTsPackage(argv = process.argv) {
     watch,
   } = await yargs
     .scriptName("build-ts-package")
-    .option("all", {
-      default: false,
-      description:
-        "if true, will compile ALL files in your source folder and link them to your package.json. this is only required if you do not have an index.ts or index.tsx entrypoint that exports all of the things you want users to use.",
-      type: "boolean",
-    })
     .option("cwd", {
       default: process.cwd(),
       description: "the CWD to use when building",
@@ -73,7 +47,7 @@ export async function buildTsPackage(argv = process.argv) {
     .option("exclude", {
       default: [],
       description:
-        "one or more file exclusion glob patterns. please note, these must be EXCLUSION glob patterns, or they may end up getting picked up by the build",
+        "one or more glob patterns of files to ignore during compilation.",
       type: "array",
     })
     .option("noCjs", {
@@ -81,11 +55,6 @@ export async function buildTsPackage(argv = process.argv) {
       description:
         "if true, will not build the CommonJS variant of this package",
       type: "boolean",
-    })
-    .option('devExports', {
-      default: false,
-      description: 'if set, will symlink the uncompiled typescript files during local development. if not set, compiled versions will be used, instead.',
-      type: 'boolean',
     })
     .option("noDts", {
       default: false,
@@ -119,7 +88,7 @@ export async function buildTsPackage(argv = process.argv) {
 
   // ESM Must come before CJS, as those typings and such take precedence
   // when dual publishing.
-  const formats = /** @type {Format[]} */ (
+  const formats = /** @type {ModuleType[]} */ (
     [noEsm ? undefined : "esm", noCjs ? undefined : "cjs"].filter(Boolean)
   );
 
@@ -137,73 +106,45 @@ export async function buildTsPackage(argv = process.argv) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
 
-    /** @type {import('tsdown').Options} */
-    const buildConfig = {
-      clean: false,
-      cwd,
-      dts: !noDts,
-      entry: [
-        "./src/**/*.ts",
-        "./src/**/*.tsx",
-        // ignore all storybook entrypoints
-        "!./src/**/*.stories.ts",
-        "!./src/**/*.test.ts",
-        "!./src/**/*.test.tsx",
-        "!./src/**/*.spec.ts",
-        "!./src/**/*.spec.tsx",
-        "!./src/**/*.stories.tsx",
-        "!./src/**/*.stories.mdx",
-        ...exclude.map((ex) => String(ex)),
-      ],
-      exports:
-        format === "esm" || numFormats <= 1 ? all || devExports ? { all, devExports } : true : false,
-      // do not attempt to resolve or import CSS, SCSS or SVG files
-      external: [/\.s?css$/, /\.svg$/],
-      format,
-      // if there's only one outputted module format, we just take over the root of ./dist
-      // otherwise, we add the module type to the dist file path
-      outDir: numFormats <= 1 ? outDirPath : path.join(outDirPath, format),
-      platform: "neutral",
-      tsconfig,
-      unbundle: true,
-      watch,
-    };
+    const outDir = numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
 
-    console.info('using the following build config:')
-    console.info(buildConfig);
+    let cmd = `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --module ${format === 'cjs' ? 'commonjs' : 'esnext'} --target esnext --resolveJsonModule false`;
+    if (watch) cmd += ` --watch`;
 
-    await build(buildConfig);
+    await execAsync(cmd, { cwd, stdio: 'inherit', verbose: true });
+
+    
   }
-  if (numFormats > 1) {
-    // we need to manually set the cjs exports, since tsdown
-    // isn't yet capable of doing this for us
-    /** @type {import('type-fest').PackageJson} */
-    const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
-    if (!pjson.publishConfig?.exports) return;
-    for (const exportKey of Object.keys(pjson.publishConfig.exports)) {
-      // @ts-expect-error - we can definitely index here, so please be silenced!
-      const exportPath = String(pjson.publishConfig.exports[exportKey]);
+  // if (numFormats > 1) {
+  //   // we need to manually set the cjs exports, since tsdown
+  //   // isn't yet capable of doing this for us
+  //   /** @type {import('type-fest').PackageJson} */
+  //   const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
+  //   if (!pjson.publishConfig?.exports) return;
+  //   for (const exportKey of Object.keys(pjson.publishConfig.exports)) {
+  //     // @ts-expect-error - we can definitely index here, so please be silenced!
+  //     const exportPath = String(pjson.publishConfig.exports[exportKey]);
 
-      // skip over all package.json files
-      if (exportPath.includes("package.json")) continue;
+  //     // skip over all package.json files
+  //     if (exportPath.includes("package.json")) continue;
 
-      // @ts-expect-error - we can definitely index here, so please be silenced!
-      pjson.publishConfig.exports[exportKey] = {
-        import: exportPath,
-        require: exportPath
-          .replace(path.extname(exportPath), ".cjs")
-          .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`),
-        types: exportPath.replace(path.extname(exportPath), ".d.ts"),
-      };
-      if (pjson.main) {
-        pjson.main = pjson.main
-          .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`)
-          .replace(/\.mjs$/, ".js");
-      }
-    }
+  //     // @ts-expect-error - we can definitely index here, so please be silenced!
+  //     pjson.publishConfig.exports[exportKey] = {
+  //       import: exportPath,
+  //       require: exportPath
+  //         .replace(path.extname(exportPath), ".cjs")
+  //         .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`),
+  //       types: exportPath.replace(path.extname(exportPath), ".d.ts"),
+  //     };
+  //     if (pjson.main) {
+  //       pjson.main = pjson.main
+  //         .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`)
+  //         .replace(/\.mjs$/, ".js");
+  //     }
+  //   }
 
-    await fs.writeFile(pjsonPath, JSON.stringify(pjson, undefined, 2), "utf8");
-  }
+  //   await fs.writeFile(pjsonPath, JSON.stringify(pjson, undefined, 2), "utf8");
+  // }
 }
 
 await buildTsPackage();

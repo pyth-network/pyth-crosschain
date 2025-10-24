@@ -1,6 +1,6 @@
 {
   "extends": "@cprussin/tsconfig/nextjs.json",
-  "exclude": ["node_modules", "**/__tests__/*"],
+  "exclude": ["dist/", "node_modules", "**/__tests__/*"],
   "compilerOptions": {
     "rootDir": "src/"
   }
