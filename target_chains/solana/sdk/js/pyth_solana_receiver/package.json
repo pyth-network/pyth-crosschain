@@ -33,6 +33,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/jest": "^29.4.0",
     "@types/node": "catalog:",

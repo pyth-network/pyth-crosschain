@@ -1,11 +1,11 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import {
-  Address,
-  PublicClient,
+  type Address,
+  type PublicClient,
   encodeFunctionData,
-  Hex,
-  Transport,
-  Chain,
+  type Hex,
+  type Transport,
+  type Chain,
 } from "viem";
 
 import { IPythAbi } from "./pyth-abi";
@@ -17,19 +17,20 @@ import {
   extractPythPriceFeedsFromTraceCallMany,
   traceCallManyAction,
 } from "./tracer/trace-call-many";
+import type { Nullish } from "./types";
 
 /**
  * Represents a call request to be executed on the blockchain
  */
 export type CallRequest = {
   /** The address making the call (optional) */
-  from?: Address;
+  from?: Nullish<Address>;
   /** The target contract address */
-  to: Address;
+  to: Nullish<Address>;
   /** The encoded function call data (optional) */
-  data?: Hex;
+  data?: Nullish<Hex>;
   /** The amount of ETH to send with the call (optional) */
-  value?: bigint;
+  value?: Nullish<bigint>;
 };
 
 /**
@@ -40,15 +41,15 @@ export type CallRequest = {
  * @param updateData - Array of hex-encoded update data
  * @returns Promise resolving to the update fee in wei
  */
-export async function getUpdateFee<
+export function getUpdateFee<
   transport extends Transport,
   chain extends Chain | undefined,
 >(
   client: PublicClient<transport, chain>,
   pythContractAddress: Address,
   updateData: Hex[],
-): Promise<bigint> {
-  return await client.readContract({
+) {
+  return client.readContract({
     address: pythContractAddress,
     abi: IPythAbi,
     functionName: "getUpdateFee",
@@ -164,13 +165,13 @@ export async function fillPythUpdate<
       break;
     } else {
       requiredPriceFeeds = requiredPriceFeeds.union(priceFeeds);
-      pythUpdate = await getPythUpdate(
+      pythUpdate = (await getPythUpdate(
         client,
         hermesClient,
         requiredPriceFeeds,
         pythContractAddress,
         call,
-      );
+      )) as typeof pythUpdate;
     }
   }
 
@@ -219,13 +220,14 @@ const getPriceFeeds = async <
   pythContractAddress: Address,
   call: CallRequest,
   config: Config,
-  pythUpdate: PythUpdate | undefined,
+  pythUpdate: Nullish<PythUpdate>,
 ) => {
   switch (config.method) {
     case "debug_traceCall": {
       return extractPythPriceFeedsFromDebugTraceCall(
         await client
           .extend(debugTraceCallAction)
+          // @ts-expect-error - the typings here are very wonky and need revisiting in a future release
           .debugTraceCall(pythUpdate ? config.bundler(pythUpdate, call) : call),
         pythContractAddress,
       );
@@ -234,6 +236,7 @@ const getPriceFeeds = async <
       return extractPythPriceFeedsFromTraceCallMany(
         await client
           .extend(traceCallManyAction)
+          // @ts-expect-error - the typings here are very wonky and need revisiting in a future release
           .traceCallMany(pythUpdate ? [pythUpdate.call, call] : [call]),
         pythContractAddress,
       );

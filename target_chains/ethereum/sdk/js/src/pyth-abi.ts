@@ -544,7 +544,7 @@ export const IPythAbi = [
     stateMutability: "payable",
     type: "function",
   },
-] as const;
+];
 
 export const IPythEventsAbi = [
   {
@@ -578,7 +578,7 @@ export const IPythEventsAbi = [
     name: "PriceFeedUpdate",
     type: "event",
   },
-] as const;
+];
 
 export const PythErrorsAbi = [
   {
@@ -651,10 +651,10 @@ export const PythErrorsAbi = [
     name: "StalePrice",
     type: "error",
   },
-] as const;
+];
 
 export const PythAbi = [
   ...IPythAbi,
   ...IPythEventsAbi,
   ...PythErrorsAbi,
-] as const;
+];

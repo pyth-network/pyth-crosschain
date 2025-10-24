@@ -1,7 +1,7 @@
 export { SuiPriceServiceConnection } from "./SuiPriceServiceConnection";
 export { SuiPythClient } from "./client";
 
-export {
+export type {
   AssetType,
   BinaryPriceUpdate,
   DurationInMs,

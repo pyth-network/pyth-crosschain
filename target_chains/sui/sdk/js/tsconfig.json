@@ -1,14 +1,5 @@
 {
-  "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "./lib",
-    "rootDir": "src/",
-    "strict": true,
-    "esModuleInterop": true
-  },
+  "extends": "@cprussin/tsconfig/nextjs.json",
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["dist", "node_modules"]
 }

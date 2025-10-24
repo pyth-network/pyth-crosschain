@@ -1,17 +1,18 @@
 import {
-  Address,
-  BlockTag,
+  type Address,
+  type BlockTag,
   decodeFunctionData,
-  RpcTransactionRequest,
-  ExactPartial,
-  Hex,
-  Client,
+  type RpcTransactionRequest,
+  type ExactPartial,
+  type Hex,
+  type Client,
   formatTransactionRequest,
-  CallParameters,
+  type CallParameters,
   isAddressEqual,
 } from "viem";
 
 import { IPythAbi } from "../pyth-abi";
+import { type Nullish } from "../types";
 
 /**
  * Extract Pyth price feed IDs from a transaction call trace.
@@ -32,7 +33,7 @@ export function extractPythPriceFeedsFromTraceCallMany(
             data: trace.action.input,
           });
 
-          let priceFeedId: `0x${string}` | undefined;
+          let priceFeedId: Nullish<`0x${string}`>;
           switch (decoded.functionName) {
             case "getPrice":
             case "getPriceNoOlderThan":
@@ -40,14 +41,17 @@ export function extractPythPriceFeedsFromTraceCallMany(
             case "getEmaPrice":
             case "getEmaPriceNoOlderThan":
             case "getEmaPriceUnsafe": {
-              priceFeedId = decoded.args[0];
+              const pfid = decoded.args?.[0];
+              if (pfid !== null && pfid !== undefined) {
+                priceFeedId = pfid as typeof priceFeedId;
+              }
               break;
             }
             default: {
               break;
             }
           }
-          if (priceFeedId !== undefined) {
+          if (priceFeedId) {
             result.add(priceFeedId);
           }
         } catch {

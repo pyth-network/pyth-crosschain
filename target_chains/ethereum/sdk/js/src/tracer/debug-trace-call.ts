@@ -1,17 +1,18 @@
 import {
-  Address,
-  BlockTag,
-  CallParameters,
-  Client,
+  type Address,
+  type BlockTag,
+  type CallParameters,
+  type Client,
   decodeFunctionData,
-  ExactPartial,
+  type ExactPartial,
   formatTransactionRequest,
-  Hex,
+  type Hex,
   isAddressEqual,
-  RpcTransactionRequest,
+  type RpcTransactionRequest,
 } from "viem";
 
 import { IPythAbi } from "../pyth-abi";
+import { type Nullish } from "../types";
 
 /**
  * Extract Pyth price feed IDs from a transaction call trace.
@@ -30,7 +31,7 @@ export function extractPythPriceFeedsFromDebugTraceCall(
         data: trace.input,
       });
 
-      let priceFeedId: Hex | undefined;
+      let priceFeedId: Nullish<Hex>;
       switch (decoded.functionName) {
         case "getPrice":
         case "getPriceNoOlderThan":
@@ -38,14 +39,17 @@ export function extractPythPriceFeedsFromDebugTraceCall(
         case "getEmaPrice":
         case "getEmaPriceNoOlderThan":
         case "getEmaPriceUnsafe": {
-          priceFeedId = decoded.args[0];
+          const pfid = decoded.args?.[0]
+          if (pfid !== null && pfid !== undefined) {
+            priceFeedId = pfid as typeof priceFeedId;
+          }
           break;
         }
         default: {
           break;
         }
       }
-      if (priceFeedId !== undefined) {
+      if (priceFeedId !== null && priceFeedId !== undefined) {
         result.add(priceFeedId);
       }
     } catch (error: unknown) {
@@ -63,9 +67,9 @@ export function extractPythPriceFeedsFromDebugTraceCall(
   }
   return new Set([
     ...result,
-    ...trace.calls.flatMap((call) => [
+    ...(trace.calls?.flatMap((call) => [
       ...extractPythPriceFeedsFromDebugTraceCall(call, pythContractAddress),
-    ]),
+    ]) ?? []),
   ]);
 }
 
@@ -107,11 +111,11 @@ export type RpcCallTrace = {
   to: Address;
   input: Hex;
   output: Hex;
-  error?: string;
-  revertReason?: string;
-  calls?: RpcCallTrace[];
-  logs?: RpcLogTrace[];
-  value?: Hex;
+  error?: Nullish<string>;
+  revertReason?: Nullish<string>;
+  calls?: Nullish<RpcCallTrace[]>;
+  logs?: Nullish<RpcLogTrace[]>;
+  value?: Nullish<Hex>;
   type: RpcCallType;
 };
 
