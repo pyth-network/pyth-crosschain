@@ -3130,6 +3130,9 @@ importers:
 
   target_chains/starknet/sdk/js:
     devDependencies:
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 3.1.2(typescript@5.9.3)
       '@types/node':
         specifier: ^18.11.18
         version: 18.19.86

@@ -1,4 +1,4 @@
-[
+export const ERC20_ABI = [
   {
     "type": "impl",
     "name": "UpgradeableImpl",

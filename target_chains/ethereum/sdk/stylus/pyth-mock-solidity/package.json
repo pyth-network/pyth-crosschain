@@ -9,8 +9,7 @@
   },
   "scripts": {
     "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
-    "build": "build-ts-package"
+    "fix:format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
@@ -21,16 +20,5 @@
   "devDependencies": {
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:"
-  },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=10.19.0"
-  },
-  "packageManager": "pnpm@10.19.0",
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist/**/*"
-  ]
+  }
 }

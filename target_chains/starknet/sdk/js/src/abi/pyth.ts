@@ -1,4 +1,4 @@
-[
+export const PYTH_ABI = [
   {
     "type": "impl",
     "name": "PythImpl",

@@ -1,7 +1,7 @@
 /** ABI of the Pyth contract. Pass it as the first argument of `new Contract()` when using starknet-js. */
-export { default as PYTH_ABI } from "./abi/pyth.json";
+export { PYTH_ABI } from "./abi/pyth";
 /** ABI of the ERC20 contract. Pass it as the first argument of `new Contract()` when using starknet-js. */
-export { default as ERC20_ABI } from "./abi/erc20.json";
+export { ERC20_ABI } from "./abi/erc20";
 
 /** Address of the ERC20 contract that Pyth uses to accept fees in STRK. */
 export const STRK_TOKEN_ADDRESS =
