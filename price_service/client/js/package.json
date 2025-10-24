@@ -7,8 +7,8 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
+  "main": "./cjs/index.js",
+  "types": "./cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -39,7 +39,9 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@types/jest": "^29.4.0",
+    "@types/node": "catalog:",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
@@ -47,7 +49,7 @@
     "jest": "^29.4.0",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5",
-    "typescript": "^4.6.3",
+    "typescript": "catalog:",
     "yargs": "^17.4.1"
   },
   "dependencies": {
@@ -64,13 +66,43 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./esm/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./examples/PriceServiceClient": "./src/examples/PriceServiceClient.ts",
-    "./PriceServiceConnection": "./src/PriceServiceConnection.ts",
-    "./ResillientWebSocket": "./src/ResillientWebSocket.ts",
-    "./utils": "./src/utils.ts",
+    "./PriceServiceConnection": {
+      "import": "./dist/esm/PriceServiceConnection.js",
+      "types": "./dist/esm/PriceServiceConnection.d.ts",
+      "require": "./dist/cjs/PriceServiceConnection.js"
+    },
+    "./ResillientWebSocket": {
+      "import": "./dist/esm/ResillientWebSocket.js",
+      "types": "./dist/esm/ResillientWebSocket.d.ts",
+      "require": "./dist/cjs/ResillientWebSocket.js"
+    },
+    "./__tests__/connection.e2e.test": {
+      "import": "./dist/esm/__tests__/connection.e2e.test.js",
+      "types": "./dist/esm/__tests__/connection.e2e.test.d.ts",
+      "require": "./dist/cjs/__tests__/connection.e2e.test.js"
+    },
+    "./examples/PriceServiceClient": {
+      "import": "./dist/esm/examples/PriceServiceClient.js",
+      "types": "./dist/esm/examples/PriceServiceClient.d.ts",
+      "require": "./dist/cjs/examples/PriceServiceClient.js"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
+    "./types": {
+      "import": "./dist/esm/types.js",
+      "types": "./dist/esm/types.d.ts",
+      "require": "./dist/cjs/types.js"
+    },
+    "./utils": {
+      "import": "./dist/esm/utils.js",
+      "types": "./dist/esm/utils.d.ts",
+      "require": "./dist/cjs/utils.js"
+    },
     "./package.json": "./package.json"
   }
 }

@@ -1,5 +1,5 @@
 import {
-  DurationInMs,
+  type DurationInMs,
   Price,
   PriceFeed,
   PriceFeedMetadata,
@@ -98,7 +98,7 @@ describe("Test http endpoints", () => {
 
     const publishTime10SecAgo = Math.floor(new Date().getTime() / 1000) - 10;
     const [vaa, vaaPublishTime] = await connection.getVaa(
-      ids[0],
+      ids[0] ?? '',
       publishTime10SecAgo,
     );
 
@@ -220,7 +220,9 @@ describe("Test websocket endpoints", () => {
 
       // Check for out of order slots but don't assert on it since it's not stable
       for (let i = 1; i < observedSlots.length; i++) {
-        if (observedSlots[i] < observedSlots[i - 1]) {
+        const curr = observedSlots[i];
+        const prev = observedSlots[i - 1];
+        if (curr !== undefined && prev !== undefined && curr < prev) {
           // Out of order slot found, but we don't assert on it
           break;
         }
