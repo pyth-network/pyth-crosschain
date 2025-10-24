@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
+  "main": "./cjs/index.js",
+  "types": "./cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -38,6 +38,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",
@@ -50,7 +51,7 @@
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5",
-    "typescript": "^5.3.3",
+    "typescript": "catalog:",
     "web3": "^1.8.2",
     "yargs": "^17.0.20"
   },
@@ -64,12 +65,28 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./esm/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./client": "./src/client.ts",
-    "./examples/IotaRelay": "./src/examples/IotaRelay.ts",
-    "./IotaPriceServiceConnection": "./src/IotaPriceServiceConnection.ts",
+    "./IotaPriceServiceConnection": {
+      "import": "./dist/esm/IotaPriceServiceConnection.js",
+      "types": "./dist/esm/IotaPriceServiceConnection.d.ts",
+      "require": "./dist/cjs/IotaPriceServiceConnection.js"
+    },
+    "./client": {
+      "import": "./dist/esm/client.js",
+      "types": "./dist/esm/client.d.ts",
+      "require": "./dist/cjs/client.js"
+    },
+    "./examples/IotaRelay": {
+      "import": "./dist/esm/examples/IotaRelay.js",
+      "types": "./dist/esm/examples/IotaRelay.d.ts",
+      "require": "./dist/cjs/examples/IotaRelay.js"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
     "./package.json": "./package.json"
   }
 }

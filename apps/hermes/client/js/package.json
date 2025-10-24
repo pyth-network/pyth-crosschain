@@ -65,7 +65,7 @@
   "exports": {
     "./HermesClient": {
       "import": "./dist/esm/HermesClient.js",
-      "types": "./dist/cjs/HermesClient.d.ts",
+      "types": "./dist/esm/HermesClient.d.ts",
       "require": "./dist/cjs/HermesClient.js"
     },
     "./examples/HermesClient": {
@@ -74,22 +74,22 @@
     },
     ".": {
       "import": "./dist/esm/index.js",
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./utils": {
       "import": "./dist/esm/utils.js",
-      "types": "./dist/cjs/utils.d.ts",
+      "types": "./dist/esm/utils.d.ts",
       "require": "./dist/cjs/utils.js"
     },
     "./zodSchemas": {
       "import": "./dist/esm/zodSchemas.js",
-      "types": "./dist/cjs/zodSchemas.d.ts",
+      "types": "./dist/esm/zodSchemas.d.ts",
       "require": "./dist/cjs/zodSchemas.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./esm/index.d.ts",
+  "types": "./cjs/index.d.ts",
   "module": "./esm/index.js",
   "main": "./cjs/index.js"
 }
