@@ -99,8 +99,9 @@ export async function buildTsPackage(argv = process.argv) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
 
-    /** @type {import('type-fest').PackageJson} */
     const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
+    // always freshly reset the exports and let the tool take over
+    pjson.exports = {};
 
     const outDir = numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
 
@@ -145,47 +146,44 @@ export async function buildTsPackage(argv = process.argv) {
       }
     }
 
-    /** @type {import('type-fest').PackageJson['exports']} */
-    const exports = {};
+    const exports =
+      Array.isArray(pjson.exports) || typeof pjson.exports === "string"
+        ? {}
+        : (pjson.exports ?? {});
 
-    // for (const builtFiles) {
+    const outDirBasename = path.basename(outDirPath);
 
-    // }
+    for (const fp of builtFiles) {
+      const fpWithNoExt = fp
+        .replace(/(\.d)?\.(c|m)?(js|ts)$/, "")
+        .replaceAll(/\\/g, "/");
+      const key = fpWithNoExt
+        .replace(/(\/|\\)?index$/, "")
+        .replace(/^\.(\/|\\)(cjs|esm)/, ".")
+        .replaceAll(/\\/g, "/");
+      const fpWithBasename = `./${path
+        .join(outDirBasename, fp)
+        .replaceAll(/\\/g, "/")}`;
 
-    // pjson.exports = exports;
+      // Ensure key object exists
+      exports[key] ??= {};
 
-    await fs.writeFile(pjsonPath, JSON.stringify(pjson, undefined, 2), "utf8");
+      // Add require/import entry without nuking the other
+      if (format === "cjs") {
+        exports[key].require = fpWithBasename;
+      } else {
+        exports[key].import = fpWithBasename;
+      }
+
+      // Also handle types if present
+      if (!noDts && fp.endsWith(".d.ts")) {
+        exports[key].types = fpWithBasename;
+      }
+    }
+
+    pjson.exports = exports;
+    await fs.writeFile(pjsonPath, JSON.stringify(pjson, null, 2), "utf8");
   }
-  // if (numFormats > 1) {
-  //   // we need to manually set the cjs exports, since tsdown
-  //   // isn't yet capable of doing this for us
-  //   /** @type {import('type-fest').PackageJson} */
-  //   const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
-  //   if (!pjson.publishConfig?.exports) return;
-  //   for (const exportKey of Object.keys(pjson.publishConfig.exports)) {
-  //     // @ts-expect-error - we can definitely index here, so please be silenced!
-  //     const exportPath = String(pjson.publishConfig.exports[exportKey]);
-
-  //     // skip over all package.json files
-  //     if (exportPath.includes("package.json")) continue;
-
-  //     // @ts-expect-error - we can definitely index here, so please be silenced!
-  //     pjson.publishConfig.exports[exportKey] = {
-  //       import: exportPath,
-  //       require: exportPath
-  //         .replace(path.extname(exportPath), ".cjs")
-  //         .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`),
-  //       types: exportPath.replace(path.extname(exportPath), ".d.ts"),
-  //     };
-  //     if (pjson.main) {
-  //       pjson.main = pjson.main
-  //         .replace(`${path.sep}esm${path.sep}`, `${path.sep}cjs${path.sep}`)
-  //         .replace(/\.mjs$/, ".js");
-  //     }
-  //   }
-
-  //   await fs.writeFile(pjsonPath, JSON.stringify(pjson, undefined, 2), "utf8");
-  // }
 }
 
 await buildTsPackage();
