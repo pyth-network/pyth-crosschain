@@ -128,17 +128,17 @@ export async function buildTsPackage(argv = process.argv) {
 
       await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
 
-      const builtFiles = (
-        await glob(
-          [
-            path.join(outDir, "**", "*.d.ts"),
-            path.join(outDir, "**", "*.js"),
-            path.join(outDir, "**", "*.cjs"),
-            path.join(outDir, "**", "*.mjs"),
-          ],
-          { absolute: true, onlyFiles: true },
-        )
-      )
+      const absoluteBuiltFiles = await glob(
+        [
+          path.join(outDir, "**", "*.d.ts"),
+          path.join(outDir, "**", "*.js"),
+          path.join(outDir, "**", "*.cjs"),
+          path.join(outDir, "**", "*.mjs"),
+        ],
+        { absolute: true, onlyFiles: true },
+      );
+
+      const builtFiles = absoluteBuiltFiles
         .map((fp) => {
           const relPath = path.relative(outDir, fp);
           if (numFormats <= 1) return `.${path.sep}${relPath}`;

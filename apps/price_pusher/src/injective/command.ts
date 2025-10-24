@@ -5,7 +5,7 @@ import fs from "fs";
 import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
-import { Options } from "yargs";
+import type { Options } from "yargs";
 import { getNetworkInfo } from "@injectivelabs/networks";
 import pino from "pino";
 import { filterInvalidPriceItems } from "../utils";
