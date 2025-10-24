@@ -14,7 +14,7 @@
   "scripts": {
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build": "build-ts-package",
+    "build": "generate-abis IScheduler SchedulerConstants SchedulerErrors SchedulerEvents SchedulerStructs",
     "test": "git diff --exit-code abis"
   },
   "keywords": [
@@ -36,13 +36,5 @@
   },
   "dependencies": {
     "@pythnetwork/pyth-sdk-solidity": "workspace:*"
-  },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=10.19.0"
-  },
-  "packageManager": "pnpm@10.19.0",
-  "files": [
-    "dist/**/*"
-  ]
+  }
 }

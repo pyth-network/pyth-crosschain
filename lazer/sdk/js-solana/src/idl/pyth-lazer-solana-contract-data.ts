@@ -1,4 +1,4 @@
-{
+export const IDL = {
   "address": "pytd2yyk641x7ak7mkaasSJVXh6YYZnC7wTmtgAyxPt",
   "metadata": {
     "name": "pyth_lazer_solana_contract",

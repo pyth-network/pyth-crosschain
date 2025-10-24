@@ -2,10 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "emitDeclarationOnly": true,
     "incremental": false,
     "declaration": true,
-    "outDir": "./dist/types"
+    "verbatimModuleSyntax": false
   },
   "exclude": ["node_modules", "dist"]
 }

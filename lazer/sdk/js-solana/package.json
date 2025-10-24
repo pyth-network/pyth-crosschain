@@ -3,41 +3,14 @@
   "version": "0.1.2",
   "description": "Pyth Lazer Solana SDK",
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.js",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./ed25519": {
-        "import": "./dist/esm/ed25519.js",
-        "require": "./dist/cjs/ed25519.cjs",
-        "types": "./dist/esm/ed25519.d.ts"
-      },
-      "./idl/pyth-lazer-solana-contract": {
-        "import": "./dist/esm/idl/pyth-lazer-solana-contract.js",
-        "require": "./dist/cjs/idl/pyth-lazer-solana-contract.cjs",
-        "types": "./dist/esm/idl/pyth-lazer-solana-contract.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "files": [
     "dist/**/*"
   ],
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.ts",
-  "exports": {
-    ".": "./src/index.ts",
-    "./ed25519": "./src/ed25519.ts",
-    "./idl/pyth-lazer-solana-contract": "./src/idl/pyth-lazer-solana-contract.ts",
-    "./package.json": "./package.json"
-  },
   "scripts": {
     "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
     "build": "build-ts-package",
-    "build:types": "tsc --project tsconfig.build.json",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
@@ -80,5 +53,30 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.js"
+  "exports": {
+    "./ed25519": {
+      "import": "./dist/esm/ed25519.js",
+      "types": "./dist/cjs/ed25519.d.ts",
+      "require": "./dist/cjs/ed25519.js"
+    },
+    "./idl/pyth-lazer-solana-contract-data": {
+      "import": "./dist/esm/idl/pyth-lazer-solana-contract-data.js",
+      "types": "./dist/cjs/idl/pyth-lazer-solana-contract-data.d.ts",
+      "require": "./dist/cjs/idl/pyth-lazer-solana-contract-data.js"
+    },
+    "./idl/pyth-lazer-solana-contract": {
+      "import": "./dist/esm/idl/pyth-lazer-solana-contract.js",
+      "types": "./dist/cjs/idl/pyth-lazer-solana-contract.d.ts",
+      "require": "./dist/cjs/idl/pyth-lazer-solana-contract.js"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./esm/index.d.ts",
+  "module": "./esm/index.js",
+  "main": "./cjs/index.js"
 }
