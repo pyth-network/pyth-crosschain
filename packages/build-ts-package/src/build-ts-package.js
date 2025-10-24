@@ -1,22 +1,13 @@
 #!/usr/bin/env node
 
-import fs from "node:fs/promises";
+import glob from "fast-glob";
+import fs from "fs-extra";
 import path from "node:path";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { findTsconfigFile } from "./find-tsconfig-file.js";
 import { execAsync } from "./exec-async.js";
-
-const DEFAULT_EXCLUSION_PATTERNS = [
-  "!./src/**/*.stories.ts",
-  "!./src/**/*.test.ts",
-  "!./src/**/*.test.tsx",
-  "!./src/**/*.spec.ts",
-  "!./src/**/*.spec.tsx",
-  "!./src/**/*.stories.tsx",
-  "!./src/**/*.stories.mdx",
-];
 
 /**
  * @typedef {'cjs' | 'esm'} ModuleType
@@ -29,8 +20,8 @@ const DEFAULT_EXCLUSION_PATTERNS = [
 export async function buildTsPackage(argv = process.argv) {
   const yargs = createCLI(hideBin(argv));
   const {
+    clean,
     cwd,
-    exclude,
     noCjs,
     noDts,
     noEsm,
@@ -39,16 +30,16 @@ export async function buildTsPackage(argv = process.argv) {
     watch,
   } = await yargs
     .scriptName("build-ts-package")
+    .option("clean", {
+      default: false,
+      description:
+        "if set, will clean out the build dirs before compiling anything",
+      type: "boolean",
+    })
     .option("cwd", {
       default: process.cwd(),
       description: "the CWD to use when building",
       type: "string",
-    })
-    .option("exclude", {
-      default: [],
-      description:
-        "one or more glob patterns of files to ignore during compilation.",
-      type: "array",
     })
     .option("noCjs", {
       default: false,
@@ -86,6 +77,8 @@ export async function buildTsPackage(argv = process.argv) {
 
   const outDirPath = path.isAbsolute(outDir) ? outDir : path.join(cwd, outDir);
 
+  if (clean) await fs.remove(outDirPath);
+
   // ESM Must come before CJS, as those typings and such take precedence
   // when dual publishing.
   const formats = /** @type {ModuleType[]} */ (
@@ -106,14 +99,62 @@ export async function buildTsPackage(argv = process.argv) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
 
+    /** @type {import('type-fest').PackageJson} */
+    const pjson = JSON.parse(await fs.readFile(pjsonPath, "utf8"));
+
     const outDir = numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
 
-    let cmd = `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --module ${format === 'cjs' ? 'commonjs' : 'esnext'} --target esnext --resolveJsonModule false`;
+    let cmd =
+      `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --module ${format === "cjs" ? "commonjs" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution node" : ""}`.trim();
     if (watch) cmd += ` --watch`;
 
-    await execAsync(cmd, { cwd, stdio: 'inherit', verbose: true });
+    await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
 
-    
+    const builtFiles = (
+      await glob(
+        [
+          path.join(outDir, "**", "*.d.ts"),
+          path.join(outDir, "**", "*.js"),
+          path.join(outDir, "**", "*.cjs"),
+          path.join(outDir, "**", "*.mjs"),
+        ],
+        { absolute: true, onlyFiles: true },
+      )
+    ).map((fp) => {
+      const relPath = path.relative(outDir, fp);
+      if (numFormats <= 1) return `.${path.sep}${relPath}`;
+      return `.${path.sep}${path.join(format, relPath)}`;
+    });
+
+    console.info("builtFiles", builtFiles);
+
+    const indexFile = builtFiles.find((fp) => {
+      const r = /^\.(\/|\\)((cjs|esm)(\/|\\))?index\.(c|m)?js$/;
+      return r.test(fp);
+    });
+
+    if (indexFile) {
+      console.info("index file detected");
+      if (format === "esm" || numFormats <= 1) {
+        pjson.types = indexFile.replace(path.extname(indexFile), ".d.ts");
+      }
+      if (format === "esm") {
+        pjson.module = indexFile;
+      } else {
+        pjson.main = indexFile;
+      }
+    }
+
+    /** @type {import('type-fest').PackageJson['exports']} */
+    const exports = {};
+
+    // for (const builtFiles) {
+
+    // }
+
+    // pjson.exports = exports;
+
+    await fs.writeFile(pjsonPath, JSON.stringify(pjson, undefined, 2), "utf8");
   }
   // if (numFormats > 1) {
   //   // we need to manually set the cjs exports, since tsdown

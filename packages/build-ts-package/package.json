@@ -15,12 +15,14 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
     "type-fest": "catalog:"
   },
   "dependencies": {
     "fast-glob": "^3.3.3",
+    "fs-extra": "^11.3.2",
     "typescript": "catalog:",
     "yargs": "catalog:"
   }

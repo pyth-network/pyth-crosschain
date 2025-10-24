@@ -16,7 +16,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --noCjs",
+    "build": "build-ts-package --clean",
     "test:unit": "jest",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
@@ -56,13 +56,7 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "exports": {
-    ".": "./dist/index.mjs",
-    "./jito": "./dist/jito.mjs",
-    "./transaction": "./dist/transaction.mjs",
-    "./package.json": "./package.json"
-  }
+  "types": "./esm/index.d.ts",
+  "module": "./esm/index.js",
+  "main": "./cjs/index.js"
 }

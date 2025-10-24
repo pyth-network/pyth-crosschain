@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn } from "node:child_process";
 
 /**
  * @typedef {Object} ExecAsyncOpts
@@ -9,18 +9,18 @@ import { spawn } from 'node:child_process';
 
 /**
  * Executes a command asynchronously via spawn.
- * @param {string} command 
+ * @param {string} command
  * @param {ExecAsyncOpts} opts
  */
 export function execAsync(
   command,
-  { verbose = process.env.LETS_VERSION_VERBOSE === 'true' || false, ...opts },
+  { verbose = process.env.LETS_VERSION_VERBOSE === "true" || false, ...opts },
 ) {
-  if (verbose) console.info('Executing', command, 'in', opts.cwd);
+  if (verbose) console.info("Executing", command, "in", opts.cwd);
 
   const [cmd, ...args] = command.split(/\s+/);
 
-  if (!cmd) throw new Error('unable to spawn because no command was given');
+  if (!cmd) throw new Error("unable to spawn because no command was given");
 
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, opts);
@@ -30,20 +30,20 @@ export function execAsync(
 
     /** @type {Error | null} */
     let error = null;
-    child.on('error', err => {
+    child.on("error", (err) => {
       error = err;
     });
-    child.stderr?.on('data', data => {
+    child.stderr?.on("data", (data) => {
       errBuffer = Buffer.concat([errBuffer, data]);
     });
 
-    child.stdout?.on('data', data => {
+    child.stdout?.on("data", (data) => {
       stdoutBuffer = Buffer.concat([stdoutBuffer, data]);
     });
 
-    child.once('exit', code => {
+    child.once("exit", (code) => {
       if (code) {
-        const errMsg = errBuffer.toString('utf-8');
+        const errMsg = errBuffer.toString("utf-8");
         console.error(errMsg);
 
         if (error) {
@@ -52,7 +52,7 @@ export function execAsync(
         return reject(new Error(errMsg));
       }
 
-      const output = stdoutBuffer.toString('utf-8');
+      const output = stdoutBuffer.toString("utf-8");
       return resolve(output);
     });
   });
