@@ -61,19 +61,20 @@
   "main": "./cjs/index.js",
   "exports": {
     ".": {
-      "require": "./dist/cjs/index.js",
       "import": "./dist/esm/index.js",
-      "types": "./dist/cjs/index.d.ts"
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js"
     },
     "./jito": {
-      "require": "./dist/cjs/jito.js",
       "import": "./dist/esm/jito.js",
-      "types": "./dist/cjs/jito.d.ts"
+      "types": "./dist/cjs/jito.d.ts",
+      "require": "./dist/cjs/jito.js"
     },
     "./transaction": {
-      "require": "./dist/cjs/transaction.js",
       "import": "./dist/esm/transaction.js",
-      "types": "./dist/cjs/transaction.d.ts"
-    }
+      "types": "./dist/cjs/transaction.d.ts",
+      "require": "./dist/cjs/transaction.js"
+    },
+    "./package.json": "./package.json"
   }
 }

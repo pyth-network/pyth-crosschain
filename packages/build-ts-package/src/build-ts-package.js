@@ -99,6 +99,7 @@ export async function buildTsPackage(argv = process.argv) {
   // always freshly reset the exports and let the tool take over
   pjson.exports = {};
 
+  console.info('building package', pjson.name);
   for (const format of formats) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
@@ -125,7 +126,7 @@ export async function buildTsPackage(argv = process.argv) {
       const relPath = path.relative(outDir, fp);
       if (numFormats <= 1) return `.${path.sep}${relPath}`;
       return `.${path.sep}${path.join(format, relPath)}`;
-    });
+    }).sort();
 
     const indexFile = builtFiles.find((fp) => {
       const r = /^\.(\/|\\)((cjs|esm)(\/|\\))?index\.(c|m)?js$/;

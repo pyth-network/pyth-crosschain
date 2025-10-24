@@ -6,8 +6,6 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -44,6 +42,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
     "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
@@ -62,9 +61,15 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
     "./package.json": "./package.json"
-  }
+  },
+  "types": "./esm/index.d.ts",
+  "module": "./esm/index.js",
+  "main": "./cjs/index.js"
 }

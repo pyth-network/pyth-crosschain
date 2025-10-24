@@ -80,6 +80,16 @@
       "types": "./dist/cjs/protocol.d.ts",
       "require": "./dist/cjs/protocol.js"
     },
+    "./socket/resilient-websocket": {
+      "import": "./dist/esm/socket/resilient-websocket.js",
+      "types": "./dist/cjs/socket/resilient-websocket.d.ts",
+      "require": "./dist/cjs/socket/resilient-websocket.js"
+    },
+    "./socket/websocket-pool": {
+      "import": "./dist/esm/socket/websocket-pool.js",
+      "types": "./dist/cjs/socket/websocket-pool.d.ts",
+      "require": "./dist/cjs/socket/websocket-pool.js"
+    },
     "./util/buffer-util": {
       "import": "./dist/esm/util/buffer-util.js",
       "types": "./dist/cjs/util/buffer-util.d.ts",
@@ -99,16 +109,6 @@
       "import": "./dist/esm/util/url-util.js",
       "types": "./dist/cjs/util/url-util.d.ts",
       "require": "./dist/cjs/util/url-util.js"
-    },
-    "./socket/resilient-websocket": {
-      "import": "./dist/esm/socket/resilient-websocket.js",
-      "types": "./dist/cjs/socket/resilient-websocket.d.ts",
-      "require": "./dist/cjs/socket/resilient-websocket.js"
-    },
-    "./socket/websocket-pool": {
-      "import": "./dist/esm/socket/websocket-pool.js",
-      "types": "./dist/cjs/socket/websocket-pool.d.ts",
-      "require": "./dist/cjs/socket/websocket-pool.js"
     },
     "./package.json": "./package.json"
   },

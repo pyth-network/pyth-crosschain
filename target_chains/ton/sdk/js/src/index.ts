@@ -2,13 +2,13 @@ import {
   Address,
   beginCell,
   Cell,
-  Contract,
+  type Contract,
   Dictionary,
-  Sender,
+  type Sender,
   SendMode,
   toNano,
 } from "@ton/core";
-import { ContractProvider } from "@ton/ton";
+import { type ContractProvider } from "@ton/ton";
 
 export const PYTH_CONTRACT_ADDRESS_MAINNET =
   "EQBgtfuGIzWLiOzpZO48_psYvco4xRtkAbdbmTwy0_o95LtZ";
@@ -253,7 +253,7 @@ export function createCellChain(buffer: Buffer): Cell {
   let lastCell: Cell | null = null;
   // Iterate through chunks in reverse order
   for (let i = chunks.length - 1; i >= 0; i--) {
-    const chunk = chunks[i];
+    const chunk = chunks[i]!;
     const cellBuilder = beginCell();
     const buffer = Buffer.from(chunk);
     cellBuilder.storeBuffer(buffer);

@@ -3404,6 +3404,9 @@ importers:
 
   target_chains/ton/sdk/js:
     devDependencies:
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 3.1.2(typescript@5.9.3)
       '@ton/core':
         specifier: ^0.59.0
         version: 0.59.1(@ton/crypto@3.3.0)
