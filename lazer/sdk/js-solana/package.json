@@ -56,27 +56,27 @@
   "exports": {
     "./ed25519": {
       "import": "./dist/esm/ed25519.js",
-      "types": "./dist/cjs/ed25519.d.ts",
+      "types": "./dist/esm/ed25519.d.ts",
       "require": "./dist/cjs/ed25519.js"
     },
     "./idl/pyth-lazer-solana-contract-data": {
       "import": "./dist/esm/idl/pyth-lazer-solana-contract-data.js",
-      "types": "./dist/cjs/idl/pyth-lazer-solana-contract-data.d.ts",
+      "types": "./dist/esm/idl/pyth-lazer-solana-contract-data.d.ts",
       "require": "./dist/cjs/idl/pyth-lazer-solana-contract-data.js"
     },
     "./idl/pyth-lazer-solana-contract": {
       "import": "./dist/esm/idl/pyth-lazer-solana-contract.js",
-      "types": "./dist/cjs/idl/pyth-lazer-solana-contract.d.ts",
+      "types": "./dist/esm/idl/pyth-lazer-solana-contract.d.ts",
       "require": "./dist/cjs/idl/pyth-lazer-solana-contract.js"
     },
     ".": {
       "import": "./dist/esm/index.js",
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./esm/index.d.ts",
+  "types": "./cjs/index.d.ts",
   "module": "./esm/index.js",
   "main": "./cjs/index.js"
 }

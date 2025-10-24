@@ -2163,6 +2163,9 @@ importers:
 
   packages/build-ts-package:
     dependencies:
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
@@ -13050,8 +13053,8 @@ packages:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
 
-  chalk@5.4.1:
-    resolution: {integrity: sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w==}
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   change-case@4.1.2:
@@ -33216,36 +33219,36 @@ snapshots:
 
   '@solana/errors@2.0.0(typescript@4.9.5)':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 12.1.0
       typescript: 4.9.5
 
   '@solana/errors@2.0.0(typescript@5.9.3)':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 12.1.0
       typescript: 5.9.3
 
   '@solana/errors@2.0.0-preview.2':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 12.1.0
 
   '@solana/errors@2.0.0-rc.1(typescript@4.9.5)':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 12.1.0
       typescript: 4.9.5
 
   '@solana/errors@2.0.0-rc.1(typescript@5.9.3)':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 12.1.0
       typescript: 5.9.3
 
   '@solana/errors@2.1.0(typescript@5.9.3)':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 13.1.0
       typescript: 5.9.3
 
@@ -37510,7 +37513,7 @@ snapshots:
 
   '@wallet-standard/errors@0.1.0':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
       commander: 12.1.0
 
   '@wallet-standard/features@1.1.0':
@@ -39562,7 +39565,7 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
-  chalk@5.4.1: {}
+  chalk@5.6.2: {}
 
   change-case@4.1.2:
     dependencies:

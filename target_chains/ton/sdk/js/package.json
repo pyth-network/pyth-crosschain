@@ -56,12 +56,12 @@
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./esm/index.d.ts",
+  "types": "./cjs/index.d.ts",
   "module": "./esm/index.js",
   "main": "./cjs/index.js"
 }

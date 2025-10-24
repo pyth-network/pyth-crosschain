@@ -31,9 +31,9 @@ import {
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
 } from "./constants.js";
-import IntegrityPoolIdl from "./idl/integrity-pool.json" with { type: "json" };
-import PublisherCapsIdl from "./idl/publisher-caps.json" with { type: "json" };
-import StakingIdl from "./idl/staking.json" with { type: "json" };
+import { INTEGRITY_POOL } from "./idl/integrity-pool.js";
+import { PUBLISHER_CAPS } from "./idl/publisher-caps.js";
+import { STAKING_IDK } from "./idl/staking.js";
 import {
   getConfigAddress,
   getDelegationRecordAddress,
@@ -91,13 +91,13 @@ export class PythStakingClient {
     this.provider = new AnchorProvider(this.connection, this.wallet, {
       skipPreflight: true,
     });
-    this.stakingProgram = new Program(StakingIdl as Staking, this.provider);
+    this.stakingProgram = new Program(STAKING_IDK as Staking, this.provider);
     this.integrityPoolProgram = new Program(
-      IntegrityPoolIdl as IntegrityPool,
+      INTEGRITY_POOL as IntegrityPool,
       this.provider,
     );
     this.publisherCapsProgram = new Program(
-      PublisherCapsIdl as PublisherCaps,
+      PUBLISHER_CAPS as PublisherCaps,
       this.provider,
     );
   }

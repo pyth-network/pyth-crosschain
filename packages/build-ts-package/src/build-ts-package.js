@@ -9,6 +9,8 @@ import { hideBin } from "yargs/helpers";
 import { findTsconfigFile } from "./find-tsconfig-file.js";
 import { execAsync } from "./exec-async.js";
 import { generateTsconfigs } from "./generate-tsconfigs.js";
+import { Logger } from "./logger.js";
+import chalk from "chalk";
 
 /**
  * @typedef {'cjs' | 'esm'} ModuleType
@@ -111,91 +113,110 @@ export async function buildTsPackage(argv = process.argv) {
   // always freshly reset the exports and let the tool take over
   pjson.exports = {};
 
-  console.info("building package", pjson.name);
+  Logger.info("building package", chalk.magenta(pjson.name));
   for (const format of formats) {
-    console.info(`building ${format} variant in ${cwd}`);
-    console.info(`  tsconfig: ${tsconfig}`);
+    try {
+      Logger.info("building", chalk.magenta(format), "variant in", cwd);
+      Logger.info("  tsconfig", chalk.magenta(tsconfig));
 
-    const outDir = numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
+      const outDir =
+        numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
 
-    let cmd =
-      `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --module ${format === "cjs" ? "commonjs" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution node" : ""}`.trim();
-    if (watch) cmd += ` --watch`;
+      let cmd =
+        `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --module ${format === "cjs" ? "nodenext" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution nodenext" : ""}`.trim();
+      if (watch) cmd += ` --watch`;
 
-    await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
+      await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
 
-    const builtFiles = (
-      await glob(
-        [
-          path.join(outDir, "**", "*.d.ts"),
-          path.join(outDir, "**", "*.js"),
-          path.join(outDir, "**", "*.cjs"),
-          path.join(outDir, "**", "*.mjs"),
-        ],
-        { absolute: true, onlyFiles: true },
+      const builtFiles = (
+        await glob(
+          [
+            path.join(outDir, "**", "*.d.ts"),
+            path.join(outDir, "**", "*.js"),
+            path.join(outDir, "**", "*.cjs"),
+            path.join(outDir, "**", "*.mjs"),
+          ],
+          { absolute: true, onlyFiles: true },
+        )
       )
-    )
-      .map((fp) => {
-        const relPath = path.relative(outDir, fp);
-        if (numFormats <= 1) return `.${path.sep}${relPath}`;
-        return `.${path.sep}${path.join(format, relPath)}`;
-      })
-      .sort();
+        .map((fp) => {
+          const relPath = path.relative(outDir, fp);
+          if (numFormats <= 1) return `.${path.sep}${relPath}`;
+          return `.${path.sep}${path.join(format, relPath)}`;
+        })
+        .sort();
 
-    const indexFile = builtFiles.find((fp) => {
-      const r = /^\.(\/|\\)((cjs|esm)(\/|\\))?index\.(c|m)?js$/;
-      return r.test(fp);
-    });
+      const indexFile = builtFiles.find((fp) => {
+        const r = /^\.(\/|\\)((cjs|esm)(\/|\\))?index\.(c|m)?js$/;
+        return r.test(fp);
+      });
 
-    if (indexFile) {
-      console.info("index file detected");
-      if (format === "esm" || numFormats <= 1) {
-        pjson.types = indexFile.replace(path.extname(indexFile), ".d.ts");
+      if (indexFile) {
+        Logger.info("index file detected");
+        if (format === "cjs" || numFormats <= 1) {
+          // we use the legacy type of typing exports for the top-level
+          // typings
+          pjson.types = indexFile.replace(path.extname(indexFile), ".d.ts");
+        }
+        if (format === "esm") {
+          pjson.module = indexFile;
+        } else {
+          pjson.main = indexFile;
+        }
       }
-      if (format === "esm") {
-        pjson.module = indexFile;
-      } else {
-        pjson.main = indexFile;
+
+      const exports =
+        Array.isArray(pjson.exports) || typeof pjson.exports === "string"
+          ? {}
+          : (pjson.exports ?? {});
+
+      const outDirBasename = path.basename(outDirPath);
+
+      for (const fp of builtFiles) {
+        const fpWithNoExt = fp
+          .replace(/(\.d)?\.(c|m)?(js|ts)$/, "")
+          .replaceAll(/\\/g, "/");
+        const key = fpWithNoExt
+          .replace(/(\/|\\)?index$/, "")
+          .replace(/^\.(\/|\\)(cjs|esm)/, ".")
+          .replaceAll(/\\/g, "/");
+        const fpWithBasename = `./${path
+          .join(outDirBasename, fp)
+          .replaceAll(/\\/g, "/")}`;
+
+        // Ensure key object exists
+        const tempExports = exports[key] ?? {};
+
+        // Add require/import entry without nuking the other
+        if (format === "cjs") {
+          tempExports.require = fpWithBasename;
+        } else {
+          tempExports.import = fpWithBasename;
+        }
+
+        // Also handle types if present
+        if (
+          (format === "esm" || numFormats <= 1) &&
+          !noDts &&
+          fp.endsWith(".d.ts")
+        ) {
+          tempExports.types = fpWithBasename;
+        }
+        exports[key] = tempExports;
       }
+
+      pjson.exports = exports;
+
+      Logger.info(chalk.green(`${pjson.name} - ${format} has been built!`));
+    } catch (error) {
+      Logger.error(
+        "**building",
+        pjson.name,
+        chalk.underline(format),
+        "variant has failed**",
+      );
+      throw error;
     }
-
-    const exports =
-      Array.isArray(pjson.exports) || typeof pjson.exports === "string"
-        ? {}
-        : (pjson.exports ?? {});
-
-    const outDirBasename = path.basename(outDirPath);
-
-    for (const fp of builtFiles) {
-      const fpWithNoExt = fp
-        .replace(/(\.d)?\.(c|m)?(js|ts)$/, "")
-        .replaceAll(/\\/g, "/");
-      const key = fpWithNoExt
-        .replace(/(\/|\\)?index$/, "")
-        .replace(/^\.(\/|\\)(cjs|esm)/, ".")
-        .replaceAll(/\\/g, "/");
-      const fpWithBasename = `./${path
-        .join(outDirBasename, fp)
-        .replaceAll(/\\/g, "/")}`;
-
-      // Ensure key object exists
-      const tempExports = exports[key] ?? {};
-
-      // Add require/import entry without nuking the other
-      if (format === "cjs") {
-        tempExports.require = fpWithBasename;
-      } else {
-        tempExports.import = fpWithBasename;
-      }
-
-      // Also handle types if present
-      if (!noDts && fp.endsWith(".d.ts")) {
-        tempExports.types = fpWithBasename;
-      }
-      exports[key] = tempExports;
-    }
-
-    pjson.exports = exports;
   }
 
   pjson.exports["./package.json"] = "./package.json";

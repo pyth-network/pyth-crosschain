@@ -56,23 +56,23 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "types": "./esm/index.d.ts",
+  "types": "./cjs/index.d.ts",
   "module": "./esm/index.js",
   "main": "./cjs/index.js",
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./jito": {
       "import": "./dist/esm/jito.js",
-      "types": "./dist/cjs/jito.d.ts",
+      "types": "./dist/esm/jito.d.ts",
       "require": "./dist/cjs/jito.js"
     },
     "./transaction": {
       "import": "./dist/esm/transaction.js",
-      "types": "./dist/cjs/transaction.d.ts",
+      "types": "./dist/esm/transaction.d.ts",
       "require": "./dist/cjs/transaction.js"
     },
     "./package.json": "./package.json"
