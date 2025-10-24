@@ -260,6 +260,7 @@ export const RECEIVER_CHAINS = {
   fluent_testnet: 50130,
   giwa_testnet: 50131,
   sonic_evm_testnet: 50132, // sonic_testnet already exist, so had to use sonic_evm_testnet
+  etherlink_new_testnet: 50133, // etherlink_testnet already exist, so had to use etherlink_new_testnet
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
