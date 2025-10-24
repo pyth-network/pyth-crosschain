@@ -1,9 +1,11 @@
 import {
   Convert,
-  Price as JsonPrice,
-  PriceFeed as JsonPriceFeed,
-  PriceFeedMetadata as JsonPriceFeedMetadata,
+  type Price as JsonPrice,
+  type PriceFeed as JsonPriceFeed,
+  type PriceFeedMetadata as JsonPriceFeedMetadata,
 } from "./schemas/PriceFeed";
+
+import type { Nullish } from "./types";
 
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
@@ -13,7 +15,7 @@ export {
   isAccumulatorUpdateData,
   sliceAccumulatorUpdateData,
   parseAccumulatorUpdateData,
-  AccumulatorUpdateData,
+  type AccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
 } from "./AccumulatorUpdateData";
@@ -92,35 +94,35 @@ export class PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestationTime?: number;
+  attestationTime?: Nullish<number>;
   /**
    * Chain of the emitter
    */
-  emitterChain: number;
+  emitterChain: Nullish<number>;
   /**
    * The time that the price service received the price
    */
-  priceServiceReceiveTime?: number;
+  priceServiceReceiveTime?: Nullish<number>;
   /**
    * Sequence number of the price
    */
-  sequenceNumber?: number;
+  sequenceNumber?: Nullish<number>;
   /**
    * Pythnet slot number of the price
    */
-  slot?: number;
+  slot?: Nullish<number>;
   /**
    * The time that the previous price was published
    */
-  prevPublishTime?: number;
+  prevPublishTime?: Nullish<number>;
 
   constructor(metadata: {
-    attestationTime?: number;
-    emitterChain: number;
-    receiveTime?: number;
-    sequenceNumber?: number;
-    slot?: number;
-    prevPublishTime?: number;
+    attestationTime?: Nullish<number>;
+    emitterChain: Nullish<number>;
+    receiveTime?: Nullish<number>;
+    sequenceNumber?: Nullish<number>;
+    slot?: Nullish<number>;
+    prevPublishTime?: Nullish<number>;
   }) {
     this.attestationTime = metadata.attestationTime;
     this.emitterChain = metadata.emitterChain;
@@ -177,11 +179,11 @@ export class PriceFeed {
   /**
    * Metadata of the price
    */
-  metadata?: PriceFeedMetadata;
+  metadata?: Nullish<PriceFeedMetadata>;
   /**
    * VAA of the price
    */
-  vaa?: string;
+  vaa?: Nullish<string>;
   /**
    * Price
    */
@@ -190,8 +192,8 @@ export class PriceFeed {
   constructor(rawFeed: {
     emaPrice: Price;
     id: HexString;
-    metadata?: PriceFeedMetadata;
-    vaa?: string;
+    metadata?: Nullish<PriceFeedMetadata>;
+    vaa?: Nullish<string>;
     price: Price;
   }) {
     this.emaPrice = rawFeed.emaPrice;
@@ -322,7 +324,7 @@ export class PriceFeed {
    * @returns a struct containing the attestation time, emitter chain, and the sequence number.
    * Returns `undefined` if metadata is currently unavailable.
    */
-  getMetadata(): PriceFeedMetadata | undefined {
+  getMetadata() {
     return this.metadata;
   }
 
@@ -332,7 +334,7 @@ export class PriceFeed {
    * @returns vaa in base64.
    * Returns `undefined` if vaa is unavailable.
    */
-  getVAA(): string | undefined {
+  getVAA() {
     return this.vaa;
   }
 }

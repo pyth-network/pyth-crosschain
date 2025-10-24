@@ -3,8 +3,6 @@
   "version": "1.8.0",
   "description": "Pyth price service SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/esm/index.d.mts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -15,25 +13,7 @@
     "directory": "price_service/sdk/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./AccumulatorUpdateData": {
-        "import": "./dist/esm/AccumulatorUpdateData.mjs",
-        "require": "./dist/cjs/AccumulatorUpdateData.cjs",
-        "types": "./dist/esm/AccumulatorUpdateData.d.ts"
-      },
-      "./schemas/PriceFeed": {
-        "import": "./dist/esm/schemas/PriceFeed.mjs",
-        "require": "./dist/cjs/schemas/PriceFeed.cjs",
-        "types": "./dist/esm/schemas/PriceFeed.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "build": "build-ts-package",
@@ -56,6 +36,7 @@
     "@cprussin/tsconfig": "catalog:",
     "@types/bn.js": "^5.1.5",
     "@types/jest": "^29.4.0",
+    "@types/node": "catalog:",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "eslint": "^8.13.0",
@@ -63,7 +44,7 @@
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
     "ts-jest": "^29.0.5",
-    "typescript": "^4.6.3"
+    "typescript": "catalog:"
   },
   "dependencies": {
     "bn.js": "^5.2.1"
@@ -73,11 +54,30 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
   "exports": {
-    ".": "./src/index.ts",
-    "./AccumulatorUpdateData": "./src/AccumulatorUpdateData.ts",
-    "./schemas/PriceFeed": "./src/schemas/PriceFeed.ts",
+    "./AccumulatorUpdateData": {
+      "import": "./dist/esm/AccumulatorUpdateData.js",
+      "types": "./dist/cjs/AccumulatorUpdateData.d.ts",
+      "require": "./dist/cjs/AccumulatorUpdateData.js"
+    },
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/cjs/index.d.ts",
+      "require": "./dist/cjs/index.js"
+    },
+    "./schemas/PriceFeed": {
+      "import": "./dist/esm/schemas/PriceFeed.js",
+      "types": "./dist/cjs/schemas/PriceFeed.d.ts",
+      "require": "./dist/cjs/schemas/PriceFeed.js"
+    },
+    "./types": {
+      "import": "./dist/esm/types.js",
+      "types": "./dist/cjs/types.d.ts",
+      "require": "./dist/cjs/types.js"
+    },
     "./package.json": "./package.json"
-  }
+  },
+  "types": "./esm/index.d.ts",
+  "module": "./esm/index.js",
+  "main": "./cjs/index.js"
 }

@@ -1,9 +1,8 @@
 {
-  "extends": "@cprussin/tsconfig/base.json",
+  "extends": "@cprussin/tsconfig/nextjs.json",
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*"],
+  "exclude": ["node_modules", "dist/", "**/__tests__/*"],
   "compilerOptions": {
-    "rootDir": "src/",
-    "outDir": "./lib"
+    "rootDir": "src/"
   }
 }

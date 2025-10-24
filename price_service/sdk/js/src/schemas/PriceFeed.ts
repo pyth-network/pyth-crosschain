@@ -1,3 +1,4 @@
+/* eslint-disable no-prototype-builtins */
 // To parse this data:
 //
 //   import { Convert, PriceFeed } from "./file";
@@ -6,6 +7,8 @@
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
+
+import type { Nullish } from "../types";
 
 /**
  * Represents an aggregate price from Pyth publisher feeds.
@@ -68,27 +71,27 @@ export interface PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestation_time?: number;
+  attestation_time?: Nullish<number>;
   /**
    * Chain of the emitter
    */
-  emitter_chain: number;
+  emitter_chain: Nullish<number>;
   /**
    * The time that the previous price was published
    */
-  prev_publish_time?: number;
+  prev_publish_time?: Nullish<number>;
   /**
    * The time that the price service received the price
    */
-  price_service_receive_time?: number;
+  price_service_receive_time?: Nullish<number>;
   /**
    * Sequence number of the price
    */
-  sequence_number?: number;
+  sequence_number?: Nullish<number>;
   /**
    * Pythnet slot number of the price
    */
-  slot?: number;
+  slot?: Nullish<number>;
 }
 
 // Converts JSON types to/from your types
@@ -163,7 +166,7 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
       const typ = typs[i];
       try {
         return transform(val, typ, getProps);
-      } catch (_) {}
+      } catch { /* no-op */ }
     }
     return invalidValue(typs, val);
   }
@@ -246,20 +249,12 @@ function uncast<T>(val: T, typ: any): any {
   return transform(val, typ, jsToJSONProps);
 }
 
-function a(typ: any) {
-  return { arrayItems: typ };
-}
-
 function u(...typs: any[]) {
   return { unionMembers: typs };
 }
 
 function o(props: any[], additional: any) {
   return { props, additional };
-}
-
-function m(additional: any) {
-  return { props: [], additional };
 }
 
 function r(name: string) {
