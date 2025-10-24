@@ -313,6 +313,7 @@ pub mod tests {
             history_service_url: None,
             enable_update_deduplication: false,
             update_deduplication_ttl: Default::default(),
+            proxy_url: None,
         };
 
         println!("{:?}", get_metadata(config).await.unwrap());
