@@ -19,35 +19,7 @@
     "directory": "price_service/client/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./examples/PriceServiceClient": {
-        "import": "./dist/esm/examples/PriceServiceClient.mjs",
-        "require": "./dist/cjs/examples/PriceServiceClient.cjs",
-        "types": "./dist/esm/examples/PriceServiceClient.d.ts"
-      },
-      "./PriceServiceConnection": {
-        "import": "./dist/esm/PriceServiceConnection.mjs",
-        "require": "./dist/cjs/PriceServiceConnection.cjs",
-        "types": "./dist/esm/PriceServiceConnection.d.ts"
-      },
-      "./ResillientWebSocket": {
-        "import": "./dist/esm/ResillientWebSocket.mjs",
-        "require": "./dist/cjs/ResillientWebSocket.cjs",
-        "types": "./dist/esm/ResillientWebSocket.d.ts"
-      },
-      "./utils": {
-        "import": "./dist/esm/utils.mjs",
-        "require": "./dist/cjs/utils.cjs",
-        "types": "./dist/esm/utils.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",

@@ -18,40 +18,7 @@
     "directory": "target_chains/ethereum/sdk/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./filler": {
-        "import": "./dist/esm/filler.mjs",
-        "require": "./dist/cjs/filler.cjs",
-        "types": "./dist/esm/filler.d.ts"
-      },
-      "./multicall3-bundler": {
-        "import": "./dist/esm/multicall3-bundler.mjs",
-        "require": "./dist/cjs/multicall3-bundler.cjs",
-        "types": "./dist/esm/multicall3-bundler.d.ts"
-      },
-      "./pyth-abi": {
-        "import": "./dist/esm/pyth-abi.mjs",
-        "require": "./dist/cjs/pyth-abi.cjs",
-        "types": "./dist/esm/pyth-abi.d.ts"
-      },
-      "./tracer/debug-trace-call": {
-        "import": "./dist/esm/tracer/debug-trace-call.mjs",
-        "require": "./dist/cjs/tracer/debug-trace-call.cjs",
-        "types": "./dist/esm/tracer/debug-trace-call.d.ts"
-      },
-      "./tracer/trace-call-many": {
-        "import": "./dist/esm/tracer/trace-call-many.mjs",
-        "require": "./dist/cjs/tracer/trace-call-many.cjs",
-        "types": "./dist/esm/tracer/trace-call-many.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "build": "build-ts-package",

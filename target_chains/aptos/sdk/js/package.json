@@ -18,25 +18,7 @@
     "directory": "target_chains/aptos/sdk/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./AptosPriceServiceConnection": {
-        "import": "./dist/esm/AptosPriceServiceConnection.mjs",
-        "require": "./dist/cjs/AptosPriceServiceConnection.cjs",
-        "types": "./dist/esm/AptosPriceServiceConnection.d.ts"
-      },
-      "./examples/AptosRelay": {
-        "import": "./dist/esm/examples/AptosRelay.mjs",
-        "require": "./dist/cjs/examples/AptosRelay.cjs",
-        "types": "./dist/esm/examples/AptosRelay.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "build": "build-ts-package",

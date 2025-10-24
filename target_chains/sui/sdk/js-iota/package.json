@@ -18,30 +18,7 @@
     "directory": "target_chains/sui/sdk/js-iota"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./client": {
-        "import": "./dist/esm/client.mjs",
-        "require": "./dist/cjs/client.cjs",
-        "types": "./dist/esm/client.d.ts"
-      },
-      "./examples/IotaRelay": {
-        "import": "./dist/esm/examples/IotaRelay.mjs",
-        "require": "./dist/cjs/examples/IotaRelay.cjs",
-        "types": "./dist/esm/examples/IotaRelay.d.ts"
-      },
-      "./IotaPriceServiceConnection": {
-        "import": "./dist/esm/IotaPriceServiceConnection.mjs",
-        "require": "./dist/cjs/IotaPriceServiceConnection.cjs",
-        "types": "./dist/esm/IotaPriceServiceConnection.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "build": "build-ts-package",

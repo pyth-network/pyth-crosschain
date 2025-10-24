@@ -15,50 +15,7 @@
     "directory": "target_chains/solana/sdk/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./address": {
-        "import": "./dist/esm/address.mjs",
-        "require": "./dist/cjs/address.cjs",
-        "types": "./dist/esm/address.d.ts"
-      },
-      "./compute_budget": {
-        "import": "./dist/esm/compute_budget.mjs",
-        "require": "./dist/cjs/compute_budget.cjs",
-        "types": "./dist/esm/compute_budget.d.ts"
-      },
-      "./idl/pyth_push_oracle": {
-        "import": "./dist/esm/idl/pyth_push_oracle.mjs",
-        "require": "./dist/cjs/idl/pyth_push_oracle.cjs",
-        "types": "./dist/esm/idl/pyth_push_oracle.d.ts"
-      },
-      "./idl/pyth_solana_receiver": {
-        "import": "./dist/esm/idl/pyth_solana_receiver.mjs",
-        "require": "./dist/cjs/idl/pyth_solana_receiver.cjs",
-        "types": "./dist/esm/idl/pyth_solana_receiver.d.ts"
-      },
-      "./idl/wormhole_core_bridge_solana": {
-        "import": "./dist/esm/idl/wormhole_core_bridge_solana.mjs",
-        "require": "./dist/cjs/idl/wormhole_core_bridge_solana.cjs",
-        "types": "./dist/esm/idl/wormhole_core_bridge_solana.d.ts"
-      },
-      "./PythSolanaReceiver": {
-        "import": "./dist/esm/PythSolanaReceiver.mjs",
-        "require": "./dist/cjs/PythSolanaReceiver.cjs",
-        "types": "./dist/esm/PythSolanaReceiver.d.ts"
-      },
-      "./vaa": {
-        "import": "./dist/esm/vaa.mjs",
-        "require": "./dist/cjs/vaa.cjs",
-        "types": "./dist/esm/vaa.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "build": "build-ts-package",

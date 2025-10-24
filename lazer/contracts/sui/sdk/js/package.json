@@ -13,7 +13,21 @@
     "dist/**/*"
   ],
   "exports": {
-    ".": "./src/client.ts",
+    "./client": {
+      "import": "./dist/esm/client.js",
+      "types": "./dist/cjs/client.d.ts",
+      "require": "./dist/cjs/client.js"
+    },
+    "./examples/fetch-and-verify-update": {
+      "import": "./dist/esm/examples/fetch-and-verify-update.js",
+      "types": "./dist/cjs/examples/fetch-and-verify-update.d.ts",
+      "require": "./dist/cjs/examples/fetch-and-verify-update.js"
+    },
+    "./src/client": {
+      "import": "./dist/esm/src/client.js",
+      "types": "./dist/cjs/src/client.d.ts",
+      "require": "./dist/cjs/src/client.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
@@ -41,15 +55,7 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/client.js",
-        "require": "./dist/cjs/client.cjs",
-        "types": "./dist/esm/client.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "packageManager": "pnpm@10.19.0",
   "main": "./dist/cjs/client.js",

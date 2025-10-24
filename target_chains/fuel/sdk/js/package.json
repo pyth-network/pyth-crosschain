@@ -18,35 +18,7 @@
     "directory": "target_chains/fuel/sdk/js"
   },
   "publishConfig": {
-    "access": "public",
-    "exports": {
-      ".": {
-        "import": "./dist/esm/index.mjs",
-        "require": "./dist/cjs/index.cjs",
-        "types": "./dist/esm/index.d.ts"
-      },
-      "./abi/pyth-contract-abi": {
-        "import": "./dist/esm/abi/pyth-contract-abi.mjs",
-        "require": "./dist/cjs/abi/pyth-contract-abi.cjs",
-        "types": "./dist/esm/abi/pyth-contract-abi.d.ts"
-      },
-      "./types": {
-        "import": "./dist/esm/types/index.mjs",
-        "require": "./dist/cjs/types/index.cjs",
-        "types": "./dist/esm/types/index.d.ts"
-      },
-      "./types/PythContract": {
-        "import": "./dist/esm/types/PythContract.mjs",
-        "require": "./dist/cjs/types/PythContract.cjs",
-        "types": "./dist/esm/types/PythContract.d.ts"
-      },
-      "./types/PythContractFactory": {
-        "import": "./dist/esm/types/PythContractFactory.mjs",
-        "require": "./dist/cjs/types/PythContractFactory.cjs",
-        "types": "./dist/esm/types/PythContractFactory.d.ts"
-      },
-      "./package.json": "./package.json"
-    }
+    "access": "public"
   },
   "scripts": {
     "usage-example": "tsx src/examples/usage.ts",
