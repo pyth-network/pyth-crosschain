@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { build } from 'esbuild';
 import glob from "fast-glob";
 import fs from "fs-extra";
 import path from "node:path";
@@ -121,9 +122,26 @@ export async function buildTsPackage(argv = process.argv) {
 
       const outDir =
         numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
+      
+      const getConfigCmd = `pnpm tsc --project ${tsconfig} --showConfig`;
+      const finalConfig = JSON.parse(await execAsync(getConfigCmd, { cwd, stdio: 'pipe' }));
+
+      if (Array.isArray(finalConfig.files)) {
+        await build({
+          bundle: false,
+          entryPoints: finalConfig.files,
+          format,
+          outdir: outDir,
+          outExtension: { '.js': format === 'cjs' ? '.js' : '.mjs' },
+          platform: 'neutral',
+          sourcemap: false,
+          splitting: false,
+          target: 'esnext',
+        });
+      }
 
       let cmd =
-        `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --module ${format === "cjs" ? "nodenext" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution nodenext" : ""}`.trim();
+        `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --emitDeclarationOnly ${!noDts} --module ${format === "cjs" ? "nodenext" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution nodenext" : ""}`.trim();
       if (watch) cmd += ` --watch`;
 
       await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
