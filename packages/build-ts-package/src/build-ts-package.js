@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 
 import { findTsconfigFile } from "./find-tsconfig-file.js";
 import { execAsync } from "./exec-async.js";
+import { generateTsconfigs } from "./generate-tsconfigs.js";
 
 /**
  * @typedef {'cjs' | 'esm'} ModuleType
@@ -22,6 +23,7 @@ export async function buildTsPackage(argv = process.argv) {
   const {
     clean,
     cwd,
+    generateTsconfig,
     noCjs,
     noDts,
     noEsm,
@@ -40,6 +42,12 @@ export async function buildTsPackage(argv = process.argv) {
       default: process.cwd(),
       description: "the CWD to use when building",
       type: "string",
+    })
+    .option("generateTsconfig", {
+      default: false,
+      description:
+        "if set, will NOT build, but instead, will generate reasonable default TSConfig files that will work with dual publishing, and in most other use cases, as well",
+      type: "boolean",
     })
     .option("noCjs", {
       default: false,
@@ -75,6 +83,10 @@ export async function buildTsPackage(argv = process.argv) {
     })
     .help().argv;
 
+  if (generateTsconfig) {
+    return generateTsconfigs(cwd);
+  }
+
   const outDirPath = path.isAbsolute(outDir) ? outDir : path.join(cwd, outDir);
 
   if (clean) await fs.remove(outDirPath);
@@ -99,7 +111,7 @@ export async function buildTsPackage(argv = process.argv) {
   // always freshly reset the exports and let the tool take over
   pjson.exports = {};
 
-  console.info('building package', pjson.name);
+  console.info("building package", pjson.name);
   for (const format of formats) {
     console.info(`building ${format} variant in ${cwd}`);
     console.info(`  tsconfig: ${tsconfig}`);
@@ -122,11 +134,13 @@ export async function buildTsPackage(argv = process.argv) {
         ],
         { absolute: true, onlyFiles: true },
       )
-    ).map((fp) => {
-      const relPath = path.relative(outDir, fp);
-      if (numFormats <= 1) return `.${path.sep}${relPath}`;
-      return `.${path.sep}${path.join(format, relPath)}`;
-    }).sort();
+    )
+      .map((fp) => {
+        const relPath = path.relative(outDir, fp);
+        if (numFormats <= 1) return `.${path.sep}${relPath}`;
+        return `.${path.sep}${path.join(format, relPath)}`;
+      })
+      .sort();
 
     const indexFile = builtFiles.find((fp) => {
       const r = /^\.(\/|\\)((cjs|esm)(\/|\\))?index\.(c|m)?js$/;
@@ -184,7 +198,7 @@ export async function buildTsPackage(argv = process.argv) {
     pjson.exports = exports;
   }
 
-  pjson.exports['./package.json'] = './package.json';
+  pjson.exports["./package.json"] = "./package.json";
   await fs.writeFile(pjsonPath, JSON.stringify(pjson, null, 2), "utf8");
 }
 
