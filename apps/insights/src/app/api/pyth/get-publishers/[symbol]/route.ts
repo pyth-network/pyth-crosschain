@@ -8,7 +8,7 @@ import {
   ClusterToName,
   toCluster,
 } from "../../../../../services/pyth";
-import { getPublishersForCluster } from "../../../../../services/pyth/get-publishers-for-cluster";
+import { getPublishersByFeedForCluster } from "../../../../../services/pyth/get-publishers-for-cluster";
 
 export const GET = async (
   request: NextRequest,
@@ -32,7 +32,7 @@ export const GET = async (
     });
   }
 
-  const map = await getPublishersForCluster(cluster);
+  const map = await getPublishersByFeedForCluster(cluster);
 
   return NextResponse.json(map[symbol] ?? []);
 };

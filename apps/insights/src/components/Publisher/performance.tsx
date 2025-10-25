@@ -16,7 +16,7 @@ import type { ReactNode, ComponentProps } from "react";
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./performance.module.scss";
 import { TopFeedsTable } from "./top-feeds-table";
-import { getPublishers } from "../../services/clickhouse";
+import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import type { Cluster } from "../../services/pyth";
 import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
@@ -48,7 +48,7 @@ export const Performance = async ({ params }: Props) => {
     notFound();
   }
   const [publishers, priceFeeds] = await Promise.all([
-    getPublishers(parsedCluster),
+    getPublishersWithRankings(parsedCluster),
     getPriceFeeds(parsedCluster, key),
   ]);
   const slicedPublishers = sliceAround(
@@ -86,9 +86,14 @@ export const Performance = async ({ params }: Props) => {
             {publisher.inactiveFeeds}
           </Link>
         ),
-        averageScore: (
-          <Score width={PUBLISHER_SCORE_WIDTH} score={publisher.averageScore} />
-        ),
+        averageScore:
+          // eslint-disable-next-line unicorn/no-null
+          publisher.averageScore === undefined ? null : (
+            <Score
+              width={PUBLISHER_SCORE_WIDTH}
+              score={publisher.averageScore}
+            />
+          ),
         name: (
           <PublisherTag
             cluster={parsedCluster}

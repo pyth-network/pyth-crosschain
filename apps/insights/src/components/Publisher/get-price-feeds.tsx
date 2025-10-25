@@ -1,12 +1,12 @@
 import { getFeedsForPublisherRequest } from "../../server/pyth";
-import { getRankingsByPublisher } from "../../services/clickhouse";
+import { getFeedRankingsByPublisher } from "../../services/clickhouse";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { getStatus } from "../../status";
 
 export const getPriceFeeds = async (cluster: Cluster, key: string) => {
   const [feeds, rankings] = await Promise.all([
     getFeedsForPublisherRequest(cluster, key),
-    getRankingsByPublisher(key),
+    getFeedRankingsByPublisher(key),
   ]);
   return feeds.map((feed) => {
     const ranking = rankings.find(

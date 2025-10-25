@@ -3,18 +3,18 @@ import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 
+import { SearchButton as SearchButtonImpl } from "./search-button";
 import {
   AMPLITUDE_API_KEY,
   ENABLE_ACCESSIBILITY_REPORTING,
   GOOGLE_ANALYTICS_ID,
 } from "../../config/server";
+import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
-import { getPublishers } from "../../services/clickhouse";
 import { Cluster } from "../../services/pyth";
 import { getFeeds } from "../../services/pyth/get-feeds";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
-import { SearchButton as SearchButtonImpl } from "./search-button";
 
 export const TABS = [
   { segment: "", children: "Overview" },
@@ -53,7 +53,7 @@ const SearchButton = async () => {
 };
 
 const getPublishersForSearchDialog = async (cluster: Cluster) => {
-  const publishers = await getPublishers(cluster);
+  const publishers = await getPublishersWithRankings(cluster);
   return publishers.map((publisher) => {
     const knownPublisher = lookupPublisher(publisher.key);
 

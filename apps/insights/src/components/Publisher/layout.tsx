@@ -15,8 +15,8 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 
+import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import {
-  getPublishers,
   getPublisherRankingHistory,
   getPublisherAverageScoreHistory,
 } from "../../services/clickhouse";
@@ -38,13 +38,13 @@ import {
   ExplainActive,
   ExplainInactive,
 } from "../Explanations";
+import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
 import { getPriceFeeds } from "./get-price-feeds";
 import styles from "./layout.module.scss";
-import { FormattedDate } from "../FormattedDate";
 import { FormattedTokens } from "../FormattedTokens";
 import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
@@ -365,7 +365,7 @@ const ActiveFeedsCard = async ({
   publisherKey: string;
 }) => {
   const [publishers, priceFeeds] = await Promise.all([
-    getPublishers(cluster),
+    getPublishersWithRankings(cluster),
     getPriceFeeds(cluster, publisherKey),
   ]);
   const publisher = publishers.find(
@@ -391,8 +391,8 @@ type ActiveFeedsCardImplProps =
       isLoading?: false | undefined;
       cluster: Cluster;
       publisherKey: string;
-      activeFeeds: number;
-      inactiveFeeds: number;
+      activeFeeds?: number | undefined;
+      inactiveFeeds?: number | undefined;
       allFeeds: number;
     };
 
@@ -435,33 +435,27 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
       )
     }
     miniStat1={
-      props.isLoading ? (
-        <Skeleton width={10} />
-      ) : (
-        <>
-          <FormattedNumber
-            maximumFractionDigits={1}
-            value={(100 * props.activeFeeds) / props.allFeeds}
-          />
-          %
-        </>
-      )
+      <RankingMiniStat
+        {...(props.isLoading
+          ? { isLoading: true }
+          : {
+              stat: props.activeFeeds,
+              allFeeds: props.allFeeds,
+            })}
+      />
     }
     miniStat2={
-      props.isLoading ? (
-        <Skeleton width={10} />
-      ) : (
-        <>
-          <FormattedNumber
-            maximumFractionDigits={1}
-            value={(100 * props.inactiveFeeds) / props.allFeeds}
-          />
-          %
-        </>
-      )
+      <RankingMiniStat
+        {...(props.isLoading
+          ? { isLoading: true }
+          : {
+              stat: props.inactiveFeeds,
+              allFeeds: props.allFeeds,
+            })}
+      />
     }
   >
-    {!props.isLoading && (
+    {!props.isLoading && props.activeFeeds !== undefined && (
       <Meter
         value={props.activeFeeds}
         maxValue={props.allFeeds}
@@ -470,6 +464,33 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
     )}
   </StatCard>
 );
+
+const RankingMiniStat = (
+  props:
+    | { isLoading: true }
+    | {
+        isLoading?: false | undefined;
+        stat: number | undefined;
+        allFeeds: number;
+      },
+) => {
+  if (props.isLoading) {
+    return <Skeleton width={10} />;
+  } else if (props.stat === undefined) {
+    // eslint-disable-next-line unicorn/no-null
+    return null;
+  } else {
+    return (
+      <>
+        <FormattedNumber
+          maximumFractionDigits={1}
+          value={(100 * props.stat) / props.allFeeds}
+        />
+        %
+      </>
+    );
+  }
+};
 
 const OisPoolCard = async ({ publisherKey }: { publisherKey: string }) => {
   const [publisherPoolData, publisherCaps] = await Promise.all([

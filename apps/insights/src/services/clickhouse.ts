@@ -11,15 +11,12 @@ import { CLICKHOUSE } from "../config/server";
 
 const client = createClient(CLICKHOUSE);
 
-const _getPublishers = async (cluster: Cluster) =>
+const _getPublisherRankings = async (cluster: Cluster) =>
   safeQuery(
     z.array(
       z.strictObject({
         key: z.string(),
         rank: z.number(),
-        permissionedFeeds: z
-          .string()
-          .transform((value) => Number.parseInt(value, 10)),
         activeFeeds: z
           .string()
           .transform((value) => Number.parseInt(value, 10)),
@@ -55,7 +52,6 @@ const _getPublishers = async (cluster: Cluster) =>
             timestamp,
             publisher AS key,
             rank,
-            LENGTH(symbols) AS permissionedFeeds,
             activeFeeds,
             inactiveFeeds,
             score_data.averageScore,
@@ -74,7 +70,7 @@ const _getPublishers = async (cluster: Cluster) =>
     },
   );
 
-const _getRankingsByPublisher = async (publisherKey: string) =>
+const _getFeedRankingsByPublisher = async (publisherKey: string) =>
   safeQuery(rankingsSchema, {
     query: `
       WITH first_rankings AS (
@@ -303,7 +299,7 @@ const _getFeedPriceHistory = async ({
     },
   );
 
-export const _getPublisherAverageScoreHistory = async ({
+const _getPublisherAverageScoreHistory = async ({
   cluster,
   key,
 }: {
@@ -405,15 +401,15 @@ export const getRankingsBySymbol = redisCache.define(
   _getRankingsBySymbol,
 ).getRankingsBySymbol;
 
-export const getRankingsByPublisher = redisCache.define(
-  "getRankingsByPublisher",
-  _getRankingsByPublisher,
-).getRankingsByPublisher;
+export const getFeedRankingsByPublisher = redisCache.define(
+  "getFeedRankingsByPublisher",
+  _getFeedRankingsByPublisher,
+).getFeedRankingsByPublisher;
 
-export const getPublishers = redisCache.define(
-  "getPublishers",
-  _getPublishers,
-).getPublishers;
+export const getPublisherRankings = redisCache.define(
+  "getPublisherRankings",
+  _getPublisherRankings,
+).getPublisherRankings;
 
 export const getPublisherAverageScoreHistory = redisCache.define(
   "getPublisherAverageScoreHistory",
