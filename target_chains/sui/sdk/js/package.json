@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./cjs/index.js",
-  "types": "./cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -65,25 +65,25 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     "./SuiPriceServiceConnection": {
-      "import": "./dist/esm/SuiPriceServiceConnection.js",
+      "import": "./dist/esm/SuiPriceServiceConnection.mjs",
       "types": "./dist/esm/SuiPriceServiceConnection.d.ts",
       "require": "./dist/cjs/SuiPriceServiceConnection.js"
     },
     "./client": {
-      "import": "./dist/esm/client.js",
+      "import": "./dist/esm/client.mjs",
       "types": "./dist/esm/client.d.ts",
       "require": "./dist/cjs/client.js"
     },
     "./examples/SuiRelay": {
-      "import": "./dist/esm/examples/SuiRelay.js",
+      "import": "./dist/esm/examples/SuiRelay.mjs",
       "types": "./dist/esm/examples/SuiRelay.d.ts",
       "require": "./dist/cjs/examples/SuiRelay.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },

@@ -64,32 +64,28 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./HermesClient": {
-      "import": "./dist/esm/HermesClient.js",
+      "import": "./dist/esm/HermesClient.mjs",
       "types": "./dist/esm/HermesClient.d.ts",
       "require": "./dist/cjs/HermesClient.js"
     },
-    "./examples/HermesClient": {
-      "import": "./dist/esm/examples/HermesClient.js",
-      "types": "./dist/esm/examples/HermesClient.d.ts"
-    },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./utils": {
-      "import": "./dist/esm/utils.js",
+      "import": "./dist/esm/utils.mjs",
       "types": "./dist/esm/utils.d.ts",
       "require": "./dist/cjs/utils.js"
     },
     "./zodSchemas": {
-      "import": "./dist/esm/zodSchemas.js",
+      "import": "./dist/esm/zodSchemas.mjs",
       "types": "./dist/esm/zodSchemas.d.ts",
       "require": "./dist/cjs/zodSchemas.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./cjs/index.d.ts",
-  "module": "./esm/index.js",
-  "main": "./cjs/index.js"
+  "types": "./dist/cjs/index.d.ts",
+  "module": "./dist/esm/index.mjs",
+  "main": "./dist/cjs/index.js"
 }

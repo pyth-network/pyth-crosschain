@@ -61,58 +61,58 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./client": {
-      "import": "./dist/esm/client.js",
+      "import": "./dist/esm/client.mjs",
       "types": "./dist/esm/client.d.ts",
       "require": "./dist/cjs/client.js"
     },
     "./constants": {
-      "import": "./dist/esm/constants.js",
+      "import": "./dist/esm/constants.mjs",
       "types": "./dist/esm/constants.d.ts",
       "require": "./dist/cjs/constants.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./protocol": {
-      "import": "./dist/esm/protocol.js",
+      "import": "./dist/esm/protocol.mjs",
       "types": "./dist/esm/protocol.d.ts",
       "require": "./dist/cjs/protocol.js"
     },
     "./socket/resilient-websocket": {
-      "import": "./dist/esm/socket/resilient-websocket.js",
+      "import": "./dist/esm/socket/resilient-websocket.mjs",
       "types": "./dist/esm/socket/resilient-websocket.d.ts",
       "require": "./dist/cjs/socket/resilient-websocket.js"
     },
     "./socket/websocket-pool": {
-      "import": "./dist/esm/socket/websocket-pool.js",
+      "import": "./dist/esm/socket/websocket-pool.mjs",
       "types": "./dist/esm/socket/websocket-pool.d.ts",
       "require": "./dist/cjs/socket/websocket-pool.js"
     },
     "./util/buffer-util": {
-      "import": "./dist/esm/util/buffer-util.js",
+      "import": "./dist/esm/util/buffer-util.mjs",
       "types": "./dist/esm/util/buffer-util.d.ts",
       "require": "./dist/cjs/util/buffer-util.js"
     },
     "./util/env-util": {
-      "import": "./dist/esm/util/env-util.js",
+      "import": "./dist/esm/util/env-util.mjs",
       "types": "./dist/esm/util/env-util.d.ts",
       "require": "./dist/cjs/util/env-util.js"
     },
     "./util": {
-      "import": "./dist/esm/util/index.js",
+      "import": "./dist/esm/util/index.mjs",
       "types": "./dist/esm/util/index.d.ts",
       "require": "./dist/cjs/util/index.js"
     },
     "./util/url-util": {
-      "import": "./dist/esm/util/url-util.js",
+      "import": "./dist/esm/util/url-util.mjs",
       "types": "./dist/esm/util/url-util.d.ts",
       "require": "./dist/cjs/util/url-util.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./cjs/index.d.ts",
-  "module": "./esm/index.js",
-  "main": "./cjs/index.js"
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.js"
 }

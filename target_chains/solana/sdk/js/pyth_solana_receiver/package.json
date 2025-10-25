@@ -3,8 +3,8 @@
   "version": "0.12.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
-  "main": "./cjs/index.js",
-  "types": "./cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -59,45 +59,45 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     "./PythSolanaReceiver": {
-      "import": "./dist/esm/PythSolanaReceiver.js",
+      "import": "./dist/esm/PythSolanaReceiver.mjs",
       "types": "./dist/esm/PythSolanaReceiver.d.ts",
       "require": "./dist/cjs/PythSolanaReceiver.js"
     },
     "./address": {
-      "import": "./dist/esm/address.js",
+      "import": "./dist/esm/address.mjs",
       "types": "./dist/esm/address.d.ts",
       "require": "./dist/cjs/address.js"
     },
     "./compute_budget": {
-      "import": "./dist/esm/compute_budget.js",
+      "import": "./dist/esm/compute_budget.mjs",
       "types": "./dist/esm/compute_budget.d.ts",
       "require": "./dist/cjs/compute_budget.js"
     },
     "./idl/pyth_push_oracle": {
-      "import": "./dist/esm/idl/pyth_push_oracle.js",
+      "import": "./dist/esm/idl/pyth_push_oracle.mjs",
       "types": "./dist/esm/idl/pyth_push_oracle.d.ts",
       "require": "./dist/cjs/idl/pyth_push_oracle.js"
     },
     "./idl/pyth_solana_receiver": {
-      "import": "./dist/esm/idl/pyth_solana_receiver.js",
+      "import": "./dist/esm/idl/pyth_solana_receiver.mjs",
       "types": "./dist/esm/idl/pyth_solana_receiver.d.ts",
       "require": "./dist/cjs/idl/pyth_solana_receiver.js"
     },
     "./idl/wormhole_core_bridge_solana": {
-      "import": "./dist/esm/idl/wormhole_core_bridge_solana.js",
+      "import": "./dist/esm/idl/wormhole_core_bridge_solana.mjs",
       "types": "./dist/esm/idl/wormhole_core_bridge_solana.d.ts",
       "require": "./dist/cjs/idl/wormhole_core_bridge_solana.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./vaa": {
-      "import": "./dist/esm/vaa.js",
+      "import": "./dist/esm/vaa.mjs",
       "types": "./dist/esm/vaa.d.ts",
       "require": "./dist/cjs/vaa.js"
     },

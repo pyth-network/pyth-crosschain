@@ -55,13 +55,13 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./cjs/index.d.ts",
-  "module": "./esm/index.js",
-  "main": "./cjs/index.js"
+  "types": "./dist/cjs/index.d.ts",
+  "module": "./dist/esm/index.mjs",
+  "main": "./dist/cjs/index.js"
 }

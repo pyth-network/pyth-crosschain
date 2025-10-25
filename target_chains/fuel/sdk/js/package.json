@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./cjs/index.js",
-  "types": "./cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -58,35 +58,39 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     "./abi/pyth-contract-abi": {
-      "import": "./dist/esm/abi/pyth-contract-abi.js",
+      "import": "./dist/esm/abi/pyth-contract-abi.mjs",
       "types": "./dist/esm/abi/pyth-contract-abi.d.ts",
       "require": "./dist/cjs/abi/pyth-contract-abi.js"
     },
     "./examples/usage": {
-      "import": "./dist/esm/examples/usage.js",
+      "import": "./dist/esm/examples/usage.mjs",
       "types": "./dist/esm/examples/usage.d.ts",
       "require": "./dist/cjs/examples/usage.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./types/PythContract": {
-      "import": "./dist/esm/types/PythContract.js",
+      "import": "./dist/esm/types/PythContract.mjs",
       "types": "./dist/esm/types/PythContract.d.ts",
       "require": "./dist/cjs/types/PythContract.js"
     },
     "./types/PythContractFactory": {
-      "import": "./dist/esm/types/PythContractFactory.js",
+      "import": "./dist/esm/types/PythContractFactory.mjs",
       "types": "./dist/esm/types/PythContractFactory.d.ts",
       "require": "./dist/cjs/types/PythContractFactory.js"
     },
+    "./types/common": {
+      "import": "./dist/esm/types/common.d.mjs",
+      "require": "./dist/cjs/types/common.d.js"
+    },
     "./types": {
-      "import": "./dist/esm/types/index.js",
+      "import": "./dist/esm/types/index.mjs",
       "types": "./dist/esm/types/index.d.ts",
       "require": "./dist/cjs/types/index.js"
     },

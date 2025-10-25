@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { build } from 'esbuild';
+import { build } from "esbuild";
 import glob from "fast-glob";
 import fs from "fs-extra";
 import path from "node:path";
@@ -12,6 +12,7 @@ import { execAsync } from "./exec-async.js";
 import { generateTsconfigs } from "./generate-tsconfigs.js";
 import { Logger } from "./logger.js";
 import chalk from "chalk";
+import { createResolver } from "./resolve-import-path.js";
 
 /**
  * @typedef {'cjs' | 'esm'} ModuleType
@@ -25,7 +26,7 @@ export async function buildTsPackage(argv = process.argv) {
   const yargs = createCLI(hideBin(argv));
   const {
     clean,
-    cwd,
+    cwd: absOrRelativeCwd,
     generateTsconfig,
     noCjs,
     noDts,
@@ -86,6 +87,10 @@ export async function buildTsPackage(argv = process.argv) {
     })
     .help().argv;
 
+  const cwd = path.isAbsolute(absOrRelativeCwd)
+    ? absOrRelativeCwd
+    : path.resolve(absOrRelativeCwd);
+
   if (generateTsconfig) {
     return generateTsconfigs(cwd);
   }
@@ -122,21 +127,25 @@ export async function buildTsPackage(argv = process.argv) {
 
       const outDir =
         numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
-      
-      const getConfigCmd = `pnpm tsc --project ${tsconfig} --showConfig`;
-      const finalConfig = JSON.parse(await execAsync(getConfigCmd, { cwd, stdio: 'pipe' }));
 
+      const getConfigCmd = `pnpm tsc --project ${tsconfig} --showConfig`;
+      const finalConfig = JSON.parse(
+        await execAsync(getConfigCmd, { cwd, stdio: "pipe", verbose: true }),
+      );
+
+      const outExtension = format === "cjs" ? ".js" : ".mjs";
       if (Array.isArray(finalConfig.files)) {
         await build({
+          absWorkingDir: cwd,
           bundle: false,
           entryPoints: finalConfig.files,
           format,
           outdir: outDir,
-          outExtension: { '.js': format === 'cjs' ? '.js' : '.mjs' },
-          platform: 'neutral',
+          outExtension: { ".js": outExtension },
+          platform: "neutral",
           sourcemap: false,
           splitting: false,
-          target: 'esnext',
+          target: "esnext",
         });
       }
 
@@ -156,6 +165,42 @@ export async function buildTsPackage(argv = process.argv) {
         { absolute: true, onlyFiles: true },
       );
 
+      // Matches ESM import/export statements and captures the module specifier
+      const esmRegex =
+        /\bimport\s+(?:[\s\S]*?\bfrom\s+)?(['"])([^'"]+)\1|\bexport\s+(?:[\s\S]*?\bfrom\s+)(['"])([^'"]+)\3/g;
+
+      await Promise.all(
+        absoluteBuiltFiles.map(async (absFp) => {
+          if (absFp.endsWith(".d.ts")) return;
+
+          let contents = await fs.readFile(absFp, "utf8");
+
+          contents = contents.replace(
+            esmRegex,
+            (full, _q1, imp1, _q2, imp2) => {
+              const importPath = imp1 || imp2;
+              const resolveImport = createResolver(absFp);
+              const { resolved } = resolveImport(importPath);
+
+              if (!resolved.startsWith(outDir)) return full;
+
+              // Compute the new path:
+              // - If the specifier has an extension, replace it.
+              // - If it doesn't, append the desired extension.
+              const ext = path.extname(importPath);
+              const newPath = ext
+                ? importPath.replace(ext, outExtension)
+                : `${importPath}${outExtension}`;
+
+              // Replace only inside the matched statement to avoid accidental global replacements.
+              return full.replace(importPath, newPath);
+            },
+          );
+
+          await fs.writeFile(absFp, contents, "utf8");
+        }),
+      );
+
       const builtFiles = absoluteBuiltFiles
         .map((fp) => {
           const relPath = path.relative(outDir, fp);
@@ -170,16 +215,21 @@ export async function buildTsPackage(argv = process.argv) {
       });
 
       if (indexFile) {
+        const fixedIndexFile = `./${path.join(path.basename(outDirPath), indexFile)}`;
+
         Logger.info("index file detected");
         if (format === "cjs" || numFormats <= 1) {
           // we use the legacy type of typing exports for the top-level
           // typings
-          pjson.types = indexFile.replace(path.extname(indexFile), ".d.ts");
+          pjson.types = fixedIndexFile.replace(
+            path.extname(indexFile),
+            ".d.ts",
+          );
         }
         if (format === "esm") {
-          pjson.module = indexFile;
+          pjson.module = fixedIndexFile;
         } else {
-          pjson.main = indexFile;
+          pjson.main = fixedIndexFile;
         }
       }
 
