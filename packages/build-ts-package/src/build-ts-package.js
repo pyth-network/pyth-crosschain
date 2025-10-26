@@ -44,7 +44,7 @@ export async function buildTsPackage(argv = process.argv) {
     })
     .option("compiler", {
       choices: AVAILABLE_COMPILERS,
-      default: "esbuild",
+      default: "swc",
       description: "which compiler to use.",
       type: "string",
     })
@@ -225,25 +225,22 @@ export async function buildTsPackage(argv = process.argv) {
         // Ensure key object exists
         const tempExports = exports[key] ?? {};
 
-        // Add require/import entry without nuking the other
-        if (numFormats <= 1) {
-          tempExports.default = fpWithBasename;
-        } else {
-          if (format === "cjs") {
-            tempExports.require = fpWithBasename;
-          } else {
-            tempExports.import = fpWithBasename;
-          }
+        // Pick target (default / import / require)
+        const target =
+          numFormats <= 1
+            ? tempExports
+            : format === "cjs"
+              ? (tempExports.require ??= {})
+              : (tempExports.import ??= {});
+
+        // Assign default JS entry
+        target.default = fpWithBasename;
+
+        // Assign type definitions if applicable
+        if (!noDts && fp.endsWith(".d.ts")) {
+          target.types = fpWithBasename;
         }
 
-        // Also handle types if present
-        if (
-          (format === "esm" || numFormats <= 1) &&
-          !noDts &&
-          fp.endsWith(".d.ts")
-        ) {
-          tempExports.types = fpWithBasename;
-        }
         exports[key] = tempExports;
       }
 

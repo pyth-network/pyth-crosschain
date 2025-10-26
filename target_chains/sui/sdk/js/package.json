@@ -21,8 +21,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --platform node",
-    "example-relay": "node lib/examples/SuiRelay.js",
+    "build": "build-ts-package --clean --platform node",
+    "example-relay": "node dist/cjs/examples/SuiRelay.js",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -65,27 +65,47 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "exports": {
     "./SuiPriceServiceConnection": {
-      "import": "./dist/esm/SuiPriceServiceConnection.mjs",
-      "types": "./dist/esm/SuiPriceServiceConnection.d.ts",
-      "require": "./dist/cjs/SuiPriceServiceConnection.js"
+      "import": {
+        "default": "./dist/esm/SuiPriceServiceConnection.js",
+        "types": "./dist/esm/SuiPriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/SuiPriceServiceConnection.js",
+        "types": "./dist/cjs/SuiPriceServiceConnection.d.ts"
+      }
     },
     "./client": {
-      "import": "./dist/esm/client.mjs",
-      "types": "./dist/esm/client.d.ts",
-      "require": "./dist/cjs/client.js"
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      }
     },
     "./examples/SuiRelay": {
-      "import": "./dist/esm/examples/SuiRelay.mjs",
-      "types": "./dist/esm/examples/SuiRelay.d.ts",
-      "require": "./dist/cjs/examples/SuiRelay.js"
+      "import": {
+        "default": "./dist/esm/examples/SuiRelay.js",
+        "types": "./dist/esm/examples/SuiRelay.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/examples/SuiRelay.js",
+        "types": "./dist/cjs/examples/SuiRelay.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./package.json": "./package.json"
   }

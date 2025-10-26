@@ -4,119 +4,234 @@
   "description": "Pyth staking SDK",
   "exports": {
     "./constants": {
-      "import": "./dist/esm/constants.js",
-      "types": "./dist/esm/constants.d.ts",
-      "require": "./dist/cjs/constants.js"
+      "import": {
+        "default": "./dist/esm/constants.js",
+        "types": "./dist/esm/constants.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/constants.js",
+        "types": "./dist/cjs/constants.d.ts"
+      }
     },
     "./idl/integrity-pool": {
-      "import": "./dist/esm/idl/integrity-pool.js",
-      "types": "./dist/esm/idl/integrity-pool.d.ts",
-      "require": "./dist/cjs/idl/integrity-pool.js"
+      "import": {
+        "default": "./dist/esm/idl/integrity-pool.js",
+        "types": "./dist/esm/idl/integrity-pool.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/idl/integrity-pool.js",
+        "types": "./dist/cjs/idl/integrity-pool.d.ts"
+      }
     },
     "./idl/publisher-caps": {
-      "import": "./dist/esm/idl/publisher-caps.js",
-      "types": "./dist/esm/idl/publisher-caps.d.ts",
-      "require": "./dist/cjs/idl/publisher-caps.js"
+      "import": {
+        "default": "./dist/esm/idl/publisher-caps.js",
+        "types": "./dist/esm/idl/publisher-caps.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/idl/publisher-caps.js",
+        "types": "./dist/cjs/idl/publisher-caps.d.ts"
+      }
     },
     "./idl/stake-caps-parameters": {
-      "import": "./dist/esm/idl/stake-caps-parameters.js",
-      "types": "./dist/esm/idl/stake-caps-parameters.d.ts",
-      "require": "./dist/cjs/idl/stake-caps-parameters.js"
+      "import": {
+        "default": "./dist/esm/idl/stake-caps-parameters.js",
+        "types": "./dist/esm/idl/stake-caps-parameters.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/idl/stake-caps-parameters.js",
+        "types": "./dist/cjs/idl/stake-caps-parameters.d.ts"
+      }
     },
     "./idl/staking": {
-      "import": "./dist/esm/idl/staking.js",
-      "types": "./dist/esm/idl/staking.d.ts",
-      "require": "./dist/cjs/idl/staking.js"
+      "import": {
+        "default": "./dist/esm/idl/staking.js",
+        "types": "./dist/esm/idl/staking.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/idl/staking.js",
+        "types": "./dist/cjs/idl/staking.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./pdas": {
-      "import": "./dist/esm/pdas.js",
-      "types": "./dist/esm/pdas.d.ts",
-      "require": "./dist/cjs/pdas.js"
+      "import": {
+        "default": "./dist/esm/pdas.js",
+        "types": "./dist/esm/pdas.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/pdas.js",
+        "types": "./dist/cjs/pdas.d.ts"
+      }
     },
     "./pyth-staking-client": {
-      "import": "./dist/esm/pyth-staking-client.js",
-      "types": "./dist/esm/pyth-staking-client.d.ts",
-      "require": "./dist/cjs/pyth-staking-client.js"
+      "import": {
+        "default": "./dist/esm/pyth-staking-client.js",
+        "types": "./dist/esm/pyth-staking-client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/pyth-staking-client.js",
+        "types": "./dist/cjs/pyth-staking-client.d.ts"
+      }
     },
     "./pythnet-client": {
-      "import": "./dist/esm/pythnet-client.js",
-      "types": "./dist/esm/pythnet-client.d.ts",
-      "require": "./dist/cjs/pythnet-client.js"
+      "import": {
+        "default": "./dist/esm/pythnet-client.js",
+        "types": "./dist/esm/pythnet-client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/pythnet-client.js",
+        "types": "./dist/cjs/pythnet-client.d.ts"
+      }
     },
     "./types": {
-      "import": "./dist/esm/types.js",
-      "types": "./dist/esm/types.d.ts",
-      "require": "./dist/cjs/types.js"
+      "import": {
+        "default": "./dist/esm/types.js",
+        "types": "./dist/esm/types.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types.js",
+        "types": "./dist/cjs/types.d.ts"
+      }
     },
     "./types/integrity-pool": {
-      "import": "./dist/esm/types/integrity-pool.js",
-      "types": "./dist/esm/types/integrity-pool.d.ts",
-      "require": "./dist/cjs/types/integrity-pool.js"
+      "import": {
+        "default": "./dist/esm/types/integrity-pool.js",
+        "types": "./dist/esm/types/integrity-pool.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/integrity-pool.js",
+        "types": "./dist/cjs/types/integrity-pool.d.ts"
+      }
     },
     "./types/publisher-caps": {
-      "import": "./dist/esm/types/publisher-caps.js",
-      "types": "./dist/esm/types/publisher-caps.d.ts",
-      "require": "./dist/cjs/types/publisher-caps.js"
+      "import": {
+        "default": "./dist/esm/types/publisher-caps.js",
+        "types": "./dist/esm/types/publisher-caps.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/publisher-caps.js",
+        "types": "./dist/cjs/types/publisher-caps.d.ts"
+      }
     },
     "./types/stake-caps-parameters": {
-      "import": "./dist/esm/types/stake-caps-parameters.js",
-      "types": "./dist/esm/types/stake-caps-parameters.d.ts",
-      "require": "./dist/cjs/types/stake-caps-parameters.js"
+      "import": {
+        "default": "./dist/esm/types/stake-caps-parameters.js",
+        "types": "./dist/esm/types/stake-caps-parameters.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/stake-caps-parameters.js",
+        "types": "./dist/cjs/types/stake-caps-parameters.d.ts"
+      }
     },
     "./types/staking": {
-      "import": "./dist/esm/types/staking.js",
-      "types": "./dist/esm/types/staking.d.ts",
-      "require": "./dist/cjs/types/staking.js"
+      "import": {
+        "default": "./dist/esm/types/staking.js",
+        "types": "./dist/esm/types/staking.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/staking.js",
+        "types": "./dist/cjs/types/staking.d.ts"
+      }
     },
     "./utils/apy": {
-      "import": "./dist/esm/utils/apy.js",
-      "types": "./dist/esm/utils/apy.d.ts",
-      "require": "./dist/cjs/utils/apy.js"
+      "import": {
+        "default": "./dist/esm/utils/apy.js",
+        "types": "./dist/esm/utils/apy.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/apy.js",
+        "types": "./dist/cjs/utils/apy.d.ts"
+      }
     },
     "./utils/bigint": {
-      "import": "./dist/esm/utils/bigint.js",
-      "types": "./dist/esm/utils/bigint.d.ts",
-      "require": "./dist/cjs/utils/bigint.js"
+      "import": {
+        "default": "./dist/esm/utils/bigint.js",
+        "types": "./dist/esm/utils/bigint.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/bigint.js",
+        "types": "./dist/cjs/utils/bigint.d.ts"
+      }
     },
     "./utils/bn": {
-      "import": "./dist/esm/utils/bn.js",
-      "types": "./dist/esm/utils/bn.d.ts",
-      "require": "./dist/cjs/utils/bn.js"
+      "import": {
+        "default": "./dist/esm/utils/bn.js",
+        "types": "./dist/esm/utils/bn.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/bn.js",
+        "types": "./dist/cjs/utils/bn.d.ts"
+      }
     },
     "./utils/clock": {
-      "import": "./dist/esm/utils/clock.js",
-      "types": "./dist/esm/utils/clock.d.ts",
-      "require": "./dist/cjs/utils/clock.js"
+      "import": {
+        "default": "./dist/esm/utils/clock.js",
+        "types": "./dist/esm/utils/clock.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/clock.js",
+        "types": "./dist/cjs/utils/clock.d.ts"
+      }
     },
     "./utils/pool": {
-      "import": "./dist/esm/utils/pool.js",
-      "types": "./dist/esm/utils/pool.d.ts",
-      "require": "./dist/cjs/utils/pool.js"
+      "import": {
+        "default": "./dist/esm/utils/pool.js",
+        "types": "./dist/esm/utils/pool.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/pool.js",
+        "types": "./dist/cjs/utils/pool.d.ts"
+      }
     },
     "./utils/position": {
-      "import": "./dist/esm/utils/position.js",
-      "types": "./dist/esm/utils/position.d.ts",
-      "require": "./dist/cjs/utils/position.js"
+      "import": {
+        "default": "./dist/esm/utils/position.js",
+        "types": "./dist/esm/utils/position.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/position.js",
+        "types": "./dist/cjs/utils/position.d.ts"
+      }
     },
     "./utils/transaction": {
-      "import": "./dist/esm/utils/transaction.js",
-      "types": "./dist/esm/utils/transaction.d.ts",
-      "require": "./dist/cjs/utils/transaction.js"
+      "import": {
+        "default": "./dist/esm/utils/transaction.js",
+        "types": "./dist/esm/utils/transaction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/transaction.js",
+        "types": "./dist/cjs/utils/transaction.d.ts"
+      }
     },
     "./utils/vesting": {
-      "import": "./dist/esm/utils/vesting.js",
-      "types": "./dist/esm/utils/vesting.d.ts",
-      "require": "./dist/cjs/utils/vesting.js"
+      "import": {
+        "default": "./dist/esm/utils/vesting.js",
+        "types": "./dist/esm/utils/vesting.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/vesting.js",
+        "types": "./dist/cjs/utils/vesting.d.ts"
+      }
     },
     "./utils/wallet": {
-      "import": "./dist/esm/utils/wallet.js",
-      "types": "./dist/esm/utils/wallet.d.ts",
-      "require": "./dist/cjs/utils/wallet.js"
+      "import": {
+        "default": "./dist/esm/utils/wallet.js",
+        "types": "./dist/esm/utils/wallet.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/wallet.js",
+        "types": "./dist/cjs/utils/wallet.d.ts"
+      }
     },
     "./package.json": "./package.json"
   },

@@ -58,7 +58,7 @@ export async function compileTs({
     .filter((ep) => /\.(j|t)sx?$/.test(ep))
     .filter((ep) => !ep.endsWith(".d.ts"));
 
-  Logger.info('using the', compiler, 'compiler');
+  Logger.info("using the", compiler, "compiler");
 
   switch (compiler) {
     case "babel":

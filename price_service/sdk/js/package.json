@@ -56,28 +56,28 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./AccumulatorUpdateData": {
-      "import": "./dist/esm/AccumulatorUpdateData.mjs",
+      "import": "./dist/esm/AccumulatorUpdateData.js",
       "types": "./dist/esm/AccumulatorUpdateData.d.ts",
       "require": "./dist/cjs/AccumulatorUpdateData.js"
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
+      "import": "./dist/esm/index.js",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./schemas/PriceFeed": {
-      "import": "./dist/esm/schemas/PriceFeed.mjs",
+      "import": "./dist/esm/schemas/PriceFeed.js",
       "types": "./dist/esm/schemas/PriceFeed.d.ts",
       "require": "./dist/cjs/schemas/PriceFeed.js"
     },
     "./types": {
-      "import": "./dist/esm/types.mjs",
+      "import": "./dist/esm/types.js",
       "types": "./dist/esm/types.d.ts",
       "require": "./dist/cjs/types.js"
     },
     "./package.json": "./package.json"
   },
   "types": "./dist/cjs/index.d.ts",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "main": "./dist/cjs/index.js"
 }

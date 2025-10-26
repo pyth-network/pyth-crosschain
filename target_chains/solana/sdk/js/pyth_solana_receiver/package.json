@@ -59,7 +59,7 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "exports": {
     "./PythSolanaReceiver": {
       "import": "./dist/esm/PythSolanaReceiver.mjs",

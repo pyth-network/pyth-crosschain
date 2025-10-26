@@ -53,6 +53,7 @@
     },
     "clean": {
       "cache": false,
+      "inputs": ["lib/**", "dist/**"],
       "outputs": []
     },
     "build:scss": {
