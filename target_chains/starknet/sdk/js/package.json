@@ -19,7 +19,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package",
+    "build": "build-ts-package --platform node",
     "usage-example": "tsx src/examples/usage.ts",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
@@ -53,23 +53,23 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./abi/erc20": {
-      "import": "./dist/esm/abi/erc20.js",
+      "import": "./dist/esm/abi/erc20.mjs",
       "types": "./dist/esm/abi/erc20.d.ts",
       "require": "./dist/cjs/abi/erc20.js"
     },
     "./abi/pyth": {
-      "import": "./dist/esm/abi/pyth.js",
+      "import": "./dist/esm/abi/pyth.mjs",
       "types": "./dist/esm/abi/pyth.d.ts",
       "require": "./dist/cjs/abi/pyth.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
-  "types": "./cjs/index.d.ts",
-  "module": "./esm/index.js",
-  "main": "./cjs/index.js"
+  "types": "./dist/cjs/index.d.ts",
+  "module": "./dist/esm/index.mjs",
+  "main": "./dist/cjs/index.js"
 }

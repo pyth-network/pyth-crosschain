@@ -21,7 +21,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean --noEsm",
+    "build": "build-ts-package --clean --noEsm --platform node",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",

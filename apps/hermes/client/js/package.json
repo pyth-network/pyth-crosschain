@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
-    "build": "build-ts-package",
+    "build": "build-ts-package --clean --noCjs --platform node",
     "clean": "rm -rf ./dist && rm -rf ./lib",
     "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "tsx src/examples/HermesClient.ts",
@@ -64,28 +64,24 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./HermesClient": {
-      "import": "./dist/esm/HermesClient.mjs",
-      "types": "./dist/esm/HermesClient.d.ts",
-      "require": "./dist/cjs/HermesClient.js"
+      "import": "./dist/HermesClient.mjs",
+      "types": "./dist/HermesClient.d.ts"
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
     },
     "./utils": {
-      "import": "./dist/esm/utils.mjs",
-      "types": "./dist/esm/utils.d.ts",
-      "require": "./dist/cjs/utils.js"
+      "import": "./dist/utils.mjs",
+      "types": "./dist/utils.d.ts"
     },
     "./zodSchemas": {
-      "import": "./dist/esm/zodSchemas.mjs",
-      "types": "./dist/esm/zodSchemas.d.ts",
-      "require": "./dist/cjs/zodSchemas.js"
+      "import": "./dist/zodSchemas.mjs",
+      "types": "./dist/zodSchemas.d.ts"
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/cjs/index.d.ts",
-  "module": "./dist/esm/index.mjs",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
   "main": "./dist/cjs/index.js"
 }

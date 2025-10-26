@@ -13,7 +13,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "build-ts-package",
+    "build": "build-ts-package --platform neutral",
     "clean": "rm -rf dist/",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",

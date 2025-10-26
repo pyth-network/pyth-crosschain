@@ -19,7 +19,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package",
+    "build": "build-ts-package --platform node",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -64,23 +64,23 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./AptosPriceServiceConnection": {
-      "import": "./dist/esm/AptosPriceServiceConnection.js",
+      "import": "./dist/esm/AptosPriceServiceConnection.mjs",
       "types": "./dist/esm/AptosPriceServiceConnection.d.ts",
       "require": "./dist/cjs/AptosPriceServiceConnection.js"
     },
     "./examples/AptosRelay": {
-      "import": "./dist/esm/examples/AptosRelay.js",
+      "import": "./dist/esm/examples/AptosRelay.mjs",
       "types": "./dist/esm/examples/AptosRelay.d.ts",
       "require": "./dist/cjs/examples/AptosRelay.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
-  "module": "./esm/index.js",
-  "types": "./cjs/index.d.ts",
-  "main": "./cjs/index.js"
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.js"
 }

@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./cjs/index.js",
-  "types": "./cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -21,7 +21,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package",
+    "build": "build-ts-package --platform node",
     "example-relay": "pnpm run build && node lib/examples/SuiRelay.js",
     "test:lint": "eslint src/",
     "test:format": "prettier --check \"src/**/*.ts\"",
@@ -65,25 +65,25 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     "./IotaPriceServiceConnection": {
-      "import": "./dist/esm/IotaPriceServiceConnection.js",
+      "import": "./dist/esm/IotaPriceServiceConnection.mjs",
       "types": "./dist/esm/IotaPriceServiceConnection.d.ts",
       "require": "./dist/cjs/IotaPriceServiceConnection.js"
     },
     "./client": {
-      "import": "./dist/esm/client.js",
+      "import": "./dist/esm/client.mjs",
       "types": "./dist/esm/client.d.ts",
       "require": "./dist/cjs/client.js"
     },
     "./examples/IotaRelay": {
-      "import": "./dist/esm/examples/IotaRelay.js",
+      "import": "./dist/esm/examples/IotaRelay.mjs",
       "types": "./dist/esm/examples/IotaRelay.d.ts",
       "require": "./dist/cjs/examples/IotaRelay.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },

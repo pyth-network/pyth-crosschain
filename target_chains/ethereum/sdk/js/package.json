@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./cjs/index.js",
-  "types": "./cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -21,7 +21,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package",
+    "build": "build-ts-package --platform node",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
@@ -59,40 +59,40 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     "./filler": {
-      "import": "./dist/esm/filler.js",
+      "import": "./dist/esm/filler.mjs",
       "types": "./dist/esm/filler.d.ts",
       "require": "./dist/cjs/filler.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./multicall3-bundler": {
-      "import": "./dist/esm/multicall3-bundler.js",
+      "import": "./dist/esm/multicall3-bundler.mjs",
       "types": "./dist/esm/multicall3-bundler.d.ts",
       "require": "./dist/cjs/multicall3-bundler.js"
     },
     "./pyth-abi": {
-      "import": "./dist/esm/pyth-abi.js",
+      "import": "./dist/esm/pyth-abi.mjs",
       "types": "./dist/esm/pyth-abi.d.ts",
       "require": "./dist/cjs/pyth-abi.js"
     },
     "./tracer/debug-trace-call": {
-      "import": "./dist/esm/tracer/debug-trace-call.js",
+      "import": "./dist/esm/tracer/debug-trace-call.mjs",
       "types": "./dist/esm/tracer/debug-trace-call.d.ts",
       "require": "./dist/cjs/tracer/debug-trace-call.js"
     },
     "./tracer/trace-call-many": {
-      "import": "./dist/esm/tracer/trace-call-many.js",
+      "import": "./dist/esm/tracer/trace-call-many.mjs",
       "types": "./dist/esm/tracer/trace-call-many.d.ts",
       "require": "./dist/cjs/tracer/trace-call-many.js"
     },
     "./types": {
-      "import": "./dist/esm/types.js",
+      "import": "./dist/esm/types.mjs",
       "types": "./dist/esm/types.d.ts",
       "require": "./dist/cjs/types.js"
     },

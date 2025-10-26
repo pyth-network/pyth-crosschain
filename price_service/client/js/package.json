@@ -7,8 +7,8 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "./cjs/index.js",
-  "types": "./cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "lib/**/*",
     "dist/**/*"
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "build-ts-package",
+    "build": "build-ts-package --platform node",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -66,40 +66,40 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     "./PriceServiceConnection": {
-      "import": "./dist/esm/PriceServiceConnection.js",
+      "import": "./dist/esm/PriceServiceConnection.mjs",
       "types": "./dist/esm/PriceServiceConnection.d.ts",
       "require": "./dist/cjs/PriceServiceConnection.js"
     },
     "./ResillientWebSocket": {
-      "import": "./dist/esm/ResillientWebSocket.js",
+      "import": "./dist/esm/ResillientWebSocket.mjs",
       "types": "./dist/esm/ResillientWebSocket.d.ts",
       "require": "./dist/cjs/ResillientWebSocket.js"
     },
     "./__tests__/connection.e2e.test": {
-      "import": "./dist/esm/__tests__/connection.e2e.test.js",
+      "import": "./dist/esm/__tests__/connection.e2e.test.mjs",
       "types": "./dist/esm/__tests__/connection.e2e.test.d.ts",
       "require": "./dist/cjs/__tests__/connection.e2e.test.js"
     },
     "./examples/PriceServiceClient": {
-      "import": "./dist/esm/examples/PriceServiceClient.js",
+      "import": "./dist/esm/examples/PriceServiceClient.mjs",
       "types": "./dist/esm/examples/PriceServiceClient.d.ts",
       "require": "./dist/cjs/examples/PriceServiceClient.js"
     },
     ".": {
-      "import": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./types": {
-      "import": "./dist/esm/types.js",
+      "import": "./dist/esm/types.mjs",
       "types": "./dist/esm/types.d.ts",
       "require": "./dist/cjs/types.js"
     },
     "./utils": {
-      "import": "./dist/esm/utils.js",
+      "import": "./dist/esm/utils.mjs",
       "types": "./dist/esm/utils.d.ts",
       "require": "./dist/cjs/utils.js"
     },

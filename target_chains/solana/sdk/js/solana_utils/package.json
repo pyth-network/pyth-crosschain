@@ -16,7 +16,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean",
+    "build": "build-ts-package --clean --noEsm --platform node",
     "test:unit": "jest",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
@@ -56,25 +56,21 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "types": "./dist/cjs/index.d.ts",
-  "module": "./dist/esm/index.mjs",
-  "main": "./dist/cjs/index.js",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./jito": {
-      "import": "./dist/esm/jito.mjs",
-      "types": "./dist/esm/jito.d.ts",
-      "require": "./dist/cjs/jito.js"
+      "default": "./dist/jito.js",
+      "types": "./dist/jito.d.ts"
     },
     "./transaction": {
-      "import": "./dist/esm/transaction.mjs",
-      "types": "./dist/esm/transaction.d.ts",
-      "require": "./dist/cjs/transaction.js"
+      "default": "./dist/transaction.js",
+      "types": "./dist/transaction.d.ts"
     },
     "./package.json": "./package.json"
-  }
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js"
 }

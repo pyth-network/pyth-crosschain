@@ -18,6 +18,11 @@ import { createResolver } from "./resolve-import-path.js";
  * @typedef {'cjs' | 'esm'} ModuleType
  */
 
+/** @typedef {import('esbuild').Platform} Platform */
+
+/** @type {Platform[]} */
+const AVAILABLE_PLATFORMS = ["browser", "neutral", "node"];
+
 /**
  * builds a typescript package, using tsdown and its Node-friendly API
  * @returns {Promise<void>}
@@ -32,6 +37,7 @@ export async function buildTsPackage(argv = process.argv) {
     noDts,
     noEsm,
     outDir,
+    platform,
     tsconfig: tsconfigOverride,
     watch,
   } = await yargs
@@ -73,6 +79,12 @@ export async function buildTsPackage(argv = process.argv) {
       default: "dist",
       description: "the folder where the built files will be written",
       type: "string",
+    })
+    .option('platform', {
+      choices: AVAILABLE_PLATFORMS,
+      demandOption: true,
+      description: 'the target environment where this JS code will be run. if you are unsure or are writing an isomorphic library, use "neutral."',
+      type: 'string',
     })
     .option("tsconfig", {
       description:
@@ -142,7 +154,7 @@ export async function buildTsPackage(argv = process.argv) {
           format,
           outdir: outDir,
           outExtension: { ".js": outExtension },
-          platform: "neutral",
+          platform,
           sourcemap: false,
           splitting: false,
           target: "esnext",
@@ -256,11 +268,15 @@ export async function buildTsPackage(argv = process.argv) {
         const tempExports = exports[key] ?? {};
 
         // Add require/import entry without nuking the other
-        if (format === "cjs") {
-          tempExports.require = fpWithBasename;
+        if (numFormats <= 1) {
+          tempExports.default = fpWithBasename;
         } else {
-          tempExports.import = fpWithBasename;
-        }
+          if (format === "cjs") {
+            tempExports.require = fpWithBasename;
+          } else {
+            tempExports.import = fpWithBasename;
+          }
+      }
 
         // Also handle types if present
         if (
@@ -274,6 +290,10 @@ export async function buildTsPackage(argv = process.argv) {
       }
 
       pjson.exports = exports;
+
+      if (format === 'esm') {
+        await fs.writeFile(path.join(outDir, 'package.json'), '{ "type": "module" }', 'utf8');
+      }
 
       Logger.info(chalk.green(`${pjson.name} - ${format} has been built!`));
     } catch (error) {
