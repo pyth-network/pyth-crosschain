@@ -15,6 +15,7 @@ import {
   AVAILABLE_PLATFORMS,
   compileTs,
 } from "./compile-ts.js";
+import { injectExtraExports } from "./inject-extra-exports.js";
 
 /**
  * builds a typescript package, using tsdown and its Node-friendly API
@@ -267,7 +268,9 @@ export async function buildTsPackage(argv = process.argv) {
   }
 
   pjson.exports["./package.json"] = "./package.json";
-  await fs.writeFile(pjsonPath, JSON.stringify(pjson, null, 2), "utf8");
+  const injected = injectExtraExports(pjson);
+
+  await fs.writeFile(pjsonPath, JSON.stringify(injected, null, 2), "utf8");
 }
 
 await buildTsPackage();

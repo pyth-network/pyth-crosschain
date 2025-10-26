@@ -380,6 +380,16 @@
       "default": "./dist/useQueryParamsPagination/index.js",
       "types": "./dist/useQueryParamsPagination/index.d.ts"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./theme": {
+      "default": "./dist/theme.scss"
+    }
+  },
+  "build-ts-package": {
+    "extraExports": {
+      "./theme": {
+        "default": "./dist/theme.scss"
+      }
+    }
   }
 }

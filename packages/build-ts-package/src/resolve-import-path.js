@@ -1,4 +1,3 @@
-// resolver.js
 import { createRequire } from "module";
 import path from "path";
 import { pathToFileURL } from "url";
@@ -6,7 +5,7 @@ import { pathToFileURL } from "url";
 /**
  * Create a resolver bound to the directory of a given file path.
  * @param {string} absFilePath - Absolute path to the file you read.
- * @returns {(specifier: string) => { resolved: string, hadExtension: boolean }}
+ * @returns {(specifier: string) => { hadExtension: boolean; resolved: string; resolvedRelative: string; }}
  */
 export function createResolver(absFilePath) {
   const absDir = path.dirname(absFilePath);
@@ -20,11 +19,16 @@ export function createResolver(absFilePath) {
     // Try Node's resolution first (handles bare specifiers, exports fields, node_modules, etc.)
     try {
       const resolved = require.resolve(specifier);
-      return { resolved, hadExtension };
+
+      const resolvedRelative = path.relative(absDir, resolved);
+      
+      return { resolved, resolvedRelative, hadExtension };
     } catch {
       // Fallback for simple relative specifiers; preserves original extension or lack thereof
       const resolved = path.resolve(absDir, specifier);
-      return { resolved, hadExtension };
+
+      const resolvedRelative = path.relative(absDir, resolved);
+      return { resolved, resolvedRelative, hadExtension };
     }
   };
 }

@@ -96,6 +96,13 @@ export async function compileTs({
             cwd,
             jsc: {
               target: "esnext",
+              transform: {
+                react: {
+                  // React 17+ support.
+                  // if you're on a legacy version, sorry
+                  runtime: 'automatic',
+                },
+              },
             },
             module: {
               outFileExtension: "js",
@@ -146,20 +153,29 @@ export async function compileTs({
       contents = contents.replace(esmRegex, (full, _q1, imp1, _q2, imp2) => {
         const importPath = imp1 || imp2;
         const resolveImport = createResolver(absFp);
-        const { resolved } = resolveImport(importPath);
+        const { resolved, resolvedRelative } = resolveImport(importPath);
 
         if (!resolved.startsWith(outDir)) return full;
 
         // Compute the new path:
         // - If the specifier has an extension, replace it.
         // - If it doesn't, append the desired extension.
-        const ext = path.extname(importPath);
-        const newPath = ext
-          ? importPath.replace(ext, outExtension)
-          : `${importPath}${outExtension}`;
+        const ext = path.extname(resolvedRelative);
+        let newPath = ext
+          ? resolvedRelative.replace(ext, outExtension)
+          : `${resolvedRelative}${outExtension}`;
 
-        // Replace only inside the matched statement to avoid accidental global replacements.
-        return full.replace(importPath, newPath);
+        if (!newPath.startsWith('.') && !newPath.startsWith('/')) {
+          newPath = `./${newPath}`;
+        }
+
+        if (/\.jsx?/.test(resolved)) {
+          // Replace only inside the matched statement to avoid accidental global replacements.
+          const out = full.replace(importPath, newPath);
+
+          return out;
+        }
+        return full;
       });
 
       await fs.writeFile(absFp, contents, "utf8");
