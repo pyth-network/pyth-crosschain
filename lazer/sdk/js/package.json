@@ -13,7 +13,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "build-ts-package --platform neutral",
+    "build": "build-ts-package --platform neutral --compiler swc",
     "clean": "rm -rf dist/",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
@@ -39,7 +39,6 @@
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
-  "type": "module",
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js",
   "repository": {
     "type": "git",
@@ -61,58 +60,58 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./client": {
-      "import": "./dist/esm/client.mjs",
+      "import": "./dist/esm/client.js",
       "types": "./dist/esm/client.d.ts",
       "require": "./dist/cjs/client.js"
     },
     "./constants": {
-      "import": "./dist/esm/constants.mjs",
+      "import": "./dist/esm/constants.js",
       "types": "./dist/esm/constants.d.ts",
       "require": "./dist/cjs/constants.js"
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
+      "import": "./dist/esm/index.js",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./protocol": {
-      "import": "./dist/esm/protocol.mjs",
+      "import": "./dist/esm/protocol.js",
       "types": "./dist/esm/protocol.d.ts",
       "require": "./dist/cjs/protocol.js"
     },
     "./socket/resilient-websocket": {
-      "import": "./dist/esm/socket/resilient-websocket.mjs",
+      "import": "./dist/esm/socket/resilient-websocket.js",
       "types": "./dist/esm/socket/resilient-websocket.d.ts",
       "require": "./dist/cjs/socket/resilient-websocket.js"
     },
     "./socket/websocket-pool": {
-      "import": "./dist/esm/socket/websocket-pool.mjs",
+      "import": "./dist/esm/socket/websocket-pool.js",
       "types": "./dist/esm/socket/websocket-pool.d.ts",
       "require": "./dist/cjs/socket/websocket-pool.js"
     },
     "./util/buffer-util": {
-      "import": "./dist/esm/util/buffer-util.mjs",
+      "import": "./dist/esm/util/buffer-util.js",
       "types": "./dist/esm/util/buffer-util.d.ts",
       "require": "./dist/cjs/util/buffer-util.js"
     },
     "./util/env-util": {
-      "import": "./dist/esm/util/env-util.mjs",
+      "import": "./dist/esm/util/env-util.js",
       "types": "./dist/esm/util/env-util.d.ts",
       "require": "./dist/cjs/util/env-util.js"
     },
     "./util": {
-      "import": "./dist/esm/util/index.mjs",
+      "import": "./dist/esm/util/index.js",
       "types": "./dist/esm/util/index.d.ts",
       "require": "./dist/cjs/util/index.js"
     },
     "./util/url-util": {
-      "import": "./dist/esm/util/url-util.mjs",
+      "import": "./dist/esm/util/url-util.js",
       "types": "./dist/esm/util/url-util.d.ts",
       "require": "./dist/cjs/util/url-util.js"
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts",
   "main": "./dist/cjs/index.js"
 }

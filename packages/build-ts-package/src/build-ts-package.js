@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-import { build } from "esbuild";
-import glob from "fast-glob";
 import fs from "fs-extra";
 import path from "node:path";
 import createCLI from "yargs";
@@ -12,16 +10,11 @@ import { execAsync } from "./exec-async.js";
 import { generateTsconfigs } from "./generate-tsconfigs.js";
 import { Logger } from "./logger.js";
 import chalk from "chalk";
-import { createResolver } from "./resolve-import-path.js";
-
-/**
- * @typedef {'cjs' | 'esm'} ModuleType
- */
-
-/** @typedef {import('esbuild').Platform} Platform */
-
-/** @type {Platform[]} */
-const AVAILABLE_PLATFORMS = ["browser", "neutral", "node"];
+import {
+  AVAILABLE_COMPILERS,
+  AVAILABLE_PLATFORMS,
+  compileTs,
+} from "./compile-ts.js";
 
 /**
  * builds a typescript package, using tsdown and its Node-friendly API
@@ -31,6 +24,7 @@ export async function buildTsPackage(argv = process.argv) {
   const yargs = createCLI(hideBin(argv));
   const {
     clean,
+    compiler,
     cwd: absOrRelativeCwd,
     generateTsconfig,
     noCjs,
@@ -47,6 +41,12 @@ export async function buildTsPackage(argv = process.argv) {
       description:
         "if set, will clean out the build dirs before compiling anything",
       type: "boolean",
+    })
+    .option("compiler", {
+      choices: AVAILABLE_COMPILERS,
+      default: "esbuild",
+      description: "which compiler to use.",
+      type: "string",
     })
     .option("cwd", {
       default: process.cwd(),
@@ -80,11 +80,12 @@ export async function buildTsPackage(argv = process.argv) {
       description: "the folder where the built files will be written",
       type: "string",
     })
-    .option('platform', {
+    .option("platform", {
       choices: AVAILABLE_PLATFORMS,
       demandOption: true,
-      description: 'the target environment where this JS code will be run. if you are unsure or are writing an isomorphic library, use "neutral."',
-      type: 'string',
+      description:
+        'the target environment where this JS code will be run. if you are unsure or are writing an isomorphic library, use "neutral."',
+      type: "string",
     })
     .option("tsconfig", {
       description:
@@ -113,8 +114,9 @@ export async function buildTsPackage(argv = process.argv) {
 
   // ESM Must come before CJS, as those typings and such take precedence
   // when dual publishing.
-  const formats = /** @type {ModuleType[]} */ (
-    [noEsm ? undefined : "esm", noCjs ? undefined : "cjs"].filter(Boolean)
+  /** @type {any[]} */
+  const formats = [noEsm ? undefined : "esm", noCjs ? undefined : "cjs"].filter(
+    Boolean,
   );
 
   const tsconfig = await findTsconfigFile(cwd, tsconfigOverride);
@@ -131,6 +133,9 @@ export async function buildTsPackage(argv = process.argv) {
   // always freshly reset the exports and let the tool take over
   pjson.exports = {};
 
+  // let the exports define how this module should be treated
+  delete pjson.type;
+
   Logger.info("building package", chalk.magenta(pjson.name));
   for (const format of formats) {
     try {
@@ -145,73 +150,26 @@ export async function buildTsPackage(argv = process.argv) {
         await execAsync(getConfigCmd, { cwd, stdio: "pipe", verbose: true }),
       );
 
-      const outExtension = format === "cjs" ? ".js" : ".mjs";
-      if (Array.isArray(finalConfig.files)) {
-        await build({
-          absWorkingDir: cwd,
-          bundle: false,
-          entryPoints: finalConfig.files,
-          format,
-          outdir: outDir,
-          outExtension: { ".js": outExtension },
-          platform,
-          sourcemap: false,
-          splitting: false,
-          target: "esnext",
-        });
-      }
+      /** @type {string[]} */
+      const tscFoundFiles = Array.isArray(finalConfig.files)
+        ? finalConfig.files
+        : [];
 
-      let cmd =
-        `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --emitDeclarationOnly ${!noDts} --module ${format === "cjs" ? "nodenext" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution nodenext" : ""}`.trim();
-      if (watch) cmd += ` --watch`;
-
-      await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
-
-      const absoluteBuiltFiles = await glob(
-        [
-          path.join(outDir, "**", "*.d.ts"),
-          path.join(outDir, "**", "*.js"),
-          path.join(outDir, "**", "*.cjs"),
-          path.join(outDir, "**", "*.mjs"),
-        ],
-        { absolute: true, onlyFiles: true },
+      const compilerToUse = /** @type {import("./compile-ts.js").Compiler} */ (
+        compiler
       );
 
-      // Matches ESM import/export statements and captures the module specifier
-      const esmRegex =
-        /\bimport\s+(?:[\s\S]*?\bfrom\s+)?(['"])([^'"]+)\1|\bexport\s+(?:[\s\S]*?\bfrom\s+)(['"])([^'"]+)\3/g;
-
-      await Promise.all(
-        absoluteBuiltFiles.map(async (absFp) => {
-          if (absFp.endsWith(".d.ts")) return;
-
-          let contents = await fs.readFile(absFp, "utf8");
-
-          contents = contents.replace(
-            esmRegex,
-            (full, _q1, imp1, _q2, imp2) => {
-              const importPath = imp1 || imp2;
-              const resolveImport = createResolver(absFp);
-              const { resolved } = resolveImport(importPath);
-
-              if (!resolved.startsWith(outDir)) return full;
-
-              // Compute the new path:
-              // - If the specifier has an extension, replace it.
-              // - If it doesn't, append the desired extension.
-              const ext = path.extname(importPath);
-              const newPath = ext
-                ? importPath.replace(ext, outExtension)
-                : `${importPath}${outExtension}`;
-
-              // Replace only inside the matched statement to avoid accidental global replacements.
-              return full.replace(importPath, newPath);
-            },
-          );
-
-          await fs.writeFile(absFp, contents, "utf8");
-        }),
-      );
+      const absoluteBuiltFiles = await compileTs({
+        compiler: compilerToUse,
+        cwd,
+        entryPoints: tscFoundFiles,
+        format,
+        noDts,
+        outDir,
+        platform,
+        tsconfig,
+        watch,
+      });
 
       const builtFiles = absoluteBuiltFiles
         .map((fp) => {
@@ -276,7 +234,7 @@ export async function buildTsPackage(argv = process.argv) {
           } else {
             tempExports.import = fpWithBasename;
           }
-      }
+        }
 
         // Also handle types if present
         if (
@@ -291,8 +249,12 @@ export async function buildTsPackage(argv = process.argv) {
 
       pjson.exports = exports;
 
-      if (format === 'esm') {
-        await fs.writeFile(path.join(outDir, 'package.json'), '{ "type": "module" }', 'utf8');
+      if (format === "esm") {
+        await fs.writeFile(
+          path.join(outDir, "package.json"),
+          '{ "type": "module" }',
+          "utf8",
+        );
       }
 
       Logger.info(chalk.green(`${pjson.name} - ${format} has been built!`));

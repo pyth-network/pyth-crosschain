@@ -16,7 +16,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean --noEsm --platform node",
+    "build": "build-ts-package --clean --noEsm --platform node --compiler swc",
     "test:unit": "jest",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",

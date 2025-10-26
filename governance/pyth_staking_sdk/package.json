@@ -4,117 +4,117 @@
   "description": "Pyth staking SDK",
   "exports": {
     "./constants": {
-      "import": "./dist/esm/constants.mjs",
+      "import": "./dist/esm/constants.js",
       "types": "./dist/esm/constants.d.ts",
       "require": "./dist/cjs/constants.js"
     },
     "./idl/integrity-pool": {
-      "import": "./dist/esm/idl/integrity-pool.mjs",
+      "import": "./dist/esm/idl/integrity-pool.js",
       "types": "./dist/esm/idl/integrity-pool.d.ts",
       "require": "./dist/cjs/idl/integrity-pool.js"
     },
     "./idl/publisher-caps": {
-      "import": "./dist/esm/idl/publisher-caps.mjs",
+      "import": "./dist/esm/idl/publisher-caps.js",
       "types": "./dist/esm/idl/publisher-caps.d.ts",
       "require": "./dist/cjs/idl/publisher-caps.js"
     },
     "./idl/stake-caps-parameters": {
-      "import": "./dist/esm/idl/stake-caps-parameters.mjs",
+      "import": "./dist/esm/idl/stake-caps-parameters.js",
       "types": "./dist/esm/idl/stake-caps-parameters.d.ts",
       "require": "./dist/cjs/idl/stake-caps-parameters.js"
     },
     "./idl/staking": {
-      "import": "./dist/esm/idl/staking.mjs",
+      "import": "./dist/esm/idl/staking.js",
       "types": "./dist/esm/idl/staking.d.ts",
       "require": "./dist/cjs/idl/staking.js"
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
+      "import": "./dist/esm/index.js",
       "types": "./dist/esm/index.d.ts",
       "require": "./dist/cjs/index.js"
     },
     "./pdas": {
-      "import": "./dist/esm/pdas.mjs",
+      "import": "./dist/esm/pdas.js",
       "types": "./dist/esm/pdas.d.ts",
       "require": "./dist/cjs/pdas.js"
     },
     "./pyth-staking-client": {
-      "import": "./dist/esm/pyth-staking-client.mjs",
+      "import": "./dist/esm/pyth-staking-client.js",
       "types": "./dist/esm/pyth-staking-client.d.ts",
       "require": "./dist/cjs/pyth-staking-client.js"
     },
     "./pythnet-client": {
-      "import": "./dist/esm/pythnet-client.mjs",
+      "import": "./dist/esm/pythnet-client.js",
       "types": "./dist/esm/pythnet-client.d.ts",
       "require": "./dist/cjs/pythnet-client.js"
     },
     "./types": {
-      "import": "./dist/esm/types.mjs",
+      "import": "./dist/esm/types.js",
       "types": "./dist/esm/types.d.ts",
       "require": "./dist/cjs/types.js"
     },
     "./types/integrity-pool": {
-      "import": "./dist/esm/types/integrity-pool.mjs",
+      "import": "./dist/esm/types/integrity-pool.js",
       "types": "./dist/esm/types/integrity-pool.d.ts",
       "require": "./dist/cjs/types/integrity-pool.js"
     },
     "./types/publisher-caps": {
-      "import": "./dist/esm/types/publisher-caps.mjs",
+      "import": "./dist/esm/types/publisher-caps.js",
       "types": "./dist/esm/types/publisher-caps.d.ts",
       "require": "./dist/cjs/types/publisher-caps.js"
     },
     "./types/stake-caps-parameters": {
-      "import": "./dist/esm/types/stake-caps-parameters.mjs",
+      "import": "./dist/esm/types/stake-caps-parameters.js",
       "types": "./dist/esm/types/stake-caps-parameters.d.ts",
       "require": "./dist/cjs/types/stake-caps-parameters.js"
     },
     "./types/staking": {
-      "import": "./dist/esm/types/staking.mjs",
+      "import": "./dist/esm/types/staking.js",
       "types": "./dist/esm/types/staking.d.ts",
       "require": "./dist/cjs/types/staking.js"
     },
     "./utils/apy": {
-      "import": "./dist/esm/utils/apy.mjs",
+      "import": "./dist/esm/utils/apy.js",
       "types": "./dist/esm/utils/apy.d.ts",
       "require": "./dist/cjs/utils/apy.js"
     },
     "./utils/bigint": {
-      "import": "./dist/esm/utils/bigint.mjs",
+      "import": "./dist/esm/utils/bigint.js",
       "types": "./dist/esm/utils/bigint.d.ts",
       "require": "./dist/cjs/utils/bigint.js"
     },
     "./utils/bn": {
-      "import": "./dist/esm/utils/bn.mjs",
+      "import": "./dist/esm/utils/bn.js",
       "types": "./dist/esm/utils/bn.d.ts",
       "require": "./dist/cjs/utils/bn.js"
     },
     "./utils/clock": {
-      "import": "./dist/esm/utils/clock.mjs",
+      "import": "./dist/esm/utils/clock.js",
       "types": "./dist/esm/utils/clock.d.ts",
       "require": "./dist/cjs/utils/clock.js"
     },
     "./utils/pool": {
-      "import": "./dist/esm/utils/pool.mjs",
+      "import": "./dist/esm/utils/pool.js",
       "types": "./dist/esm/utils/pool.d.ts",
       "require": "./dist/cjs/utils/pool.js"
     },
     "./utils/position": {
-      "import": "./dist/esm/utils/position.mjs",
+      "import": "./dist/esm/utils/position.js",
       "types": "./dist/esm/utils/position.d.ts",
       "require": "./dist/cjs/utils/position.js"
     },
     "./utils/transaction": {
-      "import": "./dist/esm/utils/transaction.mjs",
+      "import": "./dist/esm/utils/transaction.js",
       "types": "./dist/esm/utils/transaction.d.ts",
       "require": "./dist/cjs/utils/transaction.js"
     },
     "./utils/vesting": {
-      "import": "./dist/esm/utils/vesting.mjs",
+      "import": "./dist/esm/utils/vesting.js",
       "types": "./dist/esm/utils/vesting.d.ts",
       "require": "./dist/cjs/utils/vesting.js"
     },
     "./utils/wallet": {
-      "import": "./dist/esm/utils/wallet.mjs",
+      "import": "./dist/esm/utils/wallet.js",
       "types": "./dist/esm/utils/wallet.d.ts",
       "require": "./dist/cjs/utils/wallet.js"
     },
@@ -131,7 +131,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean --platform node",
+    "build": "build-ts-package --clean --platform node --compiler swc",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
@@ -163,6 +163,6 @@
   },
   "packageManager": "pnpm@10.19.0",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts"
 }
