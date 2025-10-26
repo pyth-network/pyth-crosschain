@@ -21,7 +21,7 @@ export function createResolver(absFilePath) {
       const resolved = require.resolve(specifier);
 
       const resolvedRelative = path.relative(absDir, resolved);
-      
+
       return { resolved, resolvedRelative, hadExtension };
     } catch {
       // Fallback for simple relative specifiers; preserves original extension or lack thereof

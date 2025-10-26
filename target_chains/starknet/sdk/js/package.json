@@ -53,19 +53,34 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./abi/erc20": {
-      "import": "./dist/esm/abi/erc20.mjs",
-      "types": "./dist/esm/abi/erc20.d.ts",
-      "require": "./dist/cjs/abi/erc20.js"
+      "import": {
+        "default": "./dist/esm/abi/erc20.js",
+        "types": "./dist/esm/abi/erc20.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/abi/erc20.js",
+        "types": "./dist/cjs/abi/erc20.d.ts"
+      }
     },
     "./abi/pyth": {
-      "import": "./dist/esm/abi/pyth.mjs",
-      "types": "./dist/esm/abi/pyth.d.ts",
-      "require": "./dist/cjs/abi/pyth.js"
+      "import": {
+        "default": "./dist/esm/abi/pyth.js",
+        "types": "./dist/esm/abi/pyth.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/abi/pyth.js",
+        "types": "./dist/cjs/abi/pyth.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./package.json": "./package.json"
   },

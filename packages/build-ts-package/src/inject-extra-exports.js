@@ -2,7 +2,7 @@
  * @typedef {import('type-fest').PackageJson} PackageJson
  */
 
-import { Logger } from './logger.js';
+import { Logger } from "./logger.js";
 
 /**
  * @typedef {Object} Config
@@ -17,15 +17,15 @@ import { Logger } from './logger.js';
 /**
  * takes the package.json blob and smears some additional
  * export statements into the existing block, if avaialble
- * 
- * @param {PackageJson & PackageJsonWithPossibleConfig} pjson 
+ *
+ * @param {PackageJson & PackageJsonWithPossibleConfig} pjson
  */
 export function injectExtraExports(pjson) {
-  const config = pjson['build-ts-package'];
+  const config = pjson["build-ts-package"];
 
   if (!config?.extraExports) return pjson;
 
-  Logger.info('config.extraExports', JSON.stringify(config.extraExports));
+  Logger.info("config.extraExports", JSON.stringify(config.extraExports));
 
   return {
     ...pjson,

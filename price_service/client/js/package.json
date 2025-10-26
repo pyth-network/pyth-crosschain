@@ -69,39 +69,74 @@
   "module": "./dist/esm/index.js",
   "exports": {
     "./PriceServiceConnection": {
-      "import": "./dist/esm/PriceServiceConnection.mjs",
-      "types": "./dist/esm/PriceServiceConnection.d.ts",
-      "require": "./dist/cjs/PriceServiceConnection.js"
+      "import": {
+        "default": "./dist/esm/PriceServiceConnection.js",
+        "types": "./dist/esm/PriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/PriceServiceConnection.js",
+        "types": "./dist/cjs/PriceServiceConnection.d.ts"
+      }
     },
     "./ResillientWebSocket": {
-      "import": "./dist/esm/ResillientWebSocket.mjs",
-      "types": "./dist/esm/ResillientWebSocket.d.ts",
-      "require": "./dist/cjs/ResillientWebSocket.js"
+      "import": {
+        "default": "./dist/esm/ResillientWebSocket.js",
+        "types": "./dist/esm/ResillientWebSocket.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/ResillientWebSocket.js",
+        "types": "./dist/cjs/ResillientWebSocket.d.ts"
+      }
     },
     "./__tests__/connection.e2e.test": {
-      "import": "./dist/esm/__tests__/connection.e2e.test.mjs",
-      "types": "./dist/esm/__tests__/connection.e2e.test.d.ts",
-      "require": "./dist/cjs/__tests__/connection.e2e.test.js"
+      "import": {
+        "default": "./dist/esm/__tests__/connection.e2e.test.js",
+        "types": "./dist/esm/__tests__/connection.e2e.test.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/__tests__/connection.e2e.test.js",
+        "types": "./dist/cjs/__tests__/connection.e2e.test.d.ts"
+      }
     },
     "./examples/PriceServiceClient": {
-      "import": "./dist/esm/examples/PriceServiceClient.mjs",
-      "types": "./dist/esm/examples/PriceServiceClient.d.ts",
-      "require": "./dist/cjs/examples/PriceServiceClient.js"
+      "import": {
+        "default": "./dist/esm/examples/PriceServiceClient.js",
+        "types": "./dist/esm/examples/PriceServiceClient.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/examples/PriceServiceClient.js",
+        "types": "./dist/cjs/examples/PriceServiceClient.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./types": {
-      "import": "./dist/esm/types.mjs",
-      "types": "./dist/esm/types.d.ts",
-      "require": "./dist/cjs/types.js"
+      "import": {
+        "default": "./dist/esm/types.js",
+        "types": "./dist/esm/types.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types.js",
+        "types": "./dist/cjs/types.d.ts"
+      }
     },
     "./utils": {
-      "import": "./dist/esm/utils.mjs",
-      "types": "./dist/esm/utils.d.ts",
-      "require": "./dist/cjs/utils.js"
+      "import": {
+        "default": "./dist/esm/utils.js",
+        "types": "./dist/esm/utils.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils.js",
+        "types": "./dist/cjs/utils.d.ts"
+      }
     },
     "./package.json": "./package.json"
   }

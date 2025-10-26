@@ -58,41 +58,67 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "exports": {
     "./abi/pyth-contract-abi": {
-      "import": "./dist/esm/abi/pyth-contract-abi.mjs",
-      "types": "./dist/esm/abi/pyth-contract-abi.d.ts",
-      "require": "./dist/cjs/abi/pyth-contract-abi.js"
+      "import": {
+        "default": "./dist/esm/abi/pyth-contract-abi.js",
+        "types": "./dist/esm/abi/pyth-contract-abi.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/abi/pyth-contract-abi.js",
+        "types": "./dist/cjs/abi/pyth-contract-abi.d.ts"
+      }
     },
     "./examples/usage": {
-      "import": "./dist/esm/examples/usage.mjs",
-      "types": "./dist/esm/examples/usage.d.ts",
-      "require": "./dist/cjs/examples/usage.js"
+      "import": {
+        "default": "./dist/esm/examples/usage.js",
+        "types": "./dist/esm/examples/usage.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/examples/usage.js",
+        "types": "./dist/cjs/examples/usage.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./types/PythContract": {
-      "import": "./dist/esm/types/PythContract.mjs",
-      "types": "./dist/esm/types/PythContract.d.ts",
-      "require": "./dist/cjs/types/PythContract.js"
+      "import": {
+        "default": "./dist/esm/types/PythContract.js",
+        "types": "./dist/esm/types/PythContract.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/PythContract.js",
+        "types": "./dist/cjs/types/PythContract.d.ts"
+      }
     },
     "./types/PythContractFactory": {
-      "import": "./dist/esm/types/PythContractFactory.mjs",
-      "types": "./dist/esm/types/PythContractFactory.d.ts",
-      "require": "./dist/cjs/types/PythContractFactory.js"
-    },
-    "./types/common": {
-      "import": "./dist/esm/types/common.d.mjs",
-      "require": "./dist/cjs/types/common.d.js"
+      "import": {
+        "default": "./dist/esm/types/PythContractFactory.js",
+        "types": "./dist/esm/types/PythContractFactory.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/PythContractFactory.js",
+        "types": "./dist/cjs/types/PythContractFactory.d.ts"
+      }
     },
     "./types": {
-      "import": "./dist/esm/types/index.mjs",
-      "types": "./dist/esm/types/index.d.ts",
-      "require": "./dist/cjs/types/index.js"
+      "import": {
+        "default": "./dist/esm/types/index.js",
+        "types": "./dist/esm/types/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/index.js",
+        "types": "./dist/cjs/types/index.d.ts"
+      }
     },
     "./package.json": "./package.json"
   }

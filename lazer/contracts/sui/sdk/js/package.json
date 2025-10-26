@@ -13,9 +13,14 @@
   ],
   "exports": {
     "./client": {
-      "import": "./dist/esm/client.mjs",
-      "types": "./dist/esm/client.d.ts",
-      "require": "./dist/cjs/client.js"
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      }
     },
     "./package.json": "./package.json"
   },

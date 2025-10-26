@@ -1,9 +1,7 @@
-import { build } from "esbuild";
 import { transformFile } from "@swc/core";
 import { execAsync } from "./exec-async.js";
 import fs from "fs-extra";
 import path from "node:path";
-import { Logger } from "./logger.js";
 import { createResolver } from "./resolve-import-path.js";
 import glob from "fast-glob";
 
@@ -12,26 +10,12 @@ import glob from "fast-glob";
  */
 
 /**
- * @typedef {'babel' | 'esbuild' | 'swc'} Compiler
- */
-
-/** @typedef {import('esbuild').Platform} Platform */
-
-/** @type {Platform[]} */
-export const AVAILABLE_PLATFORMS = ["browser", "neutral", "node"];
-
-/** @type {Compiler[]} */
-export const AVAILABLE_COMPILERS = ["babel", "esbuild", "swc"];
-
-/**
  * @typedef {Object} CompileTsOpts
- * @property {Compiler} compiler
  * @property {string} cwd
  * @property {string[]} entryPoints
  * @property {ModuleType} format
  * @property {boolean} noDts
  * @property {string} outDir
- * @property {Platform} platform
  * @property {string} tsconfig
  * @property {boolean} watch
  */
@@ -42,13 +26,11 @@ export const AVAILABLE_COMPILERS = ["babel", "esbuild", "swc"];
  * @param {CompileTsOpts} opts
  */
 export async function compileTs({
-  compiler,
   cwd,
   entryPoints,
   format,
   noDts,
   outDir,
-  platform,
   tsconfig,
   watch,
 }) {
@@ -58,72 +40,46 @@ export async function compileTs({
     .filter((ep) => /\.(j|t)sx?$/.test(ep))
     .filter((ep) => !ep.endsWith(".d.ts"));
 
-  Logger.info("using the", compiler, "compiler");
+  await Promise.all(
+    filesToCompile.map(async (fp) => {
+      const absFp = path.isAbsolute(fp) ? fp : path.join(cwd, fp);
+      const relThing = path.relative(cwd, absFp);
 
-  switch (compiler) {
-    case "babel":
-      await Promise.resolve();
-      break;
-    case "esbuild":
-      await build({
-        absWorkingDir: cwd,
-        bundle: false,
-        entryPoints: filesToCompile,
-        format,
-        outdir: outDir,
-        platform,
-        sourcemap: false,
-        splitting: false,
-        target: "esnext",
+      const outFilePath = path.join(
+        outDir,
+        ...relThing
+          .replace(path.extname(fp), ".js")
+          .split(path.sep)
+          .slice(1)
+          .filter(Boolean),
+      );
+
+      const { code } = await transformFile(fp, {
+        cwd,
+        jsc: {
+          target: "esnext",
+          transform: {
+            react: {
+              // React 17+ support.
+              // if you're on a legacy version, sorry
+              runtime: "automatic",
+            },
+          },
+        },
+        module: {
+          outFileExtension: "js",
+          resolveFully: true,
+          strict: true,
+          type: format === "esm" ? "es6" : "commonjs",
+        },
+        outputPath: outDir,
+        sourceMaps: false,
       });
-      break;
-    case "swc":
-      await Promise.all(
-        filesToCompile.map(async (fp) => {
-          const absFp = path.isAbsolute(fp) ? fp : path.join(cwd, fp);
-          const relThing = path.relative(cwd, absFp);
 
-          const outFilePath = path.join(
-            outDir,
-            ...relThing
-              .replace(path.extname(fp), ".js")
-              .split(path.sep)
-              .slice(1)
-              .filter(Boolean),
-          );
-
-          const { code } = await transformFile(fp, {
-            cwd,
-            jsc: {
-              target: "esnext",
-              transform: {
-                react: {
-                  // React 17+ support.
-                  // if you're on a legacy version, sorry
-                  runtime: 'automatic',
-                },
-              },
-            },
-            module: {
-              outFileExtension: "js",
-              resolveFully: true,
-              strict: true,
-              type: format === "esm" ? "es6" : "commonjs",
-            },
-            outputPath: outDir,
-            sourceMaps: false,
-          });
-
-          await fs.ensureFile(outFilePath);
-          await fs.writeFile(outFilePath, code, "utf8");
-        }),
-      );
-      break;
-    default:
-      throw new Error(
-        `an invalid compiler value of ${compiler} was provided when compiling typescript`,
-      );
-  }
+      await fs.ensureFile(outFilePath);
+      await fs.writeFile(outFilePath, code, "utf8");
+    }),
+  );
   let cmd =
     `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --emitDeclarationOnly ${!noDts} --module ${format === "cjs" ? "nodenext" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution nodenext" : ""}`.trim();
   if (watch) cmd += ` --watch`;
@@ -165,7 +121,7 @@ export async function compileTs({
           ? resolvedRelative.replace(ext, outExtension)
           : `${resolvedRelative}${outExtension}`;
 
-        if (!newPath.startsWith('.') && !newPath.startsWith('/')) {
+        if (!newPath.startsWith(".") && !newPath.startsWith("/")) {
           newPath = `./${newPath}`;
         }
 

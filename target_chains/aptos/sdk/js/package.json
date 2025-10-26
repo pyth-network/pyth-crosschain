@@ -64,23 +64,38 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./AptosPriceServiceConnection": {
-      "import": "./dist/esm/AptosPriceServiceConnection.mjs",
-      "types": "./dist/esm/AptosPriceServiceConnection.d.ts",
-      "require": "./dist/cjs/AptosPriceServiceConnection.js"
+      "import": {
+        "default": "./dist/esm/AptosPriceServiceConnection.js",
+        "types": "./dist/esm/AptosPriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/AptosPriceServiceConnection.js",
+        "types": "./dist/cjs/AptosPriceServiceConnection.d.ts"
+      }
     },
     "./examples/AptosRelay": {
-      "import": "./dist/esm/examples/AptosRelay.mjs",
-      "types": "./dist/esm/examples/AptosRelay.d.ts",
-      "require": "./dist/cjs/examples/AptosRelay.js"
+      "import": {
+        "default": "./dist/esm/examples/AptosRelay.js",
+        "types": "./dist/esm/examples/AptosRelay.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/examples/AptosRelay.js",
+        "types": "./dist/cjs/examples/AptosRelay.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts",
   "main": "./dist/cjs/index.js"
 }

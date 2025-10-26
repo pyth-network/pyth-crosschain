@@ -56,24 +56,44 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./AccumulatorUpdateData": {
-      "import": "./dist/esm/AccumulatorUpdateData.js",
-      "types": "./dist/esm/AccumulatorUpdateData.d.ts",
-      "require": "./dist/cjs/AccumulatorUpdateData.js"
+      "import": {
+        "default": "./dist/esm/AccumulatorUpdateData.js",
+        "types": "./dist/esm/AccumulatorUpdateData.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/AccumulatorUpdateData.js",
+        "types": "./dist/cjs/AccumulatorUpdateData.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./schemas/PriceFeed": {
-      "import": "./dist/esm/schemas/PriceFeed.js",
-      "types": "./dist/esm/schemas/PriceFeed.d.ts",
-      "require": "./dist/cjs/schemas/PriceFeed.js"
+      "import": {
+        "default": "./dist/esm/schemas/PriceFeed.js",
+        "types": "./dist/esm/schemas/PriceFeed.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/schemas/PriceFeed.js",
+        "types": "./dist/cjs/schemas/PriceFeed.d.ts"
+      }
     },
     "./types": {
-      "import": "./dist/esm/types.js",
-      "types": "./dist/esm/types.d.ts",
-      "require": "./dist/cjs/types.js"
+      "import": {
+        "default": "./dist/esm/types.js",
+        "types": "./dist/esm/types.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types.js",
+        "types": "./dist/cjs/types.d.ts"
+      }
     },
     "./package.json": "./package.json"
   },

@@ -54,24 +54,44 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     "./ed25519": {
-      "import": "./dist/esm/ed25519.mjs",
-      "types": "./dist/esm/ed25519.d.ts",
-      "require": "./dist/cjs/ed25519.js"
+      "import": {
+        "default": "./dist/esm/ed25519.js",
+        "types": "./dist/esm/ed25519.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/ed25519.js",
+        "types": "./dist/cjs/ed25519.d.ts"
+      }
     },
     "./idl/pyth-lazer-solana-contract-data": {
-      "import": "./dist/esm/idl/pyth-lazer-solana-contract-data.mjs",
-      "types": "./dist/esm/idl/pyth-lazer-solana-contract-data.d.ts",
-      "require": "./dist/cjs/idl/pyth-lazer-solana-contract-data.js"
+      "import": {
+        "default": "./dist/esm/idl/pyth-lazer-solana-contract-data.js",
+        "types": "./dist/esm/idl/pyth-lazer-solana-contract-data.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/idl/pyth-lazer-solana-contract-data.js",
+        "types": "./dist/cjs/idl/pyth-lazer-solana-contract-data.d.ts"
+      }
     },
     "./idl/pyth-lazer-solana-contract": {
-      "import": "./dist/esm/idl/pyth-lazer-solana-contract.mjs",
-      "types": "./dist/esm/idl/pyth-lazer-solana-contract.d.ts",
-      "require": "./dist/cjs/idl/pyth-lazer-solana-contract.js"
+      "import": {
+        "default": "./dist/esm/idl/pyth-lazer-solana-contract.js",
+        "types": "./dist/esm/idl/pyth-lazer-solana-contract.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/idl/pyth-lazer-solana-contract.js",
+        "types": "./dist/cjs/idl/pyth-lazer-solana-contract.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./package.json": "./package.json"
   },

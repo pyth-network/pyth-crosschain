@@ -65,27 +65,47 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "exports": {
     "./IotaPriceServiceConnection": {
-      "import": "./dist/esm/IotaPriceServiceConnection.mjs",
-      "types": "./dist/esm/IotaPriceServiceConnection.d.ts",
-      "require": "./dist/cjs/IotaPriceServiceConnection.js"
+      "import": {
+        "default": "./dist/esm/IotaPriceServiceConnection.js",
+        "types": "./dist/esm/IotaPriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/IotaPriceServiceConnection.js",
+        "types": "./dist/cjs/IotaPriceServiceConnection.d.ts"
+      }
     },
     "./client": {
-      "import": "./dist/esm/client.mjs",
-      "types": "./dist/esm/client.d.ts",
-      "require": "./dist/cjs/client.js"
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      }
     },
     "./examples/IotaRelay": {
-      "import": "./dist/esm/examples/IotaRelay.mjs",
-      "types": "./dist/esm/examples/IotaRelay.d.ts",
-      "require": "./dist/cjs/examples/IotaRelay.js"
+      "import": {
+        "default": "./dist/esm/examples/IotaRelay.js",
+        "types": "./dist/esm/examples/IotaRelay.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/examples/IotaRelay.js",
+        "types": "./dist/cjs/examples/IotaRelay.d.ts"
+      }
     },
     ".": {
-      "import": "./dist/esm/index.mjs",
-      "types": "./dist/esm/index.d.ts",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      }
     },
     "./package.json": "./package.json"
   }

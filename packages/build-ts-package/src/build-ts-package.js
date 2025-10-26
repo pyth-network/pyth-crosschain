@@ -10,11 +10,7 @@ import { execAsync } from "./exec-async.js";
 import { generateTsconfigs } from "./generate-tsconfigs.js";
 import { Logger } from "./logger.js";
 import chalk from "chalk";
-import {
-  AVAILABLE_COMPILERS,
-  AVAILABLE_PLATFORMS,
-  compileTs,
-} from "./compile-ts.js";
+import { compileTs } from "./compile-ts.js";
 import { injectExtraExports } from "./inject-extra-exports.js";
 
 /**
@@ -25,14 +21,12 @@ export async function buildTsPackage(argv = process.argv) {
   const yargs = createCLI(hideBin(argv));
   const {
     clean,
-    compiler,
     cwd: absOrRelativeCwd,
     generateTsconfig,
     noCjs,
     noDts,
     noEsm,
     outDir,
-    platform,
     tsconfig: tsconfigOverride,
     watch,
   } = await yargs
@@ -42,12 +36,6 @@ export async function buildTsPackage(argv = process.argv) {
       description:
         "if set, will clean out the build dirs before compiling anything",
       type: "boolean",
-    })
-    .option("compiler", {
-      choices: AVAILABLE_COMPILERS,
-      default: "swc",
-      description: "which compiler to use.",
-      type: "string",
     })
     .option("cwd", {
       default: process.cwd(),
@@ -79,13 +67,6 @@ export async function buildTsPackage(argv = process.argv) {
     .option("outDir", {
       default: "dist",
       description: "the folder where the built files will be written",
-      type: "string",
-    })
-    .option("platform", {
-      choices: AVAILABLE_PLATFORMS,
-      demandOption: true,
-      description:
-        'the target environment where this JS code will be run. if you are unsure or are writing an isomorphic library, use "neutral."',
       type: "string",
     })
     .option("tsconfig", {
@@ -156,18 +137,12 @@ export async function buildTsPackage(argv = process.argv) {
         ? finalConfig.files
         : [];
 
-      const compilerToUse = /** @type {import("./compile-ts.js").Compiler} */ (
-        compiler
-      );
-
       const absoluteBuiltFiles = await compileTs({
-        compiler: compilerToUse,
         cwd,
         entryPoints: tscFoundFiles,
         format,
         noDts,
         outDir,
-        platform,
         tsconfig,
         watch,
       });
