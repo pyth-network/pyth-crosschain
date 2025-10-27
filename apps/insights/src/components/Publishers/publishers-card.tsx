@@ -45,10 +45,10 @@ type Props = {
 
 type Publisher = {
   id: string;
-  ranking: number;
+  ranking?: number | undefined;
   permissionedFeeds: number;
-  activeFeeds: number;
-  averageScore: number;
+  activeFeeds?: number | undefined;
+  averageScore?: number | undefined;
 } & (
   | { name: string; icon: ReactNode }
   | { name?: undefined; icon?: undefined }
@@ -100,27 +100,38 @@ const ResolvedPublishersCard = ({
       filter.contains(publisher.id, search) ||
       (publisher.name !== undefined && filter.contains(publisher.name, search)),
     (a, b, { column, direction }) => {
+      const desc = direction === "descending" ? -1 : 1;
+
+      const sortByName =
+        desc * collator.compare(a.name ?? a.id, b.name ?? b.id);
+
+      const sortByRankingField = (
+        column: "ranking" | "activeFeeds" | "averageScore",
+      ) => {
+        if (a[column] === undefined) {
+          return b[column] === undefined ? sortByName : 1;
+        } else {
+          return b[column] === undefined ? -1 : desc * (a[column] - b[column]);
+        }
+      };
+
       switch (column) {
+        case "permissionedFeeds": {
+          return desc * (a[column] - b[column]);
+        }
+
         case "ranking":
-        case "permissionedFeeds":
         case "activeFeeds":
         case "averageScore": {
-          return (
-            (direction === "descending" ? -1 : 1) * (a[column] - b[column])
-          );
+          return sortByRankingField(column);
         }
 
         case "name": {
-          return (
-            (direction === "descending" ? -1 : 1) *
-            collator.compare(a.name ?? a.id, b.name ?? b.id)
-          );
+          return sortByName;
         }
 
         default: {
-          return (
-            (direction === "descending" ? -1 : 1) * (a.ranking - b.ranking)
-          );
+          return sortByRankingField("ranking");
         }
       }
     },
@@ -144,7 +155,7 @@ const ResolvedPublishersCard = ({
           textValue: publisher.name ?? id,
           prefetch: false,
           data: {
-            ranking: <Ranking>{ranking}</Ranking>,
+            ranking: ranking !== undefined && <Ranking>{ranking}</Ranking>,
             name: (
               <PublisherTag
                 publisherKey={id}
@@ -164,7 +175,7 @@ const ResolvedPublishersCard = ({
                 {activeFeeds}
               </Link>
             ),
-            averageScore: (
+            averageScore: averageScore !== undefined && (
               <Score score={averageScore} width={PUBLISHER_SCORE_WIDTH} />
             ),
           },

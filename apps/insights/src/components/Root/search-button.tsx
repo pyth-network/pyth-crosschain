@@ -54,7 +54,7 @@ type ResolvedSearchButtonProps = {
   }[];
   publishers: ({
     publisherKey: string;
-    averageScore: number;
+    averageScore?: number | undefined;
     cluster: Cluster;
   } & (
     | { name: string; icon: ReactNode }
@@ -291,7 +291,9 @@ const SearchDialogContents = ({
                         <>
                           <dt>Average Score</dt>
                           <dd>
-                            <Score score={result.averageScore} />
+                            {result.averageScore !== undefined && (
+                              <Score score={result.averageScore} />
+                            )}
                           </dd>
                         </>
                       )}
@@ -335,7 +337,9 @@ const SearchDialogContents = ({
                           icon: result.icon,
                         })}
                       />
-                      <Score score={result.averageScore} />
+                      {result.averageScore !== undefined && (
+                        <Score score={result.averageScore} />
+                      )}
                     </>
                   )}
                 </div>
