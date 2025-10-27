@@ -19,7 +19,7 @@ export async function generateTsconfigs(cwd) {
   ]);
 
   await Promise.all([
-    fs.writeFile(path.join(cwd, "tsconfig.json"), base),
-    fs.writeFile(path.join(cwd, "tsconfig.build.json"), build),
+    fs.writeFile(path.join(cwd, "tsconfigs", "tsconfig.json"), base),
+    fs.writeFile(path.join(cwd, "tsconfigs", "tsconfig.build.json"), build),
   ]);
 }

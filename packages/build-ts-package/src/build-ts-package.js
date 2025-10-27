@@ -10,7 +10,7 @@ import { execAsync } from "./exec-async.js";
 import { generateTsconfigs } from "./generate-tsconfigs.js";
 import { Logger } from "./logger.js";
 import chalk from "chalk";
-import { compileTs } from "./compile-ts.js";
+import { ALLOWED_JSX_RUNTIMES, compileCode } from "./compile-code.js";
 import { injectExtraExports } from "./inject-extra-exports.js";
 
 /**
@@ -23,9 +23,11 @@ export async function buildTsPackage(argv = process.argv) {
     clean,
     cwd: absOrRelativeCwd,
     generateTsconfig,
+    jsx,
     noCjs,
     noDts,
     noEsm,
+    noStripLeading,
     outDir,
     tsconfig: tsconfigOverride,
     watch,
@@ -48,6 +50,12 @@ export async function buildTsPackage(argv = process.argv) {
         "if set, will NOT build, but instead, will generate reasonable default TSConfig files that will work with dual publishing, and in most other use cases, as well",
       type: "boolean",
     })
+    .option("jsx", {
+      choices: ALLOWED_JSX_RUNTIMES,
+      default: "automatic",
+      description: "the type of JSX runtime to use when compiling your code",
+      type: "string",
+    })
     .option("noCjs", {
       default: false,
       description:
@@ -62,6 +70,12 @@ export async function buildTsPackage(argv = process.argv) {
     .option("noEsm", {
       default: false,
       description: "if true, will not build the ESM variant of this package",
+      type: "boolean",
+    })
+    .option("noStripLeading", {
+      default: false,
+      description:
+        'if set, will not strip the leading, last common portion of your input file paths when writing output file paths. if your code is located in a "src/" folder, you want to leave this unset.',
       type: "boolean",
     })
     .option("outDir", {
@@ -137,11 +151,14 @@ export async function buildTsPackage(argv = process.argv) {
         ? finalConfig.files
         : [];
 
-      const absoluteBuiltFiles = await compileTs({
+      const absoluteBuiltFiles = await compileCode({
         cwd,
         entryPoints: tscFoundFiles,
         format,
+        jsxRuntime:
+          /** @type {import("./compile-code.js").ReactRuntimeType} */ (jsx),
         noDts,
+        noStripLeading,
         outDir,
         tsconfig,
         watch,

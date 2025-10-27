@@ -10,81 +10,94 @@ import glob from "fast-glob";
  */
 
 /**
+ * @typedef {import('@swc/core').ReactConfig['runtime']} ReactRuntimeType
+ */
+
+/**
+ * @type {ReactRuntimeType[]}
+ */
+export const ALLOWED_JSX_RUNTIMES = ["automatic", "classic", "preserve"];
+
+/**
  * @typedef {Object} CompileTsOpts
  * @property {string} cwd
  * @property {string[]} entryPoints
  * @property {ModuleType} format
+ * @property {boolean} noStripLeading
  * @property {boolean} noDts
  * @property {string} outDir
+ * @property {ReactRuntimeType} jsxRuntime
  * @property {string} tsconfig
  * @property {boolean} watch
  */
+
+/**
+ * Generates typescript typings, if requested
+ * @param {CompileTsOpts} opts
+ * @returns {Promise<undefined>}
+ */
+async function generateTypings({ cwd, noDts, outDir, tsconfig }) {
+  if (noDts) return;
+
+  const cmd = `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration --emitDeclarationOnly`;
+
+  await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
+}
 
 /**
  * compiles typescript, using any build utility of your choosing
  *
  * @param {CompileTsOpts} opts
  */
-export async function compileTs({
-  cwd,
-  entryPoints,
-  format,
-  noDts,
-  outDir,
-  tsconfig,
-  watch,
-}) {
-  const outExtension = ".js";
+export async function compileCode(opts) {
+  const { cwd, entryPoints, format, jsxRuntime, noStripLeading, outDir } = opts;
 
-  const filesToCompile = entryPoints
-    .filter((ep) => /\.(j|t)sx?$/.test(ep))
-    .filter((ep) => !ep.endsWith(".d.ts"));
+  const outExtension = "js";
+  const outExtensionWithDot = `.${outExtension}`;
 
-  await Promise.all(
-    filesToCompile.map(async (fp) => {
-      const absFp = path.isAbsolute(fp) ? fp : path.join(cwd, fp);
-      const relThing = path.relative(cwd, absFp);
+  const filesToCompile = entryPoints.filter((ep) =>
+    /^(?!.*\.d\.ts$).*\.(?:[jt]sx?|cjs|mts)$/.test(ep),
+  );
 
-      const outFilePath = path.join(
-        outDir,
-        ...relThing
-          .replace(path.extname(fp), ".js")
-          .split(path.sep)
-          .slice(1)
-          .filter(Boolean),
-      );
+  const typescriptCompilationPromise = await generateTypings(opts);
+  const swcCompilationPromises = filesToCompile.map(async (fp) => {
+    const absFp = path.isAbsolute(fp) ? fp : path.join(cwd, fp);
+    const trueRelPath = path.relative(cwd, absFp);
 
-      const { code } = await transformFile(fp, {
-        cwd,
-        jsc: {
-          target: "esnext",
-          transform: {
-            react: {
-              // React 17+ support.
-              // if you're on a legacy version, sorry
-              runtime: "automatic",
-            },
+    const outFilePath = path.join(
+      outDir,
+      ...trueRelPath
+        .replace(path.extname(fp), outExtensionWithDot)
+        .split(path.sep)
+        .slice(noStripLeading ? 0 : 1)
+        .filter(Boolean),
+    );
+
+    const { code } = await transformFile(fp, {
+      cwd,
+      jsc: {
+        target: "esnext",
+        transform: {
+          react: {
+            runtime: jsxRuntime ?? "automatic",
           },
         },
-        module: {
-          outFileExtension: "js",
-          resolveFully: true,
-          strict: true,
-          type: format === "esm" ? "es6" : "commonjs",
-        },
-        outputPath: outDir,
-        sourceMaps: false,
-      });
+      },
+      module: {
+        outFileExtension: outExtension,
+        resolveFully: true,
+        strict: true,
+        type: format === "esm" ? "es6" : "commonjs",
+      },
+      outputPath: outDir,
+      sourceMaps: false,
+    });
 
-      await fs.ensureFile(outFilePath);
-      await fs.writeFile(outFilePath, code, "utf8");
-    }),
-  );
-  let cmd =
-    `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration ${!noDts} --emitDeclarationOnly ${!noDts} --module ${format === "cjs" ? "nodenext" : "esnext"} --target esnext --resolveJsonModule false ${format === "cjs" ? "--moduleResolution nodenext" : ""}`.trim();
-  if (watch) cmd += ` --watch`;
+    await fs.ensureFile(outFilePath);
+    await fs.writeFile(outFilePath, code, "utf8");
+  });
 
-  await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
+  await Promise.all([typescriptCompilationPromise, ...swcCompilationPromises]);
 
   const absoluteBuiltFiles = await glob(
     [
@@ -118,8 +131,8 @@ export async function compileTs({
         // - If it doesn't, append the desired extension.
         const ext = path.extname(resolvedRelative);
         let newPath = ext
-          ? resolvedRelative.replace(ext, outExtension)
-          : `${resolvedRelative}${outExtension}`;
+          ? resolvedRelative.replace(ext, outExtensionWithDot)
+          : `${resolvedRelative}${outExtensionWithDot}`;
 
         if (!newPath.startsWith(".") && !newPath.startsWith("/")) {
           newPath = `./${newPath}`;
