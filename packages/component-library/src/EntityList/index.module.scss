@@ -52,9 +52,10 @@
 
     .itemHeader,
     .itemDetailsItem {
+      align-items: center;
       display: flex;
       flex-flow: row nowrap;
-      align-items: center;
+      gap: theme.spacing(2); // give items a little breathing room if text is long
       justify-content: space-between;
     }
 
