@@ -16,7 +16,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --platform node",
+    "build": "build-ts-package",
     "clean": "rm -rf ./dist",
     "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
     "test:unit": "jest",

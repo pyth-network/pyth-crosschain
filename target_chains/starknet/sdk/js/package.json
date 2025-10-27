@@ -19,7 +19,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --platform node",
+    "build": "build-ts-package",
     "usage-example": "tsx src/examples/usage.ts",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",

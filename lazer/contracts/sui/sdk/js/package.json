@@ -32,7 +32,7 @@
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
     "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",
-    "build": "build-ts-package --platform node"
+    "build": "build-ts-package"
   },
   "dependencies": {
     "@mysten/sui": "catalog:",

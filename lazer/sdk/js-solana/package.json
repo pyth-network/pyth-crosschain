@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
-    "build": "build-ts-package --platform node",
+    "build": "build-ts-package",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",

@@ -19,7 +19,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --platform node",
+    "build": "build-ts-package",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",

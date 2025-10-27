@@ -19,7 +19,7 @@
   },
   "scripts": {
     "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
-    "build": "build-ts-package --clean --platform node",
+    "build": "build-ts-package --clean",
     "clean": "rm -rf ./dist && rm -rf ./lib",
     "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "tsx src/examples/HermesClient.ts",

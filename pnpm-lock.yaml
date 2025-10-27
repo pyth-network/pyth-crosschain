@@ -373,6 +373,9 @@ importers:
 
   .:
     devDependencies:
+      '@better-builds/ts-duality':
+        specifier: /Users/benjaminduran/dddddddd/opensource/ts-duality
+        version: link:../../../opensource/ts-duality
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)

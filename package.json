@@ -13,6 +13,7 @@
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   },
   "devDependencies": {
+    "@better-builds/ts-duality": "/Users/benjaminduran/dddddddd/opensource/ts-duality",
     "@cprussin/prettier-config": "catalog:",
     "build-ts-package": "workspace:",
     "prettier": "catalog:",

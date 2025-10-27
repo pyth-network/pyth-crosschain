@@ -21,7 +21,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean --platform node",
+    "build": "build-ts-package --clean",
     "example-relay": "node dist/cjs/examples/SuiRelay.js",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",

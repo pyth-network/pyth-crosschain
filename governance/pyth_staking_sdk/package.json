@@ -246,7 +246,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean --platform node --compiler swc",
+    "build": "build-ts-package --clean",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",

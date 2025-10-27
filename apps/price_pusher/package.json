@@ -21,12 +21,12 @@
     "access": "public"
   },
   "scripts": {
-    "build": "build-ts-package --clean --noEsm --platform node",
+    "build": "build-ts-package --clean --noEsm",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
-    "start": "node dist/esm/index.js",
+    "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
@@ -97,7 +97,7 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.mjs",
+  "module": "./dist/esm/index.js",
   "exports": {
     "./aptos/aptos": {
       "default": "./dist/aptos/aptos.js",
