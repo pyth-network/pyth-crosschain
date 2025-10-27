@@ -291,12 +291,9 @@ const SearchDialogContents = ({
                         <>
                           <dt>Average Score</dt>
                           <dd>
-                            {
-                              // eslint-disable-next-line unicorn/no-null
-                              result.averageScore === undefined ? null : (
-                                <Score score={result.averageScore} />
-                              )
-                            }
+                            {result.averageScore !== undefined && (
+                              <Score score={result.averageScore} />
+                            )}
                           </dd>
                         </>
                       )}
@@ -340,12 +337,9 @@ const SearchDialogContents = ({
                           icon: result.icon,
                         })}
                       />
-                      {
-                        // eslint-disable-next-line unicorn/no-null
-                        result.averageScore === undefined ? null : (
-                          <Score score={result.averageScore} />
-                        )
-                      }
+                      {result.averageScore !== undefined && (
+                        <Score score={result.averageScore} />
+                      )}
                     </>
                   )}
                 </div>

@@ -155,9 +155,7 @@ const ResolvedPublishersCard = ({
           textValue: publisher.name ?? id,
           prefetch: false,
           data: {
-            ranking:
-              // eslint-disable-next-line unicorn/no-null
-              ranking === undefined ? null : <Ranking>{ranking}</Ranking>,
+            ranking: ranking !== undefined && <Ranking>{ranking}</Ranking>,
             name: (
               <PublisherTag
                 publisherKey={id}
@@ -177,11 +175,9 @@ const ResolvedPublishersCard = ({
                 {activeFeeds}
               </Link>
             ),
-            averageScore:
-              // eslint-disable-next-line unicorn/no-null
-              averageScore === undefined ? null : (
-                <Score score={averageScore} width={PUBLISHER_SCORE_WIDTH} />
-              ),
+            averageScore: averageScore !== undefined && (
+              <Score score={averageScore} width={PUBLISHER_SCORE_WIDTH} />
+            ),
           },
         }),
       ),

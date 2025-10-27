@@ -63,7 +63,7 @@ export const Performance = async ({ params }: Props) => {
       prefetch: false,
       nameAsString: knownPublisher?.name ?? publisher.key,
       data: {
-        ranking: (
+        ranking: (publisher.rank !== undefined || publisher.key === key) && (
           <Ranking isCurrent={publisher.key === key} className={styles.ranking}>
             {publisher.rank}
           </Ranking>
@@ -86,14 +86,9 @@ export const Performance = async ({ params }: Props) => {
             {publisher.inactiveFeeds}
           </Link>
         ),
-        averageScore:
-          // eslint-disable-next-line unicorn/no-null
-          publisher.averageScore === undefined ? null : (
-            <Score
-              width={PUBLISHER_SCORE_WIDTH}
-              score={publisher.averageScore}
-            />
-          ),
+        averageScore: publisher.averageScore !== undefined && (
+          <Score width={PUBLISHER_SCORE_WIDTH} score={publisher.averageScore} />
+        ),
         name: (
           <PublisherTag
             cluster={parsedCluster}
