@@ -147,30 +147,30 @@ library PythLazerLib {
                 // Parse value and set flag based on property type
                 // Price Property
                 if (property == PythLazerStructs.PriceFeedProperty.Price) {
-                    (feed.price, pos) = parseFeedValueInt64(payload, pos);
-                    if (feed.price != 0)
+                    (feed._price, pos) = parseFeedValueInt64(payload, pos);
+                    if (feed._price != 0)
                         feed.existsFlags |= PythLazerStructs.PRICE_EXISTS;
 
                     // Best Bid Price Property
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.BestBidPrice
                 ) {
-                    (feed.bestBidPrice, pos) = parseFeedValueInt64(
+                    (feed._bestBidPrice, pos) = parseFeedValueInt64(
                         payload,
                         pos
                     );
-                    if (feed.bestBidPrice != 0)
+                    if (feed._bestBidPrice != 0)
                         feed.existsFlags |= PythLazerStructs.BEST_BID_EXISTS;
 
                     // Best Ask Price Property
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.BestAskPrice
                 ) {
-                    (feed.bestAskPrice, pos) = parseFeedValueInt64(
+                    (feed._bestAskPrice, pos) = parseFeedValueInt64(
                         payload,
                         pos
                     );
-                    if (feed.bestAskPrice != 0)
+                    if (feed._bestAskPrice != 0)
                         feed.existsFlags |= PythLazerStructs.BEST_ASK_EXISTS;
 
                     // Publisher Count Property
@@ -178,7 +178,7 @@ library PythLazerLib {
                     property ==
                     PythLazerStructs.PriceFeedProperty.PublisherCount
                 ) {
-                    (feed.publisherCount, pos) = parseFeedValueUint16(
+                    (feed._publisherCount, pos) = parseFeedValueUint16(
                         payload,
                         pos
                     );
@@ -188,15 +188,15 @@ library PythLazerLib {
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.Exponent
                 ) {
-                    (feed.exponent, pos) = parseFeedValueInt16(payload, pos);
+                    (feed._exponent, pos) = parseFeedValueInt16(payload, pos);
                     feed.existsFlags |= PythLazerStructs.EXPONENT_EXISTS;
 
                     // Confidence Property
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.Confidence
                 ) {
-                    (feed.confidence, pos) = parseFeedValueInt64(payload, pos);
-                    if (feed.confidence != 0)
+                    (feed._confidence, pos) = parseFeedValueUint64(payload, pos);
+                    if (feed._confidence != 0)
                         feed.existsFlags |= PythLazerStructs.CONFIDENCE_EXISTS;
 
                     // Funding Rate Property
@@ -206,7 +206,7 @@ library PythLazerLib {
                     uint8 exists;
                     (exists, pos) = parseFeedValueUint8(payload, pos);
                     if (exists != 0) {
-                        (feed.fundingRate, pos) = parseFeedValueInt64(
+                        (feed._fundingRate, pos) = parseFeedValueInt64(
                             payload,
                             pos
                         );
@@ -222,7 +222,7 @@ library PythLazerLib {
                     uint8 exists;
                     (exists, pos) = parseFeedValueUint8(payload, pos);
                     if (exists != 0) {
-                        (feed.fundingTimestamp, pos) = parseFeedValueUint64(
+                        (feed._fundingTimestamp, pos) = parseFeedValueUint64(
                             payload,
                             pos
                         );
@@ -238,7 +238,7 @@ library PythLazerLib {
                     uint8 exists;
                     (exists, pos) = parseFeedValueUint8(payload, pos);
                     if (exists != 0) {
-                        (feed.fundingRateInterval, pos) = parseFeedValueUint64(
+                        (feed._fundingRateInterval, pos) = parseFeedValueUint64(
                             payload,
                             pos
                         );
@@ -335,7 +335,7 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
         require(hasPrice(feed), "Price does not exist");
-        return feed.price;
+        return feed._price;
     }
 
     /// @notice Get best bid price (reverts if not exists)
@@ -343,7 +343,7 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
         require(hasBestBidPrice(feed), "Best bid price does not exist");
-        return feed.bestBidPrice;
+        return feed._bestBidPrice;
     }
 
     /// @notice Get best ask price (reverts if not exists)
@@ -351,7 +351,7 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
         require(hasBestAskPrice(feed), "Best ask price does not exist");
-        return feed.bestAskPrice;
+        return feed._bestAskPrice;
     }
 
     /// @notice Get publisher count (reverts if not exists)
@@ -359,7 +359,7 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (uint16) {
         require(hasPublisherCount(feed), "Publisher count does not exist");
-        return feed.publisherCount;
+        return feed._publisherCount;
     }
 
     /// @notice Get exponent (reverts if not exists)
@@ -367,15 +367,15 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (int16) {
         require(hasExponent(feed), "Exponent does not exist");
-        return feed.exponent;
+        return feed._exponent;
     }
 
     /// @notice Get confidence (reverts if not exists)
     function getConfidence(
         PythLazerStructs.Feed memory feed
-    ) public pure returns (int64) {
+    ) public pure returns (uint64) {
         require(hasConfidence(feed), "Confidence does not exist");
-        return feed.confidence;
+        return feed._confidence;
     }
 
     /// @notice Get funding rate (reverts if not exists)
@@ -383,7 +383,7 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
         require(hasFundingRate(feed), "Funding rate does not exist");
-        return feed.fundingRate;
+        return feed._fundingRate;
     }
 
     /// @notice Get funding timestamp (reverts if not exists)
@@ -391,7 +391,7 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (uint64) {
         require(hasFundingTimestamp(feed), "Funding timestamp does not exist");
-        return feed.fundingTimestamp;
+        return feed._fundingTimestamp;
     }
 
     /// @notice Get funding rate interval (reverts if not exists)
@@ -402,6 +402,6 @@ library PythLazerLib {
             hasFundingRateInterval(feed),
             "Funding rate interval does not exist"
         );
-        return feed.fundingRateInterval;
+        return feed._fundingRateInterval;
     }
 }

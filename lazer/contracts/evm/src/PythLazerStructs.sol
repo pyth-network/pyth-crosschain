@@ -25,17 +25,17 @@ library PythLazerStructs {
         // Slot 1: 4 + 4 + 8 + 8 + 8 = 32 bytes (fully packed)
         uint32 feedId;
         uint32 existsFlags; // Bitmap: bit 0-31 for up to 32 properties
-        int64 price;
-        int64 bestBidPrice;
-        int64 bestAskPrice;
+        int64 _price;
+        int64 _bestBidPrice;
+        int64 _bestAskPrice;
         // Slot 2: 8 + 8 + 8 + 8 = 32 bytes (fully packed)
-        int64 confidence;
-        int64 fundingRate;
-        uint64 fundingTimestamp;
-        uint64 fundingRateInterval;
+        uint64 _confidence;
+        int64 _fundingRate;
+        uint64 _fundingTimestamp;
+        uint64 _fundingRateInterval;
         // Slot 3: 2 + 2 = 4 bytes (28 bytes wasted, but unavoidable)
-        uint16 publisherCount;
-        int16 exponent;
+        uint16 _publisherCount;
+        int16 _exponent;
     }
 
     struct Update {
