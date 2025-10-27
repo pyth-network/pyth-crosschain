@@ -207,15 +207,15 @@ contract PythLazerTest is Test {
         // Verify feed data
         PythLazerStructs.Feed memory feed = update.feeds[0];
         assertEq(feed.feedId, 1);
-        assertEq(feed.price, 100000000);
-        assertEq(feed.bestBidPrice, 99000000);
-        assertEq(feed.bestAskPrice, 101000000);
-        assertEq(feed.publisherCount, 5);
-        assertEq(feed.exponent, -8);
-        assertEq(feed.confidence, 50000);
-        assertEq(feed.fundingRate, 123456);
-        assertEq(feed.fundingTimestamp, 1234567890);
-        assertEq(feed.fundingRateInterval, 3600);
+        assertEq(feed._price, 100000000);
+        assertEq(feed._bestBidPrice, 99000000);
+        assertEq(feed._bestAskPrice, 101000000);
+        assertEq(feed._publisherCount, 5);
+        assertEq(feed._exponent, -8);
+        assertEq(feed._confidence, 50000);
+        assertEq(feed._fundingRate, 123456);
+        assertEq(feed._fundingTimestamp, 1234567890);
+        assertEq(feed._fundingRateInterval, 3600);
 
         // Verify exists flags (all should be set)
         assertTrue(PythLazerLib.hasPrice(feed));
@@ -251,8 +251,8 @@ contract PythLazerTest is Test {
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertEq(feed.feedId, 10);
-        assertEq(feed.price, 50000000);
-        assertEq(feed.exponent, -6);
+        assertEq(feed._price, 50000000);
+        assertEq(feed._exponent, -6);
 
         // Only price and exponent should exist
         assertTrue(PythLazerLib.hasPrice(feed));
@@ -300,18 +300,18 @@ contract PythLazerTest is Test {
 
         // Verify Feed 1
         assertEq(update.feeds[0].feedId, 1);
-        assertEq(update.feeds[0].price, 50000000000);
+        assertEq(update.feeds[0]._price, 50000000000);
         assertTrue(PythLazerLib.hasConfidence(update.feeds[0]));
 
         // Verify Feed 2
         assertEq(update.feeds[1].feedId, 2);
-        assertEq(update.feeds[1].price, 3000000000);
+        assertEq(update.feeds[1]._price, 3000000000);
         assertFalse(PythLazerLib.hasConfidence(update.feeds[1]));
 
         // Verify Feed 3
         assertEq(update.feeds[2].feedId, 3);
-        assertEq(update.feeds[2].price, 100000000);
-        assertEq(update.feeds[2].publisherCount, 7);
+        assertEq(update.feeds[2]._price, 100000000);
+        assertEq(update.feeds[2]._publisherCount, 7);
     }
 
     /// @notice Test when optional properties are zero (should not exist)
@@ -335,7 +335,7 @@ contract PythLazerTest is Test {
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
-        assertEq(feed.price, 0);
+        assertEq(feed._price, 0);
         assertFalse(PythLazerLib.hasPrice(feed)); // Should not exist
         assertTrue(PythLazerLib.hasExponent(feed));
         assertTrue(PythLazerLib.hasPublisherCount(feed));
@@ -364,16 +364,15 @@ contract PythLazerTest is Test {
 
         assertTrue(PythLazerLib.hasPrice(feed));
         assertFalse(PythLazerLib.hasConfidence(feed)); // Should not exist
-        assertEq(feed.confidence, 0);
+        assertEq(feed._confidence, 0);
     }
 
     /// @notice Test negative values for signed fields
     function test_parseUpdate_negativeValues() public pure {
-        bytes[] memory properties = new bytes[](4);
+        bytes[] memory properties = new bytes[](3);
         properties[0] = buildProperty(0, encodeInt64(-50000000)); // negative price
         properties[1] = buildProperty(4, encodeInt16(-12)); // negative exponent
-        properties[2] = buildProperty(5, encodeInt64(-1000)); // negative confidence
-        properties[3] = buildProperty(6, encodeInt64(-999)); // negative funding rate
+        properties[2] = buildProperty(6, encodeInt64(-999)); // negative funding rate
 
         bytes[] memory feeds = new bytes[](1);
         feeds[0] = buildFeedDataMulti(20, properties);
@@ -389,14 +388,12 @@ contract PythLazerTest is Test {
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
-        assertEq(feed.price, -50000000);
-        assertEq(feed.exponent, -12);
-        assertEq(feed.confidence, -1000);
-        assertEq(feed.fundingRate, -999);
+        assertEq(feed._price, -50000000);
+        assertEq(feed._exponent, -12);
+        assertEq(feed._fundingRate, -999);
 
         // Negative values should still count as "exists"
         assertTrue(PythLazerLib.hasPrice(feed));
-        assertTrue(PythLazerLib.hasConfidence(feed));
         assertTrue(PythLazerLib.hasFundingRate(feed));
     }
 
