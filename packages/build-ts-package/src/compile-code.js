@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import path from "node:path";
 import { createResolver } from "./resolve-import-path.js";
 import glob from "fast-glob";
+import { Logger } from "./logger.js";
 
 /**
  * @typedef {'cjs' | 'esm'} ModuleType
@@ -26,6 +27,7 @@ export const ALLOWED_JSX_RUNTIMES = ["automatic", "classic", "preserve"];
  * @property {boolean} noStripLeading
  * @property {boolean} noDts
  * @property {string} outDir
+ * @property {Record<string, any>} parsedTsConfig
  * @property {ReactRuntimeType} jsxRuntime
  * @property {string} tsconfig
  * @property {boolean} watch
@@ -36,10 +38,44 @@ export const ALLOWED_JSX_RUNTIMES = ["automatic", "classic", "preserve"];
  * @param {CompileTsOpts} opts
  * @returns {Promise<undefined>}
  */
-async function generateTypings({ cwd, noDts, outDir, tsconfig }) {
-  if (noDts) return;
+async function generateTypings({
+  cwd,
+  noDts,
+  outDir,
+  parsedTsConfig,
+  tsconfig,
+}) {
+  if (noDts) {
+    Logger.warn("noDts was set so skipping generating TypeScript typings");
+    return;
+  }
 
-  const cmd = `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration --emitDeclarationOnly`;
+  // if the tsconfig has incremental: true enabled, we have to disable it
+  // or TSC might not generate typings for us at all.
+  // we do this by overriding it if it is set.
+  if (parsedTsConfig.compilerOptions?.incremental) {
+    Logger.warn(
+      `your tsconfig at ${tsconfig} was found to have incremental: true set. we are setting this to false to allow typings to be written to disk properly`,
+    );
+    const tsconfigContents = JSON.parse(await fs.readFile(tsconfig, "utf8"));
+    await fs.writeFile(
+      tsconfig,
+      JSON.stringify(
+        {
+          ...tsconfigContents,
+          compilerOptions: {
+            ...tsconfigContents.compilerOptions,
+            incremental: false,
+          },
+        },
+        undefined,
+        2,
+      ),
+      "utf8",
+    );
+  }
+
+  const cmd = `pnpm tsc --project ${tsconfig} --outDir ${outDir} --declaration true --emitDeclarationOnly true --noEmit false`;
 
   await execAsync(cmd, { cwd, stdio: "inherit", verbose: true });
 }

@@ -135,15 +135,15 @@ export async function buildTsPackage(argv = process.argv) {
   Logger.info("building package", chalk.magenta(pjson.name));
   for (const format of formats) {
     try {
-      Logger.info("building", chalk.magenta(format), "variant in", cwd);
-      Logger.info("  tsconfig", chalk.magenta(tsconfig));
+      Logger.info("  building", chalk.magenta(format), "variant in", cwd);
+      Logger.info("    tsconfig", chalk.magenta(tsconfig));
 
       const outDir =
         numFormats <= 1 ? outDirPath : path.join(outDirPath, format);
 
       const getConfigCmd = `pnpm tsc --project ${tsconfig} --showConfig`;
       const finalConfig = JSON.parse(
-        await execAsync(getConfigCmd, { cwd, stdio: "pipe", verbose: true }),
+        await execAsync(getConfigCmd, { cwd, stdio: "pipe" }),
       );
 
       /** @type {string[]} */
@@ -160,6 +160,7 @@ export async function buildTsPackage(argv = process.argv) {
         noDts,
         noStripLeading,
         outDir,
+        parsedTsConfig: finalConfig,
         tsconfig,
         watch,
       });
@@ -239,13 +240,11 @@ export async function buildTsPackage(argv = process.argv) {
 
       pjson.exports = exports;
 
-      if (format === "esm") {
-        await fs.writeFile(
-          path.join(outDir, "package.json"),
-          '{ "type": "module" }',
-          "utf8",
-        );
-      }
+      await fs.writeFile(
+        path.join(outDir, "package.json"),
+        `{ "type": "${format === "esm" ? "module" : "commonjs"}" }`,
+        "utf8",
+      );
 
       Logger.info(chalk.green(`${pjson.name} - ${format} has been built!`));
     } catch (error) {

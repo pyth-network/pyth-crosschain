@@ -13,7 +13,6 @@
     "incremental": true,
     "inlineSources": false,
     "lib": ["dom", "dom.iterable", "ESNext", "webworker"],
-    "module": "esnext",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -25,10 +24,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "esnext",
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
-    "moduleResolution": "bundler",
     "plugins": [{ "name": "next" }],
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
@@ -44,7 +41,10 @@
     "strictPropertyInitialization": true,
     "strictBuiltinIteratorReturn": true,
     "alwaysStrict": true,
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "target": "esnext"
   },
   "exclude": ["dist", "node_modules"],
   "include": ["./**/*.ts", "./**/*.tsx"]
