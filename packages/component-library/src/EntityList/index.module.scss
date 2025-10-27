@@ -55,7 +55,9 @@
       align-items: center;
       display: flex;
       flex-flow: row nowrap;
-      gap: theme.spacing(2); // give items a little breathing room if text is long
+      gap: theme.spacing(
+        2
+      ); // give items a little breathing room if text is long
       justify-content: space-between;
     }
 

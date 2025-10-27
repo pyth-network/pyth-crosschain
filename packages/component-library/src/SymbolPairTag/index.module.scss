@@ -50,15 +50,16 @@
 
     .description {
       color: theme.color("muted");
+
       // this helps prevent long feed descriptions from looking gross
       // and overflowing off the page, pushing the curren values off the page,
       // too
       overflow: initial;
       text-overflow: initial;
       white-space: normal;
-      
+
       @include theme.text("xs", "medium");
-      
+
       // reset the above on large devices, to match when the price feeds grid switches over
       @include theme.breakpoint("2xl") {
         overflow: hidden;
