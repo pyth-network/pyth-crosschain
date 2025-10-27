@@ -6,7 +6,8 @@ library PythLazerStructs {
         Invalid,
         RealTime,
         FixedRate50,
-        FixedRate200
+        FixedRate200,
+        FixedRate1000
     }
 
     enum PriceFeedProperty {
