@@ -18,7 +18,8 @@
     "build": "ts-duality",
     "start": "node lib/index.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.10.15",

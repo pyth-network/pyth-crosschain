@@ -34,7 +34,8 @@
     "example:streaming": "node --loader ts-node/esm examples/streaming.js",
     "example:history": "node --loader ts-node/esm examples/history.js",
     "example:symbols": "node --loader ts-node/esm examples/symbols.js",
-    "doc": "typedoc --out docs/typedoc src"
+    "doc": "typedoc --out docs/typedoc src",
+    "clean": "rm -rf ./dist"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

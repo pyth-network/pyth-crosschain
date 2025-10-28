@@ -9,7 +9,8 @@
     "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts",
     "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts",
     "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write .",
+    "clean": "rm -rf ./dist"
   },
   "author": "",
   "license": "Apache-2.0",

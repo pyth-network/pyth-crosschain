@@ -30,7 +30,8 @@
     "test:format": "prettier --check \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",

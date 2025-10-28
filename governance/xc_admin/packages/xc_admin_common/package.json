@@ -18,7 +18,8 @@
     "build": "ts-duality --noEsm",
     "test:unit": "jest",
     "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "//": [
     "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",

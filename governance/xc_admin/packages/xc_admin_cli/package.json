@@ -18,7 +18,8 @@
     "build": "ts-duality --noEsm",
     "cli": "pnpm run build && node dist/index.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

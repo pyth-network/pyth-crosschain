@@ -31,7 +31,8 @@
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts"
+    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@mysten/sui": "catalog:",

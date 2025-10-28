@@ -8,7 +8,8 @@
     "cli": "ts-node src/cli.ts",
     "build": "ts-duality",
     "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write .",
+    "clean": "rm -rf ./dist"
   },
   "author": "",
   "license": "ISC",

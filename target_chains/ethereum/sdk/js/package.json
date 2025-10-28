@@ -27,7 +27,8 @@
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && git add -A src"
+    "version": "pnpm run test:format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",

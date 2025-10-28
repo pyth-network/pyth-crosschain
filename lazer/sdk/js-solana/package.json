@@ -28,7 +28,8 @@
     "test:types": "tsc",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write .",
-    "build:docs": "typedoc --out docs/typedoc src"
+    "build:docs": "typedoc --out docs/typedoc src",
+    "clean": "rm -rf ./dist"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

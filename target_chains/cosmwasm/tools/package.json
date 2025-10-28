@@ -8,7 +8,8 @@
     "build": "ts-duality",
     "deploy": "ts-node ./src/ci/deploy.ts",
     "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write .",
+    "clean": "rm -rf ./dist"
   },
   "author": "",
   "license": "Apache-2.0",

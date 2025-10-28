@@ -29,7 +29,8 @@
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && pnpm run test:lint && git add -A src"
+    "version": "pnpm run test:format && pnpm run test:lint && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",

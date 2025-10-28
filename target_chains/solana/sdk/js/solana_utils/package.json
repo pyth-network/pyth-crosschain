@@ -25,7 +25,8 @@
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build && pnpm test:unit && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",
