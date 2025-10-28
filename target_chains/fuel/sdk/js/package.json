@@ -48,7 +48,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "fuels": "^0.96.1"
+    "fuels": "catalog:"
   },
   "engines": {
     "node": ">=22.16.0",

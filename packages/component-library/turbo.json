@@ -5,10 +5,9 @@
     "build": {
       "dependsOn": [
         "//#install:modules",
-        "^build",
         "clean",
+        "^build",
         "build:declarations",
-        "build:esm",
         "build:scss",
         "build:svg"
       ]

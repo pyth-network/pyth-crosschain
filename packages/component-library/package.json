@@ -8,25 +8,305 @@
     "pnpm": ">=10.19.0"
   },
   "exports": {
-    "./*": {
-      "types": "./dist/esm/*/index.d.ts",
-      "default": "./dist/esm/*/index.jsx"
+    "./AppShell/amplitude": {
+      "default": "./dist/AppShell/amplitude.js",
+      "types": "./dist/AppShell/amplitude.d.ts"
+    },
+    "./AppShell/body-providers": {
+      "default": "./dist/AppShell/body-providers.js",
+      "types": "./dist/AppShell/body-providers.d.ts"
+    },
+    "./AppShell/fonts": {
+      "default": "./dist/AppShell/fonts.js",
+      "types": "./dist/AppShell/fonts.d.ts"
+    },
+    "./AppShell/html-with-lang": {
+      "default": "./dist/AppShell/html-with-lang.js",
+      "types": "./dist/AppShell/html-with-lang.d.ts"
+    },
+    "./AppShell/i18n-provider": {
+      "default": "./dist/AppShell/i18n-provider.js",
+      "types": "./dist/AppShell/i18n-provider.d.ts"
+    },
+    "./AppShell": {
+      "default": "./dist/AppShell/index.js",
+      "types": "./dist/AppShell/index.d.ts"
+    },
+    "./AppShell/report-accessibility": {
+      "default": "./dist/AppShell/report-accessibility.js",
+      "types": "./dist/AppShell/report-accessibility.d.ts"
+    },
+    "./AppShell/router-provider": {
+      "default": "./dist/AppShell/router-provider.js",
+      "types": "./dist/AppShell/router-provider.d.ts"
+    },
+    "./AppShell/tabs": {
+      "default": "./dist/AppShell/tabs.js",
+      "types": "./dist/AppShell/tabs.d.ts"
+    },
+    "./Badge": {
+      "default": "./dist/Badge/index.js",
+      "types": "./dist/Badge/index.d.ts"
+    },
+    "./Breadcrumbs": {
+      "default": "./dist/Breadcrumbs/index.js",
+      "types": "./dist/Breadcrumbs/index.d.ts"
+    },
+    "./Button": {
+      "default": "./dist/Button/index.js",
+      "types": "./dist/Button/index.d.ts"
+    },
+    "./Card": {
+      "default": "./dist/Card/index.js",
+      "types": "./dist/Card/index.d.ts"
+    },
+    "./CopyButton": {
+      "default": "./dist/CopyButton/index.js",
+      "types": "./dist/CopyButton/index.d.ts"
+    },
+    "./CrossfadeTabPanels": {
+      "default": "./dist/CrossfadeTabPanels/index.js",
+      "types": "./dist/CrossfadeTabPanels/index.d.ts"
+    },
+    "./DropdownCaretDown": {
+      "default": "./dist/DropdownCaretDown/index.js",
+      "types": "./dist/DropdownCaretDown/index.d.ts"
+    },
+    "./EntityList": {
+      "default": "./dist/EntityList/index.js",
+      "types": "./dist/EntityList/index.d.ts"
+    },
+    "./ErrorPage": {
+      "default": "./dist/ErrorPage/index.js",
+      "types": "./dist/ErrorPage/index.d.ts"
+    },
+    "./Footer": {
+      "default": "./dist/Footer/index.js",
+      "types": "./dist/Footer/index.d.ts"
+    },
+    "./Header": {
+      "default": "./dist/Header/index.js",
+      "types": "./dist/Header/index.d.ts"
+    },
+    "./Header/theme-switch": {
+      "default": "./dist/Header/theme-switch.js",
+      "types": "./dist/Header/theme-switch.d.ts"
+    },
+    "./InfoBox": {
+      "default": "./dist/InfoBox/index.js",
+      "types": "./dist/InfoBox/index.d.ts"
+    },
+    "./Link": {
+      "default": "./dist/Link/index.js",
+      "types": "./dist/Link/index.d.ts"
+    },
+    "./MainNavTabs": {
+      "default": "./dist/MainNavTabs/index.js",
+      "types": "./dist/MainNavTabs/index.d.ts"
+    },
+    "./Meter": {
+      "default": "./dist/Meter/index.js",
+      "types": "./dist/Meter/index.d.ts"
+    },
+    "./MobileNavTabs": {
+      "default": "./dist/MobileNavTabs/index.js",
+      "types": "./dist/MobileNavTabs/index.d.ts"
+    },
+    "./ModalDialog": {
+      "default": "./dist/ModalDialog/index.js",
+      "types": "./dist/ModalDialog/index.d.ts"
+    },
+    "./NoResults": {
+      "default": "./dist/NoResults/index.js",
+      "types": "./dist/NoResults/index.d.ts"
+    },
+    "./NotFoundPage": {
+      "default": "./dist/NotFoundPage/index.js",
+      "types": "./dist/NotFoundPage/index.d.ts"
+    },
+    "./Paginator": {
+      "default": "./dist/Paginator/index.js",
+      "types": "./dist/Paginator/index.d.ts"
+    },
+    "./SearchButton": {
+      "default": "./dist/SearchButton/index.js",
+      "types": "./dist/SearchButton/index.d.ts"
+    },
+    "./SearchInput": {
+      "default": "./dist/SearchInput/index.js",
+      "types": "./dist/SearchInput/index.d.ts"
+    },
+    "./Select": {
+      "default": "./dist/Select/index.js",
+      "types": "./dist/Select/index.d.ts"
+    },
+    "./SingleToggleGroup": {
+      "default": "./dist/SingleToggleGroup/index.js",
+      "types": "./dist/SingleToggleGroup/index.d.ts"
+    },
+    "./Skeleton": {
+      "default": "./dist/Skeleton/index.js",
+      "types": "./dist/Skeleton/index.d.ts"
+    },
+    "./Spinner": {
+      "default": "./dist/Spinner/index.js",
+      "types": "./dist/Spinner/index.d.ts"
+    },
+    "./StatCard": {
+      "default": "./dist/StatCard/index.js",
+      "types": "./dist/StatCard/index.d.ts"
+    },
+    "./Status": {
+      "default": "./dist/Status/index.js",
+      "types": "./dist/Status/index.d.ts"
+    },
+    "./Switch": {
+      "default": "./dist/Switch/index.js",
+      "types": "./dist/Switch/index.d.ts"
+    },
+    "./SymbolPairTag": {
+      "default": "./dist/SymbolPairTag/index.js",
+      "types": "./dist/SymbolPairTag/index.d.ts"
+    },
+    "./TabList": {
+      "default": "./dist/TabList/index.js",
+      "types": "./dist/TabList/index.d.ts"
+    },
+    "./Table": {
+      "default": "./dist/Table/index.js",
+      "types": "./dist/Table/index.d.ts"
+    },
+    "./TableGrid/dummy-row-data": {
+      "default": "./dist/TableGrid/dummy-row-data.js",
+      "types": "./dist/TableGrid/dummy-row-data.d.ts"
+    },
+    "./TableGrid": {
+      "default": "./dist/TableGrid/index.js",
+      "types": "./dist/TableGrid/index.d.ts"
+    },
+    "./TableGrid/table-grid-props": {
+      "default": "./dist/TableGrid/table-grid-props.js",
+      "types": "./dist/TableGrid/table-grid-props.d.ts"
+    },
+    "./Term": {
+      "default": "./dist/Term/index.js",
+      "types": "./dist/Term/index.d.ts"
+    },
+    "./Virtualizer": {
+      "default": "./dist/Virtualizer/index.js",
+      "types": "./dist/Virtualizer/index.d.ts"
+    },
+    "./compose-providers": {
+      "default": "./dist/compose-providers.js",
+      "types": "./dist/compose-providers.d.ts"
+    },
+    "./omit-keys": {
+      "default": "./dist/omit-keys.js",
+      "types": "./dist/omit-keys.d.ts"
+    },
+    "./overlay-visible-context": {
+      "default": "./dist/overlay-visible-context.js",
+      "types": "./dist/overlay-visible-context.d.ts"
+    },
+    "./social-links": {
+      "default": "./dist/social-links.js",
+      "types": "./dist/social-links.d.ts"
+    },
+    "./unstyled/Breadcrumbs": {
+      "default": "./dist/unstyled/Breadcrumbs/index.js",
+      "types": "./dist/unstyled/Breadcrumbs/index.d.ts"
+    },
+    "./unstyled/Button": {
+      "default": "./dist/unstyled/Button/index.js",
+      "types": "./dist/unstyled/Button/index.d.ts"
+    },
+    "./unstyled/Dialog": {
+      "default": "./dist/unstyled/Dialog/index.js",
+      "types": "./dist/unstyled/Dialog/index.d.ts"
+    },
+    "./unstyled/GridList": {
+      "default": "./dist/unstyled/GridList/index.js",
+      "types": "./dist/unstyled/GridList/index.d.ts"
+    },
+    "./unstyled/Label": {
+      "default": "./dist/unstyled/Label/index.js",
+      "types": "./dist/unstyled/Label/index.d.ts"
+    },
+    "./unstyled/Link": {
+      "default": "./dist/unstyled/Link/index.js",
+      "types": "./dist/unstyled/Link/index.d.ts"
+    },
+    "./unstyled/ListBox": {
+      "default": "./dist/unstyled/ListBox/index.js",
+      "types": "./dist/unstyled/ListBox/index.d.ts"
+    },
+    "./unstyled/Meter": {
+      "default": "./dist/unstyled/Meter/index.js",
+      "types": "./dist/unstyled/Meter/index.d.ts"
+    },
+    "./unstyled/Popover": {
+      "default": "./dist/unstyled/Popover/index.js",
+      "types": "./dist/unstyled/Popover/index.d.ts"
+    },
+    "./unstyled/SearchField": {
+      "default": "./dist/unstyled/SearchField/index.js",
+      "types": "./dist/unstyled/SearchField/index.d.ts"
+    },
+    "./unstyled/Select": {
+      "default": "./dist/unstyled/Select/index.js",
+      "types": "./dist/unstyled/Select/index.d.ts"
+    },
+    "./unstyled/Switch": {
+      "default": "./dist/unstyled/Switch/index.js",
+      "types": "./dist/unstyled/Switch/index.d.ts"
+    },
+    "./unstyled/Table": {
+      "default": "./dist/unstyled/Table/index.js",
+      "types": "./dist/unstyled/Table/index.d.ts"
+    },
+    "./unstyled/Tabs": {
+      "default": "./dist/unstyled/Tabs/index.js",
+      "types": "./dist/unstyled/Tabs/index.d.ts"
+    },
+    "./unstyled/TextField": {
+      "default": "./dist/unstyled/TextField/index.js",
+      "types": "./dist/unstyled/TextField/index.d.ts"
+    },
+    "./unstyled/Toolbar": {
+      "default": "./dist/unstyled/Toolbar/index.js",
+      "types": "./dist/unstyled/Toolbar/index.d.ts"
+    },
+    "./use-prefetch": {
+      "default": "./dist/use-prefetch.js",
+      "types": "./dist/use-prefetch.d.ts"
+    },
+    "./useAlert": {
+      "default": "./dist/useAlert/index.js",
+      "types": "./dist/useAlert/index.d.ts"
     },
     "./useData": {
-      "types": "./dist/esm/useData/index.d.ts",
-      "default": "./dist/esm/useData/index.js"
+      "default": "./dist/useData/index.js",
+      "types": "./dist/useData/index.d.ts"
+    },
+    "./useDrawer": {
+      "default": "./dist/useDrawer/index.js",
+      "types": "./dist/useDrawer/index.d.ts"
+    },
+    "./useLogger": {
+      "default": "./dist/useLogger/index.js",
+      "types": "./dist/useLogger/index.d.ts"
     },
     "./useQueryParamsPagination": {
-      "types": "./dist/esm/useQueryParamsPagination/index.d.ts",
-      "default": "./dist/esm/useQueryParamsPagination/index.js"
+      "default": "./dist/useQueryParamsPagination/index.js",
+      "types": "./dist/useQueryParamsPagination/index.d.ts"
     },
-    "./theme": "./dist/esm/theme.scss"
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "ts-duality",
-    "build:scss": "copyfiles -u 1 \"src/**/*.scss\" dist/esm",
+    "build": "ts-duality --noCjs",
+    "build:scss": "copyfiles -u 1 \"src/**/*.scss\" ./dist",
     "build:storybook": "storybook build",
-    "build:svg": "copyfiles -u 1 \"src/**/*.svg\" dist/esm",
+    "build:svg": "copyfiles -u 1 \"src/**/*.svg\" ./dist",
     "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
@@ -100,7 +380,7 @@
   },
   "ts-duality": {
     "extraExports": {
-      "./theme": "./dist/esm/theme.scss"
+      "./theme": "./dist/theme.scss"
     }
   },
   "packageManager": "pnpm@10.19.0"
