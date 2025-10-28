@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "22"
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
   },
   "scripts": {
     "build": "next build",
@@ -63,5 +64,6 @@
     "tailwindcss": "^3.1.8",
     "typescript": "catalog:",
     "vercel": "^37.12.1"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

@@ -30,5 +30,10 @@
     "@types/yargs": "^17.0.18",
     "prettier": "catalog:",
     "ts-node": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

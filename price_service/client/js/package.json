@@ -10,7 +10,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -57,5 +57,10 @@
     "isomorphic-ws": "^4.0.1",
     "ts-log": "^2.2.4",
     "ws": "^8.6.0"
-  }
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

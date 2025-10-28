@@ -9,7 +9,7 @@
   "main": "lib/HermesClient.js",
   "types": "lib/HermesClient.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -55,5 +55,10 @@
     "@zodios/core": "^10.9.6",
     "eventsource": "^3.0.5",
     "zod": "^3.23.8"
-  }
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

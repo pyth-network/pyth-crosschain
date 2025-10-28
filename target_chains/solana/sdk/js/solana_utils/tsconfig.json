@@ -1,9 +1,4 @@
 {
-  "extends": "../../../../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "src/**/*.json"],
-  "exclude": ["node_modules", "**/__tests__/*"],
-  "compilerOptions": {
-    "rootDir": "src/",
-    "outDir": "./lib"
-  }
+  "extends": "@cprussin/tsconfig/base.json",
+  "exclude": ["dist", "node_modules"]
 }

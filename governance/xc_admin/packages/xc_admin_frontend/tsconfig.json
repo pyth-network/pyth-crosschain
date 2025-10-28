@@ -1,19 +1,6 @@
 {
+  "extends": "@cprussin/tsconfig/nextjs.json",
   "compilerOptions": {
-    "target": "es2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "skipLibCheck": true,
     "paths": {
       "@images/*": ["./images/*"],
       "xc-admin-common": ["../xc_admin_common/src"]

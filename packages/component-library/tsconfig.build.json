@@ -6,5 +6,9 @@
     "declaration": true,
     "emitDeclarationOnly": true
   },
-  "exclude": ["node_modules", "dist", ".storybook", "**/*.stories.tsx"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "examples/"
+  ]
 }

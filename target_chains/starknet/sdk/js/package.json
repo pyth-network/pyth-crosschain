@@ -9,7 +9,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -45,5 +45,10 @@
     "ts-jest": "^29.0.5",
     "ts-node": "catalog:",
     "typescript": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

@@ -6,7 +6,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -51,5 +51,10 @@
     "@pythnetwork/price-service-sdk": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/web3.js": "^1.90.0"
-  }
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

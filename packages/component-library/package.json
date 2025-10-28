@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
   },
   "exports": {
     "./*": {
@@ -101,5 +102,6 @@
     "extraExports": {
       "./theme": "./dist/esm/theme.scss"
     }
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }
