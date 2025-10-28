@@ -1,35 +1,36 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
+import type {Address, PublicClient, Hex, Transport, Chain} from "viem";
 import {
-  Address,
-  PublicClient,
-  encodeFunctionData,
-  Hex,
-  Transport,
-  Chain,
+  
+  
+  encodeFunctionData
+  
+  
+  
 } from "viem";
 
-import { IPythAbi } from "./pyth-abi";
+import { IPythAbi } from "./pyth-abi.js";
 import {
   debugTraceCallAction,
   extractPythPriceFeedsFromDebugTraceCall,
-} from "./tracer/debug-trace-call";
+} from "./tracer/debug-trace-call.js";
 import {
   extractPythPriceFeedsFromTraceCallMany,
   traceCallManyAction,
-} from "./tracer/trace-call-many";
+} from "./tracer/trace-call-many.js";
 
 /**
  * Represents a call request to be executed on the blockchain
  */
 export type CallRequest = {
   /** The address making the call (optional) */
-  from?: Address;
+  from?: Address | undefined;
   /** The target contract address */
   to: Address;
   /** The encoded function call data (optional) */
-  data?: Hex;
+  data?: Hex | undefined;
   /** The amount of ETH to send with the call (optional) */
-  value?: bigint;
+  value?: bigint | undefined;
 };
 
 /**

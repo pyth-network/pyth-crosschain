@@ -2,7 +2,7 @@ import { SuiClient } from "@mysten/sui/client";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import { Transaction } from "@mysten/sui/transactions";
 import { bcs } from "@mysten/sui/bcs";
-import { HexString } from "@pythnetwork/hermes-client";
+import { type HexString } from "@pythnetwork/hermes-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
@@ -118,7 +118,7 @@ export class SuiPythClient {
         "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
     const [priceUpdatesHotPotato] = tx.moveCall({
       target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
@@ -127,16 +127,16 @@ export class SuiPythClient {
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize(Array.from(updates[0]), {
+            .serialize(Array.from(updates[0]!), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
         ),
-        verifiedVaas[0],
+        verifiedVaas[0]!,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
     });
-    return priceUpdatesHotPotato;
+    return priceUpdatesHotPotato!;
   }
 
   async executePriceFeedUpdates(
@@ -245,7 +245,7 @@ export class SuiPythClient {
         "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
     tx.moveCall({
       target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
@@ -254,12 +254,12 @@ export class SuiPythClient {
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize(Array.from(updates[0]), {
+            .serialize(Array.from(updates[0]!), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
         ),
-        verifiedVaas[0],
+        verifiedVaas[0]!,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
     });

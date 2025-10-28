@@ -68,7 +68,7 @@ export interface PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestation_time?: number;
+  attestation_time?: number | undefined;
   /**
    * Chain of the emitter
    */
@@ -76,19 +76,19 @@ export interface PriceFeedMetadata {
   /**
    * The time that the previous price was published
    */
-  prev_publish_time?: number;
+  prev_publish_time?: number | undefined;
   /**
    * The time that the price service received the price
    */
-  price_service_receive_time?: number;
+  price_service_receive_time?: number | undefined;
   /**
    * Sequence number of the price
    */
-  sequence_number?: number;
+  sequence_number?: number | undefined;
   /**
    * Pythnet slot number of the price
    */
-  slot?: number;
+  slot?: number | undefined;
 }
 
 // Converts JSON types to/from your types
@@ -246,20 +246,12 @@ function uncast<T>(val: T, typ: any): any {
   return transform(val, typ, jsToJSONProps);
 }
 
-function a(typ: any) {
-  return { arrayItems: typ };
-}
-
 function u(...typs: any[]) {
   return { unionMembers: typs };
 }
 
 function o(props: any[], additional: any) {
   return { props, additional };
-}
-
-function m(additional: any) {
-  return { props: [], additional };
 }
 
 function r(name: string) {

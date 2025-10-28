@@ -7,8 +7,8 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "ts-duality",
+    "build": "ts-duality --noEsm",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -63,5 +63,25 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./PriceServiceConnection": {
+      "default": "./dist/PriceServiceConnection.js",
+      "types": "./dist/PriceServiceConnection.d.ts"
+    },
+    "./ResillientWebSocket": {
+      "default": "./dist/ResillientWebSocket.js",
+      "types": "./dist/ResillientWebSocket.d.ts"
+    },
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./utils": {
+      "default": "./dist/utils.js",
+      "types": "./dist/utils.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

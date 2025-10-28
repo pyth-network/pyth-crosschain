@@ -1,7 +1,7 @@
 import { EventSource } from "eventsource";
-import { schemas } from "./zodSchemas";
+import { schemas } from "./zodSchemas.js";
 import { z } from "zod";
-import { camelToSnakeCaseObject } from "./utils";
+import { camelToSnakeCaseObject } from "./utils.js";
 
 // Accessing schema objects
 export type AssetType = z.infer<typeof schemas.AssetType>;

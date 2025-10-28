@@ -2,7 +2,7 @@ import { IotaClient } from "@iota/iota-sdk/client";
 import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
 import { Transaction } from "@iota/iota-sdk/transactions";
 import { bcs } from "@iota/iota-sdk/bcs";
-import { HexString } from "@pythnetwork/price-service-client";
+import { type HexString } from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
@@ -123,7 +123,7 @@ export class IotaPythClient {
         "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
     [priceUpdatesHotPotato] = tx.moveCall({
       target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
@@ -132,12 +132,12 @@ export class IotaPythClient {
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize(Array.from(updates[0]), {
+            .serialize(Array.from(updates[0]!), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
         ),
-        verifiedVaas[0],
+        verifiedVaas[0]!,
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
@@ -161,9 +161,9 @@ export class IotaPythClient {
         target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
           tx.object(this.pythStateId),
-          priceUpdatesHotPotato,
+          priceUpdatesHotPotato!,
           tx.object(priceInfoObjectId),
-          coins[coinId],
+          coins[coinId]!,
           tx.object(IOTA_CLOCK_OBJECT_ID),
         ],
       });
@@ -171,7 +171,7 @@ export class IotaPythClient {
     }
     tx.moveCall({
       target: `${packageId}::hot_potato_vector::destroy`,
-      arguments: [priceUpdatesHotPotato],
+      arguments: [priceUpdatesHotPotato!],
       typeArguments: [`${packageId}::price_info::PriceInfo`],
     });
     return priceInfoObjects;
@@ -183,7 +183,7 @@ export class IotaPythClient {
         "SDK does not support sending multiple accumulator messages in a single transaction",
       );
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]);
+    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
     tx.moveCall({
       target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
@@ -192,12 +192,12 @@ export class IotaPythClient {
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize(Array.from(updates[0]), {
+            .serialize(Array.from(updates[0]!), {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
         ),
-        verifiedVaas[0],
+        verifiedVaas[0]!,
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });

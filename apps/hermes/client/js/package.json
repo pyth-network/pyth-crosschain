@@ -6,8 +6,6 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "lib/HermesClient.js",
-  "types": "lib/HermesClient.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -61,5 +59,58 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./HermesClient": {
+      "require": {
+        "default": "./dist/cjs/HermesClient.js",
+        "types": "./dist/cjs/HermesClient.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/HermesClient.js",
+        "types": "./dist/esm/HermesClient.d.ts"
+      }
+    },
+    "./examples/HermesClient": {
+      "require": {},
+      "import": {
+        "default": "./dist/esm/examples/HermesClient.js",
+        "types": "./dist/esm/examples/HermesClient.d.ts"
+      }
+    },
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./utils": {
+      "require": {
+        "default": "./dist/cjs/utils.js",
+        "types": "./dist/cjs/utils.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/utils.js",
+        "types": "./dist/esm/utils.d.ts"
+      }
+    },
+    "./zodSchemas": {
+      "require": {
+        "default": "./dist/cjs/zodSchemas.js",
+        "types": "./dist/cjs/zodSchemas.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/zodSchemas.js",
+        "types": "./dist/esm/zodSchemas.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.js"
 }

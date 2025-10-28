@@ -1,8 +1,8 @@
-import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
-import axios, { AxiosInstance } from "axios";
+import { type HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
+import axios, { type AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";
-import { Logger } from "ts-log";
+import { type Logger } from "ts-log";
 import { ResilientWebSocket } from "./ResillientWebSocket";
 import { makeWebsocketUrl, removeLeading0xIfExists } from "./utils";
 
@@ -10,37 +10,37 @@ export type DurationInMs = number;
 
 export type PriceFeedRequestConfig = {
   /* Optional verbose to request for verbose information from the service */
-  verbose?: boolean;
+  verbose?: boolean | undefined;
   /* Optional binary to include the price feeds binary update data */
-  binary?: boolean;
+  binary?: boolean | undefined;
   /* Optional config for the websocket subscription to receive out of order updates */
-  allowOutOfOrder?: boolean;
+  allowOutOfOrder?: boolean | undefined;
 };
 
 export type PriceServiceConnectionConfig = {
   /* Timeout of each request (for all of retries). Default: 5000ms */
-  timeout?: DurationInMs;
+  timeout?: DurationInMs | undefined;
   /**
    * Number of times a HTTP request will be retried before the API returns a failure. Default: 3.
    *
    * The connection uses exponential back-off for the delay between retries. However,
    * it will timeout regardless of the retries at the configured `timeout` time.
    */
-  httpRetries?: number;
+  httpRetries?: number | undefined;
   /* Optional logger (e.g: console or any logging library) to log internal events */
-  logger?: Logger;
+  logger?: Logger | undefined;
   /* Deprecated: please use priceFeedRequestConfig.verbose instead */
-  verbose?: boolean;
+  verbose?: boolean | undefined;
   /* Configuration for the price feed requests */
-  priceFeedRequestConfig?: PriceFeedRequestConfig;
+  priceFeedRequestConfig?: PriceFeedRequestConfig | undefined;
 };
 
 type ClientMessage = {
   type: "subscribe" | "unsubscribe";
   ids: HexString[];
-  verbose?: boolean;
-  binary?: boolean;
-  allow_out_of_order?: boolean;
+  verbose?: boolean | undefined;
+  binary?: boolean | undefined;
+  allow_out_of_order?: boolean | undefined;
 };
 
 type ServerResponse = {

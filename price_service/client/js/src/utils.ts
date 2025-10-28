@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/price-service-sdk";
+import { type HexString } from "@pythnetwork/price-service-sdk";
 
 /**
  * Convert http(s) endpoint to ws(s) endpoint.

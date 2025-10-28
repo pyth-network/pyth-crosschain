@@ -1,9 +1,9 @@
 import {
   Convert,
-  Price as JsonPrice,
-  PriceFeed as JsonPriceFeed,
-  PriceFeedMetadata as JsonPriceFeedMetadata,
-} from "./schemas/PriceFeed";
+  type Price as JsonPrice,
+  type PriceFeed as JsonPriceFeed,
+  type PriceFeedMetadata as JsonPriceFeedMetadata,
+} from "./schemas/PriceFeed.js";
 
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
@@ -13,10 +13,10 @@ export {
   isAccumulatorUpdateData,
   sliceAccumulatorUpdateData,
   parseAccumulatorUpdateData,
-  AccumulatorUpdateData,
+  type AccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
-} from "./AccumulatorUpdateData";
+} from "./AccumulatorUpdateData.js";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.
@@ -92,7 +92,7 @@ export class PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestationTime?: number;
+  attestationTime?: number | undefined;
   /**
    * Chain of the emitter
    */
@@ -100,27 +100,27 @@ export class PriceFeedMetadata {
   /**
    * The time that the price service received the price
    */
-  priceServiceReceiveTime?: number;
+  priceServiceReceiveTime?: number | undefined;
   /**
    * Sequence number of the price
    */
-  sequenceNumber?: number;
+  sequenceNumber?: number | undefined;
   /**
    * Pythnet slot number of the price
    */
-  slot?: number;
+  slot?: number | undefined;
   /**
    * The time that the previous price was published
    */
-  prevPublishTime?: number;
+  prevPublishTime?: number | undefined;
 
   constructor(metadata: {
-    attestationTime?: number;
+    attestationTime?: number | undefined;
     emitterChain: number;
-    receiveTime?: number;
-    sequenceNumber?: number;
-    slot?: number;
-    prevPublishTime?: number;
+    receiveTime?: number | undefined;
+    sequenceNumber?: number | undefined;
+    slot?: number | undefined;
+    prevPublishTime?: number | undefined;
   }) {
     this.attestationTime = metadata.attestationTime;
     this.emitterChain = metadata.emitterChain;
@@ -177,11 +177,11 @@ export class PriceFeed {
   /**
    * Metadata of the price
    */
-  metadata?: PriceFeedMetadata;
+  metadata?: PriceFeedMetadata | undefined;
   /**
    * VAA of the price
    */
-  vaa?: string;
+  vaa?: string | undefined;
   /**
    * Price
    */
@@ -190,8 +190,8 @@ export class PriceFeed {
   constructor(rawFeed: {
     emaPrice: Price;
     id: HexString;
-    metadata?: PriceFeedMetadata;
-    vaa?: string;
+    metadata?: PriceFeedMetadata | undefined;
+    vaa?: string | undefined;
     price: Price;
   }) {
     this.emaPrice = rawFeed.emaPrice;

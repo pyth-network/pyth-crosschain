@@ -6,8 +6,9 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "type": "module",
   "files": [
     "dist/**/*"
   ],
@@ -63,5 +64,38 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "exports": {
+    "./SuiPriceServiceConnection": {
+      "require": {
+        "default": "./dist/cjs/SuiPriceServiceConnection.js",
+        "types": "./dist/cjs/SuiPriceServiceConnection.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/SuiPriceServiceConnection.js",
+        "types": "./dist/esm/SuiPriceServiceConnection.d.ts"
+      }
+    },
+    "./client": {
+      "require": {
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
+      }
+    },
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

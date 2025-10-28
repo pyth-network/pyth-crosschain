@@ -1,17 +1,18 @@
+import type {Address, BlockTag, RpcTransactionRequest, ExactPartial, Hex, Client, CallParameters} from "viem";
 import {
-  Address,
-  BlockTag,
+  
+  
   decodeFunctionData,
-  RpcTransactionRequest,
-  ExactPartial,
-  Hex,
-  Client,
+  
+  
+  
+  
   formatTransactionRequest,
-  CallParameters,
-  isAddressEqual,
+  
+  isAddressEqual
 } from "viem";
 
-import { IPythAbi } from "../pyth-abi";
+import { IPythAbi } from "../pyth-abi.js";
 
 /**
  * Extract Pyth price feed IDs from a transaction call trace.

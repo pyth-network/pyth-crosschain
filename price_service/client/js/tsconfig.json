@@ -1,4 +1,9 @@
 {
   "extends": "@cprussin/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "module": "preserve"
+  },
   "exclude": ["dist", "node_modules"]
 }

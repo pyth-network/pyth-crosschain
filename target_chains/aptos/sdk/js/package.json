@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "ts-duality",
+    "build": "ts-duality --noEsm",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -62,5 +62,16 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./AptosPriceServiceConnection": {
+      "default": "./dist/AptosPriceServiceConnection.js",
+      "types": "./dist/AptosPriceServiceConnection.d.ts"
+    },
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  }
 }

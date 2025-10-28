@@ -7,7 +7,9 @@ export function camelToSnakeCaseObject(
 ): Record<string, string | boolean> {
   const result: Record<string, string | boolean> = {};
   Object.keys(obj).forEach((key) => {
-    result[camelToSnakeCase(key)] = obj[key];
+    const newKey = camelToSnakeCase(key);
+    const val = obj[key];
+    result[newKey] = val!;
   });
   return result;
 }

@@ -1,16 +1,16 @@
 export {
-  DurationInMs,
+  type DurationInMs,
   PriceServiceConnection,
-  PriceServiceConnectionConfig,
-} from "./PriceServiceConnection";
+  type PriceServiceConnectionConfig,
+} from "./PriceServiceConnection.js";
 
 export {
-  HexString,
+  type HexString,
   PriceFeedMetadata,
   PriceFeed,
   Price,
-  UnixTimestamp,
+  type UnixTimestamp,
   isAccumulatorUpdateData,
   parseAccumulatorUpdateData,
-  AccumulatorUpdateData,
+  type AccumulatorUpdateData,
 } from "@pythnetwork/price-service-sdk";

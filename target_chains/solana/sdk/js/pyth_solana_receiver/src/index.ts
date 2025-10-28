@@ -5,7 +5,7 @@ export {
 } from "./PythSolanaReceiver";
 export {
   TransactionBuilder,
-  InstructionWithEphemeralSigners,
+  type InstructionWithEphemeralSigners,
 } from "@pythnetwork/solana-utils";
 export {
   getConfigPda,
@@ -15,10 +15,10 @@ export {
 
 export {
   IDL as pythSolanaReceiverIdl,
-  PythSolanaReceiver as PythSolanaReceiverProgram,
+  type PythSolanaReceiver as PythSolanaReceiverProgram,
 } from "./idl/pyth_solana_receiver";
 
 export {
   IDL as wormholeCoreBridgeIdl,
-  WormholeCoreBridgeSolana as WormholeCoreBridgeProgram,
+  type WormholeCoreBridgeSolana as WormholeCoreBridgeProgram,
 } from "./idl/wormhole_core_bridge_solana";

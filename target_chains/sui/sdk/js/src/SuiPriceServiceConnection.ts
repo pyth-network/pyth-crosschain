@@ -1,7 +1,7 @@
 import {
   HermesClient,
-  HexString,
-  PriceUpdate,
+  type HexString,
+  type PriceUpdate,
 } from "@pythnetwork/hermes-client";
 import { Buffer } from "buffer";
 
