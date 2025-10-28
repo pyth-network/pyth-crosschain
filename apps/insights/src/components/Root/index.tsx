@@ -10,7 +10,6 @@ import {
   GOOGLE_ANALYTICS_ID,
 } from "../../config/server";
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
-import { LivePriceDataProvider } from "../../hooks/use-live-price-data";
 import { Cluster } from "../../services/pyth";
 import { getFeeds } from "../../services/pyth/get-feeds";
 import { PriceFeedIcon } from "../PriceFeedIcon";
@@ -32,7 +31,7 @@ export const Root = ({ children }: Props) => (
     amplitudeApiKey={AMPLITUDE_API_KEY}
     googleAnalyticsId={GOOGLE_ANALYTICS_ID}
     enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
-    providers={[NuqsAdapter, LivePriceDataProvider]}
+    providers={[NuqsAdapter]}
     tabs={TABS}
     extraCta={<SearchButton />}
   >
