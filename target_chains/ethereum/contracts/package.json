@@ -49,7 +49,6 @@
     "lodash": "^4.17.21",
     "solc": "0.8.4",
     "ts-node": "catalog:",
-    "typescript": "catalog:",
     "web3": "^1.2.2",
     "web3-eth-abi": "^1.2.2",
     "web3-utils": "^1.2.2",

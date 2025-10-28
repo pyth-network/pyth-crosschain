@@ -45,8 +45,7 @@
     "copyfiles": "^2.4.1",
     "eslint": "^8.14.0",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "fuels": "catalog:"
@@ -55,5 +54,6 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module"
 }

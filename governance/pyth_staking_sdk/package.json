@@ -38,8 +38,7 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
+    "prettier": "catalog:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "catalog:",

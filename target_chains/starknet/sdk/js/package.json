@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -44,12 +44,26 @@
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "engines": {
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

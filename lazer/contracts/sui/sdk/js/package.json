@@ -12,16 +12,17 @@
     "dist/**/*"
   ],
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/esm/client.d.ts",
-        "default": "./dist/esm/client.js"
-      },
+    "./client": {
       "require": {
-        "types": "./dist/cjs/client.d.ts",
-        "default": "./dist/cjs/client.js"
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "scripts": {
@@ -45,8 +46,7 @@
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
+    "prettier": "catalog:"
   },
   "publishConfig": {
     "access": "public"

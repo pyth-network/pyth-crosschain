@@ -33,8 +33,7 @@
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
-    "commander": "^9.5.0",
-    "typescript": "catalog:"
+    "commander": "^9.5.0"
   },
   "dev-dependencies": {
     "ts-node": "catalog:"

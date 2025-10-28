@@ -42,12 +42,12 @@
     "cosmjs-types": "^0.9.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "engines": {
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module"
 }

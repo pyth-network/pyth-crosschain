@@ -47,8 +47,7 @@
     "eslint": "catalog:",
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/contract-manager": "workspace:*",

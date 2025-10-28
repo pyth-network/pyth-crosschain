@@ -42,8 +42,7 @@
     "bn.js": "^5.2.1",
     "ethers": "^5.7.2",
     "lodash": "^4.17.21",
-    "message_buffer": "workspace:^",
-    "typescript": "^4.9.4"
+    "message_buffer": "workspace:^"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

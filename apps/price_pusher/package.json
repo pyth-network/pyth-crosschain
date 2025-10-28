@@ -56,8 +56,7 @@
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
     "ts-jest": "^29.1.1",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",
@@ -95,5 +94,6 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module"
 }

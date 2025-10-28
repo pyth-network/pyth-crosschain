@@ -43,8 +43,7 @@
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
     "ts-jest": "^29.0.5",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
@@ -57,5 +56,6 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module"
 }

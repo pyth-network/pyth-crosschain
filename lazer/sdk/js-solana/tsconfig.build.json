@@ -5,7 +5,8 @@
     "emitDeclarationOnly": true,
     "incremental": false,
     "declaration": true,
-    "outDir": "./dist/types"
+    "outDir": "./dist/types",
+    "isolatedModules": false
   },
   "exclude": [
     "node_modules",

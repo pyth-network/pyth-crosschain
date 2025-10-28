@@ -47,8 +47,7 @@
     "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
-    "typescript": "catalog:"
+    "ts-jest": "^29.0.5"
   },
   "dependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
@@ -58,5 +57,6 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module"
 }

@@ -15,14 +15,107 @@
   "main": "./dist/cjs/index.js",
   "types": "./dist/cjs/index.d.ts",
   "exports": {
-    "import": {
-      "types": "./dist/esm/index.d.ts",
-      "default": "./dist/esm/index.js"
+    "./client": {
+      "require": {
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
+      }
     },
-    "require": {
-      "types": "./dist/cjs/index.d.ts",
-      "default": "./dist/cjs/index.js"
-    }
+    "./constants": {
+      "require": {
+        "default": "./dist/cjs/constants.js",
+        "types": "./dist/cjs/constants.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/constants.js",
+        "types": "./dist/esm/constants.d.ts"
+      }
+    },
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./protocol": {
+      "require": {
+        "default": "./dist/cjs/protocol.js",
+        "types": "./dist/cjs/protocol.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/protocol.js",
+        "types": "./dist/esm/protocol.d.ts"
+      }
+    },
+    "./socket/resilient-websocket": {
+      "require": {
+        "default": "./dist/cjs/socket/resilient-websocket.js",
+        "types": "./dist/cjs/socket/resilient-websocket.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/socket/resilient-websocket.js",
+        "types": "./dist/esm/socket/resilient-websocket.d.ts"
+      }
+    },
+    "./socket/websocket-pool": {
+      "require": {
+        "default": "./dist/cjs/socket/websocket-pool.js",
+        "types": "./dist/cjs/socket/websocket-pool.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/socket/websocket-pool.js",
+        "types": "./dist/esm/socket/websocket-pool.d.ts"
+      }
+    },
+    "./util/buffer-util": {
+      "require": {
+        "default": "./dist/cjs/util/buffer-util.js",
+        "types": "./dist/cjs/util/buffer-util.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/util/buffer-util.js",
+        "types": "./dist/esm/util/buffer-util.d.ts"
+      }
+    },
+    "./util/env-util": {
+      "require": {
+        "default": "./dist/cjs/util/env-util.js",
+        "types": "./dist/cjs/util/env-util.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/util/env-util.js",
+        "types": "./dist/esm/util/env-util.d.ts"
+      }
+    },
+    "./util": {
+      "require": {
+        "default": "./dist/cjs/util/index.js",
+        "types": "./dist/cjs/util/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/util/index.js",
+        "types": "./dist/esm/util/index.d.ts"
+      }
+    },
+    "./util/url-util": {
+      "require": {
+        "default": "./dist/cjs/util/url-util.js",
+        "types": "./dist/cjs/util/url-util.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/util/url-util.js",
+        "types": "./dist/esm/util/url-util.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "ts-duality --clean",
@@ -45,8 +138,7 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "ts-node": "catalog:",
-    "typedoc": "^0.26.8",
-    "typescript": "catalog:"
+    "typedoc": "^0.26.8"
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
@@ -70,5 +162,6 @@
     "ts-log": "^2.2.7",
     "ws": "^8.18.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.js"
 }

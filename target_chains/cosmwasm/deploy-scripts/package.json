@@ -23,7 +23,6 @@
     "adm-zip": "^0.5.10",
     "node-downloader-helper": "^2.1.7",
     "rimraf": "^5.0.0",
-    "typescript": "catalog:",
     "yargs": "^17.0.1"
   },
   "devDependencies": {
@@ -36,5 +35,6 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "type": "module"
 }

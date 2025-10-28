@@ -9,6 +9,7 @@
     "node_modules",
     "dist",
     "examples/",
+    "__tests__/*",
     "**/__tests__/*"
   ]
 }

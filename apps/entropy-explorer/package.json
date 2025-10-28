@@ -51,7 +51,6 @@
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
-    "typescript": "catalog:",
     "vercel": "catalog:"
   },
   "packageManager": "pnpm@10.19.0"

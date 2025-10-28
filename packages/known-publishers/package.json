@@ -26,8 +26,7 @@
     "eslint": "catalog:",
     "jest": "catalog:",
     "prettier": "catalog:",
-    "react": "catalog:",
-    "typescript": "catalog:"
+    "react": "catalog:"
   },
   "engines": {
     "node": ">=22.16.0",

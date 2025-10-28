@@ -9,16 +9,39 @@
     "dist/**/*"
   ],
   "main": "./dist/cjs/index.js",
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/cjs/index.d.ts",
   "exports": {
-    "import": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/esm/index.js"
+    "./ed25519": {
+      "require": {
+        "default": "./dist/cjs/ed25519.js",
+        "types": "./dist/cjs/ed25519.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ed25519.js",
+        "types": "./dist/esm/ed25519.d.ts"
+      }
     },
-    "require": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/cjs/index.js"
-    }
+    "./idl/pyth-lazer-solana-contract": {
+      "require": {
+        "default": "./dist/cjs/idl/pyth-lazer-solana-contract.js",
+        "types": "./dist/cjs/idl/pyth-lazer-solana-contract.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/idl/pyth-lazer-solana-contract.js",
+        "types": "./dist/esm/idl/pyth-lazer-solana-contract.d.ts"
+      }
+    },
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
@@ -37,8 +60,7 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "typedoc": "catalog:",
-    "typescript": "catalog:"
+    "typedoc": "catalog:"
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
@@ -63,5 +85,6 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "module": "./dist/esm/index.js"
 }

@@ -72,7 +72,6 @@
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:",
     "tailwindcss-react-aria-components": "catalog:",
-    "typescript": "catalog:",
     "vercel": "catalog:"
   },
   "packageManager": "pnpm@10.19.0"

@@ -47,7 +47,6 @@
     "postcss": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:",
     "vercel": "catalog:"
   },
   "packageManager": "pnpm@10.19.0"
