@@ -51,6 +51,7 @@ catalog:
   "@amplitude/analytics-browser": ^2.13.0
   "@amplitude/plugin-autocapture-browser": ^1.0.0
   "@axe-core/react": ^4.10.1
+  "@better-builds/ts-duality": beta
   "ag-grid-community": ^34.2.0
   "ag-grid-react": ^34.2.0
   "@babel/cli": ^7.27.2
@@ -159,7 +160,8 @@ catalog:
   tailwindcss-react-aria-components: ^2.0.0
   ts-node: ^10.9.2
   typedoc: ^0.26.8
-  typescript: ^5.8.2
+  typescript: ^5.9.3
+  turbo: ^2.5.8
   vercel: ^41.4.1
   viem: ^2.37.13
   wagmi: ^2.14.16

@@ -22,11 +22,11 @@
     "./theme": "./dist/esm/theme.scss"
   },
   "scripts": {
-    "build:declarations": "tsc --project tsconfig.build.json --outDir ./dist/esm",
-    "build:esm": "babel src --out-dir ./dist/esm --extensions .ts && babel src --out-dir ./dist/esm --extensions .tsx --out-file-extension .jsx",
+    "build": "ts-duality",
     "build:scss": "copyfiles -u 1 \"src/**/*.scss\" dist/esm",
     "build:storybook": "storybook build",
     "build:svg": "copyfiles -u 1 \"src/**/*.svg\" dist/esm",
+    "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
@@ -96,5 +96,10 @@
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
     "typescript": "catalog:"
+  },
+  "ts-duality": {
+    "extraExports": {
+      "./theme": "./dist/esm/theme.scss"
+    }
   }
 }

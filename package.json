@@ -1,10 +1,10 @@
 {
   "name": "@pythnetwork/pyth-crosschain",
   "private": true,
-  "packageManager": "pnpm@10.7.0",
+  "packageManager": "pnpm@10.19.0",
   "engines": {
-    "node": "^22.14.0",
-    "pnpm": "^10.7.0"
+    "node": ">=22.16.0",
+    "pnpm": ">=10.19.0"
   },
   "scripts": {
     "fix:format": "prettier --write .",
@@ -13,9 +13,10 @@
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   },
   "devDependencies": {
+    "@better-builds/ts-duality": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
-    "turbo": "^2.4.4"
+    "turbo": "catalog:"
   }
 }
