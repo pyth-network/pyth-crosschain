@@ -9,6 +9,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "examples/"
+    "examples/",
+    "**/__tests__/*"
   ]
 }
