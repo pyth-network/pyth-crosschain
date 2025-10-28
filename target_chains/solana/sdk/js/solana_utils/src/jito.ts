@@ -1,8 +1,8 @@
-import { dummyLogger, Logger } from "ts-log";
+import { dummyLogger, type Logger } from "ts-log";
 import { Wallet } from "@coral-xyz/anchor";
 import {
   PublicKey,
-  Signer,
+  type Signer,
   SystemProgram,
   TransactionInstruction,
   VersionedTransaction,
@@ -24,7 +24,7 @@ export const TIP_ACCOUNTS = [
 
 export function getRandomTipAccount(): PublicKey {
   const randomInt = Math.floor(Math.random() * TIP_ACCOUNTS.length);
-  return new PublicKey(TIP_ACCOUNTS[randomInt]);
+  return new PublicKey(TIP_ACCOUNTS[randomInt] ?? '');
 }
 
 export function buildJitoTipInstruction(
@@ -79,7 +79,7 @@ export async function sendTransactionsJito(
   }
 
   const firstTransactionSignature = bs58.encode(
-    signedTransactions[0].signatures[0],
+    signedTransactions[0]?.signatures[0]!,
   );
 
   const bundle = new Bundle(signedTransactions, 2);
@@ -94,7 +94,7 @@ export async function sendTransactionsJito(
       totalAttempts++;
 
       try {
-        await currentClient.sendBundle(bundle);
+        await currentClient?.sendBundle(bundle);
         logger.info(
           { clientIndex: i, totalAttempts },
           `Successfully sent bundle to Jito client after ${totalAttempts} attempts`,

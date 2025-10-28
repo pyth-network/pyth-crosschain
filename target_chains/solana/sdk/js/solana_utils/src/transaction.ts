@@ -4,8 +4,8 @@ import {
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
-  SignatureResult,
-  Signer,
+  type SignatureResult,
+  type Signer,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
@@ -40,7 +40,7 @@ export type InstructionWithEphemeralSigners = {
   /** The ephemeral signers that need to sign the transaction where this instruction will be */
   signers: Signer[];
   /** The compute units that this instruction requires, useful if greater than `DEFAULT_COMPUTE_BUDGET_UNITS`  */
-  computeUnits?: number;
+  computeUnits?: number | undefined;
 };
 
 /**
@@ -188,9 +188,9 @@ export class TransactionBuilder {
     } else {
       const sizeWithComputeUnits = getSizeOfTransaction(
         [
-          ...this.transactionInstructions[
+          ...(this.transactionInstructions[
             this.transactionInstructions.length - 1
-          ].instructions,
+          ]?.instructions ?? []),
           instruction,
           this.transactionInstructions.length % JITO_BUNDLE_SIZE === 0 // This transaction may be the first of a Jito bundle, so we leave room for a Jito tip transfer.
             ? buildJitoTipInstruction(this.payer, 1)
@@ -205,13 +205,13 @@ export class TransactionBuilder {
       if (sizeWithComputeUnits <= PACKET_DATA_SIZE) {
         this.transactionInstructions[
           this.transactionInstructions.length - 1
-        ].instructions.push(instruction);
+        ]?.instructions.push(instruction);
         this.transactionInstructions[
           this.transactionInstructions.length - 1
-        ].signers.push(...signers);
+        ]?.signers.push(...signers);
         this.transactionInstructions[
           this.transactionInstructions.length - 1
-        ].computeUnits += computeUnits ?? 0;
+        ]!.computeUnits += computeUnits ?? 0;
       } else
         this.transactionInstructions.push({
           instructions: [instruction],

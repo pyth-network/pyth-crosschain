@@ -3,8 +3,8 @@
   "version": "0.5.0",
   "description": "Utility functions for Solana",
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -57,5 +57,39 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./jito": {
+      "require": {
+        "default": "./dist/cjs/jito.js",
+        "types": "./dist/cjs/jito.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/jito.js",
+        "types": "./dist/esm/jito.d.ts"
+      }
+    },
+    "./transaction": {
+      "require": {
+        "default": "./dist/cjs/transaction.js",
+        "types": "./dist/cjs/transaction.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/transaction.js",
+        "types": "./dist/esm/transaction.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }
