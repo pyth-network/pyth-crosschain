@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc --noEmit false --incremental false --declaration true --outDir ./dist",
+    "build": "ts-duality",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",

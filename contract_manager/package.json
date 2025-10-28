@@ -34,7 +34,7 @@
     "store/**/*.json"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality",
     "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",

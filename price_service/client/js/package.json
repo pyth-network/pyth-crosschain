@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "tsc",
+    "build": "ts-duality",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",

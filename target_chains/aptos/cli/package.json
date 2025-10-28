@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "cli": "ts-node src/cli.ts",
-    "build": "tsc",
+    "build": "ts-duality",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
   },

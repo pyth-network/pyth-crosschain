@@ -15,7 +15,7 @@
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality --noEsm",
     "test:unit": "jest",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:format": "prettier --check \"src/**/*.ts\""

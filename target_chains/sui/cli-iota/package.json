@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "cli": "ts-node src/cli.ts",
-    "build": "tsc",
+    "build": "ts-duality",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
   },

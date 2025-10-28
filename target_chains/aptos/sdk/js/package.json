@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",

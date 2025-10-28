@@ -11,7 +11,7 @@
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
-    "test:types": "tsc"
+    "test:types": "ts-duality"
   },
   "peerDependencies": {
     "react": "catalog:"

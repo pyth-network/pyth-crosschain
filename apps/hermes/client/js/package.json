@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build:typescript": "tsc",
+    "build": "ts-duality",
     "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
     "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
     "example": "node lib/examples/HermesClient.js",
@@ -28,7 +28,7 @@
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
-    "prepublishOnly": "pnpm run build:typescript && pnpm run test:lint",
+    "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src"
   },

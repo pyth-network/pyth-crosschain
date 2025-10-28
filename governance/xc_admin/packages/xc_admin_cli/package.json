@@ -15,8 +15,8 @@
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "scripts": {
-    "build": "tsc",
-    "cli": "pnpm run build && node lib/index.js",
+    "build": "ts-duality --noEsm",
+    "cli": "pnpm run build && node dist/index.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:format": "prettier --check \"src/**/*.ts\""
   },

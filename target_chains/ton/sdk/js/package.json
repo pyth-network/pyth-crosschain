@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",

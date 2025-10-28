@@ -5,7 +5,7 @@
   "main": "./lib/index.js",
   "private": "true",
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality",
     "deploy": "ts-node ./src/ci/deploy.ts",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."

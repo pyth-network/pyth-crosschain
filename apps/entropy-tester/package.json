@@ -17,7 +17,7 @@
     "cli/**/*"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "ts-duality --noEsm",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
