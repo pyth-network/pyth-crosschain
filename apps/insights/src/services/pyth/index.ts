@@ -1,9 +1,10 @@
+import type { PriceData } from "@pythnetwork/client";
 import {
   PythHttpClient,
-  PythConnection,
   getPythProgramKeyForCluster,
+  parsePriceData,
 } from "@pythnetwork/client";
-import type { PythPriceCallback } from "@pythnetwork/client/lib/PythConnection";
+import type { AccountInfo } from "@solana/web3.js";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../../config/isomorphic";
@@ -67,15 +68,21 @@ export const getAssetPricesFromAccounts = (
 
 export const subscribe = (
   cluster: Cluster,
-  feeds: PublicKey[],
-  cb: PythPriceCallback,
-) => {
-  const pythConn = new PythConnection(
-    connections[cluster],
-    getPythProgramKeyForCluster(ClusterToName[cluster]),
-    "confirmed",
-    feeds,
+  feed: PublicKey,
+  cb: (values: { accountInfo: AccountInfo<Buffer>; data: PriceData }) => void,
+) =>
+  connections[cluster].onAccountChange(
+    feed,
+    (accountInfo, context) => {
+      cb({
+        accountInfo,
+        data: parsePriceData(accountInfo.data, context.slot),
+      });
+    },
+    {
+      commitment: "confirmed",
+    },
   );
-  pythConn.onPriceChange(cb);
-  return pythConn;
-};
+
+export const unsubscribe = (cluster: Cluster, subscriptionId: number) =>
+  connections[cluster].removeAccountChangeListener(subscriptionId);
