@@ -5,15 +5,14 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  DefaultStore,
-  EvmChain,
-  loadHotWallet,
-  EvmWormholeContract,
-} from "@pythnetwork/contract-manager";
-import Web3 from "web3";
+import { DefaultStore } from "../src/node/utils/store";
+import { EvmChain } from "../src/core/chains";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { EvmWormholeContract } from "../src/core/contracts";
+import { encodeFunctionData, type Abi } from "viem";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import * as fs from "fs";
+import { toPrivateKey } from "../src/core/base";
 
 import { getDefaultConfig } from "../../target_chains/ethereum/contracts/scripts/contractManagerConfig";
 
@@ -62,7 +61,7 @@ async function memoize(
 
 async function main() {
   const argv = await parser.argv;
-  const privateKey = argv["private-key"];
+  const privateKey = toPrivateKey(argv["private-key"]);
   const network = argv["network"];
 
   const setupInfo = await import(argv["contract"] + "/ReceiverSetup.json");
@@ -101,17 +100,17 @@ async function main() {
           [],
         );
         console.log("implementationAddress", implementationAddress);
-        const web3 = new Web3();
-        const setup = new web3.eth.Contract(setupInfo.abi, setupAddress);
-        const initData = setup.methods
-          .setup(
+        const initData = encodeFunctionData({
+          abi: setupInfo.abi as Abi,
+          functionName: "setup",
+          args: [
             implementationAddress,
             wormholeInitialSigners,
             CHAINS[chain.wormholeChainName],
             wormholeGovernanceChainId,
             wormholeGovernanceContract,
-          )
-          .encodeABI();
+          ],
+        });
 
         // deploy proxy
         const receiverAddress = await chain.deploy(
