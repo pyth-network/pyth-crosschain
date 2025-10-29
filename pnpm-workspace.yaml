@@ -114,10 +114,10 @@ catalog:
   dnum: ^2.14.0
   eslint: ^9.23.0
   framer-motion: ^12.6.3
-  fumadocs-core: ^15.7.12
-  fumadocs-mdx: ^11.10.0
-  fumadocs-ui: ^15.7.12
-  fumadocs-openapi: ^9.3.8
+  fumadocs-core: ^16.0.5
+  fumadocs-mdx: ^13.0.2
+  fumadocs-ui: ^16.0.5
+  fumadocs-openapi: ^9.7.1
   fumadocs-typescript: ^4.0.8
   highlight.js: ^11.11.1
   ip-range-check: ^0.2.0
