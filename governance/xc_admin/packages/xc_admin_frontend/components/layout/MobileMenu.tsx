@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useEffect, useRef } from 'react'
 import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
-import { BurgerState } from './Header'
+import type { BurgerState } from './Header'
 
 import orb from '@images/burger.png'
 

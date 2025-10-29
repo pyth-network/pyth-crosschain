@@ -1,12 +1,12 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
-  AccountMeta,
+  type AccountMeta,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
-import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import {
   type ReactNode,
   Fragment,
@@ -18,7 +18,7 @@ import toast from 'react-hot-toast'
 import {
   AnchorMultisigInstruction,
   ExecutePostedVaa,
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
   WormholeMultisigInstruction,
@@ -41,7 +41,7 @@ import Spinner from '../../common/Spinner'
 import Loadbar from '../../loaders/Loadbar'
 
 import { Wallet } from '@coral-xyz/anchor'
-import { PythCluster, getPythProgramKeyForCluster } from '@pythnetwork/client'
+import { type PythCluster, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
 import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
 import { StatusTag } from './StatusTag'
@@ -207,9 +207,9 @@ export const Proposal = ({
           ix.name === 'postMessage' &&
           ix.governanceAction instanceof ExecutePostedVaa &&
           ix.governanceAction.instructions.every((remoteIx) => {
-            const innerMultisigParser = MultisigParser.fromCluster(cluster)
+            const innerMultisigParser = cluster ? MultisigParser.fromCluster(cluster) : undefined;
             const parsedRemoteInstruction =
-              innerMultisigParser.parseInstruction({
+              innerMultisigParser?.parseInstruction({
                 programId: remoteIx.programId,
                 data: remoteIx.data as Buffer,
                 keys: remoteIx.keys as AccountMeta[],
@@ -242,16 +242,16 @@ export const Proposal = ({
         const proposalInstructions = (
           await getManyProposalsInstructions(readOnlySquads, [proposal])
         )[0]
-        const multisigParser = MultisigParser.fromCluster(
+        const multisigParser = cluster ? MultisigParser.fromCluster(
           getMultisigCluster(cluster)
-        )
-        const parsedInstructions = proposalInstructions.map((ix) =>
-          multisigParser.parseInstruction({
+        ) : undefined;
+        const parsedInstructions = (proposalInstructions?.map((ix) =>
+          multisigParser?.parseInstruction({
             programId: ix.programId,
             data: ix.data as Buffer,
             keys: ix.keys as AccountMeta[],
           })
-        )
+        ) ?? []).filter((instruction): instruction is MultisigInstruction => Boolean(instruction));
         if (!isCancelled) setInstructions(parsedInstructions)
       } else {
         if (!isCancelled) setInstructions([])
@@ -339,7 +339,7 @@ export const Proposal = ({
     await handleClick(
       async (
         squad: SquadsMesh,
-        vaultKey: PublicKey,
+        _: PublicKey,
         proposalKey: PublicKey
       ): Promise<TransactionInstruction> => {
         return await squad.buildExecuteTransaction(proposalKey)
@@ -558,7 +558,7 @@ export const Proposal = ({
                           )}
                         </div>
                         {key === 'pub' &&
-                        instruction.args[key].toBase58() in
+                        publisherKeyToNameMappingCluster && instruction.args[key].toBase58() in
                           publisherKeyToNameMappingCluster ? (
                           <ParsedAccountPubkeyRow
                             key={`${index}_${instruction.args[key].toBase58()}`}
@@ -575,7 +575,7 @@ export const Proposal = ({
                 )}
               </div>
             )}
-            {instruction instanceof WormholeMultisigInstruction && (
+            {cluster && instruction instanceof WormholeMultisigInstruction && (
               <WormholeInstructionView
                 cluster={cluster}
                 instruction={instruction}
@@ -605,22 +605,22 @@ export const Proposal = ({
                             </div>
                             <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
                               <div className="flex items-center space-x-2 sm:ml-2">
-                                {instruction.accounts.named[key].isSigner ? (
+                                {instruction.accounts.named[key]?.isSigner ? (
                                   <SignerTag />
                                 ) : null}
-                                {instruction.accounts.named[key].isWritable ? (
+                                {instruction.accounts.named[key]?.isWritable ? (
                                   <WritableTag />
                                 ) : null}
                               </div>
                               <CopyText
                                 text={instruction.accounts.named[
                                   key
-                                ].pubkey.toBase58()}
+                                ]?.pubkey.toBase58() ?? ''}
                               />
                             </div>
                           </div>
                           {key === 'priceAccount' &&
-                          instruction.accounts.named[key].pubkey.toBase58() in
+                          instruction.accounts.named[key]!.pubkey.toBase58() in
                             priceAccountKeyToSymbolMapping ? (
                             <ParsedAccountPubkeyRow
                               key="priceAccountPubkey"
@@ -628,10 +628,10 @@ export const Proposal = ({
                               title="symbol"
                               pubkey={instruction.accounts.named[
                                 key
-                              ].pubkey.toBase58()}
+                              ]?.pubkey.toBase58() ?? ''}
                             />
                           ) : key === 'productAccount' &&
-                            instruction.accounts.named[key].pubkey.toBase58() in
+                            instruction.accounts.named[key]!.pubkey.toBase58() in
                               productAccountKeyToSymbolMapping ? (
                             <ParsedAccountPubkeyRow
                               key="productAccountPubkey"
@@ -639,7 +639,7 @@ export const Proposal = ({
                               title="symbol"
                               pubkey={instruction.accounts.named[
                                 key
-                              ].pubkey.toBase58()}
+                              ]?.pubkey.toBase58() ?? ''}
                             />
                           ) : null}
                         </>

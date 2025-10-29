@@ -1,6 +1,6 @@
 import { Listbox, Transition } from '@headlessui/react'
-import { PythCluster } from '@pythnetwork/client'
-import { MultisigInstruction } from '@pythnetwork/xc-admin-common'
+import type { PythCluster } from '@pythnetwork/client'
+import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
 import { getInstructionsSummary } from './utils'
 import { getMappingCluster } from '../../InstructionViews/utils'
 import CopyText from '../../common/CopyText'
@@ -14,10 +14,10 @@ export const InstructionsSummary = ({
   cluster,
 }: {
   instructions: MultisigInstruction[]
-  cluster: PythCluster
+  cluster: PythCluster | undefined;
 }) => (
   <div className="space-y-4">
-    {getInstructionsSummary({ instructions, cluster }).map((instruction) => (
+    {cluster && getInstructionsSummary({ instructions, cluster }).map((instruction) => (
       <SummaryItem instruction={instruction} key={instruction.name} />
     ))}
   </div>
@@ -113,7 +113,7 @@ const AddRemovePublisherDetails = ({
               <KeyAndName
                 mapping={
                   groupBy === 'publisher'
-                    ? publisherKeyToName
+                    ? publisherKeyToName ?? {}
                     : priceAccountKeyToSymbolMapping
                 }
               >
@@ -127,7 +127,7 @@ const AddRemovePublisherDetails = ({
                     mapping={
                       groupBy === 'publisher'
                         ? priceAccountKeyToSymbolMapping
-                        : publisherKeyToName
+                        : publisherKeyToName ?? {}
                     }
                   >
                     {groupBy === 'publisher'

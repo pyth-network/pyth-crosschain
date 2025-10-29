@@ -1,4 +1,4 @@
-import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { getMultisigCluster } from '@pythnetwork/xc-admin-common'
@@ -7,7 +7,7 @@ import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { StatusTag } from './StatusTag'
 import { getInstructionsSummary, getProposalStatus } from './utils'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AccountMeta } from '@solana/web3.js'
+import type { AccountMeta } from '@solana/web3.js'
 import {
   MultisigParser,
   getManyProposalsInstructions,
@@ -51,7 +51,7 @@ export const ProposalRow = ({
     let isCancelled = false
     const element = elementRef.current
     const observer = new IntersectionObserver(async (entries) => {
-      if (entries[0].isIntersecting) {
+      if (entries[0]?.isIntersecting) {
         if (isMultisigLoading) {
           return
         }
@@ -82,13 +82,13 @@ export const ProposalRow = ({
           const multisigParser = MultisigParser.fromCluster(
             getMultisigCluster(cluster)
           )
-          const parsedInstructions = proposalInstructions.map((ix) =>
+          const parsedInstructions = proposalInstructions?.map((ix) =>
             multisigParser.parseInstruction({
               programId: ix.programId,
               data: ix.data as Buffer,
               keys: ix.keys as AccountMeta[],
             })
-          )
+          ) ?? [];
 
           const summary = getInstructionsSummary({
             instructions: parsedInstructions,

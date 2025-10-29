@@ -1,4 +1,4 @@
-import { TransactionAccount } from '@sqds/mesh/lib/types'
+import type { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import { useContext, useEffect, useState, useMemo, Fragment } from 'react'
 import { ClusterContext } from '../../../contexts/ClusterContext'

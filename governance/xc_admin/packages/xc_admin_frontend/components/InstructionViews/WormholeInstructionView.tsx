@@ -6,7 +6,7 @@ import {
   EvmUpgradeContract,
   ExecutePostedVaa,
   MultisigParser,
-  PythGovernanceAction,
+  type PythGovernanceAction,
   RequestGovernanceDataSourceTransfer,
   SetDataSources,
   SetFee,
@@ -15,13 +15,13 @@ import {
   WormholeMultisigInstruction,
   getProgramName,
 } from '@pythnetwork/xc-admin-common'
-import { AccountMeta, PublicKey } from '@solana/web3.js'
+import { type AccountMeta, PublicKey } from '@solana/web3.js'
 import type { ReactNode } from 'react'
 import CopyText from '../common/CopyText'
 import { ParsedAccountPubkeyRow, SignerTag, WritableTag } from './AccountUtils'
 import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
-import { PythCluster } from '@pythnetwork/client'
+import type { PythCluster } from '@pythnetwork/client'
 import { lamportsToSol } from '../../utils/lamportsToSol'
 import { parseEvmExecuteCallData } from '../../utils/parseEvmExecuteCallData'
 
@@ -149,7 +149,7 @@ export const WormholeInstructionView = ({
                           )}
                         </div>
                         {key === 'pub' &&
-                        parsedInstruction.args[key].toBase58() in
+                        publisherKeyToNameMappingCluster && parsedInstruction.args[key].toBase58() in
                           publisherKeyToNameMappingCluster ? (
                           <ParsedAccountPubkeyRow
                             key={`${index}_${parsedInstruction.args[
@@ -192,25 +192,25 @@ export const WormholeInstructionView = ({
                               <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
                                 <div className="flex items-center space-x-2 sm:ml-2">
                                   {parsedInstruction.accounts.named[key]
-                                    .isSigner ? (
+                                    ?.isSigner ? (
                                     <SignerTag />
                                   ) : null}
                                   {parsedInstruction.accounts.named[key]
-                                    .isWritable ? (
+                                    ?.isWritable ? (
                                     <WritableTag />
                                   ) : null}
                                 </div>
                                 <CopyText
                                   text={parsedInstruction.accounts.named[
                                     key
-                                  ].pubkey.toBase58()}
+                                  ]?.pubkey.toBase58() ?? ''}
                                 />
                               </div>
                             </div>
                             {key === 'priceAccount' &&
                             parsedInstruction.accounts.named[
                               key
-                            ].pubkey.toBase58() in
+                            ]!.pubkey.toBase58() in
                               priceAccountKeyToSymbolMapping ? (
                               <ParsedAccountPubkeyRow
                                 key="priceAccountPubkey"
@@ -218,12 +218,12 @@ export const WormholeInstructionView = ({
                                 title="symbol"
                                 pubkey={parsedInstruction.accounts.named[
                                   key
-                                ].pubkey.toBase58()}
+                                ]?.pubkey.toBase58() ?? ''}
                               />
                             ) : key === 'productAccount' &&
                               parsedInstruction.accounts.named[
                                 key
-                              ].pubkey.toBase58() in
+                              ]!.pubkey.toBase58() in
                                 productAccountKeyToSymbolMapping ? (
                               <ParsedAccountPubkeyRow
                                 key="productAccountPubkey"
@@ -231,7 +231,7 @@ export const WormholeInstructionView = ({
                                 title="symbol"
                                 pubkey={parsedInstruction.accounts.named[
                                   key
-                                ].pubkey.toBase58()}
+                                ]?.pubkey.toBase58() ?? ''}
                               />
                             ) : null}
                           </>

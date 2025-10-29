@@ -1,9 +1,9 @@
-import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
+import { AnchorProvider, type Idl, Program } from '@coral-xyz/anchor'
 import { getPythProgramKeyForCluster } from '@pythnetwork/client'
-import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
+import { type PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { PublicKey } from '@solana/web3.js'
 import messageBuffer from 'message_buffer/idl/message_buffer.json'
-import { MessageBuffer } from 'message_buffer/idl/message_buffer'
+import type { MessageBuffer } from 'message_buffer/idl/message_buffer'
 import axios from 'axios'
 import { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -18,9 +18,9 @@ import {
   ProgramType,
   validateUploadedConfig,
   generateInstructions,
-  DownloadableConfig,
-  DownloadableProduct,
-  DownloadablePriceAccount,
+  type DownloadableConfig,
+  type DownloadableProduct,
+  type DownloadablePriceAccount,
 } from '@pythnetwork/xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -31,7 +31,7 @@ import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 import PermissionDepermissionKey from '../PermissionDepermissionKey'
-import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
+import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
 interface PriceAccountMetadata extends DownloadablePriceAccount {
   [key: string]: string | string[] | number

@@ -3,7 +3,7 @@ import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
 } from '@pythnetwork/client'
-import { PythOracle } from '@pythnetwork/client/lib/anchor'
+import type { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey } from '@solana/web3.js'
@@ -34,7 +34,7 @@ import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
-import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
+import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
 interface UpdatePermissionsProps {
   account: PermissionAccount

@@ -6,22 +6,22 @@ import React, {
   useState,
 } from 'react'
 import { usePyth } from '../hooks/usePyth'
-import { RawConfig } from '../hooks/usePyth'
+import type { RawConfig } from '../hooks/usePyth'
 import { Connection } from '@solana/web3.js'
 import {
-  MappingRawConfig,
-  ProductRawConfig,
+  type MappingRawConfig,
+  type ProductRawConfig,
 } from '@pythnetwork/xc-admin-common'
 
 type AccountKeyToSymbol = { [key: string]: string }
 interface PythContextProps {
-  rawConfig: RawConfig
-  dataIsLoading: boolean
-  connection?: Connection
-  priceAccountKeyToSymbolMapping: AccountKeyToSymbol
-  productAccountKeyToSymbolMapping: AccountKeyToSymbol
-  publisherKeyToNameMapping: Record<string, Record<string, string>>
-  multisigSignerKeyToNameMapping: Record<string, string>
+  rawConfig: RawConfig;
+  dataIsLoading: boolean;
+  connection?: Connection | undefined;
+  priceAccountKeyToSymbolMapping: AccountKeyToSymbol;
+  productAccountKeyToSymbolMapping: AccountKeyToSymbol;
+  publisherKeyToNameMapping: Record<string, Record<string, string>>;
+  multisigSignerKeyToNameMapping: Record<string, string>;
 }
 
 const PythContext = createContext<PythContextProps>({
@@ -69,7 +69,7 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     }
   }, [rawConfig, isLoading])
 
-  const value = useMemo(
+  const value = useMemo<PythContextProps>(
     () => ({
       rawConfig,
       dataIsLoading: isLoading,

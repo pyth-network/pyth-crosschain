@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { Fragment, useCallback, useContext, useEffect } from 'react'
 import { ClusterContext, DEFAULT_CLUSTER } from '../contexts/ClusterContext'
 import Arrow from '@images/icons/down.inline.svg'
-import { PythCluster } from '@pythnetwork/client'
+import type { PythCluster } from '@pythnetwork/client'
 
 const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
   const router = useRouter()

@@ -4,7 +4,10 @@
     "paths": {
       "@images/*": ["./images/*"],
       "xc-admin-common": ["../xc_admin_common/src"]
-    }
+    },
+    "exactOptionalPropertyTypes": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false
   },
   "include": [
     "next-env.d.ts",

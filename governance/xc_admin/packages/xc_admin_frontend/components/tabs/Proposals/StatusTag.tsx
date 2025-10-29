@@ -1,4 +1,4 @@
-import { ProposalStatus } from './utils'
+import type { ProposalStatus } from './utils'
 
 const getProposalBackgroundColorClassName = (
   proposalStatus: ProposalStatus

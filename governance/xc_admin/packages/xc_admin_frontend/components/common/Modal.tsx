@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { Dispatch, Fragment, SetStateAction } from 'react'
+import { type Dispatch, Fragment, type SetStateAction } from 'react'
 import CloseIcon from '../icons/CloseIcon'
 
 const Modal: React.FC<{

@@ -100,10 +100,10 @@ const Home: NextPage<{
 
   // set current tab value when tab is clicked
   const handleChangeTab = (index: number) => {
-    if (tabInfoArray[index].queryString !== 'proposals') {
+    if (tabInfoArray[index]?.queryString !== 'proposals') {
       delete router.query.proposal
     }
-    router.query.tab = tabInfoArray[index].queryString
+    router.query.tab = tabInfoArray[index]?.queryString
     setCurrentTabIndex(index)
     router.push(
       {
@@ -157,13 +157,13 @@ const Home: NextPage<{
               </Tab.Group>
             </div>
           </div>
-          {tabInfoArray[currentTabIndex].queryString ===
+          {tabInfoArray[currentTabIndex]?.queryString ===
             TAB_INFO.General.queryString && (
             <General proposerServerUrl={proposerServerUrl} />
           )}
-          {tabInfoArray[currentTabIndex].queryString ===
+          {tabInfoArray[currentTabIndex]?.queryString ===
             TAB_INFO.UpdatePermissions.queryString && <UpdatePermissions />}
-          {tabInfoArray[currentTabIndex].queryString ===
+          {tabInfoArray[currentTabIndex]?.queryString ===
             TAB_INFO.Proposals.queryString && <Proposals />}
         </MultisigContextProvider>
       </PythContextProvider>
