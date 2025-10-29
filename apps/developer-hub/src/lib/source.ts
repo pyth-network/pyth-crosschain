@@ -56,8 +56,7 @@ export const source = loader({
   },
   source: docs.toFumadocsSource(),
   pageTree: {
-    // types are very similar but not exactly the same
-    // @ts-expect-error - some weird type issues
+    // @ts-expect-error - types are very similar but not exactly the same
     transformers: [openapiPlugin()],
   },
 });

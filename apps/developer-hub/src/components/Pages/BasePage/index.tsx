@@ -16,7 +16,7 @@ export function BasePage(props: { params: { slug: string[] } }) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const MDX = page.data.body;
   return (
-    // @ts-expect-error - toc and full are properties of PageData, but not defined in the types so we need to cast to any
+    // @ts-expect-error - toc and full are properties of PageData, but not defined in the types
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     <DocsPage toc={page.data.toc} full={page.data.full}>
       <DocsTitle>{page.data.title}</DocsTitle>
