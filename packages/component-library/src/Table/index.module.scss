@@ -136,6 +136,10 @@
           right: theme.spacing(2);
           top: theme.spacing(2);
 
+          svg {
+            width: 1em;
+          }
+
           .ascending,
           .descending {
             opacity: 0.25;
