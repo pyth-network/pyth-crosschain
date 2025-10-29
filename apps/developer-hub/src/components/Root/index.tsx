@@ -1,5 +1,5 @@
 import { RootProviders } from "@pythnetwork/component-library/AppShell";
-import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
+import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider/next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 
