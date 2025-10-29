@@ -56,7 +56,7 @@ impl From<UpdateParams> for Update {
                 best_bid_price,
                 best_ask_price,
             } => Update::PriceUpdate(PriceUpdate {
-                price: Some(price.mantissa_i64()),
+                price: price.map(|p| p.mantissa_i64()),
                 best_bid_price: best_bid_price.map(|p| p.mantissa_i64()),
                 best_ask_price: best_ask_price.map(|p| p.mantissa_i64()),
                 special_fields: Default::default(),
