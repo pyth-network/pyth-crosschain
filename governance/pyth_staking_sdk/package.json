@@ -2,7 +2,6 @@
   "name": "@pythnetwork/staking-sdk",
   "version": "0.2.4",
   "description": "Pyth staking SDK",
-  "type": "module",
   "exports": {
     "./constants": {
       "require": {
@@ -207,7 +206,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "ts-duality",
+    "build": "ts-duality --copyOtherFiles",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
@@ -240,5 +239,6 @@
   "packageManager": "pnpm@10.19.0",
   "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts",
-  "main": "./dist/cjs/index.js"
+  "main": "./dist/cjs/index.js",
+  "type": "module"
 }

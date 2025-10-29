@@ -71,13 +71,6 @@
         "types": "./dist/esm/HermesClient.d.ts"
       }
     },
-    "./examples/HermesClient": {
-      "require": {},
-      "import": {
-        "default": "./dist/esm/examples/HermesClient.js",
-        "types": "./dist/esm/examples/HermesClient.d.ts"
-      }
-    },
     ".": {
       "require": {
         "default": "./dist/cjs/index.js",
