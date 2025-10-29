@@ -17,7 +17,7 @@ export async function getLLMText(page: InferPageType<typeof source>) {
   });
 
   // note: it doesn't escape frontmatter, it's up to you.
-  return `# ${page.data.title}
+  return `# ${page.data.title ?? ""}
 URL: ${page.url}
 
 ${String(processed.value)}`;

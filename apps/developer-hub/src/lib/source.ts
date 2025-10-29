@@ -57,7 +57,7 @@ export const source = loader({
   source: docs.toFumadocsSource(),
   pageTree: {
     // types are very similar but not exactly the same
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // @ts-expect-error - some weird type issues
     transformers: [openapiPlugin()],
   },
 });
