@@ -1,8 +1,8 @@
 import { Network } from "@injectivelabs/networks";
-import { TerraHost } from "./terra";
-import { InjectiveHost } from "./injective";
-import { NETWORKS } from "../network";
-import { OsmosisHost } from "./osmosis";
+import type { TerraHost } from "./terra.js";
+import type { InjectiveHost } from "./injective.js";
+import { NETWORKS } from "../network.js";
+import type { OsmosisHost } from "./osmosis.js";
 
 export enum CONFIG_TYPE {
   TERRA = "terra",

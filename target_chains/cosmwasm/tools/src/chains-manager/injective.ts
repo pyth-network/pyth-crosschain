@@ -5,15 +5,14 @@ import {
   MsgMigrateContract,
   MsgStoreCode,
   MsgUpdateAdmin,
-  Msgs,
+  type Msgs,
   PrivateKey,
   TxGrpcClient,
-  TxResponse,
+  type TxResponse,
   createTransactionFromMsg,
-  GrpcAccountPortfolio,
   ChainGrpcBankApi,
 } from "@injectivelabs/sdk-ts";
-import {
+import type {
   ChainExecutor,
   ExecuteContractRequest,
   ExecuteContractResponse,
@@ -25,14 +24,13 @@ import {
   StoreCodeResponse,
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
-} from "./chain-executor";
+} from "./chain-executor.js";
 import assert from "assert";
 import {
   getNetworkEndpoints,
   getNetworkInfo,
   Network,
 } from "@injectivelabs/networks";
-import * as net from "net";
 
 const DEFAULT_GAS_PRICE = 160000000;
 
@@ -189,7 +187,7 @@ export class InjectiveExecutor implements ChainExecutor {
       contractAddress: contractAddr,
       msg,
       funds,
-    });
+    } as MsgExecuteContract["params"]);
 
     const txResponse = await this.signAndBroadcastMsg(executeMsg);
 
@@ -253,7 +251,7 @@ export class InjectiveExecutor implements ChainExecutor {
 function extractFromRawLog(rawLog: string, key: string): string {
   try {
     const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
-    return rx.exec(rawLog)![1];
+    return rx.exec(rawLog)![1] ?? "";
   } catch (e) {
     console.error(
       "Encountered an error in parsing instantiation result. Printing raw log",

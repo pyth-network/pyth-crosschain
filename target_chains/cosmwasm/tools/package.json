@@ -2,7 +2,7 @@
   "name": "@pythnetwork/cosmwasm-deploy-tools",
   "version": "1.1.0",
   "description": "",
-  "main": "./lib/index.js",
+  "main": "./dist/cjs/index.js",
   "private": "true",
   "scripts": {
     "build": "ts-duality",
@@ -49,5 +49,150 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./chains-manager/chain-executor": {
+      "require": {
+        "default": "./dist/cjs/chains-manager/chain-executor.js",
+        "types": "./dist/cjs/chains-manager/chain-executor.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/chains-manager/chain-executor.js",
+        "types": "./dist/esm/chains-manager/chain-executor.d.ts"
+      }
+    },
+    "./chains-manager/chain-querier": {
+      "require": {
+        "default": "./dist/cjs/chains-manager/chain-querier.js",
+        "types": "./dist/cjs/chains-manager/chain-querier.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/chains-manager/chain-querier.js",
+        "types": "./dist/esm/chains-manager/chain-querier.d.ts"
+      }
+    },
+    "./chains-manager/cosmwasm": {
+      "require": {
+        "default": "./dist/cjs/chains-manager/cosmwasm.js",
+        "types": "./dist/cjs/chains-manager/cosmwasm.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/chains-manager/cosmwasm.js",
+        "types": "./dist/esm/chains-manager/cosmwasm.d.ts"
+      }
+    },
+    "./chains-manager": {
+      "require": {
+        "default": "./dist/cjs/chains-manager/index.js",
+        "types": "./dist/cjs/chains-manager/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/chains-manager/index.js",
+        "types": "./dist/esm/chains-manager/index.d.ts"
+      }
+    },
+    "./chains-manager/injective": {
+      "require": {
+        "default": "./dist/cjs/chains-manager/injective.js",
+        "types": "./dist/cjs/chains-manager/injective.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/chains-manager/injective.js",
+        "types": "./dist/esm/chains-manager/injective.d.ts"
+      }
+    },
+    "./ci/deploy": {
+      "require": {
+        "default": "./dist/cjs/ci/deploy.js",
+        "types": "./dist/cjs/ci/deploy.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/deploy.js",
+        "types": "./dist/esm/ci/deploy.d.ts"
+      }
+    },
+    "./ci/deployer/config": {
+      "require": {
+        "default": "./dist/cjs/ci/deployer/config.js",
+        "types": "./dist/cjs/ci/deployer/config.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/deployer/config.js",
+        "types": "./dist/esm/ci/deployer/config.d.ts"
+      }
+    },
+    "./ci/deployer": {
+      "require": {
+        "default": "./dist/cjs/ci/deployer/index.js",
+        "types": "./dist/cjs/ci/deployer/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/deployer/index.js",
+        "types": "./dist/esm/ci/deployer/index.d.ts"
+      }
+    },
+    "./ci/deployer/injective": {
+      "require": {
+        "default": "./dist/cjs/ci/deployer/injective.js",
+        "types": "./dist/cjs/ci/deployer/injective.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/deployer/injective.js",
+        "types": "./dist/esm/ci/deployer/injective.d.ts"
+      }
+    },
+    "./ci/deployer/osmosis": {
+      "require": {
+        "default": "./dist/cjs/ci/deployer/osmosis.js",
+        "types": "./dist/cjs/ci/deployer/osmosis.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/deployer/osmosis.js",
+        "types": "./dist/esm/ci/deployer/osmosis.d.ts"
+      }
+    },
+    "./ci/deployer/terra": {
+      "require": {
+        "default": "./dist/cjs/ci/deployer/terra.js",
+        "types": "./dist/cjs/ci/deployer/terra.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/deployer/terra.js",
+        "types": "./dist/esm/ci/deployer/terra.d.ts"
+      }
+    },
+    "./ci/network": {
+      "require": {
+        "default": "./dist/cjs/ci/network.js",
+        "types": "./dist/cjs/ci/network.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/ci/network.js",
+        "types": "./dist/esm/ci/network.d.ts"
+      }
+    },
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./pyth-wrapper": {
+      "require": {
+        "default": "./dist/cjs/pyth-wrapper.js",
+        "types": "./dist/cjs/pyth-wrapper.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/pyth-wrapper.js",
+        "types": "./dist/esm/pyth-wrapper.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts"
 }

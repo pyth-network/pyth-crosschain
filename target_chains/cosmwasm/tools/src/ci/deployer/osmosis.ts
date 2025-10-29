@@ -1,14 +1,17 @@
 import { getSigningOsmosisClient, cosmwasm } from "osmojs";
 import { estimateOsmoFee } from "@osmonauts/utils";
 import { readFileSync } from "fs";
-import { DeliverTxResponse, calculateFee } from "@cosmjs/stargate";
-import { wasmTypes } from "@cosmjs/cosmwasm-stargate/build/modules/wasm/messages";
+import { type DeliverTxResponse, calculateFee } from "@cosmjs/stargate";
 import assert from "assert";
 
-import { ContractInfo, Deployer } from ".";
-import { convert_terra_address_to_hex, extractFromRawLog } from "./terra";
-import { EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import type { ContractInfo, Deployer } from "./index.js";
+import { convert_terra_address_to_hex, extractFromRawLog } from "./terra.js";
+import {
+  type EncodeObject,
+  DirectSecp256k1HdWallet,
+} from "@cosmjs/proto-signing";
 import Long from "long";
+import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
 
 export type OsmosisHost = {
   endpoint: string;
@@ -23,7 +26,7 @@ export class OsmosisDeployer implements Deployer {
   private async getAccountAddress(): Promise<string> {
     const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic);
     const accountData = await signer.getAccounts();
-    return accountData[0].address;
+    return accountData[0]?.address ?? "";
   }
 
   private async signAndBroadcast(

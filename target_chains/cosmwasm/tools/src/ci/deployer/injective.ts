@@ -9,14 +9,15 @@ import {
   MsgInstantiateContract,
   PrivateKey,
   TxGrpcClient,
-  TxResponse,
-  Msgs,
+  type TxResponse,
+  type Msgs,
   MsgMigrateContract,
   MsgUpdateAdmin,
   createTransactionForAddressAndMsg,
   ChainGrpcWasmApi,
+  type ContractInfo,
 } from "@injectivelabs/sdk-ts";
-import { ContractInfo, Deployer } from ".";
+import type { Deployer } from "./index.js";
 
 export type InjectiveHost = {
   network: Network;
@@ -204,7 +205,7 @@ export class InjectiveDeployer implements Deployer {
       creator: creator,
       admin: admin,
       initMsg: undefined,
-    };
+    } as ContractInfo;
   }
 
   static fromHostAndMnemonic(host: InjectiveHost, mnemonic: string) {
@@ -222,5 +223,5 @@ function convert_injective_address_to_hex(human_addr: string) {
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
-  return rx.exec(rawLog)![1];
+  return rx.exec(rawLog)![1]!;
 }
