@@ -1,7 +1,7 @@
 import { Chain, SuiChain } from "../chains";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
-import { PriceFeedContract, PrivateKey, TxResult } from "../base";
+import { PriceFeedContract, type PrivateKey, type TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
@@ -158,7 +158,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
     tx.moveCall({
       target: `${packageId}::migrate::migrate`,
-      arguments: [tx.object(this.stateId), verificationReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt!],
     });
 
     return this.executeTransaction(tx, keypair);
@@ -216,7 +216,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
     tx.moveCall({
       target: `${packageId}::governance::execute_governance_instruction`,
-      arguments: [tx.object(this.stateId), verificationReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt!],
     });
 
     const result = await this.executeTransaction(tx, keypair);
@@ -239,19 +239,19 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
     const [upgradeTicket] = tx.moveCall({
       target: `${packageId}::contract_upgrade::authorize_upgrade`,
-      arguments: [tx.object(this.stateId), verificationReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt!],
     });
 
     const [upgradeReceipt] = tx.upgrade({
       modules,
       dependencies,
       package: packageId,
-      ticket: upgradeTicket,
+      ticket: upgradeTicket!,
     });
 
     tx.moveCall({
       target: `${packageId}::contract_upgrade::commit_upgrade`,
-      arguments: [tx.object(this.stateId), upgradeReceipt],
+      arguments: [tx.object(this.stateId), upgradeReceipt!],
     });
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -283,7 +283,7 @@ export class SuiPriceFeedContract extends PriceFeedContract {
 
     const [verificationReceipt] = tx.moveCall({
       target: `${packageId}::governance::verify_vaa`,
-      arguments: [tx.object(this.stateId), verifiedVAA],
+      arguments: [tx.object(this.stateId), verifiedVAA!],
     });
     return verificationReceipt;
   }
@@ -503,7 +503,7 @@ export class SuiWormholeContract extends WormholeContract {
 
     const [decreeReceipt] = tx.moveCall({
       target: `${corePackageId}::governance_message::verify_vaa`,
-      arguments: [tx.object(coreObjectId), verifiedVaa, decreeTicket],
+      arguments: [tx.object(coreObjectId), verifiedVaa!, decreeTicket!],
       typeArguments: [
         `${corePackageId}::update_guardian_set::GovernanceWitness`,
       ],
@@ -513,7 +513,7 @@ export class SuiWormholeContract extends WormholeContract {
       target: `${corePackageId}::update_guardian_set::update_guardian_set`,
       arguments: [
         tx.object(coreObjectId),
-        decreeReceipt,
+        decreeReceipt!,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
     });

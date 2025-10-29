@@ -3,8 +3,8 @@ import { WormholeContract } from "./wormhole";
 import {
   PYTH_CONTRACT_ABI as FuelContractAbi,
   FUEL_ETH_ASSET_ID,
-  PriceFeedOutput,
-  DataSourceOutput,
+  type PriceFeedOutput,
+  type DataSourceOutput,
 } from "@pythnetwork/pyth-fuel-js";
 
 import {
@@ -13,12 +13,17 @@ import {
   Wallet,
   arrayify,
   hexlify,
-  DryRunResult,
+  type DryRunResult,
 } from "fuels";
-import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
+import {
+  type PriceFeed,
+  PriceFeedContract,
+  type PrivateKey,
+  type TxResult,
+} from "../base";
 
-import { TokenQty } from "../token";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { TokenQty } from "../token";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 export class FuelWormholeContract extends WormholeContract {
   static type = "FuelWormholeContract";
@@ -73,14 +78,14 @@ export class FuelWormholeContract extends WormholeContract {
   async getCurrentGuardianSetIndex(): Promise<number> {
     const contract = await this.getContract();
     const guardianSetIndex = (
-      await contract.functions.current_guardian_set_index().get()
-    ).value;
+      await contract.functions.current_guardian_set_index?.().get()
+    )?.value;
     return guardianSetIndex;
   }
 
   async getChainId(): Promise<number> {
     const contract = await this.getContract();
-    const chainId = (await contract.functions.chain_id().get()).value;
+    const chainId = ((await contract.functions.chain_id?.().get()) ?? {}).value;
     return chainId;
   }
 
@@ -88,7 +93,7 @@ export class FuelWormholeContract extends WormholeContract {
     const contract = await this.getContract();
     const guardianSetIndex = await this.getCurrentGuardianSetIndex();
     const guardianSet = (
-      await contract.functions.guardian_set(guardianSetIndex).get()
+      (await contract.functions.guardian_set?.(guardianSetIndex).get()) ?? {}
     ).value;
     return guardianSet;
   }
@@ -100,10 +105,17 @@ export class FuelWormholeContract extends WormholeContract {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const contract = await this.getContract(wallet);
     const tx = await contract.functions
-      .submit_new_guardian_set(arrayify(vaa))
+      .submit_new_guardian_set?.(arrayify(vaa))
       .call(); // you might get `Error updating Guardianset for fuel_testnet_{address} TypeError: response.body.getReader is not a function` but the tx could still be successful, this is due to fuels using native fetch but some other packages in the monorepo is using node-fetch which overrides the fetch here
 
+    if (!tx) {
+      throw new Error("submit_new_guardian_set() was undefined");
+    }
+
     const txResult = await tx.waitForResult();
+    if (!txResult) {
+      throw new Error("waitForResult() returned undefined");
+    }
 
     return {
       id: tx.transactionId,
@@ -165,8 +177,11 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async getLastExecutedGovernanceSequence() {
     const pythContract = await this.getContract();
     return Number(
-      (await pythContract.functions.last_executed_governance_sequence().get())
-        .value,
+      (
+        (await pythContract.functions
+          .last_executed_governance_sequence?.()
+          .get()) ?? {}
+      ).value,
     );
   }
 
@@ -174,13 +189,14 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const pythContract = await this.getContract();
     const feed = "0x" + feedId;
     const exists = (
-      await pythContract.functions.price_feed_exists(hexlify(feed)).get()
+      (await pythContract.functions.price_feed_exists?.(hexlify(feed)).get()) ??
+      {}
     ).value;
     if (!exists) {
       return undefined;
     }
     const priceFeed: PriceFeedOutput = (
-      await pythContract.functions.price_feed_unsafe(feed).get()
+      (await pythContract.functions.price_feed_unsafe?.(feed).get()) ?? {}
     ).value;
     return {
       price: {
@@ -201,7 +217,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async getValidTimePeriod() {
     const pythContract = await this.getContract();
     const validTimePeriod = (
-      await pythContract.functions.valid_time_period().get()
+      (await pythContract.functions.valid_time_period?.().get()) ?? {}
     ).value;
     return Number(validTimePeriod);
   }
@@ -216,39 +232,46 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async getBaseUpdateFee() {
     const pythContract = await this.getContract();
-    const amount = (await pythContract.functions.single_update_fee().get())
-      .value;
+    const amount = (
+      (await pythContract.functions.single_update_fee?.().get()) ?? {}
+    ).value;
     return {
       amount: amount.toString(),
-      denom: this.chain.getNativeToken(),
+      denom: this.chain.getNativeToken() ?? "",
     };
   }
 
   async getDataSources(): Promise<DataSource[]> {
     const pythContract = await this.getContract();
-    const result: DryRunResult<DataSourceOutput[]> =
-      await pythContract.functions.valid_data_sources().get();
-    return result.value.map(
-      ({
-        chain_id,
-        emitter_address,
-      }: {
-        chain_id: number;
-        emitter_address: string;
-      }) => {
-        return {
-          emitterChain: chain_id,
-          emitterAddress: emitter_address.replace("0x", ""),
-        };
-      },
+    const result: DryRunResult<DataSourceOutput[]> | undefined =
+      await pythContract.functions.valid_data_sources?.().get();
+    return (
+      result?.value.map(
+        ({
+          chain_id,
+          emitter_address,
+        }: {
+          chain_id: number;
+          emitter_address: string;
+        }) => {
+          return {
+            emitterChain: chain_id,
+            emitterAddress: emitter_address.replace("0x", ""),
+          };
+        },
+      ) ?? []
     );
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const pythContract = await this.getContract();
-    const result: DryRunResult<DataSourceOutput> = await pythContract.functions
-      .governance_data_source()
-      .get();
+    const result: DryRunResult<DataSourceOutput> | undefined =
+      await pythContract.functions.governance_data_source?.().get();
+
+    if (!result) {
+      throw new Error("governance_data_source() was undefined");
+    }
+
     return {
       emitterChain: result.value.chain_id,
       emitterAddress: result.value.emitter_address.replace("0x", ""),
@@ -260,16 +283,24 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const contract = await this.getContract(wallet);
     const priceFeedUpdateData = vaas.map((vaa) => new Uint8Array(vaa));
     const updateFee: number = (
-      await contract.functions.update_fee(priceFeedUpdateData).get()
+      (await contract.functions.update_fee?.(priceFeedUpdateData).get()) ?? {}
     ).value;
     const tx = await contract.functions
-      .update_price_feeds(priceFeedUpdateData)
+      .update_price_feeds?.(priceFeedUpdateData)
       .callParams({
         forward: [updateFee, hexlify(FUEL_ETH_ASSET_ID)],
       })
       .call();
 
+    if (!tx) {
+      throw new Error("update_price_feeds() was undefined");
+    }
+
     const txResult = await tx.waitForResult();
+
+    if (!txResult) {
+      throw new Error("waitForResult() returned undefined");
+    }
 
     return { id: tx.transactionId, info: txResult.transactionResponse };
   }
@@ -281,10 +312,18 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const contract = await this.getContract(wallet);
     const tx = await contract.functions
-      .execute_governance_instruction(arrayify(vaa))
+      .execute_governance_instruction?.(arrayify(vaa))
       .call();
 
+    if (!tx) {
+      throw new Error("execute_governance_instruction() was undefined");
+    }
+
     const txResult = await tx.waitForResult();
+
+    if (!txResult) {
+      throw new Error("waitForResult() returned undefined");
+    }
 
     return { id: tx.transactionId, info: txResult.transactionResponse };
   }

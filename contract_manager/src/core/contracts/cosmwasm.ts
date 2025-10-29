@@ -1,23 +1,23 @@
 import { Chain, CosmWasmChain } from "../chains";
 import { readFileSync } from "fs";
 import {
-  ContractInfoResponse,
+  type ContractInfoResponse,
   CosmwasmQuerier,
-  Price,
+  type Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
-import { Coin } from "@cosmjs/stargate";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { Coin } from "@cosmjs/stargate";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import {
   PriceFeedContract,
   getDefaultDeploymentConfig,
-  PrivateKey,
-  TxResult,
+  type PrivateKey,
+  type TxResult,
 } from "../base";
 import { WormholeContract } from "./wormhole";
-import { TokenQty } from "../token";
+import type { TokenQty } from "../token";
 
 /**
  * Variables here need to be snake case to match the on-chain contract configs
@@ -84,24 +84,24 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
   async getCurrentGuardianSetIndex(): Promise<number> {
     const config = await this.getConfig();
-    return JSON.parse(config["\x00\x06config"])["guardian_set_index"];
+    return JSON.parse(config["\x00\x06config"] ?? "{}")["guardian_set_index"];
   }
 
   async getChainId(): Promise<number> {
     const config = await this.getConfig();
-    return JSON.parse(config["\x00\x06config"])["chain_id"];
+    return JSON.parse(config["\x00\x06config"] ?? "{}")["chain_id"];
   }
 
   async getGuardianSet(): Promise<string[]> {
     const config = await this.getConfig();
-    const guardianSetIndex = JSON.parse(config["\x00\x06config"])[
+    const guardianSetIndex = JSON.parse(config["\x00\x06config"] ?? "{}")[
       "guardian_set_index"
     ];
     let key = "\x00\fguardian_set";
     //append guardianSetIndex as 4 bytes to key string
     key += Buffer.from(guardianSetIndex.toString(16).padStart(8, "0"), "hex");
 
-    const guardianSet = JSON.parse(config[key])["addresses"];
+    const guardianSet = JSON.parse(config[key] ?? "{}")["addresses"];
     return guardianSet.map((entry: { bytes: string }) =>
       Buffer.from(entry.bytes, "base64").toString("hex"),
     );
@@ -245,7 +245,7 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       contractAddr: this.address,
     })) as Record<string, string>;
     const config = {
-      config_v1: JSON.parse(allStates["\x00\tconfig_v1"]),
+      config_v1: JSON.parse(allStates["\x00\tconfig_v1"] ?? "{}"),
       contract_version: allStates["\x00\x10contract_version"]
         ? JSON.parse(allStates["\x00\x10contract_version"])
         : undefined,
@@ -289,8 +289,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       let found = false;
       for (let j = 0; j < dataSources2.length; j++) {
         if (
-          dataSources1[i].emitter === dataSources2[j].emitter &&
-          dataSources1[i].chain_id === dataSources2[j].chain_id
+          dataSources1[i]?.emitter === dataSources2[j]?.emitter &&
+          dataSources1[i]?.chain_id === dataSources2[j]?.chain_id
         ) {
           found = true;
           break;

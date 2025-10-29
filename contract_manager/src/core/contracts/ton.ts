@@ -1,9 +1,14 @@
 import { Chain, TonChain } from "../chains";
 import { WormholeContract } from "./wormhole";
-import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
-import { TokenQty } from "../token";
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { Address, Cell, OpenedContract } from "@ton/ton";
+import {
+  type PriceFeed,
+  PriceFeedContract,
+  type PrivateKey,
+  type TxResult,
+} from "../base";
+import type { TokenQty } from "../token";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import { Address, Cell, type OpenedContract } from "@ton/ton";
 import {
   calculateUpdatePriceFeedsFee,
   PythContract,
@@ -100,7 +105,7 @@ export class TonWormholeContract extends WormholeContract {
     );
 
     return {
-      id: transactions[0].hash.toString(),
+      id: transactions[0]?.hash.toString() ?? "",
       info: JSON.stringify("0x1"),
     };
   }
@@ -250,9 +255,12 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,
     });
-    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
-    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
+    const txHash = Buffer.from(
+      txDetails[0]?.hash() ?? Buffer.alloc(0),
+    ).toString("hex");
+    const txInfo = JSON.stringify(
+      txDetails[0]?.description ?? "{}",
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
     );
 
     return {
@@ -274,9 +282,12 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,
     });
-    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
-    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
+    const txHash = Buffer.from(
+      txDetails[0]?.hash() ?? Buffer.alloc(0),
+    ).toString("hex");
+    const txInfo = JSON.stringify(
+      txDetails[0]?.description ?? "{}",
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
     );
 
     return {
@@ -298,9 +309,12 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,
     });
-    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
-    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
+    const txHash = Buffer.from(
+      txDetails[0]?.hash() ?? Buffer.alloc(0),
+    ).toString("hex");
+    const txInfo = JSON.stringify(
+      txDetails[0]?.description ?? "{}",
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
     );
 
     return {

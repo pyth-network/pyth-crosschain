@@ -1,11 +1,11 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  KeyValueConfig,
-  Price,
-  PriceFeed,
+  type KeyValueConfig,
+  type Price,
+  type PriceFeed,
   PriceFeedContract,
-  PrivateKey,
-  TxResult,
+  type PrivateKey,
+  type TxResult,
 } from "../base";
 import { Chain, StarknetChain } from "../chains";
 import { Account, Contract, shortString } from "starknet";
@@ -160,7 +160,11 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     denom?: string | undefined;
   }> {
     const tokens = await this.getFeeTokenAddresses();
-    return await this.getBaseUpdateFeeInToken(tokens[0]);
+    const result = await this.getBaseUpdateFeeInToken(tokens[0] ?? "");
+    return {
+      ...result,
+      denom: result.denom ?? "",
+    };
   }
 
   /**

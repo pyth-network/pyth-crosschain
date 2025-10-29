@@ -1,4 +1,4 @@
-import { PrivateKey, Storable, TxResult } from "../base";
+import { type PrivateKey, Storable, type TxResult } from "../base";
 
 export abstract class WormholeContract extends Storable {
   abstract getCurrentGuardianSetIndex(): Promise<number>;
@@ -37,7 +37,7 @@ export abstract class WormholeContract extends Storable {
     ];
     const currentIndex = await this.getCurrentGuardianSetIndex();
     for (let i = currentIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
-      const vaa = MAINNET_UPGRADE_VAAS[i];
+      const vaa = MAINNET_UPGRADE_VAAS[i] ?? "";
       const result = await this.upgradeGuardianSets(
         senderPrivateKey,
         Buffer.from(vaa, "hex"),

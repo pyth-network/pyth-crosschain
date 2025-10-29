@@ -1,13 +1,13 @@
 import { parseVaa } from "@certusone/wormhole-sdk";
 import {
-  DataSource,
+  type DataSource,
   EvmExecute,
   decodeGovernancePayload,
 } from "@pythnetwork/xc-admin-common";
-import { DefaultStore } from "./store";
-import { PrivateKey, TxResult } from "../../core/base";
-import { EvmExecutorContract } from "../../core/contracts";
-import { EvmChain } from "../../core/chains";
+import { DefaultStore } from "./store.js";
+import type { PrivateKey, TxResult } from "../../core/base.js";
+import { EvmChain } from "../../core/chains.js";
+import { EvmExecutorContract } from "../../core/contracts/evm.js";
 
 // TODO: A better place for this would be `base.ts`. That will require
 // significant refactor. Todo in separate PR.

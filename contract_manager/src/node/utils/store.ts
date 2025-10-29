@@ -109,10 +109,12 @@ export class Store {
             `No chain class found for chain type: ${parsed.type}`,
           );
         }
-        const chain = allChainClasses[parsed.type].fromJson(parsed);
-        if (this.chains[chain.getId()])
-          throw new Error(`Multiple chains with id ${chain.getId()} found`);
-        this.chains[chain.getId()] = chain;
+        const chain = allChainClasses[parsed.type]?.fromJson(parsed);
+        const id = chain?.getId() ?? "";
+        if (this.chains[id]) {
+          throw new Error(`Multiple chains with id ${id} found`);
+        }
+        this.chains[id] = chain!;
       }
     });
   }
@@ -128,7 +130,7 @@ export class Store {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
       }
-      contractsByType[contract.getType()].push(contract);
+      contractsByType[contract.getType()]?.push(contract);
     }
     for (const [type, contracts] of Object.entries(contractsByType)) {
       writeFileSync(
@@ -148,7 +150,7 @@ export class Store {
       if (!chainsByType[chain.getType()]) {
         chainsByType[chain.getType()] = [];
       }
-      chainsByType[chain.getType()].push(chain);
+      chainsByType[chain.getType()]?.push(chain);
     }
     for (const [type, chains] of Object.entries(chainsByType)) {
       writeFileSync(
@@ -193,8 +195,8 @@ export class Store {
         if (!this.chains[parsed.chain])
           throw new Error(`Chain ${parsed.chain} not found`);
         const chain = this.chains[parsed.chain];
-        const chainContract = allContractClasses[parsed.type].fromJson(
-          chain,
+        const chainContract = allContractClasses[parsed.type]!.fromJson(
+          chain!,
           parsed,
         );
         if (

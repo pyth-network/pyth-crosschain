@@ -1,13 +1,18 @@
-import { KeyValueConfig, PrivateKey, Storable, TxResult } from "./base";
 import {
-  ChainName,
+  type KeyValueConfig,
+  type PrivateKey,
+  Storable,
+  type TxResult,
+} from "./base";
+import {
+  type ChainName,
   SetFee,
   CosmosUpgradeContract,
   EvmUpgradeContract,
   toChainId,
   SetDataSources,
   SetValidPeriod,
-  DataSource,
+  type DataSource,
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
   EvmExecute,
@@ -24,17 +29,17 @@ import { IotaClient } from "@iota/iota-sdk/client";
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { TokenId } from "./token";
+import type { TokenId } from "./token";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 import {
   TonClient,
   WalletContractV4,
-  ContractProvider,
+  type ContractProvider,
   Address,
-  OpenedContract,
-  Sender,
+  type OpenedContract,
+  type Sender,
 } from "@ton/ton";
 import { keyPairFromSeed } from "@ton/crypto";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
@@ -168,7 +173,7 @@ export abstract class Chain extends Storable {
  * For example, governance instructions to upgrade Pyth data sources.
  */
 export class GlobalChain extends Chain {
-  static type = "GlobalChain";
+  static override type = "GlobalChain";
   constructor() {
     super("global", true, "unset", undefined);
   }
@@ -204,7 +209,7 @@ export class GlobalChain extends Chain {
 }
 
 export class CosmWasmChain extends Chain {
-  static type = "CosmWasmChain";
+  static override type = "CosmWasmChain";
 
   constructor(
     id: string,
@@ -224,12 +229,12 @@ export class CosmWasmChain extends Chain {
     return new CosmWasmChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.endpoint,
-      parsed.gasPrice,
-      parsed.prefix,
-      parsed.feeDenom,
+      parsed.endpoint ?? "",
+      parsed.gasPrice ?? "",
+      parsed.prefix ?? "",
+      parsed.feeDenom ?? "",
     );
   }
 
@@ -291,7 +296,7 @@ export class CosmWasmChain extends Chain {
 }
 
 export class SuiChain extends Chain {
-  static type = "SuiChain";
+  static override type = "SuiChain";
 
   constructor(
     id: string,
@@ -308,9 +313,9 @@ export class SuiChain extends Chain {
     return new SuiChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.rpcUrl,
+      parsed.rpcUrl ?? "",
     );
   }
 
@@ -357,7 +362,7 @@ export class SuiChain extends Chain {
 }
 
 export class IotaChain extends Chain {
-  static type = "IotaChain";
+  static override type = "IotaChain";
 
   constructor(
     id: string,
@@ -374,9 +379,9 @@ export class IotaChain extends Chain {
     return new IotaChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.rpcUrl,
+      parsed.rpcUrl ?? "",
     );
   }
 
@@ -423,7 +428,7 @@ export class IotaChain extends Chain {
 }
 
 export class EvmChain extends Chain {
-  static type = "EvmChain";
+  static override type = "EvmChain";
 
   constructor(
     id: string,
@@ -449,7 +454,7 @@ export class EvmChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.nativeToken,
-      parsed.rpcUrl,
+      parsed.rpcUrl ?? "",
       parsed.networkId,
     );
   }
@@ -612,7 +617,7 @@ export class EvmChain extends Chain {
 }
 
 export class AptosChain extends Chain {
-  static type = "AptosChain";
+  static override type = "AptosChain";
 
   constructor(
     id: string,
@@ -655,9 +660,9 @@ export class AptosChain extends Chain {
     return new AptosChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.rpcUrl,
+      parsed.rpcUrl ?? "",
     );
   }
 
@@ -697,7 +702,7 @@ export class AptosChain extends Chain {
 }
 
 export class FuelChain extends Chain {
-  static type = "FuelChain";
+  static override type = "FuelChain";
 
   constructor(
     id: string,
@@ -710,6 +715,7 @@ export class FuelChain extends Chain {
   }
 
   async getProvider(): Promise<Provider> {
+    // @ts-expect-error - TODO: The typing does NOT indicate a create() function exists, so this is likely to blow up at runtime
     return await Provider.create(this.gqlUrl);
   }
 
@@ -746,9 +752,9 @@ export class FuelChain extends Chain {
     return new FuelChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.gqlUrl,
+      parsed.gqlUrl ?? "",
     );
   }
 
@@ -765,7 +771,7 @@ export class FuelChain extends Chain {
 }
 
 export class StarknetChain extends Chain {
-  static type = "StarknetChain";
+  static override type = "StarknetChain";
 
   constructor(
     id: string,
@@ -795,8 +801,8 @@ export class StarknetChain extends Chain {
     return new StarknetChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
-      parsed.rpcUrl,
+      parsed.wormholeChainName ?? "",
+      parsed.rpcUrl ?? "",
     );
   }
 
@@ -853,7 +859,7 @@ export class StarknetChain extends Chain {
 }
 
 export class TonChain extends Chain {
-  static type = "TonChain";
+  static override type = "TonChain";
 
   constructor(
     id: string,
@@ -868,7 +874,7 @@ export class TonChain extends Chain {
   async getClient(): Promise<TonClient> {
     // We are hacking rpcUrl to include the apiKey header which is a
     // header that is used to bypass rate limits on the TON network
-    const [rpcUrl, apiKey] = parseRpcUrl(this.rpcUrl).split("#");
+    const [rpcUrl = "", apiKey = ""] = parseRpcUrl(this.rpcUrl).split("#");
 
     const client = new TonClient({
       endpoint: rpcUrl,
@@ -936,9 +942,9 @@ export class TonChain extends Chain {
     return new TonChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.rpcUrl,
+      parsed.rpcUrl ?? "",
     );
   }
 
@@ -956,7 +962,7 @@ export class TonChain extends Chain {
 }
 
 export class NearChain extends Chain {
-  static type = "NearChain";
+  static override type = "NearChain";
 
   constructor(
     id: string,
@@ -974,10 +980,10 @@ export class NearChain extends Chain {
     return new NearChain(
       parsed.id,
       parsed.mainnet,
-      parsed.wormholeChainName,
+      parsed.wormholeChainName ?? "",
       parsed.nativeToken,
-      parsed.rpcUrl,
-      parsed.networkId,
+      parsed.rpcUrl ?? "",
+      parsed.networkId ?? "",
     );
   }
 

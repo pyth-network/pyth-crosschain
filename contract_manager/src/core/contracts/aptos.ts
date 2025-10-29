@@ -1,9 +1,14 @@
-import { PriceFeedContract, PriceFeed, PrivateKey, TxResult } from "../base";
+import {
+  PriceFeedContract,
+  type PriceFeed,
+  type PrivateKey,
+  type TxResult,
+} from "../base";
 import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
-import { TokenQty } from "../token";
+import type { TokenQty } from "../token";
 
 type WormholeState = {
   chain_id: { number: string };

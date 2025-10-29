@@ -1,6 +1,6 @@
-import evmChainsData from "../../store/chains/EvmChains.json";
-import evmPriceFeedContractsData from "../../store/contracts/EvmPriceFeedContracts.json";
-import evmWormholeContractsData from "../../store/contracts/EvmWormholeContracts.json";
+import evmChainsData from "../store/chains/EvmChains.json" with { type: "json" };
+import evmPriceFeedContractsData from "../store/contracts/EvmPriceFeedContracts.json" with { type: "json" };
+import evmWormholeContractsData from "../store/contracts/EvmWormholeContracts.json" with { type: "json" };
 import * as chains from "viem/chains";
 
 export const allEvmChainIds: number[] = evmChainsData.map((c) => c.networkId);
@@ -47,8 +47,11 @@ export const getEvmChainRpcUrl = (chainId: number): string | undefined => {
     return undefined;
   } else {
     const viemChain = Object.values(chains).find(
-      (c) => c.id === Number.parseInt(chain.id, 10),
+      (c) => "id" in c && c.id === Number.parseInt(chain.id, 10),
     );
-    return viemChain?.rpcUrls.default.http[0] ?? chain.rpcUrl;
+    if (viemChain && "rpcUrls" in viemChain) {
+      return viemChain?.rpcUrls.default.http[0] ?? chain.rpcUrl;
+    }
+    return;
   }
 };

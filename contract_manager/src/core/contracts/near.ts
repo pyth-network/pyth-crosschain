@@ -1,10 +1,10 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  KeyValueConfig,
-  PriceFeed,
+  type KeyValueConfig,
+  type PriceFeed,
   PriceFeedContract,
-  PrivateKey,
-  TxResult,
+  type PrivateKey,
+  type TxResult,
 } from "../base";
 import { Chain, NearChain } from "../chains";
 import * as nearAPI from "near-api-js";
@@ -245,7 +245,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
       results.push({ id: outcome.transaction.hash, info: outcome });
     }
     if (results.length === 1) {
-      return results[0];
+      return results[0]!;
     } else {
       return {
         id: results.map((x) => x.id).join(","),

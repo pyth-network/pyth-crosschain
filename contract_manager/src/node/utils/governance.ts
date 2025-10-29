@@ -3,8 +3,8 @@ import { readFileSync } from "fs";
 import {
   Connection,
   Keypair,
-  ParsedInstruction,
-  PartiallyDecodedInstruction,
+  type ParsedInstruction,
+  type PartiallyDecodedInstruction,
   PublicKey,
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
@@ -12,28 +12,27 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import * as bs58 from "bs58";
-import {
-  getPythClusterApiUrl,
-  PythCluster,
-} from "@pythnetwork/client/lib/cluster";
-import SquadsMesh from "@sqds/mesh";
-import { AnchorProvider } from "@coral-xyz/anchor";
-import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { getPythClusterApiUrl, type PythCluster } from "@pythnetwork/client";
+import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {
   executeProposal,
   MultisigVault,
   WORMHOLE_ADDRESS,
   WORMHOLE_API_ENDPOINT,
 } from "@pythnetwork/xc-admin-common";
+import { type KeyValueConfig, Storable } from "../../core/base.js";
+import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
+import SquadsMesh from "@sqds/mesh";
+// TODO: this should be migrated to @wormhole-foundation/dsk
+// as such, we cannot publish an ESM variant of the contract_manager
+// until we upgrade
 import {
   createWormholeProgramInterface,
   deriveEmitterSequenceKey,
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
-} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { KeyValueConfig, Storable } from "../../core/base";
-import { PriorityFeeConfig } from "@pythnetwork/solana-utils";
+} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -121,7 +120,9 @@ export class SubmittedWormholeMessage {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         continue;
       }
-      const { vaaBytes } = await response.json();
+      const { vaaBytes } = (await response.json()) as {
+        vaaBytes: Parameters<typeof Buffer.from>[0];
+      };
       return Buffer.from(vaaBytes, "base64");
     }
     throw new Error("VAA not found, maybe too soon to fetch?");
@@ -343,7 +344,7 @@ export class Vault extends Storable {
     const response = await fetch(
       `${rpcUrl}/api/v1/vaas/1/${emitter.toBase58()}`,
     );
-    const { data } = await response.json();
+    const { data } = (await response.json()) as { data: any[] };
     return data[0].sequence;
   }
 

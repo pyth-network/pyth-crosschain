@@ -1,10 +1,10 @@
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
-import { PriceFeedContract, PrivateKey, Storable } from "../base";
+import { PriceFeedContract, type PrivateKey, Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { WormholeContract } from "./wormhole";
-import { TokenQty } from "../token";
+import type { TokenQty } from "../token";
 import {
   EXECUTOR_ABI,
   EXTENDED_ENTROPY_ABI,
@@ -315,7 +315,7 @@ export class EvmEntropyContract extends Storable {
         sequenceNumber: sequenceNumber,
       },
     });
-    return result[0].returnValues.userRandomNumber;
+    return result[0]?.returnValues.userRandomNumber ?? "";
   }
 
   /**

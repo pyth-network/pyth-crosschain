@@ -1,4 +1,4 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { Chain } from "./chains";
 
 export interface TxResult {
@@ -77,7 +77,10 @@ export abstract class PriceFeedContract extends Storable {
    * Returns the base update fee for this contract
    * This is the required fee for updating the price feeds in the contract
    */
-  abstract getBaseUpdateFee(): Promise<{ amount: string; denom?: string }>;
+  abstract getBaseUpdateFee(): Promise<{
+    amount: string;
+    denom?: string | undefined;
+  }>;
 
   /**
    * Returns the last governance sequence that was executed on this contract

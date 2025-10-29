@@ -1,5 +1,5 @@
 import axios from "axios";
-import { KeyValueConfig, Storable } from "./base";
+import { type KeyValueConfig, Storable } from "./base";
 
 export type TokenId = string;
 /**
