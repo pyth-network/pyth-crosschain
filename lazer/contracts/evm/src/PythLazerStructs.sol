@@ -22,21 +22,34 @@ library PythLazerStructs {
         FundingRateInterval
     }
 
+    // Tri-state for a property's availability within a feed at a given timestamp
+    //  - NotApplicable: property not included for this feed in this update
+    //  - ApplicableButMissing: included but no value available for this timestamp
+    //  - Present: value exists for this timestamp
+    enum PropertyState {
+        NotApplicable,
+        ApplicableButMissing,
+        Present
+    }
+
     struct Feed {
-        // Slot 1: 16 + 4 + 8 + 2 + 2 = 32 bytes (fully packed!)
-        uint128 existsFlags;      // Bitmap: bit 0-127 for up to 128 properties
-        uint32 feedId;
-        int64 _price;
-        uint16 _publisherCount;
-        int16 _exponent;
-        // Slot 2: 8 + 8 + 8 + 8 = 32 bytes (fully packed)
-        int64 _bestBidPrice;
-        int64 _bestAskPrice;
-        uint64 _confidence;
-        int64 _fundingRate;
-        // Slot 3: 8 + 8 = 16 bytes (16 bytes wasted)
-        uint64 _fundingTimestamp;
-        uint64 _fundingRateInterval;
+        // Slot 1: tri-state map (2 bits per property; encoded in this uint256)
+        // Encoding per property p (0..N):
+        //   bits [2*p, 2*p+1]: 00 NotApplicable, 01 ApplicableButMissing, 10 Present, 11 Reserved
+        // Capacity with uint256: 256 / 2 = 128 properties supported
+        uint256 triStateMap;
+        // Slot 2 (fully packed = 32 bytes): 4 + 8 + 2 + 2 + 8 + 8
+        uint32 feedId;           // 4
+        int64 _price;            // 8
+        uint16 _publisherCount;  // 2
+        int16 _exponent;         // 2
+        int64 _bestBidPrice;     // 8
+        int64 _bestAskPrice;     // 8
+        // Slot 3 (fully packed = 32 bytes): 8 + 8 + 8 + 8
+        uint64 _confidence;          // 8
+        int64 _fundingRate;          // 8
+        uint64 _fundingTimestamp;    // 8
+        uint64 _fundingRateInterval; // 8
     }
 
     struct Update {
@@ -45,14 +58,5 @@ library PythLazerStructs {
         Feed[] feeds;
     }
 
-    // Bitmap constants for Feed.existsFlags (supports up to 128 properties)
-    uint128 constant PRICE_EXISTS = 1 << 0;
-    uint128 constant BEST_BID_EXISTS = 1 << 1;
-    uint128 constant BEST_ASK_EXISTS = 1 << 2;
-    uint128 constant PUBLISHER_COUNT_EXISTS = 1 << 3;
-    uint128 constant EXPONENT_EXISTS = 1 << 4;
-    uint128 constant CONFIDENCE_EXISTS = 1 << 5;
-    uint128 constant FUNDING_RATE_EXISTS = 1 << 6;
-    uint128 constant FUNDING_TIMESTAMP_EXISTS = 1 << 7;
-    uint128 constant FUNDING_RATE_INTERVAL_EXISTS = 1 << 8;
+    // Deprecated exists flags removed in favor of triStateMap
 }
