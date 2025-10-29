@@ -5,84 +5,204 @@
   "private": true,
   "exports": {
     "./core/base": {
-      "default": "./dist/core/base.js",
-      "types": "./dist/core/base.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/base.js",
+        "types": "./dist/cjs/core/base.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/base.js",
+        "types": "./dist/esm/core/base.d.ts"
+      }
     },
     "./core/chains": {
-      "default": "./dist/core/chains.js",
-      "types": "./dist/core/chains.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/chains.js",
+        "types": "./dist/cjs/core/chains.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/chains.js",
+        "types": "./dist/esm/core/chains.d.ts"
+      }
     },
     "./core/contracts/aptos": {
-      "default": "./dist/core/contracts/aptos.js",
-      "types": "./dist/core/contracts/aptos.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/aptos.js",
+        "types": "./dist/cjs/core/contracts/aptos.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/aptos.js",
+        "types": "./dist/esm/core/contracts/aptos.d.ts"
+      }
     },
     "./core/contracts/cosmwasm": {
-      "default": "./dist/core/contracts/cosmwasm.js",
-      "types": "./dist/core/contracts/cosmwasm.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/cosmwasm.js",
+        "types": "./dist/cjs/core/contracts/cosmwasm.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/cosmwasm.js",
+        "types": "./dist/esm/core/contracts/cosmwasm.d.ts"
+      }
     },
     "./core/contracts/evm": {
-      "default": "./dist/core/contracts/evm.js",
-      "types": "./dist/core/contracts/evm.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/evm.js",
+        "types": "./dist/cjs/core/contracts/evm.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/evm.js",
+        "types": "./dist/esm/core/contracts/evm.d.ts"
+      }
     },
     "./core/contracts/evm_abis": {
-      "default": "./dist/core/contracts/evm_abis.js",
-      "types": "./dist/core/contracts/evm_abis.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/evm_abis.js",
+        "types": "./dist/cjs/core/contracts/evm_abis.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/evm_abis.js",
+        "types": "./dist/esm/core/contracts/evm_abis.d.ts"
+      }
     },
     "./core/contracts/fuel": {
-      "default": "./dist/core/contracts/fuel.js",
-      "types": "./dist/core/contracts/fuel.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/fuel.js",
+        "types": "./dist/cjs/core/contracts/fuel.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/fuel.js",
+        "types": "./dist/esm/core/contracts/fuel.d.ts"
+      }
     },
     "./core/contracts": {
-      "default": "./dist/core/contracts/index.js",
-      "types": "./dist/core/contracts/index.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/index.js",
+        "types": "./dist/cjs/core/contracts/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/index.js",
+        "types": "./dist/esm/core/contracts/index.d.ts"
+      }
     },
     "./core/contracts/iota": {
-      "default": "./dist/core/contracts/iota.js",
-      "types": "./dist/core/contracts/iota.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/iota.js",
+        "types": "./dist/cjs/core/contracts/iota.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/iota.js",
+        "types": "./dist/esm/core/contracts/iota.d.ts"
+      }
     },
     "./core/contracts/near": {
-      "default": "./dist/core/contracts/near.js",
-      "types": "./dist/core/contracts/near.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/near.js",
+        "types": "./dist/cjs/core/contracts/near.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/near.js",
+        "types": "./dist/esm/core/contracts/near.d.ts"
+      }
     },
     "./core/contracts/starknet": {
-      "default": "./dist/core/contracts/starknet.js",
-      "types": "./dist/core/contracts/starknet.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/starknet.js",
+        "types": "./dist/cjs/core/contracts/starknet.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/starknet.js",
+        "types": "./dist/esm/core/contracts/starknet.d.ts"
+      }
     },
     "./core/contracts/sui": {
-      "default": "./dist/core/contracts/sui.js",
-      "types": "./dist/core/contracts/sui.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/sui.js",
+        "types": "./dist/cjs/core/contracts/sui.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/sui.js",
+        "types": "./dist/esm/core/contracts/sui.d.ts"
+      }
     },
     "./core/contracts/ton": {
-      "default": "./dist/core/contracts/ton.js",
-      "types": "./dist/core/contracts/ton.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/ton.js",
+        "types": "./dist/cjs/core/contracts/ton.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/ton.js",
+        "types": "./dist/esm/core/contracts/ton.d.ts"
+      }
     },
     "./core/contracts/wormhole": {
-      "default": "./dist/core/contracts/wormhole.js",
-      "types": "./dist/core/contracts/wormhole.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/contracts/wormhole.js",
+        "types": "./dist/cjs/core/contracts/wormhole.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/wormhole.js",
+        "types": "./dist/esm/core/contracts/wormhole.d.ts"
+      }
     },
     "./core/token": {
-      "default": "./dist/core/token.js",
-      "types": "./dist/core/token.d.ts"
+      "require": {
+        "default": "./dist/cjs/core/token.js",
+        "types": "./dist/cjs/core/token.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/token.js",
+        "types": "./dist/esm/core/token.d.ts"
+      }
     },
     "./node/utils/executor": {
-      "default": "./dist/node/utils/executor.js",
-      "types": "./dist/node/utils/executor.d.ts"
+      "require": {
+        "default": "./dist/cjs/node/utils/executor.js",
+        "types": "./dist/cjs/node/utils/executor.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/executor.js",
+        "types": "./dist/esm/node/utils/executor.d.ts"
+      }
     },
     "./node/utils/governance": {
-      "default": "./dist/node/utils/governance.js",
-      "types": "./dist/node/utils/governance.d.ts"
+      "require": {
+        "default": "./dist/cjs/node/utils/governance.js",
+        "types": "./dist/cjs/node/utils/governance.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/governance.js",
+        "types": "./dist/esm/node/utils/governance.d.ts"
+      }
     },
     "./node/utils/shell": {
-      "default": "./dist/node/utils/shell.js",
-      "types": "./dist/node/utils/shell.d.ts"
+      "require": {
+        "default": "./dist/cjs/node/utils/shell.js",
+        "types": "./dist/cjs/node/utils/shell.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/shell.js",
+        "types": "./dist/esm/node/utils/shell.d.ts"
+      }
     },
     "./node/utils/store": {
-      "default": "./dist/node/utils/store.js",
-      "types": "./dist/node/utils/store.d.ts"
+      "require": {
+        "default": "./dist/cjs/node/utils/store.js",
+        "types": "./dist/cjs/node/utils/store.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/store.js",
+        "types": "./dist/esm/node/utils/store.d.ts"
+      }
     },
     "./utils/utils": {
-      "default": "./dist/utils/utils.js",
-      "types": "./dist/utils/utils.d.ts"
+      "require": {
+        "default": "./dist/cjs/utils/utils.js",
+        "types": "./dist/cjs/utils/utils.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/utils/utils.js",
+        "types": "./dist/esm/utils/utils.d.ts"
+      }
     },
     "./package.json": "./package.json",
     "./data/chains/*.json": {
@@ -102,7 +222,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "ts-duality --noEsm --copyOtherFiles",
+    "build": "ts-duality --copyOtherFiles",
     "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
