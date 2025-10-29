@@ -1,4 +1,4 @@
-import { ChainName } from "../chains";
+import type { ChainName } from "../chains";
 import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";

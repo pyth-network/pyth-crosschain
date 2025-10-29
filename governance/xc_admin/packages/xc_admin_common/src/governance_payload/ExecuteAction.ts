@@ -1,7 +1,7 @@
 import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
-import { ChainName } from "../chains";
+import type { ChainName } from "../chains";
 
 /** Executes an action from the executor contract via the specified executorAddress, callAddress, value, and calldata */
 export class EvmExecute extends PythGovernanceActionImpl {

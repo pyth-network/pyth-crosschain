@@ -1,7 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
-import { PermissionData, Product } from "@pythnetwork/client";
-import { LazerConfig, LazerInstructionAccounts } from "./lazer/lazer_functions";
-import { CoreInstructionAccounts } from "./core/core_functions";
+import type { PermissionData, Product } from "@pythnetwork/client";
+import type {
+  LazerConfig,
+  LazerInstructionAccounts,
+} from "./lazer/lazer_functions";
+import type { CoreInstructionAccounts } from "./core/core_functions";
 /**
  * Represents the different Pyth programs supported by the application.
  */

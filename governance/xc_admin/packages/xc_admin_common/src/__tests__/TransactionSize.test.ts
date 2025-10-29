@@ -7,7 +7,7 @@ import { pythOracleProgram } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
-  PythCluster,
+  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
   Connection,

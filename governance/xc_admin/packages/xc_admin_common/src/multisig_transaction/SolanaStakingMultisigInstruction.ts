@@ -5,11 +5,11 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from ".";
-import { AnchorAccounts } from "./anchor";
+import type { AnchorAccounts } from "./anchor";
 import { StakeInstruction } from "@solana/web3.js";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 

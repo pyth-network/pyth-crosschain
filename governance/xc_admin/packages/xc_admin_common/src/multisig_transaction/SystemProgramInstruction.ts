@@ -1,10 +1,10 @@
 import { SystemInstruction, TransactionInstruction } from "@solana/web3.js";
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from ".";
-import { AnchorAccounts } from "./anchor";
+import type { AnchorAccounts } from "./anchor";
 
 export class SystemProgramMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.SystemProgram;

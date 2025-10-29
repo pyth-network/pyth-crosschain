@@ -1,6 +1,6 @@
-import { Idl } from "@coral-xyz/anchor";
+import type { Idl } from "@coral-xyz/anchor";
 import {
-  AccountMeta,
+  type AccountMeta,
   PublicKey,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -25,7 +25,7 @@ export function resolveAccountNames(
   const remaining: RemainingAccounts = [];
   instruction.keys.map((account, idx) => {
     if (idx < ix.accounts.length) {
-      named[ix.accounts[idx].name] = account;
+      named[ix.accounts[idx]!.name] = account;
     } else {
       remaining.push(account);
     }

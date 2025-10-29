@@ -1,5 +1,5 @@
 import {
-  AccountMeta,
+  type AccountMeta,
   Connection,
   MAX_SEED_LENGTH,
   PublicKey,
@@ -7,11 +7,11 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "./multisig_transaction";
-import { AnchorAccounts } from "./multisig_transaction/anchor";
+import { type AnchorAccounts } from "./multisig_transaction/anchor";
 import { PRICE_FEED_OPS_KEY } from "./multisig";
 
 export const PRICE_STORE_PROGRAM_ID: PublicKey = new PublicKey(
@@ -172,7 +172,7 @@ export function parsePriceStoreInstruction(
       data = {
         type: "Initialize",
         data: {
-          payerKey: instruction.keys[0].pubkey,
+          payerKey: instruction.keys[0]!.pubkey,
           authorityKey,
         },
       };
@@ -189,8 +189,8 @@ export function parsePriceStoreInstruction(
       data = {
         type: "InitializePublisher",
         data: {
-          authorityKey: instruction.keys[0].pubkey,
-          bufferKey: instruction.keys[3].pubkey,
+          authorityKey: instruction.keys[0]!.pubkey,
+          bufferKey: instruction.keys[3]!.pubkey,
           publisherKey,
         },
       };
@@ -220,7 +220,7 @@ export function parsePriceStoreInstruction(
     a.pubkey.equals(b.pubkey);
 
   const accountMismatch = expected.keys.some(
-    (ex, index) => !accountEquals(ex, instruction.keys[index]),
+    (ex, index) => !accountEquals(ex, instruction.keys[index]!),
   );
   if (accountMismatch) {
     const expectedJson = JSON.stringify(expected.keys);

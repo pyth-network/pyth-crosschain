@@ -1,4 +1,4 @@
-import { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { type PythCluster } from "@pythnetwork/client/lib/cluster";
 import { PublicKey } from "@solana/web3.js";
 
 export const WORMHOLE_ADDRESS: Record<PythCluster, PublicKey | undefined> = {

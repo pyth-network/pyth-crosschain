@@ -1,17 +1,17 @@
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
   UnrecognizedProgram,
 } from ".";
 import {
-  AnchorAccounts,
+  type AnchorAccounts,
   IDL_SET_BUFFER_DISCRIMINATOR,
   resolveAccountNames,
 } from "./anchor";
 import messageBufferIdl from "message_buffer/idl/message_buffer.json";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { Idl, BorshCoder } from "@coral-xyz/anchor";
+import { type Idl, BorshCoder } from "@coral-xyz/anchor";
 import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
 import meshIdl from "@sqds/mesh/lib/mesh-idl/mesh.json";
 import stakingIdl from "./idl/staking.json";
@@ -73,19 +73,14 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
 
     /// Special case for IDL instructions that all programs have
     if (instruction.data.equals(IDL_SET_BUFFER_DISCRIMINATOR)) {
-      return new AnchorMultisigInstruction(
-        program,
-        "IdlSetBuffer",
-        {},
-        {
-          named: {
-            buffer: instruction.keys[0],
-            idlAccount: instruction.keys[1],
-            idlAuthority: instruction.keys[2],
-          },
-          remaining: instruction.keys.slice(3),
+      return new AnchorMultisigInstruction(program, "IdlSetBuffer", {}, {
+        named: {
+          buffer: instruction.keys[0],
+          idlAccount: instruction.keys[1],
+          idlAuthority: instruction.keys[2],
         },
-      );
+        remaining: instruction.keys.slice(3),
+      } as AnchorAccounts);
     }
     const instructionCoder = new BorshCoder(idl).instruction;
 
