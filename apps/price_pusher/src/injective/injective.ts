@@ -1,15 +1,15 @@
-import { HexString, HermesClient } from "@pythnetwork/hermes-client";
+import { type HexString, HermesClient } from "@pythnetwork/hermes-client";
 import {
-  PriceItem,
-  PriceInfo,
-  IPricePusher,
+  type PriceItem,
+  type PriceInfo,
+  type IPricePusher,
   ChainPriceListener,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
+} from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
 import {
-  Msgs,
-  Account,
-  TxResponse,
+  type Msgs,
+  type Account,
+  type TxResponse,
   PrivateKey,
   TxGrpcApi,
   ChainGrpcAuthApi,
@@ -18,7 +18,7 @@ import {
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
 import { splitArrayToChunks } from "@injectivelabs/utils";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 
 const DEFAULT_GAS_PRICE = 160000000;
 const DEFAULT_GAS_MULTIPLIER = 1.05;

@@ -1,5 +1,5 @@
-import { HermesClient, HexString } from "@pythnetwork/hermes-client";
-import { PriceItem } from "./interface";
+import { HermesClient, type HexString } from "@pythnetwork/hermes-client";
+import type { PriceItem } from "./interface.js";
 
 export type PctNumber = number;
 export type DurationInSeconds = number;

@@ -1,13 +1,13 @@
 import {
   ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
+  type IPricePusher,
+  type PriceInfo,
+  type PriceItem,
+} from "../interface.js";
 import { AptosAccount, AptosClient } from "aptos";
-import { DurationInSeconds } from "../utils";
+import type { DurationInSeconds } from "../utils.js";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 
 export class AptosPriceListener extends ChainPriceListener {
   constructor(
@@ -94,6 +94,7 @@ export class AptosPricePusher implements IPricePusher {
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
+    // @ts-expect-error - TODO: this class member is unused. remove this exception when it is
     private overrideGasPriceMultiplier: number,
   ) {
     this.sequenceNumberLocked = false;

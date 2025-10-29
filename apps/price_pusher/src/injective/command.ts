@@ -1,14 +1,14 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
 import fs from "fs";
-import { InjectivePriceListener, InjectivePricePusher } from "./injective";
-import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { Options } from "yargs";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
+import { PythPriceListener } from "../pyth-price-listener.js";
+import { Controller } from "../controller.js";
+import type { Options } from "yargs";
 import { getNetworkInfo } from "@injectivelabs/networks";
-import pino from "pino";
-import { filterInvalidPriceItems } from "../utils";
+import { pino } from "pino";
+import { filterInvalidPriceItems } from "../utils.js";
 export default {
   command: "injective",
   describe: "run price pusher for injective",

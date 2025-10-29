@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import injective from "./injective/command";
-import evm from "./evm/command";
-import aptos from "./aptos/command";
-import sui from "./sui/command";
-import near from "./near/command";
-import solana from "./solana/command";
-import fuel from "./fuel/command";
-import ton from "./ton/command";
-import { enableMetrics, metricsPort } from "./options";
+import injective from "./injective/command.js";
+import evm from "./evm/command.js";
+import aptos from "./aptos/command.js";
+import sui from "./sui/command.js";
+import near from "./near/command.js";
+import solana from "./solana/command.js";
+import fuel from "./fuel/command.js";
+import ton from "./ton/command.js";
+import { enableMetrics, metricsPort } from "./options.js";
 
 yargs(hideBin(process.argv))
   .parserConfiguration({

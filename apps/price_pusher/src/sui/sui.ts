@@ -1,15 +1,19 @@
 import {
   ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
+  type IPricePusher,
+  type PriceInfo,
+  type PriceItem,
+} from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui/client";
-import { Logger } from "pino";
+import {
+  SuiClient,
+  type SuiObjectRef,
+  type PaginatedCoins,
+} from "@mysten/sui/client";
+import type { Logger } from "pino";
 import { HermesClient } from "@pythnetwork/hermes-client";
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
@@ -237,7 +241,7 @@ export class SuiPricePusher implements IPricePusher {
         const tx = new Transaction();
         await this.pythClient.updatePriceFeeds(
           tx,
-          [Buffer.from(vaa, "base64")],
+          [Buffer.from(vaa ?? "", "base64")],
           priceIdChunk,
         );
         txBlocks.push(tx);
@@ -429,7 +433,7 @@ export class SuiPricePusher implements IPricePusher {
     );
 
     tx.transferObjects(
-      Array.from({ length: numGasObjects }, (_, i) => coins[i]),
+      Array.from({ length: numGasObjects }, (_, i) => coins[i]!),
       tx.pure.address(signerAddress),
     );
     tx.setGasPayment([gasCoin]);
@@ -463,7 +467,7 @@ export class SuiPricePusher implements IPricePusher {
     const gasCoins = await SuiPricePusher.getAllGasCoins(provider, owner);
     // skip merging if there is only one coin
     if (gasCoins.length === 1) {
-      return gasCoins[0];
+      return gasCoins[0]!;
     }
 
     const gasCoinsChunks = chunkArray<SuiObjectRef>(
@@ -476,7 +480,8 @@ export class SuiPricePusher implements IPricePusher {
     for (let i = 0; i < gasCoinsChunks.length; i++) {
       const mergeTx = new Transaction();
       let coins = gasCoinsChunks[i];
-      coins = coins.filter((coin) => !lockedAddresses.has(coin.objectId));
+      coins =
+        coins?.filter((coin) => !lockedAddresses.has(coin.objectId)) ?? [];
       if (finalCoin) {
         coins = [finalCoin, ...coins];
       }

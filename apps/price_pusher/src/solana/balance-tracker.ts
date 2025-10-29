@@ -1,12 +1,12 @@
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
   BaseBalanceTracker,
-  BaseBalanceTrackerConfig,
-  IBalanceTracker,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { Logger } from "pino";
+  type BaseBalanceTrackerConfig,
+  type IBalanceTracker,
+} from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+import { PricePusherMetrics } from "../metrics.js";
+import type { Logger } from "pino";
 
 /**
  * Solana-specific configuration for balance tracker

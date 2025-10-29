@@ -1,20 +1,20 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
 import fs from "fs";
-import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { Options } from "yargs";
+import { PythPriceListener } from "../pyth-price-listener.js";
+import { Controller } from "../controller.js";
+import type { Options } from "yargs";
 import {
   AptosPriceListener,
   AptosPricePusher,
   APTOS_ACCOUNT_HD_PATH,
-} from "./aptos";
+} from "./aptos.js";
 import { AptosAccount } from "aptos";
 import pino from "pino";
-import { filterInvalidPriceItems } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { createAptosBalanceTracker } from "./balance-tracker";
+import { filterInvalidPriceItems } from "../utils.js";
+import { PricePusherMetrics } from "../metrics.js";
+import { createAptosBalanceTracker } from "./balance-tracker.js";
 
 export default {
   command: "aptos",
@@ -130,7 +130,7 @@ export default {
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
         pushingFrequency,
-        metrics,
+        metrics: metrics!,
       },
     );
 

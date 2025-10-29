@@ -1,11 +1,11 @@
 import {
-  CustomGasChainId,
-  TxSpeed,
+  type CustomGasChainId,
+  type TxSpeed,
   verifyValidOption,
   txSpeeds,
   customGasChainIds,
-} from "../utils";
-import { Logger } from "pino";
+} from "../utils.js";
+import type { Logger } from "pino";
 import { parseGwei } from "viem";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<bigint | undefined>>;
@@ -30,7 +30,8 @@ export class CustomGasStation {
   private async fetchMaticMainnetGasPrice() {
     try {
       const res = await fetch("https://gasstation.polygon.technology/v2");
-      const jsonRes = await res.json();
+      // TODO: improve the typing specificity here
+      const jsonRes = (await res.json()) as any;
       const gasPrice = jsonRes[this.speed].maxFee;
       return parseGwei(gasPrice.toFixed(2));
     } catch (err) {
@@ -51,4 +52,5 @@ export function getCustomGasStation(
   if (customGasStation && txSpeed) {
     return new CustomGasStation(logger, customGasStation, txSpeed);
   }
+  return;
 }

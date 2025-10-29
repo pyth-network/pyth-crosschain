@@ -1,10 +1,14 @@
-import { HexString } from "@pythnetwork/hermes-client";
+import type { HexString } from "@pythnetwork/hermes-client";
 import Joi from "joi";
 import YAML from "yaml";
 import fs from "fs";
-import { Logger } from "pino";
-import { DurationInSeconds, PctNumber, removeLeading0x } from "./utils";
-import { PriceInfo } from "./interface";
+import type { Logger } from "pino";
+import {
+  type DurationInSeconds,
+  type PctNumber,
+  removeLeading0x,
+} from "./utils.js";
+import type { PriceInfo } from "./interface.js";
 
 const PriceConfigFileSchema: Joi.Schema = Joi.array()
   .items(

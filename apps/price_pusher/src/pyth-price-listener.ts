@@ -1,11 +1,11 @@
 import {
-  HexString,
+  type HexString,
   HermesClient,
-  PriceUpdate,
+  type PriceUpdate,
 } from "@pythnetwork/hermes-client";
-import { PriceInfo, IPriceListener, PriceItem } from "./interface";
-import { Logger } from "pino";
-import { sleep } from "./utils";
+import type { PriceInfo, IPriceListener, PriceItem } from "./interface.js";
+import type { Logger } from "pino";
+import { sleep } from "./utils.js";
 
 type TimestampInMs = number & { readonly _: unique symbol };
 
@@ -60,7 +60,7 @@ export class PythPriceListener implements IPriceListener {
         ignoreInvalidPriceIds: true,
       },
     );
-    eventSource.onmessage = (event: MessageEvent<string>) => {
+    eventSource.onmessage = (event: MessageEvent) => {
       const priceUpdates = JSON.parse(event.data) as PriceUpdate;
       priceUpdates.parsed?.forEach((priceUpdate) => {
         this.logger.debug(

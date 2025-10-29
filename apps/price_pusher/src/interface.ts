@@ -1,7 +1,7 @@
-import { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
-import { DurationInSeconds } from "./utils";
-import { Logger } from "pino";
-import { PricePusherMetrics } from "./metrics";
+import type { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
+import type { DurationInSeconds } from "./utils.js";
+import type { Logger } from "pino";
+import { PricePusherMetrics } from "./metrics.js";
 
 export type PriceItem = {
   id: HexString;
@@ -152,7 +152,7 @@ export abstract class BaseBalanceTracker implements IBalanceTracker {
 
   private async startUpdateLoop(): Promise<void> {
     // We're using dynamic import to avoid circular dependencies
-    const { sleep } = await import("./utils");
+    const { sleep } = await import("./utils.js");
 
     // Run in a loop to regularly update the balance
     for (;;) {

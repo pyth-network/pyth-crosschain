@@ -1,5 +1,9 @@
 {
   "extends": "@cprussin/tsconfig/base.json",
   "include": ["src"],
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "node"
+  },
   "exclude": ["node_modules", "**/__tests__/*"]
 }

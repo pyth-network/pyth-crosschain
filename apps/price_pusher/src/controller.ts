@@ -1,13 +1,17 @@
-import { UnixTimestamp } from "@pythnetwork/hermes-client";
-import { DurationInSeconds, sleep } from "./utils";
-import { IPriceListener, IPricePusher } from "./interface";
-import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
-import { Logger } from "pino";
-import { PricePusherMetrics } from "./metrics";
+import type { UnixTimestamp } from "@pythnetwork/hermes-client";
+import { type DurationInSeconds, sleep } from "./utils.js";
+import type { IPriceListener, IPricePusher } from "./interface.js";
+import {
+  type PriceConfig,
+  shouldUpdate,
+  UpdateCondition,
+} from "./price-config.js";
+import type { Logger } from "pino";
+import { PricePusherMetrics } from "./metrics.js";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
-  private metrics?: PricePusherMetrics;
+  private metrics?: PricePusherMetrics | undefined;
 
   constructor(
     private priceConfigs: PriceConfig[],

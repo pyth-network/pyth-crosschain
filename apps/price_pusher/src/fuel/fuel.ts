@@ -1,12 +1,12 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { addLeading0x, DurationInSeconds } from "../utils";
-import { Logger } from "pino";
+  type IPricePusher,
+  type PriceInfo,
+  type PriceItem,
+} from "../interface.js";
+import { addLeading0x, type DurationInSeconds } from "../utils.js";
+import type { Logger } from "pino";
 import { Provider, Contract, hexlify, arrayify, Wallet, BN } from "fuels";
 import {
   PYTH_CONTRACT_ABI,
@@ -45,13 +45,13 @@ export class FuelPriceListener extends ChainPriceListener {
     try {
       const formattedPriceId = addLeading0x(priceId);
       const priceInfo = await this.contract.functions
-        .price_unsafe(formattedPriceId)
+        .price_unsafe?.(formattedPriceId)
         .get();
 
       console.log({
-        conf: priceInfo.value.confidence.toString(),
-        price: priceInfo.value.price.toString(),
-        publishTime: tai64ToUnix(priceInfo.value.publish_time),
+        conf: priceInfo?.value.confidence.toString(),
+        price: priceInfo?.value.price.toString(),
+        publishTime: tai64ToUnix(priceInfo?.value.publish_time),
       });
 
       this.logger.debug(
@@ -61,9 +61,9 @@ export class FuelPriceListener extends ChainPriceListener {
       );
 
       return {
-        conf: priceInfo.value.confidence.toString(),
-        price: priceInfo.value.price.toString(),
-        publishTime: tai64ToUnix(priceInfo.value.publish_time),
+        conf: priceInfo?.value.confidence.toString() ?? "",
+        price: priceInfo?.value.price.toString() ?? "",
+        publishTime: tai64ToUnix(priceInfo?.value.publish_time),
       };
     } catch (err) {
       this.logger.error({ err, priceId }, `Polling on-chain price failed.`);
@@ -88,11 +88,7 @@ export class FuelPricePusher implements IPricePusher {
     );
   }
 
-  async updatePriceFeed(
-    priceIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    pubTimesToPush: number[],
-  ): Promise<void> {
+  async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
     if (priceIds.length === 0) {
       return;
     }
@@ -113,18 +109,18 @@ export class FuelPricePusher implements IPricePusher {
 
     try {
       const updateFee = await this.contract.functions
-        .update_fee(updateData)
+        .update_fee?.(updateData)
         .get();
 
       const result = await this.contract.functions
-        .update_price_feeds(updateData)
+        .update_price_feeds?.(updateData)
         .callParams({
-          forward: [updateFee.value, hexlify(FUEL_ETH_ASSET_ID)],
+          forward: [updateFee?.value, hexlify(FUEL_ETH_ASSET_ID)],
         })
         .call();
 
       this.logger.info(
-        { transactionId: result.transactionId },
+        { transactionId: result?.transactionId },
         "updatePriceFeed successful",
       );
     } catch (err: any) {

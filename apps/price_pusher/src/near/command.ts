@@ -3,9 +3,9 @@ import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
-import { Options } from "yargs";
+import type { Options } from "yargs";
 import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
-import pino from "pino";
+import { pino } from "pino";
 import { filterInvalidPriceItems } from "../utils";
 
 export default {

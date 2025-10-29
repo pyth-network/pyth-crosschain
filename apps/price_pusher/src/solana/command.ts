@@ -1,29 +1,29 @@
-import { Options } from "yargs";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
-import { PythPriceListener } from "../pyth-price-listener";
+import type { Options } from "yargs";
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
+import { PythPriceListener } from "../pyth-price-listener.js";
 import {
   SolanaPriceListener,
   SolanaPricePusher,
   SolanaPricePusherJito,
-} from "./solana";
-import { Controller } from "../controller";
+} from "./solana.js";
+import { Controller } from "../controller.js";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { Keypair, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import fs from "fs";
 import { PublicKey } from "@solana/web3.js";
-import {
-  SearcherClient,
-  searcherClient,
-} from "jito-ts/dist/sdk/block-engine/searcher";
-import pino from "pino";
-import { Logger } from "pino";
+import { pino } from "pino";
+import type { Logger } from "pino";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { filterInvalidPriceItems } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { createSolanaBalanceTracker } from "./balance-tracker";
-import { IBalanceTracker } from "../interface";
+import {
+  searcherClient,
+  SearcherClient,
+} from "jito-ts/dist/sdk/block-engine/searcher";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
+import { filterInvalidPriceItems } from "../utils.js";
+import { PricePusherMetrics } from "../metrics.js";
+import { createSolanaBalanceTracker } from "./balance-tracker.js";
+import type { IBalanceTracker } from "../interface.js";
 
 export default {
   command: "solana",
@@ -265,7 +265,7 @@ export default {
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
         pushingFrequency,
-        metrics,
+        metrics: metrics!,
       },
     );
 

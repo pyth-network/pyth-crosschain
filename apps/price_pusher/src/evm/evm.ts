@@ -1,26 +1,26 @@
 import {
-  IPricePusher,
-  PriceInfo,
+  type IPricePusher,
+  type PriceInfo,
   ChainPriceListener,
-  PriceItem,
-} from "../interface";
+  type PriceItem,
+} from "../interface.js";
 import {
   addLeading0x,
   assertDefined,
-  DurationInSeconds,
+  type DurationInSeconds,
   removeLeading0x,
-} from "../utils";
-import { PythAbi } from "./pyth-abi";
-import { Logger } from "pino";
+} from "../utils.js";
+import { PythAbi } from "./pyth-abi.js";
+import type { Logger } from "pino";
 import {
   HermesClient,
-  HexString,
-  UnixTimestamp,
+  type HexString,
+  type UnixTimestamp,
 } from "@pythnetwork/hermes-client";
 import { CustomGasStation } from "./custom-gas-station";
-import { PushAttempt } from "../common";
+import type { PushAttempt } from "../common.js";
 import {
-  WatchContractEventOnLogsParameter,
+  type WatchContractEventOnLogsParameter,
   TransactionExecutionError,
   BaseError,
   ContractFunctionRevertedError,
@@ -30,8 +30,8 @@ import {
   ContractFunctionExecutionError,
 } from "viem";
 
-import { PythContract } from "./pyth-contract";
-import { SuperWalletClient } from "./super-wallet";
+import type { PythContract } from "./pyth-contract.js";
+import type { SuperWalletClient } from "./super-wallet.js";
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
@@ -51,7 +51,7 @@ export class EvmPriceListener extends ChainPriceListener {
 
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
-  async start() {
+  override async start() {
     if (this.watchEvents) {
       this.logger.info("Watching target network pyth contract events...");
       this.startWatching();

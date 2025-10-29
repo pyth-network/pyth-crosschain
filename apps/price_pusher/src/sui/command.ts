@@ -1,16 +1,16 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
-import * as options from "../options";
+import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
-import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { Options } from "yargs";
-import { SuiPriceListener, SuiPricePusher } from "./sui";
+import { PythPriceListener } from "../pyth-price-listener.js";
+import { Controller } from "../controller.js";
+import type { Options } from "yargs";
+import { SuiPriceListener, SuiPricePusher } from "./sui.js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import pino from "pino";
-import { filterInvalidPriceItems } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { createSuiBalanceTracker } from "./balance-tracker";
+import { filterInvalidPriceItems } from "../utils.js";
+import { PricePusherMetrics } from "../metrics.js";
+import { createSuiBalanceTracker } from "./balance-tracker.js";
 import { SuiClient } from "@mysten/sui/client";
 
 export default {
@@ -172,7 +172,7 @@ export default {
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
         pushingFrequency,
-        metrics,
+        metrics: metrics!,
       },
     );
 

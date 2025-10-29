@@ -4,20 +4,20 @@ import {
   defineChain,
   http,
   webSocket,
-  Account,
-  Chain,
+  type Account,
+  type Chain,
   publicActions,
-  Client,
-  RpcSchema,
-  WalletActions,
-  PublicActions,
-  WebSocketTransport,
-  HttpTransport,
-  Transport,
+  type Client,
+  type RpcSchema,
+  type WalletActions,
+  type PublicActions,
+  type WebSocketTransport,
+  type HttpTransport,
+  type Transport,
 } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
-import { isWsEndpoint } from "../utils";
+import { isWsEndpoint } from "../utils.js";
 
 const UNKNOWN_CHAIN_CONFIG = {
   name: "Unknown",

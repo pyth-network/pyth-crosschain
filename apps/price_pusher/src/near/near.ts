@@ -3,22 +3,22 @@ import path from "path";
 import fs from "fs";
 
 import {
-  IPricePusher,
-  PriceInfo,
+  type IPricePusher,
+  type PriceInfo,
   ChainPriceListener,
-  PriceItem,
-} from "../interface";
-import { HermesClient, HexString } from "@pythnetwork/hermes-client";
-import { DurationInSeconds } from "../utils";
+  type PriceItem,
+} from "../interface.js";
+import { HermesClient, type HexString } from "@pythnetwork/hermes-client";
+import type { DurationInSeconds } from "../utils.js";
 
 import { Account, Connection, KeyPair } from "near-api-js";
 import {
-  ExecutionStatus,
+  type ExecutionStatus,
   ExecutionStatusBasic,
-  FinalExecutionOutcome,
+  type FinalExecutionOutcome,
 } from "near-api-js/lib/providers/provider";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
-import { Logger } from "pino";
+import type { Logger } from "pino";
 
 export class NearPriceListener extends ChainPriceListener {
   constructor(

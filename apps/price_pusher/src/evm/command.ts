@@ -1,18 +1,18 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import fs from "fs";
-import { Options } from "yargs";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
-import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { EvmPriceListener, EvmPricePusher } from "./evm";
-import { getCustomGasStation } from "./custom-gas-station";
+import type { Options } from "yargs";
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
+import { PythPriceListener } from "../pyth-price-listener.js";
+import { Controller } from "../controller.js";
+import { EvmPriceListener, EvmPricePusher } from "./evm.js";
+import { getCustomGasStation } from "./custom-gas-station.js";
 import pino from "pino";
-import { createClient } from "./super-wallet";
-import { createPythContract } from "./pyth-contract";
-import { isWsEndpoint, filterInvalidPriceItems } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { createEvmBalanceTracker } from "./balance-tracker";
+import { createClient } from "./super-wallet.js";
+import { createPythContract } from "./pyth-contract.js";
+import { isWsEndpoint, filterInvalidPriceItems } from "../utils.js";
+import { PricePusherMetrics } from "../metrics.js";
+import { createEvmBalanceTracker } from "./balance-tracker.js";
 
 export default {
   command: "evm",
@@ -198,7 +198,7 @@ export default {
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
         pushingFrequency,
-        metrics,
+        metrics: metrics!,
       },
     );
 
