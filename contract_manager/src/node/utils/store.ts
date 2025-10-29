@@ -277,7 +277,20 @@ export class Store {
   }
 }
 
+const getDirname = () => {
+  let out = "";
+  try {
+    out = __dirname;
+  } catch {}
+  try {
+    out = import.meta.dirname;
+  } catch {}
+  return out;
+};
+
+const __dirname = getDirname();
+
 /**
  * DefaultStore loads all the contracts and chains from the store directory and provides a single point of access to them.
  */
-export const DefaultStore = new Store(`${__dirname}/../../../store`);
+export const DefaultStore = new Store(`${__dirname}/../../store`);

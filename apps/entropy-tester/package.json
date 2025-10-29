@@ -24,7 +24,7 @@
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "start:dev": "tsc --project tsconfig.build.json && node cli/run.js",
+    "start:dev": "node cli/run.js",
     "start:prod": "node cli/run.js",
     "clean": "rm -rf ./dist"
   },
