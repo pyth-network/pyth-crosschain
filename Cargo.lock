@@ -5656,7 +5656,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-agent"
-version = "0.7.2"
+version = "0.8.0"
 dependencies = [
  "anyhow",
  "backoff",
@@ -5674,8 +5674,8 @@ dependencies = [
  "hyper 1.6.0",
  "hyper-util",
  "protobuf",
- "pyth-lazer-protocol 0.19.0",
- "pyth-lazer-publisher-sdk 0.18.0",
+ "pyth-lazer-protocol 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-lazer-publisher-sdk 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.12.23",
  "serde",
  "serde_json",
@@ -5726,27 +5726,6 @@ dependencies = [
 
 [[package]]
 name = "pyth-lazer-protocol"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b7d19a91e0d63e5003a409d51346abb4941bf55a3a9d52f65453c65057f0482"
-dependencies = [
- "anyhow",
- "byteorder",
- "chrono",
- "derive_more 1.0.0",
- "hex",
- "humantime",
- "humantime-serde",
- "itertools 0.13.0",
- "protobuf",
- "rust_decimal",
- "serde",
- "serde_json",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "pyth-lazer-protocol"
 version = "0.20.0"
 dependencies = [
  "alloy-primitives 0.8.25",
@@ -5772,17 +5751,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-lazer-publisher-sdk"
-version = "0.18.0"
+name = "pyth-lazer-protocol"
+version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b910a3ca825bd1f4bbf75ef5fe01c76eec3e4f5f7570e8c38cbd465c81e21a4"
+checksum = "2efd998c309b88c9f9790addb962cb20cb2528f3c1fe305160f998403306ba7d"
 dependencies = [
  "anyhow",
- "fs-err",
+ "byteorder",
+ "chrono",
+ "derive_more 1.0.0",
+ "hex",
+ "humantime",
+ "humantime-serde",
+ "itertools 0.13.0",
  "protobuf",
- "protobuf-codegen",
- "pyth-lazer-protocol 0.19.0",
+ "rust_decimal",
+ "serde",
  "serde_json",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -5794,6 +5780,20 @@ dependencies = [
  "protobuf",
  "protobuf-codegen",
  "pyth-lazer-protocol 0.20.0",
+ "serde_json",
+]
+
+[[package]]
+name = "pyth-lazer-publisher-sdk"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "988c6a2d6bc8d065a492d49915e803912b263e57ad5e300dc45c5a5471d609c8"
+dependencies = [
+ "anyhow",
+ "fs-err",
+ "protobuf",
+ "protobuf-codegen",
+ "pyth-lazer-protocol 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json",
 ]
 
