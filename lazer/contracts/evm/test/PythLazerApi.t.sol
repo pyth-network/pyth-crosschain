@@ -91,7 +91,19 @@ contract PythLazerApiTest is Test {
         
         // Validate Feed 3 (Regular Price Feed) - Compare against API reference
         assertEq(feed3.feedId, 3, "Feed 3: feedId mismatch");
-        
+
+        // Supported checks for Feed 3 (should be applicable for price/exponent/confidence/publisherCount/bid/ask; not applicable for funding*)
+        assertTrue(PythLazerLib.isPriceSupported(feed3));
+        assertTrue(PythLazerLib.isExponentSupported(feed3));
+        assertTrue(PythLazerLib.isConfidenceSupported(feed3));
+        assertTrue(PythLazerLib.isPublisherCountSupported(feed3));
+        assertTrue(PythLazerLib.isBestBidPriceSupported(feed3));
+        assertTrue(PythLazerLib.isBestAskPriceSupported(feed3));
+        assertFalse(PythLazerLib.isFundingRateSupported(feed3));
+        // assertFalse(PythLazerLib.isFundingTimestampSupported(feed3));
+        // assertFalse(PythLazerLib.isFundingRateIntervalSupported(feed3));
+
+                
         // Verify parsed values match API reference values exactly
         assertEq(PythLazerLib.getPrice(feed3), apiRefFeed3Price, "Feed 3: price mismatch");
         
@@ -109,9 +121,21 @@ contract PythLazerApiTest is Test {
         assertFalse(PythLazerLib.hasFundingRate(feed3), "Feed 3: should NOT have funding rate");
         assertFalse(PythLazerLib.hasFundingTimestamp(feed3), "Feed 3: should NOT have funding timestamp");
         assertFalse(PythLazerLib.hasFundingRateInterval(feed3), "Feed 3: should NOT have funding rate interval");
+
+
         
         // Validate Feed 112 (Funding Rate Feed) - Compare against API reference
         assertEq(feed112.feedId, 112, "Feed 112: feedId mismatch");
+
+        // // Supported checks for Feed 112 (should be applicable for price/exponent/publisherCount/funding*; not applicable for bid/ask)
+        // assertTrue(PythLazerLib.isPriceSupported(feed112));
+        // assertTrue(PythLazerLib.isExponentSupported(feed112));
+        // assertTrue(PythLazerLib.isPublisherCountSupported(feed112));
+        // assertTrue(PythLazerLib.isFundingRateSupported(feed112));
+        // assertTrue(PythLazerLib.isFundingTimestampSupported(feed112));
+        // assertTrue(PythLazerLib.isFundingRateIntervalSupported(feed112));
+        // assertFalse(PythLazerLib.isBestBidPriceSupported(feed112));
+        // assertFalse(PythLazerLib.isBestAskPriceSupported(feed112));
         
         // Verify parsed values match API reference values exactly
         assertEq(PythLazerLib.getPrice(feed112), apiRefFeed112Price, "Feed 112: price mismatch");
@@ -129,6 +153,7 @@ contract PythLazerApiTest is Test {
         // Feed 112 should NOT have bid/ask prices
         assertFalse(PythLazerLib.hasBestBidPrice(feed112), "Feed 112: should NOT have best bid price");
         assertFalse(PythLazerLib.hasBestAskPrice(feed112), "Feed 112: should NOT have best ask price");
+
     }
     
     /// @notice Convert hex string to bytes (handles 0x prefix)
