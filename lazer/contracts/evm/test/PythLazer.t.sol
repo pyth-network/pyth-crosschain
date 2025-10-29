@@ -259,6 +259,17 @@ contract PythLazerTest is Test {
         assertTrue(PythLazerLib.hasExponent(feed));
         assertFalse(PythLazerLib.hasBestBidPrice(feed));
         assertFalse(PythLazerLib.hasConfidence(feed));
+
+        // Supported checks (tri-state applicability)
+        assertTrue(PythLazerLib.isPriceSupported(feed));
+        assertTrue(PythLazerLib.isExponentSupported(feed));
+        assertFalse(PythLazerLib.isBestBidPriceSupported(feed));
+        assertFalse(PythLazerLib.isBestAskPriceSupported(feed));
+        assertFalse(PythLazerLib.isPublisherCountSupported(feed));
+        assertFalse(PythLazerLib.isConfidenceSupported(feed));
+        assertFalse(PythLazerLib.isFundingRateSupported(feed));
+        assertFalse(PythLazerLib.isFundingTimestampSupported(feed));
+        assertFalse(PythLazerLib.isFundingRateIntervalSupported(feed));
     }
 
     /// @notice Test parsing multiple feeds
@@ -302,22 +313,52 @@ contract PythLazerTest is Test {
         assertEq(update.feeds[0].feedId, 1);
         assertEq(update.feeds[0]._price, 50000000000);
         assertTrue(PythLazerLib.hasConfidence(update.feeds[0]));
+        // Supported checks for Feed 1 (props: price, publisherCount, exponent, confidence, bestBid)
+        assertTrue(PythLazerLib.isPriceSupported(update.feeds[0]));
+        assertTrue(PythLazerLib.isPublisherCountSupported(update.feeds[0]));
+        assertTrue(PythLazerLib.isExponentSupported(update.feeds[0]));
+        assertTrue(PythLazerLib.isConfidenceSupported(update.feeds[0]));
+        assertTrue(PythLazerLib.isBestBidPriceSupported(update.feeds[0]));
+        assertFalse(PythLazerLib.isBestAskPriceSupported(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingRateSupported(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingTimestampSupported(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingRateIntervalSupported(update.feeds[0]));
 
         // Verify Feed 2
         assertEq(update.feeds[1].feedId, 2);
         assertEq(update.feeds[1]._price, 3000000000);
         assertFalse(PythLazerLib.hasConfidence(update.feeds[1]));
+        // Supported checks for Feed 2 (props: price, exponent)
+        assertTrue(PythLazerLib.isPriceSupported(update.feeds[1]));
+        assertTrue(PythLazerLib.isExponentSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isBestBidPriceSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isBestAskPriceSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isPublisherCountSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isConfidenceSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingRateSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingTimestampSupported(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingRateIntervalSupported(update.feeds[1]));
 
         // Verify Feed 3
         assertEq(update.feeds[2].feedId, 3);
         assertEq(update.feeds[2]._price, 100000000);
         assertEq(update.feeds[2]._publisherCount, 7);
+        // Supported checks for Feed 3 (props: price, exponent, publisherCount)
+        assertTrue(PythLazerLib.isPriceSupported(update.feeds[2]));
+        assertTrue(PythLazerLib.isExponentSupported(update.feeds[2]));
+        assertTrue(PythLazerLib.isPublisherCountSupported(update.feeds[2]));
+        assertFalse(PythLazerLib.isBestBidPriceSupported(update.feeds[2]));
+        assertFalse(PythLazerLib.isBestAskPriceSupported(update.feeds[2]));
+        assertFalse(PythLazerLib.isConfidenceSupported(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingRateSupported(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingTimestampSupported(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingRateIntervalSupported(update.feeds[2]));
     }
 
-    /// @notice Test when optional properties are zero (should not exist)
+    /// @notice Test when optional properties are zero 
     function test_parseUpdate_optionalMissing_priceZero() public pure {
         bytes[] memory properties = new bytes[](3);
-        properties[0] = buildProperty(0, encodeInt64(0)); // price = 0 means doesn't exist
+        properties[0] = buildProperty(0, encodeInt64(0));
         properties[1] = buildProperty(4, encodeInt16(-8));
         properties[2] = buildProperty(3, encodeUint16(3));
 
@@ -336,17 +377,18 @@ contract PythLazerTest is Test {
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertEq(feed._price, 0);
-        assertFalse(PythLazerLib.hasPrice(feed)); // Should not exist
+        assertTrue(PythLazerLib.isPriceSupported(feed));
+        assertFalse(PythLazerLib.hasPrice(feed)); 
         assertTrue(PythLazerLib.hasExponent(feed));
         assertTrue(PythLazerLib.hasPublisherCount(feed));
     }
 
-    /// @notice Test confidence = 0 (should not exist)
+    /// @notice Test confidence = 0 
     function test_parseUpdate_optionalMissing_confidenceZero() public pure {
         bytes[] memory properties = new bytes[](3);
         properties[0] = buildProperty(0, encodeInt64(100000));
         properties[1] = buildProperty(4, encodeInt16(-6));
-        properties[2] = buildProperty(5, encodeInt64(0)); // confidence = 0 means doesn't exist
+        properties[2] = buildProperty(5, encodeInt64(0));
 
         bytes[] memory feeds = new bytes[](1);
         feeds[0] = buildFeedDataMulti(7, properties);
@@ -363,7 +405,8 @@ contract PythLazerTest is Test {
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertTrue(PythLazerLib.hasPrice(feed));
-        assertFalse(PythLazerLib.hasConfidence(feed)); // Should not exist
+        assertTrue(PythLazerLib.isConfidenceSupported(feed));
+        assertFalse(PythLazerLib.hasConfidence(feed));
         assertEq(feed._confidence, 0);
     }
 
@@ -397,44 +440,6 @@ contract PythLazerTest is Test {
         assertTrue(PythLazerLib.hasFundingRate(feed));
     }
 
-    /// @notice Test that exists flags bitmap is set correctly
-    function test_parseUpdate_existsFlags_bitmap() public pure {
-        bytes[] memory properties = new bytes[](5);
-        properties[0] = buildProperty(0, encodeInt64(100)); // bit 0
-        properties[1] = buildProperty(2, encodeInt64(102)); // bit 2 (skip bit 1)
-        properties[2] = buildProperty(3, encodeUint16(3)); // bit 3
-        properties[3] = buildProperty(4, encodeInt16(-6)); // bit 4
-        properties[4] = buildProperty(7, encodeUint64(999)); // bit 7 (skip 5, 6)
-
-        bytes[] memory feeds = new bytes[](1);
-        feeds[0] = buildFeedDataMulti(1, properties);
-
-        bytes memory payload = buildPayload(
-            1700000000,
-            PythLazerStructs.Channel.RealTime,
-            feeds
-        );
-
-        PythLazerStructs.Update memory update = PythLazerLib
-            .parseUpdateFromPayload(payload);
-
-        PythLazerStructs.Feed memory feed = update.feeds[0];
-
-        // Check specific flags
-        assertTrue(PythLazerLib.hasPrice(feed)); // bit 0
-        assertFalse(PythLazerLib.hasBestBidPrice(feed)); // bit 1 not set
-        assertTrue(PythLazerLib.hasBestAskPrice(feed)); // bit 2
-        assertTrue(PythLazerLib.hasPublisherCount(feed)); // bit 3
-        assertTrue(PythLazerLib.hasExponent(feed)); // bit 4
-        assertFalse(PythLazerLib.hasConfidence(feed)); // bit 5 not set
-        assertFalse(PythLazerLib.hasFundingRate(feed)); // bit 6 not set
-        assertTrue(PythLazerLib.hasFundingTimestamp(feed)); // bit 7
-        assertFalse(PythLazerLib.hasFundingRateInterval(feed)); // bit 8 not set
-
-        // Verify the bitmap directly
-        // bits 0, 2, 3, 4, 7 = 0x9D = 157
-        assertEq(feed.existsFlags, 0x01 | 0x04 | 0x08 | 0x10 | 0x80);
-    }
 
     function test_parseUpdate_extraBytes() public {
         bytes[] memory properties = new bytes[](1);
