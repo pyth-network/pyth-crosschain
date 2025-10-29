@@ -2855,6 +2855,9 @@ importers:
       eslint:
         specifier: ^8.14.0
         version: 8.56.0
+      fast-glob:
+        specifier: ^3.3.3
+        version: 3.3.3
       prettier:
         specifier: 'catalog:'
         version: 3.5.3

@@ -6,8 +6,8 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -44,6 +44,7 @@
     "@typescript-eslint/parser": "^7.7.0",
     "copyfiles": "^2.4.1",
     "eslint": "^8.14.0",
+    "fast-glob": "^3.3.3",
     "prettier": "catalog:",
     "ts-node": "catalog:"
   },
@@ -55,5 +56,59 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./types/PythContract": {
+      "require": {
+        "default": "./dist/cjs/types/PythContract.js",
+        "types": "./dist/cjs/types/PythContract.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/PythContract.js",
+        "types": "./dist/esm/types/PythContract.d.ts"
+      }
+    },
+    "./types/PythContractFactory": {
+      "require": {
+        "default": "./dist/cjs/types/PythContractFactory.js",
+        "types": "./dist/cjs/types/PythContractFactory.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/PythContractFactory.js",
+        "types": "./dist/esm/types/PythContractFactory.d.ts"
+      }
+    },
+    "./types/common": {
+      "require": {
+        "default": "./dist/cjs/types/common.js",
+        "types": "./dist/cjs/types/common.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/common.js",
+        "types": "./dist/esm/types/common.d.ts"
+      }
+    },
+    "./types": {
+      "require": {
+        "default": "./dist/cjs/types/index.js",
+        "types": "./dist/cjs/types/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/index.js",
+        "types": "./dist/esm/types/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

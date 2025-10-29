@@ -3,12 +3,14 @@
   "compilerOptions": {
     "noEmit": false,
     "incremental": false,
-    "declaration": true
+    "declaration": true,
+    "noUnusedLocals": false,
+    "isolatedModules": false
   },
   "exclude": [
     "node_modules",
     "dist",
-    "examples/",
+    "src/examples/",
     "**/__tests__/*"
   ]
 }
