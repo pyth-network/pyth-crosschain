@@ -45,7 +45,7 @@ pub struct FeedUpdateParams {
 pub enum UpdateParams {
     #[serde(rename = "price")]
     PriceUpdate {
-        price: Price,
+        price: Option<Price>,
         best_bid_price: Option<Price>,
         best_ask_price: Option<Price>,
     },
@@ -190,7 +190,7 @@ mod tests {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::PriceUpdate {
-                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
                     best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
                 },
@@ -231,7 +231,7 @@ mod tests {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::PriceUpdate {
-                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
                     best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
                 },
@@ -272,7 +272,7 @@ mod tests {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::PriceUpdate {
-                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     best_bid_price: Some(Price::from_integer(1234567891, 0).unwrap()),
                     best_ask_price: Some(Price::from_integer(1234567892, 0).unwrap()),
                 },
@@ -312,7 +312,7 @@ mod tests {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs::from_micros(745214124124),
                 update: UpdateParams::PriceUpdate {
-                    price: Price::from_integer(5432, 0).unwrap(),
+                    price: Some(Price::from_integer(5432, 0).unwrap()),
                     best_bid_price: Some(Price::from_integer(5432, 0).unwrap()),
                     best_ask_price: Some(Price::from_integer(5432, 0).unwrap()),
                 },
@@ -351,7 +351,7 @@ mod tests {
                 feed_id: PriceFeedId(1),
                 source_timestamp: TimestampUs::from_micros(124214124124),
                 update: UpdateParams::PriceUpdate {
-                    price: Price::from_integer(1234567890, 0).unwrap(),
+                    price: Some(Price::from_integer(1234567890, 0).unwrap()),
                     best_bid_price: None,
                     best_ask_price: None,
                 },
