@@ -89,6 +89,35 @@ pub enum PriceFeedProperty {
     // More fields may be added later.
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AssetClass {
+    Crypto,
+    Fx,
+    Equity,
+    Metal,
+    Rates,
+    Nav,
+    Commodity,
+    #[serde(rename = "funding-rate")]
+    FundingRate,
+}
+
+impl AssetClass {
+    fn as_str(&self) -> &'static str {
+        match self {
+            AssetClass::Crypto => "crypto",
+            AssetClass::Fx => "fx",
+            AssetClass::Equity => "equity",
+            AssetClass::Metal => "metal",
+            AssetClass::Rates => "rates",
+            AssetClass::Nav => "nav",
+            AssetClass::Commodity => "commodity",
+            AssetClass::FundingRate => "funding-rate",
+        }
+    }
+}
+
 // Operation and coefficient for converting value to mantissa.
 enum ExponentFactor {
     // mantissa = value * factor
