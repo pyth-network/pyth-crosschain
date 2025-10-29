@@ -6,11 +6,11 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { AccountType, parseProductData } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
-  PythCluster,
+  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
-  AccountMeta,
-  Commitment,
+  type AccountMeta,
+  type Commitment,
   ComputeBudgetProgram,
   Connection,
   Keypair,
@@ -67,7 +67,7 @@ async function run() {
   )[0];
   const executorKey: PublicKey = mapKey(EMITTER);
   const claimRecord =
-    await remoteExecutor.account.claimRecord.fetchNullable(claimRecordAddress);
+    await remoteExecutor.account.claimRecord?.fetchNullable(claimRecordAddress);
   let lastSequenceNumber: number = claimRecord
     ? (claimRecord.sequence as BN).toNumber()
     : -1;
@@ -78,13 +78,13 @@ async function run() {
     lastSequenceNumber += 1;
     console.log(`Trying sequence number : ${lastSequenceNumber}`);
 
-    const response = await (
+    const response = (await (
       await fetch(
         `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
           "hex",
         )}/${lastSequenceNumber}`,
       )
-    ).json();
+    ).json()) as Partial<{ code: number; vaaBytes: string }>;
 
     if (response.vaaBytes) {
       const vaa = parseVaa(Buffer.from(response.vaaBytes, "base64"));
@@ -144,19 +144,19 @@ async function run() {
               ),
             );
             productAccountToSymbol[
-              parsedInstruction.accounts.named.productAccount.pubkey.toBase58()
+              parsedInstruction.accounts.named.productAccount!.pubkey.toBase58()
             ] = parsedInstruction.args.symbol;
           } else if (
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addPrice"
           ) {
             const productAccount = await provider.connection.getAccountInfo(
-              parsedInstruction.accounts.named.productAccount.pubkey,
+              parsedInstruction.accounts.named.productAccount!.pubkey,
             );
             const productSymbol = productAccount
               ? parseProductData(productAccount.data).product.symbol
               : productAccountToSymbol[
-                  parsedInstruction.accounts.named.productAccount.pubkey.toBase58()
+                  parsedInstruction.accounts.named.productAccount!.pubkey.toBase58()
                 ];
             if (productSymbol) {
               preInstructions.push(
@@ -187,7 +187,7 @@ async function run() {
 
         try {
           await remoteExecutor.methods
-            .executePostedVaa()
+            .executePostedVaa?.()
             .accounts({
               claimRecord: claimRecordAddress,
               postedVaa: derivePostedVaaKey(
