@@ -120,11 +120,10 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         payable
         returns (
             bytes calldata payload,
-            address signer,
             PythLazerStructs.Update memory parsedUpdate
         )
     {
-        (payload, signer) = verifyUpdate(update);
+        (payload, _) = verifyUpdate(update);
 
         // Parse the verified payload
         parsedUpdate = PythLazerLib.parseUpdateFromPayload(payload);
