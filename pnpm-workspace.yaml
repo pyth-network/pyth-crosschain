@@ -51,7 +51,7 @@ catalog:
   "@amplitude/analytics-browser": ^2.13.0
   "@amplitude/plugin-autocapture-browser": ^1.0.0
   "@axe-core/react": ^4.10.1
-  "@better-builds/ts-duality": 0.0.1-beta.7
+  "@better-builds/ts-duality": 0.0.1-beta.8
   "ag-grid-community": ^34.2.0
   "ag-grid-react": ^34.2.0
   "@babel/cli": ^7.27.2

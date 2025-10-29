@@ -300,7 +300,8 @@
       "default": "./dist/useQueryParamsPagination/index.js",
       "types": "./dist/useQueryParamsPagination/index.d.ts"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./theme": "./dist/theme.scss"
   },
   "scripts": {
     "build": "ts-duality --noCjs",
