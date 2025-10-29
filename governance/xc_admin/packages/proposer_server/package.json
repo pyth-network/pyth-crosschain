@@ -6,7 +6,8 @@
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
-  "main": "dist/index.ts",
+  "main": "./dist/index.js",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
@@ -40,5 +41,13 @@
     "node": ">=22.16.0",
     "pnpm": ">=10.19.0"
   },
-  "packageManager": "pnpm@10.19.0"
+  "packageManager": "pnpm@10.19.0",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts"
 }

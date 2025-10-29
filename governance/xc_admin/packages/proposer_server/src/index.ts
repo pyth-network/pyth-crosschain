@@ -1,7 +1,7 @@
-import express, { Request, Response } from "express";
+import express, { type Request, type Response } from "express";
 import cors from "cors";
 import {
-  Cluster,
+  type Cluster,
   Connection,
   Keypair,
   PublicKey,
@@ -14,7 +14,7 @@ import {
   PRICE_FEED_MULTISIG,
 } from "@pythnetwork/xc-admin-common";
 import * as fs from "fs";
-import { getPythClusterApiUrl, PythCluster } from "@pythnetwork/client";
+import { getPythClusterApiUrl, type PythCluster } from "@pythnetwork/client";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
@@ -84,7 +84,7 @@ app.post("/api/propose", async (req: Request, res: Response) => {
     // preserve the existing API by returning only the first pubkey
     const proposalPubkey = (
       await vault.proposeInstructions(instructions, cluster, {
-        computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS,
+        computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS!,
       })
     )[0];
     res.status(200).json({ proposalPubkey: proposalPubkey });
