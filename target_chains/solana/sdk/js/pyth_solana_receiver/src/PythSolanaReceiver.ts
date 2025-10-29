@@ -465,7 +465,7 @@ export class PythSolanaReceiver {
     this.connection = connection;
     this.wallet = wallet;
     this.provider = new AnchorProvider(this.connection, this.wallet, {
-      commitment: connection.commitment,
+      commitment: connection.commitment!,
     });
     this.receiver = new Program<PythSolanaReceiverProgram>(
       Idl as PythSolanaReceiverProgram,
@@ -669,10 +669,10 @@ export class PythSolanaReceiver {
     );
 
     if (!startUpdateData) {
-      throw new Error('startUpdateData is undefined. this is a bug 🐛');
+      throw new Error("startUpdateData is undefined. this is a bug 🐛");
     }
     if (!endUpdateData) {
-      throw new Error('startUpdateData is undefined. this is a bug 🐛');
+      throw new Error("startUpdateData is undefined. this is a bug 🐛");
     }
 
     // Validate that the start and end updates contain the same number of price feeds
