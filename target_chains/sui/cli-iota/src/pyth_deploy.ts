@@ -8,7 +8,7 @@ import {
 
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { execSync } from "child_process";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { bcs } from "@iota/iota-sdk/bcs";
 
@@ -45,7 +45,7 @@ export async function publishPackage(
   });
 
   // Transfer upgrade capability to deployer
-  txb.transferObjects([upgradeCap], txb.pure.address(keypair.toIotaAddress()));
+  txb.transferObjects([upgradeCap!], txb.pure.address(keypair.toIotaAddress()));
 
   // Execute transactions
   const result = await provider.signAndExecuteTransaction({
@@ -63,7 +63,7 @@ export async function publishPackage(
 
   if (
     publishedChanges?.length !== 1 ||
-    publishedChanges[0].type !== "published"
+    publishedChanges[0]?.type !== "published"
   ) {
     throw new Error(
       "No publish event found in transaction:" +
