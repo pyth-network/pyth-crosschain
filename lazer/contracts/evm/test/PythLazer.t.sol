@@ -322,7 +322,9 @@ contract PythLazerTest is Test {
         assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[0]));
         assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[0]));
         assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[0]));
-        assertFalse(PythLazerLib.isFundingRateIntervalRequested(update.feeds[0]));
+        assertFalse(
+            PythLazerLib.isFundingRateIntervalRequested(update.feeds[0])
+        );
 
         // Verify Feed 2
         assertEq(update.feeds[1].feedId, 2);
@@ -337,7 +339,9 @@ contract PythLazerTest is Test {
         assertFalse(PythLazerLib.isConfidenceRequested(update.feeds[1]));
         assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[1]));
         assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[1]));
-        assertFalse(PythLazerLib.isFundingRateIntervalRequested(update.feeds[1]));
+        assertFalse(
+            PythLazerLib.isFundingRateIntervalRequested(update.feeds[1])
+        );
 
         // Verify Feed 3
         assertEq(update.feeds[2].feedId, 3);
@@ -352,10 +356,12 @@ contract PythLazerTest is Test {
         assertFalse(PythLazerLib.isConfidenceRequested(update.feeds[2]));
         assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[2]));
         assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[2]));
-        assertFalse(PythLazerLib.isFundingRateIntervalRequested(update.feeds[2]));
+        assertFalse(
+            PythLazerLib.isFundingRateIntervalRequested(update.feeds[2])
+        );
     }
 
-    /// @notice Test when optional properties are zero 
+    /// @notice Test when optional properties are zero
     function test_parseUpdate_optionalMissing_priceZero() public pure {
         bytes[] memory properties = new bytes[](3);
         properties[0] = buildProperty(0, encodeInt64(0));
@@ -378,12 +384,12 @@ contract PythLazerTest is Test {
 
         assertEq(feed._price, 0);
         assertTrue(PythLazerLib.isPriceRequested(feed));
-        assertFalse(PythLazerLib.hasPrice(feed)); 
+        assertFalse(PythLazerLib.hasPrice(feed));
         assertTrue(PythLazerLib.hasExponent(feed));
         assertTrue(PythLazerLib.hasPublisherCount(feed));
     }
 
-    /// @notice Test confidence = 0 
+    /// @notice Test confidence = 0
     function test_parseUpdate_optionalMissing_confidenceZero() public pure {
         bytes[] memory properties = new bytes[](3);
         properties[0] = buildProperty(0, encodeInt64(100000));
@@ -439,7 +445,6 @@ contract PythLazerTest is Test {
         assertTrue(PythLazerLib.hasPrice(feed));
         assertTrue(PythLazerLib.hasFundingRate(feed));
     }
-
 
     function test_parseUpdate_extraBytes() public {
         bytes[] memory properties = new bytes[](1);
