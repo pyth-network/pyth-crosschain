@@ -86,7 +86,7 @@ export const getRequests = async ({
                     return request.state.callback_failed
                       ? Request.CallbackErrored({
                           ...completedCommon,
-                          returnValue: request.state.callback_return_value,
+                          reason: request.state.callback_return_value,
                         })
                       : Request.Complete({
                           ...completedCommon,
@@ -244,7 +244,7 @@ type CompletedArgs = BaseArgs & {
   callbackTxHash: `0x${string}`;
 };
 type CallbackErrorArgs = CompletedArgs & {
-  returnValue: string;
+  reason: string;
 };
 
 const Request = {

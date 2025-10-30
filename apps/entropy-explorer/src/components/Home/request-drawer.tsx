@@ -9,6 +9,7 @@ import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { Table } from "@pythnetwork/component-library/Table";
 import { Term } from "@pythnetwork/component-library/Term";
 import type { OpenDrawerArgs } from "@pythnetwork/component-library/useDrawer";
+import type { ComponentProps } from "react";
 import { useNumberFormatter } from "react-aria";
 import TimeAgo from "react-timeago";
 
@@ -75,7 +76,7 @@ const RequestDrawerBody = ({
         <CallbackErrorInfo request={request} />
       )}
       {request.status === Status.Failed && (
-        <RevealFailedInfo request={request} />
+        <FailureInfo header="Reveal failed!" request={request} />
       )}
       <Table
         label="Details"
@@ -253,28 +254,7 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
 
   return (
     <>
-      <InfoBox
-        header="Callback failed!"
-        icon={<Warning />}
-        className={styles.message}
-        variant="warning"
-      >
-        <Button
-          hideText
-          beforeIcon={<Question />}
-          rounded
-          size="sm"
-          variant="ghost"
-          className={styles.helpButton ?? ""}
-          href={getHelpLink(request.returnValue)}
-          target="_blank"
-        >
-          Help
-        </Button>
-        <div className={styles.failureMessage}>
-          <FailureMessage reason={request.returnValue} />
-        </div>
-      </InfoBox>
+      <FailureInfo header="Callback failed!" request={request} />
       <InfoBox
         header="Retry the callback yourself"
         icon={<Code />}
@@ -311,12 +291,17 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
   );
 };
 
-const RevealFailedInfo = ({ request }: { request: FailedRequest }) => (
+const FailureInfo = ({
+  request,
+  ...props
+}: ComponentProps<typeof InfoBox> & {
+  request: CallbackErrorRequest | FailedRequest;
+}) => (
   <InfoBox
-    header="Reveal failed!"
     icon={<Warning />}
     className={styles.message}
     variant="warning"
+    {...props}
   >
     <Button
       hideText
@@ -325,37 +310,55 @@ const RevealFailedInfo = ({ request }: { request: FailedRequest }) => (
       size="sm"
       variant="ghost"
       className={styles.helpButton ?? ""}
-      href={getHelpLink(request.reason)}
+      href={getHelpLink(request)}
       target="_blank"
     >
       Help
     </Button>
     <div className={styles.failureMessage}>
-      <FailureMessage reason={request.reason} />
+      <FailureMessage request={request} />
     </div>
   </InfoBox>
 );
 
-const getHelpLink = (reason: string) => {
-  const details = getErrorDetails(reason);
-  return (
-    details?.[2] ??
-    "https://docs.pyth.network/entropy/best-practices#handling-callback-failures"
-  );
+const getHelpLink = (request: CallbackErrorRequest | FailedRequest) => {
+  const details = getErrorDetails(request.reason);
+  if (details === undefined) {
+    return isGasLimitExceeded(request)
+      ? "https://docs.pyth.network/entropy/best-practices#limit-gas-usage-on-the-callback"
+      : "https://docs.pyth.network/entropy/best-practices#handling-callback-failures";
+  } else {
+    return details[2];
+  }
 };
 
-const FailureMessage = ({ reason }: { reason: string }) => {
-  const details = getErrorDetails(reason);
-  return details ? (
-    <>
-      <p>The callback encountered the following error:</p>
-      <p className={styles.details}>
-        <b>{details[0]}</b> (<code>{reason}</code>): {details[1]}
-      </p>
-    </>
-  ) : (
-    <>
-      <b>Error response:</b> {reason}
-    </>
-  );
+const FailureMessage = ({
+  request,
+}: {
+  request: CallbackErrorRequest | FailedRequest;
+}) => {
+  const details = getErrorDetails(request.reason);
+  if (details) {
+    return (
+      <>
+        <p>The callback encountered the following error:</p>
+        <p className={styles.details}>
+          <b>{details[0]}</b> (<code>{request.reason}</code>): {details[1]}
+        </p>
+      </>
+    );
+  } else if (isGasLimitExceeded(request)) {
+    return "The callback used more gas than the set gas limit";
+  } else {
+    return (
+      <>
+        <b>Error response:</b> {request.reason}
+      </>
+    );
+  }
 };
+
+const isGasLimitExceeded = (request: CallbackErrorRequest | FailedRequest) =>
+  request.status === Status.CallbackError &&
+  request.reason === "0x" &&
+  request.gasUsed > request.gasLimit;
