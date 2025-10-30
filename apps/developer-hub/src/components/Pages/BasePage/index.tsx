@@ -12,9 +12,7 @@ import { getMDXComponents } from "../../../mdx-components";
 export function BasePage(props: { params: { slug: string[] } }) {
   const page = source.getPage(props.params.slug);
   if (!page) notFound();
-
   const MDX = page.data.body;
-
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
       <DocsTitle>{page.data.title}</DocsTitle>
