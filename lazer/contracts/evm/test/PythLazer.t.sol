@@ -260,16 +260,16 @@ contract PythLazerTest is Test {
         assertFalse(PythLazerLib.hasBestBidPrice(feed));
         assertFalse(PythLazerLib.hasConfidence(feed));
 
-        // Supported checks (tri-state applicability)
-        assertTrue(PythLazerLib.isPriceSupported(feed));
-        assertTrue(PythLazerLib.isExponentSupported(feed));
-        assertFalse(PythLazerLib.isBestBidPriceSupported(feed));
-        assertFalse(PythLazerLib.isBestAskPriceSupported(feed));
-        assertFalse(PythLazerLib.isPublisherCountSupported(feed));
-        assertFalse(PythLazerLib.isConfidenceSupported(feed));
-        assertFalse(PythLazerLib.isFundingRateSupported(feed));
-        assertFalse(PythLazerLib.isFundingTimestampSupported(feed));
-        assertFalse(PythLazerLib.isFundingRateIntervalSupported(feed));
+        // Requested checks (tri-state applicability)
+        assertTrue(PythLazerLib.isPriceRequested(feed));
+        assertTrue(PythLazerLib.isExponentRequested(feed));
+        assertFalse(PythLazerLib.isBestBidPriceRequested(feed));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(feed));
+        assertFalse(PythLazerLib.isPublisherCountRequested(feed));
+        assertFalse(PythLazerLib.isConfidenceRequested(feed));
+        assertFalse(PythLazerLib.isFundingRateRequested(feed));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(feed));
+        assertFalse(PythLazerLib.isFundingRateIntervalRequested(feed));
     }
 
     /// @notice Test parsing multiple feeds
@@ -313,46 +313,46 @@ contract PythLazerTest is Test {
         assertEq(update.feeds[0].feedId, 1);
         assertEq(update.feeds[0]._price, 50000000000);
         assertTrue(PythLazerLib.hasConfidence(update.feeds[0]));
-        // Supported checks for Feed 1 (props: price, publisherCount, exponent, confidence, bestBid)
-        assertTrue(PythLazerLib.isPriceSupported(update.feeds[0]));
-        assertTrue(PythLazerLib.isPublisherCountSupported(update.feeds[0]));
-        assertTrue(PythLazerLib.isExponentSupported(update.feeds[0]));
-        assertTrue(PythLazerLib.isConfidenceSupported(update.feeds[0]));
-        assertTrue(PythLazerLib.isBestBidPriceSupported(update.feeds[0]));
-        assertFalse(PythLazerLib.isBestAskPriceSupported(update.feeds[0]));
-        assertFalse(PythLazerLib.isFundingRateSupported(update.feeds[0]));
-        assertFalse(PythLazerLib.isFundingTimestampSupported(update.feeds[0]));
-        assertFalse(PythLazerLib.isFundingRateIntervalSupported(update.feeds[0]));
+        // Requested checks for Feed 1 (props: price, publisherCount, exponent, confidence, bestBid)
+        assertTrue(PythLazerLib.isPriceRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isPublisherCountRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isExponentRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isConfidenceRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isBestBidPriceRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingRateIntervalRequested(update.feeds[0]));
 
         // Verify Feed 2
         assertEq(update.feeds[1].feedId, 2);
         assertEq(update.feeds[1]._price, 3000000000);
         assertFalse(PythLazerLib.hasConfidence(update.feeds[1]));
-        // Supported checks for Feed 2 (props: price, exponent)
-        assertTrue(PythLazerLib.isPriceSupported(update.feeds[1]));
-        assertTrue(PythLazerLib.isExponentSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isBestBidPriceSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isBestAskPriceSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isPublisherCountSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isConfidenceSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isFundingRateSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isFundingTimestampSupported(update.feeds[1]));
-        assertFalse(PythLazerLib.isFundingRateIntervalSupported(update.feeds[1]));
+        // Requested checks for Feed 2 (props: price, exponent)
+        assertTrue(PythLazerLib.isPriceRequested(update.feeds[1]));
+        assertTrue(PythLazerLib.isExponentRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isBestBidPriceRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isPublisherCountRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isConfidenceRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingRateIntervalRequested(update.feeds[1]));
 
         // Verify Feed 3
         assertEq(update.feeds[2].feedId, 3);
         assertEq(update.feeds[2]._price, 100000000);
         assertEq(update.feeds[2]._publisherCount, 7);
-        // Supported checks for Feed 3 (props: price, exponent, publisherCount)
-        assertTrue(PythLazerLib.isPriceSupported(update.feeds[2]));
-        assertTrue(PythLazerLib.isExponentSupported(update.feeds[2]));
-        assertTrue(PythLazerLib.isPublisherCountSupported(update.feeds[2]));
-        assertFalse(PythLazerLib.isBestBidPriceSupported(update.feeds[2]));
-        assertFalse(PythLazerLib.isBestAskPriceSupported(update.feeds[2]));
-        assertFalse(PythLazerLib.isConfidenceSupported(update.feeds[2]));
-        assertFalse(PythLazerLib.isFundingRateSupported(update.feeds[2]));
-        assertFalse(PythLazerLib.isFundingTimestampSupported(update.feeds[2]));
-        assertFalse(PythLazerLib.isFundingRateIntervalSupported(update.feeds[2]));
+        // Requested checks for Feed 3 (props: price, exponent, publisherCount)
+        assertTrue(PythLazerLib.isPriceRequested(update.feeds[2]));
+        assertTrue(PythLazerLib.isExponentRequested(update.feeds[2]));
+        assertTrue(PythLazerLib.isPublisherCountRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isBestBidPriceRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isConfidenceRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingRateIntervalRequested(update.feeds[2]));
     }
 
     /// @notice Test when optional properties are zero 
@@ -377,7 +377,7 @@ contract PythLazerTest is Test {
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertEq(feed._price, 0);
-        assertTrue(PythLazerLib.isPriceSupported(feed));
+        assertTrue(PythLazerLib.isPriceRequested(feed));
         assertFalse(PythLazerLib.hasPrice(feed)); 
         assertTrue(PythLazerLib.hasExponent(feed));
         assertTrue(PythLazerLib.hasPublisherCount(feed));
@@ -405,7 +405,7 @@ contract PythLazerTest is Test {
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertTrue(PythLazerLib.hasPrice(feed));
-        assertTrue(PythLazerLib.isConfidenceSupported(feed));
+        assertTrue(PythLazerLib.isConfidenceRequested(feed));
         assertFalse(PythLazerLib.hasConfidence(feed));
         assertEq(feed._confidence, 0);
     }
