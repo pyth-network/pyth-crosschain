@@ -22,7 +22,9 @@ pub enum PriceError {
     Overflow,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema,
+)]
 #[repr(transparent)]
 #[schema(value_type = i64)]
 pub struct Price(NonZeroI64);

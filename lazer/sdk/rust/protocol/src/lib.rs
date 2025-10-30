@@ -40,7 +40,19 @@ pub use crate::{
 pub struct PublisherId(pub u16);
 
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into, ToSchema,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    Serialize,
+    Deserialize,
+    From,
+    Into,
+    ToSchema,
 )]
 #[schema(value_type = u32)]
 pub struct PriceFeedId(pub u32);
