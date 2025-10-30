@@ -23,7 +23,7 @@ pub struct LatestPriceRequestRepr {
     // Either price feed ids or symbols must be specified.
     #[schema(example = json!([1]))]
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
-    #[schema(default = schema_default_symbols)]
+    #[schema(example = schema_default_symbols)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
@@ -202,6 +202,7 @@ pub enum JsonBinaryEncoding {
 #[schema(example = "fixed_rate@200ms")]
 pub enum Channel {
     FixedRate(FixedRate),
+    #[schema(rename = "real_time")]
     RealTime,
 }
 
