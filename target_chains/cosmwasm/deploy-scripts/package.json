@@ -36,5 +36,58 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./build-contract": {
+      "require": {
+        "default": "./dist/cjs/build-contract.js",
+        "types": "./dist/cjs/build-contract.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/build-contract.js",
+        "types": "./dist/esm/build-contract.d.ts"
+      }
+    },
+    "./configs": {
+      "require": {
+        "default": "./dist/cjs/configs.js",
+        "types": "./dist/cjs/configs.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/configs.js",
+        "types": "./dist/esm/configs.d.ts"
+      }
+    },
+    "./helper": {
+      "require": {
+        "default": "./dist/cjs/helper.js",
+        "types": "./dist/cjs/helper.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/helper.js",
+        "types": "./dist/esm/helper.d.ts"
+      }
+    },
+    "./instantiate-pyth": {
+      "require": {
+        "default": "./dist/cjs/instantiate-pyth.js",
+        "types": "./dist/cjs/instantiate-pyth.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/instantiate-pyth.js",
+        "types": "./dist/esm/instantiate-pyth.d.ts"
+      }
+    },
+    "./instantiate-wormhole": {
+      "require": {
+        "default": "./dist/cjs/instantiate-wormhole.js",
+        "types": "./dist/cjs/instantiate-wormhole.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/instantiate-wormhole.js",
+        "types": "./dist/esm/instantiate-wormhole.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  }
 }

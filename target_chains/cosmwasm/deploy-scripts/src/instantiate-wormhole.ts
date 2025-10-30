@@ -1,15 +1,20 @@
-import yargs from "yargs";
+import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
-import { getWormholeConfig } from "./configs";
+import { getWormholeConfig } from "./configs.js";
 import {
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
 } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
-import { DefaultStore, Store } from "@pythnetwork/contract-manager/node/store";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
-import { DeploymentType } from "./helper";
+import type { DeploymentType } from "./helper.js";
+import {
+  DefaultStore,
+  Store,
+} from "@pythnetwork/contract-manager/node/utils/store";
+
+const yargs = createCLI(hideBin(process.argv));
 
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
@@ -81,6 +86,8 @@ async function run() {
   );
   if (argv.deploy === "stable") {
     console.log("Syncing guardian sets for mainnet contract");
+    // @ts-expect-error - TODO: typings indicate that syncMainnetGuardianSets() does not exist
+    // on the contract object, which means this has a high probabiltiy to explode at runtime
     await contract.syncMainnetGuardianSets(privateKey);
     console.log("Sync complete");
   }

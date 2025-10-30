@@ -1,5 +1,5 @@
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
-import { DeploymentType } from "./helper";
+import type { DeploymentType } from "./helper.js";
 
 function getPythSources(deploymentType: DeploymentType) {
   const config = getDefaultDeploymentConfig(deploymentType);
