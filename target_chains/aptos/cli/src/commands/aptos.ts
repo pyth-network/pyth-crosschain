@@ -1,15 +1,14 @@
-import { Argv } from "yargs";
+import type { Argv } from "yargs";
 import { spawnSync } from "child_process";
 import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
 import fs from "fs";
 import sha3 from "js-sha3";
-import { ethers } from "ethers";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
 import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 
 const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
-  .filter(([chain, config]) => {
+  .filter(([_, config]) => {
     return config instanceof AptosChain;
   })
   .map(([chain, _]) => {
@@ -181,7 +180,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const guardian_addresses_serializer = new BCS.Serializer();
         guardian_addresses_serializer.serializeU32AsUleb128(1);
         guardian_addresses_serializer.serializeBytes(
-          Buffer.from(guardian_address, "hex"),
+          Buffer.from(guardian_address!, "hex"),
         );
 
         const args = [
@@ -351,7 +350,8 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         const addr2 = argv["addr-2"];
         const url = `${endpoint}/accounts/${addr1}/resource/0x1::code::PackageRegistry`;
         const response = await (await fetch(url)).json();
-        for (const module of response.data.packages[0].modules) {
+        // @ts-expect-error - TODO: Please improve typings on the .json() response here
+        for (const module of response?.data?.packages[0]?.modules ?? []) {
           const moduleName = module.name;
           const addr1Module = `${endpoint}/accounts/${addr1}/module/${moduleName}`;
           const addr2Module = `${endpoint}/accounts/${addr2}/module/${moduleName}`;
@@ -512,12 +512,4 @@ function createDeployDerivedTransaction(
       ],
     ),
   );
-}
-
-function hex(x: string): string {
-  return ethers.utils.hexlify(x, { allowMissingPrefix: true });
-}
-
-function evm_address(x: string): string {
-  return hex(x).substring(2).padStart(64, "0");
 }
