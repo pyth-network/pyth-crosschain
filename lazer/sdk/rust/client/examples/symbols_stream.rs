@@ -21,12 +21,7 @@ async fn main() -> anyhow::Result<()> {
 
     while let Some(symbols) = symbols_stream.recv().await {
         println!("symbols len: {}", symbols.len());
-        println!(
-            "symbol 1: {:?}",
-            symbols
-                .iter()
-                .find(|feed| feed.pyth_lazer_id == PriceFeedId(1))
-        );
+        println!("symbol 1: {:?}", symbols.get(&PriceFeedId(1)));
     }
     Ok(())
 }

@@ -1,7 +1,9 @@
-use std::time::Duration;
+use {
+    pyth_lazer_protocol::PublisherId,
+    std::{env, time::Duration},
+};
 
 use pyth_lazer_client::history_client::{PythLazerHistoryClient, PythLazerHistoryClientConfig};
-use pyth_lazer_protocol::PriceFeedId;
 use tokio::time::sleep;
 use url::Url;
 
@@ -16,13 +18,17 @@ async fn main() -> anyhow::Result<()> {
     let client = PythLazerHistoryClient::new(PythLazerHistoryClientConfig {
         urls,
         update_interval: Duration::from_secs(5),
+        access_token: Some(env::var("ACCESS_TOKEN")?),
         ..Default::default()
     });
-    let symbols = client.all_symbols_metadata_handle().await?;
+    let publishers = client.publishers_handle().await?;
 
     loop {
-        println!("symbols len: {}", symbols.get().len());
-        println!("symbol 1: {:?}", symbols.get().get(&PriceFeedId(1)));
+        println!("publishers len: {}", publishers.get().by_id.len());
+        println!(
+            "publisher 1: {:?}",
+            publishers.get().by_id.get(&PublisherId(1))
+        );
         sleep(Duration::from_secs(15)).await;
     }
 }
