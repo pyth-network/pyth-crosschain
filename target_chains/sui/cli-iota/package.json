@@ -27,8 +27,8 @@
     "@types/yargs": "^17.0.32"
   },
   "engines": {
-    "node": ">=22.16.0",
-    "pnpm": ">=10.19.0"
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
   },
   "packageManager": "pnpm@10.19.0",
   "type": "module",
