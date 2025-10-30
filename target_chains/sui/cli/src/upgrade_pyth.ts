@@ -55,13 +55,13 @@ export async function upgradePyth(
     modules,
     dependencies,
     package: pythPackage,
-    ticket: upgradeTicket,
+    ticket: upgradeTicket!,
   });
 
   // Commit upgrade.
   tx.moveCall({
     target: `${pythPackage}::contract_upgrade::commit_upgrade`,
-    arguments: [tx.object(contract.stateId), upgradeReceipt],
+    arguments: [tx.object(contract.stateId), upgradeReceipt!],
   });
 
   tx.setGasBudget(MIST_PER_SUI / 4n); // 0.25 SUI

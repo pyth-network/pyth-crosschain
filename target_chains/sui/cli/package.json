@@ -2,7 +2,6 @@
   "name": "pyth-sui-cli",
   "version": "0.1.0",
   "description": "Pyth Sui Integration Cli tools",
-  "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
     "cli": "ts-node src/cli.ts",
@@ -31,5 +30,51 @@
     "pnpm": ">=10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./cli": {
+      "require": {
+        "default": "./dist/cjs/cli.js",
+        "types": "./dist/cjs/cli.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/cli.js",
+        "types": "./dist/esm/cli.d.ts"
+      }
+    },
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./pyth_deploy": {
+      "require": {
+        "default": "./dist/cjs/pyth_deploy.js",
+        "types": "./dist/cjs/pyth_deploy.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/pyth_deploy.js",
+        "types": "./dist/esm/pyth_deploy.d.ts"
+      }
+    },
+    "./upgrade_pyth": {
+      "require": {
+        "default": "./dist/cjs/upgrade_pyth.js",
+        "types": "./dist/cjs/upgrade_pyth.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/upgrade_pyth.js",
+        "types": "./dist/esm/upgrade_pyth.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.js"
 }
