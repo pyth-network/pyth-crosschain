@@ -1,17 +1,24 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
 import { HermesClient } from "@pythnetwork/hermes-client";
-import fs from "fs";
+import pino from "pino";
 import type { Options } from "yargs";
+
+import { Controller } from "../controller.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { Controller } from "../controller.js";
-import { EvmPriceListener, EvmPricePusher } from "./evm.js";
 import { getCustomGasStation } from "./custom-gas-station.js";
-import pino from "pino";
-import { createClient } from "./super-wallet.js";
+import { EvmPriceListener, EvmPricePusher } from "./evm.js";
 import { createPythContract } from "./pyth-contract.js";
-import { isWsEndpoint, filterInvalidPriceItems } from "../utils.js";
+import { createClient } from "./super-wallet.js";
 import { PricePusherMetrics } from "../metrics.js";
+import { isWsEndpoint, filterInvalidPriceItems } from "../utils.js";
 import { createEvmBalanceTracker } from "./balance-tracker.js";
 
 export default {
@@ -118,7 +125,7 @@ export default {
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
@@ -217,6 +224,6 @@ export default {
       await balanceTracker.start();
     }
 
-    await controller.start();
+    void controller.start();
   },
 };

@@ -1,5 +1,6 @@
-import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
+import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 
 export const OWNABLE_ABI = [
   {

@@ -1,8 +1,10 @@
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import { CosmWasmChain, EvmChain } from "../src/core/chains";
-import { createHash } from "crypto";
-import { DefaultStore } from "../src/node/utils/store";
+import { createHash } from "node:crypto";
+
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import {
+  getPythClusterApiUrl,
+  PythCluster,
+} from "@pythnetwork/client/lib/cluster";
 import {
   CosmosUpgradeContract,
   EvmExecute,
@@ -12,20 +14,23 @@ import {
   MultisigParser,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
-import SquadsMesh from "@sqds/mesh";
-import {
-  getPythClusterApiUrl,
-  PythCluster,
-} from "@pythnetwork/client/lib/cluster";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { AccountMeta, Keypair, PublicKey } from "@solana/web3.js";
+import SquadsMesh from "@sqds/mesh";
+import Web3 from "web3";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
+import { CosmWasmChain, EvmChain } from "../src/core/chains";
 import {
   EvmEntropyContract,
   EvmPriceFeedContract,
   getCodeDigestWithoutAddress,
   EvmWormholeContract,
 } from "../src/core/contracts/evm";
-import Web3 from "web3";
+import { DefaultStore } from "../src/node/utils/store";
+
+
+
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")
@@ -179,7 +184,7 @@ async function main() {
               .encodeFunctionSignature(invokedMethod)
               .replace("0x", "");
 
-            let newImplementationAddress: string | undefined = undefined;
+            let newImplementationAddress: string | undefined;
             if (calldataHex.startsWith(methodSignature)) {
               newImplementationAddress = web3.eth.abi.decodeParameter(
                 "address",

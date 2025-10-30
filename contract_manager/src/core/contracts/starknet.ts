@@ -1,15 +1,24 @@
-import type { DataSource } from "@pythnetwork/xc-admin-common";
-import {
-  type KeyValueConfig,
-  type Price,
-  type PriceFeed,
-  PriceFeedContract,
-  type PrivateKey,
-  type TxResult,
-} from "../base";
-import { Chain, StarknetChain } from "../chains";
-import { Account, Contract, shortString } from "starknet";
+/* eslint-disable unicorn/no-await-expression-member */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import { ByteBuffer } from "@pythnetwork/pyth-starknet-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import { Account, Contract, shortString } from "starknet";
+
+import type {
+  KeyValueConfig,
+  Price,
+  PriceFeed,
+  PrivateKey,
+  TxResult,
+} from "../base";
+import { PriceFeedContract } from "../base";
+import { Chain, StarknetChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 export class StarknetWormholeContract extends WormholeContract {
@@ -179,7 +188,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
 
   /**
    * Returns the single update fee and symbol of the specified token.
-   * @param token hex encoded token address without 0x prefix
+   * @param token - hex encoded token address without 0x prefix
    */
   async getBaseUpdateFeeInToken(
     token: string,
@@ -203,13 +212,13 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const contract = await this.getContractClient();
     const result = await contract.query_price_feed_unsafe("0x" + feedId);
-    if (result.Ok !== undefined) {
+    if (result.Ok === undefined) {
+      throw new Error(JSON.stringify(result.Err));
+    } else {
       return {
         price: convertPrice(result.Ok.price),
         emaPrice: convertPrice(result.Ok.ema_price),
       };
-    } else {
-      throw new Error(JSON.stringify(result.Err));
     }
   }
 
@@ -227,7 +236,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     );
     contract.connect(account);
 
-    const feeToken = "0x" + (await this.getFeeTokenAddresses())[0];
+    const feeToken = `0x${(await this.getFeeTokenAddresses())[0]}`;
     const tokenClassData = await provider.getClassAt(feeToken);
     const tokenContract = new Contract(tokenClassData.abi, feeToken, provider);
     tokenContract.connect(account);

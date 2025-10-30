@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { EvmChain } from "../src/core/chains";
+
 import {
   BaseDeployConfig,
   COMMON_DEPLOY_OPTIONS,
@@ -15,8 +15,9 @@ import {
   toDeploymentType,
   toPrivateKey,
 } from "../src/core/base";
-import { DefaultStore } from "../src/node/utils/store";
+import { EvmChain } from "../src/core/chains";
 import { EvmExecutorContract } from "../src/core/contracts/evm";
+import { DefaultStore } from "../src/node/utils/store";
 
 const CACHE_FILE = ".cache-deploy-evm-executor";
 
@@ -34,10 +35,10 @@ const parser = yargs(hideBin(process.argv))
     },
   });
 
-interface DeploymentConfig extends BaseDeployConfig {
+type DeploymentConfig = {
   type: DeploymentType;
   saveContract: boolean;
-}
+} & BaseDeployConfig
 
 export async function getOrDeployExecutorContract(
   chain: EvmChain,

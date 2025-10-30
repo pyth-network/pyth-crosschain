@@ -1,8 +1,9 @@
+import { HermesClient, PriceFeedMetadata } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { HermesClient, PriceFeedMetadata } from "@pythnetwork/hermes-client";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { toPrivateKey } from "../src/core/base";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Update the set of price feeds in a network. Usage: $0")

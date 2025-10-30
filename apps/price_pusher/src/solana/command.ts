@@ -1,4 +1,29 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import {
+  Keypair,
+  Connection,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from "@solana/web3.js";
+import {
+  searcherClient,
+  SearcherClient,
+} from "jito-ts/dist/sdk/block-engine/searcher";
+import type { Logger } from "pino";
+import { pino } from "pino";
 import type { Options } from "yargs";
+
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
@@ -8,22 +33,10 @@ import {
   SolanaPricePusherJito,
 } from "./solana.js";
 import { Controller } from "../controller.js";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import { Keypair, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import fs from "fs";
-import { PublicKey } from "@solana/web3.js";
-import { pino } from "pino";
-import type { Logger } from "pino";
-import { HermesClient } from "@pythnetwork/hermes-client";
-import {
-  searcherClient,
-  SearcherClient,
-} from "jito-ts/dist/sdk/block-engine/searcher";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
-import { filterInvalidPriceItems } from "../utils.js";
-import { PricePusherMetrics } from "../metrics.js";
-import { createSolanaBalanceTracker } from "./balance-tracker.js";
 import type { IBalanceTracker } from "../interface.js";
+import { PricePusherMetrics } from "../metrics.js";
+import { filterInvalidPriceItems } from "../utils.js";
+import { createSolanaBalanceTracker } from "./balance-tracker.js";
 
 export default {
   command: "solana",
@@ -47,7 +60,7 @@ export default {
     "compute-unit-price-micro-lamports": {
       description: "Priority fee per compute unit",
       type: "number",
-      default: 50000,
+      default: 50_000,
     } as Options,
     "jito-endpoints": {
       description: "Jito endpoint(s) - comma-separated list of endpoints",
@@ -235,9 +248,9 @@ export default {
         lookupTableAccount,
       );
 
-      jitoClients.forEach((client, index) => {
+      for (const [index, client] of jitoClients.entries()) {
         onBundleResult(client, logger.child({ module: `JitoClient-${index}` }));
-      });
+      }
     } else {
       solanaPricePusher = new SolanaPricePusher(
         pythSolanaReceiver,
@@ -269,14 +282,15 @@ export default {
       },
     );
 
-    controller.start();
+    void controller.start();
   },
 };
 
 export const onBundleResult = (c: SearcherClient, logger: Logger) => {
   try {
     c.onBundleResult(
-      () => undefined,
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      () => {},
       (err) => {
         logger.error(err, "Error in bundle result");
       },

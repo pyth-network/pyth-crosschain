@@ -1,11 +1,14 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import { Cell } from "@ton/ton";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { TonPriceFeedContract } from "../src/core/contracts";
+
 import { toPrivateKey } from "../src/core/base";
-import fs from "fs";
-import path from "path";
-import { Cell } from "@ton/ton";
+import { TonPriceFeedContract } from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
+
 
 // This script upgrades the Pyth contract on TON after the governance has authorized the upgrade
 // If you are starting over, the process is like the following:

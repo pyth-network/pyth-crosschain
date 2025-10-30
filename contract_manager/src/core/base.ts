@@ -1,7 +1,8 @@
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+
 import { Chain } from "./chains";
 
-export interface TxResult {
+export type TxResult = {
   id: string;
   info: unknown; // chain specific info
 }
@@ -45,14 +46,14 @@ export abstract class Storable {
   abstract toJson(): KeyValueConfig;
 }
 
-export interface Price {
+export type Price = {
   price: string;
   conf: string;
   publishTime: string;
   expo: string;
 }
 
-export interface PriceFeed {
+export type PriceFeed = {
   price: Price;
   emaPrice: Price;
 }

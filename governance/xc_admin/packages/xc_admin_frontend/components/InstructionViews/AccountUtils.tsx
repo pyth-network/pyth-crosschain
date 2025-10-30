@@ -19,7 +19,7 @@ export const ParsedAccountPubkeyRow = ({
   title,
   pubkey,
 }: {
-  mapping: { [key: string]: string }
+  mapping: Record<string, string>
   title: string
   pubkey: string
 }) => {

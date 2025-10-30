@@ -1,10 +1,11 @@
 import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
+import { Provider, Wallet, Contract, hexlify, arrayify } from "fuels";
+
 import {
   PYTH_CONTRACT_ADDRESS_SEPOLIA,
   PYTH_CONTRACT_ABI,
   FUEL_ETH_ASSET_ID,
 } from "../index";
-import { Provider, Wallet, Contract, hexlify, arrayify } from "fuels";
 
 async function main() {
   // Create a provider for interacting with Fuel RPC

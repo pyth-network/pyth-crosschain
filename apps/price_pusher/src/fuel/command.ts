@@ -1,13 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
+import { HermesClient } from "@pythnetwork/hermes-client";
+import { Provider, Wallet } from "fuels";
+import pino from "pino";
 import type { Options } from "yargs";
+
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
-import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { FuelPriceListener, FuelPricePusher } from "./fuel.js";
 import { Controller } from "../controller.js";
-import { Provider, Wallet } from "fuels";
-import fs from "fs";
-import pino from "pino";
 import { filterInvalidPriceItems } from "../utils.js";
 
 export default {
@@ -107,6 +113,6 @@ export default {
       { pushingFrequency },
     );
 
-    await controller.start();
+    void controller.start();
   },
 };

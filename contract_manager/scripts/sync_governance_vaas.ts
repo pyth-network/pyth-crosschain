@@ -1,7 +1,8 @@
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
 import { toPrivateKey } from "../src/core/base";
 import { SubmittedWormholeMessage, Vault } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
@@ -41,7 +42,7 @@ async function main() {
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
     ];
   const devnetVault =
-    DefaultStore.vaults["devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"];
+    DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
   let matchedVault: Vault;
   if (
     (await devnetVault.getEmitter()).toBuffer().toString("hex") ===
@@ -67,7 +68,7 @@ async function main() {
     lastExecuted = argv.offset - 1;
   }
   console.log("Starting from sequence number", lastExecuted);
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
       await matchedVault.getEmitter(),
@@ -77,8 +78,8 @@ async function main() {
     let vaa: Buffer;
     try {
       vaa = await submittedWormholeMessage.fetchVaa();
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log(error);
       console.log("no vaa found for sequence", lastExecuted + 1);
       break;
     }

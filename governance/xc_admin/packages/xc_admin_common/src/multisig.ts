@@ -4,7 +4,10 @@ import Squads, {
   getIxPDA,
   getTxPDA,
 } from "@sqds/mesh";
-import { type InstructionAccount, type TransactionAccount } from "@sqds/mesh/lib/types";
+import {
+  type InstructionAccount,
+  type TransactionAccount,
+} from "@sqds/mesh/lib/types";
 import BN from "bn.js";
 import lodash from "lodash";
 

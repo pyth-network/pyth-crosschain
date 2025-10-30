@@ -6,7 +6,6 @@ import { Transaction } from "@iota/iota-sdk/transactions";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-
 import { IotaPythClient } from "../client";
 import { IotaPriceServiceConnection } from "../index";
 

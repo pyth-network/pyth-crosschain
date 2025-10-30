@@ -1,33 +1,37 @@
-import { Chain, CosmWasmChain } from "../chains";
-import { readFileSync } from "fs";
-import {
-  type ContractInfoResponse,
-  CosmwasmQuerier,
-  type Price,
-  PythWrapperExecutor,
-  PythWrapperQuerier,
-} from "@pythnetwork/cosmwasm-deploy-tools";
-import type { Coin } from "@cosmjs/stargate";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
+import { readFileSync } from "node:fs";
+
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import type { Coin } from "@cosmjs/stargate";
+import type {ContractInfoResponse, Price} from "@pythnetwork/cosmwasm-deploy-tools";
+import {
+  
+  CosmwasmQuerier,
+  
+  PythWrapperExecutor,
+  PythWrapperQuerier
+} from "@pythnetwork/cosmwasm-deploy-tools";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+
+import type {PrivateKey, TxResult} from "../base";
 import {
   PriceFeedContract,
-  getDefaultDeploymentConfig,
-  type PrivateKey,
-  type TxResult,
+  getDefaultDeploymentConfig
+  
+  
 } from "../base";
-import { WormholeContract } from "./wormhole";
+import { Chain, CosmWasmChain } from "../chains";
 import type { TokenQty } from "../token";
+import { WormholeContract } from "./wormhole";
 
 /**
  * Variables here need to be snake case to match the on-chain contract configs
  */
-export interface WormholeSource {
+export type WormholeSource = {
   emitter: string;
   chain_id: number;
 }
 
-export interface DeploymentConfig {
+export type DeploymentConfig = {
   data_sources: WormholeSource[];
   governance_source: WormholeSource;
   wormhole_contract: string;
@@ -84,24 +88,22 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
   async getCurrentGuardianSetIndex(): Promise<number> {
     const config = await this.getConfig();
-    return JSON.parse(config["\x00\x06config"] ?? "{}")["guardian_set_index"];
+    return JSON.parse(config["\u0000\u0006config"] ?? "{}").guardian_set_index;
   }
 
   async getChainId(): Promise<number> {
     const config = await this.getConfig();
-    return JSON.parse(config["\x00\x06config"] ?? "{}")["chain_id"];
+    return JSON.parse(config["\u0000\u0006config"] ?? "{}").chain_id;
   }
 
   async getGuardianSet(): Promise<string[]> {
     const config = await this.getConfig();
-    const guardianSetIndex = JSON.parse(config["\x00\x06config"] ?? "{}")[
-      "guardian_set_index"
-    ];
-    let key = "\x00\fguardian_set";
+    const guardianSetIndex = JSON.parse(config["\u0000\u0006config"] ?? "{}").guardian_set_index;
+    let key = "\u0000\fguardian_set";
     //append guardianSetIndex as 4 bytes to key string
     key += Buffer.from(guardianSetIndex.toString(16).padStart(8, "0"), "hex");
 
-    const guardianSet = JSON.parse(config[key] ?? "{}")["addresses"];
+    const guardianSet = JSON.parse(config[key] ?? "{}").addresses;
     return guardianSet.map((entry: { bytes: string }) =>
       Buffer.from(entry.bytes, "base64").toString("hex"),
     );
@@ -245,9 +247,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       contractAddr: this.address,
     })) as Record<string, string>;
     const config = {
-      config_v1: JSON.parse(allStates["\x00\tconfig_v1"] ?? "{}"),
-      contract_version: allStates["\x00\x10contract_version"]
-        ? JSON.parse(allStates["\x00\x10contract_version"])
+      config_v1: JSON.parse(allStates["\u0000\tconfig_v1"] ?? "{}"),
+      contract_version: allStates["\u0000\u0010contract_version"]
+        ? JSON.parse(allStates["\u0000\u0010contract_version"])
         : undefined,
     };
     return config;
@@ -275,8 +277,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
         price: this.parsePrice(response.price),
         emaPrice: this.parsePrice(response.ema_price),
       };
-    } catch (e) {
-      return undefined;
+    } catch {
+      return;
     }
   }
 
@@ -285,12 +287,12 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     dataSources2: WormholeSource[],
   ): boolean {
     if (dataSources1.length !== dataSources2.length) return false;
-    for (let i = 0; i < dataSources1.length; i++) {
+    for (const element of dataSources1) {
       let found = false;
-      for (let j = 0; j < dataSources2.length; j++) {
+      for (const element_ of dataSources2) {
         if (
-          dataSources1[i]?.emitter === dataSources2[j]?.emitter &&
-          dataSources1[i]?.chain_id === dataSources2[j]?.chain_id
+          element.emitter === element_.emitter &&
+          element.chain_id === element_.chain_id
         ) {
           found = true;
           break;

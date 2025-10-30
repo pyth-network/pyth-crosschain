@@ -1,10 +1,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { COMMON_DEPLOY_OPTIONS } from "./common";
 import { CosmWasmChain } from "../src/core/chains";
 import { CosmWasmPriceFeedContract } from "../src/core/contracts/cosmwasm";
 import { DefaultStore } from "../src/node/utils/store";
 
-import { COMMON_DEPLOY_OPTIONS } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_cosmwasm.ts")

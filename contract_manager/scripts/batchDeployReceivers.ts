@@ -3,17 +3,19 @@
  * wormhole addresses to the deployed receiver contracts.
  */
 
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
+import * as fs from "node:fs";
+
 import {
   DefaultStore,
   EvmChain,
   loadHotWallet,
   EvmWormholeContract,
 } from "@pythnetwork/contract-manager";
-import Web3 from "web3";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
-import * as fs from "fs";
+import Web3 from "web3";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
 
 import { getDefaultConfig } from "../../target_chains/ethereum/contracts/scripts/contractManagerConfig";
 
@@ -63,14 +65,14 @@ async function memoize(
 async function main() {
   const argv = await parser.argv;
   const privateKey = argv["private-key"];
-  const network = argv["network"];
+  const network = argv.network;
 
-  const setupInfo = await import(argv["contract"] + "/ReceiverSetup.json");
+  const setupInfo = await import(argv.contract + "/ReceiverSetup.json");
   const implementationInfo = await import(
-    argv["contract"] + "/ReceiverImplementation.json"
+    argv.contract + "/ReceiverImplementation.json"
   );
   const receiverInfo = await import(
-    argv["contract"] + "/WormholeReceiver.json"
+    argv.contract + "/WormholeReceiver.json"
   );
 
   const payloads: Buffer[] = [];
@@ -133,11 +135,7 @@ async function main() {
     }
   }
   let vaultName;
-  if (network === "mainnet") {
-    vaultName = "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj";
-  } else {
-    vaultName = "devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3";
-  }
+  vaultName = network === "mainnet" ? "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj" : "devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3";
   const vault = DefaultStore.vaults[vaultName];
   vault.connect(await loadHotWallet(argv["ops-wallet"]));
   await vault.proposeWormholeMessage(payloads);

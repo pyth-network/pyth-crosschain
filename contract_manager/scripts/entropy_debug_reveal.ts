@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
@@ -58,24 +59,24 @@ async function main() {
     sequenceNumber < endingSequenceNumber;
     sequenceNumber++
   ) {
-    console.log("Revealing request for sequence number: ", sequenceNumber);
+    console.log("Revealing request for sequence number:", sequenceNumber);
     const request = await contract.getRequest(provider, sequenceNumber);
     if (request.sequenceNumber === "0") {
       console.log("Request not found");
       continue;
     }
-    console.log("Request block number: ", request.blockNumber);
+    console.log("Request block number:", request.blockNumber);
     const userRandomNumber = await contract.getUserRandomNumber(
       provider,
       sequenceNumber,
-      parseInt(request.blockNumber),
+      Number.parseInt(request.blockNumber),
     );
-    console.log("User random number: ", userRandomNumber);
+    console.log("User random number:", userRandomNumber);
     const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status !== 200) {
-      console.error("Fortuna response status: ", fortunaResponse.status);
-      console.error("Fortuna response body: ", await fortunaResponse.text());
+      console.error("Fortuna response status:", fortunaResponse.status);
+      console.error("Fortuna response body:", await fortunaResponse.text());
       console.error(
         "Refusing to continue the script, please check the Fortuna service first.",
       );
@@ -91,8 +92,8 @@ async function main() {
         sequenceNumber,
         privateKey,
       );
-    } catch (e) {
-      console.error("Error revealing request: ", e);
+    } catch (error) {
+      console.error("Error revealing request:", error);
       continue;
     }
   }

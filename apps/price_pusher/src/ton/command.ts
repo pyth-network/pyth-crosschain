@@ -1,15 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
+import { HermesClient } from "@pythnetwork/hermes-client";
+import { Address, TonClient } from "@ton/ton";
 import { pino } from "pino";
 import type { Options } from "yargs";
+
+import type { IPriceListener } from "../interface.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { TonPriceListener, TonPricePusher } from "./ton.js";
 import { Controller } from "../controller.js";
-import { Address, TonClient } from "@ton/ton";
-import fs from "fs";
-import { HermesClient } from "@pythnetwork/hermes-client";
 import { filterInvalidPriceItems } from "../utils.js";
-import type { IPriceListener } from "../interface.js";
 
 export default {
   command: "ton",
@@ -109,6 +114,6 @@ export default {
       { pushingFrequency },
     );
 
-    await controller.start();
+    void controller.start();
   },
 };

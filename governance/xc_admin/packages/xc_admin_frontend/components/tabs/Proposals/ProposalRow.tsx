@@ -1,17 +1,24 @@
-import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useRouter } from 'next/router'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { getMultisigCluster } from '@pythnetwork/xc-admin-common'
-import { ClusterContext } from '../../../contexts/ClusterContext'
-import { useMultisigContext } from '../../../contexts/MultisigContext'
-import { StatusTag } from './StatusTag'
-import { getInstructionsSummary, getProposalStatus } from './utils'
-import { useWallet } from '@solana/wallet-adapter-react'
-import type { AccountMeta } from '@solana/web3.js'
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+
 import {
+  getMultisigCluster,
   MultisigParser,
   getManyProposalsInstructions,
 } from '@pythnetwork/xc-admin-common'
+import { useWallet } from '@solana/wallet-adapter-react'
+import type { AccountMeta } from '@solana/web3.js'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+import { useRouter } from 'next/router'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+
+import { StatusTag } from './StatusTag'
+import { getInstructionsSummary, getProposalStatus } from './utils'
+import { ClusterContext } from '../../../contexts/ClusterContext'
+import { useMultisigContext } from '../../../contexts/MultisigContext'
 
 export const ProposalRow = ({
   proposal,
@@ -31,7 +38,7 @@ export const ProposalRow = ({
     readOnlySquads,
   } = useMultisigContext()
   const router = useRouter()
-  const elementRef = useRef(null)
+  const elementRef = useRef<HTMLDivElement>(null)
   const { publicKey: walletPublicKey } = useWallet()
   const formattedTime = time?.toLocaleString(undefined, {
     year: 'numeric',
@@ -67,28 +74,31 @@ export const ProposalRow = ({
                 setTime(new Date(firstBlockTime * 1000))
               }
             })
-            .catch((err) => {
+            .catch((error) => {
               console.error(
-                `Error fetching proposal time for ${proposal.publicKey.toBase58()}: ${err}`
+                `Error fetching proposal time for ${proposal.publicKey.toBase58()}: ${error}`
               )
             })
         }
 
         // calculate instructions summary
         if (!instructions) {
-          const proposalInstructions = (
-            await getManyProposalsInstructions(readOnlySquads, [proposal])
-          )[0]
+          const [proposalInstructions] = await getManyProposalsInstructions(
+            readOnlySquads,
+            [proposal]
+          )
+
           const multisigParser = MultisigParser.fromCluster(
             getMultisigCluster(cluster)
           )
-          const parsedInstructions = proposalInstructions?.map((ix) =>
-            multisigParser.parseInstruction({
-              programId: ix.programId,
-              data: ix.data as Buffer,
-              keys: ix.keys as AccountMeta[],
-            })
-          ) ?? [];
+          const parsedInstructions =
+            proposalInstructions?.map((ix) =>
+              multisigParser.parseInstruction({
+                programId: ix.programId,
+                data: ix.data as Buffer,
+                keys: ix.keys as AccountMeta[],
+              })
+            ) ?? []
 
           const summary = getInstructionsSummary({
             instructions: parsedInstructions,
@@ -154,11 +164,18 @@ export const ProposalRow = ({
 
   return (
     <div
+      aria-label="view proposal"
       ref={elementRef}
       className="my-2 cursor-pointer bg-[#1E1B2F] hover:bg-darkGray2"
-      onClick={() =>
+      onClick={() => {
         handleClickIndividualProposal(proposal.publicKey.toBase58())
-      }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter')
+          handleClickIndividualProposal(proposal.publicKey.toBase58())
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex flex-wrap gap-4 p-4">
         <div className="font-bold">{proposal.transactionIndex}</div>

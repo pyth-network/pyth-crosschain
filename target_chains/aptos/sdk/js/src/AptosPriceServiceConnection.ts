@@ -1,10 +1,7 @@
 import { Buffer } from "node:buffer";
 
-import type {HexString} from "@pythnetwork/price-service-client";
-import {
-  PriceServiceConnection
-  
-} from "@pythnetwork/price-service-client";
+import type { HexString } from "@pythnetwork/price-service-client";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { BCS } from "aptos";
 
 export class AptosPriceServiceConnection extends PriceServiceConnection {
@@ -12,7 +9,7 @@ export class AptosPriceServiceConnection extends PriceServiceConnection {
    * Gets price update data which then can be submitted to the Pyth contract to update the prices.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
    *
-   * @param priceIds Array of hex-encoded price ids.
+   * @param priceIds - Array of hex-encoded price ids.
    * @returns Array of price update data.
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<number[][]> {

@@ -1,22 +1,23 @@
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import {
-  BaseBalanceTracker,
-  type BaseBalanceTrackerConfig,
-  type IBalanceTracker,
-} from "../interface.js";
-import type { DurationInSeconds } from "../utils.js";
-import { PricePusherMetrics } from "../metrics.js";
 import type { Logger } from "pino";
+
+import type {
+  BaseBalanceTrackerConfig,
+  IBalanceTracker,
+} from "../interface.js";
+import { BaseBalanceTracker } from "../interface.js";
+import { PricePusherMetrics } from "../metrics.js";
+import type { DurationInSeconds } from "../utils.js";
 
 /**
  * Solana-specific configuration for balance tracker
  */
-export interface SolanaBalanceTrackerConfig extends BaseBalanceTrackerConfig {
+export type SolanaBalanceTrackerConfig = {
   /** Solana connection instance */
   connection: Connection;
   /** Solana public key */
   publicKey: PublicKey;
-}
+} & BaseBalanceTrackerConfig;
 
 /**
  * Solana-specific implementation of the balance tracker
@@ -53,7 +54,7 @@ export class SolanaBalanceTracker extends BaseBalanceTracker {
         balanceInSol,
       );
       this.logger.debug(
-        `Updated Solana wallet balance: ${this.address} = ${balanceInSol.toString()} SOL (${balanceInLamports} lamports)`,
+        `Updated Solana wallet balance: ${this.address} = ${balanceInSol.toString()} SOL (${balanceInLamports.toString()} lamports)`,
       );
     } catch (error) {
       this.logger.error(
@@ -67,14 +68,14 @@ export class SolanaBalanceTracker extends BaseBalanceTracker {
 /**
  * Parameters for creating a Solana balance tracker
  */
-export interface CreateSolanaBalanceTrackerParams {
+export type CreateSolanaBalanceTrackerParams = {
   connection: Connection;
   publicKey: PublicKey;
   network: string;
   updateInterval: DurationInSeconds;
   metrics: PricePusherMetrics;
   logger: Logger;
-}
+};
 
 /**
  * Factory function to create a balance tracker for Solana

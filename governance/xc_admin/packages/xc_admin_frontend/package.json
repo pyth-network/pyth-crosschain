@@ -50,14 +50,13 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@svgr/webpack": "^6.3.1",
     "@types/node": "^18.11.18",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@typescript-eslint/eslint-plugin": "^7.7.0",
     "autoprefixer": "^10.4.8",
-    "eslint": "8.56.0",
-    "eslint-config-next": "^14.2.3",
+    "eslint": "catalog:",
     "postcss": "^8.4.16",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "^0.1.13",

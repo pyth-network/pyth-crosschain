@@ -1,19 +1,27 @@
-import { AnchorProvider, type IdlAccounts, Program } from "@coral-xyz/anchor";
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable tsdoc/syntax */
+import type { IdlAccounts } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import {
+  parseAccumulatorUpdateData,
+  parsePriceFeedMessage,
+  parseTwapMessage,
+} from "@pythnetwork/price-service-sdk";
+import type {
+  InstructionWithEphemeralSigners,
+  PriorityFeeConfig,
+} from "@pythnetwork/solana-utils";
+import { TransactionBuilder } from "@pythnetwork/solana-utils";
+import type { Signer } from "@solana/web3.js";
 import {
   AddressLookupTableAccount,
   Connection,
-  type Signer,
   Transaction,
   VersionedTransaction,
+  PublicKey,
+  Keypair,
 } from "@solana/web3.js";
-import {
-  type PythSolanaReceiver as PythSolanaReceiverProgram,
-  IDL as Idl,
-} from "./idl/pyth_solana_receiver";
-import {
-  type WormholeCoreBridgeSolana,
-  IDL as WormholeCoreBridgeSolanaIdl,
-} from "./idl/wormhole_core_bridge_solana";
+
 import {
   DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   DEFAULT_RECEIVER_PROGRAM_ID,
@@ -23,19 +31,18 @@ import {
   getRandomTreasuryId,
   getTreasuryPda,
 } from "./address";
-import { PublicKey, Keypair } from "@solana/web3.js";
-import {
-  parseAccumulatorUpdateData,
-  parsePriceFeedMessage,
-  parseTwapMessage,
-} from "@pythnetwork/price-service-sdk";
 import {
   POST_TWAP_UPDATE_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
   UPDATE_PRICE_FEED_COMPUTE_BUDGET,
 } from "./compute_budget";
-import { Wallet } from "@coral-xyz/anchor";
+import type { PythPushOracle } from "./idl/pyth_push_oracle";
+import { IDL as PythPushOracleIdl } from "./idl/pyth_push_oracle";
+import type { PythSolanaReceiver as PythSolanaReceiverProgram } from "./idl/pyth_solana_receiver";
+import { IDL as Idl } from "./idl/pyth_solana_receiver";
+import type { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
+import { IDL as WormholeCoreBridgeSolanaIdl } from "./idl/wormhole_core_bridge_solana";
 import {
   buildCloseEncodedVaaInstruction,
   buildPostEncodedVaaInstructions,
@@ -44,15 +51,6 @@ import {
   getGuardianSetIndex,
   trimSignatures,
 } from "./vaa";
-import {
-  TransactionBuilder,
-  type InstructionWithEphemeralSigners,
-  type PriorityFeeConfig,
-} from "@pythnetwork/solana-utils";
-import {
-  type PythPushOracle,
-  IDL as PythPushOracleIdl,
-} from "./idl/pyth_push_oracle";
 
 export type PriceUpdateAccount =
   IdlAccounts<PythSolanaReceiverProgram>["priceUpdateV2"];
@@ -446,7 +444,7 @@ export class PythSolanaReceiver {
     wormholeProgramId = DEFAULT_WORMHOLE_PROGRAM_ID,
     receiverProgramId = DEFAULT_RECEIVER_PROGRAM_ID,
     pushOracleProgramId = DEFAULT_PUSH_ORACLE_PROGRAM_ID,
-    treasuryId = undefined,
+    treasuryId,
   }: {
     connection: Connection;
     wallet: Wallet;
@@ -468,17 +466,17 @@ export class PythSolanaReceiver {
       commitment: connection.commitment!,
     });
     this.receiver = new Program<PythSolanaReceiverProgram>(
-      Idl as PythSolanaReceiverProgram,
+      Idl,
       receiverProgramId,
       this.provider,
     );
     this.wormhole = new Program<WormholeCoreBridgeSolana>(
-      WormholeCoreBridgeSolanaIdl as WormholeCoreBridgeSolana,
+      WormholeCoreBridgeSolanaIdl,
       wormholeProgramId,
       this.provider,
     );
     this.pushOracle = new Program<PythPushOracle>(
-      PythPushOracleIdl as PythPushOracle,
+      PythPushOracleIdl,
       pushOracleProgramId,
       this.provider,
     );
@@ -782,7 +780,7 @@ export class PythSolanaReceiver {
                 treasuryId,
               },
               shardId,
-              Array.from(feedId),
+              [...feedId],
             )
             .accounts({
               pythSolanaReceiver: this.receiver.programId,
@@ -964,11 +962,9 @@ export function getPriceFeedAccountForProgram(
   pushOracleProgramId?: PublicKey,
 ): PublicKey {
   if (typeof priceFeedId == "string") {
-    if (priceFeedId.startsWith("0x")) {
-      priceFeedId = Buffer.from(priceFeedId.slice(2), "hex");
-    } else {
-      priceFeedId = Buffer.from(priceFeedId, "hex");
-    }
+    priceFeedId = priceFeedId.startsWith("0x")
+      ? Buffer.from(priceFeedId.slice(2), "hex")
+      : Buffer.from(priceFeedId, "hex");
   }
 
   if (priceFeedId.length != 32) {

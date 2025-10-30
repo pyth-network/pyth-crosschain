@@ -1,9 +1,10 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { EvmChain } from "../src/core/chains";
-import { toPrivateKey } from "../src/core/base";
+
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
+import { toPrivateKey } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -88,7 +89,7 @@ async function main() {
       value: (fee * totalCount).toString(),
     },
   );
-  console.log("Submitted transaction ", result.transactionHash);
+  console.log("Submitted transaction", result.transactionHash);
 }
 
 main();

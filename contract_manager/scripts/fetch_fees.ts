@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import {
   AptosPriceFeedContract,
   CosmWasmPriceFeedContract,
@@ -54,8 +55,8 @@ async function main() {
             `${contract.getId()} ${fee.amount} ${fee.denom} ($ value unknown)`,
           );
         }
-      } catch (e) {
-        console.error(`Error fetching fees for ${contract.getId()}`, e);
+      } catch (error) {
+        console.error(`Error fetching fees for ${contract.getId()}`, error);
       }
     }
   }

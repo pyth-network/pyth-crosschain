@@ -1,24 +1,23 @@
-import { useWallet } from '@solana/wallet-adapter-react'
-import {
-  type AccountMeta,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from '@solana/web3.js'
-import SquadsMesh from '@sqds/mesh'
-import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import {
-  type ReactNode,
-  Fragment,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
-import toast from 'react-hot-toast'
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable no-console */
+import { Wallet } from '@coral-xyz/anchor'
+import VerifiedIcon from '@images/icons/verified.inline.svg'
+import VotedIcon from '@images/icons/voted.inline.svg'
+import WarningIcon from '@images/icons/warning.inline.svg'
+import type { PythCluster } from '@pythnetwork/client'
+import { getPythProgramKeyForCluster } from '@pythnetwork/client'
+import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
+import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
 import {
   AnchorMultisigInstruction,
   ExecutePostedVaa,
-  type MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
   WormholeMultisigInstruction,
@@ -26,6 +25,23 @@ import {
   getMultisigCluster,
   getProgramName,
 } from '@pythnetwork/xc-admin-common'
+import * as Tooltip from '@radix-ui/react-tooltip'
+import { useWallet } from '@solana/wallet-adapter-react'
+import type { AccountMeta } from '@solana/web3.js'
+import {
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from '@solana/web3.js'
+import SquadsMesh from '@sqds/mesh'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+import type { ReactNode } from 'react'
+import { Fragment, useContext, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+
+import { InstructionsSummary } from './InstructionsSummary'
+import { StatusTag } from './StatusTag'
+import { getProposalStatus } from './utils'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { usePythContext } from '../../../contexts/PythContext'
@@ -36,22 +52,10 @@ import {
   WritableTag,
 } from '../../InstructionViews/AccountUtils'
 import { WormholeInstructionView } from '../../InstructionViews/WormholeInstructionView'
+import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
 import CopyText from '../../common/CopyText'
 import Spinner from '../../common/Spinner'
 import Loadbar from '../../loaders/Loadbar'
-
-import { Wallet } from '@coral-xyz/anchor'
-import { type PythCluster, getPythProgramKeyForCluster } from '@pythnetwork/client'
-import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
-import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
-import { StatusTag } from './StatusTag'
-import { getProposalStatus } from './utils'
-
-import VerifiedIcon from '@images/icons/verified.inline.svg'
-import VotedIcon from '@images/icons/voted.inline.svg'
-import WarningIcon from '@images/icons/warning.inline.svg'
-import * as Tooltip from '@radix-ui/react-tooltip'
-import { InstructionsSummary } from './InstructionsSummary'
 
 const IconWithTooltip = ({
   icon,
@@ -207,12 +211,14 @@ export const Proposal = ({
           ix.name === 'postMessage' &&
           ix.governanceAction instanceof ExecutePostedVaa &&
           ix.governanceAction.instructions.every((remoteIx) => {
-            const innerMultisigParser = cluster ? MultisigParser.fromCluster(cluster) : undefined;
+            const innerMultisigParser = cluster
+              ? MultisigParser.fromCluster(cluster)
+              : undefined
             const parsedRemoteInstruction =
-              innerMultisigParser?.parseInstruction({
+              innerMultisigParser.parseInstruction({
                 programId: remoteIx.programId,
-                data: remoteIx.data as Buffer,
-                keys: remoteIx.keys as AccountMeta[],
+                data: remoteIx.data,
+                keys: remoteIx.keys,
               })
             return (
               parsedRemoteInstruction instanceof PythMultisigInstruction ||
@@ -239,19 +245,23 @@ export const Proposal = ({
     let isCancelled = false
     const fetchInstructions = async () => {
       if (proposal) {
-        const proposalInstructions = (
-          await getManyProposalsInstructions(readOnlySquads, [proposal])
-        )[0]
-        const multisigParser = cluster ? MultisigParser.fromCluster(
-          getMultisigCluster(cluster)
-        ) : undefined;
-        const parsedInstructions = (proposalInstructions?.map((ix) =>
-          multisigParser?.parseInstruction({
-            programId: ix.programId,
-            data: ix.data as Buffer,
-            keys: ix.keys as AccountMeta[],
-          })
-        ) ?? []).filter((instruction): instruction is MultisigInstruction => Boolean(instruction));
+        const [proposalInstructions] = await getManyProposalsInstructions(
+          readOnlySquads,
+          [proposal]
+        )
+
+        const multisigParser = cluster
+          ? MultisigParser.fromCluster(getMultisigCluster(cluster))
+          : undefined
+        const parsedInstructions = (
+          proposalInstructions.map((ix) =>
+            multisigParser.parseInstruction({
+              programId: ix.programId,
+              data: ix.data as Buffer,
+              keys: ix.keys as AccountMeta[],
+            })
+          ) ?? []
+        ).filter(Boolean)
         if (!isCancelled) setInstructions(parsedInstructions)
       } else {
         if (!isCancelled) setInstructions([])
@@ -286,10 +296,10 @@ export const Proposal = ({
         builder.addInstruction({
           instruction,
           signers: [],
-          computeUnits: 20000,
+          computeUnits: 20_000,
         })
         const transactions = builder.buildLegacyTransactions({
-          computeUnitPriceMicroLamports: 150000,
+          computeUnitPriceMicroLamports: 150_000,
           tightComputeBudget: true,
         })
         await sendTransactions(
@@ -300,9 +310,8 @@ export const Proposal = ({
 
         if (refreshData) await refreshData().fetchData()
         toast.success(msg)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        toast.error(capitalizeFirstLetter(e.message))
+      } catch (error: any) {
+        toast.error(capitalizeFirstLetter(error.message))
       } finally {
         setIsTransactionLoading(false)
       }
@@ -318,7 +327,7 @@ export const Proposal = ({
       ): Promise<TransactionInstruction> => {
         return await squad.buildApproveTransaction(vaultKey, proposalKey)
       },
-      `Approved proposal ${proposal?.publicKey.toBase58()}`
+      `Approved proposal ${proposal.publicKey.toBase58()}`
     )
   }
 
@@ -331,7 +340,7 @@ export const Proposal = ({
       ): Promise<TransactionInstruction> => {
         return await squad.buildRejectTransaction(vaultKey, proposalKey)
       },
-      `Rejected proposal ${proposal?.publicKey.toBase58()}`
+      `Rejected proposal ${proposal.publicKey.toBase58()}`
     )
   }
 
@@ -344,7 +353,7 @@ export const Proposal = ({
       ): Promise<TransactionInstruction> => {
         return await squad.buildExecuteTransaction(proposalKey)
       },
-      `Executed proposal ${proposal?.publicKey.toBase58()}`
+      `Executed proposal ${proposal.publicKey.toBase58()}`
     )
   }
 
@@ -357,7 +366,7 @@ export const Proposal = ({
       ): Promise<TransactionInstruction> => {
         return await squad.buildCancelTransaction(vaultKey, proposalKey)
       },
-      `Cancelled proposal ${proposal?.publicKey.toBase58()}`
+      `Cancelled proposal ${proposal.publicKey.toBase58()}`
     )
   }
 
@@ -377,7 +386,7 @@ export const Proposal = ({
         <h4 className="h4 font-semibold">
           {uniqueTargetCluster
             ? `Target network: ${targetClusters[0]}`
-            : targetClusters.length == 0
+            : targetClusters.length === 0
               ? ''
               : `Multiple target networks detected ${targetClusters.join(' ')}`}
         </h4>
@@ -472,7 +481,7 @@ export const Proposal = ({
               {isTransactionLoading ? <Spinner /> : 'Cancel'}
             </button>
           </div>
-        ) : null}
+        ) : undefined}
       </div>
       {proposal.approved.length > 0 && (
         <AccountList listName="Confirmed" accounts={proposal.approved} />
@@ -491,13 +500,13 @@ export const Proposal = ({
         <h4 className="h4 text-[20px] font-semibold">Summary</h4>
         <InstructionsSummary instructions={instructions} cluster={cluster} />
         <hr className="border-gray-700" />
-        {instructions?.map((instruction, index) => (
+        {instructions.map((instruction, index) => (
           <Fragment key={index}>
             <h4 className="h4 text-[20px] font-semibold">
               Instruction {index + 1}
             </h4>
             <div
-              key={`${index}_instructionType`}
+              key={`${index.toString()}_instructionType`}
               className="flex justify-between"
             >
               <div>Program</div>
@@ -505,7 +514,7 @@ export const Proposal = ({
             </div>
             {
               <div
-                key={`${index}_instructionName`}
+                key={`${index.toString()}_instructionName`}
                 className="flex justify-between"
               >
                 <div>Instruction Name</div>
@@ -516,17 +525,17 @@ export const Proposal = ({
             instruction.governanceAction ? (
               <>
                 <div
-                  key={`${index}_targetChain`}
+                  key={`${index.toString()}_targetChain`}
                   className="flex justify-between"
                 >
                   <div>Target Chain</div>
                   <div>{instruction.governanceAction.targetChainId}</div>
                 </div>
               </>
-            ) : null}
-            {instruction instanceof WormholeMultisigInstruction ? null : (
+            ) : undefined}
+            {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div
-                key={`${index}_arguments`}
+                key={`${index.toString()}_arguments`}
                 className="grid grid-cols-4 justify-between"
               >
                 <div>Arguments</div>
@@ -558,15 +567,16 @@ export const Proposal = ({
                           )}
                         </div>
                         {key === 'pub' &&
-                        publisherKeyToNameMappingCluster && instruction.args[key].toBase58() in
+                        publisherKeyToNameMappingCluster &&
+                        instruction.args[key].toBase58() in
                           publisherKeyToNameMappingCluster ? (
                           <ParsedAccountPubkeyRow
-                            key={`${index}_${instruction.args[key].toBase58()}`}
+                            key={`${index.toString()}_${instruction.args[key].toBase58()}`}
                             mapping={publisherKeyToNameMappingCluster}
                             title="publisher"
-                            pubkey={instruction.args[key].toBase58()}
+                            pubkey={instruction.args[key]?.toBase58()}
                           />
-                        ) : null}
+                        ) : undefined}
                       </Fragment>
                     ))}
                   </div>
@@ -581,7 +591,7 @@ export const Proposal = ({
                 instruction={instruction}
               />
             )}
-            {!(instruction instanceof WormholeMultisigInstruction) ? (
+            {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div
                 key={`${index}_accounts`}
                 className="grid grid-cols-4 justify-between"
@@ -605,43 +615,49 @@ export const Proposal = ({
                             </div>
                             <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
                               <div className="flex items-center space-x-2 sm:ml-2">
-                                {instruction.accounts.named[key]?.isSigner ? (
+                                {instruction.accounts.named[key].isSigner ? (
                                   <SignerTag />
-                                ) : null}
-                                {instruction.accounts.named[key]?.isWritable ? (
+                                ) : undefined}
+                                {instruction.accounts.named[key].isWritable ? (
                                   <WritableTag />
-                                ) : null}
+                                ) : undefined}
                               </div>
                               <CopyText
-                                text={instruction.accounts.named[
-                                  key
-                                ]?.pubkey.toBase58() ?? ''}
+                                text={
+                                  instruction.accounts.named[
+                                    key
+                                  ].pubkey.toBase58() ?? ''
+                                }
                               />
                             </div>
                           </div>
                           {key === 'priceAccount' &&
-                          instruction.accounts.named[key]!.pubkey.toBase58() in
+                          instruction.accounts.named[key].pubkey.toBase58() in
                             priceAccountKeyToSymbolMapping ? (
                             <ParsedAccountPubkeyRow
                               key="priceAccountPubkey"
                               mapping={priceAccountKeyToSymbolMapping}
                               title="symbol"
-                              pubkey={instruction.accounts.named[
-                                key
-                              ]?.pubkey.toBase58() ?? ''}
+                              pubkey={
+                                instruction.accounts.named[
+                                  key
+                                ].pubkey.toBase58() ?? ''
+                              }
                             />
                           ) : key === 'productAccount' &&
-                            instruction.accounts.named[key]!.pubkey.toBase58() in
+                            instruction.accounts.named[key].pubkey.toBase58() in
                               productAccountKeyToSymbolMapping ? (
                             <ParsedAccountPubkeyRow
                               key="productAccountPubkey"
                               mapping={productAccountKeyToSymbolMapping}
                               title="symbol"
-                              pubkey={instruction.accounts.named[
-                                key
-                              ]?.pubkey.toBase58() ?? ''}
+                              pubkey={
+                                instruction.accounts.named[
+                                  key
+                                ].pubkey.toBase58() ?? ''
+                              }
                             />
-                          ) : null}
+                          ) : undefined}
                         </>
                       )
                     )}
@@ -650,10 +666,10 @@ export const Proposal = ({
                   <div>No arguments</div>
                 )}
               </div>
-            ) : null}
-            {index !== instructions.length - 1 ? (
+            )}
+            {index === instructions.length - 1 ? undefined : (
               <hr className="border-gray-700" />
-            ) : null}
+            )}
           </Fragment>
         ))}
       </div>

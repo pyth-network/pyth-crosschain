@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { DefaultStore } from "../src/node/utils/store";
 
 function deserializeCommitmentMetadata(data: Buffer) {
@@ -32,8 +33,8 @@ async function main() {
     try {
       provider = await contract.getDefaultProvider();
       providerInfo = await contract.getProviderInfo(provider);
-    } catch (e) {
-      console.error(`Error fetching info for ${contract.getId()}`, e);
+    } catch (error) {
+      console.error(`Error fetching info for ${contract.getId()}`, error);
       continue;
     }
 

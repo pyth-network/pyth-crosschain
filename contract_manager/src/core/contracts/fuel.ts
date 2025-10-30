@@ -1,29 +1,30 @@
-import { Chain, FuelChain } from "../chains";
-import { WormholeContract } from "./wormhole";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable unicorn/no-await-expression-member */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+import type {
+  PriceFeedOutput,
+  DataSourceOutput,
+} from "@pythnetwork/pyth-fuel-js";
 import {
   PYTH_CONTRACT_ABI as FuelContractAbi,
   FUEL_ETH_ASSET_ID,
-  type PriceFeedOutput,
-  type DataSourceOutput,
 } from "@pythnetwork/pyth-fuel-js";
-
-import {
-  Account,
-  Contract,
-  Wallet,
-  arrayify,
-  hexlify,
-  type DryRunResult,
-} from "fuels";
-import {
-  type PriceFeed,
-  PriceFeedContract,
-  type PrivateKey,
-  type TxResult,
-} from "../base";
-
-import type { TokenQty } from "../token";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DryRunResult } from "fuels";
+import { Account, Contract, Wallet, arrayify, hexlify } from "fuels";
+
+import type { PriceFeed, PrivateKey, TxResult } from "../base";
+import { Chain, FuelChain } from "../chains";
+import { WormholeContract } from "./wormhole";
+import { PriceFeedContract } from "../base";
+import type { TokenQty } from "../token";
 
 export class FuelWormholeContract extends WormholeContract {
   static type = "FuelWormholeContract";

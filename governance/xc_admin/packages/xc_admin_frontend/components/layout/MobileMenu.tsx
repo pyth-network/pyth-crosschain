@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import orb from '@images/burger.png'
 import { gsap } from 'gsap'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useEffect, useRef } from 'react'
-import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
+
 import type { BurgerState } from './Header'
+import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
 
-import orb from '@images/burger.png'
-
-interface MenuProps {
+type MenuProps = {
   headerState: BurgerState
 }
 
@@ -32,14 +33,7 @@ const MobileMenu = ({ headerState }: MenuProps) => {
 
   useEffect(() => {
     // close menu
-    if (!headerState.opened) {
-      gsap.to(burgerMenu.current, {
-        duration: 0.3,
-        ease: 'power4.out',
-        css: { right: '-100%' },
-      })
-      gsap.set(document.body, { overflow: 'initial' })
-    } else {
+    if (headerState.opened) {
       // show menu
       gsap.to(burgerMenu.current, {
         duration: 0.3,
@@ -47,6 +41,13 @@ const MobileMenu = ({ headerState }: MenuProps) => {
         css: { right: '0' },
       })
       gsap.set(document.body, { overflow: 'hidden' })
+    } else {
+      gsap.to(burgerMenu.current, {
+        duration: 0.3,
+        ease: 'power4.out',
+        css: { right: '-100%' },
+      })
+      gsap.set(document.body, { overflow: 'initial' })
     }
   }, [headerState])
 

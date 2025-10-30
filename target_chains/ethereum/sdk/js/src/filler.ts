@@ -1,13 +1,6 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
-import type {Address, PublicClient, Hex, Transport, Chain} from "viem";
-import {
-  
-  
-  encodeFunctionData
-  
-  
-  
-} from "viem";
+import type { Address, PublicClient, Hex, Transport, Chain } from "viem";
+import { encodeFunctionData } from "viem";
 
 import { IPythAbi } from "./pyth-abi.js";
 import {

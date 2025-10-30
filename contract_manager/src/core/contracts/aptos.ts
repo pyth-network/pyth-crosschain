@@ -1,14 +1,16 @@
-import {
-  PriceFeedContract,
-  type PriceFeed,
-  type PrivateKey,
-  type TxResult,
-} from "../base";
-import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
-import { AptosChain, Chain } from "../chains";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
-import { WormholeContract } from "./wormhole";
+import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
+
+import type {PriceFeed, PrivateKey, TxResult} from "../base";
+import {
+  PriceFeedContract
+  
+  
+  
+} from "../base";
+import { AptosChain, Chain } from "../chains";
 import type { TokenQty } from "../token";
+import { WormholeContract } from "./wormhole";
 
 type WormholeState = {
   chain_id: { number: string };
@@ -251,10 +253,10 @@ export class AptosPriceFeedContract extends PriceFeedContract {
         price: this.parsePrice(priceItemRes.price_feed.price),
         emaPrice: this.parsePrice(priceItemRes.price_feed.ema_price),
       };
-    } catch (e) {
-      if (e instanceof ApiError && e.errorCode === "table_item_not_found")
+    } catch (error) {
+      if (error instanceof ApiError && error.errorCode === "table_item_not_found")
         return undefined;
-      throw e;
+      throw error;
     }
   }
 

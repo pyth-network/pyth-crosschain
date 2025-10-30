@@ -1,5 +1,7 @@
+import { HermesClient } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
@@ -7,7 +9,6 @@ import {
   getOrDeployWormholeContract,
   BaseDeployConfig,
 } from "./common";
-import { HermesClient } from "@pythnetwork/hermes-client";
 import {
   DeploymentType,
   getDefaultDeploymentConfig,
@@ -18,12 +19,12 @@ import { EvmChain } from "../src/core/chains";
 import { EvmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
-interface DeploymentConfig extends BaseDeployConfig {
+type DeploymentConfig = {
   type: DeploymentType;
   validTimePeriodSeconds: number;
   singleUpdateFeeInWei: number;
   saveContract: boolean;
-}
+} & BaseDeployConfig
 
 const CACHE_FILE = ".cache-deploy-evm";
 
@@ -115,7 +116,7 @@ async function main() {
   const nativeTokenDecimals = argv["native-token-decimals"];
   if (
     singleUpdateFeeInUsd &&
-    (nativeTokenPriceFeedId == null || nativeTokenDecimals == null)
+    (nativeTokenPriceFeedId == undefined || nativeTokenDecimals == undefined)
   ) {
     throw new Error(
       "native-token-price-feed-id and native-token-decimals are required when single-update-fee-in-usd is provided",
@@ -132,7 +133,7 @@ async function main() {
     );
 
     const price = priceObject.parsed?.[0].price;
-    if (price == null) {
+    if (price == undefined) {
       throw new Error("Failed to get price of the native token");
     }
     const priceInUsd = Number(price.price);

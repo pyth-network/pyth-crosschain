@@ -1,9 +1,10 @@
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
-import { PriceFeedContract, type PrivateKey, Storable } from "../base";
+
+import type {PrivateKey} from "../base";
+import { PriceFeedContract,  Storable } from "../base";
 import { Chain, EvmChain } from "../chains";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
-import { WormholeContract } from "./wormhole";
 import type { TokenQty } from "../token";
 import {
   EXECUTOR_ABI,
@@ -13,6 +14,7 @@ import {
   PULSE_UPGRADEABLE_ABI,
   LAZER_ABI,
 } from "./evm_abis";
+import { WormholeContract } from "./wormhole";
 
 /**
  * Returns the keccak256 digest of the contract bytecode at the given address after replacing
@@ -124,7 +126,7 @@ export class EvmWormholeContract extends WormholeContract {
   }
 }
 
-interface EntropyProviderInfo {
+type EntropyProviderInfo = {
   feeInWei: string;
   accruedFeesInWei: string;
   originalCommitment: string;
@@ -138,7 +140,7 @@ interface EntropyProviderInfo {
   feeManager: string;
 }
 
-interface EntropyRequest {
+type EntropyRequest = {
   provider: string;
   sequenceNumber: string;
   numHashes: string;
@@ -586,7 +588,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     try {
       web3 = this.chain.getWeb3();
       amount = BigInt(await web3.eth.getBalance(this.address));
-    } catch (error) {
+    } catch {
       console.error(
         "Error getting balance with given RPC, moving to viem default RPC",
       );
@@ -611,7 +613,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const feed = "0x" + feedId;
     const exists = await pythContract.methods.priceFeedExists(feed).call();
     if (!exists) {
-      return undefined;
+      return;
     }
     const [price, conf, expo, publishTime] = await pythContract.methods
       .getPriceUnsafe(feed)
@@ -837,13 +839,13 @@ export class EvmPulseContract extends Storable {
   }
 
   async getFirstActiveRequests(count: number): Promise<{
-    requests: Array<{
+    requests: {
       provider: string;
       publishTime: string;
       priceIds: string[];
       callbackGasLimit: string;
       requester: string;
-    }>;
+    }[];
     actualCount: number;
   }> {
     const contract = this.getContract();

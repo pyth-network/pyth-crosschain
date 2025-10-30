@@ -1,5 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { PrivateKey, toPrivateKey } from "../src/core/base";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -35,8 +36,8 @@ async function getBalance(
     const balance =
       await DefaultStore.chains[chain].getAccountBalance(privateKey);
     return { chain, address, balance };
-  } catch (e) {
-    console.error(`Error fetching balance for ${chain}`, e);
+  } catch (error) {
+    console.error(`Error fetching balance for ${chain}`, error);
   }
   return { chain, address, balance: undefined };
 }

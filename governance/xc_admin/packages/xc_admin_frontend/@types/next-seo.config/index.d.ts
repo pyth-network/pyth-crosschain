@@ -1,1 +1,1 @@
-declare module "*next-seo.config.js";
+declare module '*next-seo.config.js'

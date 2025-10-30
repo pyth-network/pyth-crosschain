@@ -1,8 +1,9 @@
+import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { ENTROPY_DEFAULT_KEEPER } from "../src/core/contracts";
-import Web3 from "web3";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
@@ -40,7 +41,7 @@ async function main() {
       let version = "unknown";
       try {
         version = await contract.getVersion();
-      } catch (e) {
+      } catch {
         /* old deployments did not have this method */
       }
       const providerInfo = await contract.getProviderInfo(provider);
@@ -58,8 +59,8 @@ async function main() {
         version,
       });
       console.log(`Fetched info for ${contract.getId()}`);
-    } catch (e) {
-      console.error(`Error fetching info for ${contract.getId()}`, e);
+    } catch (error) {
+      console.error(`Error fetching info for ${contract.getId()}`, error);
     }
   }
   console.table(entries);

@@ -1,10 +1,12 @@
-import {
-  type HexString,
-  HermesClient,
-  type PriceUpdate,
-} from "@pythnetwork/hermes-client";
-import type { PriceInfo, IPriceListener, PriceItem } from "./interface.js";
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable unicorn/prefer-add-event-listener */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+import type { HexString, PriceUpdate } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
+
+import type { PriceInfo, IPriceListener, PriceItem } from "./interface.js";
 import { sleep } from "./utils.js";
 
 type TimestampInMs = number & { readonly _: unique symbol };
@@ -35,7 +37,7 @@ export class PythPriceListener implements IPriceListener {
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
-    this.startListening();
+    await this.startListening();
 
     // Store health check interval reference
     this.healthCheckInterval = setInterval(() => {
@@ -62,39 +64,40 @@ export class PythPriceListener implements IPriceListener {
     );
     eventSource.onmessage = (event: MessageEvent) => {
       const priceUpdates = JSON.parse(event.data) as PriceUpdate;
-      priceUpdates.parsed?.forEach((priceUpdate) => {
-        this.logger.debug(
-          `Received new price feed update from Pyth price service: ${this.priceIdToAlias.get(
-            priceUpdate.id,
-          )} ${priceUpdate.id}`,
-        );
+      if (priceUpdates.parsed)
+        for (const priceUpdate of priceUpdates.parsed) {
+          this.logger.debug(
+            `Received new price feed update from Pyth price service: ${this.priceIdToAlias.get(
+              priceUpdate.id,
+            )} ${priceUpdate.id}`,
+          );
 
-        // Consider price to be currently available if it is not older than 60s
-        const currentPrice =
-          Date.now() / 1000 - priceUpdate.price.publish_time > 60
-            ? undefined
-            : priceUpdate.price;
-        if (currentPrice === undefined) {
-          this.logger.debug("Price is older than 60s, skipping");
-          return;
+          // Consider price to be currently available if it is not older than 60s
+          const currentPrice =
+            Date.now() / 1000 - priceUpdate.price.publish_time > 60
+              ? undefined
+              : priceUpdate.price;
+          if (currentPrice === undefined) {
+            this.logger.debug("Price is older than 60s, skipping");
+            continue;
+          }
+
+          const priceInfo: PriceInfo = {
+            conf: currentPrice.conf,
+            price: currentPrice.price,
+            publishTime: currentPrice.publish_time,
+          };
+
+          this.latestPriceInfo.set(priceUpdate.id, priceInfo);
+          this.lastUpdated = Date.now() as TimestampInMs;
         }
-
-        const priceInfo: PriceInfo = {
-          conf: currentPrice.conf,
-          price: currentPrice.price,
-          publishTime: currentPrice.publish_time,
-        };
-
-        this.latestPriceInfo.set(priceUpdate.id, priceInfo);
-        this.lastUpdated = Date.now() as TimestampInMs;
-      });
     };
 
     eventSource.onerror = async (error: Event) => {
       console.error("Error receiving updates from Hermes:", error);
       eventSource.close();
       await sleep(5000); // Wait a bit before trying to reconnect
-      this.startListening(); // Attempt to restart the listener
+      void this.startListening(); // Attempt to restart the listener
     };
   }
 

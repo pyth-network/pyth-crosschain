@@ -1,38 +1,49 @@
-import { readFileSync } from "fs";
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+import { readFileSync } from "node:fs";
 
-import {
-  Connection,
-  Keypair,
-  type ParsedInstruction,
-  type PartiallyDecodedInstruction,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_CLOCK_PUBKEY,
-  SYSVAR_RENT_PUBKEY,
-  Transaction,
-} from "@solana/web3.js";
-import * as bs58 from "bs58";
-import { getPythClusterApiUrl, type PythCluster } from "@pythnetwork/client";
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
-import {
-  executeProposal,
-  MultisigVault,
-  WORMHOLE_ADDRESS,
-  WORMHOLE_API_ENDPOINT,
-} from "@pythnetwork/xc-admin-common";
-import { type KeyValueConfig, Storable } from "../../core/base.js";
-import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
-import SquadsMesh from "@sqds/mesh";
-// TODO: this should be migrated to @wormhole-foundation/dsk
-// as such, we cannot publish an ESM variant of the contract_manager
-// until we upgrade
 import {
   createWormholeProgramInterface,
   deriveEmitterSequenceKey,
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
+import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
+import type { PythCluster } from "@pythnetwork/client";
+import { getPythClusterApiUrl } from "@pythnetwork/client";
+import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
+import {
+  executeProposal,
+  MultisigVault,
+  WORMHOLE_ADDRESS,
+  WORMHOLE_API_ENDPOINT,
+} from "@pythnetwork/xc-admin-common";
+import type {
+  ParsedInstruction,
+  PartiallyDecodedInstruction,
+} from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
+  Transaction,
+} from "@solana/web3.js";
+import SquadsMesh from "@sqds/mesh";
+import * as bs58 from "bs58";
+
+import type { KeyValueConfig } from "../../core/base.js";
+import { Storable } from "../../core/base.js";
+
+// TODO: this should be migrated to @wormhole-foundation/dsk
+// as such, we cannot publish an ESM variant of the contract_manager
+// until we upgrade
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -55,9 +66,9 @@ export class SubmittedWormholeMessage {
    * Attempts to find the emitter and sequence number of a wormhole message from a transaction
    * Parses the transaction and looks for the wormhole postMessage instruction to find the emitter
    * Inspects the transaction logs to find the sequence number
-   * @param signature signature of the transaction to inspect
-   * @param cluster the cluster the transaction was submitted to
-   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
+   * @param signature - signature of the transaction to inspect
+   * @param cluster - the cluster the transaction was submitted to
+   * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   static async fromTransactionSignature(
     signature: string,
@@ -73,8 +84,11 @@ export class SubmittedWormholeMessage {
     );
 
     const sequenceNumber = Number(
-      txLog?.substring(
-        txLog.indexOf(sequenceLogPrefix) + sequenceLogPrefix.length,
+      txLog?.slice(
+        Math.max(
+          0,
+          txLog.indexOf(sequenceLogPrefix) + sequenceLogPrefix.length,
+        ),
       ),
     );
 
@@ -83,17 +97,18 @@ export class SubmittedWormholeMessage {
     let emitter: PublicKey | undefined = undefined;
 
     let allInstructions: (ParsedInstruction | PartiallyDecodedInstruction)[] =
-      txDetails?.transaction?.message?.instructions || [];
-    txDetails?.meta?.innerInstructions?.forEach((instruction) => {
-      allInstructions = allInstructions.concat(instruction.instructions);
-    });
-    allInstructions.forEach((instruction) => {
-      if (!instruction.programId.equals(wormholeAddress)) return;
+      txDetails?.transaction.message.instructions ?? [];
+    if (txDetails?.meta?.innerInstructions)
+      for (const instruction of txDetails.meta.innerInstructions) {
+        allInstructions = [...allInstructions, ...instruction.instructions];
+      }
+    for (const instruction of allInstructions) {
+      if (!instruction.programId.equals(wormholeAddress)) continue;
       // we assume RPC can not parse wormhole instructions and the type is not ParsedInstruction
       const wormholeInstruction = instruction as PartiallyDecodedInstruction;
-      if (bs58.decode(wormholeInstruction.data)[0] !== 1) return; // 1 is wormhole postMessage Instruction discriminator
+      if (bs58.decode(wormholeInstruction.data)[0] !== 1) continue; // 1 is wormhole postMessage Instruction discriminator
       emitter = wormholeInstruction.accounts[2];
-    });
+    }
     if (!emitter)
       throw new InvalidTransactionError(
         "Could not find wormhole postMessage instruction",
@@ -104,7 +119,7 @@ export class SubmittedWormholeMessage {
   /**
    * Tries to fetch the VAA from the wormhole bridge API waiting for a certain amount of time
    * before giving up and throwing an error
-   * @param waitingSeconds how long to wait before giving up
+   * @param waitingSeconds - how long to wait before giving up
    */
   async fetchVaa(waitingSeconds = 1): Promise<Buffer> {
     const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
@@ -156,8 +171,8 @@ export class WormholeEmitter {
 
   /**
    * Send a wormhole message containing payload through wormhole.
-   * @param payload the contents of the message
-   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
+   * @param payload - the contents of the message
+   * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   async sendMessage(
     payload: Buffer,
@@ -252,8 +267,8 @@ export class WormholeMultisigProposal {
             this.cluster,
           ),
         );
-      } catch (e) {
-        if (!(e instanceof InvalidTransactionError)) throw e;
+      } catch (error) {
+        if (!(error instanceof InvalidTransactionError)) throw error;
       }
     }
     if (msgs.length > 0) return msgs;
@@ -305,8 +320,8 @@ export class Vault extends Storable {
   /**
    * Connects the vault to a wallet that can be used to submit proposals
    * The wallet should be a multisig signer of the vault
-   * @param wallet
-   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
+   * @param wallet - the wallet
+   * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
   public connect(
     wallet: Wallet,
@@ -322,8 +337,9 @@ export class Vault extends Storable {
 
   /**
    * Gets the emitter address of the vault
-   * @param registry registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
+   * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const squad = SquadsMesh.endpoint(
       registry(this.cluster),
@@ -352,8 +368,8 @@ export class Vault extends Storable {
    * Proposes sending an array of wormhole messages to the wormhole bridge
    * Requires a wallet to be connected to the vault
    *
-   * @param payloads the payloads to send to the wormhole bridge
-   * @param proposalAddress if specified, will continue an existing proposal
+   * @param payloads - the payloads to send to the wormhole bridge
+   * @param proposalAddress - if specified, will continue an existing proposal
    */
   public async proposeWormholeMessage(
     payloads: Buffer[],
@@ -381,8 +397,9 @@ export class Vault extends Storable {
 /**
  * Loads a solana wallet from a file. The file should contain the secret key in array of integers format
  * This wallet can be used to connect to a vault and submit proposals
- * @param walletPath path to the wallet file
+ * @param walletPath - - path to the wallet file
  */
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function loadHotWallet(walletPath: string): Promise<Wallet> {
   return new NodeWallet(
     Keypair.fromSecretKey(

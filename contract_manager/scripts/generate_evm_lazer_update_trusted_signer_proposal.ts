@@ -1,7 +1,8 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --config <path/to/config.json>")
@@ -61,7 +62,7 @@ async function main() {
 
   console.log("Using vault at for proposal", vault.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet ", wallet.publicKey.toBase58());
+  console.log("Using wallet", wallet.publicKey.toBase58());
   await vault.connect(wallet);
   const proposal = await vault.proposeWormholeMessage(updatePayloads);
   console.log("Proposal address", proposal.address.toBase58());

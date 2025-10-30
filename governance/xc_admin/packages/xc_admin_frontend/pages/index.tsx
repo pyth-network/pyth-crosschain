@@ -1,10 +1,19 @@
-import YAML from 'yaml'
-import { z } from 'zod'
+/* eslint-disable @typescript-eslint/no-deprecated */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable unicorn/no-await-expression-member */
+/* eslint-disable n/no-process-env */
+/* eslint-disable react/prop-types */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import * as fs from 'node:fs'
+
 import { Tab } from '@headlessui/react'
-import * as fs from 'fs'
 import type { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import YAML from 'yaml'
+import { z } from 'zod'
+
 import Layout from '../components/layout/Layout'
 import General from '../components/tabs/General'
 import Proposals from '../components/tabs/Proposals/Proposals'
@@ -117,13 +126,15 @@ const Home: NextPage<{
 
   // set current tab value when page is loaded
   useEffect(() => {
-    router.query && router.query.tab
-      ? setCurrentTabIndex(
-          tabInfoArray.findIndex((v) => v.queryString === router.query.tab)
-        )
-      : setCurrentTabIndex(
-          tabInfoArray.findIndex((v) => v.queryString === DEFAULT_TAB)
-        )
+    if (router.query?.tab) {
+      setCurrentTabIndex(
+        tabInfoArray.findIndex((v) => v.queryString === router.query.tab)
+      )
+    } else {
+      setCurrentTabIndex(
+        tabInfoArray.findIndex((v) => v.queryString === DEFAULT_TAB)
+      )
+    }
   }, [router, tabInfoArray])
 
   return (

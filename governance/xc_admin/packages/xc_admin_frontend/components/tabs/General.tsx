@@ -1,4 +1,5 @@
 import { ProgramType } from '@pythnetwork/xc-admin-common'
+
 import { useProgramContext } from '../../contexts/ProgramContext'
 import ProgramSwitch from '../ProgramSwitch'
 import PythCore from '../programs/PythCore'
@@ -11,14 +12,18 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const renderProgramComponent = () => {
     try {
       switch (programType) {
-        case ProgramType.PYTH_CORE:
+        case ProgramType.PYTH_CORE: {
           return <PythCore proposerServerUrl={proposerServerUrl} />
-        case ProgramType.PYTH_LAZER:
+        }
+        case ProgramType.PYTH_LAZER: {
           return <PythLazer proposerServerUrl={proposerServerUrl} />
-        default:
+        }
+        default: {
           return <div>Unknown program type</div>
+        }
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error rendering program component:', error)
       return <div>An error occurred loading the program component</div>
     }

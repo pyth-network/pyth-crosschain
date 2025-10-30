@@ -1,4 +1,6 @@
-import { getContract, type Address, type GetContractReturnType } from "viem";
+import type { Address, GetContractReturnType } from "viem";
+import { getContract } from "viem";
+
 import { PythAbi } from "./pyth-abi.js";
 import type { SuperWalletClient } from "./super-wallet.js";
 

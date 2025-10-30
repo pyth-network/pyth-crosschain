@@ -1,8 +1,9 @@
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { toPrivateKey } from "../src/core/base";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

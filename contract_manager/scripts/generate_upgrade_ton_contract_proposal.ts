@@ -1,11 +1,13 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { loadHotWallet } from "../src/node/utils/governance";
+
 import { TonChain } from "../src/core/chains";
-import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
-import fs from "fs";
-import path from "path";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -74,7 +76,7 @@ async function main() {
 
   // Create and submit governance proposal
   console.log("Using vault for proposal:", vault.getId());
-  const keypair = await loadHotWallet(argv["ops-key-path"] as string);
+  const keypair = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet:", keypair.publicKey.toBase58());
   vault.connect(keypair);
   const proposal = await vault.proposeWormholeMessage([payload]);

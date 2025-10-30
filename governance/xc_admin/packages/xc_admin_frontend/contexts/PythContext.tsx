@@ -15,13 +15,13 @@ import {
 
 type AccountKeyToSymbol = { [key: string]: string }
 interface PythContextProps {
-  rawConfig: RawConfig;
-  dataIsLoading: boolean;
-  connection?: Connection | undefined;
-  priceAccountKeyToSymbolMapping: AccountKeyToSymbol;
-  productAccountKeyToSymbolMapping: AccountKeyToSymbol;
-  publisherKeyToNameMapping: Record<string, Record<string, string>>;
-  multisigSignerKeyToNameMapping: Record<string, string>;
+  rawConfig: RawConfig
+  dataIsLoading: boolean
+  connection?: Connection | undefined
+  priceAccountKeyToSymbolMapping: AccountKeyToSymbol
+  productAccountKeyToSymbolMapping: AccountKeyToSymbol
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
+  multisigSignerKeyToNameMapping: Record<string, string>
 }
 
 const PythContext = createContext<PythContextProps>({

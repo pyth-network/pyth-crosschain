@@ -1,20 +1,21 @@
 import { SuiClient } from "@mysten/sui/client";
-import {
-  BaseBalanceTracker,
-  type BaseBalanceTrackerConfig,
-  type IBalanceTracker,
-} from "../interface.js";
-import type { DurationInSeconds } from "../utils.js";
-import { PricePusherMetrics } from "../metrics.js";
 import type { Logger } from "pino";
+
+import type {
+  BaseBalanceTrackerConfig,
+  IBalanceTracker,
+} from "../interface.js";
+import { BaseBalanceTracker } from "../interface.js";
+import { PricePusherMetrics } from "../metrics.js";
+import type { DurationInSeconds } from "../utils.js";
 
 /**
  * Sui-specific configuration for balance tracker
  */
-export interface SuiBalanceTrackerConfig extends BaseBalanceTrackerConfig {
+export type SuiBalanceTrackerConfig = {
   /** Sui client instance */
   client: SuiClient;
-}
+} & BaseBalanceTrackerConfig;
 
 /**
  * Sui-specific implementation of the balance tracker
@@ -50,7 +51,7 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
       );
 
       this.logger.debug(
-        `Updated Sui wallet balance: ${this.address} = ${normalizedBalance} SUI`,
+        `Updated Sui wallet balance: ${this.address} = ${normalizedBalance.toString()} SUI`,
       );
     } catch (error) {
       this.logger.error(
@@ -64,14 +65,14 @@ export class SuiBalanceTracker extends BaseBalanceTracker {
 /**
  * Parameters for creating a Sui balance tracker
  */
-export interface CreateSuiBalanceTrackerParams {
+export type CreateSuiBalanceTrackerParams = {
   client: SuiClient;
   address: string;
   network: string;
   updateInterval: DurationInSeconds;
   metrics: PricePusherMetrics;
   logger: Logger;
-}
+};
 
 /**
  * Factory function to create a balance tracker for Sui chain

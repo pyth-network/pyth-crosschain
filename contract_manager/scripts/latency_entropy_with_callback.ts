@@ -1,10 +1,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { PrivateKey, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { EvmEntropyContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -57,7 +58,7 @@ async function testLatency(
   const web3 = contract.chain.getWeb3();
   const entropyContract = contract.getContract();
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const currentBlock = await web3.eth.getBlockNumber();
@@ -86,7 +87,7 @@ async function testLatency(
       );
       break;
     }
-    if (Date.now() - startTime > 60000) {
+    if (Date.now() - startTime > 60_000) {
       console.log("Timeout: 60s passed without the callback being called.");
       break;
     }

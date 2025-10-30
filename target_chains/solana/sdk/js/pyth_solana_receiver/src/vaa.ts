@@ -1,17 +1,18 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { type WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 import { Program } from "@coral-xyz/anchor";
-import { type InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
+import { sha256 } from "@noble/hashes/sha256";
+import type { AccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
+import type { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+
+import { getGuardianSetPda } from "./address";
 import {
   CLOSE_ENCODED_VAA_COMPUTE_BUDGET,
   INIT_ENCODED_VAA_COMPUTE_BUDGET,
   VERIFY_ENCODED_VAA_COMPUTE_BUDGET,
   WRITE_ENCODED_VAA_COMPUTE_BUDGET,
 } from "./compute_budget";
-import { sha256 } from "@noble/hashes/sha256";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
-import { type AccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { getGuardianSetPda } from "./address";
+import type { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
 /**
  * Get the index of the guardian set that signed a VAA
  */
@@ -62,7 +63,7 @@ export function trimSignatures(
 ): Buffer {
   const currentNumSignatures = vaa[5];
   if (currentNumSignatures === undefined) {
-    throw new Error('vaa[5] is undefined');
+    throw new Error("vaa[5] is undefined");
   }
   if (n > currentNumSignatures) {
     throw new Error(
@@ -87,13 +88,13 @@ export function trimSignatures(
  * - writeSecondPartAndVerifyInstructions: Write remaining VAA data and verify signatures
  * - closeInstructions: Close the encoded VAA account to recover rent
  */
-interface VaaInstructionGroups {
+type VaaInstructionGroups = {
   initInstructions: InstructionWithEphemeralSigners[];
   writeFirstPartInstructions: InstructionWithEphemeralSigners[];
   writeSecondPartAndVerifyInstructions: InstructionWithEphemeralSigners[];
   closeInstructions: InstructionWithEphemeralSigners[];
   encodedVaaAddress: PublicKey;
-}
+};
 
 // Core function to generate VAA instruction groups
 async function generateVaaInstructionGroups(
@@ -199,7 +200,7 @@ async function generateVaaInstructionGroups(
  *
  * @param wormhole - The Wormhole program instance
  * @param vaa - The VAA buffer to post
- * @returns {Object} Result containing:
+ * @returns Result containing:
  *   - encodedVaaAddress: Public key of the encoded VAA account
  *   - postInstructions: Instructions to post and verify the VAA
  *   - closeInstructions: Instructions to close the encoded VAA account and recover rent
@@ -240,7 +241,7 @@ export async function buildPostEncodedVaaInstructions(
  * @param wormhole - The Wormhole program instance
  * @param startUpdateData - Accumulator update data containing the start VAA
  * @param endUpdateData - Accumulator update data containing the end VAA
- * @returns {Object} Result containing:
+ * @returns Result containing:
  *   - startEncodedVaaAddress: Public key of the start VAA account
  *   - endEncodedVaaAddress: Public key of the end VAA account
  *   - postInstructions: Instructions to post and verify both VAAs

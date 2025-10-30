@@ -1,41 +1,42 @@
-import type { PythCluster } from "@pythnetwork/client";
-import { PublicKey } from "@solana/web3.js";
-import type { MultisigAccount, TransactionAccount } from "@sqds/mesh/lib/types";
+/* eslint-disable tsdoc/syntax */
+import type { PythCluster } from '@pythnetwork/client'
+import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
 import {
   ExecutePostedVaa,
-  type MultisigInstruction,
   MultisigParser,
   PythGovernanceActionImpl,
   SetDataSources,
   WormholeMultisigInstruction,
-} from "@pythnetwork/xc-admin-common";
+} from '@pythnetwork/xc-admin-common'
+import { PublicKey } from '@solana/web3.js'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 
 export const PROPOSAL_STATUSES = [
-  "active",
-  "executed",
-  "cancelled",
-  "rejected",
-  "expired",
-  "executeReady",
-  "draft",
-  "unkwown",
-] as const;
-export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
+  'active',
+  'executed',
+  'cancelled',
+  'rejected',
+  'expired',
+  'executeReady',
+  'draft',
+  'unkwown',
+] as const
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]
 
 export const getProposalStatus = (
   proposal: TransactionAccount | undefined,
-  multisig: MultisigAccount | undefined,
+  multisig: MultisigAccount | undefined
 ): ProposalStatus => {
   if (multisig && proposal) {
-    const onChainStatus = Object.keys(proposal.status)[0];
+    const onChainStatus = Object.keys(proposal.status)[0]
     return proposal.transactionIndex <= multisig.msChangeIndex &&
-      (onChainStatus == "active" || onChainStatus == "draft")
-      ? "expired"
-      : (onChainStatus as ProposalStatus);
+      (onChainStatus == 'active' || onChainStatus == 'draft')
+      ? 'expired'
+      : (onChainStatus as ProposalStatus)
   } else {
-    return "unkwown";
+    return 'unkwown'
   }
-};
+}
 
 /**
  * Returns a summary of the instructions in a list of multisig instructions.
@@ -48,74 +49,77 @@ export const getInstructionsSummary = ({
   instructions,
   cluster,
 }: {
-  instructions: MultisigInstruction[];
-  cluster: PythCluster;
+  instructions: MultisigInstruction[]
+  cluster: PythCluster
 }) =>
   Object.entries(
     getInstructionSummariesByName(
       MultisigParser.fromCluster(cluster),
-      instructions,
-    ),
+      instructions
+    )
   )
     .map(([name, summaries = []]) => ({
       name,
       count: summaries.length ?? 0,
       summaries,
     }))
-    .toSorted(({ count }) => count);
+    .toSorted(({ count }) => count)
 
 const getInstructionSummariesByName = (
   parser: MultisigParser,
-  instructions: MultisigInstruction[],
+  instructions: MultisigInstruction[]
 ) =>
   Object.groupBy(
     instructions.flatMap((instruction) =>
-      getInstructionSummary(parser, instruction),
+      getInstructionSummary(parser, instruction)
     ),
-    ({ name }) => name,
-  );
+    ({ name }) => name
+  )
 
 const getInstructionSummary = (
   parser: MultisigParser,
-  instruction: MultisigInstruction,
+  instruction: MultisigInstruction
 ) => {
   if (instruction instanceof WormholeMultisigInstruction) {
-    const { governanceAction } = instruction;
+    const { governanceAction } = instruction
     if (governanceAction instanceof ExecutePostedVaa) {
       return governanceAction.instructions.map((innerInstruction) =>
-        getTransactionSummary(parser.parseInstruction(innerInstruction)),
-      );
+        getTransactionSummary(parser.parseInstruction(innerInstruction))
+      )
     } else if (governanceAction instanceof PythGovernanceActionImpl) {
-      return [{ name: governanceAction.action } as const];
+      return [{ name: governanceAction.action } as const]
     } else if (governanceAction instanceof SetDataSources) {
-      return [{ name: governanceAction.actionName } as const];
+      return [{ name: governanceAction.actionName } as const]
     } else {
-      return [{ name: "unknown" } as const];
+      return [{ name: 'unknown' } as const]
     }
   } else {
-    return [getTransactionSummary(instruction)];
+    return [getTransactionSummary(instruction)]
   }
-};
+}
 
 const getTransactionSummary = (instruction: MultisigInstruction) => {
   switch (instruction.name) {
-    case "addPublisher":
+    case 'addPublisher': {
       return {
-        name: "addPublisher",
+        name: 'addPublisher',
         priceAccount:
-          instruction.accounts.named["priceAccount"]?.pubkey.toBase58() ?? "",
-        pub: (instruction.args["pub"] as PublicKey).toBase58(),
-      } as const;
-    case "delPublisher":
+          instruction.accounts.named.priceAccount?.pubkey.toBase58() ?? '',
+        pub: (instruction.args.pub as PublicKey).toBase58(),
+      } as const
+    }
+    case 'delPublisher': {
       return {
-        name: "delPublisher",
+        name: 'delPublisher',
         priceAccount:
-          instruction.accounts.named["priceAccount"]?.pubkey.toBase58() ?? "",
-        pub: (instruction.args["pub"] as PublicKey).toBase58(),
-      } as const;
-    default:
+          instruction.accounts.named.priceAccount?.pubkey.toBase58() ?? '',
+        pub: (instruction.args.pub as PublicKey).toBase58(),
+      } as const
+    }
+    default: {
       return {
         name: instruction.name,
-      } as const;
+      } as const
+    }
   }
-};
+}

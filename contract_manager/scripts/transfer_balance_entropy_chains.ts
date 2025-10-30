@@ -1,11 +1,12 @@
+import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { PrivateKey, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
-import Web3 from "web3";
+import { DefaultStore } from "../src/node/utils/store";
 
-interface TransferResult {
+type TransferResult = {
   chain: string;
   success: boolean;
   sourceAddress: string;
@@ -153,9 +154,7 @@ async function transferOnChain(
 
     // Calculate transfer amount
     let transferAmountEth: number;
-    if (transferAmount !== undefined) {
-      transferAmountEth = transferAmount;
-    } else {
+    if (transferAmount === undefined) {
       // transferRatio is guaranteed to be defined at this point
       if (transferRatio === undefined) {
         throw new Error(
@@ -163,6 +162,8 @@ async function transferOnChain(
         );
       }
       transferAmountEth = (balanceEth - gasCostEth) * transferRatio;
+    } else {
+      transferAmountEth = transferAmount;
     }
 
     // Round to 10 decimal places to avoid Web3 conversion errors
@@ -317,7 +318,7 @@ function getSelectedChains(argv: {
       }
       const chain = DefaultStore.chains[chainId];
       if (!(chain instanceof EvmChain)) {
-        throw new Error(`Chain ${chainId} is not an EVM chain`);
+        throw new TypeError(`Chain ${chainId} is not an EVM chain`);
       }
       selectedChains.push(chain);
     }
@@ -326,9 +327,9 @@ function getSelectedChains(argv: {
   if (selectedChains.length === 0) {
     const mode = argv.testnets
       ? "testnet"
-      : argv.mainnets
+      : (argv.mainnets
         ? "mainnet"
-        : "specified";
+        : "specified");
     throw new Error(`No valid ${mode} entropy chains found`);
   }
 
@@ -367,18 +368,18 @@ async function main() {
 
   // Determine transfer method for display
   let transferMethod: string;
-  if (argv.amount !== undefined) {
-    transferMethod = `${argv.amount} ETH (fixed amount)`;
-  } else {
+  if (argv.amount === undefined) {
     if (argv.ratio === undefined) {
       throw new Error("Ratio must be defined when amount is not specified");
     }
     transferMethod = `${(argv.ratio * 100).toFixed(1)}% of available balance`;
+  } else {
+    transferMethod = `${argv.amount} ETH (fixed amount)`;
   }
 
   console.log(`\nConfiguration:`);
   console.log(
-    `   Network: ${argv.testnets ? "Testnet" : argv.mainnets ? "Mainnet" : "Specific chains"}`,
+    `   Network: ${argv.testnets ? "Testnet" : (argv.mainnets ? "Mainnet" : "Specific chains")}`,
   );
   console.log(`   Destination: ${argv.destinationAddress}`);
   console.log(`   Transfer method: ${transferMethod}`);
@@ -418,7 +419,7 @@ async function main() {
   console.log(`Successful transfers: ${successful.length}`);
   console.log(`Failed transfers: ${failed.length}`);
   console.log(
-    `Total transferred: ${successful.reduce((sum, r) => sum + parseFloat(r.transferAmount), 0).toFixed(6)} ETH`,
+    `Total transferred: ${successful.reduce((sum, r) => sum + Number.parseFloat(r.transferAmount), 0).toFixed(6)} ETH`,
   );
 
   if (successful.length > 0) {

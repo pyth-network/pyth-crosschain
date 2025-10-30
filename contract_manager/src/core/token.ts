@@ -1,5 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import axios from "axios";
-import { type KeyValueConfig, Storable } from "./base";
+
+import type { KeyValueConfig } from "./base";
+import { Storable } from "./base";
 
 export type TokenId = string;
 /**
@@ -48,7 +53,7 @@ export class Token extends Storable {
 
       // Note that this conversion can lose some precision.
       // We don't really care about that in this application.
-      return parseInt(price.price) * Math.pow(10, price.expo);
+      return Number.parseInt(price.price) * Math.pow(10, price.expo);
     } else {
       // We may support other pricing methodologies in the future but whatever.
       return undefined;
@@ -67,7 +72,7 @@ export class Token extends Storable {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      ...(this.pythId !== undefined ? { pythId: this.pythId } : {}),
+      ...(this.pythId === undefined ? {} : { pythId: this.pythId }),
     };
   }
 

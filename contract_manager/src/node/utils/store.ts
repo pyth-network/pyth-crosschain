@@ -1,3 +1,16 @@
+/* eslint-disable no-empty */
+/* eslint-disable tsdoc/syntax */
+/* eslint-disable unicorn/no-array-for-each */
+/* eslint-disable unicorn/no-array-push-push */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+
+import { Vault } from "./governance";
+import { PriceFeedContract, Storable } from "../../core/base";
 import {
   AptosChain,
   Chain,
@@ -32,18 +45,15 @@ import {
   EvmExecutorContract,
   EvmLazerContract,
 } from "../../core/contracts";
-import { Token } from "../../core/token";
-import { PriceFeedContract, Storable } from "../../core/base";
-import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
-import { Vault } from "./governance";
-import {
-  StarknetPriceFeedContract,
-  StarknetWormholeContract,
-} from "../../core/contracts/starknet";
 import {
   NearPriceFeedContract,
   NearWormholeContract,
 } from "../../core/contracts/near";
+import {
+  StarknetPriceFeedContract,
+  StarknetWormholeContract,
+} from "../../core/contracts/starknet";
+import { Token } from "../../core/token";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
@@ -64,24 +74,24 @@ export class Store {
   }
 
   static serialize(obj: Storable) {
-    return JSON.stringify([obj.toJson()], null, 2);
+    return JSON.stringify([obj.toJson()], undefined, 2);
   }
 
   getJsonFiles(path: string) {
     const walk = function (dir: string) {
       let results: string[] = [];
       const list = readdirSync(dir);
-      list.forEach(function (file) {
+      for (let file of list) {
         file = dir + "/" + file;
         const stat = statSync(file);
-        if (stat && stat.isDirectory()) {
+        if (stat.isDirectory()) {
           // Recurse into a subdirectory
-          results = results.concat(walk(file));
+          results = [...results, ...walk(file)];
         } else {
           // Is a file
           results.push(file);
         }
-      });
+      }
       return results;
     };
     return walk(path).filter((file) => file.endsWith(".json"));
@@ -101,8 +111,8 @@ export class Store {
       [IotaChain.type]: IotaChain,
     };
 
-    this.getJsonFiles(`${this.path}/chains/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
+    for (const jsonFile of this.getJsonFiles(`${this.path}/chains/`)) {
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (allChainClasses[parsed.type] === undefined) {
           throw new Error(
@@ -116,7 +126,7 @@ export class Store {
         }
         this.chains[id] = chain!;
       }
-    });
+    }
   }
 
   saveAllContracts() {
@@ -137,7 +147,7 @@ export class Store {
         `${this.path}/contracts/${type}s.json`,
         JSON.stringify(
           contracts.map((c) => c.toJson()),
-          null,
+          undefined,
           2,
         ),
       );
@@ -157,7 +167,7 @@ export class Store {
         `${this.path}/chains/${type}s.json`,
         JSON.stringify(
           chains.map((c) => c.toJson()),
-          null,
+          undefined,
           2,
         ),
       );
@@ -189,7 +199,7 @@ export class Store {
       [EvmLazerContract.type]: EvmLazerContract,
     };
     this.getJsonFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (allContractClasses[parsed.type] === undefined) return;
         if (!this.chains[parsed.chain])
@@ -226,7 +236,7 @@ export class Store {
 
   loadAllTokens() {
     this.getJsonFiles(`${this.path}/tokens/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Token.type) return;
 
@@ -240,7 +250,7 @@ export class Store {
 
   loadAllVaults() {
     this.getJsonFiles(`${this.path}/vaults/`).forEach((jsonFile) => {
-      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf-8"));
+      const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Vault.type) return;
 
@@ -254,8 +264,8 @@ export class Store {
 
   /**
    * Returns the chain with the given ID, or throws an error if it doesn't exist or is not of the specified type.
-   * @param chainId The unique identifier of the chain to retrieve
-   * @param ChainClass Optional class to validate the chain type.
+   * @param chainId - The unique identifier of the chain to retrieve
+   * @param ChainClass - Optional class to validate the chain type.
    * @returns The chain instance of type T
    * @throws Error if chain doesn't exist or is not of the specified type
    * @template T Type of chain to return, extends base Chain class

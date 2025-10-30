@@ -1,5 +1,9 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
@@ -9,8 +13,6 @@ import {
   topupAccountsIfNecessary,
   DefaultAddresses,
 } from "./common";
-import fs from "fs";
-import path from "path";
 import {
   DeploymentType,
   toDeploymentType,
@@ -24,10 +26,10 @@ import {
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
-interface DeploymentConfig extends BaseDeployConfig {
+type DeploymentConfig = {
   type: DeploymentType;
   saveContract: boolean;
-}
+} & BaseDeployConfig
 
 const CACHE_FILE = ".cache-deploy-evm-pulse-contracts";
 
@@ -112,7 +114,7 @@ async function topupPulseAccountsIfNecessary(
   chain: EvmChain,
   deploymentConfig: DeploymentConfig,
 ) {
-  const accounts: Array<[string, DefaultAddresses]> = [
+  const accounts: [string, DefaultAddresses][] = [
     ["keeper", PULSE_DEFAULT_KEEPER],
     ["provider", PULSE_DEFAULT_PROVIDER],
   ];
@@ -128,7 +130,7 @@ async function main() {
   if (!chain) {
     throw new Error(`Chain ${chainName} not found`);
   } else if (!(chain instanceof EvmChain)) {
-    throw new Error(`Chain ${chainName} is not an EVM chain`);
+    throw new TypeError(`Chain ${chainName} is not an EVM chain`);
   }
 
   const deploymentConfig: DeploymentConfig = {

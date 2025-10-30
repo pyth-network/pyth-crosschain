@@ -1,17 +1,24 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
+import { SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { HermesClient } from "@pythnetwork/hermes-client";
+import pino from "pino";
+import type { Options } from "yargs";
+
+import { Controller } from "../controller.js";
+import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config";
-import fs from "fs";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { Controller } from "../controller.js";
-import type { Options } from "yargs";
-import { SuiPriceListener, SuiPricePusher } from "./sui.js";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import pino from "pino";
-import { filterInvalidPriceItems } from "../utils.js";
-import { PricePusherMetrics } from "../metrics.js";
 import { createSuiBalanceTracker } from "./balance-tracker.js";
-import { SuiClient } from "@mysten/sui/client";
+import { SuiPriceListener, SuiPricePusher } from "./sui.js";
+import { filterInvalidPriceItems } from "../utils.js";
 
 export default {
   command: "sui",
@@ -103,7 +110,7 @@ export default {
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
     const keypair = Ed25519Keypair.deriveKeypair(
       mnemonic,
       `m/44'/784'/${accountIndex}'/0'/0'`,
@@ -191,6 +198,6 @@ export default {
       await balanceTracker.start();
     }
 
-    controller.start();
+    void controller.start();
   },
 };

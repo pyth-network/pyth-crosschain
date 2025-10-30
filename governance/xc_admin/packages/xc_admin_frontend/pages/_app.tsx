@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-env */
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import {
   ConnectionProvider,
@@ -5,25 +6,26 @@ import {
 } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import '@solana/wallet-adapter-react-ui/styles.css'
+import type { WalletConnectWalletAdapterConfig } from '@solana/wallet-adapter-wallets'
 import {
   LedgerWalletAdapter,
   PhantomWalletAdapter,
   SolflareWalletAdapter,
   TorusWalletAdapter,
   WalletConnectWalletAdapter,
-  type WalletConnectWalletAdapterConfig,
 } from '@solana/wallet-adapter-wallets'
 import { clusterApiUrl } from '@solana/web3.js'
-import { DefaultSeo } from 'next-seo'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
+import { DefaultSeo } from 'next-seo'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 import { useMemo } from 'react'
 import { Toaster } from 'react-hot-toast'
+
 import { ClusterProvider } from '../contexts/ClusterContext'
 import { ProgramProvider } from '../contexts/ProgramContext'
 import SEO from '../next-seo.config.js'
 import '../styles/globals.css'
-import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 
 const walletConnectConfig: WalletConnectWalletAdapterConfig = {
   network: WalletAdapterNetwork.Mainnet,

@@ -1,37 +1,6 @@
-import {
-  type KeyValueConfig,
-  type PrivateKey,
-  Storable,
-  type TxResult,
-} from "./base";
-import {
-  type ChainName,
-  SetFee,
-  CosmosUpgradeContract,
-  EvmUpgradeContract,
-  toChainId,
-  SetDataSources,
-  SetValidPeriod,
-  type DataSource,
-  EvmSetWormholeAddress,
-  UpgradeContract256Bit,
-  EvmExecute,
-} from "@pythnetwork/xc-admin-common";
-import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
-import Web3 from "web3";
-import {
-  CosmwasmExecutor,
-  CosmwasmQuerier,
-  InjectiveExecutor,
-} from "@pythnetwork/cosmwasm-deploy-tools";
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
-import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import type { TokenId } from "./token";
-import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
-import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 import {
   TonClient,
@@ -47,13 +16,47 @@ import * as nearAPI from "near-api-js";
 import * as bs58 from "bs58";
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import { SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import {
+  CosmwasmExecutor,
+  CosmwasmQuerier,
+  InjectiveExecutor,
+} from "@pythnetwork/cosmwasm-deploy-tools";
+import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
+import type {ChainName, DataSource} from "@pythnetwork/xc-admin-common";
+import {
+  
+  SetFee,
+  CosmosUpgradeContract,
+  EvmUpgradeContract,
+  toChainId,
+  SetDataSources,
+  SetValidPeriod,
+  
+  EvmSetWormholeAddress,
+  UpgradeContract256Bit,
+  EvmExecute
+} from "@pythnetwork/xc-admin-common";
+import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
+import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
 import * as chains from "viem/chains";
+import Web3 from "web3";
+
+import type {KeyValueConfig, PrivateKey, TxResult} from "./base";
+import {
+  
+  
+  Storable
+  
+} from "./base";
+import type { TokenId } from "./token";
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
  */
 export function parseRpcUrl(rpcUrl: string): string {
-  const envMatches = rpcUrl.match(/\$ENV_\w+/);
+  const envMatches = /\$ENV_\w+/.exec(rpcUrl);
   if (envMatches) {
     for (const envMatch of envMatches) {
       const envName = envMatch.replace("$ENV_", "");
@@ -267,7 +270,7 @@ export class CosmWasmChain extends Chain {
   async getExecutor(
     privateKey: PrivateKey,
   ): Promise<CosmwasmExecutor | InjectiveExecutor> {
-    if (this.getId().indexOf("injective") > -1) {
+    if (this.getId().includes("injective")) {
       return InjectiveExecutor.fromPrivateKey(
         this.isMainnet() ? Network.Mainnet : Network.Testnet,
         privateKey,
@@ -282,11 +285,7 @@ export class CosmWasmChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const executor = await this.getExecutor(privateKey);
-    if (executor instanceof InjectiveExecutor) {
-      return executor.getAddress();
-    } else {
-      return await executor.getAddress();
-    }
+    return executor instanceof InjectiveExecutor ? executor.getAddress() : (await executor.getAddress());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -593,11 +592,11 @@ export class EvmChain extends Chain {
         gasPrice: gasPrice.toString(),
       });
       return deployedContract.options.address;
-    } catch (e) {
+    } catch (error) {
       // RPC errors often have useful information in the non-primary message field. Log the whole error
       // to simplify identifying the problem.
-      console.log(`Error deploying contract: ${JSON.stringify(e)}`);
-      throw e;
+      console.log(`Error deploying contract: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
@@ -694,7 +693,7 @@ export class AptosChain extends Chain {
       sender,
       txPayload,
       {
-        maxGasAmount: BigInt(30000),
+        maxGasAmount: BigInt(30_000),
       },
     );
     return { id: result.hash, info: result };
@@ -818,7 +817,7 @@ export class StarknetChain extends Chain {
     const ARGENT_CLASS_HASH =
       "0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b";
     const ADDR_BOUND =
-      0x7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00n;
+      0x7_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_00n;
 
     function computeHashOnElements(elements: string[]): string {
       let hash = "0";
@@ -1032,7 +1031,7 @@ export class NearChain extends Chain {
     senderPrivateKey?: PrivateKey,
   ): Promise<nearAPI.Account> {
     const keyStore = new nearAPI.keyStores.InMemoryKeyStore();
-    if (typeof senderPrivateKey !== "undefined") {
+    if (senderPrivateKey !== undefined) {
       const key = bs58.encode(
         new Uint8Array(Buffer.from(senderPrivateKey, "hex")),
       );

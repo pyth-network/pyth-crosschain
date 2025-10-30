@@ -38,14 +38,16 @@
  * - All operations use the chain's RPC URL from the DefaultStore
  */
 
+import { execSync } from "node:child_process";
+import { join } from "node:path";
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { execSync } from "child_process";
-import { join } from "path";
-import { DefaultStore } from "../src/node/utils/store";
+
+import { toPrivateKey, PrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { EvmLazerContract } from "../src/core/contracts/evm";
-import { toPrivateKey, PrivateKey } from "../src/core/base";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -153,7 +155,7 @@ async function deployPythLazerContract(
     console.log(output);
 
     // Extract proxy address from output
-    const proxyMatch = output.match(/Deployed proxy to: (0x[a-fA-F0-9]{40})/);
+    const proxyMatch = /Deployed proxy to: (0x[a-fA-F0-9]{40})/.exec(output);
     if (!proxyMatch) {
       throw new Error("Could not extract proxy address from deployment output");
     }

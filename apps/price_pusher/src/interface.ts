@@ -1,7 +1,8 @@
 import type { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
-import type { DurationInSeconds } from "./utils.js";
 import type { Logger } from "pino";
+
 import { PricePusherMetrics } from "./metrics.js";
+import type { DurationInSeconds } from "./utils.js";
 
 export type PriceItem = {
   id: HexString;
@@ -14,11 +15,11 @@ export type PriceInfo = {
   publishTime: UnixTimestamp;
 };
 
-export interface IPriceListener {
+export type IPriceListener = {
   // start fetches the latest price initially and then keep updating it
   start(): Promise<void>;
   getLatestPriceInfo(priceId: string): PriceInfo | undefined;
-}
+};
 
 export abstract class ChainPriceListener implements IPriceListener {
   private latestPriceInfo: Map<HexString, PriceInfo>;
@@ -35,7 +36,7 @@ export abstract class ChainPriceListener implements IPriceListener {
   }
 
   async start() {
-    setInterval(this.pollPrices.bind(this), this.pollingFrequency * 1000);
+    setInterval(() => void this.pollPrices(), this.pollingFrequency * 1000);
 
     await this.pollPrices();
   }
@@ -78,17 +79,17 @@ export abstract class ChainPriceListener implements IPriceListener {
   ): Promise<PriceInfo | undefined>;
 }
 
-export interface IPricePusher {
+export type IPricePusher = {
   updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: UnixTimestamp[],
   ): Promise<void>;
-}
+};
 
 /**
  * Common configuration properties for all balance trackers
  */
-export interface BaseBalanceTrackerConfig {
+export type BaseBalanceTrackerConfig = {
   /** Address of the wallet to track */
   address: string;
   /** Name/ID of the network/chain */
@@ -99,13 +100,13 @@ export interface BaseBalanceTrackerConfig {
   metrics: PricePusherMetrics;
   /** Logger instance */
   logger: Logger;
-}
+};
 
 /**
  * Interface for all balance trackers to implement
  * Each chain will have its own implementation of this interface
  */
-export interface IBalanceTracker {
+export type IBalanceTracker = {
   /**
    * Start tracking the wallet balance
    */
@@ -115,7 +116,7 @@ export interface IBalanceTracker {
    * Stop tracking the wallet balance
    */
   stop(): void;
-}
+};
 
 /**
  * Abstract base class that implements common functionality for all balance trackers
@@ -126,7 +127,7 @@ export abstract class BaseBalanceTracker implements IBalanceTracker {
   protected updateInterval: DurationInSeconds;
   protected metrics: PricePusherMetrics;
   protected logger: Logger;
-  protected isRunning: boolean = false;
+  protected isRunning = false;
 
   constructor(config: BaseBalanceTrackerConfig) {
     this.address = config.address;
@@ -147,7 +148,7 @@ export abstract class BaseBalanceTracker implements IBalanceTracker {
     await this.updateBalance();
 
     // Start the update loop
-    this.startUpdateLoop();
+    void this.startUpdateLoop();
   }
 
   private async startUpdateLoop(): Promise<void> {
