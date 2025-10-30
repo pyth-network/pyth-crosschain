@@ -279,7 +279,10 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     };
   }
 
-  async executeUpdatePriceFeed(senderPrivateKey: PrivateKey, vaas: Buffer[]) {
+  async executeUpdatePriceFeed(
+    senderPrivateKey: PrivateKey,
+    vaas: Buffer[],
+  ): Promise<TxResult> {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const contract = await this.getContract(wallet);
     const priceFeedUpdateData = vaas.map((vaa) => new Uint8Array(vaa));
@@ -309,7 +312,7 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
     vaa: Buffer,
-  ) {
+  ): Promise<TxResult> {
     const wallet = await this.chain.getWallet(senderPrivateKey);
     const contract = await this.getContract(wallet);
     const tx = await contract.functions
