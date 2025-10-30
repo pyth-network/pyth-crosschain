@@ -1,16 +1,21 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable tsdoc/syntax */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import type { BaseDeployConfig } from "./common";
 import {
-  BaseDeployConfig,
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   findExecutorContract,
   getOrDeployWormholeContract,
   getWeb3Contract,
 } from "./common";
+import type { DeploymentType } from "../src/core/base";
 import {
-  DeploymentType,
   getDefaultDeploymentConfig,
   toDeploymentType,
   toPrivateKey,
@@ -38,7 +43,7 @@ const parser = yargs(hideBin(process.argv))
 type DeploymentConfig = {
   type: DeploymentType;
   saveContract: boolean;
-} & BaseDeployConfig
+} & BaseDeployConfig;
 
 export async function getOrDeployExecutorContract(
   chain: EvmChain,
@@ -126,7 +131,7 @@ export async function main() {
     privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
   };
   console.log(
-    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, null, 2)}\n`,
+    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, undefined, 2)}\n`,
   );
 
   console.log(`Deploying executor contracts on ${chain.getId()}...`);
@@ -149,4 +154,5 @@ export async function main() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

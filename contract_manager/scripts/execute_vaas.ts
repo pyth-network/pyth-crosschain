@@ -1,3 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
@@ -6,7 +14,7 @@ import { hideBin } from "yargs/helpers";
 import { COMMON_DEPLOY_OPTIONS } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { executeVaa } from "../src/node/utils/executor";
-import { Vault , SubmittedWormholeMessage } from "../src/node/utils/governance";
+import { SubmittedWormholeMessage } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
@@ -48,14 +56,17 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  let vault: Vault;
-  vault = argv.vault === "mainnet" ? DefaultStore.vaults[
-        "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-      ] : DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
-  console.log("Executing VAAs for vault", vault.getId());
+  const vault =
+    argv.vault === "mainnet"
+      ? DefaultStore.vaults[
+          "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
+        ]
+      : DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
+  console.log("Executing VAAs for vault", vault?.getId());
   console.log(
     "Executing VAAs for emitter",
-    (await vault.getEmitter()).toBase58(),
+    // eslint-disable-next-line unicorn/no-await-expression-member
+    (await vault?.getEmitter())?.toBase58(),
   );
 
   let startSequenceNumber: number;
@@ -68,9 +79,9 @@ async function main() {
     // this is unreachable but it makes the typescript linter happy.
     throw new Error("Either --offset or --sequence must be provided");
   } else {
-    const lastSequenceNumber = await vault.getLastSequenceNumber();
-    startSequenceNumber = lastSequenceNumber - argv.offset;
-    endSequenceNumber = lastSequenceNumber;
+    const lastSequenceNumber = await vault?.getLastSequenceNumber();
+    startSequenceNumber = (lastSequenceNumber ?? 0) - argv.offset;
+    endSequenceNumber = lastSequenceNumber ?? 0;
   }
 
   console.log(
@@ -83,9 +94,9 @@ async function main() {
     seqNumber++
   ) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
-      await vault.getEmitter(),
+      await vault!.getEmitter(),
       seqNumber,
-      vault.cluster,
+      vault!.cluster,
     );
     const vaa = await submittedWormholeMessage.fetchVaa();
     const decodedAction = decodeGovernancePayload(parseVaa(vaa).payload);

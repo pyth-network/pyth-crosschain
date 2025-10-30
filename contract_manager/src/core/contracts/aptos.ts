@@ -1,13 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 
-import type {PriceFeed, PrivateKey, TxResult} from "../base";
-import {
-  PriceFeedContract
-  
-  
-  
-} from "../base";
+import type { PriceFeed, PrivateKey, TxResult } from "../base";
+import { PriceFeedContract } from "../base";
 import { AptosChain, Chain } from "../chains";
 import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
@@ -124,9 +124,9 @@ export class AptosPriceFeedContract extends PriceFeedContract {
    * Given the ids of the pyth state and wormhole state, create a new AptosContract
    * The package ids are derived based on the state ids
    *
-   * @param chain the chain which this contract is deployed on
-   * @param stateId id of the pyth state for the deployed contract
-   * @param wormholeStateId id of the wormhole state for the wormhole contract that pyth binds to
+   * @param chain - the chain which this contract is deployed on
+   * @param stateId - id of the pyth state for the deployed contract
+   * @param wormholeStateId - id of the wormhole state for the wormhole contract that pyth binds to
    */
   constructor(
     public chain: AptosChain,
@@ -196,7 +196,7 @@ export class AptosPriceFeedContract extends PriceFeedContract {
 
   /**
    * Returns the first occurrence of a resource with the given type in the pyth package state
-   * @param type
+   * @param type - the type of resource to find
    */
   async findResource(type: string) {
     const resources = await this.getStateResources();
@@ -254,7 +254,10 @@ export class AptosPriceFeedContract extends PriceFeedContract {
         emaPrice: this.parsePrice(priceItemRes.price_feed.ema_price),
       };
     } catch (error) {
-      if (error instanceof ApiError && error.errorCode === "table_item_not_found")
+      if (
+        error instanceof ApiError &&
+        error.errorCode === "table_item_not_found"
+      )
         return undefined;
       throw error;
     }

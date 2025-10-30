@@ -1,8 +1,13 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
 import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { PrivateKey, toPrivateKey } from "../src/core/base";
+import type { PrivateKey } from "../src/core/base";
+import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -16,7 +21,7 @@ type TransferResult = {
   remainingBalance: string;
   transactionHash?: string;
   error?: string;
-}
+};
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -327,9 +332,9 @@ function getSelectedChains(argv: {
   if (selectedChains.length === 0) {
     const mode = argv.testnets
       ? "testnet"
-      : (argv.mainnets
+      : argv.mainnets
         ? "mainnet"
-        : "specified");
+        : "specified";
     throw new Error(`No valid ${mode} entropy chains found`);
   }
 
@@ -364,6 +369,7 @@ async function main() {
   }
 
   const sourcePrivateKey = toPrivateKey(argv.sourcePrivateKey);
+  // @ts-expect-error - TODO: Typing mismatch between argv and the expected array type for getSelectedChains()
   const selectedChains = getSelectedChains(argv);
 
   // Determine transfer method for display
@@ -379,7 +385,7 @@ async function main() {
 
   console.log(`\nConfiguration:`);
   console.log(
-    `   Network: ${argv.testnets ? "Testnet" : (argv.mainnets ? "Mainnet" : "Specific chains")}`,
+    `   Network: ${argv.testnets ? "Testnet" : argv.mainnets ? "Mainnet" : "Specific chains"}`,
   );
   console.log(`   Destination: ${argv.destinationAddress}`);
   console.log(`   Transfer method: ${transferMethod}`);
@@ -448,7 +454,9 @@ async function main() {
   console.log("\nTransfer process completed!");
 }
 
+// eslint-disable-next-line unicorn/prefer-top-level-await, @typescript-eslint/use-unknown-in-catch-callback-variable
 main().catch((error) => {
   console.error("Script failed:", error);
+  // eslint-disable-next-line n/no-process-exit, unicorn/no-process-exit
   process.exit(1);
 });

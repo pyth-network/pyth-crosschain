@@ -1,6 +1,11 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable no-console */
 import { readFileSync } from "node:fs";
 
-import { PythCluster } from "@pythnetwork/client/lib/cluster";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -107,12 +112,13 @@ async function main() {
     );
   }
 
-  console.log("Using vault at for proposal", vault.getId());
+  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet", wallet.publicKey.toBase58());
-  vault.connect(wallet, registry);
-  const proposal = await vault.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal.address.toBase58());
+  vault?.connect(wallet, registry);
+  const proposal = await vault?.proposeWormholeMessage(payloads);
+  console.log("Proposal address", proposal?.address.toBase58());
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

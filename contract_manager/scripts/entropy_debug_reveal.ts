@@ -1,3 +1,14 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -37,7 +48,7 @@ async function main() {
   const privateKey = toPrivateKey(argv.privateKey);
   let startingSequenceNumber: number, endingSequenceNumber: number;
   if (argv.sequenceNumber.includes(":")) {
-    [startingSequenceNumber, endingSequenceNumber] = argv.sequenceNumber
+    [startingSequenceNumber = 0, endingSequenceNumber = 0] = argv.sequenceNumber
       .split(":")
       .map(Number);
   } else {
@@ -83,6 +94,7 @@ async function main() {
       return;
     }
     const payload = await fortunaResponse.json();
+    // @ts-expect-error - TODO payload.value is unknown and the typing needs to be fixed
     const providerRevelation = "0x" + payload.value.data;
     try {
       await contract.revealWithCallback(

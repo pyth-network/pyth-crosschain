@@ -1,3 +1,12 @@
+/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
+/* eslint-disable 
+  unicorn/prefer-top-level-await,
+  @typescript-eslint/restrict-template-expressions,
+  no-console,
+  unicorn/no-process-exit,
+  n/no-process-exit
+*/
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -40,10 +49,10 @@ type FeeResult = {
   chainId: string;
   contractAddress: string;
   accruedFees: string;
-  accruedFeesEth?: string;
+  accruedFeesEth?: string | undefined;
   isMainnet: boolean;
   error?: string;
-}
+};
 
 async function fetchAccruedFees(
   contract: EvmEntropyContract,

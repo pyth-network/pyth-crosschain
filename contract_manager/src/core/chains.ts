@@ -1,56 +1,61 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable n/no-process-env */
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
-import {
-  TonClient,
-  WalletContractV4,
-  type ContractProvider,
-  Address,
-  type OpenedContract,
-  type Sender,
-} from "@ton/ton";
-import { keyPairFromSeed } from "@ton/crypto";
-import { PythContract } from "@pythnetwork/pyth-ton-js";
-import * as nearAPI from "near-api-js";
-import * as bs58 from "bs58";
-import { MIST_PER_SUI } from "@mysten/sui/utils";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
 import {
   CosmwasmExecutor,
   CosmwasmQuerier,
   InjectiveExecutor,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
-import type {ChainName, DataSource} from "@pythnetwork/xc-admin-common";
+import { PythContract } from "@pythnetwork/pyth-ton-js";
+import type { ChainName, DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  
   SetFee,
   CosmosUpgradeContract,
   EvmUpgradeContract,
   toChainId,
   SetDataSources,
   SetValidPeriod,
-  
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
-  EvmExecute
+  EvmExecute,
 } from "@pythnetwork/xc-admin-common";
+import { keyPairFromSeed } from "@ton/crypto";
+import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
+import { TonClient, WalletContractV4, Address } from "@ton/ton";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
+import * as bs58 from "bs58";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import * as nearAPI from "near-api-js";
+import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 import * as chains from "viem/chains";
 import Web3 from "web3";
 
-import type {KeyValueConfig, PrivateKey, TxResult} from "./base";
-import {
-  
-  
-  Storable
-  
-} from "./base";
+import type { KeyValueConfig, PrivateKey, TxResult } from "./base";
+import { Storable } from "./base";
 import type { TokenId } from "./token";
+
+function computeHashOnElements(elements: string[]): string {
+  let hash = "0";
+  for (const item of elements) {
+    hash = ec.starkCurve.pedersen(hash, item);
+  }
+  return ec.starkCurve.pedersen(hash, elements.length);
+}
 
 /**
  * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
@@ -83,12 +88,11 @@ export abstract class Chain extends Storable {
 
   /**
    * Creates a new Chain object
-   * @param id unique id representing this chain
-   * @param mainnet whether this chain is mainnet or testnet/devnet
-   * @param wormholeChainName the name of the wormhole chain that this chain is associated with.
+   * @param id - unique id representing this chain
+   * @param mainnet - whether this chain is mainnet or testnet/devnet
+   * @param wormholeChainName - the name of the wormhole chain that this chain is associated with.
    * Note that pyth has included additional chain names and ids to the wormhole spec.
-   * @param nativeToken the id of the token used to pay gas on this chain
-   * @protected
+   * @param nativeToken - the id of the token used to pay gas on this chain
    */
   protected constructor(
     protected id: string,
@@ -120,8 +124,8 @@ export abstract class Chain extends Storable {
 
   /**
    * Returns the payload for a governance SetFee instruction for contracts deployed on this chain
-   * @param fee the new fee to set
-   * @param exponent the new fee exponent to set
+   * @param fee - the new fee to set
+   * @param exponent - the new fee exponent to set
    */
   generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
     return new SetFee(
@@ -133,7 +137,7 @@ export abstract class Chain extends Storable {
 
   /**
    * Returns the payload for a governance SetDataSources instruction for contracts deployed on this chain
-   * @param datasources the new datasources
+   * @param datasources - the new datasources
    */
   generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
     return new SetDataSources(this.wormholeChainName, datasources).encode();
@@ -141,7 +145,7 @@ export abstract class Chain extends Storable {
 
   /**
    * Returns the payload for a governance SetStalePriceThreshold instruction for contracts deployed on this chain
-   * @param newValidStalePriceThreshold the new stale price threshold in seconds
+   * @param newValidStalePriceThreshold - the new stale price threshold in seconds
    */
   generateGovernanceSetStalePriceThreshold(
     newValidStalePriceThreshold: bigint,
@@ -154,19 +158,19 @@ export abstract class Chain extends Storable {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
+   * @param upgradeInfo - based on the contract type, this can be a contract address, codeId, package digest, etc.
    */
   abstract generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer;
 
   /**
    * Returns the account address associated with the given private key.
-   * @param privateKey the account private key
+   * @param privateKey - the account private key
    */
   abstract getAccountAddress(privateKey: PrivateKey): Promise<string>;
 
   /**
    * Returns the balance of the account associated with the given private key.
-   * @param privateKey the account private key
+   * @param privateKey - the account private key
    */
   abstract getAccountBalance(privateKey: PrivateKey): Promise<number>;
 }
@@ -285,7 +289,9 @@ export class CosmWasmChain extends Chain {
 
   async getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const executor = await this.getExecutor(privateKey);
-    return executor instanceof InjectiveExecutor ? executor.getAddress() : (await executor.getAddress());
+    return executor instanceof InjectiveExecutor
+      ? executor.getAddress()
+      : await executor.getAddress();
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -334,7 +340,7 @@ export class SuiChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
@@ -400,7 +406,7 @@ export class IotaChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
@@ -476,7 +482,7 @@ export class EvmChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param address hex string of the 20 byte address of the contract to upgrade to without the 0x prefix
+   * @param address - hex string of the 20 byte address of the contract to upgrade to without the 0x prefix
    */
   generateGovernanceUpgradePayload(address: string): Buffer {
     return new EvmUpgradeContract(this.wormholeChainName, address).encode();
@@ -484,9 +490,9 @@ export class EvmChain extends Chain {
 
   /**
    * Returns the payload for a governance action from the executor contract
-   * @param executor the address of the executor contract live on this chain
-   * @param callAddress the address of the contract to call
-   * @param calldata the calldata to pass to the contract
+   * @param executor - the address of the executor contract live on this chain
+   * @param callAddress - the address of the contract to call
+   * @param calldata - the calldata to pass to the contract
    * @returns the payload for the governance action
    */
   generateExecutorPayload(
@@ -548,10 +554,10 @@ export class EvmChain extends Chain {
 
   /**
    * Deploys a contract on this chain
-   * @param privateKey hex string of the 32 byte private key without the 0x prefix
-   * @param abi the abi of the contract, can be obtained from the compiled contract json file
-   * @param bytecode bytecode of the contract, can be obtained from the compiled contract json file
-   * @param deployArgs arguments to pass to the constructor. Each argument must begin with 0x if it's a hex string
+   * @param privateKey - hex string of the 32 byte private key without the 0x prefix
+   * @param abi - the abi of the contract, can be obtained from the compiled contract json file
+   * @param bytecode - bytecode of the contract, can be obtained from the compiled contract json file
+   * @param deployArgs - arguments to pass to the constructor. Each argument must begin with 0x if it's a hex string
    * @returns the address of the deployed contract
    */
   async deploy(
@@ -634,7 +640,7 @@ export class AptosChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
@@ -725,7 +731,7 @@ export class FuelChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     // This might throw an error because the Fuel contract doesn't support upgrades yet (blocked on Fuel releasing Upgradeability standard)
@@ -807,7 +813,7 @@ export class StarknetChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param digest hex string of the felt252 class hash of the new contract class extended to uint256 in BE
+   * @param digest - hex string of the felt252 class hash of the new contract class extended to uint256 in BE
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
@@ -817,15 +823,8 @@ export class StarknetChain extends Chain {
     const ARGENT_CLASS_HASH =
       "0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b";
     const ADDR_BOUND =
-      0x7_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_FF_00n;
-
-    function computeHashOnElements(elements: string[]): string {
-      let hash = "0";
-      for (const item of elements) {
-        hash = ec.starkCurve.pedersen(hash, item);
-      }
-      return ec.starkCurve.pedersen(hash, elements.length);
-    }
+      // eslint-disable-next-line unicorn/number-literal-case
+      0x7_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_00n;
 
     const publicKey = await new Signer("0x" + privateKey).getPubKey();
 
@@ -916,7 +915,7 @@ export class TonChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   * @param digest - hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
@@ -1003,7 +1002,7 @@ export class NearChain extends Chain {
 
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
-   * @param codeHash hex string of the 32 byte code hash for the new contract without the 0x prefix
+   * @param codeHash - hex string of the 32 byte code hash for the new contract without the 0x prefix
    */
   generateGovernanceUpgradePayload(codeHash: string): Buffer {
     return new UpgradeContract256Bit(this.wormholeChainName, codeHash).encode();

@@ -1,10 +1,15 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 import { createHash } from "node:crypto";
 
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import {
-  getPythClusterApiUrl,
-  PythCluster,
-} from "@pythnetwork/client/lib/cluster";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import {
   CosmosUpgradeContract,
   EvmExecute,
@@ -14,7 +19,8 @@ import {
   MultisigParser,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
-import { AccountMeta, Keypair, PublicKey } from "@solana/web3.js";
+import type { AccountMeta } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import SquadsMesh from "@sqds/mesh";
 import Web3 from "web3";
 import yargs from "yargs";
@@ -28,9 +34,6 @@ import {
   EvmWormholeContract,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
-
-
-
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")

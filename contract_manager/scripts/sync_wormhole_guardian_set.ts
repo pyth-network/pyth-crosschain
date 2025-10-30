@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -48,7 +50,10 @@ async function main() {
         index = await contract.getCurrentGuardianSetIndex();
         console.log("Guardian Index at End:", index);
       } catch (error) {
-        console.error(`Error updating Guardianset for ${contract.getId()}`, error);
+        console.error(
+          `Error updating Guardianset for ${contract.getId()}`,
+          error,
+        );
       }
     }
   }
@@ -86,10 +91,14 @@ async function main() {
         await wormhole.syncMainnetGuardianSets(privateKey);
         console.log(`Updated Guardianset for ${contract.getId()}`);
       } catch (error) {
-        console.error(`Error updating Guardianset for ${contract.getId()}`, error);
+        console.error(
+          `Error updating Guardianset for ${contract.getId()}`,
+          error,
+        );
       }
     }
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

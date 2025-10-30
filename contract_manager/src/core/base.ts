@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 import { Chain } from "./chains";
@@ -5,7 +7,7 @@ import { Chain } from "./chains";
 export type TxResult = {
   id: string;
   info: unknown; // chain specific info
-}
+};
 
 export type DeploymentType = "stable" | "beta";
 export type PrivateKey = string & { __type: "PrivateKey" };
@@ -51,12 +53,12 @@ export type Price = {
   conf: string;
   publishTime: string;
   expo: string;
-}
+};
 
 export type PriceFeed = {
   price: Price;
   emaPrice: Price;
-}
+};
 
 export abstract class PriceFeedContract extends Storable {
   /**
@@ -94,14 +96,14 @@ export abstract class PriceFeedContract extends Storable {
 
   /**
    * Returns the price feed for the given feed id or undefined if not found
-   * @param feedId hex encoded feed id without 0x prefix
+   * @param feedId - hex encoded feed id without 0x prefix
    */
   abstract getPriceFeed(feedId: string): Promise<PriceFeed | undefined>;
 
   /**
    * Executes the update instructions contained in the VAAs using the sender credentials
-   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
-   * @param vaas an array of VAAs containing price update messages to execute
+   * @param senderPrivateKey - private key of the sender in hex format without 0x prefix
+   * @param vaas - an array of VAAs containing price update messages to execute
    */
   abstract executeUpdatePriceFeed(
     senderPrivateKey: PrivateKey,
@@ -110,8 +112,8 @@ export abstract class PriceFeedContract extends Storable {
 
   /**
    * Executes the governance instruction contained in the VAA using the sender credentials
-   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
-   * @param vaa the VAA to execute
+   * @param senderPrivateKey - private key of the sender in hex format without 0x prefix
+   * @param vaa - the VAA to execute
    */
   abstract executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,

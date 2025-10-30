@@ -1,24 +1,28 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import { readFileSync } from "node:fs";
 
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import type { Coin } from "@cosmjs/stargate";
-import type {ContractInfoResponse, Price} from "@pythnetwork/cosmwasm-deploy-tools";
+import type {
+  ContractInfoResponse,
+  Price,
+} from "@pythnetwork/cosmwasm-deploy-tools";
 import {
-  
   CosmwasmQuerier,
-  
   PythWrapperExecutor,
-  PythWrapperQuerier
+  PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
-import type {PrivateKey, TxResult} from "../base";
-import {
-  PriceFeedContract,
-  getDefaultDeploymentConfig
-  
-  
-} from "../base";
+import type { PrivateKey, TxResult } from "../base";
+import { PriceFeedContract, getDefaultDeploymentConfig } from "../base";
 import { Chain, CosmWasmChain } from "../chains";
 import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
@@ -29,7 +33,7 @@ import { WormholeContract } from "./wormhole";
 export type WormholeSource = {
   emitter: string;
   chain_id: number;
-}
+};
 
 export type DeploymentConfig = {
   data_sources: WormholeSource[];
@@ -40,7 +44,14 @@ export type DeploymentConfig = {
   chain_id: number;
   valid_time_period_secs: number;
   fee: { amount: string; denom: string };
-}
+};
+
+const convertDataSource = (source: DataSource) => {
+  return {
+    emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
+    chain_id: source.emitterChain,
+  };
+};
 
 export class CosmWasmWormholeContract extends WormholeContract {
   static type = "CosmWasmWormholeContract";
@@ -98,10 +109,16 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
   async getGuardianSet(): Promise<string[]> {
     const config = await this.getConfig();
-    const guardianSetIndex = JSON.parse(config["\u0000\u0006config"] ?? "{}").guardian_set_index;
+    const guardianSetIndex = JSON.parse(
+      config["\u0000\u0006config"] ?? "{}",
+    ).guardian_set_index;
     let key = "\u0000\fguardian_set";
     //append guardianSetIndex as 4 bytes to key string
-    key += Buffer.from(guardianSetIndex.toString(16).padStart(8, "0"), "hex");
+
+    key += Buffer.from(
+      guardianSetIndex.toString(16).padStart(8, "0"),
+      "hex",
+    ).toString();
 
     const guardianSet = JSON.parse(config[key] ?? "{}").addresses;
     return guardianSet.map((entry: { bytes: string }) =>
@@ -173,9 +190,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   /**
    * Stores the wasm code on the specified chain using the provided private key as the signer
    * You can find the wasm artifacts from the repo releases
-   * @param chain chain to store the code on
-   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
-   * @param wasmPath path in your local filesystem to the wasm artifact
+   * @param chain - chain to store the code on
+   * @param privateKey - private key to use for signing the transaction in hex format without 0x prefix
+   * @param wasmPath - path in your local filesystem to the wasm artifact
    */
   static async storeCode(
     chain: CosmWasmChain,
@@ -189,10 +206,10 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
 
   /**
    * Deploys a new contract to the specified chain using the uploaded wasm code codeId
-   * @param chain chain to deploy to
-   * @param codeId codeId of the uploaded wasm code. You can get this from the storeCode result
-   * @param config deployment config for initializing the contract (data sources, governance source, etc)
-   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
+   * @param chain - chain to deploy to
+   * @param codeId - codeId of the uploaded wasm code. You can get this from the storeCode result
+   * @param config - deployment config for initializing the contract (data sources, governance source, etc)
+   * @param privateKey - private key to use for signing the transaction in hex format without 0x prefix
    */
   static async initialize(
     chain: CosmWasmChain,
@@ -305,16 +322,12 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
 
   async getDeploymentType(): Promise<string> {
     const config = await this.getConfig();
-    const convertDataSource = (source: DataSource) => {
-      return {
-        emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
-        chain_id: source.emitterChain,
-      };
-    };
-    const stableDataSources =
-      getDefaultDeploymentConfig("stable").dataSources.map(convertDataSource);
-    const betaDataSources =
-      getDefaultDeploymentConfig("beta").dataSources.map(convertDataSource);
+    const stableDataSources = getDefaultDeploymentConfig(
+      "stable",
+    ).dataSources.map((ds) => convertDataSource(ds));
+    const betaDataSources = getDefaultDeploymentConfig("beta").dataSources.map(
+      (ds) => convertDataSource(ds),
+    );
     if (this.equalDataSources(config.config_v1.data_sources, stableDataSources))
       return "stable";
     else if (

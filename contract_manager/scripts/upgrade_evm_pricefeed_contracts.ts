@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/await-thenable */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-console */
 import { readFileSync } from "node:fs";
 
 import yargs from "yargs";
@@ -56,12 +61,13 @@ async function main() {
     );
   }
 
-  console.log("Using vault at for proposal", vault.getId());
+  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet", wallet.publicKey.toBase58());
-  await vault.connect(wallet);
-  const proposal = await vault.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal.address.toBase58());
+  await vault?.connect(wallet);
+  const proposal = await vault?.proposeWormholeMessage(payloads);
+  console.log("Proposal address", proposal?.address.toBase58());
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

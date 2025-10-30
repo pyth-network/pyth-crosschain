@@ -1,11 +1,24 @@
+/* eslint-disable tsdoc/syntax */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import path from "node:path";
 
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
-import { InferredOptionType } from "yargs";
+import type { InferredOptionType } from "yargs";
 
-import { PrivateKey, getDefaultDeploymentConfig } from "../src/core/base";
+import type { PrivateKey } from "../src/core/base";
+import { getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import {
   EvmEntropyContract,
@@ -19,7 +32,7 @@ export type BaseDeployConfig = {
   gasPriceMultiplier: number;
   jsonOutputDir: string;
   privateKey: PrivateKey;
-}
+};
 
 // Deploys a contract if it was not deployed before.
 // It will check for the past deployments in file `cacheFile` against a key
@@ -38,7 +51,7 @@ export async function deployIfNotCached(
   return runIfNotCached(key, async () => {
     const artifact = JSON.parse(
       readFileSync(
-        join(
+        path.join(
           config.jsonOutputDir,
           `${artifactName}.sol`,
           `${artifactName}.json`,
@@ -84,7 +97,7 @@ export function getWeb3Contract(
 ): Contract {
   const artifact = JSON.parse(
     readFileSync(
-      join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`),
+      path.join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`),
       "utf8",
     ),
   );
@@ -182,7 +195,7 @@ export function makeCacheFunction(
     }
     const result = await fn();
     cache[cacheKey] = result;
-    writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
+    writeFileSync(cacheFile, JSON.stringify(cache, undefined, 2));
     return result;
   }
 
@@ -214,7 +227,7 @@ export function getSelectedChains(argv: {
         .toString()}`,
     );
   for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0].isMainnet())
+    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
       throw new Error("All chains must be either mainnet or testnet");
   }
   return selectedChains;
@@ -251,6 +264,7 @@ export function findWormholeContract(
       return contract;
     }
   }
+  return;
 }
 
 /**
@@ -272,12 +286,13 @@ export function findExecutorContract(
       return contract;
     }
   }
+  return;
 }
 
 export type DeployWormholeReceiverContractsConfig = {
   saveContract: boolean;
   type: "stable" | "beta";
-} & BaseDeployConfig
+} & BaseDeployConfig;
 /**
  * Deploys the wormhole receiver contract for a given EVM chain.
  * @param {EvmChain} chain The EVM chain to find the wormhole receiver contract for.
@@ -373,7 +388,7 @@ export async function getOrDeployWormholeContract(
 export type DefaultAddresses = {
   mainnet: string;
   testnet: string;
-}
+};
 
 export async function topupAccountsIfNecessary(
   chain: EvmChain,

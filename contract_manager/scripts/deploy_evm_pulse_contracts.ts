@@ -1,23 +1,29 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable no-console */
+
 import fs from "node:fs";
 import path from "node:path";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import type { BaseDeployConfig, DefaultAddresses } from "./common";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
-  BaseDeployConfig,
   topupAccountsIfNecessary,
-  DefaultAddresses,
 } from "./common";
-import {
-  DeploymentType,
-  toDeploymentType,
-  toPrivateKey,
-} from "../src/core/base";
+import type { DeploymentType } from "../src/core/base";
+import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import {
   PULSE_DEFAULT_PROVIDER,
@@ -29,7 +35,7 @@ import { DefaultStore } from "../src/node/utils/store";
 type DeploymentConfig = {
   type: DeploymentType;
   saveContract: boolean;
-} & BaseDeployConfig
+} & BaseDeployConfig;
 
 const CACHE_FILE = ".cache-deploy-evm-pulse-contracts";
 
@@ -155,7 +161,7 @@ async function main() {
     privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
   };
   console.log(
-    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, null, 2)}\n`,
+    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, undefined, 2)}\n`,
   );
 
   console.log(`Deploying pulse contracts on ${chain.getId()}...`);
