@@ -1,9 +1,11 @@
-import {
-  Convert,
-  type Price as JsonPrice,
-  type PriceFeed as JsonPriceFeed,
-  type PriceFeedMetadata as JsonPriceFeedMetadata,
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
+  Price as JsonPrice,
+  PriceFeed as JsonPriceFeed,
+  PriceFeedMetadata as JsonPriceFeedMetadata,
 } from "./schemas/PriceFeed.js";
+import { Convert } from "./schemas/PriceFeed.js";
 
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
@@ -267,7 +269,7 @@ export class PriceFeed {
    * applications that require a sufficiently-recent price. Returns `undefined` if the price
    * is not recent enough.
    *
-   * @param age return a price as long as it has been updated within this number of seconds
+   * @param age - return a price as long as it has been updated within this number of seconds
    * @returns a Price struct containing the price, confidence interval along with the exponent for
    * both numbers, and its publish time, or `undefined` if no price update occurred within `age` seconds of the current time.
    */
@@ -297,7 +299,7 @@ export class PriceFeed {
    * At the moment, the confidence interval returned by this method is computed in
    * a somewhat questionable way, so we do not recommend using it for high-value applications.
    *
-   * @param age return a price as long as it has been updated within this number of seconds
+   * @param age - return a price as long as it has been updated within this number of seconds
    * @returns a Price struct containing the EMA price, confidence interval along with the exponent for
    * both numbers, and its publish time, or `undefined` if no price update occurred within `age` seconds of the current time.
    */

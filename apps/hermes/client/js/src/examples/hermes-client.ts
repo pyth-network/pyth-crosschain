@@ -42,7 +42,7 @@ function extractBasicAuthorizationHeadersFromUrl(urlString: string): {
   const headers: HeadersInit = {};
 
   if (url.username && url.password) {
-    headers["Authorization"] = `Basic ${btoa(
+    headers.Authorization = `Basic ${btoa(
       `${url.username}:${url.password}`,
     )}`;
     url.username = "";

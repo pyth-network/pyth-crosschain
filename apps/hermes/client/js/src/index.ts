@@ -1,1 +1,1 @@
-export * from './HermesClient.js';
+export * from "./hermes-client.js";

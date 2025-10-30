@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import type { Contract, Sender } from "@ton/core";
 import {
   Address,
   beginCell,
   Cell,
-  type Contract,
   Dictionary,
-  type Sender,
   SendMode,
   toNano,
 } from "@ton/core";
@@ -15,15 +15,15 @@ export const PYTH_CONTRACT_ADDRESS_MAINNET =
 export const PYTH_CONTRACT_ADDRESS_TESTNET =
   "EQB4ZnrI5qsP_IUJgVJNwEGKLzZWsQOFhiaqDbD7pTt_f9oU";
 // This is defined in target_chains/ton/contracts/common/gas.fc
-export const UPDATE_PRICE_FEEDS_BASE_GAS = 300000n;
-export const UPDATE_PRICE_FEEDS_PER_UPDATE_GAS = 90000n;
+export const UPDATE_PRICE_FEEDS_BASE_GAS = 300_000n;
+export const UPDATE_PRICE_FEEDS_PER_UPDATE_GAS = 90_000n;
 // Current settings in basechain are as follows: 1 unit of gas costs 400 nanotons
 export const GAS_PRICE_FACTOR = 400n;
 
-export interface DataSource {
+export type DataSource = {
   emitterChain: number;
   emitterAddress: string;
-}
+};
 
 export class PythContract implements Contract {
   constructor(
@@ -250,7 +250,7 @@ export class PythContract implements Contract {
 
 export function createCellChain(buffer: Buffer): Cell {
   const chunks = bufferToChunks(buffer, 127);
-  let lastCell: Cell | null = null;
+  let lastCell: Cell | undefined;
   // Iterate through chunks in reverse order
   for (let i = chunks.length - 1; i >= 0; i--) {
     const chunk = chunks[i]!;
@@ -305,10 +305,10 @@ export function parseDataSources(cell: Cell): DataSource[] {
   return dataSources;
 }
 
-export function parseDataSource(cell: Cell): DataSource | null {
+export function parseDataSource(cell: Cell): DataSource | null | undefined {
   const slice = cell.beginParse();
   if (slice.remainingBits === 0) {
-    return null;
+    return;
   }
   const emitterChain = slice.loadUint(16);
   const emitterAddress = slice.loadUintBig(256).toString(16).padStart(64, "0");

@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-misused-spread */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { EventSource } from "eventsource";
-import { schemas } from "./zodSchemas.js";
 import { z } from "zod";
+
 import { camelToSnakeCaseObject } from "./utils.js";
+import { schemas } from "./zod-schemas.js";
 
 // Accessing schema objects
 export type AssetType = z.infer<typeof schemas.AssetType>;
@@ -48,8 +52,8 @@ export class HermesClient {
   /**
    * Constructs a new Connection.
    *
-   * @param endpoint endpoint URL to the price service. Example: https://website/example/
-   * @param config Optional HermesClientConfig for custom configurations.
+   * @param endpoint - endpoint URL to the price service. Example: https://website/example/
+   * @param config - Optional HermesClientConfig for custom configurations.
    */
   constructor(endpoint: string, config?: HermesClientConfig) {
     this.baseURL = endpoint;
@@ -72,12 +76,13 @@ export class HermesClient {
           ...(options?.signal ? [options.signal] : []),
           AbortSignal.timeout(this.timeout),
         ]),
+
         headers: { ...this.headers, ...options?.headers },
       });
       if (!response.ok) {
         const errorBody = await response.text();
         throw new Error(
-          `HTTP error! status: ${response.status}${
+          `HTTP error! status: ${response.status.toString()}${
             errorBody ? `, body: ${errorBody}` : ""
           }`,
         );
@@ -102,7 +107,7 @@ export class HermesClient {
    * This endpoint can be filtered by asset type and query string.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
-   * @param options Optional parameters:
+   * @param options - Optional parameters:
    *        - query: String to filter the price feeds. If provided, the results will be filtered to all price feeds whose symbol contains the query string. Query string is case insensitive. Example: "bitcoin".
    *        - assetType: String to filter the price feeds by asset type. Possible values are "crypto", "equity", "fx", "metal", "rates", "crypto_redemption_rate". Filter string is case insensitive.
    *
@@ -117,6 +122,7 @@ export class HermesClient {
     fetchOptions?: RequestInit;
   } = {}): Promise<PriceFeedMetadata[]> {
     const url = this.buildURL("price_feeds");
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (options) {
       const transformedOptions = camelToSnakeCaseObject(options);
       this.appendUrlSearchParams(url, transformedOptions);
@@ -133,7 +139,7 @@ export class HermesClient {
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed publisher caps.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
-   * @param options Optional parameters:
+   * @param options - Optional parameters:
    *        - encoding: Encoding type. If specified, return the publisher caps in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed publisher caps should be included in the response. Default is false.
    *
@@ -148,6 +154,7 @@ export class HermesClient {
     fetchOptions?: RequestInit;
   } = {}): Promise<PublisherCaps> {
     const url = this.buildURL("updates/publisher_stake_caps/latest");
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
@@ -163,8 +170,8 @@ export class HermesClient {
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update using the options object.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
-   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param options Optional parameters:
+   * @param ids - Array of hex-encoded price feed IDs for which updates are requested.
+   * @param options - Optional parameters:
    *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
    *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
@@ -198,9 +205,9 @@ export class HermesClient {
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the parsed price update.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
-   * @param publishTime Unix timestamp in seconds.
-   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param options Optional parameters:
+   * @param publishTime - Unix timestamp in seconds.
+   * @param ids - Array of hex-encoded price feed IDs for which updates are requested.
+   * @param options - Optional parameters:
    *        - encoding: Encoding type. If specified, return the price update in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
    *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
@@ -217,7 +224,7 @@ export class HermesClient {
     },
     fetchOptions?: RequestInit,
   ): Promise<PriceUpdate> {
-    const url = this.buildURL(`updates/price/${publishTime}`);
+    const url = this.buildURL(`updates/price/${publishTime.toString()}`);
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -237,8 +244,8 @@ export class HermesClient {
    * This will return an EventSource that can be used to listen to streaming updates.
    * If an invalid hex-encoded ID is passed, it will throw an error.
    *
-   * @param ids Array of hex-encoded price feed IDs for which streaming updates are requested.
-   * @param options Optional parameters:
+   * @param ids - Array of hex-encoded price feed IDs for which streaming updates are requested.
+   * @param options - Optional parameters:
    *        - encoding: Encoding type. If specified, updates are returned in the specified encoding. Default is hex.
    *        - parsed: Boolean to specify if the parsed price update should be included in the response. Default is false.
    *        - allowUnordered: Boolean to specify if unordered updates are allowed to be included in the stream. Default is false.
@@ -258,9 +265,9 @@ export class HermesClient {
     },
   ): Promise<EventSource> {
     const url = this.buildURL("updates/price/stream");
-    ids.forEach((id) => {
+    for (const id of ids) {
       url.searchParams.append("ids[]", id);
-    });
+    }
 
     if (options) {
       const transformedOptions = camelToSnakeCaseObject(options);
@@ -284,10 +291,10 @@ export class HermesClient {
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the calculated TWAP using the options object.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
-   * @param ids Array of hex-encoded price feed IDs for which updates are requested.
-   * @param window_seconds The time window in seconds over which to calculate the TWAP, ending at the current time.
+   * @param ids - Array of hex-encoded price feed IDs for which updates are requested.
+   * @param window_seconds - The time window in seconds over which to calculate the TWAP, ending at the current time.
    *  For example, a value of 300 would return the most recent 5 minute TWAP. Must be greater than 0 and less than or equal to 600 seconds (10 minutes).
-   * @param options Optional parameters:
+   * @param options - Optional parameters:
    *        - encoding: Encoding type. If specified, return the TWAP binary data in the encoding specified by the encoding parameter. Default is hex.
    *        - parsed: Boolean to specify if the calculated TWAP should be included in the response. Default is false.
    *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
@@ -304,7 +311,9 @@ export class HermesClient {
     },
     fetchOptions?: RequestInit,
   ): Promise<TwapsResponse> {
-    const url = this.buildURL(`updates/twap/${window_seconds}/latest`);
+    const url = this.buildURL(
+      `updates/twap/${window_seconds.toString()}/latest`,
+    );
     for (const id of ids) {
       url.searchParams.append("ids[]", id);
     }
@@ -325,15 +334,17 @@ export class HermesClient {
     url: URL,
     params: Record<string, string | boolean>,
   ) {
-    Object.entries(params).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(params)) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (value !== undefined) {
         url.searchParams.append(key, String(value));
       }
-    });
+    }
   }
 
   private buildURL(endpoint: string) {
     return new URL(
+      // eslint-disable-next-line unicorn/relative-url-style
       `./v2/${endpoint}`,
       // We ensure the `baseURL` ends with a `/` so that URL doesn't resolve the
       // path relative to the parent.

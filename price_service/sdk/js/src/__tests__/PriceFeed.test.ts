@@ -40,7 +40,7 @@ test("Parsing Price Feed works as expected", () => {
   });
   expect(priceFeed.getEmaPriceUnchecked()).toStrictEqual(expectedEmaPrice);
 
-  jest.setSystemTime(20000);
+  jest.setSystemTime(20_000);
   expect(priceFeed.getPriceNoOlderThan(15)).toStrictEqual(expectedPrice);
   expect(priceFeed.getPriceNoOlderThan(5)).toBeUndefined();
   expect(priceFeed.getEmaPriceNoOlderThan(15)).toStrictEqual(expectedEmaPrice);
@@ -105,7 +105,7 @@ test("getVAA returns string as expected", () => {
 
   const priceFeed = PriceFeed.fromJson(data);
 
-  expect(priceFeed.getVAA()).toStrictEqual(
+  expect(priceFeed.getVAA()).toBe(
     "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef",
   );
 });
