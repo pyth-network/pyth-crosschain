@@ -198,9 +198,7 @@ export function parseAccumulatorUpdateData(
     cursor += 1;
     const proof = [];
     for (let j = 0; j < numProofs; j++) {
-      proof.push(
-        [...data.subarray(cursor, cursor + KECCAK160_HASH_SIZE)],
-      );
+      proof.push([...data.subarray(cursor, cursor + KECCAK160_HASH_SIZE)]);
       cursor += KECCAK160_HASH_SIZE;
     }
 

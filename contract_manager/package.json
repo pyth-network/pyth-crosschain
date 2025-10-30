@@ -279,10 +279,11 @@
     "web3-eth-contract": "^1.8.2"
   },
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-crosschain": "link:..",
     "@types/node": "catalog:",
     "@types/web3": "^1.2.2",
-    "eslint": "^8.0.0",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "typedoc": "^0.25.7"
   },

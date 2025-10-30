@@ -1,4 +1,6 @@
-import { Price, PriceFeed, PriceFeedMetadata } from "../index";
+/* eslint-disable unicorn/filename-case */
+
+import { Price, PriceFeed, PriceFeedMetadata } from "../index.js";
 
 beforeAll(() => {
   jest.useFakeTimers();

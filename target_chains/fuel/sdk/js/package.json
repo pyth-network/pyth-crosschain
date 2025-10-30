@@ -38,12 +38,13 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/node": "catalog:",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
     "copyfiles": "^2.4.1",
-    "eslint": "^8.14.0",
+    "eslint": "catalog:",
     "fast-glob": "^3.3.3",
     "prettier": "catalog:",
     "ts-node": "catalog:"

@@ -1,18 +1,20 @@
-import { Chain, TonChain } from "../chains";
-import { WormholeContract } from "./wormhole";
-import {
-  type PriceFeed,
-  PriceFeedContract,
-  type PrivateKey,
-  type TxResult,
-} from "../base";
-import type { TokenQty } from "../token";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
-import { Address, Cell, type OpenedContract } from "@ton/ton";
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable no-console */
 import {
   calculateUpdatePriceFeedsFee,
   PythContract,
 } from "@pythnetwork/pyth-ton-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { OpenedContract } from "@ton/ton";
+import { Address, Cell } from "@ton/ton";
+
+import type { PriceFeed, PrivateKey, TxResult } from "../base";
+import { Chain, TonChain } from "../chains";
+import { WormholeContract } from "./wormhole";
+import { PriceFeedContract } from "../base";
+import type { TokenQty } from "../token";
 
 export class TonWormholeContract extends WormholeContract {
   static type = "TonWormholeContract";
@@ -47,7 +49,7 @@ export class TonWormholeContract extends WormholeContract {
     if (parsed.type !== TonWormholeContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof TonChain))
-      throw new Error(`Wrong chain type ${chain}`);
+      throw new Error(`Wrong chain type ${JSON.stringify(chain)}`);
     return new TonWormholeContract(chain, parsed.address);
   }
 
@@ -128,7 +130,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
     if (parsed.type !== TonPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof TonChain))
-      throw new Error(`Wrong chain type ${chain}`);
+      throw new Error(`Wrong chain type ${JSON.stringify(chain)}`);
     return new TonPriceFeedContract(chain, parsed.address);
   }
 
@@ -188,8 +190,8 @@ export class TonPriceFeedContract extends PriceFeedContract {
           publishTime: emaPrice.publishTime.toString(),
         },
       };
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       return undefined;
     }
   }
@@ -229,8 +231,8 @@ export class TonPriceFeedContract extends PriceFeedContract {
       throw new Error("Governance data source not found");
     }
     return {
-      emitterChain: result.emitterChain,
-      emitterAddress: result.emitterAddress,
+      emitterChain: result!.emitterChain,
+      emitterAddress: result!.emitterAddress,
     };
   }
 

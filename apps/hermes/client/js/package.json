@@ -70,6 +70,16 @@
         "types": "./dist/esm/HermesClient.d.ts"
       }
     },
+    "./hermes-client": {
+      "require": {
+        "default": "./dist/cjs/hermes-client.js",
+        "types": "./dist/cjs/hermes-client.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/hermes-client.js",
+        "types": "./dist/esm/hermes-client.d.ts"
+      }
+    },
     ".": {
       "require": {
         "default": "./dist/cjs/index.js",

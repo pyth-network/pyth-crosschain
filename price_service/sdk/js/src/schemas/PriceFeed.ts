@@ -31,7 +31,7 @@ export type PriceFeed = {
    * VAA of the price
    */
   vaa?: string;
-}
+};
 
 /**
  * Exponentially-weighted moving average Price
@@ -57,7 +57,7 @@ export type Price = {
    * Publish Time of the price
    */
   publish_time: number;
-}
+};
 
 /**
  * Metadata of the price
@@ -89,7 +89,7 @@ export type PriceFeedMetadata = {
    * Pythnet slot number of the price
    */
   slot?: number | undefined;
-}
+};
 
 // Converts JSON types to/from your types
 // and asserts the results at runtime

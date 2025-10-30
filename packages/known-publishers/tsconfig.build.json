@@ -5,10 +5,5 @@
     "incremental": false,
     "declaration": true
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "examples/",
-    "**/__tests__/*"
-  ]
+  "exclude": ["node_modules", "dist", "examples/", "**/__tests__/*"]
 }

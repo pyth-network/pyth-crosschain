@@ -52,12 +52,7 @@
       "dependsOn": ["//#install:modules", "^build"]
     },
     "build": {
-      "dependsOn": [
-        "//#install:modules",
-        "pull:env",
-        "clean",
-        "^build"
-      ],
+      "dependsOn": ["//#install:modules", "pull:env", "clean", "^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
@@ -70,11 +65,7 @@
       "outputs": ["lib/**", "dist/**", ".next/**", "!.next/cache/**"]
     },
     "build:vercel": {
-      "dependsOn": [
-        "//#install:modules",
-        "pull:env",
-        "^build"
-      ],
+      "dependsOn": ["//#install:modules", "pull:env", "^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",
