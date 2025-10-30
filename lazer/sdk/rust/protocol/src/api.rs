@@ -20,6 +20,7 @@ use crate::{
 pub struct LatestPriceRequestRepr {
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    #[schema(default)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
@@ -86,6 +87,7 @@ pub struct PriceRequestRepr {
     pub timestamp: TimestampUs,
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    #[schema(default)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     pub formats: Vec<Format>,
@@ -187,6 +189,7 @@ pub enum JsonBinaryEncoding {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From, ToSchema)]
+#[schema(as = String)]
 pub enum Channel {
     FixedRate(FixedRate),
     RealTime,
@@ -281,6 +284,7 @@ impl<'de> Deserialize<'de> for Channel {
 pub struct SubscriptionParamsRepr {
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    #[schema(default)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
