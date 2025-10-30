@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {PythLazer} from "./PythLazer.sol";
 import {PythLazerStructs} from "./PythLazerStructs.sol";
-import {console2} from "forge-std/console2.sol";
 library PythLazerLib {
     // --- Internal tri-state helpers ---
     // triStateMap packs 2 bits per property at bit positions [2*p, 2*p+1]
@@ -42,11 +40,11 @@ library PythLazerLib {
         return ((feed.triStateMap >> (2 * propId)) & 3) == uint256(uint8(PythLazerStructs.PropertyState.Present));
     }
 
-    function _isSupported(
+    function _isRequested(
         PythLazerStructs.Feed memory feed,
         uint8 propId
     ) private pure returns (bool) {
-        // Supported if state != NotApplicable (i.e., any non-zero)
+        // Requested if state != NotApplicable (i.e., any non-zero)
         return ((feed.triStateMap >> (2 * propId)) & 3) != 0;
     }
     function parsePayloadHeader(
@@ -178,17 +176,10 @@ library PythLazerLib {
             uint8 numProperties;
 
             (feedId, numProperties, pos) = parseFeedHeader(payload, pos);
-            console2.log("payload");
-            console2.logBytes(payload);
 
             // Initialize feed
             feed.feedId = feedId;
             feed.triStateMap = 0;
-
-            console2.log("Feed ID");
-            console2.log(feedId);
-            console2.log("Number of Properties");
-            console2.log(numProperties);
 
             // Parse each property
             for (uint8 j = 0; j < numProperties; j++) {
@@ -257,9 +248,6 @@ library PythLazerLib {
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.FundingRate
                 ) {
-                    console2.log("Funding Rate Property");
-                    console2.log(uint256(property));
-                    console2.log(feed.feedId);
                     uint8 exists;
                     (exists, pos) = parseFeedValueUint8(payload, pos);
                     if (exists != 0) {
@@ -384,59 +372,59 @@ library PythLazerLib {
         return _hasValue(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingRateInterval));
     }
 
-    // Supported (applicability) helpers — property included in this update
-    function isPriceSupported(
+    // Requested (applicability) helpers — property included in this update
+    function isPriceRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.Price));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.Price));
     }
 
-    function isBestBidPriceSupported(
+    function isBestBidPriceRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.BestBidPrice));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.BestBidPrice));
     }
 
-    function isBestAskPriceSupported(
+    function isBestAskPriceRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.BestAskPrice));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.BestAskPrice));
     }
 
-    function isPublisherCountSupported(
+    function isPublisherCountRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.PublisherCount));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.PublisherCount));
     }
 
-    function isExponentSupported(
+    function isExponentRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.Exponent));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.Exponent));
     }
 
-    function isConfidenceSupported(
+    function isConfidenceRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.Confidence));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.Confidence));
     }
 
-    function isFundingRateSupported(
+    function isFundingRateRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingRate));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingRate));
     }
 
-    function isFundingTimestampSupported(
+    function isFundingTimestampRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingTimestamp));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingTimestamp));
     }
 
-    function isFundingRateIntervalSupported(
+    function isFundingRateIntervalRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
-        return _isSupported(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingRateInterval));
+        return _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.FundingRateInterval));
     }
 
     // Safe getter functions (revert if property doesn't exist)

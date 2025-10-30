@@ -31,111 +31,101 @@ contract PythLazerApiTest is Test {
         assert(pythLazer.isValidSigner(trustedSigner));
     }
     
-    /// @notice Test parsing real API response with two different feed types
-    /// @dev Feed 3: Regular price feed (no funding rate properties)
-    /// @dev Feed 112: Funding rate feed (no bid/ask properties)
-    function test_parseApiResponse() public {
-        // Call script to fetch full JSON response from API
+    /// @notice Test parsing real API response for Feed 3 (regular price feed)
+    /// @dev Feed 3: Regular price feed (no funding rate properties requested)
+    function test_parseApiResponse_feed3() public {
+        // Call script to fetch combined JSON response from API (two separate calls)
         string[] memory inputs = new string[](2);
         inputs[0] = "bash";
         inputs[1] = "script/fetch_pyth_payload.sh";
 
         string memory jsonString = string(vm.ffi(inputs));
         
-        // Extract Feed 3 reference values from API's parsed field (PYTH/USD)
-        int64 apiRefFeed3Price = int64(uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[0].price")));
-        int16 apiRefFeed3Exponent = int16(vm.parseJsonInt(jsonString, ".parsed.priceFeeds[0].exponent"));
-        uint64 apiRefFeed3Confidence = uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[0].confidence"));
-        uint16 apiRefFeed3PublisherCount = uint16(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[0].publisherCount"));
-        int64 apiRefFeed3BestBid = int64(uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[0].bestBidPrice")));
-        int64 apiRefFeed3BestAsk = int64(uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[0].bestAskPrice")));
+        // Extract Feed 3 binary and reference values
+        string memory feed3BinaryHex = vm.parseJsonString(jsonString, ".feed3.evm.data");
+        bytes memory encodedUpdateFeed3 = hexStringToBytes(feed3BinaryHex);
+        int64 apiRefFeed3Price = int64(uint64(vm.parseJsonUint(jsonString, ".feed3.parsed.priceFeeds[0].price")));
+        int16 apiRefFeed3Exponent = int16(vm.parseJsonInt(jsonString, ".feed3.parsed.priceFeeds[0].exponent"));
+        uint64 apiRefFeed3Confidence = uint64(vm.parseJsonUint(jsonString, ".feed3.parsed.priceFeeds[0].confidence"));
+        uint16 apiRefFeed3PublisherCount = uint16(vm.parseJsonUint(jsonString, ".feed3.parsed.priceFeeds[0].publisherCount"));
+        int64 apiRefFeed3BestBid = int64(uint64(vm.parseJsonUint(jsonString, ".feed3.parsed.priceFeeds[0].bestBidPrice")));
+        int64 apiRefFeed3BestAsk = int64(uint64(vm.parseJsonUint(jsonString, ".feed3.parsed.priceFeeds[0].bestAskPrice")));
         
-        // Extract Feed 112 reference values from API's parsed field 
-        int64 apiRefFeed112Price = int64(uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[1].price")));
-        int16 apiRefFeed112Exponent = int16(vm.parseJsonInt(jsonString, ".parsed.priceFeeds[1].exponent"));
-        uint16 apiRefFeed112PublisherCount = uint16(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[1].publisherCount"));
-        int64 apiRefFeed112FundingRate = int64(vm.parseJsonInt(jsonString, ".parsed.priceFeeds[1].fundingRate"));
-        uint64 apiRefFeed112FundingTimestamp = uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[1].fundingTimestamp"));
-        uint64 apiRefFeed112FundingRateInterval = uint64(vm.parseJsonUint(jsonString, ".parsed.priceFeeds[1].fundingRateInterval"));
-
-        bytes memory encodedUpdate = hexStringToBytes(vm.parseJsonString(jsonString, ".evm.data"));
+        // Verify and parse Feed 3
+        (bytes memory payloadFeed3, address signerFeed3) = pythLazer.verifyUpdate{value: pythLazer.verification_fee()}(encodedUpdateFeed3);
+        assertEq(signerFeed3, trustedSigner, "Feed 3: Signer mismatch");
         
-        // Verify and extract payload
-        (bytes memory payload, address signer) = pythLazer.verifyUpdate{value: pythLazer.verification_fee()}(encodedUpdate);
-        assertEq(signer, trustedSigner, "Signer mismatch");
-        
-        // Parse the verified payload
-        PythLazerStructs.Update memory parsedUpdate = PythLazerLib.parseUpdateFromPayload(payload);
-        
-        // Verify we got 2 feeds
-        assertEq(parsedUpdate.feeds.length, 2, "Should have 2 feeds");
-        
-        // Find feeds by ID (order may vary)
-        PythLazerStructs.Feed memory feed3;
-        PythLazerStructs.Feed memory feed112;
-        bool found3 = false;
-        bool found112 = false;
-        
-        for (uint256 i = 0; i < parsedUpdate.feeds.length; i++) {
-            if (parsedUpdate.feeds[i].feedId == 3) {
-                feed3 = parsedUpdate.feeds[i];
-                found3 = true;
-            } else if (parsedUpdate.feeds[i].feedId == 112) {
-                feed112 = parsedUpdate.feeds[i];
-                found112 = true;
-            }
-        }
-        
-        assertTrue(found3, "Feed 3 not found");
-        assertTrue(found112, "Feed 112 not found");
+        PythLazerStructs.Update memory updateFeed3 = PythLazerLib.parseUpdateFromPayload(payloadFeed3);
+        assertEq(updateFeed3.feeds.length, 1, "Feed 3 update should have 1 feed");
+        PythLazerStructs.Feed memory feed3 = updateFeed3.feeds[0];
         
         // Validate Feed 3 (Regular Price Feed) - Compare against API reference
         assertEq(feed3.feedId, 3, "Feed 3: feedId mismatch");
 
-        // Supported checks for Feed 3 (should be applicable for price/exponent/confidence/publisherCount/bid/ask; not applicable for funding*)
-        assertTrue(PythLazerLib.isPriceSupported(feed3));
-        assertTrue(PythLazerLib.isExponentSupported(feed3));
-        assertTrue(PythLazerLib.isConfidenceSupported(feed3));
-        assertTrue(PythLazerLib.isPublisherCountSupported(feed3));
-        assertTrue(PythLazerLib.isBestBidPriceSupported(feed3));
-        assertTrue(PythLazerLib.isBestAskPriceSupported(feed3));
-        assertFalse(PythLazerLib.isFundingRateSupported(feed3));
-        // assertFalse(PythLazerLib.isFundingTimestampSupported(feed3));
-        // assertFalse(PythLazerLib.isFundingRateIntervalSupported(feed3));
+        // Requested checks for Feed 3 (should be requested for price/exponent/confidence/publisherCount/bid/ask; not requested for funding*)
+        assertTrue(PythLazerLib.isPriceRequested(feed3),"Feed 3: price should be requested");
+        assertTrue(PythLazerLib.isExponentRequested(feed3),"Feed 3: exponent should be requested");
+        assertTrue(PythLazerLib.isConfidenceRequested(feed3),"Feed 3: confidence should be requested");
+        assertTrue(PythLazerLib.isPublisherCountRequested(feed3),"Feed 3: publisher count should be requested");
+        assertTrue(PythLazerLib.isBestBidPriceRequested(feed3),"Feed 3: best bid price should be requested");
+        assertTrue(PythLazerLib.isBestAskPriceRequested(feed3),"Feed 3: best ask price should be requested");
+        assertFalse(PythLazerLib.isFundingRateRequested(feed3), "Feed 3: funding rate should NOT be requested");
+        assertFalse(PythLazerLib.isFundingTimestampRequested(feed3), "Feed 3: funding timestamp should NOT be requested");
+        assertFalse(PythLazerLib.isFundingRateIntervalRequested(feed3), "Feed 3: funding rate interval should NOT be requested");
 
                 
         // Verify parsed values match API reference values exactly
         assertEq(PythLazerLib.getPrice(feed3), apiRefFeed3Price, "Feed 3: price mismatch");
-        
         assertEq(PythLazerLib.getExponent(feed3), apiRefFeed3Exponent, "Feed 3: exponent mismatch");
-        
         assertEq(PythLazerLib.getConfidence(feed3), apiRefFeed3Confidence, "Feed 3: confidence mismatch");
-        
         assertEq(PythLazerLib.getPublisherCount(feed3), apiRefFeed3PublisherCount, "Feed 3: publisher count mismatch");
-        
         assertEq(PythLazerLib.getBestBidPrice(feed3), apiRefFeed3BestBid, "Feed 3: best bid price mismatch");
-        
         assertEq(PythLazerLib.getBestAskPrice(feed3), apiRefFeed3BestAsk, "Feed 3: best ask price mismatch");
         
-        // Feed 3 should NOT have funding rate properties
-        assertFalse(PythLazerLib.hasFundingRate(feed3), "Feed 3: should NOT have funding rate");
-        assertFalse(PythLazerLib.hasFundingTimestamp(feed3), "Feed 3: should NOT have funding timestamp");
-        assertFalse(PythLazerLib.hasFundingRateInterval(feed3), "Feed 3: should NOT have funding rate interval");
+        
+    }
+    
+    /// @notice Test parsing real API response for Feed 112 (funding rate feed)
+    /// @dev Feed 112: Funding rate feed (no bid/ask/confidence properties requested)
+    function test_parseApiResponse_feed112() public {
+        // Call script to fetch combined JSON response from API
+        string[] memory inputs = new string[](2);
+        inputs[0] = "bash";
+        inputs[1] = "script/fetch_pyth_payload.sh";
 
+        string memory jsonString = string(vm.ffi(inputs));
+        
+        // Extract Feed 112 binary and reference values
+        string memory feed112BinaryHex = vm.parseJsonString(jsonString, ".feed112.evm.data");
+        bytes memory encodedUpdateFeed112 = hexStringToBytes(feed112BinaryHex);
+        int64 apiRefFeed112Price = int64(uint64(vm.parseJsonUint(jsonString, ".feed112.parsed.priceFeeds[0].price")));
+        int16 apiRefFeed112Exponent = int16(vm.parseJsonInt(jsonString, ".feed112.parsed.priceFeeds[0].exponent"));
+        uint16 apiRefFeed112PublisherCount = uint16(vm.parseJsonUint(jsonString, ".feed112.parsed.priceFeeds[0].publisherCount"));
+        int64 apiRefFeed112FundingRate = int64(vm.parseJsonInt(jsonString, ".feed112.parsed.priceFeeds[0].fundingRate"));
+        uint64 apiRefFeed112FundingTimestamp = uint64(vm.parseJsonUint(jsonString, ".feed112.parsed.priceFeeds[0].fundingTimestamp"));
+        uint64 apiRefFeed112FundingRateInterval = uint64(vm.parseJsonUint(jsonString, ".feed112.parsed.priceFeeds[0].fundingRateInterval"));
 
+        // Verify and parse Feed 112
+        (bytes memory payloadFeed112, address signerFeed112) = pythLazer.verifyUpdate{value: pythLazer.verification_fee()}(encodedUpdateFeed112);
+        assertEq(signerFeed112, trustedSigner, "Feed 112: Signer mismatch");
+        
+        PythLazerStructs.Update memory updateFeed112 = PythLazerLib.parseUpdateFromPayload(payloadFeed112);
+        assertEq(updateFeed112.feeds.length, 1, "Feed 112 update should have 1 feed");
+        PythLazerStructs.Feed memory feed112 = updateFeed112.feeds[0];
         
         // Validate Feed 112 (Funding Rate Feed) - Compare against API reference
         assertEq(feed112.feedId, 112, "Feed 112: feedId mismatch");
 
-        // // Supported checks for Feed 112 (should be applicable for price/exponent/publisherCount/funding*; not applicable for bid/ask)
-        // assertTrue(PythLazerLib.isPriceSupported(feed112));
-        // assertTrue(PythLazerLib.isExponentSupported(feed112));
-        // assertTrue(PythLazerLib.isPublisherCountSupported(feed112));
-        // assertTrue(PythLazerLib.isFundingRateSupported(feed112));
-        // assertTrue(PythLazerLib.isFundingTimestampSupported(feed112));
-        // assertTrue(PythLazerLib.isFundingRateIntervalSupported(feed112));
-        // assertFalse(PythLazerLib.isBestBidPriceSupported(feed112));
-        // assertFalse(PythLazerLib.isBestAskPriceSupported(feed112));
+        // Requested checks for Feed 112 (should be requested for price/exponent/publisherCount/funding*; not requested for bid/ask/confidence)
+        assertTrue(PythLazerLib.isPriceRequested(feed112), "Feed 112: price should be requested");
+        assertTrue(PythLazerLib.isExponentRequested(feed112), "Feed 112: exponent should be requested");
+        assertTrue(PythLazerLib.isPublisherCountRequested(feed112), "Feed 112: publisher count should be requested");
+        assertTrue(PythLazerLib.isFundingRateRequested(feed112), "Feed 112: funding rate should be requested");
+        assertTrue(PythLazerLib.isFundingTimestampRequested(feed112), "Feed 112: funding timestamp should be requested");
+        assertTrue(PythLazerLib.isFundingRateIntervalRequested(feed112), "Feed 112: funding rate interval should be requested");
+        assertFalse(PythLazerLib.isBestBidPriceRequested(feed112), "Feed 112: best bid price should NOT be requested");
+        assertFalse(PythLazerLib.isBestAskPriceRequested(feed112), "Feed 112: best ask price should NOT be requested");
+        assertFalse(PythLazerLib.isConfidenceRequested(feed112), "Feed 112: confidence should NOT be requested");
         
         // Verify parsed values match API reference values exactly
         assertEq(PythLazerLib.getPrice(feed112), apiRefFeed112Price, "Feed 112: price mismatch");
@@ -149,11 +139,6 @@ contract PythLazerApiTest is Test {
         assertEq(PythLazerLib.getFundingTimestamp(feed112), apiRefFeed112FundingTimestamp, "Feed 112: funding timestamp mismatch");
         
         assertEq(PythLazerLib.getFundingRateInterval(feed112), apiRefFeed112FundingRateInterval, "Feed 112: funding rate interval mismatch");
-        
-        // Feed 112 should NOT have bid/ask prices
-        assertFalse(PythLazerLib.hasBestBidPrice(feed112), "Feed 112: should NOT have best bid price");
-        assertFalse(PythLazerLib.hasBestAskPrice(feed112), "Feed 112: should NOT have best ask price");
-
     }
     
     /// @notice Convert hex string to bytes (handles 0x prefix)
