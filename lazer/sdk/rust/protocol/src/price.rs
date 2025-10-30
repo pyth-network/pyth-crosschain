@@ -7,6 +7,7 @@ use {
     serde::{Deserialize, Serialize},
     std::num::NonZeroI64,
     thiserror::Error,
+    utoipa::ToSchema,
 };
 
 #[derive(Debug, Error)]
@@ -21,8 +22,9 @@ pub enum PriceError {
     Overflow,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema)]
 #[repr(transparent)]
+#[schema(value_type = i64)]
 pub struct Price(NonZeroI64);
 
 impl Price {
