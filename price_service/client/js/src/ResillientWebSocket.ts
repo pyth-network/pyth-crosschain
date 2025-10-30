@@ -1,7 +1,16 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable unicorn/prefer-add-event-listener */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import WebSocket from "isomorphic-ws";
-import { type Logger } from "ts-log";
+import type { Logger } from "ts-log";
 
-const PING_TIMEOUT_DURATION = 30000 + 3000; // It is 30s on the server and 3s is added for delays
+const PING_TIMEOUT_DURATION = 30_000 + 3000; // It is 30s on the server and 3s is added for delays
 
 /**
  * This class wraps websocket to provide a resilient web socket client.
@@ -38,7 +47,7 @@ export class ResilientWebSocket {
     this.onReconnect = () => {};
   }
 
-  async send(data: any) {
+  async send(data: unknown) {
     this.logger?.info(`Sending ${data}`);
 
     await this.waitForMaybeReadyWebSocket();
@@ -48,7 +57,7 @@ export class ResilientWebSocket {
         "Couldn't connect to the websocket server. Error callback is called.",
       );
     } else {
-      this.wsClient?.send(data);
+      this.wsClient.send(data as Buffer);
     }
   }
 
@@ -62,13 +71,13 @@ export class ResilientWebSocket {
     this.wsClient = new WebSocket(this.endpoint);
     this.wsUserClosed = false;
 
-    this.wsClient.onopen = () => {
+    this.wsClient.addEventListener("open", () => {
       this.wsFailedAttempts = 0;
       // Ping handler is undefined in browser side so heartbeat is disabled.
       if (this.wsClient!.on !== undefined) {
         this.heartbeat();
       }
-    };
+    });
 
     this.wsClient.onerror = (event) => {
       this.onError(event.error);
@@ -78,12 +87,14 @@ export class ResilientWebSocket {
       this.onMessage(event.data);
     };
 
-    this.wsClient.onclose = async () => {
+    this.wsClient.addEventListener("close", async () => {
       if (this.pingTimeout !== undefined) {
         clearInterval(this.pingTimeout);
       }
 
-      if (this.wsUserClosed === false) {
+      if (this.wsUserClosed) {
+        this.logger?.info("The connection has been closed successfully.");
+      } else {
         this.wsFailedAttempts += 1;
         this.wsClient = undefined;
         const waitTime = expoBackoff(this.wsFailedAttempts);
@@ -94,10 +105,8 @@ export class ResilientWebSocket {
 
         await sleep(waitTime);
         this.restartUnexpectedClosedWebsocket();
-      } else {
-        this.logger?.info("The connection has been closed successfully.");
       }
-    };
+    });
 
     if (this.wsClient.on !== undefined) {
       // Ping handler is undefined in browser side
@@ -144,7 +153,7 @@ export class ResilientWebSocket {
   }
 
   private async restartUnexpectedClosedWebsocket() {
-    if (this.wsUserClosed === true) {
+    if (this.wsUserClosed) {
       return;
     }
 

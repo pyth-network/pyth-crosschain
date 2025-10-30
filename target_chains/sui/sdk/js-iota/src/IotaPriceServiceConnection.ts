@@ -1,8 +1,7 @@
-import {
-  PriceServiceConnection,
-  type HexString,
-} from "@pythnetwork/price-service-client";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
+
+import type { HexString } from "@pythnetwork/price-service-client";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 export class IotaPriceServiceConnection extends PriceServiceConnection {
   /**
@@ -10,7 +9,7 @@ export class IotaPriceServiceConnection extends PriceServiceConnection {
    * can be submitted to the Pyth contract to update the prices. This will throw an axios error if there is a network problem or
    * the price service returns a non-ok response (e.g: Invalid price ids)
    *
-   * @param priceIds Array of hex-encoded price ids.
+   * @param priceIds - Array of hex-encoded price ids.
    * @returns Array of buffers containing the price update data.
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<Buffer[]> {

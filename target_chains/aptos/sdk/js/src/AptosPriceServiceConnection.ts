@@ -1,9 +1,11 @@
+import { Buffer } from "node:buffer";
+
+import type {HexString} from "@pythnetwork/price-service-client";
 import {
-  PriceServiceConnection,
-  type HexString,
+  PriceServiceConnection
+  
 } from "@pythnetwork/price-service-client";
 import { BCS } from "aptos";
-import { Buffer } from "buffer";
 
 export class AptosPriceServiceConnection extends PriceServiceConnection {
   /**
@@ -16,7 +18,7 @@ export class AptosPriceServiceConnection extends PriceServiceConnection {
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<number[][]> {
     // Fetch the latest price feed update VAAs from the price service
     const latestVaas = await this.getLatestVaas(priceIds);
-    return latestVaas.map((vaa) => Array.from(Buffer.from(vaa, "base64")));
+    return latestVaas.map((vaa) => [...Buffer.from(vaa, "base64")]);
   }
 
   /**
@@ -27,7 +29,7 @@ export class AptosPriceServiceConnection extends PriceServiceConnection {
   static serializeUpdateData(updateData: number[][]): Uint8Array {
     const serializer = new BCS.Serializer();
     serializer.serializeU32AsUleb128(updateData.length);
-    updateData.forEach((vaa) => serializer.serializeBytes(Buffer.from(vaa)));
+    for (const vaa of updateData) serializer.serializeBytes(Buffer.from(vaa));
     return serializer.getBytes();
   }
 }

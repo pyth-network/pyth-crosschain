@@ -1,10 +1,12 @@
+import { Buffer } from "node:buffer";
+
+import { IotaClient } from "@iota/iota-sdk/client";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { Transaction } from "@iota/iota-sdk/transactions";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { IotaClient } from "@iota/iota-sdk/client";
-import { Transaction } from "@iota/iota-sdk/transactions";
-import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 
-import { Buffer } from "buffer";
+
 import { IotaPythClient } from "../client";
 import { IotaPriceServiceConnection } from "../index";
 
@@ -48,7 +50,7 @@ async function run() {
   const argv = await argvPromise;
 
   // Fetch the latest price feed update data from the Price Service
-  const connection = new IotaPriceServiceConnection(argv["hermes"]);
+  const connection = new IotaPriceServiceConnection(argv.hermes);
   const feeds = argv["feed-id"] as string[];
 
   const provider = getProvider(argv["full-node"]);

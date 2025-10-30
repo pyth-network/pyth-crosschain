@@ -1,8 +1,23 @@
-import { type HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
-import axios, { type AxiosInstance } from "axios";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable unicorn/no-process-exit */
+/* eslint-disable n/no-process-exit */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+import type { HexString } from "@pythnetwork/price-service-sdk";
+import { PriceFeed } from "@pythnetwork/price-service-sdk";
+import type { AxiosInstance } from "axios";
+import axios from "axios";
 import axiosRetry from "axios-retry";
 import * as WebSocket from "isomorphic-ws";
-import { type Logger } from "ts-log";
+import type { Logger } from "ts-log";
+
 import { ResilientWebSocket } from "./ResillientWebSocket";
 import { makeWebsocketUrl, removeLeading0xIfExists } from "./utils";
 
@@ -79,8 +94,8 @@ export class PriceServiceConnection {
   /**
    * Constructs a new Connection.
    *
-   * @param endpoint endpoint URL to the price service. Example: https://website/example/
-   * @param config Optional PriceServiceConnectionConfig for custom configurations.
+   * @param endpoint - endpoint URL to the price service. Example: https://website/example/
+   * @param config - Optional PriceServiceConnectionConfig for custom configurations.
    */
   constructor(endpoint: string, config?: PriceServiceConnectionConfig) {
     this.httpClient = axios.create({
@@ -89,7 +104,8 @@ export class PriceServiceConnection {
     });
     axiosRetry(this.httpClient, {
       retries: config?.httpRetries || 3,
-      retryDelay: axiosRetry.exponentialDelay,
+      // eslint-disable-next-line import/no-named-as-default-member
+      retryDelay: axiosRetry.exponentialDelay.bind(axiosRetry),
     });
 
     this.priceFeedRequestConfig = {
@@ -133,7 +149,7 @@ export class PriceServiceConnection {
    * Fetch Latest PriceFeeds of given price ids.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
    *
-   * @param priceIds Array of hex-encoded price ids.
+   * @param priceIds - Array of hex-encoded price ids.
    * @returns Array of PriceFeeds
    */
   async getLatestPriceFeeds(
@@ -162,7 +178,7 @@ export class PriceServiceConnection {
    *
    * This function is coupled to wormhole implemntation.
    *
-   * @param priceIds Array of hex-encoded price ids.
+   * @param priceIds - Array of hex-encoded price ids.
    * @returns Array of base64 encoded VAAs.
    */
   async getLatestVaas(priceIds: HexString[]): Promise<string[]> {
@@ -171,7 +187,7 @@ export class PriceServiceConnection {
         ids: priceIds,
       },
     });
-    return response.data;
+    return response.data as string[];
   }
 
   /**
@@ -182,8 +198,8 @@ export class PriceServiceConnection {
    *
    * This function is coupled to wormhole implemntation.
    *
-   * @param priceId Hex-encoded price id.
-   * @param publishTime Epoch timestamp in seconds.
+   * @param priceId - Hex-encoded price id.
+   * @param publishTime - Epoch timestamp in seconds.
    * @returns Tuple of VAA and publishTime.
    */
   async getVaa(
@@ -205,8 +221,8 @@ export class PriceServiceConnection {
    * is old and the price service endpoint does not have a db backend for historical requests.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price id)
    *
-   * @param priceId Hex-encoded price id.
-   * @param publishTime Epoch timestamp in seconds.
+   * @param priceId - Hex-encoded price id.
+   * @param publishTime - Epoch timestamp in seconds.
    * @returns PriceFeed
    */
   async getPriceFeed(
@@ -233,7 +249,7 @@ export class PriceServiceConnection {
    */
   async getPriceFeedIds(): Promise<HexString[]> {
     const response = await this.httpClient.get("/api/price_feed_ids");
-    return response.data;
+    return response.data as HexString[];
   }
 
   /**
@@ -244,8 +260,8 @@ export class PriceServiceConnection {
    * it calls `connection.onWsError`. If you want to handle the errors you should set the
    * `onWsError` function to your custom error handler.
    *
-   * @param priceIds Array of hex-encoded price ids.
-   * @param cb Callback function that is called with a PriceFeed upon updates to given price ids.
+   * @param priceIds - Array of hex-encoded price ids.
+   * @param cb - Callback function that is called with a PriceFeed upon updates to given price ids.
    */
   async subscribePriceFeedUpdates(
     priceIds: HexString[],
@@ -287,8 +303,8 @@ export class PriceServiceConnection {
    * it calls `connection.onWsError`. If you want to handle the errors you should set the
    * `onWsError` function to your custom error handler.
    *
-   * @param priceIds Array of hex-encoded price ids.
-   * @param cb Optional callback, if set it will only unsubscribe this callback from updates for given price ids.
+   * @param priceIds - Array of hex-encoded price ids.
+   * @param cb - Optional callback, if set it will only unsubscribe this callback from updates for given price ids.
    */
   async unsubscribePriceFeedUpdates(
     priceIds: HexString[],
@@ -353,7 +369,7 @@ export class PriceServiceConnection {
     this.wsClient.onReconnect = () => {
       if (this.priceFeedCallbacks.size > 0) {
         const message: ClientMessage = {
-          ids: Array.from(this.priceFeedCallbacks.keys()),
+          ids: [...this.priceFeedCallbacks.keys()],
           type: "subscribe",
           verbose: this.priceFeedRequestConfig.verbose,
           binary: this.priceFeedRequestConfig.binary,
@@ -372,10 +388,10 @@ export class PriceServiceConnection {
 
       try {
         message = JSON.parse(data.toString()) as ServerMessage;
-      } catch (e: any) {
+      } catch (error: unknown) {
         this.logger.error(`Error parsing message ${data.toString()} as JSON.`);
-        this.logger.error(e);
-        this.onWsError(e);
+        this.logger.error(error);
+        this.onWsError(error as Error);
         return;
       }
 
@@ -390,12 +406,12 @@ export class PriceServiceConnection {
         let priceFeed;
         try {
           priceFeed = PriceFeed.fromJson(message.price_feed);
-        } catch (e: any) {
+        } catch (error: unknown) {
           this.logger.error(
             `Error parsing price feeds from message ${data.toString()}.`,
           );
-          this.logger.error(e);
-          this.onWsError(e);
+          this.logger.error(error);
+          this.onWsError(error as Error);
           return;
         }
 

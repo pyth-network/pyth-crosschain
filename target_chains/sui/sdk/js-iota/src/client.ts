@@ -1,9 +1,14 @@
-import { IotaClient } from "@iota/iota-sdk/client";
-import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
-import { Transaction } from "@iota/iota-sdk/transactions";
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-console */
+import { Buffer } from "node:buffer";
+
 import { bcs } from "@iota/iota-sdk/bcs";
-import { type HexString } from "@pythnetwork/price-service-client";
-import { Buffer } from "buffer";
+import { IotaClient } from "@iota/iota-sdk/client";
+import { Transaction } from "@iota/iota-sdk/transactions";
+import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
+import type { HexString } from "@pythnetwork/price-service-client";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
 export type ObjectId = string;
@@ -12,7 +17,7 @@ export class IotaPythClient {
   private pythPackageId: ObjectId | undefined;
   private wormholePackageId: ObjectId | undefined;
   private priceTableInfo: { id: ObjectId; fieldType: ObjectId } | undefined;
-  private priceFeedObjectIdCache: Map<HexString, ObjectId> = new Map();
+  private priceFeedObjectIdCache = new Map<HexString, ObjectId>();
   private baseUpdateFee: number | undefined;
   constructor(
     public provider: IotaClient,
@@ -30,8 +35,7 @@ export class IotaPythClient {
         options: { showContent: true },
       });
       if (
-        !result.data ||
-        !result.data.content ||
+        !result.data?.content ||
         result.data.content.dataType !== "moveObject"
       )
         throw new Error("Unable to fetch pyth state object");
@@ -46,7 +50,7 @@ export class IotaPythClient {
   /**
    * getPackageId returns the latest package id that the object belongs to. Use this to
    * fetch the latest package id for a given object id and handle package upgrades automatically.
-   * @param objectId
+   * @param objectId - the object id
    * @returns package id
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
@@ -69,6 +73,7 @@ export class IotaPythClient {
     if ("upgrade_cap" in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return state.upgrade_cap.fields.package;
     }
 
@@ -77,8 +82,8 @@ export class IotaPythClient {
 
   /**
    * Adds the commands for calling wormhole and verifying the vaas and returns the verified vaas.
-   * @param vaas array of vaas to verify
-   * @param tx transaction block to add commands to
+   * @param vaas - array of vaas to verify
+   * @param tx - transaction block to add commands to
    */
   async verifyVaas(vaas: Buffer[], tx: Transaction) {
     const wormholePackageId = await this.getWormholePackageId();
@@ -91,7 +96,7 @@ export class IotaPythClient {
           tx.pure(
             bcs
               .vector(bcs.U8)
-              .serialize(Array.from(vaa), {
+              .serialize([...vaa], {
                 maxSize: MAX_ARGUMENT_SIZE,
               })
               .toBytes(),
@@ -106,9 +111,9 @@ export class IotaPythClient {
 
   /**
    * Adds the necessary commands for updating the pyth price feeds to the transaction block.
-   * @param tx transaction block to add commands to
-   * @param updates array of price feed updates received from the price service
-   * @param feedIds array of feed ids to update (in hex format)
+   * @param tx - transaction block to add commands to
+   * @param updates - array of price feed updates received from the price service
+   * @param feedIds - array of feed ids to update (in hex format)
    */
   async updatePriceFeeds(
     tx: Transaction,
@@ -132,7 +137,7 @@ export class IotaPythClient {
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize(Array.from(updates[0]!), {
+            .serialize([...updates[0]!], {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
@@ -161,7 +166,8 @@ export class IotaPythClient {
         target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
           tx.object(this.pythStateId),
-          priceUpdatesHotPotato!,
+          // @ts-expect-error - TODO: Fix the mismatched type here
+          priceUpdatesHotPotato,
           tx.object(priceInfoObjectId),
           coins[coinId]!,
           tx.object(IOTA_CLOCK_OBJECT_ID),
@@ -171,7 +177,8 @@ export class IotaPythClient {
     }
     tx.moveCall({
       target: `${packageId}::hot_potato_vector::destroy`,
-      arguments: [priceUpdatesHotPotato!],
+      // @ts-expect-error - TODO: Fix the mismatched type here
+      arguments: [priceUpdatesHotPotato],
       typeArguments: [`${packageId}::price_info::PriceInfo`],
     });
     return priceInfoObjects;
@@ -192,7 +199,7 @@ export class IotaPythClient {
         tx.pure(
           bcs
             .vector(bcs.U8)
-            .serialize(Array.from(updates[0]!), {
+            .serialize([...updates[0]!], {
               maxSize: MAX_ARGUMENT_SIZE,
             })
             .toBytes(),
@@ -225,7 +232,7 @@ export class IotaPythClient {
 
   /**
    * Get the priceFeedObjectId for a given feedId if not already cached
-   * @param feedId
+   * @param feedId - the feed id
    */
   async getPriceFeedObjectId(feedId: HexString): Promise<ObjectId | undefined> {
     const normalizedFeedId = feedId.replace("0x", "");
@@ -236,11 +243,11 @@ export class IotaPythClient {
         name: {
           type: `${fieldType}::price_identifier::PriceIdentifier`,
           value: {
-            bytes: Array.from(Buffer.from(normalizedFeedId, "hex")),
+            bytes: [...Buffer.from(normalizedFeedId, "hex")],
           },
         },
       });
-      if (!result.data || !result.data.content) {
+      if (!result.data?.content) {
         return undefined;
       }
       if (result.data.content.dataType !== "moveObject") {
@@ -250,6 +257,7 @@ export class IotaPythClient {
         normalizedFeedId,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         result.data.content.fields.value,
       );
     }
@@ -269,7 +277,7 @@ export class IotaPythClient {
           value: "price_info",
         },
       });
-      if (!result.data || !result.data.type) {
+      if (!result.data?.type) {
         throw new Error(
           "Price Table not found, contract may not be initialized",
         );
