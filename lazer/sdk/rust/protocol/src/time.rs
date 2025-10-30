@@ -495,6 +495,7 @@ pub mod duration_us_serde_humantime {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, ToSchema)]
+#[schema(as = String, example = "fixed_rate@200ms")]
 pub struct FixedRate {
     rate: DurationUs,
 }

@@ -7,6 +7,8 @@ use std::{
 use derive_more::derive::From;
 use itertools::Itertools as _;
 use serde::{de::Error, Deserialize, Serialize};
+#[allow(unused_imports)] // used for schema examples
+use serde_json::json;
 use utoipa::ToSchema;
 
 use crate::{
@@ -19,8 +21,9 @@ use crate::{
 #[serde(rename_all = "camelCase")]
 pub struct LatestPriceRequestRepr {
     // Either price feed ids or symbols must be specified.
+    #[schema(example = json!([1]))]
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
-    #[schema(default)]
+    #[schema(default = schema_default_symbols)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
@@ -161,6 +164,13 @@ pub fn default_parsed() -> bool {
     true
 }
 
+pub fn schema_default_symbols() -> Option<Vec<String>> {
+    None
+}
+pub fn schema_default_price_feed_ids() -> Option<Vec<PriceFeedId>> {
+    Some(vec![PriceFeedId(1)])
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum DeliveryFormat {
@@ -189,7 +199,7 @@ pub enum JsonBinaryEncoding {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From, ToSchema)]
-#[schema(as = String)]
+#[schema(example = "fixed_rate@200ms")]
 pub enum Channel {
     FixedRate(FixedRate),
     RealTime,
