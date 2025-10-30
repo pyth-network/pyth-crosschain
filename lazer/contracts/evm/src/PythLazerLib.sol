@@ -519,7 +519,7 @@ library PythLazerLib {
             );
     }
 
-    // Requested (applicability) helpers — property included in this update
+    // Requested helpers — property included in this update
     function isPriceRequested(
         PythLazerStructs.Feed memory feed
     ) public pure returns (bool) {
@@ -613,7 +613,11 @@ library PythLazerLib {
     function getPrice(
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
-        require(hasPrice(feed), "Price does not exist");
+        require(
+            isPriceRequested(feed),
+            "Price is not requested for the timestamp"
+        );
+        require(hasPrice(feed), "Price is not present for the timestamp");
         return feed._price;
     }
 
@@ -621,7 +625,14 @@ library PythLazerLib {
     function getBestBidPrice(
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
-        require(hasBestBidPrice(feed), "Best bid price does not exist");
+        require(
+            isBestBidPriceRequested(feed),
+            "Best bid price is not requested for the timestamp"
+        );
+        require(
+            hasBestBidPrice(feed),
+            "Best bid price is not present for the timestamp"
+        );
         return feed._bestBidPrice;
     }
 
@@ -629,7 +640,14 @@ library PythLazerLib {
     function getBestAskPrice(
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
-        require(hasBestAskPrice(feed), "Best ask price does not exist");
+        require(
+            isBestAskPriceRequested(feed),
+            "Best ask price is not requested for the timestamp"
+        );
+        require(
+            hasBestAskPrice(feed),
+            "Best ask price is not present for the timestamp"
+        );
         return feed._bestAskPrice;
     }
 
@@ -637,7 +655,14 @@ library PythLazerLib {
     function getPublisherCount(
         PythLazerStructs.Feed memory feed
     ) public pure returns (uint16) {
-        require(hasPublisherCount(feed), "Publisher count does not exist");
+        require(
+            isPublisherCountRequested(feed),
+            "Publisher count is not requested for the timestamp"
+        );
+        require(
+            hasPublisherCount(feed),
+            "Publisher count is not present for the timestamp"
+        );
         return feed._publisherCount;
     }
 
@@ -645,7 +670,11 @@ library PythLazerLib {
     function getExponent(
         PythLazerStructs.Feed memory feed
     ) public pure returns (int16) {
-        require(hasExponent(feed), "Exponent does not exist");
+        require(
+            isExponentRequested(feed),
+            "Exponent is not requested for the timestamp"
+        );
+        require(hasExponent(feed), "Exponent is not present for the timestamp");
         return feed._exponent;
     }
 
@@ -653,7 +682,14 @@ library PythLazerLib {
     function getConfidence(
         PythLazerStructs.Feed memory feed
     ) public pure returns (uint64) {
-        require(hasConfidence(feed), "Confidence does not exist");
+        require(
+            isConfidenceRequested(feed),
+            "Confidence is not requested for the timestamp"
+        );
+        require(
+            hasConfidence(feed),
+            "Confidence is not present for the timestamp"
+        );
         return feed._confidence;
     }
 
@@ -661,7 +697,14 @@ library PythLazerLib {
     function getFundingRate(
         PythLazerStructs.Feed memory feed
     ) public pure returns (int64) {
-        require(hasFundingRate(feed), "Funding rate does not exist");
+        require(
+            isFundingRateRequested(feed),
+            "Funding rate is not requested for the timestamp"
+        );
+        require(
+            hasFundingRate(feed),
+            "Funding rate is not present for the timestamp"
+        );
         return feed._fundingRate;
     }
 
@@ -669,7 +712,14 @@ library PythLazerLib {
     function getFundingTimestamp(
         PythLazerStructs.Feed memory feed
     ) public pure returns (uint64) {
-        require(hasFundingTimestamp(feed), "Funding timestamp does not exist");
+        require(
+            isFundingTimestampRequested(feed),
+            "Funding timestamp is not requested for the timestamp"
+        );
+        require(
+            hasFundingTimestamp(feed),
+            "Funding timestamp is not present for the timestamp"
+        );
         return feed._fundingTimestamp;
     }
 
@@ -678,8 +728,12 @@ library PythLazerLib {
         PythLazerStructs.Feed memory feed
     ) public pure returns (uint64) {
         require(
+            isFundingRateIntervalRequested(feed),
+            "Funding rate interval is not requested for the timestamp"
+        );
+        require(
             hasFundingRateInterval(feed),
-            "Funding rate interval does not exist"
+            "Funding rate interval is not present for the timestamp"
         );
         return feed._fundingRateInterval;
     }
