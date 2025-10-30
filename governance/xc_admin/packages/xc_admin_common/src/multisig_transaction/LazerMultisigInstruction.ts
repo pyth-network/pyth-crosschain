@@ -1,11 +1,11 @@
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "./index";
-import { AnchorAccounts, resolveAccountNames } from "./anchor";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { Idl, BorshInstructionCoder } from "@coral-xyz/anchor";
+import { type AnchorAccounts, resolveAccountNames } from "./anchor";
+import { TransactionInstruction } from "@solana/web3.js";
+import { type Idl, BorshInstructionCoder } from "@coral-xyz/anchor";
 import lazerIdl from "./idl/lazer.json";
 
 export class LazerMultisigInstruction implements MultisigInstruction {

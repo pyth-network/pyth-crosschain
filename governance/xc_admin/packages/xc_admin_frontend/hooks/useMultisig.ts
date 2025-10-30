@@ -2,7 +2,7 @@ import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
-import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   PRICE_FEED_MULTISIG,
@@ -58,9 +58,9 @@ export const useMultisig = (): MultisigHookData => {
 
   const connection = useMemo(() => {
     const urls = pythClusterApiUrls(multisigCluster)
-    return new Connection(urls[urlsIndex], {
+    return new Connection(urls[urlsIndex] ?? '', {
       commitment: 'confirmed',
-      wsEndpoint: deriveWsUrl(urls[urlsIndex]),
+      wsEndpoint: deriveWsUrl(urls[urlsIndex] ?? ''),
     })
   }, [urlsIndex, multisigCluster])
 

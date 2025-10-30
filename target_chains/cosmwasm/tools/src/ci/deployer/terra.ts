@@ -6,7 +6,7 @@ import {
   MsgMigrateContract,
   MsgStoreCode,
   MsgUpdateContractAdmin,
-  WaitTxBroadcastResult,
+  type WaitTxBroadcastResult,
   Wallet,
   isTxError,
 } from "@terra-money/terra.js";
@@ -14,7 +14,7 @@ import { readFileSync } from "fs";
 import { fromBech32, toHex } from "@cosmjs/encoding";
 import { ethers } from "ethers";
 import assert from "assert";
-import { ContractInfo, Deployer } from ".";
+import type { ContractInfo, Deployer } from "./index.js";
 
 export type TerraHost = {
   URL: string;
@@ -185,5 +185,5 @@ export function convert_terra_address_to_hex(human_addr: string) {
 // enter key of what to extract
 export function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
-  return rx.exec(rawLog)![1];
+  return rx.exec(rawLog)![1]!;
 }

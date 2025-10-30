@@ -1,24 +1,25 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
-import {
-  BaseBalanceTracker,
+import type { Logger } from "pino";
+
+import type {
   BaseBalanceTrackerConfig,
   IBalanceTracker,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { Logger } from "pino";
+} from "../interface.js";
+import { BaseBalanceTracker } from "../interface.js";
+import { PricePusherMetrics } from "../metrics.js";
+import type { DurationInSeconds } from "../utils.js";
 
 /**
  * Aptos-specific configuration for balance tracker
  */
-export interface AptosBalanceTrackerConfig extends BaseBalanceTrackerConfig {
+export type AptosBalanceTrackerConfig = {
   /** Aptos node endpoint URL */
   endpoint: string;
   /** Aptos account address */
   address: string;
   /** Optional decimal places for APT token (default: 8) */
   decimals?: number;
-}
+} & BaseBalanceTrackerConfig;
 
 /**
  * Aptos-specific implementation of the balance tracker
@@ -80,7 +81,7 @@ export class AptosBalanceTracker extends BaseBalanceTracker {
 /**
  * Parameters for creating an Aptos balance tracker
  */
-export interface CreateAptosBalanceTrackerParams {
+export type CreateAptosBalanceTrackerParams = {
   endpoint: string;
   address: string;
   network: string;
@@ -88,7 +89,7 @@ export interface CreateAptosBalanceTrackerParams {
   metrics: PricePusherMetrics;
   logger: Logger;
   decimals?: number;
-}
+};
 
 /**
  * Factory function to create a balance tracker for Aptos chain
@@ -104,5 +105,5 @@ export function createAptosBalanceTracker(
     metrics: params.metrics,
     logger: params.logger,
     decimals: params.decimals,
-  });
+  } as AptosBalanceTrackerConfig);
 }

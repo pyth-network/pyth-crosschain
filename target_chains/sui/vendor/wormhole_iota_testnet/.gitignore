@@ -1,2 +1,4 @@
 deploy.out
 sui.log.*
+
+dist/

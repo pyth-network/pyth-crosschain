@@ -1,8 +1,8 @@
+import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { AptosPriceServiceConnection } from "../index";
-import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 
 const argv = yargs(hideBin(process.argv))
   .option("price-ids", {

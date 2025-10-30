@@ -1,21 +1,4 @@
 {
-  "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {
-    "declaration": true,
-    "composite": true,
-    "declarationMap": true,
-    "incremental": true,
-    "target": "es2020",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "outDir": "lib",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noErrorTruncation": true,
-    "sourceMap": true,
-    "lib": ["es2021"],
-    "rootDir": "src/"
-  },
-  "include": ["src/**/*.ts"]
+  "extends": "@cprussin/tsconfig/base.json",
+  "exclude": ["dist", "node_modules"]
 }

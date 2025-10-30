@@ -1,7 +1,10 @@
-import { Registry, Counter, Gauge } from "prom-client";
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from "express";
-import { Logger } from "pino";
-import { UpdateCondition } from "./price-config";
+import type { Logger } from "pino";
+import { Registry, Counter, Gauge } from "prom-client";
+
+import { UpdateCondition } from "./price-config.js";
 
 // Define the metrics we want to track
 export class PricePusherMetrics {
@@ -10,15 +13,15 @@ export class PricePusherMetrics {
   private logger: Logger;
 
   // Metrics for price feed updates
-  public lastPublishedTime: Gauge<string>;
-  public priceUpdateAttempts: Counter<string>;
-  public priceFeedsTotal: Gauge<string>;
-  public sourceTimestamp: Gauge<string>;
-  public configuredTimeDifference: Gauge<string>;
-  public sourcePriceValue: Gauge<string>;
-  public targetPriceValue: Gauge<string>;
+  public lastPublishedTime: Gauge;
+  public priceUpdateAttempts: Counter;
+  public priceFeedsTotal: Gauge;
+  public sourceTimestamp: Gauge;
+  public configuredTimeDifference: Gauge;
+  public sourcePriceValue: Gauge;
+  public targetPriceValue: Gauge;
   // Wallet metrics
-  public walletBalance: Gauge<string>;
+  public walletBalance: Gauge;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -86,7 +89,7 @@ export class PricePusherMetrics {
     });
 
     // Setup the metrics endpoint
-    this.server.get("/metrics", async (req, res) => {
+    this.server.get("/metrics", async (_, res) => {
       res.set("Content-Type", this.registry.contentType);
       res.end(await this.registry.metrics());
     });
@@ -103,7 +106,7 @@ export class PricePusherMetrics {
   public recordPriceUpdate(
     priceId: string,
     alias: string,
-    trigger: string = "yes",
+    trigger = "yes",
   ): void {
     this.priceUpdateAttempts.inc({
       price_id: priceId,
@@ -137,7 +140,7 @@ export class PricePusherMetrics {
   public recordPriceUpdateError(
     priceId: string,
     alias: string,
-    trigger: string = "yes",
+    trigger = "yes",
   ): void {
     this.priceUpdateAttempts.inc({
       price_id: priceId,

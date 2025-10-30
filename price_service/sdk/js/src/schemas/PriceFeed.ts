@@ -10,7 +10,7 @@
 /**
  * Represents an aggregate price from Pyth publisher feeds.
  */
-export interface PriceFeed {
+export type PriceFeed = {
   /**
    * Exponentially-weighted moving average Price
    */
@@ -31,7 +31,7 @@ export interface PriceFeed {
    * VAA of the price
    */
   vaa?: string;
-}
+};
 
 /**
  * Exponentially-weighted moving average Price
@@ -40,7 +40,7 @@ export interface PriceFeed {
  *
  * Price
  */
-export interface Price {
+export type Price = {
   /**
    * Confidence interval around the price.
    */
@@ -57,18 +57,18 @@ export interface Price {
    * Publish Time of the price
    */
   publish_time: number;
-}
+};
 
 /**
  * Metadata of the price
  *
  * Represents metadata of a price feed.
  */
-export interface PriceFeedMetadata {
+export type PriceFeedMetadata = {
   /**
    * Attestation time of the price
    */
-  attestation_time?: number;
+  attestation_time?: number | undefined;
   /**
    * Chain of the emitter
    */
@@ -76,20 +76,20 @@ export interface PriceFeedMetadata {
   /**
    * The time that the previous price was published
    */
-  prev_publish_time?: number;
+  prev_publish_time?: number | undefined;
   /**
    * The time that the price service received the price
    */
-  price_service_receive_time?: number;
+  price_service_receive_time?: number | undefined;
   /**
    * Sequence number of the price
    */
-  sequence_number?: number;
+  sequence_number?: number | undefined;
   /**
    * Pythnet slot number of the price
    */
-  slot?: number;
-}
+  slot?: number | undefined;
+};
 
 // Converts JSON types to/from your types
 // and asserts the results at runtime
@@ -121,13 +121,13 @@ export class Convert {
 
 function invalidValue(typ: any, val: any, key: any = ""): never {
   if (key) {
-    throw Error(
+    throw new Error(
       `Invalid value for key "${key}". Expected type ${JSON.stringify(
         typ,
       )} but got ${JSON.stringify(val)}`,
     );
   }
-  throw Error(
+  throw new Error(
     `Invalid value ${JSON.stringify(val)} for type ${JSON.stringify(typ)}`,
   );
 }
@@ -163,13 +163,13 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
       const typ = typs[i];
       try {
         return transform(val, typ, getProps);
-      } catch (_) {}
+      } catch {}
     }
     return invalidValue(typs, val);
   }
 
   function transformEnum(cases: string[], val: any): any {
-    if (cases.indexOf(val) !== -1) return val;
+    if (cases.includes(val)) return val;
     return invalidValue(cases, val);
   }
 
@@ -191,7 +191,7 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
   }
 
   function transformObject(
-    props: { [k: string]: any },
+    props: Record<string, any>,
     additional: any,
     val: any,
   ): any {
@@ -199,18 +199,18 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
       return invalidValue("object", val);
     }
     const result: any = {};
-    Object.getOwnPropertyNames(props).forEach((key) => {
+    for (const key of Object.getOwnPropertyNames(props)) {
       const prop = props[key];
       const v = Object.prototype.hasOwnProperty.call(val, key)
         ? val[key]
         : undefined;
       result[prop.key] = transform(v, prop.typ, getProps, prop.key);
-    });
-    Object.getOwnPropertyNames(val).forEach((key) => {
+    }
+    for (const key of Object.getOwnPropertyNames(val)) {
       if (!Object.prototype.hasOwnProperty.call(props, key)) {
         result[key] = transform(val[key], additional, getProps, key);
       }
-    });
+    }
     return result;
   }
 
@@ -246,20 +246,12 @@ function uncast<T>(val: T, typ: any): any {
   return transform(val, typ, jsToJSONProps);
 }
 
-function a(typ: any) {
-  return { arrayItems: typ };
-}
-
 function u(...typs: any[]) {
   return { unionMembers: typs };
 }
 
 function o(props: any[], additional: any) {
   return { props, additional };
-}
-
-function m(additional: any) {
-  return { props: [], additional };
 }
 
 function r(name: string) {

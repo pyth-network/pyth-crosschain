@@ -2,12 +2,10 @@ import { PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   PythGovernanceHeader,
   ExecutePostedVaa,
-  MODULES,
-  MODULE_EXECUTOR,
   TargetAction,
   ExecutorAction,
-  ActionName,
-  PythGovernanceAction,
+  type ActionName,
+  type PythGovernanceAction,
   decodeGovernancePayload,
   EvmSetWormholeAddress,
   EvmExecutorAction,
@@ -15,8 +13,8 @@ import {
   StarknetSetWormholeAddress,
 } from "..";
 import * as fc from "fast-check";
-import { ChainName, CHAINS } from "../chains";
-import { Arbitrary, IntArrayConstraints } from "fast-check";
+import { type ChainName, CHAINS } from "../chains";
+import { Arbitrary, type IntArrayConstraints } from "fast-check";
 import {
   CosmosUpgradeContract,
   EvmUpgradeContract,
@@ -29,7 +27,7 @@ import {
 import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
 import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
 import {
-  DataSource,
+  type DataSource,
   SetDataSources,
 } from "../governance_payload/SetDataSources";
 import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
@@ -137,26 +135,32 @@ test("GovernancePayload ser/de", (done) => {
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(
-    executePostedVaaArgs?.instructions[0].programId.equals(
+    executePostedVaaArgs?.instructions[0]!.programId.equals(
       SystemProgram.programId,
     ),
   ).toBeTruthy();
   expect(
-    executePostedVaaArgs?.instructions[0].keys[0].pubkey.equals(
+    executePostedVaaArgs?.instructions[0]?.keys[0]?.pubkey.equals(
       new PublicKey("AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES"),
     ),
   ).toBeTruthy();
-  expect(executePostedVaaArgs?.instructions[0].keys[0].isSigner).toBeTruthy();
-  expect(executePostedVaaArgs?.instructions[0].keys[0].isWritable).toBeTruthy();
+  expect(executePostedVaaArgs?.instructions[0]?.keys[0]?.isSigner).toBeTruthy();
   expect(
-    executePostedVaaArgs?.instructions[0].keys[1].pubkey.equals(
+    executePostedVaaArgs?.instructions[0]?.keys[0]?.isWritable,
+  ).toBeTruthy();
+  expect(
+    executePostedVaaArgs?.instructions[0]?.keys[1]?.pubkey.equals(
       new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj"),
     ),
   ).toBeTruthy();
-  expect(!executePostedVaaArgs?.instructions[0].keys[1].isSigner).toBeTruthy();
-  expect(executePostedVaaArgs?.instructions[0].keys[1].isWritable).toBeTruthy();
   expect(
-    executePostedVaaArgs?.instructions[0].data.equals(
+    !executePostedVaaArgs?.instructions[0]?.keys[1]?.isSigner,
+  ).toBeTruthy();
+  expect(
+    executePostedVaaArgs?.instructions[0]?.keys[1]?.isWritable,
+  ).toBeTruthy();
+  expect(
+    executePostedVaaArgs?.instructions[0]?.data.equals(
       Buffer.from([2, 0, 0, 0, 0, 152, 13, 0, 0, 0, 0, 0]),
     ),
   );

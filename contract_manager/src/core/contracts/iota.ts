@@ -1,12 +1,23 @@
-import { Chain, IotaChain } from "../chains";
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { WormholeContract } from "./wormhole";
-import { PriceFeedContract, PrivateKey, TxResult } from "../base";
-import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
-import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction } from "@iota/iota-sdk/transactions";
-import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
+import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
+import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+
+import type { PrivateKey, TxResult } from "../base";
+import { Chain, IotaChain } from "../chains";
+import { WormholeContract } from "./wormhole";
+import { PriceFeedContract } from "../base";
 
 type ObjectId = string;
 
@@ -18,9 +29,9 @@ export class IotaPriceFeedContract extends PriceFeedContract {
    * Given the ids of the pyth state and wormhole state, create a new IotaPriceFeedContract
    * The package ids are derived based on the state ids
    *
-   * @param chain the chain which this contract is deployed on
-   * @param stateId id of the pyth state for the deployed contract
-   * @param wormholeStateId id of the wormhole state for the wormhole contract that pyth binds to
+   * @param chain - the chain which this contract is deployed on
+   * @param stateId - id of the pyth state for the deployed contract
+   * @param wormholeStateId - id of the wormhole state for the wormhole contract that pyth binds to
    */
   constructor(
     public chain: IotaChain,
@@ -69,7 +80,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
   /**
    * Given a objectId, returns the id for the package that the object belongs to.
-   * @param objectId
+   * @param objectId - the object id to get
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
     return this.client.getPackageId(objectId);
@@ -111,12 +122,12 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getPriceFeed(feedId: string) {
     const provider = this.getProvider();
     const priceInfoObjectId = await this.client.getPriceFeedObjectId(feedId);
-    if (!priceInfoObjectId) return undefined;
+    if (!priceInfoObjectId) return;
     const priceInfo = await provider.getObject({
       id: priceInfoObjectId,
       options: { showContent: true },
     });
-    if (!priceInfo.data || !priceInfo.data.content) {
+    if (!priceInfo.data?.content) {
       throw new Error(
         `Price feed ID ${priceInfoObjectId} in price table but object not found!!`,
       );
@@ -144,8 +155,8 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   /**
    * Given a signed VAA, execute the migration instruction on the pyth contract.
    * The payload of the VAA can be obtained from the `getUpgradePackagePayload` method.
-   * @param vaa
-   * @param keypair used to sign the transaction
+   * @param vaa - the vaa payload
+   * @param keypair - used to sign the transaction
    */
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new Transaction();
@@ -158,7 +169,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
     tx.moveCall({
       target: `${packageId}::migrate::migrate`,
-      arguments: [tx.object(this.stateId), verificationReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt!],
     });
 
     return this.executeTransaction(tx, keypair);
@@ -216,7 +227,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
     tx.moveCall({
       target: `${packageId}::governance::execute_governance_instruction`,
-      arguments: [tx.object(this.stateId), verificationReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt!],
     });
 
     const result = await this.executeTransaction(tx, keypair);
@@ -239,19 +250,19 @@ export class IotaPriceFeedContract extends PriceFeedContract {
 
     const [upgradeTicket] = tx.moveCall({
       target: `${packageId}::contract_upgrade::authorize_upgrade`,
-      arguments: [tx.object(this.stateId), verificationReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt!],
     });
 
     const [upgradeReceipt] = tx.upgrade({
       modules,
       dependencies,
       package: packageId,
-      ticket: upgradeTicket,
+      ticket: upgradeTicket!,
     });
 
     tx.moveCall({
       target: `${packageId}::contract_upgrade::commit_upgrade`,
-      arguments: [tx.object(this.stateId), upgradeReceipt],
+      arguments: [tx.object(this.stateId), upgradeReceipt!],
     });
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -260,10 +271,9 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   /**
    * Utility function to get the verification receipt object for a VAA that can be
    * used to authorize a governance instruction.
-   * @param tx
-   * @param packageId pyth package id
-   * @param vaa
-   * @private
+   * @param tx - the transaction
+   * @param packageId - pyth package id
+   * @param vaa - the vaa payload
    */
   async getVaaVerificationReceipt(
     tx: Transaction,
@@ -276,14 +286,14 @@ export class IotaPriceFeedContract extends PriceFeedContract {
       target: `${wormholePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(this.wormholeStateId),
-        tx.pure.arguments(Array.from(vaa)),
+        tx.pure.arguments([...vaa]),
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
 
     const [verificationReceipt] = tx.moveCall({
       target: `${packageId}::governance::verify_vaa`,
-      arguments: [tx.object(this.stateId), verifiedVAA],
+      arguments: [tx.object(this.stateId), verifiedVAA!],
     });
     return verificationReceipt;
   }
@@ -291,9 +301,8 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   /**
    * Given a transaction block and a keypair, sign and execute it
    * Sets the gas budget to 2x the estimated gas cost
-   * @param tx
-   * @param keypair
-   * @private
+   * @param tx - the transaction
+   * @param keypair - the keypair
    */
   private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.getProvider();
@@ -328,7 +337,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
         value: "data_sources",
       },
     });
-    if (!result.data || !result.data.content) {
+    if (!result.data?.content) {
       throw new Error(
         "Data Sources not found, contract may not be initialized",
       );
@@ -395,11 +404,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
       id: this.stateId,
       options: { showContent: true },
     });
-    if (
-      !result.data ||
-      !result.data.content ||
-      result.data.content.dataType !== "moveObject"
-    )
+    if (!result.data?.content || result.data.content.dataType !== "moveObject")
       throw new Error("Unable to fetch pyth state object");
     return result.data.content.fields;
   }
@@ -504,7 +509,7 @@ export class IotaWormholeContract extends WormholeContract {
 
     const [decreeReceipt] = tx.moveCall({
       target: `${corePackageId}::governance_message::verify_vaa`,
-      arguments: [tx.object(coreObjectId), verifiedVaa, decreeTicket],
+      arguments: [tx.object(coreObjectId), verifiedVaa!, decreeTicket!],
       typeArguments: [
         `${corePackageId}::update_guardian_set::GovernanceWitness`,
       ],
@@ -514,7 +519,7 @@ export class IotaWormholeContract extends WormholeContract {
       target: `${corePackageId}::update_guardian_set::update_guardian_set`,
       arguments: [
         tx.object(coreObjectId),
-        decreeReceipt,
+        decreeReceipt!,
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
     });
@@ -533,11 +538,7 @@ export class IotaWormholeContract extends WormholeContract {
       id: this.stateId,
       options: { showContent: true },
     });
-    if (
-      !result.data ||
-      !result.data.content ||
-      result.data.content.dataType !== "moveObject"
-    )
+    if (!result.data?.content || result.data.content.dataType !== "moveObject")
       throw new Error("Unable to fetch pyth state object");
     return result.data.content.fields;
   }
@@ -545,9 +546,8 @@ export class IotaWormholeContract extends WormholeContract {
   /**
    * Given a transaction block and a keypair, sign and execute it
    * Sets the gas budget to 2x the estimated gas cost
-   * @param tx
-   * @param keypair
-   * @private
+   * @param tx - the transaction
+   * @param keypair - the keypair
    */
   private async executeTransaction(tx: Transaction, keypair: Ed25519Keypair) {
     const provider = this.chain.getProvider();

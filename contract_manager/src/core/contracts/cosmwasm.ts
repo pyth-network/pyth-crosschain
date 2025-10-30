@@ -1,33 +1,41 @@
-import { Chain, CosmWasmChain } from "../chains";
-import { readFileSync } from "fs";
-import {
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+import { readFileSync } from "node:fs";
+
+import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import type { Coin } from "@cosmjs/stargate";
+import type {
   ContractInfoResponse,
-  CosmwasmQuerier,
   Price,
+} from "@pythnetwork/cosmwasm-deploy-tools";
+import {
+  CosmwasmQuerier,
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
-import { Coin } from "@cosmjs/stargate";
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import {
-  PriceFeedContract,
-  getDefaultDeploymentConfig,
-  PrivateKey,
-  TxResult,
-} from "../base";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+
+import type { PrivateKey, TxResult } from "../base";
+import { PriceFeedContract, getDefaultDeploymentConfig } from "../base";
+import { Chain, CosmWasmChain } from "../chains";
+import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
-import { TokenQty } from "../token";
 
 /**
  * Variables here need to be snake case to match the on-chain contract configs
  */
-export interface WormholeSource {
+export type WormholeSource = {
   emitter: string;
   chain_id: number;
-}
+};
 
-export interface DeploymentConfig {
+export type DeploymentConfig = {
   data_sources: WormholeSource[];
   governance_source: WormholeSource;
   wormhole_contract: string;
@@ -36,7 +44,14 @@ export interface DeploymentConfig {
   chain_id: number;
   valid_time_period_secs: number;
   fee: { amount: string; denom: string };
-}
+};
+
+const convertDataSource = (source: DataSource) => {
+  return {
+    emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
+    chain_id: source.emitterChain,
+  };
+};
 
 export class CosmWasmWormholeContract extends WormholeContract {
   static type = "CosmWasmWormholeContract";
@@ -84,24 +99,28 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
   async getCurrentGuardianSetIndex(): Promise<number> {
     const config = await this.getConfig();
-    return JSON.parse(config["\x00\x06config"])["guardian_set_index"];
+    return JSON.parse(config["\u0000\u0006config"] ?? "{}").guardian_set_index;
   }
 
   async getChainId(): Promise<number> {
     const config = await this.getConfig();
-    return JSON.parse(config["\x00\x06config"])["chain_id"];
+    return JSON.parse(config["\u0000\u0006config"] ?? "{}").chain_id;
   }
 
   async getGuardianSet(): Promise<string[]> {
     const config = await this.getConfig();
-    const guardianSetIndex = JSON.parse(config["\x00\x06config"])[
-      "guardian_set_index"
-    ];
-    let key = "\x00\fguardian_set";
+    const guardianSetIndex = JSON.parse(
+      config["\u0000\u0006config"] ?? "{}",
+    ).guardian_set_index;
+    let key = "\u0000\fguardian_set";
     //append guardianSetIndex as 4 bytes to key string
-    key += Buffer.from(guardianSetIndex.toString(16).padStart(8, "0"), "hex");
 
-    const guardianSet = JSON.parse(config[key])["addresses"];
+    key += Buffer.from(
+      guardianSetIndex.toString(16).padStart(8, "0"),
+      "hex",
+    ).toString();
+
+    const guardianSet = JSON.parse(config[key] ?? "{}").addresses;
     return guardianSet.map((entry: { bytes: string }) =>
       Buffer.from(entry.bytes, "base64").toString("hex"),
     );
@@ -171,9 +190,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   /**
    * Stores the wasm code on the specified chain using the provided private key as the signer
    * You can find the wasm artifacts from the repo releases
-   * @param chain chain to store the code on
-   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
-   * @param wasmPath path in your local filesystem to the wasm artifact
+   * @param chain - chain to store the code on
+   * @param privateKey - private key to use for signing the transaction in hex format without 0x prefix
+   * @param wasmPath - path in your local filesystem to the wasm artifact
    */
   static async storeCode(
     chain: CosmWasmChain,
@@ -187,10 +206,10 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
 
   /**
    * Deploys a new contract to the specified chain using the uploaded wasm code codeId
-   * @param chain chain to deploy to
-   * @param codeId codeId of the uploaded wasm code. You can get this from the storeCode result
-   * @param config deployment config for initializing the contract (data sources, governance source, etc)
-   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
+   * @param chain - chain to deploy to
+   * @param codeId - codeId of the uploaded wasm code. You can get this from the storeCode result
+   * @param config - deployment config for initializing the contract (data sources, governance source, etc)
+   * @param privateKey - private key to use for signing the transaction in hex format without 0x prefix
    */
   static async initialize(
     chain: CosmWasmChain,
@@ -245,9 +264,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       contractAddr: this.address,
     })) as Record<string, string>;
     const config = {
-      config_v1: JSON.parse(allStates["\x00\tconfig_v1"]),
-      contract_version: allStates["\x00\x10contract_version"]
-        ? JSON.parse(allStates["\x00\x10contract_version"])
+      config_v1: JSON.parse(allStates["\u0000\tconfig_v1"] ?? "{}"),
+      contract_version: allStates["\u0000\u0010contract_version"]
+        ? JSON.parse(allStates["\u0000\u0010contract_version"])
         : undefined,
     };
     return config;
@@ -275,8 +294,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
         price: this.parsePrice(response.price),
         emaPrice: this.parsePrice(response.ema_price),
       };
-    } catch (e) {
-      return undefined;
+    } catch {
+      return;
     }
   }
 
@@ -285,12 +304,12 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     dataSources2: WormholeSource[],
   ): boolean {
     if (dataSources1.length !== dataSources2.length) return false;
-    for (let i = 0; i < dataSources1.length; i++) {
+    for (const element of dataSources1) {
       let found = false;
-      for (let j = 0; j < dataSources2.length; j++) {
+      for (const element_ of dataSources2) {
         if (
-          dataSources1[i].emitter === dataSources2[j].emitter &&
-          dataSources1[i].chain_id === dataSources2[j].chain_id
+          element.emitter === element_.emitter &&
+          element.chain_id === element_.chain_id
         ) {
           found = true;
           break;
@@ -303,16 +322,12 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
 
   async getDeploymentType(): Promise<string> {
     const config = await this.getConfig();
-    const convertDataSource = (source: DataSource) => {
-      return {
-        emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
-        chain_id: source.emitterChain,
-      };
-    };
-    const stableDataSources =
-      getDefaultDeploymentConfig("stable").dataSources.map(convertDataSource);
-    const betaDataSources =
-      getDefaultDeploymentConfig("beta").dataSources.map(convertDataSource);
+    const stableDataSources = getDefaultDeploymentConfig(
+      "stable",
+    ).dataSources.map((ds) => convertDataSource(ds));
+    const betaDataSources = getDefaultDeploymentConfig("beta").dataSources.map(
+      (ds) => convertDataSource(ds),
+    );
     if (this.equalDataSources(config.config_v1.data_sources, stableDataSources))
       return "stable";
     else if (

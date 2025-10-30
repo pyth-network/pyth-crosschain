@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
   },
   "scripts": {
     "build:vercel": "next build",
@@ -50,7 +51,7 @@
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
-    "typescript": "catalog:",
     "vercel": "catalog:"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

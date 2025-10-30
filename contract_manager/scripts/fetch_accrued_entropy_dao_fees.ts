@@ -1,9 +1,19 @@
+/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
+/* eslint-disable 
+  unicorn/prefer-top-level-await,
+  @typescript-eslint/restrict-template-expressions,
+  no-console,
+  unicorn/no-process-exit,
+  n/no-process-exit
+*/
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
+import { findEntropyContract } from "./common";
 import { EvmChain } from "../src/core/chains";
 import { EvmEntropyContract } from "../src/core/contracts";
-import { findEntropyContract } from "./common";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -35,14 +45,14 @@ const parser = yargs(hideBin(process.argv))
     return true;
   });
 
-interface FeeResult {
+type FeeResult = {
   chainId: string;
   contractAddress: string;
   accruedFees: string;
-  accruedFeesEth?: string;
+  accruedFeesEth?: string | undefined;
   isMainnet: boolean;
   error?: string;
-}
+};
 
 async function fetchAccruedFees(
   contract: EvmEntropyContract,

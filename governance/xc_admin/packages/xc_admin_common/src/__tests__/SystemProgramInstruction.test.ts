@@ -1,4 +1,4 @@
-import { PythCluster } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client";
 import {
   MultisigInstructionProgram,
   MultisigParser,

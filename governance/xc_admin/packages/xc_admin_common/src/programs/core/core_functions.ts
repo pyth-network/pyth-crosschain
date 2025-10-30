@@ -1,19 +1,18 @@
 import {
   PublicKey,
   TransactionInstruction,
-  AccountInfo,
+  type AccountInfo,
   Connection,
 } from "@solana/web3.js";
 import {
   AccountType,
-  PythCluster,
-  getPythProgramKeyForCluster,
+  type PythCluster,
   parseBaseData,
   parseMappingData,
   parsePermissionData,
   parsePriceData,
   parseProductData,
-  Product,
+  type Product,
 } from "@pythnetwork/client";
 import {
   findDetermisticAccountAddress,
@@ -27,18 +26,17 @@ import {
   isPriceStorePublisherInitialized,
   createDetermisticPriceStoreInitializePublisherInstruction,
 } from "../../index";
-import {
+import type {
   DownloadableConfig,
   DownloadablePriceAccount,
   DownloadableProduct,
   PriceRawConfig,
   RawConfig,
   ValidationResult,
-  ProgramType,
 } from "../types";
 import { Program } from "@coral-xyz/anchor";
-import { PythOracle } from "@pythnetwork/client/lib/anchor";
-import { MessageBuffer } from "message_buffer/idl/message_buffer";
+import type { PythOracle } from "@pythnetwork/client/lib/anchor";
+import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 /**
  * Maximum sizes for instruction data to fit into transactions
@@ -189,7 +187,7 @@ export function getConfig(params: CoreConfigParams): RawConfig {
           ) {
             processedPriceKeys.add(priceAccountKey);
             const priceConfig: PriceRawConfig =
-              priceRawConfigs[priceAccountKey];
+              priceRawConfigs[priceAccountKey]!;
             priceAccounts.push(priceConfig);
             priceAccountKey = priceConfig.next
               ? priceConfig.next.toBase58()
@@ -253,7 +251,7 @@ export function getConfig(params: CoreConfigParams): RawConfig {
     ...(permissionAccount && {
       permissionAccount: parsePermissionData(permissionAccount.account.data),
     }),
-  };
+  } as RawConfig;
 }
 
 /**
@@ -265,13 +263,13 @@ export function getDownloadableConfig(
   // Convert the raw config to a user-friendly format for download
   if (rawConfig.mappingAccounts.length > 0) {
     const symbolToData = Object.fromEntries(
-      rawConfig.mappingAccounts
-        .sort(
+      rawConfig
+        .mappingAccounts!.sort(
           (mapping1, mapping2) =>
             mapping2.products.length - mapping1.products.length,
-        )[0]
+        )[0]!
         .products.sort((product1, product2) =>
-          product1.metadata.symbol.localeCompare(product2.metadata.symbol),
+          product1.metadata.symbol!.localeCompare(product2.metadata.symbol!),
         )
         .map((product) => {
           const { price_account, ...metadataWithoutPriceAccount } =
@@ -315,8 +313,8 @@ export function validateUploadedConfig(
     const changes: Record<
       string,
       {
-        prev?: Partial<DownloadableProduct>;
-        new?: Partial<DownloadableProduct>;
+        prev?: Partial<DownloadableProduct> | undefined;
+        new?: Partial<DownloadableProduct> | undefined;
       }
     > = {};
 
@@ -408,8 +406,8 @@ export function validateUploadedConfig(
     for (const symbol of Object.keys(processedConfig)) {
       if (
         existingSymbols.has(symbol) &&
-        processedConfig[symbol].address &&
-        processedConfig[symbol].address !== existingConfig[symbol].address
+        processedConfig[symbol]?.address &&
+        processedConfig[symbol]?.address !== existingConfig[symbol]?.address
       ) {
         return {
           isValid: false,
@@ -422,8 +420,8 @@ export function validateUploadedConfig(
     for (const symbol of Object.keys(processedConfig)) {
       if (
         existingSymbols.has(symbol) &&
-        processedConfig[symbol].priceAccounts?.[0] &&
-        existingConfig[symbol].priceAccounts?.[0] &&
+        processedConfig[symbol]?.priceAccounts?.[0] &&
+        existingConfig[symbol]?.priceAccounts?.[0] &&
         processedConfig[symbol].priceAccounts[0].address &&
         processedConfig[symbol].priceAccounts[0].address !==
           existingConfig[symbol].priceAccounts[0].address
@@ -439,7 +437,7 @@ export function validateUploadedConfig(
     for (const symbol of Object.keys(processedConfig)) {
       const maximumNumberOfPublishers = getMaximumNumberOfPublishers(cluster);
       if (
-        processedConfig[symbol].priceAccounts?.[0]?.publishers &&
+        processedConfig[symbol]?.priceAccounts?.[0]?.publishers &&
         processedConfig[symbol].priceAccounts[0].publishers.length >
           maximumNumberOfPublishers
       ) {
@@ -527,7 +525,7 @@ async function generateAddInstructions(
       .addProduct({ ...newChanges.metadata })
       .accounts({
         fundingAccount,
-        tailMappingAccount: rawConfig.mappingAccounts[0].address,
+        tailMappingAccount: rawConfig.mappingAccounts[0]!.address,
         productAccount: productAccountKey,
       })
       .instruction();
@@ -672,7 +670,7 @@ async function generateDeleteInstructions(
         .delProduct()
         .accounts({
           fundingAccount,
-          mappingAccount: accounts.rawConfig.mappingAccounts[0].address,
+          mappingAccount: accounts.rawConfig.mappingAccounts[0]!.address,
           productAccount: new PublicKey(prev.address || ""),
         })
         .instruction(),
@@ -847,7 +845,7 @@ export async function generateInstructions(
   const verifiedPublishers: PublicKey[] = [];
 
   for (const symbol of Object.keys(changes)) {
-    const { prev, new: newChanges } = changes[symbol];
+    const { prev, new: newChanges } = changes[symbol] ?? {};
 
     if (!prev && newChanges) {
       // Add new product/price

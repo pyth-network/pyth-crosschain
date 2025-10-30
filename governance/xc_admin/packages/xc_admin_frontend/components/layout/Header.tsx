@@ -1,18 +1,20 @@
+import Pyth from '@images/logomark.inline.svg'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useEffect, useState } from 'react'
-import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
-import Pyth from '@images/logomark.inline.svg'
+
 import MobileMenu from './MobileMenu'
+import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
+    // eslint-disable-next-line unicorn/no-await-expression-member
     (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
   { ssr: false }
 )
 
-export interface BurgerState {
+export type BurgerState = {
   initial: boolean | null
   opened: boolean | null
 }
@@ -37,14 +39,14 @@ const Header = () => {
 
   const [headerState, setHeaderState] = useState<BurgerState>({
     initial: false,
-    opened: null,
+    opened: undefined,
   })
 
   // Toggle menu
   const handleToggleMenu = () => {
     if (headerState.initial === false) {
       setHeaderState({
-        initial: null,
+        initial: undefined,
         opened: true,
       })
     } else {
@@ -65,7 +67,8 @@ const Header = () => {
   const ifSticky = () => {
     const scrollTop = window.scrollY
     if (!headerState.opened) {
-      scrollTop >= 250 ? setIsSticky(true) : setIsSticky(false)
+      if (scrollTop >= 250) setIsSticky(true)
+      else setIsSticky(false)
     }
   }
 
@@ -112,11 +115,12 @@ const Header = () => {
           </nav>
           <div className="flex items-center justify-end space-x-2">
             <div className="h-[45px] w-[180px]">
-              {headerState.opened ? null : (
+              {headerState.opened ? undefined : (
                 <WalletMultiButtonDynamic className="primary-btn float-right pt-0.5" />
               )}
             </div>
             <div
+              aria-label="toggle menu"
               className={`${
                 headerState.opened
                   ? 'relative top-0 right-5 left-0 basis-7'
@@ -124,6 +128,11 @@ const Header = () => {
               }
             `}
               onClick={handleToggleMenu}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleToggleMenu()
+              }}
+              role="button"
+              tabIndex={0}
             >
               <button
                 className={`group ml-auto align-middle ${

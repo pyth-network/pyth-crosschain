@@ -1,6 +1,6 @@
 import React from 'react'
 
-interface LoadbarProps {
+type LoadbarProps = {
   theme?: string
   width?: string | null
 }

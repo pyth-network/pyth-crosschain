@@ -6,10 +6,10 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
   },
   "scripts": {
     "usage-example": "ts-node src/examples/usage.ts",
-    "build": "pnpm run generate-fuel-types && tsc && copyfiles -u 1 \"src/**/*.d.ts\" lib",
+    "build": "pnpm run generate-fuel-types && ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
@@ -37,17 +38,78 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/node": "catalog:",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
     "copyfiles": "^2.4.1",
-    "eslint": "^8.14.0",
+    "eslint": "catalog:",
+    "fast-glob": "^3.3.3",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
-    "fuels": "^0.96.1"
-  }
+    "fuels": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "default": "./dist/cjs/index.js",
+        "types": "./dist/cjs/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/index.js",
+        "types": "./dist/esm/index.d.ts"
+      }
+    },
+    "./types/PythContract": {
+      "require": {
+        "default": "./dist/cjs/types/PythContract.js",
+        "types": "./dist/cjs/types/PythContract.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/PythContract.js",
+        "types": "./dist/esm/types/PythContract.d.ts"
+      }
+    },
+    "./types/PythContractFactory": {
+      "require": {
+        "default": "./dist/cjs/types/PythContractFactory.js",
+        "types": "./dist/cjs/types/PythContractFactory.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/PythContractFactory.js",
+        "types": "./dist/esm/types/PythContractFactory.d.ts"
+      }
+    },
+    "./types/common": {
+      "require": {
+        "default": "./dist/cjs/types/common.js",
+        "types": "./dist/cjs/types/common.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/common.js",
+        "types": "./dist/esm/types/common.d.ts"
+      }
+    },
+    "./types": {
+      "require": {
+        "default": "./dist/cjs/types/index.js",
+        "types": "./dist/cjs/types/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/types/index.js",
+        "types": "./dist/esm/types/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

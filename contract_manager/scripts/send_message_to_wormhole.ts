@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { WormholeEmitter, loadHotWallet } from "../src/node/utils/governance";
 
 const parser = yargs(hideBin(process.argv))
@@ -33,7 +36,7 @@ async function main() {
   const emitter = new WormholeEmitter(cluster, wallet);
 
   console.log(`Sending message to wormhole using cluster ${cluster}...`);
-  const payload = Buffer.from(message, "utf-8");
+  const payload = Buffer.from(message, "utf8");
   const submittedMessage = await emitter.sendMessage(payload);
   console.log(
     `Message sent. Emitter: ${submittedMessage.emitter.toBase58()}, Sequence Number: ${
@@ -51,4 +54,5 @@ async function main() {
   console.log(`VAA: ${vaa.toString("hex")}`);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

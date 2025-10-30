@@ -1,12 +1,17 @@
-import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable react/prop-types */
+import type { Idl } from '@coral-xyz/anchor'
+import { AnchorProvider, Program } from '@coral-xyz/anchor'
+import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 import { getPythProgramKeyForCluster } from '@pythnetwork/client'
-import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
-import { PublicKey } from '@solana/web3.js'
-import messageBuffer from 'message_buffer/idl/message_buffer.json'
-import { MessageBuffer } from 'message_buffer/idl/message_buffer'
-import axios from 'axios'
-import { useContext, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+import type { PythOracle } from '@pythnetwork/client/lib/anchor'
+import { pythOracleProgram } from '@pythnetwork/client/lib/anchor'
+import type {
+  DownloadableConfig,
+  DownloadableProduct,
+  DownloadablePriceAccount,
+} from '@pythnetwork/xc-admin-common'
 import {
   getDownloadableConfig,
   getMultisigCluster,
@@ -18,70 +23,72 @@ import {
   ProgramType,
   validateUploadedConfig,
   generateInstructions,
-  DownloadableConfig,
-  DownloadableProduct,
-  DownloadablePriceAccount,
 } from '@pythnetwork/xc-admin-common'
+import { PublicKey } from '@solana/web3.js'
+import axios, { isAxiosError } from 'axios'
+import type { MessageBuffer } from 'message_buffer/idl/message_buffer'
+import messageBuffer from 'message_buffer/idl/message_buffer.json'
+import { useContext, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
+import PermissionDepermissionKey from '../PermissionDepermissionKey'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
-import PermissionDepermissionKey from '../PermissionDepermissionKey'
-import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
-interface PriceAccountMetadata extends DownloadablePriceAccount {
-  [key: string]: string | string[] | number
-}
+type PriceAccountMetadata = Record<string, string | string[] | number> &
+  DownloadablePriceAccount
 
-interface PriceFeedData extends DownloadableProduct {
+type PriceFeedData = {
   key: string
-}
+} & DownloadableProduct
 
-interface MetadataChanges {
+type MetadataChanges = {
   prev?: Record<string, string | number | boolean>
   new: Record<string, string | number | boolean>
 }
 
-interface PriceAccountChanges {
+type PriceAccountChanges = {
   prev?: PriceAccountMetadata[]
   new: PriceAccountMetadata[]
 }
 
-interface PublisherChanges {
+type PublisherChanges = {
   prev?: string[]
   new: string[]
 }
 
-interface ProductChanges {
+type ProductChanges = {
   prev?: Partial<DownloadableProduct>
   new: Partial<DownloadableProduct>
 }
 
-interface MetadataChangesRowsProps {
+type MetadataChangesRowsProps = {
   changes: MetadataChanges
 }
 
-interface PriceAccountsChangesRowsProps {
+type PriceAccountsChangesRowsProps = {
   changes: PriceAccountChanges
 }
 
-interface PublisherKeysChangesRowsProps {
+type PublisherKeysChangesRowsProps = {
   changes: PublisherChanges
 }
 
-interface NewPriceFeedsRowsProps {
+type NewPriceFeedsRowsProps = {
   priceFeedData: PriceFeedData
 }
 
-interface OldPriceFeedsRowsProps {
+type OldPriceFeedsRowsProps = {
   priceFeedSymbol: string
 }
 
-interface ModalContentProps {
+type ModalContentProps = {
   changes: Record<string, ProductChanges>
   onSendProposal: () => void
   isSendProposalButtonLoading: boolean
@@ -111,7 +118,7 @@ const MetadataChangesRows: React.FC<MetadataChangesRowsProps> = ({
                     <s>{String(changes.prev[metadataKey])}</s>
                     <br />{' '}
                   </>
-                ) : null}
+                ) : undefined}
                 {String(newValue)}
               </td>
             </tr>
@@ -134,7 +141,7 @@ const PriceAccountsChangesRows: React.FC<PriceAccountsChangesRowsProps> = ({
               <PublisherKeysChangesRows
                 key={priceAccountKey}
                 changes={{
-                  new: priceAccount[priceAccountKey] as string[],
+                  new: priceAccount[priceAccountKey],
                 }}
               />
             ) : (
@@ -168,7 +175,7 @@ const PriceAccountsChangesRows: React.FC<PriceAccountsChangesRowsProps> = ({
                       <s>{changes.prev[index][priceAccountKey]}</s>
                       <br />
                     </>
-                  ) : null}
+                  ) : undefined}
                   {priceAccount[priceAccountKey]}
                 </td>
               </tr>
@@ -336,18 +343,18 @@ const ModalContent: React.FC<ModalContentProps> = ({
                             })) || [],
                         }}
                       />
-                    ) : null
+                    ) : undefined
                   )
                 )}
 
-                {Object.keys(changes).indexOf(key) !==
-                Object.keys(changes).length - 1 ? (
+                {Object.keys(changes).indexOf(key) ===
+                Object.keys(changes).length - 1 ? undefined : (
                   <tr>
                     <td className="base16 py-4 pl-6 pr-6" colSpan={2}>
                       <hr className="border-gray-700" />
                     </td>
                   </tr>
-                ) : null}
+                )}
               </tbody>
             )
           })}
@@ -370,7 +377,7 @@ const ModalContent: React.FC<ModalContentProps> = ({
   )
 }
 
-interface PythCoreProps {
+type PythCoreProps = {
   proposerServerUrl: string
 }
 
@@ -408,11 +415,11 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
   const handleDownloadJsonButtonClick = () => {
     const dataStr =
       'data:text/json;charset=utf-8,' +
-      encodeURIComponent(JSON.stringify(data, null, 2))
+      encodeURIComponent(JSON.stringify(data, undefined, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
     downloadAnchor.setAttribute('download', `data-${cluster}.json`)
-    document.body.appendChild(downloadAnchor) // required for firefox
+    document.body.append(downloadAnchor) // required for firefox
     downloadAnchor.click()
     downloadAnchor.remove()
   }
@@ -426,9 +433,10 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
       if (!file) return
 
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.addEventListener('load', (e) => {
         if (e.target?.result) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const uploadedConfig = JSON.parse(e.target.result as string)
             const validation = validateUploadedConfig[ProgramType.PYTH_CORE](
               data,
@@ -449,10 +457,11 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
             }
           }
         }
-      }
+      })
+      // eslint-disable-next-line unicorn/prefer-blob-reading-methods
       reader.readAsText(file)
     })
-    document.body.appendChild(uploadAnchor) // required for firefox
+    document.body.append(uploadAnchor) // required for firefox
     uploadAnchor.click()
     uploadAnchor.remove()
   }
@@ -485,12 +494,14 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
           instructions,
           cluster,
         })
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const { proposalPubkey } = response.data
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSendProposalButtonLoading(false)
         closeModal()
       } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
+        if (isAxiosError(error) && error.response) {
           toast.error(capitalizeFirstLetter(error.response.data))
         } else if (error instanceof Error) {
           toast.error(capitalizeFirstLetter(error.message))
@@ -531,7 +542,8 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
         closeModal={closeModal}
         content={
           <ModalContent
-            changes={dataChanges ? dataChanges : {}}
+            changes={dataChanges ?? {}}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onSendProposal={handleSendProposalButtonClick}
             isSendProposalButtonLoading={isSendProposalButtonLoading}
           />

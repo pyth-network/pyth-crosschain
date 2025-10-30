@@ -5,15 +5,15 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /*
-  Fuels version: 0.96.1
+  Fuels version: 0.101.3
 */
 
-import { Contract, Interface } from "fuels";
+import { Contract as __Contract, Interface } from "fuels";
 import type {
   Provider,
   Account,
   StorageSlot,
-  AbstractAddress,
+  Address,
   BigNumberish,
   BN,
   Bytes,
@@ -2210,7 +2210,7 @@ export class PythContractInterface extends Interface {
   };
 }
 
-export class PythContract extends Contract {
+export class PythContract extends __Contract {
   static readonly abi = abi;
   static readonly storageSlots = storageSlots;
 
@@ -2285,10 +2285,7 @@ export class PythContract extends Contract {
     governance_data_source: InvokeFunction<[], DataSourceOutput>;
   };
 
-  constructor(
-    id: string | AbstractAddress,
-    accountOrProvider: Account | Provider,
-  ) {
+  constructor(id: string | Address, accountOrProvider: Account | Provider) {
     super(id, abi, accountOrProvider);
   }
 }

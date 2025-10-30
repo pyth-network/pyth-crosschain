@@ -1,24 +1,27 @@
-import os from "os";
-import path from "path";
-import fs from "fs";
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable unicorn/no-array-reduce */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
-import {
-  IPricePusher,
-  PriceInfo,
-  ChainPriceListener,
-  PriceItem,
-} from "../interface";
-import { HermesClient, HexString } from "@pythnetwork/hermes-client";
-import { DurationInSeconds } from "../utils";
-
+import type { HexString } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { Account, Connection, KeyPair } from "near-api-js";
-import {
+import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
+import type {
   ExecutionStatus,
-  ExecutionStatusBasic,
   FinalExecutionOutcome,
 } from "near-api-js/lib/providers/provider";
-import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
-import { Logger } from "pino";
+import { ExecutionStatusBasic } from "near-api-js/lib/providers/provider";
+import type { Logger } from "pino";
+
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
 
 export class NearPriceListener extends ChainPriceListener {
   constructor(
@@ -42,17 +45,18 @@ export class NearPriceListener extends ChainPriceListener {
         )} (${priceId}) ${JSON.stringify(priceRaw)}.`,
       );
 
-      if (priceRaw) {
-        return {
-          conf: priceRaw.conf,
-          price: priceRaw.price,
-          publishTime: priceRaw.publish_time,
-        };
-      } else {
-        return undefined;
-      }
-    } catch (err) {
-      this.logger.error(err, `Polling on-chain price for ${priceId} failed.:`);
+      return priceRaw
+        ? {
+            conf: priceRaw.conf,
+            price: priceRaw.price,
+            publishTime: priceRaw.publish_time,
+          }
+        : undefined;
+    } catch (error) {
+      this.logger.error(
+        error,
+        `Polling on-chain price for ${priceId} failed.:`,
+      );
       return undefined;
     }
   }
@@ -79,8 +83,8 @@ export class NearPricePusher implements IPricePusher {
     let priceFeedUpdateData;
     try {
       priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
-    } catch (err: any) {
-      this.logger.error(err, "getPriceFeedsUpdateData failed");
+    } catch (error: any) {
+      this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
 
@@ -89,23 +93,23 @@ export class NearPricePusher implements IPricePusher {
       try {
         updateFee = await this.account.getUpdateFeeEstimate(data);
         this.logger.debug(`Update fee: ${updateFee}`);
-      } catch (err: any) {
-        this.logger.error(err, "getUpdateFeeEstimate failed");
+      } catch (error: any) {
+        this.logger.error(error, "getUpdateFeeEstimate failed");
         continue;
       }
 
       try {
         const outcome = await this.account.updatePriceFeeds(data, updateFee);
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
-        const is_success = Object.values(outcome["receipts_outcome"]).reduce(
+        const is_success = Object.values(outcome.receipts_outcome).reduce(
           (is_success, receipt) => {
             if (
               Object.prototype.hasOwnProperty.call(
-                receipt["outcome"]["status"],
+                receipt.outcome.status,
                 "Failure",
               )
             ) {
-              failureMessages.push(receipt["outcome"]["status"]);
+              failureMessages.push(receipt.outcome.status);
               return false;
             }
             return is_success;
@@ -114,14 +118,14 @@ export class NearPricePusher implements IPricePusher {
         );
         if (is_success) {
           this.logger.info(
-            { hash: outcome["transaction"]["hash"] },
+            { hash: outcome.transaction.hash },
             "updatePriceFeeds successful.",
           );
         } else {
           this.logger.error({ failureMessages }, "updatePriceFeeds failed");
         }
-      } catch (err: any) {
-        this.logger.error(err, "updatePriceFeeds failed");
+      } catch (error: any) {
+        this.logger.error(error, "updatePriceFeeds failed");
       }
     }
   }
@@ -198,6 +202,7 @@ export class NearAccount {
     privateKeyPath: string | undefined,
   ): Connection {
     const content = fs.readFileSync(
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       privateKeyPath ||
         path.join(
           os.homedir(),
@@ -214,7 +219,7 @@ export class NearAccount {
     if (accountInfo.account_id && privateKey) {
       const keyPair = KeyPair.fromString(privateKey);
       const keyStore = new InMemoryKeyStore();
-      keyStore.setKey(network, accountInfo.account_id, keyPair);
+      void keyStore.setKey(network, accountInfo.account_id, keyPair);
       return Connection.fromConfig({
         networkId: network,
         provider: { type: "JsonRpcProvider", args: { url: nodeUrl } },

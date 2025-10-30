@@ -2,10 +2,10 @@ export { IotaPriceServiceConnection } from "./IotaPriceServiceConnection";
 export { IotaPythClient } from "./client";
 
 export {
-  DurationInMs,
-  HexString,
+  type DurationInMs,
+  type HexString,
   Price,
   PriceFeed,
-  PriceServiceConnectionConfig,
-  UnixTimestamp,
+  type PriceServiceConnectionConfig,
+  type UnixTimestamp,
 } from "@pythnetwork/price-service-client";

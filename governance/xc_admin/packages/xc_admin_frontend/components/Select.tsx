@@ -7,8 +7,8 @@ import {
   ListboxOption,
   Transition,
 } from '@headlessui/react'
-import type { ComponentProps } from 'react'
 import Arrow from '@images/icons/down.inline.svg'
+import type { ComponentProps } from 'react'
 import { Fragment } from 'react'
 
 type OwnProps<T> = {
@@ -33,7 +33,7 @@ export const Select = <T extends string>({
         <>
           <ListboxButton className="inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0">
             <span className="mr-3">{props.value}</span>
-            <Arrow className={`${open && 'rotate-180'}`} />
+            <Arrow className={open && 'rotate-180'} />
           </ListboxButton>
           <Transition
             as={Fragment}

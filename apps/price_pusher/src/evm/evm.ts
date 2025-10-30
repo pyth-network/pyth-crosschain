@@ -1,26 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/require-await */
+import type { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import type { Logger } from "pino";
+import type { WatchContractEventOnLogsParameter } from "viem";
 import {
-  IPricePusher,
-  PriceInfo,
-  ChainPriceListener,
-  PriceItem,
-} from "../interface";
-import {
-  addLeading0x,
-  assertDefined,
-  DurationInSeconds,
-  removeLeading0x,
-} from "../utils";
-import { PythAbi } from "./pyth-abi";
-import { Logger } from "pino";
-import {
-  HermesClient,
-  HexString,
-  UnixTimestamp,
-} from "@pythnetwork/hermes-client";
-import { CustomGasStation } from "./custom-gas-station";
-import { PushAttempt } from "../common";
-import {
-  WatchContractEventOnLogsParameter,
   TransactionExecutionError,
   BaseError,
   ContractFunctionRevertedError,
@@ -30,8 +17,15 @@ import {
   ContractFunctionExecutionError,
 } from "viem";
 
-import { PythContract } from "./pyth-contract";
-import { SuperWalletClient } from "./super-wallet";
+import type { PushAttempt } from "../common.js";
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+import { CustomGasStation } from "./custom-gas-station";
+import type { PythContract } from "./pyth-contract.js";
+import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
+import { PythAbi } from "./pyth-abi.js";
+import type { SuperWalletClient } from "./super-wallet.js";
+import { ChainPriceListener } from "../interface.js";
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
@@ -51,10 +45,10 @@ export class EvmPriceListener extends ChainPriceListener {
 
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
-  async start() {
+  override async start() {
     if (this.watchEvents) {
       this.logger.info("Watching target network pyth contract events...");
-      this.startWatching();
+      void this.startWatching();
     } else {
       this.logger.info(
         "The target network RPC endpoint is not Websocket. " +
@@ -104,8 +98,8 @@ export class EvmPriceListener extends ChainPriceListener {
       priceRaw = await this.pythContract.read.getPriceUnsafe([
         addLeading0x(priceId),
       ]);
-    } catch (err) {
-      this.logger.error(err, `Polling on-chain price for ${priceId} failed.`);
+    } catch (error) {
+      this.logger.error(error, `Polling on-chain price for ${priceId} failed.`);
       return undefined;
     }
 
@@ -175,12 +169,12 @@ export class EvmPricePusher implements IPricePusher {
         Math.round(Number(updateFee) * (this.updateFeeMultiplier || 1)),
       );
       this.logger.debug(`Update fee: ${updateFee}`);
-    } catch (e: any) {
+    } catch (error: any) {
       this.logger.error(
-        e,
+        error,
         "An unidentified error has occured when getting the update fee.",
       );
-      throw e;
+      throw error;
     }
 
     // Gas price in networks with transaction type eip1559 represents the
@@ -195,9 +189,7 @@ export class EvmPricePusher implements IPricePusher {
       );
 
     // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
-    if (this.pusherAddress === undefined) {
-      this.pusherAddress = this.client.account.address;
-    }
+    this.pusherAddress ??= this.client.account.address;
 
     const lastExecutedNonce =
       (await this.client.getTransactionCount({
@@ -229,9 +221,7 @@ export class EvmPricePusher implements IPricePusher {
 
     this.logger.debug(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
 
-    const pubTimesToPushParam = pubTimesToPush.map((pubTime) =>
-      BigInt(pubTime),
-    );
+    const pubTimesToPushParam = pubTimesToPush.map(BigInt);
 
     const priceIdsWith0x = priceIds.map((priceId) => addLeading0x(priceId));
 
@@ -250,9 +240,9 @@ export class EvmPricePusher implements IPricePusher {
             gasPrice: BigInt(Math.ceil(gasPrice)),
             nonce: txNonce,
             gas:
-              this.gasLimit !== undefined
-                ? BigInt(Math.ceil(this.gasLimit))
-                : undefined,
+              this.gasLimit === undefined
+                ? undefined
+                : BigInt(Math.ceil(this.gasLimit)),
           },
         );
 
@@ -262,13 +252,16 @@ export class EvmPricePusher implements IPricePusher {
 
       this.logger.info({ hash }, "Price update sent");
 
-      this.waitForTransactionReceipt(hash);
-    } catch (err: any) {
-      this.logger.debug({ err }, "Simulating or sending transactions failed.");
+      void this.waitForTransactionReceipt(hash);
+    } catch (error: any) {
+      this.logger.debug(
+        { err: error },
+        "Simulating or sending transactions failed.",
+      );
 
-      if (err instanceof BaseError) {
+      if (error instanceof BaseError) {
         if (
-          err.walk(
+          error.walk(
             (e) =>
               e instanceof ContractFunctionRevertedError &&
               e.data?.errorName === "NoFreshUpdate",
@@ -280,18 +273,18 @@ export class EvmPricePusher implements IPricePusher {
           return;
         }
 
-        if (err.walk((e) => e instanceof InsufficientFundsError)) {
+        if (error.walk((e) => e instanceof InsufficientFundsError)) {
           this.logger.error(
-            { err },
+            { err: error },
             "Wallet doesn't have enough balance. In rare cases, there might be issues with gas price " +
               "calculation in the RPC.",
           );
-          throw err;
+          throw error;
         }
 
         if (
-          err.walk((e) => e instanceof FeeCapTooLowError) ||
-          err.walk(
+          error.walk((e) => e instanceof FeeCapTooLowError) ||
+          error.walk(
             (e) =>
               e instanceof InternalRpcError &&
               e.details.includes("replacement transaction underpriced"),
@@ -307,7 +300,7 @@ export class EvmPricePusher implements IPricePusher {
         }
 
         if (
-          err.walk(
+          error.walk(
             (e) =>
               e instanceof TransactionExecutionError &&
               (e.details.includes("nonce too low") ||
@@ -321,9 +314,9 @@ export class EvmPricePusher implements IPricePusher {
         }
 
         // Sometimes the contract function execution fails in simulation and this error is thrown.
-        if (err.walk((e) => e instanceof ContractFunctionExecutionError)) {
+        if (error.walk((e) => e instanceof ContractFunctionExecutionError)) {
           this.logger.warn(
-            { err },
+            { err: error },
             "The contract function execution failed in simulation. This is an expected behaviour in high frequency or multi-instance setup. " +
               "Please review this error and file an issue if it is a bug. Skipping this push.",
           );
@@ -332,9 +325,9 @@ export class EvmPricePusher implements IPricePusher {
 
         // We normally crash on unknown failures but we believe that this type of error is safe to skip. The other reason is that
         // wometimes we see a TransactionExecutionError because of the nonce without any details and it is not catchable.
-        if (err.walk((e) => e instanceof TransactionExecutionError)) {
+        if (error.walk((e) => e instanceof TransactionExecutionError)) {
           this.logger.error(
-            { err },
+            { err: error },
             "Transaction execution failed. This is an expected behaviour in high frequency or multi-instance setup. " +
               "Please review this error and file an issue if it is a bug. Skipping this push.",
           );
@@ -344,9 +337,9 @@ export class EvmPricePusher implements IPricePusher {
         // The following errors are part of the legacy code and might not work as expected.
         // We are keeping them in case they help with handling what is not covered above.
         if (
-          err.message.includes("the tx doesn't have the correct nonce.") ||
-          err.message.includes("nonce too low") ||
-          err.message.includes("invalid nonce")
+          error.message.includes("the tx doesn't have the correct nonce.") ||
+          error.message.includes("nonce too low") ||
+          error.message.includes("invalid nonce")
         ) {
           this.logger.info(
             "The nonce is incorrect (are multiple users using this account?). Skipping this push.",
@@ -354,7 +347,9 @@ export class EvmPricePusher implements IPricePusher {
           return;
         }
 
-        if (err.message.includes("max fee per gas less than block base fee")) {
+        if (
+          error.message.includes("max fee per gas less than block base fee")
+        ) {
           // We just have to handle this error and return.
           // LastPushAttempt was stored with the class
           // Next time the update will be executing, it will check the last attempt
@@ -367,13 +362,13 @@ export class EvmPricePusher implements IPricePusher {
         }
 
         if (
-          err.message.includes("sender doesn't have enough funds to send tx.")
+          error.message.includes("sender doesn't have enough funds to send tx.")
         ) {
           this.logger.error("Payer is out of balance, please top it up.");
           throw new Error("Please top up the wallet");
         }
 
-        if (err.message.includes("could not replace existing tx")) {
+        if (error.message.includes("could not replace existing tx")) {
           this.logger.error(
             "A transaction with the same nonce has been mined and this one is no longer needed. Skipping this push.",
           );
@@ -383,11 +378,11 @@ export class EvmPricePusher implements IPricePusher {
 
       // If the error is not handled, we will crash the process.
       this.logger.error(
-        { err },
+        { err: error },
         "The transaction failed with an unhandled error. crashing the process. " +
           "Please review this error and file an issue if it is a bug.",
       );
-      throw err;
+      throw error;
     }
   }
 
@@ -398,19 +393,21 @@ export class EvmPricePusher implements IPricePusher {
       });
 
       switch (receipt.status) {
-        case "success":
+        case "success": {
           this.logger.debug({ hash, receipt }, "Price update successful");
           this.logger.info({ hash }, "Price update successful");
           break;
-        default:
+        }
+        default: {
           this.logger.info(
             { hash, receipt },
             "Price update did not succeed or its transaction did not land. " +
               "This is an expected behaviour in high frequency or multi-instance setup.",
           );
+        }
       }
-    } catch (err: any) {
-      this.logger.warn({ err }, "Failed to get transaction receipt");
+    } catch (error: any) {
+      this.logger.warn({ err: error }, "Failed to get transaction receipt");
     }
   }
 

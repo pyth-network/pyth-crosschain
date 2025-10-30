@@ -3,15 +3,15 @@ import { WormholeInstructionCoder } from "@certusone/wormhole-sdk/lib/cjs/solana
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from ".";
 import {
   decodeGovernancePayload,
-  PythGovernanceAction,
+  type PythGovernanceAction,
 } from "../governance_payload";
-import { AnchorAccounts, resolveAccountNames } from "./anchor";
+import { type AnchorAccounts, resolveAccountNames } from "./anchor";
 
 export class WormholeMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.WormholeBridge;

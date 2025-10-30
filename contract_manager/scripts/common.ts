@@ -1,23 +1,38 @@
-import { DefaultStore } from "../src/node/utils/store";
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+/* eslint-disable tsdoc/syntax */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
 import Web3 from "web3";
 import { Contract } from "web3-eth-contract";
-import { InferredOptionType } from "yargs";
-import { PrivateKey, getDefaultDeploymentConfig } from "../src/core/base";
+import type { InferredOptionType } from "yargs";
+
+import type { PrivateKey } from "../src/core/base";
+import { getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import {
   EvmEntropyContract,
   EvmExecutorContract,
   EvmWormholeContract,
 } from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
 
-export interface BaseDeployConfig {
+export type BaseDeployConfig = {
   gasMultiplier: number;
   gasPriceMultiplier: number;
   jsonOutputDir: string;
   privateKey: PrivateKey;
-}
+};
 
 // Deploys a contract if it was not deployed before.
 // It will check for the past deployments in file `cacheFile` against a key
@@ -36,7 +51,7 @@ export async function deployIfNotCached(
   return runIfNotCached(key, async () => {
     const artifact = JSON.parse(
       readFileSync(
-        join(
+        path.join(
           config.jsonOutputDir,
           `${artifactName}.sol`,
           `${artifactName}.json`,
@@ -46,7 +61,7 @@ export async function deployIfNotCached(
     );
 
     // Handle bytecode which can be either a string or an object with an 'object' property
-    let bytecode = artifact["bytecode"];
+    let bytecode = artifact.bytecode;
     if (
       typeof bytecode === "object" &&
       bytecode !== null &&
@@ -63,7 +78,7 @@ export async function deployIfNotCached(
     console.log(`Deploying ${artifactName} on ${chain.getId()}...`);
     const addr = await chain.deploy(
       config.privateKey,
-      artifact["abi"],
+      artifact.abi,
       bytecode,
       deployArgs,
       config.gasMultiplier,
@@ -82,12 +97,12 @@ export function getWeb3Contract(
 ): Contract {
   const artifact = JSON.parse(
     readFileSync(
-      join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`),
+      path.join(jsonOutputDir, `${artifactName}.sol`, `${artifactName}.json`),
       "utf8",
     ),
   );
   const web3 = new Web3();
-  return new web3.eth.Contract(artifact["abi"], address);
+  return new web3.eth.Contract(artifact.abi, address);
 }
 
 export const COMMON_DEPLOY_OPTIONS = {
@@ -180,7 +195,7 @@ export function makeCacheFunction(
     }
     const result = await fn();
     cache[cacheKey] = result;
-    writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
+    writeFileSync(cacheFile, JSON.stringify(cache, undefined, 2));
     return result;
   }
 
@@ -212,7 +227,7 @@ export function getSelectedChains(argv: {
         .toString()}`,
     );
   for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0].isMainnet())
+    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
       throw new Error("All chains must be either mainnet or testnet");
   }
   return selectedChains;
@@ -249,6 +264,7 @@ export function findWormholeContract(
       return contract;
     }
   }
+  return;
 }
 
 /**
@@ -270,13 +286,13 @@ export function findExecutorContract(
       return contract;
     }
   }
+  return;
 }
 
-export interface DeployWormholeReceiverContractsConfig
-  extends BaseDeployConfig {
+export type DeployWormholeReceiverContractsConfig = {
   saveContract: boolean;
   type: "stable" | "beta";
-}
+} & BaseDeployConfig;
 /**
  * Deploys the wormhole receiver contract for a given EVM chain.
  * @param {EvmChain} chain The EVM chain to find the wormhole receiver contract for.
@@ -369,15 +385,15 @@ export async function getOrDeployWormholeContract(
   );
 }
 
-export interface DefaultAddresses {
+export type DefaultAddresses = {
   mainnet: string;
   testnet: string;
-}
+};
 
 export async function topupAccountsIfNecessary(
   chain: EvmChain,
   deploymentConfig: BaseDeployConfig,
-  accounts: Array<[string, DefaultAddresses]>,
+  accounts: [string, DefaultAddresses][],
   minBalance = 0.01,
 ) {
   for (const [accountName, defaultAddresses] of accounts) {
@@ -411,7 +427,7 @@ export async function topupAccountsIfNecessary(
       });
 
       console.log(
-        `Topped up the ${accountName} address. Tx: `,
+        `Topped up the ${accountName} address. Tx:`,
         tx.transactionHash,
       );
     }

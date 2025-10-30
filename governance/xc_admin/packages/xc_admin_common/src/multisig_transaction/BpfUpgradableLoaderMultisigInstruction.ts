@@ -1,10 +1,10 @@
 import { TransactionInstruction } from "@solana/web3.js";
 import {
-  MultisigInstruction,
+  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from ".";
-import { AnchorAccounts } from "./anchor";
+import type { AnchorAccounts } from "./anchor";
 import * as BufferLayout from "@solana/buffer-layout";
 
 // Source: https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
@@ -37,13 +37,13 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             {},
             {
               named: {
-                programData: instruction.keys[0],
-                program: instruction.keys[1],
-                buffer: instruction.keys[2],
-                spill: instruction.keys[3],
-                rent: instruction.keys[4],
-                clock: instruction.keys[5],
-                upgradeAuthority: instruction.keys[6],
+                programData: instruction.keys[0]!,
+                program: instruction.keys[1]!,
+                buffer: instruction.keys[2]!,
+                spill: instruction.keys[3]!,
+                rent: instruction.keys[4]!,
+                clock: instruction.keys[5]!,
+                upgradeAuthority: instruction.keys[6]!,
               },
               remaining: instruction.keys.slice(7),
             },
@@ -54,9 +54,9 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             {},
             {
               named: {
-                programData: instruction.keys[0],
-                currentAuthority: instruction.keys[1],
-                newAuthority: instruction.keys[2],
+                programData: instruction.keys[0]!,
+                currentAuthority: instruction.keys[1]!,
+                newAuthority: instruction.keys[2]!,
               },
               remaining: instruction.keys.slice(3),
             },
@@ -87,7 +87,11 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             };
           }
 
-          return new BpfUpgradableLoaderInstruction("Close", {}, args);
+          return new BpfUpgradableLoaderInstruction(
+            "Close",
+            {},
+            args as AnchorAccounts,
+          );
         default: // Many more cases are not supported
           throw Error("Not implemented");
       }

@@ -1,5 +1,12 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import {
   AptosPriceFeedContract,
   CosmWasmPriceFeedContract,
@@ -44,7 +51,7 @@ async function main() {
         const fee = await contract.getTotalFee();
         let feeUsd = 0;
         if (fee.denom !== undefined && prices[fee.denom] !== undefined) {
-          feeUsd = Number(fee.amount) * prices[fee.denom];
+          feeUsd = Number(fee.amount) * (prices[fee.denom] ?? 0);
           totalFeeUsd += feeUsd;
           console.log(
             `${contract.getId()} ${fee.amount} ${fee.denom} ($${feeUsd})`,
@@ -54,8 +61,8 @@ async function main() {
             `${contract.getId()} ${fee.amount} ${fee.denom} ($ value unknown)`,
           );
         }
-      } catch (e) {
-        console.error(`Error fetching fees for ${contract.getId()}`, e);
+      } catch (error) {
+        console.error(`Error fetching fees for ${contract.getId()}`, error);
       }
     }
   }

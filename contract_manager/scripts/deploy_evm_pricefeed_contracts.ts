@@ -1,15 +1,28 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
+import { HermesClient } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import type { BaseDeployConfig } from "./common";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
-  BaseDeployConfig,
 } from "./common";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { DeploymentType } from "../src/core/base";
 import {
-  DeploymentType,
   getDefaultDeploymentConfig,
   toDeploymentType,
   toPrivateKey,
@@ -18,12 +31,12 @@ import { EvmChain } from "../src/core/chains";
 import { EvmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
-interface DeploymentConfig extends BaseDeployConfig {
+type DeploymentConfig = {
   type: DeploymentType;
   validTimePeriodSeconds: number;
   singleUpdateFeeInWei: number;
   saveContract: boolean;
-}
+} & BaseDeployConfig;
 
 const CACHE_FILE = ".cache-deploy-evm";
 
@@ -115,7 +128,7 @@ async function main() {
   const nativeTokenDecimals = argv["native-token-decimals"];
   if (
     singleUpdateFeeInUsd &&
-    (nativeTokenPriceFeedId == null || nativeTokenDecimals == null)
+    (nativeTokenPriceFeedId == undefined || nativeTokenDecimals == undefined)
   ) {
     throw new Error(
       "native-token-price-feed-id and native-token-decimals are required when single-update-fee-in-usd is provided",
@@ -131,8 +144,8 @@ async function main() {
       },
     );
 
-    const price = priceObject.parsed?.[0].price;
-    if (price == null) {
+    const price = priceObject.parsed?.[0]?.price;
+    if (price == undefined) {
       throw new Error("Failed to get price of the native token");
     }
     const priceInUsd = Number(price.price);
@@ -160,7 +173,7 @@ async function main() {
     privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
   };
   console.log(
-    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, null, 2)}\n`,
+    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, undefined, 2)}\n`,
   );
 
   const chainNames = argv.chain;

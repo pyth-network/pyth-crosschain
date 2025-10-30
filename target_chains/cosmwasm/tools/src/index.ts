@@ -1,2 +1,2 @@
-export * from "./chains-manager";
-export * from "./pyth-wrapper";
+export * from "./chains-manager/index.js";
+export * from "./pyth-wrapper.js";

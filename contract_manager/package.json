@@ -4,42 +4,231 @@
   "description": "Set of tools to manage pyth contracts",
   "private": true,
   "exports": {
-    "./node/*": {
-      "types": "./lib/node/utils/*.d.ts",
-      "default": "./lib/node/utils/*.js"
+    "./core/base": {
+      "require": {
+        "default": "./dist/cjs/core/base.js",
+        "types": "./dist/cjs/core/base.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/base.js",
+        "types": "./dist/esm/core/base.d.ts"
+      }
     },
-    "./core/*": {
-      "types": "./lib/core/*.d.ts",
-      "default": "./lib/core/*.js"
+    "./core/chains": {
+      "require": {
+        "default": "./dist/cjs/core/chains.js",
+        "types": "./dist/cjs/core/chains.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/chains.js",
+        "types": "./dist/esm/core/chains.d.ts"
+      }
     },
+    "./core/contracts/aptos": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/aptos.js",
+        "types": "./dist/cjs/core/contracts/aptos.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/aptos.js",
+        "types": "./dist/esm/core/contracts/aptos.d.ts"
+      }
+    },
+    "./core/contracts/cosmwasm": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/cosmwasm.js",
+        "types": "./dist/cjs/core/contracts/cosmwasm.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/cosmwasm.js",
+        "types": "./dist/esm/core/contracts/cosmwasm.d.ts"
+      }
+    },
+    "./core/contracts/evm": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/evm.js",
+        "types": "./dist/cjs/core/contracts/evm.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/evm.js",
+        "types": "./dist/esm/core/contracts/evm.d.ts"
+      }
+    },
+    "./core/contracts/evm_abis": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/evm_abis.js",
+        "types": "./dist/cjs/core/contracts/evm_abis.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/evm_abis.js",
+        "types": "./dist/esm/core/contracts/evm_abis.d.ts"
+      }
+    },
+    "./core/contracts/fuel": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/fuel.js",
+        "types": "./dist/cjs/core/contracts/fuel.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/fuel.js",
+        "types": "./dist/esm/core/contracts/fuel.d.ts"
+      }
+    },
+    "./core/contracts": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/index.js",
+        "types": "./dist/cjs/core/contracts/index.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/index.js",
+        "types": "./dist/esm/core/contracts/index.d.ts"
+      }
+    },
+    "./core/contracts/iota": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/iota.js",
+        "types": "./dist/cjs/core/contracts/iota.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/iota.js",
+        "types": "./dist/esm/core/contracts/iota.d.ts"
+      }
+    },
+    "./core/contracts/near": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/near.js",
+        "types": "./dist/cjs/core/contracts/near.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/near.js",
+        "types": "./dist/esm/core/contracts/near.d.ts"
+      }
+    },
+    "./core/contracts/starknet": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/starknet.js",
+        "types": "./dist/cjs/core/contracts/starknet.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/starknet.js",
+        "types": "./dist/esm/core/contracts/starknet.d.ts"
+      }
+    },
+    "./core/contracts/sui": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/sui.js",
+        "types": "./dist/cjs/core/contracts/sui.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/sui.js",
+        "types": "./dist/esm/core/contracts/sui.d.ts"
+      }
+    },
+    "./core/contracts/ton": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/ton.js",
+        "types": "./dist/cjs/core/contracts/ton.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/ton.js",
+        "types": "./dist/esm/core/contracts/ton.d.ts"
+      }
+    },
+    "./core/contracts/wormhole": {
+      "require": {
+        "default": "./dist/cjs/core/contracts/wormhole.js",
+        "types": "./dist/cjs/core/contracts/wormhole.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/contracts/wormhole.js",
+        "types": "./dist/esm/core/contracts/wormhole.d.ts"
+      }
+    },
+    "./core/token": {
+      "require": {
+        "default": "./dist/cjs/core/token.js",
+        "types": "./dist/cjs/core/token.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/core/token.js",
+        "types": "./dist/esm/core/token.d.ts"
+      }
+    },
+    "./node/utils/executor": {
+      "require": {
+        "default": "./dist/cjs/node/utils/executor.js",
+        "types": "./dist/cjs/node/utils/executor.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/executor.js",
+        "types": "./dist/esm/node/utils/executor.d.ts"
+      }
+    },
+    "./node/utils/governance": {
+      "require": {
+        "default": "./dist/cjs/node/utils/governance.js",
+        "types": "./dist/cjs/node/utils/governance.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/governance.js",
+        "types": "./dist/esm/node/utils/governance.d.ts"
+      }
+    },
+    "./node/utils/shell": {
+      "require": {
+        "default": "./dist/cjs/node/utils/shell.js",
+        "types": "./dist/cjs/node/utils/shell.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/shell.js",
+        "types": "./dist/esm/node/utils/shell.d.ts"
+      }
+    },
+    "./node/utils/store": {
+      "require": {
+        "default": "./dist/cjs/node/utils/store.js",
+        "types": "./dist/cjs/node/utils/store.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/node/utils/store.js",
+        "types": "./dist/esm/node/utils/store.d.ts"
+      }
+    },
+    "./utils/utils": {
+      "require": {
+        "default": "./dist/cjs/utils/utils.js",
+        "types": "./dist/cjs/utils/utils.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/utils/utils.js",
+        "types": "./dist/esm/utils/utils.d.ts"
+      }
+    },
+    "./package.json": "./package.json",
     "./data/chains/*.json": {
-      "default": "./store/chains/*.json"
+      "default": "./dist/store/chains/*.json"
     },
     "./data/contracts/*.json": {
-      "default": "./store/contracts/*.json"
+      "default": "./dist/store/contracts/*.json"
     },
     "./data/tokens/*.json": {
-      "default": "./store/tokens/*.json"
+      "default": "./dist/store/tokens/*.json"
     },
     "./data/vaults/*.json": {
-      "default": "./store/vaults/*.json"
-    },
-    "./utils/*": {
-      "types": "./lib/utils/*.d.ts",
-      "default": "./lib/utils/*.js"
+      "default": "./dist/store/vaults/*.json"
     }
   },
   "files": [
-    "lib/**/*",
-    "store/**/*.json"
+    "dist/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality --copyOtherFiles",
     "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "test:lint": "eslint src/ scripts/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -80,21 +269,44 @@
     "axios": "^0.24.0",
     "bs58": "^5.0.0",
     "extract-files": "^13.0.0",
-    "fuels": "^0.94.0",
+    "fuels": "catalog:",
     "near-api-js": "^3.0.2",
     "ramda": "^0.30.1",
     "starknet": "^6.9.0",
     "ts-node": "catalog:",
-    "typescript": "catalog:",
     "viem": "^2.23.5",
     "web3": "^1.8.2",
     "web3-eth-contract": "^1.8.2"
   },
   "devDependencies": {
-    "@types/web3": "^1.2.2",
+    "@cprussin/eslint-config": "catalog:",
+    "@pythnetwork/pyth-crosschain": "link:..",
     "@types/node": "catalog:",
-    "eslint": "^8.0.0",
+    "@types/web3": "^1.2.2",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "typedoc": "^0.25.7"
+  },
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "type": "module",
+  "ts-duality": {
+    "extraExports": {
+      "./data/chains/*.json": {
+        "default": "./dist/store/chains/*.json"
+      },
+      "./data/contracts/*.json": {
+        "default": "./dist/store/contracts/*.json"
+      },
+      "./data/tokens/*.json": {
+        "default": "./dist/store/tokens/*.json"
+      },
+      "./data/vaults/*.json": {
+        "default": "./dist/store/vaults/*.json"
+      }
+    }
   }
 }

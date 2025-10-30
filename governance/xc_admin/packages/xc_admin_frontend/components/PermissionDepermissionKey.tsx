@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-deprecated */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Program } from '@coral-xyz/anchor'
 import { Dialog, Menu, Transition } from '@headlessui/react'
-import { PythOracle } from '@pythnetwork/client/lib/anchor'
-import * as Label from '@radix-ui/react-label'
-import { PublicKey, TransactionInstruction } from '@solana/web3.js'
-import SquadsMesh from '@sqds/mesh'
-import axios from 'axios'
-import { Fragment, useContext, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+import Arrow from '@images/icons/down.inline.svg'
+import type { PythOracle } from '@pythnetwork/client/lib/anchor'
 import {
   createDetermisticPriceStoreInitializePublisherInstruction,
   getMaximumNumberOfPublishers,
@@ -16,10 +17,16 @@ import {
   mapKey,
   PRICE_FEED_MULTISIG,
 } from '@pythnetwork/xc-admin-common'
+import * as Label from '@radix-ui/react-label'
+import { PublicKey, TransactionInstruction } from '@solana/web3.js'
+import SquadsMesh from '@sqds/mesh'
+import axios from 'axios'
+import { Fragment, useContext, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
-import { ProductRawConfig } from '../hooks/usePyth'
-import Arrow from '@images/icons/down.inline.svg'
+import type { ProductRawConfig } from '../hooks/usePyth'
 import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
 import Spinner from './common/Spinner'
 import CloseIcon from './icons/CloseIcon'
@@ -110,21 +117,20 @@ const PermissionDepermissionKey = ({
           )
         }
       }
-      if (isPermission) {
-        if (
-          !connection ||
+      if (
+        isPermission &&
+        (!connection ||
           !(await isPriceStorePublisherInitialized(
             connection,
             publisherPublicKey
-          ))
-        ) {
-          instructions.push(
-            await createDetermisticPriceStoreInitializePublisherInstruction(
-              fundingAccount,
-              publisherPublicKey
-            )
+          )))
+      ) {
+        instructions.push(
+          await createDetermisticPriceStoreInitializePublisherInstruction(
+            fundingAccount,
+            publisherPublicKey
           )
-        }
+        )
       }
       setIsSubmitButtonLoading(true)
       try {
@@ -152,10 +158,9 @@ const PermissionDepermissionKey = ({
     if (!dataIsLoading) {
       const res: PublicKey[] = []
       rawConfig.mappingAccounts[0].products.map((product: ProductRawConfig) => {
-        const publisherExists =
-          product.priceAccounts[0].publishers.find(
-            (p) => p.toBase58() === publisherKey
-          ) !== undefined
+        const publisherExists = product.priceAccounts[0].publishers.some(
+          (p) => p.toBase58() === publisherKey
+        )
         if (
           (selectedAssetType === 'All' ||
             product.metadata.asset_type === selectedAssetType) &&
@@ -190,7 +195,7 @@ const PermissionDepermissionKey = ({
               <span className="mr-3">
                 {isPermission ? 'Permission Key' : 'Depermission Key'}
               </span>
-              <Arrow className={`${open && 'rotate-180'}`} />
+              <Arrow className={open && 'rotate-180'} />
             </Menu.Button>
             <Transition
               as={Fragment}
@@ -222,7 +227,9 @@ const PermissionDepermissionKey = ({
         <Dialog
           as="div"
           className="relative z-40"
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false)
+          }}
         >
           <Transition.Child
             as={Fragment}

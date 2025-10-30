@@ -1,10 +1,12 @@
 import { readFileSync, writeFileSync } from "fs";
 import toml from "@ltd/j-toml";
 import { exec } from "child_process";
-import yargs from "yargs";
+import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
-const argv = yargs(hideBin(process.argv))
+const yargs = createCLI(hideBin(process.argv));
+
+const argv = yargs
   .usage("USAGE: npm run build-contract -- <command>")
   .option("cosmwasm", {
     type: "boolean",

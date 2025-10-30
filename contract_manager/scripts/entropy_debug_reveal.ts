@@ -1,5 +1,17 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
@@ -36,7 +48,7 @@ async function main() {
   const privateKey = toPrivateKey(argv.privateKey);
   let startingSequenceNumber: number, endingSequenceNumber: number;
   if (argv.sequenceNumber.includes(":")) {
-    [startingSequenceNumber, endingSequenceNumber] = argv.sequenceNumber
+    [startingSequenceNumber = 0, endingSequenceNumber = 0] = argv.sequenceNumber
       .split(":")
       .map(Number);
   } else {
@@ -58,30 +70,31 @@ async function main() {
     sequenceNumber < endingSequenceNumber;
     sequenceNumber++
   ) {
-    console.log("Revealing request for sequence number: ", sequenceNumber);
+    console.log("Revealing request for sequence number:", sequenceNumber);
     const request = await contract.getRequest(provider, sequenceNumber);
     if (request.sequenceNumber === "0") {
       console.log("Request not found");
       continue;
     }
-    console.log("Request block number: ", request.blockNumber);
+    console.log("Request block number:", request.blockNumber);
     const userRandomNumber = await contract.getUserRandomNumber(
       provider,
       sequenceNumber,
-      parseInt(request.blockNumber),
+      Number.parseInt(request.blockNumber),
     );
-    console.log("User random number: ", userRandomNumber);
+    console.log("User random number:", userRandomNumber);
     const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status !== 200) {
-      console.error("Fortuna response status: ", fortunaResponse.status);
-      console.error("Fortuna response body: ", await fortunaResponse.text());
+      console.error("Fortuna response status:", fortunaResponse.status);
+      console.error("Fortuna response body:", await fortunaResponse.text());
       console.error(
         "Refusing to continue the script, please check the Fortuna service first.",
       );
       return;
     }
     const payload = await fortunaResponse.json();
+    // @ts-expect-error - TODO payload.value is unknown and the typing needs to be fixed
     const providerRevelation = "0x" + payload.value.data;
     try {
       await contract.revealWithCallback(
@@ -91,8 +104,8 @@ async function main() {
         sequenceNumber,
         privateKey,
       );
-    } catch (e) {
-      console.error("Error revealing request: ", e);
+    } catch (error) {
+      console.error("Error revealing request:", error);
       continue;
     }
   }

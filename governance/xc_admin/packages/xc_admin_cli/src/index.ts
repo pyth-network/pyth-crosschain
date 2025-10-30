@@ -1,16 +1,15 @@
-import { Program, BN, Idl } from "@coral-xyz/anchor";
+import { Program, BN, type Idl } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import {
   pythOracleProgram,
-  PythHttpClient,
   parseBaseData,
   AccountType,
   parsePriceData,
 } from "@pythnetwork/client";
 import {
-  PythCluster,
+  type PythCluster,
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
 } from "@pythnetwork/client/lib/cluster";
@@ -20,7 +19,7 @@ import {
   getMint,
 } from "@solana/spl-token";
 import {
-  AccountMeta,
+  type AccountMeta,
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
@@ -65,7 +64,6 @@ import {
   DEFAULT_PRIORITY_FEE_CONFIG,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -170,7 +168,7 @@ multisigCommand(
     )[0];
 
     const proposalInstruction = await programAuthorityEscrow.methods
-      .accept()
+      .accept?.()
       .accounts({
         currentAuthority: current,
         newAuthority: await vault.getVaultAuthorityPDA(targetCluster),
@@ -180,11 +178,13 @@ multisigCommand(
       })
       .instruction();
 
-    await vault.proposeInstructions(
-      [proposalInstruction],
-      targetCluster,
-      DEFAULT_PRIORITY_FEE_CONFIG,
-    );
+    if (proposalInstruction) {
+      await vault.proposeInstructions(
+        [proposalInstruction],
+        targetCluster,
+        DEFAULT_PRIORITY_FEE_CONFIG,
+      );
+    }
   });
 
 multisigCommand(
@@ -423,7 +423,7 @@ multisigCommand(
       .map((stakeAccounts, index) => {
         if (stakeAccounts.length === 0) {
           console.log(
-            `Skipping vote account ${voteAccounts[index].toBase58()} - no stake accounts found`,
+            `Skipping vote account ${voteAccounts[index]?.toBase58()} - no stake accounts found`,
           );
         }
         return stakeAccounts;
@@ -444,7 +444,7 @@ multisigCommand(
 
     console.log(
       "Successfully proposed at: https://proposals.pyth.network/?tab=proposals&proposal=" +
-        proposalAddresses[0].toBase58(),
+        proposalAddresses[0]?.toBase58(),
     );
   });
 
@@ -551,7 +551,7 @@ multisigCommand(
           stakePubkey,
           authorizedPubkey,
           votePubkey,
-        }).instructions[0],
+        }).instructions[0]!,
       );
     }
 
@@ -564,7 +564,7 @@ multisigCommand(
     // This should be a single proposal normally
     console.log(
       "Successfully proposed at: https://proposals.pyth.network/?tab=proposals&proposal=" +
-        proposalAddresses[0].toBase58(),
+        proposalAddresses[0]?.toBase58(),
     );
   });
 
@@ -750,7 +750,7 @@ program
     console.log(
       JSON.stringify(
         parsed,
-        (key, value) => (typeof value === "bigint" ? value.toString() : value), // return everything else unchanged
+        (_, value) => (typeof value === "bigint" ? value.toString() : value), // return everything else unchanged
         2,
       ),
     );
@@ -975,18 +975,20 @@ multisigCommand(
 
     // Use Anchor to create the instruction
     const updateInstruction = await lazerProgram.methods
-      .update(trustedSigner, expiryTime)
+      .update?.(trustedSigner, expiryTime)
       .accounts({
         topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         storage: new PublicKey(SOLANA_LAZER_STORAGE_ID),
       })
       .instruction();
 
-    await vault.proposeInstructions(
-      [updateInstruction],
-      targetCluster,
-      DEFAULT_PRIORITY_FEE_CONFIG,
-    );
+    if (updateInstruction) {
+      await vault.proposeInstructions(
+        [updateInstruction],
+        targetCluster,
+        DEFAULT_PRIORITY_FEE_CONFIG,
+      );
+    }
   });
 
 multisigCommand(
@@ -1045,18 +1047,20 @@ multisigCommand(
 
     // Use Anchor to create the instruction
     const updateSignerInstruction = await lazerProgram.methods
-      .updateEcdsaSigner(trustedSigner, expiryTime)
+      .updateEcdsaSigner?.(trustedSigner, expiryTime)
       .accounts({
         topAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         storage: new PublicKey(SOLANA_LAZER_STORAGE_ID),
       })
       .instruction();
 
-    await vault.proposeInstructions(
-      [upgradeInstruction, updateSignerInstruction],
-      targetCluster,
-      DEFAULT_PRIORITY_FEE_CONFIG,
-    );
+    if (updateSignerInstruction) {
+      await vault.proposeInstructions(
+        [upgradeInstruction, updateSignerInstruction],
+        targetCluster,
+        DEFAULT_PRIORITY_FEE_CONFIG,
+      );
+    }
   });
 
 program.parse();

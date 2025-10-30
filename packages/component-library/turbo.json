@@ -5,9 +5,9 @@
     "build": {
       "dependsOn": [
         "//#install:modules",
+        "clean",
         "^build",
         "build:declarations",
-        "build:esm",
         "build:scss",
         "build:svg"
       ]
@@ -29,6 +29,10 @@
       "dependsOn": ["//#install:modules"],
       "inputs": ["src/**/*.svg"],
       "outputs": ["dist/**/*.svg"]
+    },
+    "clean": {
+      "cache": false,
+      "outputs": []
     },
     "fix:lint": {
       "dependsOn": [

@@ -1,4 +1,4 @@
-import { PythCluster } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client";
 import {
   BpfUpgradableLoaderInstruction,
   MultisigInstructionProgram,
@@ -50,33 +50,35 @@ test("Bpf Upgradable Loader multisig instruction parse", (done) => {
     );
     expect(parsedInstruction.name).toBe("Upgrade");
     expect(
-      parsedInstruction.accounts.named.programData.pubkey.equals(
+      parsedInstruction.accounts.named.programData!.pubkey.equals(
         new PublicKey(0),
       ),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.program.pubkey.equals(new PublicKey(1)),
+      parsedInstruction.accounts.named.program!.pubkey.equals(new PublicKey(1)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.buffer.pubkey.equals(new PublicKey(2)),
+      parsedInstruction.accounts.named.buffer!.pubkey.equals(new PublicKey(2)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.spill.pubkey.equals(new PublicKey(3)),
+      parsedInstruction.accounts.named.spill!.pubkey.equals(new PublicKey(3)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.rent.pubkey.equals(SYSVAR_RENT_PUBKEY),
+      parsedInstruction.accounts.named.rent!.pubkey.equals(SYSVAR_RENT_PUBKEY),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.clock.pubkey.equals(SYSVAR_CLOCK_PUBKEY),
+      parsedInstruction.accounts.named.clock!.pubkey.equals(
+        SYSVAR_CLOCK_PUBKEY,
+      ),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.upgradeAuthority.pubkey.equals(
+      parsedInstruction.accounts.named.upgradeAuthority!.pubkey.equals(
         new PublicKey(4),
       ),
     ).toBeTruthy();
     expect(parsedInstruction.accounts.remaining.length).toBe(1);
     expect(
-      parsedInstruction.accounts.remaining[0].pubkey.equals(new PublicKey(5)),
+      parsedInstruction.accounts.remaining[0]!.pubkey.equals(new PublicKey(5)),
     ).toBeTruthy();
     expect(parsedInstruction.args).toEqual({});
   } else {

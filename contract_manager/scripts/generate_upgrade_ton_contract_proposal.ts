@@ -1,11 +1,23 @@
+/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
+/* eslint-disable unicorn/no-process-exit */
+/* eslint-disable n/no-process-exit */
+/* eslint-disable unicorn/prefer-top-level-await */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+import fs from "node:fs";
+import path from "node:path";
+
+import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { loadHotWallet } from "../src/node/utils/governance";
+
 import { TonChain } from "../src/core/chains";
-import { CHAINS, toChainName } from "@pythnetwork/xc-admin-common";
-import fs from "fs";
-import path from "path";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -60,7 +72,6 @@ async function main() {
   // Read the compiled contract from the build directory
   // NOTE: Remember to rebuild contract_manager before running this script because it will also build the ton contract
   const compiledPath = path.resolve(
-    __dirname,
     "../../target_chains/ton/contracts/build/Main.compiled.json",
   );
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
@@ -73,12 +84,12 @@ async function main() {
   console.log("Payload:", payload);
 
   // Create and submit governance proposal
-  console.log("Using vault for proposal:", vault.getId());
-  const keypair = await loadHotWallet(argv["ops-key-path"] as string);
+  console.log("Using vault for proposal:", vault?.getId());
+  const keypair = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet:", keypair.publicKey.toBase58());
-  vault.connect(keypair);
-  const proposal = await vault.proposeWormholeMessage([payload]);
-  console.log("Proposal address:", proposal.address.toBase58());
+  vault?.connect(keypair);
+  const proposal = await vault?.proposeWormholeMessage([payload]);
+  console.log("Proposal address:", proposal?.address.toBase58());
 }
 
 main().catch((error) => {

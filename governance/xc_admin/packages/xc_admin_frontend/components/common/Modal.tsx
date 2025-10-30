@@ -1,5 +1,9 @@
+/* eslint-disable @typescript-eslint/no-deprecated */
+/* eslint-disable react/prop-types */
 import { Dialog, Transition } from '@headlessui/react'
-import { Dispatch, Fragment, SetStateAction } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
+import { Fragment } from 'react'
+
 import CloseIcon from '../icons/CloseIcon'
 
 const Modal: React.FC<{
@@ -13,7 +17,9 @@ const Modal: React.FC<{
       <Dialog
         as="div"
         className="relative z-40"
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false)
+        }}
       >
         <Transition.Child
           as={Fragment}

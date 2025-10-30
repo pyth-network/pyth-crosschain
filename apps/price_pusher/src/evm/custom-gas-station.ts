@@ -1,12 +1,13 @@
-import {
-  CustomGasChainId,
-  TxSpeed,
-  verifyValidOption,
-  txSpeeds,
-  customGasChainIds,
-} from "../utils";
-import { Logger } from "pino";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import type { Logger } from "pino";
 import { parseGwei } from "viem";
+
+import type { CustomGasChainId, TxSpeed } from "../utils.js";
+import { verifyValidOption, txSpeeds, customGasChainIds } from "../utils.js";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<bigint | undefined>>;
 
@@ -30,15 +31,16 @@ export class CustomGasStation {
   private async fetchMaticMainnetGasPrice() {
     try {
       const res = await fetch("https://gasstation.polygon.technology/v2");
-      const jsonRes = await res.json();
+      // TODO: improve the typing specificity here
+      const jsonRes = (await res.json()) as any;
       const gasPrice = jsonRes[this.speed].maxFee;
       return parseGwei(gasPrice.toFixed(2));
-    } catch (err) {
+    } catch (error) {
       this.logger.error(
-        err,
+        error,
         "Failed to fetch gas price from Matic mainnet. Returning undefined",
       );
-      return undefined;
+      return;
     }
   }
 }
@@ -51,4 +53,5 @@ export function getCustomGasStation(
   if (customGasStation && txSpeed) {
     return new CustomGasStation(logger, customGasStation, txSpeed);
   }
+  return;
 }

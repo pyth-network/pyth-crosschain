@@ -1,9 +1,9 @@
-import { TransactionAccount } from "@sqds/mesh/lib/types";
+import { type TransactionAccount } from "@sqds/mesh/lib/types";
 import SquadsMesh, { getIxPDA } from "@sqds/mesh";
-import { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { type PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
-  AccountMeta,
-  Commitment,
+  type AccountMeta,
+  type Commitment,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -20,18 +20,11 @@ import {
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { getCreateAccountWithSeedInstruction } from "./deterministic_oracle_accounts";
 import { AccountType, parseProductData } from "@pythnetwork/client";
-import { AnchorProvider } from "@project-serum/anchor";
 import {
   TransactionBuilder,
-  PriorityFeeConfig,
+  type PriorityFeeConfig,
   sendTransactions,
 } from "@pythnetwork/solana-utils";
-import {
-  findDetermisticPublisherBufferAddress,
-  PRICE_STORE_BUFFER_SPACE,
-  PRICE_STORE_PROGRAM_ID,
-  PriceStoreMultisigInstruction,
-} from "./price_store";
 import { Wallet } from "@coral-xyz/anchor";
 
 /**
@@ -74,7 +67,7 @@ export async function executeProposal(
   proposal: TransactionAccount,
   squad: SquadsMesh,
   cluster: PythCluster,
-  commitment: Commitment = "confirmed",
+  _: Commitment = "confirmed",
   priorityFeeConfig: PriorityFeeConfig,
 ) {
   const multisigParser = MultisigParser.fromCluster(cluster);
@@ -127,7 +120,7 @@ export async function executeProposal(
     ) {
       /// Add price, fetch the symbol from the product account
       const productAccount = await squad.connection.getAccountInfo(
-        parsedInstruction.accounts.named.productAccount.pubkey,
+        parsedInstruction.accounts.named.productAccount!.pubkey,
       );
       if (productAccount) {
         transaction.add(
@@ -135,7 +128,7 @@ export async function executeProposal(
             squad.connection,
             cluster,
             squad.wallet.publicKey,
-            parseProductData(productAccount.data).product.symbol,
+            parseProductData(productAccount.data).product.symbol!,
             AccountType.Price,
           ),
         );

@@ -1,14 +1,21 @@
-import { Options } from "yargs";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { PythPriceListener } from "../pyth-price-listener";
-import { FuelPriceListener, FuelPricePusher } from "./fuel";
-import { Controller } from "../controller";
 import { Provider, Wallet } from "fuels";
-import fs from "fs";
 import pino from "pino";
-import { filterInvalidPriceItems } from "../utils";
+import type { Options } from "yargs";
+
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
+import { PythPriceListener } from "../pyth-price-listener.js";
+import { FuelPriceListener, FuelPricePusher } from "./fuel.js";
+import { Controller } from "../controller.js";
+import { filterInvalidPriceItems } from "../utils.js";
+
 export default {
   command: "fuel",
   describe: "run price pusher for Fuel",
@@ -76,6 +83,8 @@ export default {
       logger.child({ module: "PythPriceListener" }),
     );
 
+    // @ts-expect-error - TODO: this dependency's typings are mismatched and there isn't a create() function on the Provider
+    // which may blow up at runtime (but this was existing behavior as of 29 Oct 2025)
     const provider = await Provider.create(endpoint);
     const privateKey = fs.readFileSync(privateKeyFile, "utf8").trim();
     const wallet = Wallet.fromPrivateKey(privateKey, provider);
@@ -104,6 +113,6 @@ export default {
       { pushingFrequency },
     );
 
-    await controller.start();
+    void controller.start();
   },
 };

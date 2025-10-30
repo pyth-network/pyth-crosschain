@@ -5,33 +5,35 @@
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
   },
   "files": [
-    "dist"
+    "dist/**/*"
   ],
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/esm/client.d.ts",
-        "default": "./dist/esm/client.js"
-      },
+    "./client": {
       "require": {
-        "types": "./dist/cjs/client.d.ts",
-        "default": "./dist/cjs/client.js"
+        "default": "./dist/cjs/client.js",
+        "types": "./dist/cjs/client.d.ts"
+      },
+      "import": {
+        "default": "./dist/esm/client.js",
+        "types": "./dist/esm/client.d.ts"
       }
-    }
+    },
+    "./package.json": "./package.json"
   },
   "sideEffects": false,
   "scripts": {
-    "build:cjs": "tsc --project tsconfig.build.json --verbatimModuleSyntax false --module commonjs --outDir ./dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
-    "build:esm": "tsc --project tsconfig.build.json --outDir ./dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build": "ts-duality --clean",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts"
+    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@mysten/sui": "catalog:",
@@ -44,10 +46,10 @@
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
+    "prettier": "catalog:"
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

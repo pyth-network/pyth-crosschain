@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import yargs from "yargs";
+import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
-import { builder } from "./commands/aptos";
+import { builder } from "./commands/aptos.js";
 
-builder(yargs(hideBin(process.argv))).argv;
+const yargs = createCLI(hideBin(process.argv));
+
+builder(yargs).argv;

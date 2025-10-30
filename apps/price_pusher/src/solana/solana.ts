@@ -1,20 +1,19 @@
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-import {
-  ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HermesClient } from "@pythnetwork/hermes-client";
+import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
+import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
   sendTransactions,
   sendTransactionsJito,
 } from "@pythnetwork/solana-utils";
-import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
-import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { Logger } from "pino";
 import { AddressLookupTableAccount, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import type { Logger } from "pino";
+
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
 
 const HEALTH_CHECK_TIMEOUT_SECONDS = 60;
 
@@ -39,25 +38,25 @@ export class SolanaPriceListener extends ChainPriceListener {
       const blockTime =
         await this.pythSolanaReceiver.connection.getBlockTime(slot);
       if (
-        blockTime === null ||
-        blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS
+        (blockTime === null ||
+          blockTime < Date.now() / 1000 - HEALTH_CHECK_TIMEOUT_SECONDS) &&
+        blockTime !== null
       ) {
-        if (blockTime !== null) {
-          this.logger.info(
-            `Solana connection is behind by ${
-              Date.now() / 1000 - blockTime
-            } seconds`,
-          );
-        }
+        this.logger.info(
+          `Solana connection is behind by ${(
+            Date.now() / 1000 -
+            blockTime
+          ).toString()} seconds`,
+        );
       }
-    } catch (err) {
-      this.logger.error({ err }, "checkHealth failed");
+    } catch (error) {
+      this.logger.error({ err: error }, "checkHealth failed");
     }
   }
 
-  async start() {
+  override async start() {
     // Frequently check the RPC connection to ensure it is healthy
-    setInterval(this.checkHealth.bind(this), 5000);
+    setInterval(() => void this.checkHealth(), 5000);
 
     await super.start();
   }
@@ -70,21 +69,22 @@ export class SolanaPriceListener extends ChainPriceListener {
           Buffer.from(priceId, "hex"),
         );
       this.logger.debug(
-        `Polled a Solana on chain price for feed ${this.priceIdToAlias.get(
-          priceId,
-        )} (${priceId}).`,
+        `Polled a Solana on chain price for feed ${
+          this.priceIdToAlias.get(priceId)?.toString() ?? ""
+        } (${priceId}).`,
       );
-      if (priceFeedAccount) {
-        return {
-          conf: priceFeedAccount.priceMessage.conf.toString(),
-          price: priceFeedAccount.priceMessage.price.toString(),
-          publishTime: priceFeedAccount.priceMessage.publishTime.toNumber(),
-        };
-      } else {
-        return undefined;
-      }
-    } catch (err) {
-      this.logger.error({ err, priceId }, `Polling on-chain price failed.`);
+      return priceFeedAccount
+        ? {
+            conf: priceFeedAccount.priceMessage.conf.toString(),
+            price: priceFeedAccount.priceMessage.price.toString(),
+            publishTime: priceFeedAccount.priceMessage.publishTime.toNumber(),
+          }
+        : undefined;
+    } catch (error) {
+      this.logger.error(
+        { err: error, priceId },
+        `Polling on-chain price failed.`,
+      );
       return undefined;
     }
   }
@@ -122,8 +122,8 @@ export class SolanaPricePusher implements IPricePusher {
         },
       );
       priceFeedUpdateData = response.binary.data;
-    } catch (err: any) {
-      this.logger.error(err, "getPriceFeedsUpdateData failed:");
+    } catch (error: any) {
+      this.logger.error(error, "getPriceFeedsUpdateData failed:");
       return;
     }
 
@@ -150,8 +150,8 @@ export class SolanaPricePusher implements IPricePusher {
         this.pythSolanaReceiver.wallet,
       );
       this.logger.info({ signatures }, "updatePriceFeed successful");
-    } catch (err: any) {
-      this.logger.error(err, "updatePriceFeed failed");
+    } catch (error: any) {
+      this.logger.error(error, "updatePriceFeed failed");
       return;
     }
   }
@@ -184,12 +184,14 @@ export class SolanaPricePusherJito implements IPricePusher {
         );
         return undefined;
       }
-      const data = await response.json();
+      // TODO: fix this type here to be more specific
+      const data = (await response.json()) as any[];
       return Math.floor(
         Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
       );
-    } catch (err: any) {
-      this.logger.error({ err }, "getRecentJitoTips failed");
+    } catch (error: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      this.logger.error({ err: error }, "getRecentJitoTips failed");
       return undefined;
     }
   }
@@ -210,8 +212,8 @@ export class SolanaPricePusherJito implements IPricePusher {
         encoding: "base64",
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (err: any) {
-      this.logger.error(err, "getPriceFeedsUpdateData failed");
+    } catch (error: any) {
+      this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
 

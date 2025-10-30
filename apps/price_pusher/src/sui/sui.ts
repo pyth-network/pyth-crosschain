@@ -1,16 +1,21 @@
-import {
-  ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
-import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import type { SuiObjectRef, PaginatedCoins } from "@mysten/sui/client";
+import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiClient, SuiObjectRef, PaginatedCoins } from "@mysten/sui/client";
-import { Logger } from "pino";
 import { HermesClient } from "@pythnetwork/hermes-client";
+import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import type { Logger } from "pino";
+
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
 const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
@@ -58,7 +63,7 @@ export class SuiPriceListener extends ChainPriceListener {
         options: { showContent: true },
       });
 
-      if (!priceInfoObject.data || !priceInfoObject.data.content)
+      if (!priceInfoObject.data?.content)
         throw new Error("Price not found on chain for price id " + priceId);
 
       if (priceInfoObject.data.content.dataType !== "moveObject")
@@ -76,13 +81,13 @@ export class SuiPriceListener extends ChainPriceListener {
       const timestamp = priceInfo.timestamp;
 
       return {
-        price: negative ? "-" + magnitude : magnitude,
+        price: negative ? `-${magnitude}` : magnitude,
         conf,
         publishTime: Number(timestamp),
       };
-    } catch (err) {
+    } catch (error) {
       this.logger.error(
-        err,
+        error,
         `Polling Sui on-chain price for ${priceId} failed.`,
       );
       return undefined;
@@ -118,8 +123,6 @@ export class SuiPricePusher implements IPricePusher {
   /**
    * getPackageId returns the latest package id that the object belongs to. Use this to
    * fetch the latest package id for a given object id and handle package upgrades automatically.
-   * @param provider
-   * @param objectId
    * @returns package id
    */
   static async getPackageId(
@@ -237,7 +240,7 @@ export class SuiPricePusher implements IPricePusher {
         const tx = new Transaction();
         await this.pythClient.updatePriceFeeds(
           tx,
-          [Buffer.from(vaa, "base64")],
+          [Buffer.from(vaa ?? "", "base64")],
           priceIdChunk,
         );
         txBlocks.push(tx);
@@ -248,7 +251,7 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   /** Send every transaction in txs in parallel, returning when all transactions have completed. */
-  private async sendTransactionBlocks(txs: Transaction[]): Promise<void[]> {
+  private async sendTransactionBlocks(txs: Transaction[]) {
     return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)));
   }
 
@@ -280,17 +283,17 @@ export class SuiPricePusher implements IPricePusher {
         { hash: result.digest },
         "Successfully updated price with transaction digest",
       );
-    } catch (err: any) {
+    } catch (error: any) {
       if (
-        String(err).includes("Balance of gas object") ||
-        String(err).includes("GasBalanceTooLow")
+        String(error).includes("Balance of gas object") ||
+        String(error).includes("GasBalanceTooLow")
       ) {
-        this.logger.error(err, "Insufficient gas balance");
+        this.logger.error(error, "Insufficient gas balance");
         // If the error is caused by insufficient gas, we should panic
-        throw err;
+        throw error;
       } else {
         this.logger.error(
-          err,
+          error,
           "Failed to update price. Trying to refresh gas object references.",
         );
         // Refresh the coin object here in case the error is caused by an object version mismatch.
@@ -339,8 +342,7 @@ export class SuiPricePusher implements IPricePusher {
     });
     let balance;
     if (
-      coinResult.data &&
-      coinResult.data.content &&
+      coinResult.data?.content &&
       coinResult.data.content.dataType == "moveObject"
     ) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -369,14 +371,14 @@ export class SuiPricePusher implements IPricePusher {
     ref: SuiObjectRef,
   ): Promise<SuiObjectRef> {
     const objectResponse = await provider.getObject({ id: ref.objectId });
-    if (objectResponse.data !== undefined) {
+    if (objectResponse.data === undefined) {
+      throw new Error("Failed to refresh object reference");
+    } else {
       return {
         digest: objectResponse.data!.digest,
         objectId: objectResponse.data!.objectId,
         version: objectResponse.data!.version,
       };
-    } else {
-      throw new Error("Failed to refresh object reference");
     }
   }
 
@@ -394,15 +396,14 @@ export class SuiPricePusher implements IPricePusher {
         cursor,
       });
       numCoins += paginatedCoins.data.length;
-      paginatedCoins.data.forEach((c) =>
+      for (const c of paginatedCoins.data)
         coins.add(
           JSON.stringify({
             objectId: c.coinObjectId,
             version: c.version,
             digest: c.digest,
           }),
-        ),
-      );
+        );
       hasNextPage = paginatedCoins.hasNextPage;
       cursor = paginatedCoins.nextCursor;
     }
@@ -429,7 +430,7 @@ export class SuiPricePusher implements IPricePusher {
     );
 
     tx.transferObjects(
-      Array.from({ length: numGasObjects }, (_, i) => coins[i]),
+      Array.from({ length: numGasObjects }, (_, i) => coins[i]!),
       tx.pure.address(signerAddress),
     );
     tx.setGasPayment([gasCoin]);
@@ -438,7 +439,7 @@ export class SuiPricePusher implements IPricePusher {
       transaction: tx,
       options: { showEffects: true },
     });
-    const error = result?.effects?.status.error;
+    const error = result.effects?.status.error;
     if (error) {
       throw new Error(
         `Failed to initialize gas pool: ${error}. Try re-running the script`,
@@ -447,7 +448,7 @@ export class SuiPricePusher implements IPricePusher {
     const newCoins = result.effects!.created!.map((obj) => obj.reference);
     if (newCoins.length !== numGasObjects) {
       throw new Error(
-        `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${newCoins}`,
+        `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${JSON.stringify(newCoins)}`,
       );
     }
     return newCoins;
@@ -463,7 +464,7 @@ export class SuiPricePusher implements IPricePusher {
     const gasCoins = await SuiPricePusher.getAllGasCoins(provider, owner);
     // skip merging if there is only one coin
     if (gasCoins.length === 1) {
-      return gasCoins[0];
+      return gasCoins[0]!;
     }
 
     const gasCoinsChunks = chunkArray<SuiObjectRef>(
@@ -471,12 +472,13 @@ export class SuiPricePusher implements IPricePusher {
       MAX_NUM_GAS_OBJECTS_IN_PTB - 2,
     );
     let finalCoin;
-    const lockedAddresses: Set<string> = new Set();
-    initialLockedAddresses.forEach((value) => lockedAddresses.add(value));
+    const lockedAddresses = new Set<string>();
+    for (const value of initialLockedAddresses) lockedAddresses.add(value);
     for (let i = 0; i < gasCoinsChunks.length; i++) {
       const mergeTx = new Transaction();
       let coins = gasCoinsChunks[i];
-      coins = coins.filter((coin) => !lockedAddresses.has(coin.objectId));
+      coins =
+        coins?.filter((coin) => !lockedAddresses.has(coin.objectId)) ?? [];
       if (finalCoin) {
         coins = [finalCoin, ...coins];
       }
@@ -488,15 +490,17 @@ export class SuiPricePusher implements IPricePusher {
           transaction: mergeTx,
           options: { showEffects: true },
         });
-      } catch (err) {
-        logger.error(err, "Merge transaction failed with error");
+      } catch (error_) {
+        logger.error(error_, "Merge transaction failed with error");
 
         if (
-          String(err).includes(
+          String(error_).includes(
             "quorum of validators because of locked objects. Retried a conflicting transaction",
           )
         ) {
-          Object.values((err as any).data).forEach((lockedObjects: any) => {
+          // eslint-disable-next-line unicorn/no-array-for-each
+          Object.values((error_ as any).data).forEach((lockedObjects: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, unicorn/no-array-for-each
             lockedObjects.forEach((lockedObject: [string, number, string]) => {
               lockedAddresses.add(lockedObject[0]);
             });
@@ -505,9 +509,9 @@ export class SuiPricePusher implements IPricePusher {
           i--;
           continue;
         }
-        throw err;
+        throw error_;
       }
-      const error = mergeResult?.effects?.status.error;
+      const error = mergeResult.effects?.status.error;
       if (error) {
         throw new Error(
           `Failed to merge coins when initializing gas pool: ${error}. Try re-running the script`,
@@ -516,11 +520,12 @@ export class SuiPricePusher implements IPricePusher {
       finalCoin = mergeResult.effects!.mutated!.map((obj) => obj.reference)[0];
     }
 
-    return finalCoin as SuiObjectRef;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    return finalCoin!;
   }
 }
 
-function chunkArray<T>(array: Array<T>, size: number): Array<Array<T>> {
+function chunkArray<T>(array: T[], size: number): T[][] {
   const chunked = [];
   let index = 0;
   while (index < array.length) {

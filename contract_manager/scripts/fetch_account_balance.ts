@@ -1,6 +1,13 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { PrivateKey, toPrivateKey } from "../src/core/base";
+
+import type { PrivateKey } from "../src/core/base";
+import { toPrivateKey } from "../src/core/base";
 import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
@@ -29,23 +36,23 @@ async function getBalance(
   privateKey: PrivateKey,
 ): Promise<AccountBalance | undefined> {
   const address =
-    await DefaultStore.chains[chain].getAccountAddress(privateKey);
+    await DefaultStore.chains[chain]?.getAccountAddress(privateKey);
 
   try {
     const balance =
-      await DefaultStore.chains[chain].getAccountBalance(privateKey);
+      await DefaultStore.chains[chain]?.getAccountBalance(privateKey);
     return { chain, address, balance };
-  } catch (e) {
-    console.error(`Error fetching balance for ${chain}`, e);
+  } catch (error) {
+    console.error(`Error fetching balance for ${chain}`, error);
   }
   return { chain, address, balance: undefined };
 }
 
 async function main() {
   const argv = await parser.argv;
-  const chains = argv.chain
-    ? argv.chain
-    : Object.keys(DefaultStore.chains).filter((chain) => chain !== "global");
+  const chains =
+    argv.chain ??
+    Object.keys(DefaultStore.chains).filter((chain) => chain !== "global");
 
   const privateKey = toPrivateKey(argv["private-key"]);
 

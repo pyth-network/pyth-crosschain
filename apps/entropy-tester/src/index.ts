@@ -4,7 +4,7 @@ import type { PrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { EvmChain } from "@pythnetwork/contract-manager/core/chains";
 import { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import type { Logger } from "pino";
 import { pino } from "pino";
 import yargs from "yargs";

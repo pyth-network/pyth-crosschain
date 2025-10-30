@@ -1,14 +1,17 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import {
-  KeyValueConfig,
-  PriceFeed,
-  PriceFeedContract,
-  PrivateKey,
-  TxResult,
-} from "../base";
-import { Chain, NearChain } from "../chains";
-import * as nearAPI from "near-api-js";
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { BN } from "fuels";
+import * as nearAPI from "near-api-js";
+
+import type { KeyValueConfig, PriceFeed, PrivateKey, TxResult } from "../base";
+import { PriceFeedContract } from "../base";
+import { Chain, NearChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 export class NearWormholeContract extends WormholeContract {
@@ -22,7 +25,7 @@ export class NearWormholeContract extends WormholeContract {
   }
 
   getId(): string {
-    return `${this.chain.getId()}__${this.address.replace(/-|\./g, "_")}`;
+    return `${this.chain.getId()}__${this.address.replaceAll(/-|\./g, "_")}`;
   }
 
   getChain(): NearChain {
@@ -101,7 +104,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
   }
 
   getId(): string {
-    return `${this.chain.getId()}__${this.address.replace(/-|\./g, "_")}`;
+    return `${this.chain.getId()}__${this.address.replaceAll(/-|\./g, "_")}`;
   }
 
   getType(): string {
@@ -137,7 +140,7 @@ export class NearPriceFeedContract extends PriceFeedContract {
       throw new Error("Invalid type");
     }
     if (!(chain instanceof NearChain)) {
-      throw new Error(`Wrong chain type ${chain}`);
+      throw new TypeError(`Wrong chain type ${chain}`);
     }
     return new NearPriceFeedContract(
       chain,
@@ -158,10 +161,12 @@ export class NearPriceFeedContract extends PriceFeedContract {
 
   async getValidTimePeriod(): Promise<number> {
     const account = await this.getContractNearAccount();
-    return account.viewFunction({
+    const result = await account.viewFunction({
       contractId: this.address,
       methodName: "get_stale_threshold",
     });
+
+    return Number(result);
   }
 
   async getDataSources(): Promise<DataSource[]> {
@@ -201,24 +206,22 @@ export class NearPriceFeedContract extends PriceFeedContract {
       methodName: "get_ema_price_unsafe",
       args: { price_id: feedId },
     });
-    if (price === null || emaPrice === null) {
-      return undefined;
-    } else {
-      return {
-        price: {
-          price: price.price,
-          conf: price.conf,
-          expo: price.expo.toString(),
-          publishTime: price.publish_time.toString(),
-        },
-        emaPrice: {
-          price: emaPrice.price,
-          conf: emaPrice.conf,
-          expo: emaPrice.expo.toString(),
-          publishTime: emaPrice.publish_time.toString(),
-        },
-      };
-    }
+    return price === null || emaPrice === null
+      ? undefined
+      : {
+          price: {
+            price: price.price,
+            conf: price.conf,
+            expo: price.expo.toString(),
+            publishTime: price.publish_time.toString(),
+          },
+          emaPrice: {
+            price: emaPrice.price,
+            conf: emaPrice.conf,
+            expo: emaPrice.expo.toString(),
+            publishTime: emaPrice.publish_time.toString(),
+          },
+        };
   }
 
   async executeUpdatePriceFeed(
@@ -244,14 +247,12 @@ export class NearPriceFeedContract extends PriceFeedContract {
       });
       results.push({ id: outcome.transaction.hash, info: outcome });
     }
-    if (results.length === 1) {
-      return results[0];
-    } else {
-      return {
-        id: results.map((x) => x.id).join(","),
-        info: results.map((x) => x.info),
-      };
-    }
+    return results.length === 1
+      ? results[0]!
+      : {
+          id: results.map((x) => x.id).join(","),
+          info: results.map((x) => x.info),
+        };
   }
 
   async executeGovernanceInstruction(

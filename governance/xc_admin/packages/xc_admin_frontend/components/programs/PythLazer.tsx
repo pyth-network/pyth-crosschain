@@ -1,12 +1,9 @@
-import React from 'react'
-
-interface PythLazerProps {
+type PythLazerProps = {
   proposerServerUrl: string // kept for consistency with PythCore interface
 }
 
-const PythLazer = ({
-  proposerServerUrl: _proposerServerUrl,
-}: PythLazerProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const PythLazer = (_: PythLazerProps) => {
   return (
     <div className="relative p-10">
       <div className="text-center">

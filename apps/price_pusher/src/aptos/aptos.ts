@@ -1,13 +1,16 @@
-import {
-  ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { AptosAccount, AptosClient } from "aptos";
-import { DurationInSeconds } from "../utils";
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable unicorn/no-await-expression-member */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { Logger } from "pino";
+import { AptosAccount, AptosClient } from "aptos";
+import type { Logger } from "pino";
+
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
 
 export class AptosPriceListener extends ChainPriceListener {
   constructor(
@@ -49,9 +52,9 @@ export class AptosPriceListener extends ChainPriceListener {
         multiplier * Number(priceItemRes.price_feed.price.price.magnitude);
 
       this.logger.debug(
-        `Polled an Aptos on-chain price for feed ${this.priceIdToAlias.get(
-          priceId,
-        )} (${priceId}).`,
+        `Polled an Aptos on-chain price for feed ${
+          this.priceIdToAlias.get(priceId) ?? ""
+        } (${priceId}).`,
       );
 
       return {
@@ -59,9 +62,9 @@ export class AptosPriceListener extends ChainPriceListener {
         conf: priceItemRes.price_feed.price.conf,
         publishTime: Number(priceItemRes.price_feed.price.timestamp),
       };
-    } catch (err) {
+    } catch (error) {
       this.logger.error(
-        err,
+        error,
         `Polling Aptos on-chain price for ${priceId} failed.`,
       );
       return undefined;
@@ -94,6 +97,7 @@ export class AptosPricePusher implements IPricePusher {
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
+    // @ts-expect-error - TODO: this class member is unused. remove this exception when it is
     private overrideGasPriceMultiplier: number,
   ) {
     this.sequenceNumberLocked = false;
@@ -103,7 +107,7 @@ export class AptosPricePusher implements IPricePusher {
    * Gets price update data which then can be submitted to the Pyth contract to update the prices.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
    *
-   * @param priceIds Array of hex-encoded price ids.
+   * @param priceIds - Array of hex-encoded price ids.
    * @returns Array of price update data.
    */
   async getPriceFeedsUpdateData(priceIds: string[]): Promise<number[][]> {
@@ -111,9 +115,7 @@ export class AptosPricePusher implements IPricePusher {
       encoding: "base64",
       ignoreInvalidPriceIds: true,
     });
-    return response.binary.data.map((data) =>
-      Array.from(Buffer.from(data, "base64")),
-    );
+    return response.binary.data.map((data) => [...Buffer.from(data, "base64")]);
   }
 
   async updatePriceFeed(
@@ -131,8 +133,8 @@ export class AptosPricePusher implements IPricePusher {
     try {
       // get the latest VAAs for updatePriceFeed and then push them
       priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
-    } catch (err) {
-      this.logger.error(err, "Error fetching the latest vaas to push.");
+    } catch (error) {
+      this.logger.error(error, "Error fetching the latest vaas to push.");
       return;
     }
 
@@ -151,7 +153,7 @@ export class AptosPricePusher implements IPricePusher {
         arguments: [priceFeedUpdateData],
       },
       {
-        sequence_number: sequenceNumber.toFixed(),
+        sequence_number: sequenceNumber.toFixed(0),
       },
     );
 
@@ -168,11 +170,11 @@ export class AptosPricePusher implements IPricePusher {
       // to go out of sync. Missing transactions are rare and we don't want this check to block
       // the next price update. So we use spawn a promise without awaiting on it to wait for the
       // transaction to be confirmed and if it fails, it resets the sequence number and return.
-      this.waitForTransactionConfirmation(client, pendingTx.hash);
+      void this.waitForTransactionConfirmation(client, pendingTx.hash);
 
       return;
-    } catch (err: any) {
-      this.logger.error(err, "Error executing messages");
+    } catch (error: any) {
+      this.logger.error(error, "Error executing messages");
 
       // Reset the sequence number to re-sync it (in case that was the issue)
       this.lastSequenceNumber = undefined;
@@ -193,9 +195,9 @@ export class AptosPricePusher implements IPricePusher {
       });
 
       this.logger.info({ hash: txHash }, `Transaction confirmed.`);
-    } catch (err) {
+    } catch (error) {
       this.logger.error(
-        { err, hash: txHash },
+        { err: error, hash: txHash },
         `Transaction failed to confirm.`,
       );
 
@@ -210,14 +212,13 @@ export class AptosPricePusher implements IPricePusher {
     client: AptosClient,
     account: AptosAccount,
   ): Promise<number> {
-    if (this.lastSequenceNumber !== undefined) {
-      this.lastSequenceNumber += 1;
-      return this.lastSequenceNumber;
-    } else {
+    if (this.lastSequenceNumber === undefined) {
       // Fetch from the blockchain if we don't have the local cache.
       // Note that this is locked so that only 1 fetch occurs regardless of how many updates
       // happen during that fetch.
-      if (!this.sequenceNumberLocked) {
+      if (this.sequenceNumberLocked) {
+        throw new Error("Waiting for sequence number in another thread.");
+      } else {
         try {
           this.sequenceNumberLocked = true;
           this.lastSequenceNumber = Number(
@@ -227,14 +228,15 @@ export class AptosPricePusher implements IPricePusher {
             `Fetched account sequence number: ${this.lastSequenceNumber}`,
           );
           return this.lastSequenceNumber;
-        } catch (e: any) {
-          throw new Error("Failed to retrieve sequence number" + e);
+        } catch (error: any) {
+          throw new Error(`Failed to retrieve sequence number ${error}`);
         } finally {
           this.sequenceNumberLocked = false;
         }
-      } else {
-        throw new Error("Waiting for sequence number in another thread.");
       }
+    } else {
+      this.lastSequenceNumber += 1;
+      return this.lastSequenceNumber;
     }
   }
 }

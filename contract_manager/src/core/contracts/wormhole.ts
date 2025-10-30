@@ -1,4 +1,5 @@
-import { PrivateKey, Storable, TxResult } from "../base";
+import type { PrivateKey, TxResult } from "../base";
+import { Storable } from "../base";
 
 export abstract class WormholeContract extends Storable {
   abstract getCurrentGuardianSetIndex(): Promise<number>;
@@ -16,8 +17,8 @@ export abstract class WormholeContract extends Storable {
 
   /**
    * Upgrades the guardian set of this contract using an upgrade VAA
-   * @param senderPrivateKey
-   * @param vaa
+   * @param senderPrivateKey - the sender private key
+   * @param vaa - the vaa payload
    */
   abstract upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
@@ -26,7 +27,7 @@ export abstract class WormholeContract extends Storable {
 
   /**
    * Upgrades the guardian set of this contract with the 3 pre-configured VAAs for mainnet assuming this is a mainnet contract
-   * @param senderPrivateKey
+   * @param senderPrivateKey - the sender private key
    */
   async syncMainnetGuardianSets(senderPrivateKey: PrivateKey) {
     const MAINNET_UPGRADE_VAAS = [
@@ -37,11 +38,12 @@ export abstract class WormholeContract extends Storable {
     ];
     const currentIndex = await this.getCurrentGuardianSetIndex();
     for (let i = currentIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
-      const vaa = MAINNET_UPGRADE_VAAS[i];
+      const vaa = MAINNET_UPGRADE_VAAS[i] ?? "";
       const result = await this.upgradeGuardianSets(
         senderPrivateKey,
         Buffer.from(vaa, "hex"),
       );
+      // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
       console.log(`Submitted upgrade VAA ${i} with tx id ${result.id}`);
       // make sure the upgrade is complete before continuing
       while ((await this.getCurrentGuardianSetIndex()) <= i) {

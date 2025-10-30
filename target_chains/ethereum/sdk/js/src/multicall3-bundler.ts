@@ -1,6 +1,6 @@
 import { encodeFunctionData } from "viem";
 
-import { CallRequest, PythUpdate } from "./filler";
+import type { CallRequest, PythUpdate } from "./filler.js";
 
 // Multicall3 contract address (deployed on most chains)
 export const MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";

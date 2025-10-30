@@ -1,17 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable no-console */
 import { HermesClient } from "@pythnetwork/hermes-client";
-import {
-  ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { addLeading0x, DurationInSeconds } from "../utils";
-import { Logger } from "pino";
-import { Provider, Contract, hexlify, arrayify, Wallet, BN } from "fuels";
 import {
   PYTH_CONTRACT_ABI,
   FUEL_ETH_ASSET_ID,
 } from "@pythnetwork/pyth-fuel-js";
+import { Provider, Contract, hexlify, arrayify, Wallet, BN } from "fuels";
+import type { Logger } from "pino";
+
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+import { addLeading0x } from "../utils.js";
 
 // Convert TAI64 timestamp to Unix timestamp
 function tai64ToUnix(tai64: BN): number {
@@ -45,13 +50,13 @@ export class FuelPriceListener extends ChainPriceListener {
     try {
       const formattedPriceId = addLeading0x(priceId);
       const priceInfo = await this.contract.functions
-        .price_unsafe(formattedPriceId)
+        .price_unsafe?.(formattedPriceId)
         .get();
 
       console.log({
-        conf: priceInfo.value.confidence.toString(),
-        price: priceInfo.value.price.toString(),
-        publishTime: tai64ToUnix(priceInfo.value.publish_time),
+        conf: priceInfo?.value.confidence.toString(),
+        price: priceInfo?.value.price.toString(),
+        publishTime: tai64ToUnix(priceInfo?.value.publish_time),
       });
 
       this.logger.debug(
@@ -61,12 +66,15 @@ export class FuelPriceListener extends ChainPriceListener {
       );
 
       return {
-        conf: priceInfo.value.confidence.toString(),
-        price: priceInfo.value.price.toString(),
-        publishTime: tai64ToUnix(priceInfo.value.publish_time),
+        conf: priceInfo?.value.confidence.toString() ?? "",
+        price: priceInfo?.value.price.toString() ?? "",
+        publishTime: tai64ToUnix(priceInfo?.value.publish_time),
       };
-    } catch (err) {
-      this.logger.error({ err, priceId }, `Polling on-chain price failed.`);
+    } catch (error) {
+      this.logger.error(
+        { err: error, priceId },
+        `Polling on-chain price failed.`,
+      );
       return undefined;
     }
   }
@@ -88,11 +96,8 @@ export class FuelPricePusher implements IPricePusher {
     );
   }
 
-  async updatePriceFeed(
-    priceIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    pubTimesToPush: number[],
-  ): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
     if (priceIds.length === 0) {
       return;
     }
@@ -104,8 +109,8 @@ export class FuelPricePusher implements IPricePusher {
         ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (err: any) {
-      this.logger.error(err, "getPriceFeedsUpdateData failed");
+    } catch (error: any) {
+      this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
 
@@ -113,22 +118,22 @@ export class FuelPricePusher implements IPricePusher {
 
     try {
       const updateFee = await this.contract.functions
-        .update_fee(updateData)
+        .update_fee?.(updateData)
         .get();
 
       const result = await this.contract.functions
-        .update_price_feeds(updateData)
+        .update_price_feeds?.(updateData)
         .callParams({
-          forward: [updateFee.value, hexlify(FUEL_ETH_ASSET_ID)],
+          forward: [updateFee?.value, hexlify(FUEL_ETH_ASSET_ID)],
         })
         .call();
 
       this.logger.info(
-        { transactionId: result.transactionId },
+        { transactionId: result?.transactionId },
         "updatePriceFeed successful",
       );
-    } catch (err: any) {
-      this.logger.error(err, "updatePriceFeed failed");
+    } catch (error: any) {
+      this.logger.error(error, "updatePriceFeed failed");
     }
   }
 }

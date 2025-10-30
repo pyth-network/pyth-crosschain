@@ -3,10 +3,10 @@
   "version": "0.12.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -17,14 +17,15 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality --noEsm",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build && pnpm test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",
@@ -32,18 +33,16 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/jest": "^29.4.0",
     "@types/node": "catalog:",
-    "@typescript-eslint/eslint-plugin": "^5.20.0",
-    "@typescript-eslint/parser": "^5.20.0",
-    "eslint": "^8.13.0",
+    "eslint": "catalog:",
     "jest": "^29.4.0",
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
     "ts-jest": "^29.0.5",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
@@ -51,5 +50,47 @@
     "@pythnetwork/price-service-sdk": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
     "@solana/web3.js": "^1.90.0"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "type": "module",
+  "exports": {
+    "./PythSolanaReceiver": {
+      "default": "./dist/PythSolanaReceiver.js",
+      "types": "./dist/PythSolanaReceiver.d.ts"
+    },
+    "./address": {
+      "default": "./dist/address.js",
+      "types": "./dist/address.d.ts"
+    },
+    "./compute_budget": {
+      "default": "./dist/compute_budget.js",
+      "types": "./dist/compute_budget.d.ts"
+    },
+    "./idl/pyth_push_oracle": {
+      "default": "./dist/idl/pyth_push_oracle.js",
+      "types": "./dist/idl/pyth_push_oracle.d.ts"
+    },
+    "./idl/pyth_solana_receiver": {
+      "default": "./dist/idl/pyth_solana_receiver.js",
+      "types": "./dist/idl/pyth_solana_receiver.d.ts"
+    },
+    "./idl/wormhole_core_bridge_solana": {
+      "default": "./dist/idl/wormhole_core_bridge_solana.js",
+      "types": "./dist/idl/wormhole_core_bridge_solana.d.ts"
+    },
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vaa": {
+      "default": "./dist/vaa.js",
+      "types": "./dist/vaa.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

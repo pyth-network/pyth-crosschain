@@ -1,11 +1,17 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { PrivateKey, toPrivateKey } from "../src/core/base";
-import { EvmChain } from "../src/core/chains";
-import Web3 from "web3";
 
-interface TransferResult {
+import type { PrivateKey } from "../src/core/base";
+import { toPrivateKey } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
+
+type TransferResult = {
   chain: string;
   success: boolean;
   sourceAddress: string;
@@ -15,7 +21,7 @@ interface TransferResult {
   remainingBalance: string;
   transactionHash?: string;
   error?: string;
-}
+};
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -153,9 +159,7 @@ async function transferOnChain(
 
     // Calculate transfer amount
     let transferAmountEth: number;
-    if (transferAmount !== undefined) {
-      transferAmountEth = transferAmount;
-    } else {
+    if (transferAmount === undefined) {
       // transferRatio is guaranteed to be defined at this point
       if (transferRatio === undefined) {
         throw new Error(
@@ -163,6 +167,8 @@ async function transferOnChain(
         );
       }
       transferAmountEth = (balanceEth - gasCostEth) * transferRatio;
+    } else {
+      transferAmountEth = transferAmount;
     }
 
     // Round to 10 decimal places to avoid Web3 conversion errors
@@ -317,7 +323,7 @@ function getSelectedChains(argv: {
       }
       const chain = DefaultStore.chains[chainId];
       if (!(chain instanceof EvmChain)) {
-        throw new Error(`Chain ${chainId} is not an EVM chain`);
+        throw new TypeError(`Chain ${chainId} is not an EVM chain`);
       }
       selectedChains.push(chain);
     }
@@ -363,17 +369,18 @@ async function main() {
   }
 
   const sourcePrivateKey = toPrivateKey(argv.sourcePrivateKey);
+  // @ts-expect-error - TODO: Typing mismatch between argv and the expected array type for getSelectedChains()
   const selectedChains = getSelectedChains(argv);
 
   // Determine transfer method for display
   let transferMethod: string;
-  if (argv.amount !== undefined) {
-    transferMethod = `${argv.amount} ETH (fixed amount)`;
-  } else {
+  if (argv.amount === undefined) {
     if (argv.ratio === undefined) {
       throw new Error("Ratio must be defined when amount is not specified");
     }
     transferMethod = `${(argv.ratio * 100).toFixed(1)}% of available balance`;
+  } else {
+    transferMethod = `${argv.amount} ETH (fixed amount)`;
   }
 
   console.log(`\nConfiguration:`);
@@ -418,7 +425,7 @@ async function main() {
   console.log(`Successful transfers: ${successful.length}`);
   console.log(`Failed transfers: ${failed.length}`);
   console.log(
-    `Total transferred: ${successful.reduce((sum, r) => sum + parseFloat(r.transferAmount), 0).toFixed(6)} ETH`,
+    `Total transferred: ${successful.reduce((sum, r) => sum + Number.parseFloat(r.transferAmount), 0).toFixed(6)} ETH`,
   );
 
   if (successful.length > 0) {
@@ -447,7 +454,9 @@ async function main() {
   console.log("\nTransfer process completed!");
 }
 
+// eslint-disable-next-line unicorn/prefer-top-level-await, @typescript-eslint/use-unknown-in-catch-callback-variable
 main().catch((error) => {
   console.error("Script failed:", error);
+  // eslint-disable-next-line n/no-process-exit, unicorn/no-process-exit
   process.exit(1);
 });

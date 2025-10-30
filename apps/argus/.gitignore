@@ -2,3 +2,5 @@
 *config.yaml
 *secret*
 *private-key*
+
+dist/

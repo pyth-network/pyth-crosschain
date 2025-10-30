@@ -11,7 +11,7 @@
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
-    "test:types": "tsc"
+    "test:types": "ts-duality"
   },
   "peerDependencies": {
     "react": "catalog:"
@@ -26,7 +26,11 @@
     "eslint": "catalog:",
     "jest": "catalog:",
     "prettier": "catalog:",
-    "react": "catalog:",
-    "typescript": "catalog:"
-  }
+    "react": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }

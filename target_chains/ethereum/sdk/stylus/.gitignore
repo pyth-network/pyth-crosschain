@@ -9,3 +9,5 @@ docs/build/
 **/.DS_Store
 
 **/nitro-testnode
+
+dist/

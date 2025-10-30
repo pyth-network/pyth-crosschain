@@ -1,19 +1,22 @@
-import { TransactionAccount } from '@sqds/mesh/lib/types'
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/no-misused-promises */
+/* eslint-disable @typescript-eslint/no-deprecated */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+import { Menu, Transition } from '@headlessui/react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import type { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
+import { useQueryState, parseAsStringLiteral } from 'nuqs'
 import { useContext, useEffect, useState, useMemo, Fragment } from 'react'
+
+import { Proposal } from './Proposal'
+import { ProposalRow } from './ProposalRow'
+import { PROPOSAL_STATUSES, getProposalStatus } from './utils'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
-import { PROPOSAL_STATUSES } from './utils'
 import ClusterSwitch from '../../ClusterSwitch'
-import Loadbar from '../../loaders/Loadbar'
 import { Select } from '../../Select'
-import { useQueryState, parseAsStringLiteral } from 'nuqs'
-import { Menu, Transition } from '@headlessui/react'
-
-import { ProposalRow } from './ProposalRow'
-import { getProposalStatus } from './utils'
-import { Proposal } from './Proposal'
-import { useWallet } from '@solana/wallet-adapter-react'
+import Loadbar from '../../loaders/Loadbar'
 
 type ProposalType = 'priceFeed' | 'governance' | 'lazer'
 
@@ -85,25 +88,32 @@ const Proposals = () => {
 
   const multisigAccount = useMemo(() => {
     switch (proposalType) {
-      case 'priceFeed':
+      case 'priceFeed': {
         return priceFeedMultisigAccount
-      case 'governance':
+      }
+      case 'governance': {
         return upgradeMultisigAccount
-      default:
+      }
+      default: {
         return priceFeedMultisigAccount
+      }
     }
   }, [proposalType, priceFeedMultisigAccount, upgradeMultisigAccount])
 
   const multisigProposals = useMemo(() => {
     switch (proposalType) {
-      case 'priceFeed':
+      case 'priceFeed': {
         return priceFeedMultisigProposals
-      case 'governance':
+      }
+      case 'governance': {
         return upgradeMultisigProposals
-      case 'lazer':
+      }
+      case 'lazer': {
         return []
-      default:
+      }
+      default: {
         return priceFeedMultisigProposals
+      }
     }
   }, [proposalType, priceFeedMultisigProposals, upgradeMultisigProposals])
 
@@ -141,19 +151,21 @@ const Proposals = () => {
 
           let otherProposals: TransactionAccount[] = []
           switch (type) {
-            case 'priceFeed':
+            case 'priceFeed': {
               otherProposals = priceFeedMultisigProposals
               break
-            case 'governance':
+            }
+            case 'governance': {
               otherProposals = upgradeMultisigProposals
               break
+            }
           }
 
           if (
-            otherProposals.findIndex(
+            otherProposals.some(
               (proposal) =>
                 proposal.publicKey.toBase58() === currentProposalPubkey
-            ) !== -1
+            )
           ) {
             setProposalType(type)
             break
@@ -184,8 +196,9 @@ const Proposals = () => {
   const filteredProposals = useMemo(() => {
     if (walletPublicKey) {
       switch (voteStatus) {
-        case 'any':
+        case 'any': {
           return proposalsFilteredByStatus
+        }
         case 'voted': {
           return proposalsFilteredByStatus.filter((proposal) =>
             [
@@ -275,7 +288,7 @@ const Proposals = () => {
                         <span className="mr-3">
                           {PROPOSAL_TYPE_NAMES[proposalType]} Proposals
                         </span>
-                        <Arrow className={`${open ? 'rotate-180' : ''}`} />
+                        <Arrow className={open ? 'rotate-180' : ''} />
                       </Menu.Button>
                       <Transition
                         as={Fragment}
@@ -294,7 +307,9 @@ const Proposals = () => {
                                   className={`block w-full py-3 px-6 text-left text-sm ${
                                     active ? 'bg-darkGray2' : 'bg-darkGray'
                                   }`}
-                                  onClick={() => setProposalType(type)}
+                                  onClick={() => {
+                                    setProposalType(type)
+                                  }}
                                 >
                                   {PROPOSAL_TYPE_NAMES[type]} Proposals
                                 </button>
@@ -342,7 +357,7 @@ const Proposals = () => {
                   </div>
                   {filteredProposals.length > 0 ? (
                     <div className="flex flex-col">
-                      {filteredProposals.map((proposal, _idx) => (
+                      {filteredProposals.map((proposal) => (
                         <ProposalRow
                           key={proposal.publicKey.toBase58()}
                           proposal={proposal}
@@ -363,8 +378,14 @@ const Proposals = () => {
         ) : !isMultisigLoading && currentProposal !== undefined ? (
           <>
             <div
+              aria-label="go back to the proposals"
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
               onClick={handleClickBackToProposals}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleClickBackToProposals()
+              }}
+              role="button"
+              tabIndex={0}
             >
               &#8592; back to proposals
             </div>

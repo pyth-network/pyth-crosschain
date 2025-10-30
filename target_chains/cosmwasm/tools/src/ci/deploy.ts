@@ -4,11 +4,9 @@
 // to do that.
 
 import { readdirSync } from "fs";
-import { DeployerFactory } from "./deployer";
-import { CONFIG as NetworkConfig } from "./deployer/config";
-import { NETWORKS } from "./network";
-
-const ARTIFACT_DIR = "../artifacts/";
+import { DeployerFactory } from "./deployer/index.js";
+import { CONFIG as NetworkConfig } from "./deployer/config.js";
+import { NETWORKS } from "./network.js";
 
 async function deploy() {
   /*
@@ -106,7 +104,7 @@ async function deploy() {
   };
   console.log("Instantiating Wormhole contract");
   addresses[contract] = await deployer.instantiate(
-    codeIds[contract],
+    codeIds[contract]!,
     inst_msg,
     "wormhole",
   );
@@ -145,7 +143,7 @@ async function deploy() {
 
   console.log("Instantiating Pyth contract");
   addresses[contract] = await deployer.instantiate(
-    codeIds[contract],
+    codeIds[contract]!,
     inst_msg,
     "pyth",
   );

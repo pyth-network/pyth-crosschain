@@ -1,9 +1,9 @@
-import { HexString } from "@pythnetwork/price-service-sdk";
+import type { HexString } from "@pythnetwork/price-service-sdk";
 
 /**
  * Convert http(s) endpoint to ws(s) endpoint.
  *
- * @param endpoint Http(s) protocol endpoint
+ * @param endpoint -  Http(s) protocol endpoint
  * @returns Ws(s) protocol endpoint of the same address
  */
 export function makeWebsocketUrl(endpoint: string) {
@@ -16,9 +16,5 @@ export function makeWebsocketUrl(endpoint: string) {
 }
 
 export function removeLeading0xIfExists(id: HexString): HexString {
-  if (id.startsWith("0x")) {
-    return id.substring(2);
-  } else {
-    return id;
-  }
+  return id.startsWith("0x") ? id.slice(2) : id;
 }

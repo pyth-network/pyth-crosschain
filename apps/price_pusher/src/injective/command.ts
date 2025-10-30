@@ -1,14 +1,19 @@
-import { HermesClient } from "@pythnetwork/hermes-client";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
-import fs from "fs";
-import { InjectivePriceListener, InjectivePricePusher } from "./injective";
-import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { Options } from "yargs";
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
 import { getNetworkInfo } from "@injectivelabs/networks";
-import pino from "pino";
-import { filterInvalidPriceItems } from "../utils";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import { pino } from "pino";
+import type { Options } from "yargs";
+
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
+import { Controller } from "../controller.js";
+import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
 export default {
   command: "injective",
   describe: "run price pusher for injective",
@@ -75,7 +80,7 @@ export default {
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint);
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
 
     let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
@@ -131,6 +136,6 @@ export default {
       { pushingFrequency },
     );
 
-    controller.start();
+    void controller.start();
   },
 };

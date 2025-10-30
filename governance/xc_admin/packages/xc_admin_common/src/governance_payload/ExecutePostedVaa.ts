@@ -1,13 +1,13 @@
-import { ChainName } from "../chains";
+import type { ChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
 import {
-  PythGovernanceAction,
+  type PythGovernanceAction,
   PythGovernanceHeader,
   safeLayoutDecode,
 } from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
-  AccountMeta,
+  type AccountMeta,
   PACKET_DATA_SIZE,
   PublicKey,
   TransactionInstruction,
@@ -32,7 +32,7 @@ class Vector<T> extends Layout<T[]> {
     ]).encode({ length: src.length, elements: src }, b, offset);
   }
 
-  getSpan(b: Buffer, offset?: number): number {
+  override getSpan(b: Buffer, offset?: number): number {
     const length = BufferLayout.u32().decode(b, offset);
     return 4 + this.element.span * length;
   }

@@ -37,3 +37,5 @@ yarn-error.log*
 
 # mappings
 publishers-*.json
+
+dist/

@@ -4,7 +4,7 @@ import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
 
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { execSync } from "child_process";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { SuiClient } from "@mysten/sui/client";
 import { bcs } from "@mysten/sui/bcs";
 
@@ -41,7 +41,7 @@ export async function publishPackage(
   });
 
   // Transfer upgrade capability to deployer
-  txb.transferObjects([upgradeCap], txb.pure.address(keypair.toSuiAddress()));
+  txb.transferObjects([upgradeCap!], txb.pure.address(keypair.toSuiAddress()));
 
   // Execute transactions
   const result = await provider.signAndExecuteTransaction({
@@ -59,7 +59,7 @@ export async function publishPackage(
 
   if (
     publishedChanges?.length !== 1 ||
-    publishedChanges[0].type !== "published"
+    publishedChanges[0]?.type !== "published"
   ) {
     throw new Error(
       "No publish event found in transaction:" +

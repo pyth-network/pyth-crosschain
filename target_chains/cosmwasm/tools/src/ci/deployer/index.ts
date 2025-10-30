@@ -1,7 +1,7 @@
-import { CONFIG_TYPE, NetworkConfig } from "./config";
-import { TerraDeployer } from "./terra";
-import { InjectiveDeployer } from "./injective";
-import { OsmosisDeployer } from "./osmosis";
+import { CONFIG_TYPE, type NetworkConfig } from "./config.js";
+import { TerraDeployer } from "./terra.js";
+import { InjectiveDeployer } from "./injective.js";
+import { OsmosisDeployer } from "./osmosis.js";
 
 export type ContractInfo = {
   codeId: number;
@@ -30,6 +30,7 @@ export class DeployerFactory {
         return TerraDeployer.fromHostAndMnemonic(config.host, mnemonic);
 
       case CONFIG_TYPE.INJECTIVE:
+        // @ts-expect-error - TODO: slight typing differences
         return InjectiveDeployer.fromHostAndMnemonic(config.host, mnemonic);
 
       case CONFIG_TYPE.OSMOSIS:

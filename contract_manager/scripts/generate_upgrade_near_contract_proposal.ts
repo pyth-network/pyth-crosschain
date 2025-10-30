@@ -1,8 +1,16 @@
+/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
+/* eslint-disable unicorn/no-process-exit */
+/* eslint-disable n/no-process-exit */
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable no-console */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { loadHotWallet } from "../src/node/utils/governance";
+
 import { NearChain } from "../src/core/chains";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -54,12 +62,12 @@ async function main() {
   console.log("Governance payload:", payload);
 
   // Create and submit governance proposal
-  console.log("Using vault for proposal:", vault.getId());
-  const keypair = await loadHotWallet(argv["ops-key-path"] as string);
+  console.log("Using vault for proposal:", vault?.getId());
+  const keypair = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet:", keypair.publicKey.toBase58());
-  vault.connect(keypair);
-  const proposal = await vault.proposeWormholeMessage([payload]);
-  console.log("Proposal address:", proposal.address.toBase58());
+  vault?.connect(keypair);
+  const proposal = await vault?.proposeWormholeMessage([payload]);
+  console.log("Proposal address:", proposal?.address.toBase58());
 }
 
 main().catch((error) => {

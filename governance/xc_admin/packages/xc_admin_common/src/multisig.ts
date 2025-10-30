@@ -1,10 +1,13 @@
-import { Cluster, PublicKey } from "@solana/web3.js";
+import { type Cluster, PublicKey } from "@solana/web3.js";
 import Squads, {
   DEFAULT_MULTISIG_PROGRAM_ID,
   getIxPDA,
   getTxPDA,
 } from "@sqds/mesh";
-import { InstructionAccount, TransactionAccount } from "@sqds/mesh/lib/types";
+import {
+  type InstructionAccount,
+  type TransactionAccount,
+} from "@sqds/mesh/lib/types";
 import BN from "bn.js";
 import lodash from "lodash";
 
@@ -121,7 +124,7 @@ export async function getManyProposalsInstructions(
   for (let i = 0; i < allTxIxsAccounts.length; i++) {
     const toAdd = allTxIxsAccounts[i];
     if (toAdd) {
-      ixAccountsByTx[ownerTransaction[i]].push(toAdd);
+      ixAccountsByTx[ownerTransaction[i]!]?.push(toAdd);
     }
   }
   return ixAccountsByTx;

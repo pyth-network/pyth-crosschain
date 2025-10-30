@@ -1,14 +1,15 @@
-import { PythCluster } from '@pythnetwork/client'
-import { PublicKey } from '@solana/web3.js'
-import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+/* eslint-disable tsdoc/syntax */
+import type { PythCluster } from '@pythnetwork/client'
+import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
 import {
   ExecutePostedVaa,
-  MultisigInstruction,
   MultisigParser,
   PythGovernanceActionImpl,
   SetDataSources,
   WormholeMultisigInstruction,
 } from '@pythnetwork/xc-admin-common'
+import { PublicKey } from '@solana/web3.js'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 
 export const PROPOSAL_STATUSES = [
   'active',
@@ -99,23 +100,26 @@ const getInstructionSummary = (
 
 const getTransactionSummary = (instruction: MultisigInstruction) => {
   switch (instruction.name) {
-    case 'addPublisher':
+    case 'addPublisher': {
       return {
         name: 'addPublisher',
         priceAccount:
-          instruction.accounts.named['priceAccount'].pubkey.toBase58(),
-        pub: (instruction.args['pub'] as PublicKey).toBase58(),
+          instruction.accounts.named.priceAccount?.pubkey.toBase58() ?? '',
+        pub: (instruction.args.pub as PublicKey).toBase58(),
       } as const
-    case 'delPublisher':
+    }
+    case 'delPublisher': {
       return {
         name: 'delPublisher',
         priceAccount:
-          instruction.accounts.named['priceAccount'].pubkey.toBase58(),
-        pub: (instruction.args['pub'] as PublicKey).toBase58(),
+          instruction.accounts.named.priceAccount?.pubkey.toBase58() ?? '',
+        pub: (instruction.args.pub as PublicKey).toBase58(),
       } as const
-    default:
+    }
+    default: {
       return {
         name: instruction.name,
       } as const
+    }
   }
 }

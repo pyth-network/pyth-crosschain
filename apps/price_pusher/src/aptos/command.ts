@@ -1,20 +1,27 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
+
 import { HermesClient } from "@pythnetwork/hermes-client";
-import * as options from "../options";
-import { readPriceConfigFile } from "../price-config";
-import fs from "fs";
-import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { Options } from "yargs";
+import { AptosAccount } from "aptos";
+import pino from "pino";
+import type { Options } from "yargs";
+
+import { Controller } from "../controller.js";
+import { PricePusherMetrics } from "../metrics.js";
+import * as options from "../options.js";
+import { readPriceConfigFile } from "../price-config.js";
+import { PythPriceListener } from "../pyth-price-listener.js";
 import {
   AptosPriceListener,
   AptosPricePusher,
   APTOS_ACCOUNT_HD_PATH,
-} from "./aptos";
-import { AptosAccount } from "aptos";
-import pino from "pino";
-import { filterInvalidPriceItems } from "../utils";
-import { PricePusherMetrics } from "../metrics";
-import { createAptosBalanceTracker } from "./balance-tracker";
+} from "./aptos.js";
+import { filterInvalidPriceItems } from "../utils.js";
+import { createAptosBalanceTracker } from "./balance-tracker.js";
 
 export default {
   command: "aptos",
@@ -76,7 +83,7 @@ export default {
       logger.info(`Metrics server started on port ${metricsPort}`);
     }
 
-    const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    const mnemonic = fs.readFileSync(mnemonicFile, "utf8").trim();
     const account = AptosAccount.fromDerivePath(
       APTOS_ACCOUNT_HD_PATH,
       mnemonic,
@@ -130,7 +137,7 @@ export default {
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
         pushingFrequency,
-        metrics,
+        metrics: metrics!,
       },
     );
 
@@ -149,6 +156,6 @@ export default {
       await balanceTracker.start();
     }
 
-    controller.start();
+    void controller.start();
   },
 };

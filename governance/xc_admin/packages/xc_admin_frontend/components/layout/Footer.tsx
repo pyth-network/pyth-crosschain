@@ -1,4 +1,5 @@
 import Link from 'next/link'
+
 import SocialLinks from '../common/SocialLinks'
 
 const Footer = () => {

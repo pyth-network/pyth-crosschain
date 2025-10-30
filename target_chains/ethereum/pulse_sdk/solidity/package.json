@@ -36,5 +36,13 @@
   },
   "dependencies": {
     "@pythnetwork/pyth-sdk-solidity": "workspace:*"
-  }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
+  },
+  "packageManager": "pnpm@10.19.0"
 }
