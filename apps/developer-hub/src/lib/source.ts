@@ -55,10 +55,7 @@ export const source = loader({
     return icon ? createElement(icons[icon] ?? FolderSimpleDashed) : undefined;
   },
   source: docs.toFumadocsSource(),
-  pageTree: {
-    // @ts-expect-error - types are very similar but not exactly the same
-    transformers: [openapiPlugin()],
-  },
+  plugins: [openapiPlugin()],
 });
 
 export type Page = InferPageType<typeof source>;
