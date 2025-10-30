@@ -6,11 +6,5 @@
     "declaration": true,
     "isolatedModules": false
   },
-  "exclude": [
-    "scripts",
-    "node_modules",
-    "dist",
-    "examples/",
-    "**/__tests__/*"
-  ]
+  "exclude": ["scripts", "node_modules", "dist", "examples/", "**/__tests__/*"]
 }

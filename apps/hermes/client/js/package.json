@@ -60,16 +60,6 @@
   "packageManager": "pnpm@10.19.0",
   "type": "module",
   "exports": {
-    "./HermesClient": {
-      "require": {
-        "default": "./dist/cjs/HermesClient.js",
-        "types": "./dist/cjs/HermesClient.d.ts"
-      },
-      "import": {
-        "default": "./dist/esm/HermesClient.js",
-        "types": "./dist/esm/HermesClient.d.ts"
-      }
-    },
     "./hermes-client": {
       "require": {
         "default": "./dist/cjs/hermes-client.js",
