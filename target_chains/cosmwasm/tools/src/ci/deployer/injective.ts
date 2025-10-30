@@ -189,6 +189,7 @@ export class InjectiveDeployer implements Deployer {
     await this.signAndBroadcastMsg(updateAdminMsg);
   }
 
+  // @ts-expect-error - TODO: slight typing differences in return types
   async getContractInfo(contract: string): Promise<ContractInfo> {
     const { grpc } = getNetworkInfo(this.network);
     const api = new ChainGrpcWasmApi(grpc);
@@ -205,7 +206,7 @@ export class InjectiveDeployer implements Deployer {
       creator: creator,
       admin: admin,
       initMsg: undefined,
-    } as ContractInfo;
+    } as unknown as ContractInfo;
   }
 
   static fromHostAndMnemonic(host: InjectiveHost, mnemonic: string) {

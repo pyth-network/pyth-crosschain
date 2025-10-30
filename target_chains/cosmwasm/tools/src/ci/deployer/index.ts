@@ -30,6 +30,7 @@ export class DeployerFactory {
         return TerraDeployer.fromHostAndMnemonic(config.host, mnemonic);
 
       case CONFIG_TYPE.INJECTIVE:
+        // @ts-expect-error - TODO: slight typing differences
         return InjectiveDeployer.fromHostAndMnemonic(config.host, mnemonic);
 
       case CONFIG_TYPE.OSMOSIS:
