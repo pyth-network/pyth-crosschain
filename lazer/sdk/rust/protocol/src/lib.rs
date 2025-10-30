@@ -24,6 +24,7 @@ pub mod time;
 
 use derive_more::derive::{From, Into};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 pub use crate::{
     dynamic_value::DynamicValue,
@@ -55,7 +56,7 @@ impl ChannelId {
     pub const FIXED_RATE_1000: ChannelId = ChannelId(4);
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum PriceFeedProperty {
     Price,
