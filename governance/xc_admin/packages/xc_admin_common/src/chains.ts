@@ -261,6 +261,9 @@ export const RECEIVER_CHAINS = {
   giwa_testnet: 50131,
   sonic_evm_testnet: 50132, // sonic_testnet already exist, so had to use sonic_evm_testnet
   etherlink_new_testnet: 50133, // etherlink_testnet already exist, so had to use etherlink_new_testnet
+  hoodi: 50134, // Ethereum hoodi, the new Ethereum testnet
+  taiko_hoodi: 50135,
+  morph_hoodi: 50136,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
