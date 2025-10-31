@@ -34,3 +34,13 @@ export async function GET() {
     return new NextResponse("Internal server error", { status: 500 });
   }
 }
+
+export function HEAD() {
+  return new NextResponse(undefined, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
+}

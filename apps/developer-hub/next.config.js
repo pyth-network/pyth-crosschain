@@ -3,6 +3,13 @@ import { createMDX } from "fumadocs-mdx/next";
 const config = {
   reactStrictMode: true,
   pageExtensions: ["ts", "tsx", "mdx"],
+  experimental: {
+    // Ensure content/ docs are traced into the serverless output on Vercel
+    outputFileTracingIncludes: {
+      // For App Router output; adjust if you have custom directories
+      "app/**": ["content/**"],
+    },
+  },
 
   logging: {
     fetches: {

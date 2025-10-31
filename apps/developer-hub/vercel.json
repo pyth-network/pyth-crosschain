@@ -1,4 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "turbo run build --filter @pythnetwork/developer-hub"
+  "buildCommand": "turbo run build --filter @pythnetwork/developer-hub",
+  "functions": {
+    "**": {
+      "includeFiles": "apps/developer-hub/content/**"
+    }
+  }
 }
