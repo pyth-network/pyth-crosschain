@@ -1,7 +1,7 @@
-export { DocumentationPage as default } from "../../../../components/Pages/DocumentationPage";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+export { DocumentationPage as default } from "../../../../components/Pages/DocumentationPage";
 import { source } from "../../../../lib/source";
 
 export function generateStaticParams() {
