@@ -1355,6 +1355,27 @@
     "mainnet": false,
     "rpcUrl": "https://node.shadownet.etherlink.com",
     "networkId": 127823,
-    "type": "EvmChain"    
+    "type": "EvmChain"
+  },
+  {
+    "id": "hoodi",
+    "mainnet": false,
+    "rpcUrl": "https://ethereum-hoodi-rpc.publicnode.com",
+    "networkId": 560048,
+    "type": "EvmChain"
+  },
+  {
+    "id": "taiko_hoodi",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.hoodi.taiko.xyz",
+    "networkId": 167013,
+    "type": "EvmChain"
+  },
+  {
+    "id": "morph_hoodi",
+    "mainnet": false,
+    "rpcUrl": "https://rpc-hoodi.morphl2.io",
+    "networkId": 2910,
+    "type": "EvmChain"
   }
 ]
