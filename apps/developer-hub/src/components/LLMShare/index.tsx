@@ -1,11 +1,19 @@
-'use client';
+"use client";
 
-import { Copy, Check, OpenAiLogo, Eye, FileText, ArrowSquareOut } from '@phosphor-icons/react/dist/ssr';
-import { Select } from '@pythnetwork/component-library/Select';
-import { useLogger } from '@pythnetwork/component-library/useLogger';
-import { useState } from 'react';
+import {
+  Copy,
+  Check,
+  OpenAiLogo,
+  Eye,
+  FileText,
+  ArrowSquareOut,
+} from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@pythnetwork/component-library/Button";
+import { Select } from "@pythnetwork/component-library/Select";
+import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useState } from "react";
 
-import { ClaudeIcon } from '../../lib/icons';
+import { ClaudeIcon } from "../../lib/icons";
 
 type LLMShareProps = {
   content: string;
@@ -18,41 +26,41 @@ type DropdownOption = {
   name: string;
   url?: string;
   icon: React.ComponentType;
-  type: 'markdown' | 'llm';
+  type: "markdown" | "llm";
 };
 
 const getDropdownOptions = (): DropdownOption[] => [
   {
-    id: 'view-markdown',
-    name: 'View as Markdown',
+    id: "view-markdown",
+    name: "View as Markdown",
     icon: Eye,
-    type: 'markdown',
+    type: "markdown",
   },
   {
-    id: 'download-markdown',
-    name: 'Download Markdown',
+    id: "download-markdown",
+    name: "Download Markdown",
     icon: FileText,
-    type: 'markdown',
+    type: "markdown",
   },
   {
-    id: 'chatgpt',
-    name: 'Ask ChatGPT',
-    url: 'https://chat.openai.com',
+    id: "chatgpt",
+    name: "Ask ChatGPT",
+    url: "https://chat.openai.com",
     icon: OpenAiLogo,
-    type: 'llm',
+    type: "llm",
   },
   {
-    id: 'claude',
-    name: 'Ask Claude',
-    url: 'https://claude.ai',
+    id: "claude",
+    name: "Ask Claude",
+    url: "https://claude.ai",
     icon: ClaudeIcon,
-    type: 'llm',
+    type: "llm",
   },
 ];
 
 export function LLMShare({ content, title, url }: LLMShareProps) {
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
-  const [selectedKey, setSelectedKey] = useState<string>('');
+  const [selectedKey, setSelectedKey] = useState<string>("");
   const logger = useLogger();
   const dropdownOptions = getDropdownOptions();
 
@@ -69,22 +77,22 @@ export function LLMShare({ content, title, url }: LLMShareProps) {
   }
 
   function handleDownloadMarkdown() {
-    const blob = new Blob([content], { type: 'text/markdown' });
+    const blob = new Blob([content], { type: "text/markdown" });
     const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = blobUrl;
-    const safeTitle = title.replaceAll(/[^a-zA-Z0-9]/g, '-');
+    const safeTitle = title.replaceAll(/[^a-zA-Z0-9]/g, "-");
     a.download = `${safeTitle}.md`;
     document.body.append(a);
     a.click();
-    for (const anchor of document.body.querySelectorAll('a')) anchor.remove();
+    for (const anchor of document.body.querySelectorAll("a")) anchor.remove();
     URL.revokeObjectURL(blobUrl);
   }
 
   function handleViewMarkdown() {
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([content], { type: "text/plain" });
     const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
+    window.open(blobUrl, "_blank");
     // Clean up the URL after a delay to ensure it opens
     setTimeout(() => {
       URL.revokeObjectURL(blobUrl);
@@ -92,7 +100,7 @@ export function LLMShare({ content, title, url }: LLMShareProps) {
   }
 
   function handleShare(option: DropdownOption) {
-    if (option.type === 'llm' && option.url) {
+    if (option.type === "llm" && option.url) {
       const prompt = `Please read and analyze this documentation page:
 
         Title: ${title}
@@ -102,14 +110,14 @@ export function LLMShare({ content, title, url }: LLMShareProps) {
         ${content}
 
         Please provide a summary and answer any questions I might have about this content.`;
-      
+
       const encodedInstruction = encodeURIComponent(prompt);
       const shareUrl =
-        option.name === 'Ask Claude'
+        option.name === "Ask Claude"
           ? `https://claude.ai/new?q=${encodedInstruction}`
           : `${option.url}?q=${encodedInstruction}`;
-      
-      window.open(shareUrl, '_blank');
+
+      window.open(shareUrl, "_blank");
     }
   }
 
@@ -117,49 +125,50 @@ export function LLMShare({ content, title, url }: LLMShareProps) {
     setSelectedKey(String(newKey));
     const option = dropdownOptions.find((o) => o.id === newKey);
     if (option) {
-      if (option.type === 'markdown') {
-        if (option.id === 'view-markdown') {
+      if (option.type === "markdown") {
+        if (option.id === "view-markdown") {
           handleViewMarkdown();
-        } else if (option.id === 'download-markdown') {
+        } else if (option.id === "download-markdown") {
           handleDownloadMarkdown();
         }
       } else {
         handleShare(option);
       }
       // Reset selection after action
-      setSelectedKey('');
+      setSelectedKey("");
     }
   }
 
   return (
-    <div className="inline-flex rounded-md border border-border">
+    <div className="inline-flex items-stretch rounded-md border border-border">
       {/* Main copy button */}
-      <button
-        onClick={() => {
-          handleCopy('markdown').catch(() => { /* no-op */ });
+      <Button
+        onPress={() => {
+          handleCopy("markdown").catch(() => {
+            /* no-op */
+          });
         }}
-        className="cursor-pointer relative inline-flex items-center gap-2 rounded-l-md rounded-r-none px-2 py-1.5 text-sm font-fono focus:z-10 border-0 shadow-none transition-all duration-150 hover:bg-neutral-150 dark:hover:bg-neutral-700"
+        size="sm"
+        variant="outline"
+        className="rounded-l-md rounded-r-none border-r-0"
         aria-label="Copy page content"
+        beforeIcon={
+          copiedStates.markdown ? (
+            <Check className="h-3 w-3" />
+          ) : (
+            <Copy className="h-3 w-3" />
+          )
+        }
       >
-        <span
-          className={`inline-flex items-center justify-center rounded p-0.5 transition-all duration-150 ${
-            copiedStates.markdown ? '!text-brand-orange' : ''
-          }`}
-        >
-          {copiedStates.markdown ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-        </span>
         Copy page
-      </button>
+      </Button>
 
-      {/* Divider */}
-      <div className="border-l border-border" />
-
-      {/* Select dropdown trigger */}
-      <div className="relative">
+      {/* Select dropdown trigger with divider */}
+      <div>
         <Select<DropdownOption>
           label="More options"
           buttonLabel=""
-          hideLabel
+          hideLabel={true}
           size="sm"
           variant="outline"
           options={dropdownOptions}
@@ -171,7 +180,9 @@ export function LLMShare({ content, title, url }: LLMShareProps) {
               <div className="flex items-center gap-2">
                 <Icon />
                 <span>{option.name}</span>
-                {option.type === 'llm' && <ArrowSquareOut className="ml-auto h-3 w-3" />}
+                {option.type === "llm" && (
+                  <ArrowSquareOut className="ml-auto h-3 w-3" />
+                )}
               </div>
             );
           }}
