@@ -11,21 +11,22 @@ from pusher.price_state import PriceState, PriceUpdate
 
 
 class LazerListener:
+    SOURCE_NAME = "lazer"
+
     """
     Subscribe to Lazer price updates for needed feeds.
     """
     def __init__(self, config: Config, price_state: PriceState):
         self.lazer_urls = config.lazer.lazer_urls
         self.api_key = config.lazer.lazer_api_key
-        self.base_feed_id = config.lazer.base_feed_id
-        self.quote_feed_id = config.lazer.quote_feed_id
+        self.feed_ids = config.lazer.feed_ids
         self.price_state = price_state
 
     def get_subscribe_request(self, subscription_id: int):
         return {
             "type": "subscribe",
             "subscriptionId": subscription_id,
-            "priceFeedIds": [self.base_feed_id, self.quote_feed_id],
+            "priceFeedIds": self.feed_ids,
             "properties": ["price"],
             "formats": [],
             "deliveryFormat": "json",
@@ -54,7 +55,7 @@ class LazerListener:
             subscribe_request = self.get_subscribe_request(1)
 
             await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent Lazer subscribe request to {}", router_url)
+            logger.info("Sent Lazer subscribe request to {} feed_ids {}", router_url, self.feed_ids)
 
             # listen for updates
             while True:
@@ -89,9 +90,7 @@ class LazerListener:
                 price = feed_update.get("price", None)
                 if feed_id is None or price is None:
                     continue
-                if feed_id == self.base_feed_id:
-                    self.price_state.lazer_base_price = PriceUpdate(price, now)
-                if feed_id == self.quote_feed_id:
-                    self.price_state.lazer_quote_price = PriceUpdate(price, now)
+                else:
+                    self.price_state.state[self.SOURCE_NAME][feed_id] = PriceUpdate(price, now)
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)

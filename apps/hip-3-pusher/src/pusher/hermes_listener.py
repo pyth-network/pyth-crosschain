@@ -11,19 +11,20 @@ from pusher.price_state import PriceState, PriceUpdate
 
 
 class HermesListener:
+    SOURCE_NAME = "hermes"
+
     """
     Subscribe to Hermes price updates for needed feeds.
     """
     def __init__(self, config: Config, price_state: PriceState):
         self.hermes_urls = config.hermes.hermes_urls
-        self.base_feed_id = config.hermes.base_feed_id
-        self.quote_feed_id = config.hermes.quote_feed_id
+        self.feed_ids = config.hermes.feed_ids
         self.price_state = price_state
 
     def get_subscribe_request(self):
         return {
             "type": "subscribe",
-            "ids": [self.base_feed_id, self.quote_feed_id],
+            "ids": self.feed_ids,
             "verbose": False,
             "binary": True,
             "allow_out_of_order": False,
@@ -81,9 +82,6 @@ class HermesListener:
             publish_time = price_object["publish_time"]
             logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
             now = time.time()
-            if id == self.base_feed_id:
-                self.price_state.hermes_base_price = PriceUpdate(price, now)
-            if id == self.quote_feed_id:
-                self.price_state.hermes_quote_price = PriceUpdate(price, now)
+            self.price_state.state[self.SOURCE_NAME][id] = PriceUpdate(price, now)
         except Exception as e:
             logger.error("parse_hermes_message error: {}", e)

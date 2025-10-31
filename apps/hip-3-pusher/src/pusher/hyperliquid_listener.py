@@ -16,13 +16,16 @@ HYPERLIQUID_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws"
 
 
 class HyperliquidListener:
+    ORACLE_SOURCE_NAME = "hl_oracle"
+    MARK_SOURCE_NAME = "hl_mark"
+
     """
     Subscribe to any relevant Hyperliquid websocket streams
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket
     """
     def __init__(self, config: Config, price_state: PriceState):
         self.hyperliquid_ws_urls = config.hyperliquid.hyperliquid_ws_urls
-        self.market_symbol = config.hyperliquid.market_symbol
+        self.asset_context_symbols = config.hyperliquid.asset_context_symbols
         self.price_state = price_state
 
     def get_subscribe_request(self, asset):
@@ -44,9 +47,10 @@ class HyperliquidListener:
 
     async def subscribe_single_inner(self, url):
         async with websockets.connect(url) as ws:
-            subscribe_request = self.get_subscribe_request(self.market_symbol)
-            await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent subscribe request to {}", url)
+            for symbol in self.asset_context_symbols:
+                subscribe_request = self.get_subscribe_request(symbol)
+                await ws.send(json.dumps(subscribe_request))
+                logger.info("Sent subscribe request for symbol: {} to {}", symbol,  url)
 
             # listen for updates
             while True:
@@ -76,10 +80,10 @@ class HyperliquidListener:
     def parse_hyperliquid_ws_message(self, message):
         try:
             ctx = message["data"]["ctx"]
+            symbol = message["data"]["coin"]
             now = time.time()
-            self.price_state.hl_oracle_price = PriceUpdate(ctx["oraclePx"], now)
-            self.price_state.hl_mark_price = PriceUpdate(ctx["markPx"], now)
-            logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", self.price_state.hl_oracle_price,
-                         self.price_state.hl_mark_price)
+            self.price_state.state[self.ORACLE_SOURCE_NAME][symbol] = PriceUpdate(ctx["oraclePx"], now)
+            self.price_state.state[self.MARK_SOURCE_NAME][symbol] = PriceUpdate(ctx["markPx"], now)
+            logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
             logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", message, e)

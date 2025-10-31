@@ -53,7 +53,6 @@ class Publisher:
             self.multisig_address = config.multisig.multisig_address
 
         self.market_name = config.hyperliquid.market_name
-        self.market_symbol = config.hyperliquid.market_symbol
         self.enable_publish = config.hyperliquid.enable_publish
 
         self.price_state = price_state
@@ -70,20 +69,16 @@ class Publisher:
                 logger.exception("Publisher.publish() exception: {}", repr(e))
 
     def publish(self):
-        oracle_pxs = {}
-        oracle_px = self.price_state.get_current_oracle_price()
-        if not oracle_px:
-            logger.error("No valid oracle price available")
-            self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
-            return
-        else:
-            logger.debug("Current oracle price: {}", oracle_px)
-            oracle_pxs[f"{self.market_name}:{self.market_symbol}"] = oracle_px
+        oracle_pxs, mark_pxs, external_perp_pxs = self.price_state.get_all_prices(self.market_name)
+        logger.debug("oracle_pxs: {}", oracle_pxs)
+        logger.debug("mark_pxs: {}", mark_pxs)
+        logger.debug("external_perp_pxs: {}", external_perp_pxs)
 
-        mark_pxs = []
-        external_perp_pxs = {}
-        if self.price_state.hl_mark_price:
-            external_perp_pxs[f"{self.market_name}:{self.market_symbol}"] = self.price_state.hl_mark_price.price
+        if not oracle_pxs:
+            logger.error("No valid oracle prices available")
+            self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
+        # markPxs is a list of dicts of length 0-2, and so can be empty
+        mark_pxs = [mark_pxs] if mark_pxs else []
 
         # TODO: "Each update can change oraclePx and markPx by at most 1%."
         # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
