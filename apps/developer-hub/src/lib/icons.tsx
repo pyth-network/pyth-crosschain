@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { createElement } from "react";
 
 export function ClaudeIcon({
-  size = 24,
+  size = 12,
   color = "currentColor",
   className,
   style,
@@ -29,4 +29,3 @@ export function ClaudeIcon({
     }),
   );
 }
-
