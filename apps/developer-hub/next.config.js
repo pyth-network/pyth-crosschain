@@ -7,7 +7,7 @@ const config = {
     // Ensure content/ docs are traced into the serverless output on Vercel
     outputFileTracingIncludes: {
       // For App Router output; adjust if you have custom directories
-      "app/**": ["content/**"],
+      "/**": ["./content/docs/**"],
     },
   },
 
