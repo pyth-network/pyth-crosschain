@@ -323,8 +323,9 @@ pub mod tests {
             error::GetPriceError,
             price_update::{Price, PriceUpdateV2, TwapPrice, TwapUpdate, VerificationLevel},
         },
-        anchor_lang::{prelude::*, solana_program::borsh0_10},
+        anchor_lang::prelude::*,
         pythnet_sdk::messages::PriceFeedMessage,
+        solana_program::borsh0_10,
     };
 
     #[test]
