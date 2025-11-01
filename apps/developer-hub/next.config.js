@@ -3,6 +3,9 @@ import { createMDX } from "fumadocs-mdx/next";
 const config = {
   reactStrictMode: true,
   pageExtensions: ["ts", "tsx", "mdx"],
+  outputFileTracingIncludes: {
+    "/*": ["./content/docs/**"],
+  },
 
   logging: {
     fetches: {
