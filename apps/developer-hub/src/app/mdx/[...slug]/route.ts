@@ -24,7 +24,9 @@ export async function GET(
         "Cache-Control": "public, max-age=3600", // Cache for 1 hour
       },
     });
-  } catch {
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('MDX route error:', error);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }
