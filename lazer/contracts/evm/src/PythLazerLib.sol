@@ -294,16 +294,10 @@ library PythLazerLib {
                     property == PythLazerStructs.PriceFeedProperty.Exponent
                 ) {
                     (feed._exponent, pos) = parseFeedValueInt16(payload, pos);
-                    if (feed._exponent != 0)
-                        _setPresent(
-                            feed,
-                            uint8(PythLazerStructs.PriceFeedProperty.Exponent)
-                        );
-                    else
-                        _setApplicableButMissing(
-                            feed,
-                            uint8(PythLazerStructs.PriceFeedProperty.Exponent)
-                        );
+                    _setPresent(
+                        feed,
+                        uint8(PythLazerStructs.PriceFeedProperty.Exponent)
+                    );
 
                     // Confidence Property
                 } else if (
