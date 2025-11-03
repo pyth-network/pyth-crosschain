@@ -32,7 +32,7 @@ export async function GET() {
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('LLM Text route error:', error);
+    console.error("LLM Text route error:", error);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }
