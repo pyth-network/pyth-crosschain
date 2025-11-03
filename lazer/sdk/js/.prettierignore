@@ -4,3 +4,7 @@ dist/
 doc/
 doc*/
 node_modules/
+dist/
+lib/
+build/
+node_modules/

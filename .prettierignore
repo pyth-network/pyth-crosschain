@@ -40,3 +40,7 @@ contract_manager
 lazer/contracts/solana
 lazer/sdk/js
 lazer/sdk/js-solana
+dist/
+lib/
+build/
+node_modules/

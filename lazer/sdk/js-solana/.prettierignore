@@ -5,3 +5,7 @@ doc/
 doc*/
 node_modules/
 src/idl/
+dist/
+lib/
+build/
+node_modules/

@@ -2,3 +2,7 @@
 node_modules
 build
 coverage
+dist/
+lib/
+build/
+node_modules/

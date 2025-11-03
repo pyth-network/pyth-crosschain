@@ -6,3 +6,7 @@ node_modules/
 .env*.local
 .env
 .DS_Store
+dist/
+lib/
+build/
+node_modules/
