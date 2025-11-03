@@ -17,11 +17,13 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf dist/",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
-    "test:types": "ts-duality"
+    "test:types": "tsc"
   },
   "peerDependencies": {
     "react": "catalog:"
