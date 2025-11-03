@@ -14,37 +14,50 @@ export async function getLLMText(page: Page) {
   // eslint-disable-next-line no-console
   console.error("🔥 getLLMText EXECUTED at", new Date().toISOString());
 
-  const cwd = process.cwd();
-  const abs = page.absolutePath;
+  // Resolve a readable MDX path in this Lambda:
+  // 1) app-relative (when Vercel Root Directory is apps/developer-hub)
+  // 2) repo-relative (monorepo root)
+  // 3) absolutePath provided by Fumadocs (works locally)
   const pathArray: string[] = Array.isArray(page.path)
     ? page.path
     : [page.path];
-  const repoRel = path.join(
-    cwd,
+  const appRelTry = path.join(process.cwd(), "content", "docs", ...pathArray);
+  const repoRelTry = path.join(
+    process.cwd(),
     "apps",
     "developer-hub",
     "content",
     "docs",
     ...pathArray,
   );
-  const appRel = path.join(cwd, "content", "docs", ...pathArray);
+  const absTry = page.absolutePath;
+
+  let mdxPath: string | undefined;
+  if (existsSync(appRelTry)) {
+    mdxPath = appRelTry;
+  } else if (existsSync(repoRelTry)) {
+    mdxPath = repoRelTry;
+  } else if (absTry && existsSync(absTry)) {
+    mdxPath = absTry;
+  }
 
   // eslint-disable-next-line no-console
-  console.error("🧪[LLM] url=", page.url);
-  // eslint-disable-next-line no-console
-  console.error("🧪[LLM] cwd=", cwd);
-  // eslint-disable-next-line no-console
-  console.error("🧪[LLM] abs=", abs, "exists=", abs ? existsSync(abs) : false);
-  // eslint-disable-next-line no-console
-  console.error("🧪[LLM] repoRel=", repoRel, "exists=", existsSync(repoRel));
-  // eslint-disable-next-line no-console
-  console.error("🧪[LLM] appRel=", appRel, "exists=", existsSync(appRel));
+  console.error("🧪[LLM] chosenPath=", mdxPath);
+
+  if (!mdxPath) {
+    throw new Error(
+      `MDX file not found at any known path:
+       appRel=${appRelTry},
+       repoRel=${repoRelTry},
+       abs=${absTry}`,
+    );
+  }
 
   // eslint-disable-next-line no-console
-  console.error(`Getting LLM text for ${page.absolutePath}`);
+  console.error(`Getting LLM text for ${mdxPath}`);
   const processed = await processor.process({
-    path: page.absolutePath,
-    value: await readFile(page.absolutePath, "utf8"),
+    path: mdxPath,
+    value: await readFile(mdxPath, "utf8"),
   });
 
   return `# ${page.data.title ?? "Untitled"}
