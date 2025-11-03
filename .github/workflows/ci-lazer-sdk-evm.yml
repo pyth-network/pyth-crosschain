@@ -23,4 +23,4 @@ jobs:
       - name: Check build
         run: forge build --sizes
       - name: Run tests
-        run: forge test -vvv
+        run: forge test --ffi --via-ir -vvv

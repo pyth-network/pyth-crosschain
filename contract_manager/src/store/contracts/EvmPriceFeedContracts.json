@@ -893,5 +893,20 @@
     "chain": "etherlink_new_testnet",
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "hoodi",
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "taiko_hoodi",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "morph_hoodi",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
   }
 ]
