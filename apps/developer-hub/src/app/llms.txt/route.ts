@@ -4,7 +4,6 @@ import { getLLMText } from "../../lib/get-llm-text";
 import { source } from "../../lib/source";
 
 export async function GET() {
-  try {
     const pages = source.getPages();
     const scan = pages.map((page) => getLLMText(page));
     const scanned = await Promise.all(scan);
@@ -30,9 +29,4 @@ export async function GET() {
         "Cache-Control": "public, max-age=3600", // Cache for 1 hour
       },
     });
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("LLM Text route error:", error);
-    return new NextResponse("Internal server error", { status: 500 });
-  }
 }
