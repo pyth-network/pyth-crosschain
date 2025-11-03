@@ -104,7 +104,7 @@ pub enum AssetClass {
 }
 
 impl AssetClass {
-    fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             AssetClass::Crypto => "crypto",
             AssetClass::Fx => "fx",
