@@ -1,19 +1,8 @@
 import { createMDX } from "fumadocs-mdx/next";
 
 const config = {
-  async rewrites() {
-    return [
-      {
-        source: "/docs/:path*.mdx",
-        destination: "/llms.mdx/:path*",
-      },
-    ];
-  },
   reactStrictMode: true,
   pageExtensions: ["ts", "tsx", "mdx"],
-  outputFileTracingIncludes: {
-    "/*": ["./content/docs/**"],
-  },
 
   logging: {
     fetches: {

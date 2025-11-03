@@ -167,7 +167,7 @@ export function LLMShare({ content, title, url }: LLMShareProps) {
       <div>
         <Select<DropdownOption>
           label="More options"
-          buttonLabel=""
+          buttonLabel="More options"
           hideLabel={true}
           size="sm"
           variant="outline"
