@@ -2,7 +2,7 @@
   "name": "pyth-iota-cli",
   "version": "0.1.0",
   "description": "Pyth IOTA Integration Cli tools",
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "license": "Apache-2.0",
   "scripts": {
     "cli": "ts-node src/cli.ts",
@@ -35,46 +35,46 @@
   "exports": {
     "./cli": {
       "require": {
-        "default": "./dist/cjs/cli.js",
+        "default": "./dist/cjs/cli.cjs",
         "types": "./dist/cjs/cli.d.ts"
       },
       "import": {
-        "default": "./dist/esm/cli.js",
+        "default": "./dist/esm/cli.mjs",
         "types": "./dist/esm/cli.d.ts"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
     "./pyth_deploy": {
       "require": {
-        "default": "./dist/cjs/pyth_deploy.js",
+        "default": "./dist/cjs/pyth_deploy.cjs",
         "types": "./dist/cjs/pyth_deploy.d.ts"
       },
       "import": {
-        "default": "./dist/esm/pyth_deploy.js",
+        "default": "./dist/esm/pyth_deploy.mjs",
         "types": "./dist/esm/pyth_deploy.d.ts"
       }
     },
     "./upgrade_pyth": {
       "require": {
-        "default": "./dist/cjs/upgrade_pyth.js",
+        "default": "./dist/cjs/upgrade_pyth.cjs",
         "types": "./dist/cjs/upgrade_pyth.d.ts"
       },
       "import": {
-        "default": "./dist/esm/upgrade_pyth.js",
+        "default": "./dist/esm/upgrade_pyth.mjs",
         "types": "./dist/esm/upgrade_pyth.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "types": "./dist/cjs/index.d.ts"
 }

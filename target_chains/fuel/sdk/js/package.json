@@ -6,7 +6,7 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
@@ -61,55 +61,55 @@
   "exports": {
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
     "./types/PythContract": {
       "require": {
-        "default": "./dist/cjs/types/PythContract.js",
+        "default": "./dist/cjs/types/PythContract.cjs",
         "types": "./dist/cjs/types/PythContract.d.ts"
       },
       "import": {
-        "default": "./dist/esm/types/PythContract.js",
+        "default": "./dist/esm/types/PythContract.mjs",
         "types": "./dist/esm/types/PythContract.d.ts"
       }
     },
     "./types/PythContractFactory": {
       "require": {
-        "default": "./dist/cjs/types/PythContractFactory.js",
+        "default": "./dist/cjs/types/PythContractFactory.cjs",
         "types": "./dist/cjs/types/PythContractFactory.d.ts"
       },
       "import": {
-        "default": "./dist/esm/types/PythContractFactory.js",
+        "default": "./dist/esm/types/PythContractFactory.mjs",
         "types": "./dist/esm/types/PythContractFactory.d.ts"
       }
     },
     "./types/common": {
       "require": {
-        "default": "./dist/cjs/types/common.js",
+        "default": "./dist/cjs/types/common.cjs",
         "types": "./dist/cjs/types/common.d.ts"
       },
       "import": {
-        "default": "./dist/esm/types/common.js",
+        "default": "./dist/esm/types/common.mjs",
         "types": "./dist/esm/types/common.d.ts"
       }
     },
     "./types": {
       "require": {
-        "default": "./dist/cjs/types/index.js",
+        "default": "./dist/cjs/types/index.cjs",
         "types": "./dist/cjs/types/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/types/index.js",
+        "default": "./dist/esm/types/index.mjs",
         "types": "./dist/esm/types/index.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

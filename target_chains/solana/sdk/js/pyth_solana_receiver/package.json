@@ -3,7 +3,7 @@
   "version": "0.12.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
@@ -59,35 +59,35 @@
   "type": "module",
   "exports": {
     "./PythSolanaReceiver": {
-      "default": "./dist/PythSolanaReceiver.js",
+      "default": "./dist/PythSolanaReceiver.cjs",
       "types": "./dist/PythSolanaReceiver.d.ts"
     },
     "./address": {
-      "default": "./dist/address.js",
+      "default": "./dist/address.cjs",
       "types": "./dist/address.d.ts"
     },
     "./compute_budget": {
-      "default": "./dist/compute_budget.js",
+      "default": "./dist/compute_budget.cjs",
       "types": "./dist/compute_budget.d.ts"
     },
     "./idl/pyth_push_oracle": {
-      "default": "./dist/idl/pyth_push_oracle.js",
+      "default": "./dist/idl/pyth_push_oracle.cjs",
       "types": "./dist/idl/pyth_push_oracle.d.ts"
     },
     "./idl/pyth_solana_receiver": {
-      "default": "./dist/idl/pyth_solana_receiver.js",
+      "default": "./dist/idl/pyth_solana_receiver.cjs",
       "types": "./dist/idl/pyth_solana_receiver.d.ts"
     },
     "./idl/wormhole_core_bridge_solana": {
-      "default": "./dist/idl/wormhole_core_bridge_solana.js",
+      "default": "./dist/idl/wormhole_core_bridge_solana.cjs",
       "types": "./dist/idl/wormhole_core_bridge_solana.d.ts"
     },
     ".": {
-      "default": "./dist/index.js",
+      "default": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./vaa": {
-      "default": "./dist/vaa.js",
+      "default": "./dist/vaa.cjs",
       "types": "./dist/vaa.d.ts"
     },
     "./package.json": "./package.json"

@@ -3,7 +3,7 @@
   "version": "10.2.0",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
@@ -99,135 +99,135 @@
   "type": "module",
   "exports": {
     "./aptos/aptos": {
-      "default": "./dist/aptos/aptos.js",
+      "default": "./dist/aptos/aptos.cjs",
       "types": "./dist/aptos/aptos.d.ts"
     },
     "./aptos/balance-tracker": {
-      "default": "./dist/aptos/balance-tracker.js",
+      "default": "./dist/aptos/balance-tracker.cjs",
       "types": "./dist/aptos/balance-tracker.d.ts"
     },
     "./aptos/command": {
-      "default": "./dist/aptos/command.js",
+      "default": "./dist/aptos/command.cjs",
       "types": "./dist/aptos/command.d.ts"
     },
     "./common": {
-      "default": "./dist/common.js",
+      "default": "./dist/common.cjs",
       "types": "./dist/common.d.ts"
     },
     "./controller": {
-      "default": "./dist/controller.js",
+      "default": "./dist/controller.cjs",
       "types": "./dist/controller.d.ts"
     },
     "./evm/balance-tracker": {
-      "default": "./dist/evm/balance-tracker.js",
+      "default": "./dist/evm/balance-tracker.cjs",
       "types": "./dist/evm/balance-tracker.d.ts"
     },
     "./evm/command": {
-      "default": "./dist/evm/command.js",
+      "default": "./dist/evm/command.cjs",
       "types": "./dist/evm/command.d.ts"
     },
     "./evm/custom-gas-station": {
-      "default": "./dist/evm/custom-gas-station.js",
+      "default": "./dist/evm/custom-gas-station.cjs",
       "types": "./dist/evm/custom-gas-station.d.ts"
     },
     "./evm/evm": {
-      "default": "./dist/evm/evm.js",
+      "default": "./dist/evm/evm.cjs",
       "types": "./dist/evm/evm.d.ts"
     },
     "./evm/pyth-abi": {
-      "default": "./dist/evm/pyth-abi.js",
+      "default": "./dist/evm/pyth-abi.cjs",
       "types": "./dist/evm/pyth-abi.d.ts"
     },
     "./evm/pyth-contract": {
-      "default": "./dist/evm/pyth-contract.js",
+      "default": "./dist/evm/pyth-contract.cjs",
       "types": "./dist/evm/pyth-contract.d.ts"
     },
     "./evm/super-wallet": {
-      "default": "./dist/evm/super-wallet.js",
+      "default": "./dist/evm/super-wallet.cjs",
       "types": "./dist/evm/super-wallet.d.ts"
     },
     "./fuel/command": {
-      "default": "./dist/fuel/command.js",
+      "default": "./dist/fuel/command.cjs",
       "types": "./dist/fuel/command.d.ts"
     },
     "./fuel/fuel": {
-      "default": "./dist/fuel/fuel.js",
+      "default": "./dist/fuel/fuel.cjs",
       "types": "./dist/fuel/fuel.d.ts"
     },
     ".": {
-      "default": "./dist/index.js",
+      "default": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./injective/command": {
-      "default": "./dist/injective/command.js",
+      "default": "./dist/injective/command.cjs",
       "types": "./dist/injective/command.d.ts"
     },
     "./injective/injective": {
-      "default": "./dist/injective/injective.js",
+      "default": "./dist/injective/injective.cjs",
       "types": "./dist/injective/injective.d.ts"
     },
     "./interface": {
-      "default": "./dist/interface.js",
+      "default": "./dist/interface.cjs",
       "types": "./dist/interface.d.ts"
     },
     "./metrics": {
-      "default": "./dist/metrics.js",
+      "default": "./dist/metrics.cjs",
       "types": "./dist/metrics.d.ts"
     },
     "./near/command": {
-      "default": "./dist/near/command.js",
+      "default": "./dist/near/command.cjs",
       "types": "./dist/near/command.d.ts"
     },
     "./near/near": {
-      "default": "./dist/near/near.js",
+      "default": "./dist/near/near.cjs",
       "types": "./dist/near/near.d.ts"
     },
     "./options": {
-      "default": "./dist/options.js",
+      "default": "./dist/options.cjs",
       "types": "./dist/options.d.ts"
     },
     "./price-config": {
-      "default": "./dist/price-config.js",
+      "default": "./dist/price-config.cjs",
       "types": "./dist/price-config.d.ts"
     },
     "./pyth-price-listener": {
-      "default": "./dist/pyth-price-listener.js",
+      "default": "./dist/pyth-price-listener.cjs",
       "types": "./dist/pyth-price-listener.d.ts"
     },
     "./solana/balance-tracker": {
-      "default": "./dist/solana/balance-tracker.js",
+      "default": "./dist/solana/balance-tracker.cjs",
       "types": "./dist/solana/balance-tracker.d.ts"
     },
     "./solana/command": {
-      "default": "./dist/solana/command.js",
+      "default": "./dist/solana/command.cjs",
       "types": "./dist/solana/command.d.ts"
     },
     "./solana/solana": {
-      "default": "./dist/solana/solana.js",
+      "default": "./dist/solana/solana.cjs",
       "types": "./dist/solana/solana.d.ts"
     },
     "./sui/balance-tracker": {
-      "default": "./dist/sui/balance-tracker.js",
+      "default": "./dist/sui/balance-tracker.cjs",
       "types": "./dist/sui/balance-tracker.d.ts"
     },
     "./sui/command": {
-      "default": "./dist/sui/command.js",
+      "default": "./dist/sui/command.cjs",
       "types": "./dist/sui/command.d.ts"
     },
     "./sui/sui": {
-      "default": "./dist/sui/sui.js",
+      "default": "./dist/sui/sui.cjs",
       "types": "./dist/sui/sui.d.ts"
     },
     "./ton/command": {
-      "default": "./dist/ton/command.js",
+      "default": "./dist/ton/command.cjs",
       "types": "./dist/ton/command.d.ts"
     },
     "./ton/ton": {
-      "default": "./dist/ton/ton.js",
+      "default": "./dist/ton/ton.cjs",
       "types": "./dist/ton/ton.d.ts"
     },
     "./utils": {
-      "default": "./dist/utils.js",
+      "default": "./dist/utils.cjs",
       "types": "./dist/utils.d.ts"
     },
     "./package.json": "./package.json"

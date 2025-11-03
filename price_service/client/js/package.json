@@ -7,7 +7,7 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
@@ -65,19 +65,19 @@
   "type": "module",
   "exports": {
     "./PriceServiceConnection": {
-      "default": "./dist/PriceServiceConnection.js",
+      "default": "./dist/PriceServiceConnection.cjs",
       "types": "./dist/PriceServiceConnection.d.ts"
     },
     "./ResillientWebSocket": {
-      "default": "./dist/ResillientWebSocket.js",
+      "default": "./dist/ResillientWebSocket.cjs",
       "types": "./dist/ResillientWebSocket.d.ts"
     },
     ".": {
-      "default": "./dist/index.js",
+      "default": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./utils": {
-      "default": "./dist/utils.js",
+      "default": "./dist/utils.cjs",
       "types": "./dist/utils.d.ts"
     },
     "./package.json": "./package.json"

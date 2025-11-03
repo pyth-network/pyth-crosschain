@@ -8,36 +8,36 @@
   "files": [
     "dist/**/*"
   ],
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "types": "./dist/cjs/index.d.ts",
   "exports": {
     "./ed25519": {
       "require": {
-        "default": "./dist/cjs/ed25519.js",
+        "default": "./dist/cjs/ed25519.cjs",
         "types": "./dist/cjs/ed25519.d.ts"
       },
       "import": {
-        "default": "./dist/esm/ed25519.js",
+        "default": "./dist/esm/ed25519.mjs",
         "types": "./dist/esm/ed25519.d.ts"
       }
     },
     "./idl/pyth-lazer-solana-contract": {
       "require": {
-        "default": "./dist/cjs/idl/pyth-lazer-solana-contract.js",
+        "default": "./dist/cjs/idl/pyth-lazer-solana-contract.cjs",
         "types": "./dist/cjs/idl/pyth-lazer-solana-contract.d.ts"
       },
       "import": {
-        "default": "./dist/esm/idl/pyth-lazer-solana-contract.js",
+        "default": "./dist/esm/idl/pyth-lazer-solana-contract.mjs",
         "types": "./dist/esm/idl/pyth-lazer-solana-contract.d.ts"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
@@ -86,5 +86,5 @@
     "pnpm": ">=10.7.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

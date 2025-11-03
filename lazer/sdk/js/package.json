@@ -12,106 +12,106 @@
   "files": [
     "dist/**/*"
   ],
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "types": "./dist/cjs/index.d.ts",
   "exports": {
     "./client": {
       "require": {
-        "default": "./dist/cjs/client.js",
+        "default": "./dist/cjs/client.cjs",
         "types": "./dist/cjs/client.d.ts"
       },
       "import": {
-        "default": "./dist/esm/client.js",
+        "default": "./dist/esm/client.mjs",
         "types": "./dist/esm/client.d.ts"
       }
     },
     "./constants": {
       "require": {
-        "default": "./dist/cjs/constants.js",
+        "default": "./dist/cjs/constants.cjs",
         "types": "./dist/cjs/constants.d.ts"
       },
       "import": {
-        "default": "./dist/esm/constants.js",
+        "default": "./dist/esm/constants.mjs",
         "types": "./dist/esm/constants.d.ts"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
     "./protocol": {
       "require": {
-        "default": "./dist/cjs/protocol.js",
+        "default": "./dist/cjs/protocol.cjs",
         "types": "./dist/cjs/protocol.d.ts"
       },
       "import": {
-        "default": "./dist/esm/protocol.js",
+        "default": "./dist/esm/protocol.mjs",
         "types": "./dist/esm/protocol.d.ts"
       }
     },
     "./socket/resilient-websocket": {
       "require": {
-        "default": "./dist/cjs/socket/resilient-websocket.js",
+        "default": "./dist/cjs/socket/resilient-websocket.cjs",
         "types": "./dist/cjs/socket/resilient-websocket.d.ts"
       },
       "import": {
-        "default": "./dist/esm/socket/resilient-websocket.js",
+        "default": "./dist/esm/socket/resilient-websocket.mjs",
         "types": "./dist/esm/socket/resilient-websocket.d.ts"
       }
     },
     "./socket/websocket-pool": {
       "require": {
-        "default": "./dist/cjs/socket/websocket-pool.js",
+        "default": "./dist/cjs/socket/websocket-pool.cjs",
         "types": "./dist/cjs/socket/websocket-pool.d.ts"
       },
       "import": {
-        "default": "./dist/esm/socket/websocket-pool.js",
+        "default": "./dist/esm/socket/websocket-pool.mjs",
         "types": "./dist/esm/socket/websocket-pool.d.ts"
       }
     },
     "./util/buffer-util": {
       "require": {
-        "default": "./dist/cjs/util/buffer-util.js",
+        "default": "./dist/cjs/util/buffer-util.cjs",
         "types": "./dist/cjs/util/buffer-util.d.ts"
       },
       "import": {
-        "default": "./dist/esm/util/buffer-util.js",
+        "default": "./dist/esm/util/buffer-util.mjs",
         "types": "./dist/esm/util/buffer-util.d.ts"
       }
     },
     "./util/env-util": {
       "require": {
-        "default": "./dist/cjs/util/env-util.js",
+        "default": "./dist/cjs/util/env-util.cjs",
         "types": "./dist/cjs/util/env-util.d.ts"
       },
       "import": {
-        "default": "./dist/esm/util/env-util.js",
+        "default": "./dist/esm/util/env-util.mjs",
         "types": "./dist/esm/util/env-util.d.ts"
       }
     },
     "./util": {
       "require": {
-        "default": "./dist/cjs/util/index.js",
+        "default": "./dist/cjs/util/index.cjs",
         "types": "./dist/cjs/util/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/util/index.js",
+        "default": "./dist/esm/util/index.mjs",
         "types": "./dist/esm/util/index.d.ts"
       }
     },
     "./util/url-util": {
       "require": {
-        "default": "./dist/cjs/util/url-util.js",
+        "default": "./dist/cjs/util/url-util.cjs",
         "types": "./dist/cjs/util/url-util.d.ts"
       },
       "import": {
-        "default": "./dist/esm/util/url-util.js",
+        "default": "./dist/esm/util/url-util.mjs",
         "types": "./dist/esm/util/url-util.d.ts"
       }
     },
@@ -163,5 +163,5 @@
     "ws": "^8.18.0"
   },
   "packageManager": "pnpm@10.19.0",
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

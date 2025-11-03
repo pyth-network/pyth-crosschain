@@ -6,7 +6,7 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "types": "./dist/cjs/index.d.ts",
   "type": "module",
   "files": [
@@ -68,35 +68,35 @@
   "exports": {
     "./SuiPriceServiceConnection": {
       "require": {
-        "default": "./dist/cjs/SuiPriceServiceConnection.js",
+        "default": "./dist/cjs/SuiPriceServiceConnection.cjs",
         "types": "./dist/cjs/SuiPriceServiceConnection.d.ts"
       },
       "import": {
-        "default": "./dist/esm/SuiPriceServiceConnection.js",
+        "default": "./dist/esm/SuiPriceServiceConnection.mjs",
         "types": "./dist/esm/SuiPriceServiceConnection.d.ts"
       }
     },
     "./client": {
       "require": {
-        "default": "./dist/cjs/client.js",
+        "default": "./dist/cjs/client.cjs",
         "types": "./dist/cjs/client.d.ts"
       },
       "import": {
-        "default": "./dist/esm/client.js",
+        "default": "./dist/esm/client.mjs",
         "types": "./dist/esm/client.d.ts"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

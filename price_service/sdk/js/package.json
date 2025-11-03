@@ -3,7 +3,7 @@
   "version": "1.8.0",
   "description": "Pyth price service SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
@@ -55,35 +55,35 @@
   "exports": {
     "./AccumulatorUpdateData": {
       "require": {
-        "default": "./dist/cjs/AccumulatorUpdateData.js",
+        "default": "./dist/cjs/AccumulatorUpdateData.cjs",
         "types": "./dist/cjs/AccumulatorUpdateData.d.ts"
       },
       "import": {
-        "default": "./dist/esm/AccumulatorUpdateData.js",
+        "default": "./dist/esm/AccumulatorUpdateData.mjs",
         "types": "./dist/esm/AccumulatorUpdateData.d.ts"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
     "./schemas/PriceFeed": {
       "require": {
-        "default": "./dist/cjs/schemas/PriceFeed.js",
+        "default": "./dist/cjs/schemas/PriceFeed.cjs",
         "types": "./dist/cjs/schemas/PriceFeed.d.ts"
       },
       "import": {
-        "default": "./dist/esm/schemas/PriceFeed.js",
+        "default": "./dist/esm/schemas/PriceFeed.mjs",
         "types": "./dist/esm/schemas/PriceFeed.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

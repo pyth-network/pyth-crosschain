@@ -6,7 +6,7 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
@@ -66,11 +66,11 @@
   "type": "module",
   "exports": {
     "./AptosPriceServiceConnection": {
-      "default": "./dist/AptosPriceServiceConnection.js",
+      "default": "./dist/AptosPriceServiceConnection.cjs",
       "types": "./dist/AptosPriceServiceConnection.d.ts"
     },
     ".": {
-      "default": "./dist/index.js",
+      "default": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./package.json": "./package.json"

@@ -6,7 +6,7 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/**/*"
@@ -65,15 +65,15 @@
   "type": "module",
   "exports": {
     "./IotaPriceServiceConnection": {
-      "default": "./dist/IotaPriceServiceConnection.js",
+      "default": "./dist/IotaPriceServiceConnection.cjs",
       "types": "./dist/IotaPriceServiceConnection.d.ts"
     },
     "./client": {
-      "default": "./dist/client.js",
+      "default": "./dist/client.cjs",
       "types": "./dist/client.d.ts"
     },
     ".": {
-      "default": "./dist/index.js",
+      "default": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
     "./package.json": "./package.json"

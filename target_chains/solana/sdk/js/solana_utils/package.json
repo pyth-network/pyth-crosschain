@@ -3,7 +3,7 @@
   "version": "0.5.0",
   "description": "Utility functions for Solana",
   "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
@@ -60,35 +60,35 @@
   "exports": {
     ".": {
       "require": {
-        "default": "./dist/cjs/index.js",
+        "default": "./dist/cjs/index.cjs",
         "types": "./dist/cjs/index.d.ts"
       },
       "import": {
-        "default": "./dist/esm/index.js",
+        "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       }
     },
     "./jito": {
       "require": {
-        "default": "./dist/cjs/jito.js",
+        "default": "./dist/cjs/jito.cjs",
         "types": "./dist/cjs/jito.d.ts"
       },
       "import": {
-        "default": "./dist/esm/jito.js",
+        "default": "./dist/esm/jito.mjs",
         "types": "./dist/esm/jito.d.ts"
       }
     },
     "./transaction": {
       "require": {
-        "default": "./dist/cjs/transaction.js",
+        "default": "./dist/cjs/transaction.cjs",
         "types": "./dist/cjs/transaction.d.ts"
       },
       "import": {
-        "default": "./dist/esm/transaction.js",
+        "default": "./dist/esm/transaction.mjs",
         "types": "./dist/esm/transaction.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

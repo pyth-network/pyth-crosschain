@@ -40,51 +40,51 @@
   "exports": {
     "./build-contract": {
       "require": {
-        "default": "./dist/cjs/build-contract.js",
+        "default": "./dist/cjs/build-contract.cjs",
         "types": "./dist/cjs/build-contract.d.ts"
       },
       "import": {
-        "default": "./dist/esm/build-contract.js",
+        "default": "./dist/esm/build-contract.mjs",
         "types": "./dist/esm/build-contract.d.ts"
       }
     },
     "./configs": {
       "require": {
-        "default": "./dist/cjs/configs.js",
+        "default": "./dist/cjs/configs.cjs",
         "types": "./dist/cjs/configs.d.ts"
       },
       "import": {
-        "default": "./dist/esm/configs.js",
+        "default": "./dist/esm/configs.mjs",
         "types": "./dist/esm/configs.d.ts"
       }
     },
     "./helper": {
       "require": {
-        "default": "./dist/cjs/helper.js",
+        "default": "./dist/cjs/helper.cjs",
         "types": "./dist/cjs/helper.d.ts"
       },
       "import": {
-        "default": "./dist/esm/helper.js",
+        "default": "./dist/esm/helper.mjs",
         "types": "./dist/esm/helper.d.ts"
       }
     },
     "./instantiate-pyth": {
       "require": {
-        "default": "./dist/cjs/instantiate-pyth.js",
+        "default": "./dist/cjs/instantiate-pyth.cjs",
         "types": "./dist/cjs/instantiate-pyth.d.ts"
       },
       "import": {
-        "default": "./dist/esm/instantiate-pyth.js",
+        "default": "./dist/esm/instantiate-pyth.mjs",
         "types": "./dist/esm/instantiate-pyth.d.ts"
       }
     },
     "./instantiate-wormhole": {
       "require": {
-        "default": "./dist/cjs/instantiate-wormhole.js",
+        "default": "./dist/cjs/instantiate-wormhole.cjs",
         "types": "./dist/cjs/instantiate-wormhole.d.ts"
       },
       "import": {
-        "default": "./dist/esm/instantiate-wormhole.js",
+        "default": "./dist/esm/instantiate-wormhole.mjs",
         "types": "./dist/esm/instantiate-wormhole.d.ts"
       }
     },
