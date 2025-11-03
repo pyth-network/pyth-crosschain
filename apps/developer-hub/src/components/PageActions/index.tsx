@@ -2,9 +2,8 @@
 
 import { Copy, Check, Eye, OpenAiLogo } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
-import { useLogger } from "@pythnetwork/component-library/useLogger";
-import type { ComponentType } from "react";
-import { useState } from "react";
+import { useCopy } from "@pythnetwork/component-library/useCopy";
+import type { ReactNode } from "react";
 
 import styles from "./index.module.scss";
 import { ClaudeIcon } from "../../lib/icons";
@@ -12,7 +11,7 @@ import { ClaudeIcon } from "../../lib/icons";
 type PageActionOption = {
   id: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ReactNode;
   url?: string;
   type: "copy" | "markdown" | "llm";
   ariaLabel?: string;
@@ -21,7 +20,7 @@ type PageActionOption = {
 type PageAction = {
   id: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ReactNode;
   onClick: () => void;
   ariaLabel?: string;
 };
@@ -36,21 +35,21 @@ const getPageActionOptions = (): PageActionOption[] => [
   {
     id: "copy-page",
     label: "Copy Page",
-    icon: Copy,
+    icon: <Copy />,
     type: "copy",
     ariaLabel: "Copy page content",
   },
   {
     id: "view-markdown",
     label: "View Markdown",
-    icon: Eye,
+    icon: <Eye />,
     type: "markdown",
     ariaLabel: "View page as Markdown",
   },
   {
     id: "ask-chatgpt",
     label: "Ask in ChatGPT",
-    icon: OpenAiLogo,
+    icon: <OpenAiLogo />,
     url: "https://chat.openai.com",
     type: "llm",
     ariaLabel: "Ask in ChatGPT",
@@ -58,7 +57,7 @@ const getPageActionOptions = (): PageActionOption[] => [
   {
     id: "ask-claude",
     label: "Ask in Claude",
-    icon: ClaudeIcon,
+    icon: <ClaudeIcon />,
     url: "https://claude.ai",
     type: "llm",
     ariaLabel: "Ask in Claude",
@@ -66,21 +65,8 @@ const getPageActionOptions = (): PageActionOption[] => [
 ];
 
 export function PageActions({ content, title, url }: PageActionsProps) {
-  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
-  const logger = useLogger();
+  const { isCopied, copy } = useCopy(content);
   const pageActionOptions = getPageActionOptions();
-
-  async function handleCopy(key: string) {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopiedStates((prev) => ({ ...prev, [key]: true }));
-      setTimeout(() => {
-        setCopiedStates((prev) => ({ ...prev, [key]: false }));
-      }, 1200);
-    } catch (error) {
-      logger.error(error);
-    }
-  }
 
   function handleViewMarkdown() {
     const blob = new Blob([content], { type: "text/plain" });
@@ -118,11 +104,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
     let onClick: () => void;
 
     if (option.type === "copy") {
-      onClick = () => {
-        handleCopy(option.id).catch(() => {
-          /* no-op */
-        });
-      };
+      onClick = copy;
     } else if (option.type === "markdown") {
       onClick = handleViewMarkdown;
     } else {
@@ -144,14 +126,13 @@ export function PageActions({ content, title, url }: PageActionsProps) {
     <div className={styles.wrapper}>
       <div className={styles.container}>
         {actions.map((action, index) => {
-          const Icon = action.icon;
           const isLast = index === actions.length - 1;
 
           const pageOption = pageActionOptions.find(
             (opt) => opt.id === action.id,
           );
           const isCopyAction = pageOption?.type === "copy";
-          const showCheckIcon = isCopyAction && copiedStates[action.id];
+          const showCheckIcon = isCopyAction && isCopied;
 
           return (
             <div key={action.id} className={styles.buttonWrapper}>
@@ -165,7 +146,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
                   showCheckIcon ? (
                     <Check className={styles.icon ?? ""} />
                   ) : (
-                    <Icon className={styles.icon ?? ""} />
+                    action.icon
                   )
                 }
               >
