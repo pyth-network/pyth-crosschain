@@ -4,7 +4,8 @@
     "noEmit": false,
     "incremental": false,
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "isolatedModules": false
   },
   "exclude": [
     ".storybook",
