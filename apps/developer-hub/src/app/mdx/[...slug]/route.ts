@@ -26,7 +26,7 @@ export async function GET(
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('MDX route error:', error);
+    console.error("MDX route error:", error);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }
