@@ -138,6 +138,8 @@ export class SubmittedWormholeMessage {
       const { vaaBytes } = (await response.json()) as {
         vaaBytes: Parameters<typeof Buffer.from>[0];
       };
+      // @ts-expect-error - TODO: vaaBytes is reported as an ArrayBuffer-like object
+      // but the typings are mad
       return Buffer.from(vaaBytes, "base64");
     }
     throw new Error("VAA not found, maybe too soon to fetch?");
