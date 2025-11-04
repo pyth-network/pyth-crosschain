@@ -7,6 +7,7 @@ use std::{
 use derive_more::derive::From;
 use itertools::Itertools as _;
 use serde::{de::Error, Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::{
     payload::AggregatedPriceFeedData,
@@ -14,11 +15,13 @@ use crate::{
     ChannelId, Price, PriceFeedId, PriceFeedProperty, Rate,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestPriceRequestRepr {
     // Either price feed ids or symbols must be specified.
+    #[schema(example = json!([1]))]
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    #[schema(example = schema_default_symbols)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
@@ -33,7 +36,7 @@ pub struct LatestPriceRequestRepr {
     pub channel: Channel,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LatestPriceRequest(LatestPriceRequestRepr);
 
@@ -79,12 +82,13 @@ impl DerefMut for LatestPriceRequest {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PriceRequestRepr {
     pub timestamp: TimestampUs,
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    #[schema(default)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     pub formats: Vec<Format>,
@@ -97,7 +101,7 @@ pub struct PriceRequestRepr {
     pub channel: Channel,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PriceRequest(PriceRequestRepr);
 
@@ -143,7 +147,7 @@ impl DerefMut for PriceRequest {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ReducePriceRequest {
     pub payload: JsonUpdate,
@@ -158,7 +162,14 @@ pub fn default_parsed() -> bool {
     true
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+pub fn schema_default_symbols() -> Option<Vec<String>> {
+    None
+}
+pub fn schema_default_price_feed_ids() -> Option<Vec<PriceFeedId>> {
+    Some(vec![PriceFeedId(1)])
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum DeliveryFormat {
     /// Deliver stream updates as JSON text messages.
@@ -168,7 +179,7 @@ pub enum DeliveryFormat {
     Binary,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum Format {
     Evm,
@@ -177,7 +188,7 @@ pub enum Format {
     LeUnsigned,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum JsonBinaryEncoding {
     #[default]
@@ -185,9 +196,11 @@ pub enum JsonBinaryEncoding {
     Hex,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, From, ToSchema)]
+#[schema(example = "fixed_rate@200ms")]
 pub enum Channel {
     FixedRate(FixedRate),
+    #[schema(rename = "real_time")]
     RealTime,
 }
 
@@ -275,11 +288,12 @@ impl<'de> Deserialize<'de> for Channel {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscriptionParamsRepr {
     // Either price feed ids or symbols must be specified.
     pub price_feed_ids: Option<Vec<PriceFeedId>>,
+    #[schema(default)]
     pub symbols: Option<Vec<String>>,
     pub properties: Vec<PriceFeedProperty>,
     // "chains" was renamed to "formats". "chains" is still supported for compatibility.
@@ -299,7 +313,7 @@ pub struct SubscriptionParamsRepr {
     pub ignore_invalid_feeds: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscriptionParams(SubscriptionParamsRepr);
 
@@ -345,14 +359,14 @@ impl DerefMut for SubscriptionParams {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct JsonBinaryData {
     pub encoding: JsonBinaryEncoding,
     pub data: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct JsonUpdate {
     /// Present unless `parsed = false` is specified in subscription params.
@@ -372,7 +386,7 @@ pub struct JsonUpdate {
     pub le_unsigned: Option<JsonBinaryData>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ParsedPayload {
     #[serde(with = "crate::serde_str::timestamp")]
@@ -380,7 +394,7 @@ pub struct ParsedPayload {
     pub price_feeds: Vec<ParsedFeedPayload>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ParsedFeedPayload {
     pub price_feed_id: PriceFeedId,
@@ -491,7 +505,7 @@ impl ParsedFeedPayload {
 }
 
 /// A request sent from the client to the server.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
 pub enum WsRequest {
@@ -499,10 +513,12 @@ pub enum WsRequest {
     Unsubscribe(UnsubscribeRequest),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema,
+)]
 pub struct SubscriptionId(pub u64);
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscribeRequest {
     pub subscription_id: SubscriptionId,
@@ -510,14 +526,14 @@ pub struct SubscribeRequest {
     pub params: SubscriptionParams,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UnsubscribeRequest {
     pub subscription_id: SubscriptionId,
 }
 
 /// A JSON response sent from the server to the client.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, From)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, From, ToSchema)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
 pub enum WsResponse {
@@ -530,13 +546,13 @@ pub enum WsResponse {
 }
 
 /// Sent from the server after a successul subscription.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscribedResponse {
     pub subscription_id: SubscriptionId,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct InvalidFeedSubscriptionDetails {
     pub unknown_ids: Vec<PriceFeedId>,
@@ -545,7 +561,7 @@ pub struct InvalidFeedSubscriptionDetails {
     pub unstable: Vec<PriceFeedId>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscribedWithInvalidFeedIdsIgnoredResponse {
     pub subscription_id: SubscriptionId,
@@ -553,7 +569,7 @@ pub struct SubscribedWithInvalidFeedIdsIgnoredResponse {
     pub ignored_invalid_feed_ids: InvalidFeedSubscriptionDetails,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UnsubscribedResponse {
     pub subscription_id: SubscriptionId,
@@ -561,7 +577,7 @@ pub struct UnsubscribedResponse {
 
 /// Sent from the server if the requested subscription or unsubscription request
 /// could not be fulfilled.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SubscriptionErrorResponse {
     pub subscription_id: SubscriptionId,
@@ -570,7 +586,7 @@ pub struct SubscriptionErrorResponse {
 
 /// Sent from the server if an internal error occured while serving data for an existing subscription,
 /// or a client request sent a bad request.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
     pub error: String,
@@ -578,7 +594,7 @@ pub struct ErrorResponse {
 
 /// Sent from the server when new data is available for an existing subscription
 /// (only if `delivery_format == Json`).
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StreamUpdatedResponse {
     pub subscription_id: SubscriptionId,
