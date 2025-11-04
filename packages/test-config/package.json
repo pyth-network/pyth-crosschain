@@ -16,11 +16,19 @@
   "bin": {
     "unit-test": "./unit-test.js"
   },
+  "main": "./config.cjs",
   "module": "./config.js",
+  "types": "./config.d.ts",
   "exports": {
     ".": {
-      "default": "./config.js",
-      "types": "./config.d.ts"
+      "import": {
+        "default": "./config.js",
+        "types": "./config.d.ts"
+      },
+      "require": {
+        "default": "./config.cjs",
+        "types": "./config.d.ts"
+      }
     }
   },
   "scripts": {

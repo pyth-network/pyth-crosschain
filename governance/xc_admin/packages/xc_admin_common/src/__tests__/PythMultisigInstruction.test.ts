@@ -1,7 +1,3 @@
-import crypto from "crypto";
-// @ts-expect-error
-globalThis.crypto = crypto;
-
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
 import {
@@ -12,10 +8,9 @@ import {
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { MultisigInstructionProgram, MultisigParser } from "..";
 import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
+import { expect, test } from "@pythnetwork/test-config";
 
-test("Pyth multisig instruction parse: create price account", (done) => {
-  jest.setTimeout(60000);
-
+test("Pyth multisig instruction parse: create price account", () => {
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
     getPythProgramKeyForCluster(cluster),
@@ -92,16 +87,13 @@ test("Pyth multisig instruction parse: create price account", (done) => {
 
         expect(parsedInstruction.args.expo).toBe(-8);
         expect(parsedInstruction.args.pType).toBe(1);
-        done();
       } else {
-        done("Not instance of PythMultisigInstruction");
+        throw new Error("Not instance of PythMultisigInstruction");
       }
     });
-});
+}, 60000);
 
-test("Pyth multisig instruction parse: set minimum publishers", (done) => {
-  jest.setTimeout(60000);
-
+test("Pyth multisig instruction parse: set minimum publishers", () => {
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
     getPythProgramKeyForCluster(cluster),
@@ -163,9 +155,8 @@ test("Pyth multisig instruction parse: set minimum publishers", (done) => {
         ).toBe(instruction.keys[2]?.isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
         expect(parsedInstruction.args.minPub).toBe(25);
-        done();
       } else {
-        done("Not instance of PythMultisigInstruction");
+        throw new Error("Not instance of PythMultisigInstruction");
       }
     });
-});
+}, 60000);

@@ -1,7 +1,8 @@
 import fc from "fast-check";
 import { u64be } from "../governance_payload/BufferLayoutExt";
+import { test } from "@pythnetwork/test-config";
 
-test("Buffer layout extension fc tests", (done) => {
+test("Buffer layout extension fc tests", () => {
   const u64 = u64be();
   fc.assert(
     fc.property(fc.bigUintN(64), (bi) => {
@@ -15,6 +16,4 @@ test("Buffer layout extension fc tests", (done) => {
       return buffer.equals(encodedUint8Array) && bi === decodedBI;
     }),
   );
-
-  done();
 });

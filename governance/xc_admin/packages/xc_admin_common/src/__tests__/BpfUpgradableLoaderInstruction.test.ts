@@ -13,9 +13,9 @@ import {
 } from "@solana/web3.js";
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
 
-test("Bpf Upgradable Loader multisig instruction parse", (done) => {
-  jest.setTimeout(60000);
+import { expect, test } from "@pythnetwork/test-config";
 
+test("Bpf Upgradable Loader multisig instruction parse", () => {
   const cluster: PythCluster = "devnet";
 
   const parser = MultisigParser.fromCluster(cluster);
@@ -82,7 +82,7 @@ test("Bpf Upgradable Loader multisig instruction parse", (done) => {
     ).toBeTruthy();
     expect(parsedInstruction.args).toEqual({});
   } else {
-    done("Not instance of BpfUpgradableLoaderInstruction");
+    throw new Error("Not instance of BpfUpgradableLoaderInstruction");
   }
 
   const badInstruction = new TransactionInstruction({
@@ -100,8 +100,7 @@ test("Bpf Upgradable Loader multisig instruction parse", (done) => {
     expect(
       parsedBadInstruction.args.data.equals(Buffer.from([9])),
     ).toBeTruthy();
-    done();
   } else {
-    done("Not instance of BpfUpgradableLoaderInstruction");
+    throw new Error("Not instance of BpfUpgradableLoaderInstruction");
   }
-});
+}, 60000);

@@ -4,8 +4,9 @@ import {
   parsePriceStoreInstruction,
   type PriceStoreInstruction,
 } from "../price_store";
+import { expect, test } from "@pythnetwork/test-config";
 
-test("Price store instruction parse: roundtrip", (done) => {
+test("Price store instruction parse: roundtrip", () => {
   const items: PriceStoreInstruction[] = [
     {
       type: "Initialize",
@@ -40,5 +41,4 @@ test("Price store instruction parse: roundtrip", (done) => {
     const parsed2 = parsePriceStoreInstruction(instruction);
     expect(parsed2).toStrictEqual(data);
   }
-  done();
 });

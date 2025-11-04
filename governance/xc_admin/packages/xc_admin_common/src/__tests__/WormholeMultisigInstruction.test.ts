@@ -1,7 +1,3 @@
-import crypto from "crypto";
-// @ts-expect-error
-globalThis.crypto = crypto;
-
 import { createWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {
@@ -22,10 +18,9 @@ import {
   ExecutePostedVaa,
 } from "..";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
+import { expect, test } from "@pythnetwork/test-config";
 
-test("Wormhole multisig instruction parse: send message without governance payload", (done) => {
-  jest.setTimeout(60000);
-
+test("Wormhole multisig instruction parse: send message without governance payload", () => {
   const cluster: PythCluster = "devnet";
   const wormholeProgram = createWormholeProgramInterface(
     WORMHOLE_ADDRESS[cluster]!,
@@ -160,16 +155,13 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         expect(parsedInstruction.args.payload.equals(Buffer.from([0])));
         expect(parsedInstruction.args.consistencyLevel).toBe(1);
         expect(parsedInstruction.args.targetChain).toBeUndefined();
-        done();
       } else {
-        done("Not instance of WormholeMultisigInstruction");
+        throw new Error("Not instance of WormholeMultisigInstruction");
       }
     });
-});
+}, 60000);
 
-test("Wormhole multisig instruction parse: send message with governance payload", (done) => {
-  jest.setTimeout(60000);
-
+test("Wormhole multisig instruction parse: send message with governance payload", () => {
   const cluster: PythCluster = "devnet";
   const wormholeProgram = createWormholeProgramInterface(
     WORMHOLE_ADDRESS[cluster]!,
@@ -345,12 +337,11 @@ test("Wormhole multisig instruction parse: send message with governance payload"
               );
             });
           });
-          done();
         } else {
-          done("Not instance of ExecutePostedVaa");
+          throw new Error("Not instance of ExecutePostedVaa");
         }
       } else {
-        done("Not instance of WormholeMultisigInstruction");
+        throw new Error("Not instance of WormholeMultisigInstruction");
       }
     });
-});
+}, 60000);

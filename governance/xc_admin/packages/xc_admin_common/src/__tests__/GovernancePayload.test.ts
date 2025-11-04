@@ -32,10 +32,9 @@ import {
 } from "../governance_payload/SetDataSources";
 import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
 import { WithdrawFee } from "../governance_payload/WithdrawFee";
+import { expect, test } from "@pythnetwork/test-config";
 
-test("GovernancePayload ser/de", (done) => {
-  jest.setTimeout(60000);
-
+test("GovernancePayload ser/de", () => {
   // Valid header 1
   let expectedGovernanceHeader = new PythGovernanceHeader(
     "pythnet",
@@ -281,9 +280,7 @@ test("GovernancePayload ser/de", (done) => {
       ]),
     ),
   ).toBeTruthy();
-
-  done();
-});
+}, 60000);
 
 /** Fastcheck generator for arbitrary PythGovernanceHeaders */
 function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
@@ -457,7 +454,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
   });
 }
 
-test("Header serialization round-trip test", (done) => {
+test("Header serialization round-trip test", () => {
   fc.assert(
     fc.property(governanceHeaderArb(), (original) => {
       const decoded = PythGovernanceHeader.decode(original.encode());
@@ -471,11 +468,9 @@ test("Header serialization round-trip test", (done) => {
       );
     }),
   );
-
-  done();
 });
 
-test("Governance action serialization round-trip test", (done) => {
+test("Governance action serialization round-trip test", () => {
   fc.assert(
     fc.property(governanceActionArb(), (original) => {
       const encoded = original.encode();
@@ -488,6 +483,4 @@ test("Governance action serialization round-trip test", (done) => {
       return decoded.encode().equals(original.encode());
     }),
   );
-
-  done();
 });

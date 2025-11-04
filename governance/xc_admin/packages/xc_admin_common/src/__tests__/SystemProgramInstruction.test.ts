@@ -10,10 +10,9 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { SystemProgramMultisigInstruction } from "../multisig_transaction/SystemProgramInstruction";
+import { expect, test } from "@pythnetwork/test-config";
 
-test("System multisig instruction parse", (done) => {
-  jest.setTimeout(60000);
-
+test("System multisig instruction parse", () => {
   const cluster: PythCluster = "devnet";
 
   const parser = MultisigParser.fromCluster(cluster);
@@ -38,7 +37,7 @@ test("System multisig instruction parse", (done) => {
     ).toBeTruthy();
     expect(parsedInstruction.args.lamports.toString()).toBe("100");
   } else {
-    done("Not instance of SystemInstruction");
+    throw new Error("Not instance of SystemInstruction");
   }
 
   const badInstruction = new TransactionInstruction({
@@ -55,8 +54,7 @@ test("System multisig instruction parse", (done) => {
     expect(
       parsedBadInstruction.args.data.equals(Buffer.from([1, 2, 3, 4])),
     ).toBeTruthy();
-    done();
   } else {
-    done("Not instance of SystemInstruction");
+    throw new Error("Not instance of SystemInstruction");
   }
-});
+}, 60000);

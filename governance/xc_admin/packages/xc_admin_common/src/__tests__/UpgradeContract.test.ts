@@ -1,12 +1,11 @@
+import { expect, test } from "@pythnetwork/test-config";
 import {
   decodeGovernancePayload,
   PythGovernanceHeader,
 } from "../governance_payload";
 import { CosmosUpgradeContract } from "../governance_payload/UpgradeContract";
 
-test("Upgrade contract ser/de", (done) => {
-  jest.setTimeout(60000);
-
+test("Upgrade contract ser/de", () => {
   const expectedUpgradeContract = new CosmosUpgradeContract(
     "injective",
     BigInt("18446744073709551614"),
@@ -28,7 +27,7 @@ test("Upgrade contract ser/de", (done) => {
     expect(actualHeader.targetChainId).toBe("injective");
     expect(actualHeader.action).toBe("UpgradeContract");
   } else {
-    done("Not an instance of CosmosUpgradeContract");
+    throw new Error("Not an instance of CosmosUpgradeContract");
   }
 
   const actualUpgradeContract = decodeGovernancePayload(buffer);
@@ -37,8 +36,6 @@ test("Upgrade contract ser/de", (done) => {
     expect(actualUpgradeContract.targetChainId).toBe("injective");
     expect(actualUpgradeContract.codeId).toBe(BigInt("18446744073709551614"));
   } else {
-    done("Not an instance of CosmosUpgradeContract");
+    throw new Error("Not an instance of CosmosUpgradeContract");
   }
-
-  done();
-});
+}, 60000);

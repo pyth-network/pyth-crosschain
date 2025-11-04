@@ -1,7 +1,3 @@
-import crypto from "crypto";
-// @ts-expect-error
-globalThis.crypto = crypto;
-
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
 import {
@@ -26,10 +22,9 @@ import {
   getSizeOfTransaction,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
+import { expect, it } from "@pythnetwork/test-config";
 
 it("Unit test for getSizeOfTransaction", async () => {
-  jest.setTimeout(60000);
-
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
     getPythProgramKeyForCluster(cluster),
@@ -84,11 +79,9 @@ it("Unit test for getSizeOfTransaction", async () => {
   expect(transaction.serialize({ requireAllSignatures: false }).length).toBe(
     getSizeOfTransaction(ixsToSend, false),
   );
-});
+}, 60000);
 
 it("Unit test for getSizeOfTransaction", async () => {
-  jest.setTimeout(60000);
-
   const cluster: PythCluster = "devnet";
   const pythProgram = pythOracleProgram(
     getPythProgramKeyForCluster(cluster),
@@ -145,4 +138,4 @@ it("Unit test for getSizeOfTransaction", async () => {
         getSizeOfExecutorInstructions(batch) <= MAX_EXECUTOR_PAYLOAD_SIZE,
     ),
   ).toBeTruthy();
-});
+}, 60000);

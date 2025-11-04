@@ -8,6 +8,7 @@ import {
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "../multisig_transaction";
+import { describe, expect, test } from "@pythnetwork/test-config";
 
 describe("LazerMultisigInstruction", () => {
   const mockProgramId = new PublicKey(

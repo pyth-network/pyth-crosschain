@@ -1,7 +1,3 @@
-import crypto from "crypto";
-// @ts-expect-error
-globalThis.crypto = crypto;
-
 import { AnchorProvider, Wallet, Program, type Idl } from "@coral-xyz/anchor";
 import {
   getPythClusterApiUrl,
@@ -16,10 +12,9 @@ import {
 } from "..";
 import messageBuffer from "message_buffer/idl/message_buffer.json";
 import type { MessageBuffer } from "message_buffer/idl/message_buffer";
+import { expect, test } from "@pythnetwork/test-config";
 
-test("Message buffer multisig instruction parse: create buffer", (done) => {
-  jest.setTimeout(60000);
-
+test("Message buffer multisig instruction parse: create buffer", () => {
   const cluster: PythCluster = "pythtest-crosschain";
 
   const messageBufferProgram = new Program(
@@ -129,17 +124,13 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
           parsedInstruction.args.baseAccountKey.equals(baseAccountKey),
         ).toBeTruthy();
         expect(parsedInstruction.args.targetSize).toBe(100);
-
-        done();
       } else {
-        done("Not instance of MessageBufferMultisigInstruction");
+        throw new Error("Not instance of MessageBufferMultisigInstruction");
       }
     });
-});
+}, 60000);
 
-test("Message buffer multisig instruction parse: delete buffer", (done) => {
-  jest.setTimeout(60000);
-
+test("Message buffer multisig instruction parse: delete buffer", () => {
   const cluster: PythCluster = "pythtest-crosschain";
 
   const messageBufferProgram = new Program(
@@ -230,10 +221,8 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
         expect(
           parsedInstruction.args.baseAccountKey.equals(baseAccountKey),
         ).toBeTruthy();
-
-        done();
       } else {
-        done("Not instance of MessageBufferMultisigInstruction");
+        throw new Error("Not instance of MessageBufferMultisigInstruction");
       }
     });
-});
+}, 60000);
