@@ -12,9 +12,6 @@ type PageActionOption = {
   id: string;
   label: string;
   icon: ReactNode;
-  url?: string;
-  type: "copy" | "markdown" | "llm";
-  llmProvider?: "openai" | "claude";
   ariaLabel?: string;
 };
 
@@ -29,33 +26,21 @@ const getPageActionOptions = (): PageActionOption[] => [
     id: "copy-page",
     label: "Copy Page",
     icon: <Copy />,
-    type: "copy",
-    ariaLabel: "Copy page content",
   },
   {
     id: "view-markdown",
     label: "View Markdown",
     icon: <Eye />,
-    type: "markdown",
-    ariaLabel: "View page as Markdown",
   },
   {
     id: "ask-chatgpt",
     label: "Ask in ChatGPT",
     icon: <OpenAiLogo />,
-    url: "https://chat.openai.com",
-    type: "llm",
-    llmProvider: "openai",
-    ariaLabel: "Ask in ChatGPT",
   },
   {
     id: "ask-claude",
     label: "Ask in Claude",
     icon: <ClaudeIcon />,
-    url: "https://claude.ai",
-    type: "llm",
-    llmProvider: "claude",
-    ariaLabel: "Ask in Claude",
   },
 ];
 
@@ -74,8 +59,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
   }
 
   function handleShare(option: PageActionOption) {
-    if (option.type === "llm" && option.url) {
-      const prompt = `Please read and analyze this documentation page:
+    const prompt = `Please read and analyze this documentation page:
 
         Title: ${title}
         URL: ${url}
@@ -85,27 +69,29 @@ export function PageActions({ content, title, url }: PageActionsProps) {
 
         Please provide a summary and answer any questions I might have about this content.`;
 
-      const encodedInstruction = encodeURIComponent(prompt);
-      const shareUrl =
-        option.llmProvider === "claude"
-          ? `https://claude.ai/new?q=${encodedInstruction}`
-          : `${option.url}?q=${encodedInstruction}`;
+    const encodedInstruction = encodeURIComponent(prompt);
 
+    if (option.id === "ask-claude") {
+      const shareUrl = `https://claude.ai/new?q=${encodedInstruction}`;
+      window.open(shareUrl, "_blank");
+    } else if (option.id === "ask-chatgpt") {
+      const shareUrl = `https://chat.openai.com?q=${encodedInstruction}`;
       window.open(shareUrl, "_blank");
     }
   }
 
   function handleActionClick(option: PageActionOption) {
-    switch (option.type) {
-      case "copy": {
+    switch (option.id) {
+      case "copy-page": {
         copy();
         break;
       }
-      case "markdown": {
+      case "view-markdown": {
         handleViewMarkdown();
         break;
       }
-      case "llm": {
+      case "ask-chatgpt":
+      case "ask-claude": {
         handleShare(option);
         break;
       }
@@ -117,7 +103,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
       <div className={styles.container}>
         {pageActionOptions.map((option, index) => {
           const isLast = index === pageActionOptions.length - 1;
-          const isCopyAction = option.type === "copy";
+          const isCopyAction = option.id === "copy-page";
           const showCheckIcon = isCopyAction && isCopied;
 
           return (
