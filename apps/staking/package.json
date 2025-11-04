@@ -17,7 +17,7 @@
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "test:unit": "jest --selectProjects unit"
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "catalog:",
@@ -55,18 +55,16 @@
   "devDependencies": {
     "@axe-core/react": "catalog:",
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/test-config": "workspace:",
     "@svgr/webpack": "catalog:",
     "@tailwindcss/forms": "catalog:",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",

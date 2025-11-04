@@ -1,0 +1,39 @@
+{
+  "name": "@pythnetwork/test-config",
+  "description": "baseline configuration file to use when running tests with vitest",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=10.7.0"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "type": "module",
+  "files": [
+    "unit-test.js",
+    "config.js"
+  ],
+  "bin": "./unit-test.js",
+  "module": "./config.js",
+  "exports": {
+    ".": {
+      "default": "./config.js",
+      "types": "./config.d.ts"
+    }
+  },
+  "scripts": {
+    "fix:format": "prettier --write .",
+    "fix:lint:eslint": "eslint --fix ."
+  },
+  "dependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/node": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "eslint": "catalog:",
+    "jsdom": "catalog:",
+    "prettier": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

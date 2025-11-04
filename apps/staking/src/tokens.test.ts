@@ -1,3 +1,5 @@
+import { describe, expect, it } from "@pythnetwork/test-config";
+
 import { tokensToString, stringToTokens } from "./tokens";
 
 const BIDIRECTIONAL_TESTS = [
