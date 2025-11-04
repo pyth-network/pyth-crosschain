@@ -13,7 +13,9 @@
     "unit-test.js",
     "config.js"
   ],
-  "bin": "./unit-test.js",
+  "bin": {
+    "unit-test": "./unit-test.js"
+  },
   "module": "./config.js",
   "exports": {
     ".": {
