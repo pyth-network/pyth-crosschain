@@ -14,14 +14,7 @@ type PageActionOption = {
   icon: ReactNode;
   url?: string;
   type: "copy" | "markdown" | "llm";
-  ariaLabel?: string;
-};
-
-type PageAction = {
-  id: string;
-  label: string;
-  icon: ReactNode;
-  onClick: () => void;
+  llmProvider?: "openai" | "claude";
   ariaLabel?: string;
 };
 
@@ -52,6 +45,7 @@ const getPageActionOptions = (): PageActionOption[] => [
     icon: <OpenAiLogo />,
     url: "https://chat.openai.com",
     type: "llm",
+    llmProvider: "openai",
     ariaLabel: "Ask in ChatGPT",
   },
   {
@@ -60,6 +54,7 @@ const getPageActionOptions = (): PageActionOption[] => [
     icon: <ClaudeIcon />,
     url: "https://claude.ai",
     type: "llm",
+    llmProvider: "claude",
     ariaLabel: "Ask in Claude",
   },
 ];
@@ -92,7 +87,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
 
       const encodedInstruction = encodeURIComponent(prompt);
       const shareUrl =
-        option.label === "Ask in Claude"
+        option.llmProvider === "claude"
           ? `https://claude.ai/new?q=${encodedInstruction}`
           : `${option.url}?q=${encodedInstruction}`;
 
@@ -100,57 +95,50 @@ export function PageActions({ content, title, url }: PageActionsProps) {
     }
   }
 
-  const actions: PageAction[] = pageActionOptions.map((option) => {
-    let onClick: () => void;
-
-    if (option.type === "copy") {
-      onClick = copy;
-    } else if (option.type === "markdown") {
-      onClick = handleViewMarkdown;
-    } else {
-      onClick = () => {
+  function handleActionClick(option: PageActionOption) {
+    switch (option.type) {
+      case "copy": {
+        copy();
+        break;
+      }
+      case "markdown": {
+        handleViewMarkdown();
+        break;
+      }
+      case "llm": {
         handleShare(option);
-      };
+        break;
+      }
     }
-
-    return {
-      id: option.id,
-      label: option.label,
-      icon: option.icon,
-      onClick,
-      ariaLabel: option.ariaLabel ?? option.label,
-    };
-  });
+  }
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.container}>
-        {actions.map((action, index) => {
-          const isLast = index === actions.length - 1;
-
-          const pageOption = pageActionOptions.find(
-            (opt) => opt.id === action.id,
-          );
-          const isCopyAction = pageOption?.type === "copy";
+        {pageActionOptions.map((option, index) => {
+          const isLast = index === pageActionOptions.length - 1;
+          const isCopyAction = option.type === "copy";
           const showCheckIcon = isCopyAction && isCopied;
 
           return (
-            <div key={action.id} className={styles.buttonWrapper}>
+            <div key={option.id} className={styles.buttonWrapper}>
               <Button
-                onPress={action.onClick}
+                onPress={() => {
+                  handleActionClick(option);
+                }}
                 size="sm"
                 variant="ghost"
                 className={styles.button ?? ""}
-                aria-label={action.ariaLabel ?? action.label}
+                aria-label={option.ariaLabel ?? option.label}
                 beforeIcon={
                   showCheckIcon ? (
                     <Check className={styles.icon ?? ""} />
                   ) : (
-                    action.icon
+                    option.icon
                   )
                 }
               >
-                {action.label}
+                {option.label}
               </Button>
               {!isLast && (
                 <div className={styles.verticalDivider} aria-hidden="true" />

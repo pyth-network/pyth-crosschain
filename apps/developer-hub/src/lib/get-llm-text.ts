@@ -11,9 +11,7 @@ import remarkMdx from "remark-mdx";
 const processor = remark().use(remarkMdx).use(remarkInclude).use(remarkGfm);
 
 function resolveMdxPath(page: Page): string {
-  const parts: string[] = Array.isArray(page.path) ? page.path : [page.path];
-
-  const appRelPath = [process.cwd(), "content", "docs", ...parts] as [
+  const appRelPath = [process.cwd(), "content", "docs", page.path] as [
     string,
     ...string[],
   ];
