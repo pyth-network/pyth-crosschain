@@ -20,4 +20,4 @@ pythnet-sdk = { path = "../../../pythnet/pythnet_sdk", version = "2.3.1", featur
 ] }
 
 [dev-dependencies]
-solana-program = "2.3.0"
+solana-borsh = "2.2.1" # Needed for borsh0_10 compatibility

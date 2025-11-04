@@ -1017,7 +1017,7 @@ dependencies = [
  "anchor-lang",
  "hex",
  "pythnet-sdk",
- "solana-program",
+ "solana-borsh",
 ]
 
 [[package]]
