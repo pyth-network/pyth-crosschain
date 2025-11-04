@@ -4,13 +4,10 @@ import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
-import { useCallback, useEffect, useState } from "react";
 
-import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.jsx";
-import { useLogger } from "../useLogger/index.jsx";
-
-const COPY_INDICATOR_TIME = 1000;
+import { useCopy } from "../useCopy";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   text: string;
@@ -30,37 +27,7 @@ export const CopyButton = ({
   className,
   ...props
 }: Props) => {
-  const [isCopied, setIsCopied] = useState(false);
-  const logger = useLogger();
-  const copy = useCallback(() => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setIsCopied(true);
-      })
-      .catch((error: unknown) => {
-        /* TODO do something here? */
-        logger.error(error);
-      });
-  }, [text, logger]);
-
-  useEffect(() => {
-    setIsCopied(false);
-  }, [text]);
-
-  useEffect(() => {
-    if (isCopied) {
-      const timeout = setTimeout(() => {
-        setIsCopied(false);
-      }, COPY_INDICATOR_TIME);
-      return () => {
-        clearTimeout(timeout);
-      };
-    } else {
-      return;
-    }
-  }, [isCopied]);
-
+  const { isCopied, copy } = useCopy(text);
   return (
     <Button
       onPress={copy}
