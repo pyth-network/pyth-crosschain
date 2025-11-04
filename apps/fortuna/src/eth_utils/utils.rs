@@ -1,7 +1,8 @@
 use {
     crate::{
-        chain::ethereum::{InstrumentedSignablePythContract, PythRandomEvents, Revealed2Filter},
+        chain::ethereum::{PythRandomEvents, Revealed2Filter},
         eth_utils::nonce_manager::NonceManaged,
+        keeper::contract::KeeperTxContract,
     },
     anyhow::{anyhow, Result},
     backoff::ExponentialBackoff,
@@ -352,12 +353,16 @@ pub async fn submit_tx<T: Middleware + NonceManaged + 'static>(
 }
 
 /// Transfer funds from the signing wallet to the destination address.
-pub async fn submit_transfer_tx(
-    contract: Arc<InstrumentedSignablePythContract>,
+pub async fn submit_transfer_tx<C>(
+    contract: Arc<C>,
     destination_address: ethers::types::Address,
     transfer_amount: U256,
-) -> Result<ethers::types::H256> {
-    let source_wallet_address = contract.wallet().address();
+) -> Result<ethers::types::H256>
+where
+    C: KeeperTxContract + 'static,
+{
+    let wallet = contract.wallet();
+    let source_wallet_address = wallet.address();
 
     tracing::info!(
         "Transferring {:?} from {:?} to {:?}",

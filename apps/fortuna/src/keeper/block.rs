@@ -1,11 +1,12 @@
 use {
     crate::{
         api::BlockchainState,
-        chain::{ethereum::InstrumentedSignablePythContract, reader::BlockNumber},
+        chain::reader::BlockNumber,
         config::ReplicaConfig,
         eth_utils::utils::EscalationPolicy,
         history::History,
         keeper::{
+            contract::KeeperTxContract,
             keeper_metrics::{ChainIdLabel, KeeperMetrics},
             process_event::process_event_with_backoff,
         },
@@ -37,8 +38,8 @@ pub struct BlockRange {
 }
 
 #[derive(Clone)]
-pub struct ProcessParams {
-    pub contract: Arc<InstrumentedSignablePythContract>,
+pub struct ProcessParams<C: KeeperTxContract + 'static> {
+    pub contract: Arc<C>,
     pub escalation_policy: EscalationPolicy,
     pub chain_state: BlockchainState,
     pub replica_config: Option<ReplicaConfig>,
@@ -74,7 +75,10 @@ pub async fn get_latest_safe_block(chain_state: &BlockchainState) -> BlockNumber
 #[tracing::instrument(skip_all, fields(
     range_from_block = block_range.from, range_to_block = block_range.to
 ))]
-pub async fn process_block_range(block_range: BlockRange, process_params: ProcessParams) {
+pub async fn process_block_range<C>(block_range: BlockRange, process_params: ProcessParams<C>)
+where
+    C: KeeperTxContract + 'static,
+{
     let BlockRange {
         from: first_block,
         to: last_block,
@@ -109,7 +113,12 @@ pub async fn process_block_range(block_range: BlockRange, process_params: Proces
     batch_from_block = block_range.from, batch_to_block = block_range.to
 ))]
 
-pub async fn process_single_block_batch(block_range: BlockRange, process_params: ProcessParams) {
+pub async fn process_single_block_batch<C>(
+    block_range: BlockRange,
+    process_params: ProcessParams<C>,
+) where
+    C: KeeperTxContract + 'static,
+{
     let label = ChainIdLabel {
         chain_id: process_params.chain_state.id.clone(),
     };
@@ -267,8 +276,8 @@ pub async fn watch_blocks(
 /// It waits on rx channel to receive block ranges and then calls process_block_range to process them
 /// for each configured block delay.
 #[tracing::instrument(skip_all)]
-pub async fn process_new_blocks(
-    process_params: ProcessParams,
+pub async fn process_new_blocks<C: KeeperTxContract + 'static>(
+    process_params: ProcessParams<C>,
     mut rx: mpsc::Receiver<BlockRange>,
     block_delays: Vec<u64>,
 ) {
@@ -297,8 +306,8 @@ pub async fn process_new_blocks(
 /// Processes the backlog_range for a chain.
 /// It processes the backlog range for each configured block delay.
 #[tracing::instrument(skip_all)]
-pub async fn process_backlog(
-    process_params: ProcessParams,
+pub async fn process_backlog<C: KeeperTxContract + 'static>(
+    process_params: ProcessParams<C>,
     backlog_range: BlockRange,
     block_delays: Vec<u64>,
 ) {

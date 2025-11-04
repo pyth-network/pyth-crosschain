@@ -11,12 +11,13 @@ use {
             nonce_manager::NonceManagerMiddleware,
             traced_client::{RpcMetrics, TracedClient},
         },
+        keeper::contract::{KeeperProviderInfo, KeeperTxContract},
     },
     anyhow::{anyhow, Error, Result},
     axum::async_trait,
     ethers::{
         abi::RawLog,
-        contract::{abigen, EthLogDecode, LogMeta},
+        contract::{abigen, ContractCall, EthLogDecode, LogMeta},
         core::types::Address,
         middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
         prelude::JsonRpcClient,
@@ -348,5 +349,68 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
             .await;
 
         result.map_err(|e| e.into())
+    }
+}
+
+#[async_trait]
+impl KeeperTxContract for InstrumentedSignablePythContract {
+    type Middleware = MiddlewaresWrapper<TracedClient>;
+    type ProviderClient = TracedClient;
+
+    fn client(&self) -> Arc<Self::Middleware> {
+        self.client()
+    }
+
+    fn wallet(&self) -> LocalWallet {
+        self.wallet()
+    }
+
+    fn provider(&self) -> Provider<Self::ProviderClient> {
+        self.provider()
+    }
+
+    fn reveal_with_callback(
+        &self,
+        provider_address: Address,
+        sequence_number: u64,
+        user_random_number: [u8; 32],
+        provider_revelation: [u8; 32],
+    ) -> ContractCall<Self::Middleware, ()> {
+        self.reveal_with_callback(
+            provider_address,
+            sequence_number,
+            user_random_number,
+            provider_revelation,
+        )
+    }
+
+    fn withdraw_as_fee_manager(
+        &self,
+        provider_address: Address,
+        amount: u128,
+    ) -> ContractCall<Self::Middleware, ()> {
+        self.withdraw_as_fee_manager(provider_address, amount)
+    }
+
+    fn set_provider_fee_as_fee_manager(
+        &self,
+        provider_address: Address,
+        fee: u128,
+    ) -> ContractCall<Self::Middleware, ()> {
+        self.set_provider_fee_as_fee_manager(provider_address, fee)
+    }
+
+    async fn get_provider_info(&self, provider_address: Address) -> Result<KeeperProviderInfo> {
+        let info = self.get_provider_info_v2(provider_address).call().await?;
+
+        Ok(KeeperProviderInfo {
+            accrued_fees_in_wei: U256::from(info.accrued_fees_in_wei),
+            fee_in_wei: U256::from(info.fee_in_wei),
+            sequence_number: info.sequence_number,
+            end_sequence_number: info.end_sequence_number,
+            current_commitment_sequence_number: info.current_commitment_sequence_number,
+            default_gas_limit: info.default_gas_limit.into(),
+            fee_manager: info.fee_manager,
+        })
     }
 }

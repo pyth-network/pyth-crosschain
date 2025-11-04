@@ -1,9 +1,12 @@
 use {
     crate::{
         api::BlockchainState,
-        chain::ethereum::InstrumentedSignablePythContract,
+        api::ChainId,
         eth_utils::utils::{estimate_tx_cost, send_and_confirm, submit_transfer_tx},
-        keeper::{AccountLabel, ChainId, KeeperMetrics},
+        keeper::{
+            contract::KeeperTxContract,
+            keeper_metrics::{AccountLabel, KeeperMetrics},
+        },
     },
     anyhow::{anyhow, Result},
     ethers::{
@@ -89,20 +92,22 @@ async fn calculate_fair_fee_withdrawal_amount<M: Middleware + 'static>(
 }
 
 #[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
-pub async fn withdraw_fees_wrapper(
-    contract_as_fee_manager: Arc<InstrumentedSignablePythContract>,
+pub async fn withdraw_fees_wrapper<C>(
+    contract_as_fee_manager: Arc<C>,
     provider_address: Address,
     poll_interval: Duration,
     min_balance: U256,
     keeper_address: Address,
     other_keeper_addresses: Vec<Address>,
-) {
-    let fee_manager_wallet = contract_as_fee_manager.wallet().address();
+) where
+    C: KeeperTxContract + 'static,
+{
+    let fee_manager_wallet_address = contract_as_fee_manager.wallet().address();
 
     // Add the fee manager to the list of other keepers so that we can fairly distribute the fees
     // across the fee manager and all the keepers.
     let mut other_keepers_and_fee_mgr = other_keeper_addresses.clone();
-    other_keepers_and_fee_mgr.push(contract_as_fee_manager.wallet().address());
+    other_keepers_and_fee_mgr.push(fee_manager_wallet_address);
 
     loop {
         // Top up the fee manager balance
@@ -111,7 +116,7 @@ pub async fn withdraw_fees_wrapper(
         if let Err(e) = withdraw_fees_if_necessary(
             contract_as_fee_manager.clone(),
             provider_address,
-            fee_manager_wallet,
+            fee_manager_wallet_address,
             other_keepers_and_fee_mgr.clone(),
             min_balance,
         )
@@ -141,7 +146,7 @@ pub async fn withdraw_fees_wrapper(
 
 /// Withdraws accumulated fees in the contract as needed to maintain the balance of the keeper wallet.
 pub async fn withdraw_fees_if_necessary(
-    contract_as_fee_manager: Arc<InstrumentedSignablePythContract>,
+    contract_as_fee_manager: Arc<impl KeeperTxContract + 'static>,
     provider_address: Address,
     keeper_address: Address,
     other_keeper_addresses: Vec<Address>,
@@ -161,12 +166,11 @@ pub async fn withdraw_fees_if_necessary(
     }
 
     let provider_info = contract_as_fee_manager
-        .get_provider_info_v2(provider_address)
-        .call()
+        .get_provider_info(provider_address)
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
-    let available_fees = U256::from(provider_info.accrued_fees_in_wei);
+    let available_fees = provider_info.accrued_fees_in_wei;
 
     // Determine how much we can fairly withdraw from the contract
     let withdrawal_amount = calculate_fair_fee_withdrawal_amount(
@@ -220,8 +224,8 @@ pub async fn withdraw_fees_if_necessary(
 
 #[tracing::instrument(name = "adjust_fee", skip_all)]
 #[allow(clippy::too_many_arguments)]
-pub async fn adjust_fee_wrapper(
-    contract: Arc<InstrumentedSignablePythContract>,
+pub async fn adjust_fee_wrapper<C>(
+    contract: Arc<C>,
     chain_state: BlockchainState,
     provider_address: Address,
     poll_interval: Duration,
@@ -231,7 +235,9 @@ pub async fn adjust_fee_wrapper(
     max_profit_pct: u64,
     min_fee_wei: u128,
     metrics: Arc<KeeperMetrics>,
-) {
+) where
+    C: KeeperTxContract + 'static,
+{
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
     let mut high_water_pnl: Option<U256> = None;
     // The sequence number where the keeper last updated the on-chain fee. None if we haven't observed it yet.
@@ -273,8 +279,8 @@ pub async fn adjust_fee_wrapper(
 /// These conditions are intended to make sure that the keeper is profitable while also minimizing the number of fee
 /// update transactions.
 #[allow(clippy::too_many_arguments)]
-pub async fn adjust_fee_if_necessary(
-    contract: Arc<InstrumentedSignablePythContract>,
+pub async fn adjust_fee_if_necessary<C>(
+    contract: Arc<C>,
     chain_id: ChainId,
     provider_address: Address,
     legacy_tx: bool,
@@ -285,15 +291,24 @@ pub async fn adjust_fee_if_necessary(
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
     metrics: Arc<KeeperMetrics>,
-) -> Result<()> {
+) -> Result<()>
+where
+    C: KeeperTxContract + 'static,
+{
     let provider_info = contract
-        .get_provider_info_v2(provider_address)
-        .call()
+        .get_provider_info(provider_address)
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
-    if provider_info.fee_manager != contract.wallet().address() {
-        return Err(anyhow!("Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}", contract.provider(), provider_info.fee_manager, contract.wallet().address()));
+    let wallet = contract.wallet();
+    let wallet_address = wallet.address();
+    if provider_info.fee_manager != wallet_address {
+        return Err(anyhow!(
+            "Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}",
+            contract.provider(),
+            provider_info.fee_manager,
+            wallet_address
+        ));
     }
 
     // Calculate target window for the on-chain fee.
@@ -332,12 +347,12 @@ pub async fn adjust_fee_if_necessary(
     );
 
     // Calculate current P&L to determine if we can reduce fees.
-    let current_keeper_balance = contract
-        .provider()
-        .get_balance(contract.wallet().address(), None)
+    let provider_client = contract.provider();
+    let current_keeper_balance = provider_client
+        .get_balance(wallet_address, None)
         .await
         .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
-    let current_keeper_fees = U256::from(provider_info.accrued_fees_in_wei);
+    let current_keeper_fees = provider_info.accrued_fees_in_wei;
     let current_pnl = current_keeper_balance + current_keeper_fees;
 
     let can_reduce_fees = match high_water_pnl {
@@ -354,7 +369,7 @@ pub async fn adjust_fee_if_necessary(
         }
     };
 
-    let provider_fee: u128 = provider_info.fee_in_wei;
+    let provider_fee: u128 = provider_info.fee_in_wei.as_u128();
     if is_chain_active
         && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee_min)
     {

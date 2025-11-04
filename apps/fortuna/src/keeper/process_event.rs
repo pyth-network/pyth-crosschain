@@ -7,7 +7,7 @@ use {
         },
         eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
         history::{RequestEntryState, RequestStatus},
-        keeper::block::ProcessParams,
+        keeper::{block::ProcessParams, contract::KeeperTxContract},
     },
     anyhow::{anyhow, Result},
     ethers::{abi::AbiDecode, contract::ContractError},
@@ -19,10 +19,13 @@ use {
 #[tracing::instrument(name = "process_event_with_backoff", skip_all, fields(
     sequence_number = event.sequence_number
 ))]
-pub async fn process_event_with_backoff(
+pub async fn process_event_with_backoff<C>(
     event: RequestedV2Event,
-    process_param: ProcessParams,
-) -> Result<()> {
+    process_param: ProcessParams<C>,
+) -> Result<()>
+where
+    C: KeeperTxContract + 'static,
+{
     let ProcessParams {
         chain_state,
         contract,

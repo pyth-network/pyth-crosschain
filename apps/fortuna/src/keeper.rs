@@ -34,6 +34,7 @@ use {
 
 pub(crate) mod block;
 pub(crate) mod commitment;
+pub(crate) mod contract;
 pub(crate) mod fee;
 pub(crate) mod keeper_metrics;
 pub(crate) mod process_event;
@@ -112,7 +113,9 @@ pub async fn run_keeper_threads(
 
     let (tx, rx) = mpsc::channel::<BlockRange>(1000);
     // Spawn a thread to watch for new blocks and send the range of blocks for which events has not been handled to the `tx` channel.
-    spawn(watch_blocks_wrapper(chain_state.clone(), latest_safe_block, tx).in_current_span());
+    spawn(
+        watch_blocks_wrapper(chain_state.clone(), latest_safe_block, tx).in_current_span(),
+    );
 
     // Spawn a thread for block processing with configured delays
     spawn(
