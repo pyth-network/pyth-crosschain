@@ -11,6 +11,7 @@
   "type": "module",
   "files": [
     "unit-test.js",
+    "config.cjs",
     "config.js"
   ],
   "bin": {
@@ -41,7 +42,7 @@
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
-    "jsdom": "catalog:",
+    "happy-dom": "catalog:",
     "prettier": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

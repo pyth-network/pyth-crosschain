@@ -1,6 +1,7 @@
-import { defineConfig, TestUserConfig } from "vitest/config";
+import { UserConfig } from "vite";
+import { defineConfig } from "vitest/config";
 export * from "vitest";
 
 export function defineTestConfig(
-  config?: TestUserConfig,
+  config?: UserConfig,
 ): ReturnType<typeof defineConfig>;

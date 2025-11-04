@@ -198,12 +198,12 @@ catalogs:
     fumadocs-ui:
       specifier: ^15.7.12
       version: 15.7.12
+    happy-dom:
+      specifier: ^20.0.10
+      version: 20.0.10
     ip-range-check:
       specifier: ^0.2.0
       version: 0.2.0
-    jsdom:
-      specifier: ^27.1.0
-      version: 27.1.0
     katex:
       specifier: ^0.16.22
       version: 0.16.22
@@ -508,7 +508,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   apps/developer-hub:
     dependencies:
@@ -656,7 +656,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   apps/entropy-explorer:
     dependencies:
@@ -747,7 +747,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   apps/entropy-tester:
     dependencies:
@@ -848,7 +848,7 @@ importers:
         version: 7.1.12(@types/node@20.17.30)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@20.17.30)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@20.17.30)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       yargs:
         specifier: ^17.4.1
         version: 17.7.2
@@ -1005,7 +1005,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   apps/price_pusher:
     dependencies:
@@ -1074,7 +1074,7 @@ importers:
         version: 4.21.2
       fuels:
         specifier: 'catalog:'
-        version: 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+        version: 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       jito-ts:
         specifier: ^3.0.1
         version: 3.0.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -1138,7 +1138,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)
 
   apps/staking:
     dependencies:
@@ -1391,7 +1391,7 @@ importers:
         version: 13.0.0
       fuels:
         specifier: 'catalog:'
-        version: 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+        version: 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       near-api-js:
         specifier: ^3.0.2
         version: 3.0.4(encoding@0.1.13)
@@ -1492,7 +1492,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   governance/xc_admin/packages/crank_executor:
     dependencies:
@@ -1698,7 +1698,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   governance/xc_admin/packages/xc_admin_frontend:
     dependencies:
@@ -2136,7 +2136,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   packages/known-publishers:
     devDependencies:
@@ -2169,7 +2169,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   packages/test-config:
     dependencies:
@@ -2188,9 +2188,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
-      jsdom:
+      happy-dom:
         specifier: 'catalog:'
-        version: 27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3)
+        version: 20.0.10
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -2199,7 +2199,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   price_service/client/js:
     dependencies:
@@ -2245,7 +2245,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       yargs:
         specifier: ^17.4.1
         version: 17.7.2
@@ -2279,7 +2279,7 @@ importers:
         version: 7.1.12(@types/node@16.18.126)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@16.18.126)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@16.18.126)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   pythnet/message_buffer:
     dependencies:
@@ -2399,7 +2399,7 @@ importers:
         version: 7.1.12(@types/node@18.19.86)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       web3:
         specifier: ^1.8.2
         version: 1.10.4(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -2686,7 +2686,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.0)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.5.8)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.0)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86))(turbo@2.5.8)(typescript@5.9.3)
       '@pythnetwork/pyth-sdk-solidity':
         specifier: workspace:*
         version: link:../solidity
@@ -2719,7 +2719,7 @@ importers:
         version: 7.1.12(@types/node@18.19.86)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   target_chains/ethereum/sdk/solidity:
     devDependencies:
@@ -2753,7 +2753,7 @@ importers:
     dependencies:
       fuels:
         specifier: 'catalog:'
-        version: 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+        version: 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
@@ -2879,7 +2879,7 @@ importers:
         version: 7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   target_chains/starknet/sdk/js:
     devDependencies:
@@ -3023,7 +3023,7 @@ importers:
         version: 7.1.12(@types/node@18.19.86)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       web3:
         specifier: ^1.8.2
         version: 1.10.4(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -3045,7 +3045,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.0)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.5.8)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.0)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86))(turbo@2.5.8)(typescript@5.9.3)
       '@pythnetwork/test-config':
         specifier: 'workspace:'
         version: link:../../../../packages/test-config
@@ -3075,7 +3075,7 @@ importers:
         version: 7.1.12(@types/node@18.19.86)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
       web3:
         specifier: ^1.8.2
         version: 1.10.4(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -3094,9 +3094,6 @@ importers:
       '@pythnetwork/pyth-ton-js':
         specifier: workspace:*
         version: link:../sdk/js
-      '@pythnetwork/test-config':
-        specifier: 'workspace:'
-        version: link:../../../packages/test-config
       '@pythnetwork/xc-admin-common':
         specifier: workspace:*
         version: link:../../../governance/xc_admin/packages/xc_admin_common
@@ -3118,24 +3115,30 @@ importers:
       '@ton/ton':
         specifier: ^15.1.0
         version: 15.2.1(@ton/core@0.59.1(@ton/crypto@3.3.0))(@ton/crypto@3.3.0)
+      '@types/jest':
+        specifier: ^29.5.12
+        version: 29.5.14
       '@types/node':
         specifier: ^20.14.10
         version: 20.17.30
       '@wormhole-foundation/sdk-definitions':
         specifier: ^0.10.7
         version: 0.10.12
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
+      ts-jest:
+        specifier: ^29.2.0
+        version: 29.3.1(@babel/core@7.28.5)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.5))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)))(typescript@5.9.3)
       ts-node:
         specifier: 'catalog:'
         version: 10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)
-      vite:
+      typescript:
         specifier: 'catalog:'
-        version: 7.1.12(@types/node@20.17.30)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
-      vitest:
-        specifier: 'catalog:'
-        version: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@20.17.30)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+        version: 5.9.3
 
   target_chains/ton/sdk/js:
     devDependencies:
@@ -10834,6 +10837,9 @@ packages:
   '@types/web@0.0.197':
     resolution: {integrity: sha512-V4sOroWDADFx9dLodWpKm298NOJ1VJ6zoDVgaP+WBb/utWxqQ6gnMzd9lvVDAr/F3ibiKaxH9i45eS0gQPSTaQ==}
 
+  '@types/whatwg-mimetype@3.0.2':
+    resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
+
   '@types/ws@7.4.7':
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
 
@@ -15262,6 +15268,10 @@ packages:
     resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
+
+  happy-dom@20.0.10:
+    resolution: {integrity: sha512-6umCCHcjQrhP5oXhrHQQvLB0bwb1UzHAHdsXy+FjtKoYjUhmNZsQL8NivwM1vDvNEChJabVrUYxUnp/ZdYmy2g==}
+    engines: {node: '>=20.0.0'}
 
   har-schema@2.0.0:
     resolution: {integrity: sha512-Oqluz6zhGX8cyRaTQlFMPw80bSJVG2x/cFb8ZPhUILGgHka9SsokCCOQgpveePerqidZOrT14ipqfJb7ILcW5Q==}
@@ -21474,6 +21484,10 @@ packages:
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
+  whatwg-mimetype@3.0.0:
+    resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
+    engines: {node: '>=12'}
+
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
     engines: {node: '>=18'}
@@ -21944,7 +21958,8 @@ snapshots:
       graphql: 16.10.0
       typescript: 5.9.3
 
-  '@acemir/cssom@0.9.19': {}
+  '@acemir/cssom@0.9.19':
+    optional: true
 
   '@adobe/css-tools@4.4.2': {}
 
@@ -22103,7 +22118,8 @@ snapshots:
       '@csstools/css-color-parser': 3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
-      lru-cache: 11.2.1
+      lru-cache: 11.2.2
+    optional: true
 
   '@asamuzakjp/dom-selector@6.7.4':
     dependencies:
@@ -22112,8 +22128,10 @@ snapshots:
       css-tree: 3.1.0
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.2.2
+    optional: true
 
-  '@asamuzakjp/nwsapi@2.3.9': {}
+  '@asamuzakjp/nwsapi@2.3.9':
+    optional: true
 
   '@assemblyscript/loader@0.9.4': {}
 
@@ -23130,11 +23148,6 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.5
 
-  '@babel/plugin-syntax-async-generators@7.8.4(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-async-generators@7.8.4(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
@@ -23150,19 +23163,9 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-syntax-class-properties@7.12.13(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-class-properties@7.12.13(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-class-static-block@7.14.5(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-class-static-block@7.14.5(@babel/core@7.28.5)':
@@ -23220,19 +23223,9 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.26.5
 
-  '@babel/plugin-syntax-import-meta@7.10.4(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-import-meta@7.10.4(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-json-strings@7.8.3(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-json-strings@7.8.3(@babel/core@7.28.5)':
@@ -23260,19 +23253,9 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-syntax-logical-assignment-operators@7.10.4(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-logical-assignment-operators@7.10.4(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-nullish-coalescing-operator@7.8.3(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-nullish-coalescing-operator@7.8.3(@babel/core@7.28.5)':
@@ -23280,19 +23263,9 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-syntax-numeric-separator@7.10.4(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-numeric-separator@7.10.4(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-object-rest-spread@7.8.3(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-object-rest-spread@7.8.3(@babel/core@7.28.5)':
@@ -23300,19 +23273,9 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-syntax-optional-catch-binding@7.8.3(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-optional-catch-binding@7.8.3(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-optional-chaining@7.8.3(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-optional-chaining@7.8.3(@babel/core@7.28.5)':
@@ -23320,19 +23283,9 @@ snapshots:
       '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-syntax-private-property-in-object@7.14.5(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/helper-plugin-utils': 7.27.1
-
   '@babel/plugin-syntax-private-property-in-object@7.14.5(@babel/core@7.28.5)':
     dependencies:
       '@babel/core': 7.28.5
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-top-level-await@7.14.5(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-top-level-await@7.14.5(@babel/core@7.28.5)':
@@ -23343,11 +23296,6 @@ snapshots:
   '@babel/plugin-syntax-typescript@7.25.9(@babel/core@7.26.10)':
     dependencies:
       '@babel/core': 7.26.10
-      '@babel/helper-plugin-utils': 7.27.1
-
-  '@babel/plugin-syntax-typescript@7.25.9(@babel/core@7.27.1)':
-    dependencies:
-      '@babel/core': 7.27.1
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-typescript@7.27.1(@babel/core@7.27.1)':
@@ -25906,6 +25854,43 @@ snapshots:
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.4.2))
       eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.4.2))(turbo@2.5.8)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)))(typescript@5.9.3)
+      eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.0)(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-jsonc: 2.20.0(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-jsx-a11y: 6.10.2(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-n: 17.17.0(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-react: 7.37.4(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-react-hooks: 5.2.0(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-storybook: 0.11.6(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
+      eslint-plugin-tailwindcss: 3.18.0(tailwindcss@3.4.17(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)))
+      eslint-plugin-testing-library: 7.1.1(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
+      eslint-plugin-tsdoc: 0.4.0
+      eslint-plugin-unicorn: 57.0.0(eslint@9.23.0(jiti@2.4.2))
+      globals: 16.0.0
+      tailwindcss: 3.4.17(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      typescript-eslint: 8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@eslint/json'
+      - '@testing-library/dom'
+      - '@typescript-eslint/eslint-plugin'
+      - '@typescript-eslint/parser'
+      - eslint-import-resolver-typescript
+      - eslint-import-resolver-webpack
+      - jest
+      - supports-color
+      - ts-node
+      - turbo
+      - typescript
+
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.0)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86))(turbo@2.5.8)(typescript@5.9.3)':
+    dependencies:
+      '@eslint/eslintrc': 3.3.1
+      '@eslint/js': 9.23.0
+      '@next/eslint-plugin-next': 15.2.4
+      eslint: 9.23.0(jiti@2.4.2)
+      eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.4.2))
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.4.2))(turbo@2.5.8)
+      eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.0)(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-jsonc: 2.20.0(eslint@9.23.0(jiti@2.4.2))
@@ -26017,7 +26002,7 @@ snapshots:
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.4.2))
       eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.4.2))(turbo@2.5.8)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))
-      eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@22.14.0))(typescript@5.9.3)
+      eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.0)(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-jsonc: 2.20.0(eslint@9.23.0(jiti@2.4.2))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.23.0(jiti@2.4.2))
@@ -26075,12 +26060,14 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@csstools/color-helpers@5.1.0': {}
+  '@csstools/color-helpers@5.1.0':
+    optional: true
 
   '@csstools/css-calc@2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-color-parser@3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
@@ -26088,6 +26075,7 @@ snapshots:
       '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3)':
     dependencies:
@@ -26096,12 +26084,15 @@ snapshots:
   '@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
-  '@csstools/css-syntax-patches-for-csstree@1.0.15': {}
+  '@csstools/css-syntax-patches-for-csstree@1.0.15':
+    optional: true
 
   '@csstools/css-tokenizer@3.0.3': {}
 
-  '@csstools/css-tokenizer@3.0.4': {}
+  '@csstools/css-tokenizer@3.0.4':
+    optional: true
 
   '@csstools/media-query-list-parser@4.0.2(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)':
     dependencies:
@@ -27156,43 +27147,43 @@ snapshots:
       - react
       - react-dom
 
-  '@fuel-ts/abi-coder@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/abi-coder@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       type-fest: 4.34.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/abi-coder@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/abi-coder@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       type-fest: 4.34.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/abi-coder@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/abi-coder@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       type-fest: 4.34.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/abi-typegen@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/abi-typegen@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/versions': 0.101.3
       commander: 13.1.0
       glob: 10.4.5
@@ -27203,10 +27194,10 @@ snapshots:
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/abi-typegen@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/abi-typegen@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/versions': 0.101.3
       commander: 13.1.0
       glob: 10.4.5
@@ -27217,10 +27208,10 @@ snapshots:
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/abi-typegen@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/abi-typegen@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/versions': 0.101.3
       commander: 13.1.0
       glob: 10.4.5
@@ -27231,17 +27222,17 @@ snapshots:
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/account@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/account@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/versions': 0.101.3
       '@fuels/vm-asm': 0.60.2
       '@noble/curves': 1.8.1
@@ -27254,17 +27245,17 @@ snapshots:
       - encoding
       - vitest
 
-  '@fuel-ts/account@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/account@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/versions': 0.101.3
       '@fuels/vm-asm': 0.60.2
       '@noble/curves': 1.8.1
@@ -27277,17 +27268,17 @@ snapshots:
       - encoding
       - vitest
 
-  '@fuel-ts/account@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/account@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/versions': 0.101.3
       '@fuels/vm-asm': 0.60.2
       '@noble/curves': 1.8.1
@@ -27300,107 +27291,107 @@ snapshots:
       - encoding
       - vitest
 
-  '@fuel-ts/address@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/address@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/address@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/address@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/address@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/address@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/contract@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/contract@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuels/vm-asm': 0.60.2
       ramda: 0.30.1
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/contract@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/contract@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuels/vm-asm': 0.60.2
       ramda: 0.30.1
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/contract@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/contract@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/merkle': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuels/vm-asm': 0.60.2
       ramda: 0.30.1
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/crypto@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/crypto@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/crypto@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/crypto@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/crypto@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/crypto@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
@@ -27409,26 +27400,26 @@ snapshots:
     dependencies:
       '@fuel-ts/versions': 0.101.3
 
-  '@fuel-ts/hasher@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/hasher@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/hasher@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/hasher@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/hasher@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/hasher@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@noble/hashes': 1.7.1
     transitivePeerDependencies:
       - vitest
@@ -27439,209 +27430,209 @@ snapshots:
       '@types/bn.js': 5.1.6
       bn.js: 5.2.1
 
-  '@fuel-ts/merkle@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/merkle@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/math': 0.101.3
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/merkle@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/merkle@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/merkle@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/merkle@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/program@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/program@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuels/vm-asm': 0.60.2
       ramda: 0.30.1
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/program@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/program@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuels/vm-asm': 0.60.2
       ramda: 0.30.1
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/program@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/program@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuels/vm-asm': 0.60.2
       ramda: 0.30.1
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/recipes@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/recipes@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/recipes@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/recipes@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/recipes@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/recipes@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/script@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/script@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/script@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/script@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/script@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/script@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     transitivePeerDependencies:
       - encoding
       - vitest
 
-  '@fuel-ts/transactions@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/transactions@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/transactions@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/transactions@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/transactions@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/transactions@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
     transitivePeerDependencies:
       - vitest
 
-  '@fuel-ts/utils@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
+  '@fuel-ts/utils@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
       '@fuel-ts/versions': 0.101.3
       fflate: 0.8.2
-      vitest: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)
+      vitest: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)
 
-  '@fuel-ts/utils@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/utils@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
       '@fuel-ts/versions': 0.101.3
       fflate: 0.8.2
-      vitest: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+      vitest: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
-  '@fuel-ts/utils@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
+  '@fuel-ts/utils@0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))':
     dependencies:
       '@fuel-ts/errors': 0.101.3
       '@fuel-ts/math': 0.101.3
       '@fuel-ts/versions': 0.101.3
       fflate: 0.8.2
-      vitest: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
+      vitest: 4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)
 
   '@fuel-ts/versions@0.101.3':
     dependencies:
@@ -28456,6 +28447,41 @@ snapshots:
       - supports-color
       - ts-node
 
+  '@jest/core@29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))':
+    dependencies:
+      '@jest/console': 29.7.0
+      '@jest/reporters': 29.7.0
+      '@jest/test-result': 29.7.0
+      '@jest/transform': 29.7.0
+      '@jest/types': 29.6.3
+      '@types/node': 18.19.86
+      ansi-escapes: 4.3.2
+      chalk: 4.1.2
+      ci-info: 3.9.0
+      exit: 0.1.2
+      graceful-fs: 4.2.11
+      jest-changed-files: 29.7.0
+      jest-config: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
+      jest-haste-map: 29.7.0
+      jest-message-util: 29.7.0
+      jest-regex-util: 29.6.3
+      jest-resolve: 29.7.0
+      jest-resolve-dependencies: 29.7.0
+      jest-runner: 29.7.0
+      jest-runtime: 29.7.0
+      jest-snapshot: 29.7.0
+      jest-util: 29.7.0
+      jest-validate: 29.7.0
+      jest-watcher: 29.7.0
+      micromatch: 4.0.8
+      pretty-format: 29.7.0
+      slash: 3.0.0
+      strip-ansi: 6.0.1
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
+      - ts-node
+
   '@jest/core@29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))':
     dependencies:
       '@jest/console': 29.7.0
@@ -28538,7 +28564,7 @@ snapshots:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       '@types/node': 18.19.86
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
@@ -28566,7 +28592,7 @@ snapshots:
 
   '@jest/source-map@29.6.3':
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       callsites: 3.1.0
       graceful-fs: 4.2.11
 
@@ -28586,9 +28612,9 @@ snapshots:
 
   '@jest/transform@29.7.0':
     dependencies:
-      '@babel/core': 7.27.1
+      '@babel/core': 7.28.5
       '@jest/types': 29.6.3
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       babel-plugin-istanbul: 6.1.1
       chalk: 4.1.2
       convert-source-map: 2.0.0
@@ -36265,6 +36291,8 @@ snapshots:
 
   '@types/web@0.0.197': {}
 
+  '@types/whatwg-mimetype@3.0.2': {}
+
   '@types/ws@7.4.7':
     dependencies:
       '@types/node': 18.19.86
@@ -36532,7 +36560,7 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.7.1
+      semver: 7.7.2
       tsutils: 3.21.0(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
@@ -36593,7 +36621,7 @@ snapshots:
       '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.3)
       eslint: 8.56.0
       eslint-scope: 5.1.1
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -36608,7 +36636,7 @@ snapshots:
       '@typescript-eslint/typescript-estree': 5.62.0(typescript@5.9.3)
       eslint: 9.23.0(jiti@2.4.2)
       eslint-scope: 5.1.1
-      semver: 7.7.1
+      semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -38480,19 +38508,6 @@ snapshots:
 
   axobject-query@4.1.0: {}
 
-  babel-jest@29.7.0(@babel/core@7.27.1):
-    dependencies:
-      '@babel/core': 7.27.1
-      '@jest/transform': 29.7.0
-      '@types/babel__core': 7.20.5
-      babel-plugin-istanbul: 6.1.1
-      babel-preset-jest: 29.6.3(@babel/core@7.27.1)
-      chalk: 4.1.2
-      graceful-fs: 4.2.11
-      slash: 3.0.0
-    transitivePeerDependencies:
-      - supports-color
-
   babel-jest@29.7.0(@babel/core@7.28.5):
     dependencies:
       '@babel/core': 7.28.5
@@ -38526,7 +38541,7 @@ snapshots:
   babel-plugin-jest-hoist@29.6.3:
     dependencies:
       '@babel/template': 7.27.2
-      '@babel/types': 7.27.1
+      '@babel/types': 7.28.5
       '@types/babel__core': 7.20.5
       '@types/babel__traverse': 7.20.7
 
@@ -38628,25 +38643,6 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
 
-  babel-preset-current-node-syntax@1.1.0(@babel/core@7.27.1):
-    dependencies:
-      '@babel/core': 7.27.1
-      '@babel/plugin-syntax-async-generators': 7.8.4(@babel/core@7.27.1)
-      '@babel/plugin-syntax-bigint': 7.8.3(@babel/core@7.27.1)
-      '@babel/plugin-syntax-class-properties': 7.12.13(@babel/core@7.27.1)
-      '@babel/plugin-syntax-class-static-block': 7.14.5(@babel/core@7.27.1)
-      '@babel/plugin-syntax-import-attributes': 7.26.0(@babel/core@7.27.1)
-      '@babel/plugin-syntax-import-meta': 7.10.4(@babel/core@7.27.1)
-      '@babel/plugin-syntax-json-strings': 7.8.3(@babel/core@7.27.1)
-      '@babel/plugin-syntax-logical-assignment-operators': 7.10.4(@babel/core@7.27.1)
-      '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3(@babel/core@7.27.1)
-      '@babel/plugin-syntax-numeric-separator': 7.10.4(@babel/core@7.27.1)
-      '@babel/plugin-syntax-object-rest-spread': 7.8.3(@babel/core@7.27.1)
-      '@babel/plugin-syntax-optional-catch-binding': 7.8.3(@babel/core@7.27.1)
-      '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.27.1)
-      '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.27.1)
-      '@babel/plugin-syntax-top-level-await': 7.14.5(@babel/core@7.27.1)
-
   babel-preset-current-node-syntax@1.1.0(@babel/core@7.28.5):
     dependencies:
       '@babel/core': 7.28.5
@@ -38665,12 +38661,6 @@ snapshots:
       '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.28.5)
       '@babel/plugin-syntax-private-property-in-object': 7.14.5(@babel/core@7.28.5)
       '@babel/plugin-syntax-top-level-await': 7.14.5(@babel/core@7.28.5)
-
-  babel-preset-jest@29.6.3(@babel/core@7.27.1):
-    dependencies:
-      '@babel/core': 7.27.1
-      babel-plugin-jest-hoist: 29.6.3
-      babel-preset-current-node-syntax: 1.1.0(@babel/core@7.27.1)
 
   babel-preset-jest@29.6.3(@babel/core@7.28.5):
     dependencies:
@@ -38732,6 +38722,7 @@ snapshots:
   bidi-js@1.0.3:
     dependencies:
       require-from-string: 2.0.2
+    optional: true
 
   big-integer@1.6.36: {}
 
@@ -39740,6 +39731,22 @@ snapshots:
       - ts-node
     optional: true
 
+  create-jest@29.7.0(@types/node@18.19.86):
+    dependencies:
+      '@jest/types': 29.6.3
+      chalk: 4.1.2
+      exit: 0.1.2
+      graceful-fs: 4.2.11
+      jest-config: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
+      jest-util: 29.7.0
+      prompts: 2.4.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - supports-color
+      - ts-node
+    optional: true
+
   create-jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)):
     dependencies:
       '@jest/types': 29.6.3
@@ -39755,13 +39762,13 @@ snapshots:
       - supports-color
       - ts-node
 
-  create-jest@29.7.0(@types/node@20.17.30):
+  create-jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)):
     dependencies:
       '@jest/types': 29.6.3
       chalk: 4.1.2
       exit: 0.1.2
       graceful-fs: 4.2.11
-      jest-config: 29.7.0(@types/node@20.17.30)
+      jest-config: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       jest-util: 29.7.0
       prompts: 2.4.2
     transitivePeerDependencies:
@@ -39769,7 +39776,6 @@ snapshots:
       - babel-plugin-macros
       - supports-color
       - ts-node
-    optional: true
 
   create-jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)):
     dependencies:
@@ -39937,6 +39943,7 @@ snapshots:
       '@asamuzakjp/css-color': 4.0.5
       '@csstools/css-syntax-patches-for-csstree': 1.0.15
       css-tree: 3.1.0
+    optional: true
 
   csstype@3.1.3: {}
 
@@ -39995,6 +40002,7 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
+    optional: true
 
   data-view-buffer@1.0.2:
     dependencies:
@@ -40080,7 +40088,8 @@ snapshots:
 
   decimal.js@10.5.0: {}
 
-  decimal.js@10.6.0: {}
+  decimal.js@10.6.0:
+    optional: true
 
   decode-named-character-reference@1.1.0:
     dependencies:
@@ -40505,7 +40514,8 @@ snapshots:
 
   entities@4.5.0: {}
 
-  entities@6.0.1: {}
+  entities@6.0.1:
+    optional: true
 
   env-paths@2.2.1: {}
 
@@ -41047,7 +41057,7 @@ snapshots:
       eslint: 9.23.0(jiti@2.4.2)
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 5.62.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
-      jest: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      jest: 29.7.0(@types/node@18.19.86)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -41058,7 +41068,7 @@ snapshots:
       eslint: 9.23.0(jiti@2.4.2)
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
-      jest: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      jest: 29.7.0(@types/node@18.19.86)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -41096,13 +41106,24 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-jest@28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86))(typescript@5.9.3):
+  eslint-plugin-jest@28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)))(typescript@5.9.3):
     dependencies:
       '@typescript-eslint/utils': 8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
       eslint: 9.23.0(jiti@2.4.2)
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
       jest: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  eslint-plugin-jest@28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@18.19.86))(typescript@5.9.3):
+    dependencies:
+      '@typescript-eslint/utils': 8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
+      eslint: 9.23.0(jiti@2.4.2)
+    optionalDependencies:
+      '@typescript-eslint/eslint-plugin': 8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
+      jest: 29.7.0(@types/node@18.19.86)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -41125,17 +41146,6 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
       jest: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
-  eslint-plugin-jest@28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(jest@29.7.0(@types/node@22.14.0))(typescript@5.9.3):
-    dependencies:
-      '@typescript-eslint/utils': 8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
-      eslint: 9.23.0(jiti@2.4.2)
-    optionalDependencies:
-      '@typescript-eslint/eslint-plugin': 8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.23.0(jiti@2.4.2))(typescript@5.9.3)
-      jest: 29.7.0(@types/node@22.14.0)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -42537,22 +42547,22 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fuels@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)):
+  fuels@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1)):
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/recipes': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/script': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/recipes': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/script': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
       '@fuel-ts/versions': 0.101.3
       '@fuels/vm-asm': 0.60.2
       bundle-require: 5.1.0(esbuild@0.25.3)
@@ -42573,22 +42583,22 @@ snapshots:
       - supports-color
       - vitest
 
-  fuels@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)):
+  fuels@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)):
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/recipes': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/script': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/recipes': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/script': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/versions': 0.101.3
       '@fuels/vm-asm': 0.60.2
       bundle-require: 5.1.0(esbuild@0.25.3)
@@ -42609,22 +42619,22 @@ snapshots:
       - supports-color
       - vitest
 
-  fuels@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)):
+  fuels@0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0)):
     dependencies:
-      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-coder': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/abi-typegen': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/account': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/address': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/contract': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/crypto': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/errors': 0.101.3
-      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/hasher': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/math': 0.101.3
-      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/recipes': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/script': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
-      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/program': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/recipes': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/script': 0.101.3(encoding@0.1.13)(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/transactions': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
+      '@fuel-ts/utils': 0.101.3(vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
       '@fuel-ts/versions': 0.101.3
       '@fuels/vm-asm': 0.60.2
       bundle-require: 5.1.0(esbuild@0.25.3)
@@ -43126,6 +43136,12 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
+  happy-dom@20.0.10:
+    dependencies:
+      '@types/node': 20.17.30
+      '@types/whatwg-mimetype': 3.0.2
+      whatwg-mimetype: 3.0.0
+
   har-schema@2.0.0: {}
 
   har-validator@5.1.5:
@@ -43387,6 +43403,7 @@ snapshots:
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
+    optional: true
 
   html-entities@2.6.0: {}
 
@@ -43472,6 +43489,7 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   http-signature@1.2.0:
     dependencies:
@@ -43524,6 +43542,7 @@ snapshots:
   iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
+    optional: true
 
   icss-utils@5.1.0(postcss@8.5.3):
     dependencies:
@@ -43856,7 +43875,8 @@ snapshots:
 
   is-plain-object@5.0.0: {}
 
-  is-potential-custom-element-name@1.0.1: {}
+  is-potential-custom-element-name@1.0.1:
+    optional: true
 
   is-regex@1.2.1:
     dependencies:
@@ -43993,8 +44013,8 @@ snapshots:
 
   istanbul-lib-instrument@5.2.1:
     dependencies:
-      '@babel/core': 7.27.1
-      '@babel/parser': 7.27.2
+      '@babel/core': 7.28.5
+      '@babel/parser': 7.28.5
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
       semver: 6.3.1
@@ -44003,8 +44023,8 @@ snapshots:
 
   istanbul-lib-instrument@6.0.3:
     dependencies:
-      '@babel/core': 7.27.1
-      '@babel/parser': 7.27.2
+      '@babel/core': 7.28.5
+      '@babel/parser': 7.28.5
       '@istanbuljs/schema': 0.1.3
       istanbul-lib-coverage: 3.2.2
       semver: 7.7.2
@@ -44158,7 +44178,7 @@ snapshots:
 
   jest-cli@29.7.0(@types/node@16.18.126):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
       chalk: 4.1.2
@@ -44166,6 +44186,26 @@ snapshots:
       exit: 0.1.2
       import-local: 3.2.0
       jest-config: 29.7.0(@types/node@16.18.126)
+      jest-util: 29.7.0
+      jest-validate: 29.7.0
+      yargs: 17.7.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - supports-color
+      - ts-node
+    optional: true
+
+  jest-cli@29.7.0(@types/node@18.19.86):
+    dependencies:
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
+      '@jest/test-result': 29.7.0
+      '@jest/types': 29.6.3
+      chalk: 4.1.2
+      create-jest: 29.7.0(@types/node@18.19.86)
+      exit: 0.1.2
+      import-local: 3.2.0
+      jest-config: 29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
       jest-util: 29.7.0
       jest-validate: 29.7.0
       yargs: 17.7.2
@@ -44197,14 +44237,14 @@ snapshots:
 
   jest-cli@29.7.0(@types/node@20.17.30):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
       chalk: 4.1.2
-      create-jest: 29.7.0(@types/node@20.17.30)
+      create-jest: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       exit: 0.1.2
       import-local: 3.2.0
-      jest-config: 29.7.0(@types/node@20.17.30)
+      jest-config: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       jest-util: 29.7.0
       jest-validate: 29.7.0
       yargs: 17.7.2
@@ -44215,16 +44255,16 @@ snapshots:
       - ts-node
     optional: true
 
-  jest-cli@29.7.0(@types/node@22.14.0):
+  jest-cli@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
       chalk: 4.1.2
-      create-jest: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
+      create-jest: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       exit: 0.1.2
       import-local: 3.2.0
-      jest-config: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
+      jest-config: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       jest-util: 29.7.0
       jest-validate: 29.7.0
       yargs: 17.7.2
@@ -44233,7 +44273,6 @@ snapshots:
       - babel-plugin-macros
       - supports-color
       - ts-node
-    optional: true
 
   jest-cli@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)):
     dependencies:
@@ -44256,10 +44295,10 @@ snapshots:
 
   jest-config@29.7.0(@types/node@16.18.126):
     dependencies:
-      '@babel/core': 7.27.1
+      '@babel/core': 7.28.5
       '@jest/test-sequencer': 29.7.0
       '@jest/types': 29.6.3
-      babel-jest: 29.7.0(@babel/core@7.27.1)
+      babel-jest: 29.7.0(@babel/core@7.28.5)
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1
@@ -44287,10 +44326,10 @@ snapshots:
 
   jest-config@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3)):
     dependencies:
-      '@babel/core': 7.27.1
+      '@babel/core': 7.28.5
       '@jest/test-sequencer': 29.7.0
       '@jest/types': 29.6.3
-      babel-jest: 29.7.0(@babel/core@7.27.1)
+      babel-jest: 29.7.0(@babel/core@7.28.5)
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1
@@ -44316,12 +44355,43 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)):
+  jest-config@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)):
     dependencies:
-      '@babel/core': 7.27.1
+      '@babel/core': 7.28.5
       '@jest/test-sequencer': 29.7.0
       '@jest/types': 29.6.3
-      babel-jest: 29.7.0(@babel/core@7.27.1)
+      babel-jest: 29.7.0(@babel/core@7.28.5)
+      chalk: 4.1.2
+      ci-info: 3.9.0
+      deepmerge: 4.3.1
+      glob: 7.2.3
+      graceful-fs: 4.2.11
+      jest-circus: 29.7.0
+      jest-environment-node: 29.7.0
+      jest-get-type: 29.6.3
+      jest-regex-util: 29.6.3
+      jest-resolve: 29.7.0
+      jest-runner: 29.7.0
+      jest-util: 29.7.0
+      jest-validate: 29.7.0
+      micromatch: 4.0.8
+      parse-json: 5.2.0
+      pretty-format: 29.7.0
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 18.19.86
+      ts-node: 10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
+
+  jest-config@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)):
+    dependencies:
+      '@babel/core': 7.28.5
+      '@jest/test-sequencer': 29.7.0
+      '@jest/types': 29.6.3
+      babel-jest: 29.7.0(@babel/core@7.28.5)
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1
@@ -44347,12 +44417,12 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@29.7.0(@types/node@20.17.30):
+  jest-config@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)):
     dependencies:
-      '@babel/core': 7.27.1
+      '@babel/core': 7.28.5
       '@jest/test-sequencer': 29.7.0
       '@jest/types': 29.6.3
-      babel-jest: 29.7.0(@babel/core@7.27.1)
+      babel-jest: 29.7.0(@babel/core@7.28.5)
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1
@@ -44373,17 +44443,17 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 20.17.30
+      ts-node: 10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
-    optional: true
 
   jest-config@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)):
     dependencies:
-      '@babel/core': 7.27.1
+      '@babel/core': 7.28.5
       '@jest/test-sequencer': 29.7.0
       '@jest/types': 29.6.3
-      babel-jest: 29.7.0(@babel/core@7.27.1)
+      babel-jest: 29.7.0(@babel/core@7.28.5)
       chalk: 4.1.2
       ci-info: 3.9.0
       deepmerge: 4.3.1
@@ -44469,7 +44539,7 @@ snapshots:
 
   jest-message-util@29.7.0:
     dependencies:
-      '@babel/code-frame': 7.26.2
+      '@babel/code-frame': 7.27.1
       '@jest/types': 29.6.3
       '@types/stack-utils': 2.0.3
       chalk: 4.1.2
@@ -44565,15 +44635,15 @@ snapshots:
 
   jest-snapshot@29.7.0:
     dependencies:
-      '@babel/core': 7.27.1
-      '@babel/generator': 7.27.1
-      '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.27.1)
-      '@babel/plugin-syntax-typescript': 7.25.9(@babel/core@7.27.1)
-      '@babel/types': 7.27.1
+      '@babel/core': 7.28.5
+      '@babel/generator': 7.28.5
+      '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.5)
+      '@babel/plugin-syntax-typescript': 7.27.1(@babel/core@7.28.5)
+      '@babel/types': 7.28.5
       '@jest/expect-utils': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      babel-preset-current-node-syntax: 1.1.0(@babel/core@7.27.1)
+      babel-preset-current-node-syntax: 1.1.0(@babel/core@7.28.5)
       chalk: 4.1.2
       expect: 29.7.0
       graceful-fs: 4.2.11
@@ -44632,10 +44702,23 @@ snapshots:
 
   jest@29.7.0(@types/node@16.18.126):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
       '@jest/types': 29.6.3
       import-local: 3.2.0
       jest-cli: 29.7.0(@types/node@16.18.126)
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - supports-color
+      - ts-node
+    optional: true
+
+  jest@29.7.0(@types/node@18.19.86):
+    dependencies:
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
+      '@jest/types': 29.6.3
+      import-local: 3.2.0
+      jest-cli: 29.7.0(@types/node@18.19.86)
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -44657,7 +44740,7 @@ snapshots:
 
   jest@29.7.0(@types/node@20.17.30):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3))
       '@jest/types': 29.6.3
       import-local: 3.2.0
       jest-cli: 29.7.0(@types/node@20.17.30)
@@ -44668,18 +44751,17 @@ snapshots:
       - ts-node
     optional: true
 
-  jest@29.7.0(@types/node@22.14.0):
+  jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)):
     dependencies:
-      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@18.19.86)(typescript@5.9.3))
+      '@jest/core': 29.7.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
       '@jest/types': 29.6.3
       import-local: 3.2.0
-      jest-cli: 29.7.0(@types/node@22.14.0)
+      jest-cli: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
       - supports-color
       - ts-node
-    optional: true
 
   jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.14.0)(typescript@5.9.3)):
     dependencies:
@@ -44842,6 +44924,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   jsesc@3.0.2: {}
 
@@ -45257,7 +45340,8 @@ snapshots:
 
   lru-cache@11.2.1: {}
 
-  lru-cache@11.2.2: {}
+  lru-cache@11.2.2:
+    optional: true
 
   lru-cache@5.1.1:
     dependencies:
@@ -47023,6 +47107,7 @@ snapshots:
   parse5@8.0.0:
     dependencies:
       entities: 6.0.1
+    optional: true
 
   parseurl@1.3.3: {}
 
@@ -48768,6 +48853,7 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+    optional: true
 
   scheduler@0.25.0: {}
 
@@ -49806,7 +49892,8 @@ snapshots:
 
   symbol-observable@4.0.0: {}
 
-  symbol-tree@3.2.4: {}
+  symbol-tree@3.2.4:
+    optional: true
 
   symbol.inspect@1.0.1: {}
 
@@ -50100,11 +50187,13 @@ snapshots:
 
   tinyspy@4.0.4: {}
 
-  tldts-core@7.0.17: {}
+  tldts-core@7.0.17:
+    optional: true
 
   tldts@7.0.17:
     dependencies:
       tldts-core: 7.0.17
+    optional: true
 
   tmp@0.0.33:
     dependencies:
@@ -50190,12 +50279,14 @@ snapshots:
   tough-cookie@6.0.0:
     dependencies:
       tldts: 7.0.17
+    optional: true
 
   tr46@0.0.3: {}
 
   tr46@6.0.0:
     dependencies:
       punycode: 2.3.1
+    optional: true
 
   tree-kill@1.2.2: {}
 
@@ -50229,7 +50320,27 @@ snapshots:
       json5: 2.2.3
       lodash.memoize: 4.1.2
       make-error: 1.3.6
-      semver: 7.7.1
+      semver: 7.7.2
+      type-fest: 4.39.0
+      typescript: 5.9.3
+      yargs-parser: 21.1.1
+    optionalDependencies:
+      '@babel/core': 7.28.5
+      '@jest/transform': 29.7.0
+      '@jest/types': 29.6.3
+      babel-jest: 29.7.0(@babel/core@7.28.5)
+
+  ts-jest@29.3.1(@babel/core@7.28.5)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.5))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3)))(typescript@5.9.3):
+    dependencies:
+      bs-logger: 0.2.6
+      ejs: 3.1.10
+      fast-json-stable-stringify: 2.1.0
+      jest: 29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@20.17.30)(typescript@5.9.3))
+      jest-util: 29.7.0
+      json5: 2.2.3
+      lodash.memoize: 4.1.2
+      make-error: 1.3.6
+      semver: 7.7.2
       type-fest: 4.39.0
       typescript: 5.9.3
       yargs-parser: 21.1.1
@@ -50249,7 +50360,7 @@ snapshots:
       json5: 2.2.3
       lodash.memoize: 4.1.2
       make-error: 1.3.6
-      semver: 7.7.1
+      semver: 7.7.2
       type-fest: 4.39.0
       typescript: 5.9.3
       yargs-parser: 21.1.1
@@ -50871,7 +50982,7 @@ snapshots:
 
   v8-to-istanbul@9.3.0:
     dependencies:
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
 
@@ -51165,7 +51276,7 @@ snapshots:
       terser: 5.39.0
       yaml: 2.8.0
 
-  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@16.18.126)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
+  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@16.18.126)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
     dependencies:
       '@vitest/expect': 4.0.6
       '@vitest/mocker': 4.0.6(vite@7.1.12(@types/node@16.18.126)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
@@ -51191,6 +51302,7 @@ snapshots:
       '@edge-runtime/vm': 3.2.0
       '@types/debug': 4.1.12
       '@types/node': 16.18.126
+      happy-dom: 20.0.10
       jsdom: 27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - jiti
@@ -51206,7 +51318,7 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
+  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@18.19.86)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
     dependencies:
       '@vitest/expect': 4.0.6
       '@vitest/mocker': 4.0.6(vite@7.1.12(@types/node@18.19.86)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
@@ -51232,6 +51344,7 @@ snapshots:
       '@edge-runtime/vm': 3.2.0
       '@types/debug': 4.1.12
       '@types/node': 18.19.86
+      happy-dom: 20.0.10
       jsdom: 27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - jiti
@@ -51247,7 +51360,7 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@20.17.30)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
+  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@20.17.30)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
     dependencies:
       '@vitest/expect': 4.0.6
       '@vitest/mocker': 4.0.6(vite@7.1.12(@types/node@20.17.30)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
@@ -51273,6 +51386,7 @@ snapshots:
       '@edge-runtime/vm': 3.2.0
       '@types/debug': 4.1.12
       '@types/node': 20.17.30
+      happy-dom: 20.0.10
       jsdom: 27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - jiti
@@ -51288,7 +51402,7 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1):
+  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1):
     dependencies:
       '@vitest/expect': 4.0.6
       '@vitest/mocker': 4.0.6(vite@7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.7.1))
@@ -51314,6 +51428,7 @@ snapshots:
       '@edge-runtime/vm': 3.2.0
       '@types/debug': 4.1.12
       '@types/node': 22.14.0
+      happy-dom: 20.0.10
       jsdom: 27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - jiti
@@ -51329,7 +51444,7 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
+  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
     dependencies:
       '@vitest/expect': 4.0.6
       '@vitest/mocker': 4.0.6(vite@7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
@@ -51355,6 +51470,7 @@ snapshots:
       '@edge-runtime/vm': 3.2.0
       '@types/debug': 4.1.12
       '@types/node': 22.14.0
+      happy-dom: 20.0.10
       jsdom: 27.1.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - jiti
@@ -51370,7 +51486,7 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
+  vitest@4.0.6(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0):
     dependencies:
       '@vitest/expect': 4.0.6
       '@vitest/mocker': 4.0.6(vite@7.1.12(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(yaml@2.8.0))
@@ -51396,6 +51512,7 @@ snapshots:
       '@edge-runtime/vm': 3.2.0
       '@types/debug': 4.1.12
       '@types/node': 22.14.0
+      happy-dom: 20.0.10
       jsdom: 27.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.3)
     transitivePeerDependencies:
       - jiti
@@ -51434,6 +51551,7 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+    optional: true
 
   wagmi@2.14.16(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.28.5)(@babel/preset-env@7.26.9(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.71.5)(@tanstack/react-query@5.71.5(react@19.1.0))(@types/react@19.1.0)(bufferutil@4.0.9)(encoding@0.1.13)(immer@9.0.21)(ioredis@5.7.0)(react@19.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.4))(zod@3.24.4):
     dependencies:
@@ -52192,7 +52310,8 @@ snapshots:
 
   webidl-conversions@3.0.1: {}
 
-  webidl-conversions@8.0.0: {}
+  webidl-conversions@8.0.0:
+    optional: true
 
   webpack-dev-middleware@6.1.3(webpack@5.98.0(esbuild@0.25.9)):
     dependencies:
@@ -52293,17 +52412,22 @@ snapshots:
   whatwg-encoding@3.1.1:
     dependencies:
       iconv-lite: 0.6.3
+    optional: true
 
   whatwg-fetch@2.0.4: {}
 
   whatwg-fetch@3.6.20: {}
 
-  whatwg-mimetype@4.0.0: {}
+  whatwg-mimetype@3.0.0: {}
+
+  whatwg-mimetype@4.0.0:
+    optional: true
 
   whatwg-url@15.1.0:
     dependencies:
       tr46: 6.0.0
       webidl-conversions: 8.0.0
+    optional: true
 
   whatwg-url@5.0.0:
     dependencies:
@@ -52587,9 +52711,11 @@ snapshots:
     dependencies:
       sax: 1.4.1
 
-  xml-name-validator@5.0.0: {}
+  xml-name-validator@5.0.0:
+    optional: true
 
-  xmlchars@2.2.0: {}
+  xmlchars@2.2.0:
+    optional: true
 
   xmlhttprequest-ssl@2.1.2: {}
 

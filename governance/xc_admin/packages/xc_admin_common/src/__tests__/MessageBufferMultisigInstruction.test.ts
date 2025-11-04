@@ -1,4 +1,3 @@
-import { AnchorProvider, Wallet, Program, type Idl } from "@coral-xyz/anchor";
 import {
   getPythClusterApiUrl,
   type PythCluster,
@@ -13,6 +12,10 @@ import {
 import messageBuffer from "message_buffer/idl/message_buffer.json";
 import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 import { expect, test } from "@pythnetwork/test-config";
+import { AnchorProvider } from "@coral-xyz/anchor/dist/cjs/provider";
+import { Program } from "@coral-xyz/anchor/dist/cjs/program";
+import type { Idl } from "@coral-xyz/anchor/dist/cjs/idl";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 test("Message buffer multisig instruction parse: create buffer", () => {
   const cluster: PythCluster = "pythtest-crosschain";
@@ -22,7 +25,7 @@ test("Message buffer multisig instruction parse: create buffer", () => {
     new PublicKey(MESSAGE_BUFFER_PROGRAM_ID),
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   ) as unknown as Program<MessageBuffer>;
@@ -138,7 +141,7 @@ test("Message buffer multisig instruction parse: delete buffer", () => {
     new PublicKey(MESSAGE_BUFFER_PROGRAM_ID),
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   ) as unknown as Program<MessageBuffer>;

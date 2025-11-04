@@ -1,4 +1,3 @@
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
@@ -23,6 +22,8 @@ import {
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
 import { expect, it } from "@pythnetwork/test-config";
+import { AnchorProvider } from "@coral-xyz/anchor/dist/cjs/provider";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 it("Unit test for getSizeOfTransaction", async () => {
   const cluster: PythCluster = "devnet";
@@ -30,7 +31,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     getPythProgramKeyForCluster(cluster),
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   );
@@ -87,7 +88,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     getPythProgramKeyForCluster(cluster),
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   );

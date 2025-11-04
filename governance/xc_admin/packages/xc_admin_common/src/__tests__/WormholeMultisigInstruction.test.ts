@@ -1,5 +1,4 @@
 import { createWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import {
   getPythClusterApiUrl,
   type PythCluster,
@@ -19,6 +18,8 @@ import {
 } from "..";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 import { expect, test } from "@pythnetwork/test-config";
+import { AnchorProvider } from "@coral-xyz/anchor/dist/cjs/provider";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 test("Wormhole multisig instruction parse: send message without governance payload", () => {
   const cluster: PythCluster = "devnet";
@@ -26,7 +27,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
     WORMHOLE_ADDRESS[cluster]!,
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   );
@@ -167,7 +168,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
     WORMHOLE_ADDRESS[cluster]!,
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   );

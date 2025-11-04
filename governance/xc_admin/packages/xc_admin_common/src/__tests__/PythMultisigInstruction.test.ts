@@ -1,4 +1,3 @@
-import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { pythOracleProgram } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
@@ -9,6 +8,8 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { MultisigInstructionProgram, MultisigParser } from "..";
 import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
 import { expect, test } from "@pythnetwork/test-config";
+import { AnchorProvider } from "@coral-xyz/anchor/dist/cjs/provider";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 test("Pyth multisig instruction parse: create price account", () => {
   const cluster: PythCluster = "devnet";
@@ -16,7 +17,7 @@ test("Pyth multisig instruction parse: create price account", () => {
     getPythProgramKeyForCluster(cluster),
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   );
@@ -99,7 +100,7 @@ test("Pyth multisig instruction parse: set minimum publishers", () => {
     getPythProgramKeyForCluster(cluster),
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
-      new Wallet(new Keypair()),
+      new NodeWallet(new Keypair()),
       AnchorProvider.defaultOptions(),
     ),
   );

@@ -12,7 +12,8 @@ function defineTestConfig(config) {
     ],
     test: {
       ...(config && config.test ? config.test : {}),
-      environment: config && config.environment ? config.environment : "jsdom",
+      environment:
+        config && config.environment ? config.environment : "happy-dom",
     },
   });
 }

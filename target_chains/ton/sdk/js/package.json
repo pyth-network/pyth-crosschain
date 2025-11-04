@@ -42,9 +42,7 @@
     "@ton/ton": "^15.1.0",
     "@types/node": "^18.11.18",
     "eslint": "catalog:",
-    "jest": "^29.4.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
     "ts-node": "catalog:"
   },
   "engines": {

@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 import { execSync } from "node:child_process";
+import path from "node:path";
 
-const __dirname = import.meta.dirname;
+const binDir = execSync("pnpm bin", {
+  cwd: import.meta.dirname,
+  stdio: "pipe",
+})
+  .toString("utf8")
+  .trim();
+const viteBinPath = path.join(binDir, "vitest");
 
-const args = process.argv.slice(2);
-
-execSync(`pnpm vitest run --dir ${process.cwd()} ${args.join(" ")}`.trim(), {
-  cwd: __dirname,
+execSync(`${viteBinPath} run ${process.argv.slice(2).join(" ")}`.trim(), {
   stdio: "inherit",
 });

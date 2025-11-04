@@ -8,7 +8,7 @@ export function defineTestConfig(config) {
     plugins: [...(config?.plugins ?? []), reactPlugin()],
     test: {
       ...config?.test,
-      environment: config?.environment ?? "jsdom",
+      environment: config?.test?.environment ?? "happy-dom",
     },
   });
 }

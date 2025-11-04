@@ -9,196 +9,196 @@
   },
   "exports": {
     "./AppShell/amplitude": {
-      "default": "./dist/AppShell/amplitude.mjs",
-      "types": "./dist/AppShell/amplitude.d.ts"
+      "default": "./dist/esm/AppShell/amplitude.mjs",
+      "types": "./dist/esm/AppShell/amplitude.d.ts"
     },
     "./AppShell/body-providers": {
-      "default": "./dist/AppShell/body-providers.mjs",
-      "types": "./dist/AppShell/body-providers.d.ts"
+      "default": "./dist/esm/AppShell/body-providers.mjs",
+      "types": "./dist/esm/AppShell/body-providers.d.ts"
     },
     "./AppShell/fonts": {
-      "default": "./dist/AppShell/fonts.mjs",
-      "types": "./dist/AppShell/fonts.d.ts"
+      "default": "./dist/esm/AppShell/fonts.mjs",
+      "types": "./dist/esm/AppShell/fonts.d.ts"
     },
     "./AppShell/html-with-lang": {
-      "default": "./dist/AppShell/html-with-lang.mjs",
-      "types": "./dist/AppShell/html-with-lang.d.ts"
+      "default": "./dist/esm/AppShell/html-with-lang.mjs",
+      "types": "./dist/esm/AppShell/html-with-lang.d.ts"
     },
     "./AppShell/i18n-provider": {
-      "default": "./dist/AppShell/i18n-provider.mjs",
-      "types": "./dist/AppShell/i18n-provider.d.ts"
+      "default": "./dist/esm/AppShell/i18n-provider.mjs",
+      "types": "./dist/esm/AppShell/i18n-provider.d.ts"
     },
     "./AppShell": {
-      "default": "./dist/AppShell/index.mjs",
-      "types": "./dist/AppShell/index.d.ts"
+      "default": "./dist/esm/AppShell/index.mjs",
+      "types": "./dist/esm/AppShell/index.d.ts"
     },
     "./AppShell/report-accessibility": {
-      "default": "./dist/AppShell/report-accessibility.mjs",
-      "types": "./dist/AppShell/report-accessibility.d.ts"
+      "default": "./dist/esm/AppShell/report-accessibility.mjs",
+      "types": "./dist/esm/AppShell/report-accessibility.d.ts"
     },
     "./AppShell/router-provider": {
-      "default": "./dist/AppShell/router-provider.mjs",
-      "types": "./dist/AppShell/router-provider.d.ts"
+      "default": "./dist/esm/AppShell/router-provider.mjs",
+      "types": "./dist/esm/AppShell/router-provider.d.ts"
     },
     "./AppShell/tabs": {
-      "default": "./dist/AppShell/tabs.mjs",
-      "types": "./dist/AppShell/tabs.d.ts"
+      "default": "./dist/esm/AppShell/tabs.mjs",
+      "types": "./dist/esm/AppShell/tabs.d.ts"
     },
     "./Badge": {
-      "default": "./dist/Badge/index.mjs",
-      "types": "./dist/Badge/index.d.ts"
+      "default": "./dist/esm/Badge/index.mjs",
+      "types": "./dist/esm/Badge/index.d.ts"
     },
     "./Breadcrumbs": {
-      "default": "./dist/Breadcrumbs/index.mjs",
-      "types": "./dist/Breadcrumbs/index.d.ts"
+      "default": "./dist/esm/Breadcrumbs/index.mjs",
+      "types": "./dist/esm/Breadcrumbs/index.d.ts"
     },
     "./Button": {
-      "default": "./dist/Button/index.mjs",
-      "types": "./dist/Button/index.d.ts"
+      "default": "./dist/esm/Button/index.mjs",
+      "types": "./dist/esm/Button/index.d.ts"
     },
     "./Card": {
-      "default": "./dist/Card/index.mjs",
-      "types": "./dist/Card/index.d.ts"
+      "default": "./dist/esm/Card/index.mjs",
+      "types": "./dist/esm/Card/index.d.ts"
     },
     "./CopyButton": {
-      "default": "./dist/CopyButton/index.mjs",
-      "types": "./dist/CopyButton/index.d.ts"
+      "default": "./dist/esm/CopyButton/index.mjs",
+      "types": "./dist/esm/CopyButton/index.d.ts"
     },
     "./CrossfadeTabPanels": {
-      "default": "./dist/CrossfadeTabPanels/index.mjs",
-      "types": "./dist/CrossfadeTabPanels/index.d.ts"
+      "default": "./dist/esm/CrossfadeTabPanels/index.mjs",
+      "types": "./dist/esm/CrossfadeTabPanels/index.d.ts"
     },
     "./DropdownCaretDown": {
-      "default": "./dist/DropdownCaretDown/index.mjs",
-      "types": "./dist/DropdownCaretDown/index.d.ts"
+      "default": "./dist/esm/DropdownCaretDown/index.mjs",
+      "types": "./dist/esm/DropdownCaretDown/index.d.ts"
     },
     "./EntityList": {
-      "default": "./dist/EntityList/index.mjs",
-      "types": "./dist/EntityList/index.d.ts"
+      "default": "./dist/esm/EntityList/index.mjs",
+      "types": "./dist/esm/EntityList/index.d.ts"
     },
     "./ErrorPage": {
-      "default": "./dist/ErrorPage/index.mjs",
-      "types": "./dist/ErrorPage/index.d.ts"
+      "default": "./dist/esm/ErrorPage/index.mjs",
+      "types": "./dist/esm/ErrorPage/index.d.ts"
     },
     "./Footer": {
-      "default": "./dist/Footer/index.mjs",
-      "types": "./dist/Footer/index.d.ts"
+      "default": "./dist/esm/Footer/index.mjs",
+      "types": "./dist/esm/Footer/index.d.ts"
     },
     "./Header": {
-      "default": "./dist/Header/index.mjs",
-      "types": "./dist/Header/index.d.ts"
+      "default": "./dist/esm/Header/index.mjs",
+      "types": "./dist/esm/Header/index.d.ts"
     },
     "./Header/theme-switch": {
-      "default": "./dist/Header/theme-switch.mjs",
-      "types": "./dist/Header/theme-switch.d.ts"
+      "default": "./dist/esm/Header/theme-switch.mjs",
+      "types": "./dist/esm/Header/theme-switch.d.ts"
     },
     "./InfoBox": {
-      "default": "./dist/InfoBox/index.mjs",
-      "types": "./dist/InfoBox/index.d.ts"
+      "default": "./dist/esm/InfoBox/index.mjs",
+      "types": "./dist/esm/InfoBox/index.d.ts"
     },
     "./Link": {
-      "default": "./dist/Link/index.mjs",
-      "types": "./dist/Link/index.d.ts"
+      "default": "./dist/esm/Link/index.mjs",
+      "types": "./dist/esm/Link/index.d.ts"
     },
     "./MainNavTabs": {
-      "default": "./dist/MainNavTabs/index.mjs",
-      "types": "./dist/MainNavTabs/index.d.ts"
+      "default": "./dist/esm/MainNavTabs/index.mjs",
+      "types": "./dist/esm/MainNavTabs/index.d.ts"
     },
     "./Meter": {
-      "default": "./dist/Meter/index.mjs",
-      "types": "./dist/Meter/index.d.ts"
+      "default": "./dist/esm/Meter/index.mjs",
+      "types": "./dist/esm/Meter/index.d.ts"
     },
     "./MobileNavTabs": {
-      "default": "./dist/MobileNavTabs/index.mjs",
-      "types": "./dist/MobileNavTabs/index.d.ts"
+      "default": "./dist/esm/MobileNavTabs/index.mjs",
+      "types": "./dist/esm/MobileNavTabs/index.d.ts"
     },
     "./ModalDialog": {
-      "default": "./dist/ModalDialog/index.mjs",
-      "types": "./dist/ModalDialog/index.d.ts"
+      "default": "./dist/esm/ModalDialog/index.mjs",
+      "types": "./dist/esm/ModalDialog/index.d.ts"
     },
     "./NoResults": {
-      "default": "./dist/NoResults/index.mjs",
-      "types": "./dist/NoResults/index.d.ts"
+      "default": "./dist/esm/NoResults/index.mjs",
+      "types": "./dist/esm/NoResults/index.d.ts"
     },
     "./NotFoundPage": {
-      "default": "./dist/NotFoundPage/index.mjs",
-      "types": "./dist/NotFoundPage/index.d.ts"
+      "default": "./dist/esm/NotFoundPage/index.mjs",
+      "types": "./dist/esm/NotFoundPage/index.d.ts"
     },
     "./Paginator": {
-      "default": "./dist/Paginator/index.mjs",
-      "types": "./dist/Paginator/index.d.ts"
+      "default": "./dist/esm/Paginator/index.mjs",
+      "types": "./dist/esm/Paginator/index.d.ts"
     },
     "./SearchButton": {
-      "default": "./dist/SearchButton/index.mjs",
-      "types": "./dist/SearchButton/index.d.ts"
+      "default": "./dist/esm/SearchButton/index.mjs",
+      "types": "./dist/esm/SearchButton/index.d.ts"
     },
     "./SearchInput": {
-      "default": "./dist/SearchInput/index.mjs",
-      "types": "./dist/SearchInput/index.d.ts"
+      "default": "./dist/esm/SearchInput/index.mjs",
+      "types": "./dist/esm/SearchInput/index.d.ts"
     },
     "./Select": {
-      "default": "./dist/Select/index.mjs",
-      "types": "./dist/Select/index.d.ts"
+      "default": "./dist/esm/Select/index.mjs",
+      "types": "./dist/esm/Select/index.d.ts"
     },
     "./SingleToggleGroup": {
-      "default": "./dist/SingleToggleGroup/index.mjs",
-      "types": "./dist/SingleToggleGroup/index.d.ts"
+      "default": "./dist/esm/SingleToggleGroup/index.mjs",
+      "types": "./dist/esm/SingleToggleGroup/index.d.ts"
     },
     "./Skeleton": {
-      "default": "./dist/Skeleton/index.mjs",
-      "types": "./dist/Skeleton/index.d.ts"
+      "default": "./dist/esm/Skeleton/index.mjs",
+      "types": "./dist/esm/Skeleton/index.d.ts"
     },
     "./Spinner": {
-      "default": "./dist/Spinner/index.mjs",
-      "types": "./dist/Spinner/index.d.ts"
+      "default": "./dist/esm/Spinner/index.mjs",
+      "types": "./dist/esm/Spinner/index.d.ts"
     },
     "./StatCard": {
-      "default": "./dist/StatCard/index.mjs",
-      "types": "./dist/StatCard/index.d.ts"
+      "default": "./dist/esm/StatCard/index.mjs",
+      "types": "./dist/esm/StatCard/index.d.ts"
     },
     "./Status": {
-      "default": "./dist/Status/index.mjs",
-      "types": "./dist/Status/index.d.ts"
+      "default": "./dist/esm/Status/index.mjs",
+      "types": "./dist/esm/Status/index.d.ts"
     },
     "./Switch": {
-      "default": "./dist/Switch/index.mjs",
-      "types": "./dist/Switch/index.d.ts"
+      "default": "./dist/esm/Switch/index.mjs",
+      "types": "./dist/esm/Switch/index.d.ts"
     },
     "./SymbolPairTag": {
-      "default": "./dist/SymbolPairTag/index.mjs",
-      "types": "./dist/SymbolPairTag/index.d.ts"
+      "default": "./dist/esm/SymbolPairTag/index.mjs",
+      "types": "./dist/esm/SymbolPairTag/index.d.ts"
     },
     "./TabList": {
-      "default": "./dist/TabList/index.mjs",
-      "types": "./dist/TabList/index.d.ts"
+      "default": "./dist/esm/TabList/index.mjs",
+      "types": "./dist/esm/TabList/index.d.ts"
     },
     "./Table": {
-      "default": "./dist/Table/index.mjs",
-      "types": "./dist/Table/index.d.ts"
+      "default": "./dist/esm/Table/index.mjs",
+      "types": "./dist/esm/Table/index.d.ts"
     },
     "./TableGrid/dummy-row-data": {
-      "default": "./dist/TableGrid/dummy-row-data.mjs",
-      "types": "./dist/TableGrid/dummy-row-data.d.ts"
+      "default": "./dist/esm/TableGrid/dummy-row-data.mjs",
+      "types": "./dist/esm/TableGrid/dummy-row-data.d.ts"
     },
     "./TableGrid": {
-      "default": "./dist/TableGrid/index.mjs",
-      "types": "./dist/TableGrid/index.d.ts"
+      "default": "./dist/esm/TableGrid/index.mjs",
+      "types": "./dist/esm/TableGrid/index.d.ts"
     },
     "./TableGrid/table-grid-props": {
-      "default": "./dist/TableGrid/table-grid-props.mjs",
-      "types": "./dist/TableGrid/table-grid-props.d.ts"
+      "default": "./dist/esm/TableGrid/table-grid-props.mjs",
+      "types": "./dist/esm/TableGrid/table-grid-props.d.ts"
     },
     "./Term": {
-      "default": "./dist/Term/index.mjs",
-      "types": "./dist/Term/index.d.ts"
+      "default": "./dist/esm/Term/index.mjs",
+      "types": "./dist/esm/Term/index.d.ts"
     },
     "./Virtualizer": {
-      "default": "./dist/Virtualizer/index.mjs",
-      "types": "./dist/Virtualizer/index.d.ts"
+      "default": "./dist/esm/Virtualizer/index.mjs",
+      "types": "./dist/esm/Virtualizer/index.d.ts"
     },
     "./compose-providers": {
-      "default": "./dist/compose-providers.mjs",
-      "types": "./dist/compose-providers.d.ts"
+      "default": "./dist/esm/compose-providers.mjs",
+      "types": "./dist/esm/compose-providers.d.ts"
     },
     "./omit-keys": {
       "default": "./dist/omit-keys.mjs",

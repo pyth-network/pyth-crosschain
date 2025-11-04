@@ -35,13 +35,10 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/hermes-client": "workspace:*",
-    "@types/jest": "^29.4.0",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "jest": "^29.4.0",
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
-    "ts-jest": "^29.0.5",
     "ts-node": "catalog:"
   },
   "dependencies": {
