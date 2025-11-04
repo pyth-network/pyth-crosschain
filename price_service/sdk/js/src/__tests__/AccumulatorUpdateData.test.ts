@@ -3,7 +3,9 @@ import {
   parsePriceFeedMessage,
   parseTwapMessage,
   sliceAccumulatorUpdateData,
-} from "../AccumulatorUpdateData";
+} from "../AccumulatorUpdateData.js";
+
+import { describe, expect, test } from "@pythnetwork/test-config";
 
 // This is just a sample update data from hermes
 const TEST_ACCUMULATOR_UPDATE_DATA =
@@ -19,38 +21,38 @@ describe("Test parse accumulator update", () => {
     const priceMessages = updates.map((update) => {
       return parsePriceFeedMessage(update.message);
     });
-    expect(priceMessages[0].feedId.toString("hex")).toBe(
+    expect(priceMessages[0]?.feedId.toString("hex")).toBe(
       "c96458d393fe9deb7a7d63a0ac41e2898a67a7750dbd166673279e06c868df0a",
     );
-    expect(priceMessages[0].price.toString()).toBe("4689500");
-    expect(priceMessages[0].confidence.toString()).toBe("6174");
-    expect(priceMessages[0].exponent).toBe(-8);
-    expect(priceMessages[0].publishTime.toString()).toBe("1715627146");
-    expect(priceMessages[0].prevPublishTime.toString()).toBe("1715627145");
-    expect(priceMessages[0].emaPrice.toString()).toBe("4690654");
-    expect(priceMessages[0].emaConf.toString()).toBe("6257");
+    expect(priceMessages[0]?.price.toString()).toBe("4689500");
+    expect(priceMessages[0]?.confidence.toString()).toBe("6174");
+    expect(priceMessages[0]?.exponent).toBe(-8);
+    expect(priceMessages[0]?.publishTime.toString()).toBe("1715627146");
+    expect(priceMessages[0]?.prevPublishTime.toString()).toBe("1715627145");
+    expect(priceMessages[0]?.emaPrice.toString()).toBe("4690654");
+    expect(priceMessages[0]?.emaConf.toString()).toBe("6257");
 
-    expect(priceMessages[1].feedId.toString("hex")).toBe(
+    expect(priceMessages[1]?.feedId.toString("hex")).toBe(
       "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
     );
-    expect(priceMessages[1].price.toString()).toBe("294943041422");
-    expect(priceMessages[1].confidence.toString()).toBe("184284043");
-    expect(priceMessages[1].exponent).toBe(-8);
-    expect(priceMessages[1].publishTime.toString()).toBe("1715627146");
-    expect(priceMessages[1].prevPublishTime.toString()).toBe("1715627145");
-    expect(priceMessages[1].emaPrice.toString()).toBe("294580230000");
-    expect(priceMessages[1].emaConf.toString()).toBe("239495968");
+    expect(priceMessages[1]?.price.toString()).toBe("294943041422");
+    expect(priceMessages[1]?.confidence.toString()).toBe("184284043");
+    expect(priceMessages[1]?.exponent).toBe(-8);
+    expect(priceMessages[1]?.publishTime.toString()).toBe("1715627146");
+    expect(priceMessages[1]?.prevPublishTime.toString()).toBe("1715627145");
+    expect(priceMessages[1]?.emaPrice.toString()).toBe("294580230000");
+    expect(priceMessages[1]?.emaConf.toString()).toBe("239495968");
 
-    expect(priceMessages[2].feedId.toString("hex")).toBe(
+    expect(priceMessages[2]?.feedId.toString("hex")).toBe(
       "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
     );
-    expect(priceMessages[2].price.toString()).toBe("14802549538");
-    expect(priceMessages[2].confidence.toString()).toBe("9930888");
-    expect(priceMessages[2].exponent).toBe(-8);
-    expect(priceMessages[2].publishTime.toString()).toBe("1715627146");
-    expect(priceMessages[2].prevPublishTime.toString()).toBe("1715627145");
-    expect(priceMessages[2].emaPrice.toString()).toBe("14732272500");
-    expect(priceMessages[2].emaConf.toString()).toBe("10975810");
+    expect(priceMessages[2]?.price.toString()).toBe("14802549538");
+    expect(priceMessages[2]?.confidence.toString()).toBe("9930888");
+    expect(priceMessages[2]?.exponent).toBe(-8);
+    expect(priceMessages[2]?.publishTime.toString()).toBe("1715627146");
+    expect(priceMessages[2]?.prevPublishTime.toString()).toBe("1715627145");
+    expect(priceMessages[2]?.emaPrice.toString()).toBe("14732272500");
+    expect(priceMessages[2]?.emaConf.toString()).toBe("10975810");
   });
 
   test("Slice accumulator update data", async () => {
@@ -86,27 +88,27 @@ describe("Test parse accumulator update", () => {
     const priceMessages = updates.map((update) => {
       return parsePriceFeedMessage(update.message);
     });
-    expect(priceMessages[0].feedId.toString("hex")).toBe(
+    expect(priceMessages[0]?.feedId.toString("hex")).toBe(
       "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
     );
-    expect(priceMessages[0].price.toString()).toBe("294943041422");
-    expect(priceMessages[0].confidence.toString()).toBe("184284043");
-    expect(priceMessages[0].exponent).toBe(-8);
-    expect(priceMessages[0].publishTime.toString()).toBe("1715627146");
-    expect(priceMessages[0].prevPublishTime.toString()).toBe("1715627145");
-    expect(priceMessages[0].emaPrice.toString()).toBe("294580230000");
-    expect(priceMessages[0].emaConf.toString()).toBe("239495968");
+    expect(priceMessages[0]?.price.toString()).toBe("294943041422");
+    expect(priceMessages[0]?.confidence.toString()).toBe("184284043");
+    expect(priceMessages[0]?.exponent).toBe(-8);
+    expect(priceMessages[0]?.publishTime.toString()).toBe("1715627146");
+    expect(priceMessages[0]?.prevPublishTime.toString()).toBe("1715627145");
+    expect(priceMessages[0]?.emaPrice.toString()).toBe("294580230000");
+    expect(priceMessages[0]?.emaConf.toString()).toBe("239495968");
 
-    expect(priceMessages[1].feedId.toString("hex")).toBe(
+    expect(priceMessages[1]?.feedId.toString("hex")).toBe(
       "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
     );
-    expect(priceMessages[1].price.toString()).toBe("14802549538");
-    expect(priceMessages[1].confidence.toString()).toBe("9930888");
-    expect(priceMessages[1].exponent).toBe(-8);
-    expect(priceMessages[1].publishTime.toString()).toBe("1715627146");
-    expect(priceMessages[1].prevPublishTime.toString()).toBe("1715627145");
-    expect(priceMessages[1].emaPrice.toString()).toBe("14732272500");
-    expect(priceMessages[1].emaConf.toString()).toBe("10975810");
+    expect(priceMessages[1]?.price.toString()).toBe("14802549538");
+    expect(priceMessages[1]?.confidence.toString()).toBe("9930888");
+    expect(priceMessages[1]?.exponent).toBe(-8);
+    expect(priceMessages[1]?.publishTime.toString()).toBe("1715627146");
+    expect(priceMessages[1]?.prevPublishTime.toString()).toBe("1715627145");
+    expect(priceMessages[1]?.emaPrice.toString()).toBe("14732272500");
+    expect(priceMessages[1]?.emaConf.toString()).toBe("10975810");
   });
 
   test("Wrong magic number", async () => {
@@ -126,7 +128,7 @@ describe("Test parse accumulator update", () => {
     );
 
     // Test that both messages are parsed successfully
-    const twapMessage1 = parseTwapMessage(updates[0].message);
+    const twapMessage1 = parseTwapMessage(updates[0]!.message);
     expect(twapMessage1.feedId.toString("hex")).toBe(
       "49f6b65cb1de6b10eaf75e7c03ca029c306d0357e91b5311b175084a5ad55688",
     );
@@ -138,7 +140,7 @@ describe("Test parse accumulator update", () => {
     expect(twapMessage1.prevPublishTime.toString()).toBe("1733155134");
     expect(twapMessage1.publishSlot.toString()).toBe("181871343");
 
-    const twapMessage2 = parseTwapMessage(updates[1].message);
+    const twapMessage2 = parseTwapMessage(updates[1]!.message);
     expect(twapMessage2.feedId.toString("hex")).toBe(
       "2b9ab1e972a281585084148ba1389800799bd4be63b957507db1349314e47445",
     );

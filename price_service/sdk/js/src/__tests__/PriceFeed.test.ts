@@ -1,9 +1,20 @@
 /* eslint-disable unicorn/filename-case */
 
+import {
+  afterAll,
+  beforeAll,
+  expect,
+  test,
+  vi,
+} from "@pythnetwork/test-config";
 import { Price, PriceFeed, PriceFeedMetadata } from "../index.js";
 
 beforeAll(() => {
-  jest.useFakeTimers();
+  vi.useFakeTimers();
+});
+
+afterAll(() => {
+  vi.useRealTimers();
 });
 
 test("Parsing Price Feed works as expected", () => {
@@ -42,7 +53,7 @@ test("Parsing Price Feed works as expected", () => {
   });
   expect(priceFeed.getEmaPriceUnchecked()).toStrictEqual(expectedEmaPrice);
 
-  jest.setSystemTime(20_000);
+  vi.setSystemTime(20_000);
   expect(priceFeed.getPriceNoOlderThan(15)).toStrictEqual(expectedPrice);
   expect(priceFeed.getPriceNoOlderThan(5)).toBeUndefined();
   expect(priceFeed.getEmaPriceNoOlderThan(15)).toStrictEqual(expectedEmaPrice);
