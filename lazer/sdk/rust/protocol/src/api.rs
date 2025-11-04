@@ -7,8 +7,6 @@ use std::{
 use derive_more::derive::From;
 use itertools::Itertools as _;
 use serde::{de::Error, Deserialize, Serialize};
-#[allow(unused_imports)] // used for schema examples
-use serde_json::json;
 use utoipa::ToSchema;
 
 use crate::{
