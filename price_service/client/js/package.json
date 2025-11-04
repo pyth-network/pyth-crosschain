@@ -21,7 +21,7 @@
     "access": "public"
   },
   "scripts": {
-    "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
+    "test:e2e": "unit-test",
     "build": "ts-duality --noEsm",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
@@ -40,13 +40,13 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@types/jest": "^29.4.0",
     "@types/yargs": "^17.0.10",
     "eslint": "catalog:",
-    "jest": "^29.4.0",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
-    "yargs": "^17.4.1"
+    "yargs": "^17.4.1",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "dependencies": {
     "@pythnetwork/price-service-sdk": "workspace:*",

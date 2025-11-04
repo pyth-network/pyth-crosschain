@@ -19,7 +19,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "test:unit": "jest",
+    "test:unit": "unit-test",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -36,13 +36,13 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@solana/wallet-adapter-react": "^0.15.28",
-    "@types/jest": "^29.4.0",
     "@types/node": "^22.5.1",
     "eslint": "catalog:",
-    "jest": "^29.4.0",
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
-    "ts-jest": "^29.0.5"
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",

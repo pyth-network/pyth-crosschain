@@ -48,16 +48,16 @@
     "@cprussin/eslint-config": "catalog:",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/express": "^4.17.21",
-    "@types/jest": "^27.4.1",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "catalog:",
-    "jest": "^29.7.0",
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.1.1",
-    "ts-node": "catalog:"
+    "ts-node": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",

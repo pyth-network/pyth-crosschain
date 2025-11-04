@@ -30,15 +30,15 @@
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
-    "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
     "prettier": "catalog:",
-    "react": "catalog:"
+    "react": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "engines": {
     "node": ">=22.14.0",

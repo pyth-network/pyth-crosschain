@@ -48,22 +48,22 @@
   "devDependencies": {
     "@axe-core/react": "catalog:",
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@svgr/webpack": "catalog:",
     "@tailwindcss/forms": "catalog:",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "packageManager": "pnpm@10.19.0"
 }

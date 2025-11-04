@@ -216,15 +216,15 @@
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@solana/wallet-adapter-react": "catalog:",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
-    "prettier": "catalog:"
+    "prettier": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "catalog:",

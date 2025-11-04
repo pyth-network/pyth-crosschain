@@ -54,25 +54,25 @@
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/staking-sdk": "workspace:*",
     "@svgr/webpack": "catalog:",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "packageManager": "pnpm@10.19.0"
 }

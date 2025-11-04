@@ -19,7 +19,7 @@
   "scripts": {
     "build": "ts-duality",
     "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
-    "test:unit": "jest",
+    "test:unit": "unit-test",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -36,12 +36,12 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@types/bn.js": "^5.1.5",
-    "@types/jest": "^29.4.0",
     "eslint": "catalog:",
-    "jest": "^29.4.0",
     "prettier": "catalog:",
     "quicktype": "^23.0.76",
-    "ts-jest": "^29.0.5"
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "dependencies": {
     "bn.js": "^5.2.1"

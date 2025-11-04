@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "ts-duality --noEsm --copyOtherFiles",
-    "test:unit": "jest",
+    "test:unit": "unit-test",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "clean": "rm -rf ./dist"
@@ -47,12 +47,12 @@
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
-    "@types/jest": "^29.2.5",
     "@types/lodash": "^4.14.191",
     "fast-check": "^3.10.0",
-    "jest": "^29.3.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.3"
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "engines": {
     "node": ">=22.14.0",

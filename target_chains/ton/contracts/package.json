@@ -5,7 +5,7 @@
   "scripts": {
     "start": "blueprint run",
     "build": "blueprint build Main",
-    "test:unit": "jest --verbose",
+    "test:unit": "unit-test",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
   },
@@ -20,13 +20,13 @@
     "@ton/sandbox": "^0.20.0",
     "@ton/test-utils": "^0.4.2",
     "@ton/ton": "^15.1.0",
-    "@types/jest": "^29.5.12",
     "@types/node": "^20.14.10",
     "@wormhole-foundation/sdk-definitions": "^0.10.7",
-    "jest": "^29.7.0",
     "prettier": "catalog:",
-    "ts-jest": "^29.2.0",
-    "ts-node": "catalog:"
+    "ts-node": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "engines": {
     "node": ">=22.14.0",

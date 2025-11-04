@@ -347,7 +347,6 @@
     "@babel/core": "catalog:",
     "@babel/preset-typescript": "catalog:",
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@phosphor-icons/react": "catalog:",
@@ -356,7 +355,6 @@
     "@storybook/nextjs": "catalog:",
     "@storybook/react": "catalog:",
     "@svgr/webpack": "catalog:",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -365,7 +363,6 @@
     "copyfiles": "catalog:",
     "css-loader": "catalog:",
     "eslint": "catalog:",
-    "jest": "catalog:",
     "next": "catalog:",
     "postcss": "catalog:",
     "postcss-loader": "catalog:",
@@ -376,7 +373,10 @@
     "storybook": "catalog:",
     "style-loader": "catalog:",
     "stylelint": "catalog:",
-    "stylelint-config-standard-scss": "catalog:"
+    "stylelint-config-standard-scss": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "ts-duality": {
     "extraExports": {

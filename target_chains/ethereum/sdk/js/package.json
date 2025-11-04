@@ -40,14 +40,14 @@
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
-    "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.10",
     "eslint": "catalog:",
-    "jest": "^29.4.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5"
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "@pythnetwork/test-config": "workspace:"
   },
   "dependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
