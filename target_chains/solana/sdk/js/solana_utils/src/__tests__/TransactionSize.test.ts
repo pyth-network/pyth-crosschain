@@ -1,6 +1,4 @@
-import crypto from "node:crypto";
-// @ts-expect-error
-globalThis.crypto = crypto;
+import { expect, it } from "@pythnetwork/test-config";
 
 import {
   AddressLookupTableAccount,
@@ -24,8 +22,6 @@ it("Unit test compressed u16 size", async () => {
 });
 
 it("Unit test for getSizeOfTransaction", async () => {
-  jest.setTimeout(60_000);
-
   const payer = new Keypair();
 
   const ixsToSend: TransactionInstruction[] = [];
@@ -116,4 +112,4 @@ it("Unit test for getSizeOfTransaction", async () => {
   expect(versionedTransactionWithAlt.serialize()).toHaveLength(
     getSizeOfTransaction(ixsToSend, true, addressLookupTable),
   );
-});
+}, 60_000);
