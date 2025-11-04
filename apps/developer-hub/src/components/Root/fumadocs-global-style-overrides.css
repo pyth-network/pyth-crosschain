@@ -24,7 +24,11 @@ Overrides for Fumadocs content. Everything after prose is MDX generated content 
   margin-bottom: 0;
 }
 
-#nd-sidebar {
+#nd-docs-layout p.text-lg.text-fd-muted-foreground {
+  margin-bottom: 0.5rem;
+}
+
+/* #nd-sidebar {
   --fd-sidebar-top: var(--header-height) !important;
   position: sticky !important;
   height: calc(100vh - var(--header-height));
@@ -36,7 +40,8 @@ Overrides for Fumadocs content. Everything after prose is MDX generated content 
 }
 
 /* Hacky fix to get the TOC to be sticky */
-#nd-toc {
+
+/* #nd-toc {
   top: var(--header-height) !important;
   height: max-content;
   position: sticky;
@@ -46,4 +51,4 @@ Overrides for Fumadocs content. Everything after prose is MDX generated content 
 #nd-toc > div {
   position: relative;
   left: var(--fd-toc-width);
-}
+} */

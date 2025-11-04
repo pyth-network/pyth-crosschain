@@ -2,7 +2,7 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 /* @import "./theme.css"; this overrides the default colors to match the pyth branding */
-/* @import "./fumadocs-global-style-overrides.css"; */
+@import "./fumadocs-global-style-overrides.css";
 
 .light {
   --color-fd-background: hsla(0, 16%, 96%, 1);
