@@ -8,25 +8,40 @@ use {
         eth_utils::{
             eth_gas_oracle::EthProviderOracle,
             legacy_tx_middleware::LegacyTxMiddleware,
-            nonce_manager::NonceManagerMiddleware,
+            nonce_manager::{NonceManaged, NonceManagerMiddleware},
             traced_client::{RpcMetrics, TracedClient},
+            utils::{submit_tx_with_backoff, EscalationPolicy, SubmitTxError, SubmitTxResult},
         },
-        keeper::contract::{KeeperProviderInfo, KeeperTxContract},
+        keeper::contract::{
+            KeeperProviderInfo, KeeperTxContract, KeeperTxError, KeeperTxResult,
+            RevealWithCallbackData, TxExecutionOutcome, TxHash, Wei,
+        },
     },
     anyhow::{anyhow, Error, Result},
     axum::async_trait,
+    backoff::Error as BackoffError,
+    ethers::abi::AbiDecode,
     ethers::{
         abi::RawLog,
-        contract::{abigen, ContractCall, EthLogDecode, LogMeta},
+        contract::{abigen, ContractCall, ContractError, EthLogDecode, LogMeta},
         core::types::Address,
         middleware::{gas_oracle::GasOracleMiddleware, SignerMiddleware},
         prelude::JsonRpcClient,
         providers::{Http, Middleware, Provider},
         signers::{LocalWallet, Signer},
-        types::{BlockNumber as EthersBlockNumber, U256},
+        types::{
+            transaction::eip2718::TypedTransaction, BlockNumber as EthersBlockNumber,
+            TransactionReceipt, TransactionRequest, U256, U64,
+        },
     },
+    hex,
     sha3::{Digest, Keccak256},
-    std::sync::Arc,
+    std::{
+        convert::TryFrom,
+        sync::Arc,
+        time::{Duration, Instant},
+    },
+    tokio::time::timeout,
 };
 
 // TODO: Programmatically generate this so we don't have to keep committed ABI in sync with the
@@ -354,58 +369,133 @@ impl<T: JsonRpcClient + 'static> EntropyReader for PythRandom<Provider<T>> {
 
 #[async_trait]
 impl KeeperTxContract for InstrumentedSignablePythContract {
-    type Middleware = MiddlewaresWrapper<TracedClient>;
-    type ProviderClient = TracedClient;
-
-    fn client(&self) -> Arc<Self::Middleware> {
-        self.client()
+    fn keeper_address(&self) -> Address {
+        self.wallet().address()
     }
 
-    fn wallet(&self) -> LocalWallet {
-        self.wallet()
+    async fn get_balance(&self, address: Address) -> KeeperTxResult<Wei> {
+        let balance = self
+            .provider()
+            .get_balance(address, None)
+            .await
+            .map_err(|e| KeeperTxError::Provider {
+                reason: format!("failed to fetch balance for {address:?}: {e:?}"),
+            })?;
+
+        wei_from_u256(balance, "balance")
     }
 
-    fn provider(&self) -> Provider<Self::ProviderClient> {
-        self.provider()
+    async fn estimate_tx_cost(&self, legacy_tx: bool, gas_limit: u64) -> KeeperTxResult<Wei> {
+        crate::eth_utils::utils::estimate_tx_cost(self.client(), legacy_tx, gas_limit as u128)
+            .await
+            .map(Wei)
+            .map_err(|e| KeeperTxError::Other {
+                reason: format!("failed to estimate transaction cost: {e:?}"),
+            })
     }
 
-    fn reveal_with_callback(
+    async fn reveal_with_callback(
         &self,
         provider_address: Address,
         sequence_number: u64,
         user_random_number: [u8; 32],
         provider_revelation: [u8; 32],
-    ) -> ContractCall<Self::Middleware, ()> {
-        self.reveal_with_callback(
+        escalation_policy: EscalationPolicy,
+    ) -> KeeperTxResult<TxExecutionOutcome<RevealWithCallbackData>> {
+        let contract_call = self.reveal_with_callback(
             provider_address,
             sequence_number,
             user_random_number,
             provider_revelation,
+        );
+
+        let error_mapper =
+            |num_retries: u64,
+             error: BackoffError<SubmitTxError<MiddlewaresWrapper<TracedClient>>>| {
+                if let BackoffError::Transient {
+                    err: SubmitTxError::GasUsageEstimateError(tx, ContractError::Revert(revert)),
+                    ..
+                } = &error
+                {
+                    if let Ok(PythRandomErrorsErrors::NoSuchRequest(_)) =
+                        PythRandomErrorsErrors::decode(revert)
+                    {
+                        let mapped_error = SubmitTxError::GasUsageEstimateError(
+                            tx.clone(),
+                            ContractError::Revert(revert.clone()),
+                        );
+
+                        if num_retries >= 5 {
+                            return BackoffError::Permanent(mapped_error);
+                        }
+
+                        let retry_after_seconds = match num_retries {
+                            0 => 5,
+                            1 => 10,
+                            _ => 60,
+                        };
+
+                        return BackoffError::Transient {
+                            err: mapped_error,
+                            retry_after: Some(Duration::from_secs(retry_after_seconds)),
+                        };
+                    }
+                }
+
+                error
+            };
+
+        let submit_result = submit_tx_with_backoff(
+            self.client(),
+            contract_call,
+            escalation_policy,
+            Some(error_mapper),
         )
+        .await
+        .map_err(map_submit_error)?;
+
+        convert_submit_result(submit_result)
     }
 
-    fn withdraw_as_fee_manager(
+    async fn withdraw_as_fee_manager(
         &self,
         provider_address: Address,
-        amount: u128,
-    ) -> ContractCall<Self::Middleware, ()> {
-        self.withdraw_as_fee_manager(provider_address, amount)
+        amount: Wei,
+    ) -> KeeperTxResult<TxExecutionOutcome<()>> {
+        execute_simple_call(self.withdraw_as_fee_manager(provider_address, amount.0)).await
     }
 
-    fn set_provider_fee_as_fee_manager(
+    async fn set_provider_fee_as_fee_manager(
         &self,
         provider_address: Address,
-        fee: u128,
-    ) -> ContractCall<Self::Middleware, ()> {
-        self.set_provider_fee_as_fee_manager(provider_address, fee)
+        fee: Wei,
+    ) -> KeeperTxResult<TxExecutionOutcome<()>> {
+        execute_simple_call(self.set_provider_fee_as_fee_manager(provider_address, fee.0)).await
     }
 
-    async fn get_provider_info(&self, provider_address: Address) -> Result<KeeperProviderInfo> {
-        let info = self.get_provider_info_v2(provider_address).call().await?;
+    async fn transfer(
+        &self,
+        destination: Address,
+        amount: Wei,
+    ) -> KeeperTxResult<TxExecutionOutcome<()>> {
+        transfer_funds(self.client(), self.keeper_address(), destination, amount).await
+    }
+
+    async fn get_provider_info(
+        &self,
+        provider_address: Address,
+    ) -> KeeperTxResult<KeeperProviderInfo> {
+        let info = self
+            .get_provider_info_v2(provider_address)
+            .call()
+            .await
+            .map_err(|e| KeeperTxError::Provider {
+                reason: format!("failed to fetch provider info: {e:?}"),
+            })?;
 
         Ok(KeeperProviderInfo {
-            accrued_fees_in_wei: U256::from(info.accrued_fees_in_wei),
-            fee_in_wei: U256::from(info.fee_in_wei),
+            accrued_fees_in_wei: wei_from_u256(info.accrued_fees_in_wei.into(), "accrued_fees")?,
+            fee_in_wei: wei_from_u256(info.fee_in_wei.into(), "fee")?,
             sequence_number: info.sequence_number,
             end_sequence_number: info.end_sequence_number,
             current_commitment_sequence_number: info.current_commitment_sequence_number,
@@ -413,4 +503,243 @@ impl KeeperTxContract for InstrumentedSignablePythContract {
             fee_manager: info.fee_manager,
         })
     }
+}
+
+const SIMPLE_TX_NUM_RETRIES: u64 = 0;
+const SIMPLE_TX_FEE_MULTIPLIER: u64 = 100;
+const TRANSFER_CONFIRMATION_TIMEOUT_SECS: u64 = 30;
+
+fn convert_submit_result(
+    submit_result: SubmitTxResult,
+) -> KeeperTxResult<TxExecutionOutcome<RevealWithCallbackData>> {
+    let SubmitTxResult {
+        num_retries,
+        fee_multiplier,
+        duration,
+        receipt,
+        revealed_event,
+    } = submit_result;
+
+    let outcome = receipt_to_outcome(receipt, duration, num_retries, fee_multiplier, ())?;
+
+    let callback_gas_used =
+        u256_to_u128(revealed_event.callback_gas_used.into(), "callback_gas_used")?;
+
+    let callback_return_value = revealed_event.callback_return_value.to_vec();
+
+    Ok(TxExecutionOutcome {
+        tx_hash: outcome.tx_hash,
+        block_number: outcome.block_number,
+        gas_used: outcome.gas_used,
+        effective_gas_price: outcome.effective_gas_price,
+        duration: outcome.duration,
+        num_retries: outcome.num_retries,
+        fee_multiplier: outcome.fee_multiplier,
+        result: RevealWithCallbackData {
+            callback_failed: revealed_event.callback_failed,
+            callback_return_value,
+            callback_gas_used,
+        },
+    })
+}
+
+fn receipt_to_outcome<T>(
+    receipt: TransactionReceipt,
+    duration: Duration,
+    num_retries: u64,
+    fee_multiplier: u64,
+    result: T,
+) -> KeeperTxResult<TxExecutionOutcome<T>> {
+    let tx_hash = TxHash(receipt.transaction_hash.to_fixed_bytes());
+    let block_number = receipt.block_number.map(|b| b.as_u64());
+    let gas_used = optional_u256_to_u128(receipt.gas_used, "gas_used")?;
+    let effective_gas_price =
+        optional_u256_to_u128(receipt.effective_gas_price, "effective_gas_price")?;
+
+    Ok(TxExecutionOutcome {
+        tx_hash,
+        block_number,
+        gas_used,
+        effective_gas_price,
+        duration,
+        num_retries,
+        fee_multiplier,
+        result,
+    })
+}
+
+fn optional_u256_to_u128(value: Option<U256>, context: &str) -> KeeperTxResult<Option<u128>> {
+    match value {
+        Some(v) => Ok(Some(u256_to_u128(v, context)?)),
+        None => Ok(None),
+    }
+}
+
+fn u256_to_u128(value: U256, context: &str) -> KeeperTxResult<u128> {
+    value.try_into().map_err(|_| KeeperTxError::Other {
+        reason: format!("{context} {value} exceeds supported range"),
+    })
+}
+
+fn wei_from_u256(value: U256, context: &str) -> KeeperTxResult<Wei> {
+    u256_to_u128(value, context).map(Wei)
+}
+
+fn map_submit_error<T>(error: SubmitTxError<T>) -> KeeperTxError
+where
+    T: Middleware + NonceManaged + 'static,
+{
+    match error {
+        SubmitTxError::GasUsageEstimateError(_, ContractError::Revert(revert)) => {
+            KeeperTxError::Reverted {
+                reason: format!("0x{}", hex::encode(revert)),
+            }
+        }
+        SubmitTxError::GasUsageEstimateError(_, other) => KeeperTxError::Other {
+            reason: format!("gas usage estimate error: {other:?}"),
+        },
+        SubmitTxError::GasLimitExceeded { estimate, limit } => KeeperTxError::GasLimit {
+            estimate: u256_to_u128(estimate, "gas_limit_estimate").unwrap_or(u128::MAX),
+            limit: u256_to_u128(limit, "gas_limit_limit").unwrap_or(u128::MAX),
+        },
+        SubmitTxError::GasPriceEstimateError(_) => KeeperTxError::Provider {
+            reason: "gas_price_estimate".to_string(),
+        },
+        SubmitTxError::SubmissionError(_, _) => KeeperTxError::Submission {
+            reason: "Error submitting the transaction on-chain".to_string(),
+        },
+        SubmitTxError::ConfirmationTimeout(tx) => KeeperTxError::ConfirmationTimeout {
+            reason: format!(
+                "Transaction was submitted, but never confirmed. Hash: {}",
+                format_typed_tx_hash(&tx)
+            ),
+        },
+        SubmitTxError::ConfirmationError(tx, _) => KeeperTxError::Confirmation {
+            reason: format!(
+                "Transaction was submitted, but never confirmed. Hash: {}",
+                format_typed_tx_hash(&tx)
+            ),
+        },
+        SubmitTxError::ReceiptError(tx, _) => KeeperTxError::Receipt {
+            reason: format!(
+                "Reveal transaction failed on-chain. Hash: {}",
+                format_typed_tx_hash(&tx)
+            ),
+        },
+    }
+}
+
+fn format_typed_tx_hash(tx: &TypedTransaction) -> String {
+    format!("{:#x}", tx.sighash())
+}
+
+async fn execute_simple_call(
+    contract_call: ContractCall<MiddlewaresWrapper<TracedClient>, ()>,
+) -> KeeperTxResult<TxExecutionOutcome<()>> {
+    let call_name = contract_call.function.name.clone();
+    let start = Instant::now();
+
+    let pending_tx = contract_call
+        .send()
+        .await
+        .map_err(|e| KeeperTxError::Submission {
+            reason: format!("Error submitting transaction({call_name}) {e:?}"),
+        })?;
+
+    let receipt = pending_tx
+        .await
+        .map_err(|e| KeeperTxError::Confirmation {
+            reason: format!("Error waiting for transaction({call_name}) receipt: {e:?}"),
+        })?
+        .ok_or_else(|| KeeperTxError::Other {
+            reason: format!(
+                "Can't verify the transaction({call_name}), probably dropped from mempool"
+            ),
+        })?;
+
+    tracing::info!(
+        transaction_hash = &receipt.transaction_hash.to_string(),
+        "Confirmed transaction({call_name}). Receipt: {:?}",
+        receipt
+    );
+
+    if receipt.status == Some(U64::from(0u64)) {
+        return Err(KeeperTxError::Receipt {
+            reason: format!(
+                "Transaction({call_name}) reverted on-chain. Receipt: {:?}",
+                receipt
+            ),
+        });
+    }
+
+    receipt_to_outcome(
+        receipt,
+        start.elapsed(),
+        SIMPLE_TX_NUM_RETRIES,
+        SIMPLE_TX_FEE_MULTIPLIER,
+        (),
+    )
+}
+
+async fn transfer_funds(
+    client: Arc<MiddlewaresWrapper<TracedClient>>,
+    source_wallet_address: Address,
+    destination_address: Address,
+    transfer_amount: Wei,
+) -> KeeperTxResult<TxExecutionOutcome<()>> {
+    let transfer_amount_u256 = U256::from(transfer_amount.0);
+    tracing::info!(
+        "Transferring {:?} from {:?} to {:?}",
+        transfer_amount_u256,
+        source_wallet_address,
+        destination_address
+    );
+
+    let tx = TransactionRequest::new()
+        .to(destination_address)
+        .value(U256::from(transfer_amount.0))
+        .from(source_wallet_address);
+
+    let start = Instant::now();
+
+    let pending_tx = client
+        .send_transaction(tx.clone(), None)
+        .await
+        .map_err(|e| KeeperTxError::Submission {
+            reason: format!("failed to submit transfer transaction: {e:?}"),
+        })?;
+
+    let receipt = timeout(
+        Duration::from_secs(TRANSFER_CONFIRMATION_TIMEOUT_SECS),
+        pending_tx,
+    )
+    .await
+    .map_err(|_| KeeperTxError::ConfirmationTimeout {
+        reason: "Transfer transaction confirmation timeout".to_string(),
+    })?
+    .map_err(|e| KeeperTxError::Confirmation {
+        reason: format!("transfer transaction confirmation error: {e:?}"),
+    })?
+    .ok_or_else(|| KeeperTxError::Other {
+        reason: "transfer transaction, probably dropped from mempool".to_string(),
+    })?;
+
+    if receipt.status == Some(U64::from(0u64)) {
+        return Err(KeeperTxError::Receipt {
+            reason: format!("Transfer transaction failed on-chain. Receipt: {receipt:?}"),
+        });
+    }
+
+    tracing::info!(
+        "Transfer transaction confirmed: {:?}",
+        receipt.transaction_hash
+    );
+
+    receipt_to_outcome(
+        receipt,
+        start.elapsed(),
+        SIMPLE_TX_NUM_RETRIES,
+        SIMPLE_TX_FEE_MULTIPLIER,
+        (),
+    )
 }

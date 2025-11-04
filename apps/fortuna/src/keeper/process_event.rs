@@ -1,17 +1,15 @@
 use {
     super::keeper_metrics::AccountLabel,
     crate::{
-        chain::{
-            ethereum::PythRandomErrorsErrors,
-            reader::{RequestCallbackStatus, RequestedV2Event},
-        },
-        eth_utils::utils::{submit_tx_with_backoff, SubmitTxError},
+        chain::reader::{RequestCallbackStatus, RequestedV2Event},
         history::{RequestEntryState, RequestStatus},
-        keeper::{block::ProcessParams, contract::KeeperTxContract},
+        keeper::{
+            block::ProcessParams,
+            contract::{KeeperTxContract, KeeperTxError},
+        },
     },
     anyhow::{anyhow, Result},
-    ethers::{abi::AbiDecode, contract::ContractError},
-    std::time::Duration,
+    ethers::types::{Bytes, H256, U256},
     tracing,
 };
 
@@ -141,52 +139,15 @@ where
             anyhow!("Error revealing: {:?}", e)
         })?;
 
-    let contract_call = contract.reveal_with_callback(
-        event.provider_address,
-        event.sequence_number,
-        event.user_random_number,
-        provider_revelation,
-    );
-    let error_mapper = |num_retries, e| {
-        if let backoff::Error::Transient {
-            err: SubmitTxError::GasUsageEstimateError(tx, ContractError::Revert(revert)),
-            ..
-        } = &e
-        {
-            if let Ok(PythRandomErrorsErrors::NoSuchRequest(_)) =
-                PythRandomErrorsErrors::decode(revert)
-            {
-                let err = SubmitTxError::GasUsageEstimateError(
-                    tx.clone(),
-                    ContractError::Revert(revert.clone()),
-                );
-                // Slow down the retries if the request is not found.
-                // This probably means that the request is already fulfilled via another process.
-                // After 5 retries, we return the error permanently.
-                if num_retries >= 5 {
-                    return backoff::Error::Permanent(err);
-                }
-                let retry_after_seconds = match num_retries {
-                    0 => 5,
-                    1 => 10,
-                    _ => 60,
-                };
-                return backoff::Error::Transient {
-                    err,
-                    retry_after: Some(Duration::from_secs(retry_after_seconds)),
-                };
-            }
-        }
-        e
-    };
-
-    let success = submit_tx_with_backoff(
-        contract.client(),
-        contract_call,
-        escalation_policy,
-        Some(error_mapper),
-    )
-    .await;
+    let reveal_result = contract
+        .reveal_with_callback(
+            event.provider_address,
+            event.sequence_number,
+            event.user_random_number,
+            provider_revelation,
+            escalation_policy,
+        )
+        .await;
 
     metrics
         .requests_processed
@@ -194,27 +155,28 @@ where
         .inc();
 
     status.last_updated_at = chrono::Utc::now();
-    match success {
+    match reveal_result {
         Ok(result) => {
             status.state = RequestEntryState::Completed {
-                reveal_block_number: result.receipt.block_number.unwrap_or_default().as_u64(),
-                reveal_tx_hash: result.receipt.transaction_hash,
+                reveal_block_number: result.block_number.unwrap_or_default(),
+                reveal_tx_hash: H256::from_slice(&result.tx_hash.0),
                 provider_random_number: provider_revelation,
-                gas_used: result.receipt.gas_used.unwrap_or_default(),
+                gas_used: U256::from(result.gas_used.unwrap_or_default()),
                 combined_random_number: RequestStatus::generate_combined_random_number(
                     &event.user_random_number,
                     &provider_revelation,
                 ),
-                callback_failed: result.revealed_event.callback_failed,
-                callback_return_value: result.revealed_event.callback_return_value,
-                callback_gas_used: result.revealed_event.callback_gas_used,
+                callback_failed: result.result.callback_failed,
+                callback_return_value: Bytes::from(result.result.callback_return_value.clone()),
+                callback_gas_used: u32::try_from(result.result.callback_gas_used)
+                    .unwrap_or(u32::MAX),
             };
             history.add(&status);
             tracing::info!(
                 "Processed event successfully in {:?} after {} retries. Receipt: {:?}",
                 result.duration,
                 result.num_retries,
-                result.receipt
+                result.tx_hash
             );
 
             metrics
@@ -238,15 +200,18 @@ where
                 .get_or_create(&account_label)
                 .observe(result.fee_multiplier as f64);
 
-            if let Some(gas_used) = result.receipt.gas_used {
-                let gas_used_float = gas_used.as_u128() as f64 / 1e18;
+            if let Some(gas_used) = result.gas_used {
+                let gas_used_float = gas_used as f64 / 1e18;
                 metrics
                     .total_gas_spent
                     .get_or_create(&account_label)
                     .inc_by(gas_used_float);
 
-                if let Some(gas_price) = result.receipt.effective_gas_price {
-                    let gas_fee = (gas_used * gas_price).as_u128() as f64 / 1e18;
+                if let Some(gas_price) = result.effective_gas_price {
+                    let gas_fee = U256::from(gas_used)
+                        .saturating_mul(U256::from(gas_price))
+                        .as_u128() as f64
+                        / 1e18;
                     metrics
                         .total_gas_fee_spent
                         .get_or_create(&account_label)
@@ -272,32 +237,28 @@ where
                     .get_or_create(&account_label)
                     .inc();
                 // Do not display the internal error, it might include RPC details.
-                let reason = match e {
-                    SubmitTxError::GasUsageEstimateError(_, ContractError::Revert(revert)) => {
-                        format!("Reverted: {revert}")
-                    }
-                    SubmitTxError::GasLimitExceeded { limit, estimate } => {
+                let reason = match &e {
+                    KeeperTxError::Reverted { reason } => format!("Reverted: {reason}"),
+                    KeeperTxError::GasLimit { limit, estimate } => {
                         format!("Gas limit exceeded: limit = {limit}, estimate = {estimate}")
                     }
-                    SubmitTxError::GasUsageEstimateError(_, _) => {
-                        "Unable to estimate gas usage".to_string()
-                    }
-                    SubmitTxError::GasPriceEstimateError(_) => {
+                    KeeperTxError::Provider { reason } if reason == "gas_price_estimate" => {
                         "Unable to estimate gas price".to_string()
                     }
-                    SubmitTxError::SubmissionError(_, _) => {
+                    KeeperTxError::Other { reason } if reason == "gas_usage_estimate" => {
+                        "Unable to estimate gas usage".to_string()
+                    }
+                    KeeperTxError::Submission { .. } => {
                         "Error submitting the transaction on-chain".to_string()
                     }
-                    SubmitTxError::ConfirmationTimeout(tx) => format!(
-                        "Transaction was submitted, but never confirmed. Hash: {}",
-                        tx.sighash()
-                    ),
-                    SubmitTxError::ConfirmationError(tx, _) => format!(
-                        "Transaction was submitted, but never confirmed. Hash: {}",
-                        tx.sighash()
-                    ),
-                    SubmitTxError::ReceiptError(tx, _) => {
-                        format!("Reveal transaction failed on-chain. Hash: {}", tx.sighash())
+                    KeeperTxError::ConfirmationTimeout { reason } => reason.clone(),
+                    KeeperTxError::Confirmation { reason } => reason.clone(),
+                    KeeperTxError::Receipt { reason } => reason.clone(),
+                    KeeperTxError::Provider { reason } => {
+                        format!("Provider error: {reason}")
+                    }
+                    KeeperTxError::Other { reason } => {
+                        format!("Unexpected error: {reason}")
                     }
                 };
                 status.state = RequestEntryState::Failed {

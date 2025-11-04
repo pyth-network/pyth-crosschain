@@ -1,19 +1,13 @@
 use {
     crate::{
-        api::BlockchainState,
-        api::ChainId,
-        eth_utils::utils::{estimate_tx_cost, send_and_confirm, submit_transfer_tx},
+        api::{BlockchainState, ChainId},
         keeper::{
-            contract::KeeperTxContract,
+            contract::{KeeperTxContract, Wei},
             keeper_metrics::{AccountLabel, KeeperMetrics},
         },
     },
     anyhow::{anyhow, Result},
-    ethers::{
-        middleware::Middleware,
-        signers::Signer,
-        types::{Address, U256},
-    },
+    ethers::types::{Address, U256},
     std::sync::Arc,
     tokio::time::{self, Duration},
     tracing::{self, Instrument},
@@ -26,15 +20,16 @@ use {
 ///
 /// `other_keeper_addresses` is expected to not include the `keeper_address`, and should
 /// include the fee manager so that the fee manager wallet stays funded.
-async fn calculate_fair_fee_withdrawal_amount<M: Middleware + 'static>(
-    provider: Arc<M>,
+async fn calculate_fair_fee_withdrawal_amount<C: KeeperTxContract + ?Sized>(
+    contract: &C,
     keeper_address: Address,
     other_keeper_addresses: &[Address],
-    available_fees: U256,
-) -> Result<U256> {
+    available_fees: Wei,
+) -> Result<Wei> {
+    let available_fees_u256 = U256::from(available_fees.0);
     // Early return if no fees available
-    if available_fees.is_zero() {
-        return Ok(U256::zero());
+    if available_fees_u256.is_zero() {
+        return Ok(Wei(0));
     }
 
     // If no other keepers, withdraw all available fees
@@ -42,40 +37,46 @@ async fn calculate_fair_fee_withdrawal_amount<M: Middleware + 'static>(
         return Ok(available_fees);
     }
 
-    let current_balance = provider
-        .get_balance(keeper_address, None)
+    let current_balance = contract
+        .get_balance(keeper_address)
         .await
         .map_err(|e| anyhow!("Error while getting current keeper balance. error: {:?}", e))?;
+    let current_balance_u256 = U256::from(current_balance.0);
 
     tracing::info!(
         "Contract has available fees: {:?}, current keeper ({:?}) has balance: {:?}",
-        available_fees,
+        available_fees_u256,
         keeper_address,
-        current_balance
+        current_balance_u256
     );
 
     // Calculate total funds across all keepers + available fees
-    let mut total_funds = current_balance + available_fees;
+    let mut total_funds = current_balance_u256 + available_fees_u256;
 
     for &address in other_keeper_addresses {
-        let balance = provider.get_balance(address, None).await.map_err(|e| {
+        let balance = contract.get_balance(address).await.map_err(|e| {
             anyhow!(
                 "Error while getting keeper balance for {:?}. error: {:?}",
                 address,
                 e
             )
         })?;
-        tracing::info!("Keeper address {:?} has balance: {:?}", address, balance);
-        total_funds += balance;
+        let balance_u256 = U256::from(balance.0);
+        tracing::info!(
+            "Keeper address {:?} has balance: {:?}",
+            address,
+            balance_u256
+        );
+        total_funds += balance_u256;
     }
 
     // Calculate fair share per keeper
     let fair_share = total_funds / (other_keeper_addresses.len() + 1); // +1 for current keeper
 
     // Calculate how much current keeper should withdraw to reach fair share
-    let withdrawal_amount = if current_balance < fair_share {
-        let deficit = fair_share - current_balance;
-        std::cmp::min(deficit, available_fees)
+    let withdrawal_amount = if current_balance_u256 < fair_share {
+        let deficit = fair_share - current_balance_u256;
+        std::cmp::min(deficit, available_fees_u256)
     } else {
         U256::zero()
     };
@@ -84,11 +85,13 @@ async fn calculate_fair_fee_withdrawal_amount<M: Middleware + 'static>(
         "Fair share calculation: total_funds={:?}, fair_share={:?}, current_balance={:?}, withdrawal_amount={:?}",
         total_funds,
         fair_share,
-        current_balance,
+        current_balance_u256,
         withdrawal_amount
     );
 
-    Ok(withdrawal_amount)
+    Ok(Wei(u128::try_from(withdrawal_amount).map_err(|_| {
+        anyhow!("Withdrawal amount exceeds supported range")
+    })?))
 }
 
 #[tracing::instrument(name = "withdraw_fees", skip_all, fields())]
@@ -102,7 +105,7 @@ pub async fn withdraw_fees_wrapper<C>(
 ) where
     C: KeeperTxContract + 'static,
 {
-    let fee_manager_wallet_address = contract_as_fee_manager.wallet().address();
+    let fee_manager_wallet_address = contract_as_fee_manager.keeper_address();
 
     // Add the fee manager to the list of other keepers so that we can fairly distribute the fees
     // across the fee manager and all the keepers.
@@ -152,13 +155,11 @@ pub async fn withdraw_fees_if_necessary(
     other_keeper_addresses: Vec<Address>,
     min_balance: U256,
 ) -> Result<()> {
-    let provider = contract_as_fee_manager.provider();
-    let fee_manager_wallet = contract_as_fee_manager.wallet();
-
-    let keeper_balance = provider
-        .get_balance(keeper_address, None)
+    let keeper_balance_wei = contract_as_fee_manager
+        .get_balance(keeper_address)
         .await
         .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
+    let keeper_balance = U256::from(keeper_balance_wei.0);
 
     // Only withdraw if our balance is below the minimum threshold
     if keeper_balance >= min_balance {
@@ -170,23 +171,25 @@ pub async fn withdraw_fees_if_necessary(
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
-    let available_fees = provider_info.accrued_fees_in_wei;
+    let available_fees = U256::from(provider_info.accrued_fees_in_wei.0);
 
     // Determine how much we can fairly withdraw from the contract
     let withdrawal_amount = calculate_fair_fee_withdrawal_amount(
-        Arc::new(provider.clone()),
+        contract_as_fee_manager.as_ref(),
         keeper_address,
         &other_keeper_addresses,
-        available_fees,
+        provider_info.accrued_fees_in_wei,
     )
     .await?;
 
+    let withdrawal_amount_u256 = U256::from(withdrawal_amount.0);
+
     // Only withdraw as long as we are at least doubling our keeper balance (avoids repeated withdrawals of tiny amounts)
     let min_withdrawal_amount = keeper_balance;
-    if withdrawal_amount < min_withdrawal_amount {
+    if withdrawal_amount_u256 < min_withdrawal_amount {
         // We don't have enough to meaningfully top up the balance.
         // NOTE: This log message triggers a grafana alert. If you want to change the text, please change the alert also.
-        tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up. (withdrawal_amount={:?} < min_withdrawal_amount={:?})", keeper_balance, min_balance, withdrawal_amount, min_withdrawal_amount);
+        tracing::warn!("Keeper balance {:?} is too low (< {:?}) but provider fees are not sufficient to top-up. (withdrawal_amount={:?} < min_withdrawal_amount={:?})", keeper_balance, min_balance, withdrawal_amount_u256, min_withdrawal_amount);
         return Ok(());
     }
 
@@ -194,29 +197,27 @@ pub async fn withdraw_fees_if_necessary(
         "Keeper balance {:?} below minimum {:?}, claiming {:?} out of available {:?}",
         keeper_balance,
         min_balance,
-        withdrawal_amount,
+        withdrawal_amount_u256,
         available_fees
     );
 
     // Proceed with withdrawal
-    let contract_call = contract_as_fee_manager
-        .withdraw_as_fee_manager(provider_address, withdrawal_amount.as_u128());
-    send_and_confirm(contract_call).await?;
+    contract_as_fee_manager
+        .withdraw_as_fee_manager(provider_address, withdrawal_amount)
+        .await
+        .map_err(|e| anyhow!("Failed to withdraw fees. error: {:?}", e))?;
 
     // Transfer the withdrawn funds from fee manager to keeper if fee manager is different from keeper
-    if fee_manager_wallet.address() != keeper_address {
-        submit_transfer_tx(
-            contract_as_fee_manager.clone(),
-            keeper_address,
-            withdrawal_amount,
-        )
-        .await
-        .map_err(|e| {
-            anyhow!(
-                "Failed to transfer fees from fee manager to keeper. error: {:?}",
-                e
-            )
-        })?;
+    if contract_as_fee_manager.keeper_address() != keeper_address {
+        contract_as_fee_manager
+            .transfer(keeper_address, withdrawal_amount)
+            .await
+            .map_err(|e| {
+                anyhow!(
+                    "Failed to transfer fees from fee manager to keeper. error: {:?}",
+                    e
+                )
+            })?;
     }
 
     Ok(())
@@ -300,22 +301,22 @@ where
         .await
         .map_err(|e| anyhow!("Error while getting provider info. error: {:?}", e))?;
 
-    let wallet = contract.wallet();
-    let wallet_address = wallet.address();
+    let wallet_address = contract.keeper_address();
     if provider_info.fee_manager != wallet_address {
         return Err(anyhow!(
             "Fee manager for provider {:?} is not the keeper wallet. Fee manager: {:?} Keeper: {:?}",
-            contract.provider(),
+            provider_address,
             provider_info.fee_manager,
             wallet_address
         ));
     }
 
     // Calculate target window for the on-chain fee.
-    let middleware = contract.client();
     let gas_limit: u128 = u128::from(provider_info.default_gas_limit);
-    let max_callback_cost: u128 = estimate_tx_cost(middleware, legacy_tx, gas_limit)
+    let max_callback_cost: u128 = contract
+        .estimate_tx_cost(legacy_tx, provider_info.default_gas_limit)
         .await
+        .map(|wei| wei.0)
         .map_err(|e| anyhow!("Could not estimate transaction cost. error {:?}", e))?;
 
     let account_label = AccountLabel {
@@ -347,12 +348,12 @@ where
     );
 
     // Calculate current P&L to determine if we can reduce fees.
-    let provider_client = contract.provider();
-    let current_keeper_balance = provider_client
-        .get_balance(wallet_address, None)
+    let current_keeper_balance = contract
+        .get_balance(wallet_address)
         .await
         .map_err(|e| anyhow!("Error while getting balance. error: {:?}", e))?;
-    let current_keeper_fees = provider_info.accrued_fees_in_wei;
+    let current_keeper_balance = U256::from(current_keeper_balance.0);
+    let current_keeper_fees = U256::from(provider_info.accrued_fees_in_wei.0);
     let current_pnl = current_keeper_balance + current_keeper_fees;
 
     let can_reduce_fees = match high_water_pnl {
@@ -369,7 +370,7 @@ where
         }
     };
 
-    let provider_fee: u128 = provider_info.fee_in_wei.as_u128();
+    let provider_fee: u128 = provider_info.fee_in_wei.0;
     if is_chain_active
         && ((provider_fee > target_fee_max && can_reduce_fees) || provider_fee < target_fee_min)
     {
@@ -381,8 +382,10 @@ where
             provider_fee,
             target_fee
         );
-        let contract_call = contract.set_provider_fee_as_fee_manager(provider_address, target_fee);
-        send_and_confirm(contract_call).await?;
+        contract
+            .set_provider_fee_as_fee_manager(provider_address, Wei(target_fee))
+            .await
+            .map_err(|e| anyhow!("Failed to set provider fee. error: {:?}", e))?;
 
         *sequence_number_of_last_fee_update = Some(provider_info.sequence_number);
     } else {
