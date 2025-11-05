@@ -17,7 +17,7 @@
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "test:unit": "jest --selectProjects unit"
+    "test:unit": "jest"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "catalog:",

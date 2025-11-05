@@ -1,7 +1,12 @@
 import type { Config } from "jest";
-import { nextjs } from "@cprussin/jest-config/next";
-import { merge } from "ts-deepmerge";
 
+/**
+ * creates a very reasonable and fast jest config that
+ * will transform your files, without typechecking,
+ * and will automatically resolve your imports correctly.
+ *
+ * for most things, you want to use this configuration
+ */
 export function defineJestConfig(config?: Config): Config {
   return {
     ...config,
@@ -12,8 +17,4 @@ export function defineJestConfig(config?: Config): Config {
     },
     testEnvironment: config?.testEnvironment ?? "node",
   } as unknown as Config;
-}
-
-export function defineJestConfigForNextJs(config?: Config): Config {
-  return defineJestConfig(merge(nextjs, config ?? {}) as Config);
 }

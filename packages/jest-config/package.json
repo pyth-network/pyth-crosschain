@@ -22,14 +22,24 @@
     "ts-deepmerge": "^7.0.3"
   },
   "exports": {
-    ".": {
+    "./define-config": {
       "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
+        "types": "./dist/cjs/define-config.d.ts",
+        "default": "./dist/cjs/define-config.cjs"
       },
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "types": "./dist/esm/define-config.d.ts",
+        "default": "./dist/esm/define-config.mjs"
+      }
+    },
+    "./define-next-config": {
+      "require": {
+        "types": "./dist/cjs/define-next-config.d.ts",
+        "default": "./dist/cjs/define-next-config.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/define-next-config.d.ts",
+        "default": "./dist/esm/define-next-config.mjs"
       }
     },
     "./package.json": "./package.json"
