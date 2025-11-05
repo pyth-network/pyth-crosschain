@@ -61,52 +61,52 @@
   "exports": {
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./types/PythContract": {
       "require": {
-        "default": "./dist/cjs/types/PythContract.cjs",
-        "types": "./dist/cjs/types/PythContract.d.ts"
+        "types": "./dist/cjs/types/PythContract.d.ts",
+        "default": "./dist/cjs/types/PythContract.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/PythContract.mjs",
-        "types": "./dist/esm/types/PythContract.d.ts"
+        "types": "./dist/esm/types/PythContract.d.ts",
+        "default": "./dist/esm/types/PythContract.mjs"
       }
     },
     "./types/PythContractFactory": {
       "require": {
-        "default": "./dist/cjs/types/PythContractFactory.cjs",
-        "types": "./dist/cjs/types/PythContractFactory.d.ts"
+        "types": "./dist/cjs/types/PythContractFactory.d.ts",
+        "default": "./dist/cjs/types/PythContractFactory.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/PythContractFactory.mjs",
-        "types": "./dist/esm/types/PythContractFactory.d.ts"
+        "types": "./dist/esm/types/PythContractFactory.d.ts",
+        "default": "./dist/esm/types/PythContractFactory.mjs"
       }
     },
     "./types/common": {
       "require": {
-        "default": "./dist/cjs/types/common.cjs",
-        "types": "./dist/cjs/types/common.d.ts"
+        "types": "./dist/cjs/types/common.d.ts",
+        "default": "./dist/cjs/types/common.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/common.mjs",
-        "types": "./dist/esm/types/common.d.ts"
+        "types": "./dist/esm/types/common.d.ts",
+        "default": "./dist/esm/types/common.mjs"
       }
     },
     "./types": {
       "require": {
-        "default": "./dist/cjs/types/index.cjs",
-        "types": "./dist/cjs/types/index.d.ts"
+        "types": "./dist/cjs/types/index.d.ts",
+        "default": "./dist/cjs/types/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/index.mjs",
-        "types": "./dist/esm/types/index.d.ts"
+        "types": "./dist/esm/types/index.d.ts",
+        "default": "./dist/esm/types/index.mjs"
       }
     },
     "./package.json": "./package.json"

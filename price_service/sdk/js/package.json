@@ -55,32 +55,32 @@
   "exports": {
     "./AccumulatorUpdateData": {
       "require": {
-        "default": "./dist/cjs/AccumulatorUpdateData.cjs",
-        "types": "./dist/cjs/AccumulatorUpdateData.d.ts"
+        "types": "./dist/cjs/AccumulatorUpdateData.d.ts",
+        "default": "./dist/cjs/AccumulatorUpdateData.cjs"
       },
       "import": {
-        "default": "./dist/esm/AccumulatorUpdateData.mjs",
-        "types": "./dist/esm/AccumulatorUpdateData.d.ts"
+        "types": "./dist/esm/AccumulatorUpdateData.d.ts",
+        "default": "./dist/esm/AccumulatorUpdateData.mjs"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./schemas/PriceFeed": {
       "require": {
-        "default": "./dist/cjs/schemas/PriceFeed.cjs",
-        "types": "./dist/cjs/schemas/PriceFeed.d.ts"
+        "types": "./dist/cjs/schemas/PriceFeed.d.ts",
+        "default": "./dist/cjs/schemas/PriceFeed.cjs"
       },
       "import": {
-        "default": "./dist/esm/schemas/PriceFeed.mjs",
-        "types": "./dist/esm/schemas/PriceFeed.d.ts"
+        "types": "./dist/esm/schemas/PriceFeed.d.ts",
+        "default": "./dist/esm/schemas/PriceFeed.mjs"
       }
     },
     "./package.json": "./package.json"

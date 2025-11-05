@@ -34,42 +34,42 @@
   "exports": {
     "./cli": {
       "require": {
-        "default": "./dist/cjs/cli.cjs",
-        "types": "./dist/cjs/cli.d.ts"
+        "types": "./dist/cjs/cli.d.ts",
+        "default": "./dist/cjs/cli.cjs"
       },
       "import": {
-        "default": "./dist/esm/cli.mjs",
-        "types": "./dist/esm/cli.d.ts"
+        "types": "./dist/esm/cli.d.ts",
+        "default": "./dist/esm/cli.mjs"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./pyth_deploy": {
       "require": {
-        "default": "./dist/cjs/pyth_deploy.cjs",
-        "types": "./dist/cjs/pyth_deploy.d.ts"
+        "types": "./dist/cjs/pyth_deploy.d.ts",
+        "default": "./dist/cjs/pyth_deploy.cjs"
       },
       "import": {
-        "default": "./dist/esm/pyth_deploy.mjs",
-        "types": "./dist/esm/pyth_deploy.d.ts"
+        "types": "./dist/esm/pyth_deploy.d.ts",
+        "default": "./dist/esm/pyth_deploy.mjs"
       }
     },
     "./upgrade_pyth": {
       "require": {
-        "default": "./dist/cjs/upgrade_pyth.cjs",
-        "types": "./dist/cjs/upgrade_pyth.d.ts"
+        "types": "./dist/cjs/upgrade_pyth.d.ts",
+        "default": "./dist/cjs/upgrade_pyth.cjs"
       },
       "import": {
-        "default": "./dist/esm/upgrade_pyth.mjs",
-        "types": "./dist/esm/upgrade_pyth.d.ts"
+        "types": "./dist/esm/upgrade_pyth.d.ts",
+        "default": "./dist/esm/upgrade_pyth.mjs"
       }
     },
     "./package.json": "./package.json"

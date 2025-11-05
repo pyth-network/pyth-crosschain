@@ -40,52 +40,52 @@
   "exports": {
     "./build-contract": {
       "require": {
-        "default": "./dist/cjs/build-contract.cjs",
-        "types": "./dist/cjs/build-contract.d.ts"
+        "types": "./dist/cjs/build-contract.d.ts",
+        "default": "./dist/cjs/build-contract.cjs"
       },
       "import": {
-        "default": "./dist/esm/build-contract.mjs",
-        "types": "./dist/esm/build-contract.d.ts"
+        "types": "./dist/esm/build-contract.d.ts",
+        "default": "./dist/esm/build-contract.mjs"
       }
     },
     "./configs": {
       "require": {
-        "default": "./dist/cjs/configs.cjs",
-        "types": "./dist/cjs/configs.d.ts"
+        "types": "./dist/cjs/configs.d.ts",
+        "default": "./dist/cjs/configs.cjs"
       },
       "import": {
-        "default": "./dist/esm/configs.mjs",
-        "types": "./dist/esm/configs.d.ts"
+        "types": "./dist/esm/configs.d.ts",
+        "default": "./dist/esm/configs.mjs"
       }
     },
     "./helper": {
       "require": {
-        "default": "./dist/cjs/helper.cjs",
-        "types": "./dist/cjs/helper.d.ts"
+        "types": "./dist/cjs/helper.d.ts",
+        "default": "./dist/cjs/helper.cjs"
       },
       "import": {
-        "default": "./dist/esm/helper.mjs",
-        "types": "./dist/esm/helper.d.ts"
+        "types": "./dist/esm/helper.d.ts",
+        "default": "./dist/esm/helper.mjs"
       }
     },
     "./instantiate-pyth": {
       "require": {
-        "default": "./dist/cjs/instantiate-pyth.cjs",
-        "types": "./dist/cjs/instantiate-pyth.d.ts"
+        "types": "./dist/cjs/instantiate-pyth.d.ts",
+        "default": "./dist/cjs/instantiate-pyth.cjs"
       },
       "import": {
-        "default": "./dist/esm/instantiate-pyth.mjs",
-        "types": "./dist/esm/instantiate-pyth.d.ts"
+        "types": "./dist/esm/instantiate-pyth.d.ts",
+        "default": "./dist/esm/instantiate-pyth.mjs"
       }
     },
     "./instantiate-wormhole": {
       "require": {
-        "default": "./dist/cjs/instantiate-wormhole.cjs",
-        "types": "./dist/cjs/instantiate-wormhole.d.ts"
+        "types": "./dist/cjs/instantiate-wormhole.d.ts",
+        "default": "./dist/cjs/instantiate-wormhole.cjs"
       },
       "import": {
-        "default": "./dist/esm/instantiate-wormhole.mjs",
-        "types": "./dist/esm/instantiate-wormhole.d.ts"
+        "types": "./dist/esm/instantiate-wormhole.d.ts",
+        "default": "./dist/esm/instantiate-wormhole.mjs"
       }
     },
     "./package.json": "./package.json"

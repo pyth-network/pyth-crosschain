@@ -5,192 +5,192 @@
   "exports": {
     "./constants": {
       "require": {
-        "default": "./dist/cjs/constants.cjs",
-        "types": "./dist/cjs/constants.d.ts"
+        "types": "./dist/cjs/constants.d.ts",
+        "default": "./dist/cjs/constants.cjs"
       },
       "import": {
-        "default": "./dist/esm/constants.mjs",
-        "types": "./dist/esm/constants.d.ts"
+        "types": "./dist/esm/constants.d.ts",
+        "default": "./dist/esm/constants.mjs"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./pdas": {
       "require": {
-        "default": "./dist/cjs/pdas.cjs",
-        "types": "./dist/cjs/pdas.d.ts"
+        "types": "./dist/cjs/pdas.d.ts",
+        "default": "./dist/cjs/pdas.cjs"
       },
       "import": {
-        "default": "./dist/esm/pdas.mjs",
-        "types": "./dist/esm/pdas.d.ts"
+        "types": "./dist/esm/pdas.d.ts",
+        "default": "./dist/esm/pdas.mjs"
       }
     },
     "./pyth-staking-client": {
       "require": {
-        "default": "./dist/cjs/pyth-staking-client.cjs",
-        "types": "./dist/cjs/pyth-staking-client.d.ts"
+        "types": "./dist/cjs/pyth-staking-client.d.ts",
+        "default": "./dist/cjs/pyth-staking-client.cjs"
       },
       "import": {
-        "default": "./dist/esm/pyth-staking-client.mjs",
-        "types": "./dist/esm/pyth-staking-client.d.ts"
+        "types": "./dist/esm/pyth-staking-client.d.ts",
+        "default": "./dist/esm/pyth-staking-client.mjs"
       }
     },
     "./pythnet-client": {
       "require": {
-        "default": "./dist/cjs/pythnet-client.cjs",
-        "types": "./dist/cjs/pythnet-client.d.ts"
+        "types": "./dist/cjs/pythnet-client.d.ts",
+        "default": "./dist/cjs/pythnet-client.cjs"
       },
       "import": {
-        "default": "./dist/esm/pythnet-client.mjs",
-        "types": "./dist/esm/pythnet-client.d.ts"
+        "types": "./dist/esm/pythnet-client.d.ts",
+        "default": "./dist/esm/pythnet-client.mjs"
       }
     },
     "./types": {
       "require": {
-        "default": "./dist/cjs/types.cjs",
-        "types": "./dist/cjs/types.d.ts"
+        "types": "./dist/cjs/types.d.ts",
+        "default": "./dist/cjs/types.cjs"
       },
       "import": {
-        "default": "./dist/esm/types.mjs",
-        "types": "./dist/esm/types.d.ts"
+        "types": "./dist/esm/types.d.ts",
+        "default": "./dist/esm/types.mjs"
       }
     },
     "./types/integrity-pool": {
       "require": {
-        "default": "./dist/cjs/types/integrity-pool.cjs",
-        "types": "./dist/cjs/types/integrity-pool.d.ts"
+        "types": "./dist/cjs/types/integrity-pool.d.ts",
+        "default": "./dist/cjs/types/integrity-pool.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/integrity-pool.mjs",
-        "types": "./dist/esm/types/integrity-pool.d.ts"
+        "types": "./dist/esm/types/integrity-pool.d.ts",
+        "default": "./dist/esm/types/integrity-pool.mjs"
       }
     },
     "./types/publisher-caps": {
       "require": {
-        "default": "./dist/cjs/types/publisher-caps.cjs",
-        "types": "./dist/cjs/types/publisher-caps.d.ts"
+        "types": "./dist/cjs/types/publisher-caps.d.ts",
+        "default": "./dist/cjs/types/publisher-caps.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/publisher-caps.mjs",
-        "types": "./dist/esm/types/publisher-caps.d.ts"
+        "types": "./dist/esm/types/publisher-caps.d.ts",
+        "default": "./dist/esm/types/publisher-caps.mjs"
       }
     },
     "./types/stake-caps-parameters": {
       "require": {
-        "default": "./dist/cjs/types/stake-caps-parameters.cjs",
-        "types": "./dist/cjs/types/stake-caps-parameters.d.ts"
+        "types": "./dist/cjs/types/stake-caps-parameters.d.ts",
+        "default": "./dist/cjs/types/stake-caps-parameters.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/stake-caps-parameters.mjs",
-        "types": "./dist/esm/types/stake-caps-parameters.d.ts"
+        "types": "./dist/esm/types/stake-caps-parameters.d.ts",
+        "default": "./dist/esm/types/stake-caps-parameters.mjs"
       }
     },
     "./types/staking": {
       "require": {
-        "default": "./dist/cjs/types/staking.cjs",
-        "types": "./dist/cjs/types/staking.d.ts"
+        "types": "./dist/cjs/types/staking.d.ts",
+        "default": "./dist/cjs/types/staking.cjs"
       },
       "import": {
-        "default": "./dist/esm/types/staking.mjs",
-        "types": "./dist/esm/types/staking.d.ts"
+        "types": "./dist/esm/types/staking.d.ts",
+        "default": "./dist/esm/types/staking.mjs"
       }
     },
     "./utils/apy": {
       "require": {
-        "default": "./dist/cjs/utils/apy.cjs",
-        "types": "./dist/cjs/utils/apy.d.ts"
+        "types": "./dist/cjs/utils/apy.d.ts",
+        "default": "./dist/cjs/utils/apy.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/apy.mjs",
-        "types": "./dist/esm/utils/apy.d.ts"
+        "types": "./dist/esm/utils/apy.d.ts",
+        "default": "./dist/esm/utils/apy.mjs"
       }
     },
     "./utils/bigint": {
       "require": {
-        "default": "./dist/cjs/utils/bigint.cjs",
-        "types": "./dist/cjs/utils/bigint.d.ts"
+        "types": "./dist/cjs/utils/bigint.d.ts",
+        "default": "./dist/cjs/utils/bigint.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/bigint.mjs",
-        "types": "./dist/esm/utils/bigint.d.ts"
+        "types": "./dist/esm/utils/bigint.d.ts",
+        "default": "./dist/esm/utils/bigint.mjs"
       }
     },
     "./utils/bn": {
       "require": {
-        "default": "./dist/cjs/utils/bn.cjs",
-        "types": "./dist/cjs/utils/bn.d.ts"
+        "types": "./dist/cjs/utils/bn.d.ts",
+        "default": "./dist/cjs/utils/bn.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/bn.mjs",
-        "types": "./dist/esm/utils/bn.d.ts"
+        "types": "./dist/esm/utils/bn.d.ts",
+        "default": "./dist/esm/utils/bn.mjs"
       }
     },
     "./utils/clock": {
       "require": {
-        "default": "./dist/cjs/utils/clock.cjs",
-        "types": "./dist/cjs/utils/clock.d.ts"
+        "types": "./dist/cjs/utils/clock.d.ts",
+        "default": "./dist/cjs/utils/clock.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/clock.mjs",
-        "types": "./dist/esm/utils/clock.d.ts"
+        "types": "./dist/esm/utils/clock.d.ts",
+        "default": "./dist/esm/utils/clock.mjs"
       }
     },
     "./utils/pool": {
       "require": {
-        "default": "./dist/cjs/utils/pool.cjs",
-        "types": "./dist/cjs/utils/pool.d.ts"
+        "types": "./dist/cjs/utils/pool.d.ts",
+        "default": "./dist/cjs/utils/pool.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/pool.mjs",
-        "types": "./dist/esm/utils/pool.d.ts"
+        "types": "./dist/esm/utils/pool.d.ts",
+        "default": "./dist/esm/utils/pool.mjs"
       }
     },
     "./utils/position": {
       "require": {
-        "default": "./dist/cjs/utils/position.cjs",
-        "types": "./dist/cjs/utils/position.d.ts"
+        "types": "./dist/cjs/utils/position.d.ts",
+        "default": "./dist/cjs/utils/position.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/position.mjs",
-        "types": "./dist/esm/utils/position.d.ts"
+        "types": "./dist/esm/utils/position.d.ts",
+        "default": "./dist/esm/utils/position.mjs"
       }
     },
     "./utils/transaction": {
       "require": {
-        "default": "./dist/cjs/utils/transaction.cjs",
-        "types": "./dist/cjs/utils/transaction.d.ts"
+        "types": "./dist/cjs/utils/transaction.d.ts",
+        "default": "./dist/cjs/utils/transaction.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/transaction.mjs",
-        "types": "./dist/esm/utils/transaction.d.ts"
+        "types": "./dist/esm/utils/transaction.d.ts",
+        "default": "./dist/esm/utils/transaction.mjs"
       }
     },
     "./utils/vesting": {
       "require": {
-        "default": "./dist/cjs/utils/vesting.cjs",
-        "types": "./dist/cjs/utils/vesting.d.ts"
+        "types": "./dist/cjs/utils/vesting.d.ts",
+        "default": "./dist/cjs/utils/vesting.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/vesting.mjs",
-        "types": "./dist/esm/utils/vesting.d.ts"
+        "types": "./dist/esm/utils/vesting.d.ts",
+        "default": "./dist/esm/utils/vesting.mjs"
       }
     },
     "./utils/wallet": {
       "require": {
-        "default": "./dist/cjs/utils/wallet.cjs",
-        "types": "./dist/cjs/utils/wallet.d.ts"
+        "types": "./dist/cjs/utils/wallet.d.ts",
+        "default": "./dist/cjs/utils/wallet.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils/wallet.mjs",
-        "types": "./dist/esm/utils/wallet.d.ts"
+        "types": "./dist/esm/utils/wallet.d.ts",
+        "default": "./dist/esm/utils/wallet.mjs"
       }
     },
     "./package.json": "./package.json"

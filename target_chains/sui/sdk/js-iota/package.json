@@ -65,16 +65,16 @@
   "type": "module",
   "exports": {
     "./IotaPriceServiceConnection": {
-      "default": "./dist/IotaPriceServiceConnection.cjs",
-      "types": "./dist/IotaPriceServiceConnection.d.ts"
+      "types": "./dist/IotaPriceServiceConnection.d.ts",
+      "default": "./dist/IotaPriceServiceConnection.cjs"
     },
     "./client": {
-      "default": "./dist/client.cjs",
-      "types": "./dist/client.d.ts"
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.cjs"
     },
     ".": {
-      "default": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   },

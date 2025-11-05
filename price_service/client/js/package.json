@@ -65,20 +65,20 @@
   "type": "module",
   "exports": {
     "./PriceServiceConnection": {
-      "default": "./dist/PriceServiceConnection.cjs",
-      "types": "./dist/PriceServiceConnection.d.ts"
+      "types": "./dist/PriceServiceConnection.d.ts",
+      "default": "./dist/PriceServiceConnection.cjs"
     },
     "./ResillientWebSocket": {
-      "default": "./dist/ResillientWebSocket.cjs",
-      "types": "./dist/ResillientWebSocket.d.ts"
+      "types": "./dist/ResillientWebSocket.d.ts",
+      "default": "./dist/ResillientWebSocket.cjs"
     },
     ".": {
-      "default": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
     },
     "./utils": {
-      "default": "./dist/utils.cjs",
-      "types": "./dist/utils.d.ts"
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.cjs"
     },
     "./package.json": "./package.json"
   },

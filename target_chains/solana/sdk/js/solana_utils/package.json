@@ -60,32 +60,32 @@
   "exports": {
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./jito": {
       "require": {
-        "default": "./dist/cjs/jito.cjs",
-        "types": "./dist/cjs/jito.d.ts"
+        "types": "./dist/cjs/jito.d.ts",
+        "default": "./dist/cjs/jito.cjs"
       },
       "import": {
-        "default": "./dist/esm/jito.mjs",
-        "types": "./dist/esm/jito.d.ts"
+        "types": "./dist/esm/jito.d.ts",
+        "default": "./dist/esm/jito.mjs"
       }
     },
     "./transaction": {
       "require": {
-        "default": "./dist/cjs/transaction.cjs",
-        "types": "./dist/cjs/transaction.d.ts"
+        "types": "./dist/cjs/transaction.d.ts",
+        "default": "./dist/cjs/transaction.cjs"
       },
       "import": {
-        "default": "./dist/esm/transaction.mjs",
-        "types": "./dist/esm/transaction.d.ts"
+        "types": "./dist/esm/transaction.d.ts",
+        "default": "./dist/esm/transaction.mjs"
       }
     },
     "./package.json": "./package.json"

@@ -46,12 +46,12 @@
   "packageManager": "pnpm@10.19.0",
   "exports": {
     ".": {
-      "default": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
     },
     "./ledger": {
-      "default": "./dist/ledger.cjs",
-      "types": "./dist/ledger.d.ts"
+      "types": "./dist/ledger.d.ts",
+      "default": "./dist/ledger.cjs"
     },
     "./package.json": "./package.json"
   },

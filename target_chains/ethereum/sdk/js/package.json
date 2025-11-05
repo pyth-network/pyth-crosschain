@@ -62,62 +62,62 @@
   "exports": {
     "./filler": {
       "require": {
-        "default": "./dist/cjs/filler.cjs",
-        "types": "./dist/cjs/filler.d.ts"
+        "types": "./dist/cjs/filler.d.ts",
+        "default": "./dist/cjs/filler.cjs"
       },
       "import": {
-        "default": "./dist/esm/filler.mjs",
-        "types": "./dist/esm/filler.d.ts"
+        "types": "./dist/esm/filler.d.ts",
+        "default": "./dist/esm/filler.mjs"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./multicall3-bundler": {
       "require": {
-        "default": "./dist/cjs/multicall3-bundler.cjs",
-        "types": "./dist/cjs/multicall3-bundler.d.ts"
+        "types": "./dist/cjs/multicall3-bundler.d.ts",
+        "default": "./dist/cjs/multicall3-bundler.cjs"
       },
       "import": {
-        "default": "./dist/esm/multicall3-bundler.mjs",
-        "types": "./dist/esm/multicall3-bundler.d.ts"
+        "types": "./dist/esm/multicall3-bundler.d.ts",
+        "default": "./dist/esm/multicall3-bundler.mjs"
       }
     },
     "./pyth-abi": {
       "require": {
-        "default": "./dist/cjs/pyth-abi.cjs",
-        "types": "./dist/cjs/pyth-abi.d.ts"
+        "types": "./dist/cjs/pyth-abi.d.ts",
+        "default": "./dist/cjs/pyth-abi.cjs"
       },
       "import": {
-        "default": "./dist/esm/pyth-abi.mjs",
-        "types": "./dist/esm/pyth-abi.d.ts"
+        "types": "./dist/esm/pyth-abi.d.ts",
+        "default": "./dist/esm/pyth-abi.mjs"
       }
     },
     "./tracer/debug-trace-call": {
       "require": {
-        "default": "./dist/cjs/tracer/debug-trace-call.cjs",
-        "types": "./dist/cjs/tracer/debug-trace-call.d.ts"
+        "types": "./dist/cjs/tracer/debug-trace-call.d.ts",
+        "default": "./dist/cjs/tracer/debug-trace-call.cjs"
       },
       "import": {
-        "default": "./dist/esm/tracer/debug-trace-call.mjs",
-        "types": "./dist/esm/tracer/debug-trace-call.d.ts"
+        "types": "./dist/esm/tracer/debug-trace-call.d.ts",
+        "default": "./dist/esm/tracer/debug-trace-call.mjs"
       }
     },
     "./tracer/trace-call-many": {
       "require": {
-        "default": "./dist/cjs/tracer/trace-call-many.cjs",
-        "types": "./dist/cjs/tracer/trace-call-many.d.ts"
+        "types": "./dist/cjs/tracer/trace-call-many.d.ts",
+        "default": "./dist/cjs/tracer/trace-call-many.cjs"
       },
       "import": {
-        "default": "./dist/esm/tracer/trace-call-many.mjs",
-        "types": "./dist/esm/tracer/trace-call-many.d.ts"
+        "types": "./dist/esm/tracer/trace-call-many.d.ts",
+        "default": "./dist/esm/tracer/trace-call-many.mjs"
       }
     },
     "./package.json": "./package.json"

@@ -62,42 +62,42 @@
   "exports": {
     "./hermes-client": {
       "require": {
-        "default": "./dist/cjs/hermes-client.cjs",
-        "types": "./dist/cjs/hermes-client.d.ts"
+        "types": "./dist/cjs/hermes-client.d.ts",
+        "default": "./dist/cjs/hermes-client.cjs"
       },
       "import": {
-        "default": "./dist/esm/hermes-client.mjs",
-        "types": "./dist/esm/hermes-client.d.ts"
+        "types": "./dist/esm/hermes-client.d.ts",
+        "default": "./dist/esm/hermes-client.mjs"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./utils": {
       "require": {
-        "default": "./dist/cjs/utils.cjs",
-        "types": "./dist/cjs/utils.d.ts"
+        "types": "./dist/cjs/utils.d.ts",
+        "default": "./dist/cjs/utils.cjs"
       },
       "import": {
-        "default": "./dist/esm/utils.mjs",
-        "types": "./dist/esm/utils.d.ts"
+        "types": "./dist/esm/utils.d.ts",
+        "default": "./dist/esm/utils.mjs"
       }
     },
     "./zodSchemas": {
       "require": {
-        "default": "./dist/cjs/zodSchemas.cjs",
-        "types": "./dist/cjs/zodSchemas.d.ts"
+        "types": "./dist/cjs/zodSchemas.d.ts",
+        "default": "./dist/cjs/zodSchemas.cjs"
       },
       "import": {
-        "default": "./dist/esm/zodSchemas.mjs",
-        "types": "./dist/esm/zodSchemas.d.ts"
+        "types": "./dist/esm/zodSchemas.d.ts",
+        "default": "./dist/esm/zodSchemas.mjs"
       }
     },
     "./package.json": "./package.json"

@@ -59,36 +59,36 @@
   "type": "module",
   "exports": {
     "./PythSolanaReceiver": {
-      "default": "./dist/PythSolanaReceiver.cjs",
-      "types": "./dist/PythSolanaReceiver.d.ts"
+      "types": "./dist/PythSolanaReceiver.d.ts",
+      "default": "./dist/PythSolanaReceiver.cjs"
     },
     "./address": {
-      "default": "./dist/address.cjs",
-      "types": "./dist/address.d.ts"
+      "types": "./dist/address.d.ts",
+      "default": "./dist/address.cjs"
     },
     "./compute_budget": {
-      "default": "./dist/compute_budget.cjs",
-      "types": "./dist/compute_budget.d.ts"
+      "types": "./dist/compute_budget.d.ts",
+      "default": "./dist/compute_budget.cjs"
     },
     "./idl/pyth_push_oracle": {
-      "default": "./dist/idl/pyth_push_oracle.cjs",
-      "types": "./dist/idl/pyth_push_oracle.d.ts"
+      "types": "./dist/idl/pyth_push_oracle.d.ts",
+      "default": "./dist/idl/pyth_push_oracle.cjs"
     },
     "./idl/pyth_solana_receiver": {
-      "default": "./dist/idl/pyth_solana_receiver.cjs",
-      "types": "./dist/idl/pyth_solana_receiver.d.ts"
+      "types": "./dist/idl/pyth_solana_receiver.d.ts",
+      "default": "./dist/idl/pyth_solana_receiver.cjs"
     },
     "./idl/wormhole_core_bridge_solana": {
-      "default": "./dist/idl/wormhole_core_bridge_solana.cjs",
-      "types": "./dist/idl/wormhole_core_bridge_solana.d.ts"
+      "types": "./dist/idl/wormhole_core_bridge_solana.d.ts",
+      "default": "./dist/idl/wormhole_core_bridge_solana.cjs"
     },
     ".": {
-      "default": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
     },
     "./vaa": {
-      "default": "./dist/vaa.cjs",
-      "types": "./dist/vaa.d.ts"
+      "types": "./dist/vaa.d.ts",
+      "default": "./dist/vaa.cjs"
     },
     "./package.json": "./package.json"
   },

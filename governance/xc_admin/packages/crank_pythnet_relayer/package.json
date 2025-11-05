@@ -40,8 +40,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   },

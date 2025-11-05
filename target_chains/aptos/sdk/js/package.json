@@ -66,12 +66,12 @@
   "type": "module",
   "exports": {
     "./AptosPriceServiceConnection": {
-      "default": "./dist/AptosPriceServiceConnection.cjs",
-      "types": "./dist/AptosPriceServiceConnection.d.ts"
+      "types": "./dist/AptosPriceServiceConnection.d.ts",
+      "default": "./dist/AptosPriceServiceConnection.cjs"
     },
     ".": {
-      "default": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   }

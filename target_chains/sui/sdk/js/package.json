@@ -68,32 +68,32 @@
   "exports": {
     "./SuiPriceServiceConnection": {
       "require": {
-        "default": "./dist/cjs/SuiPriceServiceConnection.cjs",
-        "types": "./dist/cjs/SuiPriceServiceConnection.d.ts"
+        "types": "./dist/cjs/SuiPriceServiceConnection.d.ts",
+        "default": "./dist/cjs/SuiPriceServiceConnection.cjs"
       },
       "import": {
-        "default": "./dist/esm/SuiPriceServiceConnection.mjs",
-        "types": "./dist/esm/SuiPriceServiceConnection.d.ts"
+        "types": "./dist/esm/SuiPriceServiceConnection.d.ts",
+        "default": "./dist/esm/SuiPriceServiceConnection.mjs"
       }
     },
     "./client": {
       "require": {
-        "default": "./dist/cjs/client.cjs",
-        "types": "./dist/cjs/client.d.ts"
+        "types": "./dist/cjs/client.d.ts",
+        "default": "./dist/cjs/client.cjs"
       },
       "import": {
-        "default": "./dist/esm/client.mjs",
-        "types": "./dist/esm/client.d.ts"
+        "types": "./dist/esm/client.d.ts",
+        "default": "./dist/esm/client.mjs"
       }
     },
     ".": {
       "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "default": "./dist/esm/index.mjs",
-        "types": "./dist/esm/index.d.ts"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./package.json": "./package.json"
