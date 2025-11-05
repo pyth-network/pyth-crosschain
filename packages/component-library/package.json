@@ -316,7 +316,7 @@
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
-    "test:types": "ts-duality"
+    "test:types": "tsc"
   },
   "peerDependencies": {
     "next": "catalog:",
