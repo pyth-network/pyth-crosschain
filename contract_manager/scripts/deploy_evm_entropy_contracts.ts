@@ -15,12 +15,14 @@ import {
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
-  getWeb3Contract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
   topupAccountsIfNecessary,
   DefaultAddresses,
 } from "./common";
+import { encodeFunctionData } from "viem";
+import * as fs from "fs";
+import { join } from "path";
 import { getOrDeployExecutorContract } from "./deploy_evm_executor_contracts";
 
 interface DeploymentConfig extends BaseDeployConfig {
@@ -57,14 +59,21 @@ async function deployEntropyContracts(
     [],
   );
 
-  const entropyImplContract = getWeb3Contract(
-    config.jsonOutputDir,
-    "EntropyUpgradable",
-    entropyImplAddr,
+  const artifact = JSON.parse(
+    fs.readFileSync(
+      join(
+        config.jsonOutputDir,
+        "EntropyUpgradable.sol",
+        "EntropyUpgradable.json",
+      ),
+      "utf8",
+    ),
   );
 
-  const entropyInitData = entropyImplContract.methods
-    .initialize(
+  const entropyInitData = encodeFunctionData({
+    abi: artifact["abi"],
+    functionName: "initialize",
+    args: [
       executorAddr, // owner
       executorAddr, // admin
       1, // pythFeeInWei
@@ -72,8 +81,8 @@ async function deployEntropyContracts(
         ? ENTROPY_DEFAULT_PROVIDER.mainnet
         : ENTROPY_DEFAULT_PROVIDER.testnet,
       true, // prefillRequestStorage
-    )
-    .encodeABI();
+    ],
+  });
 
   return await deployIfNotCached(
     CACHE_FILE,

@@ -72,21 +72,28 @@ async function main() {
   const contract = findEntropyContract(chain);
   const provider = argv.provider || (await contract.getDefaultProvider());
   const fee = await contract.getFee(provider);
-  const web3 = contract.chain.getWeb3();
-  const testerContract = new web3.eth.Contract(ABI, argv.testerAddress);
-  const { address } = web3.eth.accounts.wallet.add(privateKey);
-  const transactionObject = testerContract.methods.batchRequests(
-    provider,
-    argv.successCount,
-    argv.revertCount,
-  );
+  const walletClient = chain.getWalletClient(privateKey);
+  const publicClient = chain.getPublicClient();
+
+  const { getContract } = await import("viem");
+  const testerContract = getContract({
+    address: argv.testerAddress as `0x${string}`,
+    abi: ABI,
+    client: { public: publicClient, wallet: walletClient },
+  });
+
   const totalCount = argv.successCount + argv.revertCount;
-  const result = await contract.chain.estiamteAndSendTransaction(
-    transactionObject,
+  const value = BigInt(fee) * BigInt(totalCount);
+
+  const result = await chain.estiamteAndSendTransaction(
+    testerContract,
+    "batchRequests",
+    [provider, argv.successCount, argv.revertCount],
     {
-      from: address,
-      value: (fee * totalCount).toString(),
+      from: walletClient.account!.address,
+      value: value.toString(),
     },
+    privateKey,
   );
   console.log("Submitted transaction ", result.transactionHash);
 }

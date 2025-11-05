@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
-  getWeb3Contract,
+  getViemContract,
   getOrDeployWormholeContract,
   BaseDeployConfig,
   topupAccountsIfNecessary,
@@ -71,7 +71,8 @@ async function deployPulseContracts(
 
   console.log("PulseUpgradeable implementation deployed at:", pulseImplAddr);
 
-  const pulseImplContract = getWeb3Contract(
+  const pulseImplContract = getViemContract(
+    chain,
     config.jsonOutputDir,
     "PulseUpgradeable",
     pulseImplAddr,
