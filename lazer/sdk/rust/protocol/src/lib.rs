@@ -99,7 +99,6 @@ pub enum AssetClass {
     Rates,
     Nav,
     Commodity,
-    #[serde(rename = "funding-rate")]
     FundingRate,
 }
 
