@@ -37,6 +37,11 @@ pub use crate::{
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
 )]
+pub struct AssetId(pub u32);
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, From, Into,
+)]
 pub struct PublisherId(pub u16);
 
 #[derive(
@@ -82,6 +87,34 @@ pub enum PriceFeedProperty {
     FundingTimestamp,
     FundingRateInterval,
     // More fields may be added later.
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AssetClass {
+    Crypto,
+    Fx,
+    Equity,
+    Metal,
+    Rates,
+    Nav,
+    Commodity,
+    FundingRate,
+}
+
+impl AssetClass {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            AssetClass::Crypto => "crypto",
+            AssetClass::Fx => "fx",
+            AssetClass::Equity => "equity",
+            AssetClass::Metal => "metal",
+            AssetClass::Rates => "rates",
+            AssetClass::Nav => "nav",
+            AssetClass::Commodity => "commodity",
+            AssetClass::FundingRate => "funding-rate",
+        }
+    }
 }
 
 // Operation and coefficient for converting value to mantissa.

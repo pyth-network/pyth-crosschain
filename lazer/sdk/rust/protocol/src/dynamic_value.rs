@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::time::{DurationUs, TimestampUs};
+use anyhow::bail;
 use derive_more::From;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
@@ -51,6 +52,15 @@ impl Serialize for DynamicValue {
                 }
                 map_serializer.end()
             }
+        }
+    }
+}
+
+impl DynamicValue {
+    pub fn is_str(&self, field_name: &str) -> anyhow::Result<()> {
+        match self {
+            DynamicValue::String(_) => Ok(()),
+            _ => bail!("invalid value type for {field_name}: expected String, got {self:?}"),
         }
     }
 }
