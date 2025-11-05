@@ -415,9 +415,12 @@ const CUSTOM_PAYLOAD = Buffer.from("1234567890abcdef", "hex");
 describe("PythTest", () => {
   let code: Cell;
 
-  beforeAll(async () => {
-    code = await compile("PythTest");
-  });
+  beforeAll(
+    async () => {
+      code = await compile("PythTest");
+    },
+    60 * 1000 * 2,
+  );
 
   let blockchain: Blockchain;
   let deployer: SandboxContract<TreasuryContract>;
