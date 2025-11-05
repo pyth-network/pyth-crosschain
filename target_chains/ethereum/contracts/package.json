@@ -56,8 +56,6 @@
     "zksync-web3": "^0.13.4"
   },
   "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=10.7.0"
-  },
-  "packageManager": "pnpm@10.19.0"
+    "node": ">=22.14.0"
+  }
 }

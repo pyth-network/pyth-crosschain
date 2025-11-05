@@ -199,8 +199,7 @@
     "dist/**/*"
   ],
   "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=10.7.0"
+    "node": ">=22.14.0"
   },
   "publishConfig": {
     "access": "public"
@@ -236,7 +235,6 @@
     "@streamparser/json": "^0.0.22",
     "zod": "catalog:"
   },
-  "packageManager": "pnpm@10.19.0",
   "module": "./dist/esm/index.mjs",
   "types": "./dist/cjs/index.d.ts",
   "main": "./dist/cjs/index.cjs",

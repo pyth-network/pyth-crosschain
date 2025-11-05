@@ -5,8 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=10.7.0"
+    "node": ">=22.14.0"
   },
   "files": [
     "dist/**/*"
@@ -50,6 +49,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "packageManager": "pnpm@10.19.0"
+  }
 }

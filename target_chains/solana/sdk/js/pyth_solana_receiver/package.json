@@ -52,10 +52,8 @@
     "@solana/web3.js": "^1.90.0"
   },
   "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=10.7.0"
+    "node": ">=22.14.0"
   },
-  "packageManager": "pnpm@10.19.0",
   "type": "module",
   "exports": {
     "./PythSolanaReceiver": {

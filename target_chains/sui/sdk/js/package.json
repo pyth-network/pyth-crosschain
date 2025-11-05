@@ -61,10 +61,8 @@
     "buffer": "^6.0.3"
   },
   "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=10.7.0"
+    "node": ">=22.14.0"
   },
-  "packageManager": "pnpm@10.19.0",
   "exports": {
     "./SuiPriceServiceConnection": {
       "require": {
