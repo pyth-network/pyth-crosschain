@@ -22,6 +22,7 @@ type QuickLink = {
 type ProductCardProps = {
   title: string;
   description?: string;
+  icon?: ReactNode;
   features?: Feature[];
   quickLinks?: QuickLink[];
   buttonLabel?: string;
@@ -33,6 +34,7 @@ type ProductCardProps = {
 export function ProductCard({
   title,
   description,
+  icon,
   features,
   quickLinks,
   buttonLabel,
@@ -59,6 +61,7 @@ export function ProductCard({
           <div className={styles.header}>
             <h3 className={styles.title}>{title}</h3>
             {description && <p className={styles.description}>{description}</p>}
+            {icon && <div className={styles.icon}>{icon}</div>}
           </div>
 
           {features && features.length > 0 && (
