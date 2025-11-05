@@ -1,0 +1,218 @@
+@use "@pythnetwork/component-library/theme";
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 28rem; // 448px - prevents cards from being too wide
+  padding: 1.5rem; // 24px
+  border: 1px solid var(--color-fd-border);
+  border-radius: 1.5rem; // 24px
+  background-color: var(--color-fd-card);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 4px 5.8px 0 var(--color-fd-background, #f6f3f3);
+    border-radius: 1.5rem; // 24px
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; // 32px
+  height: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem; // 40px
+  padding-top: 0;
+  padding-bottom: 0;
+  flex: 1;
+  overflow: visible;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; // 12px
+  min-height: 7rem; // 88px - fixed height to keep FEATURES at consistent position
+  height: 7rem; // 88px - fixed height
+}
+
+.decorativeIcon {
+  position: absolute;
+  right: 1.5rem; // 24px from right
+  top: 1.5rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.barChart {
+  position: relative;
+  width: 30px; // Space for all bars
+  height: 32px;
+}
+
+.bar {
+  position: absolute;
+  width: 3px;
+  border-radius: 1.5px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.875rem; // 30px
+  font-weight: 600;
+  line-height: 1; // 30px
+  letter-spacing: -0.03em; // -0.9px
+  color: var(--color-fd-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.description {
+  margin: 0;
+  font-size: 1rem; // 16px
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: -0.01em; // -0.16px
+  color: var(--color-fd-foreground);
+  opacity: 0.9;
+  max-width: 20rem; // 320px
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; // Limit to 2 lines
+  line-clamp: 3; // Standard property for compatibility
+  -webkit-box-orient: vertical;
+  flex: 1;
+}
+
+.featuresSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; // 24px
+  min-height: 9rem; // 96px - fixed minimum height to keep QUICK LINKS at consistent position
+  max-height: 9rem; // 96px - fixed maximum height
+  overflow: hidden;
+}
+
+.quickLinksSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; // 24px
+}
+
+.sectionLabel {
+  margin: 0;
+  font-size: 0.6875rem; // 11px
+  font-weight: 500;
+  line-height: 1.82; // 20px
+  letter-spacing: -0.01em; // -0.11px
+  color: var(--color-fd-foreground);
+  opacity: 0.5;
+  text-transform: uppercase;
+  white-space: pre;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem; // 8px
+  overflow: hidden;
+  max-height: 8rem; // 128px - limit features container height
+}
+
+.featureItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; // 8px
+  padding: 0.3125rem 0.8125rem 0.3125rem 0.5rem; // 5px 13px 5px 8px
+  border: 1px solid var(--color-fd-border);
+  border-radius: 1.3125rem; // 21px
+  background-color: var(--color-fd-card);
+}
+
+.featureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.781rem; // 12.5px
+  height: 0.781rem; // 12.5px
+  flex-shrink: 0;
+  color: var(--color-fd-foreground);
+}
+
+.featureLabel {
+  font-size: 0.875rem; // 14px
+  font-weight: 600;
+  line-height: 1.65;
+  letter-spacing: -0.01em; // -0.14px
+  color: var(--color-fd-foreground);
+  white-space: pre;
+}
+
+.featureShadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 4px 0 rgb(255 255 255 / 25%);
+  border-radius: 1.3125rem; // 21px
+}
+
+.quickLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; // 16px
+}
+
+.quickLink {
+  font-size: 1rem; // 16px
+  font-weight: 500;
+  line-height: 1.25; // 20px
+  letter-spacing: -0.01em; // -0.16px
+  color: var(--color-fd-foreground);
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-underline-position: from-font;
+  text-underline-offset: 0.1875rem; // 3px
+  transition: opacity 200ms ease-out;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.buttonWrapper {
+  margin-top: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  :global(button) {
+    padding: 0.625rem; // 10px
+    border-radius: 0.5rem; // 8px
+    background-color: #27253d;
+    color: #f8f9fc;
+    font-size: 1rem; // 16px
+    font-weight: 500;
+    line-height: 1.25; // 20px
+    letter-spacing: -0.01em; // -0.16px
+    width: auto;
+    min-width: auto;
+  }
+}

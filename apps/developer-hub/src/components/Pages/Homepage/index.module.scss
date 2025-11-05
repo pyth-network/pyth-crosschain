@@ -2,4 +2,28 @@
 
 .landing {
   @include theme.max-width;
+
+  padding: 2rem 1rem;
+
+  @media (width >= 768px) {
+    padding: 3rem 1.5rem;
+  }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+
+  @media (width >= 768px) {
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 28rem));
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  @media (width >= 1024px) {
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 28rem));
+    justify-content: flex-start;
+  }
 }
