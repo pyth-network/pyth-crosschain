@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  max-width: 28rem; // 448px - prevents cards from being too wide
+  max-width: 28rem;
   padding: 1.5rem; // 24px
   border: 1px solid var(--color-fd-border);
   border-radius: 1.5rem; // 24px
@@ -29,13 +29,13 @@
   gap: 2rem; // 32px
   height: 100%;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .mainContent {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem; // 40px
+  gap: 3rem;
   padding-top: 0;
   padding-bottom: 0;
   flex: 1;
@@ -78,7 +78,7 @@
   letter-spacing: -0.03em; // -0.9px
   color: var(--color-fd-foreground);
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visble;
   text-overflow: ellipsis;
   flex-shrink: 0;
 }
@@ -91,11 +91,11 @@
   letter-spacing: -0.01em; // -0.16px
   color: var(--color-fd-foreground);
   opacity: 0.9;
-  max-width: 20rem; // 320px
-  overflow: hidden;
+  max-width: 20rem;
+  overflow: visible;
   display: -webkit-box;
-  -webkit-line-clamp: 3; // Limit to 2 lines
-  line-clamp: 3; // Standard property for compatibility
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   flex: 1;
 }
@@ -104,23 +104,23 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem; // 24px
-  min-height: 9rem; // 96px - fixed minimum height to keep QUICK LINKS at consistent position
-  max-height: 9rem; // 96px - fixed maximum height
-  overflow: hidden;
+  min-height: 12rem;
+  max-height: 12rem;
+  overflow: visible;
 }
 
 .quickLinksSection {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; // 24px
+  gap: 1.5rem;
 }
 
 .sectionLabel {
   margin: 0;
-  font-size: 0.6875rem; // 11px
+  font-size: 0.6875rem;
   font-weight: 500;
-  line-height: 1.82; // 20px
-  letter-spacing: -0.01em; // -0.11px
+  line-height: 1.82;
+  letter-spacing: -0.01em;
   color: var(--color-fd-foreground);
   opacity: 0.5;
   text-transform: uppercase;
@@ -129,10 +129,8 @@
 
 .features {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem; // 8px
-  overflow: hidden;
-  max-height: 8rem; // 128px - limit features container height
 }
 
 .featureItem {
@@ -140,10 +138,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem; // 8px
-  padding: 0.3125rem 0.8125rem 0.3125rem 0.5rem; // 5px 13px 5px 8px
-  border: 1px solid var(--color-fd-border);
+  padding: 0.3125rem 0.8125rem 0.3125rem 0.5rem;
+  border: 1px solid var(--color-fd-border, #ddd4d4);
   border-radius: 1.3125rem; // 21px
   background-color: var(--color-fd-card);
+  justify-content: left;
+  box-shadow: 0 0 4px 0 rgb(255 255 255 / 25%) inset;
 }
 
 .featureIcon {
@@ -170,7 +170,7 @@
   inset: 0;
   pointer-events: none;
   box-shadow: inset 0 0 4px 0 rgb(255 255 255 / 25%);
-  border-radius: 1.3125rem; // 21px
+  border-radius: 1.32rem; // 21px
 }
 
 .quickLinks {
