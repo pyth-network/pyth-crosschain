@@ -60,19 +60,19 @@ See also: [Code guidelines](doc/code-guidelines.md)
 
 ### Releases
 
-The repository has several CI workflows that automatically release new versions of the various components when a new Github release is published.
+The repository has several CI workflows that automatically release new versions of the various components when a new GitHub release is published.
 Each component's workflow uses a specific tag format including the component name and version number (e.g., Fortuna uses the tag `fortuna-vX.Y.Z`).
 The general process for creating a new release is:
 
 1. Update the version number of the component in the repo, e.g., in `package.json` or `Cargo.toml` or wherever. Please follow [Semantic Versioning](https://semver.org/) for package versions.
 2. Submit a PR with the changes and merge them in to main.
-3. Create a new release on github. Configure the release to create a new tag when published. Set the tag name and version for the component you wish to release -- see the [Releases](https://github.com/pyth-network/pyth-crosschain/releases) page to identify the relevant tag.
-4. Publish the release. This step will automatically trigger a Github Action to build the package and release it. This step will e.g., publish packages to NPM, or build and push docker images.
-   - Note that when publishing a public package, you should prune the auto-generated Github release notes to only include changes relevant to the release. Otherwise, the changelog will include commits from unrelated projects in the monorepo since the previous release.
+3. Create a new release on GitHub. Configure the release to create a new tag when published. Set the tag name and version for the component you wish to release -- see the [Releases](https://github.com/pyth-network/pyth-crosschain/releases) page to identify the relevant tag.
+4. Publish the release. This step will automatically trigger a GitHub Action to build the package and release it. This step will e.g., publish packages to NPM, or build and push docker images.
+   - Note that when publishing a public package, you should prune the auto-generated GitHub release notes to only include changes relevant to the release. Otherwise, the changelog will include commits from unrelated projects in the monorepo since the previous release.
 
-Note that all javascript packages are released together using a tag of the form `pyth-js-v<number>`. (The `number` is arbitrary.)
-If you have a javascript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
-and it will be excluded from the publishing workflow. If you are creating a new public javascript package, you should add
+Note that all JavaScript packages are released together using a tag of the form `pyth-js-v<number>`. (The `number` is arbitrary.)
+If you have a JavaScript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
+and it will be excluded from the publishing workflow. If you are creating a new public JavaScript package, you should add
 the following config option to `package.json`:
 
 ```
@@ -83,7 +83,7 @@ the following config option to `package.json`:
 
 ### Typescript Monorepo
 
-All of the typescript / javascript packages in this repository are part of a
+All of the typescript / JavaScript packages in this repository are part of a
 [turborepo](https://turbo.build/repo/docs) monorepo.
 
 #### Setting up
@@ -123,7 +123,7 @@ after `--`, for instance you could run `pnpm test -- --concurrency 2`.
 
 New packages should be configured with a few requirements in mind:
 
-1. You need to make sure `package.json` scripts are named such that that
+1. You need to make sure `package.json` scripts are named such that
    turborepo will hook into them at the expected times.
 
    - See [turbo.json](./turbo.json) to see the base configuration and ensure you
@@ -148,18 +148,18 @@ New packages should be configured with a few requirements in mind:
 
 3. If you are writing a package that will be published:
 
-   - Make sure you are dual-exporting cjs and esm correctly, see [how the lazer
+   - Make sure you are dual-exporting CJS and ESM correctly, see [how the lazer
      sdk package builds](./lazer/sdk/js/package.json) (in particular look at the
      `build:cjs` and `build:esm` tasks) for an example for how to do this
 
    - Ensure you have properly configured [subpath
      exports](https://nodejs.org/api/packages.html#subpath-exports) to reference
-     the esm and cjs outputs so that your package can be consumed correctly in
+     the ESM and CJS outputs so that your package can be consumed correctly in
      both environments. Again, see [the lazer sdk](./lazer/sdk/js/package.json)
      as an example for doing this correctly.
 
    - Ensure you have set a `main` and `types` property on your `package.json`
-     pointing to your cjs entrypoint for use in older javascript environments.
+     pointing to your CJS entrypoint for use in older JavaScript environments.
 
    - Ensure you configure the `files` property on your `package.json` to include
      all output files and to exclude source files & tooling configuration. This
