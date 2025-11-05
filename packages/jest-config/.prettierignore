@@ -1,1 +1,2 @@
-dist/
+dist/package.json
+tsconfig*.json
