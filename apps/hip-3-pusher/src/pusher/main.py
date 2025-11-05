@@ -9,6 +9,7 @@ from pusher.config import Config
 from pusher.hyperliquid_listener import HyperliquidListener
 from pusher.lazer_listener import LazerListener
 from pusher.hermes_listener import HermesListener
+from pusher.seda_listener import SedaListener
 from pusher.price_state import PriceState
 from pusher.publisher import Publisher
 from pusher.metrics import Metrics
@@ -48,12 +49,14 @@ async def main():
     hyperliquid_listener = HyperliquidListener(config, price_state)
     lazer_listener = LazerListener(config, price_state)
     hermes_listener = HermesListener(config, price_state)
+    seda_listener = SedaListener(config, price_state)
 
     await asyncio.gather(
         publisher.run(),
         hyperliquid_listener.subscribe_all(),
         lazer_listener.subscribe_all(),
         hermes_listener.subscribe_all(),
+        seda_listener.run(),
     )
     logger.info("Exiting hip-3-pusher..")
 

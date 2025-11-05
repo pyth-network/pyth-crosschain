@@ -28,7 +28,8 @@ class PriceState:
             "hl_oracle": {symbol: None for symbol in config.hyperliquid.asset_context_symbols},
             "hl_mark": {symbol: None for symbol in config.hyperliquid.asset_context_symbols},
             "lazer": {feed_id: None for feed_id in config.lazer.feed_ids},
-            "hermes": {feed_id: None for feed_id in config.hermes.feed_ids}
+            "hermes": {feed_id: None for feed_id in config.hermes.feed_ids},
+            "seda": {feed_name: None for feed_name in config.seda.feeds},
         }
 
     def get_all_prices(self, market_name):

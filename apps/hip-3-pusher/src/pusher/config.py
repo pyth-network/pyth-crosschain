@@ -1,7 +1,7 @@
 from hyperliquid.utils.constants import MAINNET_API_URL, TESTNET_API_URL
 from pydantic import BaseModel, FilePath, model_validator
 from typing import Optional
-from typing import Literal, Union
+from typing import Literal
 
 STALE_TIMEOUT_SECONDS = 5
 
@@ -45,6 +45,20 @@ class HyperliquidConfig(BaseModel):
         return self
 
 
+class SedaFeedConfig(BaseModel):
+    exec_program_id: str
+    exec_inputs: str
+
+
+class SedaConfig(BaseModel):
+    url: str
+    api_key_path: Optional[FilePath] = None
+    poll_interval: float
+    poll_failure_interval: float
+    poll_timeout: float
+    feeds: dict[str, SedaFeedConfig]
+
+
 class PriceSource(BaseModel):
     source_name: str
     source_id: str | int
@@ -67,7 +81,7 @@ class ConstantSourceConfig(BaseModel):
     value: str
 
 
-PriceSourceConfig = Union[SingleSourceConfig, PairSourceConfig, ConstantSourceConfig]
+PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig
 
 
 class PriceConfig(BaseModel):
@@ -83,5 +97,6 @@ class Config(BaseModel):
     kms: KMSConfig
     lazer: LazerConfig
     hermes: HermesConfig
+    seda: SedaConfig
     multisig: MultisigConfig
     price: PriceConfig
