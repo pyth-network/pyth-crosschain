@@ -12,7 +12,7 @@
   },
   "scripts": {
     "setup-foundry": "./setup-foundry.sh",
-    "setup": "npm run setup-foundry && npm run install-forge-deps",
+    "setup": "pnpm run setup-foundry && pnpm run install-forge-deps",
     "build": "forge build",
     "test": "forge test",
     "deploy": "forge script script/Deploy.s.sol --rpc-url testnet --broadcast",
