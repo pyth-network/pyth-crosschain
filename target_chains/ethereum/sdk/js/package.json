@@ -38,6 +38,7 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
+    "@pythnetwork/jest-config": "workspace:",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",

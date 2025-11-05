@@ -39,6 +39,7 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@truffle/hdwallet-provider": "^2.1.5",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
@@ -49,7 +50,6 @@
     "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
     "web3": "^1.8.2",
     "yargs": "^17.4.1"
   },

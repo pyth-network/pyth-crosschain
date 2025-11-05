@@ -47,12 +47,12 @@
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "^29.2.5",
     "@types/lodash": "^4.14.191",
     "fast-check": "^3.10.0",
     "jest": "^29.3.1",
-    "prettier": "catalog:",
-    "ts-jest": "^29.0.3"
+    "prettier": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0",

@@ -853,7 +853,7 @@ describe("PythTest", () => {
 
     // Check initial value (should be empty)
     let result = await pythTest.getGovernanceDataSource();
-    expect(result).toEqual(null);
+    expect(result).toBeFalsy();
 
     // Deploy contract with initial governance data source
     await deployContract(

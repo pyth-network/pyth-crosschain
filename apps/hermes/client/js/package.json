@@ -38,6 +38,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "^29.4.0",
     "@types/node": "^20.14.2",
     "@types/yargs": "^17.0.10",
@@ -45,7 +46,6 @@
     "jest": "^29.4.0",
     "openapi-zod-client": "^1.18.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
     "yargs": "^17.4.1"
   },
   "dependencies": {

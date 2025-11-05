@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
+    "@pythnetwork/jest-config": "workspace:",
     "@pythnetwork/price-service-sdk": "workspace:*",
     "@pythnetwork/pyth-ton-js": "workspace:*",
     "@pythnetwork/xc-admin-common": "workspace:*",
