@@ -1,4 +1,4 @@
-use std::time::Duration;
+use {pyth_lazer_client::arc_swap::StreamIntoAutoUpdatedHandle, std::time::Duration};
 
 use pyth_lazer_client::history_client::{PythLazerHistoryClient, PythLazerHistoryClientConfig};
 use pyth_lazer_protocol::PriceFeedId;
@@ -18,11 +18,21 @@ async fn main() -> anyhow::Result<()> {
         update_interval: Duration::from_secs(5),
         ..Default::default()
     });
-    let symbols = client.all_symbols_metadata_handle().await?;
+    let symbols = client
+        .all_symbols_metadata_stream()
+        .await?
+        .into_auto_updated_handle()
+        .await?;
 
     loop {
-        println!("symbols len: {}", symbols.symbols().len());
-        println!("symbol 1: {:?}", symbols.symbols().get(&PriceFeedId(1)));
+        println!("symbols len: {}", symbols.load().len());
+        println!(
+            "symbol 1: {:?}",
+            symbols
+                .load()
+                .iter()
+                .find(|feed| feed.pyth_lazer_id == PriceFeedId(1))
+        );
         sleep(Duration::from_secs(15)).await;
     }
 }
