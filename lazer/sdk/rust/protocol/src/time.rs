@@ -11,11 +11,15 @@ use {
     },
     serde::{Deserialize, Serialize},
     std::time::{Duration, SystemTime},
+    utoipa::ToSchema,
 };
 
 /// Unix timestamp with microsecond resolution.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema,
+)]
 #[repr(transparent)]
+#[schema(value_type = u64)]
 pub struct TimestampUs(u64);
 
 #[cfg_attr(feature = "mry", mry::mry)]
@@ -279,7 +283,10 @@ impl TryFrom<TimestampUs> for chrono::DateTime<chrono::Utc> {
 }
 
 /// Non-negative duration with microsecond resolution.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, ToSchema,
+)]
+#[schema(value_type = u64)]
 pub struct DurationUs(u64);
 
 impl DurationUs {
@@ -487,7 +494,8 @@ pub mod duration_us_serde_humantime {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, ToSchema)]
+#[schema(as = String, example = "fixed_rate@200ms")]
 pub struct FixedRate {
     rate: DurationUs,
 }

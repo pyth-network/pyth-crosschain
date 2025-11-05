@@ -296,6 +296,10 @@
       "types": "./dist/useLogger/index.d.ts",
       "default": "./dist/useLogger/index.mjs"
     },
+    "./useCopy": {
+      "types": "./dist/esm/useCopy/index.d.ts",
+      "default": "./dist/esm/useCopy/index.js"
+    },
     "./useQueryParamsPagination": {
       "types": "./dist/useQueryParamsPagination/index.d.ts",
       "default": "./dist/useQueryParamsPagination/index.mjs"
