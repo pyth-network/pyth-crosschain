@@ -55,7 +55,7 @@
   "devDependencies": {
     "@axe-core/react": "catalog:",
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@svgr/webpack": "catalog:",

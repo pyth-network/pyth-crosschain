@@ -10,6 +10,7 @@
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
     "@cprussin/eslint-config": "catalog:",
+    "@cprussin/jest-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "^29"
   },
@@ -17,7 +18,8 @@
     "@swc/core": "^1.15.0",
     "@swc/jest": "^0.2.39",
     "jest-ts-webcompat-resolver": "^1.0.1",
-    "jest": "^29"
+    "jest": "^29",
+    "ts-deepmerge": "^7.0.3"
   },
   "exports": {
     ".": {

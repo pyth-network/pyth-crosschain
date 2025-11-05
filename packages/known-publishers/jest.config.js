@@ -1,1 +1,3 @@
-export { base as default } from "@cprussin/jest-config";
+import { defineJestConfig } from "@pythnetwork/jest-config";
+
+export default defineJestConfig();

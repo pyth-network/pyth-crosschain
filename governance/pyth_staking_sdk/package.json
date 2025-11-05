@@ -216,7 +216,7 @@
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@solana/wallet-adapter-react": "catalog:",

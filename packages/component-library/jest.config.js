@@ -1,1 +1,3 @@
-export { base as default } from "@cprussin/jest-config";
+import { defineJestConfigForNextJs } from "@pythnetwork/jest-config";
+
+export default defineJestConfigForNextJs();

@@ -1,6 +1,8 @@
 import type { Config } from "jest";
+import { nextjs } from "@cprussin/jest-config/next";
+import { merge } from "ts-deepmerge";
 
-export function defineJestConfig(config?: Config) {
+export function defineJestConfig(config?: Config): Config {
   return {
     ...config,
     resolver: config?.resolver ?? "jest-ts-webcompat-resolver",
@@ -10,4 +12,8 @@ export function defineJestConfig(config?: Config) {
     },
     testEnvironment: config?.testEnvironment ?? "node",
   } as unknown as Config;
+}
+
+export function defineJestConfigForNextJs(config?: Config): Config {
+  return defineJestConfig(merge(nextjs, config ?? {}) as Config);
 }
