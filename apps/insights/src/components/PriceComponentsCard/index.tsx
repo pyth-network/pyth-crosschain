@@ -17,7 +17,11 @@ import type {
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
-import { useQueryState, parseAsStringEnum, parseAsBoolean } from "@pythnetwork/react-hooks/nuqs";
+import {
+  useQueryState,
+  parseAsStringEnum,
+  parseAsBoolean,
+} from "@pythnetwork/react-hooks/nuqs";
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { Fragment, Suspense, useMemo, useCallback } from "react";

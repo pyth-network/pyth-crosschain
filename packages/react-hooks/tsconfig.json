@@ -1,11 +1,4 @@
 {
   "extends": "@cprussin/tsconfig/base.json",
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "compilerOptions": {
-    "incremental": false,
-    "noEmit": false
-  }
+  "exclude": ["node_modules", "dist"]
 }

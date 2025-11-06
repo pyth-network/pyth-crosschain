@@ -1,5 +1,5 @@
 /* eslint-disable n/no-process-env */
-import { NuqsAdapter } from '@pythnetwork/react-hooks/nuqs-adapters-next';
+import { NuqsAdapter } from '@pythnetwork/react-hooks/nuqs-adapters-next'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import {
   ConnectionProvider,

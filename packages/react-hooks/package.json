@@ -10,7 +10,6 @@
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
     "test:format": "prettier --check .",
-    "test:unit": "jest",
     "test:types": "tsc"
   },
   "devDependencies": {
