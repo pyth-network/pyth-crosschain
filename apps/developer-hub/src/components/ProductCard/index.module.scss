@@ -12,48 +12,24 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 2rem; // 32px
+  gap: theme.spacing(8);
   height: 100%;
   flex: 1;
-  overflow: visible;
 }
 
 .mainContent {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
-  padding-top: 0;
-  padding-bottom: 0;
+  gap: theme.spacing(12);
   flex: 1;
-  overflow: visible;
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; // 12px
+  gap: theme.spacing(3);
   min-height: 7rem; // 88px - fixed height to keep FEATURES at consistent position
   height: 7rem; // 88px - fixed height
-}
-
-.decorativeIcon {
-  position: absolute;
-  right: 1.5rem; // 24px from right
-  top: 1.5rem;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.barChart {
-  position: relative;
-  width: 30px; // Space for all bars
-  height: 32px;
-}
-
-.bar {
-  position: absolute;
-  width: 3px;
-  border-radius: 1.5px;
 }
 
 .title {
@@ -64,7 +40,6 @@
   letter-spacing: -0.03em; // -0.9px
   color: var(--color-fd-foreground);
   white-space: nowrap;
-  overflow: visble;
   text-overflow: ellipsis;
   flex-shrink: 0;
 }
@@ -77,7 +52,6 @@
   letter-spacing: -0.01em; // -0.16px
   color: var(--color-fd-foreground);
   opacity: 0.9;
-  overflow: visible;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
@@ -88,16 +62,15 @@
 .featuresSection {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; // 24px
+  gap: theme.spacing(6);
   min-height: 12rem;
   max-height: 12rem;
-  overflow: visible;
 }
 
 .quickLinksSection {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: theme.spacing(6);
 }
 
 .sectionLabel {
@@ -115,19 +88,19 @@
 .features {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; // 8px
+  gap: theme.spacing(2);
 }
 
 .featureItem {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem; // 8px
+  gap: theme.spacing(2);
   padding: 0.3125rem 0.8125rem 0.3125rem 0.5rem;
-  border: 1px solid var(--color-fd-border, #ddd4d4);
+  border: 1px solid var(--color-fd-border);
   border-radius: 1.3125rem; // 21px
   background-color: var(--color-fd-card);
-  justify-content: left;
+  justify-content: flex-start;
   box-shadow: 0 0 4px 0 rgb(255 255 255 / 25%) inset;
 }
 
@@ -161,7 +134,7 @@
 .quickLinks {
   display: flex;
   flex-direction: column;
-  gap: 1rem; // 16px
+  gap: theme.spacing(4);
 }
 
 .quickLink {
@@ -187,17 +160,15 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}
 
-  :global(button) {
-    padding: 0.625rem; // 10px
-    border-radius: 0.5rem; // 8px
-    background-color: #27253d;
-    color: #f8f9fc;
-    font-size: 1rem; // 16px
-    font-weight: 500;
-    line-height: 1.25; // 20px
-    letter-spacing: -0.01em; // -0.16px
-    width: auto;
-    min-width: auto;
-  }
+.button {
+  padding: 0.625rem; // 10px
+  border-radius: 0.5rem; // 8px
+  background-color: #27253d;
+  color: #f8f9fc;
+  font-size: 1rem; // 16px
+  font-weight: 500;
+  line-height: 1.25; // 20px
+  letter-spacing: -0.01em; // -0.16px
 }
