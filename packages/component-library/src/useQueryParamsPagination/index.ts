@@ -1,13 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import {
   parseAsString,
   parseAsInteger,
   parseAsBoolean,
   useQueryStates,
   createSerializer,
-} from "nuqs";
+} from "@pythnetwork/react-hooks/nuqs";
+import { usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
 import type { SortDescriptor } from "../unstyled/Table";

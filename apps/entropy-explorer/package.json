@@ -24,7 +24,6 @@
     "@pythnetwork/component-library": "workspace:*",
     "clsx": "catalog:",
     "next": "catalog:",
-    "nuqs": "catalog:",
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-dom": "catalog:",

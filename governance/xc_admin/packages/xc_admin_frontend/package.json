@@ -38,7 +38,6 @@
     "message_buffer": "workspace:^",
     "next": "catalog:",
     "next-seo": "^5.15.0",
-    "nuqs": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hot-toast": "^2.4.0",
