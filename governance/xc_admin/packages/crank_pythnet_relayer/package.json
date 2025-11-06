@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/xc-admin-crank-pythnet-relayer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A crank to relay pyth governance actions to pythnet",
   "private": "true",
   "author": "",

@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-starknet-js",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Pyth Network Starknet Utilities",
   "homepage": "https://pyth.network",
   "author": {

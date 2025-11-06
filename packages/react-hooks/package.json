@@ -2,7 +2,7 @@
   "private": true,
   "name": "@pythnetwork/react-hooks",
   "description": "collection of utility hooks used across react applications powering parts of the pyth network",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "scripts": {
     "build": "ts-duality --clean --noCjs",
     "clean": "rm -rf ./dist",

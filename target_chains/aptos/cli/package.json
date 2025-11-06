@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/aptos-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Utilities for managing the Pyth Target Chain contract on Aptos",
   "private": true,
   "main": "./dist/cjs/index.cjs",
