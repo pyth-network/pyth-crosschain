@@ -101,7 +101,15 @@ export function ProductCard({
 
         {buttonLabel && (
           <div className={styles.buttonWrapper}>
-            <Button onPress={handleButtonClick} size="md" variant="primary">
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                handleButtonClick();
+              }}
+              size="md"
+              variant="primary"
+              className={clsx(styles.button, className)}
+            >
               {buttonLabel}
             </Button>
           </div>

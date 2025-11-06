@@ -1,12 +1,12 @@
 @use "@pythnetwork/component-library/theme";
 
 .landing {
+  padding: theme.spacing(4) theme.spacing(2);
+
   @include theme.max-width;
 
-  padding: 2rem 1rem;
-
-  @media (width >= 768px) {
-    padding: 3rem 1.5rem;
+  @include theme.breakpoint("md") {
+    padding: theme.spacing(6) theme.spacing(3);
   }
 }
 
@@ -14,6 +14,7 @@
   display: flex;
   gap: theme.spacing(10);
   flex-direction: column;
+
   @include theme.breakpoint("md") {
     flex-direction: row;
   }

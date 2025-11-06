@@ -9,6 +9,35 @@ export const Homepage = () => {
       <h2>Homepage Landing Page</h2>
       <div className={styles.cards}>
         <ProductCard
+          title="Pyth Core"
+          description="Stable, secure, and decentralized price data source for DeFi and TradFi applications."
+          features={[
+            { label: "400ms frequency", icon: <Lightning size={12.5} /> },
+            {
+              label: "100+ blockchains",
+              icon: <Lightning size={12.5} />,
+            },
+            {
+              label: "Confidence intervals",
+              icon: <Lightning size={12.5} />,
+            },
+            { label: "2500+ price feeds", icon: <Lightning size={12.5} /> },
+          ]}
+          quickLinks={[
+            {
+              label: "Getting Started",
+              href: "/price-feeds/v1/getting-started",
+            },
+            { label: "API Reference", href: "/openapi/hermes" },
+            {
+              label: "Contract Addresses",
+              href: "/price-feeds/v1/contract-addresses",
+            },
+          ]}
+          buttonLabel="Get started"
+          buttonHref="/price-feeds/v1"
+        />
+        <ProductCard
           title="Pyth Pro"
           description="Subscription-based price data for institutions and advanced use cases."
           features={[
@@ -26,13 +55,13 @@ export const Homepage = () => {
           quickLinks={[
             {
               label: "Get Pyth Pro Access Token",
-              href: "/docs/price-feeds/v2/acquire-an-access-token",
+              href: "/price-feeds/v2/acquire-an-access-token",
             },
-            { label: "Browse Supported Feeds", href: "/docs/price-feeds" },
-            { label: "Error Codes", href: "/docs/price-feeds" },
+            { label: "Browse Supported Feeds", href: "/price-feeds" },
+            { label: "Error Codes", href: "/price-feeds" },
           ]}
           buttonLabel="Get started"
-          buttonHref="/docs/price-feeds"
+          buttonHref="/price-feeds"
         />
         <ProductCard
           title="Entropy"
@@ -45,13 +74,13 @@ export const Homepage = () => {
           quickLinks={[
             {
               label: "Getting Started",
-              href: "/docs/entropy/create-your-first-entropy-app",
+              href: "/entropy/create-your-first-entropy-app",
             },
-            { label: "Protocol Design", href: "/docs/entropy/protocol-design" },
-            { label: "Examples", href: "/docs/entropy/examples" },
+            { label: "Protocol Design", href: "/entropy/protocol-design" },
+            { label: "Examples", href: "/entropy/examples" },
           ]}
           buttonLabel="Get started"
-          buttonHref="/docs/entropy"
+          buttonHref="/entropy"
         />
       </div>
     </div>
