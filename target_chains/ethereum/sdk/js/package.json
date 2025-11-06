@@ -6,10 +6,10 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/cjs/index.cjs",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -20,14 +20,15 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && git add -A src"
+    "version": "pnpm run test:format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
+    "@pythnetwork/jest-config": "workspace:",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",
@@ -46,11 +48,78 @@
     "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
-    "typescript": "catalog:"
+    "ts-jest": "^29.0.5"
   },
   "dependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
     "viem": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    "./filler": {
+      "require": {
+        "types": "./dist/cjs/filler.d.ts",
+        "default": "./dist/cjs/filler.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/filler.d.ts",
+        "default": "./dist/esm/filler.mjs"
+      }
+    },
+    ".": {
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
+    },
+    "./multicall3-bundler": {
+      "require": {
+        "types": "./dist/cjs/multicall3-bundler.d.ts",
+        "default": "./dist/cjs/multicall3-bundler.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/multicall3-bundler.d.ts",
+        "default": "./dist/esm/multicall3-bundler.mjs"
+      }
+    },
+    "./pyth-abi": {
+      "require": {
+        "types": "./dist/cjs/pyth-abi.d.ts",
+        "default": "./dist/cjs/pyth-abi.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/pyth-abi.d.ts",
+        "default": "./dist/esm/pyth-abi.mjs"
+      }
+    },
+    "./tracer/debug-trace-call": {
+      "require": {
+        "types": "./dist/cjs/tracer/debug-trace-call.d.ts",
+        "default": "./dist/cjs/tracer/debug-trace-call.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/tracer/debug-trace-call.d.ts",
+        "default": "./dist/esm/tracer/debug-trace-call.mjs"
+      }
+    },
+    "./tracer/trace-call-many": {
+      "require": {
+        "types": "./dist/cjs/tracer/trace-call-many.d.ts",
+        "default": "./dist/cjs/tracer/trace-call-many.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/tracer/trace-call-many.d.ts",
+        "default": "./dist/esm/tracer/trace-call-many.mjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.mjs"
 }

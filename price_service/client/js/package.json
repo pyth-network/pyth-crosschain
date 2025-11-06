@@ -7,10 +7,10 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "tsc",
+    "build": "ts-duality --noEsm",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -30,7 +30,8 @@
     "test:lint": "eslint src/ --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",
@@ -38,15 +39,13 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@types/jest": "^29.4.0",
     "@types/yargs": "^17.0.10",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
-    "eslint": "^8.14.0",
+    "eslint": "catalog:",
     "jest": "^29.4.0",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5",
-    "typescript": "^4.6.3",
     "yargs": "^17.4.1"
   },
   "dependencies": {
@@ -57,5 +56,29 @@
     "isomorphic-ws": "^4.0.1",
     "ts-log": "^2.2.4",
     "ws": "^8.6.0"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    "./PriceServiceConnection": {
+      "types": "./dist/PriceServiceConnection.d.ts",
+      "default": "./dist/PriceServiceConnection.cjs"
+    },
+    "./ResillientWebSocket": {
+      "types": "./dist/ResillientWebSocket.d.ts",
+      "default": "./dist/ResillientWebSocket.cjs"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

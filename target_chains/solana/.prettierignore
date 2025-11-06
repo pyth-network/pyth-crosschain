@@ -6,3 +6,5 @@ node_modules
 dist
 build
 test-ledger
+package.json
+tsconfig*.json

@@ -1,9 +1,9 @@
-import { Coin } from "@cosmjs/stargate";
-import {
+import type { Coin } from "@cosmjs/stargate";
+import type {
   ChainExecutor,
   ExecuteContractResponse,
-} from "./chains-manager/chain-executor";
-import { ChainQuerier } from "./chains-manager/chain-querier";
+} from "./chains-manager/chain-executor.js";
+import type { ChainQuerier } from "./chains-manager/chain-querier.js";
 
 export type Price = {
   price: number;

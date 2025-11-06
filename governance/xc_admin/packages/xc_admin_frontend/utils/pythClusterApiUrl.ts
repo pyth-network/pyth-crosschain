@@ -1,5 +1,5 @@
 import {
-  PythCluster,
+  type PythCluster,
   getPythClusterApiUrl,
 } from '@pythnetwork/client/lib/cluster'
 

@@ -4,27 +4,29 @@
   "description": "Utility to test entropy provider callbacks",
   "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "import": {
+    ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "default": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist/**/*",
     "cli/**/*"
   ],
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "ts-duality --noEsm",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "start:dev": "tsc --project tsconfig.build.json && node cli/run.js",
-    "start:prod": "node cli/run.js"
+    "start:dev": "node cli/run.js",
+    "start:prod": "node cli/run.js",
+    "clean": "rm -rf ./dist"
   },
   "repository": {
     "type": "git",
@@ -46,8 +48,7 @@
     "eslint": "catalog:",
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/contract-manager": "workspace:*",
@@ -60,5 +61,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.14.0"
+  }
 }

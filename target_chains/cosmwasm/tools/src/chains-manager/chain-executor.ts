@@ -1,4 +1,4 @@
-import { Coin } from "@cosmjs/stargate";
+import type { Coin } from "@cosmjs/stargate";
 // TODO: expose these executors and consume them in price pusher
 /**
  * Interface for classes that implements contract management for a chain.

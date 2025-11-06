@@ -1,6 +1,6 @@
 import {
   getPythProgramKeyForCluster,
-  PythCluster,
+  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
   PublicKey,
@@ -20,7 +20,7 @@ import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 import { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
-import { AnchorAccounts } from "./anchor";
+import type { AnchorAccounts } from "./anchor";
 import { SolanaStakingMultisigInstruction } from "./SolanaStakingMultisigInstruction";
 import { DEFAULT_RECEIVER_PROGRAM_ID } from "@pythnetwork/pyth-solana-receiver";
 import {

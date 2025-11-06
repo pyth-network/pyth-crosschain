@@ -1,19 +1,19 @@
-import yargs from "yargs";
+import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 import { SuiChain } from "@pythnetwork/contract-manager/core/chains";
 import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/store";
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
-import { initPyth, publishPackage } from "./pyth_deploy";
+import { initPyth, publishPackage } from "./pyth_deploy.js";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,
   migratePyth,
   upgradePyth,
-} from "./upgrade_pyth";
+} from "./upgrade_pyth.js";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 
 const OPTIONS = {
   "private-key": {
@@ -51,7 +51,9 @@ function getContract(contractId: string): SuiPriceFeedContract {
   return contract;
 }
 
-yargs(hideBin(process.argv))
+const yargs = createCLI(hideBin(process.argv));
+
+yargs
   .command(
     "create",
     "Create a new price feed",

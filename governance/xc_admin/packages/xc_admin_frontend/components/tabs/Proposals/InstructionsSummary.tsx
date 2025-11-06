@@ -1,25 +1,29 @@
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/no-deprecated */
 import { Listbox, Transition } from '@headlessui/react'
-import { PythCluster } from '@pythnetwork/client'
-import { MultisigInstruction } from '@pythnetwork/xc-admin-common'
+import Arrow from '@images/icons/down.inline.svg'
+import type { PythCluster } from '@pythnetwork/client'
+import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
+import { Fragment, useState, useMemo, useContext } from 'react'
+
 import { getInstructionsSummary } from './utils'
+import { ClusterContext } from '../../../contexts/ClusterContext'
+import { usePythContext } from '../../../contexts/PythContext'
 import { getMappingCluster } from '../../InstructionViews/utils'
 import CopyText from '../../common/CopyText'
-import Arrow from '@images/icons/down.inline.svg'
-import { Fragment, useState, useMemo, useContext } from 'react'
-import { usePythContext } from '../../../contexts/PythContext'
-import { ClusterContext } from '../../../contexts/ClusterContext'
 
 export const InstructionsSummary = ({
   instructions,
   cluster,
 }: {
   instructions: MultisigInstruction[]
-  cluster: PythCluster
+  cluster: PythCluster | undefined
 }) => (
   <div className="space-y-4">
-    {getInstructionsSummary({ instructions, cluster }).map((instruction) => (
-      <SummaryItem instruction={instruction} key={instruction.name} />
-    ))}
+    {cluster &&
+      getInstructionsSummary({ instructions, cluster }).map((instruction) => (
+        <SummaryItem instruction={instruction} key={instruction.name} />
+      ))}
   </div>
 )
 
@@ -113,7 +117,7 @@ const AddRemovePublisherDetails = ({
               <KeyAndName
                 mapping={
                   groupBy === 'publisher'
-                    ? publisherKeyToName
+                    ? (publisherKeyToName ?? {})
                     : priceAccountKeyToSymbolMapping
                 }
               >
@@ -127,7 +131,7 @@ const AddRemovePublisherDetails = ({
                     mapping={
                       groupBy === 'publisher'
                         ? priceAccountKeyToSymbolMapping
-                        : publisherKeyToName
+                        : (publisherKeyToName ?? {})
                     }
                   >
                     {groupBy === 'publisher'
@@ -148,7 +152,7 @@ const KeyAndName = ({
   mapping,
   children,
 }: {
-  mapping: { [key: string]: string }
+  mapping: Record<string, string>
   children: string
 }) => {
   const name = useMemo(() => mapping[children], [mapping, children])
@@ -182,7 +186,7 @@ const Select = <T extends string>({
       <>
         <Listbox.Button className="inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 bg-light/20">
           <span className="mr-3">{value}</span>
-          <Arrow className={`${open && 'rotate-180'}`} />
+          <Arrow className={open && 'rotate-180'} />
         </Listbox.Button>
         <Transition
           as={Fragment}

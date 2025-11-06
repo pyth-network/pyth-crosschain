@@ -1,7 +1,7 @@
 import {
   AccountType,
   getPythProgramKeyForCluster,
-  PythCluster,
+  type PythCluster,
 } from "@pythnetwork/client";
 import {
   Connection,

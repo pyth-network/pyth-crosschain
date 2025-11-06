@@ -1,7 +1,9 @@
+/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { EvmWormholeContract } from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
@@ -36,12 +38,13 @@ async function main() {
           chainId: chainId,
         });
         console.log(`Fetched contract for ${contract.getId()}`);
-      } catch (e) {
-        console.error(`Error fetching contract for ${contract.getId()}`, e);
+      } catch (error) {
+        console.error(`Error fetching contract for ${contract.getId()}`, error);
       }
     }
   }
   console.table(entries);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

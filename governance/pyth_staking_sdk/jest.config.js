@@ -1,9 +1,6 @@
-import { base } from "@cprussin/jest-config";
+import { defineJestConfig } from "@pythnetwork/jest-config/define-config";
 
-/**
- * @type {import("@jest/types").Config.InitialOptions}
- */
-export default base({
+export default defineJestConfig({
   global: {
     config: {
       testTimeout: 1_000_000,

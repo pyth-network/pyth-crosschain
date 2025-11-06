@@ -3,13 +3,13 @@
   "version": "10.2.0",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "bin": {
-    "pyth-price-pusher": "./lib/index.js"
+    "pyth-price-pusher": "./dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,16 +20,17 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality --noEsm",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
-    "start": "node lib/index.js",
+    "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && pnpm run test:lint && git add -A src"
+    "version": "pnpm run test:format && pnpm run test:lint && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",
@@ -44,19 +45,19 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/express": "^4.17.21",
     "@types/jest": "^27.4.1",
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.13.0",
+    "eslint": "catalog:",
     "jest": "^29.7.0",
     "pino-pretty": "^11.2.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.1.1",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",
@@ -80,7 +81,7 @@
     "@types/pino": "^7.0.5",
     "aptos": "^1.8.5",
     "express": "^4.18.2",
-    "fuels": "^0.94.5",
+    "fuels": "catalog:",
     "jito-ts": "^3.0.1",
     "joi": "^17.6.0",
     "near-api-js": "^3.0.2",
@@ -89,5 +90,145 @@
     "viem": "^2.19.4",
     "yaml": "^2.1.1",
     "yargs": "^17.5.1"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    "./aptos/aptos": {
+      "types": "./dist/aptos/aptos.d.ts",
+      "default": "./dist/aptos/aptos.cjs"
+    },
+    "./aptos/balance-tracker": {
+      "types": "./dist/aptos/balance-tracker.d.ts",
+      "default": "./dist/aptos/balance-tracker.cjs"
+    },
+    "./aptos/command": {
+      "types": "./dist/aptos/command.d.ts",
+      "default": "./dist/aptos/command.cjs"
+    },
+    "./common": {
+      "types": "./dist/common.d.ts",
+      "default": "./dist/common.cjs"
+    },
+    "./controller": {
+      "types": "./dist/controller.d.ts",
+      "default": "./dist/controller.cjs"
+    },
+    "./evm/balance-tracker": {
+      "types": "./dist/evm/balance-tracker.d.ts",
+      "default": "./dist/evm/balance-tracker.cjs"
+    },
+    "./evm/command": {
+      "types": "./dist/evm/command.d.ts",
+      "default": "./dist/evm/command.cjs"
+    },
+    "./evm/custom-gas-station": {
+      "types": "./dist/evm/custom-gas-station.d.ts",
+      "default": "./dist/evm/custom-gas-station.cjs"
+    },
+    "./evm/evm": {
+      "types": "./dist/evm/evm.d.ts",
+      "default": "./dist/evm/evm.cjs"
+    },
+    "./evm/pyth-abi": {
+      "types": "./dist/evm/pyth-abi.d.ts",
+      "default": "./dist/evm/pyth-abi.cjs"
+    },
+    "./evm/pyth-contract": {
+      "types": "./dist/evm/pyth-contract.d.ts",
+      "default": "./dist/evm/pyth-contract.cjs"
+    },
+    "./evm/super-wallet": {
+      "types": "./dist/evm/super-wallet.d.ts",
+      "default": "./dist/evm/super-wallet.cjs"
+    },
+    "./fuel/command": {
+      "types": "./dist/fuel/command.d.ts",
+      "default": "./dist/fuel/command.cjs"
+    },
+    "./fuel/fuel": {
+      "types": "./dist/fuel/fuel.d.ts",
+      "default": "./dist/fuel/fuel.cjs"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./injective/command": {
+      "types": "./dist/injective/command.d.ts",
+      "default": "./dist/injective/command.cjs"
+    },
+    "./injective/injective": {
+      "types": "./dist/injective/injective.d.ts",
+      "default": "./dist/injective/injective.cjs"
+    },
+    "./interface": {
+      "types": "./dist/interface.d.ts",
+      "default": "./dist/interface.cjs"
+    },
+    "./metrics": {
+      "types": "./dist/metrics.d.ts",
+      "default": "./dist/metrics.cjs"
+    },
+    "./near/command": {
+      "types": "./dist/near/command.d.ts",
+      "default": "./dist/near/command.cjs"
+    },
+    "./near/near": {
+      "types": "./dist/near/near.d.ts",
+      "default": "./dist/near/near.cjs"
+    },
+    "./options": {
+      "types": "./dist/options.d.ts",
+      "default": "./dist/options.cjs"
+    },
+    "./price-config": {
+      "types": "./dist/price-config.d.ts",
+      "default": "./dist/price-config.cjs"
+    },
+    "./pyth-price-listener": {
+      "types": "./dist/pyth-price-listener.d.ts",
+      "default": "./dist/pyth-price-listener.cjs"
+    },
+    "./solana/balance-tracker": {
+      "types": "./dist/solana/balance-tracker.d.ts",
+      "default": "./dist/solana/balance-tracker.cjs"
+    },
+    "./solana/command": {
+      "types": "./dist/solana/command.d.ts",
+      "default": "./dist/solana/command.cjs"
+    },
+    "./solana/solana": {
+      "types": "./dist/solana/solana.d.ts",
+      "default": "./dist/solana/solana.cjs"
+    },
+    "./sui/balance-tracker": {
+      "types": "./dist/sui/balance-tracker.d.ts",
+      "default": "./dist/sui/balance-tracker.cjs"
+    },
+    "./sui/command": {
+      "types": "./dist/sui/command.d.ts",
+      "default": "./dist/sui/command.cjs"
+    },
+    "./sui/sui": {
+      "types": "./dist/sui/sui.d.ts",
+      "default": "./dist/sui/sui.cjs"
+    },
+    "./ton/command": {
+      "types": "./dist/ton/command.d.ts",
+      "default": "./dist/ton/command.cjs"
+    },
+    "./ton/ton": {
+      "types": "./dist/ton/ton.d.ts",
+      "default": "./dist/ton/ton.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "default": "./dist/utils.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js"
 }

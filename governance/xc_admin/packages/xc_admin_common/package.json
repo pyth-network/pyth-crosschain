@@ -6,7 +6,8 @@
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
-  "main": "lib/index.js",
+  "main": "./dist/index.cjs",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
@@ -15,10 +16,11 @@
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality --noEsm --copyOtherFiles",
     "test:unit": "jest",
     "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "//": [
     "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",
@@ -41,16 +43,183 @@
     "bn.js": "^5.2.1",
     "ethers": "^5.7.2",
     "lodash": "^4.17.21",
-    "message_buffer": "workspace:^",
-    "typescript": "^4.9.4"
+    "message_buffer": "workspace:^"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "^29.2.5",
     "@types/lodash": "^4.14.191",
     "fast-check": "^3.10.0",
     "jest": "^29.3.1",
-    "prettier": "catalog:",
-    "ts-jest": "^29.0.3"
-  }
+    "prettier": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "exports": {
+    "./bpf_upgradable_loader": {
+      "types": "./dist/bpf_upgradable_loader.d.ts",
+      "default": "./dist/bpf_upgradable_loader.cjs"
+    },
+    "./chains": {
+      "types": "./dist/chains.d.ts",
+      "default": "./dist/chains.cjs"
+    },
+    "./cluster": {
+      "types": "./dist/cluster.d.ts",
+      "default": "./dist/cluster.cjs"
+    },
+    "./cranks": {
+      "types": "./dist/cranks.d.ts",
+      "default": "./dist/cranks.cjs"
+    },
+    "./deterministic_oracle_accounts": {
+      "types": "./dist/deterministic_oracle_accounts.d.ts",
+      "default": "./dist/deterministic_oracle_accounts.cjs"
+    },
+    "./deterministic_stake_accounts": {
+      "types": "./dist/deterministic_stake_accounts.d.ts",
+      "default": "./dist/deterministic_stake_accounts.cjs"
+    },
+    "./executor": {
+      "types": "./dist/executor.d.ts",
+      "default": "./dist/executor.cjs"
+    },
+    "./governance_payload/BufferLayoutExt": {
+      "types": "./dist/governance_payload/BufferLayoutExt.d.ts",
+      "default": "./dist/governance_payload/BufferLayoutExt.cjs"
+    },
+    "./governance_payload/ExecuteAction": {
+      "types": "./dist/governance_payload/ExecuteAction.d.ts",
+      "default": "./dist/governance_payload/ExecuteAction.cjs"
+    },
+    "./governance_payload/ExecutePostedVaa": {
+      "types": "./dist/governance_payload/ExecutePostedVaa.d.ts",
+      "default": "./dist/governance_payload/ExecutePostedVaa.cjs"
+    },
+    "./governance_payload/GovernanceDataSourceTransfer": {
+      "types": "./dist/governance_payload/GovernanceDataSourceTransfer.d.ts",
+      "default": "./dist/governance_payload/GovernanceDataSourceTransfer.cjs"
+    },
+    "./governance_payload/PythGovernanceAction": {
+      "types": "./dist/governance_payload/PythGovernanceAction.d.ts",
+      "default": "./dist/governance_payload/PythGovernanceAction.cjs"
+    },
+    "./governance_payload/SetDataSources": {
+      "types": "./dist/governance_payload/SetDataSources.d.ts",
+      "default": "./dist/governance_payload/SetDataSources.cjs"
+    },
+    "./governance_payload/SetFee": {
+      "types": "./dist/governance_payload/SetFee.d.ts",
+      "default": "./dist/governance_payload/SetFee.cjs"
+    },
+    "./governance_payload/SetTransactionFee": {
+      "types": "./dist/governance_payload/SetTransactionFee.d.ts",
+      "default": "./dist/governance_payload/SetTransactionFee.cjs"
+    },
+    "./governance_payload/SetValidPeriod": {
+      "types": "./dist/governance_payload/SetValidPeriod.d.ts",
+      "default": "./dist/governance_payload/SetValidPeriod.cjs"
+    },
+    "./governance_payload/SetWormholeAddress": {
+      "types": "./dist/governance_payload/SetWormholeAddress.d.ts",
+      "default": "./dist/governance_payload/SetWormholeAddress.cjs"
+    },
+    "./governance_payload/UpgradeContract": {
+      "types": "./dist/governance_payload/UpgradeContract.d.ts",
+      "default": "./dist/governance_payload/UpgradeContract.cjs"
+    },
+    "./governance_payload/WithdrawFee": {
+      "types": "./dist/governance_payload/WithdrawFee.d.ts",
+      "default": "./dist/governance_payload/WithdrawFee.cjs"
+    },
+    "./governance_payload": {
+      "types": "./dist/governance_payload/index.d.ts",
+      "default": "./dist/governance_payload/index.cjs"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./message_buffer": {
+      "types": "./dist/message_buffer.d.ts",
+      "default": "./dist/message_buffer.cjs"
+    },
+    "./multisig": {
+      "types": "./dist/multisig.d.ts",
+      "default": "./dist/multisig.cjs"
+    },
+    "./multisig_transaction/BpfUpgradableLoaderMultisigInstruction": {
+      "types": "./dist/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.cjs"
+    },
+    "./multisig_transaction/LazerMultisigInstruction": {
+      "types": "./dist/multisig_transaction/LazerMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/LazerMultisigInstruction.cjs"
+    },
+    "./multisig_transaction/MessageBufferMultisigInstruction": {
+      "types": "./dist/multisig_transaction/MessageBufferMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/MessageBufferMultisigInstruction.cjs"
+    },
+    "./multisig_transaction/PythMultisigInstruction": {
+      "types": "./dist/multisig_transaction/PythMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/PythMultisigInstruction.cjs"
+    },
+    "./multisig_transaction/SolanaStakingMultisigInstruction": {
+      "types": "./dist/multisig_transaction/SolanaStakingMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/SolanaStakingMultisigInstruction.cjs"
+    },
+    "./multisig_transaction/SystemProgramInstruction": {
+      "types": "./dist/multisig_transaction/SystemProgramInstruction.d.ts",
+      "default": "./dist/multisig_transaction/SystemProgramInstruction.cjs"
+    },
+    "./multisig_transaction/WormholeMultisigInstruction": {
+      "types": "./dist/multisig_transaction/WormholeMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/WormholeMultisigInstruction.cjs"
+    },
+    "./multisig_transaction/anchor": {
+      "types": "./dist/multisig_transaction/anchor.d.ts",
+      "default": "./dist/multisig_transaction/anchor.cjs"
+    },
+    "./multisig_transaction": {
+      "types": "./dist/multisig_transaction/index.d.ts",
+      "default": "./dist/multisig_transaction/index.cjs"
+    },
+    "./price_store": {
+      "types": "./dist/price_store.d.ts",
+      "default": "./dist/price_store.cjs"
+    },
+    "./programs/core/core_functions": {
+      "types": "./dist/programs/core/core_functions.d.ts",
+      "default": "./dist/programs/core/core_functions.cjs"
+    },
+    "./programs/lazer/lazer_functions": {
+      "types": "./dist/programs/lazer/lazer_functions.d.ts",
+      "default": "./dist/programs/lazer/lazer_functions.cjs"
+    },
+    "./programs/program_registry": {
+      "types": "./dist/programs/program_registry.d.ts",
+      "default": "./dist/programs/program_registry.cjs"
+    },
+    "./programs/types": {
+      "types": "./dist/programs/types.d.ts",
+      "default": "./dist/programs/types.cjs"
+    },
+    "./propose": {
+      "types": "./dist/propose.d.ts",
+      "default": "./dist/propose.cjs"
+    },
+    "./remote_executor": {
+      "types": "./dist/remote_executor.d.ts",
+      "default": "./dist/remote_executor.cjs"
+    },
+    "./wormhole": {
+      "types": "./dist/wormhole.d.ts",
+      "default": "./dist/wormhole.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "module": "./dist/esm/index.mjs"
 }

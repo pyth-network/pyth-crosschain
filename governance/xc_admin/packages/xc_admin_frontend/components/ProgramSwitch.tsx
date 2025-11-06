@@ -1,7 +1,10 @@
-import { ProgramType, PROGRAM_TYPE_NAMES } from '@pythnetwork/xc-admin-common'
-import { useProgramContext } from '../contexts/ProgramContext'
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/no-deprecated */
 import { Menu, Transition } from '@headlessui/react'
+import { ProgramType, PROGRAM_TYPE_NAMES } from '@pythnetwork/xc-admin-common'
 import { Fragment } from 'react'
+
+import { useProgramContext } from '../contexts/ProgramContext'
 
 const Arrow = ({ className }: { className?: string }) => (
   <svg
@@ -50,7 +53,7 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
               {programOptions.find((option) => option.value === programType)
                 ?.label ?? PROGRAM_TYPE_NAMES[programType]}
             </span>
-            <Arrow className={`${open ? 'rotate-180' : ''}`} />
+            <Arrow className={open ? 'rotate-180' : ''} />
           </Menu.Button>
           <Transition
             as={Fragment}
@@ -75,7 +78,9 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
                             ? 'bg-darkGray2'
                             : 'bg-darkGray'
                       }`}
-                      onClick={() => setProgramType(option.value)}
+                      onClick={() => {
+                        setProgramType(option.value)
+                      }}
                     >
                       {option.label}
                     </button>

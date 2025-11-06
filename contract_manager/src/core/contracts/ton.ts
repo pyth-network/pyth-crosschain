@@ -1,13 +1,20 @@
-import { Chain, TonChain } from "../chains";
-import { WormholeContract } from "./wormhole";
-import { PriceFeed, PriceFeedContract, PrivateKey, TxResult } from "../base";
-import { TokenQty } from "../token";
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { Address, Cell, OpenedContract } from "@ton/ton";
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable no-console */
 import {
   calculateUpdatePriceFeedsFee,
   PythContract,
 } from "@pythnetwork/pyth-ton-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { OpenedContract } from "@ton/ton";
+import { Address, Cell } from "@ton/ton";
+
+import type { PriceFeed, PrivateKey, TxResult } from "../base";
+import { Chain, TonChain } from "../chains";
+import { WormholeContract } from "./wormhole";
+import { PriceFeedContract } from "../base";
+import type { TokenQty } from "../token";
 
 export class TonWormholeContract extends WormholeContract {
   static type = "TonWormholeContract";
@@ -42,7 +49,7 @@ export class TonWormholeContract extends WormholeContract {
     if (parsed.type !== TonWormholeContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof TonChain))
-      throw new Error(`Wrong chain type ${chain}`);
+      throw new Error(`Wrong chain type ${JSON.stringify(chain)}`);
     return new TonWormholeContract(chain, parsed.address);
   }
 
@@ -100,7 +107,7 @@ export class TonWormholeContract extends WormholeContract {
     );
 
     return {
-      id: transactions[0].hash.toString(),
+      id: transactions[0]?.hash.toString() ?? "",
       info: JSON.stringify("0x1"),
     };
   }
@@ -123,7 +130,7 @@ export class TonPriceFeedContract extends PriceFeedContract {
     if (parsed.type !== TonPriceFeedContract.type)
       throw new Error("Invalid type");
     if (!(chain instanceof TonChain))
-      throw new Error(`Wrong chain type ${chain}`);
+      throw new Error(`Wrong chain type ${JSON.stringify(chain)}`);
     return new TonPriceFeedContract(chain, parsed.address);
   }
 
@@ -183,8 +190,8 @@ export class TonPriceFeedContract extends PriceFeedContract {
           publishTime: emaPrice.publishTime.toString(),
         },
       };
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       return undefined;
     }
   }
@@ -224,8 +231,8 @@ export class TonPriceFeedContract extends PriceFeedContract {
       throw new Error("Governance data source not found");
     }
     return {
-      emitterChain: result.emitterChain,
-      emitterAddress: result.emitterAddress,
+      emitterChain: result!.emitterChain,
+      emitterAddress: result!.emitterAddress,
     };
   }
 
@@ -250,9 +257,12 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,
     });
-    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
-    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
+    const txHash = Buffer.from(
+      txDetails[0]?.hash() ?? Buffer.alloc(0),
+    ).toString("hex");
+    const txInfo = JSON.stringify(
+      txDetails[0]?.description ?? "{}",
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
     );
 
     return {
@@ -274,9 +284,12 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,
     });
-    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
-    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
+    const txHash = Buffer.from(
+      txDetails[0]?.hash() ?? Buffer.alloc(0),
+    ).toString("hex");
+    const txInfo = JSON.stringify(
+      txDetails[0]?.description ?? "{}",
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
     );
 
     return {
@@ -298,9 +311,12 @@ export class TonPriceFeedContract extends PriceFeedContract {
     const txDetails = await client.getTransactions(wallet.address, {
       limit: 1,
     });
-    const txHash = Buffer.from(txDetails[0].hash()).toString("hex");
-    const txInfo = JSON.stringify(txDetails[0].description, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
+    const txHash = Buffer.from(
+      txDetails[0]?.hash() ?? Buffer.alloc(0),
+    ).toString("hex");
+    const txInfo = JSON.stringify(
+      txDetails[0]?.description ?? "{}",
+      (_, value) => (typeof value === "bigint" ? value.toString() : value),
     );
 
     return {

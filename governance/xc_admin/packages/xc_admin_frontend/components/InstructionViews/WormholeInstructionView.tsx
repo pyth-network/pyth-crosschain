@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable unicorn/no-nested-ternary */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import type { PythCluster } from '@pythnetwork/client'
+import type { PythGovernanceAction } from '@pythnetwork/xc-admin-common'
 import {
   AuthorizeGovernanceDataSourceTransfer,
   CosmosUpgradeContract,
@@ -6,7 +13,6 @@ import {
   EvmUpgradeContract,
   ExecutePostedVaa,
   MultisigParser,
-  PythGovernanceAction,
   RequestGovernanceDataSourceTransfer,
   SetDataSources,
   SetFee,
@@ -15,15 +21,15 @@ import {
   WormholeMultisigInstruction,
   getProgramName,
 } from '@pythnetwork/xc-admin-common'
-import { AccountMeta, PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import type { ReactNode } from 'react'
-import CopyText from '../common/CopyText'
+
 import { ParsedAccountPubkeyRow, SignerTag, WritableTag } from './AccountUtils'
-import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
-import { PythCluster } from '@pythnetwork/client'
+import { usePythContext } from '../../contexts/PythContext'
 import { lamportsToSol } from '../../utils/lamportsToSol'
 import { parseEvmExecuteCallData } from '../../utils/parseEvmExecuteCallData'
+import CopyText from '../common/CopyText'
 
 const GovernanceInstructionView = ({
   instruction,
@@ -77,24 +83,27 @@ export const WormholeInstructionView = ({
           const multisigParser = MultisigParser.fromCluster(cluster)
           const parsedInstruction = multisigParser.parseInstruction({
             programId: innerInstruction.programId,
-            data: innerInstruction.data as Buffer,
-            keys: innerInstruction.keys as AccountMeta[],
+            data: innerInstruction.data,
+            keys: innerInstruction.keys,
           })
           return (
             <>
-              <div key={`${index}_program`} className="flex justify-between">
+              <div
+                key={`${index.toString()}_program`}
+                className="flex justify-between"
+              >
                 <div>Program</div>
                 <div>{getProgramName(parsedInstruction.program)}</div>
               </div>
               <div
-                key={`${index}_instructionName`}
+                key={`${index.toString()}_instructionName`}
                 className="flex justify-between"
               >
                 <div>Instruction Name</div>
                 <div>{parsedInstruction.name}</div>
               </div>
               <div
-                key={`${index}_arguments`}
+                key={`${index.toString()}_arguments`}
                 className="grid grid-cols-4 justify-between"
               >
                 <div>Arguments</div>
@@ -149,17 +158,18 @@ export const WormholeInstructionView = ({
                           )}
                         </div>
                         {key === 'pub' &&
+                        publisherKeyToNameMappingCluster &&
                         parsedInstruction.args[key].toBase58() in
                           publisherKeyToNameMappingCluster ? (
                           <ParsedAccountPubkeyRow
-                            key={`${index}_${parsedInstruction.args[
+                            key={`${index.toString()}_${parsedInstruction.args[
                               key
                             ].toBase58()}`}
                             mapping={publisherKeyToNameMappingCluster}
                             title="publisher"
                             pubkey={parsedInstruction.args[key].toBase58()}
                           />
-                        ) : null}
+                        ) : undefined}
                       </>
                     ))}
                   </div>
@@ -169,7 +179,7 @@ export const WormholeInstructionView = ({
               </div>
               {
                 <div
-                  key={`${index}_accounts`}
+                  key={`${index.toString()}_accounts`}
                   className="grid grid-cols-4 justify-between"
                 >
                   <div>Accounts</div>
@@ -192,18 +202,20 @@ export const WormholeInstructionView = ({
                               <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
                                 <div className="flex items-center space-x-2 sm:ml-2">
                                   {parsedInstruction.accounts.named[key]
-                                    .isSigner ? (
+                                    ?.isSigner ? (
                                     <SignerTag />
-                                  ) : null}
+                                  ) : undefined}
                                   {parsedInstruction.accounts.named[key]
-                                    .isWritable ? (
+                                    ?.isWritable ? (
                                     <WritableTag />
-                                  ) : null}
+                                  ) : undefined}
                                 </div>
                                 <CopyText
-                                  text={parsedInstruction.accounts.named[
-                                    key
-                                  ].pubkey.toBase58()}
+                                  text={
+                                    parsedInstruction.accounts.named[
+                                      key
+                                    ]?.pubkey.toBase58() ?? ''
+                                  }
                                 />
                               </div>
                             </div>
@@ -216,9 +228,11 @@ export const WormholeInstructionView = ({
                                 key="priceAccountPubkey"
                                 mapping={priceAccountKeyToSymbolMapping}
                                 title="symbol"
-                                pubkey={parsedInstruction.accounts.named[
-                                  key
-                                ].pubkey.toBase58()}
+                                pubkey={
+                                  parsedInstruction.accounts.named[
+                                    key
+                                  ]?.pubkey.toBase58() ?? ''
+                                }
                               />
                             ) : key === 'productAccount' &&
                               parsedInstruction.accounts.named[
@@ -229,11 +243,13 @@ export const WormholeInstructionView = ({
                                 key="productAccountPubkey"
                                 mapping={productAccountKeyToSymbolMapping}
                                 title="symbol"
-                                pubkey={parsedInstruction.accounts.named[
-                                  key
-                                ].pubkey.toBase58()}
+                                pubkey={
+                                  parsedInstruction.accounts.named[
+                                    key
+                                  ]?.pubkey.toBase58() ?? ''
+                                }
                               />
-                            ) : null}
+                            ) : undefined}
                           </>
                         )
                       )}
@@ -249,10 +265,12 @@ export const WormholeInstructionView = ({
                               </div>
                               <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
                                 <div className="flex items-center space-x-2 sm:ml-2">
-                                  {accountMeta.isSigner ? <SignerTag /> : null}
+                                  {accountMeta.isSigner ? (
+                                    <SignerTag />
+                                  ) : undefined}
                                   {accountMeta.isWritable ? (
                                     <WritableTag />
-                                  ) : null}
+                                  ) : undefined}
                                 </div>
                                 <CopyText
                                   text={accountMeta.pubkey.toBase58()}

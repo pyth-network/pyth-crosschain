@@ -1,5 +1,12 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable no-console */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { EvmChain } from "../src/core/chains";
 import { loadHotWallet } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
@@ -55,7 +62,7 @@ async function main() {
         .toString()}`,
     );
   for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0].isMainnet())
+    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
       throw new Error("All chains must be either mainnet or testnet");
   }
 
@@ -67,7 +74,7 @@ async function main() {
   const payloads: Buffer[] = [];
   for (const contract of Object.values(DefaultStore.entropy_contracts)) {
     if (selectedChains.includes(contract.chain)) {
-      console.log("Creating payload for chain: ", contract.chain.getId());
+      console.log("Creating payload for chain:", contract.chain.getId());
       const pendingOwner = await contract.getPendingOwner();
       const adminPayload = contract.generateAcceptAdminPayload(pendingOwner);
       const ownerPayload =
@@ -77,12 +84,13 @@ async function main() {
     }
   }
 
-  console.log("Using vault at for proposal", vault.getId());
+  console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet ", wallet.publicKey.toBase58());
-  await vault.connect(wallet);
-  const proposal = await vault.proposeWormholeMessage(payloads);
-  console.log("Proposal address", proposal.address.toBase58());
+  console.log("Using wallet", wallet.publicKey.toBase58());
+  // eslint-disable-next-line @typescript-eslint/await-thenable
+  await vault?.connect(wallet);
+  const proposal = await vault?.proposeWormholeMessage(payloads);
+  console.log("Proposal address", proposal?.address.toBase58());
 }
 
 main();

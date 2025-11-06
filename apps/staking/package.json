@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22.14.0"
   },
   "scripts": {
     "build:vercel": "next build",
@@ -16,7 +16,7 @@
     "test:format": "prettier --check .",
     "test:lint": "eslint . --max-warnings 0",
     "test:types": "tsc",
-    "test:unit": "jest --selectProjects unit"
+    "test:unit": "jest"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "catalog:",
@@ -54,7 +54,7 @@
   "devDependencies": {
     "@axe-core/react": "catalog:",
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@svgr/webpack": "catalog:",
@@ -71,7 +71,6 @@
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:",
     "tailwindcss-react-aria-components": "catalog:",
-    "typescript": "catalog:",
     "vercel": "catalog:"
   }
 }

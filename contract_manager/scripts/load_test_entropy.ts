@@ -1,9 +1,17 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { EvmChain } from "../src/core/chains";
-import { toPrivateKey } from "../src/core/base";
+
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
+import { toPrivateKey } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -63,7 +71,7 @@ const ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+] as any;
 
 async function main() {
   const argv = await parser.argv;
@@ -88,7 +96,8 @@ async function main() {
       value: (fee * totalCount).toString(),
     },
   );
-  console.log("Submitted transaction ", result.transactionHash);
+  console.log("Submitted transaction", result.transactionHash);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

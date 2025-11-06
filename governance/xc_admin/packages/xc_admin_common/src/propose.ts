@@ -1,37 +1,38 @@
 import {
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-  SYSVAR_RENT_PUBKEY,
-  SYSVAR_CLOCK_PUBKEY,
   SystemProgram,
-  ConfirmOptions,
+  SYSVAR_RENT_PUBKEY,
+  type PublicKey,
+  type Transaction,
+  type TransactionInstruction,
+  SYSVAR_CLOCK_PUBKEY,
+  type ConfirmOptions,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import {
   createWormholeProgramInterface,
-  deriveWormholeBridgeDataKey,
   deriveEmitterSequenceKey,
   deriveFeeCollectorKey,
+  deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 import { getOpsKey } from "./multisig";
-import { PythCluster } from "@pythnetwork/client/lib/cluster";
-import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import SquadsMesh, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
-import { MultisigAccount } from "@sqds/mesh/lib/types";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
+import type { MultisigAccount } from "@sqds/mesh/lib/types";
 import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
 import {
-  TransactionBuilder,
   sendTransactions,
+  TransactionBuilder,
 } from "@pythnetwork/solana-utils";
 import {
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
-  PriorityFeeConfig,
+  type PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import type NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import type SquadsMesh from "@sqds/mesh";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
@@ -252,7 +253,7 @@ export class MultisigVault {
         proposalAddress,
         1 + i,
         this.wormholeAddress()!,
-        payloads[i],
+        payloads[i]!,
         messagePayer,
       );
       ixToSend.push(
@@ -435,7 +436,7 @@ export function batchIntoExecutorPayload(
     }
     const batch: TransactionInstruction[] = [];
     for (let k = i; k < j - 1; k += 1) {
-      batch.push(instructions[k]);
+      batch.push(instructions[k]!);
     }
     i = j - 1;
     batches.push(batch);

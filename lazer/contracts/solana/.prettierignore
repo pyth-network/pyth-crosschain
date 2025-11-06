@@ -5,3 +5,9 @@ node_modules
 dist
 build
 test-ledger
+dist/
+lib/
+build/
+node_modules/
+package.json
+tsconfig*.json

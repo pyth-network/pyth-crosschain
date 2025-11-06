@@ -4,7 +4,15 @@
     "noEmit": false,
     "incremental": false,
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "isolatedModules": false
   },
-  "exclude": ["node_modules", "dist", ".storybook", "**/*.stories.tsx"]
+  "exclude": [
+    ".storybook",
+    "node_modules",
+    "dist",
+    "examples/",
+    "**/*.stories.*",
+    "**/__tests__/*"
+  ]
 }

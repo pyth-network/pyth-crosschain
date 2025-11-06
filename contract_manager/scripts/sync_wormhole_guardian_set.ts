@@ -1,5 +1,9 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { toPrivateKey } from "../src/core/base";
 import {
   AptosWormholeContract,
   CosmWasmPriceFeedContract,
@@ -8,7 +12,6 @@ import {
   SuiWormholeContract,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
-import { toPrivateKey } from "../src/core/base";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Update the guardian set in stable networks. Usage: $0")
@@ -46,8 +49,11 @@ async function main() {
         await contract.syncMainnetGuardianSets(privateKey);
         index = await contract.getCurrentGuardianSetIndex();
         console.log("Guardian Index at End:", index);
-      } catch (e) {
-        console.error(`Error updating Guardianset for ${contract.getId()}`, e);
+      } catch (error) {
+        console.error(
+          `Error updating Guardianset for ${contract.getId()}`,
+          error,
+        );
       }
     }
   }
@@ -84,11 +90,15 @@ async function main() {
 
         await wormhole.syncMainnetGuardianSets(privateKey);
         console.log(`Updated Guardianset for ${contract.getId()}`);
-      } catch (e) {
-        console.error(`Error updating Guardianset for ${contract.getId()}`, e);
+      } catch (error) {
+        console.error(
+          `Error updating Guardianset for ${contract.getId()}`,
+          error,
+        );
       }
     }
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

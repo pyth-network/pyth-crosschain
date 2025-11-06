@@ -1,8 +1,13 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+import type { PriceFeedMetadata } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { HermesClient, PriceFeedMetadata } from "@pythnetwork/hermes-client";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { toPrivateKey } from "../src/core/base";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Update the set of price feeds in a network. Usage: $0")
@@ -66,7 +71,7 @@ async function main() {
       parsed: false,
     });
     console.log(
-      await contract.executeUpdatePriceFeed(
+      await contract?.executeUpdatePriceFeed(
         privateKey,
         updates.binary.data.map((update) =>
           encoding === "hex"
@@ -80,4 +85,5 @@ async function main() {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

@@ -1,10 +1,18 @@
-import { HexString } from "@pythnetwork/hermes-client";
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import fs from "node:fs";
+
+import type { HexString } from "@pythnetwork/hermes-client";
 import Joi from "joi";
+import type { Logger } from "pino";
 import YAML from "yaml";
-import fs from "fs";
-import { Logger } from "pino";
-import { DurationInSeconds, PctNumber, removeLeading0x } from "./utils";
-import { PriceInfo } from "./interface";
+
+import type { PriceInfo } from "./interface.js";
+import type { DurationInSeconds, PctNumber } from "./utils.js";
+import { removeLeading0x } from "./utils.js";
 
 const PriceConfigFileSchema: Joi.Schema = Joi.array()
   .items(
@@ -49,7 +57,7 @@ export type PriceConfig = {
 };
 
 export function readPriceConfigFile(path: string): PriceConfig[] {
-  const priceConfigs = YAML.parse(fs.readFileSync(path, "utf-8"));
+  const priceConfigs = YAML.parse(fs.readFileSync(path, "utf8"));
   const validationResult = PriceConfigFileSchema.validate(priceConfigs);
 
   if (validationResult.error !== undefined) {
@@ -85,7 +93,7 @@ export enum UpdateCondition {
 /**
  * Checks whether on-chain price needs to be updated with the latest pyth price information.
  *
- * @param priceConfig Config of the price feed to check
+ * @param priceConfig - Config of the price feed to check
  * @returns True if the on-chain price needs to be updated.
  */
 export function shouldUpdate(

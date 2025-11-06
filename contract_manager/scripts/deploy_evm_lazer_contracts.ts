@@ -1,3 +1,13 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable unicorn/no-process-exit */
+/* eslint-disable n/no-process-exit */
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
+
 /**
  * PythLazer EVM Contract Deployment and Management Script
  *
@@ -38,14 +48,17 @@
  * - All operations use the chain's RPC URL from the DefaultStore
  */
 
+import { execSync } from "node:child_process";
+import path from "node:path";
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { execSync } from "child_process";
-import { join } from "path";
-import { DefaultStore } from "../src/node/utils/store";
+
+import type { PrivateKey } from "../src/core/base";
+import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { EvmLazerContract } from "../src/core/contracts/evm";
-import { toPrivateKey, PrivateKey } from "../src/core/base";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -115,10 +128,10 @@ const parser = yargs(hideBin(process.argv))
 
 /**
  * Deploys the PythLazer contract using forge script
- * @param chain The EVM chain to deploy to
- * @param privateKey The private key for deployment
- * @param verify Whether to verify the contract
- * @param etherscanApiKey The Etherscan API key for verification
+ * @param chain - The EVM chain to deploy to
+ * @param privateKey - The private key for deployment
+ * @param verify - Whether to verify the contract
+ * @param etherscanApiKey - The Etherscan API key for verification
  * @returns The deployed contract address
  */
 async function deployPythLazerContract(
@@ -127,7 +140,7 @@ async function deployPythLazerContract(
   verify: boolean,
   etherscanApiKey?: string,
 ): Promise<string> {
-  const lazerContractsDir = join(__dirname, "../../lazer/contracts/evm");
+  const lazerContractsDir = path.resolve("../../lazer/contracts/evm");
   const rpcUrl = chain.rpcUrl;
 
   console.log(`Deploying PythLazer contract to ${chain.getId()}...`);
@@ -153,7 +166,7 @@ async function deployPythLazerContract(
     console.log(output);
 
     // Extract proxy address from output
-    const proxyMatch = output.match(/Deployed proxy to: (0x[a-fA-F0-9]{40})/);
+    const proxyMatch = /Deployed proxy to: (0x[a-fA-F0-9]{40})/.exec(output);
     if (!proxyMatch) {
       throw new Error("Could not extract proxy address from deployment output");
     }
@@ -161,7 +174,7 @@ async function deployPythLazerContract(
     const proxyAddress = proxyMatch[1];
     console.log(`\nPythLazer proxy deployed at: ${proxyAddress}`);
 
-    return proxyAddress;
+    return proxyAddress ?? "";
   } catch (error) {
     console.error("Deployment failed:", error);
     throw error;
@@ -170,8 +183,8 @@ async function deployPythLazerContract(
 
 /**
  * Updates the EvmLazerContracts.json file with the new deployment
- * @param chain The chain where the contract was deployed
- * @param address The deployed contract address
+ * @param chain - The chain where the contract was deployed
+ * @param address - The deployed contract address
  */
 function updateContractsFile(chain: EvmChain, address: string): void {
   console.log(`Updating contracts file for ${chain.getId()}`);
@@ -186,8 +199,8 @@ function updateContractsFile(chain: EvmChain, address: string): void {
 
 /**
  * Gets or creates an EvmLazerContract instance
- * @param chain The EVM chain
- * @param address The contract address
+ * @param chain - The EVM chain
+ * @param address - The contract address
  * @returns The EvmLazerContract instance
  */
 function getOrCreateLazerContract(
@@ -199,11 +212,11 @@ function getOrCreateLazerContract(
 
 /**
  * Updates the trusted signer for a PythLazer contract
- * @param chain The EVM chain
- * @param contractAddress The contract address
- * @param trustedSigner The trusted signer address
- * @param expiresAt The expiration timestamp
- * @param privateKey The private key for the transaction
+ * @param chain - The EVM chain
+ * @param contractAddress - The contract address
+ * @param trustedSigner - The trusted signer address
+ * @param expiresAt - The expiration timestamp
+ * @param privateKey - The private key for the transaction
  */
 async function updateTrustedSigner(
   chain: EvmChain,
@@ -228,6 +241,7 @@ function findLazerContract(chain: EvmChain): EvmLazerContract | undefined {
       return contract;
     }
   }
+  return;
 }
 
 export async function findOrDeployPythLazerContract(

@@ -1,4 +1,9 @@
-import { Commitment, Connection, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  type Commitment,
+  Connection,
+  Keypair,
+  PublicKey,
+} from "@solana/web3.js";
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID } from "@sqds/mesh";
 import * as fs from "fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
@@ -9,7 +14,7 @@ import {
 } from "@pythnetwork/xc-admin-common";
 import {
   getPythClusterApiUrl,
-  PythCluster,
+  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
@@ -42,7 +47,7 @@ async function run() {
     // If we have previously cancelled because the proposal was failing, don't attempt
     if (proposal.cancelled.length == 0) {
       await executeProposal(proposal, squad, CLUSTER, COMMITMENT, {
-        computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS,
+        computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS!,
       });
     } else {
       console.log("Skipping: ", proposal.publicKey.toBase58());

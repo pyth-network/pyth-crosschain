@@ -2,8 +2,9 @@
   "name": "message_buffer",
   "version": "0.1.0",
   "private": "true",
+  "type": "module",
   "scripts": {
-    "init-buffer": "pnpm exec ts-node scripts/setup_message_buffer.ts",
+    "init-buffer": "ts-node scripts/setup_message_buffer.ts",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
   },
@@ -20,7 +21,9 @@
     "chai": "^4.3.4",
     "mocha": "^9.0.3",
     "prettier": "catalog:",
-    "ts-mocha": "^10.0.0",
-    "typescript": "^4.3.5"
+    "ts-mocha": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

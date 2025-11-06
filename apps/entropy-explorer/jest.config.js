@@ -1,1 +1,4 @@
-export { nextjs as default } from "@cprussin/jest-config/next";
+import { defineJestConfigForNextJs } from "@pythnetwork/jest-config/define-next-config";
+("@pythnetwork/jest-config");
+
+export default defineJestConfigForNextJs();

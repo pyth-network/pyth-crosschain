@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@pythnetwork/hermes-client": "workspace:*",
+    "@pythnetwork/jest-config": "workspace:",
     "@pythnetwork/price-service-sdk": "workspace:*",
     "@pythnetwork/pyth-ton-js": "workspace:*",
     "@pythnetwork/xc-admin-common": "workspace:*",
@@ -26,7 +27,9 @@
     "jest": "^29.7.0",
     "prettier": "catalog:",
     "ts-jest": "^29.2.0",
-    "ts-node": "catalog:",
-    "typescript": "catalog:"
+    "ts-node": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

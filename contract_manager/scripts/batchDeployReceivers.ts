@@ -1,21 +1,35 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable no-console */
+
 /**
  * This script deploys the receiver contracts on all the chains and creates a governance proposal to update the
  * wormhole addresses to the deployed receiver contracts.
  */
 
+import * as fs from "node:fs";
+
+import { CHAINS } from "@pythnetwork/xc-admin-common";
+import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  DefaultStore,
-  EvmChain,
-  loadHotWallet,
-  EvmWormholeContract,
-} from "@pythnetwork/contract-manager";
-import Web3 from "web3";
-import { CHAINS } from "@pythnetwork/xc-admin-common";
-import * as fs from "fs";
 
-import { getDefaultConfig } from "../../target_chains/ethereum/contracts/scripts/contractManagerConfig";
+import { getDefaultConfig } from "../../target_chains/ethereum/contracts/scripts/contractManagerConfig.js";
+import type { PrivateKey } from "../src/core/base.js";
+import { EvmChain } from "../src/core/chains.js";
+import { EvmWormholeContract } from "../src/core/contracts/evm.js";
+import { loadHotWallet } from "../src/node/utils/governance.js";
+import { DefaultStore } from "../src/node/utils/store.js";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -63,15 +77,13 @@ async function memoize(
 async function main() {
   const argv = await parser.argv;
   const privateKey = argv["private-key"];
-  const network = argv["network"];
+  const network = argv.network;
 
-  const setupInfo = await import(argv["contract"] + "/ReceiverSetup.json");
+  const setupInfo = await import(argv.contract + "/ReceiverSetup.json");
   const implementationInfo = await import(
-    argv["contract"] + "/ReceiverImplementation.json"
+    argv.contract + "/ReceiverImplementation.json"
   );
-  const receiverInfo = await import(
-    argv["contract"] + "/WormholeReceiver.json"
-  );
+  const receiverInfo = await import(argv.contract + "/WormholeReceiver.json");
 
   const payloads: Buffer[] = [];
   for (const chain of Object.values(DefaultStore.chains)) {
@@ -88,14 +100,14 @@ async function main() {
       console.log(chain.getId());
       const address = await memoize(chain.getId(), async () => {
         const setupAddress = await chain.deploy(
-          privateKey,
+          privateKey as PrivateKey,
           setupInfo.abi,
           setupInfo.bytecode,
           [],
         );
         console.log("setupAddress", setupAddress);
         const implementationAddress = await chain.deploy(
-          privateKey,
+          privateKey as PrivateKey,
           implementationInfo.abi,
           implementationInfo.bytecode,
           [],
@@ -115,14 +127,14 @@ async function main() {
 
         // deploy proxy
         const receiverAddress = await chain.deploy(
-          privateKey,
+          privateKey as PrivateKey,
           receiverInfo.abi,
           receiverInfo.bytecode,
           [setupAddress, initData],
         );
         const contract = new EvmWormholeContract(chain, receiverAddress);
         console.log("receiverAddress", receiverAddress);
-        await contract.syncMainnetGuardianSets(privateKey);
+        await contract.syncMainnetGuardianSets(privateKey as PrivateKey);
         console.log("synced");
         return contract.address;
       });
@@ -132,15 +144,13 @@ async function main() {
       payloads.push(payload);
     }
   }
-  let vaultName;
-  if (network === "mainnet") {
-    vaultName = "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj";
-  } else {
-    vaultName = "devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3";
-  }
+  const vaultName =
+    network === "mainnet"
+      ? "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
+      : "devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3";
   const vault = DefaultStore.vaults[vaultName];
-  vault.connect(await loadHotWallet(argv["ops-wallet"]));
-  await vault.proposeWormholeMessage(payloads);
+  vault?.connect(await loadHotWallet(argv["ops-wallet"]));
+  await vault?.proposeWormholeMessage(payloads);
 }
 
 main();

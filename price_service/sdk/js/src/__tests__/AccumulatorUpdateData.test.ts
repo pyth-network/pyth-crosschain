@@ -61,8 +61,8 @@ describe("Test parse accumulator update", () => {
           2,
           1,
         ),
-      ).updates.length,
-    ).toBe(0);
+      ).updates,
+    ).toHaveLength(0);
 
     expect(
       parseAccumulatorUpdateData(
@@ -71,8 +71,8 @@ describe("Test parse accumulator update", () => {
           0,
           5,
         ),
-      ).updates.length,
-    ).toBe(3);
+      ).updates,
+    ).toHaveLength(3);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { vaa, updates } = parseAccumulatorUpdateData(

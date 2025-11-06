@@ -5,7 +5,7 @@ import {
   UpgradeContract256Bit,
 } from "./UpgradeContract";
 import {
-  PythGovernanceAction,
+  type PythGovernanceAction,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
 import {

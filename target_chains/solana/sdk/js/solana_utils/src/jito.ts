@@ -1,8 +1,10 @@
-import { dummyLogger, Logger } from "ts-log";
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { Wallet } from "@coral-xyz/anchor";
+import type { Signer } from "@solana/web3.js";
 import {
   PublicKey,
-  Signer,
   SystemProgram,
   TransactionInstruction,
   VersionedTransaction,
@@ -10,6 +12,8 @@ import {
 import bs58 from "bs58";
 import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
+import type { Logger } from "ts-log";
+import { dummyLogger } from "ts-log";
 
 export const TIP_ACCOUNTS = [
   "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe",
@@ -24,7 +28,7 @@ export const TIP_ACCOUNTS = [
 
 export function getRandomTipAccount(): PublicKey {
   const randomInt = Math.floor(Math.random() * TIP_ACCOUNTS.length);
-  return new PublicKey(TIP_ACCOUNTS[randomInt]);
+  return new PublicKey(TIP_ACCOUNTS[randomInt] ?? "");
 }
 
 export function buildJitoTipInstruction(
@@ -59,7 +63,7 @@ export async function sendTransactionsJito(
     throw new Error("No searcher clients provided");
   }
 
-  const maxRetryTimeMs = options.maxRetryTimeMs || 60000; // Default to 60 seconds
+  const maxRetryTimeMs = options.maxRetryTimeMs || 60_000; // Default to 60 seconds
   const delayBetweenCyclesMs = options.delayBetweenCyclesMs || 1000; // Default to 1 second
 
   const startTime = Date.now();
@@ -79,32 +83,31 @@ export async function sendTransactionsJito(
   }
 
   const firstTransactionSignature = bs58.encode(
-    signedTransactions[0].signatures[0],
+    signedTransactions[0]?.signatures[0]!,
   );
 
   const bundle = new Bundle(signedTransactions, 2);
 
-  let lastError: Error | null = null;
+  let lastError: Error | null | undefined;
   let totalAttempts = 0;
 
   while (Date.now() - startTime < maxRetryTimeMs) {
     // Try all clients in this cycle
-    for (let i = 0; i < clients.length; i++) {
-      const currentClient = clients[i];
+    for (const [i, currentClient] of clients.entries()) {
       totalAttempts++;
 
       try {
         await currentClient.sendBundle(bundle);
         logger.info(
           { clientIndex: i, totalAttempts },
-          `Successfully sent bundle to Jito client after ${totalAttempts} attempts`,
+          `Successfully sent bundle to Jito client after ${totalAttempts.toString()} attempts`,
         );
         return firstTransactionSignature;
-      } catch (err: any) {
-        lastError = err;
+      } catch (error: unknown) {
+        lastError = error as Error;
         logger.error(
-          { clientIndex: i, totalAttempts, err: err.message },
-          `Attempt ${totalAttempts}: Error sending bundle to Jito client ${i}`,
+          { clientIndex: i, totalAttempts, err: lastError.message },
+          `Attempt ${totalAttempts.toString()}: Error sending bundle to Jito client ${i.toString()}`,
         );
       }
 
@@ -122,7 +125,7 @@ export async function sendTransactionsJito(
   }
 
   const totalTimeMs = Date.now() - startTime;
-  const errorMsg = `Failed to send transactions via JITO after ${totalAttempts} attempts over ${totalTimeMs}ms (max: ${maxRetryTimeMs}ms)`;
+  const errorMsg = `Failed to send transactions via JITO after ${totalAttempts.toString()} attempts over ${totalTimeMs.toString()}ms (max: ${maxRetryTimeMs.toString()}ms)`;
 
   logger.error(
     {

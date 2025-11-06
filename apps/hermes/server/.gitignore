@@ -5,3 +5,5 @@
 src/network/p2p.pb.go
 src/network/p2p.proto
 tools/
+
+dist/

@@ -1,5 +1,5 @@
-import { PythCluster } from "@pythnetwork/client/lib/cluster";
-import { Cluster } from "@solana/web3.js";
+import { type PythCluster } from "@pythnetwork/client/lib/cluster";
+import { type Cluster } from "@solana/web3.js";
 
 /**
  * Return whether the cluster is governed remotely or not. For example Pythnet is governed remotely by a mainnet multisig.

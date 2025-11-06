@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react'
-import { MultisigHookData, useMultisig } from '../hooks/useMultisig'
+import { type MultisigHookData, useMultisig } from '../hooks/useMultisig'
 
 const MultisigContext = createContext<MultisigHookData | undefined>(undefined)
 

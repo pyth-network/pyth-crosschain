@@ -6,7 +6,7 @@
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
-  "main": "src/index.ts",
+  "main": "./dist/index.cjs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
@@ -15,10 +15,11 @@
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "node lib/index.js",
+    "build": "ts-duality --noEsm",
+    "start": "node dist/index.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.10.15",
@@ -31,7 +32,18 @@
     "@sqds/mesh": "^1.0.6",
     "ts-node": "catalog:"
   },
-  "devDependencies": {
-    "typescript": "catalog:"
-  }
+  "devDependencies": {},
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.ts"
 }

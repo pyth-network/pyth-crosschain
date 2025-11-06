@@ -1,9 +1,25 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-dynamic-delete */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { AnchorProvider, Program } from '@coral-xyz/anchor'
+import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
+import CopyIcon from '@images/icons/copy.inline.svg'
 import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
 } from '@pythnetwork/client'
-import { PythOracle } from '@pythnetwork/client/lib/anchor'
+import type { PythOracle } from '@pythnetwork/client/lib/anchor'
+import {
+  BPF_UPGRADABLE_LOADER,
+  getMultisigCluster,
+  isRemoteCluster,
+  mapKey,
+  UPGRADE_MULTISIG,
+  MultisigVault,
+} from '@pythnetwork/xc-admin-common'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey } from '@solana/web3.js'
@@ -16,27 +32,18 @@ import {
 import copy from 'copy-to-clipboard'
 import { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import {
-  BPF_UPGRADABLE_LOADER,
-  getMultisigCluster,
-  isRemoteCluster,
-  mapKey,
-  UPGRADE_MULTISIG,
-  MultisigVault,
-} from '@pythnetwork/xc-admin-common'
+
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
-import CopyIcon from '@images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
+import EditButton from '../EditButton'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
-import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
-import { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
 
-interface UpdatePermissionsProps {
+type UpdatePermissionsProps = {
   account: PermissionAccount
   pubkey: string
   newPubkey?: string
@@ -70,10 +77,16 @@ const defaultColumns = [
       return (
         <>
           <div
+            aria-label="copy public key"
             className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
             onClick={() => {
               copy(pubkey)
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') copy(pubkey)
+            }}
+            role="button"
+            tabIndex={0}
           >
             <span className="mr-2 hidden lg:block">{pubkey}</span>
             <span className="mr-2 lg:hidden">
@@ -93,9 +106,19 @@ type PermissionAccount =
   | 'Data Curation Authority'
   | 'Security Authority'
 
-interface PermissionAccountInfo {
+type PermissionAccountInfo = {
   prev: string
   new: string
+}
+
+// check if pubkey is valid
+const isValidPubkey = (pubkey: string) => {
+  try {
+    new PublicKey(pubkey)
+    return true
+  } catch {
+    return false
+  }
 }
 
 const UpdatePermissions = () => {
@@ -165,11 +188,10 @@ const UpdatePermissions = () => {
       },
     }
     if (pubkeyChanges) {
-      Object.keys(pubkeyChanges).forEach((key) => {
-        newPubkeyChanges[key as PermissionAccount] = pubkeyChanges[
-          key as PermissionAccount
-        ] as PermissionAccountInfo
-      })
+      for (const key of Object.keys(pubkeyChanges)) {
+        newPubkeyChanges[key as PermissionAccount] =
+          pubkeyChanges[key as PermissionAccount]
+      }
     }
 
     return newPubkeyChanges
@@ -203,16 +225,6 @@ const UpdatePermissions = () => {
 
   const closeModal = () => {
     setIsModalOpen(false)
-  }
-
-  // check if pubkey is valid
-  const isValidPubkey = (pubkey: string) => {
-    try {
-      new PublicKey(pubkey)
-      return true
-    } catch (e) {
-      return false
-    }
   }
 
   const handleEditPubkey = (
@@ -273,16 +285,18 @@ const UpdatePermissions = () => {
                 UPGRADE_MULTISIG[getMultisigCluster(cluster)]
               )
 
-              const proposalPubkey = (
-                await vault.proposeInstructions([instruction], cluster)
-              )[0]
+              const [proposalPubkey] = await vault.proposeInstructions(
+                [instruction],
+                cluster
+              )
+
               toast.success(
-                `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
+                `Proposal sent! 🚀 Proposal Pubkey: ${JSON.stringify(proposalPubkey)}`
               )
               setIsSendProposalButtonLoading(false)
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (e: any) {
-              toast.error(capitalizeFirstLetter(e.message))
+            } catch (error: any) {
+              toast.error(capitalizeFirstLetter(error.message))
               setIsSendProposalButtonLoading(false)
             }
           }
@@ -318,19 +332,19 @@ const UpdatePermissions = () => {
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
         {Object.keys(changes).length > 0 ? (
-          !connected ? (
-            <div className="flex justify-center">
-              <WalletModalButton className="action-btn text-base" />
-            </div>
-          ) : (
+          connected ? (
             <button
               className="action-btn text-base"
               onClick={handleSendProposalButtonClick}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>
+          ) : (
+            <div className="flex justify-center">
+              <WalletModalButton className="action-btn text-base" />
+            </div>
           )
-        ) : null}
+        ) : undefined}
       </>
     )
   }
@@ -392,7 +406,7 @@ const UpdatePermissions = () => {
                           }
                         >
                           {header.isPlaceholder
-                            ? null
+                            ? undefined
                             : flexRender(
                                 header.column.columnDef.header,
                                 header.getContext()
@@ -408,13 +422,13 @@ const UpdatePermissions = () => {
                       {row.getVisibleCells().map((cell) => (
                         <td
                           key={cell.id}
-                          onBlur={(e) =>
+                          onBlur={(e) => {
                             handleEditPubkey(
                               e,
                               cell.row.original.account,
                               cell.row.original.pubkey
                             )
-                          }
+                          }}
                           contentEditable={
                             cell.column.id === 'newPubkey' && editable
                               ? true

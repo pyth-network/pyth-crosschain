@@ -1,6 +1,6 @@
 import {
   AccountType,
-  PythCluster,
+  type PythCluster,
   getPythProgramKeyForCluster,
   parseBaseData,
 } from '@pythnetwork/client'
@@ -11,23 +11,25 @@ import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 import {
   ProgramType,
   getConfig,
-  RawConfig,
-  MappingRawConfig,
-  ProductRawConfig,
-  PriceRawConfig,
+  type RawConfig,
+  type MappingRawConfig,
+  type ProductRawConfig,
+  type PriceRawConfig,
 } from '@pythnetwork/xc-admin-common'
 
 interface PythHookData {
   isLoading: boolean
   rawConfig: RawConfig
-  connection?: Connection
+  connection?: Connection | undefined
 }
 
 export const usePyth = (): PythHookData => {
   const connectionRef = useRef<Connection | undefined>(undefined)
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
-  const [rawConfig, setRawConfig] = useState<RawConfig>({ mappingAccounts: [] })
+  const [rawConfig, setRawConfig] = useState<RawConfig>({
+    mappingAccounts: [],
+  })
   const [urlsIndex, setUrlsIndex] = useState(0)
 
   useEffect(() => {
@@ -41,9 +43,9 @@ export const usePyth = (): PythHookData => {
   useEffect(() => {
     let cancelled = false
     const urls = pythClusterApiUrls(cluster)
-    const connection = new Connection(urls[urlsIndex], {
+    const connection = new Connection(urls[urlsIndex] ?? '', {
       commitment: 'confirmed',
-      wsEndpoint: deriveWsUrl(urls[urlsIndex]),
+      wsEndpoint: deriveWsUrl(urls[urlsIndex] ?? ''),
     })
 
     connectionRef.current = connection

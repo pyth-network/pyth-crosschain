@@ -1,25 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HermesClient } from "@pythnetwork/hermes-client";
-import {
-  ChainPriceListener,
-  IPricePusher,
-  PriceInfo,
-  PriceItem,
-} from "../interface";
-import { addLeading0x, DurationInSeconds } from "../utils";
-import { Logger } from "pino";
-import {
-  Address,
-  ContractProvider,
-  OpenedContract,
-  Sender,
-  TonClient,
-  WalletContractV4,
-} from "@ton/ton";
-import { keyPairFromSeed } from "@ton/crypto";
 import {
   PythContract,
   calculateUpdatePriceFeedsFee,
 } from "@pythnetwork/pyth-ton-js";
+import { keyPairFromSeed } from "@ton/crypto";
+import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
+import { Address, TonClient, WalletContractV4 } from "@ton/ton";
+import type { Logger } from "pino";
+
+import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+import { addLeading0x } from "../utils.js";
 
 export class TonPriceListener extends ChainPriceListener {
   private contract: OpenedContract<PythContract>;
@@ -45,9 +38,9 @@ export class TonPriceListener extends ChainPriceListener {
       const priceInfo = await this.contract.getPriceUnsafe(formattedPriceId);
 
       this.logger.debug(
-        `Polled a TON on chain price for feed ${this.priceIdToAlias.get(
-          priceId,
-        )} (${priceId}).`,
+        `Polled a TON on chain price for feed ${
+          this.priceIdToAlias.get(priceId) ?? ""
+        } (${priceId}).`,
       );
 
       return {
@@ -55,8 +48,11 @@ export class TonPriceListener extends ChainPriceListener {
         price: priceInfo.price.toString(),
         publishTime: priceInfo.publishTime,
       };
-    } catch (err) {
-      this.logger.error({ err, priceId }, `Polling on-chain price failed.`);
+    } catch (error) {
+      this.logger.error(
+        { err: error, priceId },
+        `Polling on-chain price failed.`,
+      );
       return undefined;
     }
   }
@@ -85,11 +81,8 @@ export class TonPricePusher implements IPricePusher {
     this.sender = provider.sender(keyPair.secretKey);
   }
 
-  async updatePriceFeed(
-    priceIds: string[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    pubTimesToPush: number[],
-  ): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
     if (priceIds.length === 0) {
       return;
     }
@@ -101,8 +94,8 @@ export class TonPricePusher implements IPricePusher {
         ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (err: any) {
-      this.logger.error(err, "getPriceFeedsUpdateData failed");
+    } catch (error: any) {
+      this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
 
@@ -122,8 +115,8 @@ export class TonPricePusher implements IPricePusher {
       }
 
       this.logger.info("updatePriceFeed successful");
-    } catch (err: any) {
-      this.logger.error(err, "updatePriceFeed failed");
+    } catch (error: any) {
+      this.logger.error(error, "updatePriceFeed failed");
     }
   }
 }

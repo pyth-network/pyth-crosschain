@@ -4,9 +4,21 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.tsx"
+    ".": {
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf dist/",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:format": "prettier --check .",
@@ -18,7 +30,7 @@
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "catalog:",
@@ -26,7 +38,12 @@
     "eslint": "catalog:",
     "jest": "catalog:",
     "prettier": "catalog:",
-    "react": "catalog:",
-    "typescript": "catalog:"
-  }
+    "react": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.cjs"
 }

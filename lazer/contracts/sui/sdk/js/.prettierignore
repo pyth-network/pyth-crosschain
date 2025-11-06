@@ -1,3 +1,9 @@
 .turbo/
 node_modules/
 dist/
+dist/
+lib/
+build/
+node_modules/
+package.json
+tsconfig*.json

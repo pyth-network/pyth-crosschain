@@ -4,33 +4,314 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22.14.0"
   },
   "exports": {
-    "./*": {
-      "types": "./dist/esm/*/index.d.ts",
-      "default": "./dist/esm/*/index.jsx"
+    "./AppShell/amplitude": {
+      "types": "./dist/AppShell/amplitude.d.ts",
+      "default": "./dist/AppShell/amplitude.mjs"
     },
-    "./useData": {
-      "types": "./dist/esm/useData/index.d.ts",
-      "default": "./dist/esm/useData/index.js"
+    "./AppShell/body-providers": {
+      "types": "./dist/AppShell/body-providers.d.ts",
+      "default": "./dist/AppShell/body-providers.mjs"
+    },
+    "./AppShell/fonts": {
+      "types": "./dist/AppShell/fonts.d.ts",
+      "default": "./dist/AppShell/fonts.mjs"
+    },
+    "./AppShell/html-with-lang": {
+      "types": "./dist/AppShell/html-with-lang.d.ts",
+      "default": "./dist/AppShell/html-with-lang.mjs"
+    },
+    "./AppShell/i18n-provider": {
+      "types": "./dist/AppShell/i18n-provider.d.ts",
+      "default": "./dist/AppShell/i18n-provider.mjs"
+    },
+    "./AppShell": {
+      "types": "./dist/AppShell/index.d.ts",
+      "default": "./dist/AppShell/index.mjs"
+    },
+    "./AppShell/report-accessibility": {
+      "types": "./dist/AppShell/report-accessibility.d.ts",
+      "default": "./dist/AppShell/report-accessibility.mjs"
+    },
+    "./AppShell/router-provider": {
+      "types": "./dist/AppShell/router-provider.d.ts",
+      "default": "./dist/AppShell/router-provider.mjs"
+    },
+    "./AppShell/tabs": {
+      "types": "./dist/AppShell/tabs.d.ts",
+      "default": "./dist/AppShell/tabs.mjs"
+    },
+    "./Badge": {
+      "types": "./dist/Badge/index.d.ts",
+      "default": "./dist/Badge/index.mjs"
+    },
+    "./Breadcrumbs": {
+      "types": "./dist/Breadcrumbs/index.d.ts",
+      "default": "./dist/Breadcrumbs/index.mjs"
+    },
+    "./Button": {
+      "types": "./dist/Button/index.d.ts",
+      "default": "./dist/Button/index.mjs"
+    },
+    "./Card": {
+      "types": "./dist/Card/index.d.ts",
+      "default": "./dist/Card/index.mjs"
+    },
+    "./CopyButton": {
+      "types": "./dist/CopyButton/index.d.ts",
+      "default": "./dist/CopyButton/index.mjs"
+    },
+    "./CrossfadeTabPanels": {
+      "types": "./dist/CrossfadeTabPanels/index.d.ts",
+      "default": "./dist/CrossfadeTabPanels/index.mjs"
+    },
+    "./DropdownCaretDown": {
+      "types": "./dist/DropdownCaretDown/index.d.ts",
+      "default": "./dist/DropdownCaretDown/index.mjs"
+    },
+    "./EntityList": {
+      "types": "./dist/EntityList/index.d.ts",
+      "default": "./dist/EntityList/index.mjs"
+    },
+    "./ErrorPage": {
+      "types": "./dist/ErrorPage/index.d.ts",
+      "default": "./dist/ErrorPage/index.mjs"
+    },
+    "./Footer": {
+      "types": "./dist/Footer/index.d.ts",
+      "default": "./dist/Footer/index.mjs"
+    },
+    "./Header": {
+      "types": "./dist/Header/index.d.ts",
+      "default": "./dist/Header/index.mjs"
+    },
+    "./Header/theme-switch": {
+      "types": "./dist/Header/theme-switch.d.ts",
+      "default": "./dist/Header/theme-switch.mjs"
+    },
+    "./InfoBox": {
+      "types": "./dist/InfoBox/index.d.ts",
+      "default": "./dist/InfoBox/index.mjs"
+    },
+    "./Link": {
+      "types": "./dist/Link/index.d.ts",
+      "default": "./dist/Link/index.mjs"
+    },
+    "./MainNavTabs": {
+      "types": "./dist/MainNavTabs/index.d.ts",
+      "default": "./dist/MainNavTabs/index.mjs"
+    },
+    "./Meter": {
+      "types": "./dist/Meter/index.d.ts",
+      "default": "./dist/Meter/index.mjs"
+    },
+    "./MobileNavTabs": {
+      "types": "./dist/MobileNavTabs/index.d.ts",
+      "default": "./dist/MobileNavTabs/index.mjs"
+    },
+    "./ModalDialog": {
+      "types": "./dist/ModalDialog/index.d.ts",
+      "default": "./dist/ModalDialog/index.mjs"
+    },
+    "./NoResults": {
+      "types": "./dist/NoResults/index.d.ts",
+      "default": "./dist/NoResults/index.mjs"
+    },
+    "./NotFoundPage": {
+      "types": "./dist/NotFoundPage/index.d.ts",
+      "default": "./dist/NotFoundPage/index.mjs"
+    },
+    "./Paginator": {
+      "types": "./dist/Paginator/index.d.ts",
+      "default": "./dist/Paginator/index.mjs"
+    },
+    "./SearchButton": {
+      "types": "./dist/SearchButton/index.d.ts",
+      "default": "./dist/SearchButton/index.mjs"
+    },
+    "./SearchInput": {
+      "types": "./dist/SearchInput/index.d.ts",
+      "default": "./dist/SearchInput/index.mjs"
+    },
+    "./Select": {
+      "types": "./dist/Select/index.d.ts",
+      "default": "./dist/Select/index.mjs"
+    },
+    "./SingleToggleGroup": {
+      "types": "./dist/SingleToggleGroup/index.d.ts",
+      "default": "./dist/SingleToggleGroup/index.mjs"
+    },
+    "./Skeleton": {
+      "types": "./dist/Skeleton/index.d.ts",
+      "default": "./dist/Skeleton/index.mjs"
+    },
+    "./Spinner": {
+      "types": "./dist/Spinner/index.d.ts",
+      "default": "./dist/Spinner/index.mjs"
+    },
+    "./StatCard": {
+      "types": "./dist/StatCard/index.d.ts",
+      "default": "./dist/StatCard/index.mjs"
+    },
+    "./Status": {
+      "types": "./dist/Status/index.d.ts",
+      "default": "./dist/Status/index.mjs"
+    },
+    "./Switch": {
+      "types": "./dist/Switch/index.d.ts",
+      "default": "./dist/Switch/index.mjs"
+    },
+    "./SymbolPairTag": {
+      "types": "./dist/SymbolPairTag/index.d.ts",
+      "default": "./dist/SymbolPairTag/index.mjs"
+    },
+    "./TabList": {
+      "types": "./dist/TabList/index.d.ts",
+      "default": "./dist/TabList/index.mjs"
+    },
+    "./Table": {
+      "types": "./dist/Table/index.d.ts",
+      "default": "./dist/Table/index.mjs"
+    },
+    "./TableGrid/dummy-row-data": {
+      "types": "./dist/TableGrid/dummy-row-data.d.ts",
+      "default": "./dist/TableGrid/dummy-row-data.mjs"
+    },
+    "./TableGrid": {
+      "types": "./dist/TableGrid/index.d.ts",
+      "default": "./dist/TableGrid/index.mjs"
+    },
+    "./TableGrid/table-grid-props": {
+      "types": "./dist/TableGrid/table-grid-props.d.ts",
+      "default": "./dist/TableGrid/table-grid-props.mjs"
+    },
+    "./Term": {
+      "types": "./dist/Term/index.d.ts",
+      "default": "./dist/Term/index.mjs"
+    },
+    "./Virtualizer": {
+      "types": "./dist/Virtualizer/index.d.ts",
+      "default": "./dist/Virtualizer/index.mjs"
+    },
+    "./compose-providers": {
+      "types": "./dist/compose-providers.d.ts",
+      "default": "./dist/compose-providers.mjs"
+    },
+    "./omit-keys": {
+      "types": "./dist/omit-keys.d.ts",
+      "default": "./dist/omit-keys.mjs"
+    },
+    "./overlay-visible-context": {
+      "types": "./dist/overlay-visible-context.d.ts",
+      "default": "./dist/overlay-visible-context.mjs"
+    },
+    "./social-links": {
+      "types": "./dist/social-links.d.ts",
+      "default": "./dist/social-links.mjs"
+    },
+    "./unstyled/Breadcrumbs": {
+      "types": "./dist/unstyled/Breadcrumbs/index.d.ts",
+      "default": "./dist/unstyled/Breadcrumbs/index.mjs"
+    },
+    "./unstyled/Button": {
+      "types": "./dist/unstyled/Button/index.d.ts",
+      "default": "./dist/unstyled/Button/index.mjs"
+    },
+    "./unstyled/Dialog": {
+      "types": "./dist/unstyled/Dialog/index.d.ts",
+      "default": "./dist/unstyled/Dialog/index.mjs"
+    },
+    "./unstyled/GridList": {
+      "types": "./dist/unstyled/GridList/index.d.ts",
+      "default": "./dist/unstyled/GridList/index.mjs"
+    },
+    "./unstyled/Label": {
+      "types": "./dist/unstyled/Label/index.d.ts",
+      "default": "./dist/unstyled/Label/index.mjs"
+    },
+    "./unstyled/Link": {
+      "types": "./dist/unstyled/Link/index.d.ts",
+      "default": "./dist/unstyled/Link/index.mjs"
+    },
+    "./unstyled/ListBox": {
+      "types": "./dist/unstyled/ListBox/index.d.ts",
+      "default": "./dist/unstyled/ListBox/index.mjs"
+    },
+    "./unstyled/Meter": {
+      "types": "./dist/unstyled/Meter/index.d.ts",
+      "default": "./dist/unstyled/Meter/index.mjs"
+    },
+    "./unstyled/Popover": {
+      "types": "./dist/unstyled/Popover/index.d.ts",
+      "default": "./dist/unstyled/Popover/index.mjs"
+    },
+    "./unstyled/SearchField": {
+      "types": "./dist/unstyled/SearchField/index.d.ts",
+      "default": "./dist/unstyled/SearchField/index.mjs"
+    },
+    "./unstyled/Select": {
+      "types": "./dist/unstyled/Select/index.d.ts",
+      "default": "./dist/unstyled/Select/index.mjs"
+    },
+    "./unstyled/Switch": {
+      "types": "./dist/unstyled/Switch/index.d.ts",
+      "default": "./dist/unstyled/Switch/index.mjs"
+    },
+    "./unstyled/Table": {
+      "types": "./dist/unstyled/Table/index.d.ts",
+      "default": "./dist/unstyled/Table/index.mjs"
+    },
+    "./unstyled/Tabs": {
+      "types": "./dist/unstyled/Tabs/index.d.ts",
+      "default": "./dist/unstyled/Tabs/index.mjs"
+    },
+    "./unstyled/TextField": {
+      "types": "./dist/unstyled/TextField/index.d.ts",
+      "default": "./dist/unstyled/TextField/index.mjs"
+    },
+    "./unstyled/Toolbar": {
+      "types": "./dist/unstyled/Toolbar/index.d.ts",
+      "default": "./dist/unstyled/Toolbar/index.mjs"
+    },
+    "./use-prefetch": {
+      "types": "./dist/use-prefetch.d.ts",
+      "default": "./dist/use-prefetch.mjs"
+    },
+    "./useAlert": {
+      "types": "./dist/useAlert/index.d.ts",
+      "default": "./dist/useAlert/index.mjs"
     },
     "./useCopy": {
-      "types": "./dist/esm/useCopy/index.d.ts",
-      "default": "./dist/esm/useCopy/index.js"
+      "types": "./dist/useCopy/index.d.ts",
+      "default": "./dist/useCopy/index.mjs"
+    },
+    "./useData": {
+      "types": "./dist/useData/index.d.ts",
+      "default": "./dist/useData/index.mjs"
+    },
+    "./useDrawer": {
+      "types": "./dist/useDrawer/index.d.ts",
+      "default": "./dist/useDrawer/index.mjs"
+    },
+    "./useLogger": {
+      "types": "./dist/useLogger/index.d.ts",
+      "default": "./dist/useLogger/index.mjs"
     },
     "./useQueryParamsPagination": {
-      "types": "./dist/esm/useQueryParamsPagination/index.d.ts",
-      "default": "./dist/esm/useQueryParamsPagination/index.js"
+      "types": "./dist/useQueryParamsPagination/index.d.ts",
+      "default": "./dist/useQueryParamsPagination/index.mjs"
     },
-    "./theme": "./dist/esm/theme.scss"
+    "./package.json": "./package.json",
+    "./theme": "./dist/theme.scss"
   },
   "scripts": {
-    "build:declarations": "tsc --project tsconfig.build.json --outDir ./dist/esm",
-    "build:esm": "babel src --out-dir ./dist/esm --extensions .ts && babel src --out-dir ./dist/esm --extensions .tsx --out-file-extension .jsx",
-    "build:scss": "copyfiles -u 1 \"src/**/*.scss\" dist/esm",
+    "build": "ts-duality --noCjs",
+    "build:scss": "copyfiles -u 1 \"src/**/*.scss\" ./dist",
     "build:storybook": "storybook build",
-    "build:svg": "copyfiles -u 1 \"src/**/*.svg\" dist/esm",
+    "build:svg": "copyfiles -u 1 \"src/**/*.svg\" ./dist",
+    "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
@@ -69,9 +350,9 @@
     "@babel/core": "catalog:",
     "@babel/preset-typescript": "catalog:",
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@phosphor-icons/react": "catalog:",
     "@storybook/addon-styling-webpack": "catalog:",
     "@storybook/addon-themes": "catalog:",
@@ -98,7 +379,11 @@
     "storybook": "catalog:",
     "style-loader": "catalog:",
     "stylelint": "catalog:",
-    "stylelint-config-standard-scss": "catalog:",
-    "typescript": "catalog:"
+    "stylelint-config-standard-scss": "catalog:"
+  },
+  "ts-duality": {
+    "extraExports": {
+      "./theme": "./dist/theme.scss"
+    }
   }
 }

@@ -1,17 +1,19 @@
+/* eslint-disable no-console */
 import { parseVaa } from "@certusone/wormhole-sdk";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  DataSource,
   EvmExecute,
   decodeGovernancePayload,
 } from "@pythnetwork/xc-admin-common";
-import { DefaultStore } from "./store";
-import { PrivateKey, TxResult } from "../../core/base";
-import { EvmExecutorContract } from "../../core/contracts";
-import { EvmChain } from "../../core/chains";
+
+import { DefaultStore } from "./store.js";
+import type { PrivateKey, TxResult } from "../../core/base.js";
+import { EvmChain } from "../../core/chains.js";
+import { EvmExecutorContract } from "../../core/contracts/evm.js";
 
 // TODO: A better place for this would be `base.ts`. That will require
 // significant refactor. Todo in separate PR.
-interface GovernanceContract {
+type GovernanceContract = {
   getId(): string;
   getGovernanceDataSource(): Promise<DataSource>;
   getLastExecutedGovernanceSequence(): Promise<number>;
@@ -19,7 +21,7 @@ interface GovernanceContract {
     senderPrivateKey: PrivateKey,
     vaa: Buffer,
   ): Promise<TxResult>;
-}
+};
 
 async function executeForGovernanceContract(
   contract: GovernanceContract,
@@ -51,8 +53,8 @@ async function executeForGovernanceContract(
 
 /**
  * A general executor that tries to find any contract that can execute a given VAA and executes it
- * @param senderPrivateKey the private key to execute the governance instruction with
- * @param vaa the VAA to execute
+ * @param senderPrivateKey - the private key to execute the governance instruction with
+ * @param vaa - src/node/utils/executor.tsthe VAA to execute
  */
 export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
   const parsedVaa = parseVaa(vaa);

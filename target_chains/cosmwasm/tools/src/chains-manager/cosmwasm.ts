@@ -1,10 +1,10 @@
 import {
   DirectSecp256k1HdWallet,
   DirectSecp256k1Wallet,
-  EncodeObject,
-  OfflineSigner,
+  type EncodeObject,
+  type OfflineSigner,
 } from "@cosmjs/proto-signing";
-import {
+import type {
   ChainExecutor,
   ExecuteContractRequest,
   ExecuteContractResponse,
@@ -16,19 +16,18 @@ import {
   StoreCodeResponse,
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
-} from "./chain-executor";
+} from "./chain-executor.js";
 import {
   CosmWasmClient,
-  DeliverTxResponse,
-  MsgExecuteContractEncodeObject,
-  MsgInstantiateContractEncodeObject,
-  MsgMigrateContractEncodeObject,
-  MsgStoreCodeEncodeObject,
-  MsgUpdateAdminEncodeObject,
+  type DeliverTxResponse,
+  type MsgExecuteContractEncodeObject,
+  type MsgInstantiateContractEncodeObject,
+  type MsgMigrateContractEncodeObject,
+  type MsgStoreCodeEncodeObject,
+  type MsgUpdateAdminEncodeObject,
   SigningCosmWasmClient,
 } from "@cosmjs/cosmwasm-stargate";
 import { GasPrice } from "@cosmjs/stargate";
-import Long from "long";
 import assert from "assert";
 
 export class CosmwasmExecutor implements ChainExecutor {
@@ -65,7 +64,7 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getBalance(): Promise<number> {
-    const address = (await this.signer.getAccounts())[0].address;
+    const address = (await this.signer.getAccounts())[0]!.address;
     const cosmwasmClient = await CosmWasmClient.connect(this.endpoint);
 
     // We are interested only in the coin that we pay gas fees in.
@@ -78,13 +77,13 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getAddress(): Promise<string> {
-    return (await this.signer.getAccounts())[0].address;
+    return (await this.signer.getAccounts())[0]!.address;
   }
 
   private async signAndBroadcastMsg(
     encodedMsgObject: EncodeObject,
   ): Promise<DeliverTxResponse> {
-    const address = (await this.signer.getAccounts())[0].address;
+    const address = (await this.signer.getAccounts())[0]!.address;
 
     const cosmwasmClient = await SigningCosmWasmClient.connectWithSigner(
       this.endpoint,
@@ -190,10 +189,10 @@ export class CosmwasmExecutor implements ChainExecutor {
       funds,
     };
 
-    const msgExecuteContractEncodeObject: MsgExecuteContractEncodeObject = {
+    const msgExecuteContractEncodeObject = {
       typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
       value: msgExecuteContact,
-    };
+    } as MsgExecuteContractEncodeObject;
 
     const txResponse = await this.signAndBroadcastMsg(
       msgExecuteContractEncodeObject,
@@ -265,7 +264,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 function extractFromRawLog(rawLog: string, key: string): string {
   try {
     const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
-    return rx.exec(rawLog)![1];
+    return rx.exec(rawLog)![1] ?? "";
   } catch (e) {
     console.error(
       "Encountered an error in parsing tx result. Printing raw log",

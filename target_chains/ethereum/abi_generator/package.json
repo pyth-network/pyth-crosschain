@@ -25,5 +25,8 @@
   "devDependencies": {
     "prettier": "catalog:",
     "solc": "^0.8.15"
+  },
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

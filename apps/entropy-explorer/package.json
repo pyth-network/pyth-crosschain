@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "22"
+    "node": ">=22.14.0"
   },
   "scripts": {
     "build:vercel": "next build",
@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
-    "@cprussin/jest-config": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@svgr/webpack": "catalog:",
@@ -50,7 +50,6 @@
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
-    "typescript": "catalog:",
     "vercel": "catalog:"
   }
 }

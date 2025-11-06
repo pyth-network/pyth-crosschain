@@ -1,15 +1,11 @@
-import { HexString, HermesClient } from "@pythnetwork/hermes-client";
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import type { Msgs, Account, TxResponse } from "@injectivelabs/sdk-ts";
 import {
-  PriceItem,
-  PriceInfo,
-  IPricePusher,
-  ChainPriceListener,
-} from "../interface";
-import { DurationInSeconds } from "../utils";
-import {
-  Msgs,
-  Account,
-  TxResponse,
   PrivateKey,
   TxGrpcApi,
   ChainGrpcAuthApi,
@@ -18,9 +14,15 @@ import {
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
 import { splitArrayToChunks } from "@injectivelabs/utils";
-import { Logger } from "pino";
+import type { HexString } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
+import type { Logger } from "pino";
 
-const DEFAULT_GAS_PRICE = 160000000;
+import type { PriceItem, PriceInfo, IPricePusher } from "../interface.js";
+import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+
+const DEFAULT_GAS_PRICE = 160_000_000;
 const DEFAULT_GAS_MULTIPLIER = 1.05;
 const DEFAULT_PRICE_IDS_PROCESS_CHUNK_SIZE = -1;
 const INJECTIVE_TESTNET_CHAIN_ID = "injective-888";
@@ -71,8 +73,8 @@ export class InjectivePriceListener extends ChainPriceListener {
 
       const json = Buffer.from(data).toString();
       priceQueryResponse = JSON.parse(json);
-    } catch (err) {
-      this.logger.error(err, `Polling on-chain price for ${priceId} failed.`);
+    } catch (error) {
+      this.logger.error(error, `Polling on-chain price for ${priceId} failed.`);
       return undefined;
     }
 
@@ -93,8 +95,7 @@ export class InjectivePriceListener extends ChainPriceListener {
 export class InjectivePricePusher implements IPricePusher {
   private mnemonic: string;
   private chainConfig: InjectiveConfig;
-  private accounts: Record<string, Account | undefined> =
-    {}; /** { address: Account } */
+  private accounts: Record<string, Account | undefined> = {};
 
   constructor(
     private hermesClient: HermesClient,
@@ -150,6 +151,7 @@ export class InjectivePricePusher implements IPricePusher {
         pubKey: wallet.toPublicKey().toBase64(),
       });
 
+      // eslint-disable-next-line @typescript-eslint/await-thenable
       const sig = await wallet.sign(Buffer.from(signBytes));
 
       /** Append Signatures */
@@ -163,13 +165,13 @@ export class InjectivePricePusher implements IPricePusher {
       account.baseAccount.sequence++;
 
       return txResponse;
-    } catch (e: any) {
+    } catch (error: any) {
       // The sequence number was invalid and hence we will have to fetch it again
-      if (JSON.stringify(e).match(/account sequence mismatch/) !== null) {
+      if (/account sequence mismatch/.exec(JSON.stringify(error)) !== null) {
         this.accounts[injectiveAddress] = undefined;
       }
 
-      throw e;
+      throw error;
     }
   }
 
@@ -224,23 +226,23 @@ export class InjectivePricePusher implements IPricePusher {
         { hash: rs.txHash },
         `Successfully broadcasted txHash for chunk ${chunkIndex}`,
       );
-    } catch (err: any) {
-      if (err.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
-        this.logger.error(err, `Account not found for chunk ${chunkIndex}`);
+    } catch (error: any) {
+      if (error.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
+        this.logger.error(error, `Account not found for chunk ${chunkIndex}`);
 
         throw new Error("Please check the mnemonic");
       }
 
       if (
-        err.message.match(/insufficient/) !== null &&
-        err.message.match(/funds/) !== null
+        error.message.match(/insufficient/) !== null &&
+        error.message.match(/funds/) !== null
       ) {
-        this.logger.error(err, `Insufficient funds for chunk ${chunkIndex}`);
+        this.logger.error(error, `Insufficient funds for chunk ${chunkIndex}`);
         throw new Error("Insufficient funds");
       }
 
       this.logger.error(
-        err,
+        error,
         `Error executing messages for chunk ${chunkIndex}`,
       );
     }
@@ -276,21 +278,21 @@ export class InjectivePricePusher implements IPricePusher {
 
       const gas = (
         result.gasInfo.gasUsed * this.chainConfig.gasMultiplier
-      ).toFixed();
+      ).toFixed(0);
       const fee = {
         amount: [
           {
             denom: "inj",
-            amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(),
+            amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(0),
           },
         ],
         gas,
       };
 
       return fee;
-    } catch (err) {
-      this.logger.error(err, `Error getting std fee`);
-      throw err;
+    } catch (error) {
+      this.logger.error(error, `Error getting std fee`);
+      throw error;
     }
   }
 
@@ -314,9 +316,9 @@ export class InjectivePricePusher implements IPricePusher {
           data: string[];
         };
       };
-    } catch (err) {
-      this.logger.error(err, `Error fetching the latest vaas to push`);
-      throw err;
+    } catch (error) {
+      this.logger.error(error, `Error fetching the latest vaas to push`);
+      throw error;
     }
   }
 
@@ -339,12 +341,13 @@ export class InjectivePricePusher implements IPricePusher {
 
       const json = Buffer.from(data).toString();
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return JSON.parse(json);
-    } catch (err) {
-      this.logger.error(err, `Error fetching update fee.`);
+    } catch (error) {
+      this.logger.error(error, `Error fetching update fee.`);
 
       // Throwing an error because it is likely an RPC issue
-      throw err;
+      throw error;
     }
   }
 }

@@ -1,9 +1,7 @@
-import {
-  HermesClient,
-  HexString,
-  PriceUpdate,
-} from "@pythnetwork/hermes-client";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
+
+import type { HexString, PriceUpdate } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 
 export class SuiPriceServiceConnection extends HermesClient {
   /**
@@ -11,7 +9,7 @@ export class SuiPriceServiceConnection extends HermesClient {
    * can be submitted to the Pyth contract to update the prices. This will throw an axios error if there is a network problem or
    * the price service returns a non-ok response (e.g: Invalid price ids)
    *
-   * @param priceIds Array of hex-encoded price ids.
+   * @param priceIds - Array of hex-encoded price ids.
    * @returns Array of buffers containing the price update data.
    */
   async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<Buffer[]> {

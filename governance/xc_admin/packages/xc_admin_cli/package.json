@@ -6,7 +6,8 @@
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
-  "main": "src/index.ts",
+  "main": "./dist/index.cjs",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
@@ -15,10 +16,11 @@
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
   "scripts": {
-    "build": "tsc",
-    "cli": "pnpm run build && node lib/index.js",
+    "build": "ts-duality --noEsm",
+    "cli": "pnpm run build && node dist/index.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
@@ -32,10 +34,24 @@
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
-    "commander": "^9.5.0",
-    "typescript": "catalog:"
+    "commander": "^9.5.0"
   },
   "dev-dependencies": {
     "ts-node": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./ledger": {
+      "types": "./dist/ledger.d.ts",
+      "default": "./dist/ledger.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts"
 }

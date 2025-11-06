@@ -1,9 +1,15 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { EvmChain } from "../src/core/chains";
-import { toPrivateKey } from "../src/core/base";
+
 import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
+import { toPrivateKey } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -34,16 +40,18 @@ async function main() {
     provider,
     privateKey,
   );
-  console.log("Request tx hash: ", requestResponse.transactionHash);
+  console.log("Request tx hash:", requestResponse.transactionHash);
   const startTime = Date.now();
   const sequenceNumber = providerInfo.sequenceNumber;
   const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
   console.log("Checking this url for revelation:", revealUrl);
-  // eslint-disable-next-line no-constant-condition
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status === 200) {
-      const payload = await fortunaResponse.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const payload = (await fortunaResponse.json()) as any;
       const endTime = Date.now();
       console.log(`Fortuna Latency: ${endTime - startTime}ms`);
       const providerRevelation = "0x" + payload.value.data;
@@ -54,11 +62,12 @@ async function main() {
         sequenceNumber,
         privateKey,
       );
-      console.log("Reveal tx hash: ", revealResponse.transactionHash);
+      console.log("Reveal tx hash:", revealResponse.transactionHash);
       break;
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

@@ -1,9 +1,11 @@
-import {
-  Convert,
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
   Price as JsonPrice,
   PriceFeed as JsonPriceFeed,
   PriceFeedMetadata as JsonPriceFeedMetadata,
-} from "./schemas/PriceFeed";
+} from "./schemas/PriceFeed.js";
+import { Convert } from "./schemas/PriceFeed.js";
 
 export type UnixTimestamp = number;
 export type DurationInSeconds = number;
@@ -13,10 +15,10 @@ export {
   isAccumulatorUpdateData,
   sliceAccumulatorUpdateData,
   parseAccumulatorUpdateData,
-  AccumulatorUpdateData,
+  type AccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
-} from "./AccumulatorUpdateData";
+} from "./AccumulatorUpdateData.js";
 
 /**
  * A Pyth Price represented as `${price} ± ${conf} * 10^${expo}` published at `publishTime`.
@@ -92,7 +94,7 @@ export class PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestationTime?: number;
+  attestationTime?: number | undefined;
   /**
    * Chain of the emitter
    */
@@ -100,27 +102,27 @@ export class PriceFeedMetadata {
   /**
    * The time that the price service received the price
    */
-  priceServiceReceiveTime?: number;
+  priceServiceReceiveTime?: number | undefined;
   /**
    * Sequence number of the price
    */
-  sequenceNumber?: number;
+  sequenceNumber?: number | undefined;
   /**
    * Pythnet slot number of the price
    */
-  slot?: number;
+  slot?: number | undefined;
   /**
    * The time that the previous price was published
    */
-  prevPublishTime?: number;
+  prevPublishTime?: number | undefined;
 
   constructor(metadata: {
-    attestationTime?: number;
+    attestationTime?: number | undefined;
     emitterChain: number;
-    receiveTime?: number;
-    sequenceNumber?: number;
-    slot?: number;
-    prevPublishTime?: number;
+    receiveTime?: number | undefined;
+    sequenceNumber?: number | undefined;
+    slot?: number | undefined;
+    prevPublishTime?: number | undefined;
   }) {
     this.attestationTime = metadata.attestationTime;
     this.emitterChain = metadata.emitterChain;
@@ -177,11 +179,11 @@ export class PriceFeed {
   /**
    * Metadata of the price
    */
-  metadata?: PriceFeedMetadata;
+  metadata?: PriceFeedMetadata | undefined;
   /**
    * VAA of the price
    */
-  vaa?: string;
+  vaa?: string | undefined;
   /**
    * Price
    */
@@ -190,8 +192,8 @@ export class PriceFeed {
   constructor(rawFeed: {
     emaPrice: Price;
     id: HexString;
-    metadata?: PriceFeedMetadata;
-    vaa?: string;
+    metadata?: PriceFeedMetadata | undefined;
+    vaa?: string | undefined;
     price: Price;
   }) {
     this.emaPrice = rawFeed.emaPrice;
@@ -267,7 +269,7 @@ export class PriceFeed {
    * applications that require a sufficiently-recent price. Returns `undefined` if the price
    * is not recent enough.
    *
-   * @param age return a price as long as it has been updated within this number of seconds
+   * @param age - return a price as long as it has been updated within this number of seconds
    * @returns a Price struct containing the price, confidence interval along with the exponent for
    * both numbers, and its publish time, or `undefined` if no price update occurred within `age` seconds of the current time.
    */
@@ -297,7 +299,7 @@ export class PriceFeed {
    * At the moment, the confidence interval returned by this method is computed in
    * a somewhat questionable way, so we do not recommend using it for high-value applications.
    *
-   * @param age return a price as long as it has been updated within this number of seconds
+   * @param age - return a price as long as it has been updated within this number of seconds
    * @returns a Price struct containing the EMA price, confidence interval along with the exponent for
    * both numbers, and its publish time, or `undefined` if no price update occurred within `age` seconds of the current time.
    */

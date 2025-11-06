@@ -35,7 +35,7 @@ export type TwapMessage = {
 
 export function isAccumulatorUpdateData(updateBytes: Buffer): boolean {
   return (
-    updateBytes.toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC &&
+    updateBytes.toString("hex").startsWith(ACCUMULATOR_MAGIC) &&
     updateBytes[4] === MAJOR_VERSION &&
     updateBytes[5] === MINOR_VERSION
   );
@@ -198,9 +198,7 @@ export function parseAccumulatorUpdateData(
     cursor += 1;
     const proof = [];
     for (let j = 0; j < numProofs; j++) {
-      proof.push(
-        Array.from(data.subarray(cursor, cursor + KECCAK160_HASH_SIZE)),
-      );
+      proof.push([...data.subarray(cursor, cursor + KECCAK160_HASH_SIZE)]);
       cursor += KECCAK160_HASH_SIZE;
     }
 

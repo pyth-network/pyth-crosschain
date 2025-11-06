@@ -36,5 +36,11 @@
   },
   "dependencies": {
     "@pythnetwork/pyth-sdk-solidity": "workspace:*"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

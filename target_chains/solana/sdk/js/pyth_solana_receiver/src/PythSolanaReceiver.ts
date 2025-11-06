@@ -1,19 +1,27 @@
-import { AnchorProvider, IdlAccounts, Program } from "@coral-xyz/anchor";
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable tsdoc/syntax */
+import type { IdlAccounts } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import {
+  parseAccumulatorUpdateData,
+  parsePriceFeedMessage,
+  parseTwapMessage,
+} from "@pythnetwork/price-service-sdk";
+import type {
+  InstructionWithEphemeralSigners,
+  PriorityFeeConfig,
+} from "@pythnetwork/solana-utils";
+import { TransactionBuilder } from "@pythnetwork/solana-utils";
+import type { Signer } from "@solana/web3.js";
 import {
   AddressLookupTableAccount,
   Connection,
-  Signer,
   Transaction,
   VersionedTransaction,
+  PublicKey,
+  Keypair,
 } from "@solana/web3.js";
-import {
-  PythSolanaReceiver as PythSolanaReceiverProgram,
-  IDL as Idl,
-} from "./idl/pyth_solana_receiver";
-import {
-  WormholeCoreBridgeSolana,
-  IDL as WormholeCoreBridgeSolanaIdl,
-} from "./idl/wormhole_core_bridge_solana";
+
 import {
   DEFAULT_PUSH_ORACLE_PROGRAM_ID,
   DEFAULT_RECEIVER_PROGRAM_ID,
@@ -23,19 +31,18 @@ import {
   getRandomTreasuryId,
   getTreasuryPda,
 } from "./address";
-import { PublicKey, Keypair } from "@solana/web3.js";
-import {
-  parseAccumulatorUpdateData,
-  parsePriceFeedMessage,
-  parseTwapMessage,
-} from "@pythnetwork/price-service-sdk";
 import {
   POST_TWAP_UPDATE_COMPUTE_BUDGET,
   POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
   POST_UPDATE_COMPUTE_BUDGET,
   UPDATE_PRICE_FEED_COMPUTE_BUDGET,
 } from "./compute_budget";
-import { Wallet } from "@coral-xyz/anchor";
+import type { PythPushOracle } from "./idl/pyth_push_oracle";
+import { IDL as PythPushOracleIdl } from "./idl/pyth_push_oracle";
+import type { PythSolanaReceiver as PythSolanaReceiverProgram } from "./idl/pyth_solana_receiver";
+import { IDL as Idl } from "./idl/pyth_solana_receiver";
+import type { WormholeCoreBridgeSolana } from "./idl/wormhole_core_bridge_solana";
+import { IDL as WormholeCoreBridgeSolanaIdl } from "./idl/wormhole_core_bridge_solana";
 import {
   buildCloseEncodedVaaInstruction,
   buildPostEncodedVaaInstructions,
@@ -44,15 +51,6 @@ import {
   getGuardianSetIndex,
   trimSignatures,
 } from "./vaa";
-import {
-  TransactionBuilder,
-  InstructionWithEphemeralSigners,
-  PriorityFeeConfig,
-} from "@pythnetwork/solana-utils";
-import {
-  PythPushOracle,
-  IDL as PythPushOracleIdl,
-} from "./idl/pyth_push_oracle";
 
 export type PriceUpdateAccount =
   IdlAccounts<PythSolanaReceiverProgram>["priceUpdateV2"];
@@ -374,7 +372,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Returns all the added instructions batched into versioned transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  async buildVersionedTransactions(
+  override async buildVersionedTransactions(
     args: PriorityFeeConfig,
   ): Promise<{ tx: VersionedTransaction; signers: Signer[] }[]> {
     if (this.closeUpdateAccounts) {
@@ -386,7 +384,7 @@ export class PythTransactionBuilder extends TransactionBuilder {
   /**
    * Returns all the added instructions batched into transactions, plus for each transaction the ephemeral signers that need to sign it
    */
-  buildLegacyTransactions(
+  override buildLegacyTransactions(
     args: PriorityFeeConfig,
   ): { tx: Transaction; signers: Signer[] }[] {
     if (this.closeUpdateAccounts) {
@@ -439,14 +437,14 @@ export class PythSolanaReceiver {
   readonly receiver: Program<PythSolanaReceiverProgram>;
   readonly wormhole: Program<WormholeCoreBridgeSolana>;
   readonly pushOracle: Program<PythPushOracle>;
-  readonly treasuryId?: number;
+  readonly treasuryId?: number | undefined;
   constructor({
     connection,
     wallet,
     wormholeProgramId = DEFAULT_WORMHOLE_PROGRAM_ID,
     receiverProgramId = DEFAULT_RECEIVER_PROGRAM_ID,
     pushOracleProgramId = DEFAULT_PUSH_ORACLE_PROGRAM_ID,
-    treasuryId = undefined,
+    treasuryId,
   }: {
     connection: Connection;
     wallet: Wallet;
@@ -465,20 +463,20 @@ export class PythSolanaReceiver {
     this.connection = connection;
     this.wallet = wallet;
     this.provider = new AnchorProvider(this.connection, this.wallet, {
-      commitment: connection.commitment,
+      commitment: connection.commitment!,
     });
     this.receiver = new Program<PythSolanaReceiverProgram>(
-      Idl as PythSolanaReceiverProgram,
+      Idl,
       receiverProgramId,
       this.provider,
     );
     this.wormhole = new Program<WormholeCoreBridgeSolana>(
-      WormholeCoreBridgeSolanaIdl as WormholeCoreBridgeSolana,
+      WormholeCoreBridgeSolanaIdl,
       wormholeProgramId,
       this.provider,
     );
     this.pushOracle = new Program<PythPushOracle>(
-      PythPushOracleIdl as PythPushOracle,
+      PythPushOracleIdl,
       pushOracleProgramId,
       this.provider,
     );
@@ -668,6 +666,13 @@ export class PythSolanaReceiver {
       parseAccumulatorUpdateData(Buffer.from(data, "base64")),
     );
 
+    if (!startUpdateData) {
+      throw new Error("startUpdateData is undefined. this is a bug 🐛");
+    }
+    if (!endUpdateData) {
+      throw new Error("startUpdateData is undefined. this is a bug 🐛");
+    }
+
     // Validate that the start and end updates contain the same number of price feeds
     if (startUpdateData.updates.length !== endUpdateData.updates.length) {
       throw new Error(
@@ -691,8 +696,8 @@ export class PythSolanaReceiver {
 
     // Post a TWAP update to the receiver contract for each price feed
     for (let i = 0; i < startUpdateData.updates.length; i++) {
-      const startUpdate = startUpdateData.updates[i];
-      const endUpdate = endUpdateData.updates[i];
+      const startUpdate = startUpdateData.updates[i]!;
+      const endUpdate = endUpdateData.updates[i]!;
 
       const twapUpdateKeypair = new Keypair();
       postInstructions.push({
@@ -775,7 +780,7 @@ export class PythSolanaReceiver {
                 treasuryId,
               },
               shardId,
-              Array.from(feedId),
+              [...feedId],
             )
             .accounts({
               pythSolanaReceiver: this.receiver.programId,
@@ -957,11 +962,9 @@ export function getPriceFeedAccountForProgram(
   pushOracleProgramId?: PublicKey,
 ): PublicKey {
   if (typeof priceFeedId == "string") {
-    if (priceFeedId.startsWith("0x")) {
-      priceFeedId = Buffer.from(priceFeedId.slice(2), "hex");
-    } else {
-      priceFeedId = Buffer.from(priceFeedId, "hex");
-    }
+    priceFeedId = priceFeedId.startsWith("0x")
+      ? Buffer.from(priceFeedId.slice(2), "hex")
+      : Buffer.from(priceFeedId, "hex");
   }
 
   if (priceFeedId.length != 32) {

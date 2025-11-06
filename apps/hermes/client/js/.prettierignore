@@ -1,0 +1,7 @@
+dist/
+lib/
+build/
+node_modules/
+src/zodSchemas.ts
+package.json
+tsconfig*.json

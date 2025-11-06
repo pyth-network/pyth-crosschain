@@ -7,7 +7,7 @@ import { pythOracleProgram } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
-  PythCluster,
+  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { MultisigInstructionProgram, MultisigParser } from "..";
@@ -44,50 +44,50 @@ test("Pyth multisig instruction parse: create price account", (done) => {
         );
         expect(parsedInstruction.name).toBe("addPrice");
         expect(
-          parsedInstruction.accounts.named["fundingAccount"].pubkey.equals(
-            instruction.keys[0].pubkey,
+          parsedInstruction.accounts.named["fundingAccount"]?.pubkey.equals(
+            instruction.keys[0]!.pubkey,
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["fundingAccount"].isSigner,
-        ).toBe(instruction.keys[0].isSigner);
+          parsedInstruction.accounts.named["fundingAccount"]?.isSigner,
+        ).toBe(instruction.keys[0]!.isSigner);
         expect(
-          parsedInstruction.accounts.named["fundingAccount"].isWritable,
-        ).toBe(instruction.keys[0].isWritable);
+          parsedInstruction.accounts.named["fundingAccount"]?.isWritable,
+        ).toBe(instruction.keys[0]?.isWritable);
         console.log(parsedInstruction.accounts.named["productAccount"]);
         expect(
-          parsedInstruction.accounts.named["productAccount"].pubkey.equals(
-            instruction.keys[1].pubkey,
+          parsedInstruction.accounts.named["productAccount"]?.pubkey.equals(
+            instruction.keys[1]!.pubkey,
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["productAccount"].isSigner,
-        ).toBe(instruction.keys[1].isSigner);
+          parsedInstruction.accounts.named["productAccount"]?.isSigner,
+        ).toBe(instruction.keys[1]?.isSigner);
         expect(
-          parsedInstruction.accounts.named["productAccount"].isWritable,
-        ).toBe(instruction.keys[1].isWritable);
+          parsedInstruction.accounts.named["productAccount"]?.isWritable,
+        ).toBe(instruction.keys[1]?.isWritable);
         expect(
-          parsedInstruction.accounts.named["priceAccount"].pubkey.equals(
-            instruction.keys[2].pubkey,
+          parsedInstruction.accounts.named["priceAccount"]?.pubkey.equals(
+            instruction.keys[2]!.pubkey,
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["priceAccount"].isSigner).toBe(
-          instruction.keys[2].isSigner,
+        expect(parsedInstruction.accounts.named["priceAccount"]?.isSigner).toBe(
+          instruction.keys[2]?.isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["priceAccount"].isWritable,
-        ).toBe(instruction.keys[2].isWritable);
+          parsedInstruction.accounts.named["priceAccount"]?.isWritable,
+        ).toBe(instruction.keys[2]?.isWritable);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"].pubkey.equals(
-            instruction.keys[3].pubkey,
+          parsedInstruction.accounts.named["permissionsAccount"]?.pubkey.equals(
+            instruction.keys[3]!.pubkey,
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"].isSigner,
-        ).toBe(instruction.keys[3].isSigner);
+          parsedInstruction.accounts.named["permissionsAccount"]?.isSigner,
+        ).toBe(instruction.keys[3]?.isSigner);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"].isWritable,
-        ).toBe(instruction.keys[3].isWritable);
+          parsedInstruction.accounts.named["permissionsAccount"]?.isWritable,
+        ).toBe(instruction.keys[3]?.isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
 
         expect(parsedInstruction.args.expo).toBe(-8);
@@ -129,38 +129,38 @@ test("Pyth multisig instruction parse: set minimum publishers", (done) => {
         );
         expect(parsedInstruction.name).toBe("setMinPub");
         expect(
-          parsedInstruction.accounts.named["fundingAccount"].pubkey.equals(
-            instruction.keys[0].pubkey,
+          parsedInstruction.accounts.named["fundingAccount"]?.pubkey.equals(
+            instruction.keys[0]!.pubkey,
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["fundingAccount"].isSigner,
-        ).toBe(instruction.keys[0].isSigner);
+          parsedInstruction.accounts.named["fundingAccount"]?.isSigner,
+        ).toBe(instruction.keys[0]?.isSigner);
         expect(
-          parsedInstruction.accounts.named["fundingAccount"].isWritable,
-        ).toBe(instruction.keys[0].isWritable);
+          parsedInstruction.accounts.named["fundingAccount"]?.isWritable,
+        ).toBe(instruction.keys[0]?.isWritable);
         expect(
-          parsedInstruction.accounts.named["priceAccount"].pubkey.equals(
-            instruction.keys[1].pubkey,
+          parsedInstruction.accounts.named["priceAccount"]?.pubkey.equals(
+            instruction.keys[1]!.pubkey,
           ),
         ).toBeTruthy();
-        expect(parsedInstruction.accounts.named["priceAccount"].isSigner).toBe(
-          instruction.keys[1].isSigner,
+        expect(parsedInstruction.accounts.named["priceAccount"]?.isSigner).toBe(
+          instruction.keys[1]?.isSigner,
         );
         expect(
-          parsedInstruction.accounts.named["priceAccount"].isWritable,
-        ).toBe(instruction.keys[1].isWritable);
+          parsedInstruction.accounts.named["priceAccount"]?.isWritable,
+        ).toBe(instruction.keys[1]?.isWritable);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"].pubkey.equals(
-            instruction.keys[2].pubkey,
+          parsedInstruction.accounts.named["permissionsAccount"]?.pubkey.equals(
+            instruction.keys[2]!.pubkey,
           ),
         ).toBeTruthy();
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"].isSigner,
-        ).toBe(instruction.keys[2].isSigner);
+          parsedInstruction.accounts.named["permissionsAccount"]?.isSigner,
+        ).toBe(instruction.keys[2]?.isSigner);
         expect(
-          parsedInstruction.accounts.named["permissionsAccount"].isWritable,
-        ).toBe(instruction.keys[2].isWritable);
+          parsedInstruction.accounts.named["permissionsAccount"]?.isWritable,
+        ).toBe(instruction.keys[2]?.isWritable);
         expect(parsedInstruction.accounts.remaining.length).toBe(0);
         expect(parsedInstruction.args.minPub).toBe(25);
         done();

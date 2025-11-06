@@ -1,5 +1,10 @@
-import { HermesClient, HexString } from "@pythnetwork/hermes-client";
-import { PriceItem } from "./interface";
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { HexString } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+import type { PriceItem } from "./interface.js";
 
 export type PctNumber = number;
 export type DurationInSeconds = number;
@@ -14,7 +19,7 @@ export async function sleep(ms: number): Promise<void> {
 
 export function removeLeading0x(id: HexString): HexString {
   if (id.startsWith("0x")) {
-    return id.substring(2);
+    return id.slice(2);
   }
   return id;
 }
@@ -37,14 +42,14 @@ export function isWsEndpoint(endpoint: string): boolean {
 }
 
 export function verifyValidOption<
-  options extends Readonly<Array<any>>,
+  options extends readonly any[],
   validOption extends options[number],
 >(option: any, validOptions: options) {
   if (validOptions.includes(option)) {
     return option as validOption;
   }
-  const errorString =
-    option + " is not a valid option. Please choose between " + validOptions;
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  const errorString = `${option} is not a valid option. Please choose betweeen ${validOptions}`;
   throw new Error(errorString);
 }
 
@@ -64,15 +69,18 @@ export async function filterInvalidPriceItems(
   invalidPriceItems: PriceItem[];
 }> {
   const priceMetadata = await hermesClient.getPriceFeeds();
-  const allPriceIds = priceMetadata.map((priceMetadata) => priceMetadata.id);
+  const allPriceIds = new Set(
+    priceMetadata.map((priceMetadata) => priceMetadata.id),
+  );
 
   // Filter out invalid price ids
+  // eslint-disable-next-line unicorn/no-array-reduce
   const { existingPriceItems, invalidPriceItems } = priceItems.reduce<{
     existingPriceItems: PriceItem[];
     invalidPriceItems: PriceItem[];
   }>(
     (acc, item) => {
-      if (allPriceIds.includes(item.id)) {
+      if (allPriceIds.has(item.id)) {
         acc.existingPriceItems.push(item);
       } else {
         acc.invalidPriceItems.push(item);

@@ -2,13 +2,13 @@
   "name": "pyth-sui-cli",
   "version": "0.1.0",
   "description": "Pyth Sui Integration Cli tools",
-  "main": "index.js",
   "license": "Apache-2.0",
   "scripts": {
     "cli": "ts-node src/cli.ts",
-    "build": "tsc",
+    "build": "ts-duality",
     "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write .",
+    "clean": "rm -rf ./dist"
   },
   "private": "true",
   "dependencies": {
@@ -20,10 +20,59 @@
     "@pythnetwork/xc-admin-common": "workspace:*",
     "prettier": "catalog:",
     "ts-node": "catalog:",
-    "typescript": "catalog:",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@types/yargs": "^17.0.32"
-  }
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    "./cli": {
+      "require": {
+        "types": "./dist/cjs/cli.d.ts",
+        "default": "./dist/cjs/cli.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/cli.d.ts",
+        "default": "./dist/esm/cli.mjs"
+      }
+    },
+    ".": {
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
+    },
+    "./pyth_deploy": {
+      "require": {
+        "types": "./dist/cjs/pyth_deploy.d.ts",
+        "default": "./dist/cjs/pyth_deploy.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/pyth_deploy.d.ts",
+        "default": "./dist/esm/pyth_deploy.mjs"
+      }
+    },
+    "./upgrade_pyth": {
+      "require": {
+        "types": "./dist/cjs/upgrade_pyth.d.ts",
+        "default": "./dist/cjs/upgrade_pyth.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/upgrade_pyth.d.ts",
+        "default": "./dist/esm/upgrade_pyth.mjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.cjs"
 }

@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HermesClient } from "@pythnetwork/hermes-client";
+import { pino } from "pino";
+import type { Options } from "yargs";
+
+import { Controller } from "../controller";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
-import { Controller } from "../controller";
-import { Options } from "yargs";
 import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
-import pino from "pino";
 import { filterInvalidPriceItems } from "../utils";
 
 export default {
@@ -116,6 +120,6 @@ export default {
       { pushingFrequency },
     );
 
-    controller.start();
+    void controller.start();
   },
 };

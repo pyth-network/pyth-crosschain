@@ -1,8 +1,11 @@
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
+
 import { toPrivateKey } from "../src/core/base";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -37,7 +40,7 @@ async function main() {
     throw new Error(
       `Contract ${argv.contract} not found. Contracts found: ${Object.keys(
         DefaultStore.contracts,
-      )}`,
+      ).join(" ")}`,
     );
   }
   const priceService = new PriceServiceConnection(
@@ -53,4 +56,5 @@ async function main() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

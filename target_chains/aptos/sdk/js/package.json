@@ -6,10 +6,10 @@
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "files": [
-    "lib/**/*"
+    "dist/**/*"
   ],
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality --noEsm",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -28,7 +28,8 @@
     "test:lint": "eslint src/ --max-warnings 0",
     "prepublishOnly": "pnpm run build && pnpm test:lint",
     "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src"
+    "version": "pnpm run format && git add -A src",
+    "clean": "rm -rf ./dist"
   },
   "keywords": [
     "pyth",
@@ -36,7 +37,9 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
     "@truffle/hdwallet-provider": "^2.1.5",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
@@ -44,11 +47,9 @@
     "@types/yargs": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
-    "eslint": "^8.14.0",
+    "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
-    "typescript": "^4.6.3",
     "web3": "^1.8.2",
     "yargs": "^17.4.1"
   },
@@ -56,5 +57,20 @@
     "@pythnetwork/price-service-client": "workspace:*",
     "aptos": "^1.3.14",
     "buffer": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    "./AptosPriceServiceConnection": {
+      "types": "./dist/AptosPriceServiceConnection.d.ts",
+      "default": "./dist/AptosPriceServiceConnection.cjs"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
   }
 }

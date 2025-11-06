@@ -4,12 +4,13 @@
   "description": "",
   "private": "true",
   "scripts": {
-    "build": "tsc",
+    "build": "ts-duality",
     "build-contract": "ts-node ./src/build-contract.ts",
     "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts",
     "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts",
     "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "fix:format": "prettier --write .",
+    "clean": "rm -rf ./dist"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -22,7 +23,6 @@
     "adm-zip": "^0.5.10",
     "node-downloader-helper": "^2.1.7",
     "rimraf": "^5.0.0",
-    "typescript": "catalog:",
     "yargs": "^17.0.1"
   },
   "devDependencies": {
@@ -30,5 +30,62 @@
     "@types/yargs": "^17.0.18",
     "prettier": "catalog:",
     "ts-node": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "type": "module",
+  "exports": {
+    "./build-contract": {
+      "require": {
+        "types": "./dist/cjs/build-contract.d.ts",
+        "default": "./dist/cjs/build-contract.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/build-contract.d.ts",
+        "default": "./dist/esm/build-contract.mjs"
+      }
+    },
+    "./configs": {
+      "require": {
+        "types": "./dist/cjs/configs.d.ts",
+        "default": "./dist/cjs/configs.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/configs.d.ts",
+        "default": "./dist/esm/configs.mjs"
+      }
+    },
+    "./helper": {
+      "require": {
+        "types": "./dist/cjs/helper.d.ts",
+        "default": "./dist/cjs/helper.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/helper.d.ts",
+        "default": "./dist/esm/helper.mjs"
+      }
+    },
+    "./instantiate-pyth": {
+      "require": {
+        "types": "./dist/cjs/instantiate-pyth.d.ts",
+        "default": "./dist/cjs/instantiate-pyth.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/instantiate-pyth.d.ts",
+        "default": "./dist/esm/instantiate-pyth.mjs"
+      }
+    },
+    "./instantiate-wormhole": {
+      "require": {
+        "types": "./dist/cjs/instantiate-wormhole.d.ts",
+        "default": "./dist/cjs/instantiate-wormhole.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/instantiate-wormhole.d.ts",
+        "default": "./dist/esm/instantiate-wormhole.mjs"
+      }
+    },
+    "./package.json": "./package.json"
   }
 }

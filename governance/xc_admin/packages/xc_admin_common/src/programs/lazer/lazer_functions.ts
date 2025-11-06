@@ -1,9 +1,9 @@
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { PythCluster } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client";
 import {
-  ValidationResult,
-  DownloadableProduct,
-  DownloadableConfig,
+  type ValidationResult,
+  type DownloadableProduct,
+  type DownloadableConfig,
   ProgramType,
 } from "../types";
 
@@ -21,7 +21,7 @@ export const LAZER_PROGRAM_ID = new PublicKey(
 export type LazerConfig = {
   programType: ProgramType.PYTH_LAZER;
   // Make cluster optional since Lazer might not be tied to a specific cluster
-  cluster?: PythCluster;
+  cluster?: PythCluster | undefined;
   // More generic data source instead of Solana-specific accounts
   feeds: LazerFeed[];
   // Additional metadata that might be relevant for Lazer
@@ -148,9 +148,9 @@ export function getDownloadableConfig(config: LazerConfig): DownloadableConfig {
  * @returns Object with validation result and optional error message
  */
 export function validateUploadedConfig(
-  existingConfig: DownloadableConfig,
+  _: DownloadableConfig,
   uploadedConfig: unknown,
-  cluster: PythCluster,
+  __: PythCluster,
 ): ValidationResult {
   // Basic validation logic for Lazer config
   try {
@@ -185,15 +185,15 @@ export function validateUploadedConfig(
  * @returns Promise resolving to an array of TransactionInstructions
  */
 export async function generateInstructions(
-  changes: Record<
+  _: Record<
     string,
     {
       prev?: Partial<DownloadableProduct>;
       new?: Partial<DownloadableProduct>;
     }
   >,
-  cluster: PythCluster,
-  accounts: LazerInstructionAccounts,
+  __: PythCluster,
+  ___: LazerInstructionAccounts,
 ): Promise<TransactionInstruction[]> {
   // Simple placeholder implementation that returns an empty array of instructions
   // In a real implementation, this would transform the changes into Lazer-specific instructions

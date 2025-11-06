@@ -1,32 +1,40 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+/* eslint-disable unicorn/prefer-top-level-await */
+
+/* eslint-disable no-console */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { EvmChain } from "../src/core/chains";
-import { DefaultStore } from "../src/node/utils/store";
-import {
-  ENTROPY_DEFAULT_KEEPER,
-  ENTROPY_DEFAULT_PROVIDER,
-  EvmEntropyContract,
-} from "../src/core/contracts/evm";
-import {
-  DeploymentType,
-  toDeploymentType,
-  toPrivateKey,
-} from "../src/core/base";
+
+import type { BaseDeployConfig, DefaultAddresses } from "./common";
 import {
   COMMON_DEPLOY_OPTIONS,
   deployIfNotCached,
   getWeb3Contract,
   getOrDeployWormholeContract,
-  BaseDeployConfig,
   topupAccountsIfNecessary,
-  DefaultAddresses,
 } from "./common";
 import { getOrDeployExecutorContract } from "./deploy_evm_executor_contracts";
+import type { DeploymentType } from "../src/core/base";
+import { toDeploymentType, toPrivateKey } from "../src/core/base";
+import { EvmChain } from "../src/core/chains";
+import {
+  ENTROPY_DEFAULT_KEEPER,
+  ENTROPY_DEFAULT_PROVIDER,
+  EvmEntropyContract,
+} from "../src/core/contracts/evm";
+import { DefaultStore } from "../src/node/utils/store";
 
-interface DeploymentConfig extends BaseDeployConfig {
+type DeploymentConfig = {
   type: DeploymentType;
   saveContract: boolean;
-}
+} & BaseDeployConfig;
 
 const CACHE_FILE = ".cache-deploy-evm-entropy-contracts";
 
@@ -92,7 +100,7 @@ async function topupEntropyAccountsIfNecessary(
   chain: EvmChain,
   deploymentConfig: DeploymentConfig,
 ) {
-  const accounts: Array<[string, DefaultAddresses]> = [
+  const accounts: [string, DefaultAddresses][] = [
     ["keeper", ENTROPY_DEFAULT_KEEPER],
     ["provider", ENTROPY_DEFAULT_PROVIDER],
   ];
@@ -127,7 +135,7 @@ async function main() {
     privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
   };
   console.log(
-    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, null, 2)}\n`,
+    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, undefined, 2)}\n`,
   );
 
   console.log(`Deploying entropy contracts on ${chain.getId()}...`);

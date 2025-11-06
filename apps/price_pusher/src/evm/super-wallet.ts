@@ -1,12 +1,6 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  defineChain,
-  http,
-  webSocket,
+import type {
   Account,
   Chain,
-  publicActions,
   Client,
   RpcSchema,
   WalletActions,
@@ -15,9 +9,18 @@ import {
   HttpTransport,
   Transport,
 } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  defineChain,
+  http,
+  webSocket,
+  publicActions,
+} from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import * as chains from "viem/chains";
-import { isWsEndpoint } from "../utils";
+
+import { isWsEndpoint } from "../utils.js";
 
 const UNKNOWN_CHAIN_CONFIG = {
   name: "Unknown",
@@ -50,6 +53,7 @@ const getTransport = (endpoint: string): WebSocketTransport | HttpTransport =>
 // the viem package to support new chains if they don't work as expected with the unknown
 // chain.
 const getChainById = (chainId: number): Chain =>
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   Object.values(chains).find((chain) => chain.id === chainId) ||
   defineChain({ id: chainId, ...UNKNOWN_CHAIN_CONFIG });
 

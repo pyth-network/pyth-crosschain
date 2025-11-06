@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { toPrivateKey } from "../src/core/base";
 import { CosmWasmChain } from "../src/core/chains";
 import { CosmWasmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
-import { toPrivateKey } from "../src/core/base";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -38,4 +41,5 @@ async function main() {
   console.log(`Successfully uploaded code with id ${codeId}`);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

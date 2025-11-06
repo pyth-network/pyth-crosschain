@@ -32,5 +32,11 @@
     "abi_generator": "workspace:*",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=22.14.0"
   }
 }

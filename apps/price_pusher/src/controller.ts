@@ -1,13 +1,16 @@
-import { UnixTimestamp } from "@pythnetwork/hermes-client";
-import { DurationInSeconds, sleep } from "./utils";
-import { IPriceListener, IPricePusher } from "./interface";
-import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
-import { Logger } from "pino";
-import { PricePusherMetrics } from "./metrics";
+import type { UnixTimestamp } from "@pythnetwork/hermes-client";
+import type { Logger } from "pino";
+
+import type { IPriceListener, IPricePusher } from "./interface.js";
+import { PricePusherMetrics } from "./metrics.js";
+import type { PriceConfig } from "./price-config.js";
+import { shouldUpdate, UpdateCondition } from "./price-config.js";
+import type { DurationInSeconds } from "./utils.js";
+import { sleep } from "./utils.js";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
-  private metrics?: PricePusherMetrics;
+  private metrics?: PricePusherMetrics | undefined;
 
   constructor(
     private priceConfigs: PriceConfig[],
@@ -90,7 +93,7 @@ export class Controller {
           priceShouldUpdate == UpdateCondition.EARLY
         ) {
           pricesToPush.push(priceConfig);
-          pubTimesToPush.push((targetLatestPrice?.publishTime || 0) + 1);
+          pubTimesToPush.push((targetLatestPrice?.publishTime ?? 0) + 1);
         }
       }
       if (pushThresholdMet) {

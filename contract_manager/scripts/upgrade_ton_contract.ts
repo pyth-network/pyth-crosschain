@@ -1,11 +1,21 @@
+/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
+/* eslint-disable unicorn/no-process-exit */
+/* eslint-disable n/no-process-exit */
+/* eslint-disable unicorn/prefer-top-level-await */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import fs from "node:fs";
+import path from "node:path";
+
+import { Cell } from "@ton/ton";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src/node/utils/store";
-import { TonPriceFeedContract } from "../src/core/contracts";
+
 import { toPrivateKey } from "../src/core/base";
-import fs from "fs";
-import path from "path";
-import { Cell } from "@ton/ton";
+import { TonPriceFeedContract } from "../src/core/contracts";
+import { DefaultStore } from "../src/node/utils/store";
 
 // This script upgrades the Pyth contract on TON after the governance has authorized the upgrade
 // If you are starting over, the process is like the following:
@@ -40,7 +50,6 @@ async function main() {
   // Read the compiled contract from the build directory
   // NOTE: Remember to rebuild contract_manager before running this script because it will also build the ton contract
   const compiledPath = path.resolve(
-    __dirname,
     "../../target_chains/ton/contracts/build/Main.compiled.json",
   );
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
