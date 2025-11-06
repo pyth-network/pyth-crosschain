@@ -11,19 +11,10 @@
 }
 
 .cards {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-top: 2rem;
-
-  @media (width >= 768px) {
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 28rem));
-    gap: 2rem;
-    justify-content: center;
-  }
-
-  @media (width >= 1024px) {
-    grid-template-columns: repeat(auto-fit, minmax(20rem, 28rem));
-    justify-content: flex-start;
+  display: flex;
+  gap: theme.spacing(10);
+  flex-direction: column;
+  @include theme.breakpoint("md") {
+    flex-direction: row;
   }
 }
