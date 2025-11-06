@@ -2,7 +2,7 @@
 
 import { Switch } from "@pythnetwork/component-library/Switch";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useQueryState, parseAsBoolean } from "nuqs";
+import { useQueryState, parseAsBoolean } from "@pythnetwork/react-hooks/nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 
 import { Cluster } from "../../services/pyth";

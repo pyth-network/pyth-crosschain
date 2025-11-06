@@ -1,5 +1,5 @@
 import { AppShell } from "@pythnetwork/component-library/AppShell";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { ReactNode } from "react";
 
 import {
