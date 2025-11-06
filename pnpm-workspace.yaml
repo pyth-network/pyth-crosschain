@@ -36,54 +36,54 @@ packages:
   - lazer/contracts/sui/sdk/js
 
 catalog:
-  '@amplitude/analytics-browser': ^2.13.0
-  '@amplitude/plugin-autocapture-browser': ^1.0.0
-  '@axe-core/react': ^4.10.1
-  '@babel/cli': ^7.27.2
-  '@babel/core': ^7.27.1
-  '@babel/preset-typescript': ^7.27.1
-  '@better-builds/ts-duality': ^0.1.2
-  '@bonfida/spl-name-service': ^3.0.10
-  '@clickhouse/client': ^1.11.0
-  '@coral-xyz/anchor': ^0.30.1
-  '@cprussin/eslint-config': ^4.0.2
-  '@cprussin/jest-config': ^2.0.2
-  '@cprussin/prettier-config': ^2.2.2
-  '@cprussin/tsconfig': ^3.1.2
-  '@floating-ui/react': ^0.27.6
-  '@headlessui/react': ^2.2.0
-  '@heroicons/react': ^2.2.0
-  '@katex/katex': ^0.16.9
-  '@mysten/sui': ^1.3.0
-  '@next/third-parties': ^15.3.2
-  '@phosphor-icons/react': ^2.1.7
-  '@pythnetwork/client': ^2.22.1
-  '@pythnetwork/pyth-sdk-solidity': ^4.0.0
-  '@radix-ui/react-select': ^2.1.6
-  '@radix-ui/react-slot': ^1.1.2
-  '@radix-ui/react-switch': ^1.1.3
-  '@react-hookz/web': ^25.1.0
-  '@solana/buffer-layout': ^4.0.1
-  '@solana/wallet-adapter-base': ^0.9.24
-  '@solana/wallet-adapter-react': ^0.15.36
-  '@solana/wallet-adapter-react-ui': ^0.9.36
-  '@solana/wallet-adapter-wallets': ^0.19.33
-  '@solana/web3.js': ^1.98.0
-  '@storybook/addon-styling-webpack': ^2.0.0
-  '@storybook/addon-themes': ^9.1.8
-  '@storybook/nextjs': ^9.1.8
-  '@storybook/react': ^9.1.8
-  '@svgr/webpack': ^8.1.0
-  '@tailwindcss/forms': ^0.5.10
-  '@tailwindcss/postcss': ^4.1.6
-  '@tanstack/react-query': ^5.71.5
-  '@types/jest': ^29.5.14
-  '@types/mdx': ^2.0.13
-  '@types/node': ^22.14.0
-  '@types/react': ^19.1.0
-  '@types/react-dom': ^19.1.1
-  '@types/yargs': ^17.0.33
-  '@vercel/functions': ^2.0.0
+  "@amplitude/analytics-browser": ^2.13.0
+  "@amplitude/plugin-autocapture-browser": ^1.0.0
+  "@axe-core/react": ^4.10.1
+  "@babel/cli": ^7.27.2
+  "@babel/core": ^7.27.1
+  "@babel/preset-typescript": ^7.27.1
+  "@better-builds/ts-duality": ^0.1.2
+  "@bonfida/spl-name-service": ^3.0.10
+  "@clickhouse/client": ^1.11.0
+  "@coral-xyz/anchor": ^0.30.1
+  "@cprussin/eslint-config": ^4.0.2
+  "@cprussin/jest-config": ^2.0.2
+  "@cprussin/prettier-config": ^2.2.2
+  "@cprussin/tsconfig": ^3.1.2
+  "@floating-ui/react": ^0.27.6
+  "@headlessui/react": ^2.2.0
+  "@heroicons/react": ^2.2.0
+  "@katex/katex": ^0.16.9
+  "@mysten/sui": ^1.3.0
+  "@next/third-parties": ^15.3.2
+  "@phosphor-icons/react": ^2.1.7
+  "@pythnetwork/client": ^2.22.1
+  "@pythnetwork/pyth-sdk-solidity": ^4.0.0
+  "@radix-ui/react-select": ^2.1.6
+  "@radix-ui/react-slot": ^1.1.2
+  "@radix-ui/react-switch": ^1.1.3
+  "@react-hookz/web": ^25.1.0
+  "@solana/buffer-layout": ^4.0.1
+  "@solana/wallet-adapter-base": ^0.9.24
+  "@solana/wallet-adapter-react": ^0.15.36
+  "@solana/wallet-adapter-react-ui": ^0.9.36
+  "@solana/wallet-adapter-wallets": ^0.19.33
+  "@solana/web3.js": ^1.98.0
+  "@storybook/addon-styling-webpack": ^2.0.0
+  "@storybook/addon-themes": ^9.1.8
+  "@storybook/nextjs": ^9.1.8
+  "@storybook/react": ^9.1.8
+  "@svgr/webpack": ^8.1.0
+  "@tailwindcss/forms": ^0.5.10
+  "@tailwindcss/postcss": ^4.1.6
+  "@tanstack/react-query": ^5.71.5
+  "@types/jest": ^29.5.14
+  "@types/mdx": ^2.0.13
+  "@types/node": ^22.14.0
+  "@types/react": ^19.1.0
+  "@types/react-dom": ^19.1.1
+  "@types/yargs": ^17.0.33
+  "@vercel/functions": ^2.0.0
   ag-grid-community: ^34.2.0
   ag-grid-react: ^34.2.0
   async-cache-dedupe: ^3.0.0
@@ -162,16 +162,16 @@ engineStrict: true
 managePackageManagerVersions: true
 
 onlyBuiltDependencies:
-  - '@apollo/protobufjs'
-  - '@injectivelabs/networks'
-  - '@injectivelabs/sdk-ts'
-  - '@injectivelabs/token-metadata'
-  - '@injectivelabs/utils'
-  - '@parcel/watcher'
-  - '@scarf/scarf'
-  - '@swc/core'
-  - '@tailwindcss/oxide'
-  - '@trufflesuite/bigint-buffer'
+  - "@apollo/protobufjs"
+  - "@injectivelabs/networks"
+  - "@injectivelabs/sdk-ts"
+  - "@injectivelabs/token-metadata"
+  - "@injectivelabs/utils"
+  - "@parcel/watcher"
+  - "@scarf/scarf"
+  - "@swc/core"
+  - "@tailwindcss/oxide"
+  - "@trufflesuite/bigint-buffer"
   - bigint-buffer
   - blake-hash
   - bufferutil
@@ -198,7 +198,7 @@ onlyBuiltDependencies:
   - web3-shh
 
 overrides:
-  '@solana/web3.js@1.77.4>rpc-websockets': 7.11.0
+  "@solana/web3.js@1.77.4>rpc-websockets": 7.11.0
 
 packageManagerStrict: true
 

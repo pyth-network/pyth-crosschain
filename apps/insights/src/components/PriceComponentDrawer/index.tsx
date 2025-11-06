@@ -12,10 +12,10 @@ import type { Button as UnstyledButton } from "@pythnetwork/component-library/un
 import { StateType, useData } from "@pythnetwork/component-library/useData";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { parseAsString, useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import { useMountEffect } from "@react-hookz/web";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import {
   Suspense,

@@ -26,6 +26,7 @@
     "@pythnetwork/component-library": "workspace:*",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/known-publishers": "workspace:*",
+    "@pythnetwork/react-hooks": "workspace:",
     "@react-hookz/web": "catalog:",
     "@solana/web3.js": "catalog:",
     "async-cache-dedupe": "catalog:",

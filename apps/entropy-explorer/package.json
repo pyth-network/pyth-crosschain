@@ -22,6 +22,7 @@
   "dependencies": {
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
+    "@pythnetwork/react-hooks": "workspace:",
     "clsx": "catalog:",
     "next": "catalog:",
     "react": "catalog:",

@@ -1,4 +1,4 @@
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsStringLiteral, useQueryState } from "@pythnetwork/react-hooks/nuqs";
 
 export const RESOLUTIONS = ["1s", "1m", "5m", "1H", "1D"] as const;
 export type Resolution = (typeof RESOLUTIONS)[number];

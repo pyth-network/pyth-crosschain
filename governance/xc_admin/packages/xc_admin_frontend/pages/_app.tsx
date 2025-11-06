@@ -1,4 +1,5 @@
 /* eslint-disable n/no-process-env */
+import { NuqsAdapter } from '@pythnetwork/react-hooks/nuqs-adapters-next';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import {
   ConnectionProvider,
@@ -18,7 +19,6 @@ import { clusterApiUrl } from '@solana/web3.js'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { DefaultSeo } from 'next-seo'
-import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 import { useMemo } from 'react'
 import { Toaster } from 'react-hot-toast'
 

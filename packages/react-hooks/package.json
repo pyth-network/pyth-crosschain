@@ -27,6 +27,18 @@
   },
   "type": "module",
   "exports": {
+    "./nuqs-adapters-next": {
+      "types": "./dist/nuqs-adapters-next.d.ts",
+      "default": "./dist/nuqs-adapters-next.mjs"
+    },
+    "./nuqs-server": {
+      "types": "./dist/nuqs-server.d.ts",
+      "default": "./dist/nuqs-server.mjs"
+    },
+    "./nuqs-testing": {
+      "types": "./dist/nuqs-testing.d.ts",
+      "default": "./dist/nuqs-testing.mjs"
+    },
     "./nuqs": {
       "types": "./dist/nuqs.d.ts",
       "default": "./dist/nuqs.mjs"
