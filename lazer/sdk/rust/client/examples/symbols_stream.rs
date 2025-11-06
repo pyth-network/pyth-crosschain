@@ -1,4 +1,4 @@
-use std::time::Duration;
+use {futures::StreamExt, std::time::Duration};
 
 use pyth_lazer_client::history_client::{PythLazerHistoryClient, PythLazerHistoryClientConfig};
 use pyth_lazer_protocol::PriceFeedId;
@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
     });
     let mut symbols_stream = client.all_symbols_metadata_stream().await?;
 
-    while let Some(symbols) = symbols_stream.recv().await {
+    while let Some(symbols) = symbols_stream.next().await {
         println!("symbols len: {}", symbols.len());
         println!(
             "symbol 1: {:?}",
