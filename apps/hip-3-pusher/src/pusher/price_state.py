@@ -17,23 +17,52 @@ class PriceUpdate:
         return now - self.timestamp
 
 
+class PriceSourceState:
+    def __init__(self, name: str):
+        self.name = name
+        self.state: dict[str, PriceUpdate] = {}
+
+    def __repr__(self):
+        return f"PriceSourceState(name={self.name} state={self.state})"
+
+    def get(self, symbol: str) -> PriceUpdate | None:
+        return self.state.get(symbol)
+
+    def put(self, symbol: str, value: PriceUpdate):
+        self.state[symbol] = value
+
+
 class PriceState:
+    HL_ORACLE = "hl_oracle"
+    HL_MARK = "hl_mark"
+    LAZER = "lazer"
+    HERMES = "hermes"
+    SEDA = "seda"
+
     """
     Maintain latest prices seen across listeners and publisher.
     """
     def __init__(self, config: Config):
         self.stale_price_threshold_seconds = config.stale_price_threshold_seconds
         self.price_config = config.price
-        self.state = {
-            "hl_oracle": {symbol: None for symbol in config.hyperliquid.asset_context_symbols},
-            "hl_mark": {symbol: None for symbol in config.hyperliquid.asset_context_symbols},
-            "lazer": {feed_id: None for feed_id in config.lazer.feed_ids},
-            "hermes": {feed_id: None for feed_id in config.hermes.feed_ids},
-            "seda": {feed_name: None for feed_name in config.seda.feeds},
+
+        self.hl_oracle_state = PriceSourceState(self.HL_ORACLE)
+        self.hl_mark_state = PriceSourceState(self.HL_MARK)
+        self.lazer_state = PriceSourceState(self.LAZER)
+        self.hermes_state = PriceSourceState(self.HERMES)
+        self.seda_state = PriceSourceState(self.SEDA)
+
+        self.all_states = {
+            self.HL_ORACLE: self.hl_oracle_state,
+            self.HL_MARK: self.hl_mark_state,
+            self.LAZER: self.lazer_state,
+            self.HERMES: self.hermes_state,
+            self.SEDA: self.seda_state,
         }
 
     def get_all_prices(self, market_name):
-        logger.debug("state: {}", self.state)
+        logger.debug("get_all_prices state: {}", self.all_states)
+
         return (
             self.get_prices(self.price_config.oracle, market_name),
             self.get_prices(self.price_config.mark, market_name),
@@ -63,7 +92,7 @@ class PriceState:
 
     def get_price_from_single_source(self, source: PriceSource):
         now = time.time()
-        update: PriceUpdate | None = self.state.get(source.source_name, {}).get(source.source_id)
+        update: PriceUpdate | None = self.all_states.get(source.source_name, {}).get(source.source_id)
         if update is None:
             logger.warning("source {} id {} is missing", source.source_name, source.source_id)
             return None

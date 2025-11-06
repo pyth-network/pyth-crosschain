@@ -7,20 +7,18 @@ from tenacity import retry, retry_if_exception_type, wait_exponential
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
-from pusher.price_state import PriceState, PriceUpdate
+from pusher.price_state import PriceSourceState, PriceUpdate
 
 
 class LazerListener:
-    SOURCE_NAME = "lazer"
-
     """
     Subscribe to Lazer price updates for needed feeds.
     """
-    def __init__(self, config: Config, price_state: PriceState):
+    def __init__(self, config: Config, lazer_state: PriceSourceState):
         self.lazer_urls = config.lazer.lazer_urls
         self.api_key = config.lazer.lazer_api_key
         self.feed_ids = config.lazer.feed_ids
-        self.price_state = price_state
+        self.lazer_state = lazer_state
 
     def get_subscribe_request(self, subscription_id: int):
         return {
@@ -91,6 +89,6 @@ class LazerListener:
                 if feed_id is None or price is None:
                     continue
                 else:
-                    self.price_state.state[self.SOURCE_NAME][feed_id] = PriceUpdate(price, now)
+                    self.lazer_state.put(feed_id, PriceUpdate(price, now))
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)

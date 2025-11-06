@@ -46,10 +46,10 @@ async def main():
     metrics = Metrics(config)
 
     publisher = Publisher(config, price_state, metrics)
-    hyperliquid_listener = HyperliquidListener(config, price_state)
-    lazer_listener = LazerListener(config, price_state)
-    hermes_listener = HermesListener(config, price_state)
-    seda_listener = SedaListener(config, price_state)
+    hyperliquid_listener = HyperliquidListener(config, price_state.hl_oracle_state, price_state.hl_mark_state)
+    lazer_listener = LazerListener(config, price_state.lazer_state)
+    hermes_listener = HermesListener(config, price_state.hermes_state)
+    seda_listener = SedaListener(config, price_state.seda_state)
 
     await asyncio.gather(
         publisher.run(),

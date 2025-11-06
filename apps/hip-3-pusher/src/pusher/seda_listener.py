@@ -6,7 +6,7 @@ from loguru import logger
 from pathlib import Path
 
 from pusher.config import Config, SedaFeedConfig
-from pusher.price_state import PriceState, PriceUpdate
+from pusher.price_state import PriceSourceState, PriceUpdate
 
 
 class SedaListener:
@@ -15,14 +15,14 @@ class SedaListener:
     """
     Subscribe to SEDA price updates for needed feeds.
     """
-    def __init__(self, config: Config, price_state: PriceState):
+    def __init__(self, config: Config, seda_state: PriceSourceState):
         self.url = config.seda.url
         self.api_key = Path(config.seda.api_key_path).read_text().strip()
         self.feeds = config.seda.feeds
         self.poll_interval = config.seda.poll_interval
         self.poll_failure_interval = config.seda.poll_failure_interval
         self.poll_timeout = config.seda.poll_timeout
-        self.price_state = price_state
+        self.seda_state = seda_state
 
     async def run(self):
         await asyncio.gather(*[self._run_single(feed_name, self.feeds[feed_name]) for feed_name in self.feeds])
@@ -67,4 +67,4 @@ class SedaListener:
         price = result["composite_rate"]
         timestamp = datetime.datetime.fromisoformat(result["timestamp"]).timestamp()
         logger.debug("Parsed SEDA update for feed: {} price: {} timestamp: {}", feed_name, price, timestamp)
-        self.price_state.state[self.SOURCE_NAME][feed_name] = PriceUpdate(price, timestamp)
+        self.seda_state.put(feed_name, PriceUpdate(price, timestamp))

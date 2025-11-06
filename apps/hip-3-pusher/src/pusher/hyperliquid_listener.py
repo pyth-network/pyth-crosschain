@@ -7,7 +7,7 @@ import time
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
-from pusher.price_state import PriceState, PriceUpdate
+from pusher.price_state import PriceSourceState, PriceUpdate
 
 # This will be in config, but note here.
 # Other RPC providers exist but so far we've seen their support is incomplete.
@@ -16,17 +16,15 @@ HYPERLIQUID_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws"
 
 
 class HyperliquidListener:
-    ORACLE_SOURCE_NAME = "hl_oracle"
-    MARK_SOURCE_NAME = "hl_mark"
-
     """
     Subscribe to any relevant Hyperliquid websocket streams
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket
     """
-    def __init__(self, config: Config, price_state: PriceState):
+    def __init__(self, config: Config, hl_oracle_state: PriceSourceState, hl_mark_state: PriceSourceState):
         self.hyperliquid_ws_urls = config.hyperliquid.hyperliquid_ws_urls
         self.asset_context_symbols = config.hyperliquid.asset_context_symbols
-        self.price_state = price_state
+        self.hl_oracle_state = hl_oracle_state
+        self.hl_mark_state = hl_mark_state
 
     def get_subscribe_request(self, asset):
         return {
@@ -82,8 +80,8 @@ class HyperliquidListener:
             ctx = message["data"]["ctx"]
             symbol = message["data"]["coin"]
             now = time.time()
-            self.price_state.state[self.ORACLE_SOURCE_NAME][symbol] = PriceUpdate(ctx["oraclePx"], now)
-            self.price_state.state[self.MARK_SOURCE_NAME][symbol] = PriceUpdate(ctx["markPx"], now)
+            self.hl_oracle_state.put(symbol, PriceUpdate(ctx["oraclePx"], now))
+            self.hl_mark_state.put(symbol, PriceUpdate(ctx["markPx"], now))
             logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
             logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", message, e)
