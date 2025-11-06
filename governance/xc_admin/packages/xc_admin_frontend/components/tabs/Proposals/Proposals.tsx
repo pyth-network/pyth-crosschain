@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable unicorn/no-nested-ternary */
  
 /* eslint-disable @typescript-eslint/no-deprecated */

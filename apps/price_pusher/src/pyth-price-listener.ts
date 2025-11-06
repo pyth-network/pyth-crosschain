@@ -93,7 +93,7 @@ export class PythPriceListener implements IPriceListener {
         }
     };
 
-    eventSource.onerror = async (error: Event) => {
+    eventSource.onerror = async (error) => {
       console.error("Error receiving updates from Hermes:", error);
       eventSource.close();
       await sleep(5000); // Wait a bit before trying to reconnect
