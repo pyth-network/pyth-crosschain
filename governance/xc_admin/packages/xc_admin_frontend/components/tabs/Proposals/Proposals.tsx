@@ -3,10 +3,13 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { Menu, Transition } from '@headlessui/react'
+import {
+  useQueryState,
+  parseAsStringLiteral,
+} from '@pythnetwork/react-hooks/nuqs'
 import { useWallet } from '@solana/wallet-adapter-react'
 import type { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
-import { useQueryState, parseAsStringLiteral } from 'nuqs'
 import { useContext, useEffect, useState, useMemo, Fragment } from 'react'
 
 import { Proposal } from './Proposal'

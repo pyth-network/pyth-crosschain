@@ -338,7 +338,7 @@
     "modern-normalize": "catalog:",
     "motion": "catalog:",
     "next-themes": "catalog:",
-    "nuqs": "catalog:",
+    "@pythnetwork/react-hooks": "workspace:",
     "pino": "catalog:",
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",

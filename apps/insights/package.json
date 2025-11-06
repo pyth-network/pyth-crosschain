@@ -40,7 +40,7 @@
     "motion": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
-    "nuqs": "catalog:",
+    "@pythnetwork/react-hooks": "workspace:",
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-dom": "catalog:",

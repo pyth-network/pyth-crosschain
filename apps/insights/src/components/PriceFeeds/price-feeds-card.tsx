@@ -16,8 +16,8 @@ import type {
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
+import { parseAsString, useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import { matchSorter } from "match-sorter";
-import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { Suspense, useCallback, useMemo } from "react";
 import { useCollator } from "react-aria";

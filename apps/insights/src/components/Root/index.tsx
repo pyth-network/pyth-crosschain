@@ -1,6 +1,6 @@
 import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { ReactNode } from "react";
 
 import { SearchButton as SearchButtonImpl } from "./search-button";
