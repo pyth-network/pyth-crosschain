@@ -68,8 +68,8 @@ export function ProductCard({
             <div className={styles.featuresSection}>
               <p className={styles.sectionLabel}>FEATURES</p>
               <div className={styles.features}>
-                {features.map((feature, index) => (
-                  <div key={index} className={styles.featureItem}>
+                {features.map((feature) => (
+                  <div key={feature.label} className={styles.featureItem}>
                     <div className={styles.featureIcon}>
                       {feature.icon ?? <Lightning size={12.5} />}
                     </div>
@@ -85,9 +85,9 @@ export function ProductCard({
             <div className={styles.quickLinksSection}>
               <p className={styles.sectionLabel}>QUICK LINKS</p>
               <div className={styles.quickLinks}>
-                {quickLinks.map((link, index) => (
+                {quickLinks.map((link) => (
                   <Link
-                    key={index}
+                    key={link.href}
                     href={link.href}
                     className={styles.quickLink}
                   >
