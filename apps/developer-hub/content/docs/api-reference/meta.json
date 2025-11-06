@@ -1,0 +1,25 @@
+{
+  "title": "API Reference",
+  "root": true,
+  "pages": [
+    "---fortuna---",
+    "(generated)/fortuna",
+    "(generated)/fortuna/chain_ids",
+    "(generated)/fortuna/explorer",
+    "(generated)/fortuna/revelation",
+    "---Pyth Core---",
+    "(generated)/hermes",
+    "(generated)/hermes/get_price_feed",
+    "(generated)/hermes/get_vaa",
+    "(generated)/hermes/get_vaa_ccip",
+    "(generated)/hermes/latest_price_feeds",
+    "(generated)/hermes/latest_price_updates",
+    "(generated)/hermes/latest_publisher_stake_caps",
+    "(generated)/hermes/latest_twaps",
+    "(generated)/hermes/latest_vaas",
+    "(generated)/hermes/price_feed_ids",
+    "(generated)/hermes/price_feeds_metadata",
+    "(generated)/hermes/price_stream_sse_handler",
+    "(generated)/hermes/timestamp_price_updates"
+  ]
+}

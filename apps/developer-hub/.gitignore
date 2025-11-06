@@ -1,2 +1,4 @@
 .env*.local
 .source
+
+content/docs/api-reference/(generated)/
