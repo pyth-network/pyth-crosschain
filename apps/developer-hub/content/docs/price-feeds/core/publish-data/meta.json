@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "[Understanding Publishing Slots](./understanding-publishing-slots)",
+    "[pyth-client Websocket API](./pyth-client-websocket-api)",
+    "[Confidence Interval and Crypto Exchange Fees](./confidence-interval-and-crypto-exchange-fees)",
+    "[Useful Resources for Publishers](./useful-resources-for-publishers)"
+  ]
+}

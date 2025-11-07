@@ -1,0 +1,7 @@
+{
+  "pages": [
+    "[Hermes](./hermes)",
+    "[Benchmarks / Historical Prices](./benchmarks)",
+    "[Pythnet RPC](./pythnet-rpc)"
+  ]
+}
