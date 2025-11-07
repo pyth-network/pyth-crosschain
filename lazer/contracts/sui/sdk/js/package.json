@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sui-js",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "TypeScript SDK for the Pyth Lazer Sui contract",
   "license": "Apache-2.0",
   "type": "module",

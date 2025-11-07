@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pulse-sdk-solidity",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Automatically update price feeds with Pyth Pulse",
   "type": "module",
   "repository": {

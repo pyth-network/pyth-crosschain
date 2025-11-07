@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/solana-utils",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Utility functions for Solana",
   "homepage": "https://pyth.network",
   "main": "./dist/cjs/index.cjs",
