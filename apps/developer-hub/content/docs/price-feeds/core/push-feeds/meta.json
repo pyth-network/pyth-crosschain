@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "[EVM](./evm)",
+    "[Solana](./solana)",
+    "[Fogo](./fogo)",
+    "[Aptos](./aptos)",
+    "[Movement](./movement)",
+    "[Sui](./sui)"
+  ]
+}

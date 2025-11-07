@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "evm",
+    "solana",
+    "starknet",
+    "fuel",
+    "stacks",
+    "aptos",
+    "sui",
+    "iota",
+    "ton",
+    "cosmwasm",
+    "near"
+  ]
+}

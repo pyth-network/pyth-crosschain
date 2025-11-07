@@ -1,0 +1,60 @@
+---
+title: How to Use Real-Time Price Data
+description: Guides for using Pyth real-time price feeds
+slug: /price-feeds/core/use-real-time-data
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The following guides demonstrate how to consume Pyth real-time prices on various blockchains.
+These guides are intended for developers building on-chain applications that need the latest price data, i.e., the price data must
+be on the blockchain.
+
+Pyth price feeds are available on 100+ blockchain ecosystems.
+Check out the complete list of chains and implementation contract addresses at [Contract Addresses](../contract-addresses).
+If your blockchain is not supported, please [ask in the dev-forum](https://dev-forum.pyth.network/latest).
+
+## Choosing Your Integration Method
+
+**Pull integration** is the default choice for most applications. In this integration, the application retrieves price data from a [webservice](../how-pyth-works/hermes) and submits it to
+an on-chain smart contact as part of the transaction. This integration provides the lowest-latency access to Pyth price data.
+
+**Push integration** is for applications that don't want to pull prices in every transaction and prefer a purely on-chain integration.
+
+<Callout type="info">
+  All feeds are available through both integration methods. However, to use pull
+  integration, the application needs to submit the prices to the on-chain smart
+  contract as part of the transaction. Check out the Pull Integration section
+  below to get started.
+</Callout>
+
+## Pull Integration
+
+Consult the relevant ecosystem guide to get started using **pull integration**:
+
+- [EVM](../use-real-time-data/pull-integration/evm)
+- [Solana](../use-real-time-data/pull-integration/solana)
+- [Starknet](../use-real-time-data/pull-integration/starknet)
+- [Aptos](../use-real-time-data/pull-integration/aptos)
+- [CosmWasm](../use-real-time-data/pull-integration/cosmwasm)
+- [Sui](./pull-integration/sui)
+- [IOTA](./pull-integration/iota)
+- [Near](./pull-integration/near)
+
+## Push Integration
+
+To consume real-time price data using **push** integration, check out the following guides:
+
+- [Using Push Integration](../use-real-time-data/push-integration)
+
+This guide will walk you through the steps to use real-time price data using push integration in every ecosystem.
+
+## Off-Chain Applications
+
+Pyth price feeds can also be used in off-chain applications.
+For example, an application may need to show real-time asset prices on a website.
+Developers building such applications can consult the following guide:
+
+- [Off-chain Apps](../fetch-price-updates)
+
+To fetch historical prices, application developers can check out the [Use Historic Price Data](../use-historic-price-data) guide.
