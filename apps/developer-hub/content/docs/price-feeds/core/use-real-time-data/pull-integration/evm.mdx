@@ -10,7 +10,7 @@ This guide explains how to use real-time Pyth data in EVM contracts using the pu
 
 For an interactive playground to explore the methods supported by the Pyth contract, see the [EVM API reference](../../../api-reference).
 
-<Callout type="info">
+<Callout type="info" title="Push Option">
   If you want to use real-time price data using the push integration instead, you can use the following code snippet:
   ```solidity copy
   PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceFeedId, 60);
@@ -50,7 +50,7 @@ Then add the following line to your `remappings.txt` file:
 @pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity
 ```
 
-<Callout type="warning">
+<Callout type="warning" title="Update Prices First">
   **Important**: Pyth uses a pull oracle model that requires users to update
   prices on-chain before reading them. If you don't update the price or if the
   on-chain price becomes too stale, calls to `getPriceNoOlderThan()` will revert
