@@ -1,8 +1,8 @@
 {
   "title": "on EVM",
   "pages": [
-    "[Part 1: Create Pyth App](/price-feeds/core/tutorials/create-your-first-pyth-app/evm/part-1)",
-    "[Part 2: Deploy Pyth App](/price-feeds/core/tutorials/create-your-first-pyth-app/evm/part-2)"
+    "[Part 1: Create Pyth App](/price-feeds/core/create-your-first-pyth-app/evm/part-1)",
+    "[Part 2: Deploy Pyth App](/price-feeds/core/create-your-first-pyth-app/evm/part-2)"
   ],
   "defaultOpen": true
 }
