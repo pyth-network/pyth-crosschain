@@ -1,0 +1,117 @@
+---
+title: Price Feeds
+description: Overview of Pyth Core and Pyth Pro price feeds
+slug: /price-feeds
+---
+
+import Link from "next/link";
+import { ProductCard } from "../../../src/components/ProductCard";
+import {
+  Lightning,
+  ChartLine,
+  Tag,
+  BookOpen,
+  SquaresFour,
+} from "@phosphor-icons/react/dist/ssr";
+
+Pyth Price Feeds deliver real-time financial market data sources from 120+ first-party providers. These providers include leading exchanges, banks, trading firms, and market makers. Additionally, Pyth Price data can be verified on 100+ blockchains.
+
+## Product Options
+
+Pyth offers two main versions of price feeds, each optimized for different use cases:
+
+<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+  <ProductCard
+    title="Pyth Pro"
+    description="Subscription-based price data for institutions and advanced use cases. Previously known as Lazer."
+    features={[
+      { label: "Ultra-low latency" },
+      { label: "Crypto, equities, and indexes" },
+      { label: "Customizable channels and latency" },
+      { label: "Dedicated support" },
+    ]}
+    quickLinks={[
+      { label: "Overview", href: "/price-feeds/pro" },
+      { label: "Get access token", href: "/price-feeds/pro/access-token" },
+      { label: "Pricing", href: "/price-feeds/pro/pricing" },
+    ]}
+    buttonLabel="Explore Pro Documentation"
+    buttonHref="/price-feeds/pro"
+  />
+  <ProductCard
+    title="Pyth Core"
+    description="Decentralized price feeds for DeFi and TradFi builders with deterministic on-chain delivery."
+    features={[
+      { label: "400ms update frequency" },
+      { label: "100+ supported blockchains" },
+      { label: "Supports push and pull updates" },
+      { label: "Decentralized Oracle" },
+    ]}
+    quickLinks={[
+      { label: "Overview", href: "/price-feeds/core" },
+      { label: "Get started", href: "/price-feeds/core/getting-started" },
+      {
+        label: "Contract addresses",
+        href: "/price-feeds/core/contract-addresses",
+      },
+    ]}
+    buttonLabel="Explore Core Documentation"
+    buttonHref="/price-feeds/core"
+  />
+</div>
+
+## Additional Resources
+
+<Cards>
+  <Card icon={<Tag size={18} />} title="Price Feed IDs">
+    <p className="text-sm text-muted-foreground">
+      Complete price feed coverage for both Pyth Core and Pyth Pro.
+    </p>
+    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+      <Link
+        className="text-brand-300 hover:underline"
+        href="/price-feeds/core/price-feeds"
+      >
+        Pyth Core IDs ->
+      </Link>
+      <Link
+        className="text-brand-300 hover:underline"
+        href="/price-feeds/pro/price-feeds"
+      >
+        Pyth Pro IDs ->
+      </Link>
+    </div>
+  </Card>
+  <Card icon={<BookOpen size={18} />} title="API Reference">
+    <p className="text-sm text-muted-foreground">
+      Explore REST and WebSocket APIs for Core and Pro integrations.
+    </p>
+    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+      <Link
+        className="text-brand-300 hover:underline"
+        href="/price-feeds/core/api-reference"
+      >
+        Core APIs ->
+      </Link>
+      <Link
+        className="text-brand-300 hover:underline"
+        href="/price-feeds/pro/api-reference"
+      >
+        Pro APIs ->
+      </Link>
+    </div>
+  </Card>
+  <Card icon={<SquaresFour size={18} />} title="Examples">
+    <p className="text-sm text-muted-foreground">
+      Review sample applications and integration workflows using Pyth data.
+    </p>
+    <div className="mt-4 text-sm">
+      <Link
+        className="text-brand-300 hover:underline"
+        href="https://github.com/pyth-network/pyth-examples"
+      >
+        View examples ->
+      </Link>
+    </div>
+  </Card>
+</Cards>
