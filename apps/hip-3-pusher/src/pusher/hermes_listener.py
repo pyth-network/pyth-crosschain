@@ -7,23 +7,22 @@ from tenacity import retry, retry_if_exception_type, wait_exponential
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
-from pusher.price_state import PriceState, PriceUpdate
+from pusher.price_state import PriceSourceState, PriceUpdate
 
 
 class HermesListener:
     """
     Subscribe to Hermes price updates for needed feeds.
     """
-    def __init__(self, config: Config, price_state: PriceState):
+    def __init__(self, config: Config, hermes_state: PriceSourceState):
         self.hermes_urls = config.hermes.hermes_urls
-        self.base_feed_id = config.hermes.base_feed_id
-        self.quote_feed_id = config.hermes.quote_feed_id
-        self.price_state = price_state
+        self.feed_ids = config.hermes.feed_ids
+        self.hermes_state = hermes_state
 
     def get_subscribe_request(self):
         return {
             "type": "subscribe",
-            "ids": [self.base_feed_id, self.quote_feed_id],
+            "ids": self.feed_ids,
             "verbose": False,
             "binary": True,
             "allow_out_of_order": False,
@@ -81,9 +80,6 @@ class HermesListener:
             publish_time = price_object["publish_time"]
             logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
             now = time.time()
-            if id == self.base_feed_id:
-                self.price_state.hermes_base_price = PriceUpdate(price, now)
-            if id == self.quote_feed_id:
-                self.price_state.hermes_quote_price = PriceUpdate(price, now)
+            self.hermes_state.put(id, PriceUpdate(price, now))
         except Exception as e:
             logger.error("parse_hermes_message error: {}", e)

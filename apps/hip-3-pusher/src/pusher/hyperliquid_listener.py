@@ -7,7 +7,7 @@ import time
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
-from pusher.price_state import PriceState, PriceUpdate
+from pusher.price_state import PriceSourceState, PriceUpdate
 
 # This will be in config, but note here.
 # Other RPC providers exist but so far we've seen their support is incomplete.
@@ -20,10 +20,11 @@ class HyperliquidListener:
     Subscribe to any relevant Hyperliquid websocket streams
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket
     """
-    def __init__(self, config: Config, price_state: PriceState):
+    def __init__(self, config: Config, hl_oracle_state: PriceSourceState, hl_mark_state: PriceSourceState):
         self.hyperliquid_ws_urls = config.hyperliquid.hyperliquid_ws_urls
-        self.market_symbol = config.hyperliquid.market_symbol
-        self.price_state = price_state
+        self.asset_context_symbols = config.hyperliquid.asset_context_symbols
+        self.hl_oracle_state = hl_oracle_state
+        self.hl_mark_state = hl_mark_state
 
     def get_subscribe_request(self, asset):
         return {
@@ -44,9 +45,10 @@ class HyperliquidListener:
 
     async def subscribe_single_inner(self, url):
         async with websockets.connect(url) as ws:
-            subscribe_request = self.get_subscribe_request(self.market_symbol)
-            await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent subscribe request to {}", url)
+            for symbol in self.asset_context_symbols:
+                subscribe_request = self.get_subscribe_request(symbol)
+                await ws.send(json.dumps(subscribe_request))
+                logger.info("Sent subscribe request for symbol: {} to {}", symbol,  url)
 
             # listen for updates
             while True:
@@ -76,10 +78,10 @@ class HyperliquidListener:
     def parse_hyperliquid_ws_message(self, message):
         try:
             ctx = message["data"]["ctx"]
+            symbol = message["data"]["coin"]
             now = time.time()
-            self.price_state.hl_oracle_price = PriceUpdate(ctx["oraclePx"], now)
-            self.price_state.hl_mark_price = PriceUpdate(ctx["markPx"], now)
-            logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", self.price_state.hl_oracle_price,
-                         self.price_state.hl_mark_price)
+            self.hl_oracle_state.put(symbol, PriceUpdate(ctx["oraclePx"], now))
+            self.hl_mark_state.put(symbol, PriceUpdate(ctx["markPx"], now))
+            logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
             logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", message, e)
