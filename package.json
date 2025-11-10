@@ -14,6 +14,7 @@
   },
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
+    "@pythnetwork/create-pyth-app": "workspace:",
     "@cprussin/tsconfig": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "prettier": "catalog:",

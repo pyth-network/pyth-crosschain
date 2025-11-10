@@ -1,0 +1,36 @@
+{
+  "private": true,
+  "name": "@pythnetwork/create-pyth-app",
+  "description": "bootstrapper to quickly create a best-practices TypeScript library or application",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "create-pyth-app": "./bin/create-pyth-app"
+  },
+  "engines": {
+    "pnpm": ">=10.19.0",
+    "node": ">=22.14.0"
+  },
+  "files": [
+    "bin/**",
+    "src/**"
+  ],
+  "scripts": {
+    "start": "tsx ./src/create-pyth-app.ts",
+    "test:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "app-root-path": "catalog:",
+    "chalk": "catalog:",
+    "fs-extra": "catalog:",
+    "prompts": "catalog:",
+    "tsx": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@cprussin/eslint-config": "catalog:",
+    "@types/fs-extra": "catalog:",
+    "@types/prompts": "catalog:",
+    "eslint": "catalog:"
+  }
+}
