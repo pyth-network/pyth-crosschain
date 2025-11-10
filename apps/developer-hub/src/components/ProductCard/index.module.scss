@@ -37,7 +37,6 @@
   font-size: 1.875rem; // 30px
   font-weight: 600;
   line-height: 1; // 30px
-  letter-spacing: -0.03em; // -0.9px
   color: var(--color-fd-foreground);
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -49,7 +48,6 @@
   font-size: 1rem; // 16px
   font-weight: 400;
   line-height: 1.65;
-  letter-spacing: -0.01em; // -0.16px
   color: var(--color-fd-foreground);
   opacity: 0.9;
   display: -webkit-box;
@@ -78,7 +76,6 @@
   font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1.82;
-  letter-spacing: -0.01em;
   color: var(--color-fd-foreground);
   opacity: 0.5;
   text-transform: uppercase;
@@ -118,7 +115,6 @@
   font-size: 0.875rem; // 14px
   font-weight: 600;
   line-height: 1.65;
-  letter-spacing: -0.01em; // -0.14px
   color: var(--color-fd-foreground);
   white-space: pre;
 }
@@ -141,7 +137,6 @@
   font-size: 1rem; // 16px
   font-weight: 500;
   line-height: 1.25; // 20px
-  letter-spacing: -0.01em; // -0.16px
   color: var(--color-fd-foreground);
   text-decoration: underline;
   text-decoration-skip-ink: none;
@@ -170,5 +165,4 @@
   font-size: 1rem; // 16px
   font-weight: 500;
   line-height: 1.25; // 20px
-  letter-spacing: -0.01em; // -0.16px
 }
