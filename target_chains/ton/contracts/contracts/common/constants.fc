@@ -52,3 +52,6 @@ const int PRICE_FEED_BITS = 256 + 224 + 224;
   - Masterchain: 1 gas = 10000 nanotons = 0.00001 TON (25x more expensive)
 -}
 const int WORKCHAIN = 0;
+
+const int RESERVE_MODE::INCREASE_BY_ORIGINAL_BALANCE = 4;
+const int SENDMODE::CARRY_ALL_BALANCE = 128;

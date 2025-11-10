@@ -340,15 +340,11 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     cell custom_payload_cell = begin_cell().store_slice(custom_payload).end_cell();
     response = response.store_ref(price_feeds_cell).store_slice(sender_address).store_ref(custom_payload_cell);
 
-    int num_price_feeds = price_feeds.tlen();
-
-    ;; Calculate all fees
-    int compute_fee = get_compute_fee(WORKCHAIN, get_gas_consumed());
+    ;; Calculate update fee
     int update_fee = single_update_fee * price_feeds.tlen();
 
-    ;; Calculate total fees and remaining excess
-    int total_fees = compute_fee + update_fee;
-    int excess = msg_value - total_fees;
+    ;; Reserve current_balance + fee
+    raw_reserve(update_fee, RESERVE_MODE::INCREASE_BY_ORIGINAL_BALANCE);
 
     ;; SECURITY: Integrators MUST validate that messages are from this Pyth contract
     ;; in their receive function. Otherwise, attackers could:
@@ -362,11 +358,11 @@ cell create_price_feed_cell_chain(tuple price_feeds) {
     send_raw_message(begin_cell()
         .store_uint(0x18, 6)
         .store_slice(target_address)
-        .store_coins(excess)
+        .store_coins(0)
         .store_uint(1, MSG_SERIALIZE_BITS)
         .store_ref(response.end_cell())
         .end_cell(),
-        0);
+        SENDMODE::CARRY_ALL_BALANCE);
 }
 
 ;; Helper function to parse price IDs from a slice, handling cell chain traversal
