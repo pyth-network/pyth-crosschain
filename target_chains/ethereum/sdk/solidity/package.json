@@ -32,9 +32,6 @@
     "prettier-plugin-solidity": "catalog:",
     "solc": "^0.8.25"
   },
-  "files": [
-    "dist/**/*"
-  ],
   "engines": {
     "node": ">=22.14.0"
   }
