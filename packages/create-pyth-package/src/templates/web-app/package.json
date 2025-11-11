@@ -23,7 +23,8 @@
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
-    "test:types": "tsc"
+    "test:types": "tsc",
+    "test:unit": "jest"
   },
   "devDependencies": {
     "@axe-core/react": "catalog:",

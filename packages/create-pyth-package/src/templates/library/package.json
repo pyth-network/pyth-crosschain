@@ -21,7 +21,8 @@
     "fix:format": "prettier --write .",
     "test:lint": "eslint . --max-warnings 0",
     "test:format": "prettier --check .",
-    "test:types": "tsc"
+    "test:types": "tsc",
+    "test:unit": "jest"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
