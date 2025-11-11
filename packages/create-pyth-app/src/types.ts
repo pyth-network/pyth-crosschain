@@ -11,6 +11,7 @@ export type CreatePythAppResponses = {
   customFolderPath?: string;
   description: string;
   folder: string;
+  isPublic: boolean;
   packageName: string;
   packageType: PackageType;
 };

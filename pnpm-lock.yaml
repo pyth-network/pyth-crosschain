@@ -339,6 +339,9 @@ catalogs:
     turbo:
       specifier: ^2.5.8
       version: 2.5.8
+    type-fest:
+      specifier: ^5.2.0
+      version: 5.2.0
     typedoc:
       specifier: ^0.26.8
       version: 0.26.11
@@ -2210,6 +2213,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
+      type-fest:
+        specifier: 'catalog:'
+        version: 5.2.0
 
   packages/jest-config:
     dependencies:

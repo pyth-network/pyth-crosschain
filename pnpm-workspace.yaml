@@ -168,6 +168,7 @@ catalog:
   ts-node: ^10.9.2
   tsx: 4.20.6
   typedoc: ^0.26.8
+  type-fest: ^5.2.0
   typescript: ^5.9.3
   turbo: ^2.5.8
   vercel: ^41.4.1

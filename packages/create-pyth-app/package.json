@@ -33,6 +33,7 @@
     "@cprussin/eslint-config": "catalog:",
     "@types/fs-extra": "catalog:",
     "@types/prompts": "catalog:",
-    "eslint": "catalog:"
+    "eslint": "catalog:",
+    "type-fest": "catalog:"
   }
 }

@@ -11,6 +11,7 @@ import glob from "fast-glob";
 import fs from "fs-extra";
 import { render as renderTemplate } from "micromustache";
 import prompts from "prompts";
+import type { PackageJson } from "type-fest";
 
 import { getAvailableFolders } from "./get-available-folders.js";
 import { Logger } from "./logger.js";
@@ -44,7 +45,7 @@ function getTemplatesInputFolder(packageType: PackageType) {
 }
 
 async function createPythApp() {
-  const { confirm, description, folder, packageName, packageType } =
+  const { confirm, description, folder, isPublic, packageName, packageType } =
     (await prompts([
       {
         choices: Object.values(PackageType).map((val) => ({
@@ -93,6 +94,12 @@ async function createPythApp() {
           packageType === PackageType.WEBAPP ? false : "select",
       },
       {
+        message:
+          "Are you intending on publishing this, publicly on NPM, for users outside of our org to use?",
+        name: "isPublic",
+        type: "confirm",
+      },
+      {
         message: (
           _,
           {
@@ -102,7 +109,7 @@ async function createPythApp() {
           }: InProgressCreatePythAppResponses,
         ) => {
           let msg = `Please confirm your choices:${os.EOL}`;
-          msg += `Creating a ${chalk.magenta(packageType)} package, named ${chalk.magenta(packageName)}, in ${chalk.magenta(packageType === PackageType.WEBAPP ? `apps/${packageName?.split("/")[1] ?? ""}` : folder)}.${os.EOL}`;
+          msg += `Creating a ${chalk.magenta(packageType)} package, named ${chalk.magenta(packageName)}, in ${chalk.magenta(packageType === PackageType.WEBAPP ? "apps" : folder)}/${packageName?.split("/")[1] ?? ""}.${os.EOL}`;
           msg += "Look good?";
 
           return msg;
@@ -123,7 +130,11 @@ async function createPythApp() {
     packageType === PackageType.WEBAPP
       ? path.join("apps", packageNameWithoutOrg)
       : folder;
-  const absDest = path.join(appRootPath.toString(), relDest);
+  const absDest = path.join(
+    appRootPath.toString(),
+    relDest,
+    packageNameWithoutOrg,
+  );
 
   Logger.info("ensuring", relDest, "exists");
   await fs.ensureDir(absDest);
@@ -143,12 +154,26 @@ async function createPythApp() {
   );
   await Promise.all(
     destFiles.map(async (fp) => {
+      debugger;
       const contents = await fs.readFile(fp, "utf8");
-      await fs.writeFile(
-        fp,
-        renderTemplate(contents, { description, name: packageName }),
-        "utf8",
-      );
+      const updatedContents = renderTemplate(contents, {
+        description,
+        name: packageName,
+        relativeFolder: relDest,
+      });
+      await fs.writeFile(fp, updatedContents, "utf8");
+
+      if (fp.endsWith("package.json")) {
+        const pjson = JSON.parse(updatedContents) as PackageJson;
+        pjson.private = !isPublic;
+        if (isPublic) {
+          pjson.publishConfig = {
+            access: "public",
+          };
+        }
+
+        await fs.writeFile(fp, JSON.stringify(pjson, undefined, 2), "utf8");
+      }
     }),
   );
 
