@@ -58,9 +58,9 @@ type ResolvedSearchButtonProps = {
     averageScore?: number | undefined;
     cluster: Cluster;
   } & (
-    | { name: string; icon: ReactNode }
-    | { name?: undefined; icon?: undefined }
-  ))[];
+      | { name: string; icon: ReactNode }
+      | { name?: undefined; icon?: undefined }
+    ))[];
 };
 
 const ResolvedSearchButton = (props: ResolvedSearchButtonProps) => {
@@ -253,14 +253,14 @@ const SearchDialogContents = ({
                   // for determining if the user clicked their middle mouse button,
                   // so we need to use the native onClick directly
                   middleMousePressedRef.current = e.button === 1;
-                  openTabModifierActiveRef.current = (browserInfo?.isMacOS && e.metaKey) ?? e.ctrlKey;
+                  openTabModifierActiveRef.current = browserInfo?.isMacOS ? e.metaKey : e.ctrlKey;
                 }}
                 onPointerUp={() => {
                   const userWantsNewTab = middleMousePressedRef.current || openTabModifierActiveRef.current;
-                  
+
                   // they want a new tab, the search popover stays open
                   if (!userWantsNewTab) closeDrawer();
-                  
+
                   middleMousePressedRef.current = false;
                   openTabModifierActiveRef.current = false;
                 }}
