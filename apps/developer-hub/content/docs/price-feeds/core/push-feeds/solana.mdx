@@ -1,0 +1,23 @@
+---
+title: on Solana
+description: List of Push Feeds on Solana
+slug: /price-feeds/core/push-feeds/solana
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { SponsoredFeedsTable } from "../../../../../src/components/SponsoredFeedsTable";
+import solanaMainnet from "./data/svm/solana-mainnet.json";
+
+<Callout type="info" title="Request Additional Feeds">
+  If you would like to see additional feeds on this list, please fill in this
+  [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+## Solana Mainnet
+
+<SponsoredFeedsTable
+  feeds={solanaMainnet.feeds}
+  networkName="Solana mainnet and devnet"
+/>
+
+Note: The addresses represent the price feed account for shard 0 of the relevant price feed id.

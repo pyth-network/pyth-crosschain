@@ -1,0 +1,36 @@
+{
+  "feeds": [
+    {
+      "alias": "FOGO/USD",
+      "account_address": "BVbxoxUoiS7hDGbhr6WYQod2qQsxs4gjTqFB8LekW1yt",
+      "id": "d3cd2bae6315f4f940cbd3a4a915f675f8fba85e33bd6aa5f7b727a15a9c812f",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "fUSD/USD",
+      "account_address": "9BZ6ozhtcTRYYMCBDLfePaoNTdEzpgZR3p4pHdM3CrVf",
+      "id": "8d940f7b53df8dd4b3c33a84c3ba043214c3cdcd5243c03b7cb4b0b22746efd8",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDC/USD",
+      "account_address": "8mKftY1J7M9FhmUA5iPF49G4ptHeh7tk2f5hgPQHqJsK",
+      "id": "41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDT/USD",
+      "account_address": "86rHPbbzG8rnh4cQownzRHj9kLM9xY3YsSQM5xddtBZ6",
+      "id": "1fc18861232290221461220bd4e2acd1dcdfbc89c84092c93c18bdc7756c1588",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    }
+  ]
+}

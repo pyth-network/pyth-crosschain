@@ -1,10 +1,5 @@
 {
-  "pages": [
-    "[EVM](./evm)",
-    "[Solana](./solana)",
-    "[Fogo](./fogo)",
-    "[Aptos](./aptos)",
-    "[Movement](./movement)",
-    "[Sui](./sui)"
-  ]
+  "title": "Push Feeds",
+  "pages": ["evm", "solana", "fogo", "aptos", "movement", "sui"],
+  "defaultOpen": false
 }

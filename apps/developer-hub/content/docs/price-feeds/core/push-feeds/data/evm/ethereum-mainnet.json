@@ -1,0 +1,46 @@
+{
+  "feeds": [
+    {
+      "alias": "USDC/USD",
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "time_difference": 3600,
+      "price_deviation": 2,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USR/USD",
+      "id": "10b013adec14c0fe839ca0fe54cec9e4d0b6c1585ac6d7e70010dac015e57f9c",
+      "time_difference": 3600,
+      "price_deviation": 2,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "WSTUSR/USR",
+      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
+      "time_difference": 3600,
+      "price_deviation": 2,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDTB/NAV",
+      "id": "967549f1ff4869f41cb354a7116b9e5a9a3091bebe0b2640eeed745ca1f7f90b",
+      "time_difference": 3600,
+      "price_deviation": 2,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "LINEA/USD",
+      "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "BOLD/USD",
+      "id": "d6134dbb0427240f901e3e596d6e63f7d85088f96cd4cd4ae2f89c0819b5d623",
+      "time_difference": 3600,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    }
+  ]
+}

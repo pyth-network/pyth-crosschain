@@ -15,16 +15,14 @@ Install the Pyth TON SDK and other necessary dependencies using npm:
 
 <Tabs items={["npm", "yarn"]}>
   <Tab value="npm">
-    ```bash copy
-    npm install @pythnetwork/pyth-ton-js @pythnetwork/hermes-client
-    @ton/core @ton/ton @ton/crypto 
-    ```
+```bash copy
+npm install @pythnetwork/pyth-ton-js @pythnetwork/hermes-client @ton/core @ton/ton @ton/crypto
+```
   </Tab>
   <Tab value="yarn">
-    ```bash copy 
-    yarn add @pythnetwork/pyth-ton-js @pythnetwork/hermes-client
-    @ton/core @ton/ton @ton/crypto
-    ```
+```bash copy
+yarn add @pythnetwork/pyth-ton-js @pythnetwork/hermes-client @ton/core @ton/ton @ton/crypto
+```
   </Tab>
 </Tabs>
 
@@ -88,7 +86,7 @@ async function main() {
   const priceIds = [BTC_PRICE_FEED_ID];
   const latestPriceUpdates = await hermesClient.getLatestPriceUpdates(
     priceIds,
-    { encoding: "hex" },
+    { encoding: "hex" }
   );
   console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0].price);
   // Prepare update data
@@ -110,7 +108,7 @@ async function main() {
   await contract.sendUpdatePriceFeeds(
     provider.sender(key.secretKey),
     updateData,
-    totalFee,
+    totalFee
   );
   console.log("Price feeds updated successfully.");
 }
@@ -339,3 +337,4 @@ You may find these additional resources helpful for developing your TON applicat
 - [Pyth TON Send USD Example](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/ton/send_usd)
 - [Pyth Connector Example](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/ton/pyth-connector)
 - [EVAA Protocol Code](https://github.com/evaafi/contracts/tree/v8)
+
