@@ -21,6 +21,12 @@ import type {
 } from "./types.js";
 import { PACKAGE_PREFIX, PackageType, TEMPLATES_FOLDER } from "./types.js";
 
+function getPackageNameWithoutOrg(
+  packageNameWithOrg: string | null | undefined,
+) {
+  return packageNameWithOrg?.split("/")[1] ?? "";
+}
+
 /**
  * returns the folder that holds the correct templates, based on the user's
  * package choice
@@ -109,7 +115,7 @@ async function createPythApp() {
           }: InProgressCreatePythAppResponses,
         ) => {
           let msg = `Please confirm your choices:${os.EOL}`;
-          msg += `Creating a ${chalk.magenta(packageType)} package, named ${chalk.magenta(packageName)}, in ${chalk.magenta(packageType === PackageType.WEBAPP ? "apps" : folder)}/${packageName?.split("/")[1] ?? ""}.${os.EOL}`;
+          msg += `Creating a ${chalk.magenta(packageType)} package, named ${chalk.magenta(packageName)}, in ${chalk.magenta(packageType === PackageType.WEBAPP ? "apps" : folder)}/${getPackageNameWithoutOrg(packageName)}.${os.EOL}`;
           msg += "Look good?";
 
           return msg;
@@ -124,7 +130,7 @@ async function createPythApp() {
     return;
   }
 
-  const [, packageNameWithoutOrg = ""] = packageName.split("/");
+  const packageNameWithoutOrg = getPackageNameWithoutOrg(packageName);
 
   const relDest =
     packageType === PackageType.WEBAPP
@@ -153,12 +159,12 @@ async function createPythApp() {
     "updating files with the choices you made in the initial prompts",
   );
   await Promise.all(
-    destFiles.map(async (fp) => {
-      debugger;
+    destFiles.filter(fp => !fp.includes('node_module')).map(async (fp) => {
       const contents = await fs.readFile(fp, "utf8");
       const updatedContents = renderTemplate(contents, {
         description,
         name: packageName,
+        packageNameWithoutOrg,
         relativeFolder: relDest,
       });
       await fs.writeFile(fp, updatedContents, "utf8");
