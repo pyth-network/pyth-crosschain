@@ -25,6 +25,7 @@
     "@pythnetwork/component-library": "workspace:*",
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",
+    "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@react-hookz/web": "catalog:",
     "clsx": "catalog:",
     "fumadocs-core": "catalog:",
