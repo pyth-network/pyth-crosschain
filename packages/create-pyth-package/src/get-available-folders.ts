@@ -3,8 +3,6 @@ import path from "node:path";
 
 import appRootPath from "app-root-path";
 
-import { Logger } from "./logger.js";
-
 type PNPMPackageInfo = {
   name: string;
   path: string;
