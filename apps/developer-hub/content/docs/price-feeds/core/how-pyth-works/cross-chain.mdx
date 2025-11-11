@@ -7,7 +7,12 @@ slug: /price-feeds/core/how-pyth-works/cross-chain
 Pyth uses a cross-chain mechanism to transfer prices from [Pythnet](pythnet) to target chains. The diagram below
 shows how prices are delivered from Pythnet to target chains:
 
-![Pyth cross-chain architecture](/images/Pull-Architecture-Hermes.png)
+<figure className="image-container">
+  <img
+    src="/images/Pull-Architecture-Hermes.png"
+    alt="Pyth cross-chain architecture"
+  />
+</figure>
 
 Data providers publish their prices on Pythnet. The on-chain [oracle program](oracle-program) then aggregates prices
 for a feed to obtain the aggregate price and confidence. Next, the Pythnet validators send a Wormhole message on each

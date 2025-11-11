@@ -1,11 +1,11 @@
 {
   "pages": [
-    "[Pythnet](./pythnet)",
-    "[Oracle Program](./oracle-program)",
-    "[Cross-chain](./cross-chain)",
-    "[Fees](./fees)",
-    "[Hermes](./hermes)",
-    "[Price Aggregation](./price-aggregation)",
-    "[EMA Price Aggregation](./ema-price-aggregation)"
+    "pythnet",
+    "oracle-program",
+    "cross-chain",
+    "fees",
+    "hermes",
+    "price-aggregation",
+    "ema-price-aggregation"
   ]
 }

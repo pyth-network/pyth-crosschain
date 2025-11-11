@@ -1,7 +1,5 @@
 {
-  "pages": [
-    "[Account Structure](./account-structure)",
-    "[Product Metadata](./product-metadata)",
-    "[Schedule Format](./schedule-format)"
-  ]
+  "title": "Pythnet Reference",
+  "pages": ["account-structure", "product-metadata", "schedule-format"],
+  "defaultOpen": false
 }

@@ -26,16 +26,16 @@ export const Homepage = () => {
           quickLinks={[
             {
               label: "Getting Started",
-              href: "/price-feeds/v1/getting-started",
+              href: "/price-feeds/core",
             },
-            { label: "API Reference", href: "/openapi/hermes" },
+            { label: "API Reference", href: "/price-feeds/core/api-reference" },
             {
               label: "Contract Addresses",
-              href: "/price-feeds/v1/contract-addresses",
+              href: "/price-feeds/core/contract-addresses",
             },
           ]}
           buttonLabel="Get started"
-          buttonHref="/price-feeds/v1"
+          buttonHref="/price-feeds/core"
         />
         <ProductCard
           title="Pyth Pro"
@@ -55,13 +55,16 @@ export const Homepage = () => {
           quickLinks={[
             {
               label: "Get Pyth Pro Access Token",
-              href: "/price-feeds/v2/acquire-an-access-token",
+              href: "/price-feeds/pro/access-token",
             },
-            { label: "Browse Supported Feeds", href: "/price-feeds" },
-            { label: "Error Codes", href: "/price-feeds" },
+            {
+              label: "Browse Supported Feeds",
+              href: "/price-feeds/pro/price-feeds",
+            },
+            { label: "Error Codes", href: "/price-feeds/pro/error-codes" },
           ]}
           buttonLabel="Get started"
-          buttonHref="/price-feeds"
+          buttonHref="/price-feeds/pro"
         />
         <ProductCard
           title="Entropy"

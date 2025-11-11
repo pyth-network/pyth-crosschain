@@ -27,7 +27,12 @@ price_account .. CqFJLrT4rSpA46RQkVYWn8tdBDuQ7p7RXcp6Um76oaph
 
 In an EMA the most recent samples receive the most weight, and samples further back in time get exponentially less weight the farther in the past they are. For a 1 hour EMA, the samples 1 hour in the past get 50% of the weighting, samples 2 hours in the past get 25% of the weighting, 3 hours in the past get 12.5% of the weighting, etc.
 
-![EMA price aggregation example 1](/images/EMA_Price_Aggregation_1.png)
+<figure className="image-container">
+  <img
+    src="/images/EMA_Price_Aggregation_1.png"
+    alt="EMA price aggregation example 1"
+  />
+</figure>
 
 While conceptually not as simple as an SMA (Simple Moving Average), the EMA has a particularly simple implementation for streaming applications such as Pyth. The exponential weighting method allows the entire history of prices and weights to be represented by a single number.
 
@@ -42,6 +47,11 @@ The current Pyth averaging method is a slot-weighted, inverse confidence-weighte
 - **Slot weighted** — The Pyth EMA uses the Pythnet slot number to measure the passage of time. The averaging period is 5921 slots, which corresponds to approximately 1 hour on Pythnet.
 - **Inverse confidence weighted** — Weighting each sample by 1/Confidence lets the EMA give more weight to samples with tight confidence and ignore samples with very wide confidence. Below is an example of an outlier aggregate price with a wide confidence interval. Notice how the average using inverse confidence weighting does not get pulled up by the outlier sample while the uniform weighted average does.
 
-![EMA price aggregation example 2](/images/EMA_Price_Aggregation_2.png)
+<figure className="image-container">
+  <img
+    src="/images/EMA_Price_Aggregation_2.png"
+    alt="EMA price aggregation example 2"
+  />
+</figure>
 
 For more details and explanations, be sure to read the dedicated blog post on this topic [here](https://pythnetwork.medium.com/whats-in-a-name-302a03e6c3e1).
