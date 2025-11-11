@@ -1,0 +1,44 @@
+{
+  "name": "{{name}}",
+  "description": "{{description}}",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "{{name}}": "./bin.js"
+  },
+  "files": [
+    "bin.js",
+    "dist/**"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "{{relativeFolder}}"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "build": "ts-duality --noCjs",
+    "clean": "rm -rf dist/",
+    "fix:lint": "eslint src/ --fix --max-warnings 0",
+    "fix:format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "pnpm run build && pnpm run test:lint",
+    "test:lint": "eslint src/ --max-warnings 0",
+    "test:format": "prettier --check \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:"
+  },
+  "dependencies": {
+    "yargs": "catalog:"
+  }
+}

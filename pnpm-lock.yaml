@@ -192,6 +192,9 @@ catalogs:
     eslint:
       specifier: ^9.23.0
       version: 9.23.0
+    fast-glob:
+      specifier: ^3.3.3
+      version: 3.3.3
     framer-motion:
       specifier: ^12.6.3
       version: 12.9.2
@@ -231,6 +234,9 @@ catalogs:
     match-sorter:
       specifier: ^8.1.0
       version: 8.1.0
+    micromustache:
+      specifier: ^8.0.3
+      version: 8.0.3
     modern-normalize:
       specifier: ^3.0.1
       version: 3.0.1
@@ -2173,9 +2179,15 @@ importers:
       chalk:
         specifier: 'catalog:'
         version: 5.6.2
+      fast-glob:
+        specifier: 'catalog:'
+        version: 3.3.3
       fs-extra:
         specifier: 'catalog:'
         version: 11.3.2
+      micromustache:
+        specifier: 'catalog:'
+        version: 8.0.3
       prompts:
         specifier: 'catalog:'
         version: 2.4.2
@@ -17257,6 +17269,10 @@ packages:
   micromatch@4.0.8:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
+
+  micromustache@8.0.3:
+    resolution: {integrity: sha512-SXjrEPuYNtWq0reR9LR2nHdzdQx/3re9HPcDGjm00L7hi2RsH5KMRBhYEBvPdyQC51RW/2TznjwX/sQLPPyHNw==}
+    engines: {node: '>=8'}
 
   miller-rabin@4.0.1:
     resolution: {integrity: sha512-115fLhvZVqWwHPbClyntxEVfVDfl9DLLTuJvq3g2O/Oxi8AiNouAHvDSzHS0viUJc+V5vm3eq91Xwqn9dp4jRA==}
@@ -45527,6 +45543,8 @@ snapshots:
     dependencies:
       braces: 3.0.3
       picomatch: 2.3.1
+
+  micromustache@8.0.3: {}
 
   miller-rabin@4.0.1:
     dependencies:

@@ -117,6 +117,7 @@ catalog:
   dnum: ^2.14.0
   eslint: ^9.23.0
   fuels: 0.101.3
+  fast-glob: ^3.3.3
   framer-motion: ^12.6.3
   fumadocs-core: ^15.7.12
   fumadocs-mdx: ^11.10.0
@@ -131,6 +132,7 @@ catalog:
   lightweight-charts: ^5.0.5
   lucide-react: ^0.487.0
   match-sorter: ^8.1.0
+  micromustache: ^8.0.3
   modern-normalize: ^3.0.1
   motion: ^12.9.2
   next: ^15.5.0

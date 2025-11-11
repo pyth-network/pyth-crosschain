@@ -7,6 +7,11 @@
   "engines": {
     "node": ">=22.14.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "{{relativeFolder}}"
+  },
   "scripts": {
     "build:vercel": "next build",
     "fix:format": "prettier --write .",
