@@ -20,9 +20,10 @@ import {
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { useDetectBrowserInfo } from '@pythnetwork/react-hooks/use-detect-browser-info';
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
@@ -132,10 +133,19 @@ const SearchDialogContents = ({
   feeds,
   publishers,
 }: SearchDialogContentsProps) => {
+  /** hooks */
   const drawer = useDrawer();
   const logger = useLogger();
+  const browserInfo = useDetectBrowserInfo();
+
+  /** refs */
+  const openTabModifierActiveRef = useRef(false);
+  const middleMousePressedRef = useRef(false);
+
+  /** state */
   const [search, setSearch] = useState("");
   const [type, setType] = useState<ResultType | "">("");
+
   const closeDrawer = useCallback(() => {
     drawer.close().catch((error: unknown) => {
       logger.error(error);
@@ -231,13 +241,29 @@ const SearchDialogContents = ({
                     : (result.name ?? result.publisherKey)
                 }
                 className={styles.item ?? ""}
-                onAction={closeDrawer}
                 href={
                   result.type === ResultType.PriceFeed
                     ? `/price-feeds/${encodeURIComponent(result.symbol)}`
                     : `/publishers/${ClusterToName[result.cluster]}/${encodeURIComponent(result.publisherKey)}`
                 }
                 data-is-first={result.id === results[0]?.id ? "" : undefined}
+                onPointerDown={e => {
+                  middleMousePressedRef.current = e.button === 1;
+                  // on press is too abstracted and doesn't give us the native event
+                  // for determining if the user clicked their middle mouse button,
+                  // so we need to use the native onClick directly
+                  middleMousePressedRef.current = e.button === 1;
+                  openTabModifierActiveRef.current = (browserInfo?.isMacOS && e.metaKey) ?? e.ctrlKey;
+                }}
+                onPointerUp={() => {
+                  const userWantsNewTab = middleMousePressedRef.current || openTabModifierActiveRef.current;
+                  
+                  // they want a new tab, the search popover stays open
+                  if (!userWantsNewTab) closeDrawer();
+                  
+                  middleMousePressedRef.current = false;
+                  openTabModifierActiveRef.current = false;
+                }}
               >
                 <div className={styles.smallScreen}>
                   {result.type === ResultType.PriceFeed ? (
