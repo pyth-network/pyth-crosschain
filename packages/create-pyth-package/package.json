@@ -1,11 +1,11 @@
 {
   "private": true,
-  "name": "@pythnetwork/create-pyth-app",
+  "name": "@pythnetwork/create-pyth-package",
   "description": "bootstrapper to quickly create a best-practices TypeScript library or application",
   "version": "0.0.0",
   "type": "module",
   "bin": {
-    "create-pyth-app": "./bin/create-pyth-app"
+    "create-pyth-package": "./bin/create-pyth-package"
   },
   "engines": {
     "pnpm": ">=10.19.0",
@@ -16,7 +16,7 @@
     "src/**"
   ],
   "scripts": {
-    "start": "tsx ./src/create-pyth-app.ts",
+    "start": "tsx ./src/create-pyth-package.ts",
     "test:types": "tsc --noEmit"
   },
   "dependencies": {

@@ -391,9 +391,9 @@ importers:
       '@cprussin/tsconfig':
         specifier: 'catalog:'
         version: 3.1.2(typescript@5.9.3)
-      '@pythnetwork/create-pyth-app':
+      '@pythnetwork/create-pyth-package':
         specifier: 'workspace:'
-        version: link:packages/create-pyth-app
+        version: link:packages/create-pyth-package
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -2174,7 +2174,7 @@ importers:
         specifier: 'catalog:'
         version: 14.0.0(postcss@8.5.3)(stylelint@16.17.0(typescript@5.9.3))
 
-  packages/create-pyth-app:
+  packages/create-pyth-package:
     dependencies:
       app-root-path:
         specifier: 'catalog:'
