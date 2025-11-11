@@ -1,0 +1,176 @@
+---
+title: How to Use Real-Time Data in Stacks Applications
+description: Consume Pyth Network prices in Stacks applications
+slug: /price-feeds/core/use-real-time-data/pull-integration/stacks
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+[Stacks](https://www.stacks.co/) is a layer 2 network on Bitcoin. It brings programmability and decentralized applications (dApps) to Bitcoin without modifying Bitcoin itself. Stacks lets developers build apps, smart contracts, NFTs, and DeFi on top of Bitcoin — while using Bitcoin as the settlement and security layer.
+
+This guide explains how to use real-time Pyth data in [Clarity](https://clarity-lang.org/) smart contracts on Stacks.
+
+## Write Contract Code
+
+The Pyth protocol integration for Stacks is available as a Beta on both testnet and mainnet networks, to help developers test, give feedback, and ensure the reliability and stability of the integration.
+Unlike other smart contract languages, there is no importing modules into Clarity smart contracts for certain security reasons. So the Pyth integration on Stacks is implemented as its own set of Clarity contracts where developers will invoke a `contract-call?` to the main Pyth Clarity [contract](https://explorer.hiro.so/txid/SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4?chain=mainnet).
+
+<Callout type="info" title="Supported Assets">
+  Currently, the Pyth protocol integration is currently maintained by Trust
+  Machines. It currently supports real-time price feeds for BTC, STX, ETH, and
+  USDC. To request more price feeds, open an issue in Trust Machine's Pyth
+  maintained repo [here](https://github.com/Trust-Machines/stacks-pyth-bridge).
+</Callout>
+
+### Read BTC prices from a Clarity smart contract
+
+For our example, we will imagine a contract that mints an NFT in exchange for $100 of sBTC. In order to determine the USD value of a user's sBTC amount, we'll need to use Pyth. Since market pricing for sBTC isn't supported currently, we'll use the price data from the BTC/USD price feed.
+
+<Callout type="info" title="Pyth Oracle Contract">
+  The maintained Pyth integration contract for Stacks is called
+  [`.pyth-oracle-v4`](https://explorer.hiro.so/txid/SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4?chain=mainnet).
+  This contract serves as the main entry point for updating and getting price
+  feed data.
+</Callout>
+
+You'll notice in the Clarity snippet below we open up `let` bindings of our function to:
+
+1. Verify & update the BTC price feed with its latest VAA message (more on how to pull the VAA later in this guide). This is a means of participating in the pull price update model.
+2. Getting a fresh instance of the updated price data for BTC.
+
+```clarity
+;; --snip--
+(define-public (join-the-benjamin-club (price-feed-bytes (buff 8192)))
+  (let (
+      ;; To verify & update price feeds is to participate in the pull price model of Pyth's decentralization.
+      ;; A VAA signed message is pulled from Wormhole via the Hermes API. This VAA signed message is what
+      ;; gets passed into this function to verify & update the price data of a particular price feed.
+      (update-status (try! (contract-call? 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4
+        verify-and-update-price-feeds price-feed-bytes {
+        pyth-storage-contract: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-storage-v4,
+        pyth-decoder-contract: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-pnau-decoder-v3,
+        wormhole-core-contract: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-core-v4,
+      })))
+      ;; The price data returned will be fresh from the VAA signed message data we passed in above.
+      (price-data (try! (contract-call? 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4
+        get-price
+        ;; The official BTC price feed id.
+        0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+        'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-storage-v4
+      )))
+    ;; --snip--
+```
+
+After updating & verifying the price feed in question, and then getting the updated price feed data, we'll need to handle the price feed data and its properties.
+The price feed data returned from invoking the `get-price` function of the `.pyth-oracle-v4` contract looks like the below:
+
+```bash
+{
+  price-identifier: 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43,
+  price: 10603557773590,
+  conf: u3776653890,
+  ema-price: 10602069900000,
+  ema-conf: u4062895700,
+  expo: -8,
+  publish-time: u1750425711,
+  prev-publish-time: u1750425710
+}
+```
+
+With the price feed data, we can adjust the price based on the `expo` property. Price feeds represent numbers in a fixed-point format. So in the above returned price feed data, the price of `10603557773590` and given `expo` of `-8` should be formatted as `106035`. The same exponent is used for both the price and confidence interval.
+
+We can then determine the USD amount of sBTC the user owns and decide if it is enough to mint a `benjamin-nft` for $100 worth of sBTC. Benjamin is in reference to Benjamin Franklin being the face of a one hundred dollar bill, get it?
+
+```clarity
+;; --snip --
+      ;; Price feeds represent numbers in a fixed-point format. The expo property tells us
+      ;; at what certain position is the decimal point implicity fixed.
+      (price-denomination (pow 10 (* (get expo price-data) -1)))
+      ;; We'll adjust the price to its normal decimal representation.
+      (adjusted-price (to-uint (/ (get price price-data) price-denomination)))
+      ;; Get the user's current sBTC balance.
+      (user-sbtc-balance (unwrap!
+        (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
+          get-balance-available tx-sender
+        )
+        ERR_READING_SBTC_BALANCE
+      ))
+    )
+    ;; Determine if the user has at least $100 worth of sBTC to join the Benjamin Club.
+    (if (> (/ (* user-sbtc-balance adjusted-price) (to-uint price-denomination))
+        COST-OF-BENJAMIN-NFT
+      )
+      (let ((hundred-dollars-in-sbtc (/ (* COST-OF-BENJAMIN-NFT (to-uint price-denomination)) adjusted-price)))
+        (try! (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
+          transfer hundred-dollars-in-sbtc tx-sender (as-contract tx-sender)
+          none
+        ))
+        (contract-call? .nft-contract mint tx-sender)
+      )
+      ERR_NOT_ENOUGH_SBTC
+    )
+  )
+)
+```
+
+<Callout type="warning" title="Update Fees">
+  The `verify-and-update-price-feeds` of the `.pyth-oracle-v4` contract applies
+  a fee of 1 uSTX, or 1 micro-stx, which is 0.000001 STX.
+</Callout>
+
+Alternatively, developers can just invoke the `read-price-feed` public function of the `pyth-oracle-v4.clar` contract. This will simply return the price feed from the last updated feed. But it's always encouraged to determine if a staleness check is viable for your application.
+
+## Write Front-End Code
+
+In your front-end application code, you can install and use the methods brought by Pyth Network's `hermes-client` Javascript SDK to fetch the latest price update, known as a VAA (Verified Action Approvals) message.
+
+```javascript copy
+import { HermesClient } from "@pythnetwork/hermes-client";
+
+// --snip--
+async function handleFetchLatestVaa() {
+  const connection = new HermesClient("https://hermes.pyth.network", {});
+
+  const priceIds = [
+    "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+  ];
+
+  const priceUpdates = await connection.getLatestPriceUpdates(priceIds);
+  let latestVaaHex = `0x${priceUpdates.binary.data[0]}`;
+
+  return latestVaaHex;
+}
+// --snip--
+```
+
+The binary data returned from the Pyth SDK will already be in hexadecimal format. We'll then take this hexadecimal VAA message and pass it into our Clarity function as an argument.
+
+Using Stacks Connect of the [stacks.js](https://github.com/hirosystems/stacks.js) monorepo, we'll open up a stx_callContract request and invoke our public function while passing in the latestVaaHex as the function argument.
+
+```javascript copy
+let latestVaaHex = await handleFetchLatestVaa();
+
+let postCond1 = Pc.principal("SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R")
+  .willSendLte(1)
+  .ustx();
+
+const response = await request("stx_callContract", {
+  contract: `SP1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRCBGD7R.benjamin-club`,
+  functionName: "join-the-benjamin-club",
+  functionArgs: [Cl.bufferFromHex(latestVaaHex)],
+  network: "mainnet",
+  postConditions: [postCond1],
+  postConditionMode: "deny",
+});
+```
+
+If you noticed, we set a post-condition statement of our user transferring less than or equal to 1 uSTX, which is 0.000001 STX. This is because the `verify-and-update-price-feeds` of the `.pyth-oracle-v4` contract applies a fee for this. Setting a separate post-condition statement on the actual sbtc token transfer in our example will also be needed. Beforehand, you could invoke the `decode-price-feeds` function with the `latestVaaHex` to simply have the contained price data decoded and returned. From there you could pre-determine the estimated amount of sbtc tokens to be transferred and set in a separate post-condition.
+
+## Additional Resources
+
+You may find these additional resources helpful for developing your Stacks application with Pyth.
+
+- **[Hiro Docs](https://docs.hiro.so/resources/guides/using-pyth-price-feeds):** Check out the dedicated guide for using Pyth in Stacks applications in Hiro's documentation. In this guide you'll see a visual architecture overview of using Pyth in Stacks, how you can test your implementation, how to fetch VAAs on the front-end, learn best practices, and more.
+- **[Hiro How-To Tutorial](https://youtu.be/eybqQVRh_hw?si=KNfUp3RS3CnaST91):** Watch the dedicated video tutorial on using Pyth in Stacks and learn how a major Stacks DeFi app, Granite, is using Pyth.
+- **[Trust Machine's Pyth Github](https://github.com/Trust-Machines/stacks-pyth-bridge):** Check out the open-source repo for the Pyth integration Clarity contracts.
+- **[pyth-oracle-v4.clar](https://explorer.hiro.so/txid/SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4?chain=mainnet):** The latest Pyth integration contract on Stacks' mainnet.

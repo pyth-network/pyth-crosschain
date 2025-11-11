@@ -1,7 +1,3 @@
 {
-  "pages": [
-    "[Using Adrastia](./using-adrastia)",
-    "[Using Gelato](./using-gelato)",
-    "[Using Price Pusher](./using-price-pusher)"
-  ]
+  "pages": ["using-price-pusher", "using-adrastia", "using-gelato"]
 }

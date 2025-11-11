@@ -13,6 +13,7 @@ import {
   BookOpen,
   SquaresFour,
 } from "@phosphor-icons/react/dist/ssr";
+import styles from "./index.module.scss";
 
 Pyth Price Feeds deliver real-time financial market data sources from 120+ first-party providers. These providers include leading exchanges, banks, trading firms, and market makers. Additionally, Pyth Price data can be verified on 100+ blockchains.
 
@@ -20,7 +21,7 @@ Pyth Price Feeds deliver real-time financial market data sources from 120+ first
 
 Pyth offers two main versions of price feeds, each optimized for different use cases:
 
-<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+<div className={styles.productGrid}>
   <ProductCard
     title="Pyth Pro"
     description="Subscription-based price data for institutions and advanced use cases. Previously known as Lazer."
@@ -64,54 +65,39 @@ Pyth offers two main versions of price feeds, each optimized for different use c
 
 <Cards>
   <Card icon={<Tag size={18} />} title="Price Feed IDs">
-    <p className="text-sm text-muted-foreground">
+    <p className={styles.resourceDescription}>
       Complete price feed coverage for both Pyth Core and Pyth Pro.
     </p>
-    <div className="mt-4 flex flex-wrap gap-3 text-sm">
-      <Link
-        className="text-brand-300 hover:underline"
-        href="/price-feeds/core/price-feeds"
-      >
-        Pyth Core IDs ->
-      </Link>
-      <Link
-        className="text-brand-300 hover:underline"
-        href="/price-feeds/pro/price-feeds"
-      >
-        Pyth Pro IDs ->
-      </Link>
-    </div>
+    <Link className={styles.resourceLink} href="/price-feeds/core/price-feeds">
+      Pyth Core IDs ->
+    </Link>
+    <Link className={styles.resourceLink} href="/price-feeds/pro/price-feeds">
+      Pyth Pro IDs ->
+    </Link>
   </Card>
   <Card icon={<BookOpen size={18} />} title="API Reference">
-    <p className="text-sm text-muted-foreground">
+    <p className={styles.resourceDescription}>
       Explore REST and WebSocket APIs for Core and Pro integrations.
     </p>
-    <div className="mt-4 flex flex-wrap gap-3 text-sm">
-      <Link
-        className="text-brand-300 hover:underline"
-        href="/price-feeds/core/api-reference"
-      >
-        Core APIs ->
-      </Link>
-      <Link
-        className="text-brand-300 hover:underline"
-        href="/price-feeds/pro/api-reference"
-      >
-        Pro APIs ->
-      </Link>
-    </div>
+    <Link
+      className={styles.resourceLink}
+      href="/price-feeds/core/api-reference"
+    >
+      Core APIs ->
+    </Link>
+    <Link className={styles.resourceLink} href="/price-feeds/pro/api-reference">
+      Pro APIs ->
+    </Link>
   </Card>
   <Card icon={<SquaresFour size={18} />} title="Examples">
-    <p className="text-sm text-muted-foreground">
+    <p className={styles.resourceDescription}>
       Review sample applications and integration workflows using Pyth data.
     </p>
-    <div className="mt-4 text-sm">
-      <Link
-        className="text-brand-300 hover:underline"
-        href="https://github.com/pyth-network/pyth-examples"
-      >
-        View examples ->
-      </Link>
-    </div>
+    <Link
+      className={styles.resourceLink}
+      href="https://github.com/pyth-network/pyth-examples"
+    >
+      View examples ->
+    </Link>
   </Card>
 </Cards>

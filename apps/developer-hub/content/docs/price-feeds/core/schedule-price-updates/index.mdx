@@ -1,0 +1,23 @@
+---
+title: Schedule Price Updates
+description: Compare options for automating on-chain Pyth price updates
+slug: /price-feeds/core/schedule-price-updates
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This guide introduces the available options for scheduling Pyth price updates at regular intervals. Pyth is a pull oracle, so applications are typically responsible for updating prices on-chain. To learn more about the model, review [What is a Pull Oracle?](/price-feeds/core/pull-updates).
+
+The Pyth Data Association sponsors regular updates for select feeds. See the [push feeds overview](/price-feeds/core/push-feeds) for the current schedule and use the [request form](https://tally.so/r/nGz2jj) if you need additional coverage.
+
+You can also automate updates using any of the following services:
+
+- [Adrastia’s Pyth Price Feed Updater](./using-adrastia) — a managed service for time- and deviation-based updates on any EVM chain
+- [Gelato](./using-gelato) — a turnkey automation platform for scheduled updates
+- [Price Pusher](./using-price-pusher) — an off-chain service you can operate to trigger updates when specific time or price thresholds are met
+
+<Callout type="info" title="Tune Deviation Thresholds Carefully">
+  Lower deviation thresholds lead to more frequent on-chain transactions. While
+  this improves freshness, it also increases gas costs. Adjust thresholds
+  according to your product’s latency and cost requirements.
+</Callout>

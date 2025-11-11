@@ -1,0 +1,280 @@
+---
+title: Pyth-Agent WebSocket API
+description: Reference for publishing prices through the pyth-agent JSON-RPC WebSocket interface
+slug: /price-feeds/core/publish-data/pyth-client-websocket-api
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+[`pyth-agent`](https://github.com/pyth-network/pyth-agent) exposes a WebSocket interface that follows the JSON-RPC 2.0 specification. The primary methods are:
+
+- [`get_product_list`](#get_product_list)
+- [`update_price`](#update_price)
+- [`subscribe_price_sched`](#subscribe_price_sched)
+- [`get_product`](#get_product)
+- [`get_all_products`](#get_all_products)
+
+Batch requests execute in the order submitted. **Batching is highly recommended when updating 50 or more price feeds.**
+
+## `get_product_list`
+
+Retrieve the list of available symbols and associated metadata. All attributes in the `attr_dict` dictionary are optional—clients should tolerate missing fields.
+
+**Request**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "method": "get_product_list",
+  "id": 1
+}
+```
+
+**Response**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "result": [
+    {
+      "account": "9F6eBgAfktth93C9zmtKDXFXNjZkq6JwJR56VPKqWmJm",
+      "attr_dict": {
+        "symbol": "SYMBOL1/USD",
+        "asset_type": "Equity",
+        "country": "USA",
+        "description": "pyth example product #1",
+        "quote_currency": "USD",
+        "tenor": "Spot",
+        "cms_symbol": "SYMBOL1",
+        "cqs_symbol": "SYMBOL1",
+        "nasdaq_symbol": "SYMBOL1"
+      },
+      "price": [
+        {
+          "account": "CrZCEEt3awgkGLnVbsv45Pp4aLhr7fZfZr3ubzrbNXaq",
+          "price_exponent": -4,
+          "price_type": "price"
+        }
+      ]
+    }
+  ],
+  "id": null
+}
+```
+
+## `update_price`
+
+Publish a price update using the signing key configured in `pyth-agent`. The `price` and `conf` parameters use fixed-point integers; apply the symbol’s exponent to derive decimal values. `status` can be `"trading"` or `"unknown"`.
+
+**Request**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "method": "update_price",
+  "params": {
+    "account": "CrZCEEt3awgkGLnVbsv45Pp4aLhr7fZfZr3ubzrbNXaq",
+    "price": 42002,
+    "conf": 3,
+    "status": "trading"
+  },
+  "id": 1
+}
+```
+
+**Response**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "result": 0,
+  "id": 1
+}
+```
+
+## `subscribe_price_sched`
+
+Request notifications when it is time to submit the next price for a given symbol.
+
+<Callout type="warning" title="Avoid Saturating the Connection">
+  This method can saturate the link between the agent and the client. Implement
+  client-side scheduling or publish updates immediately when notified.
+</Callout>
+
+**Request**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "method": "subscribe_price_sched",
+  "params": {
+    "account": "CrZCEEt3awgkGLnVbsv45Pp4aLhr7fZfZr3ubzrbNXaq"
+  },
+  "id": 1
+}
+```
+
+**Subscription Response**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "subscription": 1234
+  },
+  "id": 1
+}
+```
+
+Subsequent notifications reference the subscription ID:
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "method": "notify_price_sched",
+  "params": {
+    "subscription": 1234
+  }
+}
+```
+
+## `get_product`
+
+Return detailed product information for a specific account. As with `get_product_list`, treat attributes as optional.
+
+**Request**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "method": "get_product",
+  "params": {
+    "account": "4aDoSXJ5o3AuvL7QFeR6h44jALQfTmUUCTVGDD6aoJTM"
+  },
+  "id": 1
+}
+```
+
+**Response**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "account": "4aDoSXJ5o3AuvL7QFeR6h44jALQfTmUUCTVGDD6aoJTM",
+    "attr_dict": {
+      "asset_type": "Crypto",
+      "symbol": "BTC/USD",
+      "country": "US",
+      "quote_currency": "USD",
+      "description": "BTC/USD",
+      "tenor": "Spot",
+      "generic_symbol": "BTCUSD"
+    },
+    "price_accounts": [
+      {
+        "account": "GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU",
+        "price_type": "price",
+        "price_exponent": -8,
+        "status": "trading",
+        "price": 4426101900000,
+        "conf": 4271150000,
+        "ema_price": 4433467600000,
+        "ema_confidence": 1304202670,
+        "valid_slot": 91402257,
+        "pub_slot": 91402259,
+        "prev_slot": 91402256,
+        "prev_price": 4425895500000,
+        "prev_conf": 3315350000,
+        "publisher_accounts": [
+          {
+            "account": "HekM1hBawXQu6wK6Ah1yw1YXXeMUDD2bfCHEzo25vnEB",
+            "status": "trading",
+            "price": 4426958500000,
+            "conf": 1492500000,
+            "slot": 91402255
+          },
+          {
+            "account": "GKNcUmNacSJo4S2Kq3DuYRYRGw3sNUfJ4tyqd198t6vQ",
+            "status": "trading",
+            "price": 4424690000000,
+            "conf": 3690000000,
+            "slot": 91402256
+          }
+        ]
+      }
+    ]
+  },
+  "id": 1
+}
+```
+
+## `get_all_products`
+
+Return full product data for every symbol.
+
+**Request**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "method": "get_all_products",
+  "id": 1
+}
+```
+
+**Response**
+
+```json copy
+{
+  "jsonrpc": "2.0",
+  "result": [
+    {
+      "account": "5uKdRzB3FzdmwyCHrqSGq4u2URja617jqtKkM71BVrkw",
+      "attr_dict": {
+        "asset_type": "Crypto",
+        "symbol": "BCH/USD",
+        "country": "US",
+        "quote_currency": "USD",
+        "description": "BCH/USD",
+        "tenor": "Spot",
+        "generic_symbol": "BCHUSD"
+      },
+      "price_accounts": [
+        {
+          "account": "5ALDzwcRJfSyGdGyhP3kP628aqBNHZzLuVww7o9kdspe",
+          "price_type": "price",
+          "price_exponent": -8,
+          "status": "trading",
+          "price": 60282000000,
+          "conf": 26000000,
+          "ema_price": 60321475000,
+          "ema_confidence": 22504746,
+          "valid_slot": 91402601,
+          "pub_slot": 91402604,
+          "prev_slot": 91402600,
+          "prev_price": 60282000000,
+          "prev_conf": 26000000,
+          "publisher_accounts": [
+            {
+              "account": "HekM1hBawXQu6wK6Ah1yw1YXXeMUDD2bfCHEzo25vnEB",
+              "status": "trading",
+              "price": 60282000000,
+              "conf": 26000000,
+              "slot": 91402599
+            },
+            {
+              "account": "2V7t5NaKY7aGkwytCWQgvUYZfEr9XMwNChhJEakTExk6",
+              "status": "unknown",
+              "price": 0,
+              "conf": 0,
+              "slot": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "id": 1
+}
+```

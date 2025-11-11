@@ -1,0 +1,14 @@
+---
+title: Using Price Pusher
+description: Automate on-chain Pyth price updates with the Price Pusher service
+slug: /price-feeds/core/schedule-price-updates/using-price-pusher
+---
+
+The [Price Pusher](https://github.com/pyth-network/pyth-crosschain/tree/main/apps/price_pusher)
+is an off-chain service that continuously pulls price updates onto a blockchain.
+Anyone can operate this service to keep on-chain Pyth prices current based on configurable criteria such as minimum update intervals or price change thresholds.
+
+Running the Price Pusher is a straightforward way to migrate from a push oracle: protocols that depend on regular updates can achieve the same behavior by operating this service. Refer to the project README for setup instructions and configuration details.
+
+For a walkthrough, see Ali’s tutorial on building with Pyth data:
+[How to Build with Pyth Data on EVM Chains (with Pusher): Pyth Tutorials](https://youtu.be/yhmo81JOH10).

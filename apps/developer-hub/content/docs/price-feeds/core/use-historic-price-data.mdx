@@ -1,0 +1,109 @@
+---
+title: Use Historic Price Data (Benchmarks)
+description: Learn how to query and verify historical Pyth price feeds
+slug: /price-feeds/core/use-historic-price-data
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+This guide explains how to integrate **Pyth Benchmarks** to access historical price data across applications. The Benchmarks API is available on all Pythnet chains.
+
+<Callout type="info" title="Benchmarks Terminology">
+  Throughout this guide, **Benchmarks** refers to Pyth’s historical price data
+  service.
+</Callout>
+
+## Overview
+
+Pyth Benchmarks lets you query historical prices at specific timestamps. Typical use cases include:
+
+- **Contract settlement** for derivatives such as options or futures
+- **Backtesting** trading strategies with historical data
+- **Audit and compliance** workflows that require price verification
+- **Analytics** to analyze market behavior over time
+
+Benchmarks supports two complementary flows:
+
+<Steps>
+  <Step title="Fetch historical prices via the Benchmarks API">
+    Retrieve data from the [Benchmarks API](https://benchmarks.pyth.network/docs#/Updates/price_updates_timestamp_route_v1_updates_price__timestamp__get) or through the
+    [Hermes timestamp API](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates).
+    Two REST endpoints are available:
+
+    - [`/v1/updates/price/{timestamp}`](https://benchmarks.pyth.network/docs#/): returns prices for the requested feeds at a given timestamp.
+    - [`/v1/updates/price/{timestamp}/{interval}`](https://benchmarks.pyth.network/docs#/): returns prices for a feed at the given timestamp and interval.
+
+    <Callout type="info" title="Interval Window">
+      The interval parameter represents the number of seconds added to the provided timestamp.
+      For example, with timestamp `1716400000` and interval `60`, the API returns price updates
+      from `1716400000` through `1716400060` (inclusive). The interval must not exceed `60`
+      seconds.
+    </Callout>
+
+  </Step>
+  <Step title="Verify historical prices on EVM chains">
+    After fetching price updates, pass the result to [`parsePriceFeedUpdates`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) instead of [`updatePriceFeeds`](https://api-reference.pyth.network/price-feeds/evm/updatePriceFeeds) when interacting with the Pyth contract.
+
+```solidity copy
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+
+contract HistoricalPriceConsumer {
+    IPyth public pyth;
+
+    constructor(address _pyth) {
+        pyth = IPyth(_pyth);
+    }
+
+    function settleWithHistoricalPrice(
+        bytes[] calldata priceUpdate,
+        uint256 priceId,
+        uint256 minPublishTime,
+        uint256 maxPublishTime,
+    ) external {
+        // The parsePriceFeedUpdates function requires a fee to be paid.
+        // The fee is the same as the fee for the updatePriceFeeds function.
+        uint fee = pyth.getUpdateFee(priceUpdate);
+        PythStructs.Price memory price = pyth.parsePriceFeedUpdates{value: fee}(
+            priceUpdate,
+            priceId,
+            minPublishTime,
+            maxPublishTime,
+        );
+
+        // Use the historical price for settlement
+        uint256 settlementPrice = uint256(price.price);
+        // ... settlement logic
+    }
+}
+```
+
+    The verification flow differs from [real-time price updates](/price-feeds/core/use-real-time-data/pull-integration/evm) in that it:
+
+    - Calls `parsePriceFeedUpdates` instead of `updatePriceFeeds`
+    - Provides the price feed ID to ensure the update matches the feed
+    - Supplies `minPublishTime` and `maxPublishTime` to enforce the allowable timestamp window, reverting with `PriceFeedNotFoundWithinRange` when updates fall outside the range
+
+    Consult the [API reference](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates) for additional implementation details.
+
+  </Step>
+</Steps>
+
+## Additional Resources
+
+### API Reference
+
+- [Benchmarks API documentation](https://benchmarks.pyth.network/docs)
+- [Pyth on-chain API reference](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates)
+
+### TradingView Integration
+
+- [TradingView integration](./create-tradingview-charts) for visualization
+
+### Rate Limits
+
+- Benchmarks API inherits the same limits as the [Hermes API](./rate-limits)

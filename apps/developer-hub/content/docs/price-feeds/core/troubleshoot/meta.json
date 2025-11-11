@@ -1,6 +1,3 @@
 {
-  "pages": [
-    "[EVM Price Feeds Contract](./evm)",
-    "[SVM Price Feeds Contract](./svm)"
-  ]
+  "pages": ["evm", "svm"]
 }
