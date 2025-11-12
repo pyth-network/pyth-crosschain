@@ -2,13 +2,15 @@
 
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import { Table, type ColumnConfig } from "@pythnetwork/component-library/Table";
+import type {ColumnConfig} from "@pythnetwork/component-library/Table";
+import { Table  } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+
 import CopyAddress from "../CopyAddress";
 import styles from "./index.module.scss";
 
@@ -67,7 +69,7 @@ export const PriceFeedIdsCoreTable = () => {
 
   const isLoading =
     state.type === StateType.Loading || state.type === StateType.NotLoaded;
-    
+
   const rows = paginatedItems.map((feed) => ({
     id: feed.symbol,
     data: {
