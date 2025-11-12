@@ -5,6 +5,7 @@ slug: /price-feeds/core/price-feeds/price-feed-ids
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
+import { Suspense } from "react";
 import { PriceFeedIdsCoreTable } from "../../../../../src/components/PriceFeedIdsCoreTable";
 
 # Price Feed IDs
@@ -27,5 +28,6 @@ Developers using any of these testnets:
 Please use the **Beta** price feed IDs instead of the stable ones.
 
 </Callout>
-
-<PriceFeedIdsCoreTable />
+<Suspense>
+  <PriceFeedIdsCoreTable />
+</Suspense>
