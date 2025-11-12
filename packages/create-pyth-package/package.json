@@ -16,8 +16,12 @@
     "src/**"
   ],
   "scripts": {
+    "fix:lint": "eslint --fix . --max-warnings 0",
+    "fix:format": "prettier --write .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:format": "prettier --check .",
     "start": "tsx ./src/create-pyth-package.ts",
-    "test:types": "tsc --noEmit"
+    "test:types": "tsc"
   },
   "dependencies": {
     "app-root-path": "catalog:",
@@ -34,6 +38,7 @@
     "@types/fs-extra": "catalog:",
     "@types/prompts": "catalog:",
     "eslint": "catalog:",
+    "prettier": "catalog:",
     "type-fest": "catalog:"
   }
 }

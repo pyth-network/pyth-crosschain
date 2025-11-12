@@ -2213,6 +2213,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.5.3
       type-fest:
         specifier: 'catalog:'
         version: 5.2.0
