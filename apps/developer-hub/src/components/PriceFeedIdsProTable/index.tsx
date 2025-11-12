@@ -26,12 +26,12 @@ export const PriceFeedIdsProTable = () => {
   }, []);
 
   const columns: ColumnConfig<Col>[] = [
-    { id: "Asset Type", name: "Asset Type", isRowHeader: true },
-    { id: "Description", name: "Description" },
-    { id: "Name", name: "Name" },
-    { id: "Symbol", name: "Symbol" },
-    { id: "Pyth Pro ID", name: "Pyth Pro ID" },
-    { id: "Exponent", name: "Exponent" },
+    { id: "asset_type", name: "Asset Type" },
+    { id: "description", name: "Description" },
+    { id: "name", name: "Name" },
+    { id: "symbol", name: "Symbol" },
+    { id: "pyth_lazer_id", name: "Pyth Pro ID", isRowHeader: true },
+    { id: "exponent", name: "Exponent" },
   ];
 
   const {
@@ -52,17 +52,14 @@ export const PriceFeedIdsProTable = () => {
     () => 1,
     (items, searchString) => {
       return matchSorter(items, searchString, {
-        keys: [
-          "Asset Type",
-          "Description",
-          "Name",
-          "Symbol",
-          "Pyth Pro ID",
-          "Exponent",
-        ],
+        keys: ["pyth_lazer_id"],
       });
     },
-    { defaultSort: "Pyth Pro ID", defaultPageSize: 20 },
+    {
+      defaultSort: "pyth_lazer_id",
+      defaultPageSize: 10,
+      defaultDescending: false,
+    },
   );
 
   if (state.type === StateType.Error) {
@@ -75,12 +72,12 @@ export const PriceFeedIdsProTable = () => {
   const rows = paginatedItems.map((feed) => ({
     id: feed.pyth_lazer_id,
     data: {
-      "Asset Type": feed.asset_type,
-      Description: feed.description,
-      Name: feed.name,
-      Symbol: feed.symbol,
-      "Pyth Pro ID": feed.pyth_lazer_id,
-      Exponent: feed.exponent,
+      asset_type: feed.asset_type,
+      description: feed.description,
+      name: feed.name,
+      symbol: feed.symbol,
+      pyth_lazer_id: feed.pyth_lazer_id,
+      exponent: feed.exponent,
     },
   }));
 
@@ -88,7 +85,7 @@ export const PriceFeedIdsProTable = () => {
     <>
       <SearchInput
         label="Search price feeds"
-        placeholder="Search by symbol or feed id"
+        placeholder="Search by symbol, name, or Pyth Pro ID"
         value={search}
         onChange={updateSearch}
         className={styles.searchInput ?? ""}
@@ -96,7 +93,7 @@ export const PriceFeedIdsProTable = () => {
 
       <Table<Col>
         {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
-        label="Price feed ids"
+        label="Pyth Pro price feed ids"
         columns={columns}
         onSortChange={updateSortDescriptor}
         sortDescriptor={sortDescriptor}
@@ -115,16 +112,6 @@ export const PriceFeedIdsProTable = () => {
       />
     </>
   );
-};
-
-const errorToString = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  } else if (typeof error === "string") {
-    return error;
-  } else {
-    return "An error occurred, please try again";
-  }
 };
 
 enum StateType {
@@ -150,7 +137,10 @@ const getPythProFeeds = async () => {
     "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
   );
   const data = pythProSchema.parse(await result.json());
-  return data;
+  return data.toSorted(
+    (firstFeed, secondFeed) =>
+      firstFeed.pyth_lazer_id - secondFeed.pyth_lazer_id,
+  );
 };
 
 const pythProSchema = z.array(
@@ -159,16 +149,25 @@ const pythProSchema = z.array(
     description: z.string(),
     name: z.string(),
     symbol: z.string(),
-    pyth_lazer_id: z.number(),
-    priceFeedId: z.number(),
+    pyth_lazer_id: z.number().int().positive(),
     exponent: z.number(),
   }),
 );
 
 type Col =
-  | "Asset Type"
-  | "Description"
-  | "Name"
-  | "Symbol"
-  | "Pyth Pro ID"
-  | "Exponent";
+  | "asset_type"
+  | "description"
+  | "name"
+  | "symbol"
+  | "pyth_lazer_id"
+  | "exponent";
+
+const errorToString = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  } else if (typeof error === "string") {
+    return error;
+  } else {
+    return "An error occurred, please try again";
+  }
+};
