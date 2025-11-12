@@ -14,6 +14,7 @@ export type CreatePythAppResponses = {
   isPublic: boolean;
   packageName: string;
   packageType: PackageType;
+  serverPort?: number;
 };
 
 export type InProgressCreatePythAppResponses = Partial<CreatePythAppResponses>;

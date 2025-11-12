@@ -1,14 +1,8 @@
-import { execSync } from "node:child_process";
 import path from "node:path";
 
 import appRootPath from "app-root-path";
 
-type PNPMPackageInfo = {
-  name: string;
-  path: string;
-  private: boolean;
-  version: string;
-};
+import { getAllMonorepoPackages } from "./get-all-monorepo-packages.js";
 
 const repoRoot = appRootPath.toString();
 
@@ -18,12 +12,7 @@ const repoRoot = appRootPath.toString();
  * directories for those, as a way to present the folder choice to the user.
  */
 export function getAvailableFolders() {
-  const allPackages = JSON.parse(
-    execSync("pnpm list --recursive --depth -1 --json", {
-      cwd: repoRoot,
-      stdio: "pipe",
-    }).toString("utf8"),
-  ) as PNPMPackageInfo[];
+  const allPackages = getAllMonorepoPackages();
 
   return [
     ...new Set(

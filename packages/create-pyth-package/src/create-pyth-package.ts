@@ -15,6 +15,7 @@ import prompts from "prompts";
 import type { PackageJson } from "type-fest";
 
 import { getAvailableFolders } from "./get-available-folders.js";
+import { getTakenPorts } from "./get-taken-ports.js";
 import { Logger } from "./logger.js";
 import type {
   CreatePythAppResponses,
@@ -70,6 +71,8 @@ function getTemplatesInputFolder(packageType: PackageType) {
 }
 
 async function createPythApp() {
+  const takenServerPorts = getTakenPorts();
+
   const responses = (await prompts([
     {
       choices: Object.values(PackageType).map((val) => ({
@@ -119,6 +122,25 @@ async function createPythApp() {
     },
     {
       message:
+        "On which port do you want your web application server to listen?",
+      name: "serverPort",
+      type: (_, { packageType }: InProgressCreatePythAppResponses) =>
+        packageType === PackageType.WEBAPP ? "number" : false,
+      validate: (port: number | string) => {
+        const portStr = String(port);
+        const taken = takenServerPorts.has(Number(port));
+        const portHasFourDigits = portStr.length >= 4;
+        if (taken) {
+          return `${portStr} is already taken by another application. Please choose another port.`;
+        }
+        if (!portHasFourDigits) {
+          return "please specify a port that has at least 4 digits";
+        }
+        return true;
+      },
+    },
+    {
+      message:
         "Are you intending on publishing this, publicly on NPM, for users outside of our org to use?",
       name: "isPublic",
       type: (_, { packageType }: InProgressCreatePythAppResponses) =>
@@ -144,8 +166,15 @@ async function createPythApp() {
     },
   ])) as CreatePythAppResponses;
 
-  const { confirm, description, folder, isPublic, packageName, packageType } =
-    responses;
+  const {
+    confirm,
+    description,
+    folder,
+    isPublic,
+    packageName,
+    packageType,
+    serverPort,
+  } = responses;
 
   if (!confirm) {
     Logger.warn("oops, you did not confirm your choices.");
@@ -188,6 +217,7 @@ async function createPythApp() {
           name: packageNameWithOrg,
           packageNameWithoutOrg,
           relativeFolder: relDest,
+          serverPort,
         });
         await fs.writeFile(fp, updatedContents, "utf8");
 
@@ -216,6 +246,8 @@ async function createPythApp() {
   execSync("pnpm i", { cwd: appRootPath.toString(), stdio: "inherit" });
 
   Logger.info(`Done! ${packageNameWithOrg} is ready for development`);
+  Logger.info("please checkout your package's README for more information:");
+  Logger.info(`  ${path.join(relDest, "README.md")}`);
 }
 
 await createPythApp();
