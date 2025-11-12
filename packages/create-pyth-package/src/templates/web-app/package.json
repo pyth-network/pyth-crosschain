@@ -41,9 +41,6 @@
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
-    "tailwindcss": "catalog:",
-    "tailwindcss-animate": "catalog:",
-    "tailwindcss-react-aria-components": "catalog:",
     "vercel": "catalog:"
   },
   "dependencies": {
