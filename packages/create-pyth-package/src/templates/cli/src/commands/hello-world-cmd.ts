@@ -1,9 +1,7 @@
 import type { Argv } from "yargs";
-import { createCommand } from "../create-command.js";
 
 export function setupHelloWorldCommand(yargs: Argv) {
-  return createCommand(
-    yargs,
+  return yargs.command(
     "hello-world",
     "prints hello world and your name, if provided",
     (y) =>

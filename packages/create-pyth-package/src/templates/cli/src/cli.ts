@@ -1,5 +1,6 @@
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
+
 import { setupHelloWorldCommand } from "./commands/hello-world-cmd.js";
 
 async function setupCLI() {
@@ -8,7 +9,7 @@ async function setupCLI() {
 
   const { _ } = await yargs.help().argv;
 
-  if (!_.length) {
+  if (_.length === 0) {
     yargs.showHelp();
     return;
   }

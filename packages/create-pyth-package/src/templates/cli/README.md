@@ -9,5 +9,5 @@ TODO: Fill out readme with more instructions
 From the root of this repo:
 
 ```
-pnpm --dir ./{{relativeFolder}} start
+pnpm --dir ./{{relativeFolder}} start:dev
 ```
