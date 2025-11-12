@@ -1,3 +1,5 @@
 {
-  "pages": ["[EVM](./evm)"]
+  "title": "Error Codes",
+  "pages": ["evm"],
+  "defaultOpen": false
 }

@@ -9,16 +9,14 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 This guide shows how to combine two price feeds to derive a cross rate. These are also known as "synthetic" price feeds.
 Cross rates or Synthetic Price feeds are useful for trading pairs that are not directly supported by Pyth.
 
-<Tabs items={["EVM", "SVM"]}>
-  <Tab value="EVM">
-### EVM
-
 For example, if you want to trade the price of **`ETH/EUR{:jsx}`**, which is not directly supported by Pyth, you can combine the price of **`ETH/USD{:jsx}`** and **`EUR/USD{:jsx}`** to derive the price of **`ETH/EUR{:jsx}`**.
 
-$$
+```math
 \large{\text{ETH/EUR} = \text{ETH/USD} \div \text{EUR/USD}}
-$$
+```
 
+<Tabs items={["EVM", "SVM"]}>
+<Tab value="EVM">
 ### Derive a cross rate
 
 The Pyth Solidity SDK provides [`deriveCrossRate`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/PythUtils.sol#L77) function to combine two price feeds.

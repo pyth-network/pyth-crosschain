@@ -1,0 +1,40 @@
+---
+title: Using Adrastia
+description: Coordinate managed Pyth price updates with Adrastia’s automation service
+slug: /price-feeds/core/schedule-price-updates/using-adrastia
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+[Adrastia](https://adrastia.io) is an automation platform founded by TRILEZ SOFTWARE INC. leveraging more than a decade of operational experience with AI agents to deliver reliable automated systems. The team emphasizes reliability, transparency, and prudence while helping DeFi projects enhance data freshness and resilience.
+
+## Pyth Price Feed Updater
+
+Adrastia’s Pyth Price Feed Updater is a managed, white-glove service that pushes price updates as soon as configured trigger conditions are met. Integration is intentionally lightweight—Adrastia operates the infrastructure so teams can keep their focus on product development.
+
+## Engagement Process
+
+Adrastia is building a decentralized, permissionless experience for managing automation workloads. Until that interface ships, onboarding follows a simple off-chain workflow:
+
+1. Contact Adrastia via [support@adrastia.io](mailto:support@adrastia.io) or [Discord](https://discord.adrastia.io/).
+2. Share the price feed IDs you want to keep updated on-chain.
+3. Review the configuration (public or private) they prepare in GitHub and propose adjustments if needed.
+4. Sign the service agreement authorizing Adrastia to run automation on your behalf.
+5. Fund the Automatos worker addresses they provide with the gas required for updates.
+6. Receive access to the analytics dashboard once the service is live.
+7. Request a dedicated status page to monitor execution (optional).
+8. Settle the monthly invoice for the service.
+
+## Configuration Model
+
+Each price feed can trigger updates when:
+
+- The price changes by at least a specified threshold, or
+- The heartbeat interval elapses, ensuring at least one update within the chosen period
+
+Feeds can also define **early update** rules. When one feed meets its primary condition, Adrastia can preemptively update related feeds to save gas by batching proofs and transactions.
+
+<Callout type="info" title="Learn More">
+  For pricing, analytics, and technical reference material, consult [Adrastia’s
+  documentation](https://docs.adrastia.io/automatos/pyth-price-feed-updater).
+</Callout>

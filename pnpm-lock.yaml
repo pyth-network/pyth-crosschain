@@ -554,6 +554,9 @@ importers:
       '@pythnetwork/entropy-sdk-solidity':
         specifier: workspace:*
         version: link:../../target_chains/ethereum/entropy_sdk/solidity
+      '@pythnetwork/pyth-solana-receiver':
+        specifier: workspace:*
+        version: link:../../target_chains/solana/sdk/js/pyth_solana_receiver
       '@pythnetwork/react-hooks':
         specifier: 'workspace:'
         version: link:../../packages/react-hooks
@@ -581,6 +584,9 @@ importers:
       katex:
         specifier: 'catalog:'
         version: 0.16.22
+      match-sorter:
+        specifier: 'catalog:'
+        version: 8.1.0
       next:
         specifier: 'catalog:'
         version: 15.5.0(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1)

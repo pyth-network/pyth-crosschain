@@ -1,0 +1,32 @@
+{
+  "feeds": [
+    {
+      "alias": "WETH/USD",
+      "id": "9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDT/USD",
+      "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDC/USD",
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "PENGU/USD",
+      "id": "bed3097008b9b5e3c93bec20be79cb43986b85a996475589351a21e67bae9b61",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    }
+  ]
+}

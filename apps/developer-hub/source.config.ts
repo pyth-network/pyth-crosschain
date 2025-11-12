@@ -1,4 +1,4 @@
-import { rehypeCode } from "fumadocs-core/mdx-plugins";
+import { remarkMdxMermaid, rehypeCode } from "fumadocs-core/mdx-plugins";
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
@@ -48,6 +48,6 @@ export default defineConfig({
       },
     },
     remarkPlugins: [remarkMath],
-    rehypePlugins: (v) => [rehypeKatex, rehypeCode, ...v],
+    rehypePlugins: (v) => [rehypeKatex, rehypeCode, remarkMdxMermaid, ...v],
   },
 });

@@ -1,0 +1,88 @@
+{
+  "feeds": [
+    {
+      "alias": "USDC/USD",
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "ETH/USD",
+      "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "WETH/USD",
+      "id": "9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "CBETH/USD",
+      "id": "15ecddd26d49e1a8f1de9376ebebc03916ede873447c1255d2d5891b92ce5717",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "WSTETH/USD",
+      "id": "6df640f3b8963d8f8358f791f352b8364513f6ab1cca5ed3f1f7b5448980e784",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SUI/USD",
+      "id": "23d7315113f5b1d3ba7a83604c44b94d79f4fd69af77f804fc7f920a6dc65744",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "XRP/USD",
+      "id": "ec5d399846a9209f3fe5881d70aae9268c94339ff9817e8d18ff19fa05eea1c8",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USR/USD",
+      "id": "10b013adec14c0fe839ca0fe54cec9e4d0b6c1585ac6d7e70010dac015e57f9c",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USR/USD.RR",
+      "id": "512a79cc65f49531f0bbb72956353e79ecdc1e4a6e5241847196c1f9a11d8a52",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "RLP/USD",
+      "id": "7265d5cf8ee0e7b5266f75ff19c42c5b7697a9756c9304aa78b6be4fbb8d823d",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "RLP/USD.RR",
+      "id": "796bcb684fdfbba2b071c165251511ab61f08c8949afd9e05665a26f69d9a839",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "WSTUSR/USR.RR",
+      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+---
+title: on Movement
+description: List of Push Feeds on Movement
+slug: /price-feeds/core/push-feeds/movement
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { SponsoredFeedsTable } from "../../../../../src/components/SponsoredFeedsTable";
+import movementMainnet from "./data/movement/movement-mainnet.json";
+
+## Movement Mainnet
+
+<Callout type="info" title="Request Additional Feeds">
+  If you would like to see additional feeds on this list, please fill in this
+  [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+<SponsoredFeedsTable
+  feeds={movementMainnet.feeds}
+  networkName="Movement mainnet"
+/>

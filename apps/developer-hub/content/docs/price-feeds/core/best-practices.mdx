@@ -46,7 +46,7 @@ This ability is functionally equivalent to latency: it allows users to see the p
 
 The simplest way to guard against this attack vector is to incorporate a **staleness check** to ensure that the price used in a transaction is sufficiently recent.
 
-The Pyth SDK provides the [`getPriceNoOlderThan()`](https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan) method to help users guard against this attack vector. This method returns the most recent price update that is not older than a specified threshold.
+The Pyth SDK provides the [getPriceNoOlderThan()](https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan) method to help users guard against this attack vector. This method returns the most recent price update that is not older than a specified threshold.
 Highly latency-sensitive protocols may wish to reduce the threshold to a few seconds to better suit their needs.
 Please also see the section below on [latency mitigations](#latency) for additional ideas on how latency-sensitive protocols can minimize the impact of oracle latency.
 

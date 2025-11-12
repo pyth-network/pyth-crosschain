@@ -1,0 +1,41 @@
+---
+title: Push Feeds
+description: See which Pyth price feeds receive sponsored push updates by network
+slug: /price-feeds/core/push-feeds
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The Pyth Data Association **pushes** price updates for various feeds on some networks.
+These feeds are updated at a specific heartbeat rate or when the price changes by a specific percentage.
+Applications can depend on receiving updates for these feeds, without having to pull them explicitly.
+
+The feeds can vary by network. Please see the relevant section below for the network of interest.
+
+- [EVM](/price-feeds/core/push-feeds/evm)
+- [Solana](/price-feeds/core/push-feeds/solana)
+- [Fogo](/price-feeds/core/push-feeds/fogo)
+- [Aptos](/price-feeds/core/push-feeds/aptos)
+- [Movement](/price-feeds/core/push-feeds/movement)
+- [Sui](/price-feeds/core/push-feeds/sui)
+
+<Callout type="default">
+  Deviation thresholds can be customized to fit builders' needs, and additional
+  feeds can be requested for this list. If you need custom thresholds or would
+  like to see additional feeds, please fill in this
+  [form](https://tally.so/r/nGz2jj) to signal your interest.
+</Callout>
+
+<Callout type="info">
+  Push feeds are subject to change with prior notice. Please refer to the [dev-
+  forum](https://dev-forum.pyth.network/c/announcements/6) for the latest
+  changes.
+</Callout>
+
+<Callout type="warning">
+  DISCLAIMER: While the Pyth Data Association strives to deliver timely updates,
+  these push feeds may occasionally experience delays in updates caused by chain
+  halts, gas estimations and other issues. Applications are advised to run their
+  own price-pusher. Find out how you can run your own price-pusher
+  [here](/price-feeds/core/schedule-price-updates/using-price-pusher).
+</Callout>

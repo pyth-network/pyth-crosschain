@@ -1,0 +1,217 @@
+.container {
+  margin: 1.5rem 0;
+}
+
+.introText {
+  margin-bottom: 1rem;
+  color: var(--color-gray-700);
+  font-size: 1rem;
+}
+
+.tableWrapper {
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.75rem;
+  background-color: var(--color-white);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 8%);
+  overflow: hidden;
+}
+
+.summaryBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-blue-50);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.summaryItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-gray-700);
+  font-size: 0.875rem;
+}
+
+.summaryLabel {
+  font-weight: 600;
+}
+
+.summaryCount {
+  color: var(--color-gray-500);
+}
+
+.statusDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-gray-400);
+  flex-shrink: 0;
+}
+
+.statusDotDefault {
+  background-color: var(--color-green-500);
+}
+
+.statusDotException {
+  background-color: var(--color-orange-500);
+}
+
+.tableScroll {
+  max-height: 24rem;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 620px;
+}
+
+.tableHead {
+  position: sticky;
+  top: 0;
+  background-color: var(--color-gray-50);
+  border-bottom: 1px solid var(--color-gray-200);
+  z-index: 2;
+}
+
+.headerCell {
+  padding: 0.75rem 0.875rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.tableBody {
+  background-color: var(--color-white);
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--color-gray-100);
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:hover {
+  background-color: var(--color-gray-50);
+}
+
+.nameCell,
+.accountCell,
+.idCell,
+.paramsCell {
+  padding: 0.75rem 0.875rem;
+  vertical-align: top;
+  color: var(--color-gray-800);
+}
+
+.nameLabel {
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.copyWrapper {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.code {
+  font-family: var(--py-font-family-mono, "IBM Plex Mono", monospace);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-gray-600);
+  word-break: break-all;
+}
+
+.updateParams {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.updateParamsText {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-gray-700);
+}
+
+.updateParamsDefault .updateParamsText {
+  color: var(--color-gray-700);
+}
+
+.updateParamsException .updateParamsText {
+  color: var(--color-orange-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  .introText {
+    color: var(--color-gray-300);
+  }
+
+  .tableWrapper {
+    border-color: var(--color-gray-700);
+    background-color: var(--color-gray-900);
+    box-shadow: none;
+  }
+
+  .summaryBar {
+    background-color: rgb(30 64 175 / 25%);
+    border-color: var(--color-gray-700);
+  }
+
+  .summaryItem {
+    color: var(--color-gray-300);
+  }
+
+  .summaryCount {
+    color: var(--color-gray-500);
+  }
+
+  .tableHead {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+
+  .headerCell {
+    color: var(--color-gray-100);
+    border-color: var(--color-gray-700);
+  }
+
+  .tableBody {
+    background-color: var(--color-gray-900);
+  }
+
+  .tableRow {
+    border-color: rgb(148 163 184 / 15%);
+  }
+
+  .tableRow:hover {
+    background-color: rgb(148 163 184 / 10%);
+  }
+
+  .nameCell,
+  .accountCell,
+  .idCell,
+  .paramsCell {
+    color: var(--color-gray-200);
+  }
+
+  .nameLabel {
+    color: var(--color-gray-100);
+  }
+
+  .code {
+    color: var(--color-gray-400);
+  }
+
+  .updateParamsText {
+    color: var(--color-gray-300);
+  }
+
+  .updateParamsException .updateParamsText {
+    color: var(--color-orange-400);
+  }
+}

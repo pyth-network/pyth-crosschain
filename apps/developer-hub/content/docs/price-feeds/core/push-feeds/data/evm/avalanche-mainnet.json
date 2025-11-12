@@ -1,0 +1,11 @@
+{
+  "feeds": [
+    {
+      "alias": "HLP0/USDC.RR",
+      "id": "aa388e24e74d5dd12145f74fad3180266f78ed08c0a2f47c60583fdb612587ba",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    }
+  ]
+}

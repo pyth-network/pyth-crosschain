@@ -1,0 +1,67 @@
+{
+  "feeds": [
+    {
+      "alias": "BERA/USD",
+      "id": "962088abcfdbdb6e30db2e340c8cf887d9efb311b1f2f17b155a63dbb6d40265",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "BTC/USD",
+      "id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "ETH/USD",
+      "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDC/USD",
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDT/USD",
+      "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "PYUSD/USD",
+      "id": "c1da1b73d7f01e7ddd54b3766cf7fcd644395ad14f70aa706ec5384c59e76692",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SUSDE/USDE.RR",
+      "id": "271c64ce459937abf721d42552035713b6c58f80eeceab716a624607fda4b10f",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "HONEY/USD",
+      "id": "f67b033925d73d43ba4401e00308d9b0f26ab4fbd1250e8b5407b9eaade7e1f4",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "HONEY/USD.RR",
+      "id": "8bb3695875f9c33594097b0e0a1daa881aa81290088f0eac3a07b700fc7612ba",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    }
+  ]
+}

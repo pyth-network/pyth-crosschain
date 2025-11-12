@@ -1,16 +1,16 @@
 {
   "pages": [
-    "[EVM](./evm)",
-    "[Solana / SVM](./solana)",
-    "[Aptos](./aptos)",
-    "[Sui](./sui)",
-    "[IOTA](./iota)",
-    "[Movement](./movement)",
-    "[TON](./ton)",
-    "[Fuel](./fuel)",
-    "[CosmWasm](./cosmwasm)",
-    "[NEAR](./near)",
-    "[Starknet](./starknet)",
-    "[Pythnet](./pythnet)"
+    "evm",
+    "solana",
+    "aptos",
+    "sui",
+    "iota",
+    "movement",
+    "ton",
+    "fuel",
+    "cosmwasm",
+    "near",
+    "starknet",
+    "pythnet"
   ]
 }

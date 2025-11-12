@@ -1,0 +1,179 @@
+{
+  "feeds": [
+    {
+      "alias": "APT/USD",
+      "id": "03ae4db29ed4ae33d323568895aa00337e658e348b37509f5372ae51f0af00d5",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "BTC/USD",
+      "id": "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "ETH/USD",
+      "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SOL/USD",
+      "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDC/USD",
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDT/USD",
+      "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USD1/USD",
+      "id": "0a2425d43486780990d8b63543029e20556be51fd756cca584212f4d539611d4",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "CAKE/USD",
+      "id": "2356af9529a1064d41e32d617e2ce1dca5733afa901daba9e2b68dee5d53ecf9",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SUI/USD",
+      "id": "23d7315113f5b1d3ba7a83604c44b94d79f4fd69af77f804fc7f920a6dc65744",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "STAPT/APT.RR",
+      "id": "2f218a73fb0c46ae8f9f7bb70ffbb232dd0dd65169b6401bfdc9bfb340a66b1a",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "AMI/USD",
+      "id": "9074ab34363ea1aada15db169f4678c10117e48f1ad1a8ba9f69c2a939c3a377",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SUSDE/USDE.RR",
+      "id": "271c64ce459937abf721d42552035713b6c58f80eeceab716a624607fda4b10f",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "CETUS/USD",
+      "id": "e5b274b2611143df055d6e7cd8d93fe1961716bcd4dca1cad87a83bc1e78c1ef",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "BNB/USD",
+      "id": "2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "WBTC/USD",
+      "id": "c9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "THL/USD",
+      "id": "74e3fbb0d33e0ed8c0078b56134dcebdae38852f0858a8ea4de4c5ea7474bd42",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDY/USD",
+      "id": "e393449f6aff8a4b6d3e1165a7c9ebec103685f3b41e60db4277b5b6d10e7326",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "WETH/USD",
+      "id": "9d4294bbcd1174d6f2003ec365831e64cc31d9f6f15a2b85399db8d5000960f6",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "THAPT/USD",
+      "id": "b29276972267db5d64ae718fb7f107ad9e72a79cabf9992f0e9bc75ad451a7f6",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "STONE/USD",
+      "id": "4dcc2fb96fb89a802ef9712f6bd2246d3607cf95ca5540cb24490d37003f8c46",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SUSDE/USD",
+      "id": "ca3ba9a619a4b3755c10ac7d5e760275aa95e9823d38a84fedd416856cdba37c",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDE/USD",
+      "id": "6ec879b1e9963de5ee97e9c8710b742d6228252a5e2ca12d4ae81d7fe5ee8c5d",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "STHAPT/THAPT.RR",
+      "id": "ea07fce25d7d716fe6ad10b267451011baadc8f3724b28487026072ddce3ba1b",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "RION/USD",
+      "id": "2d8b864599418dc83cb33fe1d91f69e90c8c1c32123d74211950f52a5cef006a",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "KAPT/USD",
+      "id": "a44d307a13145b84938740c93155fbea926e9fbdd46d50b67859b8fc47552959",
+      "time_difference": 15,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    }
+  ]
+}
