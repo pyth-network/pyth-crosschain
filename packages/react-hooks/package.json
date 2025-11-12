@@ -21,7 +21,6 @@
     "eslint": "catalog:"
   },
   "dependencies": {
-    "ua-parser-js": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -43,14 +42,6 @@
     "./nuqs": {
       "types": "./dist/nuqs.d.ts",
       "default": "./dist/nuqs.mjs"
-    },
-    "./use-detect-browser-info": {
-      "types": "./dist/use-detect-browser-info.d.ts",
-      "default": "./dist/use-detect-browser-info.mjs"
-    },
-    "./use-previous": {
-      "types": "./dist/use-previous.d.ts",
-      "default": "./dist/use-previous.mjs"
     },
     "./package.json": "./package.json"
   }
