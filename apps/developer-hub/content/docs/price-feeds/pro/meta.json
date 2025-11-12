@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "getting-started",
+    "---How-To Guides---",
+    "acquire-access-token",
+    "subscribe-to-prices",
+    "integrate-as-consumer",
+    "integrate-as-publisher",
+    "---Reference Material---",
+    "price-feed-ids",
+    "payload-reference",
+    "[Websocket API Reference ↗](https://pyth-lazer.dourolabs.app/docs)",
+    "[Example Applications ↗](https://github.com/pyth-network/pyth-examples/tree/main/lazer)",
+    "---Understanding Pyth Pro---",
+    "how-lazer-works"
+  ]
+}

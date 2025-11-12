@@ -1,0 +1,40 @@
+---
+title: Acquire an Access Token
+description: Request and manage access tokens for Pyth Pro
+slug: /price-feeds/pro/acquire-access-token
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This guide explains how to acquire an access token for Pyth Pro, which is required to authenticate websocket connections and subscribe to price updates.
+
+## Request Access Token
+
+Please fill out [this form](https://tally.so/r/3xG8E5) to get in touch with our authorized distribution partners (Pyth Data Distributors) and obtain an access token.
+
+<Callout type="info">
+  Access tokens are required for all Pyth Pro websocket connections. Make sure
+  to keep your token secure and do not share it publicly.
+</Callout>
+
+## Using the Access Token
+
+Once you receive your access token, use it to authenticate the websocket connection by passing it as an `Authorization` header with the value `Bearer {token}`.
+
+### Example Usage
+
+```js copy
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+  ],
+  "YOUR_ACCESS_TOKEN",
+);
+```
+
+## Next Steps
+
+After acquiring your access token, you can proceed to [subscribe to price feeds](./subscribe-price-updates.mdx) using the Pyth Pro websocket API.
