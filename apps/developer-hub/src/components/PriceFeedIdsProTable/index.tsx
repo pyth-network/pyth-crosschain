@@ -1,0 +1,174 @@
+"use client";
+
+import { Paginator } from "@pythnetwork/component-library/Paginator";
+import { SearchInput } from "@pythnetwork/component-library/SearchInput";
+import type { ColumnConfig } from "@pythnetwork/component-library/Table";
+import { Table } from "@pythnetwork/component-library/Table";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
+import { Callout } from "fumadocs-ui/components/callout";
+import { matchSorter } from "match-sorter";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+
+import styles from "./index.module.scss";
+
+export const PriceFeedIdsProTable = () => {
+  const [state, setState] = useState<State>(State.NotLoaded());
+  useEffect(() => {
+    setState(State.Loading());
+    getPythProFeeds()
+      .then((feeds) => {
+        setState(State.Loaded(feeds));
+      })
+      .catch((error: unknown) => {
+        setState(State.Failed(error));
+      });
+  }, []);
+
+  const columns: ColumnConfig<Col>[] = [
+    { id: "Asset Type", name: "Asset Type", isRowHeader: true },
+    { id: "Description", name: "Description" },
+    { id: "Name", name: "Name" },
+    { id: "Symbol", name: "Symbol" },
+    { id: "Pyth Pro ID", name: "Pyth Pro ID" },
+    { id: "Exponent", name: "Exponent" },
+  ];
+
+  const {
+    search,
+    sortDescriptor,
+    page,
+    pageSize,
+    updateSearch,
+    updateSortDescriptor,
+    updatePage,
+    updatePageSize,
+    paginatedItems,
+    numPages,
+    mkPageLink,
+  } = useQueryParamFilterPagination(
+    state.type === StateType.Loaded ? state.feeds : [],
+    () => true,
+    () => 1,
+    (items, searchString) => {
+      return matchSorter(items, searchString, {
+        keys: [
+          "Asset Type",
+          "Description",
+          "Name",
+          "Symbol",
+          "Pyth Pro ID",
+          "Exponent",
+        ],
+      });
+    },
+    { defaultSort: "Pyth Pro ID", defaultPageSize: 20 },
+  );
+
+  if (state.type === StateType.Error) {
+    return <Callout type="error">{errorToString(state.error)}</Callout>;
+  }
+
+  const isLoading =
+    state.type === StateType.Loading || state.type === StateType.NotLoaded;
+
+  const rows = paginatedItems.map((feed) => ({
+    id: feed.pyth_lazer_id,
+    data: {
+      "Asset Type": feed.asset_type,
+      Description: feed.description,
+      Name: feed.name,
+      Symbol: feed.symbol,
+      "Pyth Pro ID": feed.pyth_lazer_id,
+      Exponent: feed.exponent,
+    },
+  }));
+
+  return (
+    <>
+      <SearchInput
+        label="Search price feeds"
+        placeholder="Search by symbol or feed id"
+        value={search}
+        onChange={updateSearch}
+        className={styles.searchInput ?? ""}
+      />
+
+      <Table<Col>
+        {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
+        label="Price feed ids"
+        columns={columns}
+        onSortChange={updateSortDescriptor}
+        sortDescriptor={sortDescriptor}
+        stickyHeader="top"
+        fill
+        rounded
+      />
+      <Paginator
+        numPages={numPages}
+        currentPage={page}
+        onPageChange={updatePage}
+        pageSize={pageSize}
+        onPageSizeChange={updatePageSize}
+        mkPageLink={mkPageLink}
+        className={styles.paginator ?? ""}
+      />
+    </>
+  );
+};
+
+const errorToString = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  } else if (typeof error === "string") {
+    return error;
+  } else {
+    return "An error occurred, please try again";
+  }
+};
+
+enum StateType {
+  NotLoaded,
+  Loading,
+  Loaded,
+  Error,
+}
+
+const State = {
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  Loaded: (feeds: Awaited<ReturnType<typeof getPythProFeeds>>) => ({
+    type: StateType.Loaded as const,
+    feeds,
+  }),
+  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+};
+type State = ReturnType<(typeof State)[keyof typeof State]>;
+
+const getPythProFeeds = async () => {
+  const result: Response = await fetch(
+    "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
+  );
+  const data = pythProSchema.parse(await result.json());
+  return data;
+};
+
+const pythProSchema = z.array(
+  z.object({
+    asset_type: z.string(),
+    description: z.string(),
+    name: z.string(),
+    symbol: z.string(),
+    pyth_lazer_id: z.number(),
+    priceFeedId: z.number(),
+    exponent: z.number(),
+  }),
+);
+
+type Col =
+  | "Asset Type"
+  | "Description"
+  | "Name"
+  | "Symbol"
+  | "Pyth Pro ID"
+  | "Exponent";
