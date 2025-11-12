@@ -1,77 +1,88 @@
 "use client";
 
+import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import { Spinner } from "@pythnetwork/component-library/Spinner";
-import type { ColumnConfig } from "@pythnetwork/component-library/Table";
-import { Table } from "@pythnetwork/component-library/Table";
+import { Table, type ColumnConfig } from "@pythnetwork/component-library/Table";
+import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import { Callout } from "fumadocs-ui/components/callout";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { matchSorter } from "match-sorter";
+import { useEffect, useState } from "react";
 import { z } from "zod";
-
 import CopyAddress from "../CopyAddress";
 import styles from "./index.module.scss";
 
 export const PriceFeedIdsCoreTable = () => {
-  const isLoading = useRef(false);
   const [state, setState] = useState<State>(State.NotLoaded());
-
   useEffect(() => {
-    if (!isLoading.current) {
-      setState(State.Loading());
-      isLoading.current = true;
-      getFeeds()
-        .then((feeds) => {
-          setState(State.Loaded(feeds));
-        })
-        .catch((error: unknown) => {
-          setState(State.Failed(error));
-        });
-    }
-  }, [isLoading]);
+    setState(State.Loading());
+    getFeeds()
+      .then((feeds) => {
+        setState(State.Loaded(feeds));
+      })
+      .catch((error: unknown) => {
+        setState(State.Failed(error));
+      });
+  }, []);
 
-  switch (state.type) {
-    case StateType.Loading:
-    case StateType.NotLoaded: {
-      return <Spinner label="Fetching price feed ids..." />;
-    }
-    case StateType.Error: {
-      return <Callout type="error">{errorToString(state.error)}</Callout>;
-    }
-    case StateType.Loaded: {
-      return <LoadedResults feeds={state.feeds} />;
-    }
-  }
-};
-
-const LoadedResults = ({
-  feeds,
-}: {
-  feeds: Awaited<ReturnType<typeof getFeeds>>;
-}) => {
   const columns: ColumnConfig<Col>[] = [
-    { id: "symbol", name: "Symbol" },
+    { id: "symbol", name: "Symbol", isRowHeader: true },
     { id: "stableFeedId", name: "Stable Price Feed ID" },
     { id: "betaFeedId", name: "Beta Price Feed ID" },
     { id: "solanaPriceFeedAccount", name: "Solana Price Feed Account" },
   ];
-  const [search, setSearch] = useState("");
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-  }, []);
-  const filteredFeeds = useMemo(
-    () =>
-      feeds.filter((feed) => {
-        const searchLower = search.toLowerCase();
-        return [
-          feed.symbol,
-          feed.stableFeedId,
-          feed.betaFeedId,
-          feed.solanaPriceFeedAccount,
-        ].some((value) => value?.toLowerCase().includes(searchLower));
-      }),
-    [feeds, search],
+
+  const {
+    search,
+    sortDescriptor,
+    page,
+    pageSize,
+    updateSearch,
+    updateSortDescriptor,
+    updatePage,
+    updatePageSize,
+    paginatedItems,
+    numPages,
+    mkPageLink,
+  } = useQueryParamFilterPagination(
+    state.type === StateType.Loaded ? state.feeds : [],
+    () => true,
+    () => 1,
+    (items, searchString) => {
+      return matchSorter(items, searchString, {
+        keys: [
+          "symbol",
+          "stableFeedId",
+          "betaFeedId",
+          "solanaPriceFeedAccount",
+        ],
+      });
+    },
+    { defaultSort: "symbol", defaultPageSize: 10 },
   );
+
+  if (state.type === StateType.Error) {
+    return <Callout type="error">{errorToString(state.error)}</Callout>;
+  }
+
+  const isLoading =
+    state.type === StateType.Loading || state.type === StateType.NotLoaded;
+    
+  const rows = paginatedItems.map((feed) => ({
+    id: feed.symbol,
+    data: {
+      symbol: feed.symbol,
+      stableFeedId: feed.stableFeedId ? (
+        <CopyAddress maxLength={6} address={feed.stableFeedId} />
+      ) : undefined,
+      betaFeedId: feed.betaFeedId ? (
+        <CopyAddress maxLength={6} address={feed.betaFeedId} />
+      ) : undefined,
+      solanaPriceFeedAccount: feed.solanaPriceFeedAccount ? (
+        <CopyAddress maxLength={6} address={feed.solanaPriceFeedAccount} />
+      ) : undefined,
+    },
+  }));
 
   return (
     <>
@@ -79,34 +90,28 @@ const LoadedResults = ({
         label="Search price feeds"
         placeholder="Search by symbol or feed id"
         value={search}
-        onChange={handleSearchChange}
-        width={480}
+        onChange={updateSearch}
+        className={styles.searchInput ?? ""}
       />
+
       <Table<Col>
+        {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
         label="Price feed ids"
         columns={columns}
-        rows={filteredFeeds.map((feed) => ({
-          id: feed.symbol,
-          data: {
-            symbol: feed.symbol,
-            stableFeedId: feed.stableFeedId ? (
-              <CopyAddress maxLength={6} address={feed.stableFeedId} />
-            ) : undefined,
-            betaFeedId: feed.betaFeedId ? (
-              <CopyAddress maxLength={6} address={feed.betaFeedId} />
-            ) : undefined,
-            solanaPriceFeedAccount: feed.solanaPriceFeedAccount ? (
-              <CopyAddress
-                maxLength={6}
-                address={feed.solanaPriceFeedAccount}
-              />
-            ) : undefined,
-          },
-        }))}
-        className={styles.table ?? ""}
+        onSortChange={updateSortDescriptor}
+        sortDescriptor={sortDescriptor}
         stickyHeader="top"
         fill
         rounded
+      />
+      <Paginator
+        numPages={numPages}
+        currentPage={page}
+        onPageChange={updatePage}
+        pageSize={pageSize}
+        onPageSizeChange={updatePageSize}
+        mkPageLink={mkPageLink}
+        className={styles.paginator ?? ""}
       />
     </>
   );
