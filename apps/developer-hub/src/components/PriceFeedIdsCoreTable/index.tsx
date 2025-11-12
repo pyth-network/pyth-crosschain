@@ -2,8 +2,8 @@
 
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
-import type {ColumnConfig} from "@pythnetwork/component-library/Table";
-import { Table  } from "@pythnetwork/component-library/Table";
+import type { ColumnConfig } from "@pythnetwork/component-library/Table";
+import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import { Callout } from "fumadocs-ui/components/callout";
