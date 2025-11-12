@@ -1,0 +1,15 @@
+@use "@pythnetwork/component-library/theme";
+
+.main {
+  @include theme.max-width;
+}
+
+.ol {
+  margin-left: theme.spacing(4);
+  padding: 0;
+
+  & code {
+    color: theme.color("states", "info", "normal");
+    font-family: theme.font-family("monospace");
+  }
+}

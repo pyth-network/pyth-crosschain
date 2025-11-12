@@ -1,0 +1,44 @@
+{
+  "private": true,
+  "name": "@pythnetwork/create-pyth-package",
+  "description": "bootstrapper to quickly create a best-practices TypeScript library or application",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "create-pyth-package": "./bin/create-pyth-package"
+  },
+  "engines": {
+    "pnpm": ">=10.19.0",
+    "node": ">=22.14.0"
+  },
+  "files": [
+    "bin/**",
+    "src/**"
+  ],
+  "scripts": {
+    "fix:lint": "eslint --fix . --max-warnings 0",
+    "fix:format": "prettier --write .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:format": "prettier --check .",
+    "start": "tsx ./src/create-pyth-package.ts",
+    "test:types": "tsc"
+  },
+  "dependencies": {
+    "app-root-path": "catalog:",
+    "chalk": "catalog:",
+    "fast-glob": "catalog:",
+    "fs-extra": "catalog:",
+    "micromustache": "catalog:",
+    "prompts": "catalog:",
+    "tsx": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@cprussin/eslint-config": "catalog:",
+    "@types/fs-extra": "catalog:",
+    "@types/prompts": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "type-fest": "catalog:"
+  }
+}

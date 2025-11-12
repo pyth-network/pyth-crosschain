@@ -1,0 +1,6 @@
+#!/bin/bash
+
+THISDIR="$(dirname $0)"
+THISPKGDIR="$(realpath $THISDIR/..)"
+
+pnpm --dir "$THISPKGDIR" start

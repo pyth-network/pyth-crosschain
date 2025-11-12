@@ -1,0 +1,64 @@
+{
+  "private": true,
+  "name": "{{name}}",
+  "description": "{{description}}",
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "{{relativeFolder}}"
+  },
+  "scripts": {
+    "build:vercel": "next build",
+    "fix:format": "prettier --write .",
+    "fix:lint:eslint": "eslint --fix .",
+    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
+    "pull:env": "echo 'once {{name}} has been setup in the Vercel UI, you can replace this script with the contents in the pull:env:placeholder, below, as well as the VERCEL_PROJECT_ID variable value'",
+    "pull:env:placeholder": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=TODO_FILL_ME_IN vercel env pull",
+    "start:dev": "next dev --port {{serverPort}}",
+    "start:prod": "next start --port {{serverPort}}",
+    "test:format": "prettier --check .",
+    "test:lint:eslint": "eslint . --max-warnings 0",
+    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
+    "test:types": "tsc",
+    "test:unit": "jest"
+  },
+  "devDependencies": {
+    "@axe-core/react": "catalog:",
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "postcss": "catalog:",
+    "prettier": "catalog:",
+    "vercel": "catalog:"
+  },
+  "dependencies": {
+    "@next/third-parties": "catalog:",
+    "@pythnetwork/component-library": "workspace:*",
+    "@pythnetwork/react-hooks": "workspace:*",
+    "@react-hookz/web": "catalog:",
+    "clsx": "catalog:",
+    "framer-motion": "catalog:",
+    "next": "catalog:",
+    "nuqs": "catalog:",
+    "pino": "catalog:",
+    "react": "catalog:",
+    "react-aria": "catalog:",
+    "react-aria-components": "catalog:",
+    "react-dom": "catalog:",
+    "swr": "catalog:",
+    "zod": "catalog:"
+  }
+}
