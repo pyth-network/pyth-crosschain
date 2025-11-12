@@ -1,13 +1,22 @@
 ---
 title: Pyth Pro
-description: Introduction to Pyth Pro Price Feeds
+description: Explore Pyth Pro's enterprise-grade, customizable price data offering
 slug: /price-feeds/pro
 ---
 
-import { ProductCard } from "../../../../src/components/ProductCard";
-import { Key, Lightning, ChartLine } from "@phosphor-icons/react/dist/ssr";
+import {
+  Key,
+  Lightning,
+  CurrencyDollarSimple,
+} from "@phosphor-icons/react/dist/ssr";
 
-Pyth Pro delivers customizable, enterprise-grade price data directly from first-party publishers. Subscribers can configure their price feeds, update schedules, and usage rights for display or redistribution. The service is delivered through standard APIs for seamless integration.
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="info">Pyth Pro was previously known as Pyth Lazer.</Callout>
+
+Pyth Pro delivers customizable, enterprise-grade price data directly from first-party publishers.
+Subscribers can configure their price feeds, update schedules, and usage rights for display or redistribution.
+The service is delivered through standard APIs for seamless integration.
 
 <Cards>
   <Card
@@ -21,7 +30,7 @@ Pyth Pro delivers customizable, enterprise-grade price data directly from first-
     description="Configure real-time Pyth Pro price delivery."
   />
   <Card
-    icon={<ChartLine size={12.5} />}
+    icon={<CurrencyDollarSimple size={12.5} />}
     title="Pricing"
     description="Review subscription tiers and usage-based pricing details."
   />
