@@ -76,7 +76,7 @@ class PriceState:
                 # find first valid price in the waterfall
                 px = self.get_price(source_config)
                 if px is not None:
-                    pxs[f"{market_name}:{symbol}"] = px
+                    pxs[f"{market_name}:{symbol}"] = str(px)
                     break
         return pxs
 

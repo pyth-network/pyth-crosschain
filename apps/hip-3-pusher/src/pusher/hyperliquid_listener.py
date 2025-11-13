@@ -82,6 +82,6 @@ class HyperliquidListener:
             now = time.time()
             self.hl_oracle_state.put(symbol, PriceUpdate(ctx["oraclePx"], now))
             self.hl_mark_state.put(symbol, PriceUpdate(ctx["markPx"], now))
-            logger.debug("on_activeAssetCtx: oraclePx: {} marketPx: {}", ctx["oraclePx"], ctx["markPx"])
+            logger.debug("on_activeAssetCtx symbol: {} oraclePx: {} marketPx: {}", symbol, ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
             logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", message, e)
