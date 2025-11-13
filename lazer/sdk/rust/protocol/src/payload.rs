@@ -1,4 +1,5 @@
 use crate::{
+    api::MarketSession,
     price::Price,
     rate::Rate,
     time::{DurationUs, TimestampUs},
@@ -54,6 +55,7 @@ pub struct AggregatedPriceFeedData {
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
     pub funding_rate_interval: Option<DurationUs>,
+    pub market_session: MarketSession,
 }
 
 impl AggregatedPriceFeedData {
