@@ -35,6 +35,7 @@ class PriceSourceState:
 class PriceState:
     HL_ORACLE = "hl_oracle"
     HL_MARK = "hl_mark"
+    HL_MID = "hl_mid"
     LAZER = "lazer"
     HERMES = "hermes"
     SEDA = "seda"
@@ -48,6 +49,7 @@ class PriceState:
 
         self.hl_oracle_state = PriceSourceState(self.HL_ORACLE)
         self.hl_mark_state = PriceSourceState(self.HL_MARK)
+        self.hl_mid_state = PriceSourceState(self.HL_MID)
         self.lazer_state = PriceSourceState(self.LAZER)
         self.hermes_state = PriceSourceState(self.HERMES)
         self.seda_state = PriceSourceState(self.SEDA)
@@ -55,6 +57,7 @@ class PriceState:
         self.all_states = {
             self.HL_ORACLE: self.hl_oracle_state,
             self.HL_MARK: self.hl_mark_state,
+            self.HL_MID: self.hl_mid_state,
             self.LAZER: self.lazer_state,
             self.HERMES: self.hermes_state,
             self.SEDA: self.seda_state,

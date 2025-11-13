@@ -20,11 +20,13 @@ class HyperliquidListener:
     Subscribe to any relevant Hyperliquid websocket streams
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket
     """
-    def __init__(self, config: Config, hl_oracle_state: PriceSourceState, hl_mark_state: PriceSourceState):
+    def __init__(self, config: Config, hl_oracle_state: PriceSourceState, hl_mark_state: PriceSourceState, hl_mid_state: PriceSourceState):
+        self.market_name = config.hyperliquid.market_name
         self.hyperliquid_ws_urls = config.hyperliquid.hyperliquid_ws_urls
         self.asset_context_symbols = config.hyperliquid.asset_context_symbols
         self.hl_oracle_state = hl_oracle_state
         self.hl_mark_state = hl_mark_state
+        self.hl_mid_state = hl_mid_state
 
     def get_subscribe_request(self, asset):
         return {
@@ -50,6 +52,13 @@ class HyperliquidListener:
                 await ws.send(json.dumps(subscribe_request))
                 logger.info("Sent subscribe request for symbol: {} to {}", symbol,  url)
 
+            subscribe_all_mids_request = {
+                "method": "subscribe",
+                "subscription": {"type": "allMids", "dex": self.market_name}
+            }
+            await ws.send(json.dumps(subscribe_all_mids_request))
+            logger.info("Sent subscribe request for allMids for dex: {} to {}", self.market_name, url)
+
             # listen for updates
             while True:
                 try:
@@ -63,7 +72,9 @@ class HyperliquidListener:
                     elif channel == "error":
                         logger.error("Received Hyperliquid error response: {}", data)
                     elif channel == "activeAssetCtx":
-                        self.parse_hyperliquid_ws_message(data)
+                        self.parse_hyperliquid_active_asset_ctx_update(data)
+                    elif channel == "allMids":
+                        self.parse_hyperliquid_all_mids_update(data)
                     else:
                         logger.error("Received unknown channel: {}", channel)
                 except asyncio.TimeoutError:
@@ -75,13 +86,23 @@ class HyperliquidListener:
                 except Exception as e:
                     logger.error("Unexpected exception: {}", e)
 
-    def parse_hyperliquid_ws_message(self, message):
+    def parse_hyperliquid_active_asset_ctx_update(self, message):
         try:
             ctx = message["data"]["ctx"]
             symbol = message["data"]["coin"]
             now = time.time()
             self.hl_oracle_state.put(symbol, PriceUpdate(ctx["oraclePx"], now))
             self.hl_mark_state.put(symbol, PriceUpdate(ctx["markPx"], now))
-            logger.debug("on_activeAssetCtx symbol: {} oraclePx: {} marketPx: {}", symbol, ctx["oraclePx"], ctx["markPx"])
+            logger.debug("activeAssetCtx symbol: {} oraclePx: {} markPx: {}", symbol, ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
-            logger.error("parse_hyperliquid_ws_message error: message: {} e: {}", message, e)
+            logger.error("parse_hyperliquid_active_asset_ctx_update error: message: {} e: {}", message, e)
+
+    def parse_hyperliquid_all_mids_update(self, message):
+        try:
+            mids = message["data"]["mids"]
+            now = time.time()
+            for mid in mids:
+                self.hl_mid_state.put(mid, PriceUpdate(mids[mid], now))
+            logger.debug("allMids: {}", mids)
+        except Exception as e:
+            logger.error("parse_hyperliquid_all_mids_update error: message: {} e: {}", message, e)
