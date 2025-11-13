@@ -26,9 +26,9 @@ Please see [What is a Pull Oracle?](/price-feeds/core/pull-updates) to learn mor
 Consult [Schedule Price Updates](/price-feeds/core/schedule-price-updates) guide for more information.
 
 The Pyth Data Association sponsors regular on-chain updates for some price feeds.
-See [Push Feeds](./push-feeds.mdx) for the current list of feeds and their update parameters.
+See [Push Feeds](./push-feeds) for the current list of feeds and their update parameters.
 
-If you don't find relevant price IDs in the [Push Feeds](./push-feeds.mdx) list, please contact the Pyth team [here](https://tally.so/r/nGz2jj) to run the Price Pusher for the price feed you need.
+If you don't find relevant price IDs in the [Push Feeds](./push-feeds) list, please contact the Pyth team [here](https://tally.so/r/nGz2jj) to run the Price Pusher for the price feed you need.
 
 </Step>
 <Step>
@@ -43,14 +43,14 @@ If you are deploying, please make sure to update the README.md file with the new
 
 To do so, run the [`MorphoPythOracleDeploy.s.sol`](https://github.com/pyth-network/pyth-morpho-wrapper/blob/main/scripts/MorphoPythOracleDeploy.s.sol) script with the following environment variables set:
 
-- `PYTH_ADDRESS`: The Pyth contract address. This is the address of the Pyth contract deployed on the chain. You can find the address of the Pyth contract for each chain [here](./contract-addresses/evm.md).
+- `PYTH_ADDRESS`: The Pyth contract address. This is the address of the Pyth contract deployed on the chain. You can find the address of the Pyth contract for each chain [here](./contract-addresses/evm).
 - `BASE_VAULT`: The ERC4626 token vault for the base asset.
 - `BASE_VAULT_CONVERSION_SAMPLE`: A sample amount for converting base vault units.
-- `BASE_FEED1`, `BASE_FEED2`: Pyth price feed ids for the base asset. You can find the price feed ids for each asset in our [price feeds directory](./price-feeds.mdx).
+- `BASE_FEED1`, `BASE_FEED2`: Pyth price feed ids for the base asset. You can find the price feed ids for each asset in our [price feeds directory](./price-feeds).
 - `BASE_TOKEN_DECIMALS`: Decimal precision of the base asset.
 - `QUOTE_VAULT`: The ERC4626 token vault for the quote asset.
 - `QUOTE_VAULT_CONVERSION_SAMPLE`: A sample amount for converting quote vault units.
-- `QUOTE_FEED1`, `QUOTE_FEED2`: Pyth price feed ids for the quote asset. You can find the price feed ids for each asset in our [price feeds directory](./price-feeds.mdx).
+- `QUOTE_FEED1`, `QUOTE_FEED2`: Pyth price feed ids for the quote asset. You can find the price feed ids for each asset in our [price feeds directory](./price-feeds).
 - `QUOTE_TOKEN_DECIMALS`: Decimal precision of the quote asset.
 - `PRICE_FEED_MAX_AGE`: The maximum age of the price feed in seconds. Note: This adds an extra safety net to avoid using stale prices.
 - `SALT`: A unique identifier to create deterministic addresses for deployed oracles.
