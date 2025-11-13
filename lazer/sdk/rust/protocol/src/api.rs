@@ -650,3 +650,16 @@ fn validate_formats(formats: &[Format]) -> Result<(), &'static str> {
     }
     Ok(())
 }
+
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash, From, ToSchema, Default,
+)]
+#[serde(rename_all = "camelCase")]
+#[schema(example = "regular")]
+pub enum MarketSession {
+    #[default]
+    Regular,
+    PreMarket,
+    PostMarket,
+    OverNight,
+}
