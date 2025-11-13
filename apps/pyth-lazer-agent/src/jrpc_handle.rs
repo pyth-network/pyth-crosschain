@@ -103,22 +103,36 @@ async fn handle_jrpc_inner<T: AsyncRead + AsyncWrite + Unpin>(
     match serde_json::from_slice::<PythLazerAgentJrpcV1>(receive_buf.as_slice()) {
         Ok(jrpc_request) => match jrpc_request.params {
             JrpcCall::PushUpdate(request_params) => {
-                handle_push_update(
-                    sender,
-                    lazer_publisher,
-                    request_params,
-                    jrpc_request.id.clone(),
-                )
-                .await
+                match lazer_publisher
+                    .push_feed_update(request_params.clone().into())
+                    .await
+                {
+                    Ok(()) => send_update_success_response(sender, jrpc_request.id).await,
+                    Err(err) => {
+                        send_update_failure_response(sender, request_params, jrpc_request.id, err)
+                            .await
+                    }
+                }
             }
-            JrpcCall::PushUpdates(request_params) => {
-                handle_batch_push_update(
-                    sender,
-                    lazer_publisher,
-                    &request_params,
-                    jrpc_request.id.clone(),
-                )
-                .await
+            JrpcCall::PushUpdates(request_params_batch) => {
+                for request_params in request_params_batch {
+                    match lazer_publisher
+                        .push_feed_update(request_params.clone().into())
+                        .await
+                    {
+                        Ok(()) => (),
+                        Err(err) => {
+                            return send_update_failure_response(
+                                sender,
+                                request_params,
+                                jrpc_request.id,
+                                err,
+                            )
+                            .await;
+                        }
+                    }
+                }
+                send_update_success_response(sender, jrpc_request.id).await
             }
             JrpcCall::GetMetadata(request_params) => match jrpc_request.id {
                 JrpcId::Null => {
@@ -223,57 +237,22 @@ async fn send_update_success_response<T: AsyncRead + AsyncWrite + Unpin>(
     }
 }
 
-async fn handle_push_update<T: AsyncRead + AsyncWrite + Unpin>(
+async fn send_update_failure_response<T: AsyncRead + AsyncWrite + Unpin>(
     sender: &mut Sender<T>,
-    lazer_publisher: &LazerPublisher,
     request_params: FeedUpdateParams,
     request_id: JrpcId,
+    err: Error,
 ) -> anyhow::Result<()> {
-    match lazer_publisher
-        .push_feed_update(request_params.clone().into())
-        .await
-    {
-        Ok(_) => send_update_success_response(sender, request_id).await,
-        Err(err) => {
-            debug!("error while sending updates: {:?}", err);
-            send_json(
-                sender,
-                &JrpcErrorResponse {
-                    jsonrpc: JsonRpcVersion::V2,
-                    error: JrpcError::SendUpdateError(request_params).into(),
-                    id: request_id,
-                },
-            )
-            .await
-        }
-    }
-}
-
-async fn handle_batch_push_update<T: AsyncRead + AsyncWrite + Unpin>(
-    sender: &mut Sender<T>,
-    lazer_publisher: &LazerPublisher,
-    batch_request: &[FeedUpdateParams],
-    request_id: JrpcId,
-) -> anyhow::Result<()> {
-    for request_params in batch_request.iter() {
-        if let Err(err) = lazer_publisher
-            .push_feed_update(request_params.clone().into())
-            .await
-        {
-            debug!("error while sending updates: {:?}", err);
-            send_json(
-                sender,
-                &JrpcErrorResponse {
-                    jsonrpc: JsonRpcVersion::V2,
-                    error: JrpcError::SendUpdateError(request_params.clone()).into(),
-                    id: request_id.clone(),
-                },
-            )
-            .await?;
-            anyhow::bail!("Error processing batch update: {:?}", err);
-        }
-    }
-    send_update_success_response(sender, request_id).await
+    debug!("error while sending updates: {:?}", err);
+    send_json(
+        sender,
+        &JrpcErrorResponse {
+            jsonrpc: JsonRpcVersion::V2,
+            error: JrpcError::SendUpdateError(request_params).into(),
+            id: request_id,
+        },
+    )
+    .await
 }
 
 async fn handle_get_metadata<T: AsyncRead + AsyncWrite + Unpin>(
