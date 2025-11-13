@@ -195,6 +195,10 @@ message FeedAggregateData {
     // [optional] Confidence interval for the `price` field. Can be absent if no data is available.
     // Never present for funding rate feeds.
     optional int64 confidence = 8;
+    // [required] Exponent applied to all price and rate values for this feed.
+    // Actual value is `mantissa * 10 ^ exponent`.
+    // Restricted to int16.
+    optional int32 exponent = 9;
 }
 
 // An item of the state describing an asset.

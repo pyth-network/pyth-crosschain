@@ -434,7 +434,6 @@ pub struct ParsedFeedPayload {
 impl ParsedFeedPayload {
     pub fn new(
         price_feed_id: PriceFeedId,
-        exponent: Option<i16>,
         data: &AggregatedPriceFeedData,
         properties: &[PriceFeedProperty],
     ) -> Self {
@@ -465,7 +464,7 @@ impl ParsedFeedPayload {
                     output.publisher_count = Some(data.publisher_count);
                 }
                 PriceFeedProperty::Exponent => {
-                    output.exponent = exponent;
+                    output.exponent = Some(data.exponent);
                 }
                 PriceFeedProperty::Confidence => {
                     output.confidence = data.confidence;
