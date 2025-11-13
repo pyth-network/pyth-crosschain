@@ -1,5 +1,23 @@
 @use "@pythnetwork/component-library/theme";
 
+.heroTitle {
+  @include theme.text("5xl", "semibold");
+
+  line-height: 115%;
+  letter-spacing: theme.letter-spacing("tight");
+  color: theme.color("heading");
+  margin: 0;
+}
+
+.heroSubtitle {
+  @include theme.text("xl", "normal");
+
+  line-height: 140%;
+  color: theme.color("paragraph");
+  margin: 0;
+}
+
+
 .preview {
   display: flex;
   flex-direction: column;
@@ -9,27 +27,29 @@
 
 .sectionHero {
   position: relative;
-  border-bottom: 1px solid var(--color-fd-border);
+  border-bottom: 1px solid theme.color("border");
   background: linear-gradient(
     180deg,
-    var(--color-fd-background) 0%,
-    color-mix(in srgb, var(--color-fd-card) 65%, transparent) 100%
+    theme.color("background", "primary") 0%,
+    color-mix(in srgb, theme.color("background", "secondary") 70%, transparent) 100%
   );
 }
 
 .sectionHeroContent {
-  margin: 0 auto;
-  max-width: 1400px;
+  @include theme.max-width;
+
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(12);
-  padding: theme.spacing(14) theme.spacing(4);
+  gap: theme.spacing(10);
+  padding-top: theme.spacing(18);
+  padding-bottom: theme.spacing(18);
 
   @include theme.breakpoint("lg") {
     flex-direction: row;
     align-items: center;
-    gap: theme.spacing(20);
-    padding: theme.spacing(22) theme.spacing(6);
+    gap: theme.spacing(18);
+    padding-top: theme.spacing(24);
+    padding-bottom: theme.spacing(24);
   }
 }
 
@@ -37,154 +57,13 @@
   display: flex;
   flex-direction: column;
   gap: theme.spacing(6);
-  color: var(--color-fd-foreground);
   flex: 1;
-  max-width: 30rem;
-}
+  max-width: 34rem;
+  color: theme.color("foreground");
 
-.heroEyebrow {
-  margin: 0;
-  font-size: clamp(1.5rem, 2.5vw, 3rem);
-  font-weight: 500;
-  letter-spacing: -0.06em;
-}
-
-.heroHeading {
-  margin: 0;
-  font-size: clamp(1.75rem, 2.6vw, 2.75rem);
-  font-weight: 400;
-  line-height: 1.2;
-  opacity: 0.8;
-}
-
-.heroButton {
-  align-self: flex-start;
-  margin-top: theme.spacing(6);
-}
-
-.heroGraphic {
-  position: relative;
-  flex: 1;
-  min-height: 22rem;
-  border-radius: theme.border-radius("3xl");
-  background:
-    radial-gradient(
-      65% 70% at 50% 60%,
-      color-mix(in srgb, var(--color-fd-muted) 50%, transparent) 0%,
-      transparent 100%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-fd-card) 75%, transparent) 0%,
-      transparent 100%
-    );
-  overflow: hidden;
-}
-
-.heroStripes {
-  position: absolute;
-  inset: 52% 10% auto;
-  height: 13rem;
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--color-fd-foreground) 0,
-    var(--color-fd-foreground) 4px,
-    transparent 4px,
-    transparent 18px
-  );
-  filter: blur(14px);
-  opacity: 0.18;
-}
-
-.heroStripesBack {
-  transform: translateY(-20%) rotate(-2deg);
-}
-
-.heroStripesFront {
-  inset: 58% 15% auto;
-  transform: translateY(-10%) rotate(1deg);
-  opacity: 0.28;
-}
-
-.heroRing {
-  position: absolute;
-  width: 6rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  background: transparent;
-  box-shadow: inset 0 0 0 8px transparent;
-  filter: drop-shadow(0 24px 26px rgb(0 0 0 / 25%));
-}
-
-.heroRingPrimary {
-  top: 22%;
-  right: 8%;
-  background: conic-gradient(from 140deg, #ef6f45, #742be1 60%, #ef6f45 100%);
-  transform: rotate(-8deg);
-}
-
-.heroRingSecondary {
-  bottom: 16%;
-  left: 18%;
-  background: conic-gradient(from 180deg, #742be1, #ef6f45 70%, #742be1 100%);
-  transform: rotate(14deg);
-}
-
-.heroRingTertiary {
-  bottom: 10%;
-  right: 28%;
-  background: conic-gradient(from 200deg, #742be1, #ef6f45 65%, #742be1 100%);
-  transform: rotate(-4deg);
-  opacity: 0.8;
-}
-
-.heroToken {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(1);
-  padding: theme.spacing(4);
-  min-width: 11rem;
-  border-radius: theme.border-radius("xl");
-  background: var(--color-fd-card);
-  border: 1px solid var(--color-fd-border);
-  box-shadow: 0 16px 32px rgb(23 23 23 / 20%);
-}
-
-.heroTokenSymbol {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: color-mix(in srgb, var(--color-fd-foreground) 60%, transparent);
-}
-
-.heroTokenLabel {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-fd-foreground);
-}
-
-.heroTokenPrimary {
-  background: linear-gradient(
-    135deg,
-    rgb(201 204 255 / 85%),
-    rgb(255 255 255 / 92%)
-  );
-}
-
-.heroTokenSecondary {
-  background: linear-gradient(
-    135deg,
-    rgb(224 255 205 / 85%),
-    rgb(255 255 255 / 92%)
-  );
-}
-
-.heroTokenTertiary {
-  background: linear-gradient(
-    135deg,
-    rgb(205 226 255 / 85%),
-    rgb(255 255 255 / 92%)
-  );
+  @include theme.breakpoint("lg") {
+    max-width: 28rem;
+  }
 }
 
 .gradientDivider {
@@ -201,7 +80,7 @@
   max-width: 1400px;
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(14);
+  gap: theme.spacing(2);
 }
 
 .sectionHeader {
@@ -331,10 +210,7 @@
 .sectionResourcesDense .resourcesRow {
   display: grid;
   gap: theme.spacing(6);
-
-  @include theme.breakpoint("lg") {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .resourceCard {
