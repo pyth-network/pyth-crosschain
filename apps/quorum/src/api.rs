@@ -110,7 +110,8 @@ fn verify_observation(
         .iter()
         .position(|addr| *addr == GuardianAddress(address))
         .ok_or(anyhow::anyhow!(
-            "Signature does not match any guardian address"
+            "Signature does not match any guardian address, recovered address: {:}",
+            hex::encode(address)
         ))
 }
 
@@ -365,16 +366,19 @@ mod test {
     #[test]
     fn test_verify_observation_invalid_signature() {
         let (guardian_set, _) = get_guardian_sets(10);
-        let random_key = get_new_keypair().0;
+        let (key, address) = get_new_keypair();
         let body = get_sample_body(-(OBSERVERATION_LIFETIME as i64 - 1));
         let observation = Observation {
-            signature: sign(&body, &random_key),
+            signature: sign(&body, &key),
             body: serde_wormhole::to_vec(&body).unwrap(),
         };
         let result = verify_observation(&observation, guardian_set.clone(), OBSERVERATION_LIFETIME);
         assert_eq!(
             result.unwrap_err().to_string(),
-            "Signature does not match any guardian address"
+            format!(
+                "Signature does not match any guardian address, recovered address: {}",
+                hex::encode(address)
+            )
         );
     }
 
