@@ -49,6 +49,7 @@ pub struct AggregatedPriceFeedData {
     pub best_bid_price: Option<Price>,
     pub best_ask_price: Option<Price>,
     pub publisher_count: u16,
+    pub exponent: i16,
     pub confidence: Option<Price>,
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
@@ -63,7 +64,7 @@ impl PayloadData {
     pub fn new(
         timestamp_us: TimestampUs,
         channel_id: ChannelId,
-        feeds: &[(PriceFeedId, i16, AggregatedPriceFeedData)],
+        feeds: &[(PriceFeedId, AggregatedPriceFeedData)],
         requested_properties: &[PriceFeedProperty],
     ) -> Self {
         Self {
@@ -71,7 +72,7 @@ impl PayloadData {
             channel_id,
             feeds: feeds
                 .iter()
-                .map(|(feed_id, exponent, feed)| PayloadFeedData {
+                .map(|(feed_id, feed)| PayloadFeedData {
                     feed_id: *feed_id,
                     properties: requested_properties
                         .iter()
@@ -87,7 +88,7 @@ impl PayloadData {
                                 PayloadPropertyValue::PublisherCount(feed.publisher_count)
                             }
                             PriceFeedProperty::Exponent => {
-                                PayloadPropertyValue::Exponent(*exponent)
+                                PayloadPropertyValue::Exponent(feed.exponent)
                             }
                             PriceFeedProperty::Confidence => {
                                 PayloadPropertyValue::Confidence(feed.confidence)

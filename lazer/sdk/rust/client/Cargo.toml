@@ -6,8 +6,8 @@ description = "A Rust client for Pyth Lazer"
 license = "Apache-2.0"
 
 [dependencies]
-pyth-lazer-protocol = { path = "../protocol", version = "0.20.1" }
-pyth-lazer-publisher-sdk = { path = "../../../publisher_sdk/rust", version = "0.20.1" }
+pyth-lazer-protocol = { path = "../protocol", version = "0.21.0" }
+pyth-lazer-publisher-sdk = { path = "../../../publisher_sdk/rust", version = "0.21.0" }
 
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.17"
