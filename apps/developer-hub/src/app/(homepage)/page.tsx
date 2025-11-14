@@ -1,5 +1,5 @@
-import { DeveloperHubPreview } from "../../components/Pages/TempPage";
+import { HomePage } from "../../components/Pages/HomePage";
 
 export default function Page() {
-  return <DeveloperHubPreview />;
+  return <HomePage />;
 }
