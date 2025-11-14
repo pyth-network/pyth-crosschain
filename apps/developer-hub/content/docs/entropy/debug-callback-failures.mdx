@@ -32,7 +32,7 @@ function revealWithCallback(
 ```
 
 This call requires the chain ID, contract address, and four other arguments.
-The chain ID and contract address can be retrieved from [Chainlist and Fee Details](./entropy/chainlist) page.
+The chain ID and contract address can be retrieved from [Chainlist and Fee Details](./chainlist) page.
 Export these values as environment variables for later use:
 
 ```bash copy
@@ -62,10 +62,10 @@ There are a few common issues that can cause the callback to fail.
 
 ### Gas Limit Exceeded
 
-If your callback function uses too much gas, the transaction will fail. Check the gas limit for your chain on the [chainlist](./entropy/chainlist) page and ensure your callback function uses less gas.
+If your callback function uses too much gas, the transaction will fail. Check the gas limit for your chain on the [chainlist](./chainlist) page and ensure your callback function uses less gas.
 
 > 💡 **Tip**
-> Refer to the [Set Custom Gas Limits](./entropy/set-custom-gas-limits) guide to set a custom gas limit for your callback function.
+> Refer to the [Set Custom Gas Limits](./set-custom-gas-limits) guide to set a custom gas limit for your callback function.
 
 ### Callback Function Errors
 
@@ -79,4 +79,4 @@ Your callback function might contain logic that throws an error. Review your cal
 ### Transaction Timing
 
 Make sure you're attempting the callback after the reveal delay has passed. The reveal delay varies by network and helps prevent MEV attacks.
-Refer to the [chainlist](./entropy/chainlist) page for the reveal delay for each network.
+Refer to the [chainlist](./chainlist) page for the reveal delay for each network.

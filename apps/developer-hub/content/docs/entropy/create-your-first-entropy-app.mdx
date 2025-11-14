@@ -160,13 +160,13 @@ export PRIVATE_KEY=<your private key from above>
 export RPC_URL="https://sepolia.optimism.io"
 ```
 
-Next, use the [Superchain Faucet](https://app.optimism.io/faucet?utm_source=docs) to claim some test Sepolia ETH. Paste the address from the command above into the faucet to get your ETH. You can verify that the ETH has arrived in your wallet by running the command
+Next, use the [Superchain Faucet](https://console.optimism.io/faucet) to claim some test Sepolia ETH. Paste the address from the command above into the faucet to get your ETH. You can verify that the ETH has arrived in your wallet by running the command
 
 ```bash copy
 cast balance $ADDRESS -r $RPC_URL -e
 ```
 
-The final step before deploying is to get the arguments for the contract's constructor: the [Entropy contract address](./entropy/chainlist) for Optimism Sepolia and [the Provider address](./entropy/chainlist). We will also export these values as environment variables for convenience:
+The final step before deploying is to get the arguments for the contract's constructor: the [Entropy contract address](./chainlist) for Optimism Sepolia and [the Provider address](./chainlist). We will also export these values as environment variables for convenience:
 
 ```bash copy
 export ENTROPY_ADDRESS=0x4821932D0CDd71225A6d914706A621e0389D7061
@@ -324,5 +324,5 @@ Congratulations! You've built your first app using Entropy. In this tutorial, we
 
 You can learn more about Entropy from the following links:
 
-- [Protocol Design](./entropy/protocol-design)
-- [How to Transform Entropy Results](./entropy/transform-entropy-results)
+- [Protocol Design](./protocol-design)
+- [How to Transform Entropy Results](./transform-entropy-results)

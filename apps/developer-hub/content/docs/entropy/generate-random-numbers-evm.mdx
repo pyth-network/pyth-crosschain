@@ -42,7 +42,7 @@ The Solidity SDK exports two interfaces:
 - [`IEntropyConsumer`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropyConsumer.sol) - The interface that your contract should implement. It makes sure that your contract is compliant with the Entropy contract.
 - [`IEntropyV2`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol) - The interface to interact with the Entropy contract.
   You will need the address of an Entropy contract on your blockchain.
-  Consult the current [Entropy contract addresses](./entropy/chainlist) to find the address on your chain.
+  Consult the current [Entropy contract addresses](./chainlist) to find the address on your chain.
   Once you have a contract address, instantiate an `console.log("IEntropyV2"){:bash}` contract in your solidity contract:
 
 ```solidity copy
@@ -70,7 +70,7 @@ Invoke the [`requestV2`](https://github.com/pyth-network/pyth-crosschain/blob/ma
 The `console.log("requestV2"){:bash}` method requires paying a fee in native gas tokens which is configured per-provider.
 
 The fee differs for every chain and also varies over time depending on the chain's current gas price.
-The current value for each chain can be found on the [chainlist and fee details](./entropy/chainlist) page.
+The current value for each chain can be found on the [chainlist and fee details](./chainlist) page.
 However, you should use the on-chain method [`getFeeV2`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropy.sol#L101) to compute the required fee and send it as the value of the `requestV2{:bash}` call.
 
 These methods use the default randomness provider.
@@ -84,7 +84,7 @@ function requestRandomNumber() external payable {
 
 This method returns a sequence number and emits a [`Requested`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/EntropyEventsV2.sol#L30) event. You can store this sequence number to identify the request in next step.
 
-Note that there are several variants of `requestV2` that allow the caller to configure the provider fulfilling the request and the gas limit for the callback. Refer [request callback variants](./entropy/request-callback-variants) for more details.
+Note that there are several variants of `requestV2` that allow the caller to configure the provider fulfilling the request and the gas limit for the callback. Refer [request callback variants](./request-callback-variants) for more details.
 
 Please see the method documentation in the [IEntropyV2 interface](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/entropy_sdk/solidity/IEntropyV2.sol).
 
@@ -151,7 +151,7 @@ When the final random number is ready to use, the entropyCallback function will 
   The `entropyCallback` function on your contract should **never** return an
   error. If it returns an error, the keeper will not be able to invoke the
   callback. If you are having problems receiving the callback, please see
-  [Debugging Callback Failures](./entropy/debug-callback-failures).
+  [Debugging Callback Failures](./debug-callback-failures).
 </Callout>
 
 ## Additional Resources
@@ -160,19 +160,19 @@ You may find these additional resources helpful while integrating Pyth Entropy i
 
 ### Debug Callback Failures
 
-Check how to [Debug Callback Failures](./entropy/debug-callback-failures) if you are having trouble getting the callback to run.
+Check how to [Debug Callback Failures](./debug-callback-failures) if you are having trouble getting the callback to run.
 
 ### Pyth Entropy Contract Addresses
 
-Consult the [Entropy contract addresses](./entropy/chainlist) to find the Entropy contract address on your chain.
+Consult the [Entropy contract addresses](./chainlist) to find the Entropy contract address on your chain.
 
 ### Current Fees
 
-Check the [Current Fees](./entropy/current-fees) to find the current fee for each provider on your chain.
+Check the [chainlist and fee details](./chainlist) to find the current fee for each provider on your chain.
 
 ### Transform Entropy Results
 
-Check out the [Transform Entropy Results](./entropy/transform-entropy-results) guide for tips to limit gas usage, or generate multiple random numbers in a single transaction.
+Check out the [Transform Entropy Results](./transform-entropy-results) guide for tips to limit gas usage, or generate multiple random numbers in a single transaction.
 
 ### Randomness providers
 
