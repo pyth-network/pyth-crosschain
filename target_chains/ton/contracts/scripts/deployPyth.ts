@@ -1,7 +1,8 @@
 import { toNano } from "@ton/core";
-import { MainConfig } from "../wrappers/Main";
-import { compile, NetworkProvider, sleep } from "@ton/blueprint";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { MainConfig } from "../wrappers/Main";
+import { compile, sleep } from "@ton/blueprint";
+import type { NetworkProvider } from "@ton/blueprint";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { Main } from "../wrappers/Main";
 import {
@@ -65,11 +66,12 @@ export async function run(provider: NetworkProvider) {
   console.log(`Current guardian set index: ${currentGuardianSetIndex}`);
 
   for (let i = currentGuardianSetIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
-    const vaa = MAINNET_UPGRADE_VAAS[i];
+    const vaa = MAINNET_UPGRADE_VAAS[i]!;
+
     const vaaBuffer = Buffer.from(vaa, "hex");
     await main.sendUpdateGuardianSet(provider.sender(), vaaBuffer);
     console.log(
-      `Successfully updated guardian set ${i + 1} with VAA: ${vaa.slice(
+      `Successfully updated guardian set ${i + 1} with VAA: ${vaa?.slice(
         0,
         20,
       )}...`,
@@ -103,10 +105,17 @@ export async function run(provider: NetworkProvider) {
     priceIds,
     { encoding: "hex" },
   );
-  console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0].price);
-  console.log("Hermes ETH price:", latestPriceUpdates.parsed?.[1].price);
+  console.log("Hermes BTC price:", latestPriceUpdates.parsed?.[0]?.price);
+  console.log("Hermes ETH price:", latestPriceUpdates.parsed?.[1]?.price);
+
+  const binaryData = latestPriceUpdates.binary.data[0];
+
+  if (binaryData === undefined) {
+    throw new Error("No price updates available from Hermes");
+  }
+
   // Combine updates into a single buffer
-  const updateData = Buffer.from(latestPriceUpdates.binary.data[0], "hex");
+  const updateData = Buffer.from(binaryData, "hex");
   console.log("Update data:", latestPriceUpdates.binary.data[0]);
 
   const singleUpdateFee = await main.getSingleUpdateFee();
@@ -123,7 +132,7 @@ export async function run(provider: NetworkProvider) {
     updateData,
     totalFee,
   );
-  console.log("Price feeds updated successfully.");
+  console.log("Price feeds updated successfully.", result);
 
   console.log("Waiting for 30 seconds before checking price feeds...");
   await sleep(30000);
