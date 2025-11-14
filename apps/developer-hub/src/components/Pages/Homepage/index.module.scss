@@ -19,13 +19,13 @@
 }
 
 .sectionHeroContent {
-  @include theme.max-width;
-
   display: flex;
   flex-direction: column;
   gap: theme.spacing(10);
   padding-top: theme.spacing(18);
   padding-bottom: theme.spacing(18);
+
+  @include theme.max-width;
 
   @include theme.breakpoint("lg") {
     flex-direction: row;
