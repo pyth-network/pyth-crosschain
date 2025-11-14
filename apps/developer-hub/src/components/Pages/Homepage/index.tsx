@@ -109,7 +109,7 @@ export const HomePage = () => {
       <GradientDivider />
     </div>
   );
-};  
+};
 
 function GradientDivider() {
   return <div className={styles.gradientDivider} role="presentation" />;
