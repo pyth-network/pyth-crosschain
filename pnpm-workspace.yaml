@@ -216,6 +216,7 @@ packageManagerStrict: true
 packageManagerStrictVersion: true
 
 patchedDependencies:
+  '@ton/blueprint': patches/@ton__blueprint.patch
   eccrypto@1.1.6: patches/eccrypto@1.1.6.patch
 
 strictDepBuilds: true
