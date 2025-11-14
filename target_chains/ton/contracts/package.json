@@ -27,7 +27,7 @@
     "jest": "^29.7.0",
     "prettier": "catalog:",
     "ts-jest": "^29.2.0",
-    "ts-node": "catalog:"
+    "tsx": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

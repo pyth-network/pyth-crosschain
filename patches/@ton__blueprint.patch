@@ -1,0 +1,49 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index d70acf1a477acdf436c3053a093ffae584c0cf01..0000000000000000000000000000000000000000
+diff --git a/dist/utils/selection.utils.js b/dist/utils/selection.utils.js
+index 1c26ef80e2101d8df5120e5e865488df0553074e..6f17ce979a2756bbedf20c0cc8ab622855ecbbb6 100644
+--- a/dist/utils/selection.utils.js
++++ b/dist/utils/selection.utils.js
+@@ -32,6 +32,7 @@ const path_1 = __importDefault(require("path"));
+ const promises_1 = __importDefault(require("fs/promises"));
+ const paths_1 = require("../paths");
+ const compile_1 = require("../compile/compile");
++const tsx = require('tsx/cjs/api');
+ const findCompiles = async (directory) => {
+     const dir = directory ?? await (0, compile_1.getCompilablesDirectory)();
+     const files = await promises_1.default.readdir(dir);
+@@ -85,9 +86,18 @@ async function selectFile(files, opts) {
+             selected = await opts.ui.choose('Choose file to use', files, (f) => f.name);
+         }
+     }
++
+     return {
+         ...selected,
+-        module: opts.import !== false ? await (_a = selected.path, Promise.resolve().then(() => __importStar(require(_a)))) : undefined,
++        module: opts.import !== false ?
++            await (_a = selected.path, Promise.resolve().then(() => __importStar(tsx.require(_a, __filename)))) :
++            undefined,
+     };
++
++    // NOTE: OLD code provided, below, for historical reference
++    // return {
++    //     ...selected,
++    //     module: opts.import !== false ? await (_a = selected.path, Promise.resolve().then(() => __importStar(require(_a)))) : undefined,
++    // };
+ }
+ exports.selectFile = selectFile;
+diff --git a/package.json b/package.json
+index 3c4b649980ae606b57a4ca2fa8c991534d756a5d..5b6cf05b58cb2b62bf7c832d0f63d7870cb8f4f6 100644
+--- a/package.json
++++ b/package.json
+@@ -44,7 +44,8 @@
+     "inquirer": "^8.2.5",
+     "qrcode-terminal": "^0.12.0",
+     "ton-x": "^2.1.0",
+-    "ts-node": "^10.9.1"
++    "ts-node": "^10.9.1",
++    "tsx": "^4.20.6"
+   },
+   "packageManager": "yarn@4.3.1"
+ }
