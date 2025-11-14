@@ -56,7 +56,7 @@ class SedaConfig(BaseModel):
     poll_interval: float
     poll_failure_interval: float
     poll_timeout: float
-    feeds: dict[str, SedaFeedConfig]
+    feeds: Optional[dict[str, SedaFeedConfig]] = {}
 
 
 class PriceSource(BaseModel):
@@ -81,7 +81,12 @@ class ConstantSourceConfig(BaseModel):
     value: str
 
 
-PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig
+class OracleMidAverageConfig(BaseModel):
+    source_type: Literal["oracle_mid_average"]
+    symbol: str
+
+
+PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig | OracleMidAverageConfig
 
 
 class PriceConfig(BaseModel):

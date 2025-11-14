@@ -30,6 +30,10 @@ class HermesListener:
         }
 
     async def subscribe_all(self):
+        if not self.feed_ids:
+            logger.info("No Hermes subscriptions needed")
+            return
+
         await asyncio.gather(*(self.subscribe_single(url) for url in self.hermes_urls))
 
     @retry(

@@ -69,11 +69,10 @@ class Publisher:
                 logger.exception("Publisher.publish() exception: {}", repr(e))
 
     def publish(self):
-        oracle_pxs, mark_pxs, external_perp_pxs = self.price_state.get_all_prices(self.market_name)
-        logger.debug("oracle_pxs: {}", oracle_pxs)
-        logger.debug("mark_pxs: {}", mark_pxs)
-        logger.debug("external_perp_pxs: {}", external_perp_pxs)
+        oracle_update = self.price_state.get_all_prices()
+        logger.debug("oracle_update: {}", oracle_update)
 
+        oracle_pxs, mark_pxs, external_perp_pxs = oracle_update.oracle, oracle_update.mark, oracle_update.external
         if not oracle_pxs:
             logger.error("No valid oracle prices available")
             self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
@@ -130,13 +129,13 @@ class Publisher:
         raise PushError("all push endpoints failed")
 
     def _handle_response(self, response):
-        logger.debug("publish: push response: {} {}", response, type(response))
+        logger.debug("oracle update response: {}", response)
         status = response.get("status")
         if status == "ok":
             self.metrics.successful_push_counter.add(1, self.metrics_labels)
         elif status == "err":
             self.metrics.failed_push_counter.add(1, self.metrics_labels)
-            logger.error("publish: publish error: {}", response)
+            logger.error("oracle update error response: {}", response)
 
     def _record_push_interval_metric(self):
         now = time.time()
