@@ -49,36 +49,36 @@ export function DeveloperHubPreview() {
         <SectionCards>
           <SectionCard
             title="Pyth Token"
-            description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
-            url="/price-feeds/pro"
+            description="The native token powering governance and staking across the Pyth Network."
+            url="/pyth-token"
             urlLabel="Link"
             image={<SignalImage />}
           />
           <SectionCard
             title="Oracle Integrity Staking"
-            description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
-            url="/price-feeds/pro"
+            description="Stake PYTH to support data publishers and secure the integrity of Pyth price feeds."
+            url="/oracle-integrity-staking"
             urlLabel="Link"
             image={<SignalImage />}
           />
           <SectionCard
             title="Pyth Metrics"
-            description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
-            url="/price-feeds/pro"
+            description="Track network performance, feed activity, and ecosystem growth in real time."
+            url="/metrics"
             urlLabel="Link"
             image={<SignalImage />}
           />
         </SectionCards>
       </Section>
       <Section
-        title="Resources for builders"
-        subtitle="Get the most from Pyth Network"
+        title="Resources for Developers"
+        subtitle="Explore the Pyth Network for developers"
       >
         <SectionCards>
           <SectionCard
-            title="Pyth Pro"
-            description="Subscription-based price data for institutions and advanced use cases."
-            url="/price-feeds/pro"
+            title="Get Your Access Token"
+            description="Request access for the Pyth Ultra Low Latency price feeds."
+            url="/price-feeds/pro/access-token"
             urlLabel="Link"
             image={<SignalImage />}
           />
