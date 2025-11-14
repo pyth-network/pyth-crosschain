@@ -184,15 +184,7 @@ const useChartElem = (symbol: string, feedId: string) => {
             return;
           }
 
-          const benchmarkData = benchmarksApiResponseSchema.parse(jsonData);
-
-          // Transform OHLC data to our format using close prices
-          const data = benchmarkData.t.map((timestamp, i) => ({
-            time: timestamp as UTCTimestamp,
-            price: benchmarkData.c[i], // Use close price
-            confidence: 0, // No confidence data from benchmarks API
-            status: PriceStatus.Trading,
-          }));
+          const data = benchmarksApiResponseSchema.parse(jsonData);
 
           // Get the current historical price data
           // Note that .data() returns (WhitespaceData | LineData)[], hence the type cast.
@@ -408,15 +400,24 @@ type ChartRefContents = {
   price: ISeriesApi<"Line">;
 };
 
-const benchmarksApiResponseSchema = z.object({
-  s: z.string(), // status
-  t: z.array(z.number()), // timestamp
-  o: z.array(z.number()), // open
-  h: z.array(z.number()), // high
-  l: z.array(z.number()), // low
-  c: z.array(z.number()), // close
-  v: z.array(z.number()), // volume
-});
+const benchmarksApiResponseSchema = z
+  .object({
+    s: z.string(),
+    t: z.array(z.number()),
+    o: z.array(z.number()),
+    h: z.array(z.number()),
+    l: z.array(z.number()),
+    c: z.array(z.number()),
+    v: z.array(z.number()),
+  })
+  .transform((data) =>
+    data.t.map((timestamp, i) => ({
+      time: timestamp as UTCTimestamp,
+      price: data.c[i], // Use close price for now
+      confidence: 0, // No confidence data from benchmarks API
+      status: PriceStatus.Trading,
+    })),
+  );
 const priceFormat = {
   type: "price",
   precision: 5,
