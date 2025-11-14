@@ -2,20 +2,20 @@ import {
   beginCell,
   Cell,
   contractAddress,
-  ContractProvider,
-  Sender,
+  type ContractProvider,
+  type Sender,
   SendMode,
   toNano,
   Address,
 } from "@ton/core";
 import { BaseWrapper } from "./BaseWrapper";
-import { HexString, Price } from "@pythnetwork/price-service-sdk";
+import { type HexString, Price } from "@pythnetwork/price-service-sdk";
 import {
   createCellChain,
   parseDataSource,
   parseDataSources,
 } from "@pythnetwork/pyth-ton-js";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 export type PythTestConfig = {
   priceFeedId: HexString;
@@ -42,11 +42,18 @@ export class PythTest extends BaseWrapper {
     return BaseWrapper.createInitData(config);
   }
 
-  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+  override async sendDeploy(
+    provider: ContractProvider,
+    via: Sender,
+    value: bigint,
+  ) {
     await super.sendDeploy(provider, via, value);
   }
 
-  async getPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
+  override async getPriceUnsafe(
+    provider: ContractProvider,
+    priceFeedId: HexString,
+  ) {
     return await super.getPriceUnsafe(
       provider,
       priceFeedId,
@@ -54,7 +61,7 @@ export class PythTest extends BaseWrapper {
     );
   }
 
-  async getPriceNoOlderThan(
+  override async getPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString,
@@ -67,7 +74,10 @@ export class PythTest extends BaseWrapper {
     );
   }
 
-  async getEmaPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
+  override async getEmaPriceUnsafe(
+    provider: ContractProvider,
+    priceFeedId: HexString,
+  ) {
     return await super.getEmaPriceUnsafe(
       provider,
       priceFeedId,
@@ -75,7 +85,7 @@ export class PythTest extends BaseWrapper {
     );
   }
 
-  async getEmaPriceNoOlderThan(
+  override async getEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString,
@@ -88,18 +98,18 @@ export class PythTest extends BaseWrapper {
     );
   }
 
-  async getUpdateFee(provider: ContractProvider, vm: Buffer) {
+  override async getUpdateFee(provider: ContractProvider, vm: Buffer) {
     return await super.getUpdateFee(provider, vm, "test_get_update_fee");
   }
 
-  async getSingleUpdateFee(provider: ContractProvider) {
+  override async getSingleUpdateFee(provider: ContractProvider) {
     return await super.getSingleUpdateFee(
       provider,
       "test_get_single_update_fee",
     );
   }
 
-  async sendUpdatePriceFeeds(
+  override async sendUpdatePriceFeeds(
     provider: ContractProvider,
     via: Sender,
     updateData: Buffer,
@@ -108,7 +118,7 @@ export class PythTest extends BaseWrapper {
     await super.sendUpdatePriceFeeds(provider, via, updateData, updateFee);
   }
 
-  async sendUpdateGuardianSet(
+  override async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
     vm: Buffer,
@@ -116,7 +126,7 @@ export class PythTest extends BaseWrapper {
     await super.sendUpdateGuardianSet(provider, via, vm);
   }
 
-  async getChainId(provider: ContractProvider) {
+  override async getChainId(provider: ContractProvider) {
     return await super.getChainId(provider, "test_get_chain_id");
   }
 
