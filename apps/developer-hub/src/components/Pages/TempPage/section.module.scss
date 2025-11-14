@@ -1,7 +1,9 @@
 @use "@pythnetwork/component-library/theme";
 
 .section {
-  padding: theme.spacing(34) theme.spacing(4);
+  padding: theme.spacing(34) 0;
+  padding-left: theme.spacing(20);
+  padding-right: theme.spacing(20);
   .sectionContent {
     margin: 0 auto;
     width: 100%;
