@@ -1,26 +1,10 @@
 @use "@pythnetwork/component-library/theme";
 
-.heroTitle {
-  @include theme.text("5xl", "semibold");
-
-  line-height: 115%;
-  letter-spacing: theme.letter-spacing("tight");
-  color: theme.color("heading");
-  margin: 0;
-}
-
-.heroSubtitle {
-  @include theme.text("xl", "normal");
-
-  line-height: 140%;
-  color: theme.color("paragraph");
-  margin: 0;
-}
 
 .preview {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(24);
+  gap: theme.spacing(20);
   background-color: var(--color-fd-background);
 }
 
@@ -37,7 +21,6 @@
 
 .sectionHeroContent {
   @include theme.max-width;
-
   display: flex;
   flex-direction: column;
   gap: theme.spacing(10);
@@ -46,10 +29,10 @@
 
   @include theme.breakpoint("lg") {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     gap: theme.spacing(18);
-    padding-top: theme.spacing(24);
-    padding-bottom: theme.spacing(24);
+    padding-left: theme.spacing(20);
+    padding-right: theme.spacing(20);
   }
 }
 
@@ -66,13 +49,45 @@
   }
 }
 
-.gradientDivider {
-  height: 12px;
-  background: linear-gradient(90deg, var(--color-fd-ring) 0%, #ffad81 100%);
+
+.heroTitle {
+  @include theme.text("5xl", "semibold");
+
+  line-height: 115%;
+  letter-spacing: theme.letter-spacing("tight");
+  color: theme.color("heading");
+  margin: 0;
 }
 
+.heroSubtitle {
+  @include theme.text("2xl", "normal");
+
+  line-height: 140%;
+  color: theme.color("paragraph");
+  margin: 0;
+}
+
+
 .sectionProducts {
-  padding: theme.spacing(20) theme.spacing(4);
+  padding: theme.spacing(10) theme.spacing(20) theme.spacing(10) theme.spacing(20);
+}
+
+
+
+.sectionHeaderTitle {
+  @include theme.text("3xl", "medium");
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(2);
+}
+
+.sectionHeaderSubtitle {
+  @include theme.text("xl", "normal");
+  color: light-dark(
+    theme.pallette-color("stone", 500),
+    theme.pallette-color("steel", 400)
+  );
+  margin-top: theme.spacing(4);
+  margin-bottom: theme.spacing(12);
 }
 
 .productsGrid {
@@ -88,157 +103,8 @@
   position: relative;
 }
 
-.productBadge {
-  position: absolute;
-  top: -12px;
-  left: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 12px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  border-radius: 9999px;
-  color: var(--color-fd-card);
-  z-index: 1;
-}
 
-.productBadgePurple {
-  background: color-mix(in srgb, var(--color-fd-ring) 70%, #141125);
-}
-
-.productBadgeOrange {
-  background: linear-gradient(135deg, #f9771d, #742be1);
-}
-
-.productGlyph {
-  position: absolute;
-  top: 18px;
-  right: 38px;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgb(0 0 0 / 6%), transparent);
-  mask: linear-gradient(180deg, black 0%, transparent 100%);
-}
-
-.productGlyphPurple {
-  background: linear-gradient(
-    180deg,
-    rgb(122 84 255 / 90%),
-    rgb(247 119 29 / 90%)
-  );
-}
-
-.productGlyphOrange {
-  background: linear-gradient(
-    180deg,
-    rgb(247 119 29 / 90%),
-    rgb(122 84 255 / 90%)
-  );
-}
-
-.sectionResources {
-  padding: theme.spacing(20) theme.spacing(4);
-  background-color: color-mix(in srgb, var(--color-fd-card) 90%, transparent);
-}
-
-.sectionResourcesContent {
-  margin: 0 auto;
-  max-width: 1400px;
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(12);
-}
-
-.sectionResourcesIllustrated .resourcesLayout {
-  display: grid;
-  gap: theme.spacing(10);
-
-  @include theme.breakpoint("lg") {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
-  }
-}
-
-.resourcesCards {
-  display: grid;
-  gap: theme.spacing(6);
-}
-
-.resourcesIllustration {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    width: min(100%, 320px);
-    height: auto;
-  }
-}
-
-.sectionResourcesDense .resourcesRow {
-  display: grid;
-  gap: theme.spacing(6);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.resourceCard {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: theme.spacing(6);
-  padding: theme.spacing(6);
-  background-color: var(--color-fd-card);
-  border: 1px solid var(--color-fd-border);
-  border-radius: theme.border-radius("2xl");
-  min-height: 220px;
-}
-
-.resourceCardHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: theme.spacing(4);
-}
-
-.resourceIcon {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--color-fd-muted) 50%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-}
-
-.resourceTitle {
-  margin: 0;
-  font-size: 1.1875rem;
-  font-weight: 600;
-  color: var(--color-fd-foreground);
-}
-
-.resourceDescription {
-  margin: theme.spacing(2) 0 0;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--color-fd-foreground) 70%, transparent);
-}
-
-.resourceLink {
-  align-self: flex-start;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--color-fd-foreground);
-  text-decoration: underline;
-  text-decoration-skip-ink: none;
-  text-underline-position: from-font;
+.gradientDivider {
+  height: 12px;
+  background: linear-gradient(90deg, var(--color-fd-ring) 0%, #ffad81 100%);
 }

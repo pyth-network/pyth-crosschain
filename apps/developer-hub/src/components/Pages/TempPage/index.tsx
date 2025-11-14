@@ -20,13 +20,10 @@ export function DeveloperHubPreview() {
       </section>
 
       <section className={styles.sectionProducts}>
-        <div className={styles.sectionProductsContent}>
-          <header className={styles.sectionHeader}>
             <p className={styles.sectionHeaderTitle}>Products</p>
             <p className={styles.sectionHeaderSubtitle}>
-              Integrate with the global price layer.
+            Connect to the global market data and randomness layer.
             </p>
-          </header>
           <div className={styles.productsGrid}>
             {products.map((product: ProductCardConfig) => (
               <div key={product.title} className={styles.productsCardWrapper}>
@@ -41,32 +38,31 @@ export function DeveloperHubPreview() {
               </div>
             ))}
           </div>
-        </div>
       </section>
 
       <Section
-        title="Resources for builders"
-        subtitle="Get the most from Pyth Network"
+        title="Additional Resources"
+        subtitle="Explore the Pyth Network"
         isHighlight
         image={<ResourcesForBuildersImage />}
       >
         <SectionCards>
           <SectionCard
-            title="Grants"
+            title="Pyth Token"
             description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
             url="/price-feeds/pro"
             urlLabel="Link"
             image={<SignalImage />}
           />
           <SectionCard
-            title="Grants"
+            title="Oracle Integrity Staking"
             description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
             url="/price-feeds/pro"
             urlLabel="Link"
             image={<SignalImage />}
           />
           <SectionCard
-            title="Grants"
+            title="Pyth Metrics"
             description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
             url="/price-feeds/pro"
             urlLabel="Link"
@@ -111,8 +107,6 @@ export function DeveloperHubPreview() {
       </Section>
 
       <GradientDivider />
-
-      <p>footer...</p>
     </div>
   );
 }
@@ -125,10 +119,8 @@ const products: ProductCardConfig[] = [
   {
     title: "Pyth Pro",
     description:
-      "Subscription-based price data for institutions and advanced use cases.",
+      "Subscription-based price data for institutions and advanced use cases. Previously known as Lazer.",
     href: "/price-feeds/pro",
-    badgeLabel: "Price Feeds",
-    badgeVariant: "Purple",
     features: [
       { label: "Ultra-low latency" },
       { label: "Crypto, Equities & Indexes" },
@@ -141,16 +133,14 @@ const products: ProductCardConfig[] = [
         href: "/price-feeds/pro/access-token",
       },
       { label: "Browse Supported Feeds", href: "/price-feeds/pro/price-feeds" },
-      { label: "Error Codes", href: "/price-feeds/pro/error-codes" },
+      { label: "Pricing", href: "https://www.pyth.network/pricing" },
     ],
   },
   {
     title: "Pyth Core",
     description:
-      "Subscription-based price data for institutions and advanced use cases.",
+      "Decentralized price feeds for DeFi and TradFi builders with deterministic on-chain delivery.",
     href: "/price-feeds/core",
-    badgeLabel: "Price Feeds",
-    badgeVariant: "Purple",
     features: [
       { label: "400ms update frequency" },
       { label: "100+ blockchains" },
@@ -159,33 +149,30 @@ const products: ProductCardConfig[] = [
     ],
     quickLinks: [
       {
-        label: "Get Pyth Pro Access Token",
-        href: "/price-feeds/pro/access-token",
+        label: "Supported Blockchains",
+        href: "/price-feeds/core/contract-addresses",
       },
-      { label: "Browse Supported Feeds", href: "/price-feeds/pro/price-feeds" },
-      { label: "Error Codes", href: "/price-feeds/pro/error-codes" },
+      { label: "Browse Supported Feeds", href: "/price-feeds/core/price-feeds" },
+      { label: "API Reference", href: "/price-feeds/core/api-reference" },
     ],
   },
   {
-    title: "Secure Randomness",
+    title: "Entropy",
     description:
-      "Subscription-based price data for institutions and advanced use cases.",
+      "Secure, Verifiable Random Number Generator for EVM-based smart contracts.",
     href: "/entropy",
-    badgeLabel: "Entropy",
-    badgeVariant: "Orange",
     features: [
-      { label: "400ms update frequency" },
-      { label: "100+ blockchains" },
-      { label: "Supports Pull and Push updates" },
-      { label: "Decentralized Oracle" },
+      { label: "On-chain randomness" },
+      { label: "Verifiable results" },
+      { label: "Pay in native token" },
     ],
     quickLinks: [
       {
-        label: "Get Pyth Pro Access Token",
-        href: "/price-feeds/pro/access-token",
+        label: "Chainlist",
+        href: "/entropy/chainlist",
       },
-      { label: "Browse Supported Feeds", href: "/price-feeds/pro/price-feeds" },
-      { label: "Error Codes", href: "/price-feeds/pro/error-codes" },
+      { label: "Protocol Design", href: "/entropy/protocol-design" },
+      { label: "Entropy Explorer", href: "https://entropy-explorer.pyth.network/" },
     ],
   },
 ];
@@ -194,8 +181,6 @@ type ProductCardConfig = {
   title: string;
   description: string;
   href: string;
-  badgeLabel: string;
-  badgeVariant: "Purple" | "Orange";
   features: { label: string }[];
   quickLinks: { label: string; href: string }[];
 };
