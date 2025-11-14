@@ -185,6 +185,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
             <LivePrice
               feedKey={props.feed.product.price_account}
               cluster={Cluster.Pythnet}
+              updatePageTitle
             />
           )
         }
