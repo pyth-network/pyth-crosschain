@@ -5,7 +5,7 @@ import { SectionCards, SectionCard } from "./section-card";
 import SignalImage from "./signal.svg";
 import { ProductCard } from "../../ProductCard";
 
-export function HomePage() {
+export const HomePage = () => {
   return (
     <div className={styles.preview}>
       <section className={styles.sectionHero}>
@@ -109,7 +109,7 @@ export function HomePage() {
       <GradientDivider />
     </div>
   );
-}
+};  
 
 function GradientDivider() {
   return <div className={styles.gradientDivider} role="presentation" />;
