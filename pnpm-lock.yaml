@@ -2405,6 +2405,9 @@ importers:
       '@cprussin/tsconfig':
         specifier: 'catalog:'
         version: 3.1.2(typescript@5.9.3)
+      '@pythnetwork/jest-config':
+        specifier: 'workspace:'
+        version: link:../jest-config
       '@types/react':
         specifier: 'catalog:'
         version: 19.1.0

@@ -7,7 +7,7 @@ import { usePrefetch } from "../../use-prefetch.js";
 
 export { ListBox, ListBoxSection } from "react-aria-components";
 
-type ListBoxItemProps<T extends object> = ComponentProps<
+export type ListBoxItemProps<T extends object> = ComponentProps<
   typeof BaseListBoxItem<T>
 > & {
   prefetch?: Parameters<typeof usePrefetch>[0]["prefetch"];
