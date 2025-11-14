@@ -5,7 +5,7 @@ import { SectionCards, SectionCard } from "./section-card";
 import SignalImage from "./signal.svg";
 import { ProductCard } from "../../ProductCard";
 
-export const HomePage = () => {
+export const Homepage = () => {
   return (
     <div className={styles.preview}>
       <section className={styles.sectionHero}>
