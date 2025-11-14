@@ -17,7 +17,6 @@
   margin: 0;
 }
 
-
 .preview {
   display: flex;
   flex-direction: column;
@@ -31,7 +30,8 @@
   background: linear-gradient(
     180deg,
     theme.color("background", "primary") 0%,
-    color-mix(in srgb, theme.color("background", "secondary") 70%, transparent) 100%
+    color-mix(in srgb, theme.color("background", "secondary") 70%, transparent)
+      100%
   );
 }
 
@@ -73,35 +73,6 @@
 
 .sectionProducts {
   padding: theme.spacing(20) theme.spacing(4);
-}
-
-.sectionProductsContent {
-  margin: 0 auto;
-  max-width: 1400px;
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(2);
-}
-
-.sectionHeader {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(2);
-  color: var(--color-fd-foreground);
-}
-
-.sectionHeaderTitle {
-  margin: 0;
-  font-size: 1.5625rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
-
-.sectionHeaderSubtitle {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 400;
-  opacity: 0.55;
 }
 
 .productsGrid {

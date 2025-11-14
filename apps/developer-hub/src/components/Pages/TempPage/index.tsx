@@ -1,9 +1,9 @@
-import { Cards, Card } from "fumadocs-ui/components/card";
-
 import styles from "./index.module.scss";
+import ResourcesForBuildersImage from "./resources-for-builders.svg";
+import { Section } from "./section";
+import { SectionCards, SectionCard } from "./section-card";
+import SignalImage from "./signal.svg";
 import { ProductCard } from "../../ProductCard";
-
-
 
 export function DeveloperHubPreview() {
   return (
@@ -11,11 +11,9 @@ export function DeveloperHubPreview() {
       <section className={styles.sectionHero}>
         <div className={styles.sectionHeroContent}>
           <div className={styles.heroCopy}>
-            <h1 className={styles.heroTitle}>
-              Developer Hub
-            </h1>
+            <h1 className={styles.heroTitle}>Developer Hub</h1>
             <p className={styles.heroSubtitle}>
-            Integrate with the global price layer.
+              Integrate with the global price layer.
             </p>
           </div>
         </div>
@@ -46,35 +44,82 @@ export function DeveloperHubPreview() {
         </div>
       </section>
 
+      <Section
+        title="Resources for builders"
+        subtitle="Get the most from Pyth Network"
+        isHighlight
+        image={<ResourcesForBuildersImage />}
+      >
+        <SectionCards>
+          <SectionCard
+            title="Grants"
+            description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+          <SectionCard
+            title="Grants"
+            description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+          <SectionCard
+            title="Grants"
+            description="Handles most of the logic, including document search, content source adapters, and Markdown extensions."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+        </SectionCards>
+      </Section>
+      <Section
+        title="Resources for builders"
+        subtitle="Get the most from Pyth Network"
+      >
+        <SectionCards>
+          <SectionCard
+            title="Pyth Pro"
+            description="Subscription-based price data for institutions and advanced use cases."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+          <SectionCard
+            title="Pyth Pro"
+            description="Subscription-based price data for institutions and advanced use cases."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+          <SectionCard
+            title="Pyth Pro"
+            description="Subscription-based price data for institutions and advanced use cases."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+          <SectionCard
+            title="Pyth Pro"
+            description="Subscription-based price data for institutions and advanced use cases."
+            url="/price-feeds/pro"
+            urlLabel="Link"
+            image={<SignalImage />}
+          />
+        </SectionCards>
+      </Section>
+
       <GradientDivider />
 
-      <section className={styles.sectionProducts}>
-        <div className={styles.sectionProductsContent}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionHeaderTitle}>AdditionalResources</p>
-          </header>
-          <Cards>
-            <Card title="Network Metrics" />
-            <Card title="OIS"/>
-            <Card title="Pyth Token"/>
-            <Card title="Whitepaper"/>
-            <Card title="Security"/>
-          </Cards>
-        </div>
-      </section>
-
-
+      <p>footer...</p>
     </div>
   );
 }
 
-
 function GradientDivider() {
   return <div className={styles.gradientDivider} role="presentation" />;
 }
-
-
-
 
 const products: ProductCardConfig[] = [
   {
@@ -145,8 +190,6 @@ const products: ProductCardConfig[] = [
   },
 ];
 
-
-
 type ProductCardConfig = {
   title: string;
   description: string;
@@ -156,6 +199,3 @@ type ProductCardConfig = {
   features: { label: string }[];
   quickLinks: { label: string; href: string }[];
 };
-
-
-
