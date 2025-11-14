@@ -20,6 +20,7 @@
 
 .sectionHeroContent {
   @include theme.max-width;
+
   display: flex;
   flex-direction: column;
   gap: theme.spacing(10);
@@ -72,12 +73,14 @@
 
 .sectionHeaderTitle {
   @include theme.text("3xl", "medium");
+
   color: theme.color("heading");
   margin-bottom: theme.spacing(2);
 }
 
 .sectionHeaderSubtitle {
   @include theme.text("xl", "normal");
+
   color: light-dark(
     theme.pallette-color("stone", 500),
     theme.pallette-color("steel", 400)

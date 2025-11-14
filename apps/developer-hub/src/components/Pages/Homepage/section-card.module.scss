@@ -9,16 +9,19 @@
   border-radius: theme.border-radius("2xl");
   background-color: theme.color("background", "secondary");
   flex: 1;
+
   .sectionCardHeader {
     display: flex;
     flex-direction: row;
     gap: theme.spacing(2);
     align-items: flex-end;
     justify-content: space-between;
+
     .sectionCardTitle {
       @include theme.text("lg", "medium");
     }
   }
+
   .sectionCardDescription {
     line-height: 140%;
     color: light-dark(
@@ -26,6 +29,7 @@
       theme.pallette-color("steel", 400)
     );
   }
+
   .sectionCardUrl {
     font-weight: theme.font-weight("medium");
     text-decoration: underline;
@@ -36,6 +40,7 @@
   display: flex;
   gap: theme.spacing(10);
   flex-direction: column;
+
   @include theme.breakpoint("lg") {
     flex-direction: row;
   }
