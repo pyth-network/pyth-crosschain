@@ -32,9 +32,17 @@ Pyth offers two main versions of price feeds, each optimized for different use c
       { label: "Dedicated support" },
     ]}
     quickLinks={[
-      { label: "Overview", href: "/price-feeds/pro" },
-      { label: "Get access token", href: "/price-feeds/pro/access-token" },
-      { label: "Pricing", href: "/price-feeds/pro/pricing" },
+      { label: "Getting Started", href: "/price-feeds/pro/getting-started" },
+      {
+        label: "Get access token",
+        href: "/price-feeds/pro/acquire-access-token",
+        target: "_blank",
+      },
+      {
+        label: "Pricing",
+        href: "https://www.pyth.network/pricing",
+        target: "_blank",
+      },
     ]}
     buttonLabel="Explore Pro Documentation"
     buttonHref="/price-feeds/pro"
@@ -49,7 +57,7 @@ Pyth offers two main versions of price feeds, each optimized for different use c
       { label: "Decentralized Oracle" },
     ]}
     quickLinks={[
-      { label: "Overview", href: "/price-feeds/core" },
+      { label: "Getting Started", href: "/price-feeds/core/getting-started" },
       { label: "Get started", href: "/price-feeds/core/getting-started" },
       {
         label: "Contract addresses",
@@ -71,7 +79,10 @@ Pyth offers two main versions of price feeds, each optimized for different use c
     <Link className={styles.resourceLink} href="/price-feeds/core/price-feeds">
       Pyth Core IDs ->
     </Link>
-    <Link className={styles.resourceLink} href="/price-feeds/pro/price-feeds">
+    <Link
+      className={styles.resourceLink}
+      href="/price-feeds/pro/price-feed-ids"
+    >
       Pyth Pro IDs ->
     </Link>
   </Card>
@@ -85,8 +96,12 @@ Pyth offers two main versions of price feeds, each optimized for different use c
     >
       Core APIs ->
     </Link>
-    <Link className={styles.resourceLink} href="/price-feeds/pro/api-reference">
-      Pro APIs ->
+    <Link
+      className={styles.resourceLink}
+      href="https://pyth-lazer.dourolabs.app/docs"
+      target="_blank"
+    >
+      Pro Websocket API ->
     </Link>
   </Card>
   <Card icon={<SquaresFour size={18} />} title="Examples">
