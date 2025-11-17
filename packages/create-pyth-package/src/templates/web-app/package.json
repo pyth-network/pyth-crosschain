@@ -25,7 +25,7 @@
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc",
-    "test:unit": "jest"
+    "test:unit": "test-unit"
   },
   "devDependencies": {
     "@axe-core/react": "catalog:",

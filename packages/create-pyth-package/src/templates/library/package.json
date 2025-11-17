@@ -22,7 +22,7 @@
     "test:lint": "eslint . --max-warnings 0",
     "test:format": "prettier --check .",
     "test:types": "tsc",
-    "test:unit": "jest"
+    "test:unit": "test-unit"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
