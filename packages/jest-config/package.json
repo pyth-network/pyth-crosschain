@@ -12,14 +12,19 @@
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/jest-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
-    "@types/jest": "^29"
+    "@types/jest": "^29",
+    "@types/react": "catalog:"
   },
   "dependencies": {
     "@swc/core": "^1.15.0",
     "@swc/jest": "^0.2.39",
     "jest-ts-webcompat-resolver": "^1.0.1",
     "jest": "^29",
+    "react": "catalog:",
     "ts-deepmerge": "^7.0.3"
+  },
+  "bin": {
+    "test-unit": "./test-unit.mjs"
   },
   "exports": {
     "./define-config": {
@@ -40,6 +45,26 @@
       "import": {
         "types": "./dist/esm/define-next-config.d.ts",
         "default": "./dist/esm/define-next-config.mjs"
+      }
+    },
+    "./define-react-config": {
+      "require": {
+        "types": "./dist/cjs/define-react-config.d.ts",
+        "default": "./dist/cjs/define-react-config.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/define-react-config.d.ts",
+        "default": "./dist/esm/define-react-config.mjs"
+      }
+    },
+    "./setup-file-react": {
+      "require": {
+        "types": "./dist/cjs/setup-file-react.d.ts",
+        "default": "./dist/cjs/setup-file-react.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/setup-file-react.d.ts",
+        "default": "./dist/esm/setup-file-react.mjs"
       }
     },
     "./package.json": "./package.json"

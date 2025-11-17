@@ -2258,6 +2258,9 @@ importers:
       jest-ts-webcompat-resolver:
         specifier: ^1.0.1
         version: 1.0.1(jest-resolve@29.7.0)
+      react:
+        specifier: 'catalog:'
+        version: 19.1.0
       ts-deepmerge:
         specifier: ^7.0.3
         version: 7.0.3
@@ -2277,6 +2280,9 @@ importers:
       '@types/jest':
         specifier: ^29
         version: 29.5.14
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.1.0
 
   packages/known-publishers:
     devDependencies:
