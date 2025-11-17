@@ -91,27 +91,24 @@ const Price = ({
   prev,
   current,
   exponent,
-  pageTitlePrecision,
   updatePageTitle = false,
 }: PriceProps) => {
+  /** hooks */
+  const formatter = usePriceFormatter(exponent);
+
   if (!current) return <Skeleton width={SKELETON_WIDTH} />;
+
+  /** local variables */
+  const val = formatter.format(current);
 
   return (
     <>
-      {updatePageTitle && (
-        <DocumentTitle
-          prefix={
-            typeof pageTitlePrecision === "number"
-              ? current.toFixed(pageTitlePrecision)
-              : String(current)
-          }
-        />
-      )}
+      {updatePageTitle && <DocumentTitle prefix={val} />}
       <span
         className={styles.price}
         data-direction={prev ? getChangeDirection(prev, current) : "flat"}
       >
-        <FormattedPriceValue n={current} exponent={exponent} />
+        {val}
       </span>
     </>
   );
@@ -166,29 +163,20 @@ const Confidence = ({
 }: {
   confidence?: number | undefined;
   exponent?: number | undefined;
-}) => (
-  <span className={styles.confidence}>
-    <PlusMinus className={styles.plusMinus} />
-    {confidence === undefined ? (
-      <Skeleton width={SKELETON_WIDTH} />
-    ) : (
-      <span>
-        <FormattedPriceValue n={confidence} exponent={exponent} />
-      </span>
-    )}
-  </span>
-);
-
-const FormattedPriceValue = ({
-  n,
-  exponent,
-}: {
-  n: number;
-  exponent?: number | undefined;
 }) => {
+  /** hooks */
   const formatter = usePriceFormatter(exponent);
 
-  return useMemo(() => formatter.format(n), [n, formatter]);
+  return (
+    <span className={styles.confidence}>
+      <PlusMinus className={styles.plusMinus} />
+      {confidence === undefined ? (
+        <Skeleton width={SKELETON_WIDTH} />
+      ) : (
+        <span>{formatter.format(confidence)}</span>
+      )}
+    </span>
+  );
 };
 
 export const LiveLastUpdated = ({

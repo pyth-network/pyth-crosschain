@@ -42,13 +42,6 @@ export type LiveComponentValueProps<T extends keyof PriceComponent["latest"]> =
 export type PriceProps = {
   current?: number | undefined;
   exponent?: number | undefined;
-  /**
-   * if specified and `updatePageTitle` is true,
-   * this will truncate the decimal points
-   * to this value.
-   * By default, this is Infinity
-   */
-  pageTitlePrecision?: number | undefined;
   prev?: number | undefined;
   /**
    * if true, will automatically update the document.title
