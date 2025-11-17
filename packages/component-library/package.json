@@ -67,6 +67,14 @@
       "types": "./dist/CrossfadeTabPanels/index.d.ts",
       "default": "./dist/CrossfadeTabPanels/index.mjs"
     },
+    "./DocumentTitle/document-title.test": {
+      "types": "./dist/DocumentTitle/document-title.test.d.ts",
+      "default": "./dist/DocumentTitle/document-title.test.mjs"
+    },
+    "./DocumentTitle": {
+      "types": "./dist/DocumentTitle/index.d.ts",
+      "default": "./dist/DocumentTitle/index.mjs"
+    },
     "./DropdownCaretDown": {
       "types": "./dist/DropdownCaretDown/index.d.ts",
       "default": "./dist/DropdownCaretDown/index.mjs"
@@ -319,7 +327,8 @@
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
-    "test:types": "tsc"
+    "test:types": "tsc",
+    "test:unit": "test-unit"
   },
   "peerDependencies": {
     "next": "catalog:",
@@ -359,6 +368,9 @@
     "@storybook/nextjs": "catalog:",
     "@storybook/react": "catalog:",
     "@svgr/webpack": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

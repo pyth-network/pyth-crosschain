@@ -3,12 +3,20 @@
 import { PlusMinus } from "@phosphor-icons/react/dist/ssr/PlusMinus";
 import type { PriceData, PriceComponent } from "@pythnetwork/client";
 import { PriceStatus } from "@pythnetwork/client";
+import { DocumentTitle } from "@pythnetwork/component-library/DocumentTitle";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useDateFormatter } from "react-aria";
 
 import styles from "./index.module.scss";
+import type {
+  LiveAggregatedPriceOrConfidenceProps,
+  LiveComponentConfidenceProps,
+  LiveComponentValueProps,
+  LivePriceOrConfidenceProps,
+  LiveValueProps,
+  PriceProps,
+} from "./types";
 import {
   useLivePriceComponent,
   useLivePriceData,
@@ -21,11 +29,7 @@ export const SKELETON_WIDTH = 20;
 export const LivePrice = ({
   publisherKey,
   ...props
-}: {
-  feedKey: string;
-  publisherKey?: string | undefined;
-  cluster: Cluster;
-}) =>
+}: LivePriceOrConfidenceProps) =>
   publisherKey === undefined ? (
     <LiveAggregatePrice {...props} />
   ) : (
@@ -35,16 +39,15 @@ export const LivePrice = ({
 const LiveAggregatePrice = ({
   feedKey,
   cluster,
-}: {
-  feedKey: string;
-  cluster: Cluster;
-}) => {
+  ...rest
+}: LiveAggregatedPriceOrConfidenceProps) => {
   const { prev, current } = useLivePriceData(cluster, feedKey);
   if (current === undefined) {
-    return <Price />;
+    return <Price {...rest} />;
   } else if (current.status === PriceStatus.Trading) {
     return (
       <Price
+        {...rest}
         current={current.price}
         prev={prev?.price}
         exponent={current.exponent}
@@ -52,7 +55,11 @@ const LiveAggregatePrice = ({
     );
   } else {
     return (
-      <Price current={current.previousPrice} exponent={current.exponent} />
+      <Price
+        {...rest}
+        current={current.previousPrice}
+        exponent={current.exponent}
+      />
     );
   }
 };
@@ -84,30 +91,33 @@ const Price = ({
   prev,
   current,
   exponent,
-}: {
-  prev?: number | undefined;
-  current?: number | undefined;
-  exponent?: number | undefined;
-}) =>
-  current === undefined ? (
-    <Skeleton width={SKELETON_WIDTH} />
-  ) : (
-    <span
-      className={styles.price}
-      data-direction={prev ? getChangeDirection(prev, current) : "flat"}
-    >
-      <FormattedPriceValue n={current} exponent={exponent} />
-    </span>
+  updatePageTitle = false,
+}: PriceProps) => {
+  /** hooks */
+  const formatter = usePriceFormatter(exponent);
+
+  if (!current) return <Skeleton width={SKELETON_WIDTH} />;
+
+  /** local variables */
+  const val = formatter.format(current);
+
+  return (
+    <>
+      {updatePageTitle && <DocumentTitle prefix={val} />}
+      <span
+        className={styles.price}
+        data-direction={prev ? getChangeDirection(prev, current) : "flat"}
+      >
+        {val}
+      </span>
+    </>
   );
+};
 
 export const LiveConfidence = ({
   publisherKey,
   ...props
-}: {
-  feedKey: string;
-  publisherKey?: string | undefined;
-  cluster: Cluster;
-}) =>
+}: LivePriceOrConfidenceProps) =>
   publisherKey === undefined ? (
     <LiveAggregateConfidence {...props} />
   ) : (
@@ -117,10 +127,7 @@ export const LiveConfidence = ({
 const LiveAggregateConfidence = ({
   feedKey,
   cluster,
-}: {
-  feedKey: string;
-  cluster: Cluster;
-}) => {
+}: LiveAggregatedPriceOrConfidenceProps) => {
   const { current } = useLivePriceData(cluster, feedKey);
   return (
     <Confidence
@@ -139,11 +146,7 @@ const LiveComponentConfidence = ({
   feedKey,
   publisherKey,
   cluster,
-}: {
-  feedKey: string;
-  publisherKey: string;
-  cluster: Cluster;
-}) => {
+}: LiveComponentConfidenceProps) => {
   const { current } = useLivePriceComponent(cluster, feedKey, publisherKey);
   const { current: priceData } = useLivePriceData(cluster, feedKey);
   return (
@@ -160,29 +163,20 @@ const Confidence = ({
 }: {
   confidence?: number | undefined;
   exponent?: number | undefined;
-}) => (
-  <span className={styles.confidence}>
-    <PlusMinus className={styles.plusMinus} />
-    {confidence === undefined ? (
-      <Skeleton width={SKELETON_WIDTH} />
-    ) : (
-      <span>
-        <FormattedPriceValue n={confidence} exponent={exponent} />
-      </span>
-    )}
-  </span>
-);
-
-const FormattedPriceValue = ({
-  n,
-  exponent,
-}: {
-  n: number;
-  exponent?: number | undefined;
 }) => {
+  /** hooks */
   const formatter = usePriceFormatter(exponent);
 
-  return useMemo(() => formatter.format(n), [n, formatter]);
+  return (
+    <span className={styles.confidence}>
+      <PlusMinus className={styles.plusMinus} />
+      {confidence === undefined ? (
+        <Skeleton width={SKELETON_WIDTH} />
+      ) : (
+        <span>{formatter.format(confidence)}</span>
+      )}
+    </span>
+  );
 };
 
 export const LiveLastUpdated = ({
@@ -220,13 +214,6 @@ export const LiveLastUpdated = ({
   return formattedTimestamp ?? <Skeleton width={SKELETON_WIDTH} />;
 };
 
-type LiveValueProps<T extends keyof PriceData> = {
-  field: T;
-  feedKey: string;
-  defaultValue?: ReactNode | undefined;
-  cluster: Cluster;
-};
-
 export const LiveValue = <T extends keyof PriceData>({
   feedKey,
   field,
@@ -247,14 +234,6 @@ export const LiveValue = <T extends keyof PriceData>({
   } else {
     return <Skeleton width={SKELETON_WIDTH} />;
   }
-};
-
-type LiveComponentValueProps<T extends keyof PriceComponent["latest"]> = {
-  field: T;
-  feedKey: string;
-  publisherKey: string;
-  defaultValue?: ReactNode | undefined;
-  cluster: Cluster;
 };
 
 export const LiveComponentValue = <T extends keyof PriceComponent["latest"]>({
