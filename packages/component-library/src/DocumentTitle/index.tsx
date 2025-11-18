@@ -1,19 +1,19 @@
 import { useEffect, useRef } from "react";
 
-type DocumentTitleProps = Partial<{
+type DocumentTitleProps = {
   /**
    * set this if you want to keep the existing
    * title but want some dynamic content prepended
    * to it
    */
-  prefix: string;
+  prefix?: boolean;
 
   /**
    * set this if you want to explicitly fully-reset the
    * page title and want to fully control it.
    */
   title: string;
-}>;
+};
 
 /**
  * updates the html document.title property
@@ -28,13 +28,8 @@ export function DocumentTitle({ prefix, title }: DocumentTitleProps) {
 
   /** effects */
   useEffect(() => {
-    if (prefix && title) {
-      throw new Error(
-        "<DocumentTitle /> supports either the prefix or title prop, but not both at the same time",
-      );
-    }
     if (prefix) {
-      document.title = `${prefix} | ${initialPageTitleRef.current}`;
+      document.title = `${title} | ${initialPageTitleRef.current}`;
     } else if (title) {
       document.title = title;
     }
