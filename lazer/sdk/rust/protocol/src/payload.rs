@@ -43,7 +43,7 @@ pub enum PayloadPropertyValue {
     FundingRateInterval(Option<DurationUs>),
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AggregatedPriceFeedData {
     pub price: Option<Price>,
     pub best_bid_price: Option<Price>,
@@ -54,6 +54,22 @@ pub struct AggregatedPriceFeedData {
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
     pub funding_rate_interval: Option<DurationUs>,
+}
+
+impl AggregatedPriceFeedData {
+    pub fn empty(exponent: i16) -> Self {
+        Self {
+            price: None,
+            best_bid_price: None,
+            best_ask_price: None,
+            publisher_count: 0,
+            exponent,
+            confidence: None,
+            funding_rate: None,
+            funding_timestamp: None,
+            funding_rate_interval: None,
+        }
+    }
 }
 
 /// First bytes of a payload's encoding
