@@ -1,0 +1,13 @@
+@use "@pythnetwork/component-library/theme";
+
+.main {
+  @include theme.max-width;
+
+  padding: theme.spacing(4) 0;
+}
+
+.top {
+  align-items: center;
+  display: flex;
+  gap: theme.spacing(2);
+}

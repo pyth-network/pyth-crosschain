@@ -1,0 +1,12 @@
+@use "@pythnetwork/component-library/theme";
+
+.sourcePickerRoot {
+  
+}
+
+.sourcePickerSelect {
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(1);
+  width: 240px;
+}
