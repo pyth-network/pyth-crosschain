@@ -18,3 +18,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+.appShellRoot {
+  display: flex;
+  flex-flow: column;
+  height: 100vh;
+
+  & > header, footer {
+    flex-grow: 0;
+    flex-shrink: 0;
+  }
+
+  & > main {
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

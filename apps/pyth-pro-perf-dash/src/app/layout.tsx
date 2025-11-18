@@ -33,6 +33,7 @@ export default function RootLayout({
       >
         <AppShell
           appName="Pyth Price Monitor"
+          className="appShellRoot"
           enableAccessibilityReporting
           providers={[NuqsAdapter]}
         >

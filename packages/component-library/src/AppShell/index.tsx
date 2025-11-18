@@ -60,15 +60,15 @@ export const AppShellRoot = ({
 );
 
 export const AppShell = ({
-  enableAccessibilityReporting,
   amplitudeApiKey,
+  enableAccessibilityReporting,
   googleAnalyticsId,
   providers,
   ...props
 }: AppShellRootProps & AppBodyProps) => (
   <AppShellRoot
-    enableAccessibilityReporting={enableAccessibilityReporting}
     amplitudeApiKey={amplitudeApiKey}
+    enableAccessibilityReporting={enableAccessibilityReporting}
     googleAnalyticsId={googleAnalyticsId}
     providers={providers}
   >
@@ -82,11 +82,17 @@ type AppBodyProps = Pick<
 > & {
   tabs?: Tab[] | undefined;
   children: ReactNode;
+  className?: string | undefined;
 };
 
-export const AppBody = ({ tabs, children, ...props }: AppBodyProps) => (
+export const AppBody = ({
+  tabs,
+  children,
+  className,
+  ...props
+}: AppBodyProps) => (
   <BodyProviders>
-    <TabRoot className={styles.appShell ?? ""}>
+    <TabRoot className={clsx(styles.appShell, className)}>
       <Header
         className={styles.header}
         mainMenu={
