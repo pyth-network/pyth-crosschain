@@ -25,6 +25,10 @@ class SedaListener:
         self.seda_state = seda_state
 
     async def run(self):
+        if not self.feeds:
+            logger.info("No SEDA feeds needed")
+            return
+
         await asyncio.gather(*[self._run_single(feed_name, self.feeds[feed_name]) for feed_name in self.feeds])
 
     async def _run_single(self, feed_name: str, feed_config: SedaFeedConfig) -> None:

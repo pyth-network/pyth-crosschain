@@ -3,7 +3,7 @@ from loguru import logger
 import time
 
 from pusher.config import Config, PriceSource, PriceSourceConfig, ConstantSourceConfig, SingleSourceConfig, \
-    PairSourceConfig
+    PairSourceConfig, OracleMidAverageConfig
 
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
@@ -15,6 +15,13 @@ class PriceUpdate:
 
     def time_diff(self, now):
         return now - self.timestamp
+
+
+@dataclass
+class OracleUpdate:
+    oracle: dict[str, str]
+    mark: dict[str, str]
+    external: dict[str, str]
 
 
 class PriceSourceState:
@@ -35,6 +42,7 @@ class PriceSourceState:
 class PriceState:
     HL_ORACLE = "hl_oracle"
     HL_MARK = "hl_mark"
+    HL_MID = "hl_mid"
     LAZER = "lazer"
     HERMES = "hermes"
     SEDA = "seda"
@@ -43,11 +51,13 @@ class PriceState:
     Maintain latest prices seen across listeners and publisher.
     """
     def __init__(self, config: Config):
+        self.market_name = config.hyperliquid.market_name
         self.stale_price_threshold_seconds = config.stale_price_threshold_seconds
         self.price_config = config.price
 
         self.hl_oracle_state = PriceSourceState(self.HL_ORACLE)
         self.hl_mark_state = PriceSourceState(self.HL_MARK)
+        self.hl_mid_state = PriceSourceState(self.HL_MID)
         self.lazer_state = PriceSourceState(self.LAZER)
         self.hermes_state = PriceSourceState(self.HERMES)
         self.seda_state = PriceSourceState(self.SEDA)
@@ -55,38 +65,42 @@ class PriceState:
         self.all_states = {
             self.HL_ORACLE: self.hl_oracle_state,
             self.HL_MARK: self.hl_mark_state,
+            self.HL_MID: self.hl_mid_state,
             self.LAZER: self.lazer_state,
             self.HERMES: self.hermes_state,
             self.SEDA: self.seda_state,
         }
 
-    def get_all_prices(self, market_name):
+    def get_all_prices(self) -> OracleUpdate:
         logger.debug("get_all_prices state: {}", self.all_states)
 
-        return (
-            self.get_prices(self.price_config.oracle, market_name),
-            self.get_prices(self.price_config.mark, market_name),
-            self.get_prices(self.price_config.external, market_name)
-        )
+        oracle_update = OracleUpdate({}, {}, {})
+        oracle_update.oracle = self.get_prices(self.price_config.oracle, oracle_update)
+        oracle_update.mark = self.get_prices(self.price_config.mark, oracle_update)
+        oracle_update.external = self.get_prices(self.price_config.external, oracle_update)
 
-    def get_prices(self, symbol_configs: dict[str, list[PriceSourceConfig]], market_name: str):
+        return oracle_update
+
+    def get_prices(self, symbol_configs: dict[str, list[PriceSourceConfig]], oracle_update: OracleUpdate):
         pxs = {}
         for symbol in symbol_configs:
             for source_config in symbol_configs[symbol]:
                 # find first valid price in the waterfall
-                px = self.get_price(source_config)
+                px = self.get_price(source_config, oracle_update)
                 if px is not None:
-                    pxs[f"{market_name}:{symbol}"] = px
+                    pxs[f"{self.market_name}:{symbol}"] = str(px)
                     break
         return pxs
 
-    def get_price(self, price_source_config: PriceSourceConfig):
+    def get_price(self, price_source_config: PriceSourceConfig, oracle_update: OracleUpdate):
         if isinstance(price_source_config, ConstantSourceConfig):
             return price_source_config.value
         elif isinstance(price_source_config, SingleSourceConfig):
             return self.get_price_from_single_source(price_source_config.source)
         elif isinstance(price_source_config, PairSourceConfig):
             return self.get_price_from_pair_source(price_source_config.base_source, price_source_config.quote_source)
+        elif isinstance(price_source_config, OracleMidAverageConfig):
+            return self.get_price_from_oracle_mid_average(price_source_config.symbol, oracle_update)
         else:
             raise ValueError
 
@@ -115,3 +129,19 @@ class PriceState:
             return None
 
         return str(round(float(base_price) / float(quote_price), 2))
+
+    def get_price_from_oracle_mid_average(self, symbol: str, oracle_update: OracleUpdate):
+        oracle_price = oracle_update.oracle.get(symbol)
+        if oracle_price is None:
+            return None
+
+        mid_price_update: PriceUpdate | None = self.hl_mid_state.get(symbol)
+        if mid_price_update is None:
+            logger.warning("mid price for {} is missing", symbol)
+            return None
+        time_diff = mid_price_update.time_diff(time.time())
+        if time_diff >= self.stale_price_threshold_seconds:
+            logger.warning("mid price for {} is stale by {} seconds", symbol, time_diff)
+            return None
+
+        return (float(oracle_price) + float(mid_price_update.price)) / 2.0

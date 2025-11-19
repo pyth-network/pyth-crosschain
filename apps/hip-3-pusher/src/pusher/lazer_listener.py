@@ -34,6 +34,10 @@ class LazerListener:
         }
 
     async def subscribe_all(self):
+        if not self.feed_ids:
+            logger.info("No Lazer subscriptions needed")
+            return
+
         await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.lazer_urls))
 
     @retry(
