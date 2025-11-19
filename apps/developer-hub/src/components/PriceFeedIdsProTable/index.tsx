@@ -18,6 +18,8 @@ export const PriceFeedIdsProTable = () => {
     setState(State.Loading());
     getPythProFeeds()
       .then((feeds) => {
+        // eslint-disable-next-line no-console
+        console.log("PriceFeedIdsProTable feeds", feeds);
         setState(State.Loaded(feeds));
       })
       .catch((error: unknown) => {
@@ -49,8 +51,18 @@ export const PriceFeedIdsProTable = () => {
   } = useQueryParamFilterPagination(
     state.type === StateType.Loaded ? state.feeds : [],
     () => true,
-    () => 1,
+    (a, b, { column, direction }) => {
+      if (column === "pyth_lazer_id") {
+        return direction === "ascending"
+          ? a.pyth_lazer_id - b.pyth_lazer_id
+          : b.pyth_lazer_id - a.pyth_lazer_id;
+      }
+      return 0;
+    },
     (items, searchString) => {
+      if (!searchString) {
+        return items;
+      }
       return matchSorter(items, searchString, {
         keys: ["pyth_lazer_id"],
       });
