@@ -18,8 +18,6 @@ export const PriceFeedIdsProTable = () => {
     setState(State.Loading());
     getPythProFeeds()
       .then((feeds) => {
-        // eslint-disable-next-line no-console
-        console.log("PriceFeedIdsProTable feeds", feeds);
         setState(State.Loaded(feeds));
       })
       .catch((error: unknown) => {
