@@ -62,7 +62,7 @@ export const PriceFeedIdsProTable = () => {
         return items;
       }
       return matchSorter(items, searchString, {
-        keys: ["pyth_lazer_id"],
+        keys: ["pyth_lazer_id", "symbol", "name", "description"],
       });
     },
     {
