@@ -132,7 +132,10 @@ const products: ProductCardConfig[] = [
         label: "Get Pyth Pro Access Token",
         href: "/price-feeds/pro/access-token",
       },
-      { label: "Browse Supported Feeds", href: "/price-feeds/pro/price-feeds-ids" },
+      {
+        label: "Browse Supported Feeds",
+        href: "/price-feeds/pro/price-feeds-ids",
+      },
       { label: "Pricing", href: "https://www.pyth.network/pricing" },
     ],
   },
