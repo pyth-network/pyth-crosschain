@@ -55,11 +55,11 @@ pub struct AggregatedPriceFeedData {
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
     pub funding_rate_interval: Option<DurationUs>,
-    pub market_session: MarketSession,
+    pub market_session: Option<MarketSession>,
 }
 
 impl AggregatedPriceFeedData {
-    pub fn empty(exponent: i16) -> Self {
+    pub fn empty(exponent: i16, market_session: Option<MarketSession>) -> Self {
         Self {
             price: None,
             best_bid_price: None,
@@ -70,6 +70,7 @@ impl AggregatedPriceFeedData {
             funding_rate: None,
             funding_timestamp: None,
             funding_rate_interval: None,
+            market_session,
         }
     }
 }
