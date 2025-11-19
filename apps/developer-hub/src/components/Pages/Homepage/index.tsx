@@ -51,21 +51,21 @@ export const Homepage = () => {
             title="Pyth Token"
             description="The native token powering governance and staking across the Pyth Network."
             url="/pyth-token"
-            urlLabel="Link"
+            urlLabel="Read more"
             image={<SignalImage />}
           />
           <SectionCard
             title="Oracle Integrity Staking"
             description="Stake PYTH to support data publishers and secure the integrity of Pyth price feeds."
             url="/oracle-integrity-staking"
-            urlLabel="Link"
+            urlLabel="Read more"
             image={<SignalImage />}
           />
           <SectionCard
             title="Pyth Metrics"
             description="Track network performance, feed activity, and ecosystem growth in real time."
             url="/metrics"
-            urlLabel="Link"
+            urlLabel="Read more"
             image={<SignalImage />}
           />
         </SectionCards>
