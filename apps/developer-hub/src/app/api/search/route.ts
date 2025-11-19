@@ -42,7 +42,7 @@ async function getHermesFeeds(): Promise<AdvancedIndex[]> {
       if (parsed.success) {
         for (const feed of parsed.data) {
           allFeeds.push({
-            title: feed.attributes.symbol,
+            title: `${feed.attributes.symbol} (Core)`,
             description: `Price Feed ID: ${feed.id}`,
             url: `/price-feeds/core/price-feeds/price-feed-ids?search=${feed.attributes.symbol}`,
             id: feed.id,
@@ -79,7 +79,7 @@ async function getLazerFeeds(): Promise<AdvancedIndex[]> {
     }
 
     return parsed.data.map((feed) => ({
-      title: feed.name,
+      title: `${feed.name} (Pro)`,
       description: `${feed.symbol} - ${feed.description} (ID: ${String(feed.pyth_lazer_id)})`,
       url: `/price-feeds/pro/price-feed-ids?search=${feed.symbol}`,
       id: `lazer-${String(feed.pyth_lazer_id)}`,
