@@ -35,7 +35,7 @@ describe("<DocumentTitle /> tests", () => {
     document.title = initial;
 
     const prefix = "pizza pasta pepperoni";
-    render(<DocumentTitle prefix={prefix} />);
+    render(<DocumentTitle prefix title={prefix} />);
 
     expect(document.title).toBe(`${prefix} | ${initial}`);
   });
@@ -45,14 +45,14 @@ describe("<DocumentTitle /> tests", () => {
     document.title = initial;
 
     const prefix1 = "pizza pasta pepperoni";
-    const { rerender } = render(<DocumentTitle prefix={prefix1} />);
+    const { rerender } = render(<DocumentTitle prefix title={prefix1} />);
 
     expect(document.title).toBe(`${prefix1} | ${initial}`);
 
     await setTimeout(200);
 
     const prefix2 = "tacos and burritos";
-    rerender(<DocumentTitle prefix={prefix2} />);
+    rerender(<DocumentTitle prefix title={prefix2} />);
 
     expect(document.title).toBe(`${prefix2} | ${initial}`);
   });
