@@ -274,6 +274,7 @@
     "ramda": "^0.30.1",
     "starknet": "^6.9.0",
     "ts-node": "catalog:",
+    "tsx": "catalog:",
     "viem": "^2.23.5",
     "web3": "^1.8.2",
     "web3-eth-contract": "^1.8.2",
