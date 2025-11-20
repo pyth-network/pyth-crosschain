@@ -5,7 +5,7 @@
 }
 
 .table {
-  max-height: 400px;
+  max-height: theme.spacing(100);
   overflow-y: auto;
   border-bottom-left-radius: theme.border-radius("xl");
   border-bottom-right-radius: theme.border-radius("xl");
