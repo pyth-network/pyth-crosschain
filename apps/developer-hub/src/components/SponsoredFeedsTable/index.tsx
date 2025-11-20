@@ -1,5 +1,8 @@
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
+import { Table } from "@pythnetwork/component-library/Table";
 import clsx from "clsx";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 import styles from "./index.module.scss";
 
@@ -21,6 +24,9 @@ type UpdateParamsProps = {
   feed: SponsoredFeed;
   isDefault: boolean;
 };
+
+const truncateHex = (value: string) =>
+  `${value.slice(0, 6)}...${value.slice(-4)}`;
 
 const formatTimeDifference = (
   seconds: number,
@@ -77,17 +83,6 @@ export const SponsoredFeedsTable = ({
   feeds,
   networkName,
 }: SponsoredFeedsTableProps) => {
-  if (feeds.length === 0) {
-    return (
-      <div className={styles.container}>
-        <p className={styles.introText}>
-          No sponsored price feeds are currently available for{" "}
-          <strong>{networkName}</strong>.
-        </p>
-      </div>
-    );
-  }
-
   const paramCounts: Record<string, number> = {};
   for (const feed of feeds) {
     const key = formatUpdateParams(feed);
@@ -103,6 +98,84 @@ export const SponsoredFeedsTable = ({
     defaultParams === undefined ? 0 : (paramCounts[defaultParams] ?? 0);
 
   const hasAccountAddress = feeds.some((feed) => !!feed.account_address);
+
+  const columns = useMemo(
+    () => [
+      {
+        id: "name",
+        name: "Name",
+        isRowHeader: true,
+        alignment: "left" as const,
+      },
+      ...(hasAccountAddress
+        ? [
+            {
+              id: "accountAddress",
+              name: "Account Address",
+              alignment: "left" as const,
+            },
+          ]
+        : []),
+      {
+        id: "priceFeedId",
+        name: "Price Feed Id",
+        alignment: "left" as const,
+      },
+      {
+        id: "updateParameters",
+        name: "Update Parameters",
+        alignment: "left" as const,
+      },
+    ],
+    [hasAccountAddress],
+  );
+
+  const rows = useMemo(
+    () =>
+      feeds.map((feed) => {
+        const formattedParams = formatUpdateParams(feed);
+        const isDefault = formattedParams === defaultParams;
+
+        const rowData: {
+          name: ReactNode;
+          priceFeedId: ReactNode;
+          updateParameters: ReactNode;
+          accountAddress: ReactNode | undefined;
+        } = {
+          name: <span className={styles.nameLabel}>{feed.alias}</span>,
+          priceFeedId: (
+            <CopyButton text={feed.id}>{truncateHex(feed.id)}</CopyButton>
+          ),
+          updateParameters: <UpdateParams feed={feed} isDefault={isDefault} />,
+          accountAddress: undefined,
+        };
+
+        if (hasAccountAddress) {
+          rowData.accountAddress = feed.account_address ? (
+            <CopyButton text={feed.account_address}>
+              {truncateHex(feed.account_address)}
+            </CopyButton>
+          ) : undefined;
+        }
+
+        return {
+          id: feed.id,
+          data: rowData,
+        };
+      }),
+    [feeds, defaultParams, hasAccountAddress],
+  );
+
+  if (feeds.length === 0) {
+    return (
+      <div className={styles.container}>
+        <p className={styles.introText}>
+          No sponsored price feeds are currently available for{" "}
+          <strong>{networkName}</strong>.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -136,55 +209,14 @@ export const SponsoredFeedsTable = ({
             ))}
         </div>
 
-        <div className={styles.tableScroll}>
-          <table className={styles.table}>
-            <thead className={styles.tableHead}>
-              <tr>
-                <th className={styles.headerCell}>Name</th>
-                {hasAccountAddress ? (
-                  <th className={styles.headerCell}>Account Address</th>
-                ) : undefined}
-                <th className={styles.headerCell}>Price Feed Id</th>
-                <th className={styles.headerCell}>Update Parameters</th>
-              </tr>
-            </thead>
-            <tbody className={styles.tableBody}>
-              {feeds.map((feed) => {
-                const formattedParams = formatUpdateParams(feed);
-                const isDefault = formattedParams === defaultParams;
-
-                return (
-                  <tr key={feed.id} className={styles.tableRow}>
-                    <td className={styles.nameCell}>
-                      <span className={styles.nameLabel}>{feed.alias}</span>
-                    </td>
-                    {hasAccountAddress ? (
-                      <td className={styles.accountCell}>
-                        {feed.account_address ? (
-                          <div className={styles.copyWrapper}>
-                            <code className={styles.code}>
-                              {feed.account_address}
-                            </code>
-                            <CopyButton text={feed.account_address} iconOnly />
-                          </div>
-                        ) : undefined}
-                      </td>
-                    ) : undefined}
-                    <td className={styles.idCell}>
-                      <div className={styles.copyWrapper}>
-                        <code className={styles.code}>{feed.id}</code>
-                        <CopyButton text={feed.id} iconOnly />
-                      </div>
-                    </td>
-                    <td className={styles.paramsCell}>
-                      <UpdateParams feed={feed} isDefault={isDefault} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          label="Sponsored Feeds"
+          fill
+          columns={columns}
+          rows={rows}
+          stickyHeader="top"
+          className={clsx("not-prose", styles.table)}
+        />
       </div>
     </div>
   );
