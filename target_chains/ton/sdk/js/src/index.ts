@@ -11,9 +11,9 @@ import {
 import type { ContractProvider } from "@ton/ton";
 
 export const PYTH_CONTRACT_ADDRESS_MAINNET =
-  "EQBgtfuGIzWLiOzpZO48_psYvco4xRtkAbdbmTwy0_o95LtZ";
+  "EQA5NPyjfZztDm8jcTBwTAU9NGsgJEkw19z61yecX0TlseSB";
 export const PYTH_CONTRACT_ADDRESS_TESTNET =
-  "EQB4ZnrI5qsP_IUJgVJNwEGKLzZWsQOFhiaqDbD7pTt_f9oU";
+  "EQBeydTZBuv4nkqN8jkScqZbWcyx7TsmOtxsEDbFann0IRtD";
 // This is defined in target_chains/ton/contracts/common/gas.fc
 export const UPDATE_PRICE_FEEDS_BASE_GAS = 300_000n;
 export const UPDATE_PRICE_FEEDS_PER_UPDATE_GAS = 90_000n;

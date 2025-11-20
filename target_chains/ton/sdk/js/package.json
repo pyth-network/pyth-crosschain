@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-ton-js",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Pyth Network TON Utilities",
   "homepage": "https://pyth.network",
   "author": {
