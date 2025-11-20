@@ -21,45 +21,42 @@ const lazerSchema = z.array(
   }),
 );
 
+function toAdvancedIndex(
+  fee: z.infer<typeof hermesSchema>[number],
+): AdvancedIndex {
+  return {
+    title: `${fee.attributes.symbol} (Core)`,
+    description: `Price Feed ID: ${fee.id}`,
+    url: `/price-feeds/core/price-feeds/price-feed-ids?search=${fee.attributes.symbol}`,
+    id: fee.id,
+    tag: "price-feed-core",
+    structuredData: {
+      headings: [],
+      contents: [
+        { heading: "Symbol", content: fee.attributes.symbol },
+        { heading: "ID", content: fee.id },
+      ],
+    },
+  };
+}
+
 async function getHermesFeeds(): Promise<AdvancedIndex[]> {
   try {
-    const endpoints = [
-      "https://hermes.pyth.network",
-      "https://hermes-beta.pyth.network",
-    ];
-    const responses = await Promise.all(
-      endpoints.map((url) =>
-        fetch(`${url}/v2/price_feeds`, {
-          next: { revalidate: 3600 },
-        }).then((res) => res.json() as Promise<unknown>),
+    const results = await Promise.all(
+      ["https://hermes.pyth.network", "https://hermes-beta.pyth.network"].map(
+        async (url): Promise<AdvancedIndex[]> => {
+          const hermesResult = await fetch(new URL("/v2/price_feeds", url), {
+            next: { revalidate: 3600 },
+          });
+          const parsed = hermesSchema.safeParse(await hermesResult.json());
+          return parsed.success
+            ? parsed.data.map((feed) => toAdvancedIndex(feed))
+            : [];
+        },
       ),
     );
 
-    const allFeeds: AdvancedIndex[] = [];
-
-    for (const data of responses) {
-      const parsed = hermesSchema.safeParse(data);
-      if (parsed.success) {
-        for (const feed of parsed.data) {
-          allFeeds.push({
-            title: `${feed.attributes.symbol} (Core)`,
-            description: `Price Feed ID: ${feed.id}`,
-            url: `/price-feeds/core/price-feeds/price-feed-ids?search=${feed.attributes.symbol}`,
-            id: feed.id,
-            tag: "price-feed-core",
-            structuredData: {
-              headings: [],
-              contents: [
-                { heading: "Symbol", content: feed.attributes.symbol },
-                { heading: "ID", content: feed.id },
-              ],
-            },
-          });
-        }
-      }
-    }
-
-    return allFeeds;
+    return results.flat();
   } catch (error: unknown) {
     throw new Error("Failed to fetch Hermes feeds", { cause: error });
   }
@@ -71,8 +68,7 @@ async function getLazerFeeds(): Promise<AdvancedIndex[]> {
       "https://history.pyth-lazer.dourolabs.app/history/v1/symbols",
       { next: { revalidate: 3600 } },
     );
-    const data = (await res.json()) as unknown;
-    const parsed = lazerSchema.safeParse(data);
+    const parsed = lazerSchema.safeParse(await res.json());
 
     if (!parsed.success) {
       return [];
