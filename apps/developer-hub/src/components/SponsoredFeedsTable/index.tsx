@@ -1,5 +1,4 @@
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
-import type { RowConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import clsx from "clsx";
 import type { ReactNode } from "react";
