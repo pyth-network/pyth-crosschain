@@ -99,7 +99,6 @@ export const SponsoredFeedsTable = ({
 
   const hasAccountAddress = feeds.some((feed) => !!feed.account_address);
 
-
   const columns = useMemo(
     () => [
       {
