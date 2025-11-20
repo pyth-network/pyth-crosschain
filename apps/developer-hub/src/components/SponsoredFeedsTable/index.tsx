@@ -103,7 +103,7 @@ export const SponsoredFeedsTable = ({
   const columns = useMemo(
     () => [
       {
-        id: "name" as const,
+        id: "name",
         name: "Name",
         isRowHeader: true,
         alignment: "left" as const,
@@ -111,19 +111,19 @@ export const SponsoredFeedsTable = ({
       ...(hasAccountAddress
         ? [
             {
-              id: "accountAddress" as const,
+              id: "accountAddress",
               name: "Account Address",
               alignment: "left" as const,
             },
           ]
         : []),
       {
-        id: "priceFeedId" as const,
+        id: "priceFeedId",
         name: "Price Feed Id",
         alignment: "left" as const,
       },
       {
-        id: "updateParameters" as const,
+        id: "updateParameters",
         name: "Update Parameters",
         alignment: "left" as const,
       },
