@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
-import { Chain } from "./chains";
+import type { Chain } from "./chains";
 
 export type TxResult = {
   id: string;

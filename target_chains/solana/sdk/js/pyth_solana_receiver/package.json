@@ -3,8 +3,8 @@
   "version": "0.13.0",
   "description": "Pyth solana receiver SDK",
   "homepage": "https://pyth.network",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.cjs",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -17,7 +17,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "ts-duality --noEsm",
+    "build": "ts-duality",
     "test:lint": "eslint src/ --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -57,38 +57,86 @@
   "type": "module",
   "exports": {
     "./PythSolanaReceiver": {
-      "types": "./dist/PythSolanaReceiver.d.ts",
-      "default": "./dist/PythSolanaReceiver.cjs"
+      "require": {
+        "types": "./dist/cjs/PythSolanaReceiver.d.ts",
+        "default": "./dist/cjs/PythSolanaReceiver.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/PythSolanaReceiver.d.ts",
+        "default": "./dist/esm/PythSolanaReceiver.mjs"
+      }
     },
     "./address": {
-      "types": "./dist/address.d.ts",
-      "default": "./dist/address.cjs"
+      "require": {
+        "types": "./dist/cjs/address.d.ts",
+        "default": "./dist/cjs/address.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/address.d.ts",
+        "default": "./dist/esm/address.mjs"
+      }
     },
     "./compute_budget": {
-      "types": "./dist/compute_budget.d.ts",
-      "default": "./dist/compute_budget.cjs"
+      "require": {
+        "types": "./dist/cjs/compute_budget.d.ts",
+        "default": "./dist/cjs/compute_budget.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/compute_budget.d.ts",
+        "default": "./dist/esm/compute_budget.mjs"
+      }
     },
     "./idl/pyth_push_oracle": {
-      "types": "./dist/idl/pyth_push_oracle.d.ts",
-      "default": "./dist/idl/pyth_push_oracle.cjs"
+      "require": {
+        "types": "./dist/cjs/idl/pyth_push_oracle.d.ts",
+        "default": "./dist/cjs/idl/pyth_push_oracle.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/idl/pyth_push_oracle.d.ts",
+        "default": "./dist/esm/idl/pyth_push_oracle.mjs"
+      }
     },
     "./idl/pyth_solana_receiver": {
-      "types": "./dist/idl/pyth_solana_receiver.d.ts",
-      "default": "./dist/idl/pyth_solana_receiver.cjs"
+      "require": {
+        "types": "./dist/cjs/idl/pyth_solana_receiver.d.ts",
+        "default": "./dist/cjs/idl/pyth_solana_receiver.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/idl/pyth_solana_receiver.d.ts",
+        "default": "./dist/esm/idl/pyth_solana_receiver.mjs"
+      }
     },
     "./idl/wormhole_core_bridge_solana": {
-      "types": "./dist/idl/wormhole_core_bridge_solana.d.ts",
-      "default": "./dist/idl/wormhole_core_bridge_solana.cjs"
+      "require": {
+        "types": "./dist/cjs/idl/wormhole_core_bridge_solana.d.ts",
+        "default": "./dist/cjs/idl/wormhole_core_bridge_solana.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/idl/wormhole_core_bridge_solana.d.ts",
+        "default": "./dist/esm/idl/wormhole_core_bridge_solana.mjs"
+      }
     },
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
     },
     "./vaa": {
-      "types": "./dist/vaa.d.ts",
-      "default": "./dist/vaa.cjs"
+      "require": {
+        "types": "./dist/cjs/vaa.d.ts",
+        "default": "./dist/cjs/vaa.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/vaa.d.ts",
+        "default": "./dist/esm/vaa.mjs"
+      }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }
