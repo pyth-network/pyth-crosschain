@@ -134,7 +134,7 @@ const products: ProductCardConfig[] = [
       },
       {
         label: "Browse Supported Feeds",
-        href: "/price-feeds/pro/price-feeds-ids",
+        href: "/price-feeds/pro/price-feed-ids",
       },
       { label: "Pricing", href: "https://www.pyth.network/pricing" },
     ],
