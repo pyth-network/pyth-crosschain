@@ -1094,7 +1094,7 @@ multisigCommand(
         signer: await vault.getVaultAuthorityPDA(targetCluster),
         publisher: new PublicKey(options.publisher),
         poolData: new PublicKey("poo1zPoi5xrNzi4yk4i23oWcJrNNkDYAniBCewJY8kb"),
-        currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID,
+        currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID, // This corresponds to `None` for optional accounts in Anchor
         newStakeAccountPositionsOption,
       })
       .instruction();
