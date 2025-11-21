@@ -121,6 +121,7 @@ export const RECEIVER_CHAINS = {
   plasma: 60090,
   itsnotreal2: 60091,
   injective_evm: 60092,
+  orange: 60093,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
