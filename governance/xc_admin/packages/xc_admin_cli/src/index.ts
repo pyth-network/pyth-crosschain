@@ -47,6 +47,8 @@ import {
   idlSetBuffer,
   isPriceStorePublisherInitialized,
   lazerIdl,
+  integrityPoolIdl,
+  INTEGRITY_POOL_PROGRAM_ID,
 } from "@pythnetwork/xc-admin-common";
 
 import {
@@ -1057,6 +1059,49 @@ multisigCommand(
     if (updateSignerInstruction) {
       await vault.proposeInstructions(
         [upgradeInstruction, updateSignerInstruction],
+        targetCluster,
+        DEFAULT_PRIORITY_FEE_CONFIG,
+      );
+    }
+  });
+
+multisigCommand(
+  "set-publisher-stake-account",
+  "Set a publisher stake account for the Integrity Pool program",
+)
+  .requiredOption("-p, --publisher <pubkey>", "public key of the publisher")
+  .requiredOption(
+    "-s, --stake-account <pubkey>",
+    "public key of the stake account",
+  )
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+
+    const newStakeAccountPositionsOption = new PublicKey(options.stakeAccount);
+
+    // Create Anchor program instance
+    const integrityPoolProgram = new Program(
+      integrityPoolIdl as Idl,
+      INTEGRITY_POOL_PROGRAM_ID,
+      vault.getAnchorProvider(),
+    );
+
+    // Use Anchor to create the instruction
+    let setPublisherStakeAccountInstruction = await integrityPoolProgram.methods
+      .setPublisherStakeAccount?.()
+      .accounts({
+        signer: await vault.getVaultAuthorityPDA(targetCluster),
+        publisher: new PublicKey(options.publisher),
+        poolData: new PublicKey("poo1zPoi5xrNzi4yk4i23oWcJrNNkDYAniBCewJY8kb"),
+        currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID,
+        newStakeAccountPositionsOption,
+      })
+      .instruction();
+
+    if (setPublisherStakeAccountInstruction) {
+      await vault.proposeInstructions(
+        [setPublisherStakeAccountInstruction],
         targetCluster,
         DEFAULT_PRIORITY_FEE_CONFIG,
       );
