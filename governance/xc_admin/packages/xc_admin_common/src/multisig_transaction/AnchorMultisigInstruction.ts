@@ -15,6 +15,7 @@ import { type Idl, BorshCoder } from "@coral-xyz/anchor";
 import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
 import meshIdl from "@sqds/mesh/lib/mesh-idl/mesh.json";
 import stakingIdl from "./idl/staking.json";
+import integrityPoolIdl from "./idl/integrity-pool.json";
 import {
   DEFAULT_RECEIVER_PROGRAM_ID,
   pythSolanaReceiverIdl,
@@ -25,6 +26,9 @@ export const MESH_PROGRAM_ID = new PublicKey(
 );
 export const STAKING_PROGRAM_ID = new PublicKey(
   "pytS9TjG1qyAZypk7n8rw8gfW9sUaqqYyMhJQ4E7JCQ",
+);
+export const INTEGRITY_POOL_PROGRAM_ID = new PublicKey(
+  "pyti8TM4zRVBjmarcgAPmTNNAXYKJv7WVHrkrm6woLN",
 );
 
 export class AnchorMultisigInstruction implements MultisigInstruction {
@@ -62,6 +66,10 @@ export class AnchorMultisigInstruction implements MultisigInstruction {
       case STAKING_PROGRAM_ID.toBase58():
         idl = stakingIdl as Idl;
         program = MultisigInstructionProgram.Staking;
+        break;
+      case INTEGRITY_POOL_PROGRAM_ID.toBase58():
+        idl = integrityPoolIdl as Idl;
+        program = MultisigInstructionProgram.IntegrityPool;
         break;
       case DEFAULT_RECEIVER_PROGRAM_ID.toBase58():
         idl = pythSolanaReceiverIdl as Idl;

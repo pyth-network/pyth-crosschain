@@ -150,6 +150,10 @@
       "types": "./dist/multisig.d.ts",
       "default": "./dist/multisig.cjs"
     },
+    "./multisig_transaction/AnchorMultisigInstruction": {
+      "types": "./dist/multisig_transaction/AnchorMultisigInstruction.d.ts",
+      "default": "./dist/multisig_transaction/AnchorMultisigInstruction.cjs"
+    },
     "./multisig_transaction/BpfUpgradableLoaderMultisigInstruction": {
       "types": "./dist/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts",
       "default": "./dist/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.cjs"
@@ -157,10 +161,6 @@
     "./multisig_transaction/LazerMultisigInstruction": {
       "types": "./dist/multisig_transaction/LazerMultisigInstruction.d.ts",
       "default": "./dist/multisig_transaction/LazerMultisigInstruction.cjs"
-    },
-    "./multisig_transaction/MessageBufferMultisigInstruction": {
-      "types": "./dist/multisig_transaction/MessageBufferMultisigInstruction.d.ts",
-      "default": "./dist/multisig_transaction/MessageBufferMultisigInstruction.cjs"
     },
     "./multisig_transaction/PythMultisigInstruction": {
       "types": "./dist/multisig_transaction/PythMultisigInstruction.d.ts",

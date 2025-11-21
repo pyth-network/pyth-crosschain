@@ -14,7 +14,8 @@ import {
   MESH_PROGRAM_ID,
   AnchorMultisigInstruction,
   STAKING_PROGRAM_ID,
-} from "./MessageBufferMultisigInstruction";
+  INTEGRITY_POOL_PROGRAM_ID,
+} from "./AnchorMultisigInstruction";
 import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 import { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
@@ -36,6 +37,7 @@ export enum MultisigInstructionProgram {
   WormholeBridge,
   MessageBuffer,
   Staking,
+  IntegrityPool,
   Mesh,
   SystemProgram,
   BpfUpgradableLoader,
@@ -64,6 +66,8 @@ export function getProgramName(program: MultisigInstructionProgram) {
       return "Mesh Multisig Program";
     case MultisigInstructionProgram.Staking:
       return "Pyth Staking Program";
+    case MultisigInstructionProgram.IntegrityPool:
+      return "Integrity Pool";
     case MultisigInstructionProgram.SolanaReceiver:
       return "Pyth Solana Receiver";
     case MultisigInstructionProgram.PythPriceStore:
@@ -151,7 +155,8 @@ export class MultisigParser {
       instruction.programId.equals(MESSAGE_BUFFER_PROGRAM_ID) ||
       instruction.programId.equals(MESH_PROGRAM_ID) ||
       instruction.programId.equals(STAKING_PROGRAM_ID) ||
-      instruction.programId.equals(DEFAULT_RECEIVER_PROGRAM_ID)
+      instruction.programId.equals(DEFAULT_RECEIVER_PROGRAM_ID) ||
+      instruction.programId.equals(INTEGRITY_POOL_PROGRAM_ID)
     ) {
       return AnchorMultisigInstruction.fromTransactionInstruction(instruction);
     } else if (instruction.programId.equals(SystemProgram.programId)) {
@@ -179,7 +184,7 @@ export class MultisigParser {
 export { idlSetBuffer } from "./anchor";
 export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
-export { AnchorMultisigInstruction } from "./MessageBufferMultisigInstruction";
+export { AnchorMultisigInstruction } from "./AnchorMultisigInstruction";
 export { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 export { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
 export {
