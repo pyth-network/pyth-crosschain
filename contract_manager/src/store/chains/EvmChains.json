@@ -1377,5 +1377,12 @@
     "rpcUrl": "https://rpc-hoodi.morphl2.io",
     "networkId": 2910,
     "type": "EvmChain"
+  },
+  {
+    "id": "orange",
+    "mainnet": true,
+    "rpcUrl": "https://subnets.avax.network/orange/mainnet/rpc",
+    "networkId": 1510,
+    "type": "EvmChain"
   }
 ]
