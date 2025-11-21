@@ -147,3 +147,29 @@ impl From<pyth_lazer_protocol::api::Channel> for state::Channel {
         result
     }
 }
+
+impl From<pyth_lazer_protocol::api::MarketSession> for state::MarketSession {
+    fn from(value: pyth_lazer_protocol::api::MarketSession) -> Self {
+        match value {
+            pyth_lazer_protocol::api::MarketSession::Regular => state::MarketSession::REGULAR,
+            pyth_lazer_protocol::api::MarketSession::PreMarket => state::MarketSession::PRE_MARKET,
+            pyth_lazer_protocol::api::MarketSession::PostMarket => {
+                state::MarketSession::POST_MARKET
+            }
+            pyth_lazer_protocol::api::MarketSession::OverNight => state::MarketSession::OVER_NIGHT,
+        }
+    }
+}
+
+impl From<state::MarketSession> for pyth_lazer_protocol::api::MarketSession {
+    fn from(value: state::MarketSession) -> Self {
+        match value {
+            state::MarketSession::REGULAR => pyth_lazer_protocol::api::MarketSession::Regular,
+            state::MarketSession::PRE_MARKET => pyth_lazer_protocol::api::MarketSession::PreMarket,
+            state::MarketSession::POST_MARKET => {
+                pyth_lazer_protocol::api::MarketSession::PostMarket
+            }
+            state::MarketSession::OVER_NIGHT => pyth_lazer_protocol::api::MarketSession::OverNight,
+        }
+    }
+}

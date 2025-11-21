@@ -87,6 +87,23 @@ enum FeedKind {
     FUNDING_RATE = 1;
 }
 
+// Market session type
+enum MarketSession {
+    REGULAR = 0;
+    PRE_MARKET = 1;
+    POST_MARKET = 2;
+    OVER_NIGHT = 3;
+}
+
+message FeedMarketSchedule {
+    // Which session this applies to
+    MarketSession session = 1;
+    // Optional numeric value (can exist or not)
+    optional int32 min_publishers = 2;
+    // Future field — not required now, can be omitted
+    string market_schedule = 3;
+}
+
 // An item of the state describing a feed.
 message Feed {
     // [required] ID of the feed.
@@ -120,6 +137,8 @@ message Feed {
     optional FeedKind kind = 108;
     // [required] Current aggregated data of the feed.
     optional FeedAggregateData aggregated_data = 109;
+    // [optional] List of Market schedules for different sessions
+    repeated FeedMarketSchedule market_schedules = 110;
 
     // [required] Feed status in the current shard. Disabled feeds will not be visible in
     // the consumer API for the current shard. This setting should only be used
@@ -199,6 +218,8 @@ message FeedAggregateData {
     // Actual value is `mantissa * 10 ^ exponent`.
     // Restricted to int16.
     optional int32 exponent = 9;
+    // [optional] Market session for the feed. Can be absent if no data is available.
+    optional MarketSession market_session = 10;
 }
 
 // An item of the state describing an asset.

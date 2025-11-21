@@ -270,11 +270,13 @@ message AddFeed {
     // [required]
     optional google.protobuf.Duration expiry_time = 105;
     // [required]
-    optional string market_schedule = 106;
+    optional string market_schedule = 106 [deprecated = true];
     // [required]
     optional FeedState state = 107;
     // [required]
     optional FeedKind kind = 108;
+    // [required]
+    repeated FeedMarketSchedule market_schedules = 109;
     // [required]
     optional bool is_enabled_in_shard = 201;
 
@@ -317,11 +319,15 @@ message UpdateFeedProperties {
     // [optional]
     optional google.protobuf.Duration expiry_time = 105;
     // [optional]
-    optional string market_schedule = 106;
+    optional string market_schedule = 106 [deprecated = true];
     // [optional]
     optional FeedState state = 107;
     // [required]
     optional FeedKind kind = 108;
+    // [optional]
+    // While proto does not allow distinguishing between "not set" and "set to empty",
+    // an empty list here means to not update the market schedules.
+    repeated FeedMarketSchedule market_schedules = 109;
     // [optional]
     optional bool is_enabled_in_shard = 201;
 }
