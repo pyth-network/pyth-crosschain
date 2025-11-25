@@ -83,11 +83,15 @@ export type AllowedTreasurySymbolsType = z.infer<
   typeof ALLOWED_TREASURY_SYMBOLS
 >;
 
+export const ALLOWED_FOREX_SYMBOLS = z.enum(["EURUSD"]);
+export type AllowedForexSymbolsType = z.infer<typeof ALLOWED_FOREX_SYMBOLS>;
+
 export const NO_SELECTED_SYMBOL = z.enum(["no_symbol_selected"]);
 export type NoSelectedSymbolType = z.infer<typeof NO_SELECTED_SYMBOL>;
 
 export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...NO_SELECTED_SYMBOL.options,
+  ...ALLOWED_FOREX_SYMBOLS.options,
   ...ALLOWED_FUTURE_SYMBOLS.options,
   ...ALLOWED_CRYPTO_SYMBOLS.options,
   ...ALLOWED_EQUITY_SYMBOLS.options,
@@ -106,18 +110,22 @@ export const AllAndLatestDataStateSchema = z.object({
 });
 export type AllAndLatestDataState = z.infer<typeof AllAndLatestDataStateSchema>;
 
-export const CurrentPricesStoreStateSchema = z
-  .record(
+export const ApiTokensSchema = z.record(
+  ALL_DATA_SOURCES,
+  z.string().optional().nullable(),
+);
+export type ApiTokensState = z.infer<typeof ApiTokensSchema>;
+
+export const CurrentPricesStoreStateSchema = z.object({
+  metrics: z.record(
     ALL_DATA_SOURCES,
     z.object({
       latest: z.nullable(LatestMetricSchema),
     }),
-  )
-  .and(
-    z.object({
-      selectedSource: ALL_ALLOWED_SYMBOLS,
-    }),
-  );
+  ),
+  apiTokens: ApiTokensSchema,
+  selectedSource: ALL_ALLOWED_SYMBOLS,
+});
 export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema
 >;
