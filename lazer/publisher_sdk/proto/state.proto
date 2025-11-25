@@ -96,12 +96,12 @@ enum MarketSession {
 }
 
 message FeedMarketSchedule {
-    // Which session this applies to
-    MarketSession session = 1;
-    // Optional numeric value (can exist or not)
+    // [required] Which session this applies to
+    optional MarketSession session = 1;
+    // [optional] numeric value. If not set, minimum publishers from the feed level apply
     optional int32 min_publishers = 2;
-    // Future field — not required now, can be omitted
-    string market_schedule = 3;
+    // [required] Future field — not required now, can be omitted
+    optional string market_schedule = 3;
 }
 
 // An item of the state describing a feed.
@@ -138,6 +138,7 @@ message Feed {
     // [required] Current aggregated data of the feed.
     optional FeedAggregateData aggregated_data = 109;
     // [optional] List of Market schedules for different sessions
+    // Overrides market_schedule field if set
     repeated FeedMarketSchedule market_schedules = 110;
 
     // [required] Feed status in the current shard. Disabled feeds will not be visible in

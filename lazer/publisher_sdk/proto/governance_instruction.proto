@@ -269,7 +269,7 @@ message AddFeed {
     optional Channel min_channel = 104;
     // [required]
     optional google.protobuf.Duration expiry_time = 105;
-    // [required]
+    // [optional]
     optional string market_schedule = 106 [deprecated = true];
     // [required]
     optional FeedState state = 107;
