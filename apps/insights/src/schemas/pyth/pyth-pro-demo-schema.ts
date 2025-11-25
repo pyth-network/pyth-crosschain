@@ -123,8 +123,7 @@ export const CurrentPricesStoreStateSchema = z.object({
       latest: z.nullable(LatestMetricSchema),
     }),
   ),
-  apiTokens: ApiTokensSchema,
-  selectedSource: ALL_ALLOWED_SYMBOLS,
+  selectedSource: ALL_ALLOWED_SYMBOLS.optional().nullable(),
 });
 export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema

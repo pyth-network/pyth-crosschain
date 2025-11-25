@@ -1,5 +1,10 @@
 @use "@pythnetwork/component-library/theme";
 
+.controls {
+  align-items: center;
+  display: flex;
+}
+
 .pythFeedsDemoPageRoot {
   @include theme.max-width;
 

@@ -6,7 +6,7 @@ import { createUUID } from "@pythnetwork/shared-lib/util";
 import { useCallback, useEffect, useRef } from "react";
 import type Sockette from "sockette";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllAllowedSymbols } from "../../schemas/pyth/pyth-pro-demo-schema";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import {
@@ -43,8 +43,8 @@ type TradePush = {
 type InfowayMessage = TradePush;
 
 export function useInfowayWebSocket(): UseDataProviderSocketHookReturnType {
-  /** hooks */
-  const { addDataPoint, selectedSource } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint, selectedSource } = usePythProAppStateContext();
 
   /** refs */
   const heartbeatRef = useRef<Nullish<NodeJS.Timeout>>(null);

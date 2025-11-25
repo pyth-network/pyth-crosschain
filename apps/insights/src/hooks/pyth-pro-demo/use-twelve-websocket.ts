@@ -4,7 +4,7 @@ import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { useCallback, useEffect, useRef } from "react";
 import type Sockette from "sockette";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllAllowedSymbols } from "../../schemas/pyth/pyth-pro-demo-schema";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import { isAllowedSymbol } from "../../util/pyth-pro-demo";
@@ -54,8 +54,8 @@ type TwelveSubscriptionInfo = {
 };
 
 export function useTwelveWebSocket(): UseDataProviderSocketHookReturnType {
-  /** store */
-  const { addDataPoint, selectedSource } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint, selectedSource } = usePythProAppStateContext();
 
   /** refs */
   const heartbeatRef = useRef<Nullish<NodeJS.Timeout>>(undefined);

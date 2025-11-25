@@ -4,7 +4,7 @@ import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useCallback } from "react";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllAllowedSymbols } from "../../schemas/pyth/pyth-pro-demo-schema";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import { isAllowedSymbol } from "../../util/pyth-pro-demo";
@@ -72,8 +72,8 @@ const SYMBOL_TO_CHANNEL_MAP = new Map<
 ]);
 
 export function usePythLazerWebSocket(): UseDataProviderSocketHookReturnType {
-  /** store */
-  const { addDataPoint, selectedSource } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint, selectedSource } = usePythProAppStateContext();
 
   /** callbacks */
   const onOpen = useCallback<

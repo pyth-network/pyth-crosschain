@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import {
   isAllowedCryptoSymbol,
@@ -22,8 +22,8 @@ type OKXBBOData = {
 };
 
 export function useOKXWebSocket(): UseDataProviderSocketHookReturnType {
-  /** hooks */
-  const { addDataPoint, selectedSource } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint, selectedSource } = usePythProAppStateContext();
 
   /** callbacks */
   const onOpen = useCallback<

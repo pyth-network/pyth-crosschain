@@ -1,12 +1,19 @@
-'use client';
+"use client";
 
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import type { PropsWithChildren } from "react";
-import { createContext, use, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 
-import { useApiTokens, useDataStream, useSelectedDataSources } from "../../hooks/pyth-pro-demo";
+import { usePythProApiTokensContext } from "./pyth-pro-api-tokens-context";
+import { usePythProAppStateContext } from "./pyth-pro-app-state";
+import { useDataStream } from "../../hooks/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { isAllowedCryptoSymbol, isAllowedEquitySymbol, isAllowedForexSymbol, isAllowedSymbol } from "../../util/pyth-pro-demo";
+import {
+  isAllowedCryptoSymbol,
+  isAllowedEquitySymbol,
+  isAllowedForexSymbol,
+  isAllowedSymbol,
+} from "../../util/pyth-pro-demo";
 
 type WebSocketsContextVal = {
   statuses: Partial<
@@ -17,9 +24,9 @@ type WebSocketsContextVal = {
 const context = createContext<Nullish<WebSocketsContextVal>>(undefined);
 
 export function WebSocketsProvider({ children }: PropsWithChildren) {
-  /** store */
-  const { selectedSource } = useSelectedDataSources();
-  const { apiTokens } = useApiTokens();
+  /** context */
+  const { selectedSource } = usePythProAppStateContext();
+  const apiTokens = usePythProApiTokensContext();
 
   /** local variables */
   const isEquity = isAllowedEquitySymbol(selectedSource);
@@ -115,7 +122,7 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
 }
 
 export function useWebSocketsContext() {
-  const ctx = use(context);
+  const ctx = useContext(context);
 
   if (!ctx) {
     throw new Error(

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import { isAllowedCryptoSymbol } from "../../util/pyth-pro-demo";
 
@@ -15,8 +15,8 @@ type BinanceOrderBookData = {
 };
 
 export function useBinanceWebSocket(): UseDataProviderSocketHookReturnType {
-  /** hooks */
-  const { addDataPoint } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint } = usePythProAppStateContext();
 
   /** callbacks */
   const onMessage = useCallback<

@@ -4,7 +4,7 @@ import type { UseWebSocketOpts } from "@pythnetwork/react-hooks/use-websocket";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useCallback } from "react";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllowedCryptoSymbolsType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import { isAllowedSymbol } from "../../util/pyth-pro-demo";
@@ -23,8 +23,8 @@ type BybitOrderBookData = {
 };
 
 export function useBybitWebSocket(): UseDataProviderSocketHookReturnType {
-  /** hooks */
-  const { addDataPoint, selectedSource } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint, selectedSource } = usePythProAppStateContext();
 
   /** callbacks */
   const onOpen = useCallback<NonNullable<UseWebSocketOpts["onOpen"]>>(

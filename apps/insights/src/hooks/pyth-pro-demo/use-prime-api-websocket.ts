@@ -1,9 +1,13 @@
 "use client";
 
+import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useCallback, useEffect, useRef } from "react";
 import type Sockette from "sockette";
 
-import { usePythProStoreStateForWebsocket } from "./use-pyth-pro-store-state-for-websocket";
+import {
+  usePythProApiTokensContext,
+  usePythProAppStateContext,
+} from "../../context/pyth-pro-demo";
 import type { AllowedForexSymbolsType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import { isAllowedForexSymbol } from "../../util/pyth-pro-demo";
@@ -23,14 +27,15 @@ type PrimeSocketRequest = {
   pairs: [AllowedForexSymbolsType];
 };
 
-function sendAuthToken(socket: Sockette) {
-  const msg = { op: "auth", key: API_TOKEN_PRIME_API };
+function sendAuthToken(apiToken: string, socket: Sockette) {
+  const msg = { op: "auth", key: apiToken };
   socket.json(msg);
 }
 
 export function usePrimeApiWebSocket(): UseDataProviderSocketHookReturnType {
-  /** hooks */
-  const { addDataPoint, selectedSource } = usePythProStoreStateForWebsocket();
+  /** context */
+  const { addDataPoint, selectedSource } = usePythProAppStateContext();
+  const { prime_api } = usePythProApiTokensContext();
 
   /** refs */
   const isAuthenticated = useRef(false);
@@ -39,9 +44,13 @@ export function usePrimeApiWebSocket(): UseDataProviderSocketHookReturnType {
   /** callbacks */
   const onOpen = useCallback<
     NonNullable<UseDataProviderSocketHookReturnType["onOpen"]>
-  >((s) => {
-    sendAuthToken(s);
-  }, []);
+  >(
+    (s) => {
+      if (isNullOrUndefined(prime_api)) return;
+      sendAuthToken(prime_api, s);
+    },
+    [prime_api],
+  );
 
   const onMessage = useCallback<
     UseDataProviderSocketHookReturnType["onMessage"]

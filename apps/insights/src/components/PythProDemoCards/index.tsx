@@ -1,23 +1,28 @@
+import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 
-import { useGetMetricsForDataSourceAndSymbol, useSelectedDataSources } from "../../hooks/pyth-pro-demo";
+import { PriceCard } from "./price-card";
+import {
+  usePythProAppStateContext,
+  useWebSocketsContext,
+} from "../../context/pyth-pro-demo";
 
 export function PriceCards() {
-  /** store */
-  const { dataSourcesInUse, selectedSource } = useSelectedDataSources();
-  const { getMetricsForSourceAndSymbol } = useGetMetricsForDataSourceAndSymbol();
+  /** context */
+  const { dataSourcesInUse, metrics, selectedSource } =
+    usePythProAppStateContext();
   const { statuses } = useWebSocketsContext();
 
-  if (dataSourcesInUse.length <= 0) return;
+  if (isNullOrUndefined(selectedSource)) return;
 
   return (
     <div>
       {dataSourcesInUse.map((dataSource) => {
-        const sourceMetrics = getMetricsForSourceAndSymbol(dataSource);
+        const sourceMetrics = metrics[dataSource]?.latest;
         const socketStatus = statuses[dataSource];
 
         return (
           <PriceCard
-            currentPriceMetrics={sourceMetrics}
+            currentPriceMetrics={sourceMetrics?.[selectedSource]}
             dataSource={dataSource}
             selectedSource={selectedSource}
             socketStatus={socketStatus}

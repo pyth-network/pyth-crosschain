@@ -31,6 +31,7 @@
     "@solana/web3.js": "catalog:",
     "async-cache-dedupe": "catalog:",
     "bs58": "catalog:",
+    "change-case": "catalog:",
     "clsx": "catalog:",
     "date-fns": "catalog:",
     "csv-stringify": "catalog:",
@@ -51,8 +52,7 @@
     "swr": "catalog:",
     "zod": "catalog:",
     "zod-search-params": "catalog:",
-    "zod-validation-error": "catalog:",
-    "zustand": "catalog:"
+    "zod-validation-error": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

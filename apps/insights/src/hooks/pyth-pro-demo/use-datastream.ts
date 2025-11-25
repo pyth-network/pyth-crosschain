@@ -1,10 +1,11 @@
+"use client";
+
 import type { UseWebSocketOpts } from "@pythnetwork/react-hooks/use-websocket";
 import { useWebSocket } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useCallback } from "react";
 
-import { useApiTokens } from "./use-api-tokens";
 import { useBinanceWebSocket } from "./use-binance-websocket";
 import { useBybitWebSocket } from "./use-bybit-websocket";
 import { useCoinbaseWebSocket } from "./use-coinbase-websocket";
@@ -15,6 +16,7 @@ import { usePrimeApiWebSocket } from "./use-prime-api-websocket";
 import { usePythCoreWebSocket } from "./use-pyth-core-websocket";
 import { usePythLazerWebSocket } from "./use-pyth-lazer-websocket";
 import { useTwelveWebSocket } from "./use-twelve-websocket";
+import { usePythProApiTokensContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
@@ -83,7 +85,7 @@ export function useDataStream({
   symbol,
 }: UseDataStreamOpts) {
   /** store */
-  const { apiTokens } = useApiTokens();
+  const apiTokens = usePythProApiTokensContext();
 
   /** queries */
   const { usdtToUsdRate } = useFetchUsdtToUsdRate({ enabled });
