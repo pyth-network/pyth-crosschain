@@ -67,7 +67,7 @@ export async function publishPackage(
   ) {
     throw new Error(
       "No publish event found in transaction:" +
-      JSON.stringify(result.objectChanges, null, 2),
+        JSON.stringify(result.objectChanges, null, 2),
     );
   }
 
