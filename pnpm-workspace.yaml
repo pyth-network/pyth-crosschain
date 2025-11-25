@@ -3,6 +3,7 @@ packageManagerStrictVersion: true
 engineStrict: true
 strictDepBuilds: true
 managePackageManagerVersions: true
+preferFrozenLockfile: true
 
 overrides:
   "@solana/web3.js@1.77.4>rpc-websockets": 7.11.0
