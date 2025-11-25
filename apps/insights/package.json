@@ -49,7 +49,8 @@
     "swr": "catalog:",
     "zod": "catalog:",
     "zod-search-params": "catalog:",
-    "zod-validation-error": "catalog:"
+    "zod-validation-error": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",

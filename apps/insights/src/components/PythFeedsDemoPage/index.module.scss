@@ -1,0 +1,11 @@
+@use "@pythnetwork/component-library/theme";
+
+.pythFeedsDemoPageRoot {
+  @include theme.max-width;
+
+  // this holds the infographic cards
+  & > aside {}
+
+  // this holds the chart
+  & > section {}
+}
