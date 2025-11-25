@@ -289,6 +289,16 @@ export const EntropyDeployments = {
     isTestnet: true,
     chainId: 10_143,
   },
+  monad: {
+    address: "0xd458261e832415cfd3bae5e416fdf3230ce6f134",
+    name: "Monad",
+    rpc: "https://rpc-mainnet.monadinfra.com",
+    explorerTxTemplate: "https://monadvision.com/tx/$ADDRESS",
+    explorerAccountTemplate: "https://monadvision.com/address/$ADDRESS",
+    icon: "https://icons.llamao.fi/icons/chains/rsz_monad.jpg?w=20&h=20",
+    isTestnet: false,
+    chainId: 143,
+  },
   "abstract-sepolia-testnet": {
     address: "0x858687fD592112f7046E394A3Bf10D0C11fF9e63",
     name: "Abstract Sepolia Testnet",
