@@ -79,8 +79,6 @@ async function run() {
   console.log(
     `Code stored on chain ${chain.getId()} at ${storeCodeRes.codeId}`,
   );
-  if (chain.wormholeChainName === "") {
-  }
 
   const instantiateContractRes = await chainExecutor.instantiateContract({
     codeId: storeCodeRes.codeId,
