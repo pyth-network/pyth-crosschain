@@ -50,6 +50,11 @@ const config = {
 
   async redirects() {
     return [
+      {
+        source: "/home",
+        destination: "/",
+        permanent: true,
+      },
       // First version of docs site -> third version
       {
         source: "/evm",
