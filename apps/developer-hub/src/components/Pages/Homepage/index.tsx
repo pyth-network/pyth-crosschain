@@ -171,6 +171,7 @@ const products: ProductCardConfig[] = [
       { label: "On-chain randomness" },
       { label: "Verifiable results" },
       { label: "Pay in native token" },
+      { label: "Supports 20+ EVM chains" },
     ],
     quickLinks: [
       {
