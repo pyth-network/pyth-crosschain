@@ -1,8 +1,13 @@
-import { Cell, contractAddress, ContractProvider, Sender } from "@ton/core";
-import { HexString } from "@pythnetwork/price-service-sdk";
+import {
+  Cell,
+  contractAddress,
+  type ContractProvider,
+  type Sender,
+} from "@ton/core";
+import type { HexString } from "@pythnetwork/price-service-sdk";
 
 import { BaseWrapper } from "./BaseWrapper";
-import { DataSource } from "@pythnetwork/xc-admin-common";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 export type MainConfig = {
   singleUpdateFee: number;
@@ -26,18 +31,22 @@ export class Main extends BaseWrapper {
     return BaseWrapper.createInitData(config);
   }
 
-  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+  override async sendDeploy(
+    provider: ContractProvider,
+    via: Sender,
+    value: bigint,
+  ) {
     await super.sendDeploy(provider, via, value);
   }
 
-  async getCurrentGuardianSetIndex(provider: ContractProvider) {
+  override async getCurrentGuardianSetIndex(provider: ContractProvider) {
     return await super.getCurrentGuardianSetIndex(
       provider,
       "get_current_guardian_set_index",
     );
   }
 
-  async sendUpdateGuardianSet(
+  override async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
     vm: Buffer,
@@ -45,7 +54,7 @@ export class Main extends BaseWrapper {
     await super.sendUpdateGuardianSet(provider, via, vm);
   }
 
-  async sendUpdatePriceFeeds(
+  override async sendUpdatePriceFeeds(
     provider: ContractProvider,
     via: Sender,
     updateData: Buffer,
@@ -54,7 +63,10 @@ export class Main extends BaseWrapper {
     await super.sendUpdatePriceFeeds(provider, via, updateData, updateFee);
   }
 
-  async getPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
+  override async getPriceUnsafe(
+    provider: ContractProvider,
+    priceFeedId: HexString,
+  ) {
     return await super.getPriceUnsafe(
       provider,
       priceFeedId,
@@ -62,7 +74,7 @@ export class Main extends BaseWrapper {
     );
   }
 
-  async getPriceNoOlderThan(
+  override async getPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString,
@@ -75,7 +87,10 @@ export class Main extends BaseWrapper {
     );
   }
 
-  async getEmaPriceUnsafe(provider: ContractProvider, priceFeedId: HexString) {
+  override async getEmaPriceUnsafe(
+    provider: ContractProvider,
+    priceFeedId: HexString,
+  ) {
     return await super.getEmaPriceUnsafe(
       provider,
       priceFeedId,
@@ -83,7 +98,7 @@ export class Main extends BaseWrapper {
     );
   }
 
-  async getEmaPriceNoOlderThan(
+  override async getEmaPriceNoOlderThan(
     provider: ContractProvider,
     timePeriod: number,
     priceFeedId: HexString,
@@ -96,15 +111,15 @@ export class Main extends BaseWrapper {
     );
   }
 
-  async getUpdateFee(provider: ContractProvider, vm: Buffer) {
+  override async getUpdateFee(provider: ContractProvider, vm: Buffer) {
     return await super.getUpdateFee(provider, vm, "get_update_fee");
   }
 
-  async getSingleUpdateFee(provider: ContractProvider) {
+  override async getSingleUpdateFee(provider: ContractProvider) {
     return await super.getSingleUpdateFee(provider, "get_single_update_fee");
   }
 
-  async getChainId(provider: ContractProvider) {
+  override async getChainId(provider: ContractProvider) {
     return await super.getChainId(provider, "get_chain_id");
   }
 }
