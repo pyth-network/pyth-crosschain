@@ -1,4 +1,5 @@
 import { EmptyState } from "./empty-state";
+import classes from "./index.module.scss";
 import { PythProDemoCard } from "./price-card";
 import {
   usePythProAppStateContext,
@@ -17,7 +18,7 @@ export function PythProDemoCards() {
   }
 
   return (
-    <div>
+    <div className={classes.root}>
       {dataSourcesInUse.map((dataSource) => {
         const sourceMetrics = metrics[dataSource]?.latest;
         const socketStatus = statuses[dataSource];

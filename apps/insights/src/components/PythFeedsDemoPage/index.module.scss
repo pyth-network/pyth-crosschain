@@ -1,5 +1,9 @@
 @use "@pythnetwork/component-library/theme";
 
+.body {
+  padding-top: theme.spacing(4);
+}
+
 .subheader {
   align-items: flex-end;
   border-bottom: 1px solid theme.color("border");

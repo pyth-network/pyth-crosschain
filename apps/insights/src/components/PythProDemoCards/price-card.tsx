@@ -6,12 +6,13 @@ import { capitalCase } from "change-case";
 import cx from "clsx";
 
 import { PriceCardUtils } from "./price-card-utils";
+import classes from "./price-card.module.scss";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
   CurrentPriceMetrics,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { getColorForSymbol } from "../../util/pyth-pro-demo";
+import { getColorForSymbol, isAllowedSymbol } from "../../util/pyth-pro-demo";
 
 type PriceCardProps = {
   currentPriceMetrics: Nullish<CurrentPriceMetrics>;
@@ -26,41 +27,51 @@ export function PythProDemoCard({
   selectedSource,
   socketStatus,
 }: PriceCardProps) {
-  if (isNullOrUndefined(selectedSource)) return;
+  if (!isAllowedSymbol(selectedSource)) return;
 
   /** local variables */
   const formattedSourceType = selectedSource.toUpperCase();
+  let priceChangeClassName = "";
+
+  if (!isNullOrUndefined(currentPriceMetrics?.change)) {
+    const { change } = currentPriceMetrics;
+    if (change < 0) {
+      priceChangeClassName = classes.priceDropping;
+    } else if (change > 0) {
+      priceChangeClassName = classes.priceIncreasing;
+    }
+  }
+
   return (
     <Card
+      className={classes.root}
       nonInteractive
       title={
         <span style={{ color: getColorForSymbol(dataSource) }}>
           {capitalCase(dataSource)}
         </span>
       }
+      variant="secondary"
     >
-      <div>
-        <span>{formattedSourceType}</span>
-        {socketStatus && <span>{capitalCase(socketStatus)}</span>}
+      <div className={classes.cardContents}>
         {socketStatus === "connected" && (
           <>
-            <div>{PriceCardUtils.formatPrice(currentPriceMetrics?.price)}</div>
-            <div
-              className={
-                isNullOrUndefined(currentPriceMetrics?.change) ? "" : cx()
-                // currentPriceMetrics.change < 0
-                //   ? classes.priceDropping
-                //   : currentPriceMetrics.change > 0
-                //     ? classes.priceIncreasing
-                //     : null,
-              }
-            >
+            <div className={classes.price}>
+              {PriceCardUtils.formatPrice(currentPriceMetrics?.price)}
+            </div>
+            <div className={priceChangeClassName}>
               {PriceCardUtils.formatChange(
                 currentPriceMetrics?.change,
                 currentPriceMetrics?.changePercent,
               )}
             </div>
           </>
+        )}
+        <div className={classes.symbol}>{formattedSourceType}</div>
+        {socketStatus && (
+          <div className={classes.socketStatus}>
+            {capitalCase(socketStatus)}
+          </div>
         )}
       </div>
     </Card>
