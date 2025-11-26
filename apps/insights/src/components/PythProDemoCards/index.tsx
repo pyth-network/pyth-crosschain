@@ -1,18 +1,20 @@
-import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
-
-import { PriceCard } from "./price-card";
+import { EmptyState } from "./empty-state";
+import { PythProDemoCard } from "./price-card";
 import {
   usePythProAppStateContext,
   useWebSocketsContext,
 } from "../../context/pyth-pro-demo";
+import { isAllowedSymbol } from "../../util/pyth-pro-demo";
 
-export function PriceCards() {
+export function PythProDemoCards() {
   /** context */
   const { dataSourcesInUse, metrics, selectedSource } =
     usePythProAppStateContext();
   const { statuses } = useWebSocketsContext();
 
-  if (isNullOrUndefined(selectedSource)) return;
+  if (!isAllowedSymbol(selectedSource)) {
+    return <EmptyState />;
+  }
 
   return (
     <div>
@@ -21,7 +23,7 @@ export function PriceCards() {
         const socketStatus = statuses[dataSource];
 
         return (
-          <PriceCard
+          <PythProDemoCard
             currentPriceMetrics={sourceMetrics?.[selectedSource]}
             dataSource={dataSource}
             selectedSource={selectedSource}

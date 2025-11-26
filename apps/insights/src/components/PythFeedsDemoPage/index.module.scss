@@ -1,16 +1,39 @@
 @use "@pythnetwork/component-library/theme";
 
-.controls {
-  align-items: center;
+.subheader {
+  align-items: flex-end;
+  border-bottom: 1px solid theme.color("border");
   display: flex;
+  gap: theme.spacing(4);
+  justify-content: space-between;
+  padding-bottom: theme.spacing(4);
+
+  & > div {
+    &:first-child {
+      display: flex;
+      flex-flow: column;
+      gap: theme.spacing(4);
+
+      & > h3,
+      & > h4 {
+        margin: 0;
+      }
+
+      & > h4 {
+        color: theme.color("muted");
+      }
+    }
+  }
 }
 
 .pythFeedsDemoPageRoot {
   @include theme.max-width;
 
   // this holds the infographic cards
-  & > aside {}
+  & > aside {
+  }
 
   // this holds the chart
-  & > section {}
+  & > section {
+  }
 }

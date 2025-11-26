@@ -26,6 +26,8 @@ import {
 export function isAllowedSymbol(
   symbol: Nullish<string>,
 ): symbol is AllAllowedSymbols {
+  if (symbol === ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected) return false;
+
   for (const s of Object.values(ALL_ALLOWED_SYMBOLS.Values)) {
     if (s === symbol) return true;
   }

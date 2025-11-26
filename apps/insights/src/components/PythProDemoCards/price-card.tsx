@@ -20,7 +20,7 @@ type PriceCardProps = {
   socketStatus: Nullish<ReturnType<typeof useWebSocket>["status"]>;
 };
 
-export function PriceCard({
+export function PythProDemoCard({
   currentPriceMetrics,
   dataSource,
   selectedSource,
@@ -47,14 +47,12 @@ export function PriceCard({
             <div>{PriceCardUtils.formatPrice(currentPriceMetrics?.price)}</div>
             <div
               className={
-                isNullOrUndefined(currentPriceMetrics?.change)
-                  ? ""
-                  : cx()
-                    // currentPriceMetrics.change < 0
-                    //   ? classes.priceDropping
-                    //   : currentPriceMetrics.change > 0
-                    //     ? classes.priceIncreasing
-                    //     : null,
+                isNullOrUndefined(currentPriceMetrics?.change) ? "" : cx()
+                // currentPriceMetrics.change < 0
+                //   ? classes.priceDropping
+                //   : currentPriceMetrics.change > 0
+                //     ? classes.priceIncreasing
+                //     : null,
               }
             >
               {PriceCardUtils.formatChange(

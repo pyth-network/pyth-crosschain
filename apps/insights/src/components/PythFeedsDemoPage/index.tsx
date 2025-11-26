@@ -6,6 +6,7 @@ import {
   PythProAppStateProvider,
   WebSocketsProvider,
 } from "../../context/pyth-pro-demo";
+import { PythProDemoCards } from "../PythProDemoCards";
 import { PythProDemoSourceSelector } from "../PythProDemoSourceSelector";
 
 export function PythFeedsDemoPage() {
@@ -15,10 +16,18 @@ export function PythFeedsDemoPage() {
         <WebSocketsProvider>
           <article className={classes.pythFeedsDemoPageRoot}>
             <section>
-              <div className={classes.controls}>
-                <PythProDemoSourceSelector />
+              <div className={classes.subheader}>
+                <div>
+                  <h3>Pyth Pro</h3>
+                  <h4>Real-time feed comparison tool</h4>
+                </div>
+                <div>
+                  <PythProDemoSourceSelector />
+                </div>
               </div>
-              {/* <PythProDemoCards /> */}
+              <div className={classes.body}>
+                <PythProDemoCards />
+              </div>
             </section>
             <aside>
               {/* <PythProDemoPriceChart key={`${selectedSource}-${dataSourcesInUse.join(', ')}`} /> */}
