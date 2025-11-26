@@ -288,6 +288,16 @@
         "default": "./dist/esm/multisig.mjs"
       }
     },
+    "./multisig_transaction/AnchorMultisigInstruction": {
+      "require": {
+        "types": "./dist/cjs/multisig_transaction/AnchorMultisigInstruction.d.ts",
+        "default": "./dist/cjs/multisig_transaction/AnchorMultisigInstruction.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/multisig_transaction/AnchorMultisigInstruction.d.ts",
+        "default": "./dist/esm/multisig_transaction/AnchorMultisigInstruction.mjs"
+      }
+    },
     "./multisig_transaction/BpfUpgradableLoaderMultisigInstruction": {
       "require": {
         "types": "./dist/cjs/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts",
@@ -306,16 +316,6 @@
       "import": {
         "types": "./dist/esm/multisig_transaction/LazerMultisigInstruction.d.ts",
         "default": "./dist/esm/multisig_transaction/LazerMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/MessageBufferMultisigInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/MessageBufferMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/MessageBufferMultisigInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/MessageBufferMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/MessageBufferMultisigInstruction.mjs"
       }
     },
     "./multisig_transaction/PythMultisigInstruction": {
