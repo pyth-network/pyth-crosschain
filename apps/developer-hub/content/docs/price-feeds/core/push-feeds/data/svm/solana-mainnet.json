@@ -353,6 +353,14 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "ORE/USD",
+      "account_address": "GYYQ8gbX4Tndc4WMJ7jSjZTePTvbmgRRxByt54ZQYqvZ",
+      "id": "142b804c658e14ff60886783e46e5a51bdf398b4871d9d8f7c28aa1585cad504",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "PST/USDC.RR",
       "account_address": "CBGwQddTeYn3KdvxGWtU95fqCcavzHK9XPFBLENDF5JR",
       "id": "675e36f84a6be779ed793c71eb5c03151e1866c125767f46933626e0610af84d",
