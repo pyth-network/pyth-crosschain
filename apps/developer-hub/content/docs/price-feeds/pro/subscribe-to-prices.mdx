@@ -33,9 +33,16 @@ The websocket servers are available at:
   <Step>
   ### 1. Acquire an access token
 
-Please fill out [this form](https://tally.so/r/3xG8E5) to get in touch with our authorized distribution partners (Pyth Data Distributors) and obtain an access token.
+Please fill out [this form](https://2fga8d.share-eu1.hsforms.com/2ftdPrASCTLCxtP5YMzAq_Q) to get in touch with our authorized distribution partners (Pyth Data Distributors) and obtain an access token.
 
 Use the access token to authenticate the websocket connection by passing it as an `Authorization{:bash}` header with the value `Bearer {token}{:bash}`.
+
+<Callout type="warning">
+  **Security Warning**: Never expose your access token in frontend applications
+  or client-side code. Access tokens should only be used in secure backend
+  environments. Exposing tokens in frontend code makes them publicly accessible
+  and is a violation of our terms of service.
+</Callout>
 
   </Step>
   <Step>
