@@ -295,6 +295,20 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "USDT0/USD",
+      "id": "cfc1303ea9f083b1b4f99e1369fb9d2611f3230d5ea33a6abf2f86071c089fdc",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "USDN/USD",
+      "id": "ee8e0a7de474035b5cbc1a5f762a74d654e5006b25bfe18f390cc5a3915b88ac",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "THBILL/USDC.RR",
       "id": "5b1bc5a579deba54dbaa9bc1c5b2e2b3f116d8d5ec27fbb3b9dc140a78e9f1e2",
       "time_difference": 3600,
