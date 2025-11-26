@@ -4,9 +4,9 @@ import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
 
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { execSync } from "child_process";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { SuiClient } from "@mysten/sui/client";
 import { bcs } from "@mysten/sui/bcs";
+import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,

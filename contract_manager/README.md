@@ -24,4 +24,4 @@ You can generate the docs by running `pnpm exec typedoc src/index.ts` from this 
 
 # Scripts
 
-You can run the scripts by executing `pnpm exec ts-node scripts/<script_name>.ts` from this directory.
+You can run the scripts by executing `pnpm tsx scripts/<script_name>.ts` from this directory.

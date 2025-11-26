@@ -130,11 +130,11 @@ const products: ProductCardConfig[] = [
     quickLinks: [
       {
         label: "Get Pyth Pro Access Token",
-        href: "/price-feeds/pro/access-token",
+        href: "/price-feeds/pro/acquire-access-token",
       },
       {
         label: "Browse Supported Feeds",
-        href: "/price-feeds/pro/price-feeds-ids",
+        href: "/price-feeds/pro/price-feed-ids",
       },
       { label: "Pricing", href: "https://www.pyth.network/pricing" },
     ],
@@ -171,6 +171,7 @@ const products: ProductCardConfig[] = [
       { label: "On-chain randomness" },
       { label: "Verifiable results" },
       { label: "Pay in native token" },
+      { label: "Supports 20+ EVM chains" },
     ],
     quickLinks: [
       {
