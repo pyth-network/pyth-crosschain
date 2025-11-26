@@ -1,0 +1,48 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: theme.spacing(4);
+  background-color: var(--color-fd-background);
+}
+
+.content {
+  max-width: 28rem;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.title {
+  @include theme.text("6xl", "bold");
+  margin: 0 0 theme.spacing(4) 0;
+  color: theme.color("heading");
+  line-height: 1;
+}
+
+.heading {
+  @include theme.text("2xl", "semibold");
+  margin: 0 0 theme.spacing(4) 0;
+  color: theme.color("heading");
+}
+
+.description {
+  @include theme.text("base", "normal");
+  margin: 0 0 theme.spacing(8) 0;
+  color: theme.color("paragraph");
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+
+  @include theme.breakpoint("sm") {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
