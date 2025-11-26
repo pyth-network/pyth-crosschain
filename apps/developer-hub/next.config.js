@@ -50,17 +50,11 @@ const config = {
 
   async redirects() {
     return [
-      // Third version redirects
-      {
-        source: "/",
-        destination: "/price-feeds",
-        permanent: true,
-      },
-
       // First version of docs site -> third version
       {
         source: "/evm",
-        destination: "/price-feeds/core/use-real-time-data/pull-integration/evm",
+        destination:
+          "/price-feeds/core/use-real-time-data/pull-integration/evm",
         permanent: true,
       },
 
@@ -172,12 +166,14 @@ const config = {
       },
       {
         source: "/documentation/pythnet-price-feeds/scheduler",
-        destination: "/price-feeds/core/schedule-price-updates/using-price-pusher",
+        destination:
+          "/price-feeds/core/schedule-price-updates/using-price-pusher",
         permanent: true,
       },
       {
         source: "/price-feeds/schedule-price-updates/using-scheduler",
-        destination: "/price-feeds/core/schedule-price-updates/using-price-pusher",
+        destination:
+          "/price-feeds/core/schedule-price-updates/using-price-pusher",
         permanent: true,
       },
       {
@@ -192,7 +188,8 @@ const config = {
       },
       {
         source: "/documentation/pythnet-price-feeds/evm",
-        destination: "/price-feeds/core/use-real-time-data/pull-integration/evm",
+        destination:
+          "/price-feeds/core/use-real-time-data/pull-integration/evm",
         permanent: true,
       },
       {
@@ -268,8 +265,10 @@ const config = {
         permanent: true,
       },
       {
-        source: "/price-feeds/use-real-time-data/:path((?!pull-integration(?:/|$)).*)",
-        destination: "/price-feeds/core/use-real-time-data/pull-integration/:path",
+        source:
+          "/price-feeds/use-real-time-data/:path((?!pull-integration(?:/|$)).*)",
+        destination:
+          "/price-feeds/core/use-real-time-data/pull-integration/:path",
         permanent: true,
       },
       {
