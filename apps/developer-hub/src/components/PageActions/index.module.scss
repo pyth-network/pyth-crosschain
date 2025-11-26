@@ -11,6 +11,14 @@
   display: flex;
   align-items: center;
   gap: 0;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  @include theme.breakpoint("sm") {
+    flex-wrap: nowrap;
+    overflow-x: visible;
+  }
 }
 
 .buttonWrapper {
