@@ -39,6 +39,12 @@ const GROUPED_OPTS: { name: string; options: SourceDropdownOptType[] }[] = [
   },
 ];
 
+function renderOptionLabel({ id }: { id: number | string }) {
+  return id === ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected
+    ? sentenceCase(id)
+    : String(id).toUpperCase();
+}
+
 export function PythProDemoSourceSelector() {
   /** context */
   const { handleSelectSource, selectedSource } = usePythProAppStateContext();
@@ -52,11 +58,8 @@ export function PythProDemoSourceSelector() {
       selectedKey={
         selectedSource ?? ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected
       }
-      textValue={({ id }) =>
-        id === ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected
-          ? sentenceCase(id)
-          : id.toUpperCase()
-      }
+      show={renderOptionLabel}
+      textValue={renderOptionLabel}
     />
   );
 }
