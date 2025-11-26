@@ -102,6 +102,7 @@ export const Homepage = () => {
             url="https://pyth-lazer.dourolabs.app/docs"
             urlLabel="Link"
             image={<SignalImage />}
+            target="_blank"
           />
         </SectionCards>
       </Section>
