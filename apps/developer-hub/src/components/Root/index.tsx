@@ -12,11 +12,7 @@ export const TABS = [
   { segment: "entropy", children: "Entropy" },
 ];
 
-type Props = {
-  children: ReactNode;
-};
-
-export const Root = ({ children }: Props) => (
+export const Root = ({ children, afterBodyContent }: Props) => (
   <html lang="en">
     <body>
       <RootProviders providers={[NuqsAdapter]}>
@@ -28,21 +24,15 @@ export const Root = ({ children }: Props) => (
             },
           }}
         >
-          {/* commenting out the app body because we don't have the app shell anymore
-          <AppBody
-        appName="Developer Hub"
-        displaySupportButton={false}
-        extraCta={<SearchButton />}
-        mainCta={{
-          label: "Developer Forum",
-          href: "https://dev-forum.pyth.network/",
-        }}
-        tabs={TABS}
-      > */}
           {children}
-          {/* </AppBody> */}
         </FumadocsRootProvider>
       </RootProviders>
+      {afterBodyContent}
     </body>
   </html>
 );
+
+type Props = {
+  children: ReactNode;
+  afterBodyContent?: ReactNode;
+};
