@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { RootProviders } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
@@ -12,7 +13,7 @@ export const TABS = [
   { segment: "entropy", children: "Entropy" },
 ];
 
-export const Root = ({ children, afterBodyContent }: Props) => (
+export const Root = ({ children, googleAnalyticsId }: Props) => (
   <html lang="en">
     <body>
       <RootProviders providers={[NuqsAdapter]}>
@@ -27,12 +28,12 @@ export const Root = ({ children, afterBodyContent }: Props) => (
           {children}
         </FumadocsRootProvider>
       </RootProviders>
-      {afterBodyContent}
+      {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
     </body>
   </html>
 );
 
 type Props = {
   children: ReactNode;
-  afterBodyContent?: ReactNode;
+  googleAnalyticsId?: string | undefined;
 };
