@@ -103,7 +103,7 @@ message FeedMarketSchedule {
     // [required] Market schedule in Pythnet format
     optional string market_schedule = 3;
     // [required] The list of publisher IDs allowed to publish for this market schedule
-    repeated uint32 allowed_publishers = 4;
+    repeated uint32 allowed_publisher_ids = 4;
 }
 
 // An item of the state describing a feed.
