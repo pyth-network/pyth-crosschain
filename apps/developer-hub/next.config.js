@@ -277,6 +277,13 @@ const config = {
         permanent: true,
       },
       {
+        source:
+          "/price-feeds/core/use-real-time-data/:path((?!pull-integration(?:/|$)|push-integration(?:/|$)|index(?:/|$)).*)",
+        destination:
+          "/price-feeds/core/use-real-time-data/pull-integration/:path",
+        permanent: true,
+      },
+      {
         source: "/benchmarks",
         destination: "/price-feeds/core/use-historic-price-data",
         permanent: true,
