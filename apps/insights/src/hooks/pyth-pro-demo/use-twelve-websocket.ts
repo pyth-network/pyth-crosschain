@@ -10,7 +10,7 @@ import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-d
 import { isAllowedSymbol } from "../../util/pyth-pro-demo";
 
 type TwelveSubscriptionParams = {
-  symbols: AllAllowedSymbols;
+  symbols: string;
 };
 
 type TwelveRequest =
@@ -52,6 +52,10 @@ type TwelveSubscriptionInfo = {
 
   type: string;
 };
+
+const TWELVE_SYMBOL_CONVERSION_MAP = new Map<AllAllowedSymbols, string>([
+  ["EURUSD", "EUR/USD"],
+]);
 
 export function useTwelveWebSocket(): UseDataProviderSocketHookReturnType {
   /** context */
@@ -101,7 +105,10 @@ export function useTwelveWebSocket(): UseDataProviderSocketHookReturnType {
 
       s.json({
         action: "subscribe",
-        params: { symbols: selectedSource },
+        params: {
+          symbols:
+            TWELVE_SYMBOL_CONVERSION_MAP.get(selectedSource) ?? selectedSource,
+        },
       } satisfies TwelveRequest);
     },
     [selectedSource, startHeartbeat],

@@ -8,7 +8,7 @@ import { Label, Tooltip, TooltipTrigger } from "react-aria-components";
 
 import classes from "./index.module.scss";
 import { usePythProApiTokensContext } from "../../context/pyth-pro-demo";
-import { ALL_DATA_SOURCES } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { DATA_SOURCES_REQUIRING_API_TOKENS } from "../../schemas/pyth/pyth-pro-demo-schema";
 
 export function PythProApiTokensMenu() {
   /** context */
@@ -67,30 +67,34 @@ export function PythProApiTokensMenu() {
               They will be saved securely to your browser for future use here.
             </div>
             <div className={classes.apiTokensForm}>
-              {Object.values(ALL_DATA_SOURCES.Values).map((dataSource) => {
-                const inputId = `input-${dataSource}`;
-                const tokenVal = tokens[dataSource] ?? "";
+              {Object.values(DATA_SOURCES_REQUIRING_API_TOKENS.Values).map(
+                (dataSource) => {
+                  const inputId = `input-${dataSource}`;
+                  const tokenVal = tokens[dataSource] ?? "";
 
-                return (
-                  <div className={classes.tokenInputWrapper} key={dataSource}>
-                    <Label htmlFor={inputId}>{sentenceCase(dataSource)}</Label>
-                    <Input
-                      autoComplete="off"
-                      fullWidth
-                      id={inputId}
-                      onChange={(e) => {
-                        const {
-                          currentTarget: { value },
-                        } = e;
-                        updateApiToken(dataSource, value);
-                      }}
-                      placeholder="Enter an API token"
-                      type="password"
-                      value={tokenVal}
-                    />
-                  </div>
-                );
-              })}
+                  return (
+                    <div className={classes.tokenInputWrapper} key={dataSource}>
+                      <Label htmlFor={inputId}>
+                        {sentenceCase(dataSource)}
+                      </Label>
+                      <Input
+                        autoComplete="off"
+                        fullWidth
+                        id={inputId}
+                        onChange={(e) => {
+                          const {
+                            currentTarget: { value },
+                          } = e;
+                          updateApiToken(dataSource, value);
+                        }}
+                        placeholder="Enter an API token"
+                        type="password"
+                        value={tokenVal}
+                      />
+                    </div>
+                  );
+                },
+              )}
             </div>
           </div>
         </div>

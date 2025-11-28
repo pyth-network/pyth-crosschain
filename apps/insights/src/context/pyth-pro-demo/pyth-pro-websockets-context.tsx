@@ -79,7 +79,7 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
 
   const { status: infoway_io } = useDataStream({
     dataSource: "infoway_io",
-    enabled: (isForex || isEquity) && Boolean(tokens.infoway_io),
+    enabled: isEquity && Boolean(tokens.infoway_io),
     symbol: selectedSource,
   });
 
