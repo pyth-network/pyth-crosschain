@@ -19,6 +19,7 @@
     "@cprussin/prettier-config": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
+    "prettier-plugin-astro": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
   }

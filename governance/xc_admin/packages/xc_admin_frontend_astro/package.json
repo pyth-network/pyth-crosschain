@@ -1,0 +1,34 @@
+{
+  "name": "@pythnetwork/xc_admin_frontend_astro",
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "clean": "rm -rf dist/",
+    "fix:format": "prettier --write .",
+    "fix:lint:eslint": "eslint --fix .",
+    "start:dev": "astro dev",
+    "test:format": "prettier --check .",
+    "test:lint:eslint": "eslint . --max-warnings 0",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/react": "catalog:",
+    "@pythnetwork/component-library": "workspace:",
+    "astro": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-astro": "catalog:",
+    "prettier": "catalog:",
+    "prettier-plugin-astro": "catalog:",
+    "vercel": "catalog:"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": [
+        "BUILD_STANDALONE",
+        "NEXT_PUBLIC_MAINNET_RPC",
+        "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID",
+        "MAPPINGS_BASE_PATH",
+        "PROPOSER_SERVER_URL",
+        "ENDPOINT"
+      ]
+    }
+  }
+}
