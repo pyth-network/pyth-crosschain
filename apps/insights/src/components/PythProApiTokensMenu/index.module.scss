@@ -36,6 +36,7 @@
 
 .tooltip {
   @include theme.elevation("default", 1);
+
   background-color: theme.color("background", "tooltip");
   border-radius: theme.border-radius("md");
   color: theme.color("tooltip");
@@ -47,6 +48,7 @@
 
 .modal {
   @include theme.elevation("default", 1);
+
   background-color: theme.color("background", "secondary");
   border-radius: theme.border-radius("md");
   left: 50%;
