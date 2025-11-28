@@ -8,6 +8,7 @@ import {
 } from "../../context/pyth-pro-demo";
 import { PythProApiTokensMenu } from "../PythProApiTokensMenu";
 import { PythProDemoCards } from "../PythProDemoCards";
+import { PythProDemoPriceChart } from "../PythProDemoPriceChart";
 import { PythProDemoSourceSelector } from "../PythProDemoSourceSelector";
 
 export function PythFeedsDemoPage() {
@@ -32,7 +33,7 @@ export function PythFeedsDemoPage() {
               </div>
             </section>
             <aside>
-              {/* <PythProDemoPriceChart key={`${selectedSource}-${dataSourcesInUse.join(', ')}`} /> */}
+              <PythProDemoPriceChart />
             </aside>
           </article>
         </WebSocketsProvider>
