@@ -12,28 +12,31 @@ Welcome to the Pyth Developer Hub repository! This repository contains the docum
 ### Setup
 
 1. Clone the monorepo repository
-2. Navigate to the developer hub directory:
 
-   ```bash
-   cd apps/developer-hub
-   ```
-
-3. Install dependencies:
+2. Install dependencies:
 
    ```bash
    pnpm install
    ```
 
+3. Navigate to the developer hub directory:
+
+   ```bash
+   cd apps/developer-hub
+   ```
+
+
+
 4. Build the project:
 
    ```bash
-   pnpm run build
+   pnpm turbo run build
    ```
 
 5. Start the development server:
 
    ```bash
-   pnpm run start:dev
+   pnpm turbo run start:dev
    ```
 
 6. Open [http://localhost:3627](http://localhost:3627) in your browser
@@ -106,8 +109,8 @@ Update the `meta.json` file in each section to control navigation. Example:
 6. Run linting/formatting checks:
 
    ```bash
-   pnpm run fix:format
-   pnpm run fix:lint:eslint
+   pnpm turbo run fix:format
+   pnpm turbo run fix:lint:eslint
    ```
 
 7. Commit and push your changes to your fork
@@ -121,13 +124,13 @@ Update the `meta.json` file in each section to control navigation. Example:
 
 ## Available Commands
 
-- `pnpm run start:dev` - Start development server
-- `pnpm run build` - Build the project
-- `pnpm run fix:format` - Format code with Prettier
-- `pnpm run fix:lint:eslint` - Fix ESLint issues
-- `pnpm run test:format` - Check formatting
-- `pnpm run test:lint:eslint` - Check for linting errors
-- `pnpm run test:types` - Check TypeScript types
+- `pnpm turbo run start:dev` - Start development server
+- `pnpm turbo run build` - Build the project
+- `pnpm turbo run fix:format` - Format code with Prettier
+- `pnpm turbo run fix:lint:eslint` - Fix ESLint issues
+- `pnpm turbo run test:format` - Check formatting
+- `pnpm turbo run test:lint:eslint` - Check for linting errors
+- `pnpm turbo run test:types` - Check TypeScript types
 
 ## Getting Help
 
