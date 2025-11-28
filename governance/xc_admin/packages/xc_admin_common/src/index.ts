@@ -14,6 +14,8 @@ export * from "./chains";
 export * from "./deterministic_stake_accounts";
 export * from "./price_store";
 export { default as lazerIdl } from "./multisig_transaction/idl/lazer.json";
+export { default as integrityPoolIdl } from "./multisig_transaction/idl/integrity-pool.json";
+export { INTEGRITY_POOL_PROGRAM_ID } from "./multisig_transaction/AnchorMultisigInstruction";
 
 export {
   ProgramType,

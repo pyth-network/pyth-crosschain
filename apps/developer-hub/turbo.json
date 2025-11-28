@@ -6,7 +6,6 @@
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
-        "AMPLITUDE_API_KEY",
         "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },

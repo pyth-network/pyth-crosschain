@@ -60,7 +60,7 @@
       "alias": "DMC/USD",
       "id": "8abfa63ae82ca2fbc271861375e497166d8792580fb7c2ffcf014d2a131433f0",
       "time_difference": 60,
-      "price_deviation": 0.5,
+      "price_deviation": 3,
       "confidence_ratio": 100
     },
     {
@@ -102,7 +102,7 @@
       "alias": "HIPPO/USD",
       "id": "f2c5249856da2fbe0221e163b3fed678dd6f76515ab933292dfb4f15a1de8f8c",
       "time_difference": 60,
-      "price_deviation": 0.5,
+      "price_deviation": 3,
       "confidence_ratio": 100
     },
     {
@@ -123,7 +123,7 @@
       "alias": "LOFI/USD",
       "id": "82eebc2c47490ba9c0f9bc35ea9fb57a7e2bbf69b84a04ea2a3525153b8090ea",
       "time_difference": 60,
-      "price_deviation": 0.5,
+      "price_deviation": 3,
       "confidence_ratio": 100
     },
     {
@@ -193,7 +193,7 @@
       "alias": "TURBOS/USD",
       "id": "f9c2e890443dd995d0baafc08eea3358be1ffb874f93f99c30b3816c460bbac3",
       "time_difference": 60,
-      "price_deviation": 0.5,
+      "price_deviation": 3,
       "confidence_ratio": 100
     },
     {

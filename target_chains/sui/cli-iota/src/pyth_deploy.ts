@@ -8,9 +8,9 @@ import {
 
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { execSync } from "child_process";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { bcs } from "@iota/iota-sdk/bcs";
+import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,

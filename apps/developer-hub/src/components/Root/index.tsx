@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { RootProviders } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
@@ -12,11 +13,7 @@ export const TABS = [
   { segment: "entropy", children: "Entropy" },
 ];
 
-type Props = {
-  children: ReactNode;
-};
-
-export const Root = ({ children }: Props) => (
+export const Root = ({ children, googleAnalyticsId }: Props) => (
   <html lang="en">
     <body>
       <RootProviders providers={[NuqsAdapter]}>
@@ -28,21 +25,15 @@ export const Root = ({ children }: Props) => (
             },
           }}
         >
-          {/* commenting out the app body because we don't have the app shell anymore
-          <AppBody
-        appName="Developer Hub"
-        displaySupportButton={false}
-        extraCta={<SearchButton />}
-        mainCta={{
-          label: "Developer Forum",
-          href: "https://dev-forum.pyth.network/",
-        }}
-        tabs={TABS}
-      > */}
           {children}
-          {/* </AppBody> */}
         </FumadocsRootProvider>
       </RootProviders>
+      {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
     </body>
   </html>
 );
+
+type Props = {
+  children: ReactNode;
+  googleAnalyticsId?: string | undefined;
+};

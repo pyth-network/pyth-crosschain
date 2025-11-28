@@ -9,12 +9,14 @@ export const SectionCard = ({
   urlLabel,
   url,
   image,
+  target,
 }: {
   title: string;
   description: string;
   urlLabel?: string;
   url?: string;
   image?: ReactNode;
+  target?: string;
 }) => (
   <div className={styles.sectionCard}>
     <div className={styles.sectionCardHeader}>
@@ -23,7 +25,12 @@ export const SectionCard = ({
     </div>
     <p className={styles.sectionCardDescription}>{description}</p>
     {url && urlLabel && (
-      <Link href={url} className={styles.sectionCardUrl}>
+      <Link
+        href={url}
+        className={styles.sectionCardUrl}
+        target={target}
+        rel={target === "_blank" ? "noopener noreferrer" : undefined}
+      >
         {urlLabel}
       </Link>
     )}

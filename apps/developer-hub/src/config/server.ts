@@ -18,11 +18,7 @@ const defaultInProduction = IS_PRODUCTION_SERVER
 
 export const GOOGLE_ANALYTICS_ID = defaultInProduction(
   "GOOGLE_ANALYTICS_ID",
-  "G-E1QSY256EQ",
-);
-export const AMPLITUDE_API_KEY = defaultInProduction(
-  "AMPLITUDE_API_KEY",
-  "6faa78c51eff33087eb19f0f3dc76f33",
+  "G-7TVVW3MEK7",
 );
 
 export const ENABLE_ACCESSIBILITY_REPORTING =

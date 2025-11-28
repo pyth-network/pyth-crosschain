@@ -7,12 +7,12 @@ import {
 } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
-import { CHAINS } from "@pythnetwork/xc-admin-common";
 import type { DeploymentType } from "./helper.js";
 import {
   DefaultStore,
   Store,
 } from "@pythnetwork/contract-manager/node/utils/store";
+import { CHAINS } from "@pythnetwork/xc-admin-common/chains";
 
 const yargs = createCLI(hideBin(process.argv));
 
@@ -65,6 +65,7 @@ async function run() {
     codeId: storeCodeRes.codeId,
     instMsg: getWormholeConfig({
       feeDenom: chain.feeDenom,
+      // @ts-expect-error - Chains can be safely indexed
       wormholeChainId: CHAINS[chain.wormholeChainName],
       deploymentType: argv.deploy as DeploymentType, // TODO: use branded types
     }),

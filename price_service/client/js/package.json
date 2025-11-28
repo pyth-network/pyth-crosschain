@@ -7,8 +7,8 @@
     "name": "Pyth Data Association"
   },
   "homepage": "https://pyth.network",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.cjs",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "ts-duality --noEsm",
+    "build": "ts-duality",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
     "fix:format": "prettier --write \"src/**/*.ts\"",
     "fix:lint": "eslint src/ --fix --max-warnings 0",
@@ -63,22 +63,46 @@
   "type": "module",
   "exports": {
     "./PriceServiceConnection": {
-      "types": "./dist/PriceServiceConnection.d.ts",
-      "default": "./dist/PriceServiceConnection.cjs"
+      "require": {
+        "types": "./dist/cjs/PriceServiceConnection.d.ts",
+        "default": "./dist/cjs/PriceServiceConnection.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/PriceServiceConnection.d.ts",
+        "default": "./dist/esm/PriceServiceConnection.mjs"
+      }
     },
     "./ResillientWebSocket": {
-      "types": "./dist/ResillientWebSocket.d.ts",
-      "default": "./dist/ResillientWebSocket.cjs"
+      "require": {
+        "types": "./dist/cjs/ResillientWebSocket.d.ts",
+        "default": "./dist/cjs/ResillientWebSocket.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/ResillientWebSocket.d.ts",
+        "default": "./dist/esm/ResillientWebSocket.mjs"
+      }
     },
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
     },
     "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.cjs"
+      "require": {
+        "types": "./dist/cjs/utils.d.ts",
+        "default": "./dist/cjs/utils.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/utils.d.ts",
+        "default": "./dist/esm/utils.mjs"
+      }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.js"
+  "module": "./dist/esm/index.mjs"
 }

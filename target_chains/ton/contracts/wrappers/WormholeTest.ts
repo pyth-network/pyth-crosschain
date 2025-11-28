@@ -1,4 +1,9 @@
-import { Cell, contractAddress, ContractProvider, Sender } from "@ton/core";
+import {
+  Cell,
+  contractAddress,
+  type ContractProvider,
+  type Sender,
+} from "@ton/core";
 import { BaseWrapper } from "./BaseWrapper";
 import {
   createCellChain,
@@ -34,7 +39,11 @@ export class WormholeTest extends BaseWrapper {
     });
   }
 
-  async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
+  override async sendDeploy(
+    provider: ContractProvider,
+    via: Sender,
+    value: bigint,
+  ) {
     await super.sendDeploy(provider, via, value);
   }
 
@@ -103,7 +112,7 @@ export class WormholeTest extends BaseWrapper {
     };
   }
 
-  async getCurrentGuardianSetIndex(provider: ContractProvider) {
+  override async getCurrentGuardianSetIndex(provider: ContractProvider) {
     return await super.getCurrentGuardianSetIndex(
       provider,
       "test_get_current_guardian_set_index",
@@ -131,7 +140,7 @@ export class WormholeTest extends BaseWrapper {
     return result.stack.readNumber();
   }
 
-  async getChainId(provider: ContractProvider) {
+  override async getChainId(provider: ContractProvider) {
     return await super.getChainId(provider, "test_get_chain_id");
   }
 
@@ -151,7 +160,7 @@ export class WormholeTest extends BaseWrapper {
     return result.stack.readBoolean();
   }
 
-  async sendUpdateGuardianSet(
+  override async sendUpdateGuardianSet(
     provider: ContractProvider,
     via: Sender,
     vm: Buffer,

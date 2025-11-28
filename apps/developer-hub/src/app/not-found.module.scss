@@ -1,0 +1,136 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: theme.spacing(4);
+  background-color: var(--color-fd-background);
+}
+
+.card {
+  max-width: 64rem;
+  width: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(10);
+  padding: theme.spacing(8);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: theme.spacing(4);
+}
+
+.heading {
+  @include theme.text("3xl", "bold");
+
+  margin: 0;
+  color: theme.color("heading");
+}
+
+.description {
+  @include theme.text("base", "normal");
+
+  margin: 0;
+  color: theme.color("paragraph");
+  max-width: 40rem;
+  line-height: 1.6;
+}
+
+.navigationGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(4);
+
+  @include theme.breakpoint("sm") {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.navCard {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  padding: theme.spacing(6);
+  border: 1px solid var(--color-fd-border);
+  border-radius: theme.border-radius("lg");
+  background-color: var(--color-fd-card);
+  text-decoration: none;
+  transition: all 200ms ease-out;
+
+  &:hover {
+    border-color: var(--color-fd-ring);
+    background-color: var(--color-fd-muted);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 8%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fd-ring);
+    outline-offset: 2px;
+  }
+}
+
+.navIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: theme.border-radius("md");
+  background-color: var(--color-fd-muted);
+  color: var(--color-fd-foreground);
+}
+
+.navContent {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.navTitle {
+  @include theme.text("lg", "semibold");
+
+  margin: 0;
+  color: theme.color("heading");
+}
+
+.navDescription {
+  @include theme.text("sm", "normal");
+
+  margin: 0;
+  color: theme.color("paragraph");
+  line-height: 1.5;
+}
+
+.footerText {
+  @include theme.text("sm", "normal");
+
+  margin: 0;
+  margin-top: theme.spacing(4);
+  text-align: center;
+  color: theme.color("paragraph");
+  line-height: 1.6;
+}
+
+.footerLink {
+  color: var(--color-fd-ring);
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 0.125rem;
+  transition: opacity 200ms ease-out;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}

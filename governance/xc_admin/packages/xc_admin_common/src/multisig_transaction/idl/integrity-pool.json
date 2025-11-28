@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "name": "integrity-pool",
+  "instructions": [
+    {
+      "name": "setPublisherStakeAccount",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "publisher",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "CHECK : The publisher will be checked against data in the pool_data"
+          ]
+        },
+        {
+          "name": "poolData",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "poolConfig",
+          "isMut": false,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "pool_config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "newStakeAccountPositionsOption",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "currentStakeAccountPositionsOption",
+          "isMut": false,
+          "isSigner": false,
+          "isOptional": true
+        }
+      ],
+      "args": []
+    }
+  ]
+}
