@@ -1,0 +1,20 @@
+{
+    "$schema": "https://turbo.build/schema.json",
+    "extends": [
+      "//"
+    ],
+    "tasks": {
+      "build": {
+        "dependsOn": [
+          "//#install:modules",
+          "install-forge-deps",
+          "clean",
+          "^build"
+        ],
+        "outputs": ["out/**"]
+      },
+      "install-forge-deps": {
+        "cache": false
+      }
+    }
+}
