@@ -319,10 +319,11 @@
     "./theme": "./dist/theme.scss"
   },
   "scripts": {
-    "build": "ts-duality --clean --noCjs",
+    "build": "ts-duality --noCjs",
     "build:scss": "copyfiles -u 1 \"src/**/*.scss\" ./dist",
     "build:storybook": "storybook build",
     "build:svg": "copyfiles -u 1 \"src/**/*.svg\" ./dist",
+    "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
