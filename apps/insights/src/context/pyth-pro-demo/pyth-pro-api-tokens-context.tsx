@@ -7,14 +7,14 @@ import type {
   ApiTokensState,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 
-type ApiTokensContextVal = ApiTokensState & {
+export type ApiTokensContextVal = ApiTokensState & {
   updateApiToken: (
     dataSource: AllDataSourcesType,
     apiToken: Nullish<string>,
   ) => void;
 };
 
-const context = createContext<Nullish<ApiTokensState>>(undefined);
+const context = createContext<Nullish<ApiTokensContextVal>>(undefined);
 
 export function PythProApiTokensProvider({ children }: PropsWithChildren) {
   /** state */

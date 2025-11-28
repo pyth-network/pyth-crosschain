@@ -3,7 +3,6 @@ import type { useWebSocket } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
-import cx from "clsx";
 
 import { PriceCardUtils } from "./price-card-utils";
 import classes from "./price-card.module.scss";
@@ -31,7 +30,7 @@ export function PythProDemoCard({
 
   /** local variables */
   const formattedSourceType = selectedSource.toUpperCase();
-  let priceChangeClassName = "";
+  let priceChangeClassName: Nullish<string> = "";
 
   if (!isNullOrUndefined(currentPriceMetrics?.change)) {
     const { change } = currentPriceMetrics;

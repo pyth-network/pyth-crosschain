@@ -45,6 +45,7 @@
     "@pythnetwork/react-hooks": "workspace:",
     "react": "catalog:",
     "react-aria": "catalog:",
+    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
     "sockette": "catalog:",

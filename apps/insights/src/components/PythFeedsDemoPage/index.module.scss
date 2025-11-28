@@ -27,6 +27,12 @@
         color: theme.color("muted");
       }
     }
+
+    &:last-child {
+      align-items: center;
+      display: flex;
+      gap: theme.spacing(2);
+    }
   }
 }
 

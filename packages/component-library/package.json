@@ -103,6 +103,10 @@
       "types": "./dist/InfoBox/index.d.ts",
       "default": "./dist/InfoBox/index.mjs"
     },
+    "./Input": {
+      "types": "./dist/Input/index.d.ts",
+      "default": "./dist/Input/index.mjs"
+    },
     "./Link": {
       "types": "./dist/Link/index.d.ts",
       "default": "./dist/Link/index.mjs"
@@ -315,11 +319,10 @@
     "./theme": "./dist/theme.scss"
   },
   "scripts": {
-    "build": "ts-duality --noCjs",
+    "build": "ts-duality --clean --noCjs",
     "build:scss": "copyfiles -u 1 \"src/**/*.scss\" ./dist",
     "build:storybook": "storybook build",
     "build:svg": "copyfiles -u 1 \"src/**/*.svg\" ./dist",
-    "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",

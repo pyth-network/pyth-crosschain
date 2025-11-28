@@ -6,6 +6,7 @@ import {
   PythProAppStateProvider,
   WebSocketsProvider,
 } from "../../context/pyth-pro-demo";
+import { PythProApiTokensMenu } from "../PythProApiTokensMenu";
 import { PythProDemoCards } from "../PythProDemoCards";
 import { PythProDemoSourceSelector } from "../PythProDemoSourceSelector";
 
@@ -22,6 +23,7 @@ export function PythFeedsDemoPage() {
                   <h4>Real-time feed comparison tool</h4>
                 </div>
                 <div>
+                  <PythProApiTokensMenu />
                   <PythProDemoSourceSelector />
                 </div>
               </div>
