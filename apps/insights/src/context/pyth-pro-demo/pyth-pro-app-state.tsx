@@ -71,6 +71,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
         return {
           ...prev,
           metrics: {
+            ...prev.metrics,
             [dataSource]: {
               ...prev.metrics[dataSource],
               latest: {

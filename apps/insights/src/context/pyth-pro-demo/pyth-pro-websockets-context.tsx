@@ -26,7 +26,7 @@ const context = createContext<Nullish<WebSocketsContextVal>>(undefined);
 export function WebSocketsProvider({ children }: PropsWithChildren) {
   /** context */
   const { selectedSource } = usePythProAppStateContext();
-  const apiTokens = usePythProApiTokensContext();
+  const { tokens } = usePythProApiTokensContext();
 
   /** local variables */
   const isEquity = isAllowedEquitySymbol(selectedSource);
@@ -67,25 +67,25 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
 
   const { status: pyth_pro } = useDataStream({
     dataSource: "pyth_pro",
-    enabled: isGoodSymbol && Boolean(apiTokens.pyth_pro),
+    enabled: isGoodSymbol && Boolean(tokens.pyth_pro),
     symbol: selectedSource,
   });
 
   const { status: prime_api } = useDataStream({
     dataSource: "prime_api",
-    enabled: isForex && Boolean(apiTokens.prime_api),
+    enabled: isForex && Boolean(tokens.prime_api),
     symbol: selectedSource,
   });
 
   const { status: infoway_io } = useDataStream({
     dataSource: "infoway_io",
-    enabled: (isForex || isEquity) && Boolean(apiTokens.infoway_io),
+    enabled: (isForex || isEquity) && Boolean(tokens.infoway_io),
     symbol: selectedSource,
   });
 
   const { status: twelve_data } = useDataStream({
     dataSource: "twelve_data",
-    enabled: (isForex || isEquity) && Boolean(apiTokens.twelve_data),
+    enabled: (isForex || isEquity) && Boolean(tokens.twelve_data),
     symbol: selectedSource,
   });
 

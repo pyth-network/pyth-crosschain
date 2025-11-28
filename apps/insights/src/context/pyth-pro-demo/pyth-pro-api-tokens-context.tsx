@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-null */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import type { PropsWithChildren } from "react";
 import { createContext, use, useCallback, useMemo, useState } from "react";
@@ -6,8 +7,10 @@ import type {
   AllDataSourcesType,
   ApiTokensState,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { ALL_DATA_SOURCES } from "../../schemas/pyth/pyth-pro-demo-schema";
 
-export type ApiTokensContextVal = ApiTokensState & {
+export type ApiTokensContextVal = {
+  tokens: ApiTokensState;
   updateApiToken: (
     dataSource: AllDataSourcesType,
     apiToken: Nullish<string>,
@@ -18,12 +21,17 @@ const context = createContext<Nullish<ApiTokensContextVal>>(undefined);
 
 export function PythProApiTokensProvider({ children }: PropsWithChildren) {
   /** state */
-  const [apiTokens, setApiTokens] = useState<ApiTokensState>({});
+  const [tokens, setTokens] = useState<ApiTokensState>(
+    () =>
+      Object.fromEntries(
+        ALL_DATA_SOURCES.options.map((dataSource) => [dataSource, null]),
+      ) as Record<AllDataSourcesType, string | null>,
+  );
 
   /** callbacks */
   const updateApiToken = useCallback<ApiTokensContextVal["updateApiToken"]>(
     (dataSource, apiToken) => {
-      setApiTokens((prev) => ({
+      setTokens((prev) => ({
         ...prev,
         [dataSource]: apiToken,
       }));
@@ -34,10 +42,10 @@ export function PythProApiTokensProvider({ children }: PropsWithChildren) {
   /** provider val */
   const providerVal = useMemo<ApiTokensContextVal>(
     () => ({
-      ...apiTokens,
+      tokens,
       updateApiToken,
     }),
-    [apiTokens, updateApiToken],
+    [tokens, updateApiToken],
   );
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;

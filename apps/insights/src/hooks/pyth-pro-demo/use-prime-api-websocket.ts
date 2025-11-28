@@ -35,7 +35,9 @@ function sendAuthToken(apiToken: string, socket: Sockette) {
 export function usePrimeApiWebSocket(): UseDataProviderSocketHookReturnType {
   /** context */
   const { addDataPoint, selectedSource } = usePythProAppStateContext();
-  const { prime_api } = usePythProApiTokensContext();
+  const {
+    tokens: { prime_api },
+  } = usePythProApiTokensContext();
 
   /** refs */
   const isAuthenticated = useRef(false);

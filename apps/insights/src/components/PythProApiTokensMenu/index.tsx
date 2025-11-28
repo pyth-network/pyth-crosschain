@@ -12,7 +12,7 @@ import { ALL_DATA_SOURCES } from "../../schemas/pyth/pyth-pro-demo-schema";
 
 export function PythProApiTokensMenu() {
   /** context */
-  const { updateApiToken, ...tokens } = usePythProApiTokensContext();
+  const { tokens, updateApiToken } = usePythProApiTokensContext();
 
   /** state */
   const [open, setOpen] = useState(false);
@@ -85,6 +85,7 @@ export function PythProApiTokensMenu() {
                         updateApiToken(dataSource, value);
                       }}
                       placeholder="Enter an API token"
+                      type="password"
                       value={tokenVal}
                     />
                   </div>

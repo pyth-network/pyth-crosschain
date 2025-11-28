@@ -10,6 +10,7 @@ import type {
   DataSourcesCryptoType,
   DataSourcesEquityType,
   DataSourcesForexType,
+  DataSourcesRequiringApiTokens,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   ALL_ALLOWED_SYMBOLS,
@@ -21,6 +22,7 @@ import {
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
+  DATA_SOURCES_REQUIRING_API_TOKENS,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 
 export function isAllowedSymbol(
@@ -105,6 +107,17 @@ export function isAllowedDataSource(
 ): dataSource is AllDataSourcesType {
   for (const s of Object.values(ALL_DATA_SOURCES.Values)) {
     if (s === dataSource) return true;
+  }
+
+  return false;
+}
+
+export function datasourceRequiresApiToken(
+  dataSource: AllDataSourcesType,
+): dataSource is DataSourcesRequiringApiTokens {
+  const ds = dataSource as DataSourcesRequiringApiTokens;
+  for (const val of DATA_SOURCES_REQUIRING_API_TOKENS.options) {
+    if (val === ds) return true;
   }
 
   return false;

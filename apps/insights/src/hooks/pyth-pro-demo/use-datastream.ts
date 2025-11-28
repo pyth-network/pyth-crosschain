@@ -85,7 +85,7 @@ export function useDataStream({
   symbol,
 }: UseDataStreamOpts) {
   /** store */
-  const apiTokens = usePythProApiTokensContext();
+  const { tokens } = usePythProApiTokensContext();
 
   /** queries */
   const { usdtToUsdRate } = useFetchUsdtToUsdRate({ enabled });
@@ -225,7 +225,7 @@ export function useDataStream({
   );
 
   /** websocket */
-  const url = getUrlForSymbolAndDataSource(apiTokens, dataSource, symbol);
+  const url = getUrlForSymbolAndDataSource(tokens, dataSource, symbol);
   const parsedUrl = url ? new URL(url) : undefined;
   parsedUrl?.searchParams.set("cachebust", symbol ?? "");
   const { status } = useWebSocket(

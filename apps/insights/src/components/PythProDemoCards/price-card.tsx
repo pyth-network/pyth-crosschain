@@ -11,9 +11,14 @@ import type {
   AllDataSourcesType,
   CurrentPriceMetrics,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { getColorForSymbol, isAllowedSymbol } from "../../util/pyth-pro-demo";
+import {
+  datasourceRequiresApiToken,
+  getColorForSymbol,
+  isAllowedSymbol,
+} from "../../util/pyth-pro-demo";
 
 type PriceCardProps = {
+  apiToken: Nullish<string>;
   currentPriceMetrics: Nullish<CurrentPriceMetrics>;
   dataSource: AllDataSourcesType;
   selectedSource: Nullish<AllAllowedSymbols>;
@@ -21,6 +26,7 @@ type PriceCardProps = {
 };
 
 export function PythProDemoCard({
+  apiToken,
   currentPriceMetrics,
   dataSource,
   selectedSource,
@@ -29,7 +35,10 @@ export function PythProDemoCard({
   if (!isAllowedSymbol(selectedSource)) return;
 
   /** local variables */
-  const formattedSourceType = selectedSource.toUpperCase();
+  const requiresToken = datasourceRequiresApiToken(dataSource);
+
+  const formattedSymbol = selectedSource.toUpperCase();
+  const formattedDataSource = capitalCase(dataSource);
   let priceChangeClassName: Nullish<string> = "";
 
   if (!isNullOrUndefined(currentPriceMetrics?.change)) {
@@ -47,7 +56,7 @@ export function PythProDemoCard({
       nonInteractive
       title={
         <span style={{ color: getColorForSymbol(dataSource) }}>
-          {capitalCase(dataSource)}
+          {formattedDataSource}
         </span>
       }
       variant="secondary"
@@ -66,56 +75,22 @@ export function PythProDemoCard({
             </div>
           </>
         )}
-        <div className={classes.symbol}>{formattedSourceType}</div>
+        <div className={classes.symbol}>{formattedSymbol}</div>
         {socketStatus && (
           <div className={classes.socketStatus}>
-            {capitalCase(socketStatus)}
+            {/* the token is either missing or it's a bad token */}
+            {requiresToken && (!apiToken || socketStatus === "closed") ? (
+              <>
+                Please enter a good API token
+                <br />
+                to continue with {formattedDataSource}
+              </>
+            ) : (
+              capitalCase(socketStatus)
+            )}
           </div>
         )}
       </div>
     </Card>
   );
-  // return (
-  //   <Card
-  //     className={classes.priceCard}
-  //     key={dataSource}
-  //     subTitle={
-  //       <div className={classes.priceCardSubtitle}>
-  //         <span>{formattedSourceType}</span>
-  //         {socketStatus && <span>{capitalCase(socketStatus)}</span>}
-  //       </div>
-  //     }
-  //     title={
-  //       <span style={{ color: getColorForDataSource(dataSource) }}>
-  //         {capitalCase(dataSource)}
-  //       </span>
-  //     }
-  //   >
-  //     {socketStatus === "connected" && (
-  //       <>
-  //         <div className={classes.priceCardPrice}>
-  //           {PriceCardUtils.formatPrice(currentPriceMetrics?.price)}
-  //         </div>
-  //         <div
-  //           className={
-  //             isNullOrUndefined(currentPriceMetrics?.change)
-  //               ? ""
-  //               : cx(
-  //                   currentPriceMetrics.change < 0
-  //                     ? classes.priceDropping
-  //                     : currentPriceMetrics.change > 0
-  //                       ? classes.priceIncreasing
-  //                       : null,
-  //                 )
-  //           }
-  //         >
-  //           {PriceCardUtils.formatChange(
-  //             currentPriceMetrics?.change,
-  //             currentPriceMetrics?.changePercent,
-  //           )}
-  //         </div>
-  //       </>
-  //     )}
-  //   </Card>
-  // );
 }

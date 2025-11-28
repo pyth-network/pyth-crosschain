@@ -9,18 +9,23 @@ import type { AllAllowedSymbols } from "../../schemas/pyth/pyth-pro-demo-schema"
 import type { UseDataProviderSocketHookReturnType } from "../../types/pyth-pro-demo";
 import { isAllowedSymbol } from "../../util/pyth-pro-demo";
 
-type PythLazerStreamUpdate = {
-  type: string;
-  subscriptionId: number;
-  parsed?: {
-    timestampUs: string;
-    priceFeeds?: {
-      exponent: number;
-      priceFeedId: number;
-      price?: Nullish<string>;
-    }[];
-  };
-};
+type PythLazerResponse =
+  | {
+      type: "streamUpdated";
+      subscriptionId: number;
+      parsed?: {
+        timestampUs: string;
+        priceFeeds?: {
+          exponent: number;
+          priceFeedId: number;
+          price?: Nullish<string>;
+        }[];
+      };
+    }
+  | {
+      error: string;
+      type: "subscriptionError";
+    };
 
 const SYMBOL_TO_PRICE_FEED_MAP = new Map<
   Nullish<AllAllowedSymbols>,
@@ -101,32 +106,36 @@ export function usePythLazerWebSocket(): UseDataProviderSocketHookReturnType {
   const onMessage = useCallback<
     UseDataProviderSocketHookReturnType["onMessage"]
   >(
-    (_, __, strData) => {
-      const data = JSON.parse(strData) as Partial<
-        PythLazerStreamUpdate & { type: string }
-      >;
+    (s, __, strData) => {
+      const data = JSON.parse(strData) as Partial<PythLazerResponse>;
+
+      if (data.type === "subscriptionError") {
+        // close the socket down immediately
+        s.close();
+        return;
+      }
 
       // Handle stream updates
-      if (data.type === "streamUpdated" && data.subscriptionId === 1) {
-        const updateData = data as PythLazerStreamUpdate;
+      if (
+        data.type === "streamUpdated" &&
+        data.subscriptionId === 1 &&
+        data.parsed?.priceFeeds?.length
+      ) {
+        const priceFeed = data.parsed.priceFeeds[0];
 
-        if (updateData.parsed?.priceFeeds?.length) {
-          const priceFeed = updateData.parsed.priceFeeds[0];
+        const symbol = PRICE_FEED_TO_SYMBOL_MAP.get(priceFeed?.priceFeedId);
 
-          const symbol = PRICE_FEED_TO_SYMBOL_MAP.get(priceFeed?.priceFeedId);
+        if (!isNullOrUndefined(priceFeed) && isAllowedSymbol(symbol)) {
+          const { exponent, price } = priceFeed;
+          if (isNullOrUndefined(price)) return;
 
-          if (!isNullOrUndefined(priceFeed) && isAllowedSymbol(symbol)) {
-            const { exponent, price } = priceFeed;
-            if (isNullOrUndefined(price)) return;
+          // pyth_lazer price has 8 decimal places precision, convert to dollars
+          const priceRaw = Number.parseFloat(price);
 
-            // pyth_lazer price has 8 decimal places precision, convert to dollars
-            const priceRaw = Number.parseFloat(price);
-
-            addDataPoint("pyth_pro", symbol, {
-              price: priceRaw * Math.pow(10, exponent),
-              timestamp: Date.now(),
-            });
-          }
+          addDataPoint("pyth_pro", symbol, {
+            price: priceRaw * Math.pow(10, exponent),
+            timestamp: Date.now(),
+          });
         }
       }
     },

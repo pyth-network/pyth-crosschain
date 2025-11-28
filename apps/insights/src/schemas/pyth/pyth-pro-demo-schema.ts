@@ -23,6 +23,16 @@ export const ALL_DATA_SOURCES = z.enum([
 ]);
 export type AllDataSourcesType = z.infer<typeof ALL_DATA_SOURCES>;
 
+export const DATA_SOURCES_REQUIRING_API_TOKENS = z.enum([
+  ALL_DATA_SOURCES.Enum.infoway_io,
+  ALL_DATA_SOURCES.Enum.prime_api,
+  ALL_DATA_SOURCES.Enum.pyth_pro,
+  ALL_DATA_SOURCES.Enum.twelve_data,
+]);
+export type DataSourcesRequiringApiTokens = z.infer<
+  typeof DATA_SOURCES_REQUIRING_API_TOKENS
+>;
+
 export const DATA_SOURCES_CRYPTO = z.enum([
   BINANCE,
   BYBIT,
@@ -110,10 +120,17 @@ export const AllAndLatestDataStateSchema = z.object({
 });
 export type AllAndLatestDataState = z.infer<typeof AllAndLatestDataStateSchema>;
 
-export const ApiTokensSchema = z.record(
-  ALL_DATA_SOURCES,
-  z.string().optional().nullable(),
+export const ApiTokensSchema = z.object(
+  // eslint-disable-next-line unicorn/no-array-reduce
+  ALL_DATA_SOURCES.options.reduce(
+    (prev, key) => ({
+      ...prev,
+      [key]: z.string().nullable(),
+    }),
+    {} as Record<AllDataSourcesType, z.ZodNullable<z.ZodString>>,
+  ),
 );
+
 export type ApiTokensState = z.infer<typeof ApiTokensSchema>;
 
 export const CurrentPricesStoreStateSchema = z.object({
