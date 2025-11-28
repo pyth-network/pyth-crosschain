@@ -3,6 +3,9 @@
   "name": "@pythnetwork/react-hooks",
   "description": "collection of utility hooks used across react applications powering parts of the pyth network",
   "version": "0.1.0",
+  "engines": {
+    "node": ">=22.14.0"
+  },
   "scripts": {
     "build": "ts-duality --clean --noCjs",
     "clean": "rm -rf ./dist",
@@ -21,9 +24,12 @@
     "eslint": "catalog:"
   },
   "dependencies": {
+    "@pythnetwork/shared-lib": "workspace:",
     "nuqs": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "sockette": "catalog:",
+    "throttleit": "catalog:"
   },
   "type": "module",
   "exports": {
@@ -42,6 +48,10 @@
     "./nuqs": {
       "types": "./dist/nuqs.d.ts",
       "default": "./dist/nuqs.mjs"
+    },
+    "./use-websocket": {
+      "types": "./dist/use-websocket.d.ts",
+      "default": "./dist/use-websocket.mjs"
     },
     "./package.json": "./package.json"
   }

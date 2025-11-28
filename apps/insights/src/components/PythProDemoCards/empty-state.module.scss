@@ -1,0 +1,8 @@
+@use "@pythnetwork/component-library/theme";
+
+.root {
+  font-size: 2rem;
+  gap: theme.spacing(2);
+  margin-top: theme.spacing(4);
+  text-align: center;
+}

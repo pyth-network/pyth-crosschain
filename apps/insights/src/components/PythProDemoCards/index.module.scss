@@ -1,0 +1,7 @@
+@use "@pythnetwork/component-library/theme";
+
+.root {
+  display: flex;
+  gap: theme.spacing(2);
+  flex-wrap: wrap;
+}

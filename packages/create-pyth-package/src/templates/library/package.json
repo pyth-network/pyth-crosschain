@@ -35,5 +35,7 @@
     "eslint": "catalog:",
     "jest": "catalog:"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@pythnetwork/shared-lib": "workspace:"
+  }
 }

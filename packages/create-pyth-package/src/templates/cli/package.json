@@ -41,6 +41,7 @@
     "tsx": "catalog:"
   },
   "dependencies": {
+    "@pythnetwork/shared-lib": "workspace:",
     "yargs": "catalog:"
   }
 }
