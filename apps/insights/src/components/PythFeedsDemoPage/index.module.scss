@@ -5,12 +5,17 @@
 }
 
 .subheader {
-  align-items: flex-end;
   border-bottom: 1px solid theme.color("border");
   display: flex;
+  flex-flow: column;
   gap: theme.spacing(4);
-  justify-content: space-between;
   padding-bottom: theme.spacing(4);
+
+  @include theme.breakpoint("sm") {
+    align-items: flex-end;
+    flex-flow: initial;
+    justify-content: space-between;
+  }
 
   & > div {
     &:first-child {

@@ -1,6 +1,7 @@
 @use "@pythnetwork/component-library/theme";
 
 .apiTokensModalBody {
+  overflow-y: auto;
   padding: theme.spacing(6);
   padding-top: 0;
 }
@@ -33,9 +34,11 @@
   margin-bottom: theme.spacing(2);
 }
 
-.menu {
-  background-color: theme.color("background", "secondary");
+.tooltip {
+  @include theme.elevation("default", 1);
+  background-color: theme.color("background", "tooltip");
   border-radius: theme.border-radius("md");
+  color: theme.color("tooltip");
   min-height: 0;
   overflow-y: auto;
   padding: theme.spacing(4);
@@ -47,10 +50,17 @@
   background-color: theme.color("background", "secondary");
   border-radius: theme.border-radius("md");
   left: 50%;
+  max-height: 80vh;
+  overflow-y: auto;
   position: fixed;
   transform: translate3d(-50%, -50%, 0);
   top: 50%;
+  width: 90vw;
   z-index: 10;
+
+  @include theme.breakpoint("sm") {
+    width: initial;
+  }
 }
 
 .modalOverlay {

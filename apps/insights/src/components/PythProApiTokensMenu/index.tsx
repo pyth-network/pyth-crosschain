@@ -33,7 +33,7 @@ export function PythProApiTokensMenu() {
         >
           <GearSix />
         </Button>
-        <Tooltip className={classes.menu ?? ""} placement="bottom">
+        <Tooltip className={classes.tooltip ?? ""} placement="bottom">
           {tooltip}
         </Tooltip>
       </TooltipTrigger>
