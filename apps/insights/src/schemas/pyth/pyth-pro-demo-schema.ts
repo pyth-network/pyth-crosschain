@@ -46,8 +46,8 @@ export type DataSourcesCryptoType = z.infer<typeof DATA_SOURCES_CRYPTO>;
 export const DATA_SOURCES_EQUITY = z.enum([
   PYTH,
   PYTH_PRO,
-  PRIME_API,
   TWELVE_DATA,
+  INFOWAY,
 ]);
 export type DataSourcesEquityType = z.infer<typeof DATA_SOURCES_EQUITY>;
 

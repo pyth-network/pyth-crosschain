@@ -44,11 +44,8 @@
 .pythFeedsDemoPageRoot {
   @include theme.max-width;
 
-  // this holds the infographic cards
-  & > aside {
-  }
-
   // this holds the chart
-  & > section {
+  & > aside {
+    margin-top: theme.spacing(2);
   }
 }
