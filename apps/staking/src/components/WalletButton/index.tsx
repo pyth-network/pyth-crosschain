@@ -164,43 +164,52 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
     refreshInterval: REFRESH_INTERVAL,
   });
   const accounts = useMemo(() => {
-    if (data.type === DataStateType.Loaded) {
-      const main = api.allAccounts.find((account) =>
-        data.data.integrityStakingPublishers.some((publisher) =>
-          publisher.stakeAccount?.equals(account),
-        ),
-      );
-      const other = api.allAccounts
-        .filter((account) => account !== main)
-        .map((account) => ({
-          account,
-          id: account.toBase58(),
-        }));
-      return { main, other };
-    } else {
-      return;
-    }
+    return data.type === DataStateType.Loaded
+      ? Object.groupBy(
+          api.allAccounts.map((account) => ({
+            id: account.toBase58(),
+            account,
+            publisher: data.data.integrityStakingPublishers.find((publisher) =>
+              publisher.stakeAccount?.equals(account),
+            )?.publicKey,
+          })),
+          ({ publisher }) => (publisher === undefined ? "other" : "main"),
+        )
+      : undefined;
   }, [data, api]);
 
   return accounts === undefined ||
     // eslint-disable-next-line unicorn/no-null
-    (accounts.main === undefined && accounts.other.length === 1) ? null : (
+    (accounts.main === undefined && accounts.other?.length === 1) ? null : (
     <>
       <Section>
         <SubmenuTrigger>
           {children}
-          <Menu items={accounts.other} className="-mr-20 xs:mr-0">
-            {accounts.main === undefined ? (
+          <Menu items={accounts.other ?? []} className="-mr-20 xs:mr-0">
+            {accounts.main?.[0] === undefined ? (
               ({ account }) => <AccountMenuItem account={account} api={api} />
             ) : (
               <>
                 <Section>
                   <Header className="mx-4 text-sm font-semibold">
-                    Main Account
+                    Main Accounts
                   </Header>
-                  <AccountMenuItem account={accounts.main} api={api} />
+                  <Collection items={accounts.main}>
+                    {({ account, publisher }) => (
+                      <AccountMenuItem
+                        account={account}
+                        publisher={
+                          accounts.main !== undefined &&
+                          accounts.main.length > 1
+                            ? publisher
+                            : undefined
+                        }
+                        api={api}
+                      />
+                    )}
+                  </Collection>
                 </Section>
-                {accounts.other.length > 0 && (
+                {accounts.other !== undefined && accounts.other.length > 0 && (
                   <>
                     <Separator />
                     <Section>
@@ -228,9 +237,10 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
 type AccountMenuItemProps = {
   api: States[ApiStateType.Loaded];
   account: PublicKey;
+  publisher?: PublicKey | undefined;
 };
 
-const AccountMenuItem = ({ account, api }: AccountMenuItemProps) => (
+const AccountMenuItem = ({ account, api, publisher }: AccountMenuItemProps) => (
   <MenuItem
     onAction={() => {
       api.selectAccount(account);
@@ -242,10 +252,15 @@ const AccountMenuItem = ({ account, api }: AccountMenuItemProps) => (
   >
     <CheckIcon
       className={clsx("size-4 text-pythpurple-600", {
-        invisible: account !== api.account,
+        invisible: !account.equals(api.account),
       })}
     />
     <TruncatedKey>{account}</TruncatedKey>
+    {publisher !== undefined && (
+      <>
+        (Publisher: <TruncatedKey>{publisher}</TruncatedKey>)
+      </>
+    )}
   </MenuItem>
 );
 
