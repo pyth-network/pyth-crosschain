@@ -1,13 +1,13 @@
 [package]
 name = "pyth-lazer-client"
-version = "12.0.0"
+version = "13.0.0"
 edition = "2021"
 description = "A Rust client for Pyth Lazer"
 license = "Apache-2.0"
 
 [dependencies]
-pyth-lazer-protocol = { path = "../protocol", version = "0.23.0" }
-pyth-lazer-publisher-sdk = { path = "../../../publisher_sdk/rust", version = "0.23.0" }
+pyth-lazer-protocol = { path = "../protocol", version = "0.24.0" }
+pyth-lazer-publisher-sdk = { path = "../../../publisher_sdk/rust", version = "0.24.0" }
 
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.17"

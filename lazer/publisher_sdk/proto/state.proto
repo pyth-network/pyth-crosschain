@@ -98,10 +98,12 @@ enum MarketSession {
 message FeedMarketSchedule {
     // [required] Which session this applies to
     optional MarketSession session = 1;
-    // [optional] numeric value. If not set, minimum publishers from the feed level apply
+    // [optional] Numeric value. If not set, minimum publishers from the feed level apply
     optional int32 min_publishers = 2;
-    // [required] Future field — not required now, can be omitted
+    // [required] Market schedule in Pythnet format
     optional string market_schedule = 3;
+    // [required] The list of publisher IDs allowed to publish for this market schedule
+    repeated uint32 allowed_publisher_ids = 4;
 }
 
 // An item of the state describing a feed.

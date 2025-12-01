@@ -18,7 +18,7 @@
     "deploy": "forge script script/Deploy.s.sol --rpc-url testnet --broadcast",
     "deploy-and-verify": "forge script script/Deploy.s.sol --rpc-url testnet --broadcast --verify",
     "deploy-local": "ETHERSCAN_API_KEY= forge script script/Deploy.s.sol --slow  --rpc-url local --broadcast -vvvv",
-    "install-forge-deps": "forge install foundry-rs/forge-std@v1.7.6 --no-git",
+    "install-forge-deps": "rm -rf lib/forge-std && forge install foundry-rs/forge-std@v1.7.6 --no-git",
     "coverage": "./coverage.sh",
     "test:format": "prettier --check .",
     "fix:format": "prettier --write ."
