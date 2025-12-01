@@ -1,7 +1,6 @@
 import datetime
-import time
 
-from pusher.config import Config, LazerConfig, HermesConfig, HyperliquidConfig, SedaConfig, SedaFeedConfig
+from pusher.config import Config, LazerConfig, HermesConfig, HyperliquidConfig
 from pusher.hermes_listener import HermesListener
 from pusher.hyperliquid_listener import HyperliquidListener
 from pusher.lazer_listener import LazerListener
@@ -22,7 +21,7 @@ def get_base_config():
     config.lazer.feed_ids = [1, 8]
     config.hermes = HermesConfig.model_construct()
     config.hermes.hermes_urls = ["wss://hermes.example.com"]
-    config.hermes.feed_ids = ["feed1", "feed2"]
+    config.hermes.feed_ids = ["hermes_feed1", "hermes_feed2"]
     return config
 
 
@@ -38,7 +37,7 @@ class TestHermesListener:
         request = listener.get_subscribe_request()
 
         assert request["type"] == "subscribe"
-        assert request["ids"] == ["feed1", "feed2"]
+        assert request["ids"] == ["hermes_feed1", "hermes_feed2"]
         assert request["verbose"] is False
         assert request["binary"] is True
         assert request["allow_out_of_order"] is False
@@ -383,7 +382,7 @@ class TestSedaListener:
 
         message = {
             "data": {
-                "result": '{"composite_rate": "42.5", "timestamp": "2024-01-15T12:00:00+00:00"}'
+                "result": '{"composite_rate": "42.5", "timestamp": "2024-01-15T12:00:00.000Z"}'
             }
         }
 
@@ -392,7 +391,7 @@ class TestSedaListener:
         update = seda_state.get("custom_feed")
         assert update is not None
         assert update.price == "42.5"
-        expected_timestamp = datetime.datetime.fromisoformat("2024-01-15T12:00:00+00:00").timestamp()
+        expected_timestamp = datetime.datetime.fromisoformat("2024-01-15T12:00:00.000Z").timestamp()
         assert update.timestamp == expected_timestamp
 
     def test_parse_seda_message_different_timestamp_format(self):
@@ -407,7 +406,7 @@ class TestSedaListener:
 
         message = {
             "data": {
-                "result": '{"composite_rate": "100.25", "timestamp": "2024-06-20T15:30:45.123456+00:00"}'
+                "result": '{"composite_rate": "100.25", "timestamp": "2024-06-20T15:30:45.123456Z"}'
             }
         }
 
@@ -429,7 +428,7 @@ class TestSedaListener:
 
         message = {
             "data": {
-                "result": '{"composite_rate": 123.456, "timestamp": "2024-01-15T12:00:00+00:00"}'
+                "result": '{"composite_rate": 123.456, "timestamp": "2024-01-15T12:00:00.000Z"}'
             }
         }
 

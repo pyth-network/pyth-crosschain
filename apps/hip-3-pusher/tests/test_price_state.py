@@ -1,6 +1,5 @@
-import time
-
 import pytest
+import time
 
 from pusher.config import Config, LazerConfig, HermesConfig, PriceConfig, PriceSource, SingleSourceConfig, \
     PairSourceConfig, HyperliquidConfig, ConstantSourceConfig, OracleMidAverageConfig
