@@ -26,7 +26,7 @@ class Metrics:
             name="hip_3_relayer_last_published_time",
             description="Time of last successful oracle update",
         )
-        # labels: dex, status, error_reason
+        # labels: dex, symbol, status, error_reason
         self.update_attempts_total = self.meter.create_counter(
             name="hip_3_relayer_update_attempts_total",
             description="Number of update attempts",

@@ -1,4 +1,5 @@
 import asyncio
+from enum import StrEnum
 import time
 
 from loguru import logger
@@ -14,6 +15,13 @@ from pusher.exception import PushError
 from pusher.kms_signer import KMSSigner
 from pusher.metrics import Metrics
 from pusher.price_state import PriceState
+
+
+class PushErrorReason(StrEnum):
+    RATE_LIMIT = "rate_limit"
+    USER_LIMIT = "user_limit"
+    INTERNAL_ERROR = "internal_error"
+    UNKNOWN = "unknown"
 
 
 class Publisher:
@@ -106,7 +114,7 @@ class Publisher:
                 pass
             except Exception as e:
                 logger.exception("Unexpected exception in push request: {}", repr(e))
-                self._update_attempts_total("error", "internal_error")
+                self._update_attempts_total("error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys()))
         else:
             logger.debug("push disabled")
 
@@ -130,7 +138,7 @@ class Publisher:
         logger.debug("oracle update response: {}", response)
         status = response.get("status")
         if status == "ok":
-            self._update_attempts_total("success")
+            self._update_attempts_total("success", None, symbols)
             time_secs = int(time.time())
 
             # update last publish time for each symbol in dex
@@ -139,7 +147,7 @@ class Publisher:
                 self.metrics.last_pushed_time.set(time_secs, labels)
         elif status == "err":
             error_reason = self._get_error_reason(response)
-            self._update_attempts_total("error", error_reason)
+            self._update_attempts_total("error", error_reason, symbols)
             if error_reason != "rate_limit":
                 logger.error("Error response: {}", response)
 
@@ -190,7 +198,7 @@ class Publisher:
         )]
         return exchange.multi_sig(self.multisig_address, action, signatures, timestamp)
 
-    def _update_attempts_total(self, status: str, error_reason: str | None=None):
+    def _update_attempts_total(self, status: str, error_reason: str | None, symbols: list[str]):
         labels = {**self.metrics_labels, "status": status}
         if error_reason:
             # don't flag rate limiting as this is expected with redundancy
@@ -198,16 +206,18 @@ class Publisher:
                 return
             labels["error_reason"] = error_reason
 
-        self.metrics.update_attempts_total.add(1, labels)
+        for symbol in symbols:
+            labels["symbol"] = symbol
+            self.metrics.update_attempts_total.add(1, labels)
 
     def _get_error_reason(self, response):
         response = response.get("response")
         if not response:
             return None
         elif "Oracle price update too often" in response:
-            return "rate_limit"
+            return PushErrorReason.RATE_LIMIT
         elif "Too many cumulative requests" in response:
-            return "user_limit"
+            return PushErrorReason.USER_LIMIT
         else:
             logger.warning("Unrecognized error response: {}", response)
-            return "unknown"
+            return PushErrorReason.UNKNOWN
