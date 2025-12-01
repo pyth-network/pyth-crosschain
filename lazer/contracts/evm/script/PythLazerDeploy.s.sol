@@ -177,7 +177,29 @@ contract PythLazerDeployScript is Script {
 
     function run() public {
         address impl = deployImplementation("lazer:impl");
-        deployProxy("lazer:proxy", impl);
+        address proxy = deployProxy("lazer:proxy", impl);
+
+        // Write deployment output to JSON file for programmatic access
+        _writeDeploymentOutput(impl, proxy);
+    }
+
+    function _writeDeploymentOutput(
+        address impl,
+        address proxy
+    ) internal {
+        string memory jsonKey = "deployment";
+
+        vm.serializeAddress(jsonKey, "implementationAddress", impl);
+        vm.serializeUint(jsonKey, "chainId", block.chainid);
+        string memory finalJson = vm.serializeAddress(
+            jsonKey,
+            "proxyAddress",
+            proxy
+        );
+
+        vm.writeJson(finalJson, "./deployment-output.json");
+
+        console.log("Deployment output written to deployment-output.json");
     }
 
     function migrate() public {

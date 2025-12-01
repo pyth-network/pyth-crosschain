@@ -49,7 +49,9 @@
  */
 
 import { execSync } from "node:child_process";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -126,6 +128,12 @@ const parser = yargs(hideBin(process.argv))
     return true;
   });
 
+type DeploymentOutput = {
+  implementationAddress: string;
+  proxyAddress: string;
+  chainId: number;
+};
+
 /**
  * Deploys the PythLazer contract using forge script
  * @param chain - The EVM chain to deploy to
@@ -140,11 +148,25 @@ async function deployPythLazerContract(
   verify: boolean,
   etherscanApiKey?: string,
 ): Promise<string> {
-  const lazerContractsDir = path.resolve("../../lazer/contracts/evm");
+  // Resolve path relative to this script's location, not CWD
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const lazerContractsDir = path.resolve(
+    scriptDir,
+    "../../lazer/contracts/evm",
+  );
+  const deploymentOutputPath = path.join(
+    lazerContractsDir,
+    "deployment-output.json",
+  );
   const rpcUrl = chain.rpcUrl;
 
   console.log(`Deploying PythLazer contract to ${chain.getId()}...`);
   console.log(`RPC URL: ${rpcUrl}`);
+
+  // Clean up any previous deployment output
+  if (existsSync(deploymentOutputPath)) {
+    unlinkSync(deploymentOutputPath);
+  }
 
   // Build forge command
   let forgeCommand = `forge script script/PythLazerDeploy.s.sol --rpc-url ${rpcUrl} --private-key ${privateKey} --broadcast`;
@@ -162,19 +184,37 @@ async function deployPythLazerContract(
       stdio: "pipe",
     });
 
-    console.log("Deployment output:");
     console.log(output);
 
-    // Extract proxy address from output
-    const proxyMatch = /Deployed proxy to: (0x[a-fA-F0-9]{40})/.exec(output);
-    if (!proxyMatch) {
-      throw new Error("Could not extract proxy address from deployment output");
+    // Read deployment output from JSON file written by the forge script
+    if (!existsSync(deploymentOutputPath)) {
+      throw new Error(
+        "Deployment output file not found. Deployment may have failed.",
+      );
     }
 
-    const proxyAddress = proxyMatch[1];
-    console.log(`\nPythLazer proxy deployed at: ${proxyAddress}`);
+    const deploymentOutput = JSON.parse(
+      readFileSync(deploymentOutputPath, "utf8"),
+    ) as DeploymentOutput;
 
-    return proxyAddress ?? "";
+    // Verify chain ID matches
+    if (deploymentOutput.chainId !== chain.networkId) {
+      throw new Error(
+        `Chain ID mismatch: expected ${chain.networkId}, got ${deploymentOutput.chainId}`,
+      );
+    }
+
+    console.log(
+      `\nPythLazer implementation deployed at: ${deploymentOutput.implementationAddress}`,
+    );
+    console.log(
+      `PythLazer proxy deployed at: ${deploymentOutput.proxyAddress}`,
+    );
+
+    // Clean up the output file
+    unlinkSync(deploymentOutputPath);
+
+    return deploymentOutput.proxyAddress;
   } catch (error) {
     console.error("Deployment failed:", error);
     throw error;
