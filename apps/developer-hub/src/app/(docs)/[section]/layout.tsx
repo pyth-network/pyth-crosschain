@@ -30,7 +30,7 @@ export default async function Layout({
               </a>
             </strong>{" "}
             to track and debug callback issues. &nbsp;|&nbsp;
-            <Link href="./entropy/whats-new-entropyv2">
+            <Link href="/entropy/whats-new-entropyv2">
               Learn what&apos;s new in Entropy v2.
             </Link>
           </span>
