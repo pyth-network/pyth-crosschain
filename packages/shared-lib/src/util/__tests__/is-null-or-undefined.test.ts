@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-null */
-import { isNullOrUndefined } from "./is-null-or-undefined.js";
+import { isNullOrUndefined } from "../is-null-or-undefined.js";
 
 describe("isNullOrUndefined()", () => {
   it("should return true if something is null or undefined and false if otherwise", () => {
