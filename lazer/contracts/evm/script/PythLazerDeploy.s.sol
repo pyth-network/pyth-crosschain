@@ -199,14 +199,22 @@ contract PythLazerDeployScript is Script {
         console.log("Deployment output written to deployment-output.json");
     }
 
-    function migrate() public {
-        // Deploys new version and updates proxy to use new address
-        address proxyAddress = getProxyAddress("lazer:proxy");
-        address newImpl = deployImplementation("lazer:impl");
-        bytes memory migrateCall = abi.encodeWithSignature("migrate()");
-        vm.startBroadcast();
-        UUPSUpgradeable proxy = UUPSUpgradeable(proxyAddress);
-        proxy.upgradeToAndCall(newImpl, migrateCall);
-        vm.stopBroadcast();
+    // Commented this out as we upgrade the contract using the upgrade_evm_lazer_contracts.ts script
+    // function migrate() public {
+    //     // Deploys new version and updates proxy to use new address
+    //     address proxyAddress = getProxyAddress("lazer:proxy");
+    //     address newImpl = deployImplementation("lazer:impl");
+    //     bytes memory migrateCall = abi.encodeWithSignature("migrate()");
+    //     vm.startBroadcast();
+    //     UUPSUpgradeable proxy = UUPSUpgradeable(proxyAddress);
+    //     proxy.upgradeToAndCall(newImpl, migrateCall);
+    //     vm.stopBroadcast();
+    // }
+
+    // Deploy only the implementation for upgrades
+    // This function can be called via: forge script --sig "deployImplementationForUpgrade()"
+    function deployImplementationForUpgrade() public {
+        address impl = deployImplementation("lazer:impl");
+        console.log("Implementation address for upgrade: %s", impl);
     }
 }
