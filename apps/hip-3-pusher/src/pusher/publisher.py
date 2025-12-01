@@ -79,9 +79,6 @@ class Publisher:
         # markPxs is a list of dicts of length 0-2, and so can be empty
         mark_pxs = [mark_pxs] if mark_pxs else []
 
-        # TODO: "Each update can change oraclePx and markPx by at most 1%."
-        # TODO: "The markPx cannot be updated such that open interest would be 10x the open interest cap."
-
         if self.enable_publish:
             try:
                 if self.enable_kms:
@@ -103,12 +100,13 @@ class Publisher:
                         all_mark_pxs=mark_pxs,
                         external_perp_pxs=external_perp_pxs,
                     )
-                self._handle_response(push_response)
+                self._handle_response(push_response, list(oracle_pxs.keys()))
             except PushError:
-                logger.error("All push attempts failed")
-                self.metrics.failed_push_counter.add(1, self.metrics_labels)
+                # since rate limiting is expected, don't necessarily log
+                pass
             except Exception as e:
                 logger.exception("Unexpected exception in push request: {}", repr(e))
+                self._update_attempts_total("error", "internal_error")
         else:
             logger.debug("push disabled")
 
@@ -128,14 +126,22 @@ class Publisher:
 
         raise PushError("all push endpoints failed")
 
-    def _handle_response(self, response):
+    def _handle_response(self, response, symbols: list[str]):
         logger.debug("oracle update response: {}", response)
         status = response.get("status")
         if status == "ok":
-            self.metrics.successful_push_counter.add(1, self.metrics_labels)
+            self._update_attempts_total("success")
+            time_secs = int(time.time())
+
+            # update last publish time for each symbol in dex
+            for symbol in symbols:
+                labels = {**self.metrics_labels, "symbol": symbol}
+                self.metrics.last_pushed_time.set(time_secs, labels)
         elif status == "err":
-            self.metrics.failed_push_counter.add(1, self.metrics_labels)
-            logger.error("oracle update error response: {}", response)
+            error_reason = self._get_error_reason(response)
+            self._update_attempts_total("error", error_reason)
+            if error_reason != "rate_limit":
+                logger.error("Error response: {}", response)
 
     def _record_push_interval_metric(self):
         now = time.time()
@@ -183,3 +189,25 @@ class Publisher:
             outer_signer=self.oracle_account.address,
         )]
         return exchange.multi_sig(self.multisig_address, action, signatures, timestamp)
+
+    def _update_attempts_total(self, status: str, error_reason: str | None=None):
+        labels = {**self.metrics_labels, "status": status}
+        if error_reason:
+            # don't flag rate limiting as this is expected with redundancy
+            if error_reason == "rate_limit":
+                return
+            labels["error_reason"] = error_reason
+
+        self.metrics.update_attempts_total.add(1, labels)
+
+    def _get_error_reason(self, response):
+        response = response.get("response")
+        if not response:
+            return None
+        elif "Oracle price update too often" in response:
+            return "rate_limit"
+        elif "Too many cumulative requests" in response:
+            return "user_limit"
+        else:
+            logger.warning("Unrecognized error response: {}", response)
+            return "unknown"

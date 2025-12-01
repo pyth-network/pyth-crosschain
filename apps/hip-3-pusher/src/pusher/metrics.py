@@ -21,20 +21,24 @@ class Metrics:
         self._init_metrics()
 
     def _init_metrics(self):
+        # labels: dex, symbol
+        self.last_pushed_time = self.meter.create_gauge(
+            name="hip_3_relayer_last_published_time",
+            description="Time of last successful oracle update",
+        )
+        # labels: dex, status, error_reason
+        self.update_attempts_total = self.meter.create_counter(
+            name="hip_3_relayer_update_attempts_total",
+            description="Number of update attempts",
+        )
+        # labels: dex
         self.no_oracle_price_counter = self.meter.create_counter(
-            name="hip_3_pusher_no_oracle_price_count",
+            name="hip_3_relayer_no_oracle_price_count",
             description="Number of failed push attempts with no valid oracle price",
         )
-        self.successful_push_counter = self.meter.create_counter(
-            name="hip_3_pusher_successful_push_count",
-            description="Number of successful push attempts",
-        )
-        self.failed_push_counter = self.meter.create_counter(
-            name="hip_3_pusher_failed_push_count",
-            description="Number of failed push attempts",
-        )
+        # labels: dex
         self.push_interval_histogram = self.meter.create_histogram(
-            name="hip_3_pusher_push_interval",
+            name="hip_3_relayer_push_interval",
             description="Interval between push requests (seconds)",
             unit="s",
         )
