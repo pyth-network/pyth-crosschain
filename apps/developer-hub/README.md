@@ -25,8 +25,6 @@ Welcome to the Pyth Developer Hub repository! This repository contains the docum
    cd apps/developer-hub
    ```
 
-
-
 4. Build the project:
 
    ```bash
