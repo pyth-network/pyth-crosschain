@@ -74,6 +74,7 @@ async fn main() -> anyhow::Result<()> {
                 parsed: true,
                 channel: Channel::FixedRate(FixedRate::RATE_200_MS),
                 ignore_invalid_feeds: false,
+                market_sessions: vec![pyth_lazer_protocol::api::MarketSession::Regular],
             })
             .expect("invalid subscription params"),
         },
@@ -99,6 +100,7 @@ async fn main() -> anyhow::Result<()> {
                 parsed: false,
                 channel: Channel::FixedRate(FixedRate::RATE_50_MS),
                 ignore_invalid_feeds: false,
+                market_sessions: vec![pyth_lazer_protocol::api::MarketSession::Regular],
             })
             .expect("invalid subscription params"),
         },

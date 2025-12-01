@@ -215,6 +215,7 @@ Select which price feed properties to receive:
 - `PriceFeedProperty::FundingRate` - Funding rate (for perpetual markets)
 - `PriceFeedProperty::FundingTimestamp` - Funding rate timestamp
 - `PriceFeedProperty::FundingRateInterval` - Funding rate update interval
+- `PriceFeedProperty::MarketSession` - Current market session
 
 ```rust
 use pyth_lazer_protocol::PriceFeedProperty;

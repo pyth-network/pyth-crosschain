@@ -162,6 +162,10 @@ pub fn default_parsed() -> bool {
     true
 }
 
+pub fn default_market_sessions() -> Vec<MarketSession> {
+    vec![MarketSession::Regular]
+}
+
 pub fn schema_default_symbols() -> Option<Vec<String>> {
     None
 }
@@ -311,6 +315,9 @@ pub struct SubscriptionParamsRepr {
     // "ignoreInvalidFeedIds" was renamed to "ignoreInvalidFeeds". "ignoreInvalidFeedIds" is still supported for compatibility.
     #[serde(default, alias = "ignoreInvalidFeedIds")]
     pub ignore_invalid_feeds: bool,
+    // Market sessions to filter price feeds by. Default to [Regular] for backward compatibility.
+    #[serde(default = "default_market_sessions")]
+    pub market_sessions: Vec<MarketSession>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, ToSchema)]
@@ -429,6 +436,9 @@ pub struct ParsedFeedPayload {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub funding_rate_interval: Option<DurationUs>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub market_session: Option<MarketSession>,
 }
 
 impl ParsedFeedPayload {
@@ -448,6 +458,7 @@ impl ParsedFeedPayload {
             funding_rate: None,
             funding_timestamp: None,
             funding_rate_interval: None,
+            market_session: None,
         };
         for &property in properties {
             match property {
@@ -478,6 +489,9 @@ impl ParsedFeedPayload {
                 PriceFeedProperty::FundingRateInterval => {
                     output.funding_rate_interval = data.funding_rate_interval;
                 }
+                PriceFeedProperty::MarketSession => {
+                    output.market_session = data.market_session;
+                }
             }
         }
         output
@@ -499,6 +513,7 @@ impl ParsedFeedPayload {
             funding_rate: data.funding_rate,
             funding_timestamp: data.funding_timestamp,
             funding_rate_interval: data.funding_rate_interval,
+            market_session: data.market_session,
         }
     }
 }
@@ -662,4 +677,27 @@ pub enum MarketSession {
     PreMarket,
     PostMarket,
     OverNight,
+}
+
+impl From<MarketSession> for i16 {
+    fn from(s: MarketSession) -> i16 {
+        match s {
+            MarketSession::Regular => 0,
+            MarketSession::PreMarket => 1,
+            MarketSession::PostMarket => 2,
+            MarketSession::OverNight => 3,
+        }
+    }
+}
+
+impl From<i16> for MarketSession {
+    fn from(value: i16) -> MarketSession {
+        match value {
+            0 => MarketSession::Regular,
+            1 => MarketSession::PreMarket,
+            2 => MarketSession::PostMarket,
+            3 => MarketSession::OverNight,
+            _ => MarketSession::Regular, // Default to Regular for unknown values
+        }
+    }
 }

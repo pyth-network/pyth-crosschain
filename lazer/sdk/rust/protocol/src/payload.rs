@@ -42,6 +42,7 @@ pub enum PayloadPropertyValue {
     FundingRate(Option<Rate>),
     FundingTimestamp(Option<TimestampUs>),
     FundingRateInterval(Option<DurationUs>),
+    MarketSession(Option<MarketSession>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -123,6 +124,9 @@ impl PayloadData {
                                     feed.funding_rate_interval,
                                 )
                             }
+                            PriceFeedProperty::MarketSession => {
+                                PayloadPropertyValue::MarketSession(feed.market_session)
+                            }
                         })
                         .collect(),
                 })
@@ -175,6 +179,10 @@ impl PayloadData {
                     &PayloadPropertyValue::FundingRateInterval(interval) => {
                         writer.write_u8(PriceFeedProperty::FundingRateInterval as u8)?;
                         write_option_duration::<BO>(&mut writer, interval)?;
+                    }
+                    PayloadPropertyValue::MarketSession(market_session) => {
+                        writer.write_u8(PriceFeedProperty::MarketSession as u8)?;
+                        write_option_market_session::<BO>(&mut writer, *market_session)?;
                     }
                 }
             }
@@ -270,6 +278,34 @@ fn write_option_rate<BO: ByteOrder>(
             writer.write_u8(0)?;
             Ok(())
         }
+    }
+}
+
+fn write_option_market_session<BO: ByteOrder>(
+    mut writer: impl Write,
+    value: Option<MarketSession>,
+) -> std::io::Result<()> {
+    match value {
+        Some(value) => {
+            writer.write_u8(1)?;
+            writer.write_i16::<BO>(value.into())
+        }
+        None => {
+            writer.write_u8(0)?;
+            Ok(())
+        }
+    }
+}
+
+fn read_option_market_session<BO: ByteOrder>(
+    mut reader: impl Read,
+) -> std::io::Result<Option<MarketSession>> {
+    let present = reader.read_u8()? != 0;
+    if present {
+        let raw = reader.read_i16::<BO>()?;
+        Ok(Some(MarketSession::from(raw)))
+    } else {
+        Ok(None)
     }
 }
 
