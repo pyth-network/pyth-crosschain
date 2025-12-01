@@ -6,6 +6,8 @@ import { BodyProviders } from "../src/AppShell/body-providers.jsx";
 import { sans } from "../src/AppShell/fonts";
 import { RootProviders } from "../src/AppShell/index.jsx";
 import shellStyles from "../src/AppShell/index.module.scss";
+import "../styled-system/styles.css";
+import "../src/layer-reset.scss";
 
 const preview = {
   globalTypes: {
