@@ -183,10 +183,7 @@ contract PythLazerDeployScript is Script {
         _writeDeploymentOutput(impl, proxy);
     }
 
-    function _writeDeploymentOutput(
-        address impl,
-        address proxy
-    ) internal {
+    function _writeDeploymentOutput(address impl, address proxy) internal {
         string memory jsonKey = "deployment";
 
         vm.serializeAddress(jsonKey, "implementationAddress", impl);
