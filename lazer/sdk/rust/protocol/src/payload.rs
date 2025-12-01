@@ -238,6 +238,11 @@ impl PayloadData {
                     PayloadPropertyValue::FundingRateInterval(read_option_interval::<BO>(
                         &mut reader,
                     )?)
+                }
+                else if property == PriceFeedProperty::MarketSession as u8 {
+                    PayloadPropertyValue::MarketSession(read_option_market_session::<BO>(
+                        &mut reader,
+                    )?)
                 } else {
                     bail!("unknown property");
                 };
