@@ -13,7 +13,7 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
-default = ["fogo_mainnet"]
+default = ["pythnet"]
 # These features determine the network for deployment:
 # - Use `pythnet` for deploying on Pythnet
 # - Use `pythtest` for deploying on Pythtest
