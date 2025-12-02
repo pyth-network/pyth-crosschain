@@ -1,4 +1,9 @@
-export default {
+import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin";
+
+const withVanillaExtract = createVanillaExtractPlugin();
+
+/** @type {import('next').NextConfig} */
+const config = {
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
@@ -59,3 +64,5 @@ export default {
     },
   ],
 };
+
+export default withVanillaExtract(config);

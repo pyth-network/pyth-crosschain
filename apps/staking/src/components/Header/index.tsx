@@ -9,6 +9,7 @@ import { Stats } from "./stats";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 import { WalletButton } from "../WalletButton";
+import { throwawayBtn, throwawayBtnSpan } from "./index.css";
 
 export const Header = ({
   className,
@@ -36,6 +37,10 @@ export const Header = ({
             <CurrentStakeAccount />
             <WalletButton className="flex-none" />
             <HelpMenu />
+            <button className={throwawayBtn} type="button">
+              Throwaway
+              <span className={throwawayBtnSpan}>(button)</span>
+            </button>
           </div>
         </MaxWidth>
       </div>
