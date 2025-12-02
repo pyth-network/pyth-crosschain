@@ -1281,8 +1281,8 @@ importers:
         specifier: 'catalog:'
         version: 2.15.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       simplestyle-js:
-        specifier: 3.4.2-alpha.2
-        version: 3.4.2-alpha.2(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)
+        specifier: 3.4.2-alpha.4
+        version: 3.4.2-alpha.4(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.1.0)
@@ -19848,8 +19848,8 @@ packages:
     peerDependencies:
       react: '>=16.8'
 
-  simplestyle-js@3.4.2-alpha.2:
-    resolution: {integrity: sha512-fetAwHJAyyP+RaR5uNuyx/7dcNFdlFpp/i+js85lEGUo71cA5qWIJZIJWEbmra66x6zoco/avGK+XqzmoAg+TA==}
+  simplestyle-js@3.4.2-alpha.4:
+    resolution: {integrity: sha512-MbotlRjuzEU27A16FWMZh/0YP/VIBL01rIjBep6jvfGdbVmYiW8IJa9s0NxMyIlUW9S3IALq6eAJu216mhhHTw==}
     peerDependencies:
       react: '>=16.8'
 
@@ -48973,7 +48973,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  simplestyle-js@3.4.2-alpha.2(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10):
+  simplestyle-js@3.4.2-alpha.4(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10):
     dependencies:
       csstype: 3.2.3
       deepmerge: 4.3.1

@@ -13,7 +13,7 @@ import { WalletButton } from "../WalletButton";
 
 const { classes } = createStyle("HeaderComponent", {
   btn: {
-    backgroundColor: "purple",
+    backgroundColor: "yellow",
     padding: "1rem",
   },
 });
