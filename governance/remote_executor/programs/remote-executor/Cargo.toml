@@ -31,6 +31,7 @@ atlas_testnet = []
 mantis_mainnet = []
 sonic_mainnet = []
 fogo_testnet = []
+fogo_mainnet = []
 
 
 [dependencies]
