@@ -1,3 +1,5 @@
+import "./globals.css";
+import "../../styled-system/styles.css";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import "../tailwind.css";
 

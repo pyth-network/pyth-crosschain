@@ -6,9 +6,35 @@ import { HelpMenu } from "./help-menu";
 import Logo from "./logo.svg";
 import Logomark from "./logomark.svg";
 import { Stats } from "./stats";
+import { css } from "../../../styled-system/css";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 import { WalletButton } from "../WalletButton";
+
+const classes = {
+  throwawayBtn: css({
+    backgroundColor: "aqua !important",
+    color: "black !important",
+    padding: "0.5rem",
+    transition: "background-color .2s ease",
+
+    "&:hover": {
+      backgroundColor: "pink !important",
+
+      "& > span": {
+        color: "green !important",
+      },
+    },
+
+    "& > span": {
+      color: "red",
+      fontStyle: "italic",
+    },
+  }),
+  throwawayBtnSpan: css({
+    transition: "background-color .2s ease",
+  }),
+};
 
 export const Header = ({
   className,
@@ -36,6 +62,10 @@ export const Header = ({
             <CurrentStakeAccount />
             <WalletButton className="flex-none" />
             <HelpMenu />
+            <button className={classes.throwawayBtn} type="button">
+              Throwaway
+              <span className={classes.throwawayBtnSpan}>(button)</span>
+            </button>
           </div>
         </MaxWidth>
       </div>

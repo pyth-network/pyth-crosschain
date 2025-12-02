@@ -7,10 +7,12 @@
     "node": ">=22.14.0"
   },
   "scripts": {
-    "build:vercel": "next build",
+    "build:vercel": "pnpm panda:cssgen && next build",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
+    "panda:cssgen": "panda cssgen",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_3TIYzlYYncZx7wRtfmzG2YUsNzKp vercel env pull",
+    "prestart:dev": "pnpm panda:cssgen",
     "start:dev": "next dev --port 3001",
     "start:prod": "next start --port 3001",
     "test:format": "prettier --check .",
@@ -25,6 +27,7 @@
     "@coral-xyz/anchor": "catalog:",
     "@heroicons/react": "catalog:",
     "@next/third-parties": "catalog:",
+    "@pandacss/dev": "^1.5.1",
     "@pythnetwork/hermes-client": "workspace:*",
     "@pythnetwork/known-publishers": "workspace:*",
     "@pythnetwork/staking-sdk": "workspace:*",

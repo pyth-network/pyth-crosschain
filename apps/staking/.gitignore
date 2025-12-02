@@ -1,3 +1,4 @@
 .env*.local
 
 dist/
+styled-system/

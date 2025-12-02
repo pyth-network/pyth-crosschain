@@ -1,0 +1,4 @@
+/* globals.css */
+
+/* PandaCSS layers */
+@layer pandareset, pandabase, pandatokens, pandarecipes, pandautilities;
