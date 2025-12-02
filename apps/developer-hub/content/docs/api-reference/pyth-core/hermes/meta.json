@@ -1,0 +1,18 @@
+{
+  "title": "Hermes",
+  "pages": [
+    "index",
+    "get_price_feed",
+    "get_vaa",
+    "get_vaa_ccip",
+    "latest_price_feeds",
+    "latest_vaas",
+    "price_feed_ids",
+    "price_feeds_metadata",
+    "latest_price_updates",
+    "price_stream_sse_handler",
+    "timestamp_price_updates",
+    "latest_publisher_stake_caps",
+    "latest_twaps"
+  ]
+}
