@@ -42,7 +42,7 @@ pub enum PayloadPropertyValue {
     FundingRate(Option<Rate>),
     FundingTimestamp(Option<TimestampUs>),
     FundingRateInterval(Option<DurationUs>),
-    MarketSession(Option<MarketSession>),
+    MarketSession(MarketSession),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -56,11 +56,11 @@ pub struct AggregatedPriceFeedData {
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
     pub funding_rate_interval: Option<DurationUs>,
-    pub market_session: Option<MarketSession>,
+    pub market_session: MarketSession,
 }
 
 impl AggregatedPriceFeedData {
-    pub fn empty(exponent: i16, market_session: Option<MarketSession>) -> Self {
+    pub fn empty(exponent: i16, market_session: MarketSession) -> Self {
         Self {
             price: None,
             best_bid_price: None,
@@ -182,7 +182,7 @@ impl PayloadData {
                     }
                     PayloadPropertyValue::MarketSession(market_session) => {
                         writer.write_u8(PriceFeedProperty::MarketSession as u8)?;
-                        write_option_market_session::<BO>(&mut writer, *market_session)?;
+                        writer.write_i16::<BO>((*market_session).into())?;
                     }
                 }
             }
@@ -239,9 +239,7 @@ impl PayloadData {
                         &mut reader,
                     )?)
                 } else if property == PriceFeedProperty::MarketSession as u8 {
-                    PayloadPropertyValue::MarketSession(read_option_market_session::<BO>(
-                        &mut reader,
-                    )?)
+                    PayloadPropertyValue::MarketSession(reader.read_i16::<BO>()?.into())
                 } else {
                     bail!("unknown property");
                 };
@@ -282,34 +280,6 @@ fn write_option_rate<BO: ByteOrder>(
             writer.write_u8(0)?;
             Ok(())
         }
-    }
-}
-
-fn write_option_market_session<BO: ByteOrder>(
-    mut writer: impl Write,
-    value: Option<MarketSession>,
-) -> std::io::Result<()> {
-    match value {
-        Some(value) => {
-            writer.write_u8(1)?;
-            writer.write_i16::<BO>(value.into())
-        }
-        None => {
-            writer.write_u8(0)?;
-            Ok(())
-        }
-    }
-}
-
-fn read_option_market_session<BO: ByteOrder>(
-    mut reader: impl Read,
-) -> std::io::Result<Option<MarketSession>> {
-    let present = reader.read_u8()? != 0;
-    if present {
-        let raw = reader.read_i16::<BO>()?;
-        Ok(Some(MarketSession::from(raw)))
-    } else {
-        Ok(None)
     }
 }
 

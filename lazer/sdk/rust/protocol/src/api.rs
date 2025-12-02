@@ -490,7 +490,7 @@ impl ParsedFeedPayload {
                     output.funding_rate_interval = data.funding_rate_interval;
                 }
                 PriceFeedProperty::MarketSession => {
-                    output.market_session = data.market_session;
+                    output.market_session = Some(data.market_session);
                 }
             }
         }
@@ -513,7 +513,7 @@ impl ParsedFeedPayload {
             funding_rate: data.funding_rate,
             funding_timestamp: data.funding_timestamp,
             funding_rate_interval: data.funding_rate_interval,
-            market_session: data.market_session,
+            market_session: Some(data.market_session),
         }
     }
 }
@@ -677,6 +677,7 @@ pub enum MarketSession {
     PreMarket,
     PostMarket,
     OverNight,
+    Closed,
 }
 
 impl From<MarketSession> for i16 {
@@ -686,6 +687,7 @@ impl From<MarketSession> for i16 {
             MarketSession::PreMarket => 1,
             MarketSession::PostMarket => 2,
             MarketSession::OverNight => 3,
+            MarketSession::Closed => 4,
         }
     }
 }
@@ -697,6 +699,7 @@ impl From<i16> for MarketSession {
             1 => MarketSession::PreMarket,
             2 => MarketSession::PostMarket,
             3 => MarketSession::OverNight,
+            4 => MarketSession::Closed,
             _ => MarketSession::Regular, // Default to Regular for unknown values
         }
     }
