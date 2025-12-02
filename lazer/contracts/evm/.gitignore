@@ -15,3 +15,7 @@ docs/
 .env
 
 dist/
+
+# Lazer contract deployment output files
+upgrade-implementation-output.json
+deployment-output.json

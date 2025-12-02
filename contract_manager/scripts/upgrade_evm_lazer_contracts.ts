@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable no-console */
 import { execSync } from "node:child_process";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
@@ -39,98 +41,76 @@ function registry(cluster: PythCluster): string {
   return RPCS[cluster];
 }
 
-type ForgeScriptOutput = {
-  logs?: {
-    level?: string;
-    msg?: string;
-  }[];
-  returns?: Record<string, unknown>;
+type UpgradeImplementationOutput = {
+  implementationAddress: string;
+  chainId: number;
 };
 
 function deployLazerImplementation(
   chain: string,
   rpcUrl: string,
   privateKey: string,
+  chainNetworkId: number,
 ): Promise<string> {
-  const lazerContractsDir = path.resolve("../../lazer/contracts/evm");
+  // Resolve path relative to this script's location, not CWD
+  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+  const lazerContractsDir = path.resolve(
+    scriptDir,
+    "../../lazer/contracts/evm",
+  );
+  const upgradeOutputPath = path.join(
+    lazerContractsDir,
+    "upgrade-implementation-output.json",
+  );
 
-  // Build forge command to deploy only the implementation with JSON output
-  const forgeCommand = `forge script script/PythLazerDeploy.s.sol --rpc-url ${rpcUrl} --private-key ${privateKey} --broadcast --sig "deployImplementationForUpgrade()" --json`;
+  // Build forge command to deploy only the implementation
+  const forgeCommand = `forge script script/PythLazerDeploy.s.sol --rpc-url ${rpcUrl} --private-key ${privateKey} --broadcast --sig "deployImplementationForUpgrade()"`;
 
   try {
     console.log(`Deploying PythLazer implementation to ${chain}...`);
+    console.log(`RPC URL: ${rpcUrl}`);
+
+    // Clean up any previous upgrade output
+    if (existsSync(upgradeOutputPath)) {
+      unlinkSync(upgradeOutputPath);
+    }
+
+    // Execute forge script
+    console.log("Running forge deployment script...");
     const output = execSync(forgeCommand, {
       cwd: lazerContractsDir,
       encoding: "utf8",
       stdio: "pipe",
     });
 
-    // Parse JSON output
-    let jsonOutput: ForgeScriptOutput;
-    try {
-      // Forge may output multiple JSON objects (one per line) or a single JSON object
-      // Try to parse as single JSON first, then as newline-delimited JSON
-      const lines = output.trim().split("\n");
-      const lastLine = lines.at(-1);
-      if (!lastLine) {
-        throw new Error("Empty output from forge script");
-      }
-      jsonOutput = JSON.parse(lastLine) as ForgeScriptOutput;
-    } catch (parseError) {
-      // If JSON parsing fails, fall back to regex parsing for error messages
-      console.log("Deployment output (non-JSON):");
-      console.log(output);
-      const errorMessage =
-        parseError instanceof Error ? parseError.message : String(parseError);
-      throw new Error(`Failed to parse forge script JSON output: ${errorMessage}`);
-    }
-
-    // Extract implementation address from console logs in JSON output
-    // The deployImplementation function logs multiple possible formats:
-    // - "Deployed implementation to: <address>"
-    // - "Implementation already deployed at: <address>"
-    // - "Implementation address for upgrade: <address>" (from deployImplementationForUpgrade)
-    const addressPattern = /(0x[a-fA-F0-9]{40})/;
-
-    if (jsonOutput.logs) {
-      for (const log of jsonOutput.logs) {
-        const msg = log.msg ?? "";
-        if (
-          msg.includes("Deployed implementation to:") ||
-          msg.includes("Implementation already deployed at:") ||
-          msg.includes("Implementation address for upgrade:")
-        ) {
-          const match = addressPattern.exec(msg);
-          const implAddress = match?.[1];
-          if (implAddress) {
-            console.log(`\nPythLazer implementation address: ${implAddress}`);
-            return Promise.resolve(implAddress);
-          }
-        }
-      }
-    }
-
-    // Fallback: try to extract from raw output if logs structure is different
-    console.log("Deployment output:");
     console.log(output);
-    const patterns = [
-      /Deployed implementation to: (0x[a-fA-F0-9]{40})/,
-      /Implementation already deployed at: (0x[a-fA-F0-9]{40})/,
-      /Implementation address for upgrade: (0x[a-fA-F0-9]{40})/,
-    ];
 
-    for (const pattern of patterns) {
-      const match = pattern.exec(output);
-      const implAddress = match?.[1];
-      if (implAddress) {
-        console.log(`\nPythLazer implementation address: ${implAddress}`);
-        return Promise.resolve(implAddress);
-      }
+    // Read upgrade output from JSON file written by the forge script
+    if (!existsSync(upgradeOutputPath)) {
+      throw new Error(
+        "Upgrade output file not found. Deployment may have failed.",
+      );
     }
 
-    throw new Error(
-      "Could not extract implementation address from deployment output",
+    const upgradeOutput = JSON.parse(
+      readFileSync(upgradeOutputPath, "utf8"),
+    ) as UpgradeImplementationOutput;
+
+    // Verify chain ID matches
+    if (upgradeOutput.chainId !== chainNetworkId) {
+      throw new Error(
+        `Chain ID mismatch: expected ${chainNetworkId}, got ${upgradeOutput.chainId}`,
+      );
+    }
+
+    console.log(
+      `\nPythLazer implementation deployed at: ${upgradeOutput.implementationAddress}`,
     );
+
+    // Clean up the output file
+    unlinkSync(upgradeOutputPath);
+
+    return Promise.resolve(upgradeOutput.implementationAddress);
   } catch (error) {
     console.error("Deployment failed:", error);
     throw error;
@@ -167,6 +147,7 @@ async function main() {
               contract.chain.getId(),
               contract.chain.rpcUrl,
               argv["private-key"],
+              contract.chain.networkId,
             );
           },
         );
