@@ -1280,6 +1280,9 @@ importers:
       recharts:
         specifier: 'catalog:'
         version: 2.15.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      simplestyle-js:
+        specifier: ^3.4.1
+        version: 3.4.1(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.1.0)
@@ -44637,7 +44640,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   jsdom@27.2.0(bufferutil@4.0.9)(utf-8-validate@6.0.3):
     dependencies:
@@ -48953,6 +48955,18 @@ snapshots:
   simple-swizzle@0.2.2:
     dependencies:
       is-arrayish: 0.3.2
+
+  simplestyle-js@3.4.1(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10):
+    dependencies:
+      csstype: 3.2.3
+      deepmerge: 4.3.1
+      jsdom: 27.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      react: 19.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - canvas
+      - supports-color
+      - utf-8-validate
 
   simplestyle-js@3.4.1(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@6.0.3):
     dependencies:
