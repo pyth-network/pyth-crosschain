@@ -1,5 +1,6 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
+import { PythSolanaReceiver } from "../src/index.ts";
+import type { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
 import { Wallet } from "@coral-xyz/anchor";
 import fs from "fs";
 import os from "os";
@@ -21,7 +22,7 @@ if (process.env["SOLANA_KEYPAIR"]) {
 }
 
 async function main() {
-  const connection = new Connection("https://api.devnet.solana.com");
+  const connection = new Connection("https://mainnet.fogo.io");
   const keypair = await loadKeypairFromFile(keypairFile);
   console.log(
     `Sending transactions from account: ${keypair.publicKey.toBase58()}`
