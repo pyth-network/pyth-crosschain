@@ -6,9 +6,17 @@ import { HelpMenu } from "./help-menu";
 import Logo from "./logo.svg";
 import Logomark from "./logomark.svg";
 import { Stats } from "./stats";
+import { createStyle } from "../../styles";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 import { WalletButton } from "../WalletButton";
+
+const { classes } = createStyle("HeaderComponent", {
+  btn: {
+    backgroundColor: "purple",
+    padding: "1rem",
+  },
+});
 
 export const Header = ({
   className,
@@ -36,6 +44,9 @@ export const Header = ({
             <CurrentStakeAccount />
             <WalletButton className="flex-none" />
             <HelpMenu />
+            <button className={classes.btn} type="button">
+              Stuff
+            </button>
           </div>
         </MaxWidth>
       </div>

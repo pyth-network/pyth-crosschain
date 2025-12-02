@@ -48,7 +48,7 @@
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
-    "simplestyle-js": "^3.4.1",
+    "simplestyle-js": "3.4.2-alpha.2",
     "swr": "catalog:",
     "zod": "catalog:"
   },
