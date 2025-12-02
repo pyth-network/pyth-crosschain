@@ -20,6 +20,9 @@ export async function BasePage(props: { params: { slug: string[] } }) {
   const title = page.data.title;
   const url = page.url;
 
+  // Hide PageActions for api-reference pages
+  const isApiReference = url.startsWith("/api-reference");
+
   return (
     <DocsPage
       toc={page.data.toc}
@@ -28,7 +31,9 @@ export async function BasePage(props: { params: { slug: string[] } }) {
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
-      <PageActions content={content} title={title} url={url} />
+      {!isApiReference && (
+        <PageActions content={content} title={title} url={url} />
+      )}
       <DocsBody>
         <MDX components={getMDXComponents()} />
       </DocsBody>
