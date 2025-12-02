@@ -16,13 +16,14 @@ import {
 } from "./common";
 import { loadHotWallet } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
+import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 
 const LAZER_CACHE_FILE = ".cache-upgrade-evm-lazer-contract";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
     "Deploys a new PythLazer implementation contract to a set of chains and creates a governance proposal for upgrading the proxy.\n" +
-      `Uses a cache file to avoid deploying contracts twice\n` +
+      "Uses a cache file to avoid deploying contracts twice\n" +
       "Usage: $0 --chain <chain_1> --chain <chain_2> --private-key <private_key> --ops-key-path <ops_key_path>",
   )
   .options({
@@ -125,10 +126,13 @@ async function main() {
 
   const selectedChains = getSelectedChains(argv);
 
+  const mainnetVault = upgradeVaults.find(
+    (v) => v.cluster === "mainnet-beta" && v.type === "vault",
+  );
+  if (!mainnetVault)
+    throw new Error("Mainnet vault not found in UpgradeVaults.json");
   const vault =
-    DefaultStore.vaults[
-      "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-    ];
+    DefaultStore.vaults[`${mainnetVault.cluster}_${mainnetVault.key}`];
 
   console.log("Using cache file", cacheFile);
 
