@@ -34,6 +34,8 @@ pub struct LatestPriceRequestRepr {
     #[serde(default = "default_parsed")]
     pub parsed: bool,
     pub channel: Channel,
+    #[serde(default = "default_market_sessions")]
+    pub market_sessions: Vec<MarketSession>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, ToSchema)]
@@ -99,6 +101,8 @@ pub struct PriceRequestRepr {
     #[serde(default = "default_parsed")]
     pub parsed: bool,
     pub channel: Channel,
+    #[serde(default = "default_market_sessions")]
+    pub market_sessions: Vec<MarketSession>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, ToSchema)]
@@ -163,7 +167,13 @@ pub fn default_parsed() -> bool {
 }
 
 pub fn default_market_sessions() -> Vec<MarketSession> {
-    vec![MarketSession::Regular]
+    vec![
+        MarketSession::Regular,
+        MarketSession::PreMarket,
+        MarketSession::PostMarket,
+        MarketSession::OverNight,
+        MarketSession::Closed,
+    ]
 }
 
 pub fn schema_default_symbols() -> Option<Vec<String>> {
