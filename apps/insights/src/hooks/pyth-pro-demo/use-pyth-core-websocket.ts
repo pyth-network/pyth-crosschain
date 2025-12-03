@@ -58,11 +58,6 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<Nullish<AllAllowedSymbols>, string>([
     "2f007d2339327f9be181b61354ca0ec579d8c4ed37d575bb66921109ebffc2c9",
   ],
   ["no_symbol_selected", ""],
-  // [
-  //   "ESH2026",
-  //   "2f007d2339327f9be181b61354ca0ec579d8c4ed37d575bb66921109ebffc2c9",
-  // ],
-  // ["US10Y", "9c196541230ba421baa2a499214564312a46bb47fb6b61ef63db2f70d3ce34c1"],
 ]);
 
 const PRICE_FEED_TO_SYMBOL_MAP = new Map(

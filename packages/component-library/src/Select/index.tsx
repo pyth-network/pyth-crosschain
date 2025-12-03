@@ -50,12 +50,6 @@ export type Props<T extends { id: string | number }> = Omit<
     hideLabel?: boolean | undefined;
     buttonLabel?: ReactNode;
     defaultButtonLabel?: ReactNode;
-    /**
-     * if provided, allows you to customize how
-     * each option displayed in the dropdown list popover
-     * is rendered
-     */
-    renderOption?: (value: T) => ReactNode;
   } & (
     | {
         defaultSelectedKey?: T["id"] | undefined;
