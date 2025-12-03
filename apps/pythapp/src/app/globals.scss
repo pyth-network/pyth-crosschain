@@ -1,5 +1,5 @@
 @use "@pythnetwork/component-library/theme";
 
 :root {
-  // @include theme.
+  @include theme.export-color-vars;
 }

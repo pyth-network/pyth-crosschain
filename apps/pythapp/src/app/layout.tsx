@@ -5,6 +5,8 @@ import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { AppContent, AppLayout, LeftPanel } from "../components";
+
 export const metadata: Metadata = {
   title: "Pyth App",
   description:
@@ -22,7 +24,10 @@ export default function RootLayout({
       enableAccessibilityReporting
       providers={[NuqsAdapter]}
     >
-      {children}
+      <AppLayout>
+        <LeftPanel />
+        <AppContent>{children}</AppContent>
+      </AppLayout>
     </AppShell>
   );
 }

@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@next/third-parties": "catalog:",
+    "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
     "@pythnetwork/react-hooks": "workspace:*",
     "@pythnetwork/shared-lib": "workspace:",

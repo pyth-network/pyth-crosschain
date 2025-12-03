@@ -1,0 +1,10 @@
+@use "@pythnetwork/component-library/theme";
+
+.root {
+  @include theme.max-width;
+
+  display: grid;
+  flex-grow: 1;
+  gap: theme.spacing(2);
+  grid-template-columns: auto 1fr;
+}

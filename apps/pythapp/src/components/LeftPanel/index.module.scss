@@ -1,2 +1,47 @@
+@use "@pythnetwork/component-library/theme";
+
+.sectionLink {
+  &[data-sectionid] {
+    align-items: center;
+    display: flex;
+    height: 2em;
+    gap: theme.spacing(2);
+    margin: 0;
+    text-decoration: none;
+    text-transform: capitalize;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: theme.color("background", "secondary");
+    }
+  }
+}
+
+.sectionLinkIcon {
+  font-size: 1em;
+  height: 1em;
+  width: auto;
+}
+
+.sectionLinkContents {
+  align-items: center;
+  display: flex;
+  gap: theme.spacing(2);
+  justify-content: space-between;
+}
+
+.sectionLinkContentsSuffix {
+  align-items: center;
+  display: flex;
+  gap: theme.spacing(2);
+}
+
+.sectionTitle {
+  color: theme.color("muted");
+  text-transform: uppercase;
+}
+
 .root {
+  background: transparent;
+  width: 300px;
 }

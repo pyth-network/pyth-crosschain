@@ -1220,6 +1220,9 @@ importers:
       '@next/third-parties':
         specifier: 'catalog:'
         version: 15.3.2(next@15.5.0(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1))(react@19.1.0)
+      '@phosphor-icons/react':
+        specifier: 'catalog:'
+        version: 2.1.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@pythnetwork/component-library':
         specifier: workspace:*
         version: link:../../packages/component-library
