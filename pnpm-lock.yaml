@@ -1323,9 +1323,9 @@ importers:
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../packages/jest-config
-      '@stylexjs/babel-plugin':
-        specifier: 'catalog:'
-        version: 0.17.2
+      '@stylexswc/nextjs-plugin':
+        specifier: ^0.13.0
+        version: 0.13.0(@swc/core@1.15.0)(next@15.5.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1))
       '@svgr/webpack':
         specifier: 'catalog:'
         version: 8.1.0(typescript@5.9.3)
@@ -10072,6 +10072,9 @@ packages:
   '@streamparser/json@0.0.22':
     resolution: {integrity: sha512-b6gTSBjJ8G8SuO3Gbbj+zXbVx8NSs1EbpbMKpzGLWMdkR+98McH9bEjSz3+0mPJf68c5nxa3CrJHp5EQNXM6zQ==}
 
+  '@stylexjs/babel-plugin@0.16.3':
+    resolution: {integrity: sha512-TTcqqiQ3Im3MYBE70GKrEp4n6NEdYnHi7lrp1lAzz6qKt1SfphPmKk+qZodSxc9DUucQ7lssfjvPlzQdIdbS/A==}
+
   '@stylexjs/babel-plugin@0.17.2':
     resolution: {integrity: sha512-eSiuJ+ulTgF+8UvGumAQZeWvyLpim4zvoN8pKRgDoCeGpoBiE8SmPogPSpv+PmPSB37gJKiJY+L6JENjtBG83A==}
 
@@ -10081,8 +10084,70 @@ packages:
   '@stylexjs/shared@0.17.2':
     resolution: {integrity: sha512-DBsIpSTQAMj3+KCgRAHcAa7QmRJMP4uDQ6zkdWBUcmiiG4lzHP2Lwues3h4dVXkGEagIXad0+lHMa/tBzabSGg==}
 
+  '@stylexjs/stylex@0.16.3':
+    resolution: {integrity: sha512-tJ3Wck4h391wNr92LxE4om9b3FxKPKFiYQlTcr1omMe+EUk+v14raP8YGy+isM4wHuA+Sg4Ca87og3xYVwLOXQ==}
+
   '@stylexjs/stylex@0.17.2':
     resolution: {integrity: sha512-aa10cV1khT/vb92a1RvF9+6FMWKcbE9Ka9RI1rN20xIaAIZaUFTUuymBpVmfAUM3wgAAz/1h7bdFM6PpP2e5gA==}
+
+  '@stylexswc/nextjs-plugin@0.13.0':
+    resolution: {integrity: sha512-zWm76vnKSl3GTksNSBe0CzF7ouZTKaPGIO2Q+fvbYm07slRkVctDrAc9tbzGJ0QMhp1iYPGv6L8v9U6q6CvxRg==}
+    peerDependencies:
+      next: '>=15.0.0'
+
+  '@stylexswc/rs-compiler-darwin-arm64@0.13.0':
+    resolution: {integrity: sha512-qMtNuoPp+ZjoaphB8YRlOJWcVSsaeOeuhJD+MaxmvccX/WHrh6ZsnMa0RjIe/58/WEG4DY6vgehbLAWX+EsuFg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@stylexswc/rs-compiler-darwin-x64@0.13.0':
+    resolution: {integrity: sha512-JXvKHV3HdgEXxpzhA0k+knNUXHqmMyRnRq2vxA2ufjUml3vhnn6sQrpds3Ac+HXANUF1FFNRu4U68s5ZY5skmw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@stylexswc/rs-compiler-linux-arm64-gnu@0.13.0':
+    resolution: {integrity: sha512-qkBvEfuSmAA5xZKbDWgB2j/nNTguyzmZ8dMncV8+6lBd+G2EwHRMM+Ygg/eEleFYMezx4HLQNGf+MIdnZjh+zw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@stylexswc/rs-compiler-linux-x64-gnu@0.13.0':
+    resolution: {integrity: sha512-270+smkvfjN4bOWMI3+aDyXJ/prK21EsuhgnEH2vM5ewKpI6oCtBWR+UlCqkxOHC3J86LRG26kjJo9RdhHnWJw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@stylexswc/rs-compiler-linux-x64-musl@0.13.0':
+    resolution: {integrity: sha512-ow9d/h3QWWj+UzT0jNotQ1g4m6XaILqysVpbYsaAjK79n+ms5hM8MLuCkOJXOgNbu0wir9ir8yuTFVZyd/dLVQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@stylexswc/rs-compiler-win32-arm64-msvc@0.13.0':
+    resolution: {integrity: sha512-sbXCAXnpvetXqdh6ni6JeuC/icdzbAAbUsi2erqtyYfBb9qD+guQpWav4DTRw2Fn1gtowCuofm2CiMLIscC0KA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@stylexswc/rs-compiler-win32-x64-msvc@0.13.0':
+    resolution: {integrity: sha512-y+UTWhumyNyDZ9wB4XY4LMy1eOPQDTDxHDC8cCbdcELcUZXZRjr0pV93ZGyuFsJNtWkQ4hewPafRpGHFXJW8WA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@stylexswc/rs-compiler@0.13.0':
+    resolution: {integrity: sha512-vWmku/hNoFYgNWCqWNqazZuREm7cXjXs6o8csV4UUo0nSNk9pmzj0aMF531w3jOMgSiqWD3cjquxXA1vzvOadA==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@swc/core': ^1
+
+  '@stylexswc/turbopack-plugin@0.13.0':
+    resolution: {integrity: sha512-oLVmgq24zKvvEi6zMRuz94iJKr9OBLcXS08wmQUBBhnSNltDfSnNOJkAbF06giJdz44Qr7Z/IcBtV81hTE19EA==}
+
+  '@stylexswc/webpack-plugin@0.13.0':
+    resolution: {integrity: sha512-59fKbq1CflICC5AOoxpdXT3/Rg2Y8dEo2EcicdNuhOFhy5wYgZWQFPkd+OZ5xuOIDbcqYstq4mAfZLYD7824NQ==}
 
   '@suchipi/femver@1.0.0':
     resolution: {integrity: sha512-bprE8+K5V+DPX7q2e2K57ImqNBdfGHDIWaGI5xHxZoxbKOuQZn4wzPiUxOAHnsUr3w3xHrWXwN7gnG/iIuEMIg==}
@@ -35589,6 +35654,18 @@ snapshots:
 
   '@streamparser/json@0.0.22': {}
 
+  '@stylexjs/babel-plugin@0.16.3':
+    dependencies:
+      '@babel/core': 7.28.5
+      '@babel/helper-module-imports': 7.27.1
+      '@babel/traverse': 7.28.5
+      '@babel/types': 7.28.5
+      '@dual-bundle/import-meta-resolve': 4.1.0
+      '@stylexjs/stylex': 0.16.3
+      postcss-value-parser: 4.2.0
+    transitivePeerDependencies:
+      - supports-color
+
   '@stylexjs/babel-plugin@0.17.2':
     dependencies:
       '@babel/core': 7.27.1
@@ -35615,11 +35692,76 @@ snapshots:
 
   '@stylexjs/shared@0.17.2': {}
 
+  '@stylexjs/stylex@0.16.3':
+    dependencies:
+      css-mediaquery: 0.1.2
+      invariant: 2.2.4
+      styleq: 0.2.1
+
   '@stylexjs/stylex@0.17.2':
     dependencies:
       css-mediaquery: 0.1.2
       invariant: 2.2.4
       styleq: 0.2.1
+
+  '@stylexswc/nextjs-plugin@0.13.0(@swc/core@1.15.0)(next@15.5.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1))':
+    dependencies:
+      '@stylexswc/rs-compiler': 0.13.0(@swc/core@1.15.0)
+      '@stylexswc/turbopack-plugin': 0.13.0(@swc/core@1.15.0)
+      '@stylexswc/webpack-plugin': 0.13.0(@swc/core@1.15.0)
+      next: 15.5.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.86.1)
+    transitivePeerDependencies:
+      - '@swc/core'
+      - supports-color
+
+  '@stylexswc/rs-compiler-darwin-arm64@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler-darwin-x64@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler-linux-arm64-gnu@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler-linux-x64-gnu@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler-linux-x64-musl@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler-win32-arm64-msvc@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler-win32-x64-msvc@0.13.0':
+    optional: true
+
+  '@stylexswc/rs-compiler@0.13.0(@swc/core@1.15.0)':
+    dependencies:
+      '@swc/core': 1.15.0
+    optionalDependencies:
+      '@stylexswc/rs-compiler-darwin-arm64': 0.13.0
+      '@stylexswc/rs-compiler-darwin-x64': 0.13.0
+      '@stylexswc/rs-compiler-linux-arm64-gnu': 0.13.0
+      '@stylexswc/rs-compiler-linux-x64-gnu': 0.13.0
+      '@stylexswc/rs-compiler-linux-x64-musl': 0.13.0
+      '@stylexswc/rs-compiler-win32-arm64-msvc': 0.13.0
+      '@stylexswc/rs-compiler-win32-x64-msvc': 0.13.0
+
+  '@stylexswc/turbopack-plugin@0.13.0(@swc/core@1.15.0)':
+    dependencies:
+      '@stylexswc/rs-compiler': 0.13.0(@swc/core@1.15.0)
+      loader-utils: 3.3.1
+    transitivePeerDependencies:
+      - '@swc/core'
+
+  '@stylexswc/webpack-plugin@0.13.0(@swc/core@1.15.0)':
+    dependencies:
+      '@stylexjs/babel-plugin': 0.16.3
+      '@stylexswc/rs-compiler': 0.13.0(@swc/core@1.15.0)
+      loader-utils: 3.3.1
+    transitivePeerDependencies:
+      - '@swc/core'
+      - supports-color
 
   '@suchipi/femver@1.0.0': {}
 

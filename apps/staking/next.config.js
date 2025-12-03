@@ -1,3 +1,5 @@
+import stylexPlugin from "@stylexswc/nextjs-plugin";
+
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
@@ -61,4 +63,9 @@ const config = {
   ],
 };
 
-export default config;
+// export default config;
+export default stylexPlugin({
+  rsOptions: {
+    dev: process.env.NODE_ENV !== "production",
+  },
+})(config);
