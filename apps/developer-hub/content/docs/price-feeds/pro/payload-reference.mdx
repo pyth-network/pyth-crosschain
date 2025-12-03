@@ -71,7 +71,8 @@ Here's what a typical StreamUpdated response that contains a PriceFeed looks lik
         "bestAskPrice": "11224513591935",
         "publisherCount": 9,
         "exponent": -8,
-        "confidence": 1373488286
+        "confidence": 1373488286,
+        "marketSession": "regular"
       },
       {
         "priceFeedId": 2,
@@ -80,7 +81,8 @@ Here's what a typical StreamUpdated response that contains a PriceFeed looks lik
         "bestAskPrice": "448508987987",
         "publisherCount": 12,
         "exponent": -8,
-        "confidence": 106965585
+        "confidence": 106965585,
+        "marketSession": "regular"
       }
     ]
   },
@@ -154,6 +156,15 @@ Confidence interval representing price uncertainty
 - **Invariants**: Positive when present
 - **Usage**: Risk management and price quality assessment
 
+#### Market Session - `marketSession`
+
+Represents the trading session status during which the price update was produced.
+This helps consumers understand whether a price comes from active trading hours or a more illiquid session such as pre-market or overnight trading.
+
+- **Type**: `string`
+- **Possible Values**: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`
+- **Availability**: Only included if requested in subscription properties
+
 ### Market Depth Properties
 
 #### Highest Market Bid - `best_bid_price`
@@ -209,6 +220,7 @@ Based on the [API documentation](https://pyth-lazer.dourolabs.app/docs), you can
 
 - `publisherCount` - Number of contributing data publishers
 - `exponent` - Decimal exponent for proper price representation
+- `marketSession` - Indicates the market session during which the price update was produced.
 
 ### Spot Trading Properties
 
