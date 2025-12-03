@@ -40,6 +40,11 @@ public fun expires_at(info: &TrustedSignerInfo): u64 {
     info.expires_at
 }
 
+/// Get the trusted signer's expiry timestamp, converted to milliseconds
+public fun expires_at_ms(info: &TrustedSignerInfo): u64 {
+    info.expires_at * 1000
+}
+
 /// Get the list of trusted signers
 public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
     &s.trusted_signers
@@ -50,31 +55,30 @@ public fun get_trusted_signers(s: &State): &vector<TrustedSignerInfo> {
 ///   - If the expired_at is set to zero, the trusted signer will be removed.
 /// - If the pubkey isn't found, it is added as a new trusted signer with the given expires_at.
 public fun update_trusted_signer(_: &AdminCap, s: &mut State, pubkey: vector<u8>, expires_at: u64) {
-    assert!(vector::length(&pubkey) as u64 == SECP256K1_COMPRESSED_PUBKEY_LEN, EInvalidPubkeyLen);
+    assert!(pubkey.length() == SECP256K1_COMPRESSED_PUBKEY_LEN, EInvalidPubkeyLen);
 
     let mut maybe_idx = find_signer_index(&s.trusted_signers, &pubkey);
     if (expires_at == 0) {
-        if (option::is_some(&maybe_idx)) {
-            let idx = option::extract(&mut maybe_idx);
+        if (maybe_idx.is_some()) {
+            let idx = maybe_idx.extract();
             // Remove by swapping with last (order not preserved), discard removed value
-            let _ = vector::swap_remove(&mut s.trusted_signers, idx);
+            let _ = s.trusted_signers.swap_remove(idx);
         } else {
-            option::destroy_none(maybe_idx);
+            maybe_idx.destroy_none();
             abort ESignerNotFound
         };
         return
     };
 
-    if (option::is_some(&maybe_idx)) {
-        let idx = option::extract(&mut maybe_idx);
-        let info_ref = vector::borrow_mut(&mut s.trusted_signers, idx);
+    if (maybe_idx.is_some()) {
+        let idx = maybe_idx.extract();
+        let info_ref = &mut s.trusted_signers[idx];
         info_ref.expires_at = expires_at
     } else {
-        option::destroy_none(maybe_idx);
-        vector::push_back(
-            &mut s.trusted_signers,
-            TrustedSignerInfo { public_key: pubkey, expires_at },
-        )
+        maybe_idx.destroy_none();
+        s.trusted_signers.push_back(
+            TrustedSignerInfo { public_key: pubkey, expires_at }
+        );
     }
 }
 
@@ -82,11 +86,11 @@ public fun find_signer_index(
     signers: &vector<TrustedSignerInfo>,
     public_key: &vector<u8>,
 ): Option<u64> {
-    let len = vector::length(signers);
+    let len = signers.length();
     let mut i: u64 = 0;
-    while (i < (len as u64)) {
-        let info_ref = vector::borrow(signers, i);
-        if (*public_key(info_ref) == *public_key) {
+    while (i < len) {
+        let signer = &signers[i];
+        if (signer.public_key() == public_key) {
             return option::some(i)
         };
         i = i + 1
