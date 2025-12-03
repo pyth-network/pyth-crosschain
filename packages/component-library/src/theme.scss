@@ -917,3 +917,23 @@ $breakpoints: (
 }
 
 $header-height: var(--header-height);
+
+// creates native CSS variables for any values in a map object
+@mixin export-css-vars($map, $prefix: "") {
+  @each $key, $value in $map {
+    $var-name: if($prefix != "", "#{$prefix}-#{$key}", "#{$key}");
+
+    @if meta.type-of($value) == "map" {
+      // recurse into nested maps
+      @include export-css-vars($value, $var-name);
+    } @else {
+      // emit CSS variable
+      --#{$var-name}: #{$value};
+    }
+  }
+}
+
+@mixin export-color-vars {
+  @include export-css-vars($color-pallette, "theme-palette");
+  @include export-css-vars($color, "theme-color");
+}

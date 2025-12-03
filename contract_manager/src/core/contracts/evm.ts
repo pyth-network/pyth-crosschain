@@ -1018,6 +1018,18 @@ export class EvmLazerContract extends Storable {
     );
   }
 
+  async generateUpgradeLazerContractPayload(
+    newImplementation: string,
+  ): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods.upgradeTo(newImplementation).encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data,
+    );
+  }
+
   /**
    * Updates the trusted signer for the PythLazer contract
    * @param trustedSigner - The address of the trusted signer

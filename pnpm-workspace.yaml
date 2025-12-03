@@ -111,6 +111,7 @@ catalog:
   bcp-47: ^2.1.0
   bs58: ^6.0.0
   chalk: ^5.6.2
+  change-case: ^5.4.4
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
   connectkit: ^1.9.0
@@ -159,6 +160,7 @@ catalog:
   sass: ^1.86.1
   sass-loader: ^16.0.5
   shiki: ^3.2.1
+  sockette: ^2.0.6
   storybook: ^9.1.8
   style-loader: ^4.0.0
   stylelint: ^16.17.0
@@ -169,9 +171,11 @@ catalog:
   tailwindcss: ^3.0.0
   tailwindcss-animate: ^1.0.7
   tailwindcss-react-aria-components: ^2.0.0
+  throttleit: ^2.1.0
   ts-node: ^10.9.2
   tsx: 4.20.6
   turbo: ^2.5.8
+  uuid: ^13.0.0
   type-fest: ^5.2.0
   typedoc: ^0.26.8
   typescript: ^5.9.3
