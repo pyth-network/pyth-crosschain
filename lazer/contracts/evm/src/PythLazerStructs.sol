@@ -19,7 +19,8 @@ library PythLazerStructs {
         Confidence,
         FundingRate,
         FundingTimestamp,
-        FundingRateInterval
+        FundingRateInterval,
+        MarketSession
     }
 
     // Tri-state for a property's availability within a feed at a given timestamp
@@ -52,6 +53,8 @@ library PythLazerStructs {
         int64 _fundingRate;
         uint64 _fundingTimestamp;
         uint64 _fundingRateInterval;
+        // Slot 4: 2 bytes
+        int16 _marketSession;
     }
 
     struct Update {

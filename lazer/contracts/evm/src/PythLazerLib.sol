@@ -109,7 +109,7 @@ library PythLazerLib {
         returns (PythLazerStructs.PriceFeedProperty property, uint16 new_pos)
     {
         uint8 propertyId = uint8(update[pos]);
-        require(propertyId <= 8, "Unknown property");
+        require(propertyId <= 9, "Unknown property");
         property = PythLazerStructs.PriceFeedProperty(propertyId);
         pos += 1;
         new_pos = pos;
@@ -201,16 +201,17 @@ library PythLazerLib {
                 // Price Property
                 if (property == PythLazerStructs.PriceFeedProperty.Price) {
                     (feed._price, pos) = parseFeedValueInt64(payload, pos);
-                    if (feed._price != 0)
+                    if (feed._price != 0) {
                         _setPresent(
                             feed,
                             uint8(PythLazerStructs.PriceFeedProperty.Price)
                         );
-                    else
+                    } else {
                         _setApplicableButMissing(
                             feed,
                             uint8(PythLazerStructs.PriceFeedProperty.Price)
                         );
+                    }
 
                     // Best Bid Price Property
                 } else if (
@@ -307,16 +308,17 @@ library PythLazerLib {
                         payload,
                         pos
                     );
-                    if (feed._confidence != 0)
+                    if (feed._confidence != 0) {
                         _setPresent(
                             feed,
                             uint8(PythLazerStructs.PriceFeedProperty.Confidence)
                         );
-                    else
+                    } else {
                         _setApplicableButMissing(
                             feed,
                             uint8(PythLazerStructs.PriceFeedProperty.Confidence)
                         );
+                    }
 
                     // Funding Rate Property
                 } else if (
@@ -405,6 +407,19 @@ library PythLazerLib {
                             )
                         );
                     }
+
+                    // Market Session Property
+                } else if (
+                    property == PythLazerStructs.PriceFeedProperty.MarketSession
+                ) {
+                    (feed._marketSession, pos) = parseFeedValueInt16(
+                        payload,
+                        pos
+                    );
+                    _setPresent(
+                        feed,
+                        uint8(PythLazerStructs.PriceFeedProperty.MarketSession)
+                    );
                 } else {
                     // This should never happen due to validation in parseFeedProperty
                     revert("Unexpected property");
@@ -513,6 +528,17 @@ library PythLazerLib {
             );
     }
 
+    /// @notice Check if market session exists
+    function hasMarketSession(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _hasValue(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.MarketSession)
+            );
+    }
+
     // Requested helpers — property included in this update
     function isPriceRequested(
         PythLazerStructs.Feed memory feed
@@ -598,6 +624,16 @@ library PythLazerLib {
             _isRequested(
                 feed,
                 uint8(PythLazerStructs.PriceFeedProperty.FundingRateInterval)
+            );
+    }
+
+    function isMarketSessionRequested(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _isRequested(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.MarketSession)
             );
     }
 
@@ -730,5 +766,20 @@ library PythLazerLib {
             "Funding rate interval is not present for the timestamp"
         );
         return feed._fundingRateInterval;
+    }
+
+    /// @notice Get market session (reverts if not exists)
+    function getMarketSession(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (int16) {
+        require(
+            isMarketSessionRequested(feed),
+            "Market session is not requested for the timestamp"
+        );
+        require(
+            hasMarketSession(feed),
+            "Market session is not present for the timestamp"
+        );
+        return feed._marketSession;
     }
 }
