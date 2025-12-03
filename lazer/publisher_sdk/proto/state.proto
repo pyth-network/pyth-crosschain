@@ -93,6 +93,7 @@ enum MarketSession {
     PRE_MARKET = 1;
     POST_MARKET = 2;
     OVER_NIGHT = 3;
+    CLOSED = 4;
 }
 
 message FeedMarketSchedule {
@@ -221,7 +222,7 @@ message FeedAggregateData {
     // Actual value is `mantissa * 10 ^ exponent`.
     // Restricted to int16.
     optional int32 exponent = 9;
-    // [optional] Market session for the feed. Can be absent if no data is available.
+    // [required] Market session for the feed.
     optional MarketSession market_session = 10;
 }
 

@@ -157,6 +157,7 @@ impl From<pyth_lazer_protocol::api::MarketSession> for state::MarketSession {
                 state::MarketSession::POST_MARKET
             }
             pyth_lazer_protocol::api::MarketSession::OverNight => state::MarketSession::OVER_NIGHT,
+            pyth_lazer_protocol::api::MarketSession::Closed => state::MarketSession::CLOSED,
         }
     }
 }
@@ -170,6 +171,7 @@ impl From<state::MarketSession> for pyth_lazer_protocol::api::MarketSession {
                 pyth_lazer_protocol::api::MarketSession::PostMarket
             }
             state::MarketSession::OVER_NIGHT => pyth_lazer_protocol::api::MarketSession::OverNight,
+            state::MarketSession::CLOSED => pyth_lazer_protocol::api::MarketSession::Closed,
         }
     }
 }

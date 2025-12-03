@@ -42,6 +42,7 @@ pub enum PayloadPropertyValue {
     FundingRate(Option<Rate>),
     FundingTimestamp(Option<TimestampUs>),
     FundingRateInterval(Option<DurationUs>),
+    MarketSession(MarketSession),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -55,11 +56,11 @@ pub struct AggregatedPriceFeedData {
     pub funding_rate: Option<Rate>,
     pub funding_timestamp: Option<TimestampUs>,
     pub funding_rate_interval: Option<DurationUs>,
-    pub market_session: Option<MarketSession>,
+    pub market_session: MarketSession,
 }
 
 impl AggregatedPriceFeedData {
-    pub fn empty(exponent: i16, market_session: Option<MarketSession>) -> Self {
+    pub fn empty(exponent: i16, market_session: MarketSession) -> Self {
         Self {
             price: None,
             best_bid_price: None,
@@ -123,6 +124,9 @@ impl PayloadData {
                                     feed.funding_rate_interval,
                                 )
                             }
+                            PriceFeedProperty::MarketSession => {
+                                PayloadPropertyValue::MarketSession(feed.market_session)
+                            }
                         })
                         .collect(),
                 })
@@ -175,6 +179,10 @@ impl PayloadData {
                     &PayloadPropertyValue::FundingRateInterval(interval) => {
                         writer.write_u8(PriceFeedProperty::FundingRateInterval as u8)?;
                         write_option_duration::<BO>(&mut writer, interval)?;
+                    }
+                    PayloadPropertyValue::MarketSession(market_session) => {
+                        writer.write_u8(PriceFeedProperty::MarketSession as u8)?;
+                        writer.write_i16::<BO>((*market_session).into())?;
                     }
                 }
             }
@@ -230,6 +238,8 @@ impl PayloadData {
                     PayloadPropertyValue::FundingRateInterval(read_option_interval::<BO>(
                         &mut reader,
                     )?)
+                } else if property == PriceFeedProperty::MarketSession as u8 {
+                    PayloadPropertyValue::MarketSession(reader.read_i16::<BO>()?.try_into()?)
                 } else {
                     bail!("unknown property");
                 };
