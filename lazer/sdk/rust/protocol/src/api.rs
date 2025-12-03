@@ -702,15 +702,17 @@ impl From<MarketSession> for i16 {
     }
 }
 
-impl From<i16> for MarketSession {
-    fn from(value: i16) -> MarketSession {
+impl TryFrom<i16> for MarketSession {
+    type Error = anyhow::Error;
+
+    fn try_from(value: i16) -> Result<MarketSession, Self::Error> {
         match value {
-            0 => MarketSession::Regular,
-            1 => MarketSession::PreMarket,
-            2 => MarketSession::PostMarket,
-            3 => MarketSession::OverNight,
-            4 => MarketSession::Closed,
-            _ => MarketSession::Regular, // Default to Regular for unknown values
+            0 => Ok(MarketSession::Regular),
+            1 => Ok(MarketSession::PreMarket),
+            2 => Ok(MarketSession::PostMarket),
+            3 => Ok(MarketSession::OverNight),
+            4 => Ok(MarketSession::Closed),
+            _ => Err(anyhow::anyhow!("invalid MarketSession value: {}", value)),
         }
     }
 }

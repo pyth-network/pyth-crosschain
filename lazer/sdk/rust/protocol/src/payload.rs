@@ -239,7 +239,7 @@ impl PayloadData {
                         &mut reader,
                     )?)
                 } else if property == PriceFeedProperty::MarketSession as u8 {
-                    PayloadPropertyValue::MarketSession(reader.read_i16::<BO>()?.into())
+                    PayloadPropertyValue::MarketSession(reader.read_i16::<BO>()?.try_into()?)
                 } else {
                     bail!("unknown property");
                 };
