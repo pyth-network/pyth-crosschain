@@ -1281,8 +1281,8 @@ importers:
         specifier: 'catalog:'
         version: 2.15.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       simplestyle-js:
-        specifier: 3.4.2-alpha.4
-        version: 3.4.2-alpha.4(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)
+        specifier: ^4.1.3
+        version: 4.1.3(react@19.1.0)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.1.0)
@@ -2201,8 +2201,8 @@ importers:
         specifier: 'catalog:'
         version: 16.0.5(sass@1.86.1)(webpack@5.98.0(@swc/core@1.15.0)(esbuild@0.25.9))
       simplestyle-js:
-        specifier: ^3.4.1
-        version: 3.4.1(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@6.0.3)
+        specifier: ^4.1.3
+        version: 4.1.3(react@19.1.0)
       storybook:
         specifier: 'catalog:'
         version: 9.1.8(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(utf-8-validate@6.0.3)(vite@6.4.1(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0))
@@ -19843,13 +19843,8 @@ packages:
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
-  simplestyle-js@3.4.1:
-    resolution: {integrity: sha512-zSUnJtHf/gNZlK5tqzJpRCDegmFlf45lFclw48M54UZ98pGsqTaOZK33cqY1bRMhgre4GOFMBuJD1A3C62MdRg==}
-    peerDependencies:
-      react: '>=16.8'
-
-  simplestyle-js@3.4.2-alpha.4:
-    resolution: {integrity: sha512-MbotlRjuzEU27A16FWMZh/0YP/VIBL01rIjBep6jvfGdbVmYiW8IJa9s0NxMyIlUW9S3IALq6eAJu216mhhHTw==}
+  simplestyle-js@4.1.3:
+    resolution: {integrity: sha512-69GnNjNxOiCOqU3Rj4+MgnSWDUJ1Es2qkU4rgHoEO7HoGCjMOsuEwRpnkXd1ToE9aplCIK/ekWlZbXqgqqLzdA==}
     peerDependencies:
       react: '>=16.8'
 
@@ -22342,7 +22337,8 @@ snapshots:
       graphql: 16.10.0
       typescript: 5.9.3
 
-  '@acemir/cssom@0.9.24': {}
+  '@acemir/cssom@0.9.24':
+    optional: true
 
   '@adobe/css-tools@4.4.2': {}
 
@@ -22502,6 +22498,7 @@ snapshots:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 11.2.4
+    optional: true
 
   '@asamuzakjp/dom-selector@6.7.5':
     dependencies:
@@ -22510,8 +22507,10 @@ snapshots:
       css-tree: 3.1.0
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.2.4
+    optional: true
 
-  '@asamuzakjp/nwsapi@2.3.9': {}
+  '@asamuzakjp/nwsapi@2.3.9':
+    optional: true
 
   '@assemblyscript/loader@0.9.4': {}
 
@@ -25722,12 +25721,14 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@csstools/color-helpers@5.1.0': {}
+  '@csstools/color-helpers@5.1.0':
+    optional: true
 
   '@csstools/css-calc@2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-color-parser@3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
@@ -25735,6 +25736,7 @@ snapshots:
       '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3)':
     dependencies:
@@ -25743,12 +25745,15 @@ snapshots:
   '@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
-  '@csstools/css-syntax-patches-for-csstree@1.0.20': {}
+  '@csstools/css-syntax-patches-for-csstree@1.0.20':
+    optional: true
 
   '@csstools/css-tokenizer@3.0.3': {}
 
-  '@csstools/css-tokenizer@3.0.4': {}
+  '@csstools/css-tokenizer@3.0.4':
+    optional: true
 
   '@csstools/media-query-list-parser@4.0.2(@csstools/css-parser-algorithms@3.0.4(@csstools/css-tokenizer@3.0.3))(@csstools/css-tokenizer@3.0.3)':
     dependencies:
@@ -38402,6 +38407,7 @@ snapshots:
   bidi-js@1.0.3:
     dependencies:
       require-from-string: 2.0.2
+    optional: true
 
   big-integer@1.6.36: {}
 
@@ -39622,6 +39628,7 @@ snapshots:
       '@asamuzakjp/css-color': 4.1.0
       '@csstools/css-syntax-patches-for-csstree': 1.0.20
       css-tree: 3.1.0
+    optional: true
 
   csstype@3.1.3: {}
 
@@ -39688,6 +39695,7 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
+    optional: true
 
   data-view-buffer@1.0.2:
     dependencies:
@@ -40210,7 +40218,8 @@ snapshots:
 
   entities@4.5.0: {}
 
-  entities@6.0.1: {}
+  entities@6.0.1:
+    optional: true
 
   env-paths@2.2.1: {}
 
@@ -43111,6 +43120,7 @@ snapshots:
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
+    optional: true
 
   html-entities@2.6.0: {}
 
@@ -43204,6 +43214,7 @@ snapshots:
       debug: 4.4.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   http-signature@1.2.0:
     dependencies:
@@ -44645,6 +44656,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   jsdom@27.2.0(bufferutil@4.0.9)(utf-8-validate@6.0.3):
     dependencies:
@@ -44672,6 +44684,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   jsesc@3.0.2: {}
 
@@ -45093,7 +45106,8 @@ snapshots:
 
   lru-cache@11.2.1: {}
 
-  lru-cache@11.2.4: {}
+  lru-cache@11.2.4:
+    optional: true
 
   lru-cache@5.1.1:
     dependencies:
@@ -46860,6 +46874,7 @@ snapshots:
   parse5@8.0.0:
     dependencies:
       entities: 6.0.1
+    optional: true
 
   parseurl@1.3.3: {}
 
@@ -48961,29 +48976,11 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
-  simplestyle-js@3.4.1(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@6.0.3):
+  simplestyle-js@4.1.3(react@19.1.0):
     dependencies:
       csstype: 3.2.3
       deepmerge: 4.3.1
-      jsdom: 27.2.0(bufferutil@4.0.9)(utf-8-validate@6.0.3)
       react: 19.1.0
-    transitivePeerDependencies:
-      - bufferutil
-      - canvas
-      - supports-color
-      - utf-8-validate
-
-  simplestyle-js@3.4.2-alpha.4(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10):
-    dependencies:
-      csstype: 3.2.3
-      deepmerge: 4.3.1
-      jsdom: 27.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      react: 19.1.0
-    transitivePeerDependencies:
-      - bufferutil
-      - canvas
-      - supports-color
-      - utf-8-validate
 
   sinon-chai@3.7.0(chai@4.5.0)(sinon@18.0.1):
     dependencies:
@@ -50008,11 +50005,13 @@ snapshots:
 
   tinyspy@4.0.4: {}
 
-  tldts-core@7.0.19: {}
+  tldts-core@7.0.19:
+    optional: true
 
   tldts@7.0.19:
     dependencies:
       tldts-core: 7.0.19
+    optional: true
 
   tmp@0.0.33:
     dependencies:
@@ -50100,6 +50099,7 @@ snapshots:
   tough-cookie@6.0.0:
     dependencies:
       tldts: 7.0.19
+    optional: true
 
   tr46@0.0.3: {}
 
@@ -50110,6 +50110,7 @@ snapshots:
   tr46@6.0.0:
     dependencies:
       punycode: 2.3.1
+    optional: true
 
   tree-kill@1.2.2: {}
 
@@ -51272,6 +51273,7 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+    optional: true
 
   wagmi@2.14.16(@react-native-async-storage/async-storage@1.24.0(react-native@0.78.2(@babel/core@7.27.1)(@babel/preset-env@7.26.9(@babel/core@7.27.1))(@types/react@19.1.0)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.71.5)(@tanstack/react-query@5.71.5(react@19.1.0))(@types/react@19.1.0)(bufferutil@4.0.9)(encoding@0.1.13)(immer@9.0.21)(ioredis@5.7.0)(react@19.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.24.4))(zod@3.24.4):
     dependencies:
@@ -52032,7 +52034,8 @@ snapshots:
 
   webidl-conversions@7.0.0: {}
 
-  webidl-conversions@8.0.0: {}
+  webidl-conversions@8.0.0:
+    optional: true
 
   webpack-dev-middleware@6.1.3(webpack@5.98.0(@swc/core@1.15.0)(esbuild@0.25.9)):
     dependencies:
@@ -52137,6 +52140,7 @@ snapshots:
   whatwg-encoding@3.1.1:
     dependencies:
       iconv-lite: 0.6.3
+    optional: true
 
   whatwg-fetch@2.0.4: {}
 
@@ -52144,7 +52148,8 @@ snapshots:
 
   whatwg-mimetype@3.0.0: {}
 
-  whatwg-mimetype@4.0.0: {}
+  whatwg-mimetype@4.0.0:
+    optional: true
 
   whatwg-url@11.0.0:
     dependencies:
@@ -52155,6 +52160,7 @@ snapshots:
     dependencies:
       tr46: 6.0.0
       webidl-conversions: 8.0.0
+    optional: true
 
   whatwg-url@5.0.0:
     dependencies:
@@ -52440,7 +52446,8 @@ snapshots:
 
   xml-name-validator@4.0.0: {}
 
-  xml-name-validator@5.0.0: {}
+  xml-name-validator@5.0.0:
+    optional: true
 
   xmlchars@2.2.0: {}
 

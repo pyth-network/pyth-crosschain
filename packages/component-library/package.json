@@ -388,7 +388,7 @@
     "react": "catalog:",
     "sass": "catalog:",
     "sass-loader": "catalog:",
-    "simplestyle-js": "^3.4.1",
+    "simplestyle-js": "^4.1.3",
     "storybook": "catalog:",
     "style-loader": "catalog:",
     "stylelint": "catalog:",

@@ -6,14 +6,28 @@ import { HelpMenu } from "./help-menu";
 import Logo from "./logo.svg";
 import Logomark from "./logomark.svg";
 import { Stats } from "./stats";
-import { createStyle } from "../../styles";
+import { createStyle, keyframes } from "../../styles";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 import { WalletButton } from "../WalletButton";
 
-const { classes } = createStyle("HeaderComponent", {
-  btn: {
+const ruleId = "HeaderComponent";
+
+const { keyframe } = keyframes(ruleId, {
+  "0%": {
     backgroundColor: "yellow",
+  },
+  "50%": {
+    backgroundColor: "purple",
+  },
+  "100%": {
+    backgroundColor: "yellow",
+  },
+});
+
+const { classes } = createStyle(ruleId, {
+  btn: {
+    animation: `${keyframe} 2s linear infinite`,
     padding: "1rem",
   },
 });
