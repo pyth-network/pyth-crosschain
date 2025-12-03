@@ -1,185 +1,140 @@
-import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
-import {
-  Chart,
-  CategoryScale,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Tooltip,
-  Legend,
-  TimeScale,
-} from "chart.js";
-import { formatDate } from "date-fns";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type {
+  IChartApi,
+  ISeriesApi,
+  LineData,
+  UTCTimestamp,
+} from "lightweight-charts";
+import { createChart, LineSeries } from "lightweight-charts";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
-import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
-import { getColorForSymbol, isAllowedSymbol } from "../../util/pyth-pro-demo";
-
-Chart.register(
-  CategoryScale,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Tooltip,
-  Legend,
-  TimeScale,
-);
-
-type ChartJSPoint = { x: number; y: number };
+import {
+  getColorForSymbol,
+  getThemeCssVar,
+  isAllowedSymbol,
+} from "../../util/pyth-pro-demo";
 
 type PythProDemoPriceChartImplProps = Pick<
   AppStateContextVal,
   "dataSourcesInUse" | "metrics" | "selectedSource"
 >;
 
-const MAX_DATA_AGE = 1000 * 60; // hold no more than one minute's worth of data in the chart
-const MAX_DATA_POINTS = 3000; // don't keep more than 3K points in memory
+const MAX_DATA_AGE = 1000 * 60; // 1 minute
+const MAX_DATA_POINTS = 3000;
 
-function PythProDemoPriceChartImpl({
+export function PythProDemoPriceChartImpl({
   dataSourcesInUse,
   metrics,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
-  /** state */
-  const [canvasRef, setCanvasRef] =
-    useState<Nullish<HTMLCanvasElement>>(undefined);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<IChartApi>(undefined);
+  const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
 
-  /** refs */
-  const chartHandlerRef = useRef<Nullish<Chart>>(undefined);
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
 
-  /** effects */
-  useEffect(() => {
-    if (!canvasRef) return;
-    const c = new Chart(canvasRef, {
-      type: "line",
-      data: { datasets: [] },
-      options: {
-        animation: false,
-        elements: {
-          point: { radius: 0 },
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            beginAtZero: false,
-            type: "linear", // push numeric timestamps or indices
-            grid: { display: true },
-            ticks: {
-              callback(val) {
-                const num = Number(val);
-                const d = new Date();
-                d.setTime(num);
+    const grayColor = getThemeCssVar("--theme-palette-gray-800") ?? "#ccc";
+    const grayText = getThemeCssVar("--theme-palette-gray-300") ?? "#f1f1f3";
 
-                return formatDate(d, "pp");
-              },
-              display: true,
-            },
-          },
-          y: { type: "linear", beginAtZero: false, grid: { display: true } },
-        },
-        plugins: {
-          legend: {
-            display: true,
-            labels: {
-              generateLabels: (chart) => {
-                // Start with the default labels
-                const original =
-                  Chart.defaults.plugins.legend.labels.generateLabels(chart);
-
-                // Map them to whatever text you want
-                return original.map((label) => ({
-                  ...label,
-                  text: capitalCase(label.text),
-                }));
-              },
-              usePointStyle: true,
-            },
-          },
-          tooltip: { enabled: false },
-        },
+    const chart = createChart(containerRef.current, {
+      layout: {
+        attributionLogo: false, // hide TradingView logo
+        background: { color: "transparent" },
+        textColor: grayText,
+      },
+      grid: {
+        horzLines: { color: grayColor },
+        vertLines: { color: grayColor },
+      },
+      rightPriceScale: {
+        borderColor: grayColor,
+      },
+      timeScale: {
+        barSpacing: 3,
+        borderColor: grayColor,
+        rightOffset: 0,
+        secondsVisible: true,
+        timeVisible: true,
       },
     });
 
-    chartHandlerRef.current = c;
-  }, [canvasRef]);
+    chartRef.current = chart;
+
+    return () => {
+      chart.remove();
+      chartRef.current = undefined;
+      seriesMapRef.current = {};
+    };
+  }, []);
 
   useEffect(() => {
-    if (!chartHandlerRef.current || !isAllowedSymbol(selectedSource)) return;
-    const { current: c } = chartHandlerRef;
+    if (!chartRef.current || !isAllowedSymbol(selectedSource)) return;
 
     for (const dataSource of dataSourcesInUse) {
       const latest = metrics[dataSource]?.latest;
       const symbolMetrics = latest?.[selectedSource];
-      if (
-        isNullOrUndefined(symbolMetrics) ||
-        isNullOrUndefined(symbolMetrics.price)
-      ) {
-        continue;
+      if (!symbolMetrics?.price) continue;
+
+      let series = seriesMapRef.current[dataSource];
+      if (!series) {
+        series = chartRef.current.addSeries(LineSeries, {
+          priceScaleId: "right",
+          title: capitalCase(dataSource),
+        });
+        series.applyOptions({
+          color: getColorForSymbol(dataSource),
+          lineWidth: 2,
+          lineStyle: 0, // solid
+        });
+        seriesMapRef.current[dataSource] = series;
       }
 
-      let ds = c.data.datasets.find((d) => d.label === dataSource);
-      if (!ds) {
-        ds = {
-          data: [],
-          borderColor: getColorForSymbol(dataSource),
-          label: dataSource,
-          pointBorderWidth: 1,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          tension: 0.2,
-        };
-        c.data.datasets.push(ds);
-      }
-
-      const lastDataPoint = ds.data.at(-1) as Nullish<ChartJSPoint>;
+      const [lastPoint] = series.data().slice(-1);
       const latestMetricIsFresh =
-        !lastDataPoint || lastDataPoint.x !== symbolMetrics.timestamp;
+        !lastPoint ||
+        lastPoint.time !== Math.floor(symbolMetrics.timestamp / 1000);
 
-      if (!latestMetricIsFresh) return;
+      if (!latestMetricIsFresh) continue;
 
-      ds.data.push({ x: symbolMetrics.timestamp, y: symbolMetrics.price });
+      const newPoint: LineData = {
+        time: Math.floor(symbolMetrics.timestamp / 1000) as UTCTimestamp,
+        value: symbolMetrics.price,
+      };
 
+      series.update(newPoint);
+
+      // Trim old points
       const end = symbolMetrics.timestamp;
       const start = end - MAX_DATA_AGE;
 
-      ds.data = (ds.data as ChartJSPoint[])
-        .filter((d) => d.x >= start && d.x <= end)
+      const allData = series.data();
+      const trimmed = allData
+        .filter(
+          (d) =>
+            (d.time as UTCTimestamp) * 1000 >= start &&
+            (d.time as UTCTimestamp) * 1000 <= end,
+        )
         .slice(-MAX_DATA_POINTS);
 
-      // .sort() mutates the original array
-      c.data.datasets.sort(
-        (a, b) => a.label?.localeCompare(b.label ?? "") ?? 0,
-      );
-    }
+      series.setData(trimmed);
 
-    c.update();
+      // Update visible range so chart fills left-to-right
+      chartRef.current.timeScale().setVisibleRange({
+        from: Math.floor(start / 1000) as UTCTimestamp,
+        to: Math.floor(end / 1000) as UTCTimestamp,
+      });
+    }
   });
 
-  useLayoutEffect(() => {
-    return () => {
-      chartHandlerRef.current?.destroy();
-    };
-  }, []);
+  if (!isAllowedSymbol(selectedSource)) return;
 
-  if (!isAllowedSymbol(selectedSource)) {
-    return;
-  }
-  return (
-    <div className={classes.root}>
-      <canvas ref={setCanvasRef} />
-    </div>
-  );
+  return <div ref={containerRef} style={{ width: "100%", height: "400px" }} />;
 }
 
 export function PythProDemoPriceChart() {
-  /** context */
   const { dataSourcesInUse, metrics, selectedSource } =
     usePythProAppStateContext();
 

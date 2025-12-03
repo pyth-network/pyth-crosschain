@@ -1,6 +1,7 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 
+import { getThemeCssVar } from "./get-theme-css-var";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
 
 let palette: Nullish<Partial<Record<AllDataSourcesType, string>>>;
@@ -19,18 +20,16 @@ function hydratePalette() {
   if (isNullOrUndefined(doc)) return palette;
 
   if (isNullOrUndefined(palette)) {
-    const computedStyle = getComputedStyle(document.documentElement);
-
     palette = {
-      binance: computedStyle.getPropertyValue("--theme-palette-yellow-400"),
-      bybit: computedStyle.getPropertyValue("--theme-palette-orange-400"),
-      coinbase: computedStyle.getPropertyValue("--theme-palette-blue-700"),
-      infoway_io: computedStyle.getPropertyValue("--theme-palette-blue-300"),
-      okx: computedStyle.getPropertyPriority("--theme-palette-gray-400"),
-      prime_api: computedStyle.getPropertyValue("--theme-palette-red-600"),
-      pyth: computedStyle.getPropertyValue("--theme-palette-purple-400"),
-      pyth_pro: computedStyle.getPropertyValue("--theme-palette-purple-500"),
-      twelve_data: computedStyle.getPropertyValue("--theme-palette-blue-500"),
+      binance: getThemeCssVar("--theme-palette-yellow-400") ?? "",
+      bybit: getThemeCssVar("--theme-palette-orange-400") ?? "",
+      coinbase: getThemeCssVar("--theme-palette-blue-700") ?? "",
+      infoway_io: getThemeCssVar("--theme-palette-blue-300") ?? "",
+      okx: getThemeCssVar("--theme-palette-gray-400") ?? "",
+      prime_api: getThemeCssVar("--theme-palette-red-600") ?? "",
+      pyth: getThemeCssVar("--theme-palette-purple-300") ?? "",
+      pyth_pro: getThemeCssVar("--theme-palette-purple-500") ?? "",
+      twelve_data: getThemeCssVar("--theme-palette-blue-500") ?? "",
     };
   }
   return palette;
