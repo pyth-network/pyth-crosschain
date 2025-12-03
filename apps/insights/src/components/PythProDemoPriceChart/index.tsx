@@ -6,6 +6,7 @@ import type {
   UTCTimestamp,
 } from "lightweight-charts";
 import { createChart, LineSeries } from "lightweight-charts";
+import { useTheme } from "next-themes";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
@@ -29,6 +30,10 @@ export function PythProDemoPriceChartImpl({
   metrics,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
+  /** hooks */
+  const { theme } = useTheme();
+
+  /** refs */
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi>(undefined);
   const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
@@ -37,8 +42,14 @@ export function PythProDemoPriceChartImpl({
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
-    const grayColor = getThemeCssVar("--theme-palette-gray-800") ?? "#ccc";
-    const grayText = getThemeCssVar("--theme-palette-gray-300") ?? "#f1f1f3";
+    const grayColor =
+      theme === "dark"
+        ? (getThemeCssVar("--theme-palette-gray-800") ?? "#ccc")
+        : (getThemeCssVar("--theme-palette-gray-300") ?? "#f1f1f3");
+    const grayText =
+      theme === "dark"
+        ? (getThemeCssVar("--theme-palette-gray-300") ?? "#f1f1f3")
+        : (getThemeCssVar("--theme-palette-gray-800") ?? "#ccc");
 
     const chart = createChart(containerRef.current, {
       layout: {
@@ -69,7 +80,7 @@ export function PythProDemoPriceChartImpl({
       chartRef.current = undefined;
       seriesMapRef.current = {};
     };
-  }, []);
+  }, [theme]);
 
   useLayoutEffect(() => {
     if (!chartRef.current || !containerRef.current) return;

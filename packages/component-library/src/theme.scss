@@ -923,7 +923,7 @@ $header-height: var(--header-height);
   @each $key, $value in $map {
     $var-name: if($prefix != "", "#{$prefix}-#{$key}", "#{$key}");
 
-    @if type-of($value) == "map" {
+    @if meta.type-of($value) == "map" {
       // recurse into nested maps
       @include export-css-vars($value, $var-name);
     } @else {
