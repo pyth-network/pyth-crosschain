@@ -43,9 +43,7 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<
   ["NVDA", 1314],
   ["SPY", 1398],
   ["ESZ2025", 2284],
-  ["no_symbol_selected", Number.MIN_SAFE_INTEGER],
-  // ["ESH2026", 2282],
-  // ["US10Y", 1527],
+  ["no_symbol_selected", undefined],
 ]);
 
 const PRICE_FEED_TO_SYMBOL_MAP = new Map(
