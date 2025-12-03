@@ -145,6 +145,11 @@ class Publisher:
             for symbol in symbols:
                 labels = {**self.metrics_labels, "symbol": symbol}
                 self.metrics.last_pushed_time.set(time_secs, labels)
+
+            # log any data in the ok response (likely price clamping issues)
+            ok_data = response.get("response", {}).get("data")
+            if ok_data:
+                logger.info("ok response data: {}", ok_data)
         elif status == "err":
             error_reason = self._get_error_reason(response)
             self._update_attempts_total("error", error_reason, symbols)
