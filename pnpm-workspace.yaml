@@ -186,6 +186,8 @@ catalog:
   "@stylexjs/postcss-plugin": ^0.17.2
   "@stylexjs/stylex": ^0.17.2
   stylex-webpack: ^0.4.7
+  mini-css-extract-plugin: ^2.9.4
+  css-minimizer-webpack-plugin: ^7.0.2
 
 onlyBuiltDependencies:
   - "@apollo/protobufjs"

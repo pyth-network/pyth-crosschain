@@ -395,7 +395,9 @@
     "stylelint-config-standard-scss": "catalog:",
     "@stylexjs/babel-plugin": "catalog:",
     "@stylexjs/postcss-plugin": "catalog:",
-    "stylex-webpack": "catalog:"
+    "stylex-webpack": "catalog:",
+    "mini-css-extract-plugin": "catalog:",
+    "css-minimizer-webpack-plugin": "catalog:"
   },
   "ts-duality": {
     "extraExports": {

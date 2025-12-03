@@ -1,6 +1,8 @@
 import { createRequire } from "node:module";
 
 import type { StorybookConfig } from "@storybook/nextjs";
+import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
+import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { StyleXPlugin } from "stylex-webpack";
 
 const resolve = createRequire(import.meta.url).resolve;
@@ -25,6 +27,10 @@ const config = {
       name: "@storybook/addon-styling-webpack",
       options: {
         rules: [
+          {
+            test: /\.css$/i,
+            use: [MiniCssExtractPlugin.loader, "css-loader"],
+          },
           {
             test: /\.s[ac]ss$/i,
             use: [
@@ -62,7 +68,11 @@ const config = {
       },
     };
     config.plugins ??= [];
-    config.plugins.push(new StyleXPlugin());
+    config.plugins.push(
+      new StyleXPlugin(),
+      new MiniCssExtractPlugin(),
+      new CssMinimizerPlugin(),
+    );
 
     for (const rule of config.module?.rules ?? []) {
       if (
