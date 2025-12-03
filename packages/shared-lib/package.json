@@ -1,0 +1,108 @@
+{
+  "name": "@pythnetwork/shared-lib",
+  "description": "a collection of shared typescript typings and various utilities that are generally applicable across the JS / TS stack",
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist/**"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "packages/shared-lib"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "fix:lint": "eslint --fix . --max-warnings 0",
+    "fix:format": "prettier --write .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:format": "prettier --check .",
+    "test:types": "tsc",
+    "test:unit": "test-unit"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:"
+  },
+  "dependencies": {
+    "uuid": "catalog:"
+  },
+  "private": true,
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
+      }
+    },
+    "./types": {
+      "require": {
+        "types": "./dist/cjs/types/index.d.ts",
+        "default": "./dist/cjs/types/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/types/index.d.ts",
+        "default": "./dist/esm/types/index.mjs"
+      }
+    },
+    "./util/create-uuid": {
+      "require": {
+        "types": "./dist/cjs/util/create-uuid.d.ts",
+        "default": "./dist/cjs/util/create-uuid.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/create-uuid.d.ts",
+        "default": "./dist/esm/util/create-uuid.mjs"
+      }
+    },
+    "./util": {
+      "require": {
+        "types": "./dist/cjs/util/index.d.ts",
+        "default": "./dist/cjs/util/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/index.d.ts",
+        "default": "./dist/esm/util/index.mjs"
+      }
+    },
+    "./util/is-null-or-undefined": {
+      "require": {
+        "types": "./dist/cjs/util/is-null-or-undefined.d.ts",
+        "default": "./dist/cjs/util/is-null-or-undefined.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/is-null-or-undefined.d.ts",
+        "default": "./dist/esm/util/is-null-or-undefined.mjs"
+      }
+    },
+    "./util/is-number": {
+      "require": {
+        "types": "./dist/cjs/util/is-number.d.ts",
+        "default": "./dist/cjs/util/is-number.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/is-number.d.ts",
+        "default": "./dist/esm/util/is-number.mjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.cjs"
+}

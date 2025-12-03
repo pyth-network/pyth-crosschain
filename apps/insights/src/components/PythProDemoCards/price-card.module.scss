@@ -1,0 +1,42 @@
+@use "@pythnetwork/component-library/theme";
+
+$price-card-width: 250px;
+
+.cardContents {
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(2);
+  padding: theme.spacing(3);
+  padding-top: 0;
+}
+
+.price {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: theme.spacing(2);
+}
+
+.priceDropping {
+  color: theme.color("states", "error", "base");
+}
+
+.priceIncreasing {
+  color: theme.color("states", "success", "base");
+}
+
+.symbol,
+.socketStatus {
+  font-size: 0.8rem;
+}
+
+.socketStatus {
+  color: theme.color("muted");
+  font-style: italic;
+}
+
+.root {
+  @include theme.elevation("default", 1);
+
+  flex-basis: $price-card-width;
+  flex-grow: 1;
+}

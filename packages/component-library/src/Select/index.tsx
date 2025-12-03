@@ -33,7 +33,17 @@ export type Props<T extends { id: string | number }> = Omit<
     "variant" | "size" | "rounded" | "hideText" | "isPending"
   > &
   Pick<PopoverProps, "placement"> & {
+    /**
+     * if provided, customizes the label used
+     * for each dropdown option in the dropdown
+     * list popover
+     */
     show?: ((value: T) => ReactNode) | undefined;
+
+    /**
+     * if provided, customizes the chosen value
+     * displayed in the dropdown button trigger
+     */
     textValue?: ((value: T) => string) | undefined;
     icon?: ComponentProps<typeof Button>["beforeIcon"];
     label: ReactNode;

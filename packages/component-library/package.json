@@ -103,6 +103,10 @@
       "types": "./dist/InfoBox/index.d.ts",
       "default": "./dist/InfoBox/index.mjs"
     },
+    "./Input": {
+      "types": "./dist/Input/index.d.ts",
+      "default": "./dist/Input/index.mjs"
+    },
     "./Link": {
       "types": "./dist/Link/index.d.ts",
       "default": "./dist/Link/index.mjs"

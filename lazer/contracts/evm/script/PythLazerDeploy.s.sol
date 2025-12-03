@@ -177,17 +177,64 @@ contract PythLazerDeployScript is Script {
 
     function run() public {
         address impl = deployImplementation("lazer:impl");
-        deployProxy("lazer:proxy", impl);
+        address proxy = deployProxy("lazer:proxy", impl);
+
+        // Write deployment output to JSON file for programmatic access
+        _writeOutput(impl, proxy, "./deployment-output.json");
     }
 
-    function migrate() public {
-        // Deploys new version and updates proxy to use new address
-        address proxyAddress = getProxyAddress("lazer:proxy");
-        address newImpl = deployImplementation("lazer:impl");
-        bytes memory migrateCall = abi.encodeWithSignature("migrate()");
-        vm.startBroadcast();
-        UUPSUpgradeable proxy = UUPSUpgradeable(proxyAddress);
-        proxy.upgradeToAndCall(newImpl, migrateCall);
-        vm.stopBroadcast();
+    // Commented this out as we upgrade the contract using the upgrade_evm_lazer_contracts.ts script
+    // function migrate() public {
+    //     // Deploys new version and updates proxy to use new address
+    //     address proxyAddress = getProxyAddress("lazer:proxy");
+    //     address newImpl = deployImplementation("lazer:impl");
+    //     bytes memory migrateCall = abi.encodeWithSignature("migrate()");
+    //     vm.startBroadcast();
+    //     UUPSUpgradeable proxy = UUPSUpgradeable(proxyAddress);
+    //     proxy.upgradeToAndCall(newImpl, migrateCall);
+    //     vm.stopBroadcast();
+    // }
+
+    // Deploy only the implementation for upgrades
+    // This function can be called via: forge script --sig "deployImplementationForUpgrade()"
+    function deployImplementationForUpgrade() public {
+        address impl = deployImplementation("lazer:impl");
+        _writeOutput(impl, address(0), "./upgrade-implementation-output.json");
+    }
+
+    /**
+     * @dev Writes deployment/upgrade output to a JSON file
+     * @param impl The implementation contract address
+     * @param proxy The proxy contract address (use address(0) if not applicable)
+     * @param outputPath The path to write the JSON file to
+     */
+    function _writeOutput(
+        address impl,
+        address proxy,
+        string memory outputPath
+    ) internal {
+        string memory jsonKey = "output";
+
+        vm.serializeAddress(jsonKey, "implementationAddress", impl);
+
+        string memory finalJson;
+        if (proxy != address(0)) {
+            // Include proxy address for full deployment
+            // Serialize chainId, then proxyAddress (last call returns final JSON)
+            vm.serializeUint(jsonKey, "chainId", block.chainid);
+            finalJson = vm.serializeAddress(jsonKey, "proxyAddress", proxy);
+        } else {
+            // Only implementation and chainId for upgrade-only deployments
+            // chainId serialization is the last call, so it returns the final JSON
+            finalJson = vm.serializeUint(jsonKey, "chainId", block.chainid);
+        }
+
+        vm.writeJson(finalJson, outputPath);
+
+        console.log("Implementation address: %s", impl);
+        if (proxy != address(0)) {
+            console.log("Proxy address: %s", proxy);
+        }
+        console.log("Output written to %s", outputPath);
     }
 }
