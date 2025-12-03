@@ -112,6 +112,7 @@ export function useDataStream({
   const onMessage = useCallback<UseWebSocketOpts["onMessage"]>(
     (s, e) => {
       if (isNullOrUndefined(usdtToUsdRate)) return;
+
       const strData = String(e.data);
 
       switch (dataSource) {

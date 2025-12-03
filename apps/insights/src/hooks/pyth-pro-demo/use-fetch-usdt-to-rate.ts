@@ -1,6 +1,7 @@
 "use client";
 
 import type { Nullish } from "@pythnetwork/shared-lib/types";
+import { isNumber } from "@pythnetwork/shared-lib/util";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type UseFetchUsdtToUsdRateOpts = {
@@ -41,7 +42,15 @@ export function useFetchUsdtToUsdRate(opts?: UseFetchUsdtToUsdRateOpts) {
       .then((r) => r.json())
       .then((data: HermesPriceResponse) => {
         const price = Number(data.parsed[0]?.price.price) / Math.pow(10, 8);
-        setUsdtToUsdRate(price);
+        if (isNumber(price)) {
+          setUsdtToUsdRate(price);
+        } else {
+          setError(
+            new Error(
+              `usdt rate returned from API call was not a number (API returned ${String(price)})`,
+            ),
+          );
+        }
       })
       .catch(setError);
 

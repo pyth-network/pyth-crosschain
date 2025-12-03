@@ -90,6 +90,16 @@
         "default": "./dist/esm/util/is-null-or-undefined.mjs"
       }
     },
+    "./util/is-number": {
+      "require": {
+        "types": "./dist/cjs/util/is-number.d.ts",
+        "default": "./dist/cjs/util/is-number.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/is-number.d.ts",
+        "default": "./dist/esm/util/is-number.mjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "module": "./dist/esm/index.mjs",

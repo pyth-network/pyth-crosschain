@@ -2,7 +2,7 @@
 
 import type { UseWebSocketOpts } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
+import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
 import { useRef, useCallback } from "react";
 
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
@@ -69,12 +69,11 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
       return;
     }
 
-    // Get best bid (highest price)
-    const bestBidPrice = Math.max(...[...bids.keys()].map(Number));
+    const bestBidPrice = Math.max(...bids.keys().map(Number));
     // Get best ask (lowest price)
-    const bestAskPrice = Math.min(...[...asks.keys()].map(Number));
+    const bestAskPrice = Math.min(...asks.keys().map(Number));
 
-    if (Number.isFinite(bestBidPrice) && Number.isFinite(bestAskPrice)) {
+    if (isNumber(bestBidPrice) && Number.isFinite(bestAskPrice)) {
       return (bestBidPrice + bestAskPrice) / 2;
     }
 
@@ -121,113 +120,113 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
         events: CoinbaseAdvancedTradeLevel2Message["events"];
       }>;
 
+      if (data.channel !== "l2_data" || !data.events) return;
+
       // Handle Advanced Trade level2 orderbook messages
-      if (data.channel === "l2_data" && data.events) {
-        for (const event of data.events) {
-          let symbol: Nullish<AllowedCryptoSymbolsType>;
-          switch (event.product_id) {
-            case "BTC-USD": {
-              symbol = "BTCUSDT";
-              break;
+      for (const event of data.events) {
+        let symbol: Nullish<AllowedCryptoSymbolsType>;
+        switch (event.product_id) {
+          case "BTC-USD": {
+            symbol = "BTCUSDT";
+            break;
+          }
+          case "ETH-USD": {
+            symbol = "ETHUSDT";
+            break;
+          }
+          case "SOL-USD": {
+            {
+              symbol = "SOLUSDT";
+              // No default
             }
-            case "ETH-USD": {
-              symbol = "ETHUSDT";
-              break;
-            }
-            case "SOL-USD": {
-              {
-                symbol = "SOLUSDT";
-                // No default
+            break;
+          }
+        }
+
+        if (!isAllowedCryptoSymbol(symbol)) return;
+
+        // Handle snapshot (initial orderbook state)
+        if (event.type === "snapshot") {
+          const snapshotEvent =
+            event as unknown as CoinbaseLevel2Snapshot["events"][0];
+
+          // Clear existing orderbook
+          orderbookRef.current.bids.clear();
+          orderbookRef.current.asks.clear();
+
+          // Load bids
+          if (snapshotEvent.bids?.length) {
+            for (const bid of snapshotEvent.bids) {
+              if (Number.parseFloat(bid.new_quantity) > 0) {
+                orderbookRef.current.bids.set(
+                  bid.price_level,
+                  bid.new_quantity,
+                );
               }
-              break;
             }
           }
 
-          if (isAllowedCryptoSymbol(symbol)) {
-            // Handle snapshot (initial orderbook state)
-            if (event.type === "snapshot") {
-              const snapshotEvent =
-                event as unknown as CoinbaseLevel2Snapshot["events"][0];
-
-              // Clear existing orderbook
-              orderbookRef.current.bids.clear();
-              orderbookRef.current.asks.clear();
-
-              // Load bids
-              if (snapshotEvent.bids?.length) {
-                for (const bid of snapshotEvent.bids) {
-                  if (Number.parseFloat(bid.new_quantity) > 0) {
-                    orderbookRef.current.bids.set(
-                      bid.price_level,
-                      bid.new_quantity,
-                    );
-                  }
-                }
-              }
-
-              // Load asks
-              if (snapshotEvent.asks?.length) {
-                for (const ask of snapshotEvent.asks) {
-                  if (Number.parseFloat(ask.new_quantity) > 0) {
-                    orderbookRef.current.asks.set(
-                      ask.price_level,
-                      ask.new_quantity,
-                    );
-                  }
-                }
-              }
-
-              // Calculate and emit price after snapshot
-              const midPrice = calculateMidPrice();
-              if (!isNullOrUndefined(midPrice)) {
-                addDataPoint("coinbase", symbol, {
-                  price: midPrice,
-                  timestamp: Date.now(),
-                });
+          // Load asks
+          if (snapshotEvent.asks?.length) {
+            for (const ask of snapshotEvent.asks) {
+              if (Number.parseFloat(ask.new_quantity) > 0) {
+                orderbookRef.current.asks.set(
+                  ask.price_level,
+                  ask.new_quantity,
+                );
               }
             }
-            // Handle updates (incremental changes)
-            else if (event.type === "update") {
-              const updateEvent = event;
+          }
 
-              if (updateEvent.updates?.length) {
-                for (const update of updateEvent.updates) {
-                  const quantity = Number.parseFloat(update.new_quantity);
+          // Calculate and emit price after snapshot
+          const midPrice = calculateMidPrice();
+          if (!isNullOrUndefined(midPrice)) {
+            addDataPoint("coinbase", symbol, {
+              price: midPrice,
+              timestamp: Date.now(),
+            });
+          }
+        }
+        // Handle updates (incremental changes)
+        else if (event.type === "update") {
+          const updateEvent = event;
 
-                  if (update.side === "bid") {
-                    if (quantity === 0) {
-                      // Remove the price level
-                      orderbookRef.current.bids.delete(update.price_level);
-                    } else {
-                      // Update the price level
-                      orderbookRef.current.bids.set(
-                        update.price_level,
-                        update.new_quantity,
-                      );
-                    }
-                  } else if (update.side === "offer") {
-                    if (quantity === 0) {
-                      // Remove the price level
-                      orderbookRef.current.asks.delete(update.price_level);
-                    } else {
-                      // Update the price level
-                      orderbookRef.current.asks.set(
-                        update.price_level,
-                        update.new_quantity,
-                      );
-                    }
-                  }
+          if (updateEvent.updates?.length) {
+            for (const update of updateEvent.updates) {
+              const quantity = Number.parseFloat(update.new_quantity);
+
+              if (update.side === "bid") {
+                if (quantity === 0) {
+                  // Remove the price level
+                  orderbookRef.current.bids.delete(update.price_level);
+                } else {
+                  // Update the price level
+                  orderbookRef.current.bids.set(
+                    update.price_level,
+                    update.new_quantity,
+                  );
                 }
-
-                // Calculate and emit price after updates
-                const midPrice = calculateMidPrice();
-                if (!isNullOrUndefined(midPrice)) {
-                  addDataPoint("coinbase", symbol, {
-                    price: midPrice,
-                    timestamp: Date.now(),
-                  });
+              } else if (update.side === "offer") {
+                if (quantity === 0) {
+                  // Remove the price level
+                  orderbookRef.current.asks.delete(update.price_level);
+                } else {
+                  // Update the price level
+                  orderbookRef.current.asks.set(
+                    update.price_level,
+                    update.new_quantity,
+                  );
                 }
               }
+            }
+
+            // Calculate and emit price after updates
+            const midPrice = calculateMidPrice();
+            if (!isNullOrUndefined(midPrice)) {
+              addDataPoint("coinbase", symbol, {
+                price: midPrice,
+                timestamp: Date.now(),
+              });
             }
           }
         }
