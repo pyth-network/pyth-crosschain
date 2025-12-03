@@ -1,0 +1,7 @@
+/**
+ * The @stylex directive is used by the @stylexjs/postcss-plugin.
+ * It is automatically replaced with generated CSS during builds.
+ * this was determined by following along with the provided example
+ * on the docsite: https://github.com/facebook/stylex/tree/main/examples/example-nextjs
+ */
+@stylex;

@@ -73,8 +73,6 @@
     "tailwindcss-animate": "catalog:",
     "tailwindcss-react-aria-components": "catalog:",
     "vercel": "catalog:",
-    "@stylexjs/babel-plugin": "catalog:",
-    "@stylexjs/postcss-plugin": "catalog:",
-    "stylex-webpack": "catalog:"
+    "@stylexjs/babel-plugin": "catalog:"
   }
 }
