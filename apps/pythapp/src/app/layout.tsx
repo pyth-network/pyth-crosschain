@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "pythapp",
-  description: "Portal for managing Pyth Pro subscriptions, minting API keys, and checking your API usage",
+  description:
+    "Portal for managing Pyth Pro subscriptions, minting API keys, and checking your API usage",
 };
 
 export default function RootLayout({
