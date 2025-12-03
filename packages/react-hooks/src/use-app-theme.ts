@@ -1,7 +1,6 @@
-"use client";
-
+import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 function getThemePreferenceMediaQuery() {
   return globalThis.window.matchMedia("(prefers-color-scheme: dark)");
@@ -14,31 +13,39 @@ function getThemePreferenceMediaQuery() {
  * (which comes directly from their OS or from their browser's settings)
  */
 export function useAppTheme() {
-  /** refs */
-  const darkQueryRef = useRef(getThemePreferenceMediaQuery());
-
   /** state */
+  const [darkQuery, setDarkQuery] =
+    useState<Nullish<ReturnType<typeof getThemePreferenceMediaQuery>>>(
+      undefined,
+    );
   const [browserThemePreference, setBrowserThemePreference] = useState<
-    "dark" | "light"
-  >(darkQueryRef.current.matches ? "dark" : "light");
+    "dark" | "light" | "system"
+  >("system");
 
   /** hooks */
   const { theme, ...rest } = useTheme();
 
   /** effects */
   useEffect(() => {
-    const { current: mediaQuery } = darkQueryRef;
+    setDarkQuery(getThemePreferenceMediaQuery());
+  }, []);
+
+  useEffect(() => {
+    if (!darkQuery) return;
+
+    // sync initial query
+    setBrowserThemePreference(darkQuery.matches ? "dark" : "light");
 
     const handleChange = (e: MediaQueryListEvent) => {
       setBrowserThemePreference(e.matches ? "dark" : "light");
     };
 
-    mediaQuery.addEventListener("change", handleChange);
+    darkQuery.addEventListener("change", handleChange);
 
     return () => {
-      mediaQuery.removeEventListener("change", handleChange);
+      darkQuery.removeEventListener("change", handleChange);
     };
-  }, []);
+  }, [darkQuery]);
 
   return {
     ...rest,
