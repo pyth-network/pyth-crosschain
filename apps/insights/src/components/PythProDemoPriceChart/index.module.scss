@@ -1,0 +1,14 @@
+@use "@pythnetwork/component-library/theme";
+
+.root {
+  height: 300px;
+
+  @include theme.breakpoint("sm") {
+    height: 600px;
+  }
+
+  & > canvas {
+    height: 100%;
+    width: 100%;
+  }
+}

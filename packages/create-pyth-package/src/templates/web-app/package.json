@@ -48,6 +48,7 @@
     "@next/third-parties": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
     "@pythnetwork/react-hooks": "workspace:*",
+    "@pythnetwork/shared-lib": "workspace:",
     "@react-hookz/web": "catalog:",
     "clsx": "catalog:",
     "framer-motion": "catalog:",

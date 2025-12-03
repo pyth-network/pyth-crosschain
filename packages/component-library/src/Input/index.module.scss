@@ -1,0 +1,44 @@
+@use "sass:math";
+@use "../theme";
+
+// Base input styles
+.input {
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background-color: theme.color("background", "primary");
+  caret-color: theme.color("focus");
+  display: inline-block;
+  outline: theme.spacing(1) solid transparent;
+  outline-offset: 0;
+  overflow: hidden;
+  padding: theme.spacing(2);
+  text-overflow: ellipsis;
+  transition-property: border-color, outline-color, background-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: theme.color("forms", "input", "hover", "border");
+  }
+
+  &:focus {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+
+  // Placeholder
+  &::placeholder {
+    color: theme.color("button", "disabled", "foreground");
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: theme.color("button", "disabled", "background");
+    border-color: transparent;
+  }
+
+  &[data-fullwidth] {
+    width: 100%;
+  }
+}
