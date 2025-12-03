@@ -18,8 +18,8 @@ export function PythProApiTokensMenu() {
   const [open, setOpen] = useState(false);
 
   /** local variables */
-  const tooltip = "Configure your API tokens";
-  const closeTooltip = "Close API tokens config";
+  const tooltip = "Configure your API keys";
+  const closeTooltip = "Close API keys config";
 
   return (
     <>
@@ -61,7 +61,7 @@ export function PythProApiTokensMenu() {
             <div className={classes.fyi}>
               In order to provide a quality demo of Pyth Pro real-time
               performance relative to other sources, you will need to provide
-              API tokens to interact with these APIs.
+              API keys to interact with these APIs.
             </div>
             <div className={classes.fyi}>
               They will be saved securely to your browser for future use here.

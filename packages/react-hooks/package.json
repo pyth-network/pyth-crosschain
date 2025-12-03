@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@pythnetwork/shared-lib": "workspace:",
+    "next-themes": "catalog:",
     "nuqs": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
@@ -48,6 +49,10 @@
     "./nuqs": {
       "types": "./dist/nuqs.d.ts",
       "default": "./dist/nuqs.mjs"
+    },
+    "./use-app-theme": {
+      "types": "./dist/use-app-theme.d.ts",
+      "default": "./dist/use-app-theme.mjs"
     },
     "./use-websocket": {
       "types": "./dist/use-websocket.d.ts",
