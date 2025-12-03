@@ -33,6 +33,7 @@ export function PythProDemoPriceChartImpl({
   const chartRef = useRef<IChartApi>(undefined);
   const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
 
+  /** effects */
   useLayoutEffect(() => {
     if (!containerRef.current) return;
 
@@ -67,6 +68,26 @@ export function PythProDemoPriceChartImpl({
       chart.remove();
       chartRef.current = undefined;
       seriesMapRef.current = {};
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!chartRef.current || !containerRef.current) return;
+    const { current: chartApi } = chartRef;
+
+    const o = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+
+      const {
+        contentRect: { height, width },
+      } = entry;
+      chartApi.resize(width, height);
+    });
+
+    o.observe(containerRef.current);
+
+    return () => {
+      o.disconnect();
     };
   }, []);
 
