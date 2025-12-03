@@ -182,6 +182,10 @@ catalog:
   zod: ^3.24.2
   zod-search-params: ^0.1.6
   zod-validation-error: ^3.4.0
+  "@stylexjs/babel-plugin": ^0.17.2
+  "@stylexjs/postcss-plugin": ^0.17.2
+  "@stylexjs/stylex": ^0.17.2
+  stylex-webpack: ^0.4.7
 
 onlyBuiltDependencies:
   - "@apollo/protobufjs"

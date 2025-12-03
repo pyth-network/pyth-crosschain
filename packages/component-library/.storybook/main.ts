@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 
 import type { StorybookConfig } from "@storybook/nextjs";
+import { StyleXPlugin } from "stylex-webpack";
 
 const resolve = createRequire(import.meta.url).resolve;
 
@@ -60,6 +61,8 @@ const config = {
         ".jsx": [".jsx", ".tsx"],
       },
     };
+    config.plugins ??= [];
+    config.plugins.push(new StyleXPlugin());
 
     for (const rule of config.module?.rules ?? []) {
       if (

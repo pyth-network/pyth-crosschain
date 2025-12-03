@@ -1,4 +1,7 @@
-export default {
+import { withStyleX } from "stylex-webpack/next";
+
+/** @type {import('next').NextConfig} */
+const config = {
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
@@ -59,3 +62,5 @@ export default {
     },
   ],
 };
+
+export default withStyleX()(config);

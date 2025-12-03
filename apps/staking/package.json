@@ -49,7 +49,8 @@
     "react-dom": "catalog:",
     "recharts": "catalog:",
     "swr": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@stylexjs/stylex": "catalog:"
   },
   "devDependencies": {
     "@axe-core/react": "catalog:",
@@ -71,6 +72,9 @@
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:",
     "tailwindcss-react-aria-components": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "@stylexjs/babel-plugin": "catalog:",
+    "@stylexjs/postcss-plugin": "catalog:",
+    "stylex-webpack": "catalog:"
   }
 }

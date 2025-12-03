@@ -352,7 +352,8 @@
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
-    "swr": "catalog:"
+    "swr": "catalog:",
+    "@stylexjs/stylex": "catalog:"
   },
   "devDependencies": {
     "@babel/cli": "catalog:",
@@ -391,7 +392,10 @@
     "storybook": "catalog:",
     "style-loader": "catalog:",
     "stylelint": "catalog:",
-    "stylelint-config-standard-scss": "catalog:"
+    "stylelint-config-standard-scss": "catalog:",
+    "@stylexjs/babel-plugin": "catalog:",
+    "@stylexjs/postcss-plugin": "catalog:",
+    "stylex-webpack": "catalog:"
   },
   "ts-duality": {
     "extraExports": {

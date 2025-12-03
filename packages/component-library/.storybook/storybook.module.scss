@@ -1,5 +1,7 @@
 @use "../src/theme.scss";
 
+@import "stylex-webpack/stylex.css";
+
 body,
 :global(#storybook-root) {
   padding: 0 !important;
