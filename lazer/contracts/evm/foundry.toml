@@ -2,6 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+fs_permissions = [{ access = "read-write", path = "."}]
 
 optimizer = true
 optimizer_runs = 100000

@@ -54,10 +54,14 @@ const apiChainConfigToEntrySchema = ApiChainConfigSchema.transform((chain) => {
 
 const entropyDeploymentsSchema = z.array(apiChainConfigToEntrySchema);
 
+const HIDDEN_CHAINS = new Set(["taiko"]);
+
 export async function fetchEntropyDeployments(
   url: string,
 ): Promise<Record<string, EntropyDeployment>> {
   const response = await fetch(url);
   const entries = entropyDeploymentsSchema.parse(await response.json());
-  return Object.fromEntries(entries);
+  return Object.fromEntries(
+    entries.filter(([name]) => !HIDDEN_CHAINS.has(name)),
+  );
 }

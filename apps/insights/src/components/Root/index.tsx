@@ -1,3 +1,5 @@
+import "./css-vars.scss";
+
 import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
