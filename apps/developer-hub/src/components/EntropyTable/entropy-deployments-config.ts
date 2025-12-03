@@ -24,5 +24,6 @@ export const EntropyDeploymentsConfig: Record<string, ChainOverride> = {
   },
   "143": {
     nativeCurrency: "MON",
+    explorer: "https://monadvision.com",
   },
 };
