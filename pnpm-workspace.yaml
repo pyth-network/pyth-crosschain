@@ -55,7 +55,7 @@ catalog:
   "@babel/cli": ^7.27.2
   "@babel/core": ^7.27.1
   "@babel/preset-typescript": ^7.27.1
-  "@better-builds/ts-duality": ^0.1.2
+  "@better-builds/ts-duality": ^0.6.0
   "@bonfida/spl-name-service": ^3.0.10
   "@clickhouse/client": ^1.11.0
   "@coral-xyz/anchor": ^0.30.1
