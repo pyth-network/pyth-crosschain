@@ -61,9 +61,35 @@ export const PriceFeedIdsProTable = () => {
       if (!searchString) {
         return items;
       }
-      return matchSorter(items, searchString, {
-        keys: ["pyth_lazer_id", "symbol", "name", "description"],
-      });
+      // Split by commas or spaces to support multiple search terms
+      const searchTerms = searchString
+        .split(/[,\s]+/)
+        .map((term) => term.trim().toLowerCase())
+        .filter((term) => term.length > 0);
+
+      if (searchTerms.length === 0) {
+        return items;
+      }
+
+      // For single term, use matchSorter directly for better ranking
+      const firstTerm = searchTerms[0];
+      if (searchTerms.length === 1 && firstTerm !== undefined) {
+        return matchSorter(items, firstTerm, {
+          keys: ["pyth_lazer_id", "symbol", "name", "description"],
+        });
+      }
+
+      // For multiple terms, return items matching ANY term (OR logic)
+      const matchedItems = new Set<(typeof items)[number]>();
+      for (const term of searchTerms) {
+        const matches = matchSorter(items, term, {
+          keys: ["pyth_lazer_id", "symbol", "name", "description"],
+        });
+        for (const match of matches) {
+          matchedItems.add(match);
+        }
+      }
+      return [...matchedItems];
     },
     {
       defaultSort: "pyth_lazer_id",
@@ -95,7 +121,7 @@ export const PriceFeedIdsProTable = () => {
     <>
       <SearchInput
         label="Search price feeds"
-        placeholder="Search by symbol, name, or Pyth Pro ID"
+        placeholder="Search by symbol, name, or ID (comma/space separated)"
         value={search}
         onChange={updateSearch}
         className={styles.searchInput ?? ""}
