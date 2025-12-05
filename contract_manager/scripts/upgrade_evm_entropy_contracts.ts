@@ -50,6 +50,9 @@ function registry(cluster: PythCluster): string {
 
 async function main() {
   const argv = await parser.argv;
+  if (!argv["std-output"]) {
+    throw new Error("std-output is required");
+  }
   const cacheFile =
     argv["contract-type"] === "executor"
       ? EXECUTOR_CACHE_FILE
