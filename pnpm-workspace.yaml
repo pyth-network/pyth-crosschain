@@ -1,3 +1,16 @@
+packageManagerStrict: true
+packageManagerStrictVersion: true
+engineStrict: true
+strictDepBuilds: true
+managePackageManagerVersions: true
+
+overrides:
+  "@solana/web3.js@1.77.4>rpc-websockets": 7.11.0
+
+patchedDependencies:
+  "eccrypto@1.1.6": patches/eccrypto@1.1.6.patch
+  "@ton/blueprint": patches/@ton__blueprint.patch
+
 packages:
   - apps/*
   - packages/*
@@ -174,21 +187,17 @@ catalog:
   zod-search-params: ^0.1.6
   zod-validation-error: ^3.4.0
 
-engineStrict: true
-
-managePackageManagerVersions: true
-
 onlyBuiltDependencies:
-  - '@apollo/protobufjs'
-  - '@injectivelabs/networks'
-  - '@injectivelabs/sdk-ts'
-  - '@injectivelabs/token-metadata'
-  - '@injectivelabs/utils'
-  - '@parcel/watcher'
-  - '@scarf/scarf'
-  - '@swc/core'
-  - '@tailwindcss/oxide'
-  - '@trufflesuite/bigint-buffer'
+  - "@apollo/protobufjs"
+  - "@injectivelabs/networks"
+  - "@injectivelabs/sdk-ts"
+  - "@injectivelabs/token-metadata"
+  - "@injectivelabs/utils"
+  - "@parcel/watcher"
+  - "@scarf/scarf"
+  - "@swc/core"
+  - "@tailwindcss/oxide"
+  - "@trufflesuite/bigint-buffer"
   - bigint-buffer
   - blake-hash
   - bufferutil
@@ -213,16 +222,3 @@ onlyBuiltDependencies:
   - web3
   - web3-bzz
   - web3-shh
-
-overrides:
-  '@solana/web3.js@1.77.4>rpc-websockets': 7.11.0
-
-packageManagerStrict: true
-
-packageManagerStrictVersion: true
-
-patchedDependencies:
-  '@ton/blueprint': patches/@ton__blueprint.patch
-  eccrypto@1.1.6: patches/eccrypto@1.1.6.patch
-
-strictDepBuilds: true
