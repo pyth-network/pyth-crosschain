@@ -923,5 +923,10 @@
     "chain": "orange",
     "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
     "type": "EvmWormholeContract"
+  },
+  {
+    "chain": "celo_sepolia_testnet",
+    "address": "0xb27e5ca259702f209a29225d0eDdC131039C9933",
+    "type": "EvmWormholeContract"
   }
 ]
