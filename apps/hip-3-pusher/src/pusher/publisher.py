@@ -18,9 +18,16 @@ from pusher.price_state import PriceState
 
 
 class PushErrorReason(StrEnum):
+    """ setOracle push failure modes """
+    # 2.5s rate limit reject, expected with redundant relayers
     RATE_LIMIT = "rate_limit"
+    # Per-account limit, need to purchase more transactions with reserveRequestWeight
     USER_LIMIT = "user_limit"
+    # Some exception thrown internally
     INTERNAL_ERROR = "internal_error"
+    # Invalid nonce, if the pusher account pushes multiple transactions with the same ms timestamp
+    INVALID_NONCE = "invalid_nonce"
+    # Some error string we haven't categorized yet
     UNKNOWN = "unknown"
 
 
@@ -59,6 +66,8 @@ class Publisher:
             if not config.multisig.multisig_address:
                 raise Exception("Multisig enabled but missing multisig address")
             self.multisig_address = config.multisig.multisig_address
+        else:
+            self.multisig_address = None
 
         self.market_name = config.hyperliquid.market_name
         self.enable_publish = config.hyperliquid.enable_publish
@@ -223,6 +232,8 @@ class Publisher:
             return PushErrorReason.RATE_LIMIT
         elif "Too many cumulative requests" in response:
             return PushErrorReason.USER_LIMIT
+        elif "Invalid nonce" in response:
+            return PushErrorReason.INVALID_NONCE
         else:
             logger.warning("Unrecognized error response: {}", response)
             return PushErrorReason.UNKNOWN
