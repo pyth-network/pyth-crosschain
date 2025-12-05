@@ -102,16 +102,39 @@ export const PriceFeedIdsProTable = () => {
         );
       };
 
-      // Use Map to deduplicate by pyth_lazer_id
-      const matchedItems = new Map<number, (typeof items)[number]>();
+      // Collect matches with priority: exact ID matches first, then others
+      const exactIdMatches: (typeof items)[number][] = [];
+      const otherMatches = new Map<number, (typeof items)[number]>();
+
       for (const term of searchTerms) {
+        const isNumericTerm = /^\d+$/.test(term);
         for (const item of items) {
           if (termMatchesItem(item, term)) {
-            matchedItems.set(item.pyth_lazer_id, item);
+            // Exact ID matches get priority
+            if (isNumericTerm && String(item.pyth_lazer_id) === term) {
+              if (
+                !exactIdMatches.some(
+                  (m) => m.pyth_lazer_id === item.pyth_lazer_id,
+                )
+              ) {
+                exactIdMatches.push(item);
+              }
+            } else if (
+              !exactIdMatches.some(
+                (m) => m.pyth_lazer_id === item.pyth_lazer_id,
+              )
+            ) {
+              otherMatches.set(item.pyth_lazer_id, item);
+            }
           }
         }
       }
-      return [...matchedItems.values()];
+
+      // Return exact ID matches first, then other matches sorted by ID
+      const otherMatchesArray = [...otherMatches.values()].sort(
+        (a, b) => a.pyth_lazer_id - b.pyth_lazer_id,
+      );
+      return [...exactIdMatches, ...otherMatchesArray];
     },
     {
       defaultSort: "pyth_lazer_id",
