@@ -44,7 +44,7 @@ pnpm turbo build --filter @pythnetwork/pyth-evm-contract
 
 echo "=========== Deploying the contracts ==========="
 
-pnpm --filter=@pythnetwork/contract-manager exec ts-node scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir $stdoutputdir --private-key $PK --chain "$@"
+pnpm --filter=@pythnetwork/contract-manager exec tsx scripts/deploy_evm_pricefeed_contracts.ts --std-output-dir $stdoutputdir --private-key $PK --chain "$@"
 
 echo "=========== Cleaning up ==========="
 if [ -n "${tmpdir:-}" ]; then
