@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-pusher",
-  "version": "10.3.0",
+  "version": "10.3.1",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "./dist/index.cjs",
@@ -9,7 +9,7 @@
     "dist/**/*"
   ],
   "bin": {
-    "pyth-price-pusher": "./dist/index.js"
+    "pyth-price-pusher": "./dist/index.cjs"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
     "fix:lint": "eslint src/ --fix --max-warnings 0",
     "test:format": "prettier --check \"src/**/*.ts\"",
     "test:lint": "eslint src/ --max-warnings 0",
-    "start": "node dist/index.js",
+    "start": "node dist/index.cjs",
     "dev": "ts-node src/index.ts",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
