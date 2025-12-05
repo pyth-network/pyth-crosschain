@@ -79,17 +79,39 @@ export const PriceFeedIdsProTable = () => {
         });
       }
 
-      // For multiple terms, return items matching ANY term (OR logic)
-      const matchedItems = new Set<(typeof items)[number]>();
+      // For multiple terms, use exact/substring matching with OR logic
+      // This ensures each term finds its specific matches
+      const termMatchesItem = (
+        item: (typeof items)[number],
+        term: string,
+      ): boolean => {
+        // Numeric ID match - exact match for numeric terms
+        if (/^\d+$/.test(term)) {
+          return String(item.pyth_lazer_id) === term;
+        }
+
+        // String match - case-insensitive substring match
+        const symbol = item.symbol.toLowerCase();
+        const name = item.name.toLowerCase();
+        const description = item.description.toLowerCase();
+
+        return (
+          symbol.includes(term) ||
+          name.includes(term) ||
+          description.includes(term)
+        );
+      };
+
+      // Use Map to deduplicate by pyth_lazer_id
+      const matchedItems = new Map<number, (typeof items)[number]>();
       for (const term of searchTerms) {
-        const matches = matchSorter(items, term, {
-          keys: ["pyth_lazer_id", "symbol", "name", "description"],
-        });
-        for (const match of matches) {
-          matchedItems.add(match);
+        for (const item of items) {
+          if (termMatchesItem(item, term)) {
+            matchedItems.set(item.pyth_lazer_id, item);
+          }
         }
       }
-      return [...matchedItems];
+      return [...matchedItems.values()];
     },
     {
       defaultSort: "pyth_lazer_id",
