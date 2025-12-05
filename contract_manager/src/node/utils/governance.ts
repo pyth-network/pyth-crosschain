@@ -12,7 +12,6 @@ import {
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/index.js";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import type { PythCluster } from "@pythnetwork/client";
 import { getPythClusterApiUrl } from "@pythnetwork/client";
 import type { PriorityFeeConfig } from "@pythnetwork/solana-utils";
@@ -35,7 +34,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
-import SquadsMesh from "@sqds/mesh";
+import SquadsMeshModule from "@sqds/mesh";
 import * as bs58 from "bs58";
 
 import type { KeyValueConfig } from "../../core/base.js";
@@ -231,7 +230,7 @@ export class WormholeEmitter {
 export class WormholeMultisigProposal {
   constructor(
     public address: PublicKey,
-    public squad: SquadsMesh,
+    public squad: SquadsMeshInstance,
     public cluster: PythCluster,
   ) {}
 
@@ -267,7 +266,7 @@ export class WormholeMultisigProposal {
             this.cluster,
           ),
         );
-      } catch (error) {
+      } catch (error: unknown) {
         if (!(error instanceof InvalidTransactionError)) throw error;
       }
     }
@@ -280,10 +279,19 @@ export class WormholeMultisigProposal {
  * A vault represents a pyth multisig governance realm which exists in solana mainnet or testnet.
  * It can be used for proposals to send wormhole messages to the wormhole bridge.
  */
+type SquadsMeshClass = typeof SquadsMeshModule;
+type SquadsMeshInstance = InstanceType<SquadsMeshClass>;
+
+function getSquadsMesh(): SquadsMeshClass {
+  const mod = SquadsMeshModule as { default?: SquadsMeshClass };
+  if (mod.default) return mod.default;
+  return SquadsMeshModule;
+}
+
 export class Vault extends Storable {
   static type = "vault";
   key: PublicKey;
-  squad?: SquadsMesh;
+  squad?: SquadsMeshInstance;
   cluster: PythCluster;
 
   constructor(key: string, cluster: string) {
@@ -327,10 +335,11 @@ export class Vault extends Storable {
     wallet: Wallet,
     registry: SolanaRpcRegistry = getPythClusterApiUrl,
   ): void {
-    this.squad = SquadsMesh.endpoint(registry(this.cluster), wallet);
+    const mesh = getSquadsMesh();
+    this.squad = mesh.endpoint(registry(this.cluster), wallet);
   }
 
-  getSquadOrThrow(): SquadsMesh {
+  getSquadOrThrow(): SquadsMeshInstance {
     if (!this.squad) throw new Error("Please connect a wallet to the vault");
     return this.squad;
   }
@@ -341,9 +350,10 @@ export class Vault extends Storable {
    */
   // eslint-disable-next-line @typescript-eslint/require-await
   public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
-    const squad = SquadsMesh.endpoint(
+    const mesh = getSquadsMesh();
+    const squad = mesh.endpoint(
       registry(this.cluster),
-      new NodeWallet(Keypair.generate()), // dummy wallet
+      new Wallet(Keypair.generate()), // dummy wallet
     );
     return squad.getAuthorityPDA(this.key, 1);
   }
@@ -401,7 +411,7 @@ export class Vault extends Storable {
  */
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function loadHotWallet(walletPath: string): Promise<Wallet> {
-  return new NodeWallet(
+  return new Wallet(
     Keypair.fromSecretKey(
       Uint8Array.from(JSON.parse(readFileSync(walletPath, "ascii"))),
     ),
