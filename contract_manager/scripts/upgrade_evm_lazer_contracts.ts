@@ -141,7 +141,9 @@ async function main() {
   const payloads: Buffer[] = [];
   const failures: string[] = [];
   for (const contract of Object.values(DefaultStore.lazer_contracts)) {
-    if (selectedChains.includes(contract.chain)) {
+    if (
+      selectedChains.some((chain) => chain.getId() === contract.chain.getId())
+    ) {
       console.log("Deploying implementation to", contract.chain.getId());
       try {
         const address = await runIfNotCached(
