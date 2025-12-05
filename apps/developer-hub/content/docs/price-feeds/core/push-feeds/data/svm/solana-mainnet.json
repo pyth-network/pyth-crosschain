@@ -361,6 +361,30 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "NOPAL/USD.RR",
+      "account_address": "3GDZNVfeYJupHxj65tyCC44HW5NHPTycBihFrCEcDTBj",
+      "id": "8858dfaa8998ff44681aa145a8aa5b7772979b1d044a1bbf3cf5d971168baa85",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "NTBILL/USD.RR",
+      "account_address": "FrJxRfRkaktSWrEPsBaJhx7fdofPZZsuNHoh4E9YxZjn",
+      "id": "f03015f29e6c90d5fe62da7d1a13c912c8bf7523d90c981387f82ee0c83332bd",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "NBASIS/USD.RR",
+      "account_address": "Cv7ZRaS7vezPHVfYBYqUvaXBqh9VABbC1JDczCHzAd3j",
+      "id": "fd9397e6dfc968ff8eaa652c6e4b7dfdeb6fdc940afe90c23ca5acfa45d408e1",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "CASH/RD.RR",
       "account_address": "7ELVkNXhZLJGdwPGps8sEBgs583TewjZoRzgf9Zdp5T8",
       "id": "64c74ffd61574170cfaee65c54c8810adcf83f6c31f3c256d9a290dcbf4ff1a9",
