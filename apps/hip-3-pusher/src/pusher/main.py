@@ -27,6 +27,7 @@ def load_config():
         config_toml = tomllib.load(config_file)
         config = Config(**config_toml)
         logger.debug("Config loaded: {}", config)
+        logger.info("Price config: {}", config.price)
     return config
 
 
@@ -44,6 +45,7 @@ async def main():
 
     price_state = PriceState(config)
     metrics = Metrics(config)
+    metrics.set_price_configs(config.hyperliquid.market_name, config.price)
 
     publisher = Publisher(config, price_state, metrics)
     hyperliquid_listener = HyperliquidListener(config, price_state.hl_oracle_state, price_state.hl_mark_state, price_state.hl_mid_state)
