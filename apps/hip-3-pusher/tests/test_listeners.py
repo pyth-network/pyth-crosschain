@@ -1,5 +1,7 @@
 import datetime
 
+import pytest
+
 from pusher.config import Config, LazerConfig, HermesConfig, HyperliquidConfig
 from pusher.hermes_listener import HermesListener
 from pusher.hyperliquid_listener import HyperliquidListener
@@ -100,7 +102,11 @@ class TestHermesListener:
         assert hermes_state.state == {}
 
     def test_parse_hermes_message_malformed(self):
-        """Test that malformed messages don't crash."""
+        """Test that malformed messages result in no state mutation.
+
+        Note: parse_hermes_message swallows exceptions internally, so this test
+        verifies the observable behavior (no state change) rather than exception handling.
+        """
         config = get_base_config()
         hermes_state = PriceSourceState("hermes")
         listener = HermesListener(config, hermes_state)
@@ -201,7 +207,7 @@ class TestLazerListener:
         assert update8.price == "99000000"
 
     def test_parse_lazer_message_missing_price(self):
-        """Test that feeds without price are skipped."""
+        """Test that feeds without price key are skipped."""
         config = get_base_config()
         lazer_state = PriceSourceState("lazer")
         listener = LazerListener(config, lazer_state)
@@ -221,6 +227,32 @@ class TestLazerListener:
         assert lazer_state.get(1) is None
         update8 = lazer_state.get(8)
         assert update8 is not None
+
+    def test_parse_lazer_message_null_price(self):
+        """Test that feeds with explicit null price are skipped.
+
+        Lazer emits null prices when no aggregation is available for a feed.
+        """
+        config = get_base_config()
+        lazer_state = PriceSourceState("lazer")
+        listener = LazerListener(config, lazer_state)
+
+        message = {
+            "type": "streamUpdated",
+            "parsed": {
+                "priceFeeds": [
+                    {"priceFeedId": 1, "price": None},
+                    {"priceFeedId": 8, "price": "99000000"}
+                ]
+            }
+        }
+
+        listener.parse_lazer_message(message)
+
+        assert lazer_state.get(1) is None
+        update8 = lazer_state.get(8)
+        assert update8 is not None
+        assert update8.price == "99000000"
 
     def test_parse_lazer_message_malformed(self):
         """Test that malformed messages don't crash."""
@@ -367,18 +399,27 @@ class TestHyperliquidListener:
         assert hl_mid_state.state == {}
 
 
+class MockSedaListener:
+    """Mock SedaListener for testing _parse_seda_message directly."""
+
+    def __init__(self, seda_state: PriceSourceState):
+        self.seda_state = seda_state
+
+
+@pytest.fixture
+def seda_listener_fixture():
+    """Create a mock SEDA listener with fresh state for testing."""
+    seda_state = PriceSourceState("seda")
+    listener = MockSedaListener(seda_state)
+    return listener, seda_state
+
+
 class TestSedaListener:
     """Tests for SedaListener message parsing."""
 
-    def test_parse_seda_message_valid(self):
+    def test_parse_seda_message_valid(self, seda_listener_fixture):
         """Test parsing valid SEDA message."""
-        seda_state = PriceSourceState("seda")
-
-        class MockSedaListener:
-            def __init__(self):
-                self.seda_state = seda_state
-
-        listener = MockSedaListener()
+        listener, seda_state = seda_listener_fixture
 
         message = {
             "data": {
@@ -394,15 +435,13 @@ class TestSedaListener:
         expected_timestamp = datetime.datetime.fromisoformat("2024-01-15T12:00:00.000Z").timestamp()
         assert update.timestamp == expected_timestamp
 
-    def test_parse_seda_message_different_timestamp_format(self):
-        """Test parsing SEDA message with different timestamp format."""
-        seda_state = PriceSourceState("seda")
+    def test_parse_seda_message_different_timestamp_format(self, seda_listener_fixture):
+        """Test parsing SEDA message with microseconds in timestamp.
 
-        class MockSedaListener:
-            def __init__(self):
-                self.seda_state = seda_state
-
-        listener = MockSedaListener()
+        Python's fromisoformat() handles various ISO 8601 formats including
+        timestamps with microseconds, which SEDA may emit.
+        """
+        listener, seda_state = seda_listener_fixture
 
         message = {
             "data": {
@@ -416,15 +455,9 @@ class TestSedaListener:
         assert update is not None
         assert update.price == "100.25"
 
-    def test_parse_seda_message_numeric_rate(self):
+    def test_parse_seda_message_numeric_rate(self, seda_listener_fixture):
         """Test parsing SEDA message with numeric composite_rate."""
-        seda_state = PriceSourceState("seda")
-
-        class MockSedaListener:
-            def __init__(self):
-                self.seda_state = seda_state
-
-        listener = MockSedaListener()
+        listener, seda_state = seda_listener_fixture
 
         message = {
             "data": {
