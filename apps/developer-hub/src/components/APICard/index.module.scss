@@ -1,0 +1,77 @@
+@use "@pythnetwork/component-library/theme";
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: theme.spacing(4);
+
+  @include theme.breakpoint("md") {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (width <= 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+  padding: theme.spacing(5);
+  border-radius: theme.border-radius("lg");
+  background-color: theme.color("background", "secondary");
+  text-decoration: none;
+  transition: background-color 200ms ease-out;
+
+  &:hover {
+    background-color: theme.color("background", "card-highlight");
+  }
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+  flex-wrap: wrap;
+}
+
+.name {
+  font-size: theme.font-size("sm");
+  font-weight: theme.font-weight("semibold");
+  color: theme.color("foreground");
+}
+
+.badge {
+  font-size: theme.font-size("xxs");
+  font-weight: theme.font-weight("semibold");
+  text-transform: uppercase;
+  letter-spacing: theme.letter-spacing("wide");
+}
+
+.get {
+  color: theme.pallette-color("green", 400);
+}
+
+.post {
+  color: theme.pallette-color("amber", 400);
+}
+
+.put {
+  color: theme.pallette-color("blue", 400);
+}
+
+.patch {
+  color: theme.pallette-color("purple", 400);
+}
+
+.delete {
+  color: theme.pallette-color("red", 400);
+}
+
+.description {
+  font-size: theme.font-size("sm");
+  font-weight: theme.font-weight("normal");
+  line-height: 1.6;
+  color: theme.color("muted");
+}
