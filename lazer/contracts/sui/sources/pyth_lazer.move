@@ -54,14 +54,14 @@ public(package) fun verify_le_ecdsa_message(
     let pubkey = secp256k1_ecrecover(signature, payload, 0);
 
     // Check if the recovered pubkey is in the trusted signers list
-    let trusted_signers = state::get_trusted_signers(s);
+    let trusted_signers = s.get_trusted_signers();
     let mut maybe_idx = state::find_signer_index(trusted_signers, &pubkey);
 
     if (option::is_some(&maybe_idx)) {
         let idx = option::extract(&mut maybe_idx);
         let found_signer = &trusted_signers[idx];
-        let expires_at = state::expires_at(found_signer);
-        assert!(clock.timestamp_ms() < expires_at, ESignerExpired);
+        let expires_at_ms = found_signer.expires_at_ms();
+        assert!(clock.timestamp_ms() < expires_at_ms, ESignerExpired);
     } else {
         abort ESignerNotTrusted
     }
@@ -100,8 +100,8 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
     let payload_len = cursor.peel_u16();
     let payload = cursor.into_remainder_bytes();
 
-    // Validate expectedpayload length
-    assert!((payload_len as u64) == payload.length(), EInvalidPayloadLength);
+    // Validate expected payload length
+    assert!(payload_len as u64 == payload.length(), EInvalidPayloadLength);
 
     // Parse payload
     let mut payload_cursor = bcs::new(payload);
