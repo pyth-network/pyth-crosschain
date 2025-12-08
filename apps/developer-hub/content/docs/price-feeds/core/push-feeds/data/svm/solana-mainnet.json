@@ -385,6 +385,22 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "NWISDOM/USD.RR",
+      "account_address": "CTwo3uNzA3Pj1aJRN77Xi7icfq9Q53JWTfppUrEYHfhC",
+      "id": "384986c9655ec6887dbd7f7430d864992f872db2c77ba5781a26b78dad277adc",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "NALPHA/USD.RR",
+      "account_address": "DihTptVgZNyfxN5ya1V5XThRJHhzZ4V2RAPpwvNXkxUK",
+      "id": "57d1e11bea1316c2f7263a39c2780685691585aae34eff39300f5db564501b17",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "CASH/RD.RR",
       "account_address": "7ELVkNXhZLJGdwPGps8sEBgs583TewjZoRzgf9Zdp5T8",
       "id": "64c74ffd61574170cfaee65c54c8810adcf83f6c31f3c256d9a290dcbf4ff1a9",
