@@ -52,6 +52,7 @@ export function PythProDemoPriceChartImpl({
         : (getThemeCssVar("--theme-palette-gray-800") ?? "#ccc");
 
     const chart = createChart(containerRef.current, {
+      autoSize: true,
       layout: {
         attributionLogo: false, // hide TradingView logo
         background: { color: "transparent" },
@@ -81,26 +82,6 @@ export function PythProDemoPriceChartImpl({
       seriesMapRef.current = {};
     };
   }, [theme]);
-
-  useLayoutEffect(() => {
-    if (!chartRef.current || !containerRef.current) return;
-    const { current: chartApi } = chartRef;
-
-    const o = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-
-      const {
-        contentRect: { height, width },
-      } = entry;
-      chartApi.resize(width, height);
-    });
-
-    o.observe(containerRef.current);
-
-    return () => {
-      o.disconnect();
-    };
-  }, []);
 
   useEffect(() => {
     if (!chartRef.current || !isAllowedSymbol(selectedSource)) return;

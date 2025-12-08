@@ -3,31 +3,22 @@ import { z } from "zod";
 const BINANCE = "binance";
 const BYBIT = "bybit";
 const COINBASE = "coinbase";
-const INFOWAY = "infoway_io";
 const OKX = "okx";
-const PRIME_API = "prime_api";
 const PYTH = "pyth";
 const PYTH_PRO = "pyth_pro";
-const TWELVE_DATA = "twelve_data";
 
 export const ALL_DATA_SOURCES = z.enum([
   BINANCE,
   BYBIT,
   COINBASE,
-  INFOWAY,
   OKX,
-  PRIME_API,
   PYTH,
   PYTH_PRO,
-  TWELVE_DATA,
 ]);
 export type AllDataSourcesType = z.infer<typeof ALL_DATA_SOURCES>;
 
 export const DATA_SOURCES_REQUIRING_API_TOKENS = z.enum([
-  ALL_DATA_SOURCES.Enum.infoway_io,
-  ALL_DATA_SOURCES.Enum.prime_api,
   ALL_DATA_SOURCES.Enum.pyth_pro,
-  ALL_DATA_SOURCES.Enum.twelve_data,
 ]);
 export type DataSourcesRequiringApiTokens = z.infer<
   typeof DATA_SOURCES_REQUIRING_API_TOKENS
@@ -43,12 +34,7 @@ export const DATA_SOURCES_CRYPTO = z.enum([
 ]);
 export type DataSourcesCryptoType = z.infer<typeof DATA_SOURCES_CRYPTO>;
 
-export const DATA_SOURCES_EQUITY = z.enum([
-  PYTH,
-  PYTH_PRO,
-  TWELVE_DATA,
-  INFOWAY,
-]);
+export const DATA_SOURCES_EQUITY = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesEquityType = z.infer<typeof DATA_SOURCES_EQUITY>;
 
 export const DATA_SOURCES_HISTORICAL = z.enum([
@@ -57,12 +43,7 @@ export const DATA_SOURCES_HISTORICAL = z.enum([
 ]);
 export type DataSourcesHistoricalType = z.infer<typeof DATA_SOURCES_HISTORICAL>;
 
-export const DATA_SOURCES_FOREX = z.enum([
-  PYTH,
-  PYTH_PRO,
-  PRIME_API,
-  TWELVE_DATA,
-]);
+export const DATA_SOURCES_FOREX = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesForexType = z.infer<typeof DATA_SOURCES_FOREX>;
 
 export const DATA_SOURCES_FUTURES = z.enum([PYTH, PYTH_PRO]);
