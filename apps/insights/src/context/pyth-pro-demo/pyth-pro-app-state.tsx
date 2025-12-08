@@ -17,6 +17,7 @@ import {
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
   DATA_SOURCES_FUTURES,
+  DATA_SOURCES_HISTORICAL,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   isAllowedCryptoSymbol,
@@ -24,6 +25,7 @@ import {
   isAllowedForexSymbol,
   isAllowedFutureSymbol,
   isAllowedSymbol,
+  isHistoricalSymbol,
 } from "../../util/pyth-pro-demo";
 
 export type AppStateContextVal = CurrentPricesStoreState & {
@@ -31,6 +33,12 @@ export type AppStateContextVal = CurrentPricesStoreState & {
     dataSource: AllDataSourcesType,
     symbol: AllAllowedSymbols,
     dataPoint: PriceData,
+  ) => void;
+
+  addHistoricalDataPoints: (
+    dataSource: AllDataSourcesType,
+    symbol: AllAllowedSymbols,
+    dataPoint: PriceData[],
   ) => void;
 
   dataSourcesInUse: AllDataSourcesType[];
@@ -50,6 +58,7 @@ const initialState: CurrentPricesStoreState = {
       ...prev,
       [dataSource]: {
         latest: {},
+        historical: {},
       } satisfies CurrentPricesStoreState["metrics"]["binance"],
     }),
     {} satisfies CurrentPricesStoreState["metrics"],
@@ -107,6 +116,27 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [],
   );
 
+  const addHistoricalDataPoints = useCallback<
+    AppStateContextVal["addHistoricalDataPoints"]
+  >((dataSource, symbol, dataPoints) => {
+    setAppState((prev) => ({
+      ...prev,
+      metrics: {
+        ...prev.metrics,
+        [dataSource]: {
+          ...prev.metrics[dataSource],
+          historical: {
+            ...prev.metrics[dataSource]?.historical,
+            [symbol]: [
+              ...(prev.metrics[dataSource]?.historical?.[symbol] ?? []),
+              ...dataPoints,
+            ],
+          },
+        },
+      },
+    }));
+  }, []);
+
   const handleSelectSource = useCallback((source: AllAllowedSymbols) => {
     setAppState({
       // blast away all state, because we don't need the old
@@ -127,6 +157,8 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       out = Object.values(DATA_SOURCES_EQUITY.Values);
     } else if (isAllowedFutureSymbol(appState.selectedSource)) {
       out = Object.values(DATA_SOURCES_FUTURES.Values);
+    } else if (isHistoricalSymbol(appState.selectedSource)) {
+      out = Object.values(DATA_SOURCES_HISTORICAL.Values);
     }
     return out.sort();
   }, [appState.selectedSource]);
@@ -145,6 +177,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     () => ({
       ...appState,
       addDataPoint,
+      addHistoricalDataPoints,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectSource,
@@ -153,6 +186,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [
       appState,
       addDataPoint,
+      addHistoricalDataPoints,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectSource,

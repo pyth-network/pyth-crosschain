@@ -1,17 +1,15 @@
-/* eslint-disable */
-// due to the size of the json data being imported,
-// we have to disable eslint or it will crash nonstop
-
-import glob from "fast-glob";
+/* eslint-disable unicorn/no-await-expression-member */
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import {
-  type AllowedEquitySymbolsType,
-  type DataSourcesHistoricalType,
-  type PriceData,
-  PriceDataSchema,
+import glob from "fast-glob";
+
+import type {
+  AllowedEquitySymbolsType,
+  DataSourcesHistoricalType,
+  PriceData,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { PriceDataSchema } from "../../schemas/pyth/pyth-pro-demo-schema";
 
 // according to the next.js docs, file reading occurs from the nearest
 // package.json file, which is the "root" of the deployment:
@@ -82,49 +80,50 @@ export async function fetchHistoricalDataForPythFeedsDemo({
       ? basename.startsWith("nasdaq")
       : basename.startsWith("pyth");
   });
-  if (datasource === "NASDAQ") {
-    out = (
-      await Promise.all(
-        files.map(async (fp) => {
-          const { data } = JSON.parse(await fs.readFile(fp, "utf8")) as {
-            data: NasdaqDataEntry[];
-          };
+  out =
+    datasource === "NASDAQ"
+      ? (
+          await Promise.all(
+            files.map(async (fp) => {
+              const { data } = JSON.parse(await fs.readFile(fp, "utf8")) as {
+                data: NasdaqDataEntry[];
+              };
 
-          return data.map<PriceData>((d) => {
-            const validation = PriceDataSchema.safeParse({
-              price: Number.parseFloat(d.Price),
-              timestamp: new Date(d["Date-Time"]).getTime(),
-            });
-            if (validation.error) {
-              throw new Error(validation.error.message);
-            }
-            return validation.data;
-          });
-        }),
-      )
-    ).flat();
-  } else {
-    out = (
-      await Promise.all(
-        files.map(async (fp) => {
-          const data = JSON.parse(
-            await fs.readFile(fp, "utf8"),
-          ) as PythDataEntry[];
-          return data.map<PriceData>((d) => {
-            const validation = PriceDataSchema.safeParse({
-              price: Number.parseFloat(d.price),
-              timestamp: new Date(d.publish_time).getTime(),
-            });
-            if (validation.error) {
-              throw new Error(validation.error.message);
-            }
-            return validation.data;
-          });
-        }),
-      )
-    ).flat();
-  }
+              return data.map<PriceData>((d) => {
+                const validation = PriceDataSchema.safeParse({
+                  price: Number.parseFloat(d.Price),
+                  timestamp: new Date(d["Date-Time"]).getTime(),
+                });
+                if (validation.error) {
+                  throw new Error(validation.error.message);
+                }
+                return validation.data;
+              });
+            }),
+          )
+        ).flat()
+      : (
+          await Promise.all(
+            files.map(async (fp) => {
+              const data = JSON.parse(
+                await fs.readFile(fp, "utf8"),
+              ) as PythDataEntry[];
+              return data.map<PriceData>((d) => {
+                const validation = PriceDataSchema.safeParse({
+                  price: Number.parseFloat(d.price),
+                  timestamp: new Date(d.publish_time).getTime(),
+                });
+                if (validation.error) {
+                  throw new Error(validation.error.message);
+                }
+                return validation.data;
+              });
+            }),
+          )
+        ).flat();
 
-  console.info("out.length", out.length);
-  return out.filter((entry) => entry.timestamp >= startAt).slice(0, limit);
+  return out
+    .filter((entry) => entry.timestamp >= startAt)
+    .slice(0, limit)
+    .sort((a, b) => a.timestamp - b.timestamp);
 }

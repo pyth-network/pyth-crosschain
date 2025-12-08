@@ -9,14 +9,16 @@ import type {
   UTCTimestamp,
 } from "lightweight-charts";
 import { createChart, LineSeries } from "lightweight-charts";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
+import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   getColorForSymbol,
   getThemeCssVar,
   isAllowedSymbol,
+  isHistoricalSymbol,
 } from "../../util/pyth-pro-demo";
 
 type PythProDemoPriceChartImplProps = Pick<
@@ -40,6 +42,35 @@ export function PythProDemoPriceChartImpl({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi>(undefined);
   const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
+
+  /** callbacks */
+  const createSeriesIfNotExist = useCallback(
+    (dataSource: AllDataSourcesType) => {
+      if (!chartRef.current) return;
+
+      let series = seriesMapRef.current[dataSource];
+      if (!series) {
+        series = chartRef.current.addSeries(LineSeries, {
+          pointMarkersVisible: true,
+          priceScaleId: "right",
+          title: capitalCase(dataSource),
+        });
+
+        seriesMapRef.current[dataSource] = series;
+      }
+
+      const visible = dataSourceVisibility[dataSource];
+      series.applyOptions({
+        color: getColorForSymbol(dataSource),
+        lineWidth: 2,
+        lineStyle: 0, // solid
+        visible,
+      });
+
+      return series;
+    },
+    [dataSourceVisibility],
+  );
 
   /** effects */
   useLayoutEffect(() => {
@@ -92,31 +123,22 @@ export function PythProDemoPriceChartImpl({
   }, [theme]);
 
   useEffect(() => {
-    if (!chartRef.current || !isAllowedSymbol(selectedSource)) return;
+    if (
+      !chartRef.current ||
+      !isAllowedSymbol(selectedSource) ||
+      isHistoricalSymbol(selectedSource)
+    ) {
+      return;
+    }
 
     for (const dataSource of dataSourcesInUse) {
       const latest = metrics[dataSource]?.latest;
       const symbolMetrics = latest?.[selectedSource];
       if (!symbolMetrics?.price) continue;
 
-      let series = seriesMapRef.current[dataSource];
-      if (!series) {
-        series = chartRef.current.addSeries(LineSeries, {
-          pointMarkersVisible: true,
-          priceScaleId: "right",
-          title: capitalCase(dataSource),
-        });
+      const series = createSeriesIfNotExist(dataSource);
+      if (!series) continue;
 
-        seriesMapRef.current[dataSource] = series;
-      }
-
-      const visible = dataSourceVisibility[dataSource];
-      series.applyOptions({
-        color: getColorForSymbol(dataSource),
-        lineWidth: 2,
-        lineStyle: 0, // solid
-        visible,
-      });
       const [lastPoint] = series.data().slice(-1);
       const latestMetricIsFresh =
         !lastPoint || lastPoint.time !== symbolMetrics.timestamp;
@@ -155,7 +177,36 @@ export function PythProDemoPriceChartImpl({
     } catch {
       /* no-op. if the chart doesn't scale, it's fine, it will eventually catch up */
     }
-  }, [dataSourceVisibility, dataSourcesInUse, metrics, selectedSource]);
+  }, [
+    createSeriesIfNotExist,
+    dataSourceVisibility,
+    dataSourcesInUse,
+    metrics,
+    selectedSource,
+  ]);
+
+  useEffect(() => {
+    // handles the "historical" data cases where we get data in chunks from appState
+    if (!chartRef.current || !isHistoricalSymbol(selectedSource)) {
+      return;
+    }
+
+    for (const dataSource of dataSourcesInUse) {
+      const historicalData = metrics[dataSource]?.historical?.[selectedSource];
+      if (!historicalData) continue;
+
+      const series = createSeriesIfNotExist(dataSource);
+
+      if (!series) continue;
+
+      // remove duplicates
+      series.setData(
+        [...new Map(historicalData.map((d) => [d.timestamp, d])).values()].map(
+          (d) => ({ time: d.timestamp as UTCTimestamp, value: d.price }),
+        ),
+      );
+    }
+  }, [createSeriesIfNotExist, dataSourcesInUse, metrics, selectedSource]);
 
   if (!isAllowedSymbol(selectedSource)) return;
 
@@ -163,6 +214,7 @@ export function PythProDemoPriceChartImpl({
 }
 
 export function PythProDemoPriceChart() {
+  /** context */
   const { dataSourcesInUse, dataSourceVisibility, metrics, selectedSource } =
     usePythProAppStateContext();
 

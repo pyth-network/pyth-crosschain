@@ -126,7 +126,7 @@ export function datasourceRequiresApiToken(
   return false;
 }
 
-export function isHistoricalDataSource(
+export function isHistoricalSymbol(
   symbol: Nullish<string>,
 ): symbol is AllowedHistoricalSymbolsType {
   for (const val of ALLOWED_HISTORICAL_SYMBOLS.options) {

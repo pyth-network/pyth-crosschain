@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import {
   ALLOWED_EQUITY_SYMBOLS,
   DATA_SOURCES_HISTORICAL,
@@ -10,7 +11,7 @@ const DEFAULT_START_AT = 0;
 
 export const GET = async (
   req: NextRequest,
-  ctx: RouteContext<"/api/pyth/get-pyth-feeds-demo-data/[symbol]/[datasource]">,
+  ctx: RouteContext<"/api/pyth/get-pyth-feeds-demo-data/[datasource]/[symbol]">,
 ) => {
   const { datasource, symbol } = await ctx.params;
   const datasourceValidation =
@@ -46,5 +47,5 @@ export const GET = async (
     symbol: symbolToUse,
   });
 
-  return NextResponse.json(data);
+  return NextResponse.json(data.sort((a, b) => a.timestamp - b.timestamp));
 };

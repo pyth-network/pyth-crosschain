@@ -6,6 +6,7 @@ import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useCallback } from "react";
 
+import type { UseDataStreamOpts, UseDataStreamReturnType } from "./types";
 import { useBinanceWebSocket } from "./use-binance-websocket";
 import { useBybitWebSocket } from "./use-bybit-websocket";
 import { useCoinbaseWebSocket } from "./use-coinbase-websocket";
@@ -54,21 +55,15 @@ function getUrlForSymbolAndDataSource(
   return;
 }
 
-type UseDataStreamOpts = {
-  dataSource: AllDataSourcesType;
-  enabled?: boolean;
-  symbol: Nullish<AllAllowedSymbols>;
-};
-
 /**
  * abstraction around setting up the streaming websocket
  * and getting price updates from various sources
  */
 export function useDataStream({
   dataSource,
-  enabled = true,
+  enabled,
   symbol,
-}: UseDataStreamOpts) {
+}: UseDataStreamOpts): UseDataStreamReturnType {
   /** store */
   const { tokens } = usePythProApiTokensContext();
 

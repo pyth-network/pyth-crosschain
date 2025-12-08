@@ -12,7 +12,7 @@ import {
   ALLOWED_HISTORICAL_SYMBOLS,
   NO_SELECTED_SYMBOL,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { isHistoricalDataSource } from "../../util/pyth-pro-demo";
+import { isHistoricalSymbol } from "../../util/pyth-pro-demo";
 
 type SourceDropdownOptType = {
   id: AllAllowedSymbols;
@@ -54,7 +54,7 @@ function renderOptionLabel({
   id: number | string;
   isValue: boolean;
 }) {
-  if (typeof id === "string" && isHistoricalDataSource(id)) {
+  if (typeof id === "string" && isHistoricalSymbol(id)) {
     return `${(id.split(":::")[0] ?? "").toUpperCase()} ${isValue ? "(Historical)" : ""}`.trim();
   }
 

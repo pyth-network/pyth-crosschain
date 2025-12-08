@@ -6,11 +6,12 @@ import { createContext, useContext, useMemo } from "react";
 
 import { usePythProApiTokensContext } from "./pyth-pro-api-tokens-context";
 import { usePythProAppStateContext } from "./pyth-pro-app-state";
-import { useDataStream } from "../../hooks/pyth-pro-demo";
+import { useDataStream, useHttpDataStream } from "../../hooks/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   isAllowedCryptoSymbol,
   isAllowedSymbol,
+  isHistoricalSymbol,
 } from "../../util/pyth-pro-demo";
 
 type WebSocketsContextVal = {
@@ -67,6 +68,19 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
     symbol: selectedSource,
   });
 
+  // "Fake" websocket-like contract for easier integration
+  const { status: pyth_pro_historical } = useHttpDataStream({
+    dataSource: "pyth_pro",
+    enabled: isGoodSymbol && isHistoricalSymbol(selectedSource),
+    symbol: selectedSource,
+  });
+
+  const { status: nasdaq_historical } = useHttpDataStream({
+    dataSource: "NASDAQ",
+    enabled: isGoodSymbol && isHistoricalSymbol(selectedSource),
+    symbol: selectedSource,
+  });
+
   /** provider val */
   const providerVal = useMemo<WebSocketsContextVal>(
     () => ({
@@ -75,12 +89,25 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
         bybit,
         coinbase,
         okx,
+        NASDAQ: nasdaq_historical,
         pyth,
-        pyth_pro,
+        pyth_pro: isHistoricalSymbol(selectedSource)
+          ? pyth_pro_historical
+          : pyth_pro,
         yahoo: "connected",
       },
     }),
-    [binance, bybit, coinbase, okx, pyth, pyth_pro],
+    [
+      binance,
+      bybit,
+      coinbase,
+      nasdaq_historical,
+      okx,
+      pyth,
+      pyth_pro,
+      pyth_pro_historical,
+      selectedSource,
+    ],
   );
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;

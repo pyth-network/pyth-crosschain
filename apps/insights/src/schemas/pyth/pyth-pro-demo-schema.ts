@@ -12,6 +12,7 @@ export const ALL_DATA_SOURCES = z.enum([
   BINANCE,
   BYBIT,
   COINBASE,
+  NASDAQ,
   OKX,
   PYTH,
   PYTH_PRO,
@@ -135,11 +136,20 @@ export const ApiTokensSchema = z.object(
 
 export type ApiTokensState = z.infer<typeof ApiTokensSchema>;
 
+export const HistoricalMetricsSchema = z.record(
+  ALL_ALLOWED_SYMBOLS,
+  z.array(PriceDataSchema).nullable().optional(),
+);
+export type HistoricalMetricsSchemaType = z.infer<
+  typeof HistoricalMetricsSchema
+>;
+
 export const CurrentPricesStoreStateSchema = z.object({
   metrics: z.record(
     ALL_DATA_SOURCES,
     z.object({
       latest: z.nullable(LatestMetricSchema),
+      historical: z.nullable(HistoricalMetricsSchema),
     }),
   ),
   selectedSource: ALL_ALLOWED_SYMBOLS.optional().nullable(),
