@@ -71,6 +71,7 @@ const SYMBOL_TO_CHANNEL_MAP = new Map<
   ["SPY", "fixed_rate@200ms"],
   ["ESZ2025", "real_time"],
   ["no_symbol_selected", "real_time"],
+  ["HOOD", "real_time"],
   // ["ESH2026", "real_time"],
   // ["US10Y", "fixed_rate@200ms"],
 ]);

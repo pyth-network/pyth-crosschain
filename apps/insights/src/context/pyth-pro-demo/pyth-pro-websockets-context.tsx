@@ -10,8 +10,6 @@ import { useDataStream } from "../../hooks/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   isAllowedCryptoSymbol,
-  isAllowedEquitySymbol,
-  isAllowedForexSymbol,
   isAllowedSymbol,
 } from "../../util/pyth-pro-demo";
 
@@ -29,8 +27,6 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
   const { tokens } = usePythProApiTokensContext();
 
   /** local variables */
-  const isEquity = isAllowedEquitySymbol(selectedSource);
-  const isForex = isAllowedForexSymbol(selectedSource);
   const isGoodSymbol = isAllowedSymbol(selectedSource);
   const isCryptoSymbol = isAllowedCryptoSymbol(selectedSource);
 
@@ -71,24 +67,6 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
     symbol: selectedSource,
   });
 
-  const { status: prime_api } = useDataStream({
-    dataSource: "prime_api",
-    enabled: isForex && Boolean(tokens.prime_api),
-    symbol: selectedSource,
-  });
-
-  const { status: infoway_io } = useDataStream({
-    dataSource: "infoway_io",
-    enabled: isEquity && Boolean(tokens.infoway_io),
-    symbol: selectedSource,
-  });
-
-  const { status: twelve_data } = useDataStream({
-    dataSource: "twelve_data",
-    enabled: (isForex || isEquity) && Boolean(tokens.twelve_data),
-    symbol: selectedSource,
-  });
-
   /** provider val */
   const providerVal = useMemo<WebSocketsContextVal>(
     () => ({
@@ -96,26 +74,13 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
         binance,
         bybit,
         coinbase,
-        infoway_io,
         okx,
-        prime_api,
         pyth,
         pyth_pro,
-        twelve_data,
         yahoo: "connected",
       },
     }),
-    [
-      binance,
-      bybit,
-      coinbase,
-      infoway_io,
-      okx,
-      prime_api,
-      pyth,
-      pyth_pro,
-      twelve_data,
-    ],
+    [binance, bybit, coinbase, okx, pyth, pyth_pro],
   );
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;

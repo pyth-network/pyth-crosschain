@@ -6,6 +6,7 @@ const COINBASE = "coinbase";
 const OKX = "okx";
 const PYTH = "pyth";
 const PYTH_PRO = "pyth_pro";
+const NASDAQ = "NASDAQ";
 
 export const ALL_DATA_SOURCES = z.enum([
   BINANCE,
@@ -39,7 +40,7 @@ export type DataSourcesEquityType = z.infer<typeof DATA_SOURCES_EQUITY>;
 
 export const DATA_SOURCES_HISTORICAL = z.enum([
   DATA_SOURCES_CRYPTO.Enum.pyth_pro,
-  "NASDAQ",
+  NASDAQ,
 ]);
 export type DataSourcesHistoricalType = z.infer<typeof DATA_SOURCES_HISTORICAL>;
 
@@ -89,6 +90,13 @@ export type AllowedTreasurySymbolsType = z.infer<
 export const ALLOWED_FOREX_SYMBOLS = z.enum(["EURUSD"]);
 export type AllowedForexSymbolsType = z.infer<typeof ALLOWED_FOREX_SYMBOLS>;
 
+export const ALLOWED_HISTORICAL_SYMBOLS = z.enum([
+  `${ALLOWED_EQUITY_SYMBOLS.Enum.HOOD}:::historical`,
+]);
+export type AllowedHistoricalSymbolsType = z.infer<
+  typeof ALLOWED_HISTORICAL_SYMBOLS
+>;
+
 export const NO_SELECTED_SYMBOL = z.enum(["no_symbol_selected"]);
 export type NoSelectedSymbolType = z.infer<typeof NO_SELECTED_SYMBOL>;
 
@@ -99,6 +107,7 @@ export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...ALLOWED_CRYPTO_SYMBOLS.options,
   ...ALLOWED_EQUITY_SYMBOLS.options,
   ...ALLOWED_TREASURY_SYMBOLS.options,
+  ...ALLOWED_HISTORICAL_SYMBOLS.options,
 ]);
 export type AllAllowedSymbols = z.infer<typeof ALL_ALLOWED_SYMBOLS>;
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 
 import type {
@@ -7,6 +8,7 @@ import type {
   AllowedEquitySymbolsType,
   AllowedForexSymbolsType,
   AllowedFutureSymbolsType,
+  AllowedHistoricalSymbolsType,
   DataSourcesCryptoType,
   DataSourcesEquityType,
   DataSourcesForexType,
@@ -19,6 +21,7 @@ import {
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
   ALLOWED_FUTURE_SYMBOLS,
+  ALLOWED_HISTORICAL_SYMBOLS,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
@@ -118,6 +121,16 @@ export function datasourceRequiresApiToken(
   const ds = dataSource as DataSourcesRequiringApiTokens;
   for (const val of DATA_SOURCES_REQUIRING_API_TOKENS.options) {
     if (val === ds) return true;
+  }
+
+  return false;
+}
+
+export function isHistoricalDataSource(
+  symbol: Nullish<string>,
+): symbol is AllowedHistoricalSymbolsType {
+  for (const val of ALLOWED_HISTORICAL_SYMBOLS.options) {
+    if (val === symbol) return true;
   }
 
   return false;

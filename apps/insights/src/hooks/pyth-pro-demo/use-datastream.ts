@@ -10,19 +10,15 @@ import { useBinanceWebSocket } from "./use-binance-websocket";
 import { useBybitWebSocket } from "./use-bybit-websocket";
 import { useCoinbaseWebSocket } from "./use-coinbase-websocket";
 import { useFetchUsdtToUsdRate } from "./use-fetch-usdt-to-rate";
-import { useInfowayWebSocket } from "./use-infoway-websocket";
 import { useOKXWebSocket } from "./use-okx-websocket";
-import { usePrimeApiWebSocket } from "./use-prime-api-websocket";
 import { usePythCoreWebSocket } from "./use-pyth-core-websocket";
 import { usePythLazerWebSocket } from "./use-pyth-lazer-websocket";
-import { useTwelveWebSocket } from "./use-twelve-websocket";
 import { usePythProApiTokensContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
   ApiTokensState,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { isAllowedForexSymbol } from "../../util/pyth-pro-demo";
 
 function getUrlForSymbolAndDataSource(
   apiTokens: ApiTokensState,
@@ -32,11 +28,6 @@ function getUrlForSymbolAndDataSource(
   if (!symbol) return;
 
   switch (dataSource) {
-    case "infoway_io": {
-      return `wss://data.infoway.io/ws?business=${
-        isAllowedForexSymbol(symbol) ? "common" : "stock"
-      }&apikey=${apiTokens.infoway_io ?? ""}`;
-    }
     case "binance": {
       return `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@bookTicker`;
     }
@@ -49,17 +40,11 @@ function getUrlForSymbolAndDataSource(
     case "okx": {
       return `wss://ws.okx.com:8443/ws/v5/public?__cachebust=${symbol.toLowerCase()}`;
     }
-    case "prime_api": {
-      return "wss://euc2.primeapi.io/";
-    }
     case "pyth": {
       return `wss://hermes.pyth.network/ws?__cachebust=${symbol.toLowerCase()}`;
     }
     case "pyth_pro": {
       return `wss://pyth-lazer.dourolabs.app/v1/stream?ACCESS_TOKEN=${apiTokens.pyth_pro ?? ""}&__cachebust=${symbol.toLowerCase()}`;
-    }
-    case "twelve_data": {
-      return `wss://ws.twelvedata.com/v1/quotes/price?apikey=${apiTokens.twelve_data ?? ""}`;
     }
     default: {
       break;
@@ -96,17 +81,11 @@ export function useDataStream({
     useBybitWebSocket();
   const { onMessage: coinbaseOnMessage, onOpen: coinbaseOnOpen } =
     useCoinbaseWebSocket();
-  const { onMessage: infowayOnMessage, onOpen: infowayOnOpen } =
-    useInfowayWebSocket();
   const { onMessage: okxOnMessage, onOpen: okxOnOpen } = useOKXWebSocket();
-  const { onMessage: primeApiOnMessage, onOpen: primeApiOnOpen } =
-    usePrimeApiWebSocket();
   const { onMessage: pythLazerOnMessage, onOpen: pythLazerOnOpen } =
     usePythLazerWebSocket();
   const { onMessage: pythOnMessage, onOpen: pythOnOpen } =
     usePythCoreWebSocket();
-  const { onMessage: twelveOnMessage, onOpen: twelveOnOpen } =
-    useTwelveWebSocket();
 
   /** callbacks */
   const onMessage = useCallback<UseWebSocketOpts["onMessage"]>(
@@ -128,16 +107,8 @@ export function useDataStream({
           coinbaseOnMessage(s, usdtToUsdRate, strData);
           break;
         }
-        case "infoway_io": {
-          infowayOnMessage(s, usdtToUsdRate, strData);
-          break;
-        }
         case "okx": {
           okxOnMessage(s, usdtToUsdRate, strData);
-          break;
-        }
-        case "prime_api": {
-          primeApiOnMessage(s, usdtToUsdRate, strData);
           break;
         }
         case "pyth": {
@@ -146,10 +117,6 @@ export function useDataStream({
         }
         case "pyth_pro": {
           pythLazerOnMessage(s, usdtToUsdRate, strData);
-          break;
-        }
-        case "twelve_data": {
-          twelveOnMessage(s, usdtToUsdRate, strData);
           break;
         }
         default: {
@@ -163,12 +130,9 @@ export function useDataStream({
       binanceOnMessage,
       bybitOnMessage,
       coinbaseOnMessage,
-      infowayOnMessage,
       okxOnMessage,
-      primeApiOnMessage,
       pythOnMessage,
       pythLazerOnMessage,
-      twelveOnMessage,
     ],
   );
 
@@ -183,16 +147,8 @@ export function useDataStream({
           coinbaseOnOpen?.(...args);
           break;
         }
-        case "infoway_io": {
-          infowayOnOpen?.(...args);
-          break;
-        }
         case "okx": {
           okxOnOpen?.(...args);
-          break;
-        }
-        case "prime_api": {
-          primeApiOnOpen?.(...args);
           break;
         }
         case "pyth": {
@@ -201,10 +157,6 @@ export function useDataStream({
         }
         case "pyth_pro": {
           pythLazerOnOpen?.(...args);
-          break;
-        }
-        case "twelve_data": {
-          twelveOnOpen?.(...args);
           break;
         }
         default: {
@@ -216,12 +168,9 @@ export function useDataStream({
       bybitOnOpen,
       coinbaseOnOpen,
       dataSource,
-      infowayOnOpen,
       okxOnOpen,
-      primeApiOnOpen,
       pythOnOpen,
       pythLazerOnOpen,
-      twelveOnOpen,
     ],
   );
 

@@ -9,8 +9,10 @@ import {
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
   ALLOWED_FUTURE_SYMBOLS,
+  ALLOWED_HISTORICAL_SYMBOLS,
   NO_SELECTED_SYMBOL,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { isHistoricalDataSource } from "../../util/pyth-pro-demo";
 
 type SourceDropdownOptType = {
   id: AllAllowedSymbols;
@@ -26,8 +28,14 @@ const GROUPED_OPTS: { name: string; options: SourceDropdownOptType[] }[] = [
     options: Object.values(ALLOWED_CRYPTO_SYMBOLS.Values).map((id) => ({ id })),
   },
   {
-    name: "Equities",
+    name: "Equities (Realtime)",
     options: Object.values(ALLOWED_EQUITY_SYMBOLS.Values).map((id) => ({ id })),
+  },
+  {
+    name: "Equities (Historical)",
+    options: Object.values(ALLOWED_HISTORICAL_SYMBOLS.Values).map((id) => ({
+      id,
+    })),
   },
   {
     name: "Forex",
@@ -39,7 +47,17 @@ const GROUPED_OPTS: { name: string; options: SourceDropdownOptType[] }[] = [
   },
 ];
 
-function renderOptionLabel({ id }: { id: number | string }) {
+function renderOptionLabel({
+  id,
+  isValue,
+}: {
+  id: number | string;
+  isValue: boolean;
+}) {
+  if (typeof id === "string" && isHistoricalDataSource(id)) {
+    return `${(id.split(":::")[0] ?? "").toUpperCase()} ${isValue ? "(Historical)" : ""}`.trim();
+  }
+
   return id === ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected
     ? sentenceCase(id)
     : String(id).toUpperCase();
@@ -58,8 +76,8 @@ export function PythProDemoSourceSelector() {
       selectedKey={
         selectedSource ?? ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected
       }
-      show={renderOptionLabel}
-      textValue={renderOptionLabel}
+      show={({ id }) => renderOptionLabel({ id, isValue: false })}
+      textValue={({ id }) => renderOptionLabel({ id, isValue: true })}
     />
   );
 }
