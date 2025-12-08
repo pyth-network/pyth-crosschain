@@ -34,7 +34,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
 } from "@solana/web3.js";
-import SquadsMeshModule from "@sqds/mesh";
+import SquadsMeshClass from "@sqds/mesh";
 import * as bs58 from "bs58";
 
 import type { KeyValueConfig } from "../../core/base.js";
@@ -279,13 +279,10 @@ export class WormholeMultisigProposal {
  * A vault represents a pyth multisig governance realm which exists in solana mainnet or testnet.
  * It can be used for proposals to send wormhole messages to the wormhole bridge.
  */
-type SquadsMeshClass = typeof SquadsMeshModule;
-type SquadsMeshInstance = InstanceType<SquadsMeshClass>;
+type SquadsMeshInstance = InstanceType<typeof SquadsMeshClass>;
 
-function getSquadsMesh(): SquadsMeshClass {
-  const mod = SquadsMeshModule as { default?: SquadsMeshClass };
-  if (mod.default) return mod.default;
-  return SquadsMeshModule;
+function getSquadsMesh() {
+  return SquadsMeshClass;
 }
 
 export class Vault extends Storable {
