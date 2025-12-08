@@ -51,6 +51,12 @@ export const DATA_SOURCES_EQUITY = z.enum([
 ]);
 export type DataSourcesEquityType = z.infer<typeof DATA_SOURCES_EQUITY>;
 
+export const DATA_SOURCES_HISTORICAL = z.enum([
+  DATA_SOURCES_CRYPTO.Enum.pyth_pro,
+  "NASDAQ",
+]);
+export type DataSourcesHistoricalType = z.infer<typeof DATA_SOURCES_HISTORICAL>;
+
 export const DATA_SOURCES_FOREX = z.enum([
   PYTH,
   PYTH_PRO,
@@ -85,7 +91,13 @@ export type AllowedFutureSymbolsType = z.infer<typeof ALLOWED_FUTURE_SYMBOLS>;
 export const ALLOWED_CRYPTO_SYMBOLS = z.enum(["BTCUSDT", "ETHUSDT", "SOLUSDT"]);
 export type AllowedCryptoSymbolsType = z.infer<typeof ALLOWED_CRYPTO_SYMBOLS>;
 
-export const ALLOWED_EQUITY_SYMBOLS = z.enum(["AAPL", "NVDA", "TSLA", "SPY"]);
+export const ALLOWED_EQUITY_SYMBOLS = z.enum([
+  "AAPL",
+  "HOOD",
+  "NVDA",
+  "TSLA",
+  "SPY",
+]);
 export type AllowedEquitySymbolsType = z.infer<typeof ALLOWED_EQUITY_SYMBOLS>;
 
 export const ALLOWED_TREASURY_SYMBOLS = z.enum(["US10Y"]);

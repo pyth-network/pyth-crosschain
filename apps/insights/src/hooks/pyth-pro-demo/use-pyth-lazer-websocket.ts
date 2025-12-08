@@ -43,6 +43,7 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<
   ["NVDA", 1314],
   ["SPY", 1398],
   ["ESZ2025", 2284],
+  ["HOOD", 1182],
   ["no_symbol_selected", undefined],
 ]);
 

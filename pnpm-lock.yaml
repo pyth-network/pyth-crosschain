@@ -969,6 +969,9 @@ importers:
       dnum:
         specifier: 'catalog:'
         version: 2.14.0
+      fast-glob:
+        specifier: 'catalog:'
+        version: 3.3.3
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0
