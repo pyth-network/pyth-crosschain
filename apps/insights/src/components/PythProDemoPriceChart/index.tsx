@@ -1,9 +1,11 @@
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { capitalCase } from "change-case";
+import { format } from "date-fns";
 import type {
   IChartApi,
   ISeriesApi,
   LineData,
+  Time,
   UTCTimestamp,
 } from "lightweight-charts";
 import { createChart, LineSeries } from "lightweight-charts";
@@ -19,7 +21,7 @@ import {
 
 type PythProDemoPriceChartImplProps = Pick<
   AppStateContextVal,
-  "dataSourcesInUse" | "metrics" | "selectedSource"
+  "dataSourcesInUse" | "dataSourceVisibility" | "metrics" | "selectedSource"
 >;
 
 const MAX_DATA_AGE = 1000 * 60; // 1 minute
@@ -27,6 +29,7 @@ const MAX_DATA_POINTS = 3000;
 
 export function PythProDemoPriceChartImpl({
   dataSourcesInUse,
+  dataSourceVisibility,
   metrics,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
@@ -66,10 +69,15 @@ export function PythProDemoPriceChartImpl({
         borderColor: grayColor,
       },
       timeScale: {
-        barSpacing: 3,
+        barSpacing: 5,
         borderColor: grayColor,
         rightOffset: 0,
         secondsVisible: true,
+        tickMarkFormatter: (time: Time) => {
+          const dt = time as UTCTimestamp;
+          const d = new Date(dt);
+          return format(d, "HH:mm:ss.SS");
+        },
         timeVisible: true,
       },
     });
@@ -94,26 +102,29 @@ export function PythProDemoPriceChartImpl({
       let series = seriesMapRef.current[dataSource];
       if (!series) {
         series = chartRef.current.addSeries(LineSeries, {
+          pointMarkersVisible: true,
           priceScaleId: "right",
           title: capitalCase(dataSource),
         });
-        series.applyOptions({
-          color: getColorForSymbol(dataSource),
-          lineWidth: 2,
-          lineStyle: 0, // solid
-        });
+
         seriesMapRef.current[dataSource] = series;
       }
 
+      const visible = dataSourceVisibility[dataSource];
+      series.applyOptions({
+        color: getColorForSymbol(dataSource),
+        lineWidth: 2,
+        lineStyle: 0, // solid
+        visible,
+      });
       const [lastPoint] = series.data().slice(-1);
       const latestMetricIsFresh =
-        !lastPoint ||
-        lastPoint.time !== Math.floor(symbolMetrics.timestamp / 1000);
+        !lastPoint || lastPoint.time !== symbolMetrics.timestamp;
 
       if (!latestMetricIsFresh) continue;
 
       const newPoint: LineData = {
-        time: Math.floor(symbolMetrics.timestamp / 1000) as UTCTimestamp,
+        time: symbolMetrics.timestamp as UTCTimestamp,
         value: symbolMetrics.price,
       };
 
@@ -127,20 +138,24 @@ export function PythProDemoPriceChartImpl({
       const trimmed = allData
         .filter(
           (d) =>
-            (d.time as UTCTimestamp) * 1000 >= start &&
-            (d.time as UTCTimestamp) * 1000 <= end,
+            (d.time as UTCTimestamp) >= start &&
+            (d.time as UTCTimestamp) <= end,
         )
         .slice(-MAX_DATA_POINTS);
 
       series.setData(trimmed);
-
-      // Update visible range so chart fills left-to-right
-      chartRef.current.timeScale().setVisibleRange({
-        from: Math.floor(start / 1000) as UTCTimestamp,
-        to: Math.floor(end / 1000) as UTCTimestamp,
-      });
     }
-  });
+    const now = Date.now();
+
+    try {
+      chartRef.current.timeScale().setVisibleRange({
+        from: (now - 60 * 1000) as UTCTimestamp,
+        to: now as UTCTimestamp,
+      });
+    } catch {
+      /* no-op. if the chart doesn't scale, it's fine, it will eventually catch up */
+    }
+  }, [dataSourceVisibility, dataSourcesInUse, metrics, selectedSource]);
 
   if (!isAllowedSymbol(selectedSource)) return;
 
@@ -148,12 +163,13 @@ export function PythProDemoPriceChartImpl({
 }
 
 export function PythProDemoPriceChart() {
-  const { dataSourcesInUse, metrics, selectedSource } =
+  const { dataSourcesInUse, dataSourceVisibility, metrics, selectedSource } =
     usePythProAppStateContext();
 
   return (
     <PythProDemoPriceChartImpl
       dataSourcesInUse={dataSourcesInUse}
+      dataSourceVisibility={dataSourceVisibility}
       key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}`}
       metrics={metrics}
       selectedSource={selectedSource}

@@ -35,7 +35,11 @@ export type AppStateContextVal = CurrentPricesStoreState & {
 
   dataSourcesInUse: AllDataSourcesType[];
 
+  dataSourceVisibility: Record<AllDataSourcesType, boolean>;
+
   handleSelectSource: (source: AllAllowedSymbols) => void;
+
+  handleToggleDataSourceVisibility: (datasource: AllDataSourcesType) => void;
 };
 
 const context = createContext<Nullish<AppStateContextVal>>(undefined);
@@ -57,6 +61,18 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   /** state */
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
+
+  const [dataSourceVisibility, setDataSourceVisibility] = useState<
+    AppStateContextVal["dataSourceVisibility"]
+  >(
+    ALL_DATA_SOURCES.options.reduce(
+      (prev, datasource) => ({
+        ...prev,
+        [datasource]: true,
+      }),
+      {} as AppStateContextVal["dataSourceVisibility"],
+    ),
+  );
 
   /** callbacks */
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
@@ -115,15 +131,33 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     return out.sort();
   }, [appState.selectedSource]);
 
+  const handleToggleDataSourceVisibility = useCallback<
+    AppStateContextVal["handleToggleDataSourceVisibility"]
+  >((datasource) => {
+    setDataSourceVisibility((prev) => ({
+      ...prev,
+      [datasource]: !prev[datasource],
+    }));
+  }, []);
+
   /** provider val */
   const providerVal = useMemo<AppStateContextVal>(
     () => ({
       ...appState,
       addDataPoint,
       dataSourcesInUse,
+      dataSourceVisibility,
       handleSelectSource,
+      handleToggleDataSourceVisibility,
     }),
-    [addDataPoint, appState, dataSourcesInUse, handleSelectSource],
+    [
+      appState,
+      addDataPoint,
+      dataSourcesInUse,
+      dataSourceVisibility,
+      handleSelectSource,
+      handleToggleDataSourceVisibility,
+    ],
   );
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;
