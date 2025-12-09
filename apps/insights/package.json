@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@clickhouse/client": "catalog:",
+    "@duckdb/node-api": "^1.4.2-r.1",
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
@@ -36,7 +37,6 @@
     "date-fns": "catalog:",
     "csv-stringify": "catalog:",
     "dnum": "catalog:",
-    "fast-glob": "catalog:",
     "ioredis": "^5.7.0",
     "lightweight-charts": "catalog:",
     "match-sorter": "catalog:",

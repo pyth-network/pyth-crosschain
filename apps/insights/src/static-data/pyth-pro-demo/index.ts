@@ -1,55 +1,35 @@
-/* eslint-disable unicorn/no-await-expression-member */
-import fs from "node:fs/promises";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
-import glob from "fast-glob";
+import type { Nullish } from "@pythnetwork/shared-lib/types";
+import { isNumber } from "@pythnetwork/shared-lib/util";
 
 import type {
+  AllAllowedSymbols,
+  AllDataSourcesType,
   AllowedEquitySymbolsType,
   DataSourcesHistoricalType,
   PriceData,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { PriceDataSchema } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { appendHistoricalSymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { isHistoricalSymbol } from "../../util/pyth-pro-demo";
 
-// according to the next.js docs, file reading occurs from the nearest
-// package.json file, which is the "root" of the deployment:
-// https://vercel.com/kb/guide/loading-static-file-nextjs-api-route
-const globPattern = path
-  .join(process.cwd(), "src", "static-data", "pyth-pro-demo", "*.json")
-  .replaceAll("\\", "/");
-const jsonSampleDataPaths = glob.sync(
-  // allows globs to work on Windows
-  globPattern,
-  { absolute: true, onlyFiles: true },
+// in a next.js app, all paths must be resolved from the nearest package.json file,
+// which ends up being the root of this server project
+const dbPath = path.join(
+  process.cwd(),
+  "src",
+  "static-data",
+  "pyth-pro-demo",
+  "historical-data.db",
 );
 
-type PythDataEntry = {
-  best_ask_price: string;
-  best_bid_price: string;
-  channel: string;
-  confidence: string;
-  exponent: string;
-  funding_rate: string;
-  funding_rate_interval_us: string;
-  funding_timestamp: string;
-  market_session: string;
-  price: string;
-  price_feed_id: string;
-  publish_time: Date;
-  publisher_count: string;
-  state: string;
-};
+const db = new DatabaseSync(dbPath, { open: true, readOnly: true });
 
-type NasdaqDataEntry = {
-  "#RIC": string;
-  "Ask Price": string;
-  "Ask Size": string;
-  "Bid Price": string;
-  "Bid Size": string;
-  "Date-Time": Date;
-  Price: string;
-  Volume: string;
-};
+const queryForDataStatement = db.prepare(`SELECT * FROM NasdaqAndPythData napd
+WHERE napd.timestamp >= ? AND napd.source = ?
+ORDER BY napd.timestamp asc
+LIMIT ?;`);
 
 type FetchHistoricalDataOpts = {
   datasource: DataSourcesHistoricalType;
@@ -58,72 +38,46 @@ type FetchHistoricalDataOpts = {
   symbol: AllowedEquitySymbolsType;
 };
 
+type DatabaseResult = {
+  exponent: number;
+  price: Nullish<number>;
+  source: AllDataSourcesType;
+  symbol: AllAllowedSymbols;
+  timestamp: number;
+};
+
 /**
- * scrapes historical data out of the extracted data provided
- * for the upcoming demo
+ * queries historical data out of the prepared SQLite database
  */
-export async function fetchHistoricalDataForPythFeedsDemo({
+export function fetchHistoricalDataForPythFeedsDemo({
   datasource,
   limit,
   startAt,
   symbol,
-}: FetchHistoricalDataOpts): Promise<PriceData[]> {
-  let out: PriceData[] = [];
+}: FetchHistoricalDataOpts): PriceData[] {
+  const symbolWithSuffix = appendHistoricalSymbolSuffix(symbol);
+  const out: PriceData[] = [];
 
-  if (symbol !== "HOOD") {
+  if (!isHistoricalSymbol(symbolWithSuffix)) {
     return out;
   }
 
-  const files = jsonSampleDataPaths.filter((p) => {
-    const basename = path.basename(p);
-    return datasource === "NASDAQ"
-      ? basename.startsWith("nasdaq")
-      : basename.startsWith("pyth");
-  });
-  out =
-    datasource === "NASDAQ"
-      ? (
-          await Promise.all(
-            files.map(async (fp) => {
-              const { data } = JSON.parse(await fs.readFile(fp, "utf8")) as {
-                data: NasdaqDataEntry[];
-              };
+  const resultsIterator = queryForDataStatement.iterate(
+    startAt,
+    datasource,
+    limit,
+  );
 
-              return data.map<PriceData>((d) => {
-                const validation = PriceDataSchema.safeParse({
-                  price: Number.parseFloat(d.Price),
-                  timestamp: new Date(d["Date-Time"]).getTime(),
-                });
-                if (validation.error) {
-                  throw new Error(validation.error.message);
-                }
-                return validation.data;
-              });
-            }),
-          )
-        ).flat()
-      : (
-          await Promise.all(
-            files.map(async (fp) => {
-              const data = JSON.parse(
-                await fs.readFile(fp, "utf8"),
-              ) as PythDataEntry[];
-              return data.map<PriceData>((d) => {
-                const validation = PriceDataSchema.safeParse({
-                  price: Number.parseFloat(d.price),
-                  timestamp: new Date(d.publish_time).getTime(),
-                });
-                if (validation.error) {
-                  throw new Error(validation.error.message);
-                }
-                return validation.data;
-              });
-            }),
-          )
-        ).flat();
+  for (const result of resultsIterator) {
+    const typedResult = result as DatabaseResult;
 
-  return out
-    .filter((entry) => entry.timestamp >= startAt)
-    .slice(0, limit)
-    .sort((a, b) => a.timestamp - b.timestamp);
+    if (!isNumber(typedResult.price)) continue;
+
+    out.push({
+      price: typedResult.price * Math.pow(10, typedResult.exponent),
+      timestamp: typedResult.timestamp,
+    });
+  }
+
+  return out;
 }

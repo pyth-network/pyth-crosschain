@@ -91,8 +91,10 @@ export type AllowedTreasurySymbolsType = z.infer<
 export const ALLOWED_FOREX_SYMBOLS = z.enum(["EURUSD"]);
 export type AllowedForexSymbolsType = z.infer<typeof ALLOWED_FOREX_SYMBOLS>;
 
+const HISTORICAL_SYMBOL_SEPARATOR = ":::historical";
+
 export const ALLOWED_HISTORICAL_SYMBOLS = z.enum([
-  `${ALLOWED_EQUITY_SYMBOLS.Enum.HOOD}:::historical`,
+  `${ALLOWED_EQUITY_SYMBOLS.Enum.HOOD}${HISTORICAL_SYMBOL_SEPARATOR}`,
 ]);
 export type AllowedHistoricalSymbolsType = z.infer<
   typeof ALLOWED_HISTORICAL_SYMBOLS
@@ -111,6 +113,21 @@ export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...ALLOWED_HISTORICAL_SYMBOLS.options,
 ]);
 export type AllAllowedSymbols = z.infer<typeof ALL_ALLOWED_SYMBOLS>;
+
+export function appendHistoricalSymbolSuffix(
+  symbol: AllAllowedSymbols,
+): `${typeof symbol}${typeof HISTORICAL_SYMBOL_SEPARATOR}` {
+  return `${symbol}${HISTORICAL_SYMBOL_SEPARATOR}`;
+}
+
+export function removeHistoricalSymbolSuffix(
+  symbolWithSuffix: `${AllAllowedSymbols}${typeof HISTORICAL_SYMBOL_SEPARATOR}`,
+): AllAllowedSymbols {
+  return symbolWithSuffix.replace(
+    HISTORICAL_SYMBOL_SEPARATOR,
+    "",
+  ) as AllAllowedSymbols;
+}
 
 export const LatestMetricSchema = z.record(
   ALL_ALLOWED_SYMBOLS,

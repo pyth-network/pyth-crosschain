@@ -40,7 +40,7 @@ export const GET = async (
   const datasourceToUse = datasourceValidation.data;
   const symbolToUse = symbolValidation.data;
 
-  const data = await fetchHistoricalDataForPythFeedsDemo({
+  const data = fetchHistoricalDataForPythFeedsDemo({
     datasource: datasourceToUse,
     limit,
     startAt,
