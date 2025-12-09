@@ -116,7 +116,7 @@ export const RECEIVER_CHAINS = {
   mezo: 60084,
   iota_sui_mainnet: 60085,
   camp_network: 60086,
-  spiderman: 60087,
+  monad: 60087,
   zero_gravity: 60088,
   itsnotreal: 60089, // Deprecated
   plasma: 60090,
