@@ -1,6 +1,8 @@
 module pyth_lazer::state;
 
-use pyth_lazer::admin::{Self, AdminCap};
+#[test_only]
+use pyth_lazer::admin;
+use pyth_lazer::admin::AdminCap;
 
 const SECP256K1_COMPRESSED_PUBKEY_LEN: u64 = 33;
 const EInvalidPubkeyLen: u64 = 1;
@@ -33,11 +35,6 @@ public(package) fun new(ctx: &mut TxContext): State {
 /// Get the trusted signer's public key
 public fun public_key(info: &TrustedSignerInfo): &vector<u8> {
     &info.public_key
-}
-
-/// Get the trusted signer's expiry timestamp (seconds since Unix epoch)
-public fun expires_at(info: &TrustedSignerInfo): u64 {
-    info.expires_at
 }
 
 /// Get the trusted signer's expiry timestamp, converted to milliseconds
@@ -110,7 +107,7 @@ public fun new_for_test(ctx: &mut TxContext): State {
 public fun destroy_for_test(s: State) {
     let State { id, trusted_signers } = s;
     let _ = trusted_signers;
-    object::delete(id);
+    id.delete();
 }
 
 #[test]
@@ -124,16 +121,15 @@ public fun test_add_new_signer() {
 
     update_trusted_signer(&admin_cap, &mut s, pk, expiry);
 
-    let signers_ref = get_trusted_signers(&s);
-    assert!(vector::length(signers_ref) == 1, 100);
-    let info = vector::borrow(signers_ref, 0);
-    assert!(expires_at(info) == 123, 101);
-    let got_pk = public_key(info);
-    assert!(vector::length(got_pk) == (SECP256K1_COMPRESSED_PUBKEY_LEN as u64), 102);
-    let State { id, trusted_signers } = s;
-    let _ = trusted_signers;
-    object::delete(id);
-    admin::destroy_for_test(admin_cap);
+    let signers_ref = s.get_trusted_signers();
+    assert!(signers_ref.length() == 1, 100);
+    let info = &signers_ref[0];
+    assert!(info.expires_at == 123, 101);
+    let got_pk = info.public_key();
+    assert!(got_pk.length() == SECP256K1_COMPRESSED_PUBKEY_LEN, 102);
+
+    s.destroy_for_test();
+    admin_cap.destroy_for_test();
 }
 
 #[test]
@@ -155,14 +151,13 @@ public fun test_update_existing_signer_expiry() {
         2000,
     );
 
-    let signers_ref = get_trusted_signers(&s);
-    assert!(vector::length(signers_ref) == 1, 110);
-    let info = vector::borrow(signers_ref, 0);
-    assert!(expires_at(info) == 2000, 111);
-    let State { id, trusted_signers } = s;
-    let _ = trusted_signers;
-    object::delete(id);
-    admin::destroy_for_test(admin_cap);
+    let signers_ref = s.get_trusted_signers();
+    assert!(signers_ref.length() == 1, 110);
+    let info = &signers_ref[0];
+    assert!(info.expires_at == 2000, 111);
+
+    s.destroy_for_test();
+    admin_cap.destroy_for_test();
 }
 
 #[test]
@@ -184,12 +179,11 @@ public fun test_remove_signer_by_zero_expiry() {
         0,
     );
 
-    let signers_ref = get_trusted_signers(&s);
-    assert!(vector::length(signers_ref) == 0, 120);
-    let State { id, trusted_signers } = s;
-    let _ = trusted_signers;
-    object::delete(id);
-    admin::destroy_for_test(admin_cap);
+    let signers_ref = s.get_trusted_signers();
+    assert!(signers_ref.length() == 0, 120);
+
+    s.destroy_for_test();
+    admin_cap.destroy_for_test();
 }
 
 #[test, expected_failure(abort_code = EInvalidPubkeyLen)]
@@ -200,10 +194,9 @@ public fun test_invalid_pubkey_length_rejected() {
 
     let short_pk = x"010203";
     update_trusted_signer(&admin_cap, &mut s, short_pk, 1);
-    let State { id, trusted_signers } = s;
-    let _ = trusted_signers;
-    object::delete(id);
-    admin::destroy_for_test(admin_cap);
+
+    s.destroy_for_test();
+    admin_cap.destroy_for_test();
 }
 
 #[test, expected_failure(abort_code = ESignerNotFound)]
@@ -219,8 +212,7 @@ public fun test_remove_nonexistent_signer_fails() {
         x"03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         0,
     );
-    let State { id, trusted_signers } = s;
-    let _ = trusted_signers;
-    object::delete(id);
-    admin::destroy_for_test(admin_cap);
+
+    s.destroy_for_test();
+    admin_cap.destroy_for_test();
 }
