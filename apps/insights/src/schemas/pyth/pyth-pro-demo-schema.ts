@@ -54,11 +54,19 @@ export type DataSourcesFuturesType = z.infer<typeof DATA_SOURCES_FUTURES>;
 export const DATA_SOURCES_TREASURY = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesTreasuryType = z.infer<typeof DATA_SOURCES_TREASURY>;
 
+export const DATA_SOURCES_REPLAY = z.enum([NASDAQ, PYTH_PRO]);
+export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
+
 export const PriceDataSchema = z.object({
   price: z.number(),
   timestamp: z.number(),
 });
 export type PriceData = z.infer<typeof PriceDataSchema>;
+
+export const PriceDataSchemaWithSource = PriceDataSchema.extend({
+  source: ALL_DATA_SOURCES,
+});
+export type PriceDataWithSource = z.infer<typeof PriceDataSchemaWithSource>;
 
 export const CurrentPriceMetricsSchema = z.object({
   change: z.number().nullable().optional(),
@@ -91,14 +99,12 @@ export type AllowedTreasurySymbolsType = z.infer<
 export const ALLOWED_FOREX_SYMBOLS = z.enum(["EURUSD"]);
 export type AllowedForexSymbolsType = z.infer<typeof ALLOWED_FOREX_SYMBOLS>;
 
-const HISTORICAL_SYMBOL_SEPARATOR = ":::historical";
+const REPLAY_SYMBOL_SEPARATOR = ":::replay";
 
-export const ALLOWED_HISTORICAL_SYMBOLS = z.enum([
-  `${ALLOWED_EQUITY_SYMBOLS.Enum.HOOD}${HISTORICAL_SYMBOL_SEPARATOR}`,
+export const ALLOWED_REPLAY_SYMBOLS = z.enum([
+  `${ALLOWED_EQUITY_SYMBOLS.Enum.HOOD}${REPLAY_SYMBOL_SEPARATOR}`,
 ]);
-export type AllowedHistoricalSymbolsType = z.infer<
-  typeof ALLOWED_HISTORICAL_SYMBOLS
->;
+export type AllowedReplaySymbolsType = z.infer<typeof ALLOWED_REPLAY_SYMBOLS>;
 
 export const NO_SELECTED_SYMBOL = z.enum(["no_symbol_selected"]);
 export type NoSelectedSymbolType = z.infer<typeof NO_SELECTED_SYMBOL>;
@@ -110,21 +116,21 @@ export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...ALLOWED_CRYPTO_SYMBOLS.options,
   ...ALLOWED_EQUITY_SYMBOLS.options,
   ...ALLOWED_TREASURY_SYMBOLS.options,
-  ...ALLOWED_HISTORICAL_SYMBOLS.options,
+  ...ALLOWED_REPLAY_SYMBOLS.options,
 ]);
 export type AllAllowedSymbols = z.infer<typeof ALL_ALLOWED_SYMBOLS>;
 
-export function appendHistoricalSymbolSuffix(
+export function appendReplaySymbolSuffix(
   symbol: AllAllowedSymbols,
-): `${typeof symbol}${typeof HISTORICAL_SYMBOL_SEPARATOR}` {
-  return `${symbol}${HISTORICAL_SYMBOL_SEPARATOR}`;
+): `${typeof symbol}${typeof REPLAY_SYMBOL_SEPARATOR}` {
+  return `${symbol}${REPLAY_SYMBOL_SEPARATOR}`;
 }
 
-export function removeHistoricalSymbolSuffix(
-  symbolWithSuffix: `${AllAllowedSymbols}${typeof HISTORICAL_SYMBOL_SEPARATOR}`,
+export function removeReplaySymbolSuffix(
+  symbolWithSuffix: AllAllowedSymbols,
 ): AllAllowedSymbols {
   return symbolWithSuffix.replace(
-    HISTORICAL_SYMBOL_SEPARATOR,
+    REPLAY_SYMBOL_SEPARATOR,
     "",
   ) as AllAllowedSymbols;
 }
@@ -153,20 +159,11 @@ export const ApiTokensSchema = z.object(
 
 export type ApiTokensState = z.infer<typeof ApiTokensSchema>;
 
-export const HistoricalMetricsSchema = z.record(
-  ALL_ALLOWED_SYMBOLS,
-  z.array(PriceDataSchema).nullable().optional(),
-);
-export type HistoricalMetricsSchemaType = z.infer<
-  typeof HistoricalMetricsSchema
->;
-
 export const CurrentPricesStoreStateSchema = z.object({
   metrics: z.record(
     ALL_DATA_SOURCES,
     z.object({
       latest: z.nullable(LatestMetricSchema),
-      historical: z.nullable(HistoricalMetricsSchema),
     }),
   ),
   selectedSource: ALL_ALLOWED_SYMBOLS.optional().nullable(),

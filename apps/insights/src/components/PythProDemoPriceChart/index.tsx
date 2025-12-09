@@ -18,7 +18,6 @@ import {
   getColorForSymbol,
   getThemeCssVar,
   isAllowedSymbol,
-  isHistoricalSymbol,
 } from "../../util/pyth-pro-demo";
 
 type PythProDemoPriceChartImplProps = Pick<
@@ -102,7 +101,7 @@ export function PythProDemoPriceChartImpl({
       timeScale: {
         barSpacing: 5,
         borderColor: grayColor,
-        rightOffset: 0,
+        rightOffset: 16,
         secondsVisible: true,
         tickMarkFormatter: (time: Time) => {
           const dt = time as UTCTimestamp;
@@ -123,11 +122,7 @@ export function PythProDemoPriceChartImpl({
   }, [theme]);
 
   useEffect(() => {
-    if (
-      !chartRef.current ||
-      !isAllowedSymbol(selectedSource) ||
-      isHistoricalSymbol(selectedSource)
-    ) {
+    if (!chartRef.current || !isAllowedSymbol(selectedSource)) {
       return;
     }
 
@@ -167,16 +162,6 @@ export function PythProDemoPriceChartImpl({
 
       series.setData(trimmed);
     }
-    const now = Date.now();
-
-    try {
-      chartRef.current.timeScale().setVisibleRange({
-        from: (now - 60 * 1000) as UTCTimestamp,
-        to: now as UTCTimestamp,
-      });
-    } catch {
-      /* no-op. if the chart doesn't scale, it's fine, it will eventually catch up */
-    }
   }, [
     createSeriesIfNotExist,
     dataSourceVisibility,
@@ -184,29 +169,6 @@ export function PythProDemoPriceChartImpl({
     metrics,
     selectedSource,
   ]);
-
-  useEffect(() => {
-    // handles the "historical" data cases where we get data in chunks from appState
-    if (!chartRef.current || !isHistoricalSymbol(selectedSource)) {
-      return;
-    }
-
-    for (const dataSource of dataSourcesInUse) {
-      const historicalData = metrics[dataSource]?.historical?.[selectedSource];
-      if (!historicalData) continue;
-
-      const series = createSeriesIfNotExist(dataSource);
-
-      if (!series) continue;
-
-      // remove duplicates
-      series.setData(
-        [...new Map(historicalData.map((d) => [d.timestamp, d])).values()].map(
-          (d) => ({ time: d.timestamp as UTCTimestamp, value: d.price }),
-        ),
-      );
-    }
-  }, [createSeriesIfNotExist, dataSourcesInUse, metrics, selectedSource]);
 
   if (!isAllowedSymbol(selectedSource)) return;
 

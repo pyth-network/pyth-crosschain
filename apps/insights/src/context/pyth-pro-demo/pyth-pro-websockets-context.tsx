@@ -8,10 +8,11 @@ import { usePythProApiTokensContext } from "./pyth-pro-api-tokens-context";
 import { usePythProAppStateContext } from "./pyth-pro-app-state";
 import { useDataStream, useHttpDataStream } from "../../hooks/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { ALL_DATA_SOURCES } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   isAllowedCryptoSymbol,
   isAllowedSymbol,
-  isHistoricalSymbol,
+  isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
 type WebSocketsContextVal = {
@@ -69,15 +70,12 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
   });
 
   // "Fake" websocket-like contract for easier integration
-  const { status: pyth_pro_historical } = useHttpDataStream({
-    dataSource: "pyth_pro",
-    enabled: isGoodSymbol && isHistoricalSymbol(selectedSource),
-    symbol: selectedSource,
-  });
-
-  const { status: nasdaq_historical } = useHttpDataStream({
-    dataSource: "NASDAQ",
-    enabled: isGoodSymbol && isHistoricalSymbol(selectedSource),
+  const { status: replay_status } = useHttpDataStream({
+    dataSources: [
+      ALL_DATA_SOURCES.Values.NASDAQ,
+      ALL_DATA_SOURCES.Values.pyth_pro,
+    ],
+    enabled: isGoodSymbol && isReplaySymbol(selectedSource),
     symbol: selectedSource,
   });
 
@@ -89,11 +87,9 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
         bybit,
         coinbase,
         okx,
-        NASDAQ: nasdaq_historical,
+        NASDAQ: replay_status,
         pyth,
-        pyth_pro: isHistoricalSymbol(selectedSource)
-          ? pyth_pro_historical
-          : pyth_pro,
+        pyth_pro: isReplaySymbol(selectedSource) ? replay_status : pyth_pro,
         yahoo: "connected",
       },
     }),
@@ -101,11 +97,10 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
       binance,
       bybit,
       coinbase,
-      nasdaq_historical,
       okx,
       pyth,
       pyth_pro,
-      pyth_pro_historical,
+      replay_status,
       selectedSource,
     ],
   );

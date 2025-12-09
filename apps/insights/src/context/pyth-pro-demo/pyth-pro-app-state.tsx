@@ -1,7 +1,15 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import type { PropsWithChildren } from "react";
-import { createContext, use, useCallback, useMemo, useState } from "react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import type {
   AllAllowedSymbols,
@@ -25,7 +33,7 @@ import {
   isAllowedForexSymbol,
   isAllowedFutureSymbol,
   isAllowedSymbol,
-  isHistoricalSymbol,
+  isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
 export type AppStateContextVal = CurrentPricesStoreState & {
@@ -33,12 +41,6 @@ export type AppStateContextVal = CurrentPricesStoreState & {
     dataSource: AllDataSourcesType,
     symbol: AllAllowedSymbols,
     dataPoint: PriceData,
-  ) => void;
-
-  addHistoricalDataPoints: (
-    dataSource: AllDataSourcesType,
-    symbol: AllAllowedSymbols,
-    dataPoint: PriceData[],
   ) => void;
 
   dataSourcesInUse: AllDataSourcesType[];
@@ -58,7 +60,6 @@ const initialState: CurrentPricesStoreState = {
       ...prev,
       [dataSource]: {
         latest: {},
-        historical: {},
       } satisfies CurrentPricesStoreState["metrics"]["binance"],
     }),
     {} satisfies CurrentPricesStoreState["metrics"],
@@ -70,6 +71,9 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   /** state */
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
+
+  /** refs */
+  const selectedSymbolRef = useRef(appState.selectedSource);
 
   const [dataSourceVisibility, setDataSourceVisibility] = useState<
     AppStateContextVal["dataSourceVisibility"]
@@ -86,6 +90,9 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   /** callbacks */
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
     (dataSource, symbol, dataPoint) => {
+      // state is desynchronized, so we disallow setting of the metric here
+      if (selectedSymbolRef.current !== symbol) return;
+
       setAppState((prev) => {
         const previousPrice =
           prev.metrics[dataSource]?.latest?.[symbol]?.price ?? dataPoint.price;
@@ -116,27 +123,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [],
   );
 
-  const addHistoricalDataPoints = useCallback<
-    AppStateContextVal["addHistoricalDataPoints"]
-  >((dataSource, symbol, dataPoints) => {
-    setAppState((prev) => ({
-      ...prev,
-      metrics: {
-        ...prev.metrics,
-        [dataSource]: {
-          ...prev.metrics[dataSource],
-          historical: {
-            ...prev.metrics[dataSource]?.historical,
-            [symbol]: [
-              ...(prev.metrics[dataSource]?.historical?.[symbol] ?? []),
-              ...dataPoints,
-            ],
-          },
-        },
-      },
-    }));
-  }, []);
-
   const handleSelectSource = useCallback((source: AllAllowedSymbols) => {
     setAppState({
       // blast away all state, because we don't need the old
@@ -157,7 +143,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       out = Object.values(DATA_SOURCES_EQUITY.Values);
     } else if (isAllowedFutureSymbol(appState.selectedSource)) {
       out = Object.values(DATA_SOURCES_FUTURES.Values);
-    } else if (isHistoricalSymbol(appState.selectedSource)) {
+    } else if (isReplaySymbol(appState.selectedSource)) {
       out = Object.values(DATA_SOURCES_HISTORICAL.Values);
     }
     return out.sort();
@@ -177,7 +163,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     () => ({
       ...appState,
       addDataPoint,
-      addHistoricalDataPoints,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectSource,
@@ -186,13 +171,20 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [
       appState,
       addDataPoint,
-      addHistoricalDataPoints,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectSource,
       handleToggleDataSourceVisibility,
     ],
   );
+
+  /** effects */
+  useEffect(() => {
+    selectedSymbolRef.current = appState.selectedSource;
+  });
+
+  // @ts-expect-error - shut up while I'm testing
+  globalThis.window.demoAppState = appState;
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;
 }

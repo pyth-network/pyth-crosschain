@@ -1,38 +1,54 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
+import { wait } from "@pythnetwork/shared-lib/util";
 import { useEffect, useRef, useState } from "react";
 
-import type { UseDataStreamOpts, UseDataStreamReturnType } from "./types";
+import type { UseDataStreamReturnType, UseHttpDataStreamOpts } from "./types";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
-  AllDataSourcesType,
-  PriceData,
+  PriceDataWithSource,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import {
-  isAllowedDataSource,
-  isHistoricalSymbol,
-} from "../../util/pyth-pro-demo";
+import { removeReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { isAllowedDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
-function getFetchHistoricalUrl(
-  dataSource: Nullish<AllDataSourcesType>,
-  symbol: Nullish<AllAllowedSymbols>,
-) {
-  if (!isAllowedDataSource(dataSource) || !isHistoricalSymbol(symbol)) {
+function getFetchHistoricalUrl(symbol: Nullish<AllAllowedSymbols>) {
+  if (!isReplaySymbol(symbol)) {
     return "";
   }
-  return `/api/pyth/get-pyth-feeds-demo-data/${dataSource}/${symbol.replace(":::historical", "")}`;
+  return `/api/pyth/get-pyth-feeds-demo-data/${removeReplaySymbolSuffix(symbol)}`;
+}
+
+async function fetchHistoricalData({
+  baseUrl,
+  limit,
+  signal,
+  startAt,
+}: {
+  baseUrl: string;
+  signal: AbortSignal;
+  startAt: number;
+  limit: number;
+}) {
+  const response = await fetch(
+    `${baseUrl}?startAt=${startAt.toString()}&limit=${limit.toString()}`,
+    { method: "GET", signal },
+  );
+  if (!response.ok) {
+    const errRes = (await response.json()) as { error: string };
+    throw new Error(errRes.error);
+  }
+  const parsed = (await response.json()) as PriceDataWithSource[];
+
+  return parsed;
 }
 
 export function useHttpDataStream({
-  dataSource,
+  dataSources,
   enabled,
   symbol,
-}: UseDataStreamOpts): UseDataStreamReturnType & { error: Nullish<Error> } {
+}: UseHttpDataStreamOpts): UseDataStreamReturnType & { error: Nullish<Error> } {
   /** context */
-  const { addHistoricalDataPoints } = usePythProAppStateContext();
-
-  /** local variables */
-  const baseUrl = getFetchHistoricalUrl(dataSource, symbol);
+  const { addDataPoint } = usePythProAppStateContext();
 
   /** state */
   const [status, setStatus] =
@@ -40,76 +56,132 @@ export function useHttpDataStream({
   const [error, setError] = useState<Nullish<Error>>(undefined);
 
   /** refs */
+  const dataSourcesSetRef = useRef(new Set(dataSources));
   const enabledRef = useRef(enabled);
   const abortControllerRef = useRef<Nullish<AbortController>>(undefined);
 
   /** effects */
   useEffect(() => {
     enabledRef.current = enabled;
-  }, [enabled]);
+    dataSourcesSetRef.current = new Set(dataSources);
+  });
 
   useEffect(() => {
-    if (!baseUrl || !enabled) {
+    if (!enabled) {
       setStatus("closed");
       return;
     }
 
+    const { current: currAbtController } = abortControllerRef;
+
     setStatus("connected");
 
-    const abt = new AbortController();
-
-    const fetchHistoricalData = async (startAt: number, limit: number) => {
-      const response = await fetch(
-        `${baseUrl}?startAt=${startAt.toString()}&limit=${limit.toString()}`,
+    const kickoffFetching = async () => {
+      const allDataSourcesAllowed = dataSources.every((ds) =>
+        isAllowedDataSource(ds),
       );
-      if (!response.ok) {
-        const errRes = (await response.json()) as { error: string };
-        throw new Error(errRes.error);
+      if (!isReplaySymbol(symbol) || !allDataSourcesAllowed) {
+        abortControllerRef.current?.abort();
+        return;
       }
-      const parsed = (await response.json()) as PriceData[];
-
-      return parsed;
-    };
-
-    const startFetching = async () => {
-      abortControllerRef.current?.abort();
-
-      abortControllerRef.current = abt;
-
-      let data: PriceData[];
-
-      // This may seem arbitrary but it's the first
-      // timestamp we have NASDAQ data for the demo,
-      // so we'll just start here so we don't have pyth data bloating the UI
-      let startAt = 1_764_720_009_299;
+      // pyth starts at 1764772200000, so we start from there or we'll have a ton
+      // of empty data on the screen for pyth
+      let startAt = 1_764_772_200_000;
       const limit = 1000;
 
-      do {
-        if (!enabledRef.current || !isHistoricalSymbol(symbol)) break;
+      let results: PriceDataWithSource[];
+      let nextResults: Nullish<PriceDataWithSource[]>;
 
-        try {
-          data = await fetchHistoricalData(startAt, limit);
-          const [last] = data.slice(-1);
-
-          startAt = last?.timestamp ?? startAt + 1000; // just add one second to this if there wasn't an entry
-
-          addHistoricalDataPoints(dataSource, symbol, data);
-        } catch (error) {
-          if (!(error instanceof Error)) {
-            throw error;
+      try {
+        do {
+          if (!enabledRef.current) {
+            // enablement pointer may have changed,
+            // so we need to prevent the fetching logic from firing
+            abortControllerRef.current?.abort();
+            return;
           }
-          setError(error);
-          break;
-        }
-      } while (data.length > 0);
+
+          const abt = new AbortController();
+          abortControllerRef.current = abt;
+
+          // eslint doesn't have enough context to know that
+          // the midpoint fetch, below, will populate the nextResults
+          // value and ensure the LHS of this condition is met
+
+          const baseUrl = getFetchHistoricalUrl(symbol);
+
+          results =
+            nextResults ??
+            (await fetchHistoricalData({
+              baseUrl,
+              limit,
+              signal: abt.signal,
+              startAt,
+            }));
+
+          const resultsLen = results.length;
+          const midpoint = Math.floor(resultsLen / 2);
+          startAt = results.at(-1)?.timestamp ?? startAt + 1000;
+
+          // Need to do synthetic per-datapoint updates,
+          // like we'd get out over a websocket connection.
+          for (let i = 0; i < resultsLen; i++) {
+            const dataPoint = results[i];
+            const nextDataPoint = results[i + 1];
+
+            if (
+              !dataPoint ||
+              !dataSourcesSetRef.current.has(dataPoint.source) ||
+              !nextDataPoint
+            ) {
+              continue;
+            }
+
+            if (i === 0) {
+              addDataPoint(dataPoint.source, symbol, dataPoint);
+            }
+
+            const syntheticTimeToWait =
+              nextDataPoint.timestamp - dataPoint.timestamp;
+
+            await wait(syntheticTimeToWait);
+
+            addDataPoint(dataPoint.source, symbol, nextDataPoint);
+
+            if (i === midpoint) {
+              // fetch more, but don't hold up this synthetic loop
+
+              const abt = new AbortController();
+              abortControllerRef.current = abt;
+              void fetchHistoricalData({
+                baseUrl,
+                limit,
+                startAt,
+                signal: abt.signal,
+              })
+                .then((r) => {
+                  nextResults = r;
+                })
+                .catch((error_: unknown) => {
+                  if (!(error_ instanceof Error)) throw error_;
+                  setError(error_);
+                });
+            }
+          }
+        } while (results.length > 0);
+      } catch (error) {
+        abortControllerRef.current?.abort();
+        if (!(error instanceof Error)) throw error;
+        setError(error);
+      }
     };
 
-    void startFetching();
+    void kickoffFetching();
 
     return () => {
-      abt.abort();
+      currAbtController?.abort();
     };
-  }, [addHistoricalDataPoints, baseUrl, dataSource, enabled, symbol]);
+  }, [addDataPoint, dataSources, enabled, symbol]);
 
   return { error, status };
 }

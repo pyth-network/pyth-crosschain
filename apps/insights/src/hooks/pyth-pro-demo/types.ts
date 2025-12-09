@@ -12,6 +12,10 @@ export type UseDataStreamOpts = {
   symbol: Nullish<AllAllowedSymbols>;
 };
 
+export type UseHttpDataStreamOpts = Omit<UseDataStreamOpts, "dataSource"> & {
+  dataSources: AllDataSourcesType[];
+};
+
 export type UseDataStreamReturnType = Pick<
   ReturnType<typeof useWebSocket>,
   "status"

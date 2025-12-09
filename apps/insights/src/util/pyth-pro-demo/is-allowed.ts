@@ -8,10 +8,11 @@ import type {
   AllowedEquitySymbolsType,
   AllowedForexSymbolsType,
   AllowedFutureSymbolsType,
-  AllowedHistoricalSymbolsType,
+  AllowedReplaySymbolsType,
   DataSourcesCryptoType,
   DataSourcesEquityType,
   DataSourcesForexType,
+  DataSourcesReplayType,
   DataSourcesRequiringApiTokens,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
@@ -21,10 +22,11 @@ import {
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
   ALLOWED_FUTURE_SYMBOLS,
-  ALLOWED_HISTORICAL_SYMBOLS,
+  ALLOWED_REPLAY_SYMBOLS,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
+  DATA_SOURCES_REPLAY,
   DATA_SOURCES_REQUIRING_API_TOKENS,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 
@@ -126,10 +128,19 @@ export function datasourceRequiresApiToken(
   return false;
 }
 
-export function isHistoricalSymbol(
+export function isReplayDataSource(
+  dataSource: AllDataSourcesType,
+): dataSource is DataSourcesReplayType {
+  for (const source of DATA_SOURCES_REPLAY.options) {
+    if (source === dataSource) return true;
+  }
+  return false;
+}
+
+export function isReplaySymbol(
   symbol: Nullish<string>,
-): symbol is AllowedHistoricalSymbolsType {
-  for (const val of ALLOWED_HISTORICAL_SYMBOLS.options) {
+): symbol is AllowedReplaySymbolsType {
+  for (const val of ALLOWED_REPLAY_SYMBOLS.options) {
     if (val === symbol) return true;
   }
 

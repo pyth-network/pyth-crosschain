@@ -9,10 +9,11 @@ import {
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
   ALLOWED_FUTURE_SYMBOLS,
-  ALLOWED_HISTORICAL_SYMBOLS,
+  ALLOWED_REPLAY_SYMBOLS,
   NO_SELECTED_SYMBOL,
+  removeReplaySymbolSuffix,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { isHistoricalSymbol } from "../../util/pyth-pro-demo";
+import { isReplaySymbol } from "../../util/pyth-pro-demo";
 
 type SourceDropdownOptType = {
   id: AllAllowedSymbols;
@@ -32,8 +33,8 @@ const GROUPED_OPTS: { name: string; options: SourceDropdownOptType[] }[] = [
     options: Object.values(ALLOWED_EQUITY_SYMBOLS.Values).map((id) => ({ id })),
   },
   {
-    name: "Equities (Historical)",
-    options: Object.values(ALLOWED_HISTORICAL_SYMBOLS.Values).map((id) => ({
+    name: "Equities (Replay)",
+    options: Object.values(ALLOWED_REPLAY_SYMBOLS.Values).map((id) => ({
       id,
     })),
   },
@@ -54,8 +55,8 @@ function renderOptionLabel({
   id: number | string;
   isValue: boolean;
 }) {
-  if (typeof id === "string" && isHistoricalSymbol(id)) {
-    return `${(id.split(":::")[0] ?? "").toUpperCase()} ${isValue ? "(Historical)" : ""}`.trim();
+  if (typeof id === "string" && isReplaySymbol(id)) {
+    return `${removeReplaySymbolSuffix(id).toUpperCase()} ${isValue ? "(Replay)" : ""}`.trim();
   }
 
   return id === ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected

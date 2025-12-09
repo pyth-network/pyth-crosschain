@@ -8,11 +8,10 @@ import type {
   AllAllowedSymbols,
   AllDataSourcesType,
   AllowedEquitySymbolsType,
-  DataSourcesHistoricalType,
-  PriceData,
+  PriceDataWithSource,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { appendHistoricalSymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { isHistoricalSymbol } from "../../util/pyth-pro-demo";
+import { appendReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
 // in a next.js app, all paths must be resolved from the nearest package.json file,
 // which ends up being the root of this server project
@@ -26,13 +25,8 @@ const dbPath = path.join(
 
 const db = new DatabaseSync(dbPath, { open: true, readOnly: true });
 
-const queryForDataStatement = db.prepare(`SELECT * FROM NasdaqAndPythData napd
-WHERE napd.timestamp >= ? AND napd.source = ?
-ORDER BY napd.timestamp asc
-LIMIT ?;`);
-
 type FetchHistoricalDataOpts = {
-  datasource: DataSourcesHistoricalType;
+  datasources: AllDataSourcesType[];
   limit: number;
   startAt: number;
   symbol: AllowedEquitySymbolsType;
@@ -50,21 +44,29 @@ type DatabaseResult = {
  * queries historical data out of the prepared SQLite database
  */
 export function fetchHistoricalDataForPythFeedsDemo({
-  datasource,
+  datasources,
   limit,
   startAt,
   symbol,
-}: FetchHistoricalDataOpts): PriceData[] {
-  const symbolWithSuffix = appendHistoricalSymbolSuffix(symbol);
-  const out: PriceData[] = [];
+}: FetchHistoricalDataOpts): PriceDataWithSource[] {
+  const symbolWithSuffix = appendReplaySymbolSuffix(symbol);
+  const out: PriceDataWithSource[] = [];
+  const allDatasourcesValid = datasources.every((ds) => isReplayDataSource(ds));
 
-  if (!isHistoricalSymbol(symbolWithSuffix)) {
+  if (!isReplaySymbol(symbolWithSuffix) || !allDatasourcesValid) {
     return out;
   }
 
+  const sourcePlaceholders = datasources.map(() => "?").join(", ");
+
+  const queryForDataStatement = db.prepare(`SELECT * FROM NasdaqAndPythData napd
+WHERE napd.timestamp >= ? AND napd.source in (${sourcePlaceholders})
+ORDER BY napd.timestamp asc
+LIMIT ?;`);
+
   const resultsIterator = queryForDataStatement.iterate(
     startAt,
-    datasource,
+    ...datasources,
     limit,
   );
 
@@ -76,6 +78,7 @@ export function fetchHistoricalDataForPythFeedsDemo({
     out.push({
       price: typedResult.price * Math.pow(10, typedResult.exponent),
       timestamp: typedResult.timestamp,
+      source: typedResult.source,
     });
   }
 

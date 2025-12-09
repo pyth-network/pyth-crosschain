@@ -13,6 +13,7 @@ import type {
   AllDataSourcesType,
   CurrentPriceMetrics,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { removeReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   datasourceRequiresApiToken,
   getColorForSymbol,
@@ -44,7 +45,8 @@ export function PythProDemoCard({
   const requiresToken = datasourceRequiresApiToken(dataSource);
 
   const toggleVisibilityTooltip = `${sourceVisible ? "Hide" : "Show"} this data source in the chart`;
-  const formattedSymbol = selectedSource.toUpperCase();
+  const formattedSymbol =
+    removeReplaySymbolSuffix(selectedSource).toUpperCase();
   const formattedDataSource = capitalCase(dataSource);
   let priceChangeClassName: Nullish<string> = "";
 

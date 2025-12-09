@@ -2,26 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 import {
   ALLOWED_EQUITY_SYMBOLS,
-  DATA_SOURCES_HISTORICAL,
-} from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
-import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../../static-data/pyth-pro-demo";
+  DATA_SOURCES_REPLAY,
+} from "../../../../../schemas/pyth/pyth-pro-demo-schema";
+import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../static-data/pyth-pro-demo";
 
 const DEFAULT_LIMIT = 1000;
 const DEFAULT_START_AT = 0;
 
 export const GET = async (
   req: NextRequest,
-  ctx: RouteContext<"/api/pyth/get-pyth-feeds-demo-data/[datasource]/[symbol]">,
+  ctx: RouteContext<"/api/pyth/get-pyth-feeds-demo-data/[symbol]">,
 ) => {
-  const { datasource, symbol } = await ctx.params;
-  const datasourceValidation =
-    await DATA_SOURCES_HISTORICAL.safeParseAsync(datasource);
-  if (datasourceValidation.error) {
-    return NextResponse.json(
-      { error: datasourceValidation.error.message },
-      { status: 400 },
-    );
-  }
+  const { symbol } = await ctx.params;
 
   const symbolValidation = await ALLOWED_EQUITY_SYMBOLS.safeParseAsync(symbol);
   if (symbolValidation.error) {
@@ -37,11 +29,11 @@ export const GET = async (
 
   const startAt = Number(searchParams.get("startAt") ?? DEFAULT_START_AT);
   const limit = Number(searchParams.get("limit") ?? DEFAULT_LIMIT);
-  const datasourceToUse = datasourceValidation.data;
+
   const symbolToUse = symbolValidation.data;
 
   const data = fetchHistoricalDataForPythFeedsDemo({
-    datasource: datasourceToUse,
+    datasources: DATA_SOURCES_REPLAY.options,
     limit,
     startAt,
     symbol: symbolToUse,
