@@ -15,13 +15,7 @@ import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
 // in a next.js app, all paths must be resolved from the nearest package.json file,
 // which ends up being the root of this server project
-const dbPath = path.join(
-  process.cwd(),
-  "src",
-  "static-data",
-  "pyth-pro-demo",
-  "historical-data.db",
-);
+const dbPath = path.join(process.cwd(), "public", "db", "historical-data.db");
 
 const db = new DatabaseSync(dbPath, { open: true, readOnly: true });
 
