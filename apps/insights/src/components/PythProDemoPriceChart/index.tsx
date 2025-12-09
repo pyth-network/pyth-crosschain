@@ -1,3 +1,5 @@
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@pythnetwork/component-library/Button";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { capitalCase } from "change-case";
 import { format } from "date-fns";
@@ -11,6 +13,7 @@ import type {
 import { createChart, LineSeries } from "lightweight-charts";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
+import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -172,7 +175,23 @@ export function PythProDemoPriceChartImpl({
 
   if (!isAllowedSymbol(selectedSource)) return;
 
-  return <div ref={containerRef} style={{ width: "100%", height: "400px" }} />;
+  return (
+    <div className={classes.root}>
+      <div className={classes.buttons}>
+        <Button
+          beforeIcon={<ArrowCounterClockwise />}
+          onClick={() => {
+            chartRef.current?.timeScale().scrollToRealTime();
+          }}
+          size="xs"
+          variant="outline"
+        >
+          Reset chart position
+        </Button>
+      </div>
+      <div className={classes.chartContainer} ref={containerRef} />
+    </div>
+  );
 }
 
 export function PythProDemoPriceChart() {
