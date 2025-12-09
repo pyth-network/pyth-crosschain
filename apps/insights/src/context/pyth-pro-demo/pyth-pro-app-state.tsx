@@ -183,9 +183,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     selectedSymbolRef.current = appState.selectedSource;
   });
 
-  // @ts-expect-error - shut up while I'm testing
-  globalThis.window.demoAppState = appState;
-
   return <context.Provider value={providerVal}>{children}</context.Provider>;
 }
 
