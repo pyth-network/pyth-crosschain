@@ -11,7 +11,7 @@ const DEFAULT_START_AT = 0;
 
 export const GET = async (
   req: NextRequest,
-  ctx: RouteContext<"/api/pyth/get-pyth-feeds-demo-data/[symbol]">,
+  ctx: { params: Promise<{ symbol: string }> },
 ) => {
   const { symbol } = await ctx.params;
 
