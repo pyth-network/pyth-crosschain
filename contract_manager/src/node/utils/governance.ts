@@ -282,7 +282,9 @@ export class WormholeMultisigProposal {
 type SquadsMeshInstance = InstanceType<typeof SquadsMeshClass>;
 
 function getSquadsMesh() {
-  return SquadsMeshClass;
+  // Handle nested default export from @sqds/mesh
+  return (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
+    SquadsMeshClass;
 }
 
 export class Vault extends Storable {
