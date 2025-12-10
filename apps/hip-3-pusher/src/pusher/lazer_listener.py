@@ -41,7 +41,7 @@ class LazerListener:
         await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.lazer_urls))
 
     @retry(
-        retry=retry_if_exception_type((StaleConnectionError, websockets.ConnectionClosed)),
+        retry=retry_if_exception_type(Exception),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         reraise=True,
     )

@@ -1,5 +1,7 @@
 import asyncio
 import json
+from enum import StrEnum
+
 import websockets
 from loguru import logger
 from tenacity import retry, retry_if_exception_type, wait_exponential
@@ -13,6 +15,10 @@ from pusher.price_state import PriceSourceState, PriceUpdate
 # Other RPC providers exist but so far we've seen their support is incomplete.
 HYPERLIQUID_MAINNET_WS_URL = "wss://api.hyperliquid.xyz/ws"
 HYPERLIQUID_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws"
+
+class HLChannel(StrEnum):
+    CHANNEL_ACTIVE_ASSET_CTX = "activeAssetCtx"
+    CHANNEL_ALL_MIDS = "allMids"
 
 
 class HyperliquidListener:
@@ -38,7 +44,7 @@ class HyperliquidListener:
         await asyncio.gather(*(self.subscribe_single(hyperliquid_ws_url) for hyperliquid_ws_url in self.hyperliquid_ws_urls))
 
     @retry(
-        retry=retry_if_exception_type((StaleConnectionError, websockets.ConnectionClosed)),
+        retry=retry_if_exception_type(Exception),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         reraise=True,
     )
@@ -59,26 +65,36 @@ class HyperliquidListener:
             await ws.send(json.dumps(subscribe_all_mids_request))
             logger.info("Sent subscribe request for allMids for dex: {} to {}", self.market_name, url)
 
+            channel_last_message_timestamp = {channel: time.time() for channel in HLChannel}
             # listen for updates
             while True:
                 try:
                     message = await asyncio.wait_for(ws.recv(), timeout=STALE_TIMEOUT_SECONDS)
                     data = json.loads(message)
                     channel = data.get("channel", None)
+                    now = time.time()
                     if not channel:
                         logger.error("No channel in message: {}", data)
                     elif channel == "subscriptionResponse":
                         logger.debug("Received subscription response: {}", data)
                     elif channel == "error":
                         logger.error("Received Hyperliquid error response: {}", data)
-                    elif channel == "activeAssetCtx":
-                        self.parse_hyperliquid_active_asset_ctx_update(data)
-                    elif channel == "allMids":
-                        self.parse_hyperliquid_all_mids_update(data)
+                    elif channel == HLChannel.CHANNEL_ACTIVE_ASSET_CTX:
+                        self.parse_hyperliquid_active_asset_ctx_update(data, now)
+                        channel_last_message_timestamp[channel] = now
+                    elif channel == HLChannel.CHANNEL_ALL_MIDS:
+                        self.parse_hyperliquid_all_mids_update(data, now)
+                        channel_last_message_timestamp[channel] = now
                     else:
                         logger.error("Received unknown channel: {}", channel)
+
+                    # check for stale channels
+                    for channel in HLChannel:
+                        if now - channel_last_message_timestamp[channel] > STALE_TIMEOUT_SECONDS:
+                            logger.error("Hyperliquid channel {} stale; restarting websocket listener", channel)
+                            raise StaleConnectionError(f"No messages in channel {channel} in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
                 except asyncio.TimeoutError:
-                    raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
+                    raise StaleConnectionError(f"No messages overall in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
                 except websockets.ConnectionClosed:
                     raise
                 except json.JSONDecodeError as e:
@@ -86,21 +102,19 @@ class HyperliquidListener:
                 except Exception as e:
                     logger.error("Unexpected exception: {}", e)
 
-    def parse_hyperliquid_active_asset_ctx_update(self, message):
+    def parse_hyperliquid_active_asset_ctx_update(self, message, now):
         try:
             ctx = message["data"]["ctx"]
             symbol = message["data"]["coin"]
-            now = time.time()
             self.hl_oracle_state.put(symbol, PriceUpdate(ctx["oraclePx"], now))
             self.hl_mark_state.put(symbol, PriceUpdate(ctx["markPx"], now))
             logger.debug("activeAssetCtx symbol: {} oraclePx: {} markPx: {}", symbol, ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
             logger.error("parse_hyperliquid_active_asset_ctx_update error: message: {} e: {}", message, e)
 
-    def parse_hyperliquid_all_mids_update(self, message):
+    def parse_hyperliquid_all_mids_update(self, message, now):
         try:
             mids = message["data"]["mids"]
-            now = time.time()
             for mid in mids:
                 self.hl_mid_state.put(mid, PriceUpdate(mids[mid], now))
             logger.debug("allMids: {}", mids)
