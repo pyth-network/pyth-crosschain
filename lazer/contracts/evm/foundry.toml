@@ -7,3 +7,4 @@ fs_permissions = [{ access = "read-write", path = "."}]
 optimizer = true
 optimizer_runs = 100000
 solc_version = "0.8.23"
+evm_version = "paris"
