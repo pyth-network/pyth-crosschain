@@ -9,7 +9,10 @@ import type {
   AllAllowedSymbols,
   PriceDataWithSource,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { removeReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
+import {
+  ALLOWED_REPLAY_SYMBOLS,
+  removeReplaySymbolSuffix,
+} from "../../schemas/pyth/pyth-pro-demo-schema";
 import { isAllowedDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
 function getFetchHistoricalUrl(symbol: Nullish<AllAllowedSymbols>) {
@@ -88,7 +91,12 @@ export function useHttpDataStream({
         abortControllerRef.current?.abort();
         return;
       }
-      let startAt = 1_764_772_200_000;
+      // 🚨 DEMO HACK ALERT: the earliest point where Pyth data and Nasdaq data overlaps
+      // for the supported demo symbols
+      let startAt =
+        symbol === ALLOWED_REPLAY_SYMBOLS.Enum["TSLA:::replay"]
+          ? 1_764_892_801_942
+          : 1_764_892_800_000;
       const limit = 1000;
 
       let results: PriceDataWithSource[];
@@ -138,8 +146,28 @@ export function useHttpDataStream({
               continue;
             }
 
+            const {
+              ask: currentPointAsk,
+              bid: currentPointBid,
+              price: currentPointPrice,
+              source: currentPointSource,
+              timestamp: currentPointTimestamp,
+            } = dataPoint;
+            const {
+              ask: nextPointAsk,
+              bid: nextPointBid,
+              price: nextPointPrice,
+              source: nextPointSource,
+              timestamp: nextPointTimestamp,
+            } = nextDataPoint;
+
             if (i === 0) {
-              addDataPoint(dataPoint.source, symbol, dataPoint);
+              addDataPoint(currentPointSource, symbol, {
+                ask: currentPointAsk,
+                bid: currentPointBid,
+                price: currentPointPrice,
+                timestamp: currentPointTimestamp,
+              });
             }
 
             const syntheticTimeToWait =
@@ -152,7 +180,12 @@ export function useHttpDataStream({
               return;
             }
 
-            addDataPoint(dataPoint.source, symbol, nextDataPoint);
+            addDataPoint(nextPointSource, symbol, {
+              ask: nextPointAsk,
+              bid: nextPointBid,
+              price: nextPointPrice,
+              timestamp: nextPointTimestamp,
+            });
 
             if (i === midpoint) {
               const abt = new AbortController();
