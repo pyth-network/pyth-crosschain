@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { wait } from "@pythnetwork/shared-lib/util";
 import { useEffect, useRef, useState } from "react";
@@ -76,6 +77,9 @@ export function useHttpDataStream({
 
     setStatus("connected");
 
+    // Add a flag to track if the effect is still mounted
+    let isMounted = true;
+
     const kickoffFetching = async () => {
       const allDataSourcesAllowed = dataSources.every((ds) =>
         isAllowedDataSource(ds),
@@ -84,8 +88,6 @@ export function useHttpDataStream({
         abortControllerRef.current?.abort();
         return;
       }
-      // pyth starts at 1764772200000, so we start from there or we'll have a ton
-      // of empty data on the screen for pyth
       let startAt = 1_764_772_200_000;
       const limit = 1000;
 
@@ -94,19 +96,14 @@ export function useHttpDataStream({
 
       try {
         do {
-          if (!enabledRef.current) {
-            // enablement pointer may have changed,
-            // so we need to prevent the fetching logic from firing
+          // Check if component is still mounted
+          if (!isMounted || !enabledRef.current) {
             abortControllerRef.current?.abort();
             return;
           }
 
           const abt = new AbortController();
           abortControllerRef.current = abt;
-
-          // eslint doesn't have enough context to know that
-          // the midpoint fetch, below, will populate the nextResults
-          // value and ensure the LHS of this condition is met
 
           const baseUrl = getFetchHistoricalUrl(symbol);
 
@@ -123,9 +120,13 @@ export function useHttpDataStream({
           const midpoint = Math.floor(resultsLen / 2);
           startAt = results.at(-1)?.timestamp ?? startAt + 1000;
 
-          // Need to do synthetic per-datapoint updates,
-          // like we'd get out over a websocket connection.
           for (let i = 0; i < resultsLen; i++) {
+            // Check again inside the loop
+            if (!isMounted) {
+              abortControllerRef.current.abort();
+              return;
+            }
+
             const dataPoint = results[i];
             const nextDataPoint = results[i + 1];
 
@@ -146,11 +147,14 @@ export function useHttpDataStream({
 
             await wait(syntheticTimeToWait);
 
+            if (!isMounted) {
+              abortControllerRef.current.abort();
+              return;
+            }
+
             addDataPoint(dataPoint.source, symbol, nextDataPoint);
 
             if (i === midpoint) {
-              // fetch more, but don't hold up this synthetic loop
-
               const abt = new AbortController();
               abortControllerRef.current = abt;
               void fetchHistoricalData({
@@ -160,25 +164,32 @@ export function useHttpDataStream({
                 signal: abt.signal,
               })
                 .then((r) => {
-                  nextResults = r;
+                  if (isMounted) {
+                    nextResults = r;
+                  }
                 })
                 .catch((error_: unknown) => {
-                  if (!(error_ instanceof Error)) throw error_;
-                  setError(error_);
+                  if (isMounted) {
+                    if (!(error_ instanceof Error)) throw error_;
+                    setError(error_);
+                  }
                 });
             }
           }
         } while (results.length > 0);
       } catch (error) {
-        abortControllerRef.current?.abort();
-        if (!(error instanceof Error)) throw error;
-        setError(error);
+        if (isMounted) {
+          abortControllerRef.current?.abort();
+          if (!(error instanceof Error)) throw error;
+          setError(error);
+        }
       }
     };
 
     void kickoffFetching();
 
     return () => {
+      isMounted = false;
       currAbtController?.abort();
     };
   }, [addDataPoint, dataSources, enabled, symbol]);
