@@ -107,6 +107,7 @@ const REPLAY_SYMBOL_SEPARATOR = ":::replay";
 
 export const ALLOWED_REPLAY_SYMBOLS = z.enum([
   `${ALLOWED_EQUITY_SYMBOLS.Enum.HOOD}${REPLAY_SYMBOL_SEPARATOR}`,
+  `${ALLOWED_EQUITY_SYMBOLS.Enum.TSLA}${REPLAY_SYMBOL_SEPARATOR}`,
 ]);
 export type AllowedReplaySymbolsType = z.infer<typeof ALLOWED_REPLAY_SYMBOLS>;
 

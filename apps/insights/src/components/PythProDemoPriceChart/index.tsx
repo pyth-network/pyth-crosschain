@@ -2,6 +2,7 @@ import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { capitalCase } from "change-case";
+import color from "color";
 import { format } from "date-fns";
 import type {
   IChartApi,
@@ -18,7 +19,7 @@ import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
-  getColorForSymbol,
+  getColorForDataSource,
   getThemeCssVar,
   isAllowedSymbol,
 } from "../../util/pyth-pro-demo";
@@ -30,6 +31,8 @@ type PythProDemoPriceChartImplProps = Pick<
 
 const MAX_DATA_AGE = 1000 * 60; // 1 minute
 const MAX_DATA_POINTS = 3000;
+
+// const metricsToPlot
 
 export function PythProDemoPriceChartImpl({
   dataSourcesInUse,
@@ -62,8 +65,10 @@ export function PythProDemoPriceChartImpl({
       }
 
       const visible = dataSourceVisibility[dataSource];
+      const baseColor = color(getColorForDataSource(dataSource));
+
       series.applyOptions({
-        color: getColorForSymbol(dataSource),
+        color: baseColor.hex(),
         lineWidth: 2,
         lineStyle: 0, // solid
         visible,

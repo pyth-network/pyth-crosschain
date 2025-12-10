@@ -36,7 +36,7 @@ function hydratePalette() {
 /**
  * normalizes colors used for all data sources
  */
-export function getColorForSymbol(dataSource: AllDataSourcesType) {
+export function getColorForDataSource(dataSource: AllDataSourcesType) {
   const p = hydratePalette();
   return p?.[dataSource] ?? "gray";
 }

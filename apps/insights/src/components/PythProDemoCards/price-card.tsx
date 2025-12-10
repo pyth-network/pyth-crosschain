@@ -16,7 +16,7 @@ import type {
 import { removeReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   datasourceRequiresApiToken,
-  getColorForSymbol,
+  getColorForDataSource,
   isAllowedSymbol,
 } from "../../util/pyth-pro-demo";
 
@@ -66,7 +66,7 @@ export function PythProDemoCard({
       title={
         <span
           className={classes.dataSourceName}
-          style={{ color: getColorForSymbol(dataSource) }}
+          style={{ color: getColorForDataSource(dataSource) }}
         >
           <Button
             aria-label={toggleVisibilityTooltip}

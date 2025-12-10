@@ -1,5 +1,8 @@
+/* eslint-disable unicorn/no-array-reduce */
+import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import zlib from "node:zlib";
 
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
@@ -10,14 +13,38 @@ import type {
   AllowedEquitySymbolsType,
   PriceDataWithSource,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { appendReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
+import {
+  ALLOWED_REPLAY_SYMBOLS,
+  appendReplaySymbolSuffix,
+  removeReplaySymbolSuffix,
+} from "../../schemas/pyth/pyth-pro-demo-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
 // in a next.js app, all paths must be resolved from the nearest package.json file,
 // which ends up being the root of this server project
-const dbPath = path.join(process.cwd(), "public", "db", "historical-data.db");
+const DB_PATHS_BY_SYMBOL = ALLOWED_REPLAY_SYMBOLS.options.reduce<
+  Partial<Record<AllowedEquitySymbolsType, DatabaseSync>>
+>((prev, opt) => {
+  const symbol = removeReplaySymbolSuffix(opt);
+  const uncompressedDbPath = path.join(
+    process.cwd(),
+    "public",
+    "db",
+    `${symbol.toLowerCase()}-historical-data.db`,
+  );
+  const compressedDbPath = `${uncompressedDbPath}.gz`;
+  const compressedDb = fs.readFileSync(compressedDbPath);
+  const decompressedDb = zlib.gunzipSync(compressedDb);
+  fs.writeFileSync(uncompressedDbPath, decompressedDb);
 
-const db = new DatabaseSync(dbPath, { open: true, readOnly: true });
+  return {
+    ...prev,
+    [symbol]: new DatabaseSync(uncompressedDbPath, {
+      open: true,
+      readOnly: true,
+    }),
+  };
+}, {});
 
 type FetchHistoricalDataOpts = {
   datasources: AllDataSourcesType[];
@@ -52,11 +79,16 @@ export function fetchHistoricalDataForPythFeedsDemo({
     return out;
   }
 
+  const db = DB_PATHS_BY_SYMBOL[symbol];
+
+  if (!db) return [];
+
   const sourcePlaceholders = datasources.map(() => "?").join(", ");
 
-  const queryForDataStatement = db.prepare(`SELECT * FROM NasdaqAndPythData napd
-WHERE napd.timestamp >= ? AND napd.source in (${sourcePlaceholders})
-ORDER BY napd.timestamp asc
+  const queryForDataStatement =
+    db.prepare(`SELECT * FROM ${symbol.toUpperCase()} s
+WHERE s.timestamp >= ? AND s.source in (${sourcePlaceholders})
+ORDER BY s.timestamp asc
 LIMIT ?;`);
 
   const resultsIterator = queryForDataStatement.iterate(
