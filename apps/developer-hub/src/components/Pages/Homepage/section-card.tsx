@@ -21,7 +21,9 @@ export const SectionCard = ({
   <div className={styles.sectionCard}>
     <div className={styles.sectionCardHeader}>
       <h3 className={styles.sectionCardTitle}>{title}</h3>
-      {image}
+      <div className={styles.sectionCardImage}>
+        {image}
+      </div>
     </div>
     <p className={styles.sectionCardDescription}>{description}</p>
     {url && urlLabel && (

@@ -2,8 +2,9 @@
 
 import { Lightning } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
+import { Link } from "@pythnetwork/component-library/Link";
 import { clsx } from "clsx";
-import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -62,7 +63,24 @@ export function ProductCard({
             <h3 className={styles.title}>{title}</h3>
             {description && <p className={styles.description}>{description}</p>}
             {icon && <div className={styles.icon}>{icon}</div>}
+            {buttonLabel && (
+              <div className={styles.buttonWrapper}>
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleButtonClick();
+                  }}
+                  size="sm"
+                  variant="primary"
+                  className={clsx(styles.button, className)}
+                >
+                  {buttonLabel}
+                </Button>
+              </div>
+            )}
           </div>
+
+
 
           {features && features.length > 0 && (
             <div className={styles.featuresSection}>
@@ -89,7 +107,6 @@ export function ProductCard({
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={styles.quickLink}
                   >
                     {link.label}
                   </Link>
@@ -99,21 +116,7 @@ export function ProductCard({
           )}
         </div>
 
-        {buttonLabel && (
-          <div className={styles.buttonWrapper}>
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                handleButtonClick();
-              }}
-              size="md"
-              variant="primary"
-              className={clsx(styles.button, className)}
-            >
-              {buttonLabel}
-            </Button>
-          </div>
-        )}
+
       </div>
     </div>
   );

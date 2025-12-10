@@ -1,0 +1,15 @@
+@use "@pythnetwork/component-library/theme";
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: theme.spacing(8);
+}
+
+.container {
+  max-width: var(--spacing-fd-container);
+  margin: 0 auto;
+  > *:not(:last-child) {
+    margin-bottom: theme.spacing(20);
+  }
+}
