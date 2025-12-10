@@ -5,20 +5,22 @@
     flex-direction: row;
     gap: theme.spacing(8);
     justify-content: space-between;
+    max-height: theme.spacing(16);
+    align-items: center;
 }
 
 .title {
-  @include theme.text("3xl", "medium");
-
+  @include theme.text("2xl", "medium");
   color: theme.color("heading");
   margin-bottom: theme.spacing(2);
 }
 
 .subtitle {
-  @include theme.text("xl", "normal");
-  opacity: 0.7;
+  @include theme.text("2xl", "normal");
+  opacity: 0.65;
 }
 
 .slot {
-    // placeholder for children
+    position: relative;
+    z-index: 1;
 }
