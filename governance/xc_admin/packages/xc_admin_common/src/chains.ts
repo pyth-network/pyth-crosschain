@@ -120,7 +120,7 @@ export const RECEIVER_CHAINS = {
   zero_gravity: 60088,
   itsnotreal: 60089, // Deprecated
   plasma: 60090,
-  itsnotreal2: 60091,
+  ethereal: 60091,
   injective_evm: 60092,
   orange: 60093,
 

@@ -7,7 +7,7 @@
 
 import { createHash } from "node:crypto";
 
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@pythnetwork/xc-admin-common";
 import type { AccountMeta } from "@solana/web3.js";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import SquadsMesh from "@sqds/mesh";
+import SquadsMeshClass from "@sqds/mesh";
 import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -32,8 +32,15 @@ import {
   EvmPriceFeedContract,
   getCodeDigestWithoutAddress,
   EvmWormholeContract,
+  EvmLazerContract,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+
+function getSquadsMesh() {
+  // Handle nested default export from @sqds/mesh
+  return (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
+    SquadsMeshClass;
+}
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")
@@ -48,14 +55,21 @@ const parser = yargs(hideBin(process.argv))
       demandOption: true,
       desc: "The proposal address to check",
     },
+    "contract-type": {
+      type: "string",
+      demandOption: false,
+      desc: "Type of EVM contract to verify (entropy or lazer). Required when checking EvmExecute instructions.",
+      choices: ["entropy", "lazer"],
+    },
   });
 
 async function main() {
   const argv = await parser.argv;
   const cluster = argv.cluster as PythCluster;
-  const squad = SquadsMesh.endpoint(
+  const mesh = getSquadsMesh();
+  const squad = mesh.endpoint(
     getPythClusterApiUrl(cluster),
-    new NodeWallet(Keypair.generate()), // dummy wallet
+    new Wallet(Keypair.generate()), // dummy wallet
   );
   const transaction = await squad.getTransaction(new PublicKey(argv.proposal));
   const instructions = await getProposalInstructions(squad, transaction);
@@ -148,7 +162,7 @@ async function main() {
       if (instruction.governanceAction instanceof EvmExecute) {
         // Note: it only checks for upgrade entropy contracts right now
         console.log(
-          `Verifying EVMExecute on ${instruction.governanceAction.targetChainId}`,
+          `\nVerifying EVMExecute on ${instruction.governanceAction.targetChainId}`,
         );
         for (const chain of Object.values(DefaultStore.chains)) {
           if (
@@ -161,9 +175,13 @@ async function main() {
             const callAddress = instruction.governanceAction.callAddress;
             const calldata = instruction.governanceAction.calldata;
 
-            // TODO: If we add additional EVM contracts using the executor, we need to
-            // add some logic here to identify what kind of contract is at the call address.
-            const contract = new EvmEntropyContract(chain, callAddress);
+            // Get contract type from flag, default to "entropy" for backward compatibility
+            const contractType = argv["contract-type"] ?? "entropy";
+
+            const contract: EvmEntropyContract | EvmLazerContract =
+              contractType === "lazer"
+                ? new EvmLazerContract(chain, callAddress)
+                : new EvmEntropyContract(chain, callAddress);
             const owner = await contract.getOwner();
 
             if (
