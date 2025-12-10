@@ -27,6 +27,8 @@ class PushErrorReason(StrEnum):
     INTERNAL_ERROR = "internal_error"
     # Invalid nonce, if the pusher account pushes multiple transactions with the same ms timestamp
     INVALID_NONCE = "invalid_nonce"
+    # Missing externalPerpPxs
+    MISSING_EXTERNAL_PERP_PXS = "missing_external_perp_pxs"
     # Some error string we haven't categorized yet
     UNKNOWN = "unknown"
 
@@ -234,6 +236,8 @@ class Publisher:
             return PushErrorReason.USER_LIMIT
         elif "Invalid nonce" in response:
             return PushErrorReason.INVALID_NONCE
+        elif "externalPerpPxs missing perp" in response:
+            return PushErrorReason.MISSING_EXTERNAL_PERP_PXS
         else:
             logger.warning("Unrecognized error response: {}", response)
             return PushErrorReason.UNKNOWN
