@@ -6,7 +6,6 @@ import {
 } from "../../../../../schemas/pyth/pyth-pro-demo-schema";
 import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../static-data/pyth-pro-demo";
 
-const DEFAULT_LIMIT = 1000;
 const DEFAULT_START_AT = 0;
 
 export const GET = async (
@@ -28,13 +27,11 @@ export const GET = async (
   } = req;
 
   const startAt = Number(searchParams.get("startAt") ?? DEFAULT_START_AT);
-  const limit = Number(searchParams.get("limit") ?? DEFAULT_LIMIT);
 
   const symbolToUse = symbolValidation.data;
 
   const data = fetchHistoricalDataForPythFeedsDemo({
     datasources: DATA_SOURCES_REPLAY.options,
-    limit,
     startAt,
     symbol: symbolToUse,
   });

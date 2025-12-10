@@ -48,7 +48,6 @@ const DB_PATHS_BY_SYMBOL = ALLOWED_REPLAY_SYMBOLS.options.reduce<
 
 type FetchHistoricalDataOpts = {
   datasources: AllDataSourcesType[];
-  limit: number;
   startAt: number;
   symbol: AllowedEquitySymbolsType;
 };
@@ -67,7 +66,6 @@ type DatabaseResult = {
  */
 export function fetchHistoricalDataForPythFeedsDemo({
   datasources,
-  limit,
   startAt,
   symbol,
 }: FetchHistoricalDataOpts): PriceDataWithSource[] {
@@ -85,16 +83,18 @@ export function fetchHistoricalDataForPythFeedsDemo({
 
   const sourcePlaceholders = datasources.map(() => "?").join(", ");
 
+  // max 15 seconds worth of data on each query
+  const maxTimestamp = startAt + 1000 * 15;
+
   const queryForDataStatement =
     db.prepare(`SELECT * FROM ${symbol.toUpperCase()} s
-WHERE s.timestamp >= ? AND s.source in (${sourcePlaceholders})
-ORDER BY s.timestamp asc
-LIMIT ?;`);
+WHERE s.timestamp >= ? AND s.timestamp <= ? AND s.source in (${sourcePlaceholders})
+ORDER BY s.timestamp asc;`);
 
   const resultsIterator = queryForDataStatement.iterate(
     startAt,
+    maxTimestamp,
     ...datasources,
-    limit,
   );
 
   for (const result of resultsIterator) {

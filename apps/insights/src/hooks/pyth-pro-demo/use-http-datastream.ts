@@ -24,19 +24,17 @@ function getFetchHistoricalUrl(symbol: Nullish<AllAllowedSymbols>) {
 
 async function fetchHistoricalData({
   baseUrl,
-  limit,
   signal,
   startAt,
 }: {
   baseUrl: string;
   signal: AbortSignal;
   startAt: number;
-  limit: number;
 }) {
-  const response = await fetch(
-    `${baseUrl}?startAt=${startAt.toString()}&limit=${limit.toString()}`,
-    { method: "GET", signal },
-  );
+  const response = await fetch(`${baseUrl}?startAt=${startAt.toString()}`, {
+    method: "GET",
+    signal,
+  });
   if (!response.ok) {
     const errRes = (await response.json()) as { error: string };
     throw new Error(errRes.error);
@@ -97,7 +95,6 @@ export function useHttpDataStream({
         symbol === ALLOWED_REPLAY_SYMBOLS.Enum["TSLA:::replay"]
           ? 1_764_892_801_942
           : 1_764_892_800_000;
-      const limit = 1000;
 
       let results: PriceDataWithSource[];
       let nextResults: Nullish<PriceDataWithSource[]>;
@@ -119,7 +116,6 @@ export function useHttpDataStream({
             nextResults ??
             (await fetchHistoricalData({
               baseUrl,
-              limit,
               signal: abt.signal,
               startAt,
             }));
@@ -192,7 +188,6 @@ export function useHttpDataStream({
               abortControllerRef.current = abt;
               void fetchHistoricalData({
                 baseUrl,
-                limit,
                 startAt,
                 signal: abt.signal,
               })
