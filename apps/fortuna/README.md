@@ -144,3 +144,7 @@ automatically.  If you use this configuration you will have a `cli` script in
 your dev shell which provides easy access to some common tasks, such as `cli
 start` to start the server in watch mode, `cli test` to run unit, code format,
 and lint checks, and `cli fix` to run auto-fixes for formatting and lint issues.
+
+## Contributing
+
+See [AGENTS.md](./AGENTS.md) for repository guidelines covering project layout, workflows, and review expectations before opening a pull request.
