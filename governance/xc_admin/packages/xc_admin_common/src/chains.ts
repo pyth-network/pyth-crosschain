@@ -242,6 +242,7 @@ export const RECEIVER_CHAINS = {
   eventum_testnet: 50110,
   sonic_blaze_testnet: 50111,
   movement_bardock_testnet: 50112,
+  movement_previewnet: 60077,
   story_testnet: 50113,
   coredao_testnet_v2: 50114,
   bittensor_testnet: 50115,

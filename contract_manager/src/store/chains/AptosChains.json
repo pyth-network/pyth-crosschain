@@ -43,6 +43,13 @@
     "type": "AptosChain"
   },
   {
+    "id": "movement_previewnet",
+    "wormholeChainName": "movement_previewnet",
+    "mainnet": false,
+    "rpcUrl": "https://previewnet.devnet.movementnetwork.xyz/v1",
+    "type": "AptosChain"
+  },
+  {
     "id": "movement_mainnet",
     "wormholeChainName": "movement_mainnet",
     "mainnet": true,

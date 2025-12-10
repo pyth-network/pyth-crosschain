@@ -36,6 +36,12 @@
     "type": "AptosPriceFeedContract"
   },
   {
+    "chain": "movement_previewnet",
+    "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
+    "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
+    "type": "AptosPriceFeedContract"
+  },
+  {
     "chain": "movement_mainnet",
     "stateId": "0x9357e76fe965c9956a76181ee49f66d51b7f9c3800182a944ed96be86301e49f",
     "wormholeStateId": "0x9236893d6444b208b7e0b3e8d4be4ace90b6d17817ab7d1584e46a33ef5c50c9",
