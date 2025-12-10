@@ -880,7 +880,7 @@
     "type": "EvmWormholeContract"
   },
   {
-    "chain": "itsnotreal2",
+    "chain": "ethereal",
     "address": "0x35a58BeeE77a2Ad547FcDed7e8CB1c6e19746b13",
     "type": "EvmWormholeContract"
   },

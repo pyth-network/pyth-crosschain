@@ -1323,9 +1323,9 @@
     "type": "EvmChain"
   },
   {
-    "id": "itsnotreal2",
+    "id": "ethereal",
     "mainnet": true,
-    "rpcUrl": "https://rpc.itsnotreal2.lol",
+    "rpcUrl": "https://rpc.ethereal.trade",
     "networkId": 5064014,
     "type": "EvmChain"
   },
