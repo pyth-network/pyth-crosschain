@@ -48,7 +48,7 @@ class Metrics:
             name="hip_3_relayer_price_config",
             description="Price source config",
         )
-        # labels: user
+        # labels: dex, user
         self.user_request_balance = self.meter.create_gauge(
             name="hip_3_relayer_user_request_balance",
             description="Number of update requests left before rate limit",

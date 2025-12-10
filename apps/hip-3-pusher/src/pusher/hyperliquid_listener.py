@@ -19,6 +19,11 @@ HYPERLIQUID_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws"
 class HLChannel(StrEnum):
     CHANNEL_ACTIVE_ASSET_CTX = "activeAssetCtx"
     CHANNEL_ALL_MIDS = "allMids"
+    CHANNEL_SUBSCRIPTION_RESPONSE = "subscriptionResponse"
+    CHANNEL_PONG = "pong"
+    CHANNEL_ERROR = "error"
+
+DATA_CHANNELS = [HLChannel.CHANNEL_ACTIVE_ASSET_CTX, HLChannel.CHANNEL_ALL_MIDS]
 
 
 class HyperliquidListener:
@@ -33,6 +38,7 @@ class HyperliquidListener:
         self.hl_oracle_state = hl_oracle_state
         self.hl_mark_state = hl_mark_state
         self.hl_mid_state = hl_mid_state
+        self.ws_ping_interval = config.hyperliquid.ws_ping_interval
 
     def get_subscribe_request(self, asset):
         return {
@@ -66,7 +72,10 @@ class HyperliquidListener:
             await ws.send(json.dumps(subscribe_all_mids_request))
             logger.info("Sent subscribe request for allMids for dex: {} to {}", self.market_name, url)
 
-            channel_last_message_timestamp = {channel: time.time() for channel in HLChannel}
+            now = time.time()
+            channel_last_message_timestamp = {channel: now for channel in HLChannel}
+            last_ping_timestamp = now
+
             # listen for updates
             while True:
                 try:
@@ -76,9 +85,9 @@ class HyperliquidListener:
                     now = time.time()
                     if not channel:
                         logger.error("No channel in message: {}", data)
-                    elif channel == "subscriptionResponse":
-                        logger.debug("Received subscription response: {}", data)
-                    elif channel == "error":
+                    elif channel == HLChannel.CHANNEL_SUBSCRIPTION_RESPONSE:
+                        logger.info("Received subscription response: {}", data)
+                    elif channel == HLChannel.CHANNEL_ERROR:
                         logger.error("Received Hyperliquid error response: {}", data)
                     elif channel == HLChannel.CHANNEL_ACTIVE_ASSET_CTX:
                         self.parse_hyperliquid_active_asset_ctx_update(data, now)
@@ -86,19 +95,27 @@ class HyperliquidListener:
                     elif channel == HLChannel.CHANNEL_ALL_MIDS:
                         self.parse_hyperliquid_all_mids_update(data, now)
                         channel_last_message_timestamp[channel] = now
+                    elif channel == HLChannel.CHANNEL_PONG:
+                        logger.debug("Received pong")
                     else:
                         logger.error("Received unknown channel: {}", channel)
 
                     # check for stale channels
-                    for channel in HLChannel:
+                    for channel in DATA_CHANNELS:
                         if now - channel_last_message_timestamp[channel] > STALE_TIMEOUT_SECONDS:
                             logger.warning("HyperliquidLister: no messages in channel {} stale in {} seconds; reconnecting...", channel, STALE_TIMEOUT_SECONDS)
                             raise StaleConnectionError(f"No messages in channel {channel} in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
+
+                    # ping if we need to
+                    if now - last_ping_timestamp > self.ws_ping_interval:
+                        await ws.send(json.dumps({"method": "ping"}))
+                        last_ping_timestamp = now
                 except asyncio.TimeoutError:
                     logger.warning("HyperliquidListener: No messages overall in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
                     raise StaleConnectionError(f"No messages overall in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
-                except websockets.ConnectionClosed:
-                    logger.warning("HyperliquidListener: Connection closed, reconnecting...")
+                except websockets.ConnectionClosed as e:
+                    rc, rr = e.rcvd.code if e.rcvd else None, e.rcvd.reason if e.rcvd else None
+                    logger.warning("HyperliquidListener: Websocket connection closed (code={} reason={}); reconnecting...", rc, rr)
                     raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {} error: {}", message, e)

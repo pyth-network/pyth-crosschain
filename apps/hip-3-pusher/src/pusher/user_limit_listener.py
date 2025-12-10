@@ -15,6 +15,7 @@ class UserLimitListener:
         self.address = address.lower()
         self.metrics = metrics
         self.interval = config.hyperliquid.user_limit_interval
+        self.dex = config.hyperliquid.market_name
 
         base_url = constants.TESTNET_API_URL if config.hyperliquid.use_testnet else constants.MAINNET_API_URL
         self.info = Info(base_url=base_url, skip_ws=True, meta=Meta(universe=[]), spot_meta=SpotMeta(universe=[], tokens=[]))
@@ -27,7 +28,7 @@ class UserLimitListener:
                 logger.debug("userRateLimit response: {}", response)
                 balance = response["nRequestsSurplus"] - response["nRequestsCap"] - response["nRequestsUsed"]
                 logger.debug("userRateLimit user: {} balance: {}", self.address, balance)
-                self.metrics.user_request_balance.set(balance, {"user": self.address})
+                self.metrics.user_request_balance.set(balance, {"dex": self.dex, "user": self.address})
             except Exception as e:
                 logger.error("userRateLimit query failed: {}", e)
             await asyncio.sleep(self.interval)
