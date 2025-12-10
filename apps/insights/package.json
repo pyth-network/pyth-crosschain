@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@clickhouse/client": "catalog:",
-    "@duckdb/node-api": "^1.4.2-r.1",
+    "@duckdb/node-api": "^1.4.3-r.1",
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/component-library": "workspace:*",

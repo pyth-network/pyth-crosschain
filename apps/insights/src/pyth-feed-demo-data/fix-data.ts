@@ -10,9 +10,8 @@
  */
 
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
-import { createGzip } from "node:zlib";
 
+import { DuckDBInstance } from "@duckdb/node-api";
 import fs from "fs-extra";
 import { glob } from "glob";
 import papa from "papaparse";
@@ -120,27 +119,16 @@ for (const fp of csvs) {
 
 correctedData.sort((a, b) => a.timestamp - b.timestamp);
 
-for (const symbol of symbols) {
-  const data = correctedData.filter((d) => d.symbol === symbol);
-  const fp = path.join(outdir, `${symbol}.csv`);
-  await fs.ensureFile(fp);
-
-  try {
-    await fs.remove(fp);
-  } catch {
-    /* no-op */
-  }
-
-  await fs.writeFile(fp, unparse(data, { header: true }), "utf8");
-}
+const outputCSV = path.join(outdir, "all-data.csv");
+await fs.ensureFile(outputCSV);
+await fs.writeFile(outputCSV, unparse(correctedData, { header: true }), "utf8");
 
 const dbfilePath = path.join(outdir, "historical-demo-data.db");
-const dbfilePathGzip = `${dbfilePath}.gz`;
-await fs.ensureFile(dbfilePath);
 
-const db = new DatabaseSync(dbfilePath, { open: true, readOnly: false });
+const instance = await DuckDBInstance.create(dbfilePath, { threads: "4" });
+const db = await instance.connect();
 
-db.exec(`CREATE TABLE IF NOT EXISTS HistoricalData (
+await db.run(`CREATE TABLE IF NOT EXISTS HistoricalData (
   ask REAL,
   bid REAL,
   datetime NVARCHAR,
@@ -150,38 +138,11 @@ db.exec(`CREATE TABLE IF NOT EXISTS HistoricalData (
   timestamp REAL
 )`);
 
-const insertStatement = db.prepare(`INSERT INTO HistoricalData
-  (ask, bid, datetime, price, source, symbol, timestamp)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`);
+await db.run("BEGIN TRANSACTION");
 
-db.exec("BEGIN TRANSACTION");
+await db.run(`INSERT INTO HistoricalData
+SELECT * FROM read_csv_auto('${outputCSV}', HEADER=TRUE)`);
 
-for (const {
-  ask,
-  bid,
-  datetime,
-  price,
-  source,
-  symbol,
-  timestamp,
-} of correctedData) {
-  insertStatement.run(ask, bid, datetime, price, source, symbol, timestamp);
-}
+await db.run("COMMIT");
 
-db.exec("COMMIT");
-db.close();
-
-// clear out things we don't need in memory anymore so we don't overload the process
-correctedData.length = 0;
-
-const dbfileReadStream = fs.createReadStream(dbfilePath);
-const dbcompressWriteStream = fs.createWriteStream(dbfilePathGzip);
-const gzipWriteStream = createGzip({ level: 9 }); // maximum compression for the smallest filesize
-
-dbfileReadStream.pipe(gzipWriteStream).pipe(dbcompressWriteStream);
-
-await new Promise<void>((resolve, reject) => {
-  dbcompressWriteStream.once("finish", resolve);
-  dbcompressWriteStream.once("error", reject);
-});
+db.closeSync();

@@ -1,10 +1,8 @@
-import fs from "node:fs";
 import path from "node:path";
-import zlib from "node:zlib";
 
+import { DuckDBInstance } from "@duckdb/node-api";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
-import sqlite from "sqlite3";
 
 import type {
   AllAllowedSymbols,
@@ -22,10 +20,6 @@ const uncompressedDbPath = path.join(
   "db",
   "historical-demo-data.db",
 );
-const compressedDbPath = `${uncompressedDbPath}.gz`;
-const compressedDb = fs.readFileSync(compressedDbPath);
-const decompressedDb = zlib.gunzipSync(compressedDb);
-fs.writeFileSync(uncompressedDbPath, decompressedDb);
 
 type FetchHistoricalDataOpts = {
   datasource: AllDataSourcesType;
@@ -42,17 +36,19 @@ type DatabaseResult = {
   timestamp: number;
 };
 
-const thing = new sqlite.Database(uncompressedDbPath);
-thing.exec();
-
 /**
  * queries historical data out of the prepared SQLite database
  */
-export function fetchHistoricalDataForPythFeedsDemo({
+export async function fetchHistoricalDataForPythFeedsDemo({
   datasource,
   startAt,
   symbol,
-}: FetchHistoricalDataOpts): HistoricalDataResponseType {
+}: FetchHistoricalDataOpts): Promise<HistoricalDataResponseType> {
+  const instance = await DuckDBInstance.fromCache(uncompressedDbPath, {
+    threads: "4",
+  });
+  const db = await instance.connect();
+
   const symbolWithSuffix = appendReplaySymbolSuffix(symbol);
   const out: PriceDataWithSource[] = [];
   const allDatasourcesValid = isReplayDataSource(datasource);
@@ -61,32 +57,35 @@ export function fetchHistoricalDataForPythFeedsDemo({
     return { data: out, hasNext: false };
   }
 
-  const db = new DatabaseSync(uncompressedDbPath, {
-    open: false,
-    readOnly: true,
-  });
-
-  db.open();
-
-  const queryForDataStatement = db.prepare(`SELECT * FROM HistoricalData d
-WHERE d.timestamp >= ?
-  AND d.symbol = ?
-  AND d.source = ?
+  const queryForDataStatement = await db.prepare(`SELECT * FROM HistoricalData d
+WHERE d.timestamp >= $timestamp
+  AND d.symbol = $symbol
+  AND d.source = $source
 ORDER BY d.timestamp asc
 LIMIT 1000;`);
 
   const lastTimestampStatement =
-    db.prepare(`SELECT MAX(timestamp) as lastTimestamp FROM HistoricalData d
-WHERE d.symbol = ?
-  AND d.source = ?`);
+    await db.prepare(`SELECT MAX(timestamp) as lastTimestamp FROM HistoricalData d
+WHERE d.symbol = $symbol
+  AND d.source = $source`);
 
-  const resultsIterator = queryForDataStatement.iterate(
-    startAt,
+  queryForDataStatement.bind({
+    source: datasource,
     symbol,
-    datasource,
-  );
-  const { lastTimestamp } =
-    lastTimestampStatement.get(symbol, datasource) ?? {};
+    timestamp: startAt,
+  });
+
+  lastTimestampStatement.bind({
+    source: datasource,
+    symbol,
+  });
+
+  const results = await queryForDataStatement.run();
+  const resultsIterator = await results.getRowObjectsJS();
+
+  const lastTimestampResults = await lastTimestampStatement.run();
+  const lastTimestampRows = await lastTimestampResults.getRowObjectsJS();
+  const lastTimestamp = lastTimestampRows[0]?.lastTimestamp ?? undefined;
 
   if (isNullOrUndefined(lastTimestamp)) return { data: [], hasNext: false };
 
@@ -112,8 +111,6 @@ WHERE d.symbol = ?
       symbol,
     });
   }
-
-  db.close();
 
   return {
     data: out,
