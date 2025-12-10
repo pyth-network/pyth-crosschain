@@ -71,10 +71,13 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
 
   // "Fake" websocket-like contract for easier integration
   const { status: replay_status } = useHttpDataStream({
-    dataSources: [
-      ALL_DATA_SOURCES.Values.NASDAQ,
-      ALL_DATA_SOURCES.Values.pyth_pro,
-    ],
+    dataSource: ALL_DATA_SOURCES.Values.NASDAQ,
+    enabled: isGoodSymbol && isReplaySymbol(selectedSource),
+    symbol: selectedSource,
+  });
+
+  const { status: replay_status_pyth } = useHttpDataStream({
+    dataSource: ALL_DATA_SOURCES.Values.pyth_pro,
     enabled: isGoodSymbol && isReplaySymbol(selectedSource),
     symbol: selectedSource,
   });
@@ -89,7 +92,9 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
         okx,
         NASDAQ: replay_status,
         pyth,
-        pyth_pro: isReplaySymbol(selectedSource) ? replay_status : pyth_pro,
+        pyth_pro: isReplaySymbol(selectedSource)
+          ? replay_status_pyth
+          : pyth_pro,
         yahoo: "connected",
       },
     }),
@@ -101,6 +106,7 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
       pyth,
       pyth_pro,
       replay_status,
+      replay_status_pyth,
       selectedSource,
     ],
   );

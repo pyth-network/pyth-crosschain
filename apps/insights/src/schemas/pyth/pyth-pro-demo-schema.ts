@@ -57,29 +57,6 @@ export type DataSourcesTreasuryType = z.infer<typeof DATA_SOURCES_TREASURY>;
 export const DATA_SOURCES_REPLAY = z.enum([NASDAQ, PYTH_PRO]);
 export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
 
-export const PriceDataSchema = z.object({
-  ask: z.number().optional().nullable(),
-  bid: z.number().optional().nullable(),
-  price: z.number().optional().nullable(),
-  timestamp: z.number(),
-});
-export type PriceData = z.infer<typeof PriceDataSchema>;
-
-export const PriceDataSchemaWithSource = PriceDataSchema.extend({
-  source: ALL_DATA_SOURCES,
-});
-export type PriceDataWithSource = z.infer<typeof PriceDataSchemaWithSource>;
-
-export const CurrentPriceMetricsSchema = z.object({
-  ask: z.number().nullable().optional(),
-  bid: z.number().nullable().optional(),
-  change: z.number().nullable().optional(),
-  changePercent: z.number().nullable().optional(),
-  price: z.number().nullable().optional(),
-  timestamp: z.number(),
-});
-export type CurrentPriceMetrics = z.infer<typeof CurrentPriceMetricsSchema>;
-
 export const ALLOWED_FUTURE_SYMBOLS = z.enum(["ESZ2025"]);
 export type AllowedFutureSymbolsType = z.infer<typeof ALLOWED_FUTURE_SYMBOLS>;
 
@@ -125,6 +102,30 @@ export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...ALLOWED_REPLAY_SYMBOLS.options,
 ]);
 export type AllAllowedSymbols = z.infer<typeof ALL_ALLOWED_SYMBOLS>;
+
+export const PriceDataSchema = z.object({
+  ask: z.number().optional().nullable(),
+  bid: z.number().optional().nullable(),
+  price: z.number().optional().nullable(),
+  timestamp: z.number(),
+});
+export type PriceData = z.infer<typeof PriceDataSchema>;
+
+export const PriceDataSchemaWithSource = PriceDataSchema.extend({
+  source: ALL_DATA_SOURCES,
+  symbol: ALL_ALLOWED_SYMBOLS,
+});
+export type PriceDataWithSource = z.infer<typeof PriceDataSchemaWithSource>;
+
+export const CurrentPriceMetricsSchema = z.object({
+  ask: z.number().nullable().optional(),
+  bid: z.number().nullable().optional(),
+  change: z.number().nullable().optional(),
+  changePercent: z.number().nullable().optional(),
+  price: z.number().nullable().optional(),
+  timestamp: z.number(),
+});
+export type CurrentPriceMetrics = z.infer<typeof CurrentPriceMetricsSchema>;
 
 export function appendReplaySymbolSuffix(
   symbol: AllAllowedSymbols,
@@ -176,4 +177,12 @@ export const CurrentPricesStoreStateSchema = z.object({
 });
 export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema
+>;
+
+export const HistoricalDataResponseSchema = z.object({
+  data: z.array(PriceDataSchemaWithSource),
+  hasNext: z.boolean(),
+});
+export type HistoricalDataResponseType = z.infer<
+  typeof HistoricalDataResponseSchema
 >;

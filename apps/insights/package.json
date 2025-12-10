@@ -54,6 +54,7 @@
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
+    "sqlite-async": "^1.2.2",
     "sockette": "catalog:",
     "superjson": "catalog:",
     "swr": "catalog:",

@@ -3,23 +3,32 @@ import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { wait } from "@pythnetwork/shared-lib/util";
 import { useEffect, useRef, useState } from "react";
 
-import type { UseDataStreamReturnType, UseHttpDataStreamOpts } from "./types";
+import type { UseDataStreamOpts, UseDataStreamReturnType } from "./types";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
-  PriceDataWithSource,
+  AllDataSourcesType,
+  HistoricalDataResponseType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   ALLOWED_REPLAY_SYMBOLS,
+  HistoricalDataResponseSchema,
   removeReplaySymbolSuffix,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import { isAllowedDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
+import {
+  isAllowedDataSource,
+  isReplayDataSource,
+  isReplaySymbol,
+} from "../../util/pyth-pro-demo";
 
-function getFetchHistoricalUrl(symbol: Nullish<AllAllowedSymbols>) {
-  if (!isReplaySymbol(symbol)) {
+function getFetchHistoricalUrl(
+  datasource: Nullish<AllDataSourcesType>,
+  symbol: Nullish<AllAllowedSymbols>,
+) {
+  if (!isReplayDataSource(datasource) || !isReplaySymbol(symbol)) {
     return "";
   }
-  return `/api/pyth/get-pyth-feeds-demo-data/${removeReplaySymbolSuffix(symbol)}`;
+  return `/api/pyth/get-pyth-feeds-demo-data/${datasource}/${removeReplaySymbolSuffix(symbol)}`;
 }
 
 async function fetchHistoricalData({
@@ -30,7 +39,7 @@ async function fetchHistoricalData({
   baseUrl: string;
   signal: AbortSignal;
   startAt: number;
-}) {
+}): Promise<HistoricalDataResponseType> {
   const response = await fetch(`${baseUrl}?startAt=${startAt.toString()}`, {
     method: "GET",
     signal,
@@ -39,16 +48,21 @@ async function fetchHistoricalData({
     const errRes = (await response.json()) as { error: string };
     throw new Error(errRes.error);
   }
-  const parsed = (await response.json()) as PriceDataWithSource[];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const parsed = await response.json();
+  const validated = HistoricalDataResponseSchema.safeParse(parsed);
+  if (validated.error) {
+    throw new Error(validated.error.message);
+  }
 
-  return parsed;
+  return validated.data;
 }
 
 export function useHttpDataStream({
-  dataSources,
+  dataSource,
   enabled,
   symbol,
-}: UseHttpDataStreamOpts): UseDataStreamReturnType & { error: Nullish<Error> } {
+}: UseDataStreamOpts): UseDataStreamReturnType & { error: Nullish<Error> } {
   /** context */
   const { addDataPoint } = usePythProAppStateContext();
 
@@ -58,14 +72,14 @@ export function useHttpDataStream({
   const [error, setError] = useState<Nullish<Error>>(undefined);
 
   /** refs */
-  const dataSourcesSetRef = useRef(new Set(dataSources));
+  const datasourceRef = useRef(dataSource);
   const enabledRef = useRef(enabled);
   const abortControllerRef = useRef<Nullish<AbortController>>(undefined);
 
   /** effects */
   useEffect(() => {
+    datasourceRef.current = dataSource;
     enabledRef.current = enabled;
-    dataSourcesSetRef.current = new Set(dataSources);
   });
 
   useEffect(() => {
@@ -82,9 +96,7 @@ export function useHttpDataStream({
     let isMounted = true;
 
     const kickoffFetching = async () => {
-      const allDataSourcesAllowed = dataSources.every((ds) =>
-        isAllowedDataSource(ds),
-      );
+      const allDataSourcesAllowed = isAllowedDataSource(datasourceRef.current);
       if (!isReplaySymbol(symbol) || !allDataSourcesAllowed) {
         abortControllerRef.current?.abort();
         return;
@@ -94,10 +106,10 @@ export function useHttpDataStream({
       let startAt =
         symbol === ALLOWED_REPLAY_SYMBOLS.Enum["TSLA:::replay"]
           ? 1_764_892_801_942
-          : 1_764_892_800_000;
+          : 1_764_892_801_942;
 
-      let results: PriceDataWithSource[];
-      let nextResults: Nullish<PriceDataWithSource[]>;
+      let results: HistoricalDataResponseType;
+      let nextResults: Nullish<HistoricalDataResponseType>;
 
       try {
         do {
@@ -110,7 +122,7 @@ export function useHttpDataStream({
           const abt = new AbortController();
           abortControllerRef.current = abt;
 
-          const baseUrl = getFetchHistoricalUrl(symbol);
+          const baseUrl = getFetchHistoricalUrl(datasourceRef.current, symbol);
 
           results =
             nextResults ??
@@ -120,9 +132,11 @@ export function useHttpDataStream({
               startAt,
             }));
 
-          const resultsLen = results.length;
+          const { data } = results;
+
+          const resultsLen = data.length;
           const midpoint = Math.floor(resultsLen / 2);
-          startAt = results.at(-1)?.timestamp ?? startAt + 1000;
+          startAt = data.at(-1)?.timestamp ?? startAt + 1000;
 
           for (let i = 0; i < resultsLen; i++) {
             // Check again inside the loop
@@ -131,12 +145,12 @@ export function useHttpDataStream({
               return;
             }
 
-            const dataPoint = results[i];
-            const nextDataPoint = results[i + 1];
+            const dataPoint = data[i];
+            const nextDataPoint = data[i + 1];
 
             if (
               !dataPoint ||
-              !dataSourcesSetRef.current.has(dataPoint.source) ||
+              datasourceRef.current !== dataPoint.source ||
               !nextDataPoint
             ) {
               continue;
@@ -167,7 +181,7 @@ export function useHttpDataStream({
             }
 
             const syntheticTimeToWait =
-              nextDataPoint.timestamp - dataPoint.timestamp;
+              nextPointTimestamp - currentPointTimestamp;
 
             await wait(syntheticTimeToWait);
 
@@ -204,7 +218,7 @@ export function useHttpDataStream({
                 });
             }
           }
-        } while (results.length > 0);
+        } while (results.hasNext);
       } catch (error) {
         if (isMounted) {
           abortControllerRef.current?.abort();
@@ -220,7 +234,7 @@ export function useHttpDataStream({
       isMounted = false;
       currAbtController?.abort();
     };
-  }, [addDataPoint, dataSources, enabled, symbol]);
+  }, [addDataPoint, dataSource, enabled, symbol]);
 
   return { error, status };
 }

@@ -1,53 +1,34 @@
-/* eslint-disable unicorn/no-array-reduce */
 import fs from "node:fs";
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
 import zlib from "node:zlib";
 
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { isNumber } from "@pythnetwork/shared-lib/util";
+import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
+import sqlite from "sqlite3";
 
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
   AllowedEquitySymbolsType,
+  HistoricalDataResponseType,
   PriceDataWithSource,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
-import {
-  ALLOWED_REPLAY_SYMBOLS,
-  appendReplaySymbolSuffix,
-  removeReplaySymbolSuffix,
-} from "../../schemas/pyth/pyth-pro-demo-schema";
+import { appendReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
-// in a next.js app, all paths must be resolved from the nearest package.json file,
-// which ends up being the root of this server project
-const DB_PATHS_BY_SYMBOL = ALLOWED_REPLAY_SYMBOLS.options.reduce<
-  Partial<Record<AllowedEquitySymbolsType, DatabaseSync>>
->((prev, opt) => {
-  const symbol = removeReplaySymbolSuffix(opt);
-  const uncompressedDbPath = path.join(
-    process.cwd(),
-    "public",
-    "db",
-    `${symbol.toLowerCase()}-historical-data.db`,
-  );
-  const compressedDbPath = `${uncompressedDbPath}.gz`;
-  const compressedDb = fs.readFileSync(compressedDbPath);
-  const decompressedDb = zlib.gunzipSync(compressedDb);
-  fs.writeFileSync(uncompressedDbPath, decompressedDb);
-
-  return {
-    ...prev,
-    [symbol]: new DatabaseSync(uncompressedDbPath, {
-      open: true,
-      readOnly: true,
-    }),
-  };
-}, {});
+const uncompressedDbPath = path.join(
+  process.cwd(),
+  "public",
+  "db",
+  "historical-demo-data.db",
+);
+const compressedDbPath = `${uncompressedDbPath}.gz`;
+const compressedDb = fs.readFileSync(compressedDbPath);
+const decompressedDb = zlib.gunzipSync(compressedDb);
+fs.writeFileSync(uncompressedDbPath, decompressedDb);
 
 type FetchHistoricalDataOpts = {
-  datasources: AllDataSourcesType[];
+  datasource: AllDataSourcesType;
   startAt: number;
   symbol: AllowedEquitySymbolsType;
 };
@@ -61,41 +42,53 @@ type DatabaseResult = {
   timestamp: number;
 };
 
+const thing = new sqlite.Database(uncompressedDbPath);
+thing.exec();
+
 /**
  * queries historical data out of the prepared SQLite database
  */
 export function fetchHistoricalDataForPythFeedsDemo({
-  datasources,
+  datasource,
   startAt,
   symbol,
-}: FetchHistoricalDataOpts): PriceDataWithSource[] {
+}: FetchHistoricalDataOpts): HistoricalDataResponseType {
   const symbolWithSuffix = appendReplaySymbolSuffix(symbol);
   const out: PriceDataWithSource[] = [];
-  const allDatasourcesValid = datasources.every((ds) => isReplayDataSource(ds));
+  const allDatasourcesValid = isReplayDataSource(datasource);
 
   if (!isReplaySymbol(symbolWithSuffix) || !allDatasourcesValid) {
-    return out;
+    return { data: out, hasNext: false };
   }
 
-  const db = DB_PATHS_BY_SYMBOL[symbol];
+  const db = new DatabaseSync(uncompressedDbPath, {
+    open: false,
+    readOnly: true,
+  });
 
-  if (!db) return [];
+  db.open();
 
-  const sourcePlaceholders = datasources.map(() => "?").join(", ");
+  const queryForDataStatement = db.prepare(`SELECT * FROM HistoricalData d
+WHERE d.timestamp >= ?
+  AND d.symbol = ?
+  AND d.source = ?
+ORDER BY d.timestamp asc
+LIMIT 1000;`);
 
-  // max 15 seconds worth of data on each query
-  const maxTimestamp = startAt + 1000 * 15;
-
-  const queryForDataStatement =
-    db.prepare(`SELECT * FROM ${symbol.toUpperCase()} s
-WHERE s.timestamp >= ? AND s.timestamp <= ? AND s.source in (${sourcePlaceholders})
-ORDER BY s.timestamp asc;`);
+  const lastTimestampStatement =
+    db.prepare(`SELECT MAX(timestamp) as lastTimestamp FROM HistoricalData d
+WHERE d.symbol = ?
+  AND d.source = ?`);
 
   const resultsIterator = queryForDataStatement.iterate(
     startAt,
-    maxTimestamp,
-    ...datasources,
+    symbol,
+    datasource,
   );
+  const { lastTimestamp } =
+    lastTimestampStatement.get(symbol, datasource) ?? {};
+
+  if (isNullOrUndefined(lastTimestamp)) return { data: [], hasNext: false };
 
   for (const result of resultsIterator) {
     const typedResult = result as DatabaseResult;
@@ -116,8 +109,16 @@ ORDER BY s.timestamp asc;`);
       price: typedResult.price,
       timestamp: typedResult.timestamp,
       source: typedResult.source,
+      symbol,
     });
   }
 
-  return out;
+  db.close();
+
+  return {
+    data: out,
+    hasNext:
+      out.length <= 0 ||
+      (out.at(-1)?.timestamp ?? lastTimestamp) < lastTimestamp,
+  };
 }
