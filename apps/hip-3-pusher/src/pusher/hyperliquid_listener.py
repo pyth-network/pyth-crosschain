@@ -4,7 +4,7 @@ from enum import StrEnum
 
 import websockets
 from loguru import logger
-from tenacity import retry, retry_if_exception_type, wait_exponential
+from tenacity import retry, retry_if_exception_type, wait_fixed
 import time
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
@@ -51,7 +51,7 @@ class HyperliquidListener:
 
     @retry(
         retry=retry_if_exception_type(Exception),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
+        wait=wait_fixed(1),
         reraise=True,
     )
     async def subscribe_single(self, url):

@@ -3,7 +3,7 @@ import json
 from loguru import logger
 import time
 import websockets
-from tenacity import retry, retry_if_exception_type, wait_exponential
+from tenacity import retry, retry_if_exception_type, wait_fixed
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
@@ -42,7 +42,7 @@ class LazerListener:
 
     @retry(
         retry=retry_if_exception_type(Exception),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
+        wait=wait_fixed(1),
         reraise=True,
     )
     async def subscribe_single(self, router_url):
