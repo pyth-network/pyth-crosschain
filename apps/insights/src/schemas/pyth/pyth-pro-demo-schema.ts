@@ -58,6 +58,8 @@ export const DATA_SOURCES_REPLAY = z.enum([NASDAQ, PYTH_PRO]);
 export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
 
 export const PriceDataSchema = z.object({
+  ask: z.number().optional().nullable(),
+  bid: z.number().optional().nullable(),
   price: z.number(),
   timestamp: z.number(),
 });
@@ -69,6 +71,8 @@ export const PriceDataSchemaWithSource = PriceDataSchema.extend({
 export type PriceDataWithSource = z.infer<typeof PriceDataSchemaWithSource>;
 
 export const CurrentPriceMetricsSchema = z.object({
+  ask: z.number().nullable().optional(),
+  bid: z.number().nullable().optional(),
   change: z.number().nullable().optional(),
   changePercent: z.number().nullable().optional(),
   price: z.number().nullable().optional(),

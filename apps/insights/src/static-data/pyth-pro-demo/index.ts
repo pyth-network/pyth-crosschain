@@ -27,7 +27,8 @@ type FetchHistoricalDataOpts = {
 };
 
 type DatabaseResult = {
-  exponent: number;
+  ask: Nullish<number>;
+  bid: Nullish<number>;
   price: Nullish<number>;
   source: AllDataSourcesType;
   symbol: AllAllowedSymbols;
@@ -68,9 +69,19 @@ LIMIT ?;`);
     const typedResult = result as DatabaseResult;
 
     if (!isNumber(typedResult.price)) continue;
+    const ask =
+      typedResult.source === "pyth_pro"
+        ? Number.NaN
+        : Number.parseFloat(String(typedResult.ask ?? ""));
+    const bid =
+      typedResult.source === "pyth_pro"
+        ? Number.NaN
+        : Number.parseFloat(String(typedResult.bid ?? ""));
 
     out.push({
-      price: typedResult.price * Math.pow(10, typedResult.exponent),
+      ask: Number.isNaN(ask) ? undefined : ask,
+      bid: Number.isNaN(bid) ? undefined : bid,
+      price: typedResult.price,
       timestamp: typedResult.timestamp,
       source: typedResult.source,
     });

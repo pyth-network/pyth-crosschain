@@ -109,6 +109,8 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
               latest: {
                 ...prev.metrics[dataSource]?.latest,
                 [symbol]: {
+                  ask: dataPoint.ask,
+                  bid: dataPoint.bid,
                   change,
                   changePercent,
                   price: dataPoint.price,
