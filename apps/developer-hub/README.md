@@ -129,10 +129,12 @@ The API reference documentation is automatically generated from OpenAPI specific
 The script performs the following steps:
 
 1. **File Generation**: Uses `fumadocs-openapi` to convert OpenAPI specs into MDX files
+
    - Each API endpoint becomes a separate MDX file
    - Files are organized by product (e.g., `pyth-core`, `entropy`) and service (e.g., `hermes`, `fortuna`)
 
 2. **Meta File Generation**: Creates `meta.json` files for navigation
+
    - Root `meta.json` for the API reference section
    - Product-level `meta.json` files (e.g., `pyth-core/meta.json`)
    - Service-level `meta.json` files (e.g., `pyth-core/hermes/meta.json`)
@@ -158,6 +160,7 @@ pnpm generate:docs
 ```
 
 This will:
+
 - Fetch OpenAPI specs from the configured URLs
 - Generate MDX files in `content/docs/api-reference/`
 - Create/update all `meta.json` navigation files
@@ -179,6 +182,7 @@ export const products = {
 ```
 
 After adding a new service:
+
 1. Run `pnpm generate:docs` to generate the documentation
 2. The new service will appear in the API reference navigation
 
