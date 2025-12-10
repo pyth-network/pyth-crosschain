@@ -162,6 +162,11 @@ export function PythProDemoPriceChartImpl({
 
     for (const dataSource of dataSourcesInUse) {
       for (const metricType of metricsToPlot) {
+        // we omit the price for the demo, because the Pyth
+        // data will track the price.
+        // for market data, we just want to display the ask and bid
+        if (dataSource === "NASDAQ" && metricType === "price") continue;
+
         const latest = metrics[dataSource]?.latest;
         const symbolMetrics = latest?.[selectedSource];
         const metricVal = symbolMetrics?.[metricType];

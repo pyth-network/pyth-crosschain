@@ -60,7 +60,7 @@ export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
 export const PriceDataSchema = z.object({
   ask: z.number().optional().nullable(),
   bid: z.number().optional().nullable(),
-  price: z.number(),
+  price: z.number().optional().nullable(),
   timestamp: z.number(),
 });
 export type PriceData = z.infer<typeof PriceDataSchema>;

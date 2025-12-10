@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
+import { isNumber } from "@pythnetwork/shared-lib/util";
 import type { PropsWithChildren } from "react";
 import {
   createContext,
@@ -96,9 +97,16 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       setAppState((prev) => {
         const previousPrice =
           prev.metrics[dataSource]?.latest?.[symbol]?.price ?? dataPoint.price;
-        const change = dataPoint.price - previousPrice;
-        const changePercent =
-          previousPrice > 0 ? (change / previousPrice) * 100 : 0;
+        const change =
+          isNumber(dataPoint.price) && isNumber(previousPrice)
+            ? dataPoint.price - previousPrice
+            : 0;
+
+        let changePercent = 0;
+        if (isNumber(previousPrice)) {
+          changePercent =
+            previousPrice > 0 ? (change / previousPrice) * 100 : 0;
+        }
 
         return {
           ...prev,
