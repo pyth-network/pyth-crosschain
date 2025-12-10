@@ -62,7 +62,7 @@ async function main() {
   // eslint-disable-next-line n/no-process-env
   if (process.env.SUI_KEY === undefined) {
     throw new Error(
-      `SUI_KEY environment variable should be set to your Sui private key in hex format.`,
+      `SUI_KEY environment variable should be set to your Sui private key in Bech32 format.`,
     );
   }
 
@@ -86,7 +86,7 @@ async function main() {
 
   const wallet = Ed25519Keypair.fromSecretKey(
     // eslint-disable-next-line n/no-process-env
-    Buffer.from(process.env.SUI_KEY, "hex"),
+    process.env.SUI_KEY,
   );
   const res = await provider.signAndExecuteTransaction({
     signer: wallet,
