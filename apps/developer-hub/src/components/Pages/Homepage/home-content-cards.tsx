@@ -1,26 +1,45 @@
-import { Book, ChartScatter, CodeBlock, CurrencyDollarSimple, Key, ListChecks, Wrench } from "@phosphor-icons/react/dist/ssr";
+import { ArrowsDownUp, Book, ChartScatter, CheckCircle, CodeBlock, Coin, CurrencyBtc, CurrencyDollarSimple, DiceFive, GlobeSimple, Key, Lightning, ListChecks, Network, SlidersHorizontal, Wrench } from "@phosphor-icons/react/dist/ssr";
+import type { ReactNode } from "react";
 
+
+
+
+
+type Feature = {
+  label: string;
+  icon?: ReactNode | undefined;
+};
+
+type QuickLink = {
+  label: string;
+  href: string;
+};
 
 export type ProductCardConfigType = {
   title: string;
-  description: string;
-  href: string;
-  features: { label: string }[];
-  quickLinks: { label: string; href: string }[];
+  badge?: string | undefined;
+  description?: string | undefined;
+  icon?: ReactNode | undefined;
+  features?: Feature[] | undefined;
+  quickLinks?: QuickLink[] | undefined;
+  buttonLabel?: string | undefined;
+  href?: string | undefined;
+  external?: boolean | undefined;
+  className?: string | undefined;
 };
-
 
 export const products: ProductCardConfigType[] = [
   {
-    title: "Pyth Pro",
+    title: "Pyth",
+    badge: "PRO",
     description:
       "Subscription-based price data for institutions and advanced use cases. Previously known as Lazer.",
     href: "/price-feeds/pro",
     features: [
-      { label: "Ultra-low latency" },
-      { label: "Crypto, Equities & Indexes" },
-      { label: "Customizable channels and latency" },
-      { label: "Dedicated support" },
+      { label: "Ultra-low latency", icon: <Lightning /> },
+      { label: "Crypto, Equities & Indexes", icon: <CurrencyBtc /> },
+      { label: "Customizable channels and latency", icon: <SlidersHorizontal /> },
+      { label: "Dedicated support", icon: <Wrench /> },
     ],
     quickLinks: [
       {
@@ -35,15 +54,16 @@ export const products: ProductCardConfigType[] = [
     ],
   },
   {
-    title: "Pyth Core",
+    title: "Pyth",
+    badge: "CORE",
     description:
       "Decentralized price feeds for DeFi and TradFi builders with deterministic on-chain delivery.",
     href: "/price-feeds/core",
     features: [
-      { label: "400ms update frequency" },
-      { label: "100+ blockchains" },
-      { label: "Supports Pull and Push updates" },
-      { label: "Decentralized Oracle" },
+      { label: "400ms update frequency", icon: <Lightning /> },
+      { label: "100+ blockchains", icon: <Network /> },
+      { label: "Supports Pull and Push updates", icon: <ArrowsDownUp /> },
+      { label: "Decentralized Oracle", icon: <GlobeSimple /> },
     ],
     quickLinks: [
       {
@@ -63,10 +83,10 @@ export const products: ProductCardConfigType[] = [
       "Secure, Verifiable Random Number Generator for EVM-based smart contracts.",
     href: "/entropy",
     features: [
-      { label: "On-chain randomness" },
-      { label: "Verifiable results" },
-      { label: "Pay in native token" },
-      { label: "Supports 20+ EVM chains" },
+      { label: "On-chain randomness", icon: <DiceFive /> },
+      { label: "Verifiable results", icon: <CheckCircle /> },
+      { label: "Pay in native token", icon: <Coin /> },
+      { label: "Supports 20+ EVM chains", icon: <Network /> },
     ],
     quickLinks: [
       {
