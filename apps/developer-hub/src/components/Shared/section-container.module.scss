@@ -1,0 +1,14 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  max-width: var(--spacing-fd-container);
+  margin: 0 auto;
+  padding: 0 theme.spacing(4);
+  > *:not(:last-child) {
+    margin-bottom: theme.spacing(20);
+  }
+
+  @include theme.breakpoint("sm") {
+    padding: 0 theme.spacing(6);
+  }
+}

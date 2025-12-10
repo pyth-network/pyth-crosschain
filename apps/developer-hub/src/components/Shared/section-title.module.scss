@@ -1,0 +1,24 @@
+@use "@pythnetwork/component-library/theme";
+
+.sectionTitle {
+    display: flex;
+    flex-direction: row;
+    gap: theme.spacing(8);
+    justify-content: space-between;
+}
+
+.title {
+  @include theme.text("3xl", "medium");
+
+  color: theme.color("heading");
+  margin-bottom: theme.spacing(2);
+}
+
+.subtitle {
+  @include theme.text("xl", "normal");
+  opacity: 0.7;
+}
+
+.slot {
+    // placeholder for children
+}
