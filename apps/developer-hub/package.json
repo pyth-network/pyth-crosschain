@@ -20,8 +20,9 @@
     "test:types": "tsc",
     "generate:docs": "bun ./scripts/generate-docs.ts"
   },
-  "dependencies": {
-    "@phosphor-icons/react": "catalog:",
+    "dependencies": {
+      "@cookbookdev/docsbot": "^4.21.5",
+      "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/entropy-sdk-solidity": "workspace:*",

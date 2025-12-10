@@ -4,6 +4,8 @@ import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
 import type { ReactNode } from "react";
 
+import { AskCookbook } from "../AskCookbook";
+
 import "./global.css";
 
 export const TABS = [
@@ -29,6 +31,7 @@ export const Root = ({ children, googleAnalyticsId }: Props) => (
         </FumadocsRootProvider>
       </RootProviders>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
+      <AskCookbook />
     </body>
   </html>
 );
