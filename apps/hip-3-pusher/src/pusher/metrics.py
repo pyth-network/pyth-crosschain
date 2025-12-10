@@ -48,6 +48,11 @@ class Metrics:
             name="hip_3_relayer_price_config",
             description="Price source config",
         )
+        # labels: user
+        self.user_request_balance = self.meter.create_gauge(
+            name="hip_3_relayer_user_request_balance",
+            description="Number of update requests left before rate limit",
+        )
 
     def set_price_configs(self, dex: str, price_config: PriceConfig):
         self._set_price_config_type(dex, price_config.oracle, "oracle")

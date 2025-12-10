@@ -4,6 +4,7 @@ from typing import Optional
 from typing import Literal
 
 STALE_TIMEOUT_SECONDS = 5
+USER_LIMIT_INTERVAL_SECONDS = 1800
 
 
 class KMSConfig(BaseModel):
@@ -37,6 +38,7 @@ class HyperliquidConfig(BaseModel):
     publish_interval: float
     publish_timeout: float
     enable_publish: bool
+    user_limit_interval: int = USER_LIMIT_INTERVAL_SECONDS
 
     @model_validator(mode="after")
     def set_default_urls(self):

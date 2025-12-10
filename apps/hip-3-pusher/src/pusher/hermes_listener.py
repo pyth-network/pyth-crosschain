@@ -42,6 +42,7 @@ class HermesListener:
         reraise=True,
     )
     async def subscribe_single(self, url):
+        logger.info("Starting Hermes listener loop: {}", url)
         return await self.subscribe_single_inner(url)
 
     async def subscribe_single_inner(self, url):
@@ -58,8 +59,10 @@ class HermesListener:
                     data = json.loads(message)
                     self.parse_hermes_message(data)
                 except asyncio.TimeoutError:
+                    logger.warning("HermesListener: No messages in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
                     raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
                 except websockets.ConnectionClosed:
+                    logger.warning("HermesListener: Connection closed, reconnecting...")
                     raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {}", e)

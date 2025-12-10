@@ -46,6 +46,7 @@ class LazerListener:
         reraise=True,
     )
     async def subscribe_single(self, router_url):
+        logger.info("Starting Lazer listener loop: {}", router_url)
         return await self.subscribe_single_inner(router_url)
 
     async def subscribe_single_inner(self, router_url):
@@ -66,8 +67,10 @@ class LazerListener:
                     data = json.loads(message)
                     self.parse_lazer_message(data)
                 except asyncio.TimeoutError:
+                    logger.warning("LazerListener: No messages in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
                     raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
                 except websockets.ConnectionClosed:
+                    logger.warning("LazerListener: Connection closed, reconnecting...")
                     raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {}", e)

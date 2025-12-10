@@ -49,6 +49,7 @@ class HyperliquidListener:
         reraise=True,
     )
     async def subscribe_single(self, url):
+        logger.info("Starting Hyperliquid listener loop: {}", url)
         return await self.subscribe_single_inner(url)
 
     async def subscribe_single_inner(self, url):
@@ -91,11 +92,13 @@ class HyperliquidListener:
                     # check for stale channels
                     for channel in HLChannel:
                         if now - channel_last_message_timestamp[channel] > STALE_TIMEOUT_SECONDS:
-                            logger.error("Hyperliquid channel {} stale; restarting websocket listener", channel)
+                            logger.warning("HyperliquidLister: no messages in channel {} stale in {} seconds; reconnecting...", channel, STALE_TIMEOUT_SECONDS)
                             raise StaleConnectionError(f"No messages in channel {channel} in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
                 except asyncio.TimeoutError:
+                    logger.warning("HyperliquidListener: No messages overall in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
                     raise StaleConnectionError(f"No messages overall in {STALE_TIMEOUT_SECONDS} seconds, reconnecting...")
                 except websockets.ConnectionClosed:
+                    logger.warning("HyperliquidListener: Connection closed, reconnecting...")
                     raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {} error: {}", message, e)
