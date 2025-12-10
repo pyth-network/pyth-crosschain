@@ -88,6 +88,7 @@ export type AllowedCryptoSymbolsType = z.infer<typeof ALLOWED_CRYPTO_SYMBOLS>;
 
 export const ALLOWED_EQUITY_SYMBOLS = z.enum([
   "AAPL",
+  "AMZN",
   "HOOD",
   "NVDA",
   "TSLA",

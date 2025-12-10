@@ -135,6 +135,9 @@ catalogs:
     '@types/node':
       specifier: ^22.14.0
       version: 22.14.0
+    '@types/papaparse':
+      specifier: ^5.5.1
+      version: 5.5.1
     '@types/prompts':
       specifier: 2.4.9
       version: 2.4.9
@@ -204,9 +207,6 @@ catalogs:
     eslint:
       specifier: ^9.23.0
       version: 9.23.0
-    fast-glob:
-      specifier: ^3.3.3
-      version: 3.3.3
     framer-motion:
       specifier: ^12.6.3
       version: 12.9.2
@@ -231,6 +231,9 @@ catalogs:
     fumadocs-ui:
       specifier: ^15.7.12
       version: 15.7.12
+    glob:
+      specifier: ^13.0.0
+      version: 13.0.0
     ip-range-check:
       specifier: ^0.2.0
       version: 0.2.0
@@ -264,6 +267,9 @@ catalogs:
     nuqs:
       specifier: ^2.4.1
       version: 2.4.1
+    papaparse:
+      specifier: ^5.5.3
+      version: 5.5.3
     pino:
       specifier: ^9.6.0
       version: 9.6.0
@@ -975,6 +981,12 @@ importers:
       dnum:
         specifier: 'catalog:'
         version: 2.14.0
+      fs-extra:
+        specifier: 'catalog:'
+        version: 11.3.2
+      glob:
+        specifier: 'catalog:'
+        version: 13.0.0
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0
@@ -993,6 +1005,9 @@ importers:
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      papaparse:
+        specifier: 'catalog:'
+        version: 5.5.3
       react:
         specifier: 'catalog:'
         version: 19.2.1
@@ -1017,6 +1032,9 @@ importers:
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.2.1)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
       zod:
         specifier: 'catalog:'
         version: 3.24.4
@@ -1045,12 +1063,18 @@ importers:
       '@svgr/webpack':
         specifier: 'catalog:'
         version: 8.1.0(typescript@5.9.3)
+      '@types/fs-extra':
+        specifier: 'catalog:'
+        version: 11.0.4
       '@types/jest':
         specifier: 'catalog:'
         version: 29.5.14
       '@types/node':
         specifier: 'catalog:'
         version: 22.14.0
+      '@types/papaparse':
+        specifier: 'catalog:'
+        version: 5.5.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.1.0
@@ -2248,12 +2272,12 @@ importers:
       chalk:
         specifier: 'catalog:'
         version: 5.6.2
-      fast-glob:
-        specifier: 'catalog:'
-        version: 3.3.3
       fs-extra:
         specifier: 'catalog:'
         version: 11.3.2
+      glob:
+        specifier: 'catalog:'
+        version: 13.0.0
       micromustache:
         specifier: 'catalog:'
         version: 8.0.3
@@ -3014,9 +3038,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.23.0(jiti@2.4.2)
-      fast-glob:
-        specifier: ^3.3.3
-        version: 3.3.3
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -11046,6 +11067,9 @@ packages:
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
+  '@types/papaparse@5.5.1':
+    resolution: {integrity: sha512-esEO+VISsLIyE+JZBmb89NzsYYbpwV8lmv2rPo6oX5y9KhBaIP7hhHgjuTut54qjdKVMufTEcrh5fUl9+58huw==}
+
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
@@ -15460,16 +15484,20 @@ packages:
 
   glob@7.1.6:
     resolution: {integrity: sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@7.2.0:
     resolution: {integrity: sha512-lmLf6gtyrPq8tTjSmrO94wBeQbFR3HbLHbuyD69wuyQkImp2hWqMGB47OX65FBkPffO641IP9jWa1z4ivqG26Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
     engines: {node: '>=12'}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   global-modules@2.0.0:
     resolution: {integrity: sha512-NGbfmJBp9x8IxyJSd1P+otYK8vonoJactOogrVfFRIAEY1ukil8RSKDz2Yo7wh1oihl51l/r6W4epkeKJHqL8A==}
@@ -17522,10 +17550,6 @@ packages:
   minimalistic-crypto-utils@1.0.1:
     resolution: {integrity: sha512-JIYlbt6g8i5jKfJ3xz7rF0LXmv2TkDxBLUkiBeZ7bAx4GnnNMr8xFpGnOxn6GhTEHx3SjRrZEoU+j04prX1ktg==}
 
-  minimatch@10.0.3:
-    resolution: {integrity: sha512-IPZ167aShDZZUMdRk66cyQAW3qr0WzbHkPdMYa8bzZhlHhO3jALbKdxcaak7W9FfT2rZNpQuUu4Od7ILEpXSaw==}
-    engines: {node: 20 || >=22}
-
   minimatch@10.1.1:
     resolution: {integrity: sha512-enIvLvRAFZYXJzkCYG5RKmPfrFArdLv+R+lbQ53BmIMLIry74bjKzX6iHAm8WYamJkhSSEabrWN5D97XnKObjQ==}
     engines: {node: 20 || >=22}
@@ -18256,6 +18280,9 @@ packages:
 
   pako@2.1.0:
     resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
+
+  papaparse@5.5.3:
+    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
 
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
@@ -35754,7 +35781,7 @@ snapshots:
   '@ts-morph/common@0.27.0':
     dependencies:
       fast-glob: 3.3.3
-      minimatch: 10.0.3
+      minimatch: 10.1.1
       path-browserify: 1.0.1
 
   '@tsconfig/node10@1.0.11': {}
@@ -36020,6 +36047,10 @@ snapshots:
       undici-types: 6.19.8
 
   '@types/normalize-package-data@2.4.4': {}
+
+  '@types/papaparse@5.5.1':
+    dependencies:
+      '@types/node': 18.19.86
 
   '@types/parse-json@4.0.2': {}
 
@@ -46080,10 +46111,6 @@ snapshots:
 
   minimalistic-crypto-utils@1.0.1: {}
 
-  minimatch@10.0.3:
-    dependencies:
-      '@isaacs/brace-expansion': 5.0.0
-
   minimatch@10.1.1:
     dependencies:
       '@isaacs/brace-expansion': 5.0.0
@@ -46985,6 +47012,8 @@ snapshots:
   pako@1.0.11: {}
 
   pako@2.1.0: {}
+
+  papaparse@5.5.3: {}
 
   param-case@3.0.4:
     dependencies:
