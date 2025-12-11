@@ -1,14 +1,15 @@
 import { Card, Cards } from "fumadocs-ui/components/card";
-import { ProductCard } from "../../ProductCard";
-import { SectionTitle } from "../../Shared/section-title";
-import styles from "./index.module.scss";
+
+import { BoxSVG } from "./box-svg";
 import {
   additionalResources,
   developerResources,
   products,
 } from "./home-content-cards";
+import styles from "./index.module.scss";
+import { ProductCard } from "../../ProductCard";
 import { SectionContainer } from "../../Shared/section-container";
-import { BoxSVG } from "./box-svg";
+import { SectionTitle } from "../../Shared/section-title";
 
 export const Homepage = () => (
   <>
@@ -56,9 +57,9 @@ export const Homepage = () => (
         </SectionTitle>
         <Cards className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10">
           {additionalResources.map(
-            ({ title, description, href, icon }, index) => (
+            ({ title, description, href, icon }) => (
               <Card
-                key={`resource-${index}`}
+                key={title}
                 icon={icon}
                 href={href}
                 title={title}
@@ -79,9 +80,9 @@ export const Homepage = () => (
         />
         <Cards className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {developerResources.map(
-            ({ title, description, href, icon }, index) => (
+            ({ title, description, href, icon }) => (
               <Card
-                key={`resource-${index}`}
+                key={title}
                 icon={icon}
                 href={href}
                 title={title}
