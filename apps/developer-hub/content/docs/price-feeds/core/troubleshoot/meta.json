@@ -1,6 +1,6 @@
 {
   "pages": [
     "[EVM Price Feeds Contract](/price-feeds/core/troubleshoot/evm)",
-    "[Solana Price Feeds Contract](/price-feeds/core/troubleshoot/svm)"
+    "[SVM Price Feeds Contract](/price-feeds/core/troubleshoot/svm)"
   ]
 }
