@@ -230,7 +230,7 @@ contract PythLazerLibTestHelper {
 
     function getMarketSession(
         PythLazerStructs.Feed memory feed
-    ) external pure returns (int16) {
+    ) external pure returns (PythLazerStructs.MarketSession) {
         return PythLazerLib.getMarketSession(feed);
     }
 }
