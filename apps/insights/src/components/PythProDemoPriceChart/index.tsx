@@ -39,7 +39,7 @@ type PythProDemoPriceChartImplProps = Pick<
   | "selectedSource"
 >;
 
-const MAX_DATA_AGE = 1000 * 60 * 5; // 5 minutes
+const MAX_DATA_AGE = 1000 * 60 * 5; // 3 minutes
 const MAX_DATA_POINTS = 3000;
 
 const metricsToPlot: (keyof Pick<PriceData, "ask" | "bid" | "price">)[] = [
@@ -69,38 +69,42 @@ export function PythProDemoPriceChartImpl({
     (dataSource: AllDataSourcesType, metricType: (typeof metricsToPlot)[0]) => {
       if (!chartRef.current) return;
 
-      const seriesKey = `${dataSource}_${metricType}`;
+      try {
+        const seriesKey = `${dataSource}_${metricType}`;
 
-      let series = seriesMapRef.current[seriesKey];
-      if (!series) {
-        series = chartRef.current.addSeries(LineSeries, {
-          pointMarkersVisible: true,
-          priceScaleId: "right",
-          title:
-            `${capitalCase(dataSource)} ${metricType === "price" ? "" : `(${metricType})`}`.trim(),
+        let series = seriesMapRef.current[seriesKey];
+        if (!series) {
+          series = chartRef.current.addSeries(LineSeries, {
+            pointMarkersVisible: true,
+            priceScaleId: "right",
+            title:
+              `${capitalCase(dataSource)} ${metricType === "price" ? "" : `(${metricType})`}`.trim(),
+          });
+
+          seriesMapRef.current[seriesKey] = series;
+        }
+
+        const visible = dataSourceVisibility[dataSource];
+        const baseColor = color(getColorForDataSource(dataSource));
+        let colorToUse = baseColor.hex();
+
+        if (metricType === "ask") {
+          colorToUse = baseColor.darken(0.4).hex();
+        } else if (metricType === "bid") {
+          colorToUse = baseColor.lighten(0.4).hex();
+        }
+
+        series.applyOptions({
+          color: colorToUse,
+          lineWidth: 2,
+          lineStyle: 0, // solid
+          visible,
         });
 
-        seriesMapRef.current[seriesKey] = series;
+        return series;
+      } catch {
+        return;
       }
-
-      const visible = dataSourceVisibility[dataSource];
-      const baseColor = color(getColorForDataSource(dataSource));
-      let colorToUse = baseColor.hex();
-
-      if (metricType === "ask") {
-        colorToUse = baseColor.darken(0.4).hex();
-      } else if (metricType === "bid") {
-        colorToUse = baseColor.lighten(0.4).hex();
-      }
-
-      series.applyOptions({
-        color: colorToUse,
-        lineWidth: 2,
-        lineStyle: 0, // solid
-        visible,
-      });
-
-      return series;
     },
     [dataSourceVisibility],
   );
@@ -177,59 +181,71 @@ export function PythProDemoPriceChartImpl({
       return;
     }
 
-    for (const dataSource of dataSourcesInUse) {
-      for (const metricType of metricsToPlot) {
-        // we omit the price for the demo, because the Pyth
-        // data will track the price.
-        // for market data, we just want to display the ask and bid
-        const isPriceMetric = metricType === "price";
-        const isNasdaq = dataSource === "NASDAQ";
-        const isPyth = dataSource === "pyth" || dataSource === "pyth_pro";
-        if ((isNasdaq && isPriceMetric) || (isPyth && !isPriceMetric)) continue;
+    try {
+      for (const dataSource of dataSourcesInUse) {
+        for (const metricType of metricsToPlot) {
+          // we omit the price for the demo, because the Pyth
+          // data will track the price.
+          // for market data, we just want to display the ask and bid
+          const isPriceMetric = metricType === "price";
+          const isNasdaq = dataSource === "NASDAQ";
+          const isPyth = dataSource === "pyth" || dataSource === "pyth_pro";
+          if ((isNasdaq && isPriceMetric) || (isPyth && !isPriceMetric))
+            continue;
 
-        const latest = metrics[dataSource]?.latest;
-        const symbolMetrics = latest?.[selectedSource];
-        const metricVal = symbolMetrics?.[metricType];
-        const timestampStr = symbolMetrics?.timestamp;
-        const timestamp = timestampStr
-          ? new Date(timestampStr).getTime()
-          : undefined;
+          const latest = metrics[dataSource]?.latest;
+          const symbolMetrics = latest?.[selectedSource];
+          const metricVal = symbolMetrics?.[metricType];
+          const timestampStr = symbolMetrics?.timestamp;
+          const timestamp = timestampStr
+            ? new Date(timestampStr).getTime()
+            : undefined;
 
-        if (!isNumber(metricVal) || !isNumber(timestamp)) continue;
+          if (!isNumber(metricVal) || !isNumber(timestamp)) continue;
+          if (metricVal < 0) continue;
 
-        // bad data, ignore
-        if (metricVal < 0) continue;
+          const series = createSeriesIfNotExist(dataSource, metricType);
+          if (!series) continue;
 
-        const series = createSeriesIfNotExist(dataSource, metricType);
-        if (!series) continue;
+          const [lastPoint] = series.data().slice(-1);
+          const latestMetricIsFresh =
+            !lastPoint || lastPoint.time !== timestamp;
 
-        const [lastPoint] = series.data().slice(-1);
-        const latestMetricIsFresh = !lastPoint || lastPoint.time !== timestamp;
+          if (!latestMetricIsFresh) continue;
 
-        if (!latestMetricIsFresh) continue;
+          const newPoint: LineData = {
+            time: timestamp as UTCTimestamp,
+            value: metricVal,
+          };
 
-        const newPoint: LineData = {
-          time: timestamp as UTCTimestamp,
-          value: metricVal,
-        };
+          try {
+            series.update(newPoint);
+          } catch {
+            continue;
+          }
 
-        series.update(newPoint);
+          // Trim old points
+          const end = timestamp;
+          const start = end - MAX_DATA_AGE;
 
-        // Trim old points
-        const end = timestamp;
-        const start = end - MAX_DATA_AGE;
+          const allData = series.data();
+          const trimmed = allData
+            .filter(
+              (d) =>
+                (d.time as UTCTimestamp) >= start &&
+                (d.time as UTCTimestamp) <= end,
+            )
+            .slice(-MAX_DATA_POINTS);
 
-        const allData = series.data();
-        const trimmed = allData
-          .filter(
-            (d) =>
-              (d.time as UTCTimestamp) >= start &&
-              (d.time as UTCTimestamp) <= end,
-          )
-          .slice(-MAX_DATA_POINTS);
-
-        series.setData(trimmed);
+          try {
+            series.setData(trimmed);
+          } catch {
+            continue;
+          }
+        }
       }
+    } catch {
+      /* no-op, lightweight-charts may have been destroyed midway through a write to it */
     }
   }, [
     createSeriesIfNotExist,
@@ -294,7 +310,11 @@ export function PythProDemoPriceChartImpl({
         <Button
           beforeIcon={<ArrowCounterClockwise />}
           onClick={() => {
-            chartRef.current?.timeScale().scrollToRealTime();
+            try {
+              chartRef.current?.timeScale().scrollToRealTime();
+            } catch {
+              /* no-op */
+            }
           }}
           size="xs"
           variant="outline"

@@ -34,15 +34,12 @@ function getFetchHistoricalUrl(
   return `/api/pyth/get-pyth-feeds-demo-data/${datasource}/${removeReplaySymbolSuffix(symbol)}`;
 }
 
-async function fetchHistoricalData({
-  baseUrl,
-  signal,
-  startAt,
-}: {
+export async function fetchHistoricalData(opts: {
   baseUrl: string;
   signal: AbortSignal;
   startAt: Date;
 }): Promise<HistoricalDataResponseType> {
+  const { baseUrl, signal, startAt } = opts;
   const response = await fetch(`${baseUrl}?startAt=${startAt.toISOString()}`, {
     method: "GET",
     signal,
@@ -51,8 +48,15 @@ async function fetchHistoricalData({
     const errRes = (await response.json()) as { error: string };
     throw new Error(errRes.error);
   }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const parsed = await response.json();
+
+  // we need to read as text first, because
+  // next.js is sometimes returning an empty response for no apparent
+  // reason and we need to immediately retry the fetch operation
+  const textResponse = await response.text();
+  if (textResponse.length <= 0) {
+    return fetchHistoricalData(opts);
+  }
+  const parsed = JSON.parse(textResponse) as object;
   const validated = HistoricalDataResponseSchema.safeParse(parsed);
   if (validated.error) {
     throw new Error(validated.error.message);
@@ -77,8 +81,8 @@ export function useHttpDataStream({
   /** refs */
   const datasourceRef = useRef(dataSource);
   const enabledRef = useRef(enabled);
+  const generationRef = useRef(0);
   const playbackSpeedRef = useRef(playbackSpeed);
-  const abortControllerRef = useRef<Nullish<AbortController>>(undefined);
 
   /** effects */
   useEffect(() => {
@@ -88,12 +92,11 @@ export function useHttpDataStream({
   });
 
   useEffect(() => {
+    const { current: generation } = generationRef;
     if (!enabled) {
       setStatus("closed");
       return;
     }
-
-    const { current: currAbtController } = abortControllerRef;
 
     setStatus("connected");
 
@@ -102,10 +105,7 @@ export function useHttpDataStream({
 
     const kickoffFetching = async () => {
       const allDataSourcesAllowed = isAllowedDataSource(datasourceRef.current);
-      if (!isReplaySymbol(symbol) || !allDataSourcesAllowed) {
-        abortControllerRef.current?.abort();
-        return;
-      }
+      if (!isReplaySymbol(symbol) || !allDataSourcesAllowed) return;
 
       let startAt = INITIAL_START_AT;
       let results: HistoricalDataResponseType;
@@ -114,13 +114,14 @@ export function useHttpDataStream({
       try {
         do {
           // Check if component is still mounted
-          if (!isMounted || !enabledRef.current) {
-            abortControllerRef.current?.abort();
+          if (
+            !isMounted ||
+            !enabledRef.current ||
+            generation !== generationRef.current
+          )
             return;
-          }
 
           const abt = new AbortController();
-          abortControllerRef.current = abt;
 
           const baseUrl = getFetchHistoricalUrl(datasourceRef.current, symbol);
 
@@ -144,7 +145,6 @@ export function useHttpDataStream({
           for (let i = 0; i < resultsLen; i++) {
             // Check again inside the loop
             if (!isMounted) {
-              abortControllerRef.current.abort();
               return;
             }
 
@@ -190,7 +190,6 @@ export function useHttpDataStream({
             await wait(syntheticTimeToWait / playbackSpeedRef.current);
 
             if (!isMounted) {
-              abortControllerRef.current.abort();
               return;
             }
 
@@ -203,7 +202,6 @@ export function useHttpDataStream({
 
             if (i === midpoint) {
               const abt = new AbortController();
-              abortControllerRef.current = abt;
               void fetchHistoricalData({
                 baseUrl,
                 startAt,
@@ -225,7 +223,6 @@ export function useHttpDataStream({
         } while (results.hasNext);
       } catch (error) {
         if (isMounted) {
-          abortControllerRef.current?.abort();
           if (!(error instanceof Error)) throw error;
           setError(error);
         }
@@ -236,7 +233,6 @@ export function useHttpDataStream({
 
     return () => {
       isMounted = false;
-      currAbtController?.abort();
     };
   }, [addDataPoint, dataSource, enabled, symbol]);
 

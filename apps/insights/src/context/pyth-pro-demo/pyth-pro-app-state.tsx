@@ -142,14 +142,18 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   );
 
   const handleSelectSource = useCallback((source: AllAllowedSymbols) => {
+    // reset playback speed to 1x
+    setPlaybackSpeed(1);
+
+    // delay a few moments to let the http datastream events come down
+    // so we don't accidentally kill the new http requests
+    // (this is demo code, if we choose to keep this longer term, this will be revised)
     setAppState({
       // blast away all state, because we don't need the old
       // data to be munged with the new data
       ...initialState,
       selectedSource: isAllowedSymbol(source) ? source : undefined,
     });
-    // reset playback speed to 1x
-    setPlaybackSpeed(1);
   }, []);
 
   /** memos */
