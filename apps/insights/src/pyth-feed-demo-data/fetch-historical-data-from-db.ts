@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { DuckDBInstance } from "@duckdb/node-api";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
+import { isNumber } from "@pythnetwork/shared-lib/util";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
@@ -62,6 +62,8 @@ export async function fetchHistoricalDataForPythFeedsDemo({
   console.info(`  symbol: ${symbol}`);
 
   const instance = await DuckDBInstance.fromCache(uncompressedDbPath, {
+    access_mode: "READ_ONLY",
+    temp_directory: "", // prevents temp file creation (required for usage in Vercel, which is has a read-only disk)
     threads: "4",
   });
   const db = await instance.connect();
@@ -77,15 +79,16 @@ export async function fetchHistoricalDataForPythFeedsDemo({
   const queryForDataStatement =
     await db.prepare(`SELECT hd.* FROM main.HistoricalData hd 
 WHERE hd.symbol = $symbol
-	AND hd.datetime >= $startAt
+	AND hd.datetime > $startAt
   AND hd.source = $datasource
 order by hd.datetime asc
-limit 1000;`);
+limit 200;`);
 
   const lastTimestampStatement =
-    await db.prepare(`SELECT MAX(d.datetime) as lastDateTime FROM HistoricalData d
-  WHERE d.symbol = $symbol
-    AND d.source = $source`);
+    await db.prepare(`SELECT COUNT(hd.datetime) as remainingCount FROM HistoricalData hd
+WHERE hd.symbol = $symbol
+	AND hd.datetime > $lastDatetime
+  AND hd.source = $source;`);
 
   queryForDataStatement.bind({
     datasource,
@@ -93,19 +96,8 @@ limit 1000;`);
     symbol,
   });
 
-  lastTimestampStatement.bind({
-    source: datasource,
-    symbol,
-  });
-
   const results = await queryForDataStatement.run();
   const resultsIterator = await results.getRowObjectsJS();
-
-  const lastTimestampResults = await lastTimestampStatement.run();
-  const lastTimestampRows = await lastTimestampResults.getRowObjectsJS();
-  const lastTimestamp = lastTimestampRows[0]?.lastDateTime ?? undefined;
-
-  if (isNullOrUndefined(lastTimestamp)) return { data: [], hasNext: false };
 
   for (const result of resultsIterator) {
     const typedResult = result as DatabaseResult;
@@ -130,10 +122,25 @@ limit 1000;`);
     });
   }
 
+  const lastItem = out.at(-1);
+
+  let hasNext = false;
+
+  if (lastItem) {
+    lastTimestampStatement.bind({
+      lastDatetime: lastItem.timestamp,
+      source: datasource,
+      symbol,
+    });
+
+    const lastResults = await lastTimestampStatement.run();
+    const [result] = await lastResults.getRowObjectsJS();
+
+    hasNext = Number(result?.remainingCount ?? "0") > 0;
+  }
+
   return {
     data: out,
-    hasNext:
-      out.length <= 0 ||
-      (out.at(-1)?.timestamp ?? lastTimestamp) < lastTimestamp,
+    hasNext,
   };
 }
