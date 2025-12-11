@@ -10,9 +10,6 @@
         "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },
-    "generate:docs": {
-      "cache": false
-    },
     "fix:lint": {
       "dependsOn": [
         "//#install:modules",
