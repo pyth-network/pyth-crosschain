@@ -3,7 +3,6 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["generate:docs"],
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
