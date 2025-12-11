@@ -63,7 +63,7 @@ export async function fetchHistoricalDataForPythFeedsDemo({
 
   const instance = await DuckDBInstance.fromCache(uncompressedDbPath, {
     access_mode: "READ_ONLY",
-    temp_directory: "", // prevents temp file creation (required for usage in Vercel, which is has a read-only disk)
+    temp_directory: "/tmp",
     threads: "4",
   });
   const db = await instance.connect();
