@@ -41,6 +41,13 @@
       "time_difference": 3600,
       "price_deviation": 0.5,
       "confidence_ratio": 100
+    },
+    {
+      "alias": "SPYX/USD",
+      "id": "2817b78438c769357182c04346fddaad1178c82f4048828fe0997c3c64624e14",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
     }
   ]
 }

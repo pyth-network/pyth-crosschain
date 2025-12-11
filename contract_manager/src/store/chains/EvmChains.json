@@ -1302,9 +1302,9 @@
     "type": "EvmChain"
   },
   {
-    "id": "spiderman",
+    "id": "monad",
     "mainnet": true,
-    "rpcUrl": "https://rpc-mainnet.spiderman.com/rpc/",
+    "rpcUrl": "https://rpc-mainnet.monadinfra.com",
     "networkId": 143,
     "type": "EvmChain"
   },

@@ -220,7 +220,7 @@
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "spiderman",
+    "chain": "monad",
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     "type": "EvmExecutorContract"
   },

@@ -120,10 +120,96 @@ Update the `meta.json` file in each section to control navigation. Example:
 - Use proper heading hierarchy (h2, h3, etc.)
 - Link to related documentation when relevant
 
+## API Reference Generation
+
+The API reference documentation is automatically generated from OpenAPI specifications using the `scripts/generate-docs.ts` script. This script converts OpenAPI specs (from services like Hermes and Fortuna) into MDX documentation files.
+
+### What It Does
+
+The script performs the following steps:
+
+1. **File Generation**: Uses `fumadocs-openapi` to convert OpenAPI specs into MDX files
+
+   - Each API endpoint becomes a separate MDX file
+   - Files are organized by product (e.g., `pyth-core`, `entropy`) and service (e.g., `hermes`, `fortuna`)
+
+2. **Meta File Generation**: Creates `meta.json` files for navigation
+
+   - Root `meta.json` for the API reference section
+   - Product-level `meta.json` files (e.g., `pyth-core/meta.json`)
+   - Service-level `meta.json` files (e.g., `pyth-core/hermes/meta.json`)
+
+3. **Post-Processing**: Customizes generated files to match our documentation structure
+   - Updates MDX frontmatter titles to use endpoint paths instead of operation IDs
+   - Rewrites `index.mdx` files to use `APICard` components with proper formatting
+
+### When to Run
+
+The script runs automatically during the build process (`pnpm turbo run build`). You typically don't need to run it manually unless:
+
+- You've updated an OpenAPI specification URL
+- You've added a new service to the configuration
+- You want to regenerate docs without doing a full build
+
+### Manual Execution
+
+To run the script manually:
+
+```bash
+pnpm generate:docs
+```
+
+This will:
+
+- Fetch OpenAPI specs from the configured URLs
+- Generate MDX files in `content/docs/api-reference/`
+- Create/update all `meta.json` navigation files
+- Post-process files to customize titles and index pages
+
+### Configuration
+
+To add a new API service, edit `src/lib/openapi.ts` and add an entry to the `products` object:
+
+```typescript
+export const products = {
+  // ... existing services ...
+  newService: {
+    name: "newService",
+    product: "product-category", // e.g., "pyth-core" or "entropy"
+    openApiUrl: "https://api.example.com/docs/openapi.json",
+  },
+};
+```
+
+After adding a new service:
+
+1. Run `pnpm generate:docs` to generate the documentation
+2. The new service will appear in the API reference navigation
+
+### Generated Files
+
+All generated files are written to `content/docs/api-reference/`:
+
+```
+content/docs/api-reference/
+├── meta.json                    # Root navigation
+├── pyth-core/
+│   ├── meta.json               # Product navigation
+│   └── hermes/
+│       ├── meta.json           # Service navigation
+│       ├── index.mdx           # Service overview page
+│       └── *.mdx               # Individual endpoint pages
+└── entropy/
+    └── ...
+```
+
+**Important**: Generated files should not be edited manually. Any changes will be overwritten the next time the script runs. If you need to customize the documentation, modify the OpenAPI specification or the generation script itself.
+
 ## Available Commands
 
 - `pnpm turbo run start:dev` - Start development server
-- `pnpm turbo run build` - Build the project
+- `pnpm turbo run build` - Build the project (includes API reference generation)
+- `pnpm generate:docs` - Generate API reference documentation manually
 - `pnpm turbo run fix:format` - Format code with Prettier
 - `pnpm turbo run fix:lint:eslint` - Fix ESLint issues
 - `pnpm turbo run test:format` - Check formatting
