@@ -131,9 +131,6 @@
     },
     "test:integration": {
       "dependsOn": ["//#install:modules", "^build"]
-    },
-    "generate:docs": {
-      "dependsOn": ["//#install:modules"]
     }
   }
 }
