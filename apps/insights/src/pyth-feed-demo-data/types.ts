@@ -39,5 +39,4 @@ export type OutputEntry = {
   price: number;
   source: "NASDAQ" | "pyth_pro";
   symbol: string;
-  timestamp: number;
 };

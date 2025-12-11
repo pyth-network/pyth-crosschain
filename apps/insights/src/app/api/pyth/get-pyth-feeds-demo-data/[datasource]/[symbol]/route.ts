@@ -1,12 +1,11 @@
+import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { NextRequest, NextResponse } from "next/server";
 
+import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../../pyth-feed-demo-data/fetch-historical-data-from-db";
 import {
   ALLOWED_EQUITY_SYMBOLS,
   DATA_SOURCES_REPLAY,
 } from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
-import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../../static-data/pyth-pro-demo";
-
-const DEFAULT_START_AT = 0;
 
 export const GET = async (
   req: NextRequest,
@@ -35,14 +34,27 @@ export const GET = async (
     nextUrl: { searchParams },
   } = req;
 
-  const startAt = Number(searchParams.get("startAt") ?? DEFAULT_START_AT);
+  const startAtParam = searchParams.get("startAt");
+  if (isNullOrUndefined(startAtParam)) {
+    return NextResponse.json(
+      { error: "startAt query parameter is required" },
+      { status: 400 },
+    );
+  }
+  const startAt = new Date(startAtParam);
+  if (startAt.toString() === "Invalid Date") {
+    return NextResponse.json(
+      { error: "startAt query parameter is not a valid ISO date string" },
+      { status: 400 },
+    );
+  }
 
   const symbolToUse = symbolValidation.data;
   const datasourceToUse = datasourceValidation.data;
 
   const { data, hasNext } = await fetchHistoricalDataForPythFeedsDemo({
     datasource: datasourceToUse,
-    startAt,
+    startAt: startAt.toISOString(),
     symbol: symbolToUse,
   });
 

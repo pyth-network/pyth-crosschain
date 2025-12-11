@@ -38,6 +38,7 @@
     "color": "^5.0.3",
     "date-fns": "catalog:",
     "csv-stringify": "catalog:",
+    "dayjs": "^1.11.19",
     "dnum": "catalog:",
     "fs-extra": "catalog:",
     "glob": "catalog:",

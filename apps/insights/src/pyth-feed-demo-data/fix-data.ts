@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* eslint-disable unicorn/no-null */
 
 /**
  * To use this script, simply place any CSVs
@@ -12,6 +11,9 @@
 import path from "node:path";
 
 import { DuckDBInstance } from "@duckdb/node-api";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import fs from "fs-extra";
 import { glob } from "glob";
 import papa from "papaparse";
@@ -21,7 +23,10 @@ import { ALLOWED_EQUITY_SYMBOLS } from "../schemas/pyth/pyth-pro-demo-schema";
 
 const { parse, unparse } = papa;
 
-const outdir = path.join(import.meta.dirname, "output");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const outdir = path.join(import.meta.dirname, "../../public", "db");
 
 function coerceNum(num: unknown, defaultVal = Number.MIN_SAFE_INTEGER) {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string
@@ -60,9 +65,9 @@ for (const fp of csvs) {
 
     let ask: OutputEntry["ask"] = Number.MIN_SAFE_INTEGER;
     let bid: OutputEntry["bid"] = Number.MIN_SAFE_INTEGER;
+    let datetime: OutputEntry["datetime"] = "";
     let exponent: number;
     let price: OutputEntry["price"];
-    let timestamp: OutputEntry["timestamp"] | null = null;
     let source: OutputEntry["source"];
     let symbol: OutputEntry["symbol"];
 
@@ -71,9 +76,9 @@ for (const fp of csvs) {
       exponent = coerceNum(typedRow.expo, 0);
       source = "pyth_pro";
       price = coerceNum(typedRow.price);
-      timestamp = typedRow.publishTime
-        ? new Date(typedRow.publishTime).getTime()
-        : null;
+      datetime = typedRow.publishTime
+        ? dayjs.tz(typedRow.publishTime, "UTC").toISOString()
+        : "";
       const { symbol: rowSymbol } = typedRow;
       // we are assuming a format that looks like the following:
       // Equity.US.HOOD/USD.POST
@@ -85,9 +90,9 @@ for (const fp of csvs) {
       bid = coerceNum(typedRow.bid_price);
       exponent = 0;
       price = coerceNum(typedRow.price);
-      timestamp = typedRow.datetime
-        ? new Date(typedRow.datetime).getTime()
-        : null;
+      datetime = typedRow.datetime
+        ? dayjs.tz(typedRow.datetime, "UTC").toISOString()
+        : "";
       source = "NASDAQ";
       symbol = typedRow.ticker ?? "";
     } else {
@@ -97,7 +102,7 @@ for (const fp of csvs) {
       continue;
     }
 
-    if (symbol && timestamp && price > 0) {
+    if (symbol && datetime && price > 0) {
       const symbolValidation = ALLOWED_EQUITY_SYMBOLS.safeParse(symbol);
       if (symbolValidation.error) {
         throw new Error(symbolValidation.error.message);
@@ -107,17 +112,14 @@ for (const fp of csvs) {
       correctedData.push({
         ask: ask * 10 ** exponent,
         bid: bid * 10 ** exponent,
-        datetime: new Date(timestamp).toISOString(),
+        datetime,
         price: price * 10 ** exponent,
         source,
         symbol,
-        timestamp,
       });
     }
   }
 }
-
-correctedData.sort((a, b) => a.timestamp - b.timestamp);
 
 const outputCSV = path.join(outdir, "all-data.csv");
 await fs.ensureFile(outputCSV);
@@ -131,11 +133,10 @@ const db = await instance.connect();
 await db.run(`CREATE TABLE IF NOT EXISTS HistoricalData (
   ask REAL,
   bid REAL,
-  datetime NVARCHAR,
+  datetime TIMESTAMPTZ,
   price REAL,
   source VARCHAR,
-  symbol VARCHAR,
-  timestamp REAL
+  symbol VARCHAR
 )`);
 
 await db.run("BEGIN TRANSACTION");
@@ -146,3 +147,5 @@ SELECT * FROM read_csv_auto('${outputCSV}', HEADER=TRUE)`);
 await db.run("COMMIT");
 
 db.closeSync();
+
+await fs.remove(outputCSV);
