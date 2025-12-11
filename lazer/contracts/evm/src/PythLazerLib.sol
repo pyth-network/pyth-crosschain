@@ -412,9 +412,17 @@ library PythLazerLib {
                 } else if (
                     property == PythLazerStructs.PriceFeedProperty.MarketSession
                 ) {
-                    (feed._marketSession, pos) = parseFeedValueInt16(
+                    int16 marketSessionValue;
+                    (marketSessionValue, pos) = parseFeedValueInt16(
                         payload,
                         pos
+                    );
+                    require(
+                        marketSessionValue >= 0 && marketSessionValue <= 4,
+                        "Invalid market session value"
+                    );
+                    feed._marketSession = PythLazerStructs.MarketSession(
+                        uint8(uint16(marketSessionValue))
                     );
                     _setPresent(
                         feed,
@@ -771,7 +779,7 @@ library PythLazerLib {
     /// @notice Get market session (reverts if not exists)
     function getMarketSession(
         PythLazerStructs.Feed memory feed
-    ) public pure returns (int16) {
+    ) public pure returns (PythLazerStructs.MarketSession) {
         require(
             isMarketSessionRequested(feed),
             "Market session is not requested for the timestamp"
