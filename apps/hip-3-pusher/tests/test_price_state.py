@@ -61,7 +61,7 @@ def test_fallback_lazer():
     price_state.lazer_state.put(8, PriceUpdate("99000000", now - price_state.stale_price_threshold_seconds / 2.0))
 
     oracle_update = price_state.get_all_prices()
-    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "111616.16"}
+    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "111616.16161616161"}
 
 
 
@@ -81,7 +81,7 @@ def test_fallback_hermes():
                                  PriceUpdate("98000000", now - price_state.stale_price_threshold_seconds / 2.0))
 
     oracle_update = price_state.get_all_prices()
-    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "113265.31"}
+    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "113265.30612244898"}
 
 
 def test_all_fail():
