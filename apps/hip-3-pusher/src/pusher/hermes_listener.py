@@ -1,7 +1,6 @@
 import asyncio
 import json
 from loguru import logger
-import time
 import websockets
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
@@ -86,7 +85,6 @@ class HermesListener:
             expo = price_object["expo"]
             publish_time = price_object["publish_time"]
             logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
-            now = time.time()
-            self.hermes_state.put(id, PriceUpdate(price, now))
+            self.hermes_state.put(id, PriceUpdate(price, publish_time))
         except Exception as e:
             logger.error("parse_hermes_message error: {}", e)

@@ -1,7 +1,6 @@
 import asyncio
 import json
 from loguru import logger
-import time
 import websockets
 from tenacity import retry, retry_if_exception_type, wait_fixed
 
@@ -88,14 +87,14 @@ class LazerListener:
             if data.get("type", "") != "streamUpdated":
                 return
             price_feeds = data["parsed"]["priceFeeds"]
-            logger.debug("price_feeds: {}", price_feeds)
-            now = time.time()
+            timestamp = int(data["parsed"]["timestampUs"]) / 1_000_000.0
+            logger.debug("price_feeds: {} timestamp: {}", price_feeds, timestamp)
             for feed_update in price_feeds:
                 feed_id = feed_update.get("priceFeedId", None)
                 price = feed_update.get("price", None)
                 if feed_id is None or price is None:
                     continue
                 else:
-                    self.lazer_state.put(feed_id, PriceUpdate(price, now))
+                    self.lazer_state.put(feed_id, PriceUpdate(price, timestamp))
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)
