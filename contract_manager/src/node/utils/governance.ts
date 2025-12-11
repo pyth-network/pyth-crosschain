@@ -283,8 +283,10 @@ type SquadsMeshInstance = InstanceType<typeof SquadsMeshClass>;
 
 function getSquadsMesh() {
   // Handle nested default export from @sqds/mesh
-  return (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
-    SquadsMeshClass;
+  return (
+    (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
+    SquadsMeshClass
+  );
 }
 
 export class Vault extends Storable {

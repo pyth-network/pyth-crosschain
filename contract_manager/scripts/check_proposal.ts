@@ -38,8 +38,10 @@ import { DefaultStore } from "../src/node/utils/store";
 
 function getSquadsMesh() {
   // Handle nested default export from @sqds/mesh
-  return (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
-    SquadsMeshClass;
+  return (
+    (SquadsMeshClass as { default?: typeof SquadsMeshClass }).default ??
+    SquadsMeshClass
+  );
 }
 
 const parser = yargs(hideBin(process.argv))
