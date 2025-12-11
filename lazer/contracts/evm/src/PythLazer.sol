@@ -107,28 +107,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
         }
     }
 
-    /// @notice Verify signature and parse update into structured data
-    /// @dev Combines verifyUpdate() with parseUpdateFromPayload() for convenience and safety
-    /// @param update The complete update message (EVM format with signature)
-    /// @return payload The verified payload bytes
-    /// @return parsedUpdate The parsed Update struct with all feeds and properties
-    function verifyAndParseUpdate(
-        bytes calldata update
-    )
-        external
-        payable
-        returns (
-            bytes calldata payload,
-            PythLazerStructs.Update memory parsedUpdate
-        )
-    {
-        (payload, ) = verifyUpdate(update);
-
-        // Parse the verified payload
-        parsedUpdate = PythLazerLib.parseUpdateFromPayload(payload);
-    }
-
     function version() public pure returns (string memory) {
-        return "0.2.0";
+        return "0.2.1";
     }
 }
