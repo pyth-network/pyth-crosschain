@@ -52,17 +52,26 @@ export const GET = async (
   const symbolToUse = symbolValidation.data;
   const datasourceToUse = datasourceValidation.data;
 
-  const { data, hasNext } = await fetchHistoricalDataForPythFeedsDemo({
-    datasource: datasourceToUse,
-    startAt: startAt.toISOString(),
-    symbol: symbolToUse,
-  });
+  try {
+    const { data, hasNext } = await fetchHistoricalDataForPythFeedsDemo({
+      datasource: datasourceToUse,
+      startAt: startAt.toISOString(),
+      symbol: symbolToUse,
+    });
 
-  return NextResponse.json({
-    data: data.sort(
-      (a, b) =>
-        new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf(),
-    ),
-    hasNext,
-  });
+    return NextResponse.json({
+      data: data.sort(
+        (a, b) =>
+          new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf(),
+      ),
+      hasNext,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    );
+  }
 };
