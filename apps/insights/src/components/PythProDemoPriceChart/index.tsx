@@ -165,14 +165,23 @@ export function PythProDemoPriceChartImpl({
         // we omit the price for the demo, because the Pyth
         // data will track the price.
         // for market data, we just want to display the ask and bid
-        if (dataSource === "NASDAQ" && metricType === "price") continue;
+        const isPriceMetric = metricType === "price";
+        const isNasdaq = dataSource === "NASDAQ";
+        const isPyth = dataSource === "pyth" || dataSource === "pyth_pro";
+        if ((isNasdaq && isPriceMetric) || (isPyth && !isPriceMetric)) continue;
 
         const latest = metrics[dataSource]?.latest;
         const symbolMetrics = latest?.[selectedSource];
         const metricVal = symbolMetrics?.[metricType];
-        const timestamp = symbolMetrics?.timestamp;
+        const timestampStr = symbolMetrics?.timestamp;
+        const timestamp = timestampStr
+          ? new Date(timestampStr).getTime()
+          : undefined;
 
         if (!isNumber(metricVal) || !isNumber(timestamp)) continue;
+
+        // bad data, ignore
+        if (metricVal < 0) continue;
 
         const series = createSeriesIfNotExist(dataSource, metricType);
         if (!series) continue;

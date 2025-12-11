@@ -29,4 +29,3 @@ justfile
 dist/
 
 **/.ai/** 
-apps/insights/public/db/*.db

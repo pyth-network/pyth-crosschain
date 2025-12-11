@@ -129,7 +129,7 @@ export function datasourceRequiresApiToken(
 }
 
 export function isReplayDataSource(
-  dataSource: AllDataSourcesType,
+  dataSource: Nullish<AllDataSourcesType>,
 ): dataSource is DataSourcesReplayType {
   for (const source of DATA_SOURCES_REPLAY.options) {
     if (source === dataSource) return true;
