@@ -25,12 +25,9 @@
 /* @import "./theme.css"; this overrides the default colors to match the pyth branding */
 /* @import "./fumadocs-global-style-overrides.css"; */
 
-
-
 table {
   border-color: var(--color-gray-200, #e5e7eb);
 }
-
 
 .light {
   --color-fd-background: hsla(0, 16%, 96%, 1);
@@ -86,5 +83,4 @@ table {
   --color-fd-accent: hsla(0, 0%, 40.9%, 30%);
   --color-fd-accent-foreground: hsl(0, 0%, 90%);
   --color-fd-ring: hsl(0, 0%, 54.9%);
-
 }

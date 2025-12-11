@@ -12,16 +12,12 @@
   background: var(--color-fd-card);
 }
 
-
-
-
 .sectionHeroContent {
   display: flex;
   flex-direction: column;
   gap: theme.spacing(4);
   padding-top: theme.spacing(18);
   padding-bottom: theme.spacing(18);
-
 
   @include theme.breakpoint("lg") {
     flex-direction: row;
@@ -52,6 +48,7 @@
 
 .heroSubtitle {
   @include theme.text("2xl", "normal");
+
   line-height: 140%;
   opacity: 0.7;
   margin: 0;
@@ -70,6 +67,7 @@
 
 .sectionHeaderSubtitle {
   @include theme.text("xl", "normal");
+
   opacity: 0.7;
 }
 

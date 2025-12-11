@@ -1,9 +1,22 @@
-import { ArrowsDownUp, Book, ChartScatter, CheckCircle, CodeBlock, Coin, CurrencyBtc, CurrencyDollarSimple, DiceFive, GlobeSimple, Key, Lightning, ListChecks, Network, SlidersHorizontal, Wrench } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowsDownUp,
+  Book,
+  ChartScatter,
+  CheckCircle,
+  CodeBlock,
+  Coin,
+  CurrencyBtc,
+  CurrencyDollarSimple,
+  DiceFive,
+  GlobeSimple,
+  Key,
+  Lightning,
+  ListChecks,
+  Network,
+  SlidersHorizontal,
+  Wrench,
+} from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
-
-
-
-
 
 type Feature = {
   label: string;
@@ -38,7 +51,10 @@ export const products: ProductCardConfigType[] = [
     features: [
       { label: "Ultra-low latency", icon: <Lightning /> },
       { label: "Crypto, Equities & Indexes", icon: <CurrencyBtc /> },
-      { label: "Customizable channels and latency", icon: <SlidersHorizontal /> },
+      {
+        label: "Customizable channels and latency",
+        icon: <SlidersHorizontal />,
+      },
       { label: "Dedicated support", icon: <Wrench /> },
     ],
     quickLinks: [
@@ -102,24 +118,25 @@ export const products: ProductCardConfigType[] = [
   },
 ];
 
-
-
 export const additionalResources = [
   {
     title: "Pyth Token",
-    description: "The native token powering governance and staking across the Pyth Network.",
+    description:
+      "The native token powering governance and staking across the Pyth Network.",
     href: "/pyth-token",
     icon: <CurrencyDollarSimple />,
   },
   {
     title: "Oracle Integrity Staking",
-    description: "Stake PYTH to support data publishers and secure the integrity of Pyth price feeds.",
+    description:
+      "Stake PYTH to support data publishers and secure the integrity of Pyth price feeds.",
     href: "/oracle-integrity-staking",
     icon: <Wrench />,
   },
   {
     title: "Pyth Metrics",
-    description: "Track network performance, feed activity, and ecosystem growth in real time.",
+    description:
+      "Track network performance, feed activity, and ecosystem growth in real time.",
     href: "/metrics",
     icon: <ChartScatter />,
   },
@@ -130,24 +147,26 @@ export const developerResources = [
     title: "Get Your Access Token",
     description: "Request access for the Pyth Ultra Low Latency price feeds.",
     href: "/access-token",
-    icon: <Key />
+    icon: <Key />,
   },
   {
     title: "Supported Feeds",
-    description: "Explore the complete list of supported price feeds for Pyth Pro.",
+    description:
+      "Explore the complete list of supported price feeds for Pyth Pro.",
     href: "/price-feeds/pro/price-feed-ids",
-    icon: <ListChecks />
+    icon: <ListChecks />,
   },
   {
     title: "Pyth API Documentation",
-    description: "Learn how to use the Pyth API to access real-time price data.",
+    description:
+      "Learn how to use the Pyth API to access real-time price data.",
     href: "/api-documentation",
-    icon: <Book />
+    icon: <Book />,
   },
   {
     title: "API Reference",
     description: "Explore the complete API reference for Pyth Pro.",
     href: "https://pyth-lazer.dourolabs.app/docs",
-    icon: <CodeBlock />
-  }
-]
+    icon: <CodeBlock />,
+  },
+];
