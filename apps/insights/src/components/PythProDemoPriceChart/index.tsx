@@ -26,14 +26,20 @@ import {
   getColorForDataSource,
   getThemeCssVar,
   isAllowedSymbol,
+  isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
 type PythProDemoPriceChartImplProps = Pick<
   AppStateContextVal,
-  "dataSourcesInUse" | "dataSourceVisibility" | "metrics" | "selectedSource"
+  | "dataSourcesInUse"
+  | "dataSourceVisibility"
+  | "handleSelectPlaybackSpeed"
+  | "metrics"
+  | "playbackSpeed"
+  | "selectedSource"
 >;
 
-const MAX_DATA_AGE = 1000 * 60; // 1 minute
+const MAX_DATA_AGE = 1000 * 60 * 5; // 5 minutes
 const MAX_DATA_POINTS = 3000;
 
 const metricsToPlot: (keyof Pick<PriceData, "ask" | "bid" | "price">)[] = [
@@ -45,7 +51,9 @@ const metricsToPlot: (keyof Pick<PriceData, "ask" | "bid" | "price">)[] = [
 export function PythProDemoPriceChartImpl({
   dataSourcesInUse,
   dataSourceVisibility,
+  handleSelectPlaybackSpeed,
   metrics,
+  playbackSpeed,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
   /** hooks */
@@ -95,6 +103,15 @@ export function PythProDemoPriceChartImpl({
       return series;
     },
     [dataSourceVisibility],
+  );
+
+  const createSelectPlaybackSpeed = useCallback(
+    (speed: typeof playbackSpeed) => () => {
+      if (speed === playbackSpeed) return;
+
+      handleSelectPlaybackSpeed(speed);
+    },
+    [handleSelectPlaybackSpeed, playbackSpeed],
   );
 
   /** effects */
@@ -227,6 +244,53 @@ export function PythProDemoPriceChartImpl({
   return (
     <div className={classes.root}>
       <div className={classes.buttons}>
+        {isReplaySymbol(selectedSource) && (
+          <>
+            <Button
+              onClick={createSelectPlaybackSpeed(1)}
+              size="xs"
+              variant={playbackSpeed === 1 ? "success" : "outline"}
+            >
+              1x
+            </Button>
+            <Button
+              onClick={createSelectPlaybackSpeed(2)}
+              size="xs"
+              variant={playbackSpeed === 2 ? "success" : "outline"}
+            >
+              2x
+            </Button>
+            <Button
+              onClick={createSelectPlaybackSpeed(4)}
+              size="xs"
+              variant={playbackSpeed === 4 ? "success" : "outline"}
+            >
+              4x
+            </Button>
+            <Button
+              onClick={createSelectPlaybackSpeed(8)}
+              size="xs"
+              variant={playbackSpeed === 8 ? "success" : "outline"}
+            >
+              8x
+            </Button>
+            <Button
+              onClick={createSelectPlaybackSpeed(16)}
+              size="xs"
+              variant={playbackSpeed === 16 ? "success" : "outline"}
+            >
+              16x
+            </Button>
+            <Button
+              onClick={createSelectPlaybackSpeed(32)}
+              size="xs"
+              variant={playbackSpeed === 32 ? "success" : "outline"}
+            >
+              32x
+            </Button>
+            <div className={classes.verticalDivider} />
+          </>
+        )}
         <Button
           beforeIcon={<ArrowCounterClockwise />}
           onClick={() => {
@@ -245,15 +309,23 @@ export function PythProDemoPriceChartImpl({
 
 export function PythProDemoPriceChart() {
   /** context */
-  const { dataSourcesInUse, dataSourceVisibility, metrics, selectedSource } =
-    usePythProAppStateContext();
+  const {
+    dataSourcesInUse,
+    dataSourceVisibility,
+    handleSelectPlaybackSpeed,
+    metrics,
+    playbackSpeed,
+    selectedSource,
+  } = usePythProAppStateContext();
 
   return (
     <PythProDemoPriceChartImpl
       dataSourcesInUse={dataSourcesInUse}
       dataSourceVisibility={dataSourceVisibility}
       key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}`}
+      handleSelectPlaybackSpeed={handleSelectPlaybackSpeed}
       metrics={metrics}
+      playbackSpeed={playbackSpeed}
       selectedSource={selectedSource}
     />
   );

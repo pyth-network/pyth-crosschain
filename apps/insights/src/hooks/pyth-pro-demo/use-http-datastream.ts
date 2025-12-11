@@ -67,7 +67,7 @@ export function useHttpDataStream({
   symbol,
 }: UseDataStreamOpts): UseDataStreamReturnType & { error: Nullish<Error> } {
   /** context */
-  const { addDataPoint } = usePythProAppStateContext();
+  const { addDataPoint, playbackSpeed } = usePythProAppStateContext();
 
   /** state */
   const [status, setStatus] =
@@ -77,12 +77,14 @@ export function useHttpDataStream({
   /** refs */
   const datasourceRef = useRef(dataSource);
   const enabledRef = useRef(enabled);
+  const playbackSpeedRef = useRef(playbackSpeed);
   const abortControllerRef = useRef<Nullish<AbortController>>(undefined);
 
   /** effects */
   useEffect(() => {
     datasourceRef.current = dataSource;
     enabledRef.current = enabled;
+    playbackSpeedRef.current = playbackSpeed;
   });
 
   useEffect(() => {
@@ -185,7 +187,7 @@ export function useHttpDataStream({
               new Date(nextPointTimestamp).valueOf() -
               new Date(currentPointTimestamp).valueOf();
 
-            await wait(syntheticTimeToWait);
+            await wait(syntheticTimeToWait / playbackSpeedRef.current);
 
             if (!isMounted) {
               abortControllerRef.current.abort();

@@ -37,6 +37,8 @@ import {
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
+type PlaybackSpeed = 1 | 2 | 4 | 8 | 16 | 32;
+
 export type AppStateContextVal = CurrentPricesStoreState & {
   addDataPoint: (
     dataSource: AllDataSourcesType,
@@ -48,9 +50,13 @@ export type AppStateContextVal = CurrentPricesStoreState & {
 
   dataSourceVisibility: Record<AllDataSourcesType, boolean>;
 
+  handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => void;
+
   handleSelectSource: (source: AllAllowedSymbols) => void;
 
   handleToggleDataSourceVisibility: (datasource: AllDataSourcesType) => void;
+
+  playbackSpeed: PlaybackSpeed;
 };
 
 const context = createContext<Nullish<AppStateContextVal>>(undefined);
@@ -73,9 +79,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
 
-  /** refs */
-  const selectedSymbolRef = useRef(appState.selectedSource);
-
   const [dataSourceVisibility, setDataSourceVisibility] = useState<
     AppStateContextVal["dataSourceVisibility"]
   >(
@@ -87,6 +90,11 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       {} as AppStateContextVal["dataSourceVisibility"],
     ),
   );
+
+  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
+
+  /** refs */
+  const selectedSymbolRef = useRef(appState.selectedSource);
 
   /** callbacks */
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
@@ -140,6 +148,8 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       ...initialState,
       selectedSource: isAllowedSymbol(source) ? source : undefined,
     });
+    // reset playback speed to 1x
+    setPlaybackSpeed(1);
   }, []);
 
   /** memos */
@@ -168,6 +178,12 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     }));
   }, []);
 
+  const handleSelectPlaybackSpeed = useCallback<
+    AppStateContextVal["handleSelectPlaybackSpeed"]
+  >((speed) => {
+    setPlaybackSpeed(speed);
+  }, []);
+
   /** provider val */
   const providerVal = useMemo<AppStateContextVal>(
     () => ({
@@ -175,16 +191,20 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       addDataPoint,
       dataSourcesInUse,
       dataSourceVisibility,
+      handleSelectPlaybackSpeed,
       handleSelectSource,
       handleToggleDataSourceVisibility,
+      playbackSpeed,
     }),
     [
       appState,
       addDataPoint,
       dataSourcesInUse,
       dataSourceVisibility,
+      handleSelectPlaybackSpeed,
       handleSelectSource,
       handleToggleDataSourceVisibility,
+      playbackSpeed,
     ],
   );
 

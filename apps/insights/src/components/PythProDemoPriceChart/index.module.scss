@@ -5,12 +5,19 @@
   display: flex;
   flex-grow: 0;
   flex-shrink: 0;
+  gap: theme.spacing(2);
   justify-content: flex-end;
 }
 
 .chartContainer {
   flex-grow: 1;
   flex-shrink: 0;
+}
+
+.verticalDivider {
+  background-color: theme.color("border");
+  height: 1.5em;
+  width: 1px;
 }
 
 .root {
