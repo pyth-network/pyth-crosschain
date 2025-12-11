@@ -59,7 +59,10 @@ export const GET = async (
   });
 
   return NextResponse.json({
-    data: data.sort((a, b) => a.timestamp - b.timestamp),
+    data: data.sort(
+      (a, b) =>
+        new Date(a.timestamp).valueOf() - new Date(b.timestamp).valueOf(),
+    ),
     hasNext,
   });
 };

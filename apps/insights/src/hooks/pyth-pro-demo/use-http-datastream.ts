@@ -11,7 +11,6 @@ import type {
   HistoricalDataResponseType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
-  ALLOWED_REPLAY_SYMBOLS,
   HistoricalDataResponseSchema,
   removeReplaySymbolSuffix,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -20,6 +19,10 @@ import {
   isReplayDataSource,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+
+// 🚨 DEMO HACK ALERT: we pick some point an hour into trading
+// to ensure all APIs have saturated query results
+const INITIAL_START_AT = new Date("2025-12-05T09:00:00.000Z");
 
 function getFetchHistoricalUrl(
   datasource: Nullish<AllDataSourcesType>,
@@ -38,9 +41,9 @@ async function fetchHistoricalData({
 }: {
   baseUrl: string;
   signal: AbortSignal;
-  startAt: number;
+  startAt: Date;
 }): Promise<HistoricalDataResponseType> {
-  const response = await fetch(`${baseUrl}?startAt=${startAt.toString()}`, {
+  const response = await fetch(`${baseUrl}?startAt=${startAt.toISOString()}`, {
     method: "GET",
     signal,
   });
@@ -101,13 +104,8 @@ export function useHttpDataStream({
         abortControllerRef.current?.abort();
         return;
       }
-      // 🚨 DEMO HACK ALERT: the earliest point where Pyth data and Nasdaq data overlaps
-      // for the supported demo symbols
-      let startAt =
-        symbol === ALLOWED_REPLAY_SYMBOLS.Enum["TSLA:::replay"]
-          ? 1_764_892_801_942
-          : 1_764_892_801_942;
 
+      let startAt = INITIAL_START_AT;
       let results: HistoricalDataResponseType;
       let nextResults: Nullish<HistoricalDataResponseType>;
 
@@ -136,7 +134,10 @@ export function useHttpDataStream({
 
           const resultsLen = data.length;
           const midpoint = Math.floor(resultsLen / 2);
-          startAt = data.at(-1)?.timestamp ?? startAt + 1000;
+          const lastTimestamp = data.at(-1)?.timestamp;
+          startAt = lastTimestamp
+            ? new Date(lastTimestamp)
+            : new Date(startAt.valueOf() + 1000);
 
           for (let i = 0; i < resultsLen; i++) {
             // Check again inside the loop
@@ -181,7 +182,8 @@ export function useHttpDataStream({
             }
 
             const syntheticTimeToWait =
-              nextPointTimestamp - currentPointTimestamp;
+              new Date(nextPointTimestamp).valueOf() -
+              new Date(currentPointTimestamp).valueOf();
 
             await wait(syntheticTimeToWait);
 

@@ -170,7 +170,10 @@ export function PythProDemoPriceChartImpl({
         const latest = metrics[dataSource]?.latest;
         const symbolMetrics = latest?.[selectedSource];
         const metricVal = symbolMetrics?.[metricType];
-        const timestamp = symbolMetrics?.timestamp;
+        const timestampStr = symbolMetrics?.timestamp;
+        const timestamp = timestampStr
+          ? new Date(timestampStr).getTime()
+          : undefined;
 
         if (!isNumber(metricVal) || !isNumber(timestamp)) continue;
 

@@ -107,7 +107,7 @@ export const PriceDataSchema = z.object({
   ask: z.number().optional().nullable(),
   bid: z.number().optional().nullable(),
   price: z.number().optional().nullable(),
-  timestamp: z.number(),
+  timestamp: z.string().datetime(),
 });
 export type PriceData = z.infer<typeof PriceDataSchema>;
 
@@ -123,7 +123,7 @@ export const CurrentPriceMetricsSchema = z.object({
   change: z.number().nullable().optional(),
   changePercent: z.number().nullable().optional(),
   price: z.number().nullable().optional(),
-  timestamp: z.number(),
+  timestamp: z.string().datetime(),
 });
 export type CurrentPriceMetrics = z.infer<typeof CurrentPriceMetricsSchema>;
 
