@@ -782,4 +782,11 @@ library PythLazerLib {
         );
         return feed._marketSession;
     }
+
+    /// @notice Get feed ID
+    function getFeedId(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (uint32) {
+        return feed.feedId;
+    }
 }
