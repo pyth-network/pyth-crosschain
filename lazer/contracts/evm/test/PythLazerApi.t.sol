@@ -106,6 +106,11 @@ contract PythLazerApiTest is Test {
 
         // Validate Feed 3 (Regular Price Feed) - Compare against API reference
         assertEq(feed3.feedId, 3, "Feed 3: feedId mismatch");
+        assertEq(
+            PythLazerLib.getFeedId(feed3),
+            3,
+            "Feed 3: getFeedId mismatch"
+        );
 
         // Requested checks for Feed 3 (should be requested for price/exponent/confidence/publisherCount/bid/ask; not requested for funding*)
         assertTrue(
@@ -263,6 +268,11 @@ contract PythLazerApiTest is Test {
 
         // Validate Feed 112 (Funding Rate Feed) - Compare against API reference
         assertEq(feed112.feedId, 112, "Feed 112: feedId mismatch");
+        assertEq(
+            PythLazerLib.getFeedId(feed112),
+            112,
+            "Feed 112: getFeedId mismatch"
+        );
 
         // Requested checks for Feed 112 (should be requested for price/exponent/publisherCount/funding*; not requested for bid/ask/confidence)
         assertTrue(

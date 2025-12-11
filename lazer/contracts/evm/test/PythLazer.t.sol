@@ -209,6 +209,7 @@ contract PythLazerTest is Test {
         // Verify feed data
         PythLazerStructs.Feed memory feed = update.feeds[0];
         assertEq(feed.feedId, 1);
+        assertEq(PythLazerLib.getFeedId(feed), 1);
         assertEq(feed._price, 100000000);
         assertEq(feed._bestBidPrice, 99000000);
         assertEq(feed._bestAskPrice, 101000000);
@@ -255,6 +256,7 @@ contract PythLazerTest is Test {
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertEq(feed.feedId, 10);
+        assertEq(PythLazerLib.getFeedId(feed), 10);
         assertEq(feed._price, 50000000);
         assertEq(feed._exponent, -6);
 
@@ -316,6 +318,7 @@ contract PythLazerTest is Test {
 
         // Verify Feed 1
         assertEq(update.feeds[0].feedId, 1);
+        assertEq(PythLazerLib.getFeedId(update.feeds[0]), 1);
         assertEq(update.feeds[0]._price, 50000000000);
         assertTrue(PythLazerLib.hasConfidence(update.feeds[0]));
         // Requested checks for Feed 1 (props: price, publisherCount, exponent, confidence, bestBid)
@@ -334,6 +337,7 @@ contract PythLazerTest is Test {
 
         // Verify Feed 2
         assertEq(update.feeds[1].feedId, 2);
+        assertEq(PythLazerLib.getFeedId(update.feeds[1]), 2);
         assertEq(update.feeds[1]._price, 3000000000);
         assertFalse(PythLazerLib.hasConfidence(update.feeds[1]));
         // Requested checks for Feed 2 (props: price, exponent)
@@ -352,6 +356,7 @@ contract PythLazerTest is Test {
 
         // Verify Feed 3
         assertEq(update.feeds[2].feedId, 3);
+        assertEq(PythLazerLib.getFeedId(update.feeds[2]), 3);
         assertEq(update.feeds[2]._price, 100000000);
         assertEq(update.feeds[2]._publisherCount, 7);
         // Requested checks for Feed 3 (props: price, exponent, publisherCount)
