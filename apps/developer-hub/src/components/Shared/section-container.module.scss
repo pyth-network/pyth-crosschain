@@ -5,6 +5,7 @@
   margin: 0 auto;
   width: 100%;
   padding: 0 theme.spacing(4);
+
   > *:not(:last-child) {
     margin-bottom: theme.spacing(20);
   }
