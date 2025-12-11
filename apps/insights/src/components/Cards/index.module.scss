@@ -30,11 +30,4 @@
       max-width: unset;
     }
   }
-
-  .publishersChart,
-  .priceFeedsChart {
-    & svg {
-      cursor: pointer;
-    }
-  }
 }

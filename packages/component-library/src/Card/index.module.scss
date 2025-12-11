@@ -93,7 +93,7 @@
     background: theme.color("background", "card-highlight");
 
     &[data-hovered] {
-      @include theme.elevation("primary", 2);
+      @include theme.elevation("primary", 1);
     }
   }
 
@@ -101,7 +101,7 @@
     background: theme.color("background", "secondary");
 
     &[data-hovered] {
-      @include theme.elevation("default", 2);
+      @include theme.elevation("default", 1);
     }
   }
 
@@ -109,7 +109,7 @@
     background: theme.color("background", "primary");
 
     &[data-hovered] {
-      @include theme.elevation("default", 2);
+      @include theme.elevation("default", 1);
     }
   }
 

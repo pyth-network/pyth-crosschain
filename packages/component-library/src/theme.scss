@@ -844,6 +844,10 @@ $max-width-padding: var(--max-width-padding);
 
 $elevations: (
   primary: (
+    1: (
+      0px 4px 6px -4px rgb(112 66 206 / 10%),
+      0px 10px 15px -3px rgb(112 66 206 / 10%),
+    ),
     2: (
       0px 66px 18px 0px rgb(112 66 206 / 0%),
       0px 42px 17px 0px rgb(112 66 206 / 3%),

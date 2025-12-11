@@ -18,9 +18,9 @@ import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 
 export const TABS = [
-  { segment: "", children: "Overview" },
-  { segment: "publishers", children: "Publishers" },
+  { segment: "", children: "Home" },
   { segment: "price-feeds", children: "Price Feeds" },
+  { segment: "publishers", children: "Publishers" },
 ];
 
 type Props = {

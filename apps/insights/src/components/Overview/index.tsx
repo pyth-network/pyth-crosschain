@@ -42,11 +42,55 @@ export const Overview = async () => {
 
   return (
     <div className={styles.overview}>
-      <h1 className={styles.header}>Overview</h1>
       <Cards>
         <ChartCard
-          header="Total Volume Traded"
+          header="Price Feeds"
           variant="primary"
+          href="/price-feeds"
+          chartClassName={styles.priceFeedsChart}
+          data={feedCounts}
+          miniStat={
+            <ChangePercent
+              previousValue={feedCounts.at(-2)?.y ?? 0}
+              currentValue={feedCounts.at(-1)?.y ?? 0}
+            />
+          }
+          stat={feedCounts.at(-1)?.y}
+        />
+        <ChartCard
+          header="Publishers"
+          href="/publishers"
+          chartClassName={styles.publishersChart}
+          data={activePublishers.map(({ date, numPublishers }) => ({
+            x: date,
+            displayX: <FormattedDate value={date} />,
+            y: numPublishers,
+          }))}
+          miniStat={
+            <ChangePercent
+              previousValue={activePublishers.at(-2)?.numPublishers ?? 0}
+              currentValue={activePublishers.at(-1)?.numPublishers ?? 0}
+            />
+          }
+          stat={activePublishers.at(-1)?.numPublishers}
+        />
+        <ChartCard
+          header="Chains"
+          data={activeChains.map(({ date, chains }) => ({
+            x: date,
+            displayX: <FormattedDate value={date} />,
+            y: chains,
+          }))}
+          miniStat={
+            <ChangePercent
+              previousValue={activeChains.at(-2)?.chains ?? 0}
+              currentValue={activeChains.at(-1)?.chains ?? 0}
+            />
+          }
+          stat={activeChains.at(-1)?.chains}
+        />
+        <ChartCard
+          header="Total Volume Traded"
           data={totalVolumeTraded.map(({ date, volume }) => ({
             x: date,
             displayX: <FormattedDate value={date} />,
@@ -74,51 +118,6 @@ export const Overview = async () => {
               notation="compact"
             />
           }
-        />
-        <ChartCard
-          header="Publishers Onboarded"
-          href="/publishers"
-          chartClassName={styles.publishersChart}
-          data={activePublishers.map(({ date, numPublishers }) => ({
-            x: date,
-            displayX: <FormattedDate value={date} />,
-            y: numPublishers,
-          }))}
-          miniStat={
-            <ChangePercent
-              previousValue={activePublishers.at(-2)?.numPublishers ?? 0}
-              currentValue={activePublishers.at(-1)?.numPublishers ?? 0}
-            />
-          }
-          stat={activePublishers.at(-1)?.numPublishers}
-        />
-        <ChartCard
-          header="Price Feeds (Active + Coming Soon)"
-          href="/price-feeds"
-          chartClassName={styles.priceFeedsChart}
-          data={feedCounts}
-          miniStat={
-            <ChangePercent
-              previousValue={feedCounts.at(-2)?.y ?? 0}
-              currentValue={feedCounts.at(-1)?.y ?? 0}
-            />
-          }
-          stat={feedCounts.at(-1)?.y}
-        />
-        <ChartCard
-          header="Active Chains"
-          data={activeChains.map(({ date, chains }) => ({
-            x: date,
-            displayX: <FormattedDate value={date} />,
-            y: chains,
-          }))}
-          miniStat={
-            <ChangePercent
-              previousValue={activeChains.at(-2)?.chains ?? 0}
-              currentValue={activeChains.at(-1)?.chains ?? 0}
-            />
-          }
-          stat={activeChains.at(-1)?.chains}
         />
       </Cards>
       <Tabs orientation="vertical" className={styles.overviewMainContent ?? ""}>
@@ -159,23 +158,23 @@ export const Overview = async () => {
           className={styles.tabList ?? ""}
           items={[
             {
-              id: "publishers",
-              header: "Publishers",
-              body: "Get insights about quality, ranking, and performance of each Publisher contributing to the network.",
-            },
-            {
               id: "price feeds",
               header: "Price Feeds",
               body: "See information about every price feed's price, performance, components, and technical aspects all in one place for a better integration experience.",
             },
+            {
+              id: "publishers",
+              header: "Publishers",
+              body: "Get insights about quality, ranking, and performance of each Publisher contributing to the network.",
+            },
           ]}
         />
         <div className={styles.buttons}>
-          <Button href="/publishers" variant="solid" size="md">
-            Publishers
+          <Button href="/price-feeds" variant="solid" size="md">
+            Explore Price Feeds
           </Button>
-          <Button href="/price-feeds" variant="outline" size="md">
-            Price Feeds
+          <Button href="/publishers" variant="ghost" size="md">
+            View Publishers
           </Button>
         </div>
       </Tabs>
