@@ -219,7 +219,10 @@ contract PythLazerTest is Test {
         assertEq(feed._fundingRate, 123456);
         assertEq(feed._fundingTimestamp, 1234567890);
         assertEq(feed._fundingRateInterval, 3600);
-        assertEq(feed._marketSession, 0);
+        assertEq(
+            uint8(feed._marketSession),
+            uint8(PythLazerStructs.MarketSession.Regular)
+        );
 
         // Verify exists flags (all should be set)
         assertTrue(PythLazerLib.hasPrice(feed));
@@ -395,10 +398,16 @@ contract PythLazerTest is Test {
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
-        assertEq(feed._marketSession, 1);
+        assertEq(
+            uint8(feed._marketSession),
+            uint8(PythLazerStructs.MarketSession.PreMarket)
+        );
         assertTrue(PythLazerLib.hasMarketSession(feed));
         assertTrue(PythLazerLib.isMarketSessionRequested(feed));
-        assertEq(PythLazerLib.getMarketSession(feed), 1);
+        assertEq(
+            uint8(PythLazerLib.getMarketSession(feed)),
+            uint8(PythLazerStructs.MarketSession.PreMarket)
+        );
 
         // Test different market session values
         bytes[] memory properties2 = new bytes[](3);
@@ -419,8 +428,14 @@ contract PythLazerTest is Test {
             .parseUpdateFromPayload(payload2);
 
         PythLazerStructs.Feed memory feed2 = update2.feeds[0];
-        assertEq(feed2._marketSession, 2);
-        assertEq(PythLazerLib.getMarketSession(feed2), 2);
+        assertEq(
+            uint8(feed2._marketSession),
+            uint8(PythLazerStructs.MarketSession.PostMarket)
+        );
+        assertEq(
+            uint8(PythLazerLib.getMarketSession(feed2)),
+            uint8(PythLazerStructs.MarketSession.PostMarket)
+        );
     }
 
     /// @notice Test MarketSession getter when not requested

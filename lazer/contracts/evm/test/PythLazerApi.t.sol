@@ -156,10 +156,19 @@ contract PythLazerApiTest is Test {
                 PythLazerLib.hasMarketSession(feed3),
                 "Feed 3: if market session is requested, it should be present"
             );
-            int16 marketSession = PythLazerLib.getMarketSession(feed3);
-            // MarketSession should be a valid value (0-4 based on enum)
-            assertGe(marketSession, 0, "Feed 3: market session should be >= 0");
-            assertLe(marketSession, 4, "Feed 3: market session should be <= 4");
+            PythLazerStructs.MarketSession marketSession = PythLazerLib
+                .getMarketSession(feed3);
+            // MarketSession should be a valid enum value (0-4)
+            assertGe(
+                uint8(marketSession),
+                0,
+                "Feed 3: market session should be >= 0"
+            );
+            assertLe(
+                uint8(marketSession),
+                4,
+                "Feed 3: market session should be <= 4"
+            );
         }
 
         // Verify parsed values match API reference values exactly
@@ -318,15 +327,16 @@ contract PythLazerApiTest is Test {
                 PythLazerLib.hasMarketSession(feed112),
                 "Feed 112: if market session is requested, it should be present"
             );
-            int16 marketSession = PythLazerLib.getMarketSession(feed112);
-            // MarketSession should be a valid value (0-4 based on enum)
+            PythLazerStructs.MarketSession marketSession = PythLazerLib
+                .getMarketSession(feed112);
+            // MarketSession should be a valid enum value (0-4)
             assertGe(
-                marketSession,
+                uint8(marketSession),
                 0,
                 "Feed 112: market session should be >= 0"
             );
             assertLe(
-                marketSession,
+                uint8(marketSession),
                 4,
                 "Feed 112: market session should be <= 4"
             );

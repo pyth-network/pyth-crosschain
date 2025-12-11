@@ -12,7 +12,7 @@ response_feed3=$(curl -X GET "$API_URL" \
   --header "Content-Type: application/json" \
   --data-raw '{
     "priceFeedIds": [3],
-    "properties": ["price", "bestBidPrice", "bestAskPrice", "publisherCount", "exponent", "confidence"],
+    "properties": ["price", "bestBidPrice", "bestAskPrice", "publisherCount", "exponent", "confidence", "marketSession"],
     "chains": ["evm"],
     "channel": "fixed_rate@200ms",
     "deliveryFormat": "json",
