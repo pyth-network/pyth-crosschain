@@ -1,3 +1,4 @@
+/** @type {import('next').NextConfig} */
 const config = {
   experimental: {
     useCache: true,
@@ -12,6 +13,8 @@ const config = {
       fullUrl: true,
     },
   },
+
+  serverExternalPackages: ["@duckdb/node-api"],
 
   turbopack: {
     rules: {

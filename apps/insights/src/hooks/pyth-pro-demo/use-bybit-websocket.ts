@@ -70,7 +70,7 @@ export function useBybitWebSocket(): UseDataProviderSocketHookReturnType {
 
             addDataPoint("bybit", symbol as AllowedCryptoSymbolsType, {
               price: midPriceUSD,
-              timestamp: Date.now(),
+              timestamp: new Date().toISOString(),
             });
           }
         }

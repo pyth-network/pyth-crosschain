@@ -8,8 +8,8 @@ import path from "node:path";
 
 import appRootPath from "app-root-path";
 import chalk from "chalk";
-import glob from "fast-glob";
 import fs from "fs-extra";
+import { glob } from "glob";
 import { render as renderTemplate } from "micromustache";
 import prompts from "prompts";
 import type { PackageJson } from "type-fest";
@@ -201,7 +201,7 @@ async function createPythApp() {
   const destFiles = await glob(path.join(absDest, "**", "*"), {
     absolute: true,
     dot: true,
-    onlyFiles: true,
+    nodir: true,
   });
 
   Logger.info(

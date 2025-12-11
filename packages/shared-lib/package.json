@@ -100,6 +100,16 @@
         "default": "./dist/esm/util/is-number.mjs"
       }
     },
+    "./util/wait": {
+      "require": {
+        "types": "./dist/cjs/util/wait.d.ts",
+        "default": "./dist/cjs/util/wait.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/wait.d.ts",
+        "default": "./dist/esm/util/wait.mjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "module": "./dist/esm/index.mjs",

@@ -26,8 +26,8 @@
   "dependencies": {
     "app-root-path": "catalog:",
     "chalk": "catalog:",
-    "fast-glob": "catalog:",
     "fs-extra": "catalog:",
+    "glob": "catalog:",
     "micromustache": "catalog:",
     "prompts": "catalog:",
     "tsx": "catalog:"

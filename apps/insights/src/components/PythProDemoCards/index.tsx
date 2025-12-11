@@ -10,8 +10,13 @@ import { isAllowedSymbol } from "../../util/pyth-pro-demo";
 
 export function PythProDemoCards() {
   /** context */
-  const { dataSourcesInUse, metrics, selectedSource } =
-    usePythProAppStateContext();
+  const {
+    dataSourcesInUse,
+    dataSourceVisibility,
+    handleToggleDataSourceVisibility,
+    metrics,
+    selectedSource,
+  } = usePythProAppStateContext();
   const { tokens } = usePythProApiTokensContext();
   const { statuses } = useWebSocketsContext();
 
@@ -30,9 +35,11 @@ export function PythProDemoCards() {
             apiToken={tokens[dataSource]}
             currentPriceMetrics={sourceMetrics?.[selectedSource]}
             dataSource={dataSource}
+            key={dataSource}
             selectedSource={selectedSource}
             socketStatus={socketStatus}
-            key={dataSource}
+            sourceVisible={dataSourceVisibility[dataSource]}
+            toggleDataSourceVisibility={handleToggleDataSourceVisibility}
           />
         );
       })}

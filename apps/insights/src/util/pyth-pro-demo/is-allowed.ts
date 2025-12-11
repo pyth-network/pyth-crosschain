@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 
 import type {
@@ -7,9 +8,11 @@ import type {
   AllowedEquitySymbolsType,
   AllowedForexSymbolsType,
   AllowedFutureSymbolsType,
+  AllowedReplaySymbolsType,
   DataSourcesCryptoType,
   DataSourcesEquityType,
   DataSourcesForexType,
+  DataSourcesReplayType,
   DataSourcesRequiringApiTokens,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
@@ -19,9 +22,11 @@ import {
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
   ALLOWED_FUTURE_SYMBOLS,
+  ALLOWED_REPLAY_SYMBOLS,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
+  DATA_SOURCES_REPLAY,
   DATA_SOURCES_REQUIRING_API_TOKENS,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 
@@ -118,6 +123,25 @@ export function datasourceRequiresApiToken(
   const ds = dataSource as DataSourcesRequiringApiTokens;
   for (const val of DATA_SOURCES_REQUIRING_API_TOKENS.options) {
     if (val === ds) return true;
+  }
+
+  return false;
+}
+
+export function isReplayDataSource(
+  dataSource: Nullish<AllDataSourcesType>,
+): dataSource is DataSourcesReplayType {
+  for (const source of DATA_SOURCES_REPLAY.options) {
+    if (source === dataSource) return true;
+  }
+  return false;
+}
+
+export function isReplaySymbol(
+  symbol: Nullish<string>,
+): symbol is AllowedReplaySymbolsType {
+  for (const val of ALLOWED_REPLAY_SYMBOLS.options) {
+    if (val === symbol) return true;
   }
 
   return false;
