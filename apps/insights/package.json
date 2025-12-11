@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@clickhouse/client": "catalog:",
-    "@duckdb/node-api": "^1.4.3-r.1",
+    "@duckdb/node-api": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
@@ -55,7 +55,6 @@
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "recharts": "catalog:",
-    "sqlite-async": "^1.2.2",
     "sockette": "catalog:",
     "superjson": "catalog:",
     "swr": "catalog:",
