@@ -3129,7 +3129,7 @@ dependencies = [
 
 [[package]]
 name = "fortuna"
-version = "9.2.2"
+version = "9.3.0"
 dependencies = [
  "anyhow",
  "axum 0.6.20",

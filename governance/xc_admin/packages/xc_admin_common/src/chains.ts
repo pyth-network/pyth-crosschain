@@ -116,7 +116,7 @@ export const RECEIVER_CHAINS = {
   mezo: 60084,
   iota_sui_mainnet: 60085,
   camp_network: 60086,
-  spiderman: 60087,
+  monad: 60087,
   zero_gravity: 60088,
   itsnotreal: 60089, // Deprecated
   plasma: 60090,
@@ -266,6 +266,7 @@ export const RECEIVER_CHAINS = {
   hoodi: 50134, // Ethereum hoodi, the new Ethereum testnet
   taiko_hoodi: 50135,
   morph_hoodi: 50136,
+  celo_sepolia_testnet: 50137,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

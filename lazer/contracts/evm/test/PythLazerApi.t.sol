@@ -144,6 +144,18 @@ contract PythLazerApiTest is Test {
             PythLazerLib.isFundingRateIntervalRequested(feed3),
             "Feed 3: funding rate interval should NOT be requested"
         );
+        // MarketSession may or may not be requested depending on API response
+        // If present, verify it can be accessed correctly
+        if (PythLazerLib.isMarketSessionRequested(feed3)) {
+            assertTrue(
+                PythLazerLib.hasMarketSession(feed3),
+                "Feed 3: if market session is requested, it should be present"
+            );
+            int16 marketSession = PythLazerLib.getMarketSession(feed3);
+            // MarketSession should be a valid value (0-4 based on enum)
+            assertGe(marketSession, 0, "Feed 3: market session should be >= 0");
+            assertLe(marketSession, 4, "Feed 3: market session should be <= 4");
+        }
 
         // Verify parsed values match API reference values exactly
         assertEq(
@@ -289,6 +301,26 @@ contract PythLazerApiTest is Test {
             PythLazerLib.isConfidenceRequested(feed112),
             "Feed 112: confidence should NOT be requested"
         );
+        // MarketSession may or may not be requested depending on API response
+        // If present, verify it can be accessed correctly
+        if (PythLazerLib.isMarketSessionRequested(feed112)) {
+            assertTrue(
+                PythLazerLib.hasMarketSession(feed112),
+                "Feed 112: if market session is requested, it should be present"
+            );
+            int16 marketSession = PythLazerLib.getMarketSession(feed112);
+            // MarketSession should be a valid value (0-4 based on enum)
+            assertGe(
+                marketSession,
+                0,
+                "Feed 112: market session should be >= 0"
+            );
+            assertLe(
+                marketSession,
+                4,
+                "Feed 112: market session should be <= 4"
+            );
+        }
 
         // Verify parsed values match API reference values exactly
         assertEq(

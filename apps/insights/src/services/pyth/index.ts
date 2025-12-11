@@ -43,7 +43,7 @@ export const parseCluster = (name: string): Cluster | undefined =>
     : undefined;
 
 const mkConnection = (cluster: Cluster) =>
-  new Connection(ClusterToRPC[cluster]);
+  new Connection(ClusterToRPC[cluster], "confirmed");
 
 const connections = {
   [Cluster.Pythnet]: mkConnection(Cluster.Pythnet),

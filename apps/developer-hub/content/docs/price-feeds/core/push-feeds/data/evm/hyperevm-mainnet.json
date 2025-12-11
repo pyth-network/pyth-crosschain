@@ -309,6 +309,13 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "HWUSD/USDC.RR",
+      "id": "90730ebbd6d0e9b9fe41d099e31b06f5465a2164e468d77126b78e3017f19fa2",
+      "time_difference": 3600,
+      "price_deviation": 1,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "THBILL/USDC.RR",
       "id": "5b1bc5a579deba54dbaa9bc1c5b2e2b3f116d8d5ec27fbb3b9dc140a78e9f1e2",
       "time_difference": 3600,

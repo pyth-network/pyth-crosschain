@@ -1,3 +1,4 @@
+import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { capitalCase } from "change-case";
 import type {
   IChartApi,
@@ -6,7 +7,6 @@ import type {
   UTCTimestamp,
 } from "lightweight-charts";
 import { createChart, LineSeries } from "lightweight-charts";
-import { useTheme } from "next-themes";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
@@ -31,7 +31,7 @@ export function PythProDemoPriceChartImpl({
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
   /** hooks */
-  const { theme } = useTheme();
+  const { theme } = useAppTheme();
 
   /** refs */
   const containerRef = useRef<HTMLDivElement | null>(null);

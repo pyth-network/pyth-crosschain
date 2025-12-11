@@ -73,8 +73,8 @@ This variant allows you to specify a custom entropy provider instead of using th
 ```solidity
 function requestV2(
     address provider,
-    uint32 gasLimit,
-    bytes32 userRandomNumber
+    bytes32 userRandomNumber,
+    uint32 gasLimit
 ) external payable returns (uint64 assignedSequenceNumber);
 ```
 

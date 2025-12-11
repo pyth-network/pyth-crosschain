@@ -93,6 +93,10 @@ where
 
     #[derive(OpenApi)]
     #[openapi(
+        servers(
+            (url = "https://hermes.pyth.network", description = "Public endpoint"),
+            (url = "https://hermes-beta.pyth.network", description = "Beta (for testnet Aptos and Sui testnets)"),
+        ),
         paths(
             rest::get_price_feed,
             rest::get_vaa,

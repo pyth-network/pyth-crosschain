@@ -17,7 +17,7 @@ class SedaListener:
     """
     def __init__(self, config: Config, seda_state: PriceSourceState):
         self.url = config.seda.url
-        self.api_key = Path(config.seda.api_key_path).read_text().strip()
+        self.api_key = Path(config.seda.api_key_path).read_text().strip() if config.seda.api_key_path else None
         self.feeds = config.seda.feeds
         self.poll_interval = config.seda.poll_interval
         self.poll_failure_interval = config.seda.poll_failure_interval

@@ -14,7 +14,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import Web3 from "web3";
-import { Contract } from "web3-eth-contract";
+import type { Contract } from "web3-eth-contract";
 import type { InferredOptionType } from "yargs";
 
 import type { PrivateKey } from "../src/core/base";
@@ -175,7 +175,7 @@ export const COMMON_UPGRADE_OPTIONS = {
   },
   "std-output": {
     type: "string",
-    demandOption: true,
+    demandOption: false,
     desc: "Path to the standard JSON output of the pyth contract (build artifact)",
   },
 } as const;

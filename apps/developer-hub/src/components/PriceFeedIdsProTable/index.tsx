@@ -61,9 +61,80 @@ export const PriceFeedIdsProTable = () => {
       if (!searchString) {
         return items;
       }
-      return matchSorter(items, searchString, {
-        keys: ["pyth_lazer_id", "symbol", "name", "description"],
-      });
+      // Split by commas or spaces to support multiple search terms
+      const searchTerms = searchString
+        .split(/[,\s]+/)
+        .map((term) => term.trim().toLowerCase())
+        .filter((term) => term.length > 0);
+
+      if (searchTerms.length === 0) {
+        return items;
+      }
+
+      // For single term, use matchSorter directly for better ranking
+      const firstTerm = searchTerms[0];
+      if (searchTerms.length === 1 && firstTerm !== undefined) {
+        return matchSorter(items, firstTerm, {
+          keys: ["pyth_lazer_id", "symbol", "name", "description"],
+        });
+      }
+
+      // For multiple terms, use exact/substring matching with OR logic
+      // This ensures each term finds its specific matches
+      const termMatchesItem = (
+        item: (typeof items)[number],
+        term: string,
+      ): boolean => {
+        // Numeric ID match - exact match for numeric terms
+        if (/^\d+$/.test(term)) {
+          return String(item.pyth_lazer_id) === term;
+        }
+
+        // String match - case-insensitive substring match
+        const symbol = item.symbol.toLowerCase();
+        const name = item.name.toLowerCase();
+        const description = item.description.toLowerCase();
+
+        return (
+          symbol.includes(term) ||
+          name.includes(term) ||
+          description.includes(term)
+        );
+      };
+
+      // Collect matches with priority: exact ID matches first, then others
+      const exactIdMatches: (typeof items)[number][] = [];
+      const otherMatches = new Map<number, (typeof items)[number]>();
+
+      for (const term of searchTerms) {
+        const isNumericTerm = /^\d+$/.test(term);
+        for (const item of items) {
+          if (termMatchesItem(item, term)) {
+            // Exact ID matches get priority
+            if (isNumericTerm && String(item.pyth_lazer_id) === term) {
+              if (
+                !exactIdMatches.some(
+                  (m) => m.pyth_lazer_id === item.pyth_lazer_id,
+                )
+              ) {
+                exactIdMatches.push(item);
+              }
+            } else if (
+              !exactIdMatches.some(
+                (m) => m.pyth_lazer_id === item.pyth_lazer_id,
+              )
+            ) {
+              otherMatches.set(item.pyth_lazer_id, item);
+            }
+          }
+        }
+      }
+
+      // Return exact ID matches first, then other matches sorted by ID
+      const otherMatchesArray = [...otherMatches.values()].sort(
+        (a, b) => a.pyth_lazer_id - b.pyth_lazer_id,
+      );
+      return [...exactIdMatches, ...otherMatchesArray];
     },
     {
       defaultSort: "pyth_lazer_id",
@@ -95,7 +166,7 @@ export const PriceFeedIdsProTable = () => {
     <>
       <SearchInput
         label="Search price feeds"
-        placeholder="Search by symbol, name, or Pyth Pro ID"
+        placeholder="Search by symbol, name, or ID (comma/space separated)"
         value={search}
         onChange={updateSearch}
         className={styles.searchInput ?? ""}

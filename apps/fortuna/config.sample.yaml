@@ -32,6 +32,9 @@ chains:
     # How much to charge in fees
     fee: 1500000000000000
 
+    # Optional hard cap on the fee (in wei). If the dynamically calculated fee exceeds this, it will be clamped.
+    # max_fee: 10000000000000000
+
     # Set this temporarily to false if you have changed the fees and want to apply a new baseline fee.
     sync_fee_only_on_register: true
 

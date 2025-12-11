@@ -421,6 +421,13 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "SMON/MON.RR",
+      "id": "7fbf66b9b4e8b0e5723fc7001b00848c7d25225982ab33f6a5d111fdbf528001",
+      "time_difference": 3600,
+      "price_deviation": 0.05,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "AUSD/USD",
       "id": "d9912df360b5b7f21a122f15bdd5e27f62ce5e72bd316c291f7c86620e07fb2a",
       "time_difference": 3600,
