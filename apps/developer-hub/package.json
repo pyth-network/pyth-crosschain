@@ -18,7 +18,7 @@
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc",
-    "generate:docs": "bun ./scripts/generate-docs.ts"
+    "generate:docs": "tsx ./scripts/generate-docs.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "catalog:",
@@ -48,6 +48,7 @@
     "remark-math": "^6.0.0",
     "remark-mdx": "^3.1.1",
     "shiki": "catalog:",
+    "tsx": "catalog:",
     "viem": "catalog:",
     "zod": "catalog:",
     "zod-validation-error": "catalog:"

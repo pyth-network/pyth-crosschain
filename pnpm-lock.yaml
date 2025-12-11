@@ -647,6 +647,9 @@ importers:
       shiki:
         specifier: 'catalog:'
         version: 3.12.2
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
       viem:
         specifier: 'catalog:'
         version: 2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@6.0.3)(zod@3.24.4)
