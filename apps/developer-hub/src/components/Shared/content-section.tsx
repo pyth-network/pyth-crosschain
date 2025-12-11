@@ -1,5 +1,4 @@
 import styles from "./content-section.module.scss";
-
 import { SectionTitle } from "./section-title";
 
 export const Section = ({ children }: { children: React.ReactNode }) => {

@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@pythnetwork/component-library/Button";
 import { Link } from "@pythnetwork/component-library/Link";
 
