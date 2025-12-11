@@ -10,6 +10,10 @@
         "DISABLE_ACCESSIBILITY_REPORTING"
       ]
     },
+    "generate:docs": {
+      "dependsOn": ["//#install:modules", "^build"],
+      "outputs": ["content/docs/api-reference/**"]
+    },
     "fix:lint": {
       "dependsOn": [
         "//#install:modules",
