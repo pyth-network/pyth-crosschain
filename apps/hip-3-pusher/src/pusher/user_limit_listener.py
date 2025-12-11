@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from hyperliquid.utils.types import SpotMeta, Meta
 from loguru import logger
@@ -22,16 +23,27 @@ class UserLimitListener:
 
     async def run(self):
         logger.info("Starting user limit listener url: {} address: {} interval: {}", self.info.base_url, self.address, self.interval)
+        most_recent_timestamp = None
+        most_recent_balance = None
+
         while True:
             try:
-                response = await asyncio.to_thread(self._request)
-                logger.debug("userRateLimit response: {}", response)
-                balance = response["nRequestsSurplus"] - response["nRequestsCap"] - response["nRequestsUsed"]
-                logger.debug("userRateLimit user: {} balance: {}", self.address, balance)
-                self.metrics.user_request_balance.set(balance, {"dex": self.dex, "user": self.address})
+                now = time.time()
+                if not most_recent_timestamp or now - most_recent_timestamp > self.interval:
+                    response = await asyncio.to_thread(self._request)
+                    logger.debug("userRateLimit response: {}", response)
+                    new_balance = response["nRequestsSurplus"] + response["nRequestsCap"] - response["nRequestsUsed"]
+                    logger.debug("userRateLimit user: {} balance: {}", self.address, new_balance)
+
+                    most_recent_timestamp = now
+                    most_recent_balance = new_balance
+
+                self.metrics.user_request_balance.set(most_recent_balance, {"dex": self.dex, "user": self.address})
             except Exception as e:
                 logger.error("userRateLimit query failed: {}", e)
-            await asyncio.sleep(self.interval)
+
+            # want to update every 60s to keep metric populated in Grafana
+            await asyncio.sleep(60)
 
     def _request(self):
         return self.info.user_rate_limit(self.address)
