@@ -44,6 +44,7 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<
   ["SPY", 1398],
   ["ESZ2025", 2284],
   ["HOOD", 1182],
+  ["AMZN", 954],
   ["no_symbol_selected", undefined],
 ]);
 
@@ -72,6 +73,7 @@ const SYMBOL_TO_CHANNEL_MAP = new Map<
   ["ESZ2025", "real_time"],
   ["no_symbol_selected", "real_time"],
   ["HOOD", "real_time"],
+  ["AAPL", "real_time"],
   // ["ESH2026", "real_time"],
   // ["US10Y", "fixed_rate@200ms"],
 ]);
