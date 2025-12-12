@@ -7,7 +7,7 @@
     "name": "Pyth Data Association"
   },
   "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "dist/**/*"
   ],
@@ -59,51 +59,41 @@
   "exports": {
     ".": {
       "require": {
-        "types": "./dist/cjs/index.d.ts",
         "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "types": "./dist/esm/index.d.ts",
         "default": "./dist/esm/index.mjs"
       }
     },
     "./types/PythContract": {
       "require": {
-        "types": "./dist/cjs/types/PythContract.d.ts",
         "default": "./dist/cjs/types/PythContract.cjs"
       },
       "import": {
-        "types": "./dist/esm/types/PythContract.d.ts",
         "default": "./dist/esm/types/PythContract.mjs"
       }
     },
     "./types/PythContractFactory": {
       "require": {
-        "types": "./dist/cjs/types/PythContractFactory.d.ts",
         "default": "./dist/cjs/types/PythContractFactory.cjs"
       },
       "import": {
-        "types": "./dist/esm/types/PythContractFactory.d.ts",
         "default": "./dist/esm/types/PythContractFactory.mjs"
       }
     },
     "./types/common": {
       "require": {
-        "types": "./dist/cjs/types/common.d.ts",
         "default": "./dist/cjs/types/common.cjs"
       },
       "import": {
-        "types": "./dist/esm/types/common.d.ts",
         "default": "./dist/esm/types/common.mjs"
       }
     },
     "./types": {
       "require": {
-        "types": "./dist/cjs/types/index.d.ts",
         "default": "./dist/cjs/types/index.cjs"
       },
       "import": {
-        "types": "./dist/esm/types/index.d.ts",
         "default": "./dist/esm/types/index.mjs"
       }
     },
