@@ -73,6 +73,40 @@ Derivative protocols are encouraged to consider the following strategies to miti
    For example, a protocol could require users to hold an asset or a position for a certain period before they can trade or close it.
    This hold time gives the protocol time to observe price changes and reject trades that profit over latency.
 
+## Executable Price Risks and Mitigations
+
+Protocols that offer executable prices should account for additional risks beyond the latency and staleness guidance described above.
+These risks are particularly relevant for high-frequency derivative protocols, such as perps who offer or wants to offer instant fills.
+
+Protocols offering executable prices are encouraged to consider the following risks and mitigation strategies:
+
+1. **Same-Block Exploitation**: If your protocol allows positions to be opened and closed within the same block, stale or manipulated prices can be exploited using flash loans without inventory risk.
+   An attacker can open a position using a favorable stale price, then immediately close it in the same transaction, profiting from the price discrepancy.
+   To prevent this, separate the commitment to a trade from its execution.
+   **Use delayed settlement or commit-reveal schemes** to ensure that positions cannot be opened and closed in the same block.
+   Enforce a minimum holding period or require a certain number of blocks between entry and exit to prevent flash-loan round trips.
+
+1. **Staleness in Executable Prices**: Adversaries may see price updates before your protocol does, or they may select favorable historical price updates that satisfy staleness constraints.
+   This latency advantage allows sophisticated traders to exploit price differences.
+   **Use `getPriceNoOlderThan()` with strict staleness thresholds** when filling orders.
+   For delayed execution models, fetch the price at the order timestamp from [Hermes](https://hermes.pyth.network/docs/#/rest/timestamp_price_updates) and parse it using [`parsePriceFeedUpdates()`](https://api-reference.pyth.network/price-feeds/evm/parsePriceFeedUpdates).
+
+1. **High Volatility and Wide Confidence Intervals**: During periods of high volatility, large price moves widen confidence intervals and can cause significant slippage relative to your executable quote.
+   The executable price you quote may not reflect the true market price when confidence intervals are wide.
+   **Design your pricing function to account for trade size and confidence intervals.** Scale spreads and fees with notional size and confidence.
+   **Discount prices toward the adverse side of the confidence interval** when quoting executable prices.
+   When the ratio of confidence to price exceeds a threshold, widen spreads or cap the maximum trade size.
+
+1. **Liquidity and Price Impact**: Executable prices effectively provide liquidity to traders.
+   If your pricing model treats price as size-agnostic and ignores external market depth, traders can systematically extract value by trading at sizes that would move the market price.
+   **Implement exposure limits to cap per-trade notional, per-block trading volume, and per-market open interest.**
+   Increase taker and maker fees during stressed market conditions to compensate for increased risk.
+
+1. **Availability Gaps**: Market hours or network outages can cause price feeds to freeze while trading remains active.
+   In such cases, your protocol may continue to offer executable prices based on stale data.
+   **Respect market hours and implement availability guardrails.**
+   If price updates stall or confidence intervals widen beyond acceptable thresholds, pause new position openings or switch to conservative pricing instead of reusing stale executable prices.
+
 ## Confidence Intervals
 
 At every point in time, Pyth publishes both a price and a confidence interval for each product. For example, Pyth may publish the current price of bitcoin as \$50000 ± \$10. Pyth publishes a confidence interval because, in real markets, there is _no one single price for a product_. For example, at any given time, bitcoin trades at different prices at different venues around the world. While these prices are typically similar, they can diverge for a number of reasons, such as when a cryptocurrency exchange blocks withdrawals on an asset. If this happens, prices diverge because arbitrageurs can no longer bring prices across exchanges into line. Alternatively, prices on different venues can differ simply because an asset is highly volatile at a particular point in time. At such times, bid/ask spreads tend to be wider, and trades on different markets at around the same time tend to occur at a wider range of prices.
