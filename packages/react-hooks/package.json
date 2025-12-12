@@ -7,8 +7,6 @@
     "node": ">=22.14.0"
   },
   "scripts": {
-    "build": "ts-duality --clean --noCjs",
-    "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --fix . --max-warnings 0",
     "test:lint": "eslint . --max-warnings 0",
@@ -34,30 +32,12 @@
   },
   "type": "module",
   "exports": {
-    "./nuqs-adapters-next": {
-      "types": "./dist/nuqs-adapters-next.d.ts",
-      "default": "./dist/nuqs-adapters-next.mjs"
-    },
-    "./nuqs-server": {
-      "types": "./dist/nuqs-server.d.ts",
-      "default": "./dist/nuqs-server.mjs"
-    },
-    "./nuqs-testing": {
-      "types": "./dist/nuqs-testing.d.ts",
-      "default": "./dist/nuqs-testing.mjs"
-    },
-    "./nuqs": {
-      "types": "./dist/nuqs.d.ts",
-      "default": "./dist/nuqs.mjs"
-    },
-    "./use-app-theme": {
-      "types": "./dist/use-app-theme.d.ts",
-      "default": "./dist/use-app-theme.mjs"
-    },
-    "./use-websocket": {
-      "types": "./dist/use-websocket.d.ts",
-      "default": "./dist/use-websocket.mjs"
-    },
+    "./nuqs-adapters-next": "./src/nuqs-adapters-next.ts",
+    "./nuqs-server": "./src/nuqs-server.ts",
+    "./nuqs-testing": "./src/nuqs-testing.ts",
+    "./nuqs": "./src/nuqs.ts",
+    "./use-app-theme": "./src/use-app-theme.ts",
+    "./use-websocket": "./src/use-websocket.ts",
     "./package.json": "./package.json"
   }
 }
