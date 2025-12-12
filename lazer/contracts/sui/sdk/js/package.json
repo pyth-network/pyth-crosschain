@@ -1,53 +1,66 @@
 {
   "name": "@pythnetwork/pyth-lazer-sui-js",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "TypeScript SDK for the Pyth Lazer Sui contract",
   "license": "Apache-2.0",
   "type": "module",
+  "files": [
+    "dist/**"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "lazer/contracts/pyth-lazer-sui-js"
+  },
   "engines": {
     "node": ">=22.14.0"
   },
-  "files": [
-    "dist/**/*"
-  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "fix:lint": "eslint --fix . --max-warnings 0",
+    "fix:format": "prettier --write .",
+    "test:lint": "eslint . --max-warnings 0",
+    "test:format": "prettier --check .",
+    "test:types": "tsc",
+    "test:unit": "test-unit",
+    "example:fetch-and-verify": "tsx src/examples/fetch-and-verify.ts"
+  },
+  "devDependencies": {
+    "@cprussin/eslint-config": "catalog:",
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@pythnetwork/pyth-lazer-sdk": "workspace:*",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "yargs": "catalog:"
+  },
+  "dependencies": {
+    "@mysten/sui": "catalog:"
+  },
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
-    "./client": {
+    ".": {
       "require": {
-        "types": "./dist/cjs/client.d.ts",
-        "default": "./dist/cjs/client.cjs"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.cjs"
       },
       "import": {
-        "types": "./dist/esm/client.d.ts",
-        "default": "./dist/esm/client.mjs"
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.mjs"
       }
     },
     "./package.json": "./package.json"
   },
-  "sideEffects": false,
-  "scripts": {
-    "build": "ts-duality --clean",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:types": "tsc",
-    "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",
-    "clean": "rm -rf ./dist"
-  },
-  "dependencies": {
-    "@mysten/sui": "catalog:",
-    "@pythnetwork/pyth-lazer-sdk": "workspace:*",
-    "@types/yargs": "catalog:",
-    "yargs": "catalog:"
-  },
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@cprussin/tsconfig": "catalog:",
-    "@types/node": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+  "module": "./dist/esm/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.cjs"
 }
