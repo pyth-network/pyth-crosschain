@@ -13,6 +13,7 @@ from pusher.seda_listener import SedaListener
 from pusher.price_state import PriceState
 from pusher.publisher import Publisher
 from pusher.metrics import Metrics
+from pusher.user_limit_listener import UserLimitListener
 
 
 def load_config():
@@ -52,6 +53,7 @@ async def main():
     lazer_listener = LazerListener(config, price_state.lazer_state)
     hermes_listener = HermesListener(config, price_state.hermes_state)
     seda_listener = SedaListener(config, price_state.seda_state)
+    user_limit_listener = UserLimitListener(config, metrics, publisher.user_limit_address)
 
     await asyncio.gather(
         publisher.run(),
@@ -59,6 +61,7 @@ async def main():
         lazer_listener.subscribe_all(),
         hermes_listener.subscribe_all(),
         seda_listener.run(),
+        user_limit_listener.run(),
     )
     logger.info("Exiting hip-3-pusher..")
 

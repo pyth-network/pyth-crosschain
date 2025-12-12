@@ -12,6 +12,7 @@ def get_config():
     config: Config = Config.model_construct()
     config.stale_price_threshold_seconds = 5
     config.hyperliquid = HyperliquidConfig.model_construct()
+    config.hyperliquid.market_name = "pyth"
     config.hyperliquid.asset_context_symbols = [SYMBOL]
     config.lazer = LazerConfig.model_construct()
     config.lazer.feed_ids = [1, 8]
@@ -44,8 +45,8 @@ def test_good_hl_price():
     now = time.time()
     price_state.hl_oracle_state.put(SYMBOL, PriceUpdate("110000.0", now - price_state.stale_price_threshold_seconds / 2.0))
 
-    oracle_px, _, _ = price_state.get_all_prices(DEX)
-    assert oracle_px == {f"{DEX}:{SYMBOL}": "110000.0"}
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "110000.0"}
 
 
 def test_fallback_lazer():
@@ -59,8 +60,8 @@ def test_fallback_lazer():
     price_state.lazer_state.put(1, PriceUpdate("11050000000000", now - price_state.stale_price_threshold_seconds / 2.0))
     price_state.lazer_state.put(8, PriceUpdate("99000000", now - price_state.stale_price_threshold_seconds / 2.0))
 
-    oracle_px, _, _ = price_state.get_all_prices(DEX)
-    assert oracle_px == {f"{DEX}:{SYMBOL}": "111616.16"}
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "111616.16161616161"}
 
 
 
@@ -79,8 +80,8 @@ def test_fallback_hermes():
     price_state.hermes_state.put("2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
                                  PriceUpdate("98000000", now - price_state.stale_price_threshold_seconds / 2.0))
 
-    oracle_px, _, _ = price_state.get_all_prices(DEX)
-    assert oracle_px == {f"{DEX}:{SYMBOL}": "113265.31"}
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.oracle == {f"{DEX}:{SYMBOL}": "113265.30612244898"}
 
 
 def test_all_fail():
@@ -98,5 +99,5 @@ def test_all_fail():
     price_state.hermes_state.put("2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
                                  PriceUpdate("98000000", now - price_state.stale_price_threshold_seconds - 1.0))
 
-    oracle_px, _, _ = price_state.get_all_prices(DEX)
-    assert oracle_px == {}
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.oracle == {}

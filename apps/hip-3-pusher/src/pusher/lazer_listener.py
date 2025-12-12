@@ -1,9 +1,8 @@
 import asyncio
 import json
 from loguru import logger
-import time
 import websockets
-from tenacity import retry, retry_if_exception_type, wait_exponential
+from tenacity import retry, retry_if_exception_type, wait_fixed
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
@@ -41,11 +40,12 @@ class LazerListener:
         await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.lazer_urls))
 
     @retry(
-        retry=retry_if_exception_type((StaleConnectionError, websockets.ConnectionClosed)),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
+        retry=retry_if_exception_type(Exception),
+        wait=wait_fixed(1),
         reraise=True,
     )
     async def subscribe_single(self, router_url):
+        logger.info("Starting Lazer listener loop: {}", router_url)
         return await self.subscribe_single_inner(router_url)
 
     async def subscribe_single_inner(self, router_url):
@@ -66,8 +66,10 @@ class LazerListener:
                     data = json.loads(message)
                     self.parse_lazer_message(data)
                 except asyncio.TimeoutError:
+                    logger.warning("LazerListener: No messages in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
                     raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
                 except websockets.ConnectionClosed:
+                    logger.warning("LazerListener: Connection closed, reconnecting...")
                     raise
                 except json.JSONDecodeError as e:
                     logger.error("Failed to decode JSON message: {}", e)
@@ -85,14 +87,14 @@ class LazerListener:
             if data.get("type", "") != "streamUpdated":
                 return
             price_feeds = data["parsed"]["priceFeeds"]
-            logger.debug("price_feeds: {}", price_feeds)
-            now = time.time()
+            timestamp = int(data["parsed"]["timestampUs"]) / 1_000_000.0
+            logger.debug("price_feeds: {} timestamp: {}", price_feeds, timestamp)
             for feed_update in price_feeds:
                 feed_id = feed_update.get("priceFeedId", None)
                 price = feed_update.get("price", None)
                 if feed_id is None or price is None:
                     continue
                 else:
-                    self.lazer_state.put(feed_id, PriceUpdate(price, now))
+                    self.lazer_state.put(feed_id, PriceUpdate(price, timestamp))
         except Exception as e:
             logger.error("parse_lazer_message error: {}", e)
