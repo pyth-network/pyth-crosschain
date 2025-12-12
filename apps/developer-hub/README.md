@@ -102,17 +102,18 @@ Update the `meta.json` file in each section to control navigation. Example:
    ```
 
 3. Create a new branch for your changes
-4. Make your edits to the relevant `.mdx` files
-5. Preview your changes locally using the dev server
-6. Run linting/formatting checks:
+4. Review the contributor guide in [AGENTS.md](./AGENTS.md) for project structure, coding standards, and security notes
+5. Make your edits to the relevant `.mdx` files
+6. Preview your changes locally using the dev server
+7. Run linting/formatting checks:
 
    ```bash
    pnpm turbo run fix:format
    pnpm turbo run fix:lint:eslint
    ```
 
-7. Commit and push your changes to your fork
-8. Submit a pull request from your fork with a clear description of your changes
+8. Commit and push your changes to your fork
+9. Submit a pull request from your fork with a clear description of your changes
 
 ### Content Best Practices
 
