@@ -28,8 +28,14 @@ class PushErrorReason(StrEnum):
     INTERNAL_ERROR = "internal_error"
     # Invalid nonce, if the pusher account pushes multiple transactions with the same ms timestamp
     INVALID_NONCE = "invalid_nonce"
+    # Invalid account
+    INVALID_DEPLOYER_ACCOUNT = "invalid_deployer_account"
+    # User not activated
+    ACCOUNT_DOES_NOT_EXIST = "account_does_not_exist"
     # Missing externalPerpPxs
     MISSING_EXTERNAL_PERP_PXS = "missing_external_perp_pxs"
+    # Invalid dex (e.g. pointing to mainnet or testnet by mistake)
+    INVALID_DEX = "invalid_dex"
     # Some error string we haven't categorized yet
     UNKNOWN = "unknown"
 
@@ -250,6 +256,12 @@ class Publisher:
             return PushErrorReason.INVALID_NONCE
         elif "externalPerpPxs missing perp" in response:
             return PushErrorReason.MISSING_EXTERNAL_PERP_PXS
+        elif "Invalid perp deployer or sub-deployer" in response:
+            return PushErrorReason.INVALID_DEPLOYER_ACCOUNT
+        elif "User or API Wallet" in response:
+            return PushErrorReason.ACCOUNT_DOES_NOT_EXIST
+        elif "Invalid perp DEX" in response:
+            return PushErrorReason.INVALID_DEX
         else:
             logger.warning("Unrecognized error response: {}", response)
             return PushErrorReason.UNKNOWN
