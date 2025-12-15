@@ -92,6 +92,9 @@ export function useHttpDataStream({
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
 
+  // last emitted timestamp across *all* data sources (global replay clock)
+  const lastEmittedDatetimeRef = useRef<Nullish<Date>>(undefined);
+
   /** effects */
   useEffect(() => {
     datasourcesRef.current = dataSources;
@@ -169,6 +172,18 @@ export function useHttpDataStream({
                   prevDataPoint.symbol,
                   prevDataPoint,
                 );
+
+                const prevTs = new Date(prevDataPoint.timestamp);
+                lastEmittedDatetimeRef.current = lastEmittedDatetimeRef.current
+                  ? // global "last emitted" should be the *max* we've seen
+                    new Date(
+                      Math.max(
+                        lastEmittedDatetimeRef.current.valueOf(),
+                        prevTs.valueOf(),
+                      ),
+                    )
+                  : prevTs;
+
                 continue;
               }
 
@@ -186,18 +201,40 @@ export function useHttpDataStream({
                 );
               }
 
-              const delta =
-                new Date(currDataPoint.timestamp).valueOf() -
-                new Date(prevDataPoint.timestamp).valueOf();
+              const prevTs = new Date(prevDataPoint.timestamp);
+              const currTs = new Date(currDataPoint.timestamp);
 
+              const delta = currTs.valueOf() - prevTs.valueOf();
               if (!isReplaySymbol(symbolRef.current)) continue;
+
+              // compute how far this point is ahead of the last globally emitted point
+              const globalLast = lastEmittedDatetimeRef.current;
+              const globalDelta = globalLast
+                ? currTs.valueOf() - globalLast.valueOf()
+                : 0;
+
+              // if this datasource is about to jump ahead of the global clock,
+              // we need to wait so that all the streams are "buffered" and end up
+              // synchronized in the UI, marching together
+              if (globalDelta > 0) {
+                await wait(globalDelta / playbackSpeedRef.current);
+              }
 
               addDataPoint(
                 currDataPoint.source,
                 symbolRef.current,
                 currDataPoint,
               );
-              await wait(delta / playbackSpeedRef.current);
+
+              // advance the global last emitted timestamp
+              lastEmittedDatetimeRef.current = globalLast
+                ? new Date(Math.max(globalLast.valueOf(), currTs.valueOf()))
+                : currTs;
+
+              // then wait the intra-source delta to preserve within-stream pacing
+              if (delta > 0) {
+                await wait(delta / playbackSpeedRef.current);
+              }
             }
           }),
         );
