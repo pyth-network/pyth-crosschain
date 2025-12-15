@@ -1302,9 +1302,9 @@
     "type": "EvmChain"
   },
   {
-    "id": "spiderman",
+    "id": "monad",
     "mainnet": true,
-    "rpcUrl": "https://rpc-mainnet.spiderman.com/rpc/",
+    "rpcUrl": "https://rpc-mainnet.monadinfra.com",
     "networkId": 143,
     "type": "EvmChain"
   },
@@ -1323,9 +1323,9 @@
     "type": "EvmChain"
   },
   {
-    "id": "itsnotreal2",
+    "id": "ethereal",
     "mainnet": true,
-    "rpcUrl": "https://rpc.itsnotreal2.lol",
+    "rpcUrl": "https://rpc.ethereal.trade",
     "networkId": 5064014,
     "type": "EvmChain"
   },
@@ -1383,6 +1383,13 @@
     "mainnet": true,
     "rpcUrl": "https://subnets.avax.network/orange/mainnet/rpc",
     "networkId": 1510,
+    "type": "EvmChain"
+  },
+  {
+    "id": "celo_sepolia_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://forno.celo-sepolia.celo-testnet.org",
+    "networkId": 11142220,
     "type": "EvmChain"
   }
 ]

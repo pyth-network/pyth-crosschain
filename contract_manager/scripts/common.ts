@@ -175,7 +175,7 @@ export const COMMON_UPGRADE_OPTIONS = {
   },
   "std-output": {
     type: "string",
-    demandOption: true,
+    demandOption: false,
     desc: "Path to the standard JSON output of the pyth contract (build artifact)",
   },
 } as const;

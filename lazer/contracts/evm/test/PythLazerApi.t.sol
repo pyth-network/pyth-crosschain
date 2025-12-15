@@ -5,6 +5,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {PythLazer} from "../src/PythLazer.sol";
 import {PythLazerLib} from "../src/PythLazerLib.sol";
 import {PythLazerStructs} from "../src/PythLazerStructs.sol";
+import {PythLazerLibTestHelper} from "./PythLazerLibTestHelper.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 /**
@@ -14,6 +15,7 @@ import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.so
  */
 contract PythLazerApiTest is Test {
     PythLazer public pythLazer;
+    PythLazerLibTestHelper public libHelper;
     address owner;
     address trustedSigner = 0x26FB61A864c758AE9fBA027a96010480658385B9;
     uint256 trustedSignerExpiration = 3000000000000000;
@@ -27,6 +29,7 @@ contract PythLazerApiTest is Test {
             abi.encodeWithSelector(PythLazer.initialize.selector, owner)
         );
         pythLazer = PythLazer(address(proxy));
+        libHelper = new PythLazerLibTestHelper();
         vm.prank(owner);
         pythLazer.updateTrustedSigner(trustedSigner, trustedSignerExpiration);
         assert(pythLazer.isValidSigner(trustedSigner));
@@ -95,7 +98,7 @@ contract PythLazerApiTest is Test {
         );
         assertEq(signerFeed3, trustedSigner, "Feed 3: Signer mismatch");
 
-        PythLazerStructs.Update memory updateFeed3 = PythLazerLib
+        PythLazerStructs.Update memory updateFeed3 = libHelper
             .parseUpdateFromPayload(payloadFeed3);
         assertEq(
             updateFeed3.feeds.length,
@@ -106,85 +109,99 @@ contract PythLazerApiTest is Test {
 
         // Validate Feed 3 (Regular Price Feed) - Compare against API reference
         assertEq(feed3.feedId, 3, "Feed 3: feedId mismatch");
+        assertEq(
+            PythLazerLib.getFeedId(feed3),
+            3,
+            "Feed 3: getFeedId mismatch"
+        );
 
         // Requested checks for Feed 3 (should be requested for price/exponent/confidence/publisherCount/bid/ask; not requested for funding*)
         assertTrue(
-            PythLazerLib.isPriceRequested(feed3),
+            libHelper.isPriceRequested(feed3),
             "Feed 3: price should be requested"
         );
         assertTrue(
-            PythLazerLib.isExponentRequested(feed3),
+            libHelper.isExponentRequested(feed3),
             "Feed 3: exponent should be requested"
         );
         assertTrue(
-            PythLazerLib.isConfidenceRequested(feed3),
+            libHelper.isConfidenceRequested(feed3),
             "Feed 3: confidence should be requested"
         );
         assertTrue(
-            PythLazerLib.isPublisherCountRequested(feed3),
+            libHelper.isPublisherCountRequested(feed3),
             "Feed 3: publisher count should be requested"
         );
         assertTrue(
-            PythLazerLib.isBestBidPriceRequested(feed3),
+            libHelper.isBestBidPriceRequested(feed3),
             "Feed 3: best bid price should be requested"
         );
         assertTrue(
-            PythLazerLib.isBestAskPriceRequested(feed3),
+            libHelper.isBestAskPriceRequested(feed3),
             "Feed 3: best ask price should be requested"
         );
         assertFalse(
-            PythLazerLib.isFundingRateRequested(feed3),
+            libHelper.isFundingRateRequested(feed3),
             "Feed 3: funding rate should NOT be requested"
         );
         assertFalse(
-            PythLazerLib.isFundingTimestampRequested(feed3),
+            libHelper.isFundingTimestampRequested(feed3),
             "Feed 3: funding timestamp should NOT be requested"
         );
         assertFalse(
-            PythLazerLib.isFundingRateIntervalRequested(feed3),
+            libHelper.isFundingRateIntervalRequested(feed3),
             "Feed 3: funding rate interval should NOT be requested"
         );
         // MarketSession may or may not be requested depending on API response
         // If present, verify it can be accessed correctly
-        if (PythLazerLib.isMarketSessionRequested(feed3)) {
+        if (libHelper.isMarketSessionRequested(feed3)) {
             assertTrue(
-                PythLazerLib.hasMarketSession(feed3),
+                libHelper.hasMarketSession(feed3),
                 "Feed 3: if market session is requested, it should be present"
             );
-            int16 marketSession = PythLazerLib.getMarketSession(feed3);
-            // MarketSession should be a valid value (0-4 based on enum)
-            assertGe(marketSession, 0, "Feed 3: market session should be >= 0");
-            assertLe(marketSession, 4, "Feed 3: market session should be <= 4");
+            PythLazerStructs.MarketSession marketSession = PythLazerLib
+                .getMarketSession(feed3);
+            // MarketSession should be a valid enum value (0-4)
+            assertGe(
+                uint8(marketSession),
+                0,
+                "Feed 3: market session should be >= 0"
+            );
+            assertLe(
+                uint8(marketSession),
+                4,
+                "Feed 3: market session should be <= 4"
+            );
         }
 
         // Verify parsed values match API reference values exactly
         assertEq(
-            PythLazerLib.getPrice(feed3),
+            libHelper.getPrice(feed3),
             apiRefFeed3Price,
             "Feed 3: price mismatch"
         );
         assertEq(
-            PythLazerLib.getExponent(feed3),
+            libHelper.getExponent(feed3),
             apiRefFeed3Exponent,
             "Feed 3: exponent mismatch"
         );
         assertEq(
-            PythLazerLib.getConfidence(feed3),
+            libHelper.getConfidence(feed3),
             apiRefFeed3Confidence,
             "Feed 3: confidence mismatch"
         );
         assertEq(
-            PythLazerLib.getPublisherCount(feed3),
+            libHelper.getPublisherCount(feed3),
             apiRefFeed3PublisherCount,
             "Feed 3: publisher count mismatch"
         );
         assertEq(
-            PythLazerLib.getBestBidPrice(feed3),
+            libHelper.getBestBidPrice(feed3),
             apiRefFeed3BestBid,
             "Feed 3: best bid price mismatch"
         );
         assertEq(
-            PythLazerLib.getBestAskPrice(feed3),
+            libHelper.getBestAskPrice(feed3),
             apiRefFeed3BestAsk,
             "Feed 3: best ask price mismatch"
         );
@@ -252,7 +269,7 @@ contract PythLazerApiTest is Test {
         );
         assertEq(signerFeed112, trustedSigner, "Feed 112: Signer mismatch");
 
-        PythLazerStructs.Update memory updateFeed112 = PythLazerLib
+        PythLazerStructs.Update memory updateFeed112 = libHelper
             .parseUpdateFromPayload(payloadFeed112);
         assertEq(
             updateFeed112.feeds.length,
@@ -263,60 +280,66 @@ contract PythLazerApiTest is Test {
 
         // Validate Feed 112 (Funding Rate Feed) - Compare against API reference
         assertEq(feed112.feedId, 112, "Feed 112: feedId mismatch");
+        assertEq(
+            PythLazerLib.getFeedId(feed112),
+            112,
+            "Feed 112: getFeedId mismatch"
+        );
 
         // Requested checks for Feed 112 (should be requested for price/exponent/publisherCount/funding*; not requested for bid/ask/confidence)
         assertTrue(
-            PythLazerLib.isPriceRequested(feed112),
+            libHelper.isPriceRequested(feed112),
             "Feed 112: price should be requested"
         );
         assertTrue(
-            PythLazerLib.isExponentRequested(feed112),
+            libHelper.isExponentRequested(feed112),
             "Feed 112: exponent should be requested"
         );
         assertTrue(
-            PythLazerLib.isPublisherCountRequested(feed112),
+            libHelper.isPublisherCountRequested(feed112),
             "Feed 112: publisher count should be requested"
         );
         assertTrue(
-            PythLazerLib.isFundingRateRequested(feed112),
+            libHelper.isFundingRateRequested(feed112),
             "Feed 112: funding rate should be requested"
         );
         assertTrue(
-            PythLazerLib.isFundingTimestampRequested(feed112),
+            libHelper.isFundingTimestampRequested(feed112),
             "Feed 112: funding timestamp should be requested"
         );
         assertTrue(
-            PythLazerLib.isFundingRateIntervalRequested(feed112),
+            libHelper.isFundingRateIntervalRequested(feed112),
             "Feed 112: funding rate interval should be requested"
         );
         assertFalse(
-            PythLazerLib.isBestBidPriceRequested(feed112),
+            libHelper.isBestBidPriceRequested(feed112),
             "Feed 112: best bid price should NOT be requested"
         );
         assertFalse(
-            PythLazerLib.isBestAskPriceRequested(feed112),
+            libHelper.isBestAskPriceRequested(feed112),
             "Feed 112: best ask price should NOT be requested"
         );
         assertFalse(
-            PythLazerLib.isConfidenceRequested(feed112),
+            libHelper.isConfidenceRequested(feed112),
             "Feed 112: confidence should NOT be requested"
         );
         // MarketSession may or may not be requested depending on API response
         // If present, verify it can be accessed correctly
-        if (PythLazerLib.isMarketSessionRequested(feed112)) {
+        if (libHelper.isMarketSessionRequested(feed112)) {
             assertTrue(
-                PythLazerLib.hasMarketSession(feed112),
+                libHelper.hasMarketSession(feed112),
                 "Feed 112: if market session is requested, it should be present"
             );
-            int16 marketSession = PythLazerLib.getMarketSession(feed112);
-            // MarketSession should be a valid value (0-4 based on enum)
+            PythLazerStructs.MarketSession marketSession = PythLazerLib
+                .getMarketSession(feed112);
+            // MarketSession should be a valid enum value (0-4)
             assertGe(
-                marketSession,
+                uint8(marketSession),
                 0,
                 "Feed 112: market session should be >= 0"
             );
             assertLe(
-                marketSession,
+                uint8(marketSession),
                 4,
                 "Feed 112: market session should be <= 4"
             );
@@ -324,37 +347,37 @@ contract PythLazerApiTest is Test {
 
         // Verify parsed values match API reference values exactly
         assertEq(
-            PythLazerLib.getPrice(feed112),
+            libHelper.getPrice(feed112),
             apiRefFeed112Price,
             "Feed 112: price mismatch"
         );
 
         assertEq(
-            PythLazerLib.getExponent(feed112),
+            libHelper.getExponent(feed112),
             apiRefFeed112Exponent,
             "Feed 112: exponent mismatch"
         );
 
         assertEq(
-            PythLazerLib.getPublisherCount(feed112),
+            libHelper.getPublisherCount(feed112),
             apiRefFeed112PublisherCount,
             "Feed 112: publisher count mismatch"
         );
 
         assertEq(
-            PythLazerLib.getFundingRate(feed112),
+            libHelper.getFundingRate(feed112),
             apiRefFeed112FundingRate,
             "Feed 112: funding rate mismatch"
         );
 
         assertEq(
-            PythLazerLib.getFundingTimestamp(feed112),
+            libHelper.getFundingTimestamp(feed112),
             apiRefFeed112FundingTimestamp,
             "Feed 112: funding timestamp mismatch"
         );
 
         assertEq(
-            PythLazerLib.getFundingRateInterval(feed112),
+            libHelper.getFundingRateInterval(feed112),
             apiRefFeed112FundingRateInterval,
             "Feed 112: funding rate interval mismatch"
         );

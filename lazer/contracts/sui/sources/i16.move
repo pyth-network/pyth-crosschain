@@ -49,7 +49,7 @@ public fun get_magnitude_if_negative(in: &I16): u64 {
 
 public fun from_u16(from: u16): I16 {
     // Use the MSB to determine whether the number is negative or not.
-    let from_u64 = (from as u64);
+    let from_u64 = from as u64;
     let negative = (from_u64 >> 15) == 1;
     let magnitude = parse_magnitude(from_u64, negative);
 
@@ -71,7 +71,7 @@ fun parse_magnitude(from: u64, negative: bool): u64 {
 #[test]
 fun test_max_positive_magnitude() {
     new(0x7FFF, false);  // 32767
-    assert!(&new((1<<15) - 1, false) == &from_u16(((1<<15) - 1) as u16), 1);
+    assert!(&new((1 << 15) - 1, false) == &from_u16((1 << 15) - 1), 1);
 }
 
 #[test]
@@ -83,7 +83,7 @@ fun test_magnitude_too_large_positive() {
 #[test]
 fun test_max_negative_magnitude() {
     new(0x8000, true);   // 32768
-    assert!(&new(1<<15, true) == &from_u16((1<<15) as u16), 1);
+    assert!(&new(1 << 15, true) == &from_u16(1 << 15), 1);
 }
 
 #[test]

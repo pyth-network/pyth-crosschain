@@ -33,6 +33,14 @@ library PythLazerStructs {
         Present
     }
 
+    enum MarketSession {
+        Regular,
+        PreMarket,
+        PostMarket,
+        OverNight,
+        Closed
+    }
+
     struct Feed {
         // NOTE: Do not access fields directly. Use PythLazerLib getters (getPrice, hasPrice, isPriceRequested, etc.)
 
@@ -53,8 +61,8 @@ library PythLazerStructs {
         int64 _fundingRate;
         uint64 _fundingTimestamp;
         uint64 _fundingRateInterval;
-        // Slot 4: 2 bytes
-        int16 _marketSession;
+        // Slot 4: 1 byte
+        MarketSession _marketSession;
     }
 
     struct Update {

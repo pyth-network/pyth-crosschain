@@ -230,6 +230,7 @@ pub async fn adjust_fee_wrapper(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
+    max_fee_wei: Option<u128>,
     metrics: Arc<KeeperMetrics>,
 ) {
     // The maximum balance of accrued fees + provider wallet balance. None if we haven't observed a value yet.
@@ -246,6 +247,7 @@ pub async fn adjust_fee_wrapper(
             target_profit_pct,
             max_profit_pct,
             min_fee_wei,
+            max_fee_wei,
             &mut high_water_pnl,
             &mut sequence_number_of_last_fee_update,
             metrics.clone(),
@@ -261,7 +263,8 @@ pub async fn adjust_fee_wrapper(
 
 /// Adjust the fee charged by the provider to ensure that it is profitable at the prevailing gas price.
 /// This method targets a fee as a function of the maximum cost of the callback,
-/// c = (gas_limit) * (current gas price), with min_fee_wei as a lower bound on the fee.
+/// c = (gas_limit) * (current gas price), with min_fee_wei as a lower bound and max_fee_wei as an
+/// optional upper bound on the fee.
 ///
 /// The method then updates the on-chain fee if all of the following are satisfied:
 /// - the on-chain fee does not fall into an interval [c*min_profit, c*max_profit]. The tolerance
@@ -282,6 +285,7 @@ pub async fn adjust_fee_if_necessary(
     target_profit_pct: u64,
     max_profit_pct: u64,
     min_fee_wei: u128,
+    max_fee_wei: Option<u128>,
     high_water_pnl: &mut Option<U256>,
     sequence_number_of_last_fee_update: &mut Option<u64>,
     metrics: Arc<KeeperMetrics>,
@@ -313,11 +317,11 @@ pub async fn adjust_fee_if_necessary(
         .get_or_create(&account_label)
         .set((max_callback_cost / gas_limit) as f64 / 1e9);
 
-    let target_fee_min = std::cmp::max(
+    let mut target_fee_min = std::cmp::max(
         (max_callback_cost * u128::from(min_profit_pct)) / 100,
         min_fee_wei,
     );
-    let target_fee = std::cmp::max(
+    let mut target_fee = std::cmp::max(
         (max_callback_cost * u128::from(target_profit_pct)) / 100,
         min_fee_wei,
     );
@@ -326,10 +330,18 @@ pub async fn adjust_fee_if_necessary(
         .get_or_create(&account_label)
         .set(((max_callback_cost * u128::from(target_profit_pct)) / 100) as f64 / 1e18);
 
-    let target_fee_max = std::cmp::max(
+    let mut target_fee_max = std::cmp::max(
         (max_callback_cost * u128::from(max_profit_pct)) / 100,
         min_fee_wei,
     );
+
+    // Apply max fee cap if configured, but ensure it doesn't go below min_fee_wei
+    if let Some(max_fee) = max_fee_wei {
+        let effective_max = std::cmp::max(max_fee, min_fee_wei);
+        target_fee_min = std::cmp::min(target_fee_min, effective_max);
+        target_fee = std::cmp::min(target_fee, effective_max);
+        target_fee_max = std::cmp::min(target_fee_max, effective_max);
+    }
 
     // Calculate current P&L to determine if we can reduce fees.
     let current_keeper_balance = contract

@@ -3,11 +3,16 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "dependsOn": ["generate:docs"],
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
         "DISABLE_ACCESSIBILITY_REPORTING"
       ]
+    },
+    "generate:docs": {
+      "dependsOn": ["//#install:modules", "^build"],
+      "outputs": ["content/docs/api-reference/**"]
     },
     "fix:lint": {
       "dependsOn": [
