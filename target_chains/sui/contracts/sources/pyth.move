@@ -581,7 +581,7 @@ module pyth::pyth_tests{
         (scenario, coins, clock)
     }
 
-    fun get_mock_price_infos(): vector<PriceInfo> {
+    public fun get_mock_price_infos(): vector<PriceInfo> {
         use pyth::i64::Self;
         use pyth::price::{Self};
         vector<PriceInfo>[
