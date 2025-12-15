@@ -187,3 +187,6 @@ export const HistoricalDataResponseSchema = z.object({
 export type HistoricalDataResponseType = z.infer<
   typeof HistoricalDataResponseSchema
 >;
+
+export const ValidDateSchema = z.date();
+export type ValidDateType = z.infer<typeof ValidDateSchema>;

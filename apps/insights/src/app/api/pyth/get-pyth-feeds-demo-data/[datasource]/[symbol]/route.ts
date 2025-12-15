@@ -5,6 +5,7 @@ import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../../pyth-feed
 import {
   ALLOWED_EQUITY_SYMBOLS,
   DATA_SOURCES_REPLAY,
+  ValidDateSchema,
 } from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
 
 export const GET = async (
@@ -41,13 +42,20 @@ export const GET = async (
       { status: 400 },
     );
   }
-  const startAt = new Date(startAtParam);
-  if (startAt.toString() === "Invalid Date") {
+
+  const startAtDate = new Date(startAtParam);
+
+  const startAtValidation = await ValidDateSchema.safeParseAsync(startAtDate);
+  if (startAtValidation.error) {
     return NextResponse.json(
-      { error: "startAt query parameter is not a valid ISO date string" },
+      {
+        error: `startAt query parameter is not a valid ISO date string: ${startAtValidation.error.message}`,
+      },
       { status: 400 },
     );
   }
+
+  const startAt = startAtValidation.data;
 
   const symbolToUse = symbolValidation.data;
   const datasourceToUse = datasourceValidation.data;
