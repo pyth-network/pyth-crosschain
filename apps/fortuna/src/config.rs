@@ -190,6 +190,11 @@ pub struct EthereumConfig {
     #[serde(default)]
     pub fee: u128,
 
+    /// Optional hard cap on the fee (in wei). If the dynamically calculated fee exceeds this,
+    /// it will be clamped to this value. When None, no cap is applied.
+    #[serde(default)]
+    pub max_fee: Option<u128>,
+
     /// Only set the provider's fee when the provider is registered for the first time. Default is true.
     /// This is useful to avoid resetting the fees on service restarts.
     #[serde(default = "default_sync_fee_only_on_register")]

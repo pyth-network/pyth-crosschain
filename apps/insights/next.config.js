@@ -31,6 +31,15 @@ const config = {
       use: ["@svgr/webpack"],
     });
 
+    // make Next.js aware of how to import uncompiled TypeScript files
+    // from our component-library and other shared packages
+    config.resolve.extensionAlias = {
+      ".js": [".ts", ".tsx", ".js", ".jsx"],
+      ".jsx": [".tsx", ".jsx"],
+      ".mjs": [".mts", ".mjs"],
+      ".cjs": [".cts", ".cjs"],
+    };
+
     return config;
   },
 

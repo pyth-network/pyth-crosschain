@@ -169,6 +169,7 @@ pub async fn run_keeper_threads(
                 u64::try_from(100 + chain_eth_config.max_profit_pct)
                     .expect("max_profit_pct must be >= -100"),
                 chain_eth_config.fee,
+                chain_eth_config.max_fee,
                 metrics.clone(),
             )
             .in_current_span(),

@@ -190,7 +190,7 @@
     "type": "EvmEntropyContract"
   },
   {
-    "chain": "spiderman",
+    "chain": "monad",
     "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
     "type": "EvmEntropyContract"
   },
