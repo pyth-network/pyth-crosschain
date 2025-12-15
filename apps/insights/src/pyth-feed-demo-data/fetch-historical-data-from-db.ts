@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
 /* eslint-disable no-console */
 import path from "node:path";
 
@@ -15,7 +16,10 @@ import type {
   HistoricalDataResponseType,
   PriceDataWithSource,
 } from "../schemas/pyth/pyth-pro-demo-schema";
-import { appendReplaySymbolSuffix } from "../schemas/pyth/pyth-pro-demo-schema";
+import {
+  appendReplaySymbolSuffix,
+  ValidDateSchema,
+} from "../schemas/pyth/pyth-pro-demo-schema";
 import { isReplayDataSource, isReplaySymbol } from "../util/pyth-pro-demo";
 
 dayjs.extend(utc);
@@ -79,6 +83,59 @@ export async function fetchHistoricalDataForPythFeedsDemo({
     return { data: out, hasNext: false };
   }
 
+  // there's no guarantee that the $endAt value is the
+  // max for this query. it might actually be less,
+  // if the data source doesn't tick as fast
+  const maxDatetimeForSourceParamStatement = await db.prepare(`
+SELECT MAX(hd.datetime) as maxDatetime FROM main.HistoricalData hd
+WHERE hd.symbol = $symbol
+	AND hd.datetime >= $startAt
+  AND hd.datetime <= $endAt
+  AND hd.source = $datasource`);
+
+  maxDatetimeForSourceParamStatement.bind({
+    datasource,
+    endAt,
+    startAt: normalizedStartAt,
+    symbol,
+  });
+
+  const maxForGivenSourceResults =
+    await maxDatetimeForSourceParamStatement.run();
+  const [maxResult] = await maxForGivenSourceResults.getRowObjectsJS();
+  const maxInputSourceParamDatetime = new Date(String(maxResult?.maxDatetime));
+  if (ValidDateSchema.safeParse(maxInputSourceParamDatetime).error) {
+    return { data: [], hasNext: false };
+  }
+
+  const maxDatetimeForOtherSourcesStatement = await db.prepare(`
+SELECT MAX(hd.datetime) as maxDatetime FROM main.HistoricalData hd
+WHERE hd.symbol = $symbol
+	AND hd.datetime >= $startAt
+  AND hd.datetime <= $endAt
+  AND hd.source != $datasource`);
+
+  maxDatetimeForOtherSourcesStatement.bind({
+    datasource,
+    endAt,
+    startAt: normalizedStartAt,
+    symbol,
+  });
+
+  const maxForOthersResults = await maxDatetimeForOtherSourcesStatement.run();
+  const [maxForOthers] = await maxForOthersResults.getRowObjectsJS();
+  const maxForOthersDatetime = new Date(String(maxForOthers?.maxDatetime));
+  if (ValidDateSchema.safeParse(maxForOthersDatetime).error) {
+    return { data: [], hasNext: false };
+  }
+
+  const endAtToUse = new Date(
+    Math.min(
+      maxInputSourceParamDatetime.valueOf(),
+      maxForOthersDatetime.valueOf(),
+    ),
+  );
+
   const queryForDataStatement =
     await db.prepare(`SELECT hd.* FROM main.HistoricalData hd 
 WHERE hd.symbol = $symbol
@@ -95,7 +152,7 @@ WHERE hd.symbol = $symbol
 
   queryForDataStatement.bind({
     datasource,
-    endAt,
+    endAt: endAtToUse.toISOString(),
     startAt: normalizedStartAt,
     symbol,
   });
