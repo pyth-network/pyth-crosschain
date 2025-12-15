@@ -8,7 +8,7 @@ import {
   createSerializer,
 } from "@pythnetwork/react-hooks/nuqs";
 import { usePathname } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useDeferredValue, useMemo } from "react";
 
 import type { SortDescriptor } from "../unstyled/Table";
 import { useLogger } from "../useLogger";
@@ -41,6 +41,9 @@ export const useQueryParamFilterPagination = <T>(
 
   const [{ search, page, pageSize, sort, descending }, setQuery] =
     useQueryStates(queryParams);
+
+  const deferredSearch = useDeferredValue(search);
+  const isPending = search !== deferredSearch;
 
   const sortDescriptor = useMemo(
     (): SortDescriptor => ({
@@ -93,8 +96,10 @@ export const useQueryParamFilterPagination = <T>(
 
   const filteredItems = useMemo(
     () =>
-      search === "" ? items : items.filter((item) => predicate(item, search)),
-    [items, search, predicate],
+      deferredSearch === ""
+        ? items
+        : items.filter((item) => predicate(item, deferredSearch)),
+    [items, deferredSearch, predicate],
   );
 
   const sortedItems = useMemo(
@@ -103,8 +108,8 @@ export const useQueryParamFilterPagination = <T>(
   );
 
   const mutatedItems = useMemo(() => {
-    return doMutate(sortedItems, search);
-  }, [doMutate, sortedItems, search]);
+    return doMutate(sortedItems, deferredSearch);
+  }, [doMutate, sortedItems, deferredSearch]);
 
   const paginatedItems = useMemo(
     () => mutatedItems.slice((page - 1) * pageSize, page * pageSize),
@@ -139,5 +144,6 @@ export const useQueryParamFilterPagination = <T>(
     numPages,
     mkPageLink,
     numResults: mutatedItems.length,
+    isPending,
   };
 };

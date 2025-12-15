@@ -160,6 +160,7 @@ export const ResolvedPriceComponentsCard = <
     numResults,
     numPages,
     mkPageLink,
+    isPending,
   } = useQueryParamFilterPagination(
     componentsFilteredByStatus,
     (component, search) => filter.contains(component.nameAsString, search),
@@ -314,6 +315,7 @@ export const ResolvedPriceComponentsCard = <
       onStatusChange={updateStatus}
       showQuality={showQuality}
       setShowQuality={updateShowQuality}
+      isPending={isPending}
       {...props}
     />
   );
@@ -354,6 +356,7 @@ type PriceComponentsCardProps<
         showQuality: boolean;
         setShowQuality: (newValue: boolean) => void;
         rows: (RowConfig<string> & { nameAsString: string })[];
+        isPending: boolean;
       }
   );
 
@@ -421,6 +424,7 @@ export const PriceComponentsCardContents = <
                 : {
                     value: props.search,
                     onChange: props.onSearchChange,
+                    isPending: props.isPending,
                   })}
             />
           </div>
