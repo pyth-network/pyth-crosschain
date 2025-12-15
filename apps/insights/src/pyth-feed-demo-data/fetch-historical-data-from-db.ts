@@ -85,8 +85,7 @@ WHERE hd.symbol = $symbol
 	AND hd.datetime >= $startAt
   AND hd.datetime <= $endAt
   AND hd.source = $datasource
-order by hd.datetime asc
-limit 200;`);
+order by hd.datetime asc`);
 
   const lastTimestampStatement =
     await db.prepare(`SELECT COUNT(hd.datetime) as remainingCount FROM HistoricalData hd

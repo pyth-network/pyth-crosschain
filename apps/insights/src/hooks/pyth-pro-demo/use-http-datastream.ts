@@ -115,7 +115,7 @@ export function useHttpDataStream({
     const kickoffFetching = async () => {
       if (!enabledRef.current) return;
 
-      let hasNext = false;
+      let hasNext = true;
       let maxTimestamp = startAtToFetch;
 
       try {
