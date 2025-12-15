@@ -48,12 +48,24 @@ async function main() {
   );
   const vaas = await priceService.getLatestVaas(argv["feed-id"] as string[]);
   const privateKey = toPrivateKey(argv["private-key"]);
-  console.log(
-    await contract.executeUpdatePriceFeed(
-      privateKey,
-      vaas.map((vaa) => Buffer.from(vaa, "base64")),
-    ),
-  );
+
+  // Check if the contract has executeUpdatePriceFeedWithFeeds method (Sui/Iota contracts)
+  if ("executeUpdatePriceFeedWithFeeds" in contract) {
+    console.log(
+      await contract.executeUpdatePriceFeedWithFeeds(
+        privateKey,
+        vaas.map((vaa) => Buffer.from(vaa, "base64")),
+        argv["feed-id"] as string[],
+      ),
+    );
+  } else {
+    console.log(
+      await contract.executeUpdatePriceFeed(
+        privateKey,
+        vaas.map((vaa) => Buffer.from(vaa, "base64")),
+      ),
+    );
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
