@@ -6,6 +6,7 @@ from typing import Literal
 STALE_TIMEOUT_SECONDS = 5
 USER_LIMIT_INTERVAL_SECONDS = 1800
 HYPERLIQUID_WS_PING_INTERVAL_SECONDS = 20
+DEFAULT_STOP_AFTER_ATTEMPT = 20
 
 
 class KMSConfig(BaseModel):
@@ -22,11 +23,13 @@ class LazerConfig(BaseModel):
     lazer_urls: list[str]
     lazer_api_key: str
     feed_ids: list[int]
+    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
 
 class HermesConfig(BaseModel):
     hermes_urls: list[str]
     feed_ids: list[str]
+    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
 
 class HyperliquidConfig(BaseModel):
@@ -41,6 +44,7 @@ class HyperliquidConfig(BaseModel):
     enable_publish: bool
     user_limit_interval: int = USER_LIMIT_INTERVAL_SECONDS
     ws_ping_interval: int = HYPERLIQUID_WS_PING_INTERVAL_SECONDS
+    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
     @model_validator(mode="after")
     def set_default_urls(self):

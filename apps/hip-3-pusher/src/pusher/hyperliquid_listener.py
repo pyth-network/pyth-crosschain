@@ -4,7 +4,7 @@ from enum import StrEnum
 
 import websockets
 from loguru import logger
-from tenacity import retry, retry_if_exception_type, wait_fixed
+from tenacity import retry, retry_if_exception_type, wait_fixed, stop_after_attempt
 import time
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
@@ -39,6 +39,7 @@ class HyperliquidListener:
         self.hl_mark_state = hl_mark_state
         self.hl_mid_state = hl_mid_state
         self.ws_ping_interval = config.hyperliquid.ws_ping_interval
+        self.stop_after_attempt = config.hyperliquid.stop_after_attempt
 
     def get_subscribe_request(self, asset):
         return {
@@ -49,14 +50,19 @@ class HyperliquidListener:
     async def subscribe_all(self):
         await asyncio.gather(*(self.subscribe_single(hyperliquid_ws_url) for hyperliquid_ws_url in self.hyperliquid_ws_urls))
 
-    @retry(
-        retry=retry_if_exception_type(Exception),
-        wait=wait_fixed(1),
-        reraise=True,
-    )
     async def subscribe_single(self, url):
         logger.info("Starting Hyperliquid listener loop: {}", url)
-        return await self.subscribe_single_inner(url)
+
+        @retry(
+            retry=retry_if_exception_type(Exception),
+            wait=wait_fixed(1),
+            stop=stop_after_attempt(self.stop_after_attempt),
+            reraise=True,
+        )
+        async def _run():
+            return await self.subscribe_single_inner(url)
+
+        return await _run()
 
     async def subscribe_single_inner(self, url):
         async with websockets.connect(url) as ws:
@@ -118,9 +124,9 @@ class HyperliquidListener:
                     logger.warning("HyperliquidListener: Websocket connection closed (code={} reason={}); reconnecting...", rc, rr)
                     raise
                 except json.JSONDecodeError as e:
-                    logger.error("Failed to decode JSON message: {} error: {}", message, e)
+                    logger.exception("Failed to decode JSON message: {} error: {}", message, repr(e))
                 except Exception as e:
-                    logger.error("Unexpected exception: {}", e)
+                    logger.exception("Unexpected exception: {}", repr(e))
 
     def parse_hyperliquid_active_asset_ctx_update(self, message, now):
         try:
@@ -130,7 +136,7 @@ class HyperliquidListener:
             self.hl_mark_state.put(symbol, PriceUpdate(ctx["markPx"], now))
             logger.debug("activeAssetCtx symbol: {} oraclePx: {} markPx: {}", symbol, ctx["oraclePx"], ctx["markPx"])
         except Exception as e:
-            logger.error("parse_hyperliquid_active_asset_ctx_update error: message: {} e: {}", message, e)
+            logger.exception("parse_hyperliquid_active_asset_ctx_update error: message: {} e: {}", message, repr(e))
 
     def parse_hyperliquid_all_mids_update(self, message, now):
         try:

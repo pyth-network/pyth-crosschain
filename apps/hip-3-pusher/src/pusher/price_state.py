@@ -92,7 +92,7 @@ class PriceState:
                         pxs[f"{self.market_name}:{symbol}"] = str(px)
                         break
                 except Exception as e:
-                    logger.exception("get_price exception for symbol: {} source_config: {} error: {}", symbol, source_config, e)
+                    logger.exception("get_price exception for symbol: {} source_config: {} error: {}", symbol, source_config, repr(e))
         return pxs
 
     def get_price(self, price_source_config: PriceSourceConfig, oracle_update: OracleUpdate):

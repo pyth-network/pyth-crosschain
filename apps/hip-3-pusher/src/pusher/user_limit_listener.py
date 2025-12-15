@@ -12,6 +12,16 @@ from pusher.metrics import Metrics
 
 
 class UserLimitListener:
+    """
+    Periodically polls the Hyperliquid API to monitor the updater account's
+    reserved requests.
+
+    For the oracle updater account (single or multisig), poll
+    info/userRateLimit and update the hip_3_relayer_user_request_balance
+    metric for that account. Topping up can be done with the provided script
+    to call reserveRequestWeight.
+    """
+
     def __init__(self, config: Config, metrics: Metrics, address: str):
         self.address = address.lower()
         self.metrics = metrics
@@ -40,7 +50,7 @@ class UserLimitListener:
 
                 self.metrics.user_request_balance.set(most_recent_balance, {"dex": self.dex, "user": self.address})
             except Exception as e:
-                logger.error("userRateLimit query failed: {}", e)
+                logger.exception("userRateLimit query failed: {}", repr(e))
 
             # want to update every 60s to keep metric populated in Grafana
             await asyncio.sleep(60)
