@@ -26,6 +26,7 @@ import {
 import { useTheme } from "next-themes";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef } from "react";
+import { useDateFormatter } from "react-aria";
 import { z } from "zod";
 
 import styles from "./chart.module.scss";
@@ -68,6 +69,7 @@ const useChartElem = (symbol: string, feedId: string) => {
   const [resolution] = useChartResolution();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
+  const tooltipRef = useRef<HTMLDivElement | undefined>(undefined);
   const isBackfilling = useRef(false);
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
   // Lightweight charts has [a
@@ -264,6 +266,16 @@ const useChartElem = (symbol: string, feedId: string) => {
     if (chartRef.current) {
       chartRef.current.chart.remove();
     }
+    if (tooltipRef.current) {
+      tooltipRef.current.remove();
+    }
+
+    const tooltip = document.createElement("div");
+    tooltip.className = styles.tooltip ?? "";
+    tooltip.style.display = "none";
+    chartElem.append(tooltip);
+    tooltipRef.current = tooltip;
+
     const chart = createChart(chartElem, {
       layout: {
         attributionLogo: false,
@@ -283,6 +295,7 @@ const useChartElem = (symbol: string, feedId: string) => {
       },
       localization: {
         priceFormatter: priceFormatter.format,
+        dateFormat: "dd MMM yy,",
       },
     });
 
@@ -337,6 +350,10 @@ const useChartElem = (symbol: string, feedId: string) => {
 
     return () => {
       chart.remove();
+      if (tooltipRef.current) {
+        tooltipRef.current.remove();
+        tooltipRef.current = undefined;
+      }
     };
   });
 
@@ -382,6 +399,110 @@ const useChartElem = (symbol: string, feedId: string) => {
       });
     }
   }, [livePriceData?.exponent, priceFormatter]);
+
+  const dateFormatter = useDateFormatter({
+    year: "2-digit",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  });
+
+  // Subscribe to crosshair move for tooltip updates
+  useEffect(() => {
+    const chartData = chartRef.current;
+    const tooltip = tooltipRef.current;
+    const chartElem = chartContainerRef.current;
+
+    if (!chartData || !tooltip || !chartElem) {
+      return;
+    }
+
+    const { chart, price, confidenceHigh, confidenceLow } = chartData;
+
+    const handleCrosshairMove: Parameters<
+      typeof chart.subscribeCrosshairMove
+    >[0] = (param) => {
+      const priceData = param.seriesData.get(price);
+      const confidenceHighData = param.seriesData.get(confidenceHigh);
+      const confidenceLowData = param.seriesData.get(confidenceLow);
+
+      const hasPrice = priceData && "value" in priceData;
+      const hasTime = param.time !== undefined;
+      const hasPoint = param.point && "x" in param.point && "y" in param.point;
+
+      if (!hasPrice || !hasTime || !hasPoint) {
+        tooltip.style.display = "none";
+        return;
+      }
+
+      const priceValue = priceData.value;
+      const date = new Date(Number(param.time) * 1000);
+      const formattedDate = dateFormatter.format(date);
+      const formattedPrice = priceFormatter.format(priceValue);
+
+      let confidenceText = "N/A";
+      if (
+        confidenceHighData &&
+        "value" in confidenceHigh &&
+        confidenceLowData &&
+        "value" in confidenceLow
+      ) {
+        confidenceText = `±${priceFormatter.format(confidenceHighData.value - priceValue)}`;
+      }
+
+      tooltip.innerHTML = `
+        <table class="${styles.tooltipTable ?? ""}">
+          <tbody>
+            <tr>
+              <td colspan="2">${formattedDate}</td>
+            </tr>
+            <tr>
+            <tr>
+              <td>Price</td>
+              <td>${formattedPrice}</td>
+            </tr>
+            <tr>
+              <td>Confidence</td>
+              <td>${confidenceText}</td>
+            </tr>
+          </tbody>
+        </table>
+        `;
+
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const containerRect = chartElem.getBoundingClientRect();
+      const tooltipMargin = 20;
+
+      const left = Math.max(
+        0,
+        Math.min(
+          containerRect.width - tooltipRect.width,
+          param.point.x - tooltipRect.width / 2,
+        ),
+      );
+
+      const coordinate = price.priceToCoordinate(priceValue);
+      if (coordinate === null) {
+        tooltip.style.display = "none";
+        return;
+      }
+      const top = Math.max(0, coordinate - tooltipRect.height - tooltipMargin);
+
+      tooltip.style.left = `${String(left)}px`;
+      tooltip.style.top = `${String(top)}px`;
+      tooltip.style.display = "block";
+    };
+
+    chart.subscribeCrosshairMove(handleCrosshairMove);
+
+    return () => {
+      chart.unsubscribeCrosshairMove(handleCrosshairMove);
+    };
+  }, [priceFormatter, chartContainerRef, dateFormatter]);
 
   return { chartRef, chartContainerRef };
 };

@@ -6,6 +6,7 @@
     height: theme.spacing(140);
     border-radius: theme.border-radius("xl");
     overflow: hidden;
+    position: relative;
 
     .spinnerContainer {
       width: 100%;
