@@ -22,7 +22,7 @@ import {
 
 // 🚨 DEMO HACK ALERT: we pick some point into trading
 // to ensure all APIs have saturated query results
-const INITIAL_START_AT = new Date("2025-12-05T09:00:00.000Z");
+const INITIAL_START_AT = new Date("2025-12-05T19:00:00.000Z");
 
 function getFetchHistoricalUrl(
   datasource: Nullish<AllDataSourcesType>,

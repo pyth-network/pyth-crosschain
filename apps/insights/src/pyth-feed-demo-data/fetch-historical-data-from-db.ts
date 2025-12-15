@@ -54,11 +54,14 @@ export async function fetchHistoricalDataForPythFeedsDemo({
   startAt,
   symbol,
 }: FetchHistoricalDataOpts): Promise<HistoricalDataResponseType> {
-  const normalizedStartAt = dayjs.tz(startAt, "UTC").toISOString();
+  const normalizedStart = dayjs.tz(startAt, "UTC");
+  const normalizedStartAt = normalizedStart.toISOString();
+  const endAt = normalizedStart.add(1, "minute").toISOString();
 
   console.info(`querying DB for results with the following params:`);
   console.info(`  datasource: ${datasource}`);
   console.info(`  startAt: ${startAt}`);
+  console.info(`  endAt: ${endAt}`);
   console.info(`  symbol: ${symbol}`);
 
   const instance = await DuckDBInstance.fromCache(uncompressedDbPath, {
@@ -79,7 +82,8 @@ export async function fetchHistoricalDataForPythFeedsDemo({
   const queryForDataStatement =
     await db.prepare(`SELECT hd.* FROM main.HistoricalData hd 
 WHERE hd.symbol = $symbol
-	AND hd.datetime > $startAt
+	AND hd.datetime >= $startAt
+  AND hd.datetime <= $endAt
   AND hd.source = $datasource
 order by hd.datetime asc
 limit 200;`);
@@ -87,11 +91,12 @@ limit 200;`);
   const lastTimestampStatement =
     await db.prepare(`SELECT COUNT(hd.datetime) as remainingCount FROM HistoricalData hd
 WHERE hd.symbol = $symbol
-	AND hd.datetime > $lastDatetime
+	AND hd.datetime >= $lastDatetime
   AND hd.source = $source;`);
 
   queryForDataStatement.bind({
     datasource,
+    endAt,
     startAt: normalizedStartAt,
     symbol,
   });
