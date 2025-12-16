@@ -97,4 +97,11 @@
       }
     }
   }
+
+  .publishersChart,
+  .priceFeedsChart {
+    & svg {
+      cursor: pointer;
+    }
+  }
 }
