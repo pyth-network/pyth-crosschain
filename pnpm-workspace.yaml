@@ -186,7 +186,7 @@ catalog:
   typedoc: ^0.26.8
   typescript: ^5.9.3
   vercel: ^41.4.1
-  viem: ^2.37.13
+  viem: ^2.39.0
   wagmi: ^2.14.16
   yargs: ^18.0.0
   zod: ^3.24.2
