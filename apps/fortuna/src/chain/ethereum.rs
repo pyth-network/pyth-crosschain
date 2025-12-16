@@ -167,8 +167,19 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         provider: Provider<T>,
         network_id: u64,
     ) -> Result<SignablePythContractInner<T>> {
-        let gas_oracle =
-            EthProviderOracle::new(provider.clone(), chain_config.priority_fee_multiplier_pct);
+        let gas_oracle = EthProviderOracle::new(
+            provider.clone(),
+            chain_config.priority_fee_multiplier_pct,
+            chain_config.min_reward_samples,
+            chain_config.fee_estimation_past_blocks,
+            chain_config.fee_estimation_reward_percentile,
+            chain_config.eip1559_fee_estimation_default_priority_fee,
+            chain_config.eip1559_fee_estimation_priority_fee_trigger,
+            chain_config.eip1559_fee_estimation_threshold_max_change,
+            chain_config.surge_threshold_1,
+            chain_config.surge_threshold_2,
+            chain_config.surge_threshold_3,
+        );
         let wallet__ = private_key
             .parse::<LocalWallet>()?
             .with_chain_id(network_id);
