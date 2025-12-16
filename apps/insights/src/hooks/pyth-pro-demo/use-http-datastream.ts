@@ -2,7 +2,7 @@
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
-import { useIsMounted } from "@react-hookz/web";
+import { useIsMounted, usePrevious } from "@react-hookz/web";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
@@ -108,6 +108,7 @@ export function useHttpDataStream({
   const enabledRef = useRef(enabled);
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
+  const prevSymbol = usePrevious(symbol);
 
   // last emitted timestamp across *all* data sources (global replay clock)
   const lastEmittedDatetimeRef = useRef<Nullish<Date>>(undefined);
@@ -146,6 +147,11 @@ export function useHttpDataStream({
       dataSources.every((ds) => isReplayDataSource(ds));
     playbackSpeedRef.current = playbackSpeed;
     symbolRef.current = symbol;
+
+    if (prevSymbol !== symbol) {
+      // user changed symbol, don't accidentally delay things here, thanks
+      lastEmittedDatetimeRef.current = undefined;
+    }
   });
 
   useEffect(() => {
