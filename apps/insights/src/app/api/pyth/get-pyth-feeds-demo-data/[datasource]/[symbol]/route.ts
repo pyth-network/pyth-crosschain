@@ -1,64 +1,35 @@
-import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../../pyth-feed-demo-data/fetch-historical-data-from-db";
-import {
-  ALLOWED_EQUITY_SYMBOLS,
-  DATA_SOURCES_REPLAY,
-  ValidDateSchema,
-} from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
+import type { GetPythFeedsDemoDataRequestType } from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
+import { GetPythFeedsDemoDataRequestSchema } from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
 
 export const GET = async (
   req: NextRequest,
-  ctx: { params: Promise<{ datasource: string; symbol: string }> },
+  ctx: { params: Promise<GetPythFeedsDemoDataRequestType["params"]> },
 ) => {
-  const { datasource, symbol } = await ctx.params;
-  const datasourceValidation =
-    await DATA_SOURCES_REPLAY.safeParseAsync(datasource);
-
-  if (datasourceValidation.error) {
-    return NextResponse.json(
-      { error: datasourceValidation.error.message },
-      { status: 400 },
-    );
-  }
-
-  const symbolValidation = await ALLOWED_EQUITY_SYMBOLS.safeParseAsync(symbol);
-  if (symbolValidation.error) {
-    return NextResponse.json(
-      { error: symbolValidation.error.message },
-      { status: 400 },
-    );
-  }
-
+  const params = await ctx.params;
   const {
     nextUrl: { searchParams },
   } = req;
+  const paramsAndQueryValidation = GetPythFeedsDemoDataRequestSchema.safeParse({
+    params,
+    searchParams: Object.fromEntries(searchParams),
+  });
 
-  const startAtParam = searchParams.get("startAt");
-  if (isNullOrUndefined(startAtParam)) {
-    return NextResponse.json(
-      { error: "startAt query parameter is required" },
-      { status: 400 },
-    );
-  }
-
-  const startAtDate = new Date(startAtParam);
-
-  const startAtValidation = await ValidDateSchema.safeParseAsync(startAtDate);
-  if (startAtValidation.error) {
+  if (paramsAndQueryValidation.error) {
     return NextResponse.json(
       {
-        error: `startAt query parameter is not a valid ISO date string: ${startAtValidation.error.message}`,
+        error: paramsAndQueryValidation.error.message,
       },
       { status: 400 },
     );
   }
 
-  const startAt = startAtValidation.data;
-
-  const symbolToUse = symbolValidation.data;
-  const datasourceToUse = datasourceValidation.data;
+  const {
+    params: { datasource: datasourceToUse, symbol: symbolToUse },
+    searchParams: { startAt },
+  } = paramsAndQueryValidation.data;
 
   try {
     const { data, hasNext } = await fetchHistoricalDataForPythFeedsDemo({

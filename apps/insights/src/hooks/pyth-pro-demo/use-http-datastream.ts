@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
 import { useIsMounted } from "@react-hookz/web";
@@ -46,49 +47,25 @@ function getFetchHistoricalUrl(
 
 export async function fetchHistoricalData(
   url: string,
-  maxRetries = 10,
-  tryNum = 0,
+  maxRetries = 5,
+  tryNum = 1,
 ): Promise<HistoricalDataResponseType> {
   try {
-    const response = await fetch(url, {
-      method: "GET",
-    });
+    const response = await fetch(url, { method: "GET" });
+
+    const textResponse = await response.text();
 
     if (!response.ok) {
-      if (tryNum >= maxRetries) {
-        const errRes = (await response.json()) as { error: string };
-        throw new Error(errRes.error);
-      }
-
-      const waitDelay =
-        BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY * Math.exp(tryNum);
-      const jitter = Math.random() * waitDelay * 0.1; // 10% jitter
-      const totalWait = waitDelay + jitter;
-
-      await wait(totalWait);
-      return await fetchHistoricalData(url, maxRetries, tryNum + 1);
+      throw new Error(`HTTP ${response.statusText}: ${textResponse}`);
     }
 
-    // Read as text first to handle empty responses
-    const textResponse = await response.text();
-    if (textResponse.length <= 0) {
-      if (tryNum >= maxRetries) {
-        throw new Error(
-          "/api/pyth/get-pyth-feeds-demo-data endpoint returned an empty data stream and was unrecoverable",
-        );
-      }
-
-      const waitDelay =
-        BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY * Math.exp(tryNum);
-      const jitter = Math.random() * waitDelay * 0.1; // 10% jitter to prevent multiple failing clients from crushing the endpoint
-      const totalWait = waitDelay + jitter;
-
-      await wait(totalWait);
-      return await fetchHistoricalData(url, maxRetries, tryNum + 1);
+    if (textResponse.length === 0) {
+      throw new Error("Empty response");
     }
 
-    const parsed = JSON.parse(textResponse) as object;
-    const validated = HistoricalDataResponseSchema.safeParse(parsed);
+    const validated = HistoricalDataResponseSchema.safeParse(
+      JSON.parse(textResponse),
+    );
     if (validated.error) {
       throw new Error(validated.error.message);
     }
@@ -96,14 +73,13 @@ export async function fetchHistoricalData(
     return validated.data;
   } catch (error) {
     if (tryNum >= maxRetries) {
-      throw error;
+      throw error instanceof Error ? error : new Error("Unknown fetch error");
     }
 
     const waitDelay = BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY * Math.exp(tryNum);
-    const jitter = Math.random() * waitDelay * 0.1; // 10% jitter
-    const totalWait = waitDelay + jitter;
+    const jitter = Math.random() * waitDelay * 0.1;
 
-    await wait(totalWait);
+    await wait(waitDelay + jitter);
     return fetchHistoricalData(url, maxRetries, tryNum + 1);
   }
 }
@@ -115,6 +91,7 @@ export function useHttpDataStream({
 }: UseHttpDataStreamOpts): UseHttpDataStreamReturnType {
   /** hooks */
   const checkIsMounted = useIsMounted();
+  const { open: showAlert } = useAlert();
 
   /** context */
   const { addDataPoint, playbackSpeed } = usePythProAppStateContext();
@@ -289,6 +266,12 @@ export function useHttpDataStream({
 
     void kickoffFetching();
   }, [addDataPoint, dataSources, enabled, startAtToFetch, symbol]);
+
+  useEffect(() => {
+    if (error) {
+      showAlert({ contents: error.message, title: "An error has occurred" });
+    }
+  }, [error, showAlert]);
 
   return { error, status };
 }

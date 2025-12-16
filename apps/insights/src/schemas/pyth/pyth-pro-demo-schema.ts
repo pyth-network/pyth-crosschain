@@ -190,3 +190,19 @@ export type HistoricalDataResponseType = z.infer<
 
 export const ValidDateSchema = z.date();
 export type ValidDateType = z.infer<typeof ValidDateSchema>;
+
+export const GetPythFeedsDemoDataRequestSchema = z.strictObject({
+  params: z.object({
+    datasource: DATA_SOURCES_REPLAY,
+    symbol: ALLOWED_EQUITY_SYMBOLS,
+  }),
+  searchParams: z.object({
+    startAt: z
+      .string()
+      .datetime({ offset: true })
+      .transform((val) => new Date(val)),
+  }),
+});
+export type GetPythFeedsDemoDataRequestType = z.infer<
+  typeof GetPythFeedsDemoDataRequestSchema
+>;
