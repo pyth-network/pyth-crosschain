@@ -18,6 +18,7 @@ import {
   datasourceRequiresApiToken,
   getColorForDataSource,
   isAllowedSymbol,
+  isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
 type PriceCardProps = {
@@ -102,7 +103,9 @@ export function PythProDemoCard({
         {socketStatus && (
           <div className={classes.socketStatus}>
             {/* the token is either missing or it's a bad token */}
-            {requiresToken && (!apiToken || socketStatus === "closed") ? (
+            {!isReplaySymbol(selectedSource) &&
+            requiresToken &&
+            (!apiToken || socketStatus === "closed") ? (
               <>
                 Please enter a good API token
                 <br />
