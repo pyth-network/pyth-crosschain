@@ -109,16 +109,16 @@ WHERE hd.symbol = $symbol
     if (!isNumber(typedResult.price)) continue;
     const ask =
       typedResult.source === "pyth_pro"
-        ? Number.NaN
+        ? undefined
         : Number.parseFloat(String(typedResult.ask ?? ""));
     const bid =
       typedResult.source === "pyth_pro"
-        ? Number.NaN
+        ? undefined
         : Number.parseFloat(String(typedResult.bid ?? ""));
 
     out.push({
-      ask: Number.isNaN(ask) ? undefined : ask,
-      bid: Number.isNaN(bid) ? undefined : bid,
+      ask,
+      bid,
       price: typedResult.price,
       timestamp: new Date(typedResult.datetime).toISOString(),
       source: typedResult.source,
