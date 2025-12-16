@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../../pyth-feed-demo-data/fetch-historical-data-from-db";
-import type { GetPythFeedsDemoDataRequestType } from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
 import { GetPythFeedsDemoDataRequestSchema } from "../../../../../../schemas/pyth/pyth-pro-demo-schema";
 
 export const GET = async (
   req: NextRequest,
-  ctx: { params: Promise<GetPythFeedsDemoDataRequestType["params"]> },
+  ctx: { params: Promise<Record<string, string>> },
 ) => {
   const params = await ctx.params;
   const {
