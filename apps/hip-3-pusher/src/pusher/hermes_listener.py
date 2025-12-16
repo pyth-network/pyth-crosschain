@@ -1,9 +1,8 @@
 import asyncio
 import json
 from loguru import logger
-import time
 import websockets
-from tenacity import retry, retry_if_exception_type, wait_exponential
+from tenacity import retry, retry_if_exception_type, wait_fixed, stop_after_attempt
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
 from pusher.exception import StaleConnectionError
@@ -18,6 +17,7 @@ class HermesListener:
         self.hermes_urls = config.hermes.hermes_urls
         self.feed_ids = config.hermes.feed_ids
         self.hermes_state = hermes_state
+        self.stop_after_attempt = config.hermes.stop_after_attempt
 
     def get_subscribe_request(self):
         return {
@@ -36,13 +36,19 @@ class HermesListener:
 
         await asyncio.gather(*(self.subscribe_single(url) for url in self.hermes_urls))
 
-    @retry(
-        retry=retry_if_exception_type((StaleConnectionError, websockets.ConnectionClosed)),
-        wait=wait_exponential(multiplier=1, min=1, max=10),
-        reraise=True,
-    )
     async def subscribe_single(self, url):
-        return await self.subscribe_single_inner(url)
+        logger.info("Starting Hermes listener loop: {}", url)
+
+        @retry(
+            retry=retry_if_exception_type(Exception),
+            wait=wait_fixed(1),
+            stop=stop_after_attempt(self.stop_after_attempt),
+            reraise=True,
+        )
+        async def _run():
+            return await self.subscribe_single_inner(url)
+
+        return await _run()
 
     async def subscribe_single_inner(self, url):
         async with websockets.connect(url) as ws:
@@ -58,13 +64,15 @@ class HermesListener:
                     data = json.loads(message)
                     self.parse_hermes_message(data)
                 except asyncio.TimeoutError:
+                    logger.warning("HermesListener: No messages in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
                     raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
                 except websockets.ConnectionClosed:
+                    logger.warning("HermesListener: Connection closed, reconnecting...")
                     raise
                 except json.JSONDecodeError as e:
-                    logger.error("Failed to decode JSON message: {}", e)
+                    logger.exception("Failed to decode JSON message: {}", repr(e))
                 except Exception as e:
-                    logger.error("Unexpected exception: {}", e)
+                    logger.exception("Unexpected exception: {}", repr(e))
 
     def parse_hermes_message(self, data):
         """
@@ -83,7 +91,6 @@ class HermesListener:
             expo = price_object["expo"]
             publish_time = price_object["publish_time"]
             logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
-            now = time.time()
-            self.hermes_state.put(id, PriceUpdate(price, now))
+            self.hermes_state.put(id, PriceUpdate(price, publish_time))
         except Exception as e:
-            logger.error("parse_hermes_message error: {}", e)
+            logger.exception("parse_hermes_message error: {}", repr(e))

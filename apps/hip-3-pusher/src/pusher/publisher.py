@@ -2,6 +2,7 @@ import asyncio
 from enum import StrEnum
 import time
 
+from hyperliquid.utils.types import Meta, SpotMeta
 from loguru import logger
 from pathlib import Path
 
@@ -27,6 +28,14 @@ class PushErrorReason(StrEnum):
     INTERNAL_ERROR = "internal_error"
     # Invalid nonce, if the pusher account pushes multiple transactions with the same ms timestamp
     INVALID_NONCE = "invalid_nonce"
+    # Invalid account
+    INVALID_DEPLOYER_ACCOUNT = "invalid_deployer_account"
+    # User not activated
+    ACCOUNT_DOES_NOT_EXIST = "account_does_not_exist"
+    # Missing externalPerpPxs
+    MISSING_EXTERNAL_PERP_PXS = "missing_external_perp_pxs"
+    # Invalid dex (e.g. pointing to mainnet or testnet by mistake)
+    INVALID_DEX = "invalid_dex"
     # Some error string we haven't categorized yet
     UNKNOWN = "unknown"
 
@@ -50,9 +59,12 @@ class Publisher:
             oracle_pusher_key = Path(config.hyperliquid.oracle_pusher_key_path).read_text().strip()
             self.oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
             logger.info("oracle pusher local pubkey: {}", self.oracle_account.address)
+            self.user_limit_address = self.oracle_account.address
         self.publisher_exchanges = [Exchange(wallet=self.oracle_account,
                                              base_url=url,
-                                             timeout=config.hyperliquid.publish_timeout)
+                                             timeout=config.hyperliquid.publish_timeout,
+                                             meta=Meta(universe=[]),
+                                             spot_meta=SpotMeta(universe=[], tokens=[]))
                                     for url in self.push_urls]
         if config.kms.enable_kms:
             # TODO: Add KMS/multisig support
@@ -61,11 +73,13 @@ class Publisher:
 
             self.enable_kms = True
             self.kms_signer = KMSSigner(config, self.publisher_exchanges)
+            self.user_limit_address = self.kms_signer.address
 
         if config.multisig.enable_multisig:
             if not config.multisig.multisig_address:
                 raise Exception("Multisig enabled but missing multisig address")
             self.multisig_address = config.multisig.multisig_address
+            self.user_limit_address = self.multisig_address
         else:
             self.multisig_address = None
 
@@ -81,11 +95,11 @@ class Publisher:
         while True:
             await asyncio.sleep(self.publish_interval)
             try:
-                self.publish()
+                await self.publish()
             except Exception as e:
                 logger.exception("Publisher.publish() exception: {}", repr(e))
 
-    def publish(self):
+    async def publish(self):
         oracle_update = self.price_state.get_all_prices()
         logger.debug("oracle_update: {}", oracle_update)
 
@@ -106,13 +120,13 @@ class Publisher:
                         external_perp_pxs=external_perp_pxs,
                     )
                 elif self.multisig_address:
-                    push_response = self._send_multisig_update(
+                    push_response = await self._send_multisig_update(
                         oracle_pxs=oracle_pxs,
                         all_mark_pxs=mark_pxs,
                         external_perp_pxs=external_perp_pxs,
                     )
                 else:
-                    push_response = self._send_update(
+                    push_response = await self._send_update(
                         oracle_pxs=oracle_pxs,
                         all_mark_pxs=mark_pxs,
                         external_perp_pxs=external_perp_pxs,
@@ -129,19 +143,22 @@ class Publisher:
 
         self._record_push_interval_metric()
 
-    def _send_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    async def _send_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
         for exchange in self.publisher_exchanges:
             try:
-                return exchange.perp_deploy_set_oracle(
-                    dex=self.market_name,
-                    oracle_pxs=oracle_pxs,
-                    all_mark_pxs=all_mark_pxs,
-                    external_perp_pxs=external_perp_pxs,
-                )
+                return await asyncio.to_thread(self._request_single, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs)
             except Exception as e:
                 logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
         raise PushError("all push endpoints failed")
+
+    def _request_single(self, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs):
+        return exchange.perp_deploy_set_oracle(
+            dex=self.market_name,
+            oracle_pxs=oracle_pxs,
+            all_mark_pxs=all_mark_pxs,
+            external_perp_pxs=external_perp_pxs,
+        )
 
     def _handle_response(self, response, symbols: list[str]):
         logger.debug("oracle update response: {}", response)
@@ -172,10 +189,10 @@ class Publisher:
         self.last_push_time = now
         logger.debug("Push interval: {}", push_interval)
 
-    def _send_multisig_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    async def _send_multisig_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
         for exchange in self.publisher_exchanges:
             try:
-                return self._send_single_multisig_update(
+                return await self._send_single_multisig_update(
                     exchange=exchange,
                     oracle_pxs=oracle_pxs,
                     all_mark_pxs=all_mark_pxs,
@@ -186,7 +203,7 @@ class Publisher:
 
         raise PushError("all push endpoints failed for multisig")
 
-    def _send_single_multisig_update(self, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    async def _send_single_multisig_update(self, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs):
         timestamp = get_timestamp_ms()
         oracle_pxs_wire = sorted(list(oracle_pxs.items()))
         mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
@@ -210,6 +227,9 @@ class Publisher:
             payload_multi_sig_user=self.multisig_address,
             outer_signer=self.oracle_account.address,
         )]
+        return await asyncio.to_thread(self._request_multi_sig, exchange, action, signatures, timestamp)
+
+    def _request_multi_sig(self, exchange, action, signatures, timestamp):
         return exchange.multi_sig(self.multisig_address, action, signatures, timestamp)
 
     def _update_attempts_total(self, status: str, error_reason: str | None, symbols: list[str]):
@@ -234,6 +254,14 @@ class Publisher:
             return PushErrorReason.USER_LIMIT
         elif "Invalid nonce" in response:
             return PushErrorReason.INVALID_NONCE
+        elif "externalPerpPxs missing perp" in response:
+            return PushErrorReason.MISSING_EXTERNAL_PERP_PXS
+        elif "Invalid perp deployer or sub-deployer" in response:
+            return PushErrorReason.INVALID_DEPLOYER_ACCOUNT
+        elif "User or API Wallet" in response:
+            return PushErrorReason.ACCOUNT_DOES_NOT_EXIST
+        elif "Invalid perp DEX" in response:
+            return PushErrorReason.INVALID_DEX
         else:
             logger.warning("Unrecognized error response: {}", response)
             return PushErrorReason.UNKNOWN

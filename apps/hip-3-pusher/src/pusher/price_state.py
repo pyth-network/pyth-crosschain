@@ -85,11 +85,14 @@ class PriceState:
         pxs = {}
         for symbol in symbol_configs:
             for source_config in symbol_configs[symbol]:
-                # find first valid price in the waterfall
-                px = self.get_price(source_config, oracle_update)
-                if px is not None:
-                    pxs[f"{self.market_name}:{symbol}"] = str(px)
-                    break
+                try:
+                    # find first valid price in the waterfall
+                    px = self.get_price(source_config, oracle_update)
+                    if px is not None:
+                        pxs[f"{self.market_name}:{symbol}"] = str(px)
+                        break
+                except Exception as e:
+                    logger.exception("get_price exception for symbol: {} source_config: {} error: {}", symbol, source_config, repr(e))
         return pxs
 
     def get_price(self, price_source_config: PriceSourceConfig, oracle_update: OracleUpdate):
@@ -125,10 +128,10 @@ class PriceState:
         if base_price is None:
             return None
         quote_price = self.get_price_from_single_source(quote_source)
-        if quote_price is None:
+        if quote_price is None or float(quote_price) == 0:
             return None
 
-        return str(round(float(base_price) / float(quote_price), 2))
+        return str(float(base_price) / float(quote_price))
 
     def get_price_from_oracle_mid_average(self, symbol: str, oracle_update: OracleUpdate):
         oracle_price = oracle_update.oracle.get(symbol)

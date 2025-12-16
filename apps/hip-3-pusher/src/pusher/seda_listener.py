@@ -62,9 +62,9 @@ class SedaListener:
             resp.raise_for_status()
             return {"ok": True, "status": resp.status_code, "json": resp.json()}
         except httpx.HTTPStatusError as e:
-            return {"ok": False, "status": e.response.status_code, "error": str(e)}
+            return {"ok": False, "status": e.response.status_code, "error": repr(e)}
         except Exception as e:
-            return {"ok": False, "status": None, "error": str(e)}
+            return {"ok": False, "status": None, "error": repr(e)}
 
     def _parse_seda_message(self, feed_name, message):
         result = json.loads(message["data"]["result"])

@@ -3,7 +3,14 @@ from pydantic import BaseModel, FilePath, model_validator
 from typing import Optional
 from typing import Literal
 
+# Interval of time after which we'll cycle websocket connections
 STALE_TIMEOUT_SECONDS = 5
+# This is the interval to call userRateLimit. Low-frequency as it's just for long-term metrics.
+USER_LIMIT_INTERVAL_SECONDS = 1800
+# HL has an application-level ping-pong that should be handled on the order of a minute.
+HYPERLIQUID_WS_PING_INTERVAL_SECONDS = 20
+# Number of websocket failures before we crash/restart the app.
+DEFAULT_STOP_AFTER_ATTEMPT = 20
 
 
 class KMSConfig(BaseModel):
@@ -20,11 +27,13 @@ class LazerConfig(BaseModel):
     lazer_urls: list[str]
     lazer_api_key: str
     feed_ids: list[int]
+    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
 
 class HermesConfig(BaseModel):
     hermes_urls: list[str]
     feed_ids: list[str]
+    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
 
 class HyperliquidConfig(BaseModel):
@@ -37,6 +46,9 @@ class HyperliquidConfig(BaseModel):
     publish_interval: float
     publish_timeout: float
     enable_publish: bool
+    user_limit_interval: int = USER_LIMIT_INTERVAL_SECONDS
+    ws_ping_interval: int = HYPERLIQUID_WS_PING_INTERVAL_SECONDS
+    stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
 
     @model_validator(mode="after")
     def set_default_urls(self):
