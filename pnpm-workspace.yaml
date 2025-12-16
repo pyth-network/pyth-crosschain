@@ -156,7 +156,6 @@ catalog:
   prettier-plugin-solidity: ^1.4.2
   prompts: 2.4.2
   proxycheck-ts: ^0.0.11
-  query-string: ^9.3.1
   react: ^19.1.4
   react-aria: ^3.42.0
   react-aria-components: ^1.11.0

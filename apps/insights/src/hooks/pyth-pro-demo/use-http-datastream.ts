@@ -1,7 +1,6 @@
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { wait } from "@pythnetwork/shared-lib/util";
-import qs from "query-string";
 import { useEffect, useRef, useState } from "react";
 
 import type {
@@ -46,15 +45,14 @@ function getFetchHistoricalUrl(
     return "";
   }
 
-  const query = qs.stringify(
-    {
-      datasources,
-      startAt: startAtValidation.data.toISOString(),
-    },
-    { arrayFormat: "bracket" },
-  );
+  const queryParams = new URLSearchParams();
+  queryParams.set("startAt", startAtValidation.data.toISOString());
 
-  return `/api/pyth/get-pyth-feeds-demo-data/${removeReplaySymbolSuffix(symbol)}?${query}`;
+  for (const datasource of datasources) {
+    queryParams.append("datasources[]", datasource);
+  }
+
+  return `/api/pyth/get-pyth-feeds-demo-data/${removeReplaySymbolSuffix(symbol)}?${queryParams.toString()}`;
 }
 
 export async function fetchHistoricalData(
@@ -124,10 +122,16 @@ export function useHttpDataStream({
   });
 
   useEffect(() => {
-    if (!enabled || !isReplaySymbol(symbol)) return;
+    if (!enabled || !isReplaySymbol(symbol)) {
+      setStatus("closed");
+      return;
+    }
 
     const url = getFetchHistoricalUrl(dataSources, symbol, startAtToFetch);
-    if (!url) return;
+    if (!url) {
+      setStatus("closed");
+      return;
+    }
 
     setStatus("connected");
 
@@ -138,7 +142,7 @@ export function useHttpDataStream({
         // this may mean that one data source runs further ahead than another for a bit,
         // if there is no data for a certain time interval
 
-        for (let i = 0; i < data.length - 1; i++) {
+        for (let i = 0; i < data.length; i++) {
           const currPoint = data[i];
           const nextPoint = data[i + 1];
 
