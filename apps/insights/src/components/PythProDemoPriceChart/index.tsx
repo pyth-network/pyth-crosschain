@@ -188,10 +188,9 @@ export function PythProDemoPriceChartImpl({
           // data will track the price.
           // for market data, we just want to display the ask and bid
           const isPriceMetric = metricType === "price";
-          const isNasdaq = dataSource === "nasdaq";
+          const isNbbo = dataSource === "nbbo";
           const isPyth = dataSource === "pyth" || dataSource === "pyth_pro";
-          if ((isNasdaq && isPriceMetric) || (isPyth && !isPriceMetric))
-            continue;
+          if ((isNbbo && isPriceMetric) || (isPyth && !isPriceMetric)) continue;
 
           const latest = metrics[dataSource]?.latest;
           const symbolMetrics = latest?.[selectedSource];

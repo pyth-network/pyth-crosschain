@@ -29,7 +29,7 @@ const uncompressedDbPath = path.join(
 );
 
 type FetchHistoricalDataOpts = {
-  datasource: AllDataSourcesType;
+  datasources: AllDataSourcesType[];
   startAt: string;
   symbol: AllowedEquitySymbolsType;
 };
@@ -50,7 +50,7 @@ type DatabaseResult = {
  * queries historical data out of the prepared SQLite database
  */
 export async function fetchHistoricalDataForPythFeedsDemo({
-  datasource,
+  datasources,
   startAt,
   symbol,
 }: FetchHistoricalDataOpts): Promise<HistoricalDataResponseType> {
@@ -59,7 +59,7 @@ export async function fetchHistoricalDataForPythFeedsDemo({
   const endAt = normalizedStart.add(1, "minute").toISOString();
 
   console.info(`querying DB for results with the following params:`);
-  console.info(`  datasource: ${datasource}`);
+  console.info(`  datasources: ${datasources.join(", ")}`);
   console.info(`  startAt: ${startAt}`);
   console.info(`  endAt: ${endAt}`);
   console.info(`  symbol: ${symbol}`);
@@ -73,37 +73,37 @@ export async function fetchHistoricalDataForPythFeedsDemo({
 
   const symbolWithSuffix = appendReplaySymbolSuffix(symbol);
   const out: PriceDataWithSource[] = [];
-  const allDatasourcesValid = isReplayDataSource(datasource);
+  const allDatasourcesValid = datasources.every((ds) => isReplayDataSource(ds));
 
   if (!isReplaySymbol(symbolWithSuffix) || !allDatasourcesValid) {
     return { data: out, hasNext: false };
   }
 
-  const queryForDataStatement =
-    await db.prepare(`SELECT hd.* FROM main.HistoricalData hd 
-WHERE hd.symbol = $symbol
-	AND hd.datetime >= $startAt
-  AND hd.datetime <= $endAt
-  AND hd.source = $datasource
-order by hd.datetime asc`);
+  const sourceContainedWithinExpression = `(${datasources.map(() => "?").join(",")})`;
 
-  const lastTimestampStatement =
-    await db.prepare(`SELECT COUNT(hd.datetime) as remainingCount FROM HistoricalData hd
-WHERE hd.symbol = $symbol
-	AND hd.datetime >= $lastDatetime
-  AND hd.source = $source;`);
+  const results = await db.run(
+    `SELECT hd.* FROM main.HistoricalData hd
+WHERE hd.symbol = ?
+	AND hd.datetime >= ?
+  AND hd.datetime <= ?
+  AND hd.source in ${sourceContainedWithinExpression}
+order by hd.datetime asc`,
+    [symbol, normalizedStartAt, endAt, ...datasources],
+  );
 
-  queryForDataStatement.bind({
-    datasource,
-    endAt,
-    startAt: normalizedStartAt,
-    symbol,
-  });
+  const remainingCountResults = await db.run(
+    `SELECT COUNT(hd.*) as remainingCount
+FROM main.HistoricalData hd
+WHERE hd.symbol = ?
+  AND hd.datetime > ?
+  AND hd.source in ${sourceContainedWithinExpression}`,
+    [symbol, endAt, ...datasources],
+  );
 
-  const results = await queryForDataStatement.run();
-  const resultsIterator = await results.getRowObjectsJS();
+  const [remainingCountResult] = await remainingCountResults.getRowObjectsJS();
+  const { remainingCount } = remainingCountResult ?? {};
 
-  for (const result of resultsIterator) {
+  for (const result of await results.getRowObjects()) {
     const typedResult = result as DatabaseResult;
 
     if (!isNumber(typedResult.price)) continue;
@@ -126,25 +126,8 @@ WHERE hd.symbol = $symbol
     });
   }
 
-  const lastItem = out.at(-1);
-
-  let hasNext = false;
-
-  if (lastItem) {
-    lastTimestampStatement.bind({
-      lastDatetime: lastItem.timestamp,
-      source: datasource,
-      symbol,
-    });
-
-    const lastResults = await lastTimestampStatement.run();
-    const [result] = await lastResults.getRowObjectsJS();
-
-    hasNext = Number(result?.remainingCount ?? "0") > 0;
-  }
-
   return {
     data: out,
-    hasNext,
+    hasNext: Number(remainingCount ?? 0) > 0,
   };
 }
