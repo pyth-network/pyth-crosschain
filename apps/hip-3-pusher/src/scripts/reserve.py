@@ -42,7 +42,7 @@ def main():
         "--weight",
         type=int,
         required=True,
-        help="Amount to send in USDC",
+        help="request weight to reserve",
     )
     network = parser.add_mutually_exclusive_group(required=True)
     network.add_argument(
