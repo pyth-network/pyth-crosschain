@@ -131,6 +131,9 @@ export type CurrentPriceMetrics = z.infer<typeof CurrentPriceMetricsSchema>;
 export function appendReplaySymbolSuffix(
   symbol: AllAllowedSymbols,
 ): `${typeof symbol}${typeof REPLAY_SYMBOL_SEPARATOR}` {
+  if (symbol.endsWith(REPLAY_SYMBOL_SEPARATOR)) {
+    return symbol as `${typeof symbol}${typeof REPLAY_SYMBOL_SEPARATOR}`;
+  }
   return `${symbol}${REPLAY_SYMBOL_SEPARATOR}`;
 }
 
