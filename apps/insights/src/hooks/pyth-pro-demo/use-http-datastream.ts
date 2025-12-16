@@ -311,7 +311,10 @@ export function useHttpDataStream({
       }
     };
 
-    void kickoffFetching();
+    kickoffFetching().catch((error_: unknown) => {
+      if (!(error_ instanceof Error)) throw error_;
+      setError(error_);
+    });
   }, [
     addDataPointIfSourceIsUnchanged,
     dataSources,
