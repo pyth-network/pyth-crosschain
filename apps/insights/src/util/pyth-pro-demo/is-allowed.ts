@@ -44,7 +44,10 @@ function schemaEnumIncludes(thing: Nullish<string>, enumOpts: string[]) {
 export function isAllowedSymbol(
   symbol: Nullish<string>,
 ): symbol is AllAllowedSymbols {
-  return schemaEnumIncludes(symbol, ALL_ALLOWED_SYMBOLS.options);
+  return (
+    symbol !== ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected &&
+    schemaEnumIncludes(symbol, ALL_ALLOWED_SYMBOLS.options)
+  );
 }
 
 export function isAllowedCryptoSymbol(
