@@ -6,13 +6,13 @@ import { createContext, useContext, useMemo } from "react";
 
 import { usePythProApiTokensContext } from "./pyth-pro-api-tokens-context";
 import { usePythProAppStateContext } from "./pyth-pro-app-state";
-import { useDataStream } from "../../hooks/pyth-pro-demo";
+import { useDataStream, useHttpDataStream } from "../../hooks/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { ALL_DATA_SOURCES } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   isAllowedCryptoSymbol,
-  isAllowedEquitySymbol,
-  isAllowedForexSymbol,
   isAllowedSymbol,
+  isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
 type WebSocketsContextVal = {
@@ -29,8 +29,6 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
   const { tokens } = usePythProApiTokensContext();
 
   /** local variables */
-  const isEquity = isAllowedEquitySymbol(selectedSource);
-  const isForex = isAllowedForexSymbol(selectedSource);
   const isGoodSymbol = isAllowedSymbol(selectedSource);
   const isCryptoSymbol = isAllowedCryptoSymbol(selectedSource);
 
@@ -71,21 +69,13 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
     symbol: selectedSource,
   });
 
-  const { status: prime_api } = useDataStream({
-    dataSource: "prime_api",
-    enabled: isForex && Boolean(tokens.prime_api),
-    symbol: selectedSource,
-  });
-
-  const { status: infoway_io } = useDataStream({
-    dataSource: "infoway_io",
-    enabled: isEquity && Boolean(tokens.infoway_io),
-    symbol: selectedSource,
-  });
-
-  const { status: twelve_data } = useDataStream({
-    dataSource: "twelve_data",
-    enabled: (isForex || isEquity) && Boolean(tokens.twelve_data),
+  // "Fake" websocket-like contract for easier integration
+  const { status: replay_status } = useHttpDataStream({
+    dataSources: [
+      ALL_DATA_SOURCES.Values.pyth_pro,
+      ALL_DATA_SOURCES.Values.nasdaq,
+    ],
+    enabled: isGoodSymbol && isReplaySymbol(selectedSource),
     symbol: selectedSource,
   });
 
@@ -96,12 +86,10 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
         binance,
         bybit,
         coinbase,
-        infoway_io,
         okx,
-        prime_api,
+        nasdaq: replay_status,
         pyth,
-        pyth_pro,
-        twelve_data,
+        pyth_pro: isReplaySymbol(selectedSource) ? replay_status : pyth_pro,
         yahoo: "connected",
       },
     }),
@@ -109,12 +97,11 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
       binance,
       bybit,
       coinbase,
-      infoway_io,
       okx,
-      prime_api,
       pyth,
       pyth_pro,
-      twelve_data,
+      replay_status,
+      selectedSource,
     ],
   );
 

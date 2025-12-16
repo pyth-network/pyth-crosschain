@@ -112,6 +112,8 @@ export const traceCallManyAction = (client: Client) => ({
     return client.request<TraceCallRpcSchema>({
       method: "trace_callMany",
       params: [
+        // TODO: remove this, because suppressing type warnings i extra bad
+        // @ts-expect-error - types have drifted for the formatTransactionRequest so we temporarily silence
         args.map((a) => [formatTransactionRequest(a), ["trace"]]),
         "latest",
       ],

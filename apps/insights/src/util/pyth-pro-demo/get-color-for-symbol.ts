@@ -24,12 +24,10 @@ function hydratePalette() {
       binance: getThemeCssVar("--theme-palette-yellow-400") ?? "",
       bybit: getThemeCssVar("--theme-palette-orange-400") ?? "",
       coinbase: getThemeCssVar("--theme-palette-blue-700") ?? "",
-      infoway_io: getThemeCssVar("--theme-palette-blue-300") ?? "",
+      nasdaq: getThemeCssVar("--theme-palette-pink-500") ?? "pink",
       okx: getThemeCssVar("--theme-palette-gray-400") ?? "",
-      prime_api: getThemeCssVar("--theme-palette-red-600") ?? "",
       pyth: getThemeCssVar("--theme-palette-purple-300") ?? "",
       pyth_pro: getThemeCssVar("--theme-palette-purple-500") ?? "",
-      twelve_data: getThemeCssVar("--theme-palette-blue-500") ?? "",
     };
   }
   return palette;
@@ -38,7 +36,7 @@ function hydratePalette() {
 /**
  * normalizes colors used for all data sources
  */
-export function getColorForSymbol(dataSource: AllDataSourcesType) {
+export function getColorForDataSource(dataSource: AllDataSourcesType) {
   const p = hydratePalette();
   return p?.[dataSource] ?? "gray";
 }

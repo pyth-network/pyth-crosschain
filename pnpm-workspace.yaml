@@ -63,6 +63,7 @@ catalog:
   "@cprussin/jest-config": ^2.0.2
   "@cprussin/prettier-config": ^2.2.2
   "@cprussin/tsconfig": ^3.1.2
+  "@duckdb/node-api": ^1.4.3-r.1
   "@floating-ui/react": ^0.27.6
   "@headlessui/react": ^2.2.0
   "@heroicons/react": ^2.2.0
@@ -97,6 +98,7 @@ catalog:
   "@types/jest": ^29.5.14
   "@types/mdx": ^2.0.13
   "@types/node": ^22.14.0
+  "@types/papaparse": ^5.5.1
   "@types/prompts": 2.4.9
   "@types/react": ^19.1.4
   "@types/react-dom": ^19.1.4
@@ -114,14 +116,15 @@ catalog:
   change-case: ^5.4.4
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
+  color: ^5.0.3
   connectkit: ^1.9.0
   copyfiles: ^2.4.1
   css-loader: ^7.1.2
   csv-stringify: ^6.6.0
   date-fns: ^4.1.0
+  dayjs: ^1.11.19
   dnum: ^2.14.0
   eslint: ^9.23.0
-  fast-glob: ^3.3.3
   framer-motion: ^12.6.3
   fs-extra: ^11.3.2
   fuels: 0.101.3
@@ -130,8 +133,10 @@ catalog:
   fumadocs-openapi: ^9.3.8
   fumadocs-typescript: ^4.0.8
   fumadocs-ui: ^15.7.12
+  glob: ^13.0.0
   highlight.js: ^11.11.1
   ip-range-check: ^0.2.0
+  ioredis: ^5.7.0
   jest: ^29.7.0
   katex: ^0.16.22
   lightweight-charts: ^5.0.5
@@ -143,6 +148,7 @@ catalog:
   next: ^15.5.9
   next-themes: ^0.4.6
   nuqs: ^2.4.1
+  papaparse: ^5.5.3
   pino: ^9.6.0
   postcss: ^8.5.3
   postcss-loader: ^8.1.1

@@ -122,6 +122,8 @@ export const debugTraceCallAction = (client: Client) => ({
     return client.request<TraceCallRpcSchema>({
       method: "debug_traceCall",
       params: [
+        // TODO: remove this, because suppressing type warnings i extra bad
+        // @ts-expect-error - types have drifted for the formatTransactionRequest so we temporarily silence
         formatTransactionRequest(args),
         "latest",
         { tracer: "callTracer" },

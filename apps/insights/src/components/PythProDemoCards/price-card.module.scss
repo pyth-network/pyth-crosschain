@@ -10,6 +10,13 @@ $price-card-width: 250px;
   padding-top: 0;
 }
 
+.dataSourceName {
+  align-items: center;
+  display: flex;
+  gap: theme.spacing(2);
+  justify-content: space-between;
+}
+
 .price {
   font-size: 1.2rem;
   font-weight: bold;
@@ -32,6 +39,15 @@ $price-card-width: 250px;
 .socketStatus {
   color: theme.color("muted");
   font-style: italic;
+}
+
+.toggleVisibilityBtn[data-size="sm"] {
+  align-items: center;
+  display: inline-flex;
+  padding: 0;
+  height: 2em;
+  justify-content: center;
+  width: 2em;
 }
 
 .root {

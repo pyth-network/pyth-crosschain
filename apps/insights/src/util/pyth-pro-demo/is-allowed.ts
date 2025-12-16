@@ -1,4 +1,5 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
+import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 
 import type {
   AllAllowedSymbols,
@@ -7,9 +8,11 @@ import type {
   AllowedEquitySymbolsType,
   AllowedForexSymbolsType,
   AllowedFutureSymbolsType,
+  AllowedReplaySymbolsType,
   DataSourcesCryptoType,
   DataSourcesEquityType,
   DataSourcesForexType,
+  DataSourcesReplayType,
   DataSourcesRequiringApiTokens,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
@@ -19,106 +22,99 @@ import {
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
   ALLOWED_FUTURE_SYMBOLS,
+  ALLOWED_REPLAY_SYMBOLS,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
+  DATA_SOURCES_REPLAY,
   DATA_SOURCES_REQUIRING_API_TOKENS,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+
+/**
+ * this function is required to prevent needing to add
+ * ts-expect-error suppression everywhere a typed enum array
+ * is doing an Array.prototype.includes check on a nullish string.
+ */
+function schemaEnumIncludes(thing: Nullish<string>, enumOpts: string[]) {
+  if (isNullOrUndefined(thing)) return false;
+
+  return enumOpts.includes(thing);
+}
 
 export function isAllowedSymbol(
   symbol: Nullish<string>,
 ): symbol is AllAllowedSymbols {
-  if (symbol === ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected) return false;
-
-  for (const s of Object.values(ALL_ALLOWED_SYMBOLS.Values)) {
-    if (s === symbol) return true;
-  }
-
-  return false;
+  return (
+    symbol !== ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected &&
+    schemaEnumIncludes(symbol, ALL_ALLOWED_SYMBOLS.options)
+  );
 }
 
 export function isAllowedCryptoSymbol(
   symbol: Nullish<string>,
 ): symbol is AllowedCryptoSymbolsType {
-  for (const s of Object.values(ALLOWED_CRYPTO_SYMBOLS.Values)) {
-    if (s === symbol) return true;
-  }
-
-  return false;
+  return schemaEnumIncludes(symbol, ALLOWED_CRYPTO_SYMBOLS.options);
 }
 
 export function isAllowedCryptoDataSource(
   dataSource: Nullish<string>,
 ): dataSource is DataSourcesCryptoType {
-  for (const s of Object.values(DATA_SOURCES_CRYPTO.Values)) {
-    if (s === dataSource) return true;
-  }
-  return false;
+  return schemaEnumIncludes(dataSource, DATA_SOURCES_CRYPTO.options);
 }
 
 export function isAllowedEquitySymbol(
   symbol: Nullish<string>,
 ): symbol is AllowedEquitySymbolsType {
-  for (const s of Object.values(ALLOWED_EQUITY_SYMBOLS.Values)) {
-    if (s === symbol) return true;
-  }
-  return false;
+  return schemaEnumIncludes(symbol, ALLOWED_EQUITY_SYMBOLS.options);
 }
 
 export function isAllowedEquityDataSource(
   dataSource: Nullish<string>,
 ): dataSource is DataSourcesEquityType {
-  for (const s of Object.values(DATA_SOURCES_EQUITY.Values)) {
-    if (s === dataSource) return true;
-  }
-  return false;
+  return schemaEnumIncludes(dataSource, DATA_SOURCES_EQUITY.options);
 }
 
 export function isAllowedForexSymbol(
   symbol: Nullish<string>,
 ): symbol is AllowedForexSymbolsType {
-  for (const s of Object.values(ALLOWED_FOREX_SYMBOLS.Values)) {
-    if (s === symbol) return true;
-  }
-  return false;
+  return schemaEnumIncludes(symbol, ALLOWED_FOREX_SYMBOLS.options);
 }
 
 export function isAllowedForexDataSource(
   dataSource: Nullish<string>,
 ): dataSource is DataSourcesForexType {
-  for (const s of Object.values(DATA_SOURCES_FOREX.Values)) {
-    if (s === dataSource) return true;
-  }
-  return false;
+  return schemaEnumIncludes(dataSource, DATA_SOURCES_FOREX.options);
 }
 
 export function isAllowedFutureSymbol(
   symbol: Nullish<string>,
 ): symbol is AllowedFutureSymbolsType {
-  for (const s of Object.values(ALLOWED_FUTURE_SYMBOLS.Values)) {
-    if (s === symbol) return true;
-  }
-
-  return false;
+  return schemaEnumIncludes(symbol, ALLOWED_FUTURE_SYMBOLS.options);
 }
 
 export function isAllowedDataSource(
   dataSource: Nullish<AllDataSourcesType>,
 ): dataSource is AllDataSourcesType {
-  for (const s of Object.values(ALL_DATA_SOURCES.Values)) {
-    if (s === dataSource) return true;
-  }
-
-  return false;
+  return schemaEnumIncludes(dataSource, ALL_DATA_SOURCES.options);
 }
 
 export function datasourceRequiresApiToken(
   dataSource: AllDataSourcesType,
 ): dataSource is DataSourcesRequiringApiTokens {
-  const ds = dataSource as DataSourcesRequiringApiTokens;
-  for (const val of DATA_SOURCES_REQUIRING_API_TOKENS.options) {
-    if (val === ds) return true;
-  }
+  return schemaEnumIncludes(
+    dataSource,
+    DATA_SOURCES_REQUIRING_API_TOKENS.options,
+  );
+}
 
-  return false;
+export function isReplayDataSource(
+  dataSource: Nullish<AllDataSourcesType>,
+): dataSource is DataSourcesReplayType {
+  return schemaEnumIncludes(dataSource, DATA_SOURCES_REPLAY.options);
+}
+
+export function isReplaySymbol(
+  symbol: Nullish<string>,
+): symbol is AllowedReplaySymbolsType {
+  return schemaEnumIncludes(symbol, ALLOWED_REPLAY_SYMBOLS.options);
 }

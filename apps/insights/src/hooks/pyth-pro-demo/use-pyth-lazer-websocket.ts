@@ -43,6 +43,8 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<
   ["NVDA", 1314],
   ["SPY", 1398],
   ["ESZ2025", 2284],
+  ["HOOD", 1182],
+  ["AMZN", 954],
   ["no_symbol_selected", undefined],
 ]);
 
@@ -70,6 +72,8 @@ const SYMBOL_TO_CHANNEL_MAP = new Map<
   ["SPY", "fixed_rate@200ms"],
   ["ESZ2025", "real_time"],
   ["no_symbol_selected", "real_time"],
+  ["HOOD", "real_time"],
+  ["AAPL", "real_time"],
   // ["ESH2026", "real_time"],
   // ["US10Y", "fixed_rate@200ms"],
 ]);
@@ -132,7 +136,7 @@ export function usePythLazerWebSocket(): UseDataProviderSocketHookReturnType {
 
           addDataPoint("pyth_pro", symbol, {
             price: priceRaw * Math.pow(10, exponent),
-            timestamp: Date.now(),
+            timestamp: new Date().toISOString(),
           });
         }
       }

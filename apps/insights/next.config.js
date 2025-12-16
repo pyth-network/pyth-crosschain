@@ -14,6 +14,8 @@ const config = {
     },
   },
 
+  serverExternalPackages: ["@duckdb/node-api"],
+
   turbopack: {
     rules: {
       "*.svg": {
