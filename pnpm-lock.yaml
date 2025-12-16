@@ -189,6 +189,9 @@ catalogs:
     clsx:
       specifier: ^2.1.1
       version: 2.1.1
+    color:
+      specifier: ^5.0.3
+      version: 5.0.3
     connectkit:
       specifier: ^1.9.0
       version: 1.9.0
@@ -204,6 +207,9 @@ catalogs:
     date-fns:
       specifier: ^4.1.0
       version: 4.1.0
+    dayjs:
+      specifier: ^1.11.19
+      version: 1.11.19
     dnum:
       specifier: ^2.14.0
       version: 2.14.0
@@ -237,6 +243,9 @@ catalogs:
     glob:
       specifier: ^13.0.0
       version: 13.0.0
+    ioredis:
+      specifier: ^5.7.0
+      version: 5.7.0
     ip-range-check:
       specifier: ^0.2.0
       version: 0.2.0
@@ -749,7 +758,7 @@ importers:
         version: 2.1.1
       next:
         specifier: 'catalog:'
-        version: 15.5.9(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+        version: 15.5.9(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
       react:
         specifier: 'catalog:'
         version: 19.2.1
@@ -976,7 +985,7 @@ importers:
         specifier: 'catalog:'
         version: 2.1.1
       color:
-        specifier: ^5.0.3
+        specifier: 'catalog:'
         version: 5.0.3
       csv-stringify:
         specifier: 'catalog:'
@@ -985,7 +994,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.0
       dayjs:
-        specifier: ^1.11.19
+        specifier: 'catalog:'
         version: 1.11.19
       dnum:
         specifier: 'catalog:'
@@ -997,7 +1006,7 @@ importers:
         specifier: 'catalog:'
         version: 13.0.0
       ioredis:
-        specifier: ^5.7.0
+        specifier: 'catalog:'
         version: 5.7.0
       lightweight-charts:
         specifier: 'catalog:'
@@ -13640,6 +13649,7 @@ packages:
 
   debug@4.1.1:
     resolution: {integrity: sha512-pYAIzeRo8J6KPEaJ0VWOh5Pzkbw/RetuzehGM7QRRX5he4fPHx2rdKMB256ehJCkX+XRQm16eZLqLNS8RSZXZw==}
+    deprecated: Debug versions >=3.2.0 <3.2.7 || >=4 <4.3.1 have a low-severity ReDos regression when used in a Node.js environment. It is recommended you upgrade to 3.2.7 or 4.3.1. (https://github.com/visionmedia/debug/issues/797)
     peerDependencies:
       supports-color: '*'
     peerDependenciesMeta:
