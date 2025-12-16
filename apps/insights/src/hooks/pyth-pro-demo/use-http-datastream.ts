@@ -3,7 +3,7 @@ import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
 import { useIsMounted } from "@react-hookz/web";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   UseDataStreamReturnType,
@@ -17,6 +17,7 @@ import type {
   HistoricalDataResponseType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
+  appendReplaySymbolSuffix,
   HistoricalDataResponseSchema,
   removeReplaySymbolSuffix,
   ValidDateSchema,
@@ -111,6 +112,30 @@ export function useHttpDataStream({
   // last emitted timestamp across *all* data sources (global replay clock)
   const lastEmittedDatetimeRef = useRef<Nullish<Date>>(undefined);
 
+  /** callbacks */
+  const addDataPointIfSourceIsUnchanged = useCallback(
+    (...args: Parameters<typeof addDataPoint>) => {
+      if (!isReplaySymbol(symbolRef.current)) return false;
+
+      const [dataSource, symbol, ...rest] = args;
+
+      if (
+        symbol !== removeReplaySymbolSuffix(symbolRef.current) ||
+        !datasourcesRef.current.includes(dataSource)
+      ) {
+        return false;
+      }
+
+      addDataPoint(
+        dataSource,
+        appendReplaySymbolSuffix(symbol) as AllAllowedSymbols,
+        ...rest,
+      );
+      return true;
+    },
+    [addDataPoint],
+  );
+
   /** effects */
   useEffect(() => {
     datasourcesRef.current = dataSources;
@@ -134,6 +159,7 @@ export function useHttpDataStream({
     const kickoffFetching = async () => {
       if (!enabledRef.current) return;
 
+      let abort = false;
       let hasNext = true;
       let maxTimestamp = startAtToFetch;
 
@@ -173,7 +199,10 @@ export function useHttpDataStream({
 
             for (let i = 1; i < results.data.length; i++) {
               // things changed async, do nothing
-              if (!enabledRef.current) break;
+              if (!enabledRef.current) {
+                abort = true;
+                break;
+              }
 
               const prevDataPoint = results.data[i - 1];
               const currDataPoint = results.data[i];
@@ -183,11 +212,16 @@ export function useHttpDataStream({
                 !isNullOrUndefined(prevDataPoint)
               ) {
                 // there's only a single datapoint, so just emit it and we're done
-                addDataPoint(
+                const addSuccess = addDataPointIfSourceIsUnchanged(
                   prevDataPoint.source,
                   prevDataPoint.symbol,
                   prevDataPoint,
                 );
+
+                if (!addSuccess) {
+                  abort = true;
+                  break;
+                }
 
                 const prevTs = new Date(prevDataPoint.timestamp);
                 lastEmittedDatetimeRef.current = lastEmittedDatetimeRef.current
@@ -236,11 +270,16 @@ export function useHttpDataStream({
                 await wait(globalDelta / playbackSpeedRef.current);
               }
 
-              addDataPoint(
+              const addSuccess = addDataPointIfSourceIsUnchanged(
                 currDataPoint.source,
-                symbolRef.current,
+                currDataPoint.symbol,
                 currDataPoint,
               );
+
+              if (!addSuccess) {
+                abort = true;
+                break;
+              }
 
               // advance the global last emitted timestamp
               lastEmittedDatetimeRef.current = globalLast
@@ -259,13 +298,21 @@ export function useHttpDataStream({
         setError(error);
       }
 
+      if (abort) return;
+
       if (hasNext) {
         setStartAtToFetch(maxTimestamp);
       }
     };
 
     void kickoffFetching();
-  }, [addDataPoint, dataSources, enabled, startAtToFetch, symbol]);
+  }, [
+    addDataPointIfSourceIsUnchanged,
+    dataSources,
+    enabled,
+    startAtToFetch,
+    symbol,
+  ]);
 
   useEffect(() => {
     if (error) {
