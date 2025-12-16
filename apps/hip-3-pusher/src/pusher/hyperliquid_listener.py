@@ -17,10 +17,17 @@ HYPERLIQUID_MAINNET_WS_URL = "wss://api.hyperliquid.xyz/ws"
 HYPERLIQUID_TESTNET_WS_URL = "wss://api.hyperliquid-testnet.xyz/ws"
 
 class HLChannel(StrEnum):
+    """ Hyperliquid websocket subscription channels. See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions """
+
+    # activeAssetCtx includes oracle and mark price for perps (either main HyperCore or HIP-3)
     CHANNEL_ACTIVE_ASSET_CTX = "activeAssetCtx"
+    # HL market mid price
     CHANNEL_ALL_MIDS = "allMids"
+    # either subscription ack or error
     CHANNEL_SUBSCRIPTION_RESPONSE = "subscriptionResponse"
+    # application-level ping response
     CHANNEL_PONG = "pong"
+    # error response
     CHANNEL_ERROR = "error"
 
 DATA_CHANNELS = [HLChannel.CHANNEL_ACTIVE_ASSET_CTX, HLChannel.CHANNEL_ALL_MIDS]
