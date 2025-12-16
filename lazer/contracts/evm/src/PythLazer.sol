@@ -4,8 +4,6 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {PythLazerLib} from "./PythLazerLib.sol";
-import {PythLazerStructs} from "./PythLazerStructs.sol";
 
 contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     TrustedSignerInfo[100] internal trustedSigners;
@@ -71,7 +69,7 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
 
     function verifyUpdate(
         bytes calldata update
-    ) public payable returns (bytes calldata payload, address signer) {
+    ) external payable returns (bytes calldata payload, address signer) {
         // Require fee and refund excess
         require(msg.value >= verification_fee, "Insufficient fee provided");
         if (msg.value > verification_fee) {
@@ -108,6 +106,6 @@ contract PythLazer is OwnableUpgradeable, UUPSUpgradeable {
     }
 
     function version() public pure returns (string memory) {
-        return "0.2.1";
+        return "0.1.1";
     }
 }
