@@ -87,7 +87,7 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
         bybit,
         coinbase,
         okx,
-        NASDAQ: replay_status,
+        nasdaq: replay_status,
         pyth,
         pyth_pro: isReplaySymbol(selectedSource) ? replay_status : pyth_pro,
         yahoo: "connected",

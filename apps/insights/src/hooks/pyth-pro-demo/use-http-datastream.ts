@@ -22,6 +22,8 @@ import {
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
+const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
+
 // 🚨 DEMO HACK ALERT: we pick some point into trading
 // to ensure all APIs have saturated query results
 const INITIAL_START_AT = new Date("2025-12-05T19:00:00.000Z");
@@ -44,29 +46,66 @@ function getFetchHistoricalUrl(
 
 export async function fetchHistoricalData(
   url: string,
+  maxRetries = 10,
+  tryNum = 0,
 ): Promise<HistoricalDataResponseType> {
-  const response = await fetch(url, {
-    method: "GET",
-  });
-  if (!response.ok) {
-    const errRes = (await response.json()) as { error: string };
-    throw new Error(errRes.error);
-  }
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+    });
 
-  // we need to read as text first, because
-  // next.js is sometimes returning an empty response for no apparent
-  // reason and we need to immediately retry the fetch operation
-  const textResponse = await response.text();
-  if (textResponse.length <= 0) {
-    return fetchHistoricalData(url);
-  }
-  const parsed = JSON.parse(textResponse) as object;
-  const validated = HistoricalDataResponseSchema.safeParse(parsed);
-  if (validated.error) {
-    throw new Error(validated.error.message);
-  }
+    if (!response.ok) {
+      if (tryNum >= maxRetries) {
+        const errRes = (await response.json()) as { error: string };
+        throw new Error(errRes.error);
+      }
 
-  return validated.data;
+      const waitDelay =
+        BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY * Math.exp(tryNum);
+      const jitter = Math.random() * waitDelay * 0.1; // 10% jitter
+      const totalWait = waitDelay + jitter;
+
+      await wait(totalWait);
+      return await fetchHistoricalData(url, maxRetries, tryNum + 1);
+    }
+
+    // Read as text first to handle empty responses
+    const textResponse = await response.text();
+    if (textResponse.length <= 0) {
+      if (tryNum >= maxRetries) {
+        throw new Error(
+          "/api/pyth/get-pyth-feeds-demo-data endpoint returned an empty data stream and was unrecoverable",
+        );
+      }
+
+      const waitDelay =
+        BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY * Math.exp(tryNum);
+      const jitter = Math.random() * waitDelay * 0.1; // 10% jitter to prevent multiple failing clients from crushing the endpoint
+      const totalWait = waitDelay + jitter;
+
+      await wait(totalWait);
+      return await fetchHistoricalData(url, maxRetries, tryNum + 1);
+    }
+
+    const parsed = JSON.parse(textResponse) as object;
+    const validated = HistoricalDataResponseSchema.safeParse(parsed);
+    if (validated.error) {
+      throw new Error(validated.error.message);
+    }
+
+    return validated.data;
+  } catch (error) {
+    if (tryNum >= maxRetries) {
+      throw error;
+    }
+
+    const waitDelay = BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY * Math.exp(tryNum);
+    const jitter = Math.random() * waitDelay * 0.1; // 10% jitter
+    const totalWait = waitDelay + jitter;
+
+    await wait(totalWait);
+    return fetchHistoricalData(url, maxRetries, tryNum + 1);
+  }
 }
 
 export function useHttpDataStream({
