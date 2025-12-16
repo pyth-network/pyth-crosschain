@@ -73,7 +73,7 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
   const { status: replay_status } = useHttpDataStream({
     dataSources: [
       ALL_DATA_SOURCES.Values.pyth_pro,
-      ALL_DATA_SOURCES.Values.NASDAQ,
+      ALL_DATA_SOURCES.Values.nasdaq,
     ],
     enabled: isGoodSymbol && isReplaySymbol(selectedSource),
     symbol: selectedSource,

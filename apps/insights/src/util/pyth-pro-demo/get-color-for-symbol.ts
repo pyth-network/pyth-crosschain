@@ -24,7 +24,7 @@ function hydratePalette() {
       binance: getThemeCssVar("--theme-palette-yellow-400") ?? "",
       bybit: getThemeCssVar("--theme-palette-orange-400") ?? "",
       coinbase: getThemeCssVar("--theme-palette-blue-700") ?? "",
-      NASDAQ: getThemeCssVar("--theme-palette-pink-500") ?? "pink",
+      nasdaq: getThemeCssVar("--theme-palette-pink-500") ?? "pink",
       okx: getThemeCssVar("--theme-palette-gray-400") ?? "",
       pyth: getThemeCssVar("--theme-palette-purple-300") ?? "",
       pyth_pro: getThemeCssVar("--theme-palette-purple-500") ?? "",

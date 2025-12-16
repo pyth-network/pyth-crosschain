@@ -6,7 +6,7 @@ const COINBASE = "coinbase";
 const OKX = "okx";
 const PYTH = "pyth";
 const PYTH_PRO = "pyth_pro";
-const NASDAQ = "NASDAQ";
+const NASDAQ = "nasdaq";
 
 export const ALL_DATA_SOURCES = z.enum([
   BINANCE,
