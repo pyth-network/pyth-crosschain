@@ -1,8 +1,0 @@
-relayer_urls = ["wss://relayer-0.pyth-lazer.dourolabs.app/v1/transaction", "wss://relayer-1.pyth-lazer.dourolabs.app/v1/transaction"]
-publish_keypair_path = "/path/to/solana/id.json"
-listen_address = "0.0.0.0:8910"
-publish_interval_duration = "25ms"
-enable_update_deduplication = true
-update_deduplication_ttl = "500ms"
-# Publishers with existing tokens may still need to provide them. Please confirm with the Lazer team.
-# New publishers will not need this line.

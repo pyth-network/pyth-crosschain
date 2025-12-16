@@ -4,12 +4,8 @@ resolver = "2"
 members = [
     "apps/argus",
     "apps/fortuna",
-    "apps/pyth-lazer-agent",
     "apps/quorum",
     "apps/hermes/client/rust",
-    "lazer/publisher_sdk/rust",
-    "lazer/sdk/rust/client",
-    "lazer/sdk/rust/protocol",
     "pythnet/pythnet_sdk",
     "target_chains/starknet/tools/test_vaas",
 ]
