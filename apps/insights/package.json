@@ -50,6 +50,7 @@
     "next-themes": "catalog:",
     "@pythnetwork/react-hooks": "workspace:",
     "papaparse": "catalog:",
+    "query-string": "catalog:",
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",

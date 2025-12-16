@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
-import { useIsMounted, usePrevious } from "@react-hookz/web";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { wait } from "@pythnetwork/shared-lib/util";
+import qs from "query-string";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   UseDataStreamReturnType,
@@ -31,11 +30,15 @@ const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
 const INITIAL_START_AT = new Date("2025-12-05T19:00:00.000Z");
 
 function getFetchHistoricalUrl(
-  datasource: Nullish<AllDataSourcesType>,
+  datasources: AllDataSourcesType[],
   symbol: Nullish<AllAllowedSymbols>,
   startAt: Date,
 ) {
-  if (!isReplayDataSource(datasource) || !isReplaySymbol(symbol)) {
+  const allSourcesAreReplaySources = datasources.every((ds) =>
+    isReplayDataSource(ds),
+  );
+
+  if (!allSourcesAreReplaySources || !isReplaySymbol(symbol)) {
     return "";
   }
   const startAtValidation = ValidDateSchema.safeParse(startAt);
@@ -43,7 +46,15 @@ function getFetchHistoricalUrl(
     return "";
   }
 
-  return `/api/pyth/get-pyth-feeds-demo-data/${datasource}/${removeReplaySymbolSuffix(symbol)}?startAt=${startAtValidation.data.toISOString()}`;
+  const query = qs.stringify(
+    {
+      datasources,
+      startAt: startAtValidation.data.toISOString(),
+    },
+    { arrayFormat: "bracket" },
+  );
+
+  return `/api/pyth/get-pyth-feeds-demo-data/${removeReplaySymbolSuffix(symbol)}?${query}`;
 }
 
 export async function fetchHistoricalData(
@@ -85,17 +96,29 @@ export async function fetchHistoricalData(
   }
 }
 
+function constructKeyForDataStreamDedup(
+  datasources: AllDataSourcesType[],
+  symbol: Nullish<AllAllowedSymbols>,
+) {
+  if (datasources.length <= 0 || !isReplaySymbol(symbol)) return "";
+  return `${datasources.join(",")}:${symbol}`;
+}
+
 export function useHttpDataStream({
   dataSources,
   enabled,
   symbol,
 }: UseHttpDataStreamOpts): UseHttpDataStreamReturnType {
   /** hooks */
-  const checkIsMounted = useIsMounted();
   const { open: showAlert } = useAlert();
 
   /** context */
   const { addDataPoint, playbackSpeed } = usePythProAppStateContext();
+
+  /** refs */
+  const dataStreamKey = useRef("");
+  const playbackSpeedRef = useRef(playbackSpeed);
+  const symbolRef = useRef(symbol);
 
   /** state */
   const [status, setStatus] =
@@ -103,230 +126,74 @@ export function useHttpDataStream({
   const [error, setError] = useState<Nullish<Error>>(undefined);
   const [startAtToFetch, setStartAtToFetch] = useState(INITIAL_START_AT);
 
-  /** refs */
-  const datasourcesRef = useRef(dataSources);
-  const enabledRef = useRef(enabled);
-  const playbackSpeedRef = useRef(playbackSpeed);
-  const symbolRef = useRef(symbol);
-  const prevSymbol = usePrevious(symbol);
-
-  // last emitted timestamp across *all* data sources (global replay clock)
-  const lastEmittedDatetimeRef = useRef<Nullish<Date>>(undefined);
-
-  /** callbacks */
-  const addDataPointIfSourceIsUnchanged = useCallback(
-    (...args: Parameters<typeof addDataPoint>) => {
-      if (!isReplaySymbol(symbolRef.current)) return false;
-
-      const [dataSource, symbol, ...rest] = args;
-
-      if (
-        symbol !== removeReplaySymbolSuffix(symbolRef.current) ||
-        !datasourcesRef.current.includes(dataSource)
-      ) {
-        return false;
-      }
-
-      addDataPoint(
-        dataSource,
-        appendReplaySymbolSuffix(symbol) as AllAllowedSymbols,
-        ...rest,
-      );
-      return true;
-    },
-    [addDataPoint],
-  );
-
   /** effects */
   useEffect(() => {
-    datasourcesRef.current = dataSources;
-    enabledRef.current =
-      checkIsMounted() &&
-      enabled &&
-      isReplaySymbol(symbol) &&
-      dataSources.every((ds) => isReplayDataSource(ds));
     playbackSpeedRef.current = playbackSpeed;
     symbolRef.current = symbol;
-
-    if (prevSymbol !== symbol) {
-      // user changed symbol, don't accidentally delay things here, thanks
-      lastEmittedDatetimeRef.current = undefined;
-    }
   });
 
   useEffect(() => {
-    if (!enabled) {
-      setStatus("closed");
-      return;
-    }
+    dataStreamKey.current = constructKeyForDataStreamDedup(dataSources, symbol);
+
+    return () => {
+      dataStreamKey.current = "";
+    };
+  }, [dataSources, enabled, symbol]);
+
+  useEffect(() => {
+    if (!enabled || !isReplaySymbol(symbol)) return;
+
+    const url = getFetchHistoricalUrl(dataSources, symbol, startAtToFetch);
+    if (!url) return;
 
     setStatus("connected");
 
-    const kickoffFetching = async () => {
-      if (!enabledRef.current) return;
+    fetchHistoricalData(url)
+      .then(async ({ data, hasNext }) => {
+        // all the results should be in order of timestamp, regardless of the datasource
+        // so we'll just write them all out to the chart as they flow in.
+        // this may mean that one data source runs further ahead than another for a bit,
+        // if there is no data for a certain time interval
 
-      let abort = false;
-      let hasNext = true;
-      let maxTimestamp = startAtToFetch;
+        for (let i = 0; i < data.length - 1; i++) {
+          const currPoint = data[i];
+          const nextPoint = data[i + 1];
 
-      try {
-        await Promise.all(
-          dataSources.map(async (datasource) => {
-            const url = getFetchHistoricalUrl(
-              datasource,
-              symbol,
-              startAtToFetch,
-            );
+          if (currPoint) {
+            const dataPointSymbol = appendReplaySymbolSuffix(currPoint.symbol);
 
-            const didSymbolChangeAsync = symbol !== symbolRef.current;
-            const didDatasourceChangeAsync = dataSources.some(
-              (ds) => !datasourcesRef.current.includes(ds),
-            );
+            if (dataPointSymbol !== symbolRef.current) break;
 
-            // things changed on us async, so do nothing
-            if (
-              !enabledRef.current ||
-              !url ||
-              didSymbolChangeAsync ||
-              didDatasourceChangeAsync
-            ) {
-              return;
-            }
+            addDataPoint(currPoint.source, dataPointSymbol, currPoint);
+          }
 
-            const results = await fetchHistoricalData(url);
+          if (currPoint && nextPoint) {
+            const delta =
+              new Date(nextPoint.timestamp).valueOf() -
+              new Date(currPoint.timestamp).valueOf();
+            await wait(delta / playbackSpeedRef.current);
+          }
+        }
 
-            hasNext &&= results.hasNext;
-            maxTimestamp = new Date(
-              Math.max(
-                startAtToFetch.valueOf(),
-                new Date(results.data?.at(-1)?.timestamp ?? "0").valueOf(),
-              ),
-            );
+        const lastPoint = data.at(-1);
 
-            for (let i = 1; i < results.data.length; i++) {
-              // things changed async, do nothing
-              if (!enabledRef.current) {
-                abort = true;
-                break;
-              }
-
-              const prevDataPoint = results.data[i - 1];
-              const currDataPoint = results.data[i];
-
-              if (
-                isNullOrUndefined(currDataPoint) &&
-                !isNullOrUndefined(prevDataPoint)
-              ) {
-                // there's only a single datapoint, so just emit it and we're done
-                const addSuccess = addDataPointIfSourceIsUnchanged(
-                  prevDataPoint.source,
-                  prevDataPoint.symbol,
-                  prevDataPoint,
-                );
-
-                if (!addSuccess) {
-                  abort = true;
-                  break;
-                }
-
-                const prevTs = new Date(prevDataPoint.timestamp);
-                lastEmittedDatetimeRef.current = lastEmittedDatetimeRef.current
-                  ? // global "last emitted" should be the *max* we've seen
-                    new Date(
-                      Math.max(
-                        lastEmittedDatetimeRef.current.valueOf(),
-                        prevTs.valueOf(),
-                      ),
-                    )
-                  : prevTs;
-
-                continue;
-              }
-
-              // we shouldn't *technially* have to check if prevDataPoint is nullish,
-              // because the guard immediately above here blocks that, but we'll do it
-              // to appease the typing gods and just throw an error
-              if (isNullOrUndefined(prevDataPoint)) {
-                throw new Error(
-                  `for some reason, the previousDataPoint for ${datasource}: ${symbol ?? "-unknown symbol-"} is nullish`,
-                );
-              }
-              if (isNullOrUndefined(currDataPoint)) {
-                throw new Error(
-                  `for some reason, the currDataPoint for ${datasource}: ${symbol ?? "-unknown symbol-"} is nullish`,
-                );
-              }
-
-              const prevTs = new Date(prevDataPoint.timestamp);
-              const currTs = new Date(currDataPoint.timestamp);
-
-              const delta = currTs.valueOf() - prevTs.valueOf();
-              if (!isReplaySymbol(symbolRef.current)) continue;
-
-              // compute how far this point is ahead of the last globally emitted point
-              const globalLast = lastEmittedDatetimeRef.current;
-              const globalDelta = globalLast
-                ? currTs.valueOf() - globalLast.valueOf()
-                : 0;
-
-              // if this datasource is about to jump ahead of the global clock,
-              // we need to wait so that all the streams are "buffered" and end up
-              // synchronized in the UI, marching together
-              if (globalDelta > 0) {
-                await wait(globalDelta / playbackSpeedRef.current);
-              }
-
-              const addSuccess = addDataPointIfSourceIsUnchanged(
-                currDataPoint.source,
-                currDataPoint.symbol,
-                currDataPoint,
-              );
-
-              if (!addSuccess) {
-                abort = true;
-                break;
-              }
-
-              // advance the global last emitted timestamp
-              lastEmittedDatetimeRef.current = globalLast
-                ? new Date(Math.max(globalLast.valueOf(), currTs.valueOf()))
-                : currTs;
-
-              // then wait the intra-source delta to preserve within-stream pacing
-              if (delta > 0) {
-                await wait(delta / playbackSpeedRef.current);
-              }
-            }
-          }),
-        );
-      } catch (error) {
-        if (!(error instanceof Error)) throw error;
-        setError(error);
-      }
-
-      if (abort) return;
-
-      if (hasNext) {
-        setStartAtToFetch(maxTimestamp);
-      }
-    };
-
-    kickoffFetching().catch((error_: unknown) => {
-      if (!(error_ instanceof Error)) throw error_;
-      setError(error_);
-    });
-  }, [
-    addDataPointIfSourceIsUnchanged,
-    dataSources,
-    enabled,
-    startAtToFetch,
-    symbol,
-  ]);
+        if (lastPoint && hasNext) {
+          setStartAtToFetch(new Date(lastPoint.timestamp));
+        }
+      })
+      .catch((error_: unknown) => {
+        if (!(error_ instanceof Error)) throw error_;
+        setError(error_);
+      });
+  }, [addDataPoint, dataSources, enabled, startAtToFetch, symbol]);
 
   useEffect(() => {
-    if (error) {
-      showAlert({ contents: error.message, title: "An error has occurred" });
-    }
+    if (!error) return;
+
+    showAlert({
+      contents: error.message,
+      title: "Historical data failed to fetch",
+    });
   }, [error, showAlert]);
 
   return { error, status };
