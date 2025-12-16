@@ -39,7 +39,7 @@ type PythProDemoPriceChartImplProps = Pick<
   | "selectedSource"
 >;
 
-const MAX_DATA_AGE = 1000 * 60 * 5; // 3 minutes
+const MAX_DATA_AGE = 1000 * 60 * 5; // 5 minutes
 const MAX_DATA_POINTS = 3000;
 
 const metricsToPlot: (keyof Pick<PriceData, "ask" | "bid" | "price">)[] = [
