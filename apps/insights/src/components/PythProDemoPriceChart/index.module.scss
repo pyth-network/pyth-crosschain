@@ -16,7 +16,7 @@
 
 .verticalDivider {
   background-color: theme.color("border");
-  height: 1.5em;
+  height: theme.spacing(6);
   width: 1px;
 }
 
@@ -24,7 +24,7 @@
   display: flex;
   flex-flow: column;
   gap: theme.spacing(2);
-  height: 440px;
+  height: theme.spacing(110);
   position: relative;
   width: 100%;
 }
