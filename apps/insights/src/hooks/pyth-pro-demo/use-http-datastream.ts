@@ -96,14 +96,6 @@ export async function fetchHistoricalData(
   }
 }
 
-function constructKeyForDataStreamDedup(
-  datasources: AllDataSourcesType[],
-  symbol: Nullish<AllAllowedSymbols>,
-) {
-  if (datasources.length <= 0 || !isReplaySymbol(symbol)) return "";
-  return `${datasources.join(",")}:${symbol}`;
-}
-
 export function useHttpDataStream({
   dataSources,
   enabled,
@@ -116,7 +108,6 @@ export function useHttpDataStream({
   const { addDataPoint, playbackSpeed } = usePythProAppStateContext();
 
   /** refs */
-  const dataStreamKey = useRef("");
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
 
@@ -131,14 +122,6 @@ export function useHttpDataStream({
     playbackSpeedRef.current = playbackSpeed;
     symbolRef.current = symbol;
   });
-
-  useEffect(() => {
-    dataStreamKey.current = constructKeyForDataStreamDedup(dataSources, symbol);
-
-    return () => {
-      dataStreamKey.current = "";
-    };
-  }, [dataSources, enabled, symbol]);
 
   useEffect(() => {
     if (!enabled || !isReplaySymbol(symbol)) return;
