@@ -41,13 +41,13 @@ $price-card-width: 250px;
   font-style: italic;
 }
 
-.toggleVisibilityBtn {
+.toggleVisibilityBtn[data-size="sm"] {
   align-items: center;
   display: inline-flex;
   padding: 0;
-  height: 2em !important;
+  height: 2em;
   justify-content: center;
-  width: 2em !important;
+  width: 2em;
 }
 
 .root {
