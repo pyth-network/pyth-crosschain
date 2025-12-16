@@ -157,6 +157,54 @@ pub struct EthereumConfig {
     #[serde(default = "default_priority_fee_multiplier_pct")]
     pub priority_fee_multiplier_pct: u64,
 
+    /// The minimum number of reward samples required for priority fee estimation.
+    /// If fewer samples are available, the priority fee will be set to zero.
+    /// Defaults to 0 if not provided.
+    #[serde(default = "default_min_reward_samples")]
+    pub min_reward_samples: usize,
+
+    /// The number of past blocks to use for fee estimation.
+    /// Defaults to 10 if not provided.
+    #[serde(default = "default_fee_estimation_past_blocks")]
+    pub fee_estimation_past_blocks: u64,
+
+    /// The reward percentile to use for fee estimation (e.g., 5.0 for the 5th percentile).
+    /// Defaults to 5.0 if not provided.
+    #[serde(default = "default_fee_estimation_reward_percentile")]
+    pub fee_estimation_reward_percentile: f64,
+
+    /// The default max priority fee per gas, used in case the base fee is within a threshold.
+    /// Defaults to 3000 if not provided.
+    #[serde(default = "default_eip1559_fee_estimation_default_priority_fee")]
+    pub eip1559_fee_estimation_default_priority_fee: u64,
+
+    /// The threshold for base fee below which we use the default priority fee, and beyond which we
+    /// estimate an appropriate value for priority fee.
+    /// Defaults to 100000 if not provided.
+    #[serde(default = "default_eip1559_fee_estimation_priority_fee_trigger")]
+    pub eip1559_fee_estimation_priority_fee_trigger: u64,
+
+    /// The threshold max change/difference (in %) at which we will ignore the fee history values
+    /// under it.
+    /// Defaults to 200 if not provided.
+    #[serde(default = "default_eip1559_fee_estimation_threshold_max_change")]
+    pub eip1559_fee_estimation_threshold_max_change: i64,
+
+    /// First threshold at which the base fee gets a multiplier.
+    /// Defaults to 40000 if not provided.
+    #[serde(default = "default_surge_threshold_1")]
+    pub surge_threshold_1: u64,
+
+    /// Second threshold at which the base fee gets a multiplier.
+    /// Defaults to 100000 if not provided.
+    #[serde(default = "default_surge_threshold_2")]
+    pub surge_threshold_2: u64,
+
+    /// Third threshold at which the base fee gets a multiplier.
+    /// Defaults to 200000 if not provided.
+    #[serde(default = "default_surge_threshold_3")]
+    pub surge_threshold_3: u64,
+
     /// The escalation policy governs how the gas limit and fee are increased during backoff retries.
     #[serde(default)]
     pub escalation_policy: EscalationPolicyConfig,
@@ -224,6 +272,42 @@ fn default_block_delays() -> Vec<u64> {
 
 fn default_priority_fee_multiplier_pct() -> u64 {
     100
+}
+
+fn default_min_reward_samples() -> usize {
+    0
+}
+
+fn default_fee_estimation_past_blocks() -> u64 {
+    10
+}
+
+fn default_fee_estimation_reward_percentile() -> f64 {
+    5.0
+}
+
+fn default_eip1559_fee_estimation_default_priority_fee() -> u64 {
+    3_000
+}
+
+fn default_eip1559_fee_estimation_priority_fee_trigger() -> u64 {
+    100_000
+}
+
+fn default_eip1559_fee_estimation_threshold_max_change() -> i64 {
+    200
+}
+
+fn default_surge_threshold_1() -> u64 {
+    40_000
+}
+
+fn default_surge_threshold_2() -> u64 {
+    100_000
+}
+
+fn default_surge_threshold_3() -> u64 {
+    200_000
 }
 
 fn default_backlog_range() -> u64 {
