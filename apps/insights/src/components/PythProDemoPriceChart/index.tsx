@@ -270,13 +270,6 @@ export function PythProDemoPriceChartImpl({
               1x
             </Button>
             <Button
-              onClick={createSelectPlaybackSpeed(2)}
-              size="xs"
-              variant={playbackSpeed === 2 ? "success" : "outline"}
-            >
-              2x
-            </Button>
-            <Button
               onClick={createSelectPlaybackSpeed(4)}
               size="xs"
               variant={playbackSpeed === 4 ? "success" : "outline"}
