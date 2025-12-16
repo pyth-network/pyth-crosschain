@@ -18,7 +18,7 @@ import fs from "fs-extra";
 import { glob } from "glob";
 import papa from "papaparse";
 
-import type { NasdaqEntry, OutputEntry, PythEntry } from "./types";
+import type { NBBOEntry, OutputEntry, PythEntry } from "./types";
 import { ALLOWED_EQUITY_SYMBOLS } from "../schemas/pyth/pyth-pro-demo-schema";
 
 const { parse, unparse } = papa;
@@ -61,7 +61,7 @@ for (const fp of csvs) {
     const row = parsed.data[i];
 
     // change this, as needed
-    const typedRow = row as PythEntry | NasdaqEntry;
+    const typedRow = row as PythEntry | NBBOEntry;
 
     let ask: OutputEntry["ask"] = Number.MIN_SAFE_INTEGER;
     let bid: OutputEntry["bid"] = Number.MIN_SAFE_INTEGER;
@@ -93,7 +93,7 @@ for (const fp of csvs) {
       datetime = typedRow.datetime
         ? dayjs.tz(typedRow.datetime, "UTC").toISOString()
         : "";
-      source = "NASDAQ";
+      source = "nbbo";
       symbol = typedRow.ticker ?? "";
     } else {
       console.warn(

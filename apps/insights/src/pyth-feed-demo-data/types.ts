@@ -1,4 +1,6 @@
-export type NasdaqEntry = Record<
+import type { DataSourcesReplayType } from "../schemas/pyth/pyth-pro-demo-schema";
+
+export type NBBOEntry = Record<
   | "ticker"
   | "Domain"
   | "datetime"
@@ -37,6 +39,6 @@ export type OutputEntry = {
   bid: number;
   datetime: string;
   price: number;
-  source: "NASDAQ" | "pyth_pro";
+  source: DataSourcesReplayType;
   symbol: string;
 };

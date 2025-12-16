@@ -6,13 +6,13 @@ const COINBASE = "coinbase";
 const OKX = "okx";
 const PYTH = "pyth";
 const PYTH_PRO = "pyth_pro";
-const NASDAQ = "nasdaq";
+const NBBO = "nbbo";
 
 export const ALL_DATA_SOURCES = z.enum([
   BINANCE,
   BYBIT,
   COINBASE,
-  NASDAQ,
+  NBBO,
   OKX,
   PYTH,
   PYTH_PRO,
@@ -41,7 +41,7 @@ export type DataSourcesEquityType = z.infer<typeof DATA_SOURCES_EQUITY>;
 
 export const DATA_SOURCES_HISTORICAL = z.enum([
   DATA_SOURCES_CRYPTO.Enum.pyth_pro,
-  NASDAQ,
+  NBBO,
 ]);
 export type DataSourcesHistoricalType = z.infer<typeof DATA_SOURCES_HISTORICAL>;
 
@@ -54,7 +54,7 @@ export type DataSourcesFuturesType = z.infer<typeof DATA_SOURCES_FUTURES>;
 export const DATA_SOURCES_TREASURY = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesTreasuryType = z.infer<typeof DATA_SOURCES_TREASURY>;
 
-export const DATA_SOURCES_REPLAY = z.enum([NASDAQ, PYTH_PRO]);
+export const DATA_SOURCES_REPLAY = z.enum([NBBO, PYTH_PRO]);
 export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
 
 export const ALLOWED_FUTURE_SYMBOLS = z.enum(["ESZ2025"]);

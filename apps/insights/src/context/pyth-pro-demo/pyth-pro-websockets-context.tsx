@@ -72,8 +72,8 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
   // "Fake" websocket-like contract for easier integration
   const { status: replay_status } = useHttpDataStream({
     dataSources: [
+      ALL_DATA_SOURCES.Values.nbbo,
       ALL_DATA_SOURCES.Values.pyth_pro,
-      ALL_DATA_SOURCES.Values.nasdaq,
     ],
     enabled: isGoodSymbol && isReplaySymbol(selectedSource),
     symbol: selectedSource,
