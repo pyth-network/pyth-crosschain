@@ -6,8 +6,5 @@
     "noEmit": false,
     "isolatedModules": false
   },
-  "exclude": [
-    "dist/",
-    "node_modules/"
-  ]
+  "exclude": ["dist/", "node_modules/"]
 }
