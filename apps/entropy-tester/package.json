@@ -40,7 +40,8 @@
     "@types/node": "catalog:",
     "@types/yargs": "^17.0.10",
     "pino-pretty": "^11.2.1",
-    "ts-node": "catalog:"
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/contract-manager": "workspace:*",

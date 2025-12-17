@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import {
   getNetworkEndpoints,
   getNetworkInfo,
@@ -17,7 +18,6 @@ import {
   TxGrpcClient,
   type TxResponse,
 } from "@injectivelabs/sdk-ts";
-import assert from "assert";
 import type {
   ChainExecutor,
   ExecuteContractRequest,
@@ -143,6 +143,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const codeId: number = parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
 
     return {
@@ -160,7 +161,6 @@ export class InjectiveExecutor implements ChainExecutor {
       admin: this.getAddress(),
       codeId,
       label,
-      // @ts-expect-error: bug in the injective's sdk
       msg: instMsg,
     });
 
@@ -213,6 +213,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const resultCodeId: number = parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
     try {
       assert.strictEqual(newCodeId, resultCodeId);
@@ -251,7 +252,7 @@ export class InjectiveExecutor implements ChainExecutor {
 function extractFromRawLog(rawLog: string, key: string): string {
   try {
     const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
-    return rx.exec(rawLog)![1] ?? "";
+    return rx.exec(rawLog)?.[1] ?? "";
   } catch (e) {
     console.error(
       "Encountered an error in parsing instantiation result. Printing raw log",

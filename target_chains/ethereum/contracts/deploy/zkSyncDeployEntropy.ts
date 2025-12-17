@@ -4,14 +4,12 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import {
   DefaultStore,
   ENTROPY_DEFAULT_PROVIDER,
-  EvmChain,
   EvmEntropyContract,
-  EvmWormholeContract,
 } from "@pythnetwork/contract-manager";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-import { utils, Wallet } from "zksync-web3";
+import { Wallet } from "zksync-web3";
 import {
   deployWormholeContract,
   findWormholeContract,
@@ -138,7 +136,7 @@ async function deployExecutorContract(
 async function deployEntropyContract(
   deployer: Deployer,
   executorContractAddress: string,
-  chainId: number,
+  _chainId: number,
   isMainnet: boolean,
 ) {
   const entropyImplArtifact = await deployer.loadArtifact("EntropyUpgradable");

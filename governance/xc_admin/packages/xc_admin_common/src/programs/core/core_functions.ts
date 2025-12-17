@@ -367,11 +367,7 @@ export function validateUploadedConfig(
         if (changes[symbol].new?.priceAccounts?.[0]?.address) {
           const newChanges = changes[symbol].new;
 
-          if (
-            newChanges &&
-            newChanges.priceAccounts &&
-            newChanges.priceAccounts[0]
-          ) {
+          if (newChanges?.priceAccounts?.[0]) {
             const priceAccount = newChanges.priceAccounts[0];
             const { address, ...restPriceAccount } = priceAccount;
 

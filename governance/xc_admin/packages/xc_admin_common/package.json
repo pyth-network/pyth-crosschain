@@ -33,6 +33,7 @@
     "@injectivelabs/token-metadata": "~1.10.42",
     "@project-serum/anchor": "^0.25.0",
     "@pythnetwork/client": "catalog:",
+    "@pythnetwork/shared-lib": "workspace:*",
     "@pythnetwork/pyth-lazer-sdk": "workspace:*",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
@@ -51,7 +52,8 @@
     "@types/jest": "^29.2.5",
     "@types/lodash": "^4.14.191",
     "fast-check": "^3.10.0",
-    "jest": "^29.3.1"
+    "jest": "^29.3.1",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

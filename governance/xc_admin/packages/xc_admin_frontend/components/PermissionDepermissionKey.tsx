@@ -134,7 +134,7 @@ const PermissionDepermissionKey = ({
       }
       setIsSubmitButtonLoading(true);
       try {
-        const response = await axios.post(proposerServerUrl + "/api/propose", {
+        const response = await axios.post(`${proposerServerUrl}/api/propose`, {
           instructions,
           cluster,
         });

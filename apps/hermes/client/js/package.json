@@ -41,7 +41,8 @@
     "@types/yargs": "^17.0.10",
     "jest": "^29.4.0",
     "openapi-zod-client": "^1.18.1",
-    "yargs": "^17.4.1"
+    "yargs": "^17.4.1",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@zodios/core": "^10.9.6",

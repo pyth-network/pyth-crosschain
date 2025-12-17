@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { BN, type Idl, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
@@ -62,7 +63,6 @@ import {
 } from "@solana/web3.js";
 import SquadsMesh from "@sqds/mesh";
 import { program } from "commander";
-import fs from "fs";
 import { LedgerNodeWallet } from "./ledger";
 
 export async function loadHotWalletOrLedger(

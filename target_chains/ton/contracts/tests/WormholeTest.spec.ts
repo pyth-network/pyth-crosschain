@@ -168,7 +168,7 @@ describe("WormholeTest", () => {
 
   it("should fail with wrong vaa", async () => {
     await deployContract();
-    const invalid_mainnet_upgrade_vaa = "00" + MAINNET_UPGRADE_VAAS[0].slice(2);
+    const invalid_mainnet_upgrade_vaa = `00${MAINNET_UPGRADE_VAAS[0].slice(2)}`;
     const result = await wormholeTest.sendUpdateGuardianSet(
       deployer.getSender(),
       Buffer.from(invalid_mainnet_upgrade_vaa, "hex"),
@@ -240,7 +240,7 @@ describe("WormholeTest", () => {
 
     getGovernanceActionIsConsumedResult =
       await wormholeTest.getGovernanceActionIsConsumed(
-        BigInt("0x" + getParseAndVerifyWormholeVmResult.hash),
+        BigInt(`0x${getParseAndVerifyWormholeVmResult.hash}`),
       );
     expect(getGovernanceActionIsConsumedResult).toEqual(true);
   });

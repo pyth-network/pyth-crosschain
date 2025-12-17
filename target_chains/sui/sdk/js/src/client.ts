@@ -66,7 +66,7 @@ export class SuiPythClient {
         },
       })
       .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
+        if (result.data?.content?.dataType === "moveObject") {
           return result.data.content.fields;
         }
         console.log(result.data?.content);

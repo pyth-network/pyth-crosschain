@@ -74,7 +74,8 @@
     "storybook": "catalog:",
     "style-loader": "catalog:",
     "stylelint": "catalog:",
-    "stylelint-config-standard-scss": "catalog:"
+    "stylelint-config-standard-scss": "catalog:",
+    "typescript": "catalog:"
   },
   "exports": {
     "./AppShell": "./src/AppShell/index.tsx",

@@ -55,7 +55,8 @@
   "devDependencies": {
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
-    "typedoc": "catalog:"
+    "typedoc": "catalog:",
+    "typescript": "catalog:"
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"

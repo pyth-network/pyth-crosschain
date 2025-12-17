@@ -93,7 +93,7 @@ export async function executeProposal(
 
     if (
       parsedInstruction instanceof WormholeMultisigInstruction &&
-      parsedInstruction.name == "postMessage"
+      parsedInstruction.name === "postMessage"
     ) {
       transaction.add(
         await getPostMessageFeeInstruction(
@@ -103,7 +103,7 @@ export async function executeProposal(
       );
     } else if (
       parsedInstruction instanceof PythMultisigInstruction &&
-      parsedInstruction.name == "addProduct"
+      parsedInstruction.name === "addProduct"
     ) {
       /// Add product, fetch the symbol from the instruction
       transaction.add(
@@ -117,7 +117,7 @@ export async function executeProposal(
       );
     } else if (
       parsedInstruction instanceof PythMultisigInstruction &&
-      parsedInstruction.name == "addPrice"
+      parsedInstruction.name === "addPrice"
     ) {
       /// Add price, fetch the symbol from the product account
       const productAccount = await squad.connection.getAccountInfo(

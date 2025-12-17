@@ -30,7 +30,7 @@ export const getProposalStatus = (
   if (multisig && proposal) {
     const onChainStatus = Object.keys(proposal.status)[0];
     return proposal.transactionIndex <= multisig.msChangeIndex &&
-      (onChainStatus == "active" || onChainStatus == "draft")
+      (onChainStatus === "active" || onChainStatus === "draft")
       ? "expired"
       : (onChainStatus as ProposalStatus);
   } else {

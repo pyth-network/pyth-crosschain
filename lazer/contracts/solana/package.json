@@ -24,7 +24,8 @@
     "mocha": "^9.0.3",
     "ts-mocha": "^10.0.0",
     "ts-node": "catalog:",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

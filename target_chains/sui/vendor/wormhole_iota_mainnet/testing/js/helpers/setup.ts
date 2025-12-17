@@ -1,5 +1,5 @@
+import * as fs from "node:fs";
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
-import * as fs from "fs";
 import { GUARDIAN_PRIVATE_KEY, UTF8 } from "./consts";
 
 export function generateVaaFromDigest(
@@ -10,7 +10,7 @@ export function generateVaaFromDigest(
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex"),
+    `0x${digest.toString("hex")}`,
   );
 
   // Sui is not supported yet by the SDK, so we need to adjust the payload.

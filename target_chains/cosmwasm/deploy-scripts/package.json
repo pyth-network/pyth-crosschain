@@ -28,7 +28,8 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.0",
     "@types/yargs": "^17.0.18",
-    "ts-node": "catalog:"
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import * as anchor from "@coral-xyz/anchor";
 import { type Idl, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
@@ -9,12 +11,9 @@ import {
   parseBaseData,
   parseProductData,
 } from "@pythnetwork/client";
-import { Connection, type PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import dotenv from "dotenv";
-import fs from "fs";
-
-import path from "path";
 import messageBuffer from "../target/idl/message_buffer.json";
 import type { MessageBuffer } from "../target/types/message_buffer";
 

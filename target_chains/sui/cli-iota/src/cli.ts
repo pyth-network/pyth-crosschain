@@ -1,11 +1,11 @@
+import { execSync } from "node:child_process";
+import { resolve } from "node:path";
 import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
 import type { IotaChain } from "@pythnetwork/contract-manager/core/chains";
 import type { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { execSync } from "child_process";
-import { resolve } from "path";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 import { initPyth, publishPackage } from "./pyth_deploy.js";

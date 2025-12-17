@@ -331,18 +331,16 @@ const OisUnstake = ({
         </>
       }
       action={
-        <>
-          {stakedPlusWarmup > 0n && (
-            <Button
-              size="small"
-              variant="secondary"
-              onPress={doUnstakeAll}
-              isDisabled={state.type === StateType.Complete}
-              isLoading={state.type === StateType.Running}>
-              Unstake All
-            </Button>
-          )}
-        </>
+        stakedPlusWarmup > 0n && (
+          <Button
+            size="small"
+            variant="secondary"
+            onPress={doUnstakeAll}
+            isDisabled={state.type === StateType.Complete}
+            isLoading={state.type === StateType.Running}>
+            Unstake All
+          </Button>
+        )
       }
     />
   );

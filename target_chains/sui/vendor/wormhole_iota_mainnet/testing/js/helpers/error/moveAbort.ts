@@ -32,7 +32,7 @@ export class MoveAbort {
       parseMoveAbort(errorMessage);
 
     return new MoveAbort(
-      "0x" + packageId,
+      `0x${packageId}`,
       moduleName,
       functionName,
       errorCode,

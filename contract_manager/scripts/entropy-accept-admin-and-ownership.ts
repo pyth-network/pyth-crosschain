@@ -62,7 +62,7 @@ async function main() {
         .toString()}`,
     );
   for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
+    if (chain.isMainnet() !== selectedChains[0]?.isMainnet())
       throw new Error("All chains must be either mainnet or testnet");
   }
 

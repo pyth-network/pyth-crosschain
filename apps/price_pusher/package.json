@@ -50,7 +50,8 @@
     "@types/yargs": "^17.0.10",
     "jest": "^29.7.0",
     "pino-pretty": "^11.2.1",
-    "ts-node": "catalog:"
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",

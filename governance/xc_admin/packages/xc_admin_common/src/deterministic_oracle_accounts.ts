@@ -21,9 +21,9 @@ import { PRICE_FEED_OPS_KEY } from "./multisig";
 function getSeed(accountType: AccountType, symbol: string): string {
   switch (accountType) {
     case AccountType.Price:
-      return "price:" + symbol;
+      return `price:${symbol}`;
     case AccountType.Product:
-      return "product:" + symbol;
+      return `product:${symbol}`;
     default:
       throw new Error("Unimplemented");
   }

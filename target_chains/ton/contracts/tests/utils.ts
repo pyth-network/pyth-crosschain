@@ -1,5 +1,5 @@
+import { Buffer } from "node:buffer";
 import type { Transaction } from "@ton/core";
-import { Buffer } from "buffer";
 
 const GOVERNANCE_MAGIC = 0x5054474d;
 const GOVERNANCE_MODULE = 1;

@@ -34,6 +34,7 @@
     "@cprussin/tsconfig": "catalog:",
     "@types/fs-extra": "catalog:",
     "@types/prompts": "catalog:",
-    "type-fest": "catalog:"
+    "type-fest": "catalog:",
+    "typescript": "catalog:"
   }
 }

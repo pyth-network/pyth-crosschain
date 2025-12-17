@@ -224,9 +224,8 @@ const DialogContents = ({
           </div>
         )}
       </TextField>
-      {children && (
-        <>{typeof children === "function" ? children(amount) : children}</>
-      )}
+      {children &&
+        (typeof children === "function" ? children(amount) : children)}
       <Button
         className="mt-6 w-full"
         type="submit"

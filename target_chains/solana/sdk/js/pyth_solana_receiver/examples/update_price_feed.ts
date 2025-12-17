@@ -1,9 +1,9 @@
+import fs from "node:fs";
+import os from "node:os";
 import { Wallet } from "@coral-xyz/anchor";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import fs from "fs";
-import os from "os";
 import { type InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
@@ -14,8 +14,8 @@ const ETH_PRICE_FEED_ID =
 const PRICE_FEED_IDS = [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID];
 
 let keypairFile = "";
-if (process.env["SOLANA_KEYPAIR"]) {
-  keypairFile = process.env["SOLANA_KEYPAIR"];
+if (process.env.SOLANA_KEYPAIR) {
+  keypairFile = process.env.SOLANA_KEYPAIR;
 } else {
   keypairFile = `${os.homedir()}/.config/solana/id.json`;
 }
@@ -69,7 +69,7 @@ async function main() {
 
   await transactionBuilder.addPriceConsumerInstructions(
     async (
-      getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
+      _getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
     ): Promise<InstructionWithEphemeralSigners[]> => {
       // You can generate instructions here that use the price updates posted above.
       // getPriceUpdateAccount(<price feed id>) will give you the account you need.

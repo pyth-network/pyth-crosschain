@@ -38,11 +38,11 @@ export function decodeGovernancePayload(
       // is their payload lengths. We're getting a little lucky here that all of these upgrade instructions
       // have different-length payloads.
       const payloadLength = data.length - PythGovernanceHeader.span;
-      if (payloadLength == CosmosUpgradeContract.layout.span) {
+      if (payloadLength === CosmosUpgradeContract.layout.span) {
         return CosmosUpgradeContract.decode(data);
-      } else if (payloadLength == UpgradeContract256Bit.layout.span) {
+      } else if (payloadLength === UpgradeContract256Bit.layout.span) {
         return UpgradeContract256Bit.decode(data);
-      } else if (payloadLength == EvmUpgradeContract.layout.span) {
+      } else if (payloadLength === EvmUpgradeContract.layout.span) {
         return EvmUpgradeContract.decode(data);
       } else {
         return undefined;
@@ -65,9 +65,9 @@ export function decodeGovernancePayload(
       // is their payload lengths. We're getting a little lucky here that all of these upgrade instructions
       // have different-length payloads.
       const payloadLength = data.length - PythGovernanceHeader.span;
-      if (payloadLength == EvmSetWormholeAddress.layout.span) {
+      if (payloadLength === EvmSetWormholeAddress.layout.span) {
         return EvmSetWormholeAddress.decode(data);
-      } else if (payloadLength == StarknetSetWormholeAddress.layout.span) {
+      } else if (payloadLength === StarknetSetWormholeAddress.layout.span) {
         return StarknetSetWormholeAddress.decode(data);
       } else {
         return undefined;

@@ -12,7 +12,7 @@ export async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 

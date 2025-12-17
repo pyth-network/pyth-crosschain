@@ -93,8 +93,8 @@ export class StarknetWormholeContract extends WormholeContract {
     const contract = await this.getContractClient();
     const account = new Account(
       provider,
-      "0x" + senderAddress,
-      "0x" + senderPrivateKey,
+      `0x${senderAddress}`,
+      `0x${senderPrivateKey}`,
     );
     contract.connect(account);
 
@@ -193,7 +193,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
   async getBaseUpdateFeeInToken(
     token: string,
   ): Promise<{ amount: string; denom?: string | undefined }> {
-    token = "0x" + token;
+    token = `0x${token}`;
     const provider = this.chain.getProvider();
     const contract = await this.getContractClient();
     const fee: bigint = await contract.get_single_update_fee(token);
@@ -211,7 +211,7 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
 
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const contract = await this.getContractClient();
-    const result = await contract.query_price_feed_unsafe("0x" + feedId);
+    const result = await contract.query_price_feed_unsafe(`0x${feedId}`);
     if (result.Ok === undefined) {
       throw new Error(JSON.stringify(result.Err));
     } else {
@@ -231,8 +231,8 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const contract = await this.getContractClient();
     const account = new Account(
       provider,
-      "0x" + senderAddress,
-      "0x" + senderPrivateKey,
+      `0x${senderAddress}`,
+      `0x${senderPrivateKey}`,
     );
     contract.connect(account);
 
@@ -266,8 +266,8 @@ export class StarknetPriceFeedContract extends PriceFeedContract {
     const contract = await this.getContractClient();
     const account = new Account(
       provider,
-      "0x" + senderAddress,
-      "0x" + senderPrivateKey,
+      `0x${senderAddress}`,
+      `0x${senderPrivateKey}`,
     );
     contract.connect(account);
 

@@ -103,9 +103,9 @@ async function deployPriceFeedContracts(
     .initialize(
       wormholeAddr,
       dataSources.map((ds) => ds.emitterChain),
-      dataSources.map((ds) => "0x" + ds.emitterAddress),
+      dataSources.map((ds) => `0x${ds.emitterAddress}`),
       governanceDataSource.emitterChain,
-      "0x" + governanceDataSource.emitterAddress,
+      `0x${governanceDataSource.emitterAddress}`,
       0, // governanceInitialSequence
       config.validTimePeriodSeconds,
       config.singleUpdateFeeInWei,
@@ -127,7 +127,7 @@ async function main() {
   const nativeTokenDecimals = argv["native-token-decimals"];
   if (
     singleUpdateFeeInUsd &&
-    (nativeTokenPriceFeedId == undefined || nativeTokenDecimals == undefined)
+    (nativeTokenPriceFeedId === undefined || nativeTokenDecimals === undefined)
   ) {
     throw new Error(
       "native-token-price-feed-id and native-token-decimals are required when single-update-fee-in-usd is provided",
@@ -144,7 +144,7 @@ async function main() {
     );
 
     const price = priceObject.parsed?.[0]?.price;
-    if (price == undefined) {
+    if (price === undefined) {
       throw new Error("Failed to get price of the native token");
     }
     const priceInUsd = Number(price.price);

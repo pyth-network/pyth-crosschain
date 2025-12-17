@@ -1,0 +1,12 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.9/schema.json",
+  "extends": "//",
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noImplicitAnyLet": "warn",
+        "noNonNullAssertedOptionalChain": "warn"
+      }
+    }
+  }
+}

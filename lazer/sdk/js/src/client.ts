@@ -114,7 +114,7 @@ export class PythLazerClient {
   addMessageListener(handler: (event: JsonOrBinaryResponse) => void) {
     const wsp = this.getWebSocketPool();
     wsp.addMessageListener(async (data: WebSocket.Data) => {
-      if (typeof data == "string") {
+      if (typeof data === "string") {
         handler({
           type: "json",
           value: JSON.parse(data) as Response,
@@ -127,7 +127,7 @@ export class PythLazerClient {
         .subarray(pos, pos + UINT32_NUM_BYTES)
         .readUint32LE();
       pos += UINT32_NUM_BYTES;
-      if (magic != BINARY_UPDATE_FORMAT_MAGIC_LE) {
+      if (magic !== BINARY_UPDATE_FORMAT_MAGIC_LE) {
         throw new Error("binary update format magic mismatch");
       }
       // TODO: some uint64 values may not be representable as Number.
@@ -145,15 +145,15 @@ export class PythLazerClient {
         const magic = buffData
           .subarray(pos, pos + UINT32_NUM_BYTES)
           .readUint32LE();
-        if (magic == FORMAT_MAGICS_LE.EVM) {
+        if (magic === FORMAT_MAGICS_LE.EVM) {
           value.evm = buffData.subarray(pos, pos + len);
-        } else if (magic == FORMAT_MAGICS_LE.SOLANA) {
+        } else if (magic === FORMAT_MAGICS_LE.SOLANA) {
           value.solana = buffData.subarray(pos, pos + len);
-        } else if (magic == FORMAT_MAGICS_LE.LE_ECDSA) {
+        } else if (magic === FORMAT_MAGICS_LE.LE_ECDSA) {
           value.leEcdsa = buffData.subarray(pos, pos + len);
-        } else if (magic == FORMAT_MAGICS_LE.LE_UNSIGNED) {
+        } else if (magic === FORMAT_MAGICS_LE.LE_UNSIGNED) {
           value.leUnsigned = buffData.subarray(pos, pos + len);
-        } else if (magic == FORMAT_MAGICS_LE.JSON) {
+        } else if (magic === FORMAT_MAGICS_LE.JSON) {
           value.parsed = JSON.parse(
             buffData.subarray(pos + UINT32_NUM_BYTES, pos + len).toString(),
           ) as ParsedPayload;

@@ -33,7 +33,7 @@ export async function run(provider: NetworkProvider) {
   const chainId = parseInt(process.env.CHAIN_ID, 10);
 
   // Validate that chainId is a valid number
-  if (isNaN(chainId)) {
+  if (Number.isNaN(chainId)) {
     throw new Error("CHAIN_ID must be a valid number");
   }
 

@@ -37,7 +37,8 @@
     "@types/bn.js": "^5.1.5",
     "@types/jest": "^29.4.0",
     "jest": "^29.4.0",
-    "quicktype": "^23.0.76"
+    "quicktype": "^23.0.76",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "bn.js": "^5.2.1"

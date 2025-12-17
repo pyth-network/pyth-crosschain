@@ -42,7 +42,7 @@ async function main() {
   console.log("Request tx hash:", requestResponse.transactionHash);
   const startTime = Date.now();
   const sequenceNumber = providerInfo.sequenceNumber;
-  const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
+  const revealUrl = `${providerInfo.uri}/revelations/${sequenceNumber}`;
   console.log("Checking this url for revelation:", revealUrl);
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -53,7 +53,7 @@ async function main() {
       const payload = (await fortunaResponse.json()) as any;
       const endTime = Date.now();
       console.log(`Fortuna Latency: ${endTime - startTime}ms`);
-      const providerRevelation = "0x" + payload.value.data;
+      const providerRevelation = `0x${payload.value.data}`;
       const revealResponse = await contract.revealRandomness(
         userRandomNumber,
         providerRevelation,

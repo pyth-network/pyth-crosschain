@@ -36,7 +36,8 @@
     "autoprefixer": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@next/third-parties": "catalog:",

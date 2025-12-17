@@ -33,7 +33,7 @@ export function isWsEndpoint(endpoint: string): boolean {
   const url = new URL(endpoint);
   const protocol = url.protocol;
 
-  if (protocol === "ws:" || protocol == "wss:") {
+  if (protocol === "ws:" || protocol === "wss:") {
     return true;
   }
 

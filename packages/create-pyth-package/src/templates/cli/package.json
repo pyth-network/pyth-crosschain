@@ -33,7 +33,8 @@
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
     "jest": "catalog:",
-    "tsx": "catalog:"
+    "tsx": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/shared-lib": "workspace:",

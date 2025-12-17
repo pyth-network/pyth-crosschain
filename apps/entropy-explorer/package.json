@@ -44,6 +44,7 @@
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "typescript": "catalog:"
   }
 }

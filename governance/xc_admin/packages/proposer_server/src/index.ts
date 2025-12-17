@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { getPythClusterApiUrl, type PythCluster } from "@pythnetwork/client";
 import {
@@ -16,7 +17,6 @@ import {
 import SquadsMesh from "@sqds/mesh";
 import cors from "cors";
 import express, { type Request, type Response } from "express";
-import * as fs from "fs";
 
 const PORT: number = Number(process.env.PORT ?? "4000");
 const KEYPAIR: Keypair = Keypair.fromSecretKey(

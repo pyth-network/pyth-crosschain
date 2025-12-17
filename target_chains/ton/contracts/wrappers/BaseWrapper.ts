@@ -91,7 +91,7 @@ export class BaseWrapper implements Contract {
           .storeUint(source.emitterChain, 16)
           .storeBuffer(Buffer.from(source.emitterAddress, "hex"))
           .endCell();
-        const cellHash = BigInt("0x" + sourceCell.hash().toString("hex"));
+        const cellHash = BigInt(`0x${sourceCell.hash().toString("hex")}`);
         isValidDataSourceDict.set(cellHash, true);
       });
     }

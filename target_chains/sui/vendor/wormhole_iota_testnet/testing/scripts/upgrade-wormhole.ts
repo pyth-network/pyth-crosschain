@@ -1,3 +1,6 @@
+import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import { resolve } from "node:path";
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
 import {
   Ed25519Keypair,
@@ -9,9 +12,6 @@ import {
   TransactionBlock,
   testnetConnection,
 } from "@mysten/sui.js";
-import { execSync } from "child_process";
-import * as fs from "fs";
-import { resolve } from "path";
 
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
@@ -56,7 +56,7 @@ async function main() {
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex"),
+    `0x${digest.toString("hex")}`,
   );
   published.writeUInt16BE(21, published.length - 34);
 
@@ -128,7 +128,7 @@ async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 
@@ -204,7 +204,7 @@ async function buildAndUpgradeWormhole(
   });
 }
 
-async function migrateWormhole(
+async function _migrateWormhole(
   signer: RawSigner,
   wormholeStateId: string,
   signedUpgradeVaa: Buffer,

@@ -1,9 +1,9 @@
+import fs from "node:fs";
+import os from "node:os";
 import { Wallet } from "@coral-xyz/anchor";
-import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
 import { Connection, Keypair, type PublicKey } from "@solana/web3.js";
-import fs from "fs";
-import os from "os";
 import { type InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
@@ -11,8 +11,8 @@ const SOL_PRICE_FEED_ID =
   "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d";
 
 let keypairFile = "";
-if (process.env["SOLANA_KEYPAIR"]) {
-  keypairFile = process.env["SOLANA_KEYPAIR"];
+if (process.env.SOLANA_KEYPAIR) {
+  keypairFile = process.env.SOLANA_KEYPAIR;
 } else {
   keypairFile = `${os.homedir()}/.config/solana/id.json`;
 }
@@ -45,7 +45,7 @@ async function main() {
 
   await transactionBuilder.addPriceConsumerInstructions(
     async (
-      getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
+      _getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
     ): Promise<InstructionWithEphemeralSigners[]> => {
       // You can generate instructions here that use the price updates posted above.
       // getPriceUpdateAccount(<price feed id>) will give you the account you need.

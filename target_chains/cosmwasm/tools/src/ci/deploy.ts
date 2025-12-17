@@ -3,7 +3,7 @@
 // as well. You can use Dockerfile.cosmwasm in the root of this repo
 // to do that.
 
-import { readdirSync } from "fs";
+import { readdirSync } from "node:fs";
 import { CONFIG as NetworkConfig } from "./deployer/config.js";
 import { DeployerFactory } from "./deployer/index.js";
 import { NETWORKS } from "./network.js";

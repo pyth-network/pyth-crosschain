@@ -3,9 +3,8 @@ require("dotenv").config({ path: ".env" });
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
-import { writeFileSync } from "fs";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-import { utils, Wallet } from "zksync-web3";
+import { Wallet } from "zksync-web3";
 import {
   deployWormholeContract,
   findWormholeContract,

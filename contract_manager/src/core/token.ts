@@ -53,7 +53,7 @@ export class Token extends Storable {
 
       // Note that this conversion can lose some precision.
       // We don't really care about that in this application.
-      return Number.parseInt(price.price) * 10 ** price.expo;
+      return Number.parseInt(price.price, 10) * 10 ** price.expo;
     } else {
       // We may support other pricing methodologies in the future but whatever.
       return undefined;

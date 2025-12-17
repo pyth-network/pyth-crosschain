@@ -519,14 +519,12 @@ export const Proposal = ({
             }
             {instruction instanceof WormholeMultisigInstruction &&
             instruction.governanceAction ? (
-              <>
-                <div
-                  key={`${index.toString()}_targetChain`}
-                  className="flex justify-between">
-                  <div>Target Chain</div>
-                  <div>{instruction.governanceAction.targetChainId}</div>
-                </div>
-              </>
+              <div
+                key={`${index.toString()}_targetChain`}
+                className="flex justify-between">
+                <div>Target Chain</div>
+                <div>{instruction.governanceAction.targetChainId}</div>
+              </div>
             ) : undefined}
             {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div

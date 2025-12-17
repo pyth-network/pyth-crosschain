@@ -115,16 +115,14 @@ const ConnectedButton = ({
       </ButtonComponent>
       <Menu className="min-w-[var(--trigger-width)]">
         {api.type === ApiStateType.Loaded && (
-          <>
-            <Section>
-              <StakeAccountSelector api={api}>
-                <MenuItem icon={BanknotesIcon} textValue="Select stake account">
-                  <span>Select stake account</span>
-                  <ChevronRightIcon className="size-4" />
-                </MenuItem>
-              </StakeAccountSelector>
-            </Section>
-          </>
+          <Section>
+            <StakeAccountSelector api={api}>
+              <MenuItem icon={BanknotesIcon} textValue="Select stake account">
+                <span>Select stake account</span>
+                <ChevronRightIcon className="size-4" />
+              </MenuItem>
+            </StakeAccountSelector>
+          </Section>
         )}
         <Section>
           <MenuItem onAction={showModal} icon={ArrowsRightLeftIcon}>

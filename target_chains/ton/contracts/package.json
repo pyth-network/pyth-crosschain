@@ -26,7 +26,8 @@
     "@wormhole-foundation/sdk-definitions": "^0.10.7",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.0",
-    "tsx": "catalog:"
+    "tsx": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

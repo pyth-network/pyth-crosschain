@@ -1,11 +1,8 @@
 require("dotenv").config({ path: ".env" });
 
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import { assert } from "chai";
-import { ethers } from "ethers";
-import { writeFileSync } from "fs";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
-import { utils, Wallet } from "zksync-web3";
+import { Wallet } from "zksync-web3";
 
 function envOrErr(name: string): string {
   const res = process.env[name];

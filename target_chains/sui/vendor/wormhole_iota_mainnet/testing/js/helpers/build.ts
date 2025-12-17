@@ -1,8 +1,8 @@
-import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js";
 import {
   type ExecSyncOptionsWithStringEncoding,
   execSync,
-} from "child_process";
+} from "node:child_process";
+import { fromB64, normalizeSuiObjectId } from "@mysten/sui.js";
 import { UTF8 } from "./consts";
 
 export const EXEC_UTF8: ExecSyncOptionsWithStringEncoding = { encoding: UTF8 };

@@ -48,7 +48,7 @@ async function run() {
   const argv = await argvPromise;
 
   // Fetch the latest price feed update data from the Price Service
-  const connection = new SuiPriceServiceConnection(argv["hermes"]);
+  const connection = new SuiPriceServiceConnection(argv.hermes);
   const feeds = argv["feed-id"];
   if (!Array.isArray(feeds)) {
     throw new Error("Not a valid input!");
@@ -65,7 +65,7 @@ async function run() {
     if (typeof feed !== "string") {
       throw new Error(`Not a valid string input ${feed}`);
     }
-    if ((await client.getPriceFeedObjectId(feed)) == undefined) {
+    if ((await client.getPriceFeedObjectId(feed)) === undefined) {
       newFeeds.push(feed);
     } else {
       existingFeeds.push(feed);

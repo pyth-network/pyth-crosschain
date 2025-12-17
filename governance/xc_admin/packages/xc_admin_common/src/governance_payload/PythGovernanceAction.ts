@@ -33,9 +33,12 @@ export const EvmExecutorAction = {
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>,
 ): ActionName | undefined {
-  if (deserialized.moduleId == MODULE_EXECUTOR && deserialized.actionId == 0) {
+  if (
+    deserialized.moduleId === MODULE_EXECUTOR &&
+    deserialized.actionId === 0
+  ) {
     return "ExecutePostedVaa";
-  } else if (deserialized.moduleId == MODULE_TARGET) {
+  } else if (deserialized.moduleId === MODULE_TARGET) {
     switch (deserialized.actionId) {
       case 0:
         return "UpgradeContract";
@@ -59,8 +62,8 @@ export function toActionName(
         return "WithdrawFee";
     }
   } else if (
-    deserialized.moduleId == MODULE_EVM_EXECUTOR &&
-    deserialized.actionId == 0
+    deserialized.moduleId === MODULE_EVM_EXECUTOR &&
+    deserialized.actionId === 0
   ) {
     return "Execute";
   }

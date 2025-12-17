@@ -86,7 +86,7 @@ export class FuelWormholeContract extends WormholeContract {
 
   async getChainId(): Promise<number> {
     const contract = await this.getContract();
-    const chainId = ((await contract.functions.chain_id?.().get()) ?? {}).value;
+    const chainId = (await contract.functions.chain_id?.().get())?.value;
     return chainId;
   }
 
@@ -94,8 +94,8 @@ export class FuelWormholeContract extends WormholeContract {
     const contract = await this.getContract();
     const guardianSetIndex = await this.getCurrentGuardianSetIndex();
     const guardianSet = (
-      (await contract.functions.guardian_set?.(guardianSetIndex).get()) ?? {}
-    ).value;
+      await contract.functions.guardian_set?.(guardianSetIndex).get()
+    )?.value;
     return guardianSet;
   }
 
@@ -178,27 +178,23 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async getLastExecutedGovernanceSequence() {
     const pythContract = await this.getContract();
     return Number(
-      (
-        (await pythContract.functions
-          .last_executed_governance_sequence?.()
-          .get()) ?? {}
-      ).value,
+      (await pythContract.functions.last_executed_governance_sequence?.().get())
+        ?.value,
     );
   }
 
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const pythContract = await this.getContract();
-    const feed = "0x" + feedId;
+    const feed = `0x${feedId}`;
     const exists = (
-      (await pythContract.functions.price_feed_exists?.(hexlify(feed)).get()) ??
-      {}
-    ).value;
+      await pythContract.functions.price_feed_exists?.(hexlify(feed)).get()
+    )?.value;
     if (!exists) {
       return undefined;
     }
     const priceFeed: PriceFeedOutput = (
-      (await pythContract.functions.price_feed_unsafe?.(feed).get()) ?? {}
-    ).value;
+      await pythContract.functions.price_feed_unsafe?.(feed).get()
+    )?.value;
     return {
       price: {
         price: priceFeed.price.price.toString(),
@@ -218,8 +214,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
   async getValidTimePeriod() {
     const pythContract = await this.getContract();
     const validTimePeriod = (
-      (await pythContract.functions.valid_time_period?.().get()) ?? {}
-    ).value;
+      await pythContract.functions.valid_time_period?.().get()
+    )?.value;
     return Number(validTimePeriod);
   }
 
@@ -233,9 +229,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
 
   async getBaseUpdateFee() {
     const pythContract = await this.getContract();
-    const amount = (
-      (await pythContract.functions.single_update_fee?.().get()) ?? {}
-    ).value;
+    const amount = (await pythContract.functions.single_update_fee?.().get())
+      ?.value;
     return {
       amount: amount.toString(),
       denom: this.chain.getNativeToken() ?? "",
@@ -287,8 +282,8 @@ export class FuelPriceFeedContract extends PriceFeedContract {
     const contract = await this.getContract(wallet);
     const priceFeedUpdateData = vaas.map((vaa) => new Uint8Array(vaa));
     const updateFee: number = (
-      (await contract.functions.update_fee?.(priceFeedUpdateData).get()) ?? {}
-    ).value;
+      await contract.functions.update_fee?.(priceFeedUpdateData).get()
+    )?.value;
     const tx = await contract.functions
       .update_price_feeds?.(priceFeedUpdateData)
       .callParams({

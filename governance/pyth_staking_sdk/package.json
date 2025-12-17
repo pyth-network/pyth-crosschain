@@ -217,7 +217,8 @@
     "@solana/wallet-adapter-react": "catalog:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
-    "jest": "catalog:"
+    "jest": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "catalog:",

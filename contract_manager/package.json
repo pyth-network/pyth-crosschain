@@ -282,7 +282,8 @@
     "@pythnetwork/pyth-crosschain": "link:..",
     "@types/node": "catalog:",
     "@types/web3": "^1.2.2",
-    "typedoc": "^0.25.7"
+    "typedoc": "^0.25.7",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

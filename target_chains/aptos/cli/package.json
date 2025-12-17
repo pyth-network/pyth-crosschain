@@ -18,7 +18,8 @@
   },
   "devDependencies": {
     "@types/node": "^18.7.21",
-    "@types/yargs": "^17.0.13"
+    "@types/yargs": "^17.0.13",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/contract-manager": "workspace:*",

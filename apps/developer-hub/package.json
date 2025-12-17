@@ -68,6 +68,7 @@
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
     "tailwindcss": "^4.1.6",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "typescript": "catalog:"
   }
 }

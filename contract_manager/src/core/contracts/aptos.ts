@@ -224,9 +224,9 @@ export class AptosPriceFeedContract extends PriceFeedContract {
     timestamp: string;
   }) {
     let expo = priceInfo.expo.magnitude;
-    if (priceInfo.expo.negative) expo = "-" + expo;
+    if (priceInfo.expo.negative) expo = `-${expo}`;
     let price = priceInfo.price.magnitude;
-    if (priceInfo.price.negative) price = "-" + price;
+    if (priceInfo.price.negative) price = `-${price}`;
     return {
       conf: priceInfo.conf,
       publishTime: priceInfo.timestamp,

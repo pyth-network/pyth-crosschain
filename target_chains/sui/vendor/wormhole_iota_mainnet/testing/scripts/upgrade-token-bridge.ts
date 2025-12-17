@@ -1,3 +1,6 @@
+import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import { resolve } from "node:path";
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
 import {
   Ed25519Keypair,
@@ -9,9 +12,6 @@ import {
   TransactionBlock,
   testnetConnection,
 } from "@mysten/sui.js";
-import { execSync } from "child_process";
-import * as fs from "fs";
-import { resolve } from "path";
 
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
@@ -56,7 +56,7 @@ async function main() {
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex"),
+    `0x${digest.toString("hex")}`,
   );
   const moduleName = Buffer.alloc(32);
   moduleName.write("TokenBridge", 32 - "TokenBridge".length);
@@ -133,7 +133,7 @@ async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 
@@ -147,7 +147,7 @@ async function getPackageId(
   throw new Error("upgrade_cap not found");
 }
 
-async function upgradeTokenBridge(
+async function _upgradeTokenBridge(
   signer: RawSigner,
   tokenBridgeStateId: string,
   wormholeStateId: string,
@@ -263,7 +263,7 @@ async function migrateTokenBridge(
   });
 }
 
-function setUpWormholeDirectory(
+function _setUpWormholeDirectory(
   srcWormholePath: string,
   dstWormholePath: string,
 ) {
@@ -295,6 +295,6 @@ function setUpWormholeDirectory(
   );
 }
 
-function cleanUpPackageDirectory(packagePath: string) {
+function _cleanUpPackageDirectory(packagePath: string) {
   fs.rmSync(packagePath, { recursive: true, force: true });
 }

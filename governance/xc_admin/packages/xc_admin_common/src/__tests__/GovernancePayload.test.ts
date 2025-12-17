@@ -135,7 +135,7 @@ test("GovernancePayload ser/de", (done) => {
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(
-    executePostedVaaArgs?.instructions[0]!.programId.equals(
+    executePostedVaaArgs?.instructions[0]?.programId.equals(
       SystemProgram.programId,
     ),
   ).toBeTruthy();
@@ -311,7 +311,7 @@ function bufferArb(constraints?: IntArrayConstraints): Arbitrary<Buffer> {
 
 /** Fastcheck generator for a uint of numBits bits. Warning: don't pass numBits > float precision */
 function uintArb(numBits: number): Arbitrary<number> {
-  return fc.bigUintN(numBits).map((x) => Number.parseInt(x.toString()));
+  return fc.bigUintN(numBits).map((x) => Number.parseInt(x.toString(), 10));
 }
 
 /** Fastcheck generator for a byte array encoded as a hex string. */
@@ -379,7 +379,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return fc.bigUintN(32).map((index) => {
         return new RequestGovernanceDataSourceTransfer(
           header.targetChainId,
-          parseInt(index.toString()),
+          parseInt(index.toString(), 10),
         );
       });
     } else if (header.action === "SetWormholeAddress") {

@@ -15,7 +15,8 @@
     "@pythnetwork/jest-config": "workspace:",
     "@cprussin/tsconfig": "catalog:",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/shared-lib": "workspace:",

@@ -325,7 +325,7 @@ export function parseGuardianSetKeys(cell: Cell): string[] {
         const bitsToSkip = slice.remainingBits - 160;
         slice = slice.skip(bitsToSkip);
         const key = slice.loadBits(160);
-        keys.push("0x" + key.toString());
+        keys.push(`0x${key.toString()}`);
       }
       if (slice.remainingRefs > 0) {
         parseCell(slice.loadRef());

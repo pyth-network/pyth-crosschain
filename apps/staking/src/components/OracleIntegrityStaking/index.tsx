@@ -121,7 +121,7 @@ export const OracleIntegrityStaking = ({
           ),
         }),
       }}>
-      {self && api.type == ApiStateType.Loaded && (
+      {self && api.type === ApiStateType.Loaded && (
         <SelfStaking
           api={api}
           self={self}

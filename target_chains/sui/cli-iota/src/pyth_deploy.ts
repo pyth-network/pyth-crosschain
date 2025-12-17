@@ -1,6 +1,6 @@
+import { execSync } from "node:child_process";
 import { bcs } from "@iota/iota-sdk/bcs";
 import type { IotaClient } from "@iota/iota-sdk/client";
-
 import type { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction } from "@iota/iota-sdk/transactions";
 import {
@@ -9,7 +9,6 @@ import {
   normalizeIotaObjectId,
 } from "@iota/iota-sdk/utils";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
-import { execSync } from "child_process";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,

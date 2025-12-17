@@ -28,7 +28,7 @@
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run test:format && git add -A src",
-    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:format"
+    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:lint"
   },
   "keywords": [
     "pyth",
@@ -39,7 +39,8 @@
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/node": "catalog:",
     "copyfiles": "^2.4.1",
-    "ts-node": "catalog:"
+    "ts-node": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "fuels": "catalog:"

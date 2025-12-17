@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import type { IotaClient } from "@iota/iota-sdk/client";
 import type { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction } from "@iota/iota-sdk/transactions";
@@ -7,7 +8,6 @@ import {
   normalizeIotaObjectId,
 } from "@iota/iota-sdk/utils";
 import type { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
-import { execSync } from "child_process";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {

@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
 import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
@@ -32,7 +33,6 @@ import {
   PublicKey,
   type TransactionInstruction,
 } from "@solana/web3.js";
-import * as fs from "fs";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
@@ -41,7 +41,7 @@ const KEYPAIR: Keypair = Keypair.fromSecretKey(
 );
 const OFFSET: number = Number(process.env.OFFSET ?? "-1");
 const SKIP_FAILED_REMOTE_INSTRUCTIONS: boolean =
-  process.env.SKIP_FAILED_REMOTE_INSTRUCTIONS == "true";
+  process.env.SKIP_FAILED_REMOTE_INSTRUCTIONS === "true";
 const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
 
@@ -92,7 +92,7 @@ async function run() {
 
       if (
         governancePayload instanceof ExecutePostedVaa &&
-        governancePayload.targetChainId == "pythnet"
+        governancePayload.targetChainId === "pythnet"
       ) {
         const preInstructions: TransactionInstruction[] = [];
 
@@ -132,7 +132,7 @@ async function run() {
 
           if (
             parsedInstruction instanceof PythMultisigInstruction &&
-            parsedInstruction.name == "addProduct"
+            parsedInstruction.name === "addProduct"
           ) {
             preInstructions.push(
               await getCreateAccountWithSeedInstruction(
@@ -144,19 +144,19 @@ async function run() {
               ),
             );
             productAccountToSymbol[
-              parsedInstruction.accounts.named.productAccount!.pubkey.toBase58()
+              parsedInstruction.accounts.named.productAccount?.pubkey.toBase58()!
             ] = parsedInstruction.args.symbol;
           } else if (
             parsedInstruction instanceof PythMultisigInstruction &&
-            parsedInstruction.name == "addPrice"
+            parsedInstruction.name === "addPrice"
           ) {
             const productAccount = await provider.connection.getAccountInfo(
-              parsedInstruction.accounts.named.productAccount!.pubkey,
+              parsedInstruction.accounts.named.productAccount?.pubkey!,
             );
             const productSymbol = productAccount
               ? parseProductData(productAccount.data).product.symbol
               : productAccountToSymbol[
-                  parsedInstruction.accounts.named.productAccount!.pubkey.toBase58()
+                  parsedInstruction.accounts.named.productAccount?.pubkey.toBase58()!
                 ];
             if (productSymbol) {
               preInstructions.push(
@@ -173,7 +173,7 @@ async function run() {
             }
           } else if (
             parsedInstruction instanceof PriceStoreMultisigInstruction &&
-            parsedInstruction.name == "InitializePublisher"
+            parsedInstruction.name === "InitializePublisher"
           ) {
             preInstructions.push(
               await createDeterministicPublisherBufferAccountInstruction(
@@ -209,7 +209,7 @@ async function run() {
           } else throw e;
         }
       }
-    } else if (response.code == 5) {
+    } else if (response.code === 5) {
       console.log(`All VAAs have been relayed`);
       console.log(
         `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(

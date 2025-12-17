@@ -1,4 +1,3 @@
-import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
 import {
   Ed25519Keypair,
   JsonRpcProvider,
@@ -8,7 +7,6 @@ import {
 import { expect } from "chai";
 import {
   CREATOR_PRIVATE_KEY,
-  GUARDIAN_PRIVATE_KEY,
   RELAYER_PRIVATE_KEY,
   WALLET_PRIVATE_KEY,
 } from "./helpers/consts";

@@ -281,7 +281,7 @@ export class PriceServiceConnection {
         newPriceIds.push(id);
       }
 
-      this.priceFeedCallbacks.get(id)!.add(cb);
+      this.priceFeedCallbacks.get(id)?.add(cb);
     }
 
     const message: ClientMessage = {
@@ -326,9 +326,9 @@ export class PriceServiceConnection {
           this.priceFeedCallbacks.delete(id);
           idRemoved = true;
         } else {
-          this.priceFeedCallbacks.get(id)!.delete(cb);
+          this.priceFeedCallbacks.get(id)?.delete(cb);
 
-          if (this.priceFeedCallbacks.get(id)!.size === 0) {
+          if (this.priceFeedCallbacks.get(id)?.size === 0) {
             this.priceFeedCallbacks.delete(id);
             idRemoved = true;
           }

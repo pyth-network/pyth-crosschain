@@ -237,11 +237,11 @@ const NewPriceFeedsRows: React.FC<NewPriceFeedsRowsProps> = ({
   return (
     <>
       <MetadataChangesRows
-        key={priceFeedData.key + "metadata"}
+        key={`${priceFeedData.key}metadata`}
         changes={{ new: priceFeedData.metadata }}
       />
       <PriceAccountsChangesRows
-        key={priceFeedData.key + "priceAccounts"}
+        key={`${priceFeedData.key}priceAccounts`}
         changes={{ new: priceFeedData.priceAccounts }}
       />
     </>
@@ -252,12 +252,10 @@ const OldPriceFeedsRows: React.FC<OldPriceFeedsRowsProps> = ({
   priceFeedSymbol,
 }) => {
   return (
-    <>
-      <tr key={priceFeedSymbol}>
-        <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Symbol</td>
-        <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{priceFeedSymbol}</td>
-      </tr>
-    </>
+    <tr key={priceFeedSymbol}>
+      <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Symbol</td>
+      <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{priceFeedSymbol}</td>
+    </tr>
   );
 };
 
@@ -362,14 +360,12 @@ const ModalContent: React.FC<ModalContentProps> = ({
         <p className="mb-8 leading-6">No proposed changes.</p>
       )}
       {Object.keys(changes).length > 0 && (
-        <>
-          <button
-            className="action-btn text-base"
-            onClick={onSendProposal}
-            disabled={isSendProposalButtonLoading}>
-            {isSendProposalButtonLoading ? <Spinner /> : "Send Proposal"}
-          </button>
-        </>
+        <button
+          className="action-btn text-base"
+          onClick={onSendProposal}
+          disabled={isSendProposalButtonLoading}>
+          {isSendProposalButtonLoading ? <Spinner /> : "Send Proposal"}
+        </button>
       )}
     </>
   );
@@ -488,7 +484,7 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
           },
         );
 
-        const response = await axios.post(proposerServerUrl + "/api/propose", {
+        const response = await axios.post(`${proposerServerUrl}/api/propose`, {
           instructions,
           cluster,
         });

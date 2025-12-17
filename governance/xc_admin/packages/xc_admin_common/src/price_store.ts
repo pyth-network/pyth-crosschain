@@ -166,7 +166,7 @@ export function parsePriceStoreInstruction(
         throw new Error("instruction data is too short");
       }
       const authorityKey = new PublicKey(instruction.data.subarray(2, 34));
-      if (instruction.keys.length != 3) {
+      if (instruction.keys.length !== 3) {
         throw new Error("invalid number of accounts");
       }
       data = {
@@ -183,7 +183,7 @@ export function parsePriceStoreInstruction(
         throw new Error("instruction data is too short");
       }
       const publisherKey = new PublicKey(instruction.data.subarray(3, 35));
-      if (instruction.keys.length != 5) {
+      if (instruction.keys.length !== 5) {
         throw new Error("invalid number of accounts");
       }
       data = {
@@ -215,8 +215,8 @@ export function parsePriceStoreInstruction(
   }
 
   const accountEquals = (a: AccountMeta, b: AccountMeta) =>
-    a.isSigner == b.isSigner &&
-    a.isWritable == b.isWritable &&
+    a.isSigner === b.isSigner &&
+    a.isWritable === b.isWritable &&
     a.pubkey.equals(b.pubkey);
 
   const accountMismatch = expected.keys.some(

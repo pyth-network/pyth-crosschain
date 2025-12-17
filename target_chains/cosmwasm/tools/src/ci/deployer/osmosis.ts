@@ -1,3 +1,5 @@
+import assert from "node:assert";
+import { readFileSync } from "node:fs";
 import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
 import {
   DirectSecp256k1HdWallet,
@@ -5,8 +7,6 @@ import {
 } from "@cosmjs/proto-signing";
 import { calculateFee, type DeliverTxResponse } from "@cosmjs/stargate";
 import { estimateOsmoFee } from "@osmonauts/utils";
-import assert from "assert";
-import { readFileSync } from "fs";
 import Long from "long";
 import { cosmwasm, getSigningOsmosisClient } from "osmojs";
 import type { ContractInfo, Deployer } from "./index.js";
@@ -52,7 +52,7 @@ export class OsmosisDeployer implements Deployer {
     // which seems to be not enough
     // hence again multiplying by 1.3
     const fee = calculateFee(
-      parseInt((parseInt(gas) * 1.3).toFixed()),
+      parseInt((parseInt(gas, 10) * 1.3).toFixed(), 10),
       "0.025uosmo",
     );
 
@@ -88,7 +88,7 @@ export class OsmosisDeployer implements Deployer {
     try {
       // {"key":"code_id","value":"14"}
       const ci = extractFromRawLog(rs.rawLog, "code_id");
-      codeId = parseInt(ci);
+      codeId = parseInt(ci, 10);
     } catch (e) {
       console.error(
         "Encountered an error in parsing deploy code result. Printing raw log",
@@ -163,7 +163,10 @@ export class OsmosisDeployer implements Deployer {
 
     try {
       // {"key":"code_id","value":"13"}
-      const resultCodeId = parseInt(extractFromRawLog(rs.rawLog, "code_id"));
+      const resultCodeId = parseInt(
+        extractFromRawLog(rs.rawLog, "code_id"),
+        10,
+      );
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(

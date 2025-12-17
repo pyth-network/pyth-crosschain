@@ -47,7 +47,7 @@ export class PythWrapperQuerier {
       });
 
       return updateFeeResponse as Coin;
-    } catch (e) {
+    } catch (_e) {
       throw new Error("Error fetching update fee");
     }
   }
@@ -76,7 +76,7 @@ export class PythWrapperQuerier {
       });
 
       return (priceFeedResponse as any).price_feed as PriceFeedResponse;
-    } catch (e) {
+    } catch (_e) {
       throw new Error("Error fetching update fee");
     }
   }

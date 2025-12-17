@@ -44,7 +44,8 @@
     "@types/yargs": "^17.0.10",
     "jest": "^29.4.1",
     "web3": "^1.8.2",
-    "yargs": "^17.4.1"
+    "yargs": "^17.4.1",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/price-service-client": "workspace:*",

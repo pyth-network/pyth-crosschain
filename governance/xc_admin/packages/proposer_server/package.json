@@ -35,7 +35,8 @@
     "ts-node": "catalog:"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21"
+    "@types/express": "^4.17.21",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

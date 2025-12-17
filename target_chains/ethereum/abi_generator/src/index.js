@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const solc = require("solc");
 
 /**
@@ -71,7 +71,7 @@ function generateAbi(contracts) {
     const abi = output.contracts[contractFile][contract].abi;
     fs.writeFileSync(
       `abis/${contract}.json`,
-      JSON.stringify(abi, null, 2) + "\n",
+      `${JSON.stringify(abi, null, 2)}\n`,
     );
   }
 }

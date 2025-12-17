@@ -1,3 +1,4 @@
+import crypto from "node:crypto"; // eslint-disable-line unicorn/prefer-node-protocol
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
@@ -20,7 +21,6 @@ import {
   type TransactionInstruction,
 } from "@solana/web3.js";
 import { JSONParser } from "@streamparser/json";
-import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
 import { z } from "zod";
 
 import {
@@ -367,12 +367,9 @@ export class PythStakingClient {
       .reverse()
       .filter(
         ({ position }) =>
-          position.targetWithParameters.integrityPool?.publisher !==
-            undefined &&
-          position.targetWithParameters.integrityPool.publisher.equals(
+          position.targetWithParameters.integrityPool?.publisher?.equals(
             publisher,
-          ) &&
-          positionState === getPositionState(position, currentEpoch),
+          ) && positionState === getPositionState(position, currentEpoch),
       );
 
     for (const { position, index } of eligiblePositions) {
@@ -817,7 +814,7 @@ export class PythStakingClient {
         continue;
       }
       const buffer = Buffer.from(val, "base64").reverse();
-      totalRewards += BigInt("0x" + buffer.toString("hex"));
+      totalRewards += BigInt(`0x${buffer.toString("hex")}`);
     }
 
     return {

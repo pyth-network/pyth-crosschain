@@ -195,7 +195,7 @@ export class PythTest extends BaseWrapper {
         type: "cell",
         cell: beginCell()
           .storeUint(dataSource.emitterChain, 16)
-          .storeUint(BigInt("0x" + dataSource.emitterAddress), 256)
+          .storeUint(BigInt(`0x${dataSource.emitterAddress}`), 256)
           .endCell(),
       },
     ]);

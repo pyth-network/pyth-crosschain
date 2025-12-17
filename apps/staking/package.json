@@ -65,6 +65,7 @@
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:",
     "tailwindcss-react-aria-components": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "typescript": "catalog:"
   }
 }

@@ -1,9 +1,9 @@
+import fs from "node:fs";
+import os from "node:os";
 import { Wallet } from "@coral-xyz/anchor";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
 import { Connection, Keypair } from "@solana/web3.js";
-import fs from "fs";
-import os from "os";
 import { type InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
@@ -13,8 +13,8 @@ const ETH_PRICE_FEED_ID =
   "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
 
 let keypairFile = "";
-if (process.env["SOLANA_KEYPAIR"]) {
-  keypairFile = process.env["SOLANA_KEYPAIR"];
+if (process.env.SOLANA_KEYPAIR) {
+  keypairFile = process.env.SOLANA_KEYPAIR;
 } else {
   keypairFile = `${os.homedir()}/.config/solana/id.json`;
 }

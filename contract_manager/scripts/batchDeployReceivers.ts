@@ -79,11 +79,11 @@ async function main() {
   const privateKey = argv["private-key"];
   const network = argv.network;
 
-  const setupInfo = await import(argv.contract + "/ReceiverSetup.json");
+  const setupInfo = await import(`${argv.contract}/ReceiverSetup.json`);
   const implementationInfo = await import(
-    argv.contract + "/ReceiverImplementation.json"
+    `${argv.contract}/ReceiverImplementation.json`
   );
-  const receiverInfo = await import(argv.contract + "/WormholeReceiver.json");
+  const receiverInfo = await import(`${argv.contract}/WormholeReceiver.json`);
 
   const payloads: Buffer[] = [];
   for (const chain of Object.values(DefaultStore.chains)) {

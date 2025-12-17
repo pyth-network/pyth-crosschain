@@ -1,11 +1,10 @@
+import { execSync } from "node:child_process";
 import { bcs } from "@mysten/sui/bcs";
 import type { SuiClient } from "@mysten/sui/client";
-
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
-import { execSync } from "child_process";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,

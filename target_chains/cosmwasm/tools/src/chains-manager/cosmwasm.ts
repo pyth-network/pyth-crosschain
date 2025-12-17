@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import {
   CosmWasmClient,
   type DeliverTxResponse,
@@ -15,7 +16,6 @@ import {
   type OfflineSigner,
 } from "@cosmjs/proto-signing";
 import { GasPrice } from "@cosmjs/stargate";
-import assert from "assert";
 import type {
   ChainExecutor,
   ExecuteContractRequest,
@@ -64,12 +64,12 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getBalance(): Promise<number> {
-    const address = (await this.signer.getAccounts())[0]!.address;
+    const address = (await this.signer.getAccounts())[0]?.address;
     const cosmwasmClient = await CosmWasmClient.connect(this.endpoint);
 
     // We are interested only in the coin that we pay gas fees in.
     const denom = GasPrice.fromString(this.gasPrice).denom;
-    const balance = await cosmwasmClient.getBalance(address, denom);
+    const balance = await cosmwasmClient.getBalance(address!, denom);
 
     // By default the coins have 6 decimal places in CosmWasm
     // and the denom is usually `u<chain>`.
@@ -77,13 +77,14 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getAddress(): Promise<string> {
-    return (await this.signer.getAccounts())[0]!.address;
+    const a = await this.signer.getAccounts();
+    return a[0]?.address!;
   }
 
   private async signAndBroadcastMsg(
     encodedMsgObject: EncodeObject,
   ): Promise<DeliverTxResponse> {
-    const address = (await this.signer.getAccounts())[0]!.address;
+    const address = (await this.signer.getAccounts())[0]?.address;
 
     const cosmwasmClient = await SigningCosmWasmClient.connectWithSigner(
       this.endpoint,
@@ -95,7 +96,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 
     try {
       const txResponse = await cosmwasmClient.signAndBroadcast(
-        address,
+        address!,
         [encodedMsgObject],
         2,
       );
@@ -132,7 +133,10 @@ export class CosmwasmExecutor implements ChainExecutor {
     if (txResponse.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
 
-    const codeId = parseInt(extractFromRawLog(txResponse.rawLog, "code_id"));
+    const codeId = parseInt(
+      extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
+    );
 
     return {
       codeId,
@@ -226,6 +230,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 
     const resultCodeId = parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
 
     assert.strictEqual(newCodeId, resultCodeId);
@@ -264,7 +269,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 function extractFromRawLog(rawLog: string, key: string): string {
   try {
     const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
-    return rx.exec(rawLog)![1] ?? "";
+    return rx.exec(rawLog)?.[1] ?? "";
   } catch (e) {
     console.error(
       "Encountered an error in parsing tx result. Printing raw log",

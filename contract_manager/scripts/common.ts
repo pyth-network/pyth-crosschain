@@ -227,7 +227,7 @@ export function getSelectedChains(argv: {
         .toString()}`,
     );
   for (const chain of selectedChains) {
-    if (chain.isMainnet() != selectedChains[0]?.isMainnet())
+    if (chain.isMainnet() !== selectedChains[0]?.isMainnet())
       throw new Error("All chains must be either mainnet or testnet");
   }
   return selectedChains;
@@ -333,10 +333,10 @@ export async function deployWormholeContract(
   const initData = setupContract.methods
     .setup(
       receiverImplAddr,
-      wormholeConfig.initialGuardianSet.map((addr: string) => "0x" + addr),
+      wormholeConfig.initialGuardianSet.map((addr: string) => `0x${addr}`),
       chain.getWormholeChainId(),
       wormholeConfig.governanceChainId,
-      "0x" + wormholeConfig.governanceContract,
+      `0x${wormholeConfig.governanceContract}`,
     )
     .encodeABI();
 

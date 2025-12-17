@@ -132,7 +132,8 @@
     "@types/node": "^18.19.54",
     "@types/ws": "^8.5.12",
     "ts-node": "catalog:",
-    "typedoc": "^0.26.8"
+    "typedoc": "^0.26.8",
+    "typescript": "catalog:"
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"

@@ -2,11 +2,9 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   BorshAccountsCoder,
   type IdlAccounts,
-  IdlTypes,
   type Program,
 } from "@coral-xyz/anchor";
 import type NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import lumina from "@lumina-dev/test";
 import { type AccountMeta, ComputeBudgetProgram } from "@solana/web3.js";
 import bs58 from "bs58";
 import { assert } from "chai";
@@ -306,7 +304,7 @@ describe("message_buffer", () => {
       });
 
     console.log(`addPriceTx: ${addPriceTx}`);
-    const pythPriceAccount = await provider.connection.getAccountInfo(
+    const _pythPriceAccount = await provider.connection.getAccountInfo(
       mockCpiCallerAddPriceTxPubkeys.pythPriceAccount,
     );
 
@@ -736,7 +734,7 @@ function parseMessageBuffer(
   for (let i = 0; i < msgBufferHeader.endOffsets.length; i++) {
     const endOffset = msgBufferHeader.endOffsets[i];
 
-    if (endOffset == 0) {
+    if (endOffset === 0) {
       console.log(`endOffset = 0. breaking`);
       break;
     }
@@ -745,12 +743,12 @@ function parseMessageBuffer(
     const { header: msgHeader, data: msgData } =
       parseMessageBytes(messageBytes);
     console.info(`header: ${JSON.stringify(msgHeader, null, 2)}`);
-    if (msgHeader.schema == 0) {
+    if (msgHeader.schema === 0) {
       accumulatorMessages.push(parseFullPriceMessage(msgData));
-    } else if (msgHeader.schema == 1) {
+    } else if (msgHeader.schema === 1) {
       accumulatorMessages.push(parseCompactPriceMessage(msgData));
     } else {
-      console.warn("unknown msgHeader.schema: " + i);
+      console.warn(`unknown msgHeader.schema: ${i}`);
       continue;
     }
     start = endOffset;

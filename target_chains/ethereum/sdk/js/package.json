@@ -43,7 +43,8 @@
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.10",
     "jest": "^29.4.1",
-    "ts-jest": "^29.0.5"
+    "ts-jest": "^29.0.5",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/hermes-client": "workspace:*",

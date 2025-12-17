@@ -1,4 +1,3 @@
-import { http } from "wagmi";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
 import "@matterlabs/hardhat-zksync-deploy";

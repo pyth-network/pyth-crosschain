@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 // @ts-expect-error
 globalThis.crypto = crypto;

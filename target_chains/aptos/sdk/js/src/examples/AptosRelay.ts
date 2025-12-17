@@ -53,7 +53,7 @@ async function run() {
     sender,
     new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
-        argv.pythContract + "::pyth",
+        `${argv.pythContract}::pyth`,
         "update_price_feeds_with_funder",
         [],
         [AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)],

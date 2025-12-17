@@ -28,7 +28,8 @@
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
-    "jest": "catalog:"
+    "jest": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "uuid": "catalog:"

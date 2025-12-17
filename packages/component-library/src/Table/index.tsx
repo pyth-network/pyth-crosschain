@@ -94,11 +94,11 @@ export const Table = <T extends string>({
       </div>
     )}
     {props.hideHeadersInEmptyState === true && rows?.length === 0 ? (
-      <>
-        {"renderEmptyState" in props
-          ? props.renderEmptyState({ isEmpty: true, isDropTarget: false })
-          : props.emptyState}
-      </>
+      "renderEmptyState" in props ? (
+        props.renderEmptyState({ isEmpty: true, isDropTarget: false })
+      ) : (
+        props.emptyState
+      )
     ) : (
       <UnstyledTable
         aria-label={label}

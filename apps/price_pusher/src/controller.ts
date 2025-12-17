@@ -84,13 +84,13 @@ export class Controller {
           this.metrics.recordUpdateCondition(priceId, alias, priceShouldUpdate);
         }
 
-        if (priceShouldUpdate == UpdateCondition.YES) {
+        if (priceShouldUpdate === UpdateCondition.YES) {
           pushThresholdMet = true;
         }
 
         if (
-          priceShouldUpdate == UpdateCondition.YES ||
-          priceShouldUpdate == UpdateCondition.EARLY
+          priceShouldUpdate === UpdateCondition.YES ||
+          priceShouldUpdate === UpdateCondition.EARLY
         ) {
           pricesToPush.push(priceConfig);
           pubTimesToPush.push((targetLatestPrice?.publishTime ?? 0) + 1);

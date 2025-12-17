@@ -1,3 +1,5 @@
+import assert from "node:assert";
+import { readFileSync } from "node:fs";
 import { fromBech32, toHex } from "@cosmjs/encoding";
 import { getNetworkInfo, type Network } from "@injectivelabs/networks";
 import {
@@ -14,9 +16,7 @@ import {
   TxGrpcClient,
   type TxResponse,
 } from "@injectivelabs/sdk-ts";
-import assert from "assert";
 import { ethers } from "ethers";
-import { readFileSync } from "fs";
 import type { Deployer } from "./index.js";
 
 export type InjectiveHost = {
@@ -105,7 +105,7 @@ export class InjectiveDeployer implements Deployer {
     try {
       // {"key":"code_id","value":"\"14\""}
       const ci = extractFromRawLog(txResponse.rawLog, "code_id");
-      codeId = parseInt(ci);
+      codeId = parseInt(ci, 10);
     } catch (e) {
       console.error(
         "Encountered an error in parsing deploy code result. Printing raw log",
@@ -166,7 +166,10 @@ export class InjectiveDeployer implements Deployer {
 
     let resultCodeId: number;
     try {
-      resultCodeId = parseInt(extractFromRawLog(txResponse.rawLog, "code_id"));
+      resultCodeId = parseInt(
+        extractFromRawLog(txResponse.rawLog, "code_id"),
+        10,
+      );
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
@@ -218,11 +221,11 @@ export class InjectiveDeployer implements Deployer {
 // Injective addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
 function convert_injective_address_to_hex(human_addr: string) {
-  return "0x" + toHex(ethers.utils.zeroPad(fromBech32(human_addr).data, 32));
+  return `0x${toHex(ethers.utils.zeroPad(fromBech32(human_addr).data, 32))}`;
 }
 
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
-  return rx.exec(rawLog)[1]!;
+  return rx.exec(rawLog)?.[1]!;
 }

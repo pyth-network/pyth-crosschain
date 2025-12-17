@@ -78,7 +78,7 @@ async function testLatency(
     });
 
     const event = events.find(
-      (event) => event.returnValues.request[1] == sequenceNumber,
+      (event) => event.returnValues.request[1] === sequenceNumber,
     );
 
     if (event !== undefined) {

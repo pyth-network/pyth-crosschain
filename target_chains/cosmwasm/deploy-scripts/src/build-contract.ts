@@ -1,6 +1,6 @@
+import { exec } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import toml from "@ltd/j-toml";
-import { exec } from "child_process";
-import { readFileSync, writeFileSync } from "fs";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 

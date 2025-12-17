@@ -24,7 +24,7 @@ describe("Test http endpoints", () => {
 
     const priceFeeds = await connection.getLatestPriceFeeds(ids);
     expect(priceFeeds).toBeDefined();
-    expect(priceFeeds!.length).toEqual(ids.length);
+    expect(priceFeeds?.length).toEqual(ids.length);
 
     for (const priceFeed of priceFeeds!) {
       expect(priceFeed.id.length).toBe(64); // 32 byte address has size 64 in hex
@@ -46,7 +46,7 @@ describe("Test http endpoints", () => {
 
     const priceFeeds = await connection.getLatestPriceFeeds(ids);
     expect(priceFeeds).toBeDefined();
-    expect(priceFeeds!.length).toEqual(ids.length);
+    expect(priceFeeds?.length).toEqual(ids.length);
 
     for (const priceFeed of priceFeeds!) {
       expect(priceFeed.getMetadata()).toBeInstanceOf(PriceFeedMetadata);
@@ -64,7 +64,7 @@ describe("Test http endpoints", () => {
 
     const priceFeeds = await connection.getLatestPriceFeeds(ids);
     expect(priceFeeds).toBeDefined();
-    expect(priceFeeds!.length).toEqual(ids.length);
+    expect(priceFeeds?.length).toEqual(ids.length);
 
     for (const priceFeed of priceFeeds!) {
       expect(priceFeed.getMetadata()).toBeUndefined();
@@ -96,7 +96,7 @@ describe("Test http endpoints", () => {
     const ids = await connection.getPriceFeedIds();
     expect(ids.length).toBeGreaterThan(0);
 
-    const publishTime10SecAgo = Math.floor(new Date().getTime() / 1000) - 10;
+    const publishTime10SecAgo = Math.floor(Date.now() / 1000) - 10;
     const [vaa, vaaPublishTime] = await connection.getVaa(
       ids[0],
       publishTime10SecAgo,

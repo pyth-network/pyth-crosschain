@@ -50,7 +50,7 @@ async function main() {
     ];
 
   const codeHash = argv["code-hash"];
-  if (Buffer.from(codeHash, "hex").length != 32) {
+  if (Buffer.from(codeHash, "hex").length !== 32) {
     throw new Error("invalid code hash format");
   }
   console.log(

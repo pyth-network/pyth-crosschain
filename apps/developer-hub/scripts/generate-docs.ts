@@ -573,7 +573,7 @@ function escapeQuotes(text: string): string {
 }
 
 async function writeJson(filePath: string, data: object): Promise<void> {
-  const jsonContent = JSON.stringify(data, undefined, 2) + "\n";
+  const jsonContent = `${JSON.stringify(data, undefined, 2)}\n`;
   await fs.writeFile(filePath, jsonContent);
 }
 

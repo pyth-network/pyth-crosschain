@@ -831,7 +831,7 @@ export class StarknetChain extends Chain {
       // eslint-disable-next-line unicorn/number-literal-case
       0x7_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_00n;
 
-    const publicKey = await new Signer("0x" + privateKey).getPubKey();
+    const publicKey = await new Signer(`0x${privateKey}`).getPubKey();
 
     const value = computeHashOnElements([
       shortString.encodeShortString("STARKNET_CONTRACT_ADDRESS"),
@@ -852,7 +852,7 @@ export class StarknetChain extends Chain {
     const tokenClassData = await provider.getClassAt(ETH);
     const tokenContract = new Contract(tokenClassData.abi, ETH, provider);
     const decimals = await tokenContract.decimals();
-    const amount = await tokenContract.balanceOf("0x" + address);
+    const amount = await tokenContract.balanceOf(`0x${address}`);
     return Number(amount) / Number(10n ** decimals);
   }
 

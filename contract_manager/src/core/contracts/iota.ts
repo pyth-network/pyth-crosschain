@@ -108,9 +108,9 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     };
   }) {
     let expo = priceInfo.fields.expo.fields.magnitude;
-    if (priceInfo.fields.expo.fields.negative) expo = "-" + expo;
+    if (priceInfo.fields.expo.fields.negative) expo = `-${expo}`;
     let price = priceInfo.fields.price.fields.magnitude;
-    if (priceInfo.fields.price.fields.negative) price = "-" + price;
+    if (priceInfo.fields.price.fields.negative) price = `-${price}`;
     return {
       conf: priceInfo.fields.conf,
       publishTime: priceInfo.fields.timestamp,

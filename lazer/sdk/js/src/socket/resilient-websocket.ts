@@ -115,7 +115,7 @@ export class ResilientWebSocket {
       return;
     }
 
-    if (this.wsFailedAttempts == 0) {
+    if (this.wsFailedAttempts === 0) {
       this.logger.info(`Creating Web Socket client`);
     }
 

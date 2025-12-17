@@ -230,9 +230,11 @@ export class TonPriceFeedContract extends PriceFeedContract {
     if (result === null) {
       throw new Error("Governance data source not found");
     }
+    const emitterChain = Number(result?.emitterChain);
+    const emitterAddress = String(result?.emitterAddress);
     return {
-      emitterChain: result!.emitterChain,
-      emitterAddress: result!.emitterAddress,
+      emitterChain,
+      emitterAddress,
     };
   }
 

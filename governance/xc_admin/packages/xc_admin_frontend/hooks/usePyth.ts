@@ -97,7 +97,7 @@ export const usePyth = (): PythHookData => {
 
         setRawConfig(parsedConfig as RawConfig);
         setIsLoading(false);
-      } catch (e) {
+      } catch (_e) {
         if (cancelled) return;
         if (urlsIndex === urls.length - 1) {
           setIsLoading(false);

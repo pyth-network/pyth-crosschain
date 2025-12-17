@@ -75,25 +75,23 @@ const defaultColumns = [
     cell: (props) => {
       const pubkey = props.getValue();
       return (
-        <>
-          <div
-            aria-label="copy public key"
-            className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-            onClick={() => {
-              copy(pubkey);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") copy(pubkey);
-            }}
-            role="button"
-            tabIndex={0}>
-            <span className="mr-2 hidden lg:block">{pubkey}</span>
-            <span className="mr-2 lg:hidden">
-              {pubkey.slice(0, 6) + "..." + pubkey.slice(-6)}
-            </span>{" "}
-            <CopyIcon className="shrink-0" />
-          </div>
-        </>
+        <div
+          aria-label="copy public key"
+          className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+          onClick={() => {
+            copy(pubkey);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") copy(pubkey);
+          }}
+          role="button"
+          tabIndex={0}>
+          <span className="mr-2 hidden lg:block">{pubkey}</span>
+          <span className="mr-2 lg:hidden">
+            {`${pubkey.slice(0, 6)}...${pubkey.slice(-6)}`}
+          </span>{" "}
+          <CopyIcon className="shrink-0" />
+        </div>
       );
     },
     header: () => <span>Public Key</span>,
@@ -242,7 +240,7 @@ const UpdatePermissions = () => {
       });
     } else {
       // delete account from pubkeyChanges if it exists
-      if (pubkeyChanges && pubkeyChanges[account]) {
+      if (pubkeyChanges?.[account]) {
         delete pubkeyChanges[account];
       }
       setPubkeyChanges(pubkeyChanges);
@@ -312,16 +310,14 @@ const UpdatePermissions = () => {
             {Object.keys(changes).map((key) => {
               return (
                 changes[key].prev !== changes[key].new && (
-                  <>
-                    <div
-                      key={key}
-                      className="mb-4 flex items-center justify-between">
-                      <span className="pr-4 text-left font-bold">{key}</span>
-                      <span className="mr-2">
-                        {changes[key].prev} &rarr; {changes[key].new}
-                      </span>
-                    </div>
-                  </>
+                  <div
+                    key={key}
+                    className="mb-4 flex items-center justify-between">
+                    <span className="pr-4 text-left font-bold">{key}</span>
+                    <span className="mr-2">
+                      {changes[key].prev} &rarr; {changes[key].new}
+                    </span>
+                  </div>
                 )
               );
             })}
@@ -426,9 +422,7 @@ const UpdatePermissions = () => {
                             );
                           }}
                           contentEditable={
-                            cell.column.id === "newPubkey" && editable
-                              ? true
-                              : false
+                            !!(cell.column.id === "newPubkey" && editable)
                           }
                           suppressContentEditableWarning={true}
                           className={

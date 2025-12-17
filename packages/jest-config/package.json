@@ -14,7 +14,8 @@
     "@cprussin/jest-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "^29",
-    "@types/react": "catalog:"
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
   },
   "dependencies": {
     "@swc/core": "^1.15.0",

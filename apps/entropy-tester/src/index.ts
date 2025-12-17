@@ -59,7 +59,7 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
   const loadedConfigs = configs.map((config) => {
     const interval = timeToSeconds(config.interval);
     const contracts = Object.values(DefaultStore.entropy_contracts).filter(
-      (contract) => contract.chain.getId() == config["chain-id"],
+      (contract) => contract.chain.getId() === config["chain-id"],
     );
     const firstContract = contracts[0];
     if (contracts.length === 0 || !firstContract) {
@@ -115,6 +115,7 @@ async function testLatency(
   // Read the sequence number for the request from the transaction events.
   const sequenceNumber = Number.parseInt(
     requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber,
+    10,
   );
   logger.info(
     { sequenceNumber, txHash: requestResponse.transactionHash },
@@ -129,7 +130,7 @@ async function testLatency(
     const request = await contract.getRequest(provider, sequenceNumber);
     logger.debug(request);
 
-    if (Number.parseInt(request.sequenceNumber) === 0) {
+    if (Number.parseInt(request.sequenceNumber, 10) === 0) {
       // 0 means the request is cleared
       const endTime = Date.now();
       logger.info(

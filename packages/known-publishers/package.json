@@ -32,7 +32,8 @@
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "jest": "catalog:",
-    "react": "catalog:"
+    "react": "catalog:",
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=22.14.0"

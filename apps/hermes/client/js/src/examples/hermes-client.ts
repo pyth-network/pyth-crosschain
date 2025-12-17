@@ -88,7 +88,7 @@ async function run() {
   eventSource.onmessage = (event: MessageEvent<string>) => {
     console.log("Received price update:", event.data);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const priceUpdate = JSON.parse(event.data) as PriceUpdate;
+    const _priceUpdate = JSON.parse(event.data) as PriceUpdate;
   };
 
   eventSource.onerror = (error: Event) => {

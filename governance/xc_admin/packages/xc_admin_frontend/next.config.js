@@ -7,8 +7,8 @@ const nextConfig = {
   webpack(config, { isServer }) {
     config.experiments = { asyncWebAssembly: true, layers: true };
     config.resolve.fallback = { fs: false };
-    const fileLoaderRule = config.module.rules.find(
-      (rule) => rule.test && rule.test?.test?.(".svg"),
+    const fileLoaderRule = config.module.rules.find((rule) =>
+      rule.test?.test?.(".svg"),
     );
     fileLoaderRule.exclude = /\.inline\.svg$/;
     config.module.rules.push({

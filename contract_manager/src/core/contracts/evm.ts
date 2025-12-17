@@ -119,7 +119,7 @@ export class EvmWormholeContract extends WormholeContract {
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const wormholeContract = new web3.eth.Contract(WORMHOLE_ABI, this.address);
     const transactionObject = wormholeContract.methods.submitNewGuardianSet(
-      "0x" + vaa.toString("hex"),
+      `0x${vaa.toString("hex")}`,
     );
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
@@ -462,7 +462,7 @@ export class EvmExecutorContract extends Storable {
     //Unfortunately, there is no public method to get the wormhole address
     //Found 251 by using `forge build --extra-output storageLayout` and finding the slot for the wormhole variable.
     let address = await web3.eth.getStorageAt(this.address, 251);
-    address = "0x" + address.slice(26);
+    address = `0x${address.slice(26)}`;
     return new EvmWormholeContract(this.chain, address);
   }
 
@@ -516,7 +516,7 @@ export class EvmExecutorContract extends Storable {
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const executorContract = new web3.eth.Contract(EXECUTOR_ABI, this.address);
     const transactionObject = executorContract.methods.execute(
-      "0x" + vaa.toString("hex"),
+      `0x${vaa.toString("hex")}`,
     );
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,
@@ -582,7 +582,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const storagePosition =
       "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
     let address = await web3.eth.getStorageAt(this.address, storagePosition);
-    address = "0x" + address.slice(26);
+    address = `0x${address.slice(26)}`;
     return address;
   }
 
@@ -621,7 +621,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
 
   async getPriceFeed(feedId: string) {
     const pythContract = this.getContract();
-    const feed = "0x" + feedId;
+    const feed = `0x${feedId}`;
     const exists = await pythContract.methods.priceFeedExists(feed).call();
     if (!exists) {
       return;
@@ -698,7 +698,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const web3 = this.chain.getWeb3();
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
-    const priceFeedUpdateData = vaas.map((vaa) => "0x" + vaa.toString("hex"));
+    const priceFeedUpdateData = vaas.map((vaa) => `0x${vaa.toString("hex")}`);
     const updateFee = await pythContract.methods
       .getUpdateFee(priceFeedUpdateData)
       .call();
@@ -719,7 +719,7 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     const transactionObject = pythContract.methods.executeGovernanceInstruction(
-      "0x" + vaa.toString("hex"),
+      `0x${vaa.toString("hex")}`,
     );
     const result = await this.chain.estiamteAndSendTransaction(
       transactionObject,

@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   getPythClusterApiUrl,
@@ -15,7 +16,6 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID } from "@sqds/mesh";
-import * as fs from "fs";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const VAULT: PublicKey = new PublicKey(envOrErr("VAULT"));
@@ -45,7 +45,7 @@ async function run() {
   for (const proposal of proposals) {
     console.log("Trying to execute: ", proposal.publicKey.toBase58());
     // If we have previously cancelled because the proposal was failing, don't attempt
-    if (proposal.cancelled.length == 0) {
+    if (proposal.cancelled.length === 0) {
       await executeProposal(proposal, squad, CLUSTER, COMMITMENT, {
         computeUnitPriceMicroLamports: COMPUTE_UNIT_PRICE_MICROLAMPORTS!,
       });

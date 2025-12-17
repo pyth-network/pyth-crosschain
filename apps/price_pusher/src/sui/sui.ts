@@ -55,7 +55,7 @@ export class SuiPriceListener extends ChainPriceListener {
       const priceInfoObjectId =
         await this.pythClient.getPriceFeedObjectId(priceId);
       if (priceInfoObjectId === undefined) {
-        throw new Error("Price not found on chain for price id " + priceId);
+        throw new Error(`Price not found on chain for price id ${priceId}`);
       }
 
       // Fetching the price info object for the above priceInfoObjectId
@@ -65,7 +65,7 @@ export class SuiPriceListener extends ChainPriceListener {
       });
 
       if (!priceInfoObject.data?.content)
-        throw new Error("Price not found on chain for price id " + priceId);
+        throw new Error(`Price not found on chain for price id ${priceId}`);
 
       if (priceInfoObject.data.content.dataType !== "moveObject")
         throw new Error("fetched object datatype should be moveObject");
@@ -138,7 +138,7 @@ export class SuiPricePusher implements IPricePusher {
         },
       })
       .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
+        if (result.data?.content?.dataType === "moveObject") {
           return result.data.content.fields;
         }
 
@@ -344,9 +344,8 @@ export class SuiPricePusher implements IPricePusher {
     let balance;
     if (
       coinResult.data?.content &&
-      coinResult.data.content.dataType == "moveObject"
+      coinResult.data.content.dataType === "moveObject"
     ) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       balance = coinResult.data.content.fields.balance;
     } else throw new Error("Bad coin object");
@@ -376,9 +375,9 @@ export class SuiPricePusher implements IPricePusher {
       throw new Error("Failed to refresh object reference");
     } else {
       return {
-        digest: objectResponse.data!.digest,
-        objectId: objectResponse.data!.objectId,
-        version: objectResponse.data!.version,
+        digest: objectResponse.data?.digest!,
+        objectId: objectResponse.data?.objectId!,
+        version: objectResponse.data?.version!,
       };
     }
   }
@@ -446,8 +445,8 @@ export class SuiPricePusher implements IPricePusher {
         `Failed to initialize gas pool: ${error}. Try re-running the script`,
       );
     }
-    const newCoins = result.effects.created!.map((obj) => obj.reference);
-    if (newCoins.length !== numGasObjects) {
+    const newCoins = result.effects?.created?.map((obj) => obj.reference);
+    if (newCoins?.length !== numGasObjects) {
       throw new Error(
         `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${JSON.stringify(newCoins)}`,
       );
@@ -499,9 +498,7 @@ export class SuiPricePusher implements IPricePusher {
             "quorum of validators because of locked objects. Retried a conflicting transaction",
           )
         ) {
-          // eslint-disable-next-line unicorn/no-array-for-each
           Object.values((error_ as any).data).forEach((lockedObjects: any) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, unicorn/no-array-for-each
             lockedObjects.forEach((lockedObject: [string, number, string]) => {
               lockedAddresses.add(lockedObject[0]);
             });
@@ -518,10 +515,9 @@ export class SuiPricePusher implements IPricePusher {
           `Failed to merge coins when initializing gas pool: ${error}. Try re-running the script`,
         );
       }
-      finalCoin = mergeResult.effects.mutated!.map((obj) => obj.reference)[0];
+      finalCoin = mergeResult.effects?.mutated?.map((obj) => obj.reference)[0];
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     return finalCoin!;
   }
 }

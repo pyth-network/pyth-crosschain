@@ -93,9 +93,9 @@ async function main() {
     seqNumber++
   ) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
-      await vault!.getEmitter(),
+      await vault?.getEmitter(),
       seqNumber,
-      vault!.cluster,
+      vault?.cluster,
     );
     const vaa = await submittedWormholeMessage.fetchVaa();
     const decodedAction = decodeGovernancePayload(parseVaa(vaa).payload);

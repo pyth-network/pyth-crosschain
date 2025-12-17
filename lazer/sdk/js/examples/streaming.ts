@@ -50,7 +50,7 @@ void client.getSymbols().then((symbols) => {
 client.addMessageListener((message) => {
   switch (message.type) {
     case "json": {
-      if (message.value.type == "streamUpdated") {
+      if (message.value.type === "streamUpdated") {
         refreshFeedDisplay(message.value as JsonUpdate, feedData, symbolsMap);
       }
       break;

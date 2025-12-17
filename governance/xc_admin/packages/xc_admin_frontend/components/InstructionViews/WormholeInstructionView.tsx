@@ -288,7 +288,7 @@ export const WormholeInstructionView = ({
           content={
             <div>
               Address:
-              <CopyText text={"0x" + governanceAction.address} />
+              <CopyText text={`0x${governanceAction.address}`} />
             </div>
           }
         />
@@ -333,22 +333,18 @@ export const WormholeInstructionView = ({
         <GovernanceInstructionView
           instruction={governanceAction}
           actionName={governanceAction.actionName}
-          content={
-            <>
-              {governanceAction.dataSources.map((dataSource, idx) => (
-                <div key={idx}>
-                  Datasource #{idx + 1}:
-                  <ul className="px-4">
-                    <li>Emitter Chain: {dataSource.emitterChain}</li>
-                    <li>
-                      Emitter Address:{" "}
-                      <CopyText text={"0x" + dataSource.emitterAddress} />
-                    </li>
-                  </ul>
-                </div>
-              ))}
-            </>
-          }
+          content={governanceAction.dataSources.map((dataSource, idx) => (
+            <div key={idx}>
+              Datasource #{idx + 1}:
+              <ul className="px-4">
+                <li>Emitter Chain: {dataSource.emitterChain}</li>
+                <li>
+                  Emitter Address:{" "}
+                  <CopyText text={`0x${dataSource.emitterAddress}`} />
+                </li>
+              </ul>
+            </div>
+          ))}
         />
       )}
 
@@ -359,7 +355,7 @@ export const WormholeInstructionView = ({
           content={
             <div>
               New Wormhole Address:
-              <CopyText text={"0x" + governanceAction.address} />
+              <CopyText text={`0x${governanceAction.address}`} />
             </div>
           }
         />
@@ -411,11 +407,11 @@ export const WormholeInstructionView = ({
             <div>
               <div>
                 Executor Address:{" "}
-                <CopyText text={"0x" + governanceAction.executorAddress} />
+                <CopyText text={`0x${governanceAction.executorAddress}`} />
               </div>
               <div>
                 Call Address:{" "}
-                <CopyText text={"0x" + governanceAction.callAddress} />
+                <CopyText text={`0x${governanceAction.callAddress}`} />
               </div>
               <div>Value: {governanceAction.value.toString()}</div>
               <EvmExecuteCallData calldata={governanceAction.calldata} />

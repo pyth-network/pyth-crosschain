@@ -547,7 +547,7 @@ export class PythSolanaReceiver {
           computeUnits: POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
         });
         priceFeedIdToPriceUpdateAccount[
-          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+          `0x${parsePriceFeedMessage(update.message).feedId.toString("hex")}`
         ] = priceUpdateKeypair.publicKey;
 
         closeInstructions.push(
@@ -618,7 +618,7 @@ export class PythSolanaReceiver {
         });
 
         priceFeedIdToPriceUpdateAccount[
-          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+          `0x${parsePriceFeedMessage(update.message).feedId.toString("hex")}`
         ] = priceUpdateKeypair.publicKey;
         closeInstructions.push(
           await this.buildClosePriceUpdateInstruction(
@@ -720,7 +720,7 @@ export class PythSolanaReceiver {
       });
 
       priceFeedIdToTwapUpdateAccount[
-        "0x" + parseTwapMessage(startUpdate.message).feedId.toString("hex")
+        `0x${parseTwapMessage(startUpdate.message).feedId.toString("hex")}`
       ] = twapUpdateKeypair.publicKey;
       closeInstructions.push(
         await this.buildCloseTwapUpdateInstruction(twapUpdateKeypair.publicKey),
@@ -798,7 +798,7 @@ export class PythSolanaReceiver {
         });
 
         priceFeedIdToPriceUpdateAccount[
-          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+          `0x${parsePriceFeedMessage(update.message).feedId.toString("hex")}`
         ] = this.getPriceFeedAccountAddress(shardId, feedId);
       }
     }
@@ -961,13 +961,13 @@ export function getPriceFeedAccountForProgram(
   priceFeedId: Buffer | string,
   pushOracleProgramId?: PublicKey,
 ): PublicKey {
-  if (typeof priceFeedId == "string") {
+  if (typeof priceFeedId === "string") {
     priceFeedId = priceFeedId.startsWith("0x")
       ? Buffer.from(priceFeedId.slice(2), "hex")
       : Buffer.from(priceFeedId, "hex");
   }
 
-  if (priceFeedId.length != 32) {
+  if (priceFeedId.length !== 32) {
     throw new Error("Feed ID should be 32 bytes long");
   }
   const shardBuffer = Buffer.alloc(2);

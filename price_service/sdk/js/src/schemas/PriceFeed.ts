@@ -184,7 +184,7 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
       return null;
     }
     const d = new Date(val);
-    if (isNaN(d.valueOf())) {
+    if (Number.isNaN(d.valueOf())) {
       return invalidValue("Date", val);
     }
     return d;

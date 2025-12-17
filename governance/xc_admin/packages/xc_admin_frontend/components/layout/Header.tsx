@@ -97,7 +97,7 @@ const Header = () => {
                   <Link
                     href={item.href}
                     className={
-                      router.pathname == item.href
+                      router.pathname === item.href
                         ? "nav-link font-bold"
                         : "nav-link"
                     }>

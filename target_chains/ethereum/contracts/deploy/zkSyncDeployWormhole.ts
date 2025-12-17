@@ -1,11 +1,8 @@
 import type { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import {
   DefaultStore,
-  EvmChain,
   EvmWormholeContract,
 } from "@pythnetwork/contract-manager";
-import { CHAINS } from "@pythnetwork/xc-admin-common";
-import { assert } from "chai";
 
 export function findWormholeContract(chainId: string): string | undefined {
   for (const contract of Object.values(DefaultStore.wormhole_contracts)) {
@@ -20,7 +17,7 @@ export function findWormholeContract(chainId: string): string | undefined {
 
 export async function deployWormholeContract(
   deployer: Deployer,
-  chainName: string,
+  _chainName: string,
   wormholeGovernanceChainId: string,
   wormholeGovernanceContract: string,
   wormholeInitialSigners: string[],

@@ -47,8 +47,8 @@ export function pythClusterApiUrls(cluster: PythCluster) {
 
 export function deriveWsUrl(httpUrl: string) {
   if (httpUrl.startsWith("https://")) {
-    return "wss://" + httpUrl.slice(8);
+    return `wss://${httpUrl.slice(8)}`;
   } else {
-    return "ws://" + httpUrl.slice(7);
+    return `ws://${httpUrl.slice(7)}`;
   }
 }

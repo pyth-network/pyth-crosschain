@@ -1,9 +1,9 @@
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
 import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
-import { spawnSync } from "child_process";
-import fs from "fs";
 import sha3 from "js-sha3";
 import type { Argv } from "yargs";
 
@@ -380,7 +380,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
     .demandCommand();
 
 function getSender() {
-  const key = process.env["APTOS_PRIVATE_KEY"];
+  const key = process.env.APTOS_PRIVATE_KEY;
   if (key === undefined) {
     throw new Error(
       `Please set the APTOS_PRIVATE_KEY environment variable to the private key of the sender in hex format`,
@@ -462,7 +462,7 @@ function buildPackage(dir: string, addrs?: string): Package {
   const buildDir = `${dir}/build/${buildDirs[0]}`;
   return {
     meta_file: `${buildDir}/package-metadata.bcs`,
-    mv_files: result["Result"].map(
+    mv_files: result.Result.map(
       (mod: string) => `${buildDir}/bytecode_modules/${mod.split("::")[1]}.mv`,
     ),
   };
@@ -502,7 +502,7 @@ function createDeployDerivedTransaction(
 
   return new TxnBuilderTypes.TransactionPayloadEntryFunction(
     TxnBuilderTypes.EntryFunction.natural(
-      deployer + "::deployer",
+      `${deployer}::deployer`,
       "deploy_derived",
       [],
       [

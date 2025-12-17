@@ -7,7 +7,7 @@ type LoadbarProps = {
 
 const Loadbar: React.FC<LoadbarProps> = ({ theme, width }) => {
   let color = "bg-dark-300";
-  if (theme == "light") {
+  if (theme === "light") {
     color = "bg-beige-300";
   }
   return (

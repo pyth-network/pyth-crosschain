@@ -79,10 +79,10 @@ async function main() {
     const userRandomNumber = await contract.getUserRandomNumber(
       provider,
       sequenceNumber,
-      Number.parseInt(request.blockNumber),
+      Number.parseInt(request.blockNumber, 10),
     );
     console.log("User random number:", userRandomNumber);
-    const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
+    const revealUrl = `${providerInfo.uri}/revelations/${sequenceNumber}`;
     const fortunaResponse = await fetch(revealUrl);
     if (fortunaResponse.status !== 200) {
       console.error("Fortuna response status:", fortunaResponse.status);
@@ -94,7 +94,7 @@ async function main() {
     }
     const payload = await fortunaResponse.json();
     // @ts-expect-error - TODO payload.value is unknown and the typing needs to be fixed
-    const providerRevelation = "0x" + payload.value.data;
+    const providerRevelation = `0x${payload.value.data}`;
     try {
       await contract.revealWithCallback(
         userRandomNumber,

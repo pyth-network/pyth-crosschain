@@ -6,9 +6,9 @@ import type { Cluster } from "@solana/web3.js";
  */
 export function isRemoteCluster(cluster: PythCluster) {
   return (
-    cluster == "pythnet" ||
-    cluster == "pythtest-conformance" ||
-    cluster == "pythtest-crosschain"
+    cluster === "pythnet" ||
+    cluster === "pythtest-conformance" ||
+    cluster === "pythtest-crosschain"
   );
 }
 

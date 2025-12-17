@@ -101,7 +101,7 @@ export class NearPricePusher implements IPricePusher {
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
         const is_success = Object.values(outcome.receipts_outcome).reduce(
           (is_success, receipt) => {
-            if (Object.hasOwn(receipt.outcome.status, "Failure")) {
+            if (Object.hasOwn(receipt.outcome.status as object, "Failure")) {
               failureMessages.push(receipt.outcome.status);
               return false;
             }
@@ -201,7 +201,7 @@ export class NearAccount {
           os.homedir(),
           ".near-credentials",
           network,
-          accountId + ".json",
+          `${accountId}.json`,
         ),
     );
     const accountInfo = JSON.parse(content.toString());

@@ -19,7 +19,7 @@ const CopyText: React.FC<{
       tabIndex={0}>
       <span className="mr-2 hidden xl:block">{text}</span>
       <span className="mr-2 xl:hidden">
-        {text.slice(0, 6) + "..." + text.slice(-6)}
+        {`${text.slice(0, 6)}...${text.slice(-6)}`}
       </span>{" "}
       <CopyIcon className="shrink-0" />
     </div>
