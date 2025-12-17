@@ -9,5 +9,3 @@ export const DEFAULT_STREAM_SERVICE_0_URL =
   "wss://pyth-lazer-0.dourolabs.app/v1/stream";
 export const DEFAULT_STREAM_SERVICE_1_URL =
   "wss://pyth-lazer-1.dourolabs.app/v1/stream";
-export const DEFAULT_STREAM_SERVICE_2_URL =
-  "wss://pyth-lazer-2.dourolabs.app/v1/stream";

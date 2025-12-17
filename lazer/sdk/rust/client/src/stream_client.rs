@@ -60,10 +60,9 @@ use url::Url;
 const DEDUP_CACHE_SIZE: usize = 100_000;
 const DEDUP_TTL: Duration = Duration::from_secs(10);
 
-const DEFAULT_ENDPOINTS: [&str; 3] = [
+const DEFAULT_ENDPOINTS: [&str; 2] = [
     "wss://pyth-lazer-0.dourolabs.app/v1/stream",
     "wss://pyth-lazer-1.dourolabs.app/v1/stream",
-    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
 ];
 const DEFAULT_NUM_CONNECTIONS: usize = 4;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
