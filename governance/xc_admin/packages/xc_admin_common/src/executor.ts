@@ -121,7 +121,7 @@ export async function executeProposal(
     ) {
       /// Add price, fetch the symbol from the product account
       const productAccount = await squad.connection.getAccountInfo(
-        parsedInstruction.accounts.named.productAccount?.pubkey,
+        parsedInstruction.accounts.named.productAccount?.pubkey!,
       );
       if (productAccount) {
         transaction.add(

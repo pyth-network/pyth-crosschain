@@ -1,13 +1,9 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": [
-        "generate:docs"
-      ],
+      "dependsOn": ["generate:docs"],
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
@@ -15,13 +11,8 @@
       ]
     },
     "generate:docs": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build"
-      ],
-      "outputs": [
-        "content/docs/api-reference/**"
-      ]
+      "dependsOn": ["//#install:modules", "^build"],
+      "outputs": ["content/docs/api-reference/**"]
     },
     "fix:lint": {
       "dependsOn": [
@@ -33,49 +24,27 @@
       ]
     },
     "fix:lint:biome": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build",
-        "build"
-      ],
+      "dependsOn": ["//#install:modules", "^build", "build"],
       "cache": false
     },
     "fix:lint:stylelint": {
-      "dependsOn": [
-        "//#install:modules"
-      ],
+      "dependsOn": ["//#install:modules"],
       "cache": false
     },
     "start:prod": {
-      "dependsOn": [
-        "//#install:modules",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "build"]
     },
     "test:lint": {
-      "dependsOn": [
-        "test:lint:biome",
-        "test:lint:stylelint"
-      ]
+      "dependsOn": ["test:lint:biome", "test:lint:stylelint"]
     },
     "test:lint:biome": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "^build", "build"]
     },
     "test:lint:stylelint": {
-      "dependsOn": [
-        "//#install:modules"
-      ]
+      "dependsOn": ["//#install:modules"]
     },
     "test:types": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build",
-        "build"
-      ]
+      "dependsOn": ["//#install:modules", "^build", "build"]
     }
   }
 }

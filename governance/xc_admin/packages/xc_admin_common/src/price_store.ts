@@ -172,7 +172,7 @@ export function parsePriceStoreInstruction(
       data = {
         type: "Initialize",
         data: {
-          payerKey: instruction.keys[0]?.pubkey,
+          payerKey: instruction.keys[0]?.pubkey!,
           authorityKey,
         },
       };
@@ -189,8 +189,8 @@ export function parsePriceStoreInstruction(
       data = {
         type: "InitializePublisher",
         data: {
-          authorityKey: instruction.keys[0]?.pubkey,
-          bufferKey: instruction.keys[3]?.pubkey,
+          authorityKey: instruction.keys[0]?.pubkey!,
+          bufferKey: instruction.keys[3]?.pubkey!,
           publisherKey,
         },
       };
