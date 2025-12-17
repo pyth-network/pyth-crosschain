@@ -34,7 +34,8 @@ export function APICard({ href, title, method, description }: APICardProps) {
             methodLower === "put" && styles.put,
             methodLower === "patch" && styles.patch,
             methodLower === "delete" && styles.delete,
-          )}>
+          )}
+        >
           {method}
         </span>
       </div>

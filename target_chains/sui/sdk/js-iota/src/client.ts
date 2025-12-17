@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable no-console */
 import { Buffer } from "node:buffer";
 
 import { bcs } from "@iota/iota-sdk/bcs";
@@ -39,7 +35,6 @@ export class IotaPythClient {
         result.data.content.dataType !== "moveObject"
       )
         throw new Error("Unable to fetch pyth state object");
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
     }
@@ -71,9 +66,7 @@ export class IotaPythClient {
       });
 
     if ("upgrade_cap" in state) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return state.upgrade_cap.fields.package;
     }
 
@@ -122,7 +115,6 @@ export class IotaPythClient {
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
 
-    let priceUpdatesHotPotato;
     if (updates.length > 1) {
       throw new Error(
         "SDK does not support sending multiple accumulator messages in a single transaction",
@@ -130,7 +122,7 @@ export class IotaPythClient {
     }
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
-    [priceUpdatesHotPotato] = tx.moveCall({
+    let [priceUpdatesHotPotato] = tx.moveCall({
       target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
       arguments: [
         tx.object(this.pythStateId),
@@ -255,9 +247,7 @@ export class IotaPythClient {
       }
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         result.data.content.fields.value,
       );
     }

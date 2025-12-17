@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Menu, Transition } from "@headlessui/react";
 import Arrow from "@images/icons/down.inline.svg";
 import type { PythCluster } from "@pythnetwork/client";
@@ -16,7 +11,6 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
 
   const { cluster, setCluster } = useContext(ClusterContext);
   const handleChange = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       if (event.target.value) {
         router.query.cluster = event.target.value;
@@ -77,7 +71,8 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
           <Menu.Button
             className={`inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 ${
               light ? "bg-beige2" : "bg-darkGray2"
-            }`}>
+            }`}
+          >
             <span className="mr-3">{cluster}</span>
             <Arrow className={open && "rotate-180"} />
           </Menu.Button>
@@ -88,7 +83,8 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
             enterTo="transform opacity-100 scale-100"
             leave="transition ease-in duration-75"
             leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95">
+            leaveTo="transform opacity-0 scale-95"
+          >
             <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
               {clusters.map((c) => (
                 <Menu.Item key={c.name}>
@@ -99,7 +95,9 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
                         : "bg-darkGray hover:bg-darkGray2"
                     } `}
                     value={c.value}
-                    onClick={handleChange}>
+                    onClick={handleChange}
+                    type="button"
+                  >
                     {c.name}
                   </button>
                 </Menu.Item>

@@ -20,8 +20,7 @@ const Page = (props: Props) => {
     params.chain,
     apis,
   )
-    ? // eslint-disable-next-line import/namespace
-      apis[params.chain]
+    ? apis[params.chain]
     : undefined;
   const api =
     chain && isKeyOf(params.method, chain) ? chain[params.method] : undefined;

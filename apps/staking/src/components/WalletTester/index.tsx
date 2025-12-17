@@ -77,7 +77,8 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
           className="px-10 py-4"
           size="nopad"
           isLoading={isLoading}
-          {...(!isLoading && { onPress: showModal })}>
+          {...(!isLoading && { onPress: showModal })}
+        >
           {isLoading ? (
             "Loading..."
           ) : (
@@ -169,7 +170,8 @@ const Tester = ({ wallet }: { wallet: PythStakingWallet }) => {
               size="nopad"
               {...(state.type === UseAsyncStateType.Running
                 ? { isLoading: true }
-                : { onPress: doTest })}>
+                : { onPress: doTest })}
+            >
               Click to test
             </Button>
           </div>

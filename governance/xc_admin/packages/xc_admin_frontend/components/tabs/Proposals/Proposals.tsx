@@ -1,7 +1,3 @@
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Menu, Transition } from "@headlessui/react";
 import {
   parseAsStringLiteral,
@@ -48,7 +44,8 @@ const Arrow = ({ className }: { className?: string }) => (
     height="6"
     viewBox="0 0 10 6"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg">
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M1 1L5 5L9 1"
       stroke="currentColor"
@@ -271,18 +268,22 @@ const Proposals = () => {
                     onClick={() => {
                       const { fetchData } = refreshData();
                       fetchData();
-                    }}>
+                    }}
+                    type="button"
+                  >
                     Refresh
                   </button>
                 )}
                 <Menu
                   as="div"
-                  className="relative z-[5] block w-[180px] text-left">
+                  className="relative z-[5] block w-[180px] text-left"
+                >
                   {({ open }) => (
                     <>
                       <Menu.Button
                         className="inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 bg-darkGray2 action-btn"
-                        disabled={isMultisigLoading}>
+                        disabled={isMultisigLoading}
+                      >
                         <span className="mr-3">
                           {PROPOSAL_TYPE_NAMES[proposalType]} Proposals
                         </span>
@@ -295,7 +296,8 @@ const Proposals = () => {
                         enterTo="transform opacity-100 scale-100"
                         leave="transition ease-in duration-75"
                         leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95">
+                        leaveTo="transform opacity-0 scale-95"
+                      >
                         <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
                           {proposalTypeOptions.map((type) => (
                             <Menu.Item key={type}>
@@ -306,7 +308,9 @@ const Proposals = () => {
                                   }`}
                                   onClick={() => {
                                     setProposalType(type);
-                                  }}>
+                                  }}
+                                  type="button"
+                                >
                                   {PROPOSAL_TYPE_NAMES[type]} Proposals
                                 </button>
                               )}
@@ -381,7 +385,8 @@ const Proposals = () => {
                 if (e.key === "Enter") handleClickBackToProposals();
               }}
               role="button"
-              tabIndex={0}>
+              tabIndex={0}
+            >
               &#8592; back to proposals
             </div>
             <div className="relative mt-6">

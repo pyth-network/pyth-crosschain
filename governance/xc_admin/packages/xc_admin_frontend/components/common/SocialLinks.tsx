@@ -12,13 +12,15 @@ const SocialLinks = () => {
       <Link
         href="https://twitter.com/PythNetwork"
         target="_blank"
-        className="mr-6">
+        className="mr-6"
+      >
         <Twitter />
       </Link>
       <Link
         href="https://discord.gg/invite/PythNetwork"
         target="_blank"
-        className="mr-6">
+        className="mr-6"
+      >
         <Discord />
       </Link>
       <Link href="https://t.me/Pyth_Network" target="_blank" className="mr-6">
@@ -27,19 +29,22 @@ const SocialLinks = () => {
       <Link
         href="https://www.linkedin.com/company/pyth-network"
         target="_blank"
-        className="mr-6">
+        className="mr-6"
+      >
         <LinkedIn />
       </Link>
       <Link
         href="https://github.com/pyth-network"
         target="_blank"
-        className="mr-6">
+        className="mr-6"
+      >
         <Github />
       </Link>
       <Link
         href="https://www.youtube.com/@pythnetwork"
         target="_blank"
-        className="">
+        className=""
+      >
         <Youtube />
       </Link>
     </div>

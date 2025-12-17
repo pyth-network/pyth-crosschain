@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-// eslint-disable-next-line unicorn/import-style
 import type { ColorName } from "chalk";
 import chalk from "chalk";
 

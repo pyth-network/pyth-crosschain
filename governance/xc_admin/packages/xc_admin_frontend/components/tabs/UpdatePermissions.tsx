@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable @typescript-eslint/no-dynamic-delete */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/prefer-optional-chain */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { AnchorProvider, type Program } from "@coral-xyz/anchor";
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import CopyIcon from "@images/icons/copy.inline.svg";
@@ -85,7 +79,8 @@ const defaultColumns = [
             if (e.key === "Enter") copy(pubkey);
           }}
           role="button"
-          tabIndex={0}>
+          tabIndex={0}
+        >
           <span className="mr-2 hidden lg:block">{pubkey}</span>
           <span className="mr-2 lg:hidden">
             {`${pubkey.slice(0, 6)}...${pubkey.slice(-6)}`}
@@ -225,7 +220,7 @@ const UpdatePermissions = () => {
   };
 
   const handleEditPubkey = (
-    e: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    e: any,
     account: PermissionAccount,
     prevPubkey: string,
   ) => {
@@ -291,7 +286,6 @@ const UpdatePermissions = () => {
                 `Proposal sent! 🚀 Proposal Pubkey: ${JSON.stringify(proposalPubkey)}`,
               );
               setIsSendProposalButtonLoading(false);
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (error: any) {
               toast.error(capitalizeFirstLetter(error.message));
               setIsSendProposalButtonLoading(false);
@@ -300,8 +294,6 @@ const UpdatePermissions = () => {
         });
     }
   };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
@@ -312,7 +304,8 @@ const UpdatePermissions = () => {
                 changes[key].prev !== changes[key].new && (
                   <div
                     key={key}
-                    className="mb-4 flex items-center justify-between">
+                    className="mb-4 flex items-center justify-between"
+                  >
                     <span className="pr-4 text-left font-bold">{key}</span>
                     <span className="mr-2">
                       {changes[key].prev} &rarr; {changes[key].new}
@@ -329,7 +322,9 @@ const UpdatePermissions = () => {
           connected ? (
             <button
               className="action-btn text-base"
-              onClick={handleSendProposalButtonClick}>
+              onClick={handleSendProposalButtonClick}
+              type="button"
+            >
               {isSendProposalButtonLoading ? <Spinner /> : "Send Proposal"}
             </button>
           ) : (
@@ -396,7 +391,8 @@ const UpdatePermissions = () => {
                             header.column.id === "account"
                               ? "base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 xl:pl-14"
                               : "base16 pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60"
-                          }>
+                          }
+                        >
                           {header.isPlaceholder
                             ? undefined
                             : flexRender(
@@ -429,7 +425,8 @@ const UpdatePermissions = () => {
                             cell.column.id === "account"
                               ? "py-3 pl-4 pr-2 xl:pl-14"
                               : "items-center py-3 pl-1 pr-4"
-                          }>
+                          }
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),

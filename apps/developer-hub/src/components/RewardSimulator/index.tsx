@@ -77,7 +77,8 @@ const RewardSimulator: React.FC = () => {
       variant="secondary"
       title="Reward Simulator"
       nonInteractive
-      className={styles.card}>
+      className={styles.card}
+    >
       <form onSubmit={recalculateRewards} onChange={doSubmit}>
         <div className={styles.inputGrid}>
           <div className={styles.inputGroup}>

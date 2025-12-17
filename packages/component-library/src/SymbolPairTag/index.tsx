@@ -22,7 +22,8 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
   <div
     className={clsx(styles.symbolPairTag, className)}
     data-loading={props.isLoading ? "" : undefined}
-    {...omitKeys(props, ["displaySymbol", "description", "isLoading"])}>
+    {...omitKeys(props, ["displaySymbol", "description", "isLoading"])}
+  >
     {props.isLoading ? (
       <Skeleton fill className={styles.icon} />
     ) : (

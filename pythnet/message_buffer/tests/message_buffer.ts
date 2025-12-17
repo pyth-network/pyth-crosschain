@@ -689,10 +689,10 @@ describe("message_buffer", () => {
   });
 });
 
-export const getAccumulatorPdaMeta = (
+function getAccumulatorPdaMeta(
   cpiCallerAuth: anchor.web3.PublicKey,
   pythAccount: anchor.web3.PublicKey,
-): AccountMeta => {
+): AccountMeta {
   const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
     [cpiCallerAuth.toBuffer(), MESSAGE, pythAccount.toBuffer()],
     messageBufferProgram.programId,
@@ -702,7 +702,7 @@ export const getAccumulatorPdaMeta = (
     isSigner: false,
     isWritable: true,
   };
-};
+}
 
 async function getMessageBuffer(
   connection: anchor.web3.Connection,

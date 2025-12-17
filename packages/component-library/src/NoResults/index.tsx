@@ -24,7 +24,8 @@ export type Variant = "success" | "error" | "warning" | "info" | "data";
 export const NoResults = ({ className, onClearSearch, ...props }: Props) => (
   <div
     data-variant={"variant" in props ? (props.variant ?? "info") : "info"}
-    className={clsx(styles.noResults, className)}>
+    className={clsx(styles.noResults, className)}
+  >
     <div className={styles.icon}>
       {"icon" in props ? props.icon : <MagnifyingGlass />}
     </div>

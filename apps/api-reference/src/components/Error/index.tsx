@@ -3,11 +3,15 @@ type Props = {
   reset?: () => void;
 };
 
-export const Error = ({ error, reset }: Props) => (
+export const ErrorComponent = ({ error, reset }: Props) => (
   <main>
     <h1>Uh oh!</h1>
     <h2>Something went wrong</h2>
     <p>Error Code: {error.digest}</p>
-    {reset && <button onClick={reset}>Reset</button>}
+    {reset && (
+      <button onClick={reset} type="button">
+        Reset
+      </button>
+    )}
   </main>
 );

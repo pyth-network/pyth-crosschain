@@ -83,9 +83,9 @@ const ResolvedPriceFeedSelect = ({
               value={search}
               onChange={setSearch}
               className={styles.searchField ?? ""}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
-              aria-label="Search">
+              aria-label="Search"
+            >
               <Input
                 className={styles.searchInput ?? ""}
                 placeholder="Symbol, asset class, or key"
@@ -95,8 +95,8 @@ const ResolvedPriceFeedSelect = ({
               <ListBox
                 items={filteredAndSortedFeeds}
                 className={styles.listbox ?? ""}
-                // eslint-disable-next-line jsx-a11y/no-autofocus
-                autoFocus={false}>
+                autoFocus={false}
+              >
                 {({ symbol, displaySymbol, description, icon, assetClass }) => (
                   <ListBoxItem
                     textValue={displaySymbol}
@@ -107,7 +107,8 @@ const ResolvedPriceFeedSelect = ({
                         ? ""
                         : undefined
                     }
-                    prefetch={false}>
+                    prefetch={false}
+                  >
                     <SymbolPairTag
                       displaySymbol={displaySymbol}
                       description={description}
@@ -144,10 +145,12 @@ const PriceFeedSelectImpl = ({
 }: PriceFeedSelectImplProps) => (
   <Select
     aria-label="Select a Price Feed"
-    className={clsx(className, styles.priceFeedSelect)}>
+    className={clsx(className, styles.priceFeedSelect)}
+  >
     <Button
       className={styles.trigger ?? ""}
-      isPending={props.isLoading ?? false}>
+      isPending={props.isLoading ?? false}
+    >
       {children}
       <DropdownCaretDown className={styles.caret} />
     </Button>

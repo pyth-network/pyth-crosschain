@@ -20,7 +20,5 @@ export const Amplitude = ({ apiKey }: Props) => {
       amplitudeInitialized.current = true;
     }
   }, [apiKey]);
-
-  // eslint-disable-next-line unicorn/no-null
   return null;
 };

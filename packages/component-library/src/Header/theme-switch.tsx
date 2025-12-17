@@ -39,7 +39,8 @@ export const ThemeSwitch = <T extends ElementType>({
       beforeIcon={<IconPath />}
       className={clsx(styles.themeSwitch, className)}
       rounded
-      {...props}>
+      {...props}
+    >
       Dark mode
     </Button>
   );
@@ -75,7 +76,8 @@ const IconMovement = ({ icon, offset }: IconMovementProps) => (
     className={styles.iconMovement}
     animate={{ offsetDistance: offset }}
     transition={{ type: "spring", bounce: 0.35, duration: 0.6 }}
-    initial={false}>
+    initial={false}
+  >
     {icon}
   </motion.div>
 );

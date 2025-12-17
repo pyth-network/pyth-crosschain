@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable unicorn/no-await-expression-member */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import { AptosAccount, AptosClient } from "aptos";
 import type { Logger } from "pino";

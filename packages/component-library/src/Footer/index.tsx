@@ -42,7 +42,8 @@ export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
           important disclaimer before using them.{" "}
           <Link
             href="https://www.pyth.network/legal/disclaimer-for-pyth-network-price-feeds"
-            target="_blank">
+            target="_blank"
+          >
             Read disclaimer
           </Link>
           .
@@ -84,7 +85,8 @@ export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
         </Link>
         <Link
           href="https://www.pyth.network/trademark-disclaimer"
-          target="_blank">
+          target="_blank"
+        >
           Trademark Disclaimer
         </Link>
       </div>

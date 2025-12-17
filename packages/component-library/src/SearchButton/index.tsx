@@ -47,7 +47,8 @@ export const SearchButton = ({
         beforeIcon={beforeIcon ?? <MagnifyingGlass />}
         size="sm"
         rounded
-        {...props}>
+        {...props}
+      >
         {largeScreenContent ?? <SearchShortcutText />}
       </Button>
       <Button
@@ -57,7 +58,8 @@ export const SearchButton = ({
         beforeIcon={beforeIcon ?? <MagnifyingGlass />}
         size="sm"
         rounded
-        {...props}>
+        {...props}
+      >
         {smallScreenContent ?? <SearchShortcutText />}
       </Button>
     </div>

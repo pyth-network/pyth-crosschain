@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import type { Program } from "@coral-xyz/anchor";
 import { Dialog, Menu, Transition } from "@headlessui/react";
 import Arrow from "@images/icons/down.inline.svg";
@@ -63,8 +57,6 @@ const PermissionDepermissionKey = ({
   const { rawConfig, dataIsLoading, connection } = usePythContext();
 
   // get current input value
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (event: any) => {
     setSelectedAssetType(event.target.value);
     setIsModalOpen(true);
@@ -142,7 +134,6 @@ const PermissionDepermissionKey = ({
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`);
         setIsSubmitButtonLoading(false);
         closeModal();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         if (error.response) {
           toast.error(capitalizeFirstLetter(error.response.data));
@@ -157,22 +148,24 @@ const PermissionDepermissionKey = ({
   useEffect(() => {
     if (!dataIsLoading) {
       const res: PublicKey[] = [];
-      rawConfig.mappingAccounts[0].products.map((product: ProductRawConfig) => {
-        const publisherExists = product.priceAccounts[0].publishers.some(
-          (p) => p.toBase58() === publisherKey,
-        );
-        if (
-          (selectedAssetType === "All" ||
-            product.metadata.asset_type === selectedAssetType) &&
-          ((isPermission &&
-            product.priceAccounts[0].publishers.length <
-              getMaximumNumberOfPublishers(cluster) &&
-            !publisherExists) ||
-            (!isPermission && publisherExists))
-        ) {
-          res.push(product.priceAccounts[0].address);
-        }
-      });
+      rawConfig.mappingAccounts[0].products.forEach(
+        (product: ProductRawConfig) => {
+          const publisherExists = product.priceAccounts[0].publishers.some(
+            (p) => p.toBase58() === publisherKey,
+          );
+          if (
+            (selectedAssetType === "All" ||
+              product.metadata.asset_type === selectedAssetType) &&
+            ((isPermission &&
+              product.priceAccounts[0].publishers.length <
+                getMaximumNumberOfPublishers(cluster) &&
+              !publisherExists) ||
+              (!isPermission && publisherExists))
+          ) {
+            res.push(product.priceAccounts[0].address);
+          }
+        },
+      );
       setPriceAccounts(res);
     }
   }, [
@@ -190,7 +183,8 @@ const PermissionDepermissionKey = ({
         {({ open }) => (
           <>
             <Menu.Button
-              className={`inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0`}>
+              className={`inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0`}
+            >
               <span className="mr-3">
                 {isPermission ? "Permission Key" : "Depermission Key"}
               </span>
@@ -203,14 +197,17 @@ const PermissionDepermissionKey = ({
               enterTo="transform opacity-100 scale-100"
               leave="transition ease-in duration-75"
               leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95">
+              leaveTo="transform opacity-0 scale-95"
+            >
               <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
                 {assetTypes.map((a) => (
                   <Menu.Item key={a}>
                     <button
                       className={`block w-full bg-darkGray py-3 px-6 text-left text-sm hover:bg-darkGray2`}
                       value={a}
-                      onClick={handleChange}>
+                      onClick={handleChange}
+                      type="button"
+                    >
                       {a}
                     </button>
                   </Menu.Item>
@@ -226,7 +223,8 @@ const PermissionDepermissionKey = ({
           className="relative z-40"
           onClose={() => {
             setIsModalOpen(false);
-          }}>
+          }}
+        >
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -234,7 +232,8 @@ const PermissionDepermissionKey = ({
             enterTo="opacity-100"
             leave="ease-in duration-200"
             leaveFrom="opacity-100"
-            leaveTo="opacity-0">
+            leaveTo="opacity-0"
+          >
             <div className="fixed inset-0 bg-black bg-opacity-50" />
           </Transition.Child>
           <div className="fixed inset-0 overflow-y-auto">
@@ -246,9 +245,14 @@ const PermissionDepermissionKey = ({
                 enterTo="opacity-100 scale-100"
                 leave="ease-in duration-200"
                 leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95">
+                leaveTo="opacity-0 scale-95"
+              >
                 <Dialog.Panel className="dialogPanel">
-                  <button className="dialogClose" onClick={closeModal}>
+                  <button
+                    className="dialogClose"
+                    onClick={closeModal}
+                    type="button"
+                  >
                     <span className="mr-3">close</span> <CloseIcon />
                   </button>
                   <div className="max-w-full">
@@ -274,7 +278,9 @@ const PermissionDepermissionKey = ({
                     <div className="mt-6">
                       <button
                         className="action-btn text-base"
-                        onClick={handleSubmitButton}>
+                        onClick={handleSubmitButton}
+                        type="button"
+                      >
                         {isSubmitButtonLoading ? (
                           <Spinner />
                         ) : (

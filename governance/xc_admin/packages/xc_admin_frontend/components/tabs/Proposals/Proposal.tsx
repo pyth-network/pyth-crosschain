@@ -1,12 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable no-console */
 import type { Wallet } from "@coral-xyz/anchor";
 import VerifiedIcon from "@images/icons/verified.inline.svg";
 import VotedIcon from "@images/icons/voted.inline.svg";
@@ -151,14 +142,14 @@ export const Proposal = ({
   const { cluster: contextCluster } = useContext(ClusterContext);
   const multisigCluster = getMultisigCluster(contextCluster);
   const targetClusters: (PythCluster | "unknown")[] = [];
-  instructions.map((ix) => {
+  instructions.forEach((ix) => {
     if (!(ix instanceof WormholeMultisigInstruction)) {
       targetClusters.push(multisigCluster);
     } else if (
       ix instanceof WormholeMultisigInstruction &&
       ix.governanceAction instanceof ExecutePostedVaa
     ) {
-      ix.governanceAction.instructions.map((ix) => {
+      ix.governanceAction.instructions.forEach((ix) => {
         const remoteClusters: PythCluster[] = [
           "pythnet",
           "pythtest-conformance",
@@ -454,13 +445,17 @@ export const Proposal = ({
             <button
               disabled={isTransactionLoading}
               className="action-btn text-base"
-              onClick={handleClickApprove}>
+              onClick={handleClickApprove}
+              type="button"
+            >
               {isTransactionLoading ? <Spinner /> : "Approve"}
             </button>
             <button
               disabled={isTransactionLoading}
               className="sub-action-btn text-base"
-              onClick={handleClickReject}>
+              onClick={handleClickReject}
+              type="button"
+            >
               {isTransactionLoading ? <Spinner /> : "Reject"}
             </button>
           </div>
@@ -469,13 +464,17 @@ export const Proposal = ({
             <button
               disabled={isTransactionLoading}
               className="action-btn text-base"
-              onClick={handleClickExecute}>
+              onClick={handleClickExecute}
+              type="button"
+            >
               {isTransactionLoading ? <Spinner /> : "Execute"}
             </button>
             <button
               disabled={isTransactionLoading}
               className="sub-action-btn text-base"
-              onClick={handleClickCancel}>
+              onClick={handleClickCancel}
+              type="button"
+            >
               {isTransactionLoading ? <Spinner /> : "Cancel"}
             </button>
           </div>
@@ -505,14 +504,16 @@ export const Proposal = ({
             </h4>
             <div
               key={`${index.toString()}_instructionType`}
-              className="flex justify-between">
+              className="flex justify-between"
+            >
               <div>Program</div>
               <div>{getProgramName(instruction.program)}</div>
             </div>
             {
               <div
                 key={`${index.toString()}_instructionName`}
-                className="flex justify-between">
+                className="flex justify-between"
+              >
                 <div>Instruction Name</div>
                 <div>{instruction.name}</div>
               </div>
@@ -521,7 +522,8 @@ export const Proposal = ({
             instruction.governanceAction ? (
               <div
                 key={`${index.toString()}_targetChain`}
-                className="flex justify-between">
+                className="flex justify-between"
+              >
                 <div>Target Chain</div>
                 <div>{instruction.governanceAction.targetChainId}</div>
               </div>
@@ -529,7 +531,8 @@ export const Proposal = ({
             {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div
                 key={`${index.toString()}_arguments`}
-                className="grid grid-cols-4 justify-between">
+                className="grid grid-cols-4 justify-between"
+              >
                 <div>Arguments</div>
                 {Object.keys(instruction.args).length > 0 ? (
                   <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
@@ -586,7 +589,8 @@ export const Proposal = ({
             {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div
                 key={`${index}_accounts`}
-                className="grid grid-cols-4 justify-between">
+                className="grid grid-cols-4 justify-between"
+              >
                 <div>Accounts</div>
                 {Object.keys(instruction.accounts.named).length > 0 ? (
                   <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
@@ -599,7 +603,8 @@ export const Proposal = ({
                         <>
                           <div
                             key={index}
-                            className="flex justify-between border-t border-beige-300 py-3">
+                            className="flex justify-between border-t border-beige-300 py-3"
+                          >
                             <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                               {key}
                             </div>

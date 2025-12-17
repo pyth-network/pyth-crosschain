@@ -40,7 +40,6 @@ export const StatCard = <T extends ElementType>({
   ...props
 }: Props<T>) => {
   const {
-    /* eslint-disable @typescript-eslint/no-unused-vars */
     header,
     stat,
     miniStat,
@@ -67,7 +66,8 @@ export const StatCard = <T extends ElementType>({
               <h2 className={styles.header}>{props.header}</h2>
               <div
                 data-small={props.small ? "" : undefined}
-                className={styles.stats}>
+                className={styles.stats}
+              >
                 <div className={styles.mainStat}>{props.stat}</div>
                 {props.miniStat && (
                   <div className={styles.miniStat}>{props.miniStat}</div>

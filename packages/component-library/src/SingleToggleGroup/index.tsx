@@ -53,7 +53,8 @@ export const SingleToggleGroup = ({
         onSelectionChange: handleSelectionChange,
       })}
       {...(selectedKey !== undefined && { selectedKeys: [selectedKey] })}
-      {...props}>
+      {...props}
+    >
       {items.map(({ className: tabClassName, children, ...toggleButton }) => (
         <ToggleButton
           key={toggleButton.id}
@@ -65,7 +66,8 @@ export const SingleToggleGroup = ({
           data-size="sm"
           data-variant="ghost"
           data-rounded={rounded ? "" : undefined}
-          {...toggleButton}>
+          {...toggleButton}
+        >
           {(args) => (
             <>
               {args.isSelected && (

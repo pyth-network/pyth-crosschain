@@ -92,16 +92,19 @@ export const Publishers = async () => {
               target="_blank"
               size="sm"
               variant="outline"
-              afterIcon={<ArrowSquareOut />}>
+              afterIcon={<ArrowSquareOut />}
+            >
               Staking App
             </Button>
-          }>
+          }
+        >
           <SemicircleMeter
             width={340}
             height={340}
             value={Number(oisStats.totalStaked)}
             maxValue={oisStats.maxPoolSize ?? 0}
-            className={styles.oisPool ?? ""}>
+            className={styles.oisPool ?? ""}
+          >
             <Label className={styles.title}>PYTH Staking Pool</Label>
             <p className={styles.poolUsed}>
               <FormattedTokens mode="wholePart" tokens={oisStats.totalStaked} />

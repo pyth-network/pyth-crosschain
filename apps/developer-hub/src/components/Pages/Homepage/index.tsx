@@ -44,7 +44,8 @@ export const Homepage = () => {
         title="Additional Resources"
         subtitle="Explore the Pyth Network"
         isHighlight
-        image={<ResourcesForBuildersImage />}>
+        image={<ResourcesForBuildersImage />}
+      >
         <SectionCards>
           <SectionCard
             title="Pyth Token"
@@ -71,7 +72,8 @@ export const Homepage = () => {
       </Section>
       <Section
         title="Resources for Developers"
-        subtitle="Explore the Pyth Network for developers">
+        subtitle="Explore the Pyth Network for developers"
+      >
         <SectionCards>
           <SectionCard
             title="Get Your Access Token"

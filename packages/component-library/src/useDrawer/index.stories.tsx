@@ -10,7 +10,8 @@ const OpenButton = (
     <Button
       onPress={() => {
         drawer.open(props);
-      }}>
+      }}
+    >
       Open drawer
     </Button>
   );

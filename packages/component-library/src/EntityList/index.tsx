@@ -48,7 +48,8 @@ export const EntityList = <T extends string>({
     className={clsx(styles.entityList, className)}
     items={isLoading ? [] : rows}
     aria-label={label}
-    {...props}>
+    {...props}
+  >
     {isLoading ? (
       <GridListItem className={styles.entityItem ?? ""} textValue="Loading">
         <div className={styles.itemHeader}>{headerLoadingSkeleton}</div>

@@ -45,8 +45,6 @@ type Props = Omit<ComponentProps<typeof Button>, "onClick" | "children">;
 export const WalletButton = (props: Props) => {
   const segment = useSelectedLayoutSegment();
   const isBlocked = segment === VPN_BLOCKED_SEGMENT;
-
-  // eslint-disable-next-line unicorn/no-null
   return isBlocked ? null : <WalletButtonImpl {...props} />;
 };
 
@@ -107,7 +105,8 @@ const ConnectedButton = ({
     <MenuTrigger>
       <ButtonComponent
         className={clsx("group data-[pressed]:bg-pythpurple-600/60", className)}
-        {...props}>
+        {...props}
+      >
         <span className="truncate">
           <ButtonContent />
         </span>
@@ -136,7 +135,8 @@ const ConnectedButton = ({
         <Section>
           <BaseMenuItem
             className="outline-none data-[focused]:bg-pythpurple-800/20"
-            onAction={toggleMainnet}>
+            onAction={toggleMainnet}
+          >
             <Switch
               isSelected={isMainnet}
               postLabel="Mainnet"
@@ -175,7 +175,6 @@ const StakeAccountSelector = ({ children, api }: StakeAccountSelectorProps) => {
   }, [data, api]);
 
   return accounts === undefined ||
-    // eslint-disable-next-line unicorn/no-null
     (accounts.main === undefined && accounts.other?.length === 1) ? null : (
     <>
       <Section>
@@ -244,7 +243,8 @@ const AccountMenuItem = ({ account, api, publisher }: AccountMenuItemProps) => (
     className={clsx({
       "pr-8 font-semibold": account === api.account,
     })}
-    isDisabled={account === api.account}>
+    isDisabled={account === api.account}
+  >
     <CheckIcon
       className={clsx("size-4 text-pythpurple-600", {
         invisible: !account.equals(api.account),
@@ -299,7 +299,8 @@ const ButtonComponent = ({
   <Button
     className={clsx("w-36 text-sm lg:text-base xl:w-52", className)}
     size="nopad"
-    {...props}>
+    {...props}
+  >
     <WalletIcon className="size-4 flex-none opacity-60" />
     {children}
   </Button>

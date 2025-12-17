@@ -21,7 +21,8 @@ const Blocked = ({ reason }: Props) => (
     <LinkButton
       className="w-full max-w-96 place-self-center px-8 py-3"
       href="https://www.pyth.network"
-      target="_blank">
+      target="_blank"
+    >
       Read More About Pyth
     </LinkButton>
   </main>

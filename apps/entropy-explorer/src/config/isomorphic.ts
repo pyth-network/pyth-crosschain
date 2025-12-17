@@ -1,5 +1,3 @@
-/* eslint-disable n/no-process-env */
-
 /**
  * Indicates this is a production-optimized build.  Note this does NOT
  * necessarily indicate that we're running on a cloud machine or the live build

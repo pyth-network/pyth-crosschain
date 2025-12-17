@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-misused-spread */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { EventSource } from "eventsource";
 import type { z } from "zod";
 
@@ -122,7 +119,6 @@ export class HermesClient {
     fetchOptions?: RequestInit;
   } = {}): Promise<PriceFeedMetadata[]> {
     const url = this.buildURL("price_feeds");
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (options) {
       const transformedOptions = camelToSnakeCaseObject(options);
       this.appendUrlSearchParams(url, transformedOptions);
@@ -154,7 +150,6 @@ export class HermesClient {
     fetchOptions?: RequestInit;
   } = {}): Promise<PublisherCaps> {
     const url = this.buildURL("updates/publisher_stake_caps/latest");
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (options) {
       this.appendUrlSearchParams(url, options);
     }
@@ -335,7 +330,6 @@ export class HermesClient {
     params: Record<string, string | boolean>,
   ) {
     for (const [key, value] of Object.entries(params)) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (value !== undefined) {
         url.searchParams.append(key, String(value));
       }
@@ -344,7 +338,6 @@ export class HermesClient {
 
   private buildURL(endpoint: string) {
     return new URL(
-      // eslint-disable-next-line unicorn/relative-url-style
       `./v2/${endpoint}`,
       // We ensure the `baseURL` ends with a `/` so that URL doesn't resolve the
       // path relative to the parent.

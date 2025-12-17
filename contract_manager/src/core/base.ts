@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 import type { Chain } from "./chains";

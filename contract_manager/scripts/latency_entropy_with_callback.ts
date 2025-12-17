@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { PrivateKey } from "../src/core/base";
@@ -62,8 +57,6 @@ async function testLatency(
   const fromBlock = requestResponse.blockNumber;
   const web3 = contract.chain.getWeb3();
   const entropyContract = contract.getContract();
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const currentBlock = await web3.eth.getBlockNumber();
@@ -121,6 +114,4 @@ async function main() {
     await testLatency(contract, privateKey, argv.provider);
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

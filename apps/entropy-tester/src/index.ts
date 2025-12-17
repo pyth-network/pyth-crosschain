@@ -123,8 +123,6 @@ async function testLatency(
   );
 
   const startTime = Date.now();
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     const request = await contract.getRequest(provider, sequenceNumber);
@@ -196,7 +194,6 @@ export const main = () =>
         const promises = configs.map(
           async ({ contract, interval, retries }) => {
             const child = logger.child({ chain: contract.chain.getId() });
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             while (true) {
               let lastError: Error | undefined;
               let success = false;

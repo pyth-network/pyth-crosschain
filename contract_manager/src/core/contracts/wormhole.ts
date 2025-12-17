@@ -43,7 +43,6 @@ export abstract class WormholeContract extends Storable {
         senderPrivateKey,
         Buffer.from(vaa, "hex"),
       );
-      // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
       console.log(`Submitted upgrade VAA ${i} with tx id ${result.id}`);
       // make sure the upgrade is complete before continuing
       while ((await this.getCurrentGuardianSetIndex()) <= i) {

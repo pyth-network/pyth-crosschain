@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unnecessary-type-parameters */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { HermesClient, HexString } from "@pythnetwork/hermes-client";
 
 import type { PriceItem } from "./interface.js";
@@ -47,7 +44,6 @@ export function verifyValidOption<
   if (validOptions.includes(option)) {
     return option as validOption;
   }
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const errorString = `${option} is not a valid option. Please choose betweeen ${validOptions}`;
   throw new Error(errorString);
 }
@@ -73,7 +69,6 @@ export async function filterInvalidPriceItems(
   );
 
   // Filter out invalid price ids
-  // eslint-disable-next-line unicorn/no-array-reduce
   const { existingPriceItems, invalidPriceItems } = priceItems.reduce<{
     existingPriceItems: PriceItem[];
     invalidPriceItems: PriceItem[];

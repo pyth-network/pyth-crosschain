@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable unicorn/no-array-reduce */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -195,7 +189,6 @@ export class NearAccount {
     privateKeyPath: string | undefined,
   ): Connection {
     const content = fs.readFileSync(
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       privateKeyPath ||
         path.join(
           os.homedir(),

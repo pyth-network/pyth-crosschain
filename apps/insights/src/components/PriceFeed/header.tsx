@@ -86,7 +86,8 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
                   key: item.product.price_account,
                   icon: <PriceFeedIcon assetClass={item.product.asset_type} />,
                 })),
-            })}>
+            })}
+      >
         <SymbolPairTag
           {...(props.isLoading
             ? { isLoading: true }
@@ -158,7 +159,8 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
                 />
               ),
             },
-          })}>
+          })}
+        >
           Reference Data
         </Button>
       </div>
@@ -212,7 +214,8 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
               size="xs"
               variant="solid"
               href="https://docs.pyth.network/price-feeds/best-practices#confidence-intervals"
-              target="_blank">
+              target="_blank"
+            >
               Learn more
             </Button>
           </Explain>
@@ -234,7 +237,8 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
             <Skeleton width={20} />
           ) : (
             <YesterdaysPricesProvider
-              feeds={{ [props.feed.symbol]: props.feed.product.price_account }}>
+              feeds={{ [props.feed.symbol]: props.feed.product.price_account }}
+            >
               <PriceFeedChangePercent
                 feedKey={props.feed.product.price_account}
               />

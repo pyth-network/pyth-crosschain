@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable tsdoc/syntax */
 import type { IdlAccounts } from "@coral-xyz/anchor";
 import { AnchorProvider, Program, type Wallet } from "@coral-xyz/anchor";
 import {

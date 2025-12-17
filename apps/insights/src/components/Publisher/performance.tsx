@@ -71,7 +71,8 @@ export const Performance = async ({ params }: Props) => {
           <Link
             href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
             invert
-            prefetch={false}>
+            prefetch={false}
+          >
             {publisher.activeFeeds}
           </Link>
         ),
@@ -79,7 +80,8 @@ export const Performance = async ({ params }: Props) => {
           <Link
             href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Inactive`}
             invert
-            prefetch={false}>
+            prefetch={false}
+          >
             {publisher.inactiveFeeds}
           </Link>
         ),
@@ -163,7 +165,8 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
     <Card
       icon={<Broadcast />}
       title="Publishers Ranking"
-      className={styles.publishersRankingCard ?? ""}>
+      className={styles.publishersRankingCard ?? ""}
+    >
       <EntityList
         label="Publishers Ranking"
         className={styles.publishersRankingList ?? ""}

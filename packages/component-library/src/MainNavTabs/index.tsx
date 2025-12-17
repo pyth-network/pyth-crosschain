@@ -9,12 +9,12 @@ import buttonStyles from "../Button/index.module.scss";
 import { Tab, TabList } from "../unstyled/Tabs/index.jsx";
 import styles from "./index.module.scss";
 
-type Tab = Omit<ComponentProps<typeof Tab>, "id" | "href"> & {
+type TabType = Omit<ComponentProps<typeof Tab>, "id" | "href"> & {
   segment: string;
 };
 
 type OwnProps = {
-  tabs: Tab[];
+  tabs: TabType[];
 };
 
 type Props = Omit<ComponentProps<typeof TabList>, keyof OwnProps | "items"> &
@@ -32,7 +32,8 @@ export const MainNavTabs = ({ className, tabs, ...props }: Props) => {
         tabs.every((tab) => pathname !== `/${tab.segment}`) ? "" : undefined
       }
       items={tabs}
-      {...props}>
+      {...props}
+    >
       {({ className: tabClassName, children, ...tab }) => (
         <Tab
           className={clsx(styles.tab, buttonStyles.button, tabClassName)}
@@ -41,7 +42,8 @@ export const MainNavTabs = ({ className, tabs, ...props }: Props) => {
           data-rounded
           id={tab.segment}
           href={`/${tab.segment}`}
-          {...tab}>
+          {...tab}
+        >
           {(args) => (
             <>
               {args.isSelected && (

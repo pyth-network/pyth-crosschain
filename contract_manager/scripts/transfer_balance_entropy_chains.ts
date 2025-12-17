@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
 import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -453,10 +449,7 @@ async function main() {
 
   console.log("\nTransfer process completed!");
 }
-
-// eslint-disable-next-line unicorn/prefer-top-level-await, @typescript-eslint/use-unknown-in-catch-callback-variable
 main().catch((error) => {
   console.error("Script failed:", error);
-  // eslint-disable-next-line n/no-process-exit, unicorn/no-process-exit
   process.exit(1);
 });

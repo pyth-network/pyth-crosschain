@@ -28,8 +28,7 @@ export const PriceFeedIcon = ({ assetClass, ...props }: Props) => {
     default: {
       return assetClassHasIcon(assetClass) ? (
         <GenericIcon assetClass={assetClass} {...props} />
-      ) : // eslint-disable-next-line unicorn/no-null
-      null;
+      ) : null;
     }
   }
 };

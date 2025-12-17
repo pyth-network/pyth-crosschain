@@ -1,8 +1,5 @@
 // Disable the following rule because this file is the intended place to declare
-// and load all env variables.
-/* eslint-disable n/no-process-env */
-
-import { Redis } from "ioredis";
+// and load all env variables.import { Redis } from "ioredis";
 import "server-only";
 
 /**

@@ -5,7 +5,7 @@ import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 import { Button } from "../Button";
-import { Date } from "../Date";
+import { DateDisplay } from "../Date";
 import { ModalDialog } from "../ModalDialog";
 import { StakingTimeline } from "../StakingTimeline";
 import { Tokens } from "../Tokens";
@@ -36,7 +36,8 @@ export const ProgramSection = ({
       "border-x border-b border-neutral-600/50 bg-pythpurple-800 px-4 py-6 sm:px-8",
       className,
     )}
-    {...props}>
+    {...props}
+  >
     <div className="mx-auto flex max-w-4xl flex-col gap-2 px-2 pb-6 sm:px-6 sm:py-10">
       <div className="flex flex-row items-start gap-8">
         <div className="grow">
@@ -130,7 +131,8 @@ const TokenOverview = ({
       "flex flex-col items-stretch justify-center border-neutral-600/50 md:flex-row lg:mx-auto lg:border lg:bg-white/5 lg:p-6",
       className,
     )}
-    {...props}>
+    {...props}
+  >
     <Position
       name="Available to Stake"
       nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
@@ -143,11 +145,13 @@ const TokenOverview = ({
             actionName="Stake"
             max={available}
             transfer={stake}
-            successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch">
+            successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
+          >
             <StakingTimeline currentEpoch={currentEpoch} />
           </TransferButton>
         ),
-      })}>
+      })}
+    >
       {available}
     </Position>
     <Arrow />
@@ -157,7 +161,10 @@ const TokenOverview = ({
       {...(warmup > 0n && {
         details: (
           <div className="mt-2 text-xs text-neutral-500">
-            Staking <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
+            Staking{" "}
+            <DateDisplay options="time">
+              {epochToDate(currentEpoch + 1n)}
+            </DateDisplay>
           </div>
         ),
       })}
@@ -175,7 +182,8 @@ const TokenOverview = ({
             successMessage="Your tokens are no longer in warmup for staking"
           />
         ),
-      })}>
+      })}
+    >
       {warmup}
     </Position>
     <Arrow />
@@ -191,11 +199,13 @@ const TokenOverview = ({
             actionName="Unstake"
             max={staked}
             transfer={unstake}
-            successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch">
+            successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
+          >
             <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
           </TransferButton>
         ),
-      })}>
+      })}
+    >
       {staked}
     </Position>
     <Arrow />
@@ -207,17 +217,22 @@ const TokenOverview = ({
           {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown}</Tokens> end{" "}
-              <Date options="time">{epochToDate(currentEpoch + 2n)}</Date>
+              <DateDisplay options="time">
+                {epochToDate(currentEpoch + 2n)}
+              </DateDisplay>
             </div>
           )}
           {cooldown2 > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown2}</Tokens> end{" "}
-              <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
+              <DateDisplay options="time">
+                {epochToDate(currentEpoch + 1n)}
+              </DateDisplay>
             </div>
           )}
         </>
-      }>
+      }
+    >
       {cooldown + cooldown2}
     </Position>
   </div>
@@ -244,12 +259,14 @@ const Position = ({
     className={clsx(
       "mx-auto flex w-full max-w-64 flex-col overflow-hidden border border-neutral-600/50 bg-white/5 p-4 md:mx-0 lg:bg-pythpurple-800 lg:p-6",
       className,
-    )}>
+    )}
+  >
     <div
       className={clsx(
         "mb-2 inline-block flex-none border border-neutral-600/50 px-1 py-0.5 text-xs text-neutral-400 sm:px-3 sm:py-1",
         nameClassName,
-      )}>
+      )}
+    >
       {name}
     </div>
     <div className="flex grow flex-row items-end justify-between gap-6 sm:flex-col sm:items-start">

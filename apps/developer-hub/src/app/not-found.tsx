@@ -45,7 +45,8 @@ export default function NotFound() {
 
             <Link
               href="/price-feeds/pro/acquire-access-token"
-              className={styles.navCard}>
+              className={styles.navCard}
+            >
               <div className={styles.navIcon}>
                 <Key size={24} weight="regular" />
               </div>
@@ -61,7 +62,8 @@ export default function NotFound() {
 
             <Link
               href="/price-feeds/pro/price-feed-ids"
-              className={styles.navCard}>
+              className={styles.navCard}
+            >
               <div className={styles.navIcon}>
                 <List size={24} weight="regular" />
               </div>
@@ -80,7 +82,8 @@ export default function NotFound() {
               href="https://dev-forum.pyth.network/"
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.footerLink}>
+              className={styles.footerLink}
+            >
               open a thread in the Developer Forum
             </a>
             .

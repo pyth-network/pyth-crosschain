@@ -1,7 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable unicorn/prefer-add-event-listener */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import type {
   HermesClient,
   HexString,

@@ -63,7 +63,8 @@ export const ColorThemeSelector = () => {
           className={clsx(
             "hover:bg-neutral-100 dark:hover:bg-neutral-800",
             buttonClasses,
-          )}>
+          )}
+        >
           {createElement(THEME_ICONS[resolvedTheme], {
             className: "w-full stroke-2",
           })}

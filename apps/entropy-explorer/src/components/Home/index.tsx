@@ -56,7 +56,8 @@ export const Home = (props: Props) => (
           <Suspense>
             <Paginator {...props} />
           </Suspense>
-        }>
+        }
+      >
         <div className={styles.cardBody}>
           <Suspense fallback={<ResultsLoading />}>
             <Results {...props} />

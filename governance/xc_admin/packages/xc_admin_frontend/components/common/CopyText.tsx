@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import CopyIcon from "@images/icons/copy.inline.svg";
 import copy from "copy-to-clipboard";
 
@@ -16,7 +15,8 @@ const CopyText: React.FC<{
         if (e.key === "Enter") copy(text);
       }}
       role="button"
-      tabIndex={0}>
+      tabIndex={0}
+    >
       <span className="mr-2 hidden xl:block">{text}</span>
       <span className="mr-2 xl:hidden">
         {`${text.slice(0, 6)}...${text.slice(-6)}`}

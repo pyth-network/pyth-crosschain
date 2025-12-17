@@ -42,13 +42,15 @@ export const Select = <T extends string>({
             enterTo="transform opacity-100 scale-100"
             leave="transition ease-in duration-75"
             leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95">
+            leaveTo="transform opacity-0 scale-95"
+          >
             <ListboxOptions className="absolute right-0 mt-2 w-full origin-top-right z-10">
               {options.map((option) => (
                 <ListboxOption
                   key={option}
                   value={option}
-                  className="block w-full bg-darkGray py-3 px-6 text-left text-sm hover:bg-darkGray2 cursor-pointer">
+                  className="block w-full bg-darkGray py-3 px-6 text-left text-sm hover:bg-darkGray2 cursor-pointer"
+                >
                   {option}
                 </ListboxOption>
               ))}

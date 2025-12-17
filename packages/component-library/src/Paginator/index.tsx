@@ -131,7 +131,8 @@ const PaginatorToolbar = ({
         isDisabled={currentPage === 1}
         page={1}
         onPageChange={onPageChange}
-        mkPageLink={mkPageLink}>
+        mkPageLink={mkPageLink}
+      >
         First Page
       </PageSelector>
       {pages.map((page) => {
@@ -143,7 +144,8 @@ const PaginatorToolbar = ({
             page={page}
             aria-label={`Page ${page.toString()}`}
             onPageChange={onPageChange}
-            mkPageLink={mkPageLink}>
+            mkPageLink={mkPageLink}
+          >
             {page.toString()}
           </PageSelector>
         );
@@ -154,7 +156,8 @@ const PaginatorToolbar = ({
         isDisabled={currentPage === numPages}
         page={numPages}
         onPageChange={onPageChange}
-        mkPageLink={mkPageLink}>
+        mkPageLink={mkPageLink}
+      >
         Last Page
       </PageSelector>
     </Toolbar>
@@ -245,7 +248,8 @@ const SelectedPage = ({ children }: { children: string }) => (
     data-size="sm"
     data-variant="ghost"
     data-pressed
-    key={children}>
+    key={children}
+  >
     <span className={buttonStyles.text}>{children}</span>
   </div>
 );

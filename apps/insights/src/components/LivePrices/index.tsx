@@ -105,7 +105,8 @@ const Price = ({
       {updatePageTitle && <DocumentTitle prefix title={val} />}
       <span
         className={styles.price}
-        data-direction={prev ? getChangeDirection(prev, current) : "flat"}>
+        data-direction={prev ? getChangeDirection(prev, current) : "flat"}
+      >
         {val}
       </span>
     </>

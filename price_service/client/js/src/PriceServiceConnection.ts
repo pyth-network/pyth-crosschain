@@ -1,15 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable @typescript-eslint/no-base-to-string */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import type { HexString } from "@pythnetwork/price-service-sdk";
 import { PriceFeed } from "@pythnetwork/price-service-sdk";
 import type { AxiosInstance } from "axios";
@@ -104,7 +92,6 @@ export class PriceServiceConnection {
     });
     axiosRetry(this.httpClient, {
       retries: config?.httpRetries || 3,
-      // eslint-disable-next-line import/no-named-as-default-member
       retryDelay: axiosRetry.exponentialDelay.bind(axiosRetry),
     });
 
@@ -403,7 +390,7 @@ export class PriceServiceConnection {
           this.onWsError(new Error(message.error));
         }
       } else if (message.type === "price_update") {
-        let priceFeed;
+        let priceFeed: PriceFeed;
         try {
           priceFeed = PriceFeed.fromJson(message.price_feed);
         } catch (error: unknown) {

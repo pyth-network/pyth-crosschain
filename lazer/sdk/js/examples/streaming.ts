@@ -1,7 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable unicorn/prefer-top-level-await */
-
 import type { JsonUpdate } from "../src/index.js";
 import { PythLazerClient } from "../src/index.js";
 import { refreshFeedDisplay, renderFeeds } from "./util.js";

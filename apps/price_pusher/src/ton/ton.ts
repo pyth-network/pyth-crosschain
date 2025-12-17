@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
   calculateUpdatePriceFeedsFee,
@@ -80,8 +79,6 @@ export class TonPricePusher implements IPricePusher {
     const provider = this.client.open(wallet);
     this.sender = provider.sender(keyPair.secretKey);
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
     if (priceIds.length === 0) {
       return;

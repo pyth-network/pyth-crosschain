@@ -8,7 +8,7 @@ type Props = Omit<HTMLProps<HTMLSpanElement>, "children"> & {
   options?: DateFormatterOptions | undefined | "time";
 };
 
-export const Date = ({ children, options, ...props }: Props) => {
+export const DateDisplay = ({ children, options, ...props }: Props) => {
   const formatter = useDateFormatter(
     options === "time"
       ? {

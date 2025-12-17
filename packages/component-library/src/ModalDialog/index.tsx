@@ -1,5 +1,6 @@
 "use client";
 
+import type { Nullish } from "@pythnetwork/shared-lib";
 import type { MotionProps, PanInfo } from "motion/react";
 import { motion } from "motion/react";
 import type {
@@ -180,7 +181,8 @@ export const ModalDialog = ({
       {...(onOpenChange && { onOpenChange })}
       {...(overlayVariants && { variants: overlayVariants })}
       {...(overlayClassName && { className: overlayClassName })}
-      {...(isOpen !== undefined && { isOpen })}>
+      {...(isOpen !== undefined && { isOpen })}
+    >
       <Modal style={{ height: 0 }}>
         {(...args) => (
           <MotionDialog
@@ -189,7 +191,8 @@ export const ModalDialog = ({
               onDragEnd: (e, info) => {
                 onDragEnd(e, info, args[0]);
               },
-            })}>
+            })}
+          >
             {typeof children === "function" ? children(...args) : children}
           </MotionDialog>
         )}
@@ -278,7 +281,6 @@ export const createModalDialogContext = <
       // This rule is a false positive because typescript ensures we never
       // fallthough, and adding a `break` above triggers an unreachable code
       // error
-      // eslint-disable-next-line no-fallthrough
       case ActionType.OpenFinish: {
         switch (state.type) {
           case StateType.Opening: {
@@ -295,7 +297,6 @@ export const createModalDialogContext = <
       // This rule is a false positive because typescript ensures we never
       // fallthough, and adding a `break` above triggers an unreachable code
       // error
-      // eslint-disable-next-line no-fallthrough
       case ActionType.Close: {
         switch (state.type) {
           case StateType.Open:
@@ -314,7 +315,6 @@ export const createModalDialogContext = <
       // This rule is a false positive because typescript ensures we never
       // fallthough, and adding a `break` above triggers an unreachable code
       // error
-      // eslint-disable-next-line no-fallthrough
       case ActionType.CloseFinish: {
         switch (state.type) {
           case StateType.Closing: {
@@ -357,7 +357,7 @@ export const createModalDialogContext = <
         dispatch(Action.OpenFinish());
       }, [dispatch]);
       const handleCloseFinish = useCallback(() => {
-        let onCloseFinished;
+        let onCloseFinished: Nullish<() => void>;
         if (state.type === StateType.Closing) {
           onCloseFinished = state.props.onCloseFinished;
         }

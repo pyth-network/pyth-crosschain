@@ -29,12 +29,14 @@ export const ProgramParameters = ({ api, ...props }: Props) => {
           <Link
             href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
             className="underline"
-            target="_blank">
+            target="_blank"
+          >
             the docs
           </Link>
         </>
       }
-      {...props}>
+      {...props}
+    >
       <ul className="mb-4 mt-8 flex flex-col gap-4 sm:mb-8 sm:mt-16">
         <Parameter
           value={
@@ -44,7 +46,8 @@ export const ProgramParameters = ({ api, ...props }: Props) => {
               <Loading />
             )
           }
-          variable="M">
+          variable="M"
+        >
           A constant parameter representing the target stake per symbol
         </Parameter>
         <Parameter
@@ -55,7 +58,8 @@ export const ProgramParameters = ({ api, ...props }: Props) => {
               <Loading />
             )
           }
-          variable="Z">
+          variable="Z"
+        >
           A constant parameter to control cap contribution from symbols with a
           low number of publishers
         </Parameter>
@@ -67,7 +71,8 @@ export const ProgramParameters = ({ api, ...props }: Props) => {
               <Loading />
             )
           }
-          variable="y">
+          variable="y"
+        >
           The cap to the rate of rewards for any pool
         </Parameter>
       </ul>

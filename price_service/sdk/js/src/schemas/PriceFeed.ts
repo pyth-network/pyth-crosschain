@@ -135,7 +135,9 @@ function invalidValue(typ: any, val: any, key: any = ""): never {
 function jsonToJSProps(typ: any): any {
   if (typ.jsonToJS === undefined) {
     const map: any = {};
-    typ.props.forEach((p: any) => (map[p.json] = { key: p.js, typ: p.typ }));
+    typ.props.forEach((p: any) => {
+      map[p.json] = { key: p.js, typ: p.typ };
+    });
     typ.jsonToJS = map;
   }
   return typ.jsonToJS;
@@ -144,7 +146,9 @@ function jsonToJSProps(typ: any): any {
 function jsToJSONProps(typ: any): any {
   if (typ.jsToJSON === undefined) {
     const map: any = {};
-    typ.props.forEach((p: any) => (map[p.js] = { key: p.json, typ: p.typ }));
+    typ.props.forEach((p: any) => {
+      map[p.js] = { key: p.json, typ: p.typ };
+    });
     typ.jsToJSON = map;
   }
   return typ.jsToJSON;

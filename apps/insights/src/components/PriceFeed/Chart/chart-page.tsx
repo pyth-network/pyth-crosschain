@@ -72,7 +72,7 @@ const Disclaimer = ({ displaySymbol, symbol }: DisclaimerProps) => {
         liability for your use.
       </p>
     </div>
-  ) : null; // eslint-disable-line unicorn/no-null
+  ) : null;
 };
 
 const NEW_YORK_FED_SYMBOLS = new Set([

@@ -1,13 +1,7 @@
 // Disable the following rule because this file is the intended place to declare
-// and load all env variables.
-/* eslint-disable n/no-process-env */
-
-// Disable the following rule because variables in this file are only loaded at
+// and load all env variables.// Disable the following rule because variables in this file are only loaded at
 // runtime and do not influence the build outputs, thus they need not be
-// declared to turbo for it to be able to cache build outputs correctly.
-/* eslint-disable turbo/no-undeclared-env-vars */
-
-import "server-only";
+// declared to turbo for it to be able to cache build outputs correctly.import "server-only";
 
 /**
  * Throw if the env var `key` is not set (at either runtime or build time).

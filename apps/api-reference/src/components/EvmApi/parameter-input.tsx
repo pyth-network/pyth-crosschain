@@ -79,7 +79,8 @@ const PriceFeedIdInput = <ParameterName extends string>({
           priceFeedList.type === PriceFeedListContextType.Loaded
             ? priceFeedList.list
             : [],
-      }}>
+      }}
+    >
       <ComboboxInput
         as={Input}
         displayValue={() =>
@@ -96,16 +97,13 @@ const PriceFeedIdInput = <ParameterName extends string>({
       />
       <div className="absolute right-0 top-0 z-50 mt-20 hidden w-full min-w-[34rem] overflow-hidden rounded-lg border border-neutral-400 bg-neutral-100 text-sm shadow focus-visible:border-pythpurple-600 focus-visible:outline-none group-data-[open]:block dark:border-neutral-600 dark:bg-neutral-800 dark:shadow-white/20 dark:focus-visible:border-pythpurple-400">
         <PriceFeedListOptions priceFeedList={priceFeedList} />
-        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-        <div
-          className="bg-neutral-200 p-1 px-2 text-right text-xs dark:bg-neutral-700"
-          onMouseDown={(e) => {
-            e.preventDefault();
-          }}>
+        {}
+        <div className="bg-neutral-200 p-1 px-2 text-right text-xs dark:bg-neutral-700">
           See all price feed IDs on{" "}
           <InlineLink
             target="_blank"
-            href="https://pyth.network/developers/price-feed-ids">
+            href="https://pyth.network/developers/price-feed-ids"
+          >
             the reference page
           </InlineLink>
         </div>
@@ -132,7 +130,8 @@ const PriceFeedListOptions = ({ priceFeedList }: PriceFeedListOptionsProps) => {
             <ComboboxOption
               key={feedId}
               value={option}
-              className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 p-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400">
+              className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 p-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
+            >
               <PriceFeedIcon name={name} />
               <div>
                 <div className="flex flex-row items-center gap-3">
@@ -272,7 +271,6 @@ const usePriceFeedSelector = (
     () =>
       sortedPriceFeedListWithHexIds.find(
         ({ feedId }) => feedId === internalValue,
-        // eslint-disable-next-line unicorn/no-null
       ) ?? null,
     [sortedPriceFeedListWithHexIds, internalValue],
   );

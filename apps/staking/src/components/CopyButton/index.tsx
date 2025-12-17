@@ -56,7 +56,8 @@ export const CopyButton = ({
         className,
       )}
       {...(isCopied && { "data-is-copied": true })}
-      {...props}>
+      {...props}
+    >
       {(...args) => (
         <>
           <span>

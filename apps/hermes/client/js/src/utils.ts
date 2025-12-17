@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 function camelToSnakeCase(str: string): string {
   return str.replaceAll(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }

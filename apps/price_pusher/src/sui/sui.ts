@@ -1,10 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { PaginatedCoins, SuiObjectRef } from "@mysten/sui/client";
 import { SuiClient } from "@mysten/sui/client";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
@@ -71,7 +64,6 @@ export class SuiPriceListener extends ChainPriceListener {
         throw new Error("fetched object datatype should be moveObject");
 
       const priceInfo =
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
           .price.fields;
@@ -146,7 +138,6 @@ export class SuiPricePusher implements IPricePusher {
       });
 
     if ("upgrade_cap" in state) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       return state.upgrade_cap.fields.package;
     }

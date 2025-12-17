@@ -226,7 +226,6 @@ const SearchDialogContents = ({
             value={search}
             onChange={setSearch}
             className={styles.searchInput ?? ""}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
           <SingleToggleGroup
@@ -248,7 +247,8 @@ const SearchDialogContents = ({
           hideText
           rounded
           variant="ghost"
-          size="sm">
+          size="sm"
+        >
           Close
         </Button>
       </div>
@@ -258,7 +258,6 @@ const SearchDialogContents = ({
             aria-label="Search"
             items={results}
             className={styles.listbox ?? ""}
-            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus={false}
             shouldFocusOnHover
             renderEmptyState={() => (
@@ -268,7 +267,8 @@ const SearchDialogContents = ({
                   setSearch("");
                 }}
               />
-            )}>
+            )}
+          >
             {(result) => (
               <ListBoxItem
                 textValue={
@@ -284,7 +284,8 @@ const SearchDialogContents = ({
                 }
                 data-is-first={result.id === results[0]?.id ? "" : undefined}
                 onPointerDown={onLinkPointerDown}
-                onPointerUp={onLinkPointerUp}>
+                onPointerUp={onLinkPointerUp}
+              >
                 <div className={styles.smallScreen}>
                   {result.type === ResultType.PriceFeed ? (
                     <SymbolPairTag
@@ -315,7 +316,8 @@ const SearchDialogContents = ({
                               : "info"
                           }
                           style="filled"
-                          size="xs">
+                          size="xs"
+                        >
                           {result.type === ResultType.PriceFeed
                             ? "PRICE FEED"
                             : "PUBLISHER"}
@@ -354,7 +356,8 @@ const SearchDialogContents = ({
                           : "info"
                       }
                       style="filled"
-                      size="xs">
+                      size="xs"
+                    >
                       {result.type === ResultType.PriceFeed
                         ? "PRICE FEED"
                         : "PUBLISHER"}

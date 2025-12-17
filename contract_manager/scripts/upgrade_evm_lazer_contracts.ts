@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
@@ -186,6 +184,4 @@ async function main() {
   const proposal = await vault?.proposeWormholeMessage(payloads);
   console.log("Proposal address", proposal?.address.toBase58());
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

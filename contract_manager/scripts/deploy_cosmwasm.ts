@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable no-console */
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { CosmWasmChain } from "../src/core/chains";

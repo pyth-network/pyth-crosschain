@@ -89,7 +89,8 @@ export function ProductCard({
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={styles.quickLink}>
+                    className={styles.quickLink}
+                  >
                     {link.label}
                   </Link>
                 ))}
@@ -107,7 +108,8 @@ export function ProductCard({
               }}
               size="md"
               variant="primary"
-              className={clsx(styles.button, className)}>
+              className={clsx(styles.button, className)}
+            >
               {buttonLabel}
             </Button>
           </div>

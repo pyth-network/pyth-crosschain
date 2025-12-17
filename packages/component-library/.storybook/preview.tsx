@@ -73,7 +73,8 @@ export const decorators: Decorator[] = [
             })}
             {...(typeof globals.background === "string" && {
               "data-background": globals.background,
-            })}>
+            })}
+          >
             <Story />
           </BodyProviders>
         )}

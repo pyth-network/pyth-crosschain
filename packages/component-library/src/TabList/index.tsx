@@ -21,14 +21,16 @@ export const TabList = ({ label, className, currentTab, ...props }: Props) => (
       aria-label={label}
       dependencies={[currentTab]}
       className={styles.tabList ?? ""}
-      {...props}>
+      {...props}
+    >
       {({ className: tabClassName, children, ...tab }) => (
         <Tab
           className={clsx(styles.tab, buttonStyles.button, tabClassName)}
           data-size="sm"
           data-variant="ghost"
           data-selectable={currentTab === tab.id ? undefined : ""}
-          {...tab}>
+          {...tab}
+        >
           {(args) => (
             <>
               <span className={buttonStyles.text}>

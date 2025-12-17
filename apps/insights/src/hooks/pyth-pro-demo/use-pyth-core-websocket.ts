@@ -31,7 +31,6 @@ type PythPriceUpdateMessage = {
 
 const SYMBOL_TO_PRICE_FEED_MAP = new Map<Nullish<AllAllowedSymbols>, string>([
   [undefined, ""],
-  // eslint-disable-next-line unicorn/no-null
   [null, ""],
   [
     "BTCUSDT",

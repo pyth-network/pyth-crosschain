@@ -16,7 +16,7 @@ export const extractPublisherData = (
       stakeAccount:
         poolData.publisherStakeAccounts[index] === undefined ||
         poolData.publisherStakeAccounts[index].equals(PublicKey.default)
-          ? null // eslint-disable-line unicorn/no-null
+          ? null
           : poolData.publisherStakeAccounts[index],
       totalDelegation:
         (poolData.delState[index]?.totalDelegation ?? 0n) +

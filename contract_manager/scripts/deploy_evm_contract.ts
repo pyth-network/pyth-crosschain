@@ -1,14 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable no-console */
-
 import { readFileSync } from "node:fs";
 
 import yargs from "yargs";

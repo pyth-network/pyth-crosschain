@@ -267,9 +267,9 @@ export function getDownloadableConfig(
         .sort(
           (mapping1, mapping2) =>
             mapping2.products.length - mapping1.products.length,
-        )[0]!
-        .products.sort((product1, product2) =>
-          product1.metadata.symbol!.localeCompare(product2.metadata.symbol!),
+        )[0]
+        ?.products.sort((product1, product2) =>
+          product1.metadata.symbol?.localeCompare(product2.metadata.symbol!),
         )
         .map((product) => {
           const { price_account, ...metadataWithoutPriceAccount } =
@@ -521,7 +521,7 @@ async function generateAddInstructions(
       .addProduct({ ...newChanges.metadata })
       .accounts({
         fundingAccount,
-        tailMappingAccount: rawConfig.mappingAccounts[0]!.address,
+        tailMappingAccount: rawConfig.mappingAccounts[0]?.address,
         productAccount: productAccountKey,
       })
       .instruction();
@@ -666,7 +666,7 @@ async function generateDeleteInstructions(
         .delProduct()
         .accounts({
           fundingAccount,
-          mappingAccount: accounts.rawConfig.mappingAccounts[0]!.address,
+          mappingAccount: accounts.rawConfig.mappingAccounts[0]?.address,
           productAccount: new PublicKey(prev.address || ""),
         })
         .instruction(),

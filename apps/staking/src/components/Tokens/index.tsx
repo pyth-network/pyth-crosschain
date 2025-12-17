@@ -47,7 +47,8 @@ const TokenButton = ({ children, className, ...props }: TokenButtonProps) => (
       "inline-flex cursor-default items-center gap-[0.25em] align-top active:outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
       className,
     )}
-    {...props}>
+    {...props}
+  >
     <Pyth className="aspect-square size-[1em]" />
     <span>{children}</span>
   </Button>

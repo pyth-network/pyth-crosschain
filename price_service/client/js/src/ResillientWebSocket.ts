@@ -1,12 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable unicorn/prefer-add-event-listener */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-empty-function */
 import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 

@@ -1,4 +1,3 @@
-/* eslint-disable tsdoc/syntax */
 import type { PythCluster } from "@pythnetwork/client";
 import type { MultisigInstruction } from "@pythnetwork/xc-admin-common";
 import {

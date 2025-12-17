@@ -1,8 +1,5 @@
 // Disable the following rule because this file is the intended place to declare
-// and load all env variables.
-/* eslint-disable n/no-process-env */
-
-import "server-only";
+// and load all env variables.import "server-only";
 
 const getEnvOrDefault = (key: string, defaultValue: string) =>
   process.env[key] ?? defaultValue;

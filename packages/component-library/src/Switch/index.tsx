@@ -21,7 +21,8 @@ export const Switch = ({
     className={clsx(styles.switch, className)}
     isDisabled={isDisabled === true || isPending === true}
     data-pending={isPending ? "" : undefined}
-    {...props}>
+    {...props}
+  >
     {(args) => (
       <>
         <div className={styles.indicator}>

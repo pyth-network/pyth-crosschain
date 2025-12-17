@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-null */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { useLocalStorageValue } from "@react-hookz/web";
 import type { PropsWithChildren } from "react";

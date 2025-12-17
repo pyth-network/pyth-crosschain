@@ -1,3 +1,8 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-openapi/css/preset.css";
+
 .image-container {
   display: flex;
   justify-content: center;
@@ -19,10 +24,6 @@
     background-color: var(--color-gray-900, #111827);
   }
 }
-@import "tailwindcss";
-@import "fumadocs-ui/css/neutral.css";
-@import "fumadocs-ui/css/preset.css";
-@import "fumadocs-openapi/css/preset.css";
 /* @import "./theme.css"; this overrides the default colors to match the pyth branding */
 /* @import "./fumadocs-global-style-overrides.css"; */
 

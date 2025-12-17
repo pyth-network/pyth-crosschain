@@ -33,7 +33,8 @@ export const PublisherTag = ({ className, ...props }: Props) => (
       "publisherKey",
       "name",
       "icon",
-    ])}>
+    ])}
+  >
     {props.isLoading ? (
       <Skeleton fill className={styles.icon} />
     ) : (
@@ -45,7 +46,8 @@ export const PublisherTag = ({ className, ...props }: Props) => (
         variant="muted"
         style="filled"
         size="xs"
-        className={styles.testBadge}>
+        className={styles.testBadge}
+      >
         test
       </Badge>
     )}

@@ -57,7 +57,8 @@ const ConfidenceCellRenderer = ({ value }: { value: number }) => (
       height: "100%",
       display: "flex",
       alignItems: "center",
-    }}>{`+/- ${value.toFixed(2)}%`}</span>
+    }}
+  >{`+/- ${value.toFixed(2)}%`}</span>
 );
 
 const FeedCellRenderer = ({ value }: { value: string }) => (

@@ -1,7 +1,6 @@
 // the linting rules don't allow importing anything that might clash with
 // a global, top-level import. we disable this rule because we need this
 // imported from our installed dependency
-// eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer as BrowserBuffer } from "buffer";
 
 import type { Data } from "isomorphic-ws";

@@ -1,13 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable n/no-process-env */
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
@@ -195,13 +185,9 @@ export class GlobalChain extends Chain {
       "Can not create a governance message for upgrading contracts on all chains!",
     );
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getAccountAddress(_privateKey: PrivateKey): Promise<string> {
     throw new Error("Can not get account for GlobalChain.");
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getAccountBalance(_privateKey: PrivateKey): Promise<number> {
     throw new Error("Can not get account balance for GlobalChain.");
   }
@@ -543,7 +529,7 @@ export class EvmChain extends Chain {
   }
 
   async estiamteAndSendTransaction(
-    transactionObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    transactionObject: any,
     txParams: { from?: string; value?: string },
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;
@@ -567,9 +553,9 @@ export class EvmChain extends Chain {
    */
   async deploy(
     privateKey: PrivateKey,
-    abi: any, // eslint-disable-line  @typescript-eslint/no-explicit-any
+    abi: any,
     bytecode: string,
-    deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
+    deployArgs: any[],
     gasMultiplier = 1,
     gasPriceMultiplier = 1,
   ): Promise<string> {
@@ -828,7 +814,6 @@ export class StarknetChain extends Chain {
     const ARGENT_CLASS_HASH =
       "0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b";
     const ADDR_BOUND =
-      // eslint-disable-next-line unicorn/number-literal-case
       0x7_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_00n;
 
     const publicKey = await new Signer(`0x${privateKey}`).getPubKey();

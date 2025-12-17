@@ -39,7 +39,8 @@ export const GeneralFaq = (
                 <Link
                   href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
                   className="underline"
-                  target="_blank">
+                  target="_blank"
+                >
                   official announcement
                 </Link>
                 .
@@ -81,7 +82,8 @@ export const GeneralFaq = (
                 <Link
                   href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   className="underline"
-                  target="_blank">
+                  target="_blank"
+                >
                   Pyth DAO Constitution
                 </Link>
                 .
@@ -186,7 +188,8 @@ export const GeneralFaq = (
                 <Link
                   href="https://pyth.network/publishers"
                   className="underline"
-                  target="_blank">
+                  target="_blank"
+                >
                   here
                 </Link>
                 . You can learn more about how Pyth Price Feeds work by visiting
@@ -194,7 +197,8 @@ export const GeneralFaq = (
                 <Link
                   href="https://docs.pyth.network/price-feeds/how-pyth-works"
                   className="underline"
-                  target="_blank">
+                  target="_blank"
+                >
                   docs
                 </Link>
                 .
@@ -213,7 +217,8 @@ export const GeneralFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                   className="underline"
-                  target="_blank">
+                  target="_blank"
+                >
                   here
                 </Link>
                 .

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -45,6 +44,4 @@ async function main() {
   }
   console.table(entries);
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

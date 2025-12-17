@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 

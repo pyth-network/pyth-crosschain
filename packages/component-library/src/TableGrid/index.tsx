@@ -58,7 +58,6 @@ export const TableGrid = <TData extends Record<string, unknown>>({
       return {
         ...colDef,
         // the types in ag-grid are `any` for the cellRenderers which is throwing an error here
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         cellRenderer: loading
           ? (colDef.loadingCellRenderer ?? SkeletonCellRenderer)
           : colDef.cellRenderer,
@@ -111,7 +110,8 @@ export const TableGrid = <TData extends Record<string, unknown>>({
           />
         )
       }
-      {...cardProps}>
+      {...cardProps}
+    >
       {tableGrid}
     </Card>
   );

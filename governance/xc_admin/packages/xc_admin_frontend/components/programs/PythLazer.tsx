@@ -1,8 +1,6 @@
 type PythLazerProps = {
   proposerServerUrl: string; // kept for consistency with PythCore interface
 };
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PythLazer = (_: PythLazerProps) => {
   return (
     <div className="relative p-10">
@@ -14,7 +12,8 @@ const PythLazer = (_: PythLazerProps) => {
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="mb-4 h-16 w-16 text-amber-500">
+            className="mb-4 h-16 w-16 text-amber-500"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"

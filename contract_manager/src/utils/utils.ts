@@ -57,7 +57,6 @@ export const getEvmChainRpcUrl = (chainId: number): string | undefined => {
       (c) => "id" in c && c.id === Number.parseInt(chain.id, 10),
     );
     if (viemChain && "rpcUrls" in viemChain) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       return viemChain.rpcUrls.default.http[0] ?? chain.rpcUrl;
     }
     return;

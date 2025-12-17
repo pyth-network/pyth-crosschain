@@ -51,7 +51,8 @@ const UnknownError = ({ error }: { error: unknown }) => {
       <m.div
         className="overflow-hidden pt-1 opacity-60"
         initial={{ height: 0 }}
-        animate={{ height: detailsOpen ? "auto" : 0 }}>
+        animate={{ height: detailsOpen ? "auto" : 0 }}
+      >
         {message}
       </m.div>
     </LazyMotion>

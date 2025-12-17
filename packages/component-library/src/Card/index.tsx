@@ -36,7 +36,6 @@ export const Card = (
   const overlayState = use(OverlayTriggerStateContext);
 
   if (props.nonInteractive) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { nonInteractive, ...otherProps } = props;
     return <div {...cardProps(otherProps)} />;
   } else if ("href" in props) {
@@ -75,7 +74,8 @@ const cardProps = <T extends ElementType>({
           {toolbar && (
             <div
               className={clsx(styles.toolbar, toolbarClassName)}
-              data-always-on-top={toolbarAlwaysOnTop ? "" : undefined}>
+              data-always-on-top={toolbarAlwaysOnTop ? "" : undefined}
+            >
               {toolbar}
             </div>
           )}

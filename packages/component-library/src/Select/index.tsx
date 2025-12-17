@@ -94,7 +94,8 @@ export const Select = <T extends { id: string | number }>({
     className={clsx(styles.select, className)}
     data-label-hidden={hideLabel ? "" : undefined}
     {...("selectedKey" in props && { selectedKey: props.selectedKey })}
-    {...props}>
+    {...props}
+  >
     <Label className={styles.label}>{label}</Label>
     <Button
       className={styles.trigger ?? ""}
@@ -114,7 +115,8 @@ export const Select = <T extends { id: string | number }>({
       rounded={rounded}
       hideText={hideText}
       beforeIcon={icon}
-      isPending={isPending === true}>
+      isPending={isPending === true}
+    >
       <ButtonLabel
         buttonLabel={buttonLabel}
         defaultButtonLabel={defaultButtonLabel}
@@ -127,7 +129,8 @@ export const Select = <T extends { id: string | number }>({
         "data-grouped": "",
         "data-group-label-hidden": props.hideGroupLabel ? "" : undefined,
       })}
-      className={styles.popover ?? ""}>
+      className={styles.popover ?? ""}
+    >
       <span className={styles.title}>{label}</span>
       {"options" in props ? (
         <ListBox className={styles.listbox ?? ""} items={props.options}>
@@ -143,7 +146,8 @@ export const Select = <T extends { id: string | number }>({
             <ListBoxSection
               data-label-hidden={hideLabel ? "" : undefined}
               className={styles.section ?? ""}
-              id={name}>
+              id={name}
+            >
               <Header className={styles.groupLabel ?? ""}>{name}</Header>
               <Collection items={options}>
                 {(item) => (
@@ -174,7 +178,8 @@ const Item = <T extends { id: string | number }>({
   <ListBoxItem
     id={typeof children === "object" ? children.id : children}
     className={styles.listboxItem ?? ""}
-    textValue={getTextValue({ children, show, textValue })}>
+    textValue={getTextValue({ children, show, textValue })}
+  >
     <span>{show?.(children) ?? children.id}</span>
     <Check weight="bold" className={styles.check} />
   </ListBoxItem>

@@ -22,7 +22,8 @@ export const Root = ({ children }: Props) => (
       label: "Entropy Docs",
       href: "https://docs.pyth.network/entropy",
     }}
-    providers={[NuqsAdapter]}>
+    providers={[NuqsAdapter]}
+  >
     {children}
   </AppShell>
 );

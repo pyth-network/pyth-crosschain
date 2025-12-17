@@ -21,7 +21,8 @@ export const Ranking = ({
   <span
     className={clsx(styles.ranking, className)}
     data-is-current={isCurrent ? "" : undefined}
-    {...props}>
+    {...props}
+  >
     {isLoading ? (
       <Skeleton fill className={styles.skeleton} />
     ) : (

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-misused-promises */
 import express from "express";
 import type { Logger } from "pino";
 import { Counter, Gauge, Registry } from "prom-client";

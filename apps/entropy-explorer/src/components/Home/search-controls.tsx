@@ -68,16 +68,16 @@ const ResolvedPaginator = (
 const usePaginator = () => {
   const pageSize = useSearchParam({
     paramName: "pageSize",
-    parse: parseInt,
+    parse: parseIntFromStr,
     defaultValue: DEFAULT_PAGE_SIZE,
-    serialize: toString,
+    serialize: stringify,
   });
   const page = useSearchParam({
     paramName: "page",
-    parse: parseInt,
+    parse: parseIntFromStr,
     defaultValue: 1,
     preservePageOnChange: true,
-    serialize: toString,
+    serialize: stringify,
   });
 
   return {
@@ -197,7 +197,7 @@ const useChainSelect = () => {
     paramName: "chain",
     parse: parseChainSlug,
     defaultValue: "all-mainnet",
-    serialize: toString,
+    serialize: stringify,
   });
   const collator = useCollator();
 
@@ -266,9 +266,8 @@ const entropyDeploymentsByNetwork = (
     .toSorted((a, b) => collator.compare(a.name, b.name));
 
 const id = <T,>(value: T) => value;
-const parseInt = (value: string) => Number.parseInt(value, 10);
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-const toString = <T extends { toString: () => string }>(value: T) =>
+const parseIntFromStr = (value: string) => Number.parseInt(value, 10);
+const stringify = <T extends { toString: () => string }>(value: T) =>
   value.toString();
 
 const useSearchParam = <T,>({

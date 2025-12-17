@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import type { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
@@ -192,7 +190,6 @@ export class SolanaPricePusherJito implements IPricePusher {
         Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
       );
     } catch (error: any) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.logger.error({ err: error }, "getRecentJitoTips failed");
       return undefined;
     }

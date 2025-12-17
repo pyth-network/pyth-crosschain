@@ -36,7 +36,8 @@ export const StatusTag = ({
     <div
       className={`flex items-center justify-center rounded-full ${getProposalBackgroundColorClassName(
         proposalStatus,
-      )} py-1 px-2 text-xs`}>
+      )} py-1 px-2 text-xs`}
+    >
       {text || proposalStatus}
     </div>
   );

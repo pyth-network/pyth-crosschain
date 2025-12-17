@@ -28,7 +28,8 @@ export function PythProApiTokensMenu() {
           onClick={() => {
             setOpen(true);
           }}
-          variant="outline">
+          variant="outline"
+        >
           <GearSix />
         </Button>
         <Tooltip className={classes.tooltip ?? ""} placement="bottom">
@@ -39,7 +40,8 @@ export function PythProApiTokensMenu() {
         className={classes.modal ?? ""}
         isOpen={open}
         onOpenChange={setOpen}
-        overlayClassName={classes.modalOverlay ?? ""}>
+        overlayClassName={classes.modalOverlay ?? ""}
+      >
         <div className={classes.apiTokensMenu}>
           <div className={classes.apiTokensMenuHeader}>
             <span>{tooltip}</span>
@@ -49,7 +51,8 @@ export function PythProApiTokensMenu() {
                 setOpen(false);
               }}
               size="md"
-              variant="ghost">
+              variant="ghost"
+            >
               <X />
             </Button>
           </div>

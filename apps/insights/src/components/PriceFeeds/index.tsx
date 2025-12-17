@@ -165,7 +165,8 @@ const FeaturedFeeds = ({
           symbol,
           product.price_account,
         ]),
-      )}>
+      )}
+    >
       <FeaturedFeedsCard
         title="Featured"
         icon={<Star />}
@@ -202,7 +203,8 @@ const FeaturedFeeds = ({
                 }))}
               />
             ),
-          }}>
+          }}
+        >
           Show all
         </Button>
       }
@@ -239,7 +241,8 @@ const FeaturedFeedsCard = <T extends ElementType>({
         <Card
           key={feed.product.price_account}
           variant="tertiary"
-          href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}>
+          href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}
+        >
           <div className={styles.feedCardContents}>
             <SymbolPairTag
               displaySymbol={feed.product.display_symbol}

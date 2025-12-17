@@ -1,6 +1,3 @@
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable react/prop-types */
 import type { Idl } from "@coral-xyz/anchor";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
@@ -293,7 +290,8 @@ const ModalContent: React.FC<ModalContentProps> = ({
                 <tr>
                   <td
                     className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
-                    colSpan={2}>
+                    colSpan={2}
+                  >
                     {addPriceFeed
                       ? "Add New Price Feed"
                       : deletePriceFeed
@@ -363,7 +361,9 @@ const ModalContent: React.FC<ModalContentProps> = ({
         <button
           className="action-btn text-base"
           onClick={onSendProposal}
-          disabled={isSendProposalButtonLoading}>
+          disabled={isSendProposalButtonLoading}
+          type="button"
+        >
           {isSendProposalButtonLoading ? <Spinner /> : "Send Proposal"}
         </button>
       )}
@@ -430,7 +430,6 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
       reader.addEventListener("load", (e) => {
         if (e.target?.result) {
           try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const uploadedConfig = JSON.parse(e.target.result as string);
             const validation = validateUploadedConfig[ProgramType.PYTH_CORE](
               data,
@@ -452,7 +451,6 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
           }
         }
       });
-      // eslint-disable-next-line unicorn/prefer-blob-reading-methods
       reader.readAsText(file);
     });
     document.body.append(uploadAnchor); // required for firefox
@@ -488,9 +486,7 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
           instructions,
           cluster,
         });
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const { proposalPubkey } = response.data;
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`);
         setIsSendProposalButtonLoading(false);
         closeModal();
@@ -537,7 +533,6 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
         content={
           <ModalContent
             changes={dataChanges ?? {}}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onSendProposal={handleSendProposalButtonClick}
             isSendProposalButtonLoading={isSendProposalButtonLoading}
           />
@@ -570,14 +565,18 @@ const PythCore: React.FC<PythCoreProps> = ({ proposerServerUrl }) => {
             <div className="mb-10">
               <button
                 className="action-btn text-base"
-                onClick={handleDownloadJsonButtonClick}>
+                onClick={handleDownloadJsonButtonClick}
+                type="button"
+              >
                 Download JSON
               </button>
             </div>
             <div className="mb-10">
               <button
                 className="action-btn text-base"
-                onClick={handleUploadJsonButtonClick}>
+                onClick={handleUploadJsonButtonClick}
+                type="button"
+              >
                 Upload JSON
               </button>
             </div>

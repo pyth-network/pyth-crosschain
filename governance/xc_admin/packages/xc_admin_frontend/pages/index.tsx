@@ -1,10 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable unicorn/no-await-expression-member */
-/* eslint-disable n/no-process-env */
-/* eslint-disable react/prop-types */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as fs from "node:fs";
 
 import { Tab } from "@headlessui/react";
@@ -141,13 +134,15 @@ const Home: NextPage<{
     <Layout>
       <PythContextProvider
         publisherKeyToNameMapping={publisherKeyToNameMapping}
-        multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}>
+        multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
+      >
         <MultisigContextProvider>
           <div className="container relative pt-16 md:pt-20">
             <div className="py-8 md:py-16">
               <Tab.Group
                 selectedIndex={currentTabIndex}
-                onChange={handleChangeTab}>
+                onChange={handleChangeTab}
+              >
                 <Tab.List className="mx-auto gap-1 space-x-4 space-y-4 text-center sm:gap-2.5 md:space-x-8">
                   {Object.entries(TAB_INFO).map((tab, idx) => (
                     <Tab
@@ -157,7 +152,8 @@ const Home: NextPage<{
                           "p-3 text-xs font-semibold uppercase outline-none transition-colors hover:bg-darkGray3 md:text-base",
                           selected ? "bg-darkGray3" : "bg-darkGray2",
                         )
-                      }>
+                      }
+                    >
                       {tab[1].title}
                     </Tab>
                   ))}

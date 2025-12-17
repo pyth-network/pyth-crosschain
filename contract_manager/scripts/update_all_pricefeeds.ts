@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import type { PriceFeedMetadata } from "@pythnetwork/hermes-client";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
@@ -84,6 +81,4 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

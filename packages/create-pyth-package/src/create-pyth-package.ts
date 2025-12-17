@@ -1,4 +1,3 @@
-/* eslint-disable tsdoc/syntax */
 // this rule is absolutely broken for the typings the prompts library
 // provides, so we need to hard-disable it for all usages of prompts
 

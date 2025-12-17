@@ -9,7 +9,7 @@ import {
   useData,
 } from "../../hooks/use-data";
 import { Dashboard } from "../Dashboard";
-import { Error as ErrorPage } from "../Error";
+import { ErrorComponent as ErrorPage } from "../Error";
 import { Loading } from "../Loading";
 import { NoWalletHome } from "../NoWalletHome";
 

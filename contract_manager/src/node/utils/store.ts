@@ -1,28 +1,17 @@
-/* eslint-disable no-empty */
-/* eslint-disable tsdoc/syntax */
-/* eslint-disable unicorn/no-array-for-each */
-/* eslint-disable unicorn/no-array-push-push */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-
-import { Vault } from "./governance";
-import { PriceFeedContract, Storable } from "../../core/base";
+import type { PriceFeedContract, Storable } from "../../core/base";
 import {
   AptosChain,
-  Chain,
+  type Chain,
   CosmWasmChain,
-  StarknetChain,
   EvmChain,
   FuelChain,
   GlobalChain,
+  IotaChain,
+  NearChain,
+  StarknetChain,
   SuiChain,
   TonChain,
-  NearChain,
-  IotaChain,
 } from "../../core/chains";
 import {
   AptosPriceFeedContract,
@@ -30,20 +19,20 @@ import {
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
   EvmEntropyContract,
-  EvmPriceFeedContract,
-  EvmWormholeContract,
-  SuiPriceFeedContract,
-  SuiWormholeContract,
-  FuelWormholeContract,
-  WormholeContract,
-  FuelPriceFeedContract,
-  TonPriceFeedContract,
-  TonWormholeContract,
-  IotaWormholeContract,
-  IotaPriceFeedContract,
-  EvmPulseContract,
   EvmExecutorContract,
   EvmLazerContract,
+  EvmPriceFeedContract,
+  type EvmPulseContract,
+  EvmWormholeContract,
+  FuelPriceFeedContract,
+  FuelWormholeContract,
+  IotaPriceFeedContract,
+  IotaWormholeContract,
+  SuiPriceFeedContract,
+  SuiWormholeContract,
+  TonPriceFeedContract,
+  TonWormholeContract,
+  WormholeContract,
 } from "../../core/contracts";
 import {
   NearPriceFeedContract,
@@ -54,6 +43,7 @@ import {
   StarknetWormholeContract,
 } from "../../core/contracts/starknet";
 import { Token } from "../../core/token";
+import { Vault } from "./governance";
 
 export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
@@ -78,7 +68,7 @@ export class Store {
   }
 
   getJsonFiles(path: string) {
-    const walk = function (dir: string) {
+    const walk = (dir: string) => {
       let results: string[] = [];
       const list = readdirSync(dir);
       for (let file of list) {
@@ -272,7 +262,7 @@ export class Store {
    */
   getChainOrThrow<T extends Chain>(
     chainId: string,
-    ChainClass?: { new (...args: any[]): T; type: string }, // eslint-disable-line @typescript-eslint/no-explicit-any
+    ChainClass?: { new (...args: any[]): T; type: string },
   ): T {
     const chain = this.chains[chainId];
     if (!chain) {

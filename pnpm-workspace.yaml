@@ -57,7 +57,7 @@ catalog:
   "@babel/preset-typescript": ^7.27.1
   "@better-builds/ts-duality": ^1.0.0
   "@bonfida/spl-name-service": ^3.0.10
-  "@biomejs/biome": ^2.3.9
+  "@biomejs/biome": ^2.3.10
   "@clickhouse/client": ^1.11.0
   "@coral-xyz/anchor": ^0.30.1
   "@cprussin/jest-config": ^3.1.3

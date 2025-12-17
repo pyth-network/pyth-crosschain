@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import type { Wallet } from "@coral-xyz/anchor";
 import type { Signer } from "@solana/web3.js";
 import {

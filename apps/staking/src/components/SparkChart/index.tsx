@@ -4,7 +4,7 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import resolveConfig from "tailwindcss/resolveConfig";
 
 import tailwindConfig from "../../../tailwind.config";
-import { Date } from "../Date";
+import { DateDisplay } from "../Date";
 
 const fullConfig = resolveConfig(tailwindConfig);
 
@@ -38,7 +38,7 @@ type TooltipProps = {
 
 const TooltipContent = ({ payload, label }: TooltipProps) => (
   <div className="flex flex-row gap-2 border border-pythpurple-400 bg-pythpurple-950 p-2 text-xs shadow">
-    {label && <Date className="font-medium">{label}</Date>}
+    {label && <DateDisplay className="font-medium">{label}</DateDisplay>}
     <span>{payload?.[0]?.value ?? 0}%</span>
   </div>
 );

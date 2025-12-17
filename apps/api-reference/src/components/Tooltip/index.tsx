@@ -177,8 +177,7 @@ const TooltipContent = <T extends ElementType = "div">(
         ...state.getFloatingProps(props),
       })}
     </FloatingPortal>
-  ) : // eslint-disable-next-line unicorn/no-null
-  null;
+  ) : null;
 };
 
 const TooltipArrow = (

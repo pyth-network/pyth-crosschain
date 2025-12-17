@@ -52,13 +52,13 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
     if (!isLoading) {
       const productAccountMapping: AccountKeyToSymbol = {};
       const priceAccountMapping: AccountKeyToSymbol = {};
-      rawConfig.mappingAccounts.map((acc: MappingRawConfig) =>
-        acc.products.map((prod: ProductRawConfig) => {
+      rawConfig.mappingAccounts.forEach((acc: MappingRawConfig) => {
+        acc.products.forEach((prod: ProductRawConfig) => {
           productAccountMapping[prod.address.toBase58()] = prod.metadata.symbol;
           priceAccountMapping[prod.priceAccounts[0].address.toBase58()] =
             prod.metadata.symbol;
-        }),
-      );
+        });
+      });
       setProductAccountKeyToSymbolMapping(productAccountMapping);
       setPriceAccountKeyToSymbolMapping(priceAccountMapping);
     }

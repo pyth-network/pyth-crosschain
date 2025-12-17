@@ -412,7 +412,7 @@ function hexStringToByteArray(hexString: string) {
   }
   var numBytes = hexString.length / 2;
   var byteArray = new Uint8Array(numBytes);
-  for (var i = 0; i < numBytes; i++) {
+  for (let i = 0; i < numBytes; i++) {
     byteArray[i] = parseInt(hexString.substr(i * 2, 2), 16);
   }
   return byteArray;
@@ -477,7 +477,9 @@ function serializePackage(p: Package): PackageBCS {
   const modules = p.mv_files.map((file) => fs.readFileSync(file));
   const serializer = new BCS.Serializer();
   serializer.serializeU32AsUleb128(modules.length);
-  modules.forEach((module) => serializer.serializeBytes(module));
+  modules.forEach((module) => {
+    serializer.serializeBytes(module);
+  });
   const serializedModules = serializer.getBytes();
 
   const hashes = [metaBytes]

@@ -16,13 +16,15 @@ export const Header = ({
   <>
     <header
       className={clsx("sticky top-0 w-full lg:px-4", className)}
-      {...props}>
+      {...props}
+    >
       <div className="border-b border-neutral-600/50 bg-pythpurple-800 lg:border-x">
         <MaxWidth className="flex h-header items-center justify-between gap-2 lg:-mx-4">
           <div className="flex flex-row items-center gap-6 xl:gap-12">
             <Link
               href="/"
-              className="-mx-2 h-[calc(var(--header-height)_-_0.5rem)] rounded-sm p-2 text-pythpurple-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400">
+              className="-mx-2 h-[calc(var(--header-height)_-_0.5rem)] rounded-sm p-2 text-pythpurple-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
+            >
               <Logo className="hidden h-full lg:block" />
               <Logomark className="h-full lg:hidden" />
               <span className="sr-only">Pyth Staking</span>

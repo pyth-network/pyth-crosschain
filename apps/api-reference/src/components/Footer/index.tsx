@@ -39,7 +39,8 @@ export const Footer = ({
         "sticky bottom-0 w-full bg-white dark:bg-pythpurple-900",
         className,
       )}
-      {...props}>
+      {...props}
+    >
       <MaxWidth className="flex h-16 items-center justify-between text-xs font-light text-neutral-600 dark:text-neutral-400">
         <div className="flex h-full items-center gap-4">
           <span>© 2025 Pyth Data Association</span>
@@ -51,7 +52,8 @@ export const Footer = ({
               href={href}
               key={name}
               className="hover:text-pythpurple-600 dark:hover:text-pythpurple-400"
-              rel="noreferrer">
+              rel="noreferrer"
+            >
               <Icon className="h-4" />
               <span className="sr-only">{name}</span>
             </a>

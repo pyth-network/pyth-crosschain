@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-null */
 import { isNullOrUndefined } from "../is-null-or-undefined.js";
 
 describe("isNullOrUndefined()", () => {

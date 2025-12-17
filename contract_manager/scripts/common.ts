@@ -1,15 +1,3 @@
-/* eslint-disable tsdoc/syntax */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -43,7 +31,7 @@ export async function deployIfNotCached(
   chain: EvmChain,
   config: BaseDeployConfig,
   artifactName: string,
-  deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
+  deployArgs: any[],
   cacheKey?: string,
 ): Promise<string> {
   const runIfNotCached = makeCacheFunction(cacheFile);

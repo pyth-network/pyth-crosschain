@@ -1,13 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
 /**
  * PythLazer EVM Contract Deployment and Management Script
  *

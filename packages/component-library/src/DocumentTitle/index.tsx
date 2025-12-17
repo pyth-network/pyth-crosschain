@@ -34,7 +34,5 @@ export function DocumentTitle({ prefix, title }: DocumentTitleProps) {
       document.title = title;
     }
   }, [prefix, title]);
-
-  // eslint-disable-next-line unicorn/no-null
   return null;
 }

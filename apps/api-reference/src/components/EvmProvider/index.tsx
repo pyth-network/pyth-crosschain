@@ -51,7 +51,8 @@ export const EvmProvider = ({
         appIcon: metadata.icons.apple.url,
         walletConnectProjectId: walletConnectProjectId ?? "",
       }),
-    )}>
+    )}
+  >
     <QueryClientProvider client={new QueryClient()}>
       <ConnectKitProviderWrapper>{children}</ConnectKitProviderWrapper>
     </QueryClientProvider>
@@ -68,7 +69,8 @@ const ConnectKitProviderWrapper = ({ children }: { children: ReactNode }) => {
       options={{ initialChainId: chainId }}
       customTheme={{
         "--ck-font-family": "var(--font-sans)",
-      }}>
+      }}
+    >
       {children}
     </ConnectKitProvider>
   );

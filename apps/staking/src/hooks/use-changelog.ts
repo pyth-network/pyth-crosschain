@@ -8,7 +8,6 @@ export const useChangelog = () => {
     "last-changelog-message-seen",
     {
       parse: (value) =>
-        // eslint-disable-next-line unicorn/no-null
         value === null || value === "" ? null : Number.parseInt(value, 10),
       stringify: (value) => value.toString(),
     },

@@ -1,4 +1,4 @@
-import crypto from "node:crypto"; // eslint-disable-line unicorn/prefer-node-protocol
+import crypto from "node:crypto";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
@@ -702,7 +702,7 @@ export class PythStakingClient {
               ),
           );
 
-        let lowestEpoch;
+        let lowestEpoch: ReturnType<typeof bigintMin>;
         for (const position of positionsWithPublisher) {
           lowestEpoch = bigintMin(position.activationEpoch, lowestEpoch);
         }
@@ -748,7 +748,7 @@ export class PythStakingClient {
             publisherStakeAccountPositions: stakeAccount,
             publisherStakeAccountCustody: stakeAccount
               ? getStakeAccountCustodyAddress(stakeAccount)
-              : null, // eslint-disable-line unicorn/no-null
+              : null,
             stakeAccountPositions,
             stakeAccountCustody: getStakeAccountCustodyAddress(
               stakeAccountPositions,
@@ -807,7 +807,6 @@ export class PythStakingClient {
     for (const instruction of instructions.advanceDelegationRecordInstructions) {
       const tx = new Transaction().add(instruction);
       tx.feePayer = simulationPayer ?? this.wallet.publicKey;
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const res = await this.connection.simulateTransaction(tx);
       const val = res.value.returnData?.data[0];
       if (val === undefined) {
@@ -835,7 +834,6 @@ export class PythStakingClient {
       .setPublisherStakeAccount()
       .accounts({
         currentStakeAccountPositionsOption: stakeAccountPositions,
-        // eslint-disable-next-line unicorn/no-null
         newStakeAccountPositionsOption: newStakeAccountPositions ?? null,
         publisher,
       })
@@ -1097,7 +1095,6 @@ export class PythStakingClient {
           };
           const parse = async () => {
             const reader = body.getReader();
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             while (true) {
               const res = await reader.read();
               if (res.done) {
@@ -1147,7 +1144,6 @@ const accountSchema = z.array(
         .min(1)
         .transform((data) =>
           // Safe because `min(1)` guarantees that `data` is nonempty
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           Buffer.from(data[0]!, "base64"),
         ),
     }),

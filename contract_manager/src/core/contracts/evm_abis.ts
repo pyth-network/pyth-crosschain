@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 
@@ -62,7 +61,7 @@ export const OWNABLE_ABI = [
     stateMutability: "nonpayable",
     type: "function",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;
 
 export const EXTENDED_ENTROPY_ABI = [
   {
@@ -74,7 +73,7 @@ export const EXTENDED_ENTROPY_ABI = [
   },
   ...OWNABLE_ABI,
   ...EntropyAbi,
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;
 export const EXTENDED_PYTH_ABI = [
   {
     inputs: [],
@@ -206,7 +205,7 @@ export const EXTENDED_PYTH_ABI = [
     type: "function",
   },
   ...PythInterfaceAbi,
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;
 export const WORMHOLE_ABI = [
   {
     inputs: [],
@@ -291,7 +290,7 @@ export const WORMHOLE_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;
 export const EXECUTOR_ABI = [
   {
     inputs: [
@@ -364,7 +363,7 @@ export const EXECUTOR_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;
 
 export const PULSE_UPGRADEABLE_ABI = [
   {
@@ -1366,7 +1365,7 @@ export const PULSE_UPGRADEABLE_ABI = [
       },
     ],
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;
 
 export const LAZER_ABI = [
   { type: "constructor", inputs: [], stateMutability: "nonpayable" },
@@ -1571,4 +1570,4 @@ export const LAZER_ABI = [
     name: "UUPSUnsupportedProxiableUUID",
     inputs: [{ name: "slot", type: "bytes32", internalType: "bytes32" }],
   },
-] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
+] as any;

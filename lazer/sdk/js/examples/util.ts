@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import type { JsonUpdate } from "../src/index.js";
 
 // Helper function to render all feeds in place

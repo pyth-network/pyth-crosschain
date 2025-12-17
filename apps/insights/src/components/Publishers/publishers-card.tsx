@@ -172,7 +172,8 @@ const ResolvedPublishersCard = ({
               <Link
                 href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
                 invert
-                prefetch={false}>
+                prefetch={false}
+              >
                 {activeFeeds}
               </Link>
             ),
@@ -305,7 +306,8 @@ const PublishersCardContents = ({
           mkPageLink={props.mkPageLink}
         />
       ),
-    })}>
+    })}
+  >
     <EntityList
       label="Publishers"
       className={styles.entityList ?? ""}

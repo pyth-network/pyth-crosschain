@@ -2,12 +2,12 @@
 
 import type { ComponentProps } from "react";
 
-import { Error } from "../components/Error";
+import { ErrorComponent } from "../components/Error";
 
-const GlobalError = (props: ComponentProps<typeof Error>) => (
+const GlobalError = (props: ComponentProps<typeof ErrorComponent>) => (
   <html lang="en" dir="ltr">
     <body>
-      <Error {...props} />
+      <ErrorComponent {...props} />
     </body>
   </html>
 );

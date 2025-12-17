@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
-/* eslint-disable @typescript-eslint/no-misused-promises */
-
 import {
   getManyProposalsInstructions,
   getMultisigCluster,
@@ -174,7 +168,8 @@ export const ProposalRow = ({
           handleClickIndividualProposal(proposal.publicKey.toBase58());
       }}
       role="button"
-      tabIndex={0}>
+      tabIndex={0}
+    >
       <div className="flex flex-wrap gap-4 p-4">
         <div className="font-bold">{proposal.transactionIndex}</div>
         <div className="flex items-center">

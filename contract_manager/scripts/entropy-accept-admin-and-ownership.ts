@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable no-console */
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -87,7 +81,6 @@ async function main() {
   console.log("Using vault at for proposal", vault?.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   console.log("Using wallet", wallet.publicKey.toBase58());
-  // eslint-disable-next-line @typescript-eslint/await-thenable
   await vault?.connect(wallet);
   const proposal = await vault?.proposeWormholeMessage(payloads);
   console.log("Proposal address", proposal?.address.toBase58());

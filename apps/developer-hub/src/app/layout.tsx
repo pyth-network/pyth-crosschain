@@ -12,7 +12,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <Root
       {...(GOOGLE_ANALYTICS_ID
         ? { googleAnalyticsId: GOOGLE_ANALYTICS_ID }
-        : {})}>
+        : {})}
+    >
       {children}
     </Root>
   );

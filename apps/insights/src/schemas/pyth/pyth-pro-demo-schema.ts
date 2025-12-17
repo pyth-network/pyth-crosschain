@@ -158,7 +158,6 @@ export const AllAndLatestDataStateSchema = z.object({
 export type AllAndLatestDataState = z.infer<typeof AllAndLatestDataStateSchema>;
 
 export const ApiTokensSchema = z.object(
-  // eslint-disable-next-line unicorn/no-array-reduce
   ALL_DATA_SOURCES.options.reduce(
     (prev, key) => ({
       ...prev,

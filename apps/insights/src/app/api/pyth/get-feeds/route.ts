@@ -22,7 +22,6 @@ export const GET = async (request: NextRequest) => {
   const feeds = await getFeeds(cluster);
   const filteredFeeds = excludePriceComponents
     ? feeds.map((feed) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { price, ...rest } = feed;
         return rest;
       })

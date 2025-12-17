@@ -87,7 +87,8 @@ export const Table = <T extends string>({
   <div
     className={clsx(styles.tableContainer, className)}
     data-fill={fill ? "" : undefined}
-    data-rounded={rounded ? "" : undefined}>
+    data-rounded={rounded ? "" : undefined}
+  >
     {isUpdating && (
       <div className={styles.loaderWrapper}>
         <div className={styles.loader} />
@@ -103,13 +104,15 @@ export const Table = <T extends string>({
       <UnstyledTable
         aria-label={label}
         className={styles.table ?? ""}
-        {...props}>
+        {...props}
+      >
         <TableHeader columns={columns} className={styles.tableHeader ?? ""}>
           {(columnConfig: ColumnConfig<T>) => (
             <Column
               data-sticky-header={stickyHeader}
               {...columnConfig}
-              {...cellProps(columnConfig, headerCellClassName)}>
+              {...cellProps(columnConfig, headerCellClassName)}
+            >
               {({ allowsSorting, sortDirection, ...column }) => (
                 <>
                   <div className={styles.name}>{columnConfig.name}</div>
@@ -129,7 +132,8 @@ export const Table = <T extends string>({
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 16 16"
-                          fill="currentColor">
+                          fill="currentColor"
+                        >
                           <path
                             className={styles.ascending}
                             d="m10.677 6.073-2.5-2.5a.25.25 0 0 0-.354 0l-2.5 2.5A.25.25 0 0 0 5.5 6.5h5a.25.25 0 0 0 .177-.427Z"
@@ -140,7 +144,8 @@ export const Table = <T extends string>({
                           />
                         </svg>
                       }
-                      hideText>
+                      hideText
+                    >
                       Sort
                     </Button>
                   )}
@@ -160,13 +165,15 @@ export const Table = <T extends string>({
                 "renderEmptyState" in props
                   ? props.renderEmptyState
                   : () => props.emptyState,
-            })}>
+            })}
+        >
           {isLoading ? (
             <Row
               id="loading"
               key="loading"
               className={styles.row ?? ""}
-              columns={columns}>
+              columns={columns}
+            >
               {(column: ColumnConfig<T>) => (
                 <Cell {...cellProps(column)}>
                   {"loadingSkeleton" in column ? (
@@ -189,7 +196,8 @@ export const Table = <T extends string>({
                 className={clsx(styles.row, rowClassName)}
                 columns={columns}
                 data-has-action={row.onAction === undefined ? undefined : ""}
-                {...row}>
+                {...row}
+              >
                 {(column: ColumnConfig<T>) => (
                   <Cell {...cellProps(column)}>{data[column.id]}</Cell>
                 )}

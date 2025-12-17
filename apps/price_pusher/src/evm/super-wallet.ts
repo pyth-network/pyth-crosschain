@@ -53,7 +53,6 @@ const getTransport = (endpoint: string): WebSocketTransport | HttpTransport =>
 // the viem package to support new chains if they don't work as expected with the unknown
 // chain.
 const getChainById = (chainId: number): Chain =>
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   Object.values(chains).find((chain) => chain.id === chainId) ||
   defineChain({ id: chainId, ...UNKNOWN_CHAIN_CONFIG });
 

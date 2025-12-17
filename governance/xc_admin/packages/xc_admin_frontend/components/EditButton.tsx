@@ -8,7 +8,9 @@ const EditButton = ({
   return (
     <button
       className={`bg-darkGray2 py-3 px-6 text-sm font-semibold uppercase outline-none transition-colors`}
-      onClick={onClick}>
+      onClick={onClick}
+      type="button"
+    >
       <span>{editable ? "done" : "edit"}</span>
     </button>
   );

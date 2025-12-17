@@ -7,7 +7,6 @@ export const singletonArray = <Output, Def extends ZodTypeDef, Input>(
   z
     .array(schema)
     .length(1)
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     .transform((value) => value[0]!);
 
 export const safeFetch = async <Output, Def extends ZodTypeDef, Input>(

@@ -1,5 +1,3 @@
-/* eslint-disable unicorn/filename-case */
-
 import { Price, PriceFeed, PriceFeedMetadata } from "../index.js";
 
 beforeAll(() => {

@@ -16,7 +16,8 @@ export const Spinner = ({ label, className, ...props }: Props) => (
   <ProgressBar
     aria-label={label}
     className={clsx(styles.spinnerContainer, className)}
-    {...props}>
+    {...props}
+  >
     {({ percentage }) => (
       <>
         <svg
@@ -25,7 +26,8 @@ export const Spinner = ({ label, className, ...props }: Props) => (
           viewBox="0 0 32 32"
           fill="none"
           className={styles.spinner}
-          strokeWidth={4}>
+          strokeWidth={4}
+        >
           <circle cx={16} cy={16} r={12} className={styles.background} />
           <circle
             cx={16}

@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
 import type { PropsWithChildren } from "react";

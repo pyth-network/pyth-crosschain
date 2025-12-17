@@ -35,7 +35,8 @@ export const Term = ({ className, children, term, ...props }: Props) => {
           setIsOpen(false);
           didEscape.current = true;
         }
-      }}>
+      }}
+    >
       <Button
         className={clsx(className, styles.term)}
         onHoverStart={() => {
@@ -62,7 +63,8 @@ export const Term = ({ className, children, term, ...props }: Props) => {
         onPress={() => {
           setIsOpen(true);
         }}
-        {...props}>
+        {...props}
+      >
         {term}
         <span className={styles.question}>?</span>
       </Button>

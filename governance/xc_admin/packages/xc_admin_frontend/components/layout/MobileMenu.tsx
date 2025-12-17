@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import orb from "@images/burger.png";
 import { gsap } from "gsap";
 import Image from "next/image";
@@ -53,7 +52,8 @@ const MobileMenu = ({ headerState }: MenuProps) => {
   return (
     <div
       ref={burgerMenu}
-      className="fixed top-0 -right-full  z-30  h-full w-full overscroll-y-none bg-darkGray landscape:overflow-auto  ">
+      className="fixed top-0 -right-full  z-30  h-full w-full overscroll-y-none bg-darkGray landscape:overflow-auto  "
+    >
       <div className="relative flex min-h-[100vh] flex-col sm:justify-between">
         <Image
           src={orb}
@@ -71,7 +71,8 @@ const MobileMenu = ({ headerState }: MenuProps) => {
                     className=" inline-block font-body  text-4xl leading-none tracking-wide transition-colors hover:text-white"
                     aria-current={
                       router.pathname === item.href ? "page" : undefined
-                    }>
+                    }
+                  >
                     {item.name}
                   </Link>
                 </li>

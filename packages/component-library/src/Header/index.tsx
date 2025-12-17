@@ -63,7 +63,8 @@ export const Header = ({
             rounded
             beforeIcon={<Lifebuoy />}
             drawer={SupportDrawer}
-            className={styles.supportButton ?? ""}>
+            className={styles.supportButton ?? ""}
+          >
             Support
           </Button>
         )}
@@ -74,7 +75,8 @@ export const Header = ({
           size="sm"
           rounded
           target="_blank"
-          className={styles.mainCta ?? ""}>
+          className={styles.mainCta ?? ""}
+        >
           {mainCta?.label ?? "Dev Docs"}
         </Button>
         <ThemeSwitch className={styles.themeSwitch ?? ""} />
@@ -101,7 +103,8 @@ const MobileMenu = ({
       hideHeading: true,
       title: "Menu",
       contents: <MobileMenuContents mainCta={mainCta} />,
-    }}>
+    }}
+  >
     Menu
   </Button>
 );
@@ -114,14 +117,16 @@ const MobileMenuContents = ({ mainCta }: { mainCta: Props["mainCta"] }) => (
         size="md"
         rounded
         beforeIcon={<Lifebuoy />}
-        drawer={SupportDrawer}>
+        drawer={SupportDrawer}
+      >
         Support
       </Button>
       <Button
         href={mainCta?.href ?? "https://docs.pyth.network"}
         size="md"
         rounded
-        target="_blank">
+        target="_blank"
+      >
         {mainCta?.label ?? "Dev Docs"}
       </Button>
     </div>

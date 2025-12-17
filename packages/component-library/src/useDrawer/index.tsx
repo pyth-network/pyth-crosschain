@@ -93,7 +93,8 @@ const Drawer = ({
       data-fill={fill ? "" : undefined}
       data-hide-heading={hideHeading ? "" : undefined}
       {...animationProps}
-      {...props}>
+      {...props}
+    >
       <div
         className={styles.handle}
         onPointerDown={() => {
@@ -119,7 +120,8 @@ const Drawer = ({
               rounded
               variant="ghost"
               size="sm"
-              {...(closeHref && { href: closeHref })}>
+              {...(closeHref && { href: closeHref })}
+            >
               Close
             </Button>
           </div>

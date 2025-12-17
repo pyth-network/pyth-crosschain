@@ -99,9 +99,9 @@ it("Unit test for getSizeOfTransaction", async () => {
         addresses: [
           SystemProgram.programId,
           ComputeBudgetProgram.programId,
-          ...ixsToSend[0]?.keys.map((key) => key.pubkey),
-          ...ixsToSend[1]?.keys.map((key) => key.pubkey),
-          ...ixsToSend[2]?.keys.map((key) => key.pubkey),
+          ...(ixsToSend?.[0]?.keys.map((key) => key.pubkey) ?? []),
+          ...(ixsToSend?.[1]?.keys.map((key) => key.pubkey) ?? []),
+          ...(ixsToSend?.[2]?.keys.map((key) => key.pubkey) ?? []),
         ],
       },
     });

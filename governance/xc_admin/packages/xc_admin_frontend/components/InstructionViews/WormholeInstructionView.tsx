@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { PythCluster } from "@pythnetwork/client";
 import type { PythGovernanceAction } from "@pythnetwork/xc-admin-common";
 import {
@@ -89,19 +84,22 @@ export const WormholeInstructionView = ({
             <>
               <div
                 key={`${index.toString()}_program`}
-                className="flex justify-between">
+                className="flex justify-between"
+              >
                 <div>Program</div>
                 <div>{getProgramName(parsedInstruction.program)}</div>
               </div>
               <div
                 key={`${index.toString()}_instructionName`}
-                className="flex justify-between">
+                className="flex justify-between"
+              >
                 <div>Instruction Name</div>
                 <div>{parsedInstruction.name}</div>
               </div>
               <div
                 key={`${index.toString()}_arguments`}
-                className="grid grid-cols-4 justify-between">
+                className="grid grid-cols-4 justify-between"
+              >
                 <div>Arguments</div>
                 {Object.keys(parsedInstruction.args).length > 0 ? (
                   <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
@@ -113,7 +111,8 @@ export const WormholeInstructionView = ({
                       <>
                         <div
                           key={index}
-                          className="flex justify-between border-t border-beige-300 py-3">
+                          className="flex justify-between border-t border-beige-300 py-3"
+                        >
                           {key === "lamports" &&
                           typeof parsedInstruction.args[key] === "bigint" ? (
                             <>
@@ -175,7 +174,8 @@ export const WormholeInstructionView = ({
               {
                 <div
                   key={`${index.toString()}_accounts`}
-                  className="grid grid-cols-4 justify-between">
+                  className="grid grid-cols-4 justify-between"
+                >
                   <div>Accounts</div>
                   {Object.keys(parsedInstruction.accounts.named).length > 0 ? (
                     <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
@@ -188,7 +188,8 @@ export const WormholeInstructionView = ({
                           <>
                             <div
                               key={index}
-                              className="flex justify-between border-t border-beige-300 py-3">
+                              className="flex justify-between border-t border-beige-300 py-3"
+                            >
                               <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                                 {key}
                               </div>
@@ -251,7 +252,8 @@ export const WormholeInstructionView = ({
                           <>
                             <div
                               key="rem-{index}"
-                              className="flex justify-between border-t border-beige-300 py-3">
+                              className="flex justify-between border-t border-beige-300 py-3"
+                            >
                               <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                                 Remaining {index + 1}
                               </div>

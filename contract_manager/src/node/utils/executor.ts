@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { parseVaa } from "@certusone/wormhole-sdk";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {

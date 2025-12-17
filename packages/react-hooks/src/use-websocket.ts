@@ -1,6 +1,4 @@
 "use client";
-
-/* eslint-disable no-console */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SocketteOptions } from "sockette";

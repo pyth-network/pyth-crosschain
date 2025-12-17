@@ -1,14 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
-
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { toPrivateKey } from "../src/core/base";

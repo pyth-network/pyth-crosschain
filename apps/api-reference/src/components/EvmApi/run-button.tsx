@@ -57,7 +57,8 @@ export const RunButton = <ParameterName extends string>(
             <InlineLink
               as="button"
               onClick={show}
-              className="mb-2 flex flex-row items-center justify-center gap-2">
+              className="mb-2 flex flex-row items-center justify-center gap-2"
+            >
               {isConnected ? (
                 <>
                   <Avatar address={address} size={24} />
@@ -75,7 +76,8 @@ export const RunButton = <ParameterName extends string>(
           disabled={disabled}
           loading={status.type === StatusType.Loading}
           className="mb-8 flex h-10 w-full flex-row items-center justify-center gap-2"
-          onClick={run}>
+          onClick={run}
+        >
           {status.type === StatusType.Loading ? (
             <ArrowPathIcon className="size-4 animate-spin" />
           ) : (
@@ -98,7 +100,8 @@ export const RunButton = <ParameterName extends string>(
                   <InlineLink
                     href={status.data.link}
                     target="_blank"
-                    className="text-sm text-blue-500 hover:underline">
+                    className="text-sm text-blue-500 hover:underline"
+                  >
                     Open in explorer↗
                   </InlineLink>
                 )}

@@ -34,7 +34,8 @@ export const CopyButton = ({
       className={clsx(styles.copyButton, className)}
       data-is-copied={isCopied ? "" : undefined}
       data-icon-only={iconOnly ? "" : undefined}
-      {...props}>
+      {...props}
+    >
       {(...args) => (
         <>
           <span className={styles.contents}>

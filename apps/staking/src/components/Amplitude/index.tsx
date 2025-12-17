@@ -8,7 +8,5 @@ type Props = {
 
 export const Amplitude = ({ apiKey }: Props) => {
   useAmplitude(apiKey);
-
-  // eslint-disable-next-line unicorn/no-null
   return null;
 };

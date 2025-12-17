@@ -3,7 +3,6 @@ import cardMeta, { Card as CardStory } from "../Card/index.stories.jsx";
 import { StatCard as StatCardComponent } from "./index.jsx";
 
 const cardMetaArgTypes = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { title, toolbar, icon, footer, ...argTypes } = cardMeta.argTypes;
   return argTypes;
 };
@@ -44,7 +43,6 @@ const meta = {
 export default meta;
 
 const cardStoryArgs = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { title, toolbar, footer, ...args } = CardStory.args;
   return args;
 };

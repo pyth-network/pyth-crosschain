@@ -1,10 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable no-console */
 import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
   FUEL_ETH_ASSET_ID,
@@ -102,8 +95,6 @@ export class FuelPricePusher implements IPricePusher {
       this.wallet as Provider,
     );
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updatePriceFeed(priceIds: string[], _: number[]): Promise<void> {
     if (priceIds.length === 0) {
       return;

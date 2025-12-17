@@ -16,7 +16,5 @@ export const ReportAccessibility = () => {
         logger.error("Error setting up axe for accessibility testing", error);
       });
   }, [logger]);
-
-  // eslint-disable-next-line unicorn/no-null
   return null;
 };

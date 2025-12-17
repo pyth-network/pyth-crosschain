@@ -244,8 +244,6 @@ const RankingChange = ({
 }) => {
   const current = rankingHistory.at(-1)?.rank;
   const prev = rankingHistory.at(-2)?.rank;
-
-  // eslint-disable-next-line unicorn/no-null
   return current === undefined || prev === undefined ? null : (
     <ChangeValue direction={getChangeDirection(current, prev)}>
       {Math.abs(current - prev)}
@@ -326,8 +324,6 @@ const CurrentAverageScore = ({
   averageScoreHistory: { averageScore: number }[];
 }) => {
   const currentAverageScore = averageScoreHistory.at(-1)?.averageScore;
-
-  // eslint-disable-next-line unicorn/no-null
   return currentAverageScore === undefined ? null : (
     <FormattedNumber maximumSignificantDigits={5} value={currentAverageScore} />
   );
@@ -340,8 +336,6 @@ const ScoreChange = ({
 }) => {
   const current = averageScoreHistory.at(-1)?.averageScore;
   const prev = averageScoreHistory.at(-2)?.averageScore;
-
-  // eslint-disable-next-line unicorn/no-null
   return current === undefined || prev === undefined ? null : (
     <ChangePercent currentValue={current} previousValue={prev} />
   );
@@ -416,7 +410,8 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
       ) : (
         <Link
           href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Active`}
-          invert>
+          invert
+        >
           {props.activeFeeds}
         </Link>
       )
@@ -427,7 +422,8 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
       ) : (
         <Link
           href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Inactive`}
-          invert>
+          invert
+        >
           {props.inactiveFeeds}
         </Link>
       )
@@ -451,7 +447,8 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
               allFeeds: props.allFeeds,
             })}
       />
-    }>
+    }
+  >
     {!props.isLoading && props.activeFeeds !== undefined && (
       <Meter
         value={props.activeFeeds}
@@ -474,7 +471,6 @@ const RankingMiniStat = (
   if (props.isLoading) {
     return <Skeleton width={10} />;
   } else if (props.stat === undefined) {
-    // eslint-disable-next-line unicorn/no-null
     return null;
   } else {
     return (
@@ -539,7 +535,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://staking.pyth.network"
             target="_blank"
-            beforeIcon={<Browsers />}>
+            beforeIcon={<Browsers />}
+          >
             Open Staking App
           </Button>
           <Button
@@ -547,7 +544,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://docs.pyth.network/home/oracle-integrity-staking"
             target="_blank"
-            beforeIcon={<BookOpenText />}>
+            beforeIcon={<BookOpenText />}
+          >
             Documentation
           </Button>
         </>
@@ -562,7 +560,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
                 value={Number(props.poolUtilization)}
                 maxValue={props.maxPoolSize}
                 className={styles.smallOisMeter ?? ""}
-                aria-label="OIS Pool Utilization">
+                aria-label="OIS Pool Utilization"
+              >
                 <TokenIcon className={styles.oisMeterIcon} />
                 <div className={styles.oisMeterLabel}>OIS Pool</div>
               </SemicircleMeter>
@@ -572,7 +571,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
                 value={Number(props.poolUtilization)}
                 maxValue={props.maxPoolSize}
                 className={styles.oisMeter ?? ""}
-                aria-label="OIS Pool Utilization">
+                aria-label="OIS Pool Utilization"
+              >
                 <TokenIcon className={styles.oisMeterIcon} />
                 <div className={styles.oisMeterLabel}>OIS Pool</div>
               </SemicircleMeter>
@@ -613,7 +613,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           <InfoBox
             className={styles.oisInfoBox}
             icon={<ShieldChevron />}
-            header="Oracle Integrity Staking (OIS)">
+            header="Oracle Integrity Staking (OIS)"
+          >
             OIS allows anyone to help secure Pyth and protect DeFi. Through
             decentralized staking rewards and slashing, OIS incentivizes Pyth
             publishers to maintain high-quality data contributions. PYTH holders
@@ -632,7 +633,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           className={styles.oisAllocation}
           data-is-overallocated={
             Number(props.poolUtilization) > props.maxPoolSize ? "" : undefined
-          }>
+          }
+        >
           <FormattedNumber
             maximumFractionDigits={2}
             value={(100 * Number(props.poolUtilization)) / props.maxPoolSize}
@@ -641,7 +643,8 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
         </span>
       )
     }
-    corner={<ArrowsOutSimple />}>
+    corner={<ArrowsOutSimple />}
+  >
     <Meter
       value={props.isLoading ? 0 : Number(props.poolUtilization)}
       maxValue={props.isLoading ? 0 : props.maxPoolSize}

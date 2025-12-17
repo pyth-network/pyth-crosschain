@@ -1,10 +1,3 @@
-/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable no-console */
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 

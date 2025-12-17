@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { PythLazerClient } from "../src/index.js";
 
 const client = await PythLazerClient.create({

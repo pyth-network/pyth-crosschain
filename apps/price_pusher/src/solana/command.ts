@@ -1,10 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs";
 
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
@@ -288,7 +281,6 @@ export default {
 export const onBundleResult = (c: SearcherClient, logger: Logger) => {
   try {
     c.onBundleResult(
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       () => {},
       (err) => {
         logger.error(err, "Error in bundle result");

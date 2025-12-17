@@ -49,7 +49,8 @@ const Alert = ({
       unmounted: { y: "calc(100% + 2rem)" },
     }}
     className={clsx(styles.alert, className)}
-    {...props}>
+    {...props}
+  >
     <Button
       className={styles.closeButton ?? ""}
       beforeIcon={<XCircle weight="fill" />}
@@ -57,7 +58,8 @@ const Alert = ({
       hideText
       rounded
       variant="ghost"
-      size="sm">
+      size="sm"
+    >
       Close
     </Button>
     <Heading className={styles.title} slot="title">

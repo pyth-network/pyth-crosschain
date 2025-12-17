@@ -23,7 +23,8 @@ export const Skeleton = ({
     {...(width &&
       !fill && { style: { "--skeleton-width": width } as CSSProperties })}
     data-fill={fill ? "" : undefined}
-    className={clsx(styles.skeleton, className)}>
+    className={clsx(styles.skeleton, className)}
+  >
     <span className={clsx(styles.skeletonInner, className)} {...props}>
       <Label>{label ?? "Loading"}</Label>
     </span>

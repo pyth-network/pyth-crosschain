@@ -48,7 +48,8 @@ export const AppShellRoot = ({
     <HtmlWithLang
       // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       suppressHydrationWarning
-      className={clsx(sans.className, styles.html)}>
+      className={clsx(sans.className, styles.html)}
+    >
       <body className={styles.body}>{children}</body>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
       {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}
@@ -68,7 +69,8 @@ export const AppShell = ({
     enableAccessibilityReporting={enableAccessibilityReporting}
     amplitudeApiKey={amplitudeApiKey}
     googleAnalyticsId={googleAnalyticsId}
-    providers={providers}>
+    providers={providers}
+  >
     <AppBody {...props} />
   </AppShellRoot>
 );

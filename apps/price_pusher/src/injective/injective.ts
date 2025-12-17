@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { Account, Msgs, TxResponse } from "@injectivelabs/sdk-ts";
 import {
   ChainGrpcAuthApi,
@@ -149,8 +143,6 @@ export class InjectivePricePusher implements IPricePusher {
         fee: await this.getStdFee(msg, index),
         pubKey: wallet.toPublicKey().toBase64(),
       });
-
-      // eslint-disable-next-line @typescript-eslint/await-thenable
       const sig = await wallet.sign(Buffer.from(signBytes));
 
       /** Append Signatures */
@@ -339,8 +331,6 @@ export class InjectivePricePusher implements IPricePusher {
       );
 
       const json = Buffer.from(data).toString();
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return JSON.parse(json);
     } catch (error) {
       this.logger.error(error, `Error fetching update fee.`);

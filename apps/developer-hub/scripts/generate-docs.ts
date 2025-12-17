@@ -51,7 +51,6 @@ type MetaFile = {
 };
 
 export async function generateDocs(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log("Starting API reference documentation generation...\n");
 
   await generateMdxFilesFromOpenApi();
@@ -63,8 +62,6 @@ export async function generateDocs(): Promise<void> {
   await updateMdxTitles();
 
   await updateIndexCards();
-
-  // eslint-disable-next-line no-console
   console.log("\nDocumentation generation complete!");
 }
 
@@ -87,11 +84,9 @@ export async function generateDocs(): Promise<void> {
  * - Creates an index.mdx file listing all endpoints
  */
 async function generateMdxFilesFromOpenApi(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log("Generating MDX files from OpenAPI specifications...");
 
   for (const [serviceName, config] of Object.entries(products)) {
-    // eslint-disable-next-line no-console
     console.log(`\n  Processing service: ${serviceName}`);
 
     generatedEndpoints[serviceName] = [];
@@ -161,8 +156,6 @@ function generateOperationFileName(
 
   // Track this endpoint for meta file generation
   generatedEndpoints[serviceName]?.push(operationId);
-
-  // eslint-disable-next-line no-console
   console.log(`    ✓ ${operationId}`);
 
   // Return file path: product/service/operationId
@@ -180,7 +173,6 @@ function generateOperationFileName(
  * These meta.json files are used by Fumadocs to build the navigation sidebar.
  */
 async function generateMetaFiles(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log("\nGenerating meta.json navigation files...");
 
   const productGroups = groupServicesByProduct();
@@ -212,7 +204,6 @@ async function generateRootMetaFile(
   };
 
   await writeJson(path.join(OUTPUT_DIR, "meta.json"), rootMeta);
-  // eslint-disable-next-line no-console
   console.log("  ✓ api-reference/meta.json");
 }
 
@@ -228,7 +219,6 @@ async function generateProductAndServiceMetaFiles(
     const productDir = path.join(OUTPUT_DIR, productName);
     await fs.mkdir(productDir, { recursive: true });
     await writeJson(path.join(productDir, "meta.json"), productMeta);
-    // eslint-disable-next-line no-console
     console.log(`  ✓ ${productName}/meta.json`);
 
     // Generate service-level meta.json files
@@ -241,7 +231,6 @@ async function generateProductAndServiceMetaFiles(
 
       const serviceDir = path.join(productDir, serviceName);
       await writeJson(path.join(serviceDir, "meta.json"), serviceMeta);
-      // eslint-disable-next-line no-console
       console.log(`  ✓ ${productName}/${serviceName}/meta.json`);
     }
   }
@@ -265,7 +254,6 @@ function formatServiceTitle(serviceName: string): string {
  * IntegrationCard components in a simple grid layout.
  */
 async function generateApiReferenceIndex(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log("\nGenerating API Reference index page...");
 
   const productGroups = groupServicesByProduct();
@@ -348,12 +336,10 @@ ${productSections.join("\n")}
 
   const indexPath = path.join(OUTPUT_DIR, "index.mdx");
   await fs.writeFile(indexPath, indexContent);
-  // eslint-disable-next-line no-console
   console.log("  ✓ api-reference/index.mdx");
 }
 
 async function updateMdxTitles(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log("\nUpdating MDX file titles to use endpoint paths...");
 
   for (const [serviceName, config] of Object.entries(products)) {
@@ -415,7 +401,6 @@ async function updateSingleMdxTitle(
   // Only write if content actually changed
   if (updatedContent !== content) {
     await fs.writeFile(filePath, updatedContent);
-    // eslint-disable-next-line no-console
     console.log(`  ✓ ${productName}/${serviceName}/${fileName}`);
   }
 }
@@ -424,7 +409,6 @@ async function updateSingleMdxTitle(
  * Updates index.mdx files to use APICard components.
  **/
 async function updateIndexCards(): Promise<void> {
-  // eslint-disable-next-line no-console
   console.log("\nUpdating index pages with APICard components...");
 
   for (const [serviceName, config] of Object.entries(products)) {
@@ -449,7 +433,6 @@ async function updateIndexCards(): Promise<void> {
     const newIndexContent = generateIndexContent(cardData);
 
     await fs.writeFile(indexPath, newIndexContent);
-    // eslint-disable-next-line no-console
     console.log(`  ✓ ${config.product}/${serviceName}/index.mdx`);
   }
 }

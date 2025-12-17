@@ -94,11 +94,11 @@ export const PriceComponentsCard = <
   if (props.isLoading) {
     return <PriceComponentsCardContents {...props} />;
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { isLoading, priceComponents, ...otherProps } = props;
     return (
       <Suspense
-        fallback={<PriceComponentsCardContents isLoading {...otherProps} />}>
+        fallback={<PriceComponentsCardContents isLoading {...otherProps} />}
+      >
         <ResolvedPriceComponentsCard
           priceComponents={priceComponents}
           {...otherProps}
@@ -453,7 +453,8 @@ export const PriceComponentsCardContents = <
             mkPageLink={props.mkPageLink}
           />
         ),
-      })}>
+      })}
+    >
       <EntityList
         label={label}
         className={styles.entityList ?? ""}
@@ -585,7 +586,8 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#uptime-1"
                     size="xs"
                     variant="solid"
-                    target="_blank">
+                    target="_blank"
+                  >
                     Read more
                   </Button>
                 </Explain>
@@ -616,7 +618,8 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#price-deviation-1"
                     size="xs"
                     variant="solid"
-                    target="_blank">
+                    target="_blank"
+                  >
                     Read more
                   </Button>
                 </Explain>
@@ -648,7 +651,8 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#lack-of-stalled-prices-1"
                     size="xs"
                     variant="solid"
-                    target="_blank">
+                    target="_blank"
+                  >
                     Read more
                   </Button>
                 </Explain>
@@ -681,7 +685,8 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     size="xs"
                     variant="solid"
-                    target="_blank">
+                    target="_blank"
+                  >
                     Read more
                   </Button>
                 </Explain>

@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { readFileSync } from "node:fs";
 
 import {
@@ -349,7 +344,6 @@ export class Vault extends Storable {
    * Gets the emitter address of the vault
    * @param registry - registry of RPC nodes to use for each solana network. Defaults to the Solana public RPCs if not provided.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await
   public async getEmitter(registry: SolanaRpcRegistry = getPythClusterApiUrl) {
     const mesh = getSquadsMesh();
     const squad = mesh.endpoint(
@@ -410,7 +404,6 @@ export class Vault extends Storable {
  * This wallet can be used to connect to a vault and submit proposals
  * @param walletPath - - path to the wallet file
  */
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function loadHotWallet(walletPath: string): Promise<Wallet> {
   return new Wallet(
     Keypair.fromSecretKey(

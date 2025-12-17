@@ -36,7 +36,8 @@ export const SearchInput = ({
     data-static-width={width === undefined ? undefined : ""}
     {...(width && { style: { "--width": width } as CSSProperties })}
     {...(isPending && { "data-pending": "" })}
-    {...props}>
+    {...props}
+  >
     <Input className={styles.input ?? ""} placeholder={placeholder} />
     <MagnifyingGlass className={styles.searchIcon} />
     <CircleNotch className={styles.loadingIcon} />

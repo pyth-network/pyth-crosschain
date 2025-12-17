@@ -213,7 +213,8 @@ export const OracleIntegrityStakingGuide = (
                   <Link
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     target="_blank"
-                    className="underline">
+                    className="underline"
+                  >
                     documentation
                   </Link>
                   .
@@ -307,7 +308,8 @@ export const OracleIntegrityStakingGuide = (
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
                       className="underline"
-                      target="_blank">
+                      target="_blank"
+                    >
                       documentation
                     </Link>
                     .
@@ -330,7 +332,8 @@ export const OracleIntegrityStakingGuide = (
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
                       className="underline"
-                      target="_blank">
+                      target="_blank"
+                    >
                       documentation
                     </Link>
                     .

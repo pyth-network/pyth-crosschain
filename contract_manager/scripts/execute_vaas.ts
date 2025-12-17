@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
@@ -64,7 +56,6 @@ async function main() {
   console.log("Executing VAAs for vault", vault?.getId());
   console.log(
     "Executing VAAs for emitter",
-    // eslint-disable-next-line unicorn/no-await-expression-member
     (await vault?.getEmitter())?.toBase58(),
   );
 

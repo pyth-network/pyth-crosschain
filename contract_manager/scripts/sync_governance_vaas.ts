@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable unicorn/no-await-expression-member */
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
@@ -74,8 +71,6 @@ async function main() {
     lastExecuted = argv.offset - 1;
   }
   console.log("Starting from sequence number", lastExecuted);
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
       await matchedVault.getEmitter(),
@@ -113,6 +108,4 @@ async function main() {
     lastExecuted++;
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

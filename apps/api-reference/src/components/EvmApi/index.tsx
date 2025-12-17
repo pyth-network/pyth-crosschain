@@ -232,7 +232,8 @@ export const EvmApi = <ParameterName extends string>({
             {code.map(({ language }) => (
               <Tab
                 key={LANGUAGE_TO_DISPLAY_NAME[language]}
-                className="mb-[-2px] border-b-2 border-transparent px-2 text-sm font-medium leading-loose hover:text-pythpurple-600 data-[selected]:cursor-default data-[selected]:border-pythpurple-600 data-[selected]:text-pythpurple-600 dark:hover:text-pythpurple-400 dark:data-[selected]:border-pythpurple-400 dark:data-[selected]:text-pythpurple-400">
+                className="mb-[-2px] border-b-2 border-transparent px-2 text-sm font-medium leading-loose hover:text-pythpurple-600 data-[selected]:cursor-default data-[selected]:border-pythpurple-600 data-[selected]:text-pythpurple-600 dark:hover:text-pythpurple-400 dark:data-[selected]:border-pythpurple-400 dark:data-[selected]:text-pythpurple-400"
+              >
                 {LANGUAGE_TO_DISPLAY_NAME[language]}
               </Tab>
             ))}
@@ -242,7 +243,8 @@ export const EvmApi = <ParameterName extends string>({
               <TabPanel key={LANGUAGE_TO_DISPLAY_NAME[language]}>
                 <Code
                   language={LANUGAGE_TO_SHIKI_NAME[language]}
-                  dimRange={dimRange}>
+                  dimRange={dimRange}
+                >
                   {codeContents(
                     isMounted
                       ? {
@@ -330,7 +332,8 @@ const Example = <ParameterName extends string>({
       <InlineLink
         as="button"
         onClick={updateValues}
-        className="flex flex-row items-center gap-2">
+        className="flex flex-row items-center gap-2"
+      >
         {Icon && <Icon className="h-4" />}
         <span>{example.name}</span>
       </InlineLink>

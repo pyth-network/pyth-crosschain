@@ -1,4 +1,3 @@
-/* eslint-disable n/no-process-env */
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
@@ -66,7 +65,8 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <NuqsAdapter>
       <ConnectionProvider
-        endpoint={endpoint || clusterApiUrl(WalletAdapterNetwork.Devnet)}>
+        endpoint={endpoint || clusterApiUrl(WalletAdapterNetwork.Devnet)}
+      >
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
             <ClusterProvider>

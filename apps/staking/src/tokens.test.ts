@@ -33,7 +33,7 @@ const STRING_TO_TOKENS_ONLY_TESTS = [
 const INVALID_STRING_TESTS = ["foo", "10bar", "1.5baz", "biz.54"];
 
 describe("tokensToString", () => {
-  BIDIRECTIONAL_TESTS.map(([input, output]) => {
+  BIDIRECTIONAL_TESTS.forEach(([input, output]) => {
     describe(`with "${input.toString()}"`, () => {
       it(`returns "${output}"`, () => {
         expect(tokensToString(input)).toEqual(output);
@@ -43,7 +43,7 @@ describe("tokensToString", () => {
 });
 
 describe("stringToTokens", () => {
-  BIDIRECTIONAL_TESTS.map(([output, input]) => {
+  BIDIRECTIONAL_TESTS.forEach(([output, input]) => {
     describe(`with "${input}"`, () => {
       it(`returns "${output.toString()}"`, () => {
         expect(stringToTokens(input)).toEqual(output);
@@ -51,7 +51,7 @@ describe("stringToTokens", () => {
     });
   });
 
-  STRING_TO_TOKENS_ONLY_TESTS.map(([input, output]) => {
+  STRING_TO_TOKENS_ONLY_TESTS.forEach(([input, output]) => {
     describe(`with "${input}"`, () => {
       it(`returns "${output.toString()}"`, () => {
         expect(stringToTokens(input)).toEqual(output);
@@ -59,7 +59,7 @@ describe("stringToTokens", () => {
     });
   });
 
-  INVALID_STRING_TESTS.map((str) => {
+  INVALID_STRING_TESTS.forEach((str) => {
     describe(`with "${str}"`, () => {
       it(`returns undefined`, () => {
         expect(stringToTokens(str)).toBeUndefined();

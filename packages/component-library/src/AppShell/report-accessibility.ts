@@ -9,8 +9,6 @@ const AXE_TIMEOUT = 1000;
 
 export const ReportAccessibility = () => {
   useReportAccessibility();
-
-  // eslint-disable-next-line unicorn/no-null
   return null;
 };
 

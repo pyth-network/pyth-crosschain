@@ -1,12 +1,3 @@
-/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
-/* eslint-disable 
-  unicorn/prefer-top-level-await,
-  @typescript-eslint/restrict-template-expressions,
-  no-console,
-  unicorn/no-process-exit,
-  n/no-process-exit
-*/
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { EvmChain } from "../src/core/chains";

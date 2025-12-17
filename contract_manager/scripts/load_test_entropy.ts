@@ -1,10 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { toPrivateKey } from "../src/core/base";
@@ -97,6 +90,4 @@ async function main() {
   );
   console.log("Submitted transaction", result.transactionHash);
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

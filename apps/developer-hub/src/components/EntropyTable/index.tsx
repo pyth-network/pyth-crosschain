@@ -200,7 +200,6 @@ function useEntropyFees(
     }
 
     loadInBatches().catch((error: unknown) => {
-      // eslint-disable-next-line no-console
       console.error("Failed to load entropy fees:", error);
     });
 

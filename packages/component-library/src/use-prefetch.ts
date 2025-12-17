@@ -73,8 +73,6 @@ export const usePrefetch = <T extends Element>({
     },
     [resolvedHref, resetVisible, setIntersectionRef, rerender],
   );
-
-  // eslint-disable-next-line unicorn/no-null
   const setRef = useMergedRef(setIntersectionWithResetRef, ref ?? null);
 
   const doPrefetch = useCallback(
@@ -82,7 +80,6 @@ export const usePrefetch = <T extends Element>({
       if (
         resolvedHref === undefined ||
         prefetch === false ||
-        // eslint-disable-next-line n/no-process-env
         (!allowInDev && process.env.NODE_ENV !== "production") ||
         !isLocalURL(resolvedHref)
       ) {

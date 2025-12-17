@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Contract, Sender } from "@ton/core";
 import {
   type Address,

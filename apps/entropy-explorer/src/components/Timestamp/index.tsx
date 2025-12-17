@@ -31,7 +31,8 @@ export const Timestamp = ({
         setShowRelative((cur) => !cur);
       }}
       className={styles.timestamp ?? ""}
-      data-show-relative={showRelative ? "" : undefined}>
+      data-show-relative={showRelative ? "" : undefined}
+    >
       <Clock className={styles.clock} />
       <span className={styles.relative}>
         <TimeAgo

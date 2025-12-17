@@ -30,7 +30,8 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
     <UnstyledBreadcrumbs
       className={clsx(styles.breadcrumbs, className)}
       items={items.map((item, i) => ({ id: i, ...item }))}
-      {...props}>
+      {...props}
+    >
       {(item) => (
         <Breadcrumb className={styles.breadcrumb ?? ""}>
           {"href" in item ? (
@@ -41,7 +42,8 @@ export const Breadcrumbs = ({ label, className, items, ...props }: Props) => (
                   variant="outline"
                   beforeIcon={<House />}
                   hideText
-                  href="/">
+                  href="/"
+                >
                   {item.label}
                 </Button>
               ) : (

@@ -1,5 +1,3 @@
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-deprecated */
 import { Menu, Transition } from "@headlessui/react";
 import {
   PROGRAM_TYPE_NAMES,
@@ -16,7 +14,8 @@ const Arrow = ({ className }: { className?: string }) => (
     height="6"
     viewBox="0 0 10 6"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg">
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path
       d="M1 1L5 5L9 1"
       stroke="currentColor"
@@ -49,7 +48,8 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
           <Menu.Button
             className={`inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 ${
               light ? "bg-beige2" : "bg-darkGray2"
-            }`}>
+            }`}
+          >
             <span className="mr-3">
               {programOptions.find((option) => option.value === programType)
                 ?.label ?? PROGRAM_TYPE_NAMES[programType]}
@@ -63,7 +63,8 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
             enterTo="transform opacity-100 scale-100"
             leave="transition ease-in duration-75"
             leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95">
+            leaveTo="transform opacity-0 scale-95"
+          >
             <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
               {programOptions.map((option) => (
                 <Menu.Item key={option.value}>
@@ -80,7 +81,9 @@ const ProgramSwitch = ({ light = false }: { light?: boolean }) => {
                       }`}
                       onClick={() => {
                         setProgramType(option.value);
-                      }}>
+                      }}
+                      type="button"
+                    >
                       {option.label}
                     </button>
                   )}

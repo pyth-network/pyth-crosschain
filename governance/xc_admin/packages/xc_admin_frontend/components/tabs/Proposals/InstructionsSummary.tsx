@@ -1,5 +1,3 @@
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/no-deprecated */
 import { Listbox, Transition } from "@headlessui/react";
 import Arrow from "@images/icons/down.inline.svg";
 import type { PythCluster } from "@pythnetwork/client";
@@ -110,14 +108,16 @@ const AddRemovePublisherDetails = ({
         <>
           <div
             key={groupKey}
-            className="flex justify-between border-t border-beige-300 py-3">
+            className="flex justify-between border-t border-beige-300 py-3"
+          >
             <div>
               <KeyAndName
                 mapping={
                   groupBy === "publisher"
                     ? (publisherKeyToName ?? {})
                     : priceAccountKeyToSymbolMapping
-                }>
+                }
+              >
                 {groupKey}
               </KeyAndName>
             </div>
@@ -129,7 +129,8 @@ const AddRemovePublisherDetails = ({
                       groupBy === "publisher"
                         ? priceAccountKeyToSymbolMapping
                         : (publisherKeyToName ?? {})
-                    }>
+                    }
+                  >
                     {groupBy === "publisher"
                       ? summary.priceAccount
                       : summary.pub}
@@ -176,7 +177,8 @@ const Select = <T extends string>({
     as="div"
     className="relative z-[3] block w-[180px] text-left"
     value={value}
-    onChange={onChange}>
+    onChange={onChange}
+  >
     {({ open }) => (
       <>
         <Listbox.Button className="inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 bg-light/20">
@@ -190,13 +192,15 @@ const Select = <T extends string>({
           enterTo="transform opacity-100 scale-100"
           leave="transition ease-in duration-75"
           leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95">
+          leaveTo="transform opacity-0 scale-95"
+        >
           <Listbox.Options className="absolute right-0 mt-2 w-full origin-top-right">
             {items.map((item) => (
               <Listbox.Option
                 key={item}
                 value={item}
-                className="block w-full py-3 px-6 text-left text-sm bg-darkGray hover:bg-darkGray2 cursor-pointer">
+                className="block w-full py-3 px-6 text-left text-sm bg-darkGray hover:bg-darkGray2 cursor-pointer"
+              >
                 {item}
               </Listbox.Option>
             ))}

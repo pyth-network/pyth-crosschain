@@ -1,8 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable tsdoc/syntax */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { DeploymentType } from "../src/core/base";
@@ -152,6 +147,4 @@ export async function main() {
     `✅ Executor contract on ${chain.getId()} at ${executorContract.address}\n\n`,
   );
 }
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await
 main();

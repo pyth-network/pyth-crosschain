@@ -1,7 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable unicorn/no-null */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type { SignatureResult, Signer } from "@solana/web3.js";
 import {
@@ -93,10 +89,10 @@ export function getSizeOfTransaction(
   const signers = new Set<string>();
   let accounts = new Set<string>();
 
-  instructions.map((ix) => {
+  instructions.forEach((ix) => {
     programs.add(ix.programId.toBase58());
     accounts.add(ix.programId.toBase58());
-    ix.keys.map((key) => {
+    ix.keys.forEach((key) => {
       if (key.isSigner) {
         signers.add(key.pubkey.toBase58());
       }
@@ -475,7 +471,6 @@ export async function sendTransactions(
     );
 
     confirmedTx = undefined;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (!confirmedTx) {
       confirmedTx = await Promise.race([
         new Promise<SignatureResult>((resolve) => {

@@ -43,7 +43,8 @@ const NavTab = ({ segment, bubbleId, children }: TabProps) => {
     <Link
       href={`/${segment}`}
       className={styles.mobileTab ?? ""}
-      data-is-selected={isSelected ? "" : undefined}>
+      data-is-selected={isSelected ? "" : undefined}
+    >
       {children}
       {isSelected && (
         <motion.span

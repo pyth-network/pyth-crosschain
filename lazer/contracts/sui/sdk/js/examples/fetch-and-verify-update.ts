@@ -59,7 +59,6 @@ async function main() {
     .parseAsync();
 
   // Defined as a dependency in turbo.json
-  // eslint-disable-next-line n/no-process-env
   if (process.env.SUI_KEY === undefined) {
     throw new Error(
       `SUI_KEY environment variable should be set to your Sui private key in hex format.`,
@@ -85,7 +84,6 @@ async function main() {
   // --- You can add more calls to the transaction that consume the parsed update here ---
 
   const wallet = Ed25519Keypair.fromSecretKey(
-    // eslint-disable-next-line n/no-process-env
     Buffer.from(process.env.SUI_KEY, "hex"),
   );
   const res = await provider.signAndExecuteTransaction({
@@ -93,12 +91,8 @@ async function main() {
     transaction: tx,
     options: { showEffects: true, showEvents: true },
   });
-
-  // eslint-disable-next-line no-console
   console.log("Execution result:", JSON.stringify(res, undefined, 2));
 }
-
-// eslint-disable-next-line unicorn/prefer-top-level-await
 main().catch((error: unknown) => {
   throw error;
 });

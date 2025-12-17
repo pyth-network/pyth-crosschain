@@ -25,7 +25,8 @@ export const Explain = ({ size, title, children }: Props) => (
         icon: <Lightbulb />,
         bodyClassName: styles.description,
         contents: children,
-      }}>
+      }}
+    >
       Explain {title}
     </Button>
   </div>

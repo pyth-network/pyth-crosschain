@@ -23,7 +23,8 @@ export const Root = ({ children, googleAnalyticsId }: Props) => (
             options: {
               api: "/api/search",
             },
-          }}>
+          }}
+        >
           {children}
         </FumadocsRootProvider>
       </RootProviders>

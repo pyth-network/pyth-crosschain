@@ -29,7 +29,9 @@ async function deploy() {
     console.log(
       "Error during terra deployment. The following files are expected to be in the artifacts folder:",
     );
-    missing_artifacts.forEach((file) => console.log(`  - ${file}`));
+    missing_artifacts.forEach((file) => {
+      console.log(`  - ${file}`);
+    });
     console.log(
       "Hint: the deploy script needs to run after the contracts have been built.",
     );
@@ -46,7 +48,9 @@ async function deploy() {
     console.log(
       "Error during terra deployment. The following files are not expected to be in the artifacts folder:",
     );
-    unexpected_artifacts.forEach((file) => console.log(`  - ${file}`));
+    unexpected_artifacts.forEach((file) => {
+      console.log(`  - ${file}`);
+    });
     console.log("Hint: you might need to modify tools/deploy.js");
     process.exit(1);
   }
@@ -84,7 +88,7 @@ async function deploy() {
   const govAddress =
     "0000000000000000000000000000000000000000000000000000000000000004";
 
-  let inst_msg: Object = {
+  let inst_msg: object = {
     gov_chain: govChain,
     gov_address: Buffer.from(govAddress, "hex").toString("base64"),
     guardian_set_expirity: 86400,

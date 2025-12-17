@@ -13,7 +13,7 @@ import { StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
-import { Date } from "../Date";
+import { DateDisplay } from "../Date";
 import { ErrorMessage } from "../ErrorMessage";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
@@ -83,7 +83,7 @@ export const AccountSummary = ({
           {lastSlash && (
             <p className="max-w-48 text-sm text-red-600">
               <Tokens>{lastSlash.amount}</Tokens> were slashed on{" "}
-              <Date options="time">{lastSlash.date}</Date>
+              <DateDisplay options="time">{lastSlash.date}</DateDisplay>
             </p>
           )}
         </div>
@@ -99,7 +99,8 @@ export const AccountSummary = ({
               </ReactAriaButton>
               <ModalDialog
                 title="Unlock Schedule"
-                description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule">
+                description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule"
+              >
                 <div className="border border-neutral-600/50 bg-pythpurple-100/10 p-4 sm:px-8 sm:py-6">
                   <table>
                     <thead className="font-medium">
@@ -112,7 +113,9 @@ export const AccountSummary = ({
                       {unlockSchedule.map((unlock, i) => (
                         <tr key={i}>
                           <td className="pr-12 text-xs opacity-80 sm:text-sm">
-                            <Date options="time">{unlock.date}</Date>
+                            <DateDisplay options="time">
+                              {unlock.date}
+                            </DateDisplay>
                           </td>
                           <td>
                             <Tokens>{unlock.amount}</Tokens>
@@ -239,7 +242,7 @@ export const AccountSummary = ({
                   <>
                     Rewards expire one year from the epoch in which they were
                     earned. You have rewards expiring on{" "}
-                    <Date>{expiringRewards}</Date>.
+                    <DateDisplay>{expiringRewards}</DateDisplay>.
                   </>
                 ),
               })}
@@ -292,8 +295,6 @@ const OisUnstake = ({
         toast.error(error);
       });
   }, [execute, toast]);
-
-  // eslint-disable-next-line unicorn/no-null
   return total === 0n ? null : (
     <BalanceCategory
       className={className}
@@ -319,13 +320,17 @@ const OisUnstake = ({
           {cooldown > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown}</Tokens> end{" "}
-              <Date options="time">{epochToDate(currentEpoch + 2n)}</Date>
+              <DateDisplay options="time">
+                {epochToDate(currentEpoch + 2n)}
+              </DateDisplay>
             </div>
           )}
           {cooldown2 > 0n && (
             <div className="mt-2 text-xs text-neutral-500">
               <Tokens>{cooldown2}</Tokens> end{" "}
-              <Date options="time">{epochToDate(currentEpoch + 1n)}</Date>
+              <DateDisplay options="time">
+                {epochToDate(currentEpoch + 1n)}
+              </DateDisplay>
             </div>
           )}
         </>
@@ -337,7 +342,8 @@ const OisUnstake = ({
             variant="secondary"
             onPress={doUnstakeAll}
             isDisabled={state.type === StateType.Complete}
-            isLoading={state.type === StateType.Running}>
+            isLoading={state.type === StateType.Running}
+          >
             Unstake All
           </Button>
         )
@@ -362,7 +368,8 @@ const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
     {...(api.type === ApiStateType.Loaded && {
       transfer: api.withdraw,
     })}
-    {...props}>
+    {...props}
+  >
     <div className="mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
       <InformationCircleIcon className="size-8 flex-none" />
       <div className="text-sm">
@@ -394,7 +401,8 @@ const BalanceCategory = ({
     className={clsx(
       "flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:px-6 xl:w-80 2xl:w-96",
       className,
-    )}>
+    )}
+  >
     <div>
       <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}
@@ -483,7 +491,8 @@ const ClaimDialogContents = ({
           <InformationCircleIcon className="size-8 flex-none" />
           <div className="text-sm">
             Rewards expire one year from the epoch in which they were earned.
-            You have rewards expiring on <Date>{expiringRewards}</Date>.
+            You have rewards expiring on{" "}
+            <DateDisplay>{expiringRewards}</DateDisplay>.
           </div>
         </div>
       )}
@@ -497,7 +506,8 @@ const ClaimDialogContents = ({
           variant="secondary"
           className="w-full sm:w-auto"
           size="noshrink"
-          onPress={close}>
+          onPress={close}
+        >
           Cancel
         </Button>
         <Button
@@ -505,7 +515,8 @@ const ClaimDialogContents = ({
           size="noshrink"
           isDisabled={state.type === StateType.Complete}
           isLoading={state.type === StateType.Running}
-          onPress={doClaim}>
+          onPress={doClaim}
+        >
           Claim
         </Button>
       </div>
@@ -540,7 +551,8 @@ const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
       onPress={doClaim}
       isDisabled={state.type === StateType.Complete}
       isLoading={state.type === StateType.Running}
-      {...props}>
+      {...props}
+    >
       Claim
     </Button>
   );

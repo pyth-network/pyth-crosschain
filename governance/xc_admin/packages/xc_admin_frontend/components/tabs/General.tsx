@@ -23,7 +23,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         }
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Error rendering program component:", error);
       return <div>An error occurred loading the program component</div>;
     }

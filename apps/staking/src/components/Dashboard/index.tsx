@@ -135,7 +135,8 @@ export const Dashboard = ({
       <main
         className={clsx("flex w-full flex-col gap-4 xl:px-4", {
           "sm:gap-0": !enableOis,
-        })}>
+        })}
+      >
         <AccountSummary
           api={api}
           locked={locked}
@@ -159,7 +160,8 @@ export const Dashboard = ({
             selectedKey={tab}
             onSelectionChange={setTab}
             className="group border-neutral-600/50 data-[empty]:my-[5dvh] data-[empty]:border data-[empty]:bg-white/10 data-[empty]:p-4 sm:p-4 data-[empty]:sm:my-0 data-[empty]:sm:border-0 data-[empty]:sm:bg-transparent data-[empty]:sm:p-0"
-            {...(tab === TabIds.Empty && { "data-empty": true })}>
+            {...(tab === TabIds.Empty && { "data-empty": true })}
+          >
             <h1 className="my-4 hidden text-center text-xl/tight font-light group-data-[empty]:mb-10 group-data-[empty]:block sm:mb-6 sm:text-3xl group-data-[empty]:sm:mb-6 lg:my-6 lg:text-5xl">
               Choose Your Journey
             </h1>
@@ -169,7 +171,8 @@ export const Dashboard = ({
                 longText="Oracle Integrity Staking (OIS)"
                 shortText="OIS"
                 image={ois}
-                id={TabIds.IntegrityStaking}>
+                id={TabIds.IntegrityStaking}
+              >
                 <span>Secure the Oracle</span>
                 <br />
                 <span className="font-semibold">to Earn Rewards</span>
@@ -178,7 +181,8 @@ export const Dashboard = ({
                 longText="Pyth Governance"
                 shortText="Governance"
                 image={governanceImage}
-                id={TabIds.Governance}>
+                id={TabIds.Governance}
+              >
                 <span>Gain Voting Power</span>
                 <br />
                 <span className="font-semibold">for Governance</span>
@@ -241,8 +245,6 @@ const useIntegrityStakingSum = (
         .reduce((acc, cur) => acc + cur, 0n),
     [publishers, field],
   );
-
-// eslint-disable-next-line unicorn/no-array-reduce, unicorn/prefer-math-min-max
 const bigIntMin = (...args: bigint[]) => args.reduce((m, e) => (e < m ? e : m));
 
 type TabId = Exclude<ComponentProps<typeof Tabs>["selectedKey"], undefined>;
@@ -267,7 +269,8 @@ const Journey = ({
       "group/tab flex flex-1 cursor-pointer flex-col items-center bg-pythpurple-800 data-[selected]:cursor-default focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 group-data-[empty]:sm:bg-transparent",
       className,
     )}
-    {...props}>
+    {...props}
+  >
     <div className="grid size-full flex-none basis-0 place-content-center border border-neutral-600/50 bg-pythpurple-800 p-2 text-center font-semibold transition group-hover/tab:bg-pythpurple-600/30 group-data-[selected]/tab:border-pythpurple-400/60 group-data-[selected]/tab:bg-pythpurple-600/60 group-data-[empty]:py-8 group-hover/tab:group-data-[selected]/tab:bg-pythpurple-600/60 sm:py-4 sm:text-lg group-data-[empty]:sm:py-2">
       <span className="hidden group-data-[empty]:inline sm:inline">
         {longText}
@@ -308,7 +311,8 @@ const Disclosure = () => {
     <ModalDialog
       title="Legal Notice - Local Restrictions"
       isOpen={hasAcknowledgedLegal.value === null}
-      noClose>
+      noClose
+    >
       <Form onSubmit={acknowledge}>
         <p className="max-w-prose text-sm opacity-60">
           THE SERVICES ARE NOT OFFERED TO PERSONS OR ENTITIES WHO RESIDE IN, ARE
@@ -338,26 +342,30 @@ const Disclosure = () => {
         <Checkbox
           className="my-4 block max-w-prose"
           isSelected={understood}
-          onChange={setUnderstood}>
+          onChange={setUnderstood}
+        >
           I understand
         </Checkbox>
         <Checkbox
           className="my-4 block max-w-prose"
           isSelected={agreed}
-          onChange={setAgreed}>
+          onChange={setAgreed}
+        >
           By checking the box and access the Services, you acknowledge and agree
           to the terms and conditions of our{" "}
           <Link
             href="https://www.pyth.network/terms-of-use"
             target="_blank"
-            className="underline">
+            className="underline"
+          >
             Terms of Use
           </Link>{" "}
           ,{" "}
           <Link
             href="https://www.pyth.network/privacy-policy"
             target="_blank"
-            className="underline">
+            className="underline"
+          >
             Privacy Policy
           </Link>
           , and{" "}
@@ -371,14 +379,16 @@ const Disclosure = () => {
             className="w-full sm:w-auto"
             href="https://pyth.network/"
             variant="secondary"
-            size="noshrink">
+            size="noshrink"
+          >
             Exit
           </LinkButton>
           <Button
             className="w-full sm:w-auto"
             size="noshrink"
             type="submit"
-            isDisabled={!understood || !agreed}>
+            isDisabled={!understood || !agreed}
+          >
             Confirm
           </Button>
         </div>

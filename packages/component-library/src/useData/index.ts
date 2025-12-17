@@ -11,7 +11,6 @@ export const useData = <T>(
 ) => {
   const { data, isLoading, isValidating, mutate, ...rest } = useSWR(
     key,
-    // eslint-disable-next-line unicorn/no-null
     fetcher ?? null,
     config,
   );

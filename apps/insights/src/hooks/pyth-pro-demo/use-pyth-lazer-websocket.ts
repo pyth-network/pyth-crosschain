@@ -32,7 +32,6 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<
   Nullish<number>
 >([
   [undefined, undefined],
-  // eslint-disable-next-line unicorn/no-null
   [null, null],
   ["BTCUSDT", 1],
   ["ETHUSDT", 2],
@@ -60,7 +59,6 @@ const SYMBOL_TO_CHANNEL_MAP = new Map<
   Nullish<"real_time" | "fixed_rate@200ms">
 >([
   [undefined, undefined],
-  // eslint-disable-next-line unicorn/no-null
   [null, null],
   ["BTCUSDT", "real_time"],
   ["ETHUSDT", "real_time"],

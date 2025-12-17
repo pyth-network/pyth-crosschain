@@ -16,7 +16,8 @@ export const Header = ({
         "sticky top-0 w-full bg-white dark:bg-pythpurple-900",
         className,
       )}
-      {...props}>
+      {...props}
+    >
       <MaxWidth className="flex h-16 items-center justify-between">
         <Link href="/" className="-ml-4 flex items-center gap-4 px-4 py-2">
           <Logo className="h-8 text-pythpurple-600 dark:text-pythpurple-400" />
@@ -25,7 +26,8 @@ export const Header = ({
         <div className="-mr-4 flex items-center gap-3">
           <nav
             className="border-r border-neutral-400 pr-3 dark:border-neutral-600"
-            aria-label="Main menu">
+            aria-label="Main menu"
+          >
             <ul className="contents">
               <li className="contents">
                 <NavLink href="/price-feeds/evm/getPriceNoOlderThan">
@@ -35,7 +37,8 @@ export const Header = ({
               <li className="contents">
                 <NavLink
                   href="https://benchmarks.pyth.network/docs#/"
-                  target="_blank">
+                  target="_blank"
+                >
                   Benchmarks
                 </NavLink>
               </li>

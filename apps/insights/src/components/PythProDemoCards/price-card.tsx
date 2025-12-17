@@ -66,7 +66,8 @@ export function PythProDemoCard({
       title={
         <span
           className={classes.dataSourceName}
-          style={{ color: getColorForDataSource(dataSource) }}>
+          style={{ color: getColorForDataSource(dataSource) }}
+        >
           <Button
             aria-label={toggleVisibilityTooltip}
             className={classes.toggleVisibilityBtn ?? ""}
@@ -74,13 +75,15 @@ export function PythProDemoCard({
               toggleDataSourceVisibility(dataSource);
             }}
             size="sm"
-            variant="ghost">
+            variant="ghost"
+          >
             {sourceVisible ? <Eye /> : <EyeSlash />}
           </Button>
           {formattedDataSource}
         </span>
       }
-      variant="secondary">
+      variant="secondary"
+    >
       <div className={classes.cardContents}>
         {socketStatus === "connected" && (
           <>

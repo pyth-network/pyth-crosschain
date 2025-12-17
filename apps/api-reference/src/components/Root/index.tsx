@@ -38,7 +38,8 @@ export const Root = ({ children }: Props) => (
     dir="ltr"
     className={clsx("h-dvh", redHatText.variable, redHatMono.variable)}
     // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
-    suppressHydrationWarning>
+    suppressHydrationWarning
+  >
     <body className="grid size-full grid-cols-1 grid-rows-[max-content_1fr_max-content] bg-white text-pythpurple-950 dark:bg-pythpurple-900 dark:text-white">
       <ThemeProvider attribute="class">
         <HighlighterProvider>

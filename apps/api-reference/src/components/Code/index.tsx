@@ -29,7 +29,8 @@ export const Code = ({ language, children, dimRange }: CodeProps) => {
       <HighlightedCode
         language={language}
         className={style.code}
-        dimRange={dimRange}>
+        dimRange={dimRange}
+      >
         {chompedCode}
       </HighlightedCode>
     </div>
@@ -83,10 +84,12 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
   return (
     <div
       className={clsx("bg-neutral-100 dark:bg-neutral-800", className)}
-      {...props}>
+      {...props}
+    >
       <Button
         onClick={copy}
-        className="rounded-md p-2 text-neutral-800 dark:text-neutral-300">
+        className="rounded-md p-2 text-neutral-800 dark:text-neutral-300"
+      >
         <ClipboardDocumentIcon className="size-4" />
         <div className="sr-only">Copy code to clipboaord</div>
       </Button>
@@ -99,7 +102,8 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
         enterTo="opacity-100"
         leave="transition-opacity duration-150"
         leaveFrom="opacity-100"
-        leaveTo="opacity-0">
+        leaveTo="opacity-0"
+      >
         <CheckIcon className="size-4 stroke-2" />
       </Transition>
     </div>

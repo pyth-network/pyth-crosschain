@@ -27,7 +27,8 @@ export async function BasePage(props: { params: { slug: string[] } }) {
     <DocsPage
       toc={page.data.toc}
       tableOfContent={{ style: "clerk" }}
-      full={page.data.full}>
+      full={page.data.full}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       {!isApiReference && (

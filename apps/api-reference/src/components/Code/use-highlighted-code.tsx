@@ -112,7 +112,6 @@ const createShikiLoader = () => {
         // `false`.  However, that's not actually true and some other code could
         // have called `cancel` during the `await` and flipped `cancelled` to
         // false, so we should check it here too.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         return cancelled ? undefined : highlighter;
       }
     },

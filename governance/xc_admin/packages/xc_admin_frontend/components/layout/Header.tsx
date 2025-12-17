@@ -8,7 +8,6 @@ import MobileMenu from "./MobileMenu";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
-    // eslint-disable-next-line unicorn/no-await-expression-member
     (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
   { ssr: false },
 );
@@ -77,21 +76,25 @@ const Header = () => {
         className={`left-0 top-0 z-40 w-full px-1 transition-all lg:px-10
       ${isSticky || headerState.opened ? "fixed" : "absolute"}
       ${isSticky && !headerState.opened ? "bg-darkGray shadow-black" : ""}
-      `}>
+      `}
+      >
         <div
           className={`relative flex items-center justify-between ${
             isSticky ? "lg:py-4" : "before:gradient-border md:py-6"
-          } px-4 py-3 lg:px-10 lg:py-6`}>
+          } px-4 py-3 lg:px-10 lg:py-6`}
+        >
           <Link
             href="/"
-            className={`flex min-h-[45px] basis-[180px] cursor-pointer items-center`}>
+            className={`flex min-h-[45px] basis-[180px] cursor-pointer items-center`}
+          >
             <Pyth />
           </Link>
           <nav>
             <ul
               className={`list-none space-x-10 ${
                 headerState.opened ? "hidden" : "hidden lg:flex"
-              }`}>
+              }`}
+            >
               {navigation.map((item) => (
                 <li key={item.name}>
                   <Link
@@ -100,7 +103,8 @@ const Header = () => {
                       router.pathname === item.href
                         ? "nav-link font-bold"
                         : "nav-link"
-                    }>
+                    }
+                  >
                     {item.name}
                   </Link>
                 </li>
@@ -126,27 +130,33 @@ const Header = () => {
                 if (e.key === "Enter") handleToggleMenu();
               }}
               role="button"
-              tabIndex={0}>
+              tabIndex={0}
+            >
               <button
                 className={`group ml-auto align-middle ${
                   headerState.opened ? "block" : "lg:hidden"
-                }`}>
+                }`}
+                type="button"
+              >
                 <span
                   className={`ml-auto block h-0.5 w-3.5 rounded-sm bg-light transition-all lg:group-hover:w-5 ${
                     headerState.opened
                       ? "mb-0 w-5 translate-y-1 rotate-45"
                       : "mb-1"
-                  }`}></span>
+                  }`}
+                ></span>
                 <span
                   className={`mb-1 block h-0.5 w-5 rounded-sm bg-light transition-all ${
                     headerState.opened && "opacity-0"
-                  }`}></span>
+                  }`}
+                ></span>
                 <span
                   className={`ml-auto block h-0.5 w-3.5 rounded-sm bg-light transition-all lg:group-hover:w-5 ${
                     headerState.opened
                       ? "mb-0 w-5 -translate-y-1 -rotate-45"
                       : "mb-1"
-                  }`}></span>
+                  }`}
+                ></span>
               </button>
             </div>
           </div>

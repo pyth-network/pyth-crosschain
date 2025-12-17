@@ -52,8 +52,6 @@ export const ChartToolbar = () => {
     },
     [logger, setQuickSelectWindow, setResolution],
   );
-
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!ENABLE_RESOLUTION_SELECTOR) {
     return;
   }

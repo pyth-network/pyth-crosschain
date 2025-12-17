@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 /**
  * To use this script, simply place any CSVs
  * that you want massaged and normalized
@@ -28,7 +26,6 @@ dayjs.extend(timezone);
 const outdir = path.join(import.meta.dirname, "../../public", "db");
 
 function coerceNum(num: unknown, defaultVal = Number.MIN_SAFE_INTEGER) {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   const parsed = Number.parseFloat(String(num ?? ""));
   return Number.isNaN(parsed) ? defaultVal : parsed;
 }

@@ -94,7 +94,8 @@ const PublishersCardImpl = (props: PublishersCardImplProps) => (
           : {
               isSelected: props.includeTestFeeds,
               onChange: props.updateIncludeTestFeeds,
-            })}>
+            })}
+      >
         Include test publishers
       </Switch>
     }

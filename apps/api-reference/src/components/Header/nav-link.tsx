@@ -22,7 +22,8 @@ export const NavLink = ({ className, ...props }: NavLinkProps) => {
         "text-pythpurple-600 dark:text-pythpurple-400",
         baseClasses,
         className,
-      )}>
+      )}
+    >
       {props.children}
     </span>
   ) : (

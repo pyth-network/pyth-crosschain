@@ -11,7 +11,8 @@ const ShowButton = (
     <Button
       onPress={() => {
         drawer.open(props);
-      }}>
+      }}
+    >
       Show alert
     </Button>
   );

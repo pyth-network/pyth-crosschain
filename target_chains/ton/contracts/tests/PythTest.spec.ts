@@ -422,7 +422,7 @@ describe("PythTest", () => {
 
   it("should correctly update price feeds", async () => {
     await deployContract();
-    let result;
+    let result: Awaited<ReturnType<typeof pythTest.sendUpdatePriceFeeds>>;
 
     await updateGuardianSets(pythTest, deployer);
 

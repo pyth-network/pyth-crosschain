@@ -121,7 +121,8 @@ export function PageActions({ content, title, url }: PageActionsProps) {
                   ) : (
                     option.icon
                   )
-                }>
+                }
+              >
                 {option.label}
               </Button>
               {!isLast && (

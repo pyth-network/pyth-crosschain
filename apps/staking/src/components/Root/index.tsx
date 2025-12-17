@@ -55,7 +55,8 @@ export const Root = ({ children }: Props) => (
       "scroll-pt-header-height",
       redHatText.variable,
       redHatMono.variable,
-    )}>
+    )}
+  >
     <body className="grid min-h-dvh grid-rows-[auto_auto_auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(20rem_50rem_at_50rem_10rem,_rgba(119,_49,_234,_0.20)_0%,_rgba(17,_15,_35,_0.00)_100rem),_#0A0814] selection:bg-pythpurple-600/60 lg:grid-rows-[auto_auto_1fr_auto]">
       <Header className="z-10" />
       <RestrictedRegionBanner />
@@ -79,11 +80,13 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
         <NetworkProvider>
           <WalletProvider
             walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
-            mainnetRpc={MAINNET_RPC}>
+            mainnetRpc={MAINNET_RPC}
+          >
             <ApiProvider
               hermesUrl={HERMES_URL}
               pythnetRpcUrl={PYTHNET_RPC}
-              simulationPayerAddress={SIMULATION_PAYER_ADDRESS}>
+              simulationPayerAddress={SIMULATION_PAYER_ADDRESS}
+            >
               <ToastProvider>
                 <html lang={lang} {...props} />
               </ToastProvider>

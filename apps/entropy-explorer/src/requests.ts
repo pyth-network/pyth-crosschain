@@ -61,50 +61,55 @@ export const getRequests = async ({
         return parsed.success
           ? Result.Success({
               numPages: Math.ceil(parsed.data.total_results / pageSize),
-              currentPage: parsed.data.requests.map((request) => {
-                const common = {
-                  chain: getChain(request.network_id),
-                  gasLimit: request.gas_limit,
-                  provider: request.provider,
-                  requestTimestamp: request.created_at,
-                  requestTxHash: request.request_tx_hash,
-                  sender: request.sender,
-                  sequenceNumber: request.sequence,
-                  userContribution: request.user_random_number,
-                };
-                switch (request.state.state) {
-                  case "completed": {
-                    const completedCommon = {
-                      ...common,
-                      callbackTxHash: request.state.reveal_tx_hash,
-                      callbackTimestamp: request.last_updated_at,
-                      gasUsed: request.state.gas_used,
-                      randomNumber: request.state.combined_random_number,
-                      providerContribution:
-                        request.state.provider_random_number,
-                    };
-                    return request.state.callback_failed
-                      ? Request.CallbackErrored({
-                          ...completedCommon,
-                          reason: request.state.callback_return_value,
-                        })
-                      : Request.Complete({
-                          ...completedCommon,
-                        });
+              currentPage: parsed.data.requests
+                .map((request) => {
+                  const common = {
+                    chain: getChain(request.network_id),
+                    gasLimit: request.gas_limit,
+                    provider: request.provider,
+                    requestTimestamp: request.created_at,
+                    requestTxHash: request.request_tx_hash,
+                    sender: request.sender,
+                    sequenceNumber: request.sequence,
+                    userContribution: request.user_random_number,
+                  };
+                  switch (request.state.state) {
+                    case "completed": {
+                      const completedCommon = {
+                        ...common,
+                        callbackTxHash: request.state.reveal_tx_hash,
+                        callbackTimestamp: request.last_updated_at,
+                        gasUsed: request.state.gas_used,
+                        randomNumber: request.state.combined_random_number,
+                        providerContribution:
+                          request.state.provider_random_number,
+                      };
+                      return request.state.callback_failed
+                        ? Request.CallbackErrored({
+                            ...completedCommon,
+                            reason: request.state.callback_return_value,
+                          })
+                        : Request.Complete({
+                            ...completedCommon,
+                          });
+                    }
+                    case "pending": {
+                      return Request.Pending(common);
+                    }
+                    case "failed": {
+                      return Request.Failed({
+                        ...common,
+                        reason: request.state.reason.replace(/^Reverted: /, ""),
+                        providerContribution:
+                          request.state.provider_random_number,
+                      });
+                    }
+                    default: {
+                      return undefined;
+                    }
                   }
-                  case "pending": {
-                    return Request.Pending(common);
-                  }
-                  case "failed": {
-                    return Request.Failed({
-                      ...common,
-                      reason: request.state.reason.replace(/^Reverted: /, ""),
-                      providerContribution:
-                        request.state.provider_random_number,
-                    });
-                  }
-                }
-              }),
+                })
+                .filter((r): r is Request => Boolean(r)),
             })
           : Result.ErrorResult(parsed.error);
       } catch (error) {

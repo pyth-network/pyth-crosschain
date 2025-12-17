@@ -29,7 +29,8 @@ const Address = ({ value, chain, isAccount }: Props) => {
       <Link
         href={explorerTemplate.replace("$ADDRESS", value)}
         target="_blank"
-        rel="noreferrer">
+        rel="noreferrer"
+      >
         <code>{truncatedValue}</code>
       </Link>
       <CopyButton text={value} iconOnly />

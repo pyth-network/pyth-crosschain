@@ -35,21 +35,24 @@ export const Button = ({
       baseClassName({ variant, size }),
       className,
     )}
-    {...props}>
+    {...props}
+  >
     {(values) => (
       <>
         <div
           className={clsx(
             "flex flex-row items-center justify-center gap-[0.5em] transition",
             { "opacity-0": isLoading },
-          )}>
+          )}
+        >
           {typeof children === "function" ? children(values) : children}
         </div>
         <div
           className={clsx(
             "absolute inset-0 grid place-content-center transition",
             { "opacity-0": !isLoading },
-          )}>
+          )}
+        >
           <ArrowPathIcon className="inline-block size-[1em] animate-spin" />
         </div>
       </>

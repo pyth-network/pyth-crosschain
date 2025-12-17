@@ -1,5 +1,3 @@
-/* eslint-disable n/no-process-env */
-
 import { getPythClusterApiUrl } from "@pythnetwork/client";
 
 /**

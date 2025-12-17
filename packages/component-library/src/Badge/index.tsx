@@ -36,7 +36,8 @@ export const Badge = ({
     data-variant={variant}
     data-size={size}
     data-style={style}
-    {...props}>
+    {...props}
+  >
     {children}
   </span>
 );

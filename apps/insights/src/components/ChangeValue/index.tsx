@@ -17,13 +17,13 @@ type OwnProps =
 type Props = Omit<ComponentProps<"span">, keyof OwnProps> & OwnProps;
 
 export const ChangeValue = ({ className, children, ...props }: Props) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { isLoading, ...propsWithoutIsLoading } = props;
   return (
     <span
       className={clsx(styles.changeValue, className)}
       {...(!props.isLoading && { "data-direction": props.direction })}
-      {...propsWithoutIsLoading}>
+      {...propsWithoutIsLoading}
+    >
       <Contents {...props}>{children}</Contents>
     </span>
   );

@@ -62,7 +62,8 @@ const UpdateParams = ({ feed, isDefault }: UpdateParamsProps) => {
       className={clsx(
         styles.updateParams,
         isDefault ? styles.updateParamsDefault : styles.updateParamsException,
-      )}>
+      )}
+    >
       <div
         className={clsx(
           styles.statusDot,
