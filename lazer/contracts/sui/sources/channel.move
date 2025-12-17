@@ -1,7 +1,7 @@
 module pyth_lazer::channel;
 
-// Error codes for channel parsing
-const EInvalidChannel: u64 = 1;
+#[error]
+const EInvalidChannel: vector<u8> = "Invalid channel value";
 
 public enum Channel has copy, drop {
     RealTime,

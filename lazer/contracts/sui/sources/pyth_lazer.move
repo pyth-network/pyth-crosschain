@@ -1,33 +1,30 @@
 module pyth_lazer::pyth_lazer;
 
-use pyth_lazer::state::{Self, State};
-use pyth_lazer::update::{Self, Update};
-use sui::bcs;
-use sui::clock::Clock;
-use sui::ecdsa_k1::secp256k1_ecrecover;
+use sui::{
+    bcs,
+    clock::Clock,
+    ecdsa_k1::secp256k1_ecrecover,
+};
+
+use pyth_lazer::{
+    state::State,
+    update::{Self, Update},
+};
 
 const SECP256K1_SIG_LEN: u32 = 65;
 const UPDATE_MESSAGE_MAGIC: u32 = 1296547300;
 const PAYLOAD_MAGIC: u32 = 2479346549;
 
-// Error codes
-const ESignerNotTrusted: u64 = 2;
-const ESignerExpired: u64 = 3;
-const EInvalidMagic: u64 = 4;
-const EInvalidPayloadLength: u64 = 6;
-
-/// The `PYTH_LAZER` resource serves as the one-time witness.
-/// It has the `drop` ability, allowing it to be consumed immediately after use.
-/// See: https://move-book.com/programmability/one-time-witness
-public struct PYTH_LAZER has drop {}
-
-/// Initializes the module. Called at publish time.
-/// Creates and shares the singular State object.
-/// AdminCap is created and transferred in admin::init via a One-Time Witness.
-fun init(_: PYTH_LAZER, ctx: &mut TxContext) {
-    let s = state::new(ctx);
-    transfer::public_share_object(s);
-}
+#[error]
+const ESignerNotTrusted: vector<u8> = "Recovered public key is not in the trusted signers list";
+#[error]
+const ESignerExpired: vector<u8> = "Signer's certificate has expired";
+#[error]
+const EInvalidUpdateMagic: vector<u8> = "Invalid magic number in update";
+#[error]
+const EInvalidPayloadMagic: vector<u8> = "Invalid magic number in payload";
+#[error]
+const EInvalidPayloadLength: vector<u8> = "Payload length doesn't match data";
 
 /// Verify LE ECDSA message signature against trusted signers.
 ///
@@ -45,26 +42,26 @@ fun init(_: PYTH_LAZER, ctx: &mut TxContext) {
 /// * `ESignerNotTrusted` - The recovered public key is not in the trusted signers list
 /// * `ESignerExpired` - The signer's certificate has expired
 public(package) fun verify_le_ecdsa_message(
-    s: &State,
+    state: &State,
     clock: &Clock,
     signature: &vector<u8>,
     payload: &vector<u8>,
 ) {
+    let current_cap = state.current_cap();
+
     // 0 stands for keccak256 hash
     let pubkey = secp256k1_ecrecover(signature, payload, 0);
 
     // Check if the recovered pubkey is in the trusted signers list
-    let trusted_signers = s.get_trusted_signers();
-    let mut maybe_idx = state::find_signer_index(trusted_signers, &pubkey);
+    let trusted_signers = state.trusted_signers(&current_cap);
+    let mut maybe_idx = trusted_signers.find_index!(|signer|
+        signer.public_key() == &pubkey
+    );
 
-    if (option::is_some(&maybe_idx)) {
-        let idx = option::extract(&mut maybe_idx);
-        let found_signer = &trusted_signers[idx];
-        let expires_at_ms = found_signer.expires_at_ms();
-        assert!(clock.timestamp_ms() < expires_at_ms, ESignerExpired);
-    } else {
-        abort ESignerNotTrusted
-    }
+    assert!(maybe_idx.is_some(), ESignerNotTrusted);
+    let idx = maybe_idx.extract();
+    let expires_at_ms = trusted_signers[idx].expires_at_ms();
+    assert!(clock.timestamp_ms() < expires_at_ms, ESignerExpired);
 }
 
 /// Parse the Lazer update message and validate the signature within.
@@ -77,7 +74,8 @@ public(package) fun verify_le_ecdsa_message(
 /// * `update` - The LeEcdsa formatted Lazer update
 ///
 /// # Errors
-/// * `EInvalidMagic` - Invalid magic number in update or payload
+/// * `EInvalidUpdateMagic` - Invalid magic number in update
+/// * `EInvalidPayloadMagic` - Invalid magic number in payload
 /// * `EInvalidPayloadLength` - Payload length doesn't match actual data
 /// * `ESignerNotTrusted` - The recovered public key is not in the trusted signers list
 /// * `ESignerExpired` - The signer's certificate has expired
@@ -86,7 +84,7 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
 
     // Parse and validate message magic
     let magic = cursor.peel_u32();
-    assert!(magic == UPDATE_MESSAGE_MAGIC, EInvalidMagic);
+    assert!(magic == UPDATE_MESSAGE_MAGIC, EInvalidUpdateMagic);
 
     // Parse signature
     let mut signature = vector::empty<u8>();
@@ -106,7 +104,7 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
     // Parse payload
     let mut payload_cursor = bcs::new(payload);
     let payload_magic = payload_cursor.peel_u32();
-    assert!(payload_magic == PAYLOAD_MAGIC, EInvalidMagic);
+    assert!(payload_magic == PAYLOAD_MAGIC, EInvalidPayloadMagic);
 
     // Verify the signature against trusted signers
     verify_le_ecdsa_message(s, clock, &signature, &payload);
