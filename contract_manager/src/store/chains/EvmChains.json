@@ -1157,7 +1157,7 @@
   {
     "id": "monad_testnet",
     "mainnet": false,
-    "rpcUrl": "https://monad-testnet.drpc.org",
+    "rpcUrl": "https://rpc-testnet.monadinfra.com",
     "networkId": 10143,
     "type": "EvmChain"
   },
