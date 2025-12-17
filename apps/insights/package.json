@@ -9,16 +9,18 @@
   "scripts": {
     "build:vercel": "next build",
     "build:csv": "tsx ./src/pyth-feed-demo-data/fix-data.ts",
-    "fix:format": "prettier --write .",
+    "fix:format": "biome format --write",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TBkf9EyQjQF37gs4Vk0sQKJj97kE vercel env pull",
     "start:dev": "next dev --port 3003",
     "start:prod": "next start --port 3003",
-    "test:format": "prettier --check .",
+    "test:format": "biome format",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
-    "test:types": "tsc"
+    "test:types": "tsc",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "dependencies": {
     "@clickhouse/client": "catalog:",
@@ -64,7 +66,6 @@
     "zod-validation-error": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
@@ -78,7 +79,6 @@
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",

@@ -21,10 +21,10 @@
   },
   "scripts": {
     "build": "ts-duality",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
+    "test:format": "biome format",
+    "test:lint": "biome check",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run test:format && git add -A src",
@@ -36,7 +36,6 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@pythnetwork/jest-config": "workspace:",
     "@truffle/hdwallet-provider": "^2.1.5",
@@ -45,7 +44,6 @@
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.10",
-    "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5"

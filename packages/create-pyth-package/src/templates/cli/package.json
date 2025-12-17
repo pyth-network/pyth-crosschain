@@ -21,22 +21,20 @@
   "scripts": {
     "build": "ts-duality --noCjs",
     "clean": "rm -rf dist/",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
+    "fix:lint": "biome check --write",
+    "fix:format": "biome format --write",
     "start:dev": "tsx ./src/cli.ts",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
+    "test:lint": "biome check",
+    "test:format": "biome format",
     "test:unit": "test-unit"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "tsx": "catalog:"
   },

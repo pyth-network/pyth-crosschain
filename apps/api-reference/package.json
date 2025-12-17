@@ -8,13 +8,13 @@
   },
   "scripts": {
     "build:vercel": "next build",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix . --max-warnings 0",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_gbljYVzp0m5EpCuOF6nZpM4WMFM6 vercel env pull",
     "start:dev": "next dev --port 3002",
     "start:prod": "next start --port 3002",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint . --max-warnings 0",
+    "test:format": "biome format",
+    "test:lint": "biome check",
     "test:types": "tsc"
   },
   "dependencies": {
@@ -46,7 +46,6 @@
   },
   "devDependencies": {
     "@axe-core/react": "catalog:",
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
@@ -57,7 +56,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",

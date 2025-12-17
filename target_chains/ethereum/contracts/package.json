@@ -20,8 +20,10 @@
     "deploy-local": "ETHERSCAN_API_KEY= forge script script/Deploy.s.sol --slow  --rpc-url local --broadcast -vvvv",
     "install-forge-deps": "rm -rf lib/forge-std && forge install foundry-rs/forge-std@v1.7.6 --no-git",
     "coverage": "./coverage.sh",
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "test:format": "biome format",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "author": "",
   "license": "Apache-2.0",

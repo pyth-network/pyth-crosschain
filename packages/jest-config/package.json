@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "build": "ts-duality",
-    "clean": "rm -rf dist/"
+    "clean": "rm -rf dist/",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
+    "test:format": "biome format",
+    "test:lint": "biome check"
   },
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/jest-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "^29",

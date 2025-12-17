@@ -10,10 +10,10 @@
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
     "start:dev": "next dev --port 3004",
     "start:prod": "next start --port 3004",
-    "fix:format": "prettier --write .",
-    "fix:lint": "next lint --fix --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:lint": "next lint --max-warnings 0",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
+    "test:format": "biome format",
+    "test:lint": "biome check",
     "test:types": "tsc"
   },
   "dependencies": {
@@ -49,13 +49,11 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@svgr/webpack": "^6.3.1",
     "@types/node": "^18.11.18",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "^10.4.8",
-    "eslint": "catalog:",
     "postcss": "^8.4.16",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "^0.1.13",

@@ -118,11 +118,11 @@
   },
   "scripts": {
     "build": "ts-duality --clean",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "test:lint": "eslint . --max-warnings 0",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check",
     "test:types": "tsc",
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
+    "test:format": "biome format",
+    "fix:format": "biome format --write",
     "example:streaming": "node --loader ts-node/esm examples/streaming.js",
     "example:history": "node --loader ts-node/esm examples/history.js",
     "example:symbols": "node --loader ts-node/esm examples/symbols.js",
@@ -130,11 +130,9 @@
     "clean": "rm -rf ./dist"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "^18.19.54",
     "@types/ws": "^8.5.12",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "ts-node": "catalog:",
     "typedoc": "^0.26.8"

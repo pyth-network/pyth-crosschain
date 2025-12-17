@@ -18,9 +18,11 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "test:unit": "jest",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "clean": "rm -rf ./dist"
+    "fix:format": "biome format --write",
+    "test:format": "biome format",
+    "clean": "rm -rf ./dist",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "//": [
     "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",

@@ -6,8 +6,10 @@
     "start": "blueprint run",
     "build": "blueprint build Main",
     "test:unit": "jest --verbose",
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
+    "test:format": "biome format",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "devDependencies": {
     "@pythnetwork/hermes-client": "workspace:*",

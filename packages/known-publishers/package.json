@@ -19,23 +19,21 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf dist/",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint . --max-warnings 0",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
+    "test:format": "biome format",
+    "test:lint": "biome check",
     "test:types": "tsc"
   },
   "peerDependencies": {
     "react": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:"

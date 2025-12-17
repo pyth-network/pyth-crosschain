@@ -16,10 +16,10 @@
     "src/**"
   ],
   "scripts": {
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "fix:format": "prettier --write .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:format": "prettier --check .",
+    "fix:lint": "biome check --write",
+    "fix:format": "biome format --write",
+    "test:lint": "biome check",
+    "test:format": "biome format",
     "start": "tsx ./src/create-pyth-package.ts",
     "test:types": "tsc"
   },
@@ -34,10 +34,8 @@
   },
   "devDependencies": {
     "@cprussin/tsconfig": "catalog:",
-    "@cprussin/eslint-config": "catalog:",
     "@types/fs-extra": "catalog:",
     "@types/prompts": "catalog:",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "type-fest": "catalog:"
   }

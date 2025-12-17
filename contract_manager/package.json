@@ -224,10 +224,10 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "shell": "ts-node ./src/node/utils/shell.ts",
-    "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
-    "test:lint": "eslint src/ scripts/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\"",
+    "fix:lint": "biome check --write",
+    "fix:format": "biome format --write",
+    "test:lint": "biome check",
+    "test:format": "biome format",
     "clean": "rm -rf ./dist"
   },
   "author": "",
@@ -281,11 +281,9 @@
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-crosschain": "link:..",
     "@types/node": "catalog:",
     "@types/web3": "^1.2.2",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "typedoc": "^0.25.7"
   },

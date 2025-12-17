@@ -46,19 +46,17 @@
   "scripts": {
     "update-idl": "cd ../../contracts/solana && RUSTUP_TOOLCHAIN=nightly-2025-04-15 anchor build && cp target/types/pyth_lazer_solana_contract.ts ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.ts && cp target/idl/pyth_lazer_solana_contract.json ../../sdk/js-solana/src/idl/pyth-lazer-solana-contract.json",
     "build": "ts-duality",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "test:lint": "eslint . --max-warnings 0",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check",
     "test:types": "tsc",
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
+    "test:format": "biome format",
+    "fix:format": "biome format --write",
     "build:docs": "typedoc --out docs/typedoc src",
     "clean": "rm -rf ./dist"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "catalog:",
     "prettier": "catalog:",
     "typedoc": "catalog:"
   },

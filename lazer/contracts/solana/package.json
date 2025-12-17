@@ -3,11 +3,13 @@
   "private": true,
   "license": "ISC",
   "scripts": {
-    "fix:format": "prettier --write **/*.*",
-    "test:format": "prettier --check **/*.*",
+    "fix:format": "biome format --write",
+    "test:format": "biome format",
     "test:anchor": "CARGO_TARGET_DIR=\"$PWD/target\" anchor test",
     "setup": "pnpm ts-node scripts/setup.ts",
-    "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts"
+    "check-trusted-signer": "pnpm ts-node scripts/check_trusted_signer.ts",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",

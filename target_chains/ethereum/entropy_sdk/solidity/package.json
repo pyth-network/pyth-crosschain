@@ -12,10 +12,12 @@
     "access": "public"
   },
   "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
+    "test:format": "biome format",
+    "fix:format": "biome format --write",
     "build": "generate-abis IEntropy IEntropyV2 IEntropyConsumer EntropyErrors EntropyEvents EntropyEventsV2 EntropyStructs EntropyStructsV2 EntropyStatusConstants PRNG",
-    "test": "git diff --exit-code abis"
+    "test": "git diff --exit-code abis",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "keywords": [
     "pyth",

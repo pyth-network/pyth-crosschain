@@ -26,10 +26,10 @@
   "sideEffects": false,
   "scripts": {
     "build": "ts-duality --clean",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint . --max-warnings 0",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
+    "test:format": "biome format",
+    "test:lint": "biome check",
     "test:types": "tsc",
     "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",
     "clean": "rm -rf ./dist"
@@ -41,10 +41,8 @@
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "catalog:",
     "prettier": "catalog:"
   },
   "publishConfig": {

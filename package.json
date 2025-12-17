@@ -7,13 +7,16 @@
     "pnpm": ">=10.7.0"
   },
   "scripts": {
-    "fix:format": "prettier --write .",
+    "fix:format": "biome format --write",
     "install:modules": "[ $CI ] && true || pnpm install",
-    "test:format": "prettier --check .",
-    "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
+    "test:format": "biome format",
+    "turbo": "[ ! -d node_modules ] && pnpm install; turbo",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
+    "@biomejs/biome": "catalog:",
     "@pythnetwork/create-pyth-package": "workspace:",
     "@cprussin/tsconfig": "catalog:",
     "@cprussin/prettier-config": "catalog:",

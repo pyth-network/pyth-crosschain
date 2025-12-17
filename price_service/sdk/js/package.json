@@ -20,13 +20,14 @@
     "build": "ts-duality",
     "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
     "test:unit": "jest",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
+    "test:lint": "biome check",
+    "fix:format": "biome format --write",
+    "fix:lint": "biome check --write",
     "prepublishOnly": "pnpm run build && pnpm test:unit && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run format && git add -A src",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist",
+    "test:format": "biome format"
   },
   "keywords": [
     "pyth",
@@ -34,11 +35,9 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@types/bn.js": "^5.1.5",
     "@types/jest": "^29.4.0",
-    "eslint": "catalog:",
     "jest": "^29.4.0",
     "prettier": "catalog:",
     "quicktype": "^23.0.76"

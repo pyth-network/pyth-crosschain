@@ -9,16 +9,18 @@
   "scripts": {
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
-    "fix:format": "prettier --write .",
+    "fix:format": "biome format --write",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "start:dev": "next dev --port 3627",
     "start:prod": "next start --port 3627",
-    "test:format": "prettier --check .",
+    "test:format": "biome format",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc",
-    "generate:docs": "tsx ./scripts/generate-docs.ts"
+    "generate:docs": "tsx ./scripts/generate-docs.ts",
+    "fix:lint": "biome check --write",
+    "test:lint": "biome check"
   },
   "dependencies": {
     "@phosphor-icons/react": "catalog:",
@@ -54,7 +56,6 @@
     "zod-validation-error": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
@@ -66,7 +67,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
