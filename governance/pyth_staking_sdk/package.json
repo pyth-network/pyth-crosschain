@@ -206,9 +206,7 @@
   },
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
-    "fix:format": "biome format --write",
     "fix:lint": "biome check --write",
-    "test:format": "biome format",
     "test:lint": "biome check",
     "test:types": "tsc",
     "clean": "rm -rf ./dist"

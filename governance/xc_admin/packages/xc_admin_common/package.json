@@ -18,8 +18,6 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "test:unit": "jest",
-    "fix:format": "biome format --write",
-    "test:format": "biome format",
     "clean": "rm -rf ./dist",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"

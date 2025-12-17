@@ -18,8 +18,6 @@
     "generate-abis": "src/generate.js"
   },
   "scripts": {
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "generate": "node src/generate.js",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"

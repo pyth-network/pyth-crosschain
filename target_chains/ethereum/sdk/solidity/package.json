@@ -11,8 +11,6 @@
   "scripts": {
     "build:abis": "generate-abis IPyth IPythEvents AbstractPyth MockPyth PythErrors PythUtils PythAggregatorV3",
     "build:bin": "solcjs --bin MockPyth.sol --base-path . -o build/",
-    "fix:format": "biome format --write",
-    "test:format": "biome format",
     "test": "git diff --exit-code abis",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"

@@ -21,9 +21,7 @@
   },
   "scripts": {
     "build": "ts-duality --noEsm",
-    "fix:format": "biome format --write",
     "fix:lint": "biome check --write",
-    "test:format": "biome format",
     "test:lint": "biome check",
     "start": "node dist/index.cjs",
     "dev": "ts-node src/index.ts",

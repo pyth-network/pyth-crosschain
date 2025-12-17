@@ -121,8 +121,6 @@
     "fix:lint": "biome check --write",
     "test:lint": "biome check",
     "test:types": "tsc",
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "example:streaming": "node --loader ts-node/esm examples/streaming.js",
     "example:history": "node --loader ts-node/esm examples/history.js",
     "example:symbols": "node --loader ts-node/esm examples/symbols.js",

@@ -5,8 +5,6 @@
   "type": "module",
   "scripts": {
     "init-buffer": "ts-node scripts/setup_message_buffer.ts",
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"
   },

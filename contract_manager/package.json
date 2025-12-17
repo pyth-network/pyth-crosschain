@@ -225,9 +225,7 @@
     "build": "ts-duality --copyOtherFiles",
     "shell": "ts-node ./src/node/utils/shell.ts",
     "fix:lint": "biome check --write",
-    "fix:format": "biome format --write",
     "test:lint": "biome check",
-    "test:format": "biome format",
     "clean": "rm -rf ./dist"
   },
   "author": "",

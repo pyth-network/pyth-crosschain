@@ -7,8 +7,6 @@
   "scripts": {
     "cli": "ts-node src/cli.ts",
     "build": "ts-duality",
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "clean": "rm -rf ./dist",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"

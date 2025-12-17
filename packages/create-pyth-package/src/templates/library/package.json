@@ -18,9 +18,7 @@
     "build": "ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
     "fix:lint": "biome check --write",
-    "fix:format": "biome format --write",
     "test:lint": "biome check",
-    "test:format": "biome format",
     "test:types": "tsc",
     "test:unit": "test-unit"
   },

@@ -49,8 +49,6 @@
     "fix:lint": "biome check --write",
     "test:lint": "biome check",
     "test:types": "tsc",
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "build:docs": "typedoc --out docs/typedoc src",
     "clean": "rm -rf ./dist"
   },

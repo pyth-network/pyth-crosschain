@@ -22,9 +22,7 @@
   "scripts": {
     "build": "ts-duality --noEsm",
     "example-relay": "pnpm run build && node lib/examples/AptosRelay.js",
-    "fix:format": "biome format --write",
     "fix:lint": "biome check --write",
-    "test:format": "biome format",
     "test:lint": "biome check",
     "prepublishOnly": "pnpm run build && pnpm test:lint",
     "preversion": "pnpm run test:lint",

@@ -26,9 +26,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "ts-duality --clean",
-    "fix:format": "biome format --write",
     "fix:lint": "biome check --write",
-    "test:format": "biome format",
     "test:lint": "biome check",
     "test:types": "tsc",
     "example:fetch-and-verify": "tsx examples/fetch-and-verify-update.ts",

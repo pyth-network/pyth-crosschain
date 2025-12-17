@@ -8,8 +8,6 @@
     "build-contract": "ts-node ./src/build-contract.ts",
     "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts",
     "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts",
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "clean": "rm -rf ./dist",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"

@@ -17,9 +17,7 @@
   ],
   "scripts": {
     "fix:lint": "biome check --write",
-    "fix:format": "biome format --write",
     "test:lint": "biome check",
-    "test:format": "biome format",
     "start": "tsx ./src/create-pyth-package.ts",
     "test:types": "tsc"
   },

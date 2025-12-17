@@ -9,15 +9,11 @@
   "scripts": {
     "build:vercel": "next build",
     "build:csv": "tsx ./src/pyth-feed-demo-data/fix-data.ts",
-    "fix:format": "biome format --write",
-    "fix:lint:eslint": "eslint --fix .",
-    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
+    "fix:lint:eslint": "biome check --write",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TBkf9EyQjQF37gs4Vk0sQKJj97kE vercel env pull",
     "start:dev": "next dev --port 3003",
     "start:prod": "next start --port 3003",
-    "test:format": "biome format",
-    "test:lint:eslint": "eslint . --max-warnings 0",
-    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
+    "test:lint:eslint": "biome check",
     "test:types": "tsc",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"

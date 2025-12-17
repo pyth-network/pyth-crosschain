@@ -12,8 +12,6 @@
     "access": "public"
   },
   "scripts": {
-    "test:format": "biome format",
-    "fix:format": "biome format --write",
     "build": "generate-abis IScheduler SchedulerConstants SchedulerErrors SchedulerEvents SchedulerStructs",
     "test": "git diff --exit-code abis",
     "fix:lint": "biome check --write",

@@ -22,9 +22,7 @@
   "scripts": {
     "build": "ts-duality",
     "test:lint": "biome check",
-    "test:format": "biome format",
     "fix:lint": "biome check --write",
-    "fix:format": "biome format --write",
     "prepublishOnly": "pnpm run build && pnpm run test:lint",
     "preversion": "pnpm run test:lint",
     "version": "pnpm run test:format && git add -A src",

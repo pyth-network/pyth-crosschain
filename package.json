@@ -7,9 +7,7 @@
     "pnpm": ">=10.7.0"
   },
   "scripts": {
-    "fix:format": "biome format --write",
     "install:modules": "[ $CI ] && true || pnpm install",
-    "test:format": "biome format",
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo",
     "fix:lint": "biome check --write",
     "test:lint": "biome check"
