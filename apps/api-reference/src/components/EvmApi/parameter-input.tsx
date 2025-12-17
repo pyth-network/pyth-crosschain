@@ -9,15 +9,7 @@ import base58 from "bs58";
 import clsx from "clsx";
 import Image from "next/image";
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { useState, useCallback, useMemo, useEffect } from "react";
-
-import type { Parameter } from "./parameter";
-import {
-  isValid,
-  getValidationError,
-  ParameterType,
-  getPlaceHolder,
-} from "./parameter";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PriceFeed } from "../../use-price-feed-list";
 import {
   PriceFeedListContextType,
@@ -26,6 +18,13 @@ import {
 import { InlineLink } from "../InlineLink";
 import { Input } from "../Input";
 import { Markdown } from "../Markdown";
+import type { Parameter } from "./parameter";
+import {
+  getPlaceHolder,
+  getValidationError,
+  isValid,
+  ParameterType,
+} from "./parameter";
 
 type ParameterProps<ParameterName extends string> = {
   spec: Parameter<ParameterName>;
@@ -80,8 +79,7 @@ const PriceFeedIdInput = <ParameterName extends string>({
           priceFeedList.type === PriceFeedListContextType.Loaded
             ? priceFeedList.list
             : [],
-      }}
-    >
+      }}>
       <ComboboxInput
         as={Input}
         displayValue={() =>
@@ -103,13 +101,11 @@ const PriceFeedIdInput = <ParameterName extends string>({
           className="bg-neutral-200 p-1 px-2 text-right text-xs dark:bg-neutral-700"
           onMouseDown={(e) => {
             e.preventDefault();
-          }}
-        >
+          }}>
           See all price feed IDs on{" "}
           <InlineLink
             target="_blank"
-            href="https://pyth.network/developers/price-feed-ids"
-          >
+            href="https://pyth.network/developers/price-feed-ids">
             the reference page
           </InlineLink>
         </div>
@@ -136,8 +132,7 @@ const PriceFeedListOptions = ({ priceFeedList }: PriceFeedListOptionsProps) => {
             <ComboboxOption
               key={feedId}
               value={option}
-              className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 p-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
-            >
+              className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 p-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400">
               <PriceFeedIcon name={name} />
               <div>
                 <div className="flex flex-row items-center gap-3">

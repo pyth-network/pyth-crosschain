@@ -1,11 +1,11 @@
 import type {
   Address,
   BlockTag,
-  RpcTransactionRequest,
+  CallParameters,
+  Client,
   ExactPartial,
   Hex,
-  Client,
-  CallParameters,
+  RpcTransactionRequest,
 } from "viem";
 import {
   decodeFunctionData,

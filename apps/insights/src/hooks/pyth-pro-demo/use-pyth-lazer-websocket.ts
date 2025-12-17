@@ -135,7 +135,7 @@ export function usePythLazerWebSocket(): UseDataProviderSocketHookReturnType {
           const priceRaw = Number.parseFloat(price);
 
           addDataPoint("pyth_pro", symbol, {
-            price: priceRaw * Math.pow(10, exponent),
+            price: priceRaw * 10 ** exponent,
             timestamp: new Date().toISOString(),
           });
         }

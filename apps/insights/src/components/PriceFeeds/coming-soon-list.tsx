@@ -8,9 +8,8 @@ import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
-
-import styles from "./coming-soon-list.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
+import styles from "./coming-soon-list.module.scss";
 
 type Props = {
   comingSoonFeeds: {

@@ -19,7 +19,6 @@
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",
     "@pythnetwork/xc-admin-common": "workspace:*",
-    "prettier": "catalog:",
     "ts-node": "catalog:",
     "yargs": "^17.7.2"
   },

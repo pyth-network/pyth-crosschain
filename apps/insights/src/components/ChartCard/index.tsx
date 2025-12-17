@@ -3,9 +3,9 @@
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
-import type { ElementType, ComponentProps, ReactNode } from "react";
-import { Suspense, useState, useMemo, useCallback } from "react";
-import { ResponsiveContainer, Tooltip, Line, XAxis, YAxis } from "recharts";
+import type { ComponentProps, ElementType, ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
+import { Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 
 import styles from "./index.module.scss";
@@ -75,19 +75,16 @@ export const ChartCard = <T extends ElementType, U>({
       className={clsx(className, styles.chartCard)}
       {...props}
       stat={selectedPoint ? (selectedPoint.displayY ?? selectedPoint.y) : stat}
-      miniStat={selectedDate ?? miniStat}
-    >
+      miniStat={selectedDate ?? miniStat}>
       <Suspense
-        fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}
-      >
+        fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <LineChart
             className={chartClassName ?? ""}
             data={data}
             onMouseEnter={updateSelectedPoint}
             onMouseMove={updateSelectedPoint}
-            onMouseLeave={updateSelectedPoint}
-          >
+            onMouseLeave={updateSelectedPoint}>
             <Tooltip content={() => <></>} />
             <Line
               type="monotone"

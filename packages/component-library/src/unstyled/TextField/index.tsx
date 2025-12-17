@@ -1,3 +1,3 @@
 "use client";
 
-export { TextField, Input } from "react-aria-components";
+export { Input, TextField } from "react-aria-components";

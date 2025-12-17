@@ -1,5 +1,5 @@
 import type { BN, IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 
 import type { IntegrityPool } from "./types/integrity-pool.js";
 import type { Staking } from "./types/staking.js";

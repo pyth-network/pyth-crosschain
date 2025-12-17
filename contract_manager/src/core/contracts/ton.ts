@@ -8,13 +8,13 @@ import {
 } from "@pythnetwork/pyth-ton-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import type { OpenedContract } from "@ton/ton";
-import { Address, Cell } from "@ton/ton";
+import { Address, type Cell } from "@ton/ton";
 
 import type { PriceFeed, PrivateKey, TxResult } from "../base";
-import { Chain, TonChain } from "../chains";
-import { WormholeContract } from "./wormhole";
 import { PriceFeedContract } from "../base";
+import { type Chain, TonChain } from "../chains";
 import type { TokenQty } from "../token";
+import { WormholeContract } from "./wormhole";
 
 export class TonWormholeContract extends WormholeContract {
   static type = "TonWormholeContract";

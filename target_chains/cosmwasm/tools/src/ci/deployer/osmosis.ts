@@ -1,17 +1,16 @@
-import { getSigningOsmosisClient, cosmwasm } from "osmojs";
+import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
+import {
+  DirectSecp256k1HdWallet,
+  type EncodeObject,
+} from "@cosmjs/proto-signing";
+import { calculateFee, type DeliverTxResponse } from "@cosmjs/stargate";
 import { estimateOsmoFee } from "@osmonauts/utils";
-import { readFileSync } from "fs";
-import { type DeliverTxResponse, calculateFee } from "@cosmjs/stargate";
 import assert from "assert";
-
+import { readFileSync } from "fs";
+import Long from "long";
+import { cosmwasm, getSigningOsmosisClient } from "osmojs";
 import type { ContractInfo, Deployer } from "./index.js";
 import { convert_terra_address_to_hex, extractFromRawLog } from "./terra.js";
-import {
-  type EncodeObject,
-  DirectSecp256k1HdWallet,
-} from "@cosmjs/proto-signing";
-import Long from "long";
-import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
 
 export type OsmosisHost = {
   endpoint: string;
@@ -113,7 +112,7 @@ export class OsmosisDeployer implements Deployer {
         admin: accAddress,
         // FIXME: soon this file will be removed
         // not spending any time on this bug
-        // @ts-ignore
+        // @ts-expect-error
         codeId: Long.fromNumber(codeId),
         label,
         msg: Buffer.from(JSON.stringify(inst_msg)),
@@ -149,7 +148,7 @@ export class OsmosisDeployer implements Deployer {
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.migrateContract({
         sender: await this.getAccountAddress(),
         contract,
-        // @ts-ignore
+        // @ts-expect-error
         codeId: Long.fromNumber(codeId),
         msg: Buffer.from(
           JSON.stringify({
@@ -164,7 +163,7 @@ export class OsmosisDeployer implements Deployer {
 
     try {
       // {"key":"code_id","value":"13"}
-      let resultCodeId = parseInt(extractFromRawLog(rs.rawLog, "code_id"));
+      const resultCodeId = parseInt(extractFromRawLog(rs.rawLog, "code_id"));
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(

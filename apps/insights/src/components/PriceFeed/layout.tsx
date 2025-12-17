@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-
-import styles from "./layout.module.scss";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
+import styles from "./layout.module.scss";
 
 type Props = {
   header: ReactNode;

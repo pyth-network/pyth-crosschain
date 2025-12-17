@@ -1,4 +1,4 @@
-import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -56,8 +56,7 @@ export const CopyButton = ({
         className,
       )}
       {...(isCopied && { "data-is-copied": true })}
-      {...props}
-    >
+      {...props}>
       {(...args) => (
         <>
           <span>

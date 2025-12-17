@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import {
-  PythContract,
   calculateUpdatePriceFeedsFee,
+  PythContract,
 } from "@pythnetwork/pyth-ton-js";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
-import { Address, TonClient, WalletContractV4 } from "@ton/ton";
+import { type Address, type TonClient, WalletContractV4 } from "@ton/ton";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";

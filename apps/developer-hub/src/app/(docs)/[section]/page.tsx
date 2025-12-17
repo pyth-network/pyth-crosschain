@@ -1,4 +1,5 @@
 export { LandingPage as default } from "../../../components/Pages/LandingPage";
+
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 

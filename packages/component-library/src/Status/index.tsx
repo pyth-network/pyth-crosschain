@@ -34,8 +34,7 @@ export const Status = ({
     data-variant={variant}
     data-size={size}
     data-style={style}
-    {...props}
-  >
+    {...props}>
     <span className={styles.dot} />
     <span className={styles.text}>{children}</span>
   </span>

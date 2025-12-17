@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import { sliceAccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
+import type { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
   sendTransactions,
   sendTransactionsJito,
 } from "@pythnetwork/solana-utils";
-import { AddressLookupTableAccount, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import {
+  type AddressLookupTableAccount,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
+import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -44,8 +47,7 @@ export class SolanaPriceListener extends ChainPriceListener {
       ) {
         this.logger.info(
           `Solana connection is behind by ${(
-            Date.now() / 1000 -
-            blockTime
+            Date.now() / 1000 - blockTime
           ).toString()} seconds`,
         );
       }

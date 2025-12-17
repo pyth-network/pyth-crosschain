@@ -28,12 +28,10 @@
   },
   "devDependencies": {
     "@pythnetwork/jest-config": "workspace:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "jest": "catalog:",
-    "prettier": "catalog:",
     "react": "catalog:"
   },
   "engines": {

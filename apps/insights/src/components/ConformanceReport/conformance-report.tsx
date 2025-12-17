@@ -60,8 +60,7 @@ const ConformanceReport = (props: ConformanceReportProps) => {
         size="sm"
         onClick={handleReport}
         afterIcon={<Download key="download" />}
-        isPending={isGeneratingReport}
-      >
+        isPending={isGeneratingReport}>
         Report
       </Button>
     </div>

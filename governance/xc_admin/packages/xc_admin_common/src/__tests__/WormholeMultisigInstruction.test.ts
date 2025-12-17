@@ -1,4 +1,5 @@
 import crypto from "crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
@@ -13,13 +14,13 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 import {
+  ExecutePostedVaa,
   MultisigInstructionProgram,
   MultisigParser,
   WORMHOLE_ADDRESS,
-  ExecutePostedVaa,
 } from "..";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 
@@ -334,14 +335,14 @@ test("Wormhole multisig instruction parse: send message with governance payload"
             instruction.keys.forEach((account, j) => {
               expect(
                 account.pubkey.equals(
-                  executePostedVaa.instructions[i]!.keys[j]!.pubkey,
+                  executePostedVaa.instructions[i].keys[j]!.pubkey,
                 ),
               ).toBeTruthy();
               expect(account.isSigner).toBe(
-                executePostedVaa.instructions[i]!.keys[j]!.isSigner,
+                executePostedVaa.instructions[i].keys[j]!.isSigner,
               );
               expect(account.isWritable).toBe(
-                executePostedVaa.instructions[i]!.keys[j]!.isWritable,
+                executePostedVaa.instructions[i].keys[j]!.isWritable,
               );
             });
           });

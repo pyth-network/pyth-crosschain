@@ -14,7 +14,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toPrivateKey } from "../src/core/base";
-import { TonPriceFeedContract } from "../src/core/contracts";
+import type { TonPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 
 // This script upgrades the Pyth contract on TON after the governance has authorized the upgrade

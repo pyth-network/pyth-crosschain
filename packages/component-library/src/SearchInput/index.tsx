@@ -4,12 +4,11 @@ import { CircleNotch } from "@phosphor-icons/react/dist/ssr/CircleNotch";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr/MagnifyingGlass";
 import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import clsx from "clsx";
-import type { CSSProperties, ComponentProps } from "react";
-
-import styles from "./index.module.scss";
+import type { ComponentProps, CSSProperties } from "react";
 import { Button } from "../unstyled/Button/index.jsx";
 import { SearchField } from "../unstyled/SearchField/index.jsx";
 import { Input } from "../unstyled/TextField/index.jsx";
+import styles from "./index.module.scss";
 
 export const SIZES = ["xs", "sm", "md", "lg"] as const;
 
@@ -37,8 +36,7 @@ export const SearchInput = ({
     data-static-width={width === undefined ? undefined : ""}
     {...(width && { style: { "--width": width } as CSSProperties })}
     {...(isPending && { "data-pending": "" })}
-    {...props}
-  >
+    {...props}>
     <Input className={styles.input ?? ""} placeholder={placeholder} />
     <MagnifyingGlass className={styles.searchIcon} />
     <CircleNotch className={styles.loadingIcon} />

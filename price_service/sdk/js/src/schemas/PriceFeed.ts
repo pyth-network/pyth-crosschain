@@ -201,13 +201,11 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
     const result: any = {};
     for (const key of Object.getOwnPropertyNames(props)) {
       const prop = props[key];
-      const v = Object.prototype.hasOwnProperty.call(val, key)
-        ? val[key]
-        : undefined;
+      const v = Object.hasOwn(val, key) ? val[key] : undefined;
       result[prop.key] = transform(v, prop.typ, getProps, prop.key);
     }
     for (const key of Object.getOwnPropertyNames(val)) {
-      if (!Object.prototype.hasOwnProperty.call(props, key)) {
+      if (!Object.hasOwn(props, key)) {
         result[key] = transform(val[key], additional, getProps, key);
       }
     }
@@ -225,11 +223,11 @@ function transform(val: any, typ: any, getProps: any, key: any = ""): any {
   }
   if (Array.isArray(typ)) return transformEnum(typ, val);
   if (typeof typ === "object") {
-    return typ.hasOwnProperty("unionMembers")
+    return Object.hasOwn(typ, "unionMembers")
       ? transformUnion(typ.unionMembers, val)
-      : typ.hasOwnProperty("arrayItems")
+      : Object.hasOwn(typ, "arrayItems")
         ? transformArray(typ.arrayItems, val)
-        : typ.hasOwnProperty("props")
+        : Object.hasOwn(typ, "props")
           ? transformObject(getProps(typ), typ.additional, val)
           : invalidValue(typ, val);
   }

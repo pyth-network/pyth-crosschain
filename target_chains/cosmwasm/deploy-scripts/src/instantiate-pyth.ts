@@ -1,16 +1,16 @@
-import createCLI from "yargs";
-import { hideBin } from "yargs/helpers";
 import { sha256 } from "@cosmjs/crypto";
-import { getPythConfig } from "./configs.js";
-import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import { CosmWasmPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
-import { type DeploymentType, getContractBytesDict } from "./helper.js";
 import {
   DefaultStore,
   Store,
 } from "@pythnetwork/contract-manager/node/utils/store";
 import { CHAINS } from "@pythnetwork/xc-admin-common/chains";
+import createCLI from "yargs";
+import { hideBin } from "yargs/helpers";
+import { getPythConfig } from "./configs.js";
+import { type DeploymentType, getContractBytesDict } from "./helper.js";
 
 const yargs = createCLI(hideBin(process.argv));
 
@@ -61,7 +61,7 @@ async function run() {
     pythArtifactZipName = "injective";
   }
   // get the wasm code from github
-  let contractBytesDict = await getContractBytesDict(
+  const contractBytesDict = await getContractBytesDict(
     [pythArtifactZipName],
     argv.contractVersion,
   );

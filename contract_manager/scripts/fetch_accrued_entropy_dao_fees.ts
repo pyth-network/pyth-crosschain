@@ -9,11 +9,10 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { findEntropyContract } from "./common";
 import { EvmChain } from "../src/core/chains";
-import { EvmEntropyContract } from "../src/core/contracts";
+import type { EvmEntropyContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import { findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

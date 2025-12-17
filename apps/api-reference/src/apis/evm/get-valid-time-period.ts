@@ -1,4 +1,4 @@
-import { readApi, solidity, ethersJS } from "./common";
+import { ethersJS, readApi, solidity } from "./common";
 
 export const getValidTimePeriod = readApi<never>({
   name: "getValidTimePeriod (deprecated)",

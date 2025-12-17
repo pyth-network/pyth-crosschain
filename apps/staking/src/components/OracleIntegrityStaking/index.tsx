@@ -1,11 +1,11 @@
 import {
-  ChevronUpIcon,
-  XMarkIcon,
-  MagnifyingGlassIcon,
   Bars3Icon,
-  ChevronDownIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { lookup } from "@pythnetwork/known-publishers";
 import { calculateApy } from "@pythnetwork/staking-sdk";
@@ -14,21 +14,21 @@ import clsx from "clsx";
 import type {
   ComponentProps,
   Dispatch,
-  SetStateAction,
-  HTMLAttributes,
   FormEvent,
+  HTMLAttributes,
+  SetStateAction,
 } from "react";
-import { useMemo, useCallback, useState, useRef, createElement } from "react";
-import { useFilter, useCollator } from "react-aria";
+import { createElement, useCallback, useMemo, useRef, useState } from "react";
+import { useCollator, useFilter } from "react-aria";
 import {
-  SearchField,
-  Input,
   Button as BaseButton,
-  Meter,
-  Label,
-  TextField,
   Form,
+  Input,
+  Label,
   MenuTrigger,
+  Meter,
+  SearchField,
+  TextField,
 } from "react-aria-components";
 
 import type { States } from "../../hooks/use-api";
@@ -120,8 +120,7 @@ export const OracleIntegrityStaking = ({
             </div>
           ),
         }),
-      }}
-    >
+      }}>
       {self && api.type == ApiStateType.Loaded && (
         <SelfStaking
           api={api}
@@ -135,8 +134,7 @@ export const OracleIntegrityStaking = ({
         className={clsx(
           "relative -mx-4 overflow-hidden border-t border-neutral-600/50 pt-6 sm:-mx-8 lg:mt-10",
           { "mt-6 sm:mt-12": self === undefined },
-        )}
-      >
+        )}>
         <PublisherList
           api={api}
           currentEpoch={currentEpoch}
@@ -192,8 +190,7 @@ const SelfStaking = ({
               <PublisherIdentity
                 truncatedClassName="2xl:hidden"
                 fullClassName="hidden 2xl:inline"
-                className="opacity-60"
-              >
+                className="opacity-60">
                 {self}
               </PublisherIdentity>
             </div>
@@ -220,8 +217,7 @@ const SelfStaking = ({
                     </MenuItem>
                     <MenuItem
                       href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
-                      target="_blank"
-                    >
+                      target="_blank">
                       Data Publisher Guide
                     </MenuItem>
                   </Section>
@@ -231,31 +227,27 @@ const SelfStaking = ({
                 href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
                 target="_blank"
                 size="small"
-                className="hidden lg:block"
-              >
+                className="hidden lg:block">
                 Publisher Guide
               </LinkButton>
               <Button
                 size="small"
                 onPress={openPublisherFaq}
-                className="hidden lg:block"
-              >
+                className="hidden lg:block">
                 Publisher FAQ
               </Button>
               <Button
                 variant="secondary"
                 size="small"
                 onPress={openReassignStakeAccount}
-                className="hidden lg:block"
-              >
+                className="hidden lg:block">
                 Reassign Stake Account
               </Button>
               <Button
                 variant="secondary"
                 size="small"
                 onPress={openOptOut}
-                className="hidden lg:block"
-              >
+                className="hidden lg:block">
                 Opt Out of Rewards
               </Button>
             </div>
@@ -360,8 +352,7 @@ const ReassignStakeAccount = ({
           </PublisherIdentity>
         </>
       }
-      {...props}
-    >
+      {...props}>
       {({ close }) => (
         <ReassignStakeAccountForm
           api={api}
@@ -438,8 +429,7 @@ const ReassignStakeAccountForm = ({
         onChange={setValue}
         validationBehavior="aria"
         name="publicKey"
-        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
-      >
+        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96">
         <div className="flex flex-row items-center justify-between">
           <Label>New stake account public key</Label>
         </div>
@@ -460,8 +450,7 @@ const ReassignStakeAccountForm = ({
         isLoading={state.type === UseAsyncStateType.Running}
         isDisabled={
           key === undefined || state.type === UseAsyncStateType.Complete
-        }
-      >
+        }>
         <ReassignStakeAccountButtonContents value={value} publicKey={key} />
       </Button>
     </Form>
@@ -570,8 +559,7 @@ const OptOutModalContents = ({
           size="noshrink"
           isLoading={state.type === UseAsyncStateType.Running}
           isDisabled={state.type === UseAsyncStateType.Complete}
-          onPress={doOptOut}
-        >
+          onPress={doOptOut}>
           Yes, opt me out
         </Button>
       </div>
@@ -707,8 +695,7 @@ const PublisherList = ({
             value={search}
             onChange={updateSearch}
             aria-label="Search"
-            className="group relative w-full md:max-w-96 xl:max-w-64 2xl:max-w-96"
-          >
+            className="group relative w-full md:max-w-96 xl:max-w-64 2xl:max-w-96">
             <Input
               className="group-focused:ring-0 group-focused:border-pythpurple-400 group-focused:outline-none w-full truncate border border-pythpurple-600 bg-pythpurple-600/10 py-2 pl-10 pr-8 focus:border-pythpurple-400 focus:outline-none focus:ring-0 focus-visible:border-pythpurple-400 focus-visible:outline-none focus-visible:ring-0 search-cancel:appearance-none search-decoration:appearance-none"
               placeholder="Search"
@@ -777,32 +764,28 @@ const PublisherList = ({
                   sort={sort}
                   setSort={updateSort}
                   alignment="left"
-                  className="pl-4 sm:pl-10"
-                >
+                  className="pl-4 sm:pl-10">
                   Publisher
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.SelfStakeAscending}
                   desc={SortOption.SelfStakeDescending}
                   sort={sort}
-                  setSort={updateSort}
-                >
+                  setSort={updateSort}>
                   {"Publisher's stake"}
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.RemainingPoolAscending}
                   desc={SortOption.RemainingPoolDescending}
                   sort={sort}
-                  setSort={updateSort}
-                >
+                  setSort={updateSort}>
                   Pool
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.ApyAscending}
                   desc={SortOption.ApyDescending}
                   sort={sort}
-                  setSort={updateSort}
-                >
+                  setSort={updateSort}>
                   Estimated next APY
                 </SortablePublisherTableHeader>
                 <PublisherTableHeader>Historical APY</PublisherTableHeader>
@@ -810,16 +793,14 @@ const PublisherList = ({
                   asc={SortOption.NumberOfFeedsAscending}
                   desc={SortOption.NumberOfFeedsDescending}
                   sort={sort}
-                  setSort={updateSort}
-                >
+                  setSort={updateSort}>
                   Number of feeds
                 </SortablePublisherTableHeader>
                 <SortablePublisherTableHeader
                   asc={SortOption.QualityRankingAscending}
                   desc={SortOption.QualityRankingDescending}
                   sort={sort}
-                  setSort={updateSort}
-                >
+                  setSort={updateSort}>
                   Quality ranking
                 </SortablePublisherTableHeader>
                 <PublisherTableHeader className="pr-4 sm:pr-10" />
@@ -888,8 +869,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
             }}
             size="nopad"
             variant="secondary"
-            className="size-8"
-          >
+            className="size-8">
             <ChevronDoubleLeftIcon className="size-4" />
           </Button>
         </li>
@@ -898,8 +878,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
         page === currentPage ? (
           <li
             key={page}
-            className="grid size-8 place-content-center border border-pythpurple-600 bg-pythpurple-600"
-          >
+            className="grid size-8 place-content-center border border-pythpurple-600 bg-pythpurple-600">
             {page}
           </li>
         ) : (
@@ -911,8 +890,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
               }}
               size="nopad"
               variant="secondary"
-              className="size-8"
-            >
+              className="size-8">
               {page}
             </Button>
           </li>
@@ -926,8 +904,7 @@ const Paginator = ({ currentPage, numPages, onPageChange }: PaginatorProps) => {
             }}
             size="nopad"
             variant="secondary"
-            className="size-8"
-          >
+            className="size-8">
             <ChevronDoubleRightIcon className="size-4" />
           </Button>
         </li>
@@ -1154,8 +1131,7 @@ const SortablePublisherTableHeader = ({
         {...((sort === asc || sort === desc) && { "data-sorted": true })}
         {...(sort === desc && { "data-descending": true })}
         data-alignment={alignment ?? "center"}
-        {...props}
-      >
+        {...props}>
         <span className="align-middle">{children}</span>
         <ChevronUpIcon className="ml-2 hidden size-3 transition-transform group-data-[sorted]:inline group-data-[descending]:rotate-180" />
       </PublisherTableHeader>
@@ -1269,8 +1245,7 @@ const Publisher = ({
             className="font-semibold"
             truncatedClassName="md:hidden"
             fullClassName="hidden md:inline"
-            withNameClassName="flex flex-col items-start"
-          >
+            withNameClassName="flex flex-col items-start">
             {publisher}
           </PublisherIdentity>
           <StakeToPublisherButton
@@ -1289,8 +1264,7 @@ const Publisher = ({
           isSelf
             ? "flex flex-row-reverse items-center justify-between"
             : "xs:flex xs:flex-row-reverse xs:items-center xs:justify-between",
-        )}
-      >
+        )}>
         {!isSelf && (
           <div className="flex grow flex-col gap-2 xs:items-end">
             <UtilizationMeter
@@ -1315,8 +1289,7 @@ const Publisher = ({
             isSelf
               ? "lg:flex lg:flex-row lg:gap-6"
               : "md:grid md:grid-cols-2 lg:gap-x-10 xl:flex xl:flex-row xl:gap-8",
-          )}
-        >
+          )}>
           {!isSelf && (
             <div className="flex flex-row items-center gap-2">
               <dt className="font-semibold">{"Publisher's Stake:"}</dt>
@@ -1370,8 +1343,7 @@ const Publisher = ({
               <PublisherIdentity
                 truncatedClassName="3xl:hidden"
                 fullClassName="hidden 3xl:inline"
-                withNameClassName="flex flex-col items-start"
-              >
+                withNameClassName="flex flex-col items-start">
                 {publisher}
               </PublisherIdentity>
             </PublisherTableCell>
@@ -1403,8 +1375,7 @@ const Publisher = ({
           {publisher.qualityRanking === 0 ? "-" : publisher.qualityRanking}
         </PublisherTableCell>
         <PublisherTableCell
-          className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}
-        >
+          className={clsx("text-right", { "pr-4 sm:pr-10": !isSelf })}>
           <StakeToPublisherButton
             api={api}
             currentEpoch={currentEpoch}
@@ -1472,8 +1443,7 @@ const UtilizationMeter = ({ publisher, ...props }: UtilizationMeterProps) => {
             <div
               className={clsx("isolate text-sm font-medium", {
                 "mix-blend-difference": percentage < 100,
-              })}
-            >
+              })}>
               {Number.isNaN(utilizationPercent)
                 ? "Inactive Pool"
                 : `${utilizationPercent.toString()}%`}
@@ -1530,8 +1500,7 @@ const YourPositionsTable = ({
             <td
               className={clsx("text-right", {
                 "pb-2": staked !== undefined,
-              })}
-            >
+              })}>
               <TransferButton
                 size="small"
                 variant="secondary"
@@ -1584,8 +1553,7 @@ const YourPositionsTable = ({
                 actionName="Unstake"
                 successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
                 max={staked}
-                transfer={unstake}
-              >
+                transfer={unstake}>
                 <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
               </TransferButton>
             </td>
@@ -1636,8 +1604,7 @@ const StakeToPublisherButton = ({
       actionName="Stake"
       max={availableToStake}
       transfer={delegate}
-      successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
-    >
+      successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch">
       {(amount) => (
         <>
           <div className="mb-8 flex flex-row items-center justify-between text-sm">
@@ -1646,8 +1613,7 @@ const StakeToPublisherButton = ({
               className="font-medium"
               isSelf={isSelf}
               publisher={publisher}
-              yieldRate={yieldRate}
-            >
+              yieldRate={yieldRate}>
               {amount.type === AmountType.Valid ||
               amount.type === AmountType.AboveMax
                 ? amount.amount
@@ -1750,8 +1716,7 @@ const PublisherKey = ({
 }: PublisherKeyProps) => (
   <CopyButton
     text={children.publicKey.toBase58()}
-    {...(className && { className })}
-  >
+    {...(className && { className })}>
     {fullClassName && (
       <code className={fullClassName}>{children.publicKey.toBase58()}</code>
     )}

@@ -8,15 +8,14 @@ import { fileURLToPath } from "node:url";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
+import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
-import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
 
 const LAZER_CACHE_FILE = ".cache-upgrade-evm-lazer-contract";
 

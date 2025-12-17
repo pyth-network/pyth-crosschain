@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Contract, Sender } from "@ton/core";
 import {
-  Address,
+  type Address,
   beginCell,
-  Cell,
+  type Cell,
   Dictionary,
   SendMode,
   toNano,

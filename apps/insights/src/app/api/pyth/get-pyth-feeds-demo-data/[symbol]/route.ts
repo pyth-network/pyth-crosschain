@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../pyth-feed-demo-data/fetch-historical-data-from-db";
 import { GetPythFeedsDemoDataRequestSchema } from "../../../../../schemas/pyth/pyth-pro-demo-schema";

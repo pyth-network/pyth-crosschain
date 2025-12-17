@@ -7,12 +7,12 @@ import {
 } from "@headlessui/react";
 import {
   ChevronDownIcon,
-  MagnifyingGlassIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import type { ReactNode, ChangeEvent } from "react";
-import { useState, useCallback, useMemo } from "react";
+import type { ChangeEvent, ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Accordion, AccordionButton, AccordionPanel } from "../Accordion";
 
@@ -57,8 +57,7 @@ export const Select = <T,>({
       value={value}
       onChange={onChange}
       as="div"
-      className={clsx("relative", className)}
-    >
+      className={clsx("relative", className)}>
       {renderButton ? (
         renderButton(value)
       ) : (
@@ -76,8 +75,7 @@ export const Select = <T,>({
           className={clsx(
             "absolute right-0 top-full z-50 mt-1 min-w-[var(--button-width)] overflow-hidden rounded-lg border border-neutral-400 bg-neutral-100 text-sm font-medium shadow focus-visible:border-pythpurple-600 focus-visible:outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:shadow-white/20 dark:focus-visible:border-pythpurple-400",
             { "py-1": "options" in props },
-          )}
-        >
+          )}>
           <div className="max-h-80 overflow-y-auto">
             {filter && (
               <div className="sticky top-0 z-20 h-10 w-full bg-neutral-100 p-2 dark:bg-neutral-800">
@@ -150,8 +148,7 @@ const OptionGroup = <T,>({
         className={clsx(
           "group sticky z-10 flex w-full flex-row items-center gap-1 bg-neutral-200 px-2 py-1 text-left text-xs font-bold hover:bg-neutral-300 focus-visible:bg-neutral-300 focus-visible:outline-none dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:focus-visible:bg-neutral-500",
           filter ? "top-10" : "top-0",
-        )}
-      >
+        )}>
         <ChevronRightIcon className="size-3 fill-pythpurple-950 transition-transform group-data-[open]:rotate-90 dark:fill-white" />
         <div>{name}</div>
       </AccordionButton>
@@ -173,8 +170,7 @@ const Options = <T,>({ options, renderOption }: OptionsProps<T>) =>
     <ListboxOption
       key={i}
       value={option}
-      className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 px-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400"
-    >
+      className="group flex w-32 min-w-full cursor-pointer flex-row items-center gap-3 px-2 py-1 data-[focus]:bg-neutral-300 data-[selected]:text-pythpurple-600 dark:data-[focus]:bg-neutral-700 dark:data-[selected]:text-pythpurple-400">
       {renderOption(option)}
     </ListboxOption>
   ));

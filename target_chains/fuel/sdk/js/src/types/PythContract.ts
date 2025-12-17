@@ -20,2159 +20,1729 @@ import type {
   FunctionFragment,
   InvokeFunction,
   StrSlice,
-} from "fuels";
+} from 'fuels';
 
 import type { Enum, Vec } from "./common";
 
-export enum AccessErrorInput {
-  NotOwner = "NotOwner",
-}
-export enum AccessErrorOutput {
-  NotOwner = "NotOwner",
-}
-export enum GovernanceActionInput {
-  UpgradeContract = "UpgradeContract",
-  AuthorizeGovernanceDataSourceTransfer = "AuthorizeGovernanceDataSourceTransfer",
-  SetDataSources = "SetDataSources",
-  SetFee = "SetFee",
-  SetValidPeriod = "SetValidPeriod",
-  RequestGovernanceDataSourceTransfer = "RequestGovernanceDataSourceTransfer",
-  Invalid = "Invalid",
-}
-export enum GovernanceActionOutput {
-  UpgradeContract = "UpgradeContract",
-  AuthorizeGovernanceDataSourceTransfer = "AuthorizeGovernanceDataSourceTransfer",
-  SetDataSources = "SetDataSources",
-  SetFee = "SetFee",
-  SetValidPeriod = "SetValidPeriod",
-  RequestGovernanceDataSourceTransfer = "RequestGovernanceDataSourceTransfer",
-  Invalid = "Invalid",
-}
-export enum GovernanceModuleInput {
-  Executor = "Executor",
-  Target = "Target",
-  EvmExecutor = "EvmExecutor",
-  StacksTarget = "StacksTarget",
-  Invalid = "Invalid",
-}
-export enum GovernanceModuleOutput {
-  Executor = "Executor",
-  Target = "Target",
-  EvmExecutor = "EvmExecutor",
-  StacksTarget = "StacksTarget",
-  Invalid = "Invalid",
-}
-export type IdentityInput = Enum<{
-  Address: AddressInput;
-  ContractId: ContractIdInput;
-}>;
-export type IdentityOutput = Enum<{
-  Address: AddressOutput;
-  ContractId: ContractIdOutput;
-}>;
-export enum InitializationErrorInput {
-  CannotReinitialized = "CannotReinitialized",
-}
-export enum InitializationErrorOutput {
-  CannotReinitialized = "CannotReinitialized",
-}
-export enum PythErrorInput {
-  FeesCanOnlyBePaidInTheBaseAsset = "FeesCanOnlyBePaidInTheBaseAsset",
-  GuardianSetNotFound = "GuardianSetNotFound",
-  IncorrectMessageType = "IncorrectMessageType",
-  InsufficientFee = "InsufficientFee",
-  InvalidArgument = "InvalidArgument",
-  InvalidAttestationSize = "InvalidAttestationSize",
-  InvalidDataSourcesLength = "InvalidDataSourcesLength",
-  InvalidExponent = "InvalidExponent",
-  InvalidGovernanceDataSource = "InvalidGovernanceDataSource",
-  InvalidGovernanceAction = "InvalidGovernanceAction",
-  InvalidGovernanceMessage = "InvalidGovernanceMessage",
-  InvalidGovernanceModule = "InvalidGovernanceModule",
-  InvalidGovernanceTarget = "InvalidGovernanceTarget",
-  InvalidHeaderSize = "InvalidHeaderSize",
-  InvalidMagic = "InvalidMagic",
-  InvalidMajorVersion = "InvalidMajorVersion",
-  InvalidMinorVersion = "InvalidMinorVersion",
-  InvalidPayloadId = "InvalidPayloadId",
-  InvalidPayloadLength = "InvalidPayloadLength",
-  InvalidPriceFeedDataLength = "InvalidPriceFeedDataLength",
-  InvalidProof = "InvalidProof",
-  InvalidUpdateData = "InvalidUpdateData",
-  InvalidUpdateDataLength = "InvalidUpdateDataLength",
-  InvalidUpdateDataSource = "InvalidUpdateDataSource",
-  InvalidUpgradeModule = "InvalidUpgradeModule",
-  InvalidWormholeAddressToSet = "InvalidWormholeAddressToSet",
-  LengthOfPriceFeedIdsAndPublishTimesMustMatch = "LengthOfPriceFeedIdsAndPublishTimesMustMatch",
-  NewGuardianSetIsEmpty = "NewGuardianSetIsEmpty",
-  NumberOfUpdatesIrretrievable = "NumberOfUpdatesIrretrievable",
-  OldGovernanceMessage = "OldGovernanceMessage",
-  OutdatedPrice = "OutdatedPrice",
-  PriceFeedNotFound = "PriceFeedNotFound",
-  PriceFeedNotFoundWithinRange = "PriceFeedNotFoundWithinRange",
-  WormholeGovernanceActionNotFound = "WormholeGovernanceActionNotFound",
-}
-export enum PythErrorOutput {
-  FeesCanOnlyBePaidInTheBaseAsset = "FeesCanOnlyBePaidInTheBaseAsset",
-  GuardianSetNotFound = "GuardianSetNotFound",
-  IncorrectMessageType = "IncorrectMessageType",
-  InsufficientFee = "InsufficientFee",
-  InvalidArgument = "InvalidArgument",
-  InvalidAttestationSize = "InvalidAttestationSize",
-  InvalidDataSourcesLength = "InvalidDataSourcesLength",
-  InvalidExponent = "InvalidExponent",
-  InvalidGovernanceDataSource = "InvalidGovernanceDataSource",
-  InvalidGovernanceAction = "InvalidGovernanceAction",
-  InvalidGovernanceMessage = "InvalidGovernanceMessage",
-  InvalidGovernanceModule = "InvalidGovernanceModule",
-  InvalidGovernanceTarget = "InvalidGovernanceTarget",
-  InvalidHeaderSize = "InvalidHeaderSize",
-  InvalidMagic = "InvalidMagic",
-  InvalidMajorVersion = "InvalidMajorVersion",
-  InvalidMinorVersion = "InvalidMinorVersion",
-  InvalidPayloadId = "InvalidPayloadId",
-  InvalidPayloadLength = "InvalidPayloadLength",
-  InvalidPriceFeedDataLength = "InvalidPriceFeedDataLength",
-  InvalidProof = "InvalidProof",
-  InvalidUpdateData = "InvalidUpdateData",
-  InvalidUpdateDataLength = "InvalidUpdateDataLength",
-  InvalidUpdateDataSource = "InvalidUpdateDataSource",
-  InvalidUpgradeModule = "InvalidUpgradeModule",
-  InvalidWormholeAddressToSet = "InvalidWormholeAddressToSet",
-  LengthOfPriceFeedIdsAndPublishTimesMustMatch = "LengthOfPriceFeedIdsAndPublishTimesMustMatch",
-  NewGuardianSetIsEmpty = "NewGuardianSetIsEmpty",
-  NumberOfUpdatesIrretrievable = "NumberOfUpdatesIrretrievable",
-  OldGovernanceMessage = "OldGovernanceMessage",
-  OutdatedPrice = "OutdatedPrice",
-  PriceFeedNotFound = "PriceFeedNotFound",
-  PriceFeedNotFoundWithinRange = "PriceFeedNotFoundWithinRange",
-  WormholeGovernanceActionNotFound = "WormholeGovernanceActionNotFound",
-}
-export type StateInput = Enum<{
-  Uninitialized: undefined;
-  Initialized: IdentityInput;
-  Revoked: undefined;
-}>;
-export type StateOutput = Enum<{
-  Uninitialized: void;
-  Initialized: IdentityOutput;
-  Revoked: void;
-}>;
-export enum WormholeErrorInput {
-  ConsistencyLevelIrretrievable = "ConsistencyLevelIrretrievable",
-  GovernanceActionAlreadyConsumed = "GovernanceActionAlreadyConsumed",
-  GuardianIndexIrretrievable = "GuardianIndexIrretrievable",
-  GuardianSetHasExpired = "GuardianSetHasExpired",
-  GuardianSetKeyIrretrievable = "GuardianSetKeyIrretrievable",
-  GuardianSetKeysLengthNotEqual = "GuardianSetKeysLengthNotEqual",
-  GuardianSetNotFound = "GuardianSetNotFound",
-  InvalidGovernanceAction = "InvalidGovernanceAction",
-  InvalidGovernanceChain = "InvalidGovernanceChain",
-  InvalidGovernanceContract = "InvalidGovernanceContract",
-  InvalidGuardianSet = "InvalidGuardianSet",
-  InvalidGuardianSetKeysLength = "InvalidGuardianSetKeysLength",
-  InvalidGuardianSetUpgrade = "InvalidGuardianSetUpgrade",
-  InvalidGuardianSetUpgradeLength = "InvalidGuardianSetUpgradeLength",
-  InvalidModule = "InvalidModule",
-  InvalidPayloadLength = "InvalidPayloadLength",
-  InvalidSignatureLength = "InvalidSignatureLength",
-  InvalidUpdateDataSource = "InvalidUpdateDataSource",
-  NewGuardianSetIsEmpty = "NewGuardianSetIsEmpty",
-  NewGuardianSetIndexIsInvalid = "NewGuardianSetIndexIsInvalid",
-  NoQuorum = "NoQuorum",
-  NotSignedByCurrentGuardianSet = "NotSignedByCurrentGuardianSet",
-  SignatureInvalid = "SignatureInvalid",
-  SignatureIndicesNotAscending = "SignatureIndicesNotAscending",
-  SignatureVIrretrievable = "SignatureVIrretrievable",
-  SignersLengthIrretrievable = "SignersLengthIrretrievable",
-  VMSignatureInvalid = "VMSignatureInvalid",
-  VMVersionIncompatible = "VMVersionIncompatible",
-}
-export enum WormholeErrorOutput {
-  ConsistencyLevelIrretrievable = "ConsistencyLevelIrretrievable",
-  GovernanceActionAlreadyConsumed = "GovernanceActionAlreadyConsumed",
-  GuardianIndexIrretrievable = "GuardianIndexIrretrievable",
-  GuardianSetHasExpired = "GuardianSetHasExpired",
-  GuardianSetKeyIrretrievable = "GuardianSetKeyIrretrievable",
-  GuardianSetKeysLengthNotEqual = "GuardianSetKeysLengthNotEqual",
-  GuardianSetNotFound = "GuardianSetNotFound",
-  InvalidGovernanceAction = "InvalidGovernanceAction",
-  InvalidGovernanceChain = "InvalidGovernanceChain",
-  InvalidGovernanceContract = "InvalidGovernanceContract",
-  InvalidGuardianSet = "InvalidGuardianSet",
-  InvalidGuardianSetKeysLength = "InvalidGuardianSetKeysLength",
-  InvalidGuardianSetUpgrade = "InvalidGuardianSetUpgrade",
-  InvalidGuardianSetUpgradeLength = "InvalidGuardianSetUpgradeLength",
-  InvalidModule = "InvalidModule",
-  InvalidPayloadLength = "InvalidPayloadLength",
-  InvalidSignatureLength = "InvalidSignatureLength",
-  InvalidUpdateDataSource = "InvalidUpdateDataSource",
-  NewGuardianSetIsEmpty = "NewGuardianSetIsEmpty",
-  NewGuardianSetIndexIsInvalid = "NewGuardianSetIndexIsInvalid",
-  NoQuorum = "NoQuorum",
-  NotSignedByCurrentGuardianSet = "NotSignedByCurrentGuardianSet",
-  SignatureInvalid = "SignatureInvalid",
-  SignatureIndicesNotAscending = "SignatureIndicesNotAscending",
-  SignatureVIrretrievable = "SignatureVIrretrievable",
-  SignersLengthIrretrievable = "SignersLengthIrretrievable",
-  VMSignatureInvalid = "VMSignatureInvalid",
-  VMVersionIncompatible = "VMVersionIncompatible",
-}
+export enum AccessErrorInput { NotOwner = 'NotOwner' };
+export enum AccessErrorOutput { NotOwner = 'NotOwner' };
+export enum GovernanceActionInput { UpgradeContract = 'UpgradeContract', AuthorizeGovernanceDataSourceTransfer = 'AuthorizeGovernanceDataSourceTransfer', SetDataSources = 'SetDataSources', SetFee = 'SetFee', SetValidPeriod = 'SetValidPeriod', RequestGovernanceDataSourceTransfer = 'RequestGovernanceDataSourceTransfer', Invalid = 'Invalid' };
+export enum GovernanceActionOutput { UpgradeContract = 'UpgradeContract', AuthorizeGovernanceDataSourceTransfer = 'AuthorizeGovernanceDataSourceTransfer', SetDataSources = 'SetDataSources', SetFee = 'SetFee', SetValidPeriod = 'SetValidPeriod', RequestGovernanceDataSourceTransfer = 'RequestGovernanceDataSourceTransfer', Invalid = 'Invalid' };
+export enum GovernanceModuleInput { Executor = 'Executor', Target = 'Target', EvmExecutor = 'EvmExecutor', StacksTarget = 'StacksTarget', Invalid = 'Invalid' };
+export enum GovernanceModuleOutput { Executor = 'Executor', Target = 'Target', EvmExecutor = 'EvmExecutor', StacksTarget = 'StacksTarget', Invalid = 'Invalid' };
+export type IdentityInput = Enum<{ Address: AddressInput, ContractId: ContractIdInput }>;
+export type IdentityOutput = Enum<{ Address: AddressOutput, ContractId: ContractIdOutput }>;
+export enum InitializationErrorInput { CannotReinitialized = 'CannotReinitialized' };
+export enum InitializationErrorOutput { CannotReinitialized = 'CannotReinitialized' };
+export enum PythErrorInput { FeesCanOnlyBePaidInTheBaseAsset = 'FeesCanOnlyBePaidInTheBaseAsset', GuardianSetNotFound = 'GuardianSetNotFound', IncorrectMessageType = 'IncorrectMessageType', InsufficientFee = 'InsufficientFee', InvalidArgument = 'InvalidArgument', InvalidAttestationSize = 'InvalidAttestationSize', InvalidDataSourcesLength = 'InvalidDataSourcesLength', InvalidExponent = 'InvalidExponent', InvalidGovernanceDataSource = 'InvalidGovernanceDataSource', InvalidGovernanceAction = 'InvalidGovernanceAction', InvalidGovernanceMessage = 'InvalidGovernanceMessage', InvalidGovernanceModule = 'InvalidGovernanceModule', InvalidGovernanceTarget = 'InvalidGovernanceTarget', InvalidHeaderSize = 'InvalidHeaderSize', InvalidMagic = 'InvalidMagic', InvalidMajorVersion = 'InvalidMajorVersion', InvalidMinorVersion = 'InvalidMinorVersion', InvalidPayloadId = 'InvalidPayloadId', InvalidPayloadLength = 'InvalidPayloadLength', InvalidPriceFeedDataLength = 'InvalidPriceFeedDataLength', InvalidProof = 'InvalidProof', InvalidUpdateData = 'InvalidUpdateData', InvalidUpdateDataLength = 'InvalidUpdateDataLength', InvalidUpdateDataSource = 'InvalidUpdateDataSource', InvalidUpgradeModule = 'InvalidUpgradeModule', InvalidWormholeAddressToSet = 'InvalidWormholeAddressToSet', LengthOfPriceFeedIdsAndPublishTimesMustMatch = 'LengthOfPriceFeedIdsAndPublishTimesMustMatch', NewGuardianSetIsEmpty = 'NewGuardianSetIsEmpty', NumberOfUpdatesIrretrievable = 'NumberOfUpdatesIrretrievable', OldGovernanceMessage = 'OldGovernanceMessage', OutdatedPrice = 'OutdatedPrice', PriceFeedNotFound = 'PriceFeedNotFound', PriceFeedNotFoundWithinRange = 'PriceFeedNotFoundWithinRange', WormholeGovernanceActionNotFound = 'WormholeGovernanceActionNotFound' };
+export enum PythErrorOutput { FeesCanOnlyBePaidInTheBaseAsset = 'FeesCanOnlyBePaidInTheBaseAsset', GuardianSetNotFound = 'GuardianSetNotFound', IncorrectMessageType = 'IncorrectMessageType', InsufficientFee = 'InsufficientFee', InvalidArgument = 'InvalidArgument', InvalidAttestationSize = 'InvalidAttestationSize', InvalidDataSourcesLength = 'InvalidDataSourcesLength', InvalidExponent = 'InvalidExponent', InvalidGovernanceDataSource = 'InvalidGovernanceDataSource', InvalidGovernanceAction = 'InvalidGovernanceAction', InvalidGovernanceMessage = 'InvalidGovernanceMessage', InvalidGovernanceModule = 'InvalidGovernanceModule', InvalidGovernanceTarget = 'InvalidGovernanceTarget', InvalidHeaderSize = 'InvalidHeaderSize', InvalidMagic = 'InvalidMagic', InvalidMajorVersion = 'InvalidMajorVersion', InvalidMinorVersion = 'InvalidMinorVersion', InvalidPayloadId = 'InvalidPayloadId', InvalidPayloadLength = 'InvalidPayloadLength', InvalidPriceFeedDataLength = 'InvalidPriceFeedDataLength', InvalidProof = 'InvalidProof', InvalidUpdateData = 'InvalidUpdateData', InvalidUpdateDataLength = 'InvalidUpdateDataLength', InvalidUpdateDataSource = 'InvalidUpdateDataSource', InvalidUpgradeModule = 'InvalidUpgradeModule', InvalidWormholeAddressToSet = 'InvalidWormholeAddressToSet', LengthOfPriceFeedIdsAndPublishTimesMustMatch = 'LengthOfPriceFeedIdsAndPublishTimesMustMatch', NewGuardianSetIsEmpty = 'NewGuardianSetIsEmpty', NumberOfUpdatesIrretrievable = 'NumberOfUpdatesIrretrievable', OldGovernanceMessage = 'OldGovernanceMessage', OutdatedPrice = 'OutdatedPrice', PriceFeedNotFound = 'PriceFeedNotFound', PriceFeedNotFoundWithinRange = 'PriceFeedNotFoundWithinRange', WormholeGovernanceActionNotFound = 'WormholeGovernanceActionNotFound' };
+export type StateInput = Enum<{ Uninitialized: undefined, Initialized: IdentityInput, Revoked: undefined }>;
+export type StateOutput = Enum<{ Uninitialized: void, Initialized: IdentityOutput, Revoked: void }>;
+export enum WormholeErrorInput { ConsistencyLevelIrretrievable = 'ConsistencyLevelIrretrievable', GovernanceActionAlreadyConsumed = 'GovernanceActionAlreadyConsumed', GuardianIndexIrretrievable = 'GuardianIndexIrretrievable', GuardianSetHasExpired = 'GuardianSetHasExpired', GuardianSetKeyIrretrievable = 'GuardianSetKeyIrretrievable', GuardianSetKeysLengthNotEqual = 'GuardianSetKeysLengthNotEqual', GuardianSetNotFound = 'GuardianSetNotFound', InvalidGovernanceAction = 'InvalidGovernanceAction', InvalidGovernanceChain = 'InvalidGovernanceChain', InvalidGovernanceContract = 'InvalidGovernanceContract', InvalidGuardianSet = 'InvalidGuardianSet', InvalidGuardianSetKeysLength = 'InvalidGuardianSetKeysLength', InvalidGuardianSetUpgrade = 'InvalidGuardianSetUpgrade', InvalidGuardianSetUpgradeLength = 'InvalidGuardianSetUpgradeLength', InvalidModule = 'InvalidModule', InvalidPayloadLength = 'InvalidPayloadLength', InvalidSignatureLength = 'InvalidSignatureLength', InvalidUpdateDataSource = 'InvalidUpdateDataSource', NewGuardianSetIsEmpty = 'NewGuardianSetIsEmpty', NewGuardianSetIndexIsInvalid = 'NewGuardianSetIndexIsInvalid', NoQuorum = 'NoQuorum', NotSignedByCurrentGuardianSet = 'NotSignedByCurrentGuardianSet', SignatureInvalid = 'SignatureInvalid', SignatureIndicesNotAscending = 'SignatureIndicesNotAscending', SignatureVIrretrievable = 'SignatureVIrretrievable', SignersLengthIrretrievable = 'SignersLengthIrretrievable', VMSignatureInvalid = 'VMSignatureInvalid', VMVersionIncompatible = 'VMVersionIncompatible' };
+export enum WormholeErrorOutput { ConsistencyLevelIrretrievable = 'ConsistencyLevelIrretrievable', GovernanceActionAlreadyConsumed = 'GovernanceActionAlreadyConsumed', GuardianIndexIrretrievable = 'GuardianIndexIrretrievable', GuardianSetHasExpired = 'GuardianSetHasExpired', GuardianSetKeyIrretrievable = 'GuardianSetKeyIrretrievable', GuardianSetKeysLengthNotEqual = 'GuardianSetKeysLengthNotEqual', GuardianSetNotFound = 'GuardianSetNotFound', InvalidGovernanceAction = 'InvalidGovernanceAction', InvalidGovernanceChain = 'InvalidGovernanceChain', InvalidGovernanceContract = 'InvalidGovernanceContract', InvalidGuardianSet = 'InvalidGuardianSet', InvalidGuardianSetKeysLength = 'InvalidGuardianSetKeysLength', InvalidGuardianSetUpgrade = 'InvalidGuardianSetUpgrade', InvalidGuardianSetUpgradeLength = 'InvalidGuardianSetUpgradeLength', InvalidModule = 'InvalidModule', InvalidPayloadLength = 'InvalidPayloadLength', InvalidSignatureLength = 'InvalidSignatureLength', InvalidUpdateDataSource = 'InvalidUpdateDataSource', NewGuardianSetIsEmpty = 'NewGuardianSetIsEmpty', NewGuardianSetIndexIsInvalid = 'NewGuardianSetIndexIsInvalid', NoQuorum = 'NoQuorum', NotSignedByCurrentGuardianSet = 'NotSignedByCurrentGuardianSet', SignatureInvalid = 'SignatureInvalid', SignatureIndicesNotAscending = 'SignatureIndicesNotAscending', SignatureVIrretrievable = 'SignatureVIrretrievable', SignersLengthIrretrievable = 'SignersLengthIrretrievable', VMSignatureInvalid = 'VMSignatureInvalid', VMVersionIncompatible = 'VMVersionIncompatible' };
 
 export type AddressInput = { bits: string };
 export type AddressOutput = AddressInput;
-export type AuthorizeGovernanceDataSourceTransferPayloadInput = {
-  claim_vaa: Bytes;
-};
-export type AuthorizeGovernanceDataSourceTransferPayloadOutput =
-  AuthorizeGovernanceDataSourceTransferPayloadInput;
+export type AuthorizeGovernanceDataSourceTransferPayloadInput = { claim_vaa: Bytes };
+export type AuthorizeGovernanceDataSourceTransferPayloadOutput = AuthorizeGovernanceDataSourceTransferPayloadInput;
 export type ConstructedEventInput = { guardian_set_index: BigNumberish };
 export type ConstructedEventOutput = { guardian_set_index: number };
 export type ContractIdInput = { bits: string };
 export type ContractIdOutput = ContractIdInput;
-export type DataSourceInput = {
-  chain_id: BigNumberish;
-  emitter_address: string;
-};
-export type DataSourceOutput = { chain_id: number; emitter_address: string };
-export type DataSourcesSetEventInput = {
-  old_data_sources: Vec<DataSourceInput>;
-  new_data_sources: Vec<DataSourceInput>;
-};
-export type DataSourcesSetEventOutput = {
-  old_data_sources: Vec<DataSourceOutput>;
-  new_data_sources: Vec<DataSourceOutput>;
-};
-export type FeeSetEventInput = { old_fee: BigNumberish; new_fee: BigNumberish };
-export type FeeSetEventOutput = { old_fee: BN; new_fee: BN };
-export type GovernanceDataSourceSetEventInput = {
-  old_data_source: DataSourceInput;
-  new_data_source: DataSourceInput;
-  initial_sequence: BigNumberish;
-};
-export type GovernanceDataSourceSetEventOutput = {
-  old_data_source: DataSourceOutput;
-  new_data_source: DataSourceOutput;
-  initial_sequence: BN;
-};
-export type GovernanceInstructionInput = {
-  magic: BigNumberish;
-  module: GovernanceModuleInput;
-  action: GovernanceActionInput;
-  target_chain_id: BigNumberish;
-  payload: Bytes;
-};
-export type GovernanceInstructionOutput = {
-  magic: number;
-  module: GovernanceModuleOutput;
-  action: GovernanceActionOutput;
-  target_chain_id: number;
-  payload: Bytes;
-};
-export type GuardianSetInput = {
-  expiration_time: BigNumberish;
-  keys: Vec<string>;
-};
-export type GuardianSetOutput = { expiration_time: BN; keys: Vec<string> };
-export type NewGuardianSetEventInput = {
-  governance_action_hash: string;
-  new_guardian_set_index: BigNumberish;
-};
-export type NewGuardianSetEventOutput = {
-  governance_action_hash: string;
-  new_guardian_set_index: number;
-};
+export type DataSourceInput = { chain_id: BigNumberish, emitter_address: string };
+export type DataSourceOutput = { chain_id: number, emitter_address: string };
+export type DataSourcesSetEventInput = { old_data_sources: Vec<DataSourceInput>, new_data_sources: Vec<DataSourceInput> };
+export type DataSourcesSetEventOutput = { old_data_sources: Vec<DataSourceOutput>, new_data_sources: Vec<DataSourceOutput> };
+export type FeeSetEventInput = { old_fee: BigNumberish, new_fee: BigNumberish };
+export type FeeSetEventOutput = { old_fee: BN, new_fee: BN };
+export type GovernanceDataSourceSetEventInput = { old_data_source: DataSourceInput, new_data_source: DataSourceInput, initial_sequence: BigNumberish };
+export type GovernanceDataSourceSetEventOutput = { old_data_source: DataSourceOutput, new_data_source: DataSourceOutput, initial_sequence: BN };
+export type GovernanceInstructionInput = { magic: BigNumberish, module: GovernanceModuleInput, action: GovernanceActionInput, target_chain_id: BigNumberish, payload: Bytes };
+export type GovernanceInstructionOutput = { magic: number, module: GovernanceModuleOutput, action: GovernanceActionOutput, target_chain_id: number, payload: Bytes };
+export type GuardianSetInput = { expiration_time: BigNumberish, keys: Vec<string> };
+export type GuardianSetOutput = { expiration_time: BN, keys: Vec<string> };
+export type NewGuardianSetEventInput = { governance_action_hash: string, new_guardian_set_index: BigNumberish };
+export type NewGuardianSetEventOutput = { governance_action_hash: string, new_guardian_set_index: number };
 export type OwnershipRenouncedInput = { previous_owner: IdentityInput };
 export type OwnershipRenouncedOutput = { previous_owner: IdentityOutput };
 export type OwnershipSetInput = { new_owner: IdentityInput };
 export type OwnershipSetOutput = { new_owner: IdentityOutput };
-export type PriceInput = {
-  confidence: BigNumberish;
-  exponent: BigNumberish;
-  price: BigNumberish;
-  publish_time: BigNumberish;
-};
-export type PriceOutput = {
-  confidence: BN;
-  exponent: number;
-  price: BN;
-  publish_time: BN;
-};
-export type PriceFeedInput = {
-  ema_price: PriceInput;
-  id: string;
-  price: PriceInput;
-};
-export type PriceFeedOutput = {
-  ema_price: PriceOutput;
-  id: string;
-  price: PriceOutput;
-};
+export type PriceInput = { confidence: BigNumberish, exponent: BigNumberish, price: BigNumberish, publish_time: BigNumberish };
+export type PriceOutput = { confidence: BN, exponent: number, price: BN, publish_time: BN };
+export type PriceFeedInput = { ema_price: PriceInput, id: string, price: PriceInput };
+export type PriceFeedOutput = { ema_price: PriceOutput, id: string, price: PriceOutput };
 export type SetDataSourcesPayloadInput = { data_sources: Vec<DataSourceInput> };
-export type SetDataSourcesPayloadOutput = {
-  data_sources: Vec<DataSourceOutput>;
-};
+export type SetDataSourcesPayloadOutput = { data_sources: Vec<DataSourceOutput> };
 export type SetFeePayloadInput = { new_fee: BigNumberish };
 export type SetFeePayloadOutput = { new_fee: BN };
 export type SetValidPeriodPayloadInput = { new_valid_period: BigNumberish };
 export type SetValidPeriodPayloadOutput = { new_valid_period: BN };
-export type ValidPeriodSetEventInput = {
-  old_valid_period: BigNumberish;
-  new_valid_period: BigNumberish;
-};
-export type ValidPeriodSetEventOutput = {
-  old_valid_period: BN;
-  new_valid_period: BN;
-};
-export type WormholeVMInput = {
-  version: BigNumberish;
-  guardian_set_index: BigNumberish;
-  governance_action_hash: string;
-  timestamp: BigNumberish;
-  nonce: BigNumberish;
-  emitter_chain_id: BigNumberish;
-  emitter_address: string;
-  sequence: BigNumberish;
-  consistency_level: BigNumberish;
-  payload: Bytes;
-};
-export type WormholeVMOutput = {
-  version: number;
-  guardian_set_index: number;
-  governance_action_hash: string;
-  timestamp: number;
-  nonce: number;
-  emitter_chain_id: number;
-  emitter_address: string;
-  sequence: BN;
-  consistency_level: number;
-  payload: Bytes;
-};
+export type ValidPeriodSetEventInput = { old_valid_period: BigNumberish, new_valid_period: BigNumberish };
+export type ValidPeriodSetEventOutput = { old_valid_period: BN, new_valid_period: BN };
+export type WormholeVMInput = { version: BigNumberish, guardian_set_index: BigNumberish, governance_action_hash: string, timestamp: BigNumberish, nonce: BigNumberish, emitter_chain_id: BigNumberish, emitter_address: string, sequence: BigNumberish, consistency_level: BigNumberish, payload: Bytes };
+export type WormholeVMOutput = { version: number, guardian_set_index: number, governance_action_hash: string, timestamp: number, nonce: number, emitter_chain_id: number, emitter_address: string, sequence: BN, consistency_level: number, payload: Bytes };
 
 export type PythContractConfigurables = Partial<{
   DEPLOYER: IdentityInput;
 }>;
 
 const abi = {
-  programType: "contract",
-  specVersion: "1",
-  encodingVersion: "1",
-  concreteTypes: [
+  "programType": "contract",
+  "specVersion": "1",
+  "encodingVersion": "1",
+  "concreteTypes": [
     {
-      type: "()",
-      concreteTypeId:
-        "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "type": "()",
+      "concreteTypeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
     },
     {
-      type: "b256",
-      concreteTypeId:
-        "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
+      "type": "b256",
+      "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
     },
     {
-      type: "bool",
-      concreteTypeId:
-        "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
+      "type": "bool",
+      "concreteTypeId": "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903"
     },
     {
-      type: "enum ownership::errors::InitializationError",
-      concreteTypeId:
-        "b1fddf488ccb9e63d11888b2750bbd1280a1ae1c49f2d6637fd4cf1e930d1468",
-      metadataTypeId: 0,
+      "type": "enum ownership::errors::InitializationError",
+      "concreteTypeId": "b1fddf488ccb9e63d11888b2750bbd1280a1ae1c49f2d6637fd4cf1e930d1468",
+      "metadataTypeId": 0
     },
     {
-      type: "enum pyth_interface::errors::PythError",
-      concreteTypeId:
-        "ef9531eda675e74905aeb0648d5f0289c85f8506754060ccaae49f3e657d2946",
-      metadataTypeId: 3,
+      "type": "enum pyth_interface::errors::PythError",
+      "concreteTypeId": "ef9531eda675e74905aeb0648d5f0289c85f8506754060ccaae49f3e657d2946",
+      "metadataTypeId": 3
     },
     {
-      type: "enum pyth_interface::errors::WormholeError",
-      concreteTypeId:
-        "549ef08391322bda7ed2fc775474af0638edb3e851370d0d7fdecf5341640a44",
-      metadataTypeId: 4,
+      "type": "enum pyth_interface::errors::WormholeError",
+      "concreteTypeId": "549ef08391322bda7ed2fc775474af0638edb3e851370d0d7fdecf5341640a44",
+      "metadataTypeId": 4
     },
     {
-      type: "enum src5::AccessError",
-      concreteTypeId:
-        "f1247475d0d1466599267010f088190f8664dd31663a40c5d5e525d8e64b995d",
-      metadataTypeId: 5,
+      "type": "enum src5::AccessError",
+      "concreteTypeId": "f1247475d0d1466599267010f088190f8664dd31663a40c5d5e525d8e64b995d",
+      "metadataTypeId": 5
     },
     {
-      type: "enum src5::State",
-      concreteTypeId:
-        "287a382c1e0b1f11d12a422e77a248d27761327cd17515cc6e6369d528cf31ca",
-      metadataTypeId: 6,
+      "type": "enum src5::State",
+      "concreteTypeId": "287a382c1e0b1f11d12a422e77a248d27761327cd17515cc6e6369d528cf31ca",
+      "metadataTypeId": 6
     },
     {
-      type: "enum std::identity::Identity",
-      concreteTypeId:
-        "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
-      metadataTypeId: 7,
+      "type": "enum std::identity::Identity",
+      "concreteTypeId": "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
+      "metadataTypeId": 7
     },
     {
-      type: "str",
-      concreteTypeId:
-        "8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a",
+      "type": "str",
+      "concreteTypeId": "8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a"
     },
     {
-      type: "struct ownership::events::OwnershipRenounced",
-      concreteTypeId:
-        "f407ab6707e340f081ad27d36c1d30ad14e67562f96d6267bf3082e9adb3e46d",
-      metadataTypeId: 10,
+      "type": "struct ownership::events::OwnershipRenounced",
+      "concreteTypeId": "f407ab6707e340f081ad27d36c1d30ad14e67562f96d6267bf3082e9adb3e46d",
+      "metadataTypeId": 10
     },
     {
-      type: "struct ownership::events::OwnershipSet",
-      concreteTypeId:
-        "8c0d2488561c35a28ef795bb8bcc4c43999cdd1e3ecbd10c226e0a68660c54d4",
-      metadataTypeId: 11,
+      "type": "struct ownership::events::OwnershipSet",
+      "concreteTypeId": "8c0d2488561c35a28ef795bb8bcc4c43999cdd1e3ecbd10c226e0a68660c54d4",
+      "metadataTypeId": 11
     },
     {
-      type: "struct pyth_interface::data_structures::data_source::DataSource",
-      concreteTypeId:
-        "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
-      metadataTypeId: 12,
+      "type": "struct pyth_interface::data_structures::data_source::DataSource",
+      "concreteTypeId": "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
+      "metadataTypeId": 12
     },
     {
-      type: "struct pyth_interface::data_structures::governance_instruction::GovernanceInstruction",
-      concreteTypeId:
-        "bfe2ceb22444f7821c75d478fb595c4642cbf8970f8ec8960637a7c9aa6690c2",
-      metadataTypeId: 13,
+      "type": "struct pyth_interface::data_structures::governance_instruction::GovernanceInstruction",
+      "concreteTypeId": "bfe2ceb22444f7821c75d478fb595c4642cbf8970f8ec8960637a7c9aa6690c2",
+      "metadataTypeId": 13
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::AuthorizeGovernanceDataSourceTransferPayload",
-      concreteTypeId:
-        "0fd96dec5e5828d8a3e64d70e2d2962b1b7f4d0a8f1d6c9e035ce65e7c97679b",
-      metadataTypeId: 14,
+      "type": "struct pyth_interface::data_structures::governance_payload::AuthorizeGovernanceDataSourceTransferPayload",
+      "concreteTypeId": "0fd96dec5e5828d8a3e64d70e2d2962b1b7f4d0a8f1d6c9e035ce65e7c97679b",
+      "metadataTypeId": 14
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::SetDataSourcesPayload",
-      concreteTypeId:
-        "89b51ee7c5040a64ca6af11d37b8583445937d042f24de1865407025999d41e8",
-      metadataTypeId: 15,
+      "type": "struct pyth_interface::data_structures::governance_payload::SetDataSourcesPayload",
+      "concreteTypeId": "89b51ee7c5040a64ca6af11d37b8583445937d042f24de1865407025999d41e8",
+      "metadataTypeId": 15
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::SetFeePayload",
-      concreteTypeId:
-        "b16aeeb868cef02f09f43d578ea970bd5f5b7d12692380200c8db6492d7ff3a0",
-      metadataTypeId: 16,
+      "type": "struct pyth_interface::data_structures::governance_payload::SetFeePayload",
+      "concreteTypeId": "b16aeeb868cef02f09f43d578ea970bd5f5b7d12692380200c8db6492d7ff3a0",
+      "metadataTypeId": 16
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::SetValidPeriodPayload",
-      concreteTypeId:
-        "553112cfecd8d38944c33cc4528f5b23e88d21148b19abca47d8e76fe7faf163",
-      metadataTypeId: 17,
+      "type": "struct pyth_interface::data_structures::governance_payload::SetValidPeriodPayload",
+      "concreteTypeId": "553112cfecd8d38944c33cc4528f5b23e88d21148b19abca47d8e76fe7faf163",
+      "metadataTypeId": 17
     },
     {
-      type: "struct pyth_interface::data_structures::price::Price",
-      concreteTypeId:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      metadataTypeId: 18,
+      "type": "struct pyth_interface::data_structures::price::Price",
+      "concreteTypeId": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "metadataTypeId": 18
     },
     {
-      type: "struct pyth_interface::data_structures::price::PriceFeed",
-      concreteTypeId:
-        "13eb7054501f8758f39326623a86e36908793ac7123adf2c5eddd0634d9c0809",
-      metadataTypeId: 19,
+      "type": "struct pyth_interface::data_structures::price::PriceFeed",
+      "concreteTypeId": "13eb7054501f8758f39326623a86e36908793ac7123adf2c5eddd0634d9c0809",
+      "metadataTypeId": 19
     },
     {
-      type: "struct pyth_interface::data_structures::wormhole_light::GuardianSet",
-      concreteTypeId:
-        "c574f99b562987df1da975be7ed02d4658ad16bc1699fde46946bd14fbcc51ed",
-      metadataTypeId: 20,
+      "type": "struct pyth_interface::data_structures::wormhole_light::GuardianSet",
+      "concreteTypeId": "c574f99b562987df1da975be7ed02d4658ad16bc1699fde46946bd14fbcc51ed",
+      "metadataTypeId": 20
     },
     {
-      type: "struct pyth_interface::data_structures::wormhole_light::WormholeVM",
-      concreteTypeId:
-        "bd8b04267be788b4834b73914421df35c49678d2056e5fe667c0726515bcb28a",
-      metadataTypeId: 21,
+      "type": "struct pyth_interface::data_structures::wormhole_light::WormholeVM",
+      "concreteTypeId": "bd8b04267be788b4834b73914421df35c49678d2056e5fe667c0726515bcb28a",
+      "metadataTypeId": 21
     },
     {
-      type: "struct pyth_interface::events::ConstructedEvent",
-      concreteTypeId:
-        "d686cd9012ca81d56b62946d7a0bbec125a19237443e81495493c08426a76b1b",
-      metadataTypeId: 22,
+      "type": "struct pyth_interface::events::ConstructedEvent",
+      "concreteTypeId": "d686cd9012ca81d56b62946d7a0bbec125a19237443e81495493c08426a76b1b",
+      "metadataTypeId": 22
     },
     {
-      type: "struct pyth_interface::events::DataSourcesSetEvent",
-      concreteTypeId:
-        "8d73ffeb7192d229077a509df2382f8b8979602df4e98faec0732d24f56589be",
-      metadataTypeId: 23,
+      "type": "struct pyth_interface::events::DataSourcesSetEvent",
+      "concreteTypeId": "8d73ffeb7192d229077a509df2382f8b8979602df4e98faec0732d24f56589be",
+      "metadataTypeId": 23
     },
     {
-      type: "struct pyth_interface::events::FeeSetEvent",
-      concreteTypeId:
-        "228b1b26fb5198bd07b4ff49c1e59f5ace59a97dbf91242b955cfc91a6b88fc3",
-      metadataTypeId: 24,
+      "type": "struct pyth_interface::events::FeeSetEvent",
+      "concreteTypeId": "228b1b26fb5198bd07b4ff49c1e59f5ace59a97dbf91242b955cfc91a6b88fc3",
+      "metadataTypeId": 24
     },
     {
-      type: "struct pyth_interface::events::GovernanceDataSourceSetEvent",
-      concreteTypeId:
-        "581d4b37add000314b9bfae1fcfade22b78d3a0c8daa006aabada1c49114920e",
-      metadataTypeId: 25,
+      "type": "struct pyth_interface::events::GovernanceDataSourceSetEvent",
+      "concreteTypeId": "581d4b37add000314b9bfae1fcfade22b78d3a0c8daa006aabada1c49114920e",
+      "metadataTypeId": 25
     },
     {
-      type: "struct pyth_interface::events::NewGuardianSetEvent",
-      concreteTypeId:
-        "d76acd04100912f23d6d0798c810021f2332efc785fe432091a7f873140fb097",
-      metadataTypeId: 26,
+      "type": "struct pyth_interface::events::NewGuardianSetEvent",
+      "concreteTypeId": "d76acd04100912f23d6d0798c810021f2332efc785fe432091a7f873140fb097",
+      "metadataTypeId": 26
     },
     {
-      type: "struct pyth_interface::events::ValidPeriodSetEvent",
-      concreteTypeId:
-        "fc60c7d3c867f2a30c3e6be2cc21efd907b913f533f0f14ee397115a476c2f79",
-      metadataTypeId: 27,
+      "type": "struct pyth_interface::events::ValidPeriodSetEvent",
+      "concreteTypeId": "fc60c7d3c867f2a30c3e6be2cc21efd907b913f533f0f14ee397115a476c2f79",
+      "metadataTypeId": 27
     },
     {
-      type: "struct std::bytes::Bytes",
-      concreteTypeId:
-        "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
-      metadataTypeId: 29,
+      "type": "struct std::bytes::Bytes",
+      "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
+      "metadataTypeId": 29
     },
     {
-      type: "struct std::vec::Vec<b256>",
-      concreteTypeId:
-        "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198",
-      metadataTypeId: 33,
-      typeArguments: [
-        "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-      ],
+      "type": "struct std::vec::Vec<b256>",
+      "concreteTypeId": "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198",
+      "metadataTypeId": 33,
+      "typeArguments": [
+        "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+      ]
     },
     {
-      type: "struct std::vec::Vec<struct pyth_interface::data_structures::data_source::DataSource>",
-      concreteTypeId:
-        "921bd92ab7bb109127518976318770057b0a4c95b21b83dbe6121d19cdf142dd",
-      metadataTypeId: 33,
-      typeArguments: [
-        "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
-      ],
+      "type": "struct std::vec::Vec<struct pyth_interface::data_structures::data_source::DataSource>",
+      "concreteTypeId": "921bd92ab7bb109127518976318770057b0a4c95b21b83dbe6121d19cdf142dd",
+      "metadataTypeId": 33,
+      "typeArguments": [
+        "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb"
+      ]
     },
     {
-      type: "struct std::vec::Vec<struct pyth_interface::data_structures::price::PriceFeed>",
-      concreteTypeId:
-        "7445e418358e558eaf1fb04dc2ee316739df0bce65fd8359c879b0dc9ffd3487",
-      metadataTypeId: 33,
-      typeArguments: [
-        "13eb7054501f8758f39326623a86e36908793ac7123adf2c5eddd0634d9c0809",
-      ],
+      "type": "struct std::vec::Vec<struct pyth_interface::data_structures::price::PriceFeed>",
+      "concreteTypeId": "7445e418358e558eaf1fb04dc2ee316739df0bce65fd8359c879b0dc9ffd3487",
+      "metadataTypeId": 33,
+      "typeArguments": [
+        "13eb7054501f8758f39326623a86e36908793ac7123adf2c5eddd0634d9c0809"
+      ]
     },
     {
-      type: "struct std::vec::Vec<struct std::bytes::Bytes>",
-      concreteTypeId:
-        "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5",
-      metadataTypeId: 33,
-      typeArguments: [
-        "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
-      ],
+      "type": "struct std::vec::Vec<struct std::bytes::Bytes>",
+      "concreteTypeId": "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5",
+      "metadataTypeId": 33,
+      "typeArguments": [
+        "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb"
+      ]
     },
     {
-      type: "struct std::vec::Vec<u64>",
-      concreteTypeId:
-        "d5bfe1d4e1ace20166c9b50cadd47e862020561bde24f5189cfc2723f5ed76f4",
-      metadataTypeId: 33,
-      typeArguments: [
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-      ],
+      "type": "struct std::vec::Vec<u64>",
+      "concreteTypeId": "d5bfe1d4e1ace20166c9b50cadd47e862020561bde24f5189cfc2723f5ed76f4",
+      "metadataTypeId": 33,
+      "typeArguments": [
+        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+      ]
     },
     {
-      type: "u16",
-      concreteTypeId:
-        "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
+      "type": "u16",
+      "concreteTypeId": "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef"
     },
     {
-      type: "u32",
-      concreteTypeId:
-        "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+      "type": "u32",
+      "concreteTypeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
     },
     {
-      type: "u64",
-      concreteTypeId:
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-    },
+      "type": "u64",
+      "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+    }
   ],
-  metadataTypes: [
+  "metadataTypes": [
     {
-      type: "enum ownership::errors::InitializationError",
-      metadataTypeId: 0,
-      components: [
+      "type": "enum ownership::errors::InitializationError",
+      "metadataTypeId": 0,
+      "components": [
         {
-          name: "CannotReinitialized",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "CannotReinitialized",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum pyth_interface::data_structures::governance_instruction::GovernanceAction",
-      metadataTypeId: 1,
-      components: [
+      "type": "enum pyth_interface::data_structures::governance_instruction::GovernanceAction",
+      "metadataTypeId": 1,
+      "components": [
         {
-          name: "UpgradeContract",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "UpgradeContract",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "AuthorizeGovernanceDataSourceTransfer",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "AuthorizeGovernanceDataSourceTransfer",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SetDataSources",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SetDataSources",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SetFee",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SetFee",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SetValidPeriod",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SetValidPeriod",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "RequestGovernanceDataSourceTransfer",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "RequestGovernanceDataSourceTransfer",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "Invalid",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "Invalid",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum pyth_interface::data_structures::governance_instruction::GovernanceModule",
-      metadataTypeId: 2,
-      components: [
+      "type": "enum pyth_interface::data_structures::governance_instruction::GovernanceModule",
+      "metadataTypeId": 2,
+      "components": [
         {
-          name: "Executor",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "Executor",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "Target",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "Target",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "EvmExecutor",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "EvmExecutor",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "StacksTarget",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "StacksTarget",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "Invalid",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "Invalid",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum pyth_interface::errors::PythError",
-      metadataTypeId: 3,
-      components: [
+      "type": "enum pyth_interface::errors::PythError",
+      "metadataTypeId": 3,
+      "components": [
         {
-          name: "FeesCanOnlyBePaidInTheBaseAsset",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "FeesCanOnlyBePaidInTheBaseAsset",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GuardianSetNotFound",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GuardianSetNotFound",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "IncorrectMessageType",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "IncorrectMessageType",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InsufficientFee",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InsufficientFee",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidArgument",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidArgument",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidAttestationSize",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidAttestationSize",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidDataSourcesLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidDataSourcesLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidExponent",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidExponent",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceDataSource",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceDataSource",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceAction",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceAction",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceMessage",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceMessage",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceModule",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceModule",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceTarget",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceTarget",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidHeaderSize",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidHeaderSize",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidMagic",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidMagic",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidMajorVersion",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidMajorVersion",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidMinorVersion",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidMinorVersion",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidPayloadId",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidPayloadId",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidPayloadLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidPayloadLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidPriceFeedDataLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidPriceFeedDataLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidProof",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidProof",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidUpdateData",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidUpdateData",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidUpdateDataLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidUpdateDataLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidUpdateDataSource",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidUpdateDataSource",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidUpgradeModule",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidUpgradeModule",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidWormholeAddressToSet",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidWormholeAddressToSet",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "LengthOfPriceFeedIdsAndPublishTimesMustMatch",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "LengthOfPriceFeedIdsAndPublishTimesMustMatch",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "NewGuardianSetIsEmpty",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "NewGuardianSetIsEmpty",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "NumberOfUpdatesIrretrievable",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "NumberOfUpdatesIrretrievable",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "OldGovernanceMessage",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "OldGovernanceMessage",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "OutdatedPrice",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "OutdatedPrice",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "PriceFeedNotFound",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "PriceFeedNotFound",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "PriceFeedNotFoundWithinRange",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "PriceFeedNotFoundWithinRange",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "WormholeGovernanceActionNotFound",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "WormholeGovernanceActionNotFound",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum pyth_interface::errors::WormholeError",
-      metadataTypeId: 4,
-      components: [
+      "type": "enum pyth_interface::errors::WormholeError",
+      "metadataTypeId": 4,
+      "components": [
         {
-          name: "ConsistencyLevelIrretrievable",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "ConsistencyLevelIrretrievable",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GovernanceActionAlreadyConsumed",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GovernanceActionAlreadyConsumed",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GuardianIndexIrretrievable",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GuardianIndexIrretrievable",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GuardianSetHasExpired",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GuardianSetHasExpired",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GuardianSetKeyIrretrievable",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GuardianSetKeyIrretrievable",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GuardianSetKeysLengthNotEqual",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GuardianSetKeysLengthNotEqual",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "GuardianSetNotFound",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "GuardianSetNotFound",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceAction",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceAction",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceChain",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceChain",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGovernanceContract",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGovernanceContract",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGuardianSet",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGuardianSet",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGuardianSetKeysLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGuardianSetKeysLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGuardianSetUpgrade",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGuardianSetUpgrade",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidGuardianSetUpgradeLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidGuardianSetUpgradeLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidModule",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidModule",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidPayloadLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidPayloadLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidSignatureLength",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidSignatureLength",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "InvalidUpdateDataSource",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "InvalidUpdateDataSource",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "NewGuardianSetIsEmpty",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "NewGuardianSetIsEmpty",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "NewGuardianSetIndexIsInvalid",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "NewGuardianSetIndexIsInvalid",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "NoQuorum",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "NoQuorum",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "NotSignedByCurrentGuardianSet",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "NotSignedByCurrentGuardianSet",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SignatureInvalid",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SignatureInvalid",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SignatureIndicesNotAscending",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SignatureIndicesNotAscending",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SignatureVIrretrievable",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SignatureVIrretrievable",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "SignersLengthIrretrievable",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "SignersLengthIrretrievable",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "VMSignatureInvalid",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "VMSignatureInvalid",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "VMVersionIncompatible",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "VMVersionIncompatible",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum src5::AccessError",
-      metadataTypeId: 5,
-      components: [
+      "type": "enum src5::AccessError",
+      "metadataTypeId": 5,
+      "components": [
         {
-          name: "NotOwner",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "NotOwner",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum src5::State",
-      metadataTypeId: 6,
-      components: [
+      "type": "enum src5::State",
+      "metadataTypeId": 6,
+      "components": [
         {
-          name: "Uninitialized",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+          "name": "Uninitialized",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
         },
         {
-          name: "Initialized",
-          typeId: 7,
+          "name": "Initialized",
+          "typeId": 7
         },
         {
-          name: "Revoked",
-          typeId:
-            "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-        },
-      ],
+          "name": "Revoked",
+          "typeId": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d"
+        }
+      ]
     },
     {
-      type: "enum std::identity::Identity",
-      metadataTypeId: 7,
-      components: [
+      "type": "enum std::identity::Identity",
+      "metadataTypeId": 7,
+      "components": [
         {
-          name: "Address",
-          typeId: 28,
+          "name": "Address",
+          "typeId": 28
         },
         {
-          name: "ContractId",
-          typeId: 31,
-        },
-      ],
+          "name": "ContractId",
+          "typeId": 31
+        }
+      ]
     },
     {
-      type: "generic T",
-      metadataTypeId: 8,
+      "type": "generic T",
+      "metadataTypeId": 8
     },
     {
-      type: "raw untyped ptr",
-      metadataTypeId: 9,
+      "type": "raw untyped ptr",
+      "metadataTypeId": 9
     },
     {
-      type: "struct ownership::events::OwnershipRenounced",
-      metadataTypeId: 10,
-      components: [
+      "type": "struct ownership::events::OwnershipRenounced",
+      "metadataTypeId": 10,
+      "components": [
         {
-          name: "previous_owner",
-          typeId: 7,
-        },
-      ],
+          "name": "previous_owner",
+          "typeId": 7
+        }
+      ]
     },
     {
-      type: "struct ownership::events::OwnershipSet",
-      metadataTypeId: 11,
-      components: [
+      "type": "struct ownership::events::OwnershipSet",
+      "metadataTypeId": 11,
+      "components": [
         {
-          name: "new_owner",
-          typeId: 7,
-        },
-      ],
+          "name": "new_owner",
+          "typeId": 7
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::data_source::DataSource",
-      metadataTypeId: 12,
-      components: [
+      "type": "struct pyth_interface::data_structures::data_source::DataSource",
+      "metadataTypeId": 12,
+      "components": [
         {
-          name: "chain_id",
-          typeId:
-            "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
+          "name": "chain_id",
+          "typeId": "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef"
         },
         {
-          name: "emitter_address",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
-      ],
+          "name": "emitter_address",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::governance_instruction::GovernanceInstruction",
-      metadataTypeId: 13,
-      components: [
+      "type": "struct pyth_interface::data_structures::governance_instruction::GovernanceInstruction",
+      "metadataTypeId": 13,
+      "components": [
         {
-          name: "magic",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+          "name": "magic",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
         },
         {
-          name: "module",
-          typeId: 2,
+          "name": "module",
+          "typeId": 2
         },
         {
-          name: "action",
-          typeId: 1,
+          "name": "action",
+          "typeId": 1
         },
         {
-          name: "target_chain_id",
-          typeId:
-            "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
+          "name": "target_chain_id",
+          "typeId": "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef"
         },
         {
-          name: "payload",
-          typeId: 29,
-        },
-      ],
+          "name": "payload",
+          "typeId": 29
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::AuthorizeGovernanceDataSourceTransferPayload",
-      metadataTypeId: 14,
-      components: [
+      "type": "struct pyth_interface::data_structures::governance_payload::AuthorizeGovernanceDataSourceTransferPayload",
+      "metadataTypeId": 14,
+      "components": [
         {
-          name: "claim_vaa",
-          typeId: 29,
-        },
-      ],
+          "name": "claim_vaa",
+          "typeId": 29
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::SetDataSourcesPayload",
-      metadataTypeId: 15,
-      components: [
+      "type": "struct pyth_interface::data_structures::governance_payload::SetDataSourcesPayload",
+      "metadataTypeId": 15,
+      "components": [
         {
-          name: "data_sources",
-          typeId: 33,
-          typeArguments: [
+          "name": "data_sources",
+          "typeId": 33,
+          "typeArguments": [
             {
-              name: "",
-              typeId: 12,
-            },
-          ],
-        },
-      ],
+              "name": "",
+              "typeId": 12
+            }
+          ]
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::SetFeePayload",
-      metadataTypeId: 16,
-      components: [
+      "type": "struct pyth_interface::data_structures::governance_payload::SetFeePayload",
+      "metadataTypeId": 16,
+      "components": [
         {
-          name: "new_fee",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "new_fee",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::governance_payload::SetValidPeriodPayload",
-      metadataTypeId: 17,
-      components: [
+      "type": "struct pyth_interface::data_structures::governance_payload::SetValidPeriodPayload",
+      "metadataTypeId": 17,
+      "components": [
         {
-          name: "new_valid_period",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "new_valid_period",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::price::Price",
-      metadataTypeId: 18,
-      components: [
+      "type": "struct pyth_interface::data_structures::price::Price",
+      "metadataTypeId": 18,
+      "components": [
         {
-          name: "confidence",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "confidence",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "exponent",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+          "name": "exponent",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
         },
         {
-          name: "price",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "price",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "publish_time",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "publish_time",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::price::PriceFeed",
-      metadataTypeId: 19,
-      components: [
+      "type": "struct pyth_interface::data_structures::price::PriceFeed",
+      "metadataTypeId": 19,
+      "components": [
         {
-          name: "ema_price",
-          typeId: 18,
+          "name": "ema_price",
+          "typeId": 18
         },
         {
-          name: "id",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
+          "name": "id",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
         },
         {
-          name: "price",
-          typeId: 18,
-        },
-      ],
+          "name": "price",
+          "typeId": 18
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::wormhole_light::GuardianSet",
-      metadataTypeId: 20,
-      components: [
+      "type": "struct pyth_interface::data_structures::wormhole_light::GuardianSet",
+      "metadataTypeId": 20,
+      "components": [
         {
-          name: "expiration_time",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "expiration_time",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "keys",
-          typeId: 33,
-          typeArguments: [
+          "name": "keys",
+          "typeId": 33,
+          "typeArguments": [
             {
-              name: "",
-              typeId:
-                "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-            },
-          ],
-        },
-      ],
+              "name": "",
+              "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+            }
+          ]
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::data_structures::wormhole_light::WormholeVM",
-      metadataTypeId: 21,
-      components: [
+      "type": "struct pyth_interface::data_structures::wormhole_light::WormholeVM",
+      "metadataTypeId": 21,
+      "components": [
         {
-          name: "version",
-          typeId: 34,
+          "name": "version",
+          "typeId": 34
         },
         {
-          name: "guardian_set_index",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+          "name": "guardian_set_index",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
         },
         {
-          name: "governance_action_hash",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
+          "name": "governance_action_hash",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
         },
         {
-          name: "timestamp",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+          "name": "timestamp",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
         },
         {
-          name: "nonce",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+          "name": "nonce",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
         },
         {
-          name: "emitter_chain_id",
-          typeId:
-            "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
+          "name": "emitter_chain_id",
+          "typeId": "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef"
         },
         {
-          name: "emitter_address",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
+          "name": "emitter_address",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
         },
         {
-          name: "sequence",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "sequence",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "consistency_level",
-          typeId: 34,
+          "name": "consistency_level",
+          "typeId": 34
         },
         {
-          name: "payload",
-          typeId: 29,
-        },
-      ],
+          "name": "payload",
+          "typeId": 29
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::events::ConstructedEvent",
-      metadataTypeId: 22,
-      components: [
+      "type": "struct pyth_interface::events::ConstructedEvent",
+      "metadataTypeId": 22,
+      "components": [
         {
-          name: "guardian_set_index",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
-        },
-      ],
+          "name": "guardian_set_index",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::events::DataSourcesSetEvent",
-      metadataTypeId: 23,
-      components: [
+      "type": "struct pyth_interface::events::DataSourcesSetEvent",
+      "metadataTypeId": 23,
+      "components": [
         {
-          name: "old_data_sources",
-          typeId: 33,
-          typeArguments: [
+          "name": "old_data_sources",
+          "typeId": 33,
+          "typeArguments": [
             {
-              name: "",
-              typeId: 12,
-            },
-          ],
+              "name": "",
+              "typeId": 12
+            }
+          ]
         },
         {
-          name: "new_data_sources",
-          typeId: 33,
-          typeArguments: [
+          "name": "new_data_sources",
+          "typeId": 33,
+          "typeArguments": [
             {
-              name: "",
-              typeId: 12,
-            },
-          ],
-        },
-      ],
+              "name": "",
+              "typeId": 12
+            }
+          ]
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::events::FeeSetEvent",
-      metadataTypeId: 24,
-      components: [
+      "type": "struct pyth_interface::events::FeeSetEvent",
+      "metadataTypeId": 24,
+      "components": [
         {
-          name: "old_fee",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "old_fee",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "new_fee",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "new_fee",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::events::GovernanceDataSourceSetEvent",
-      metadataTypeId: 25,
-      components: [
+      "type": "struct pyth_interface::events::GovernanceDataSourceSetEvent",
+      "metadataTypeId": 25,
+      "components": [
         {
-          name: "old_data_source",
-          typeId: 12,
+          "name": "old_data_source",
+          "typeId": 12
         },
         {
-          name: "new_data_source",
-          typeId: 12,
+          "name": "new_data_source",
+          "typeId": 12
         },
         {
-          name: "initial_sequence",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "initial_sequence",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::events::NewGuardianSetEvent",
-      metadataTypeId: 26,
-      components: [
+      "type": "struct pyth_interface::events::NewGuardianSetEvent",
+      "metadataTypeId": 26,
+      "components": [
         {
-          name: "governance_action_hash",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
+          "name": "governance_action_hash",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
         },
         {
-          name: "new_guardian_set_index",
-          typeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
-        },
-      ],
+          "name": "new_guardian_set_index",
+          "typeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
+        }
+      ]
     },
     {
-      type: "struct pyth_interface::events::ValidPeriodSetEvent",
-      metadataTypeId: 27,
-      components: [
+      "type": "struct pyth_interface::events::ValidPeriodSetEvent",
+      "metadataTypeId": 27,
+      "components": [
         {
-          name: "old_valid_period",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "old_valid_period",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "new_valid_period",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "new_valid_period",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct std::address::Address",
-      metadataTypeId: 28,
-      components: [
+      "type": "struct std::address::Address",
+      "metadataTypeId": 28,
+      "components": [
         {
-          name: "bits",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
-      ],
+          "name": "bits",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
+      ]
     },
     {
-      type: "struct std::bytes::Bytes",
-      metadataTypeId: 29,
-      components: [
+      "type": "struct std::bytes::Bytes",
+      "metadataTypeId": 29,
+      "components": [
         {
-          name: "buf",
-          typeId: 30,
+          "name": "buf",
+          "typeId": 30
         },
         {
-          name: "len",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "len",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct std::bytes::RawBytes",
-      metadataTypeId: 30,
-      components: [
+      "type": "struct std::bytes::RawBytes",
+      "metadataTypeId": 30,
+      "components": [
         {
-          name: "ptr",
-          typeId: 9,
+          "name": "ptr",
+          "typeId": 9
         },
         {
-          name: "cap",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
-      ],
+          "name": "cap",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
+      ]
     },
     {
-      type: "struct std::contract_id::ContractId",
-      metadataTypeId: 31,
-      components: [
+      "type": "struct std::contract_id::ContractId",
+      "metadataTypeId": 31,
+      "components": [
         {
-          name: "bits",
-          typeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
-      ],
+          "name": "bits",
+          "typeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
+      ]
     },
     {
-      type: "struct std::vec::RawVec",
-      metadataTypeId: 32,
-      components: [
+      "type": "struct std::vec::RawVec",
+      "metadataTypeId": 32,
+      "components": [
         {
-          name: "ptr",
-          typeId: 9,
+          "name": "ptr",
+          "typeId": 9
         },
         {
-          name: "cap",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
+          "name": "cap",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
       ],
-      typeParameters: [8],
+      "typeParameters": [
+        8
+      ]
     },
     {
-      type: "struct std::vec::Vec",
-      metadataTypeId: 33,
-      components: [
+      "type": "struct std::vec::Vec",
+      "metadataTypeId": 33,
+      "components": [
         {
-          name: "buf",
-          typeId: 32,
-          typeArguments: [
+          "name": "buf",
+          "typeId": 32,
+          "typeArguments": [
             {
-              name: "",
-              typeId: 8,
-            },
-          ],
+              "name": "",
+              "typeId": 8
+            }
+          ]
         },
         {
-          name: "len",
-          typeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-        },
+          "name": "len",
+          "typeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
+        }
       ],
-      typeParameters: [8],
+      "typeParameters": [
+        8
+      ]
     },
     {
-      type: "u8",
-      metadataTypeId: 34,
-    },
+      "type": "u8",
+      "metadataTypeId": 34
+    }
   ],
-  functions: [
+  "functions": [
     {
-      name: "owner",
-      inputs: [],
-      output:
-        "287a382c1e0b1f11d12a422e77a248d27761327cd17515cc6e6369d528cf31ca",
-      attributes: [
+      "name": "owner",
+      "inputs": [],
+      "output": "287a382c1e0b1f11d12a422e77a248d27761327cd17515cc6e6369d528cf31ca",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "ema_price",
-      inputs: [
+      "name": "ema_price",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      attributes: [
+      "output": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "ema_price_no_older_than",
-      inputs: [
+      "name": "ema_price_no_older_than",
+      "inputs": [
         {
-          name: "time_period",
-          concreteTypeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "time_period",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      attributes: [
+      "output": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "ema_price_unsafe",
-      inputs: [
+      "name": "ema_price_unsafe",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      attributes: [
+      "output": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "parse_price_feed_updates",
-      inputs: [
+      "name": "parse_price_feed_updates",
+      "inputs": [
         {
-          name: "max_publish_time",
-          concreteTypeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "max_publish_time",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "min_publish_time",
-          concreteTypeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "min_publish_time",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "target_price_feed_ids",
-          concreteTypeId:
-            "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198",
+          "name": "target_price_feed_ids",
+          "concreteTypeId": "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198"
         },
         {
-          name: "update_data",
-          concreteTypeId:
-            "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5",
-        },
+          "name": "update_data",
+          "concreteTypeId": "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5"
+        }
       ],
-      output:
-        "7445e418358e558eaf1fb04dc2ee316739df0bce65fd8359c879b0dc9ffd3487",
-      attributes: [
+      "output": "7445e418358e558eaf1fb04dc2ee316739df0bce65fd8359c879b0dc9ffd3487",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
         },
         {
-          name: "payable",
-          arguments: [],
-        },
-      ],
+          "name": "payable",
+          "arguments": []
+        }
+      ]
     },
     {
-      name: "price",
-      inputs: [
+      "name": "price",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      attributes: [
+      "output": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "price_no_older_than",
-      inputs: [
+      "name": "price_no_older_than",
+      "inputs": [
         {
-          name: "time_period",
-          concreteTypeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "time_period",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      attributes: [
+      "output": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "price_unsafe",
-      inputs: [
+      "name": "price_unsafe",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
-      attributes: [
+      "output": "8aba92fff7345309d4313706ed7db3a811609f62da8f0d2859819db43d461ff8",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "update_fee",
-      inputs: [
+      "name": "update_fee",
+      "inputs": [
         {
-          name: "update_data",
-          concreteTypeId:
-            "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5",
-        },
+          "name": "update_data",
+          "concreteTypeId": "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5"
+        }
       ],
-      output:
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-      attributes: [
+      "output": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "update_price_feeds",
-      inputs: [
+      "name": "update_price_feeds",
+      "inputs": [
         {
-          name: "update_data",
-          concreteTypeId:
-            "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5",
-        },
+          "name": "update_data",
+          "concreteTypeId": "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5"
+        }
       ],
-      output:
-        "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-      attributes: [
+      "output": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read", "write"],
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
         },
         {
-          name: "payable",
-          arguments: [],
-        },
-      ],
+          "name": "payable",
+          "arguments": []
+        }
+      ]
     },
     {
-      name: "update_price_feeds_if_necessary",
-      inputs: [
+      "name": "update_price_feeds_if_necessary",
+      "inputs": [
         {
-          name: "price_feed_ids",
-          concreteTypeId:
-            "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198",
+          "name": "price_feed_ids",
+          "concreteTypeId": "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198"
         },
         {
-          name: "publish_times",
-          concreteTypeId:
-            "d5bfe1d4e1ace20166c9b50cadd47e862020561bde24f5189cfc2723f5ed76f4",
+          "name": "publish_times",
+          "concreteTypeId": "d5bfe1d4e1ace20166c9b50cadd47e862020561bde24f5189cfc2723f5ed76f4"
         },
         {
-          name: "update_data",
-          concreteTypeId:
-            "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5",
-        },
+          "name": "update_data",
+          "concreteTypeId": "2601885b27af3627b8910876fc176d900cec2b16ec78c538f5f312e785d915f5"
+        }
       ],
-      output:
-        "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-      attributes: [
+      "output": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read", "write"],
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
         },
         {
-          name: "payable",
-          arguments: [],
-        },
-      ],
+          "name": "payable",
+          "arguments": []
+        }
+      ]
     },
     {
-      name: "valid_time_period",
-      inputs: [],
-      output:
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-      attributes: [
+      "name": "valid_time_period",
+      "inputs": [],
+      "output": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "constructor",
-      inputs: [
+      "name": "constructor",
+      "inputs": [
         {
-          name: "data_sources",
-          concreteTypeId:
-            "921bd92ab7bb109127518976318770057b0a4c95b21b83dbe6121d19cdf142dd",
+          "name": "data_sources",
+          "concreteTypeId": "921bd92ab7bb109127518976318770057b0a4c95b21b83dbe6121d19cdf142dd"
         },
         {
-          name: "governance_data_source",
-          concreteTypeId:
-            "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
+          "name": "governance_data_source",
+          "concreteTypeId": "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb"
         },
         {
-          name: "wormhole_governance_data_source",
-          concreteTypeId:
-            "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
+          "name": "wormhole_governance_data_source",
+          "concreteTypeId": "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb"
         },
         {
-          name: "single_update_fee",
-          concreteTypeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "single_update_fee",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "valid_time_period_seconds",
-          concreteTypeId:
-            "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+          "name": "valid_time_period_seconds",
+          "concreteTypeId": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0"
         },
         {
-          name: "wormhole_guardian_set_addresses",
-          concreteTypeId:
-            "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198",
+          "name": "wormhole_guardian_set_addresses",
+          "concreteTypeId": "32559685d0c9845f059bf9d472a0a38cf77d36c23dfcffe5489e86a65cdd9198"
         },
         {
-          name: "wormhole_guardian_set_index",
-          concreteTypeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+          "name": "wormhole_guardian_set_index",
+          "concreteTypeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
         },
         {
-          name: "chain_id",
-          concreteTypeId:
-            "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
-        },
+          "name": "chain_id",
+          "concreteTypeId": "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef"
+        }
       ],
-      output:
-        "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-      attributes: [
+      "output": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read", "write"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
     },
     {
-      name: "chain_id",
-      inputs: [],
-      output:
-        "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
-      attributes: [
+      "name": "chain_id",
+      "inputs": [],
+      "output": "29881aad8730c5ab11d275376323d8e4ff4179aae8ccb6c13fe4902137e162ef",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "is_valid_data_source",
-      inputs: [
+      "name": "is_valid_data_source",
+      "inputs": [
         {
-          name: "data_source",
-          concreteTypeId:
-            "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
-        },
+          "name": "data_source",
+          "concreteTypeId": "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb"
+        }
       ],
-      output:
-        "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
-      attributes: [
+      "output": "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "last_executed_governance_sequence",
-      inputs: [],
-      output:
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-      attributes: [
+      "name": "last_executed_governance_sequence",
+      "inputs": [],
+      "output": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "latest_publish_time",
-      inputs: [
+      "name": "latest_publish_time",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-      attributes: [
+      "output": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "price_feed_exists",
-      inputs: [
+      "name": "price_feed_exists",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
-      attributes: [
+      "output": "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "price_feed_unsafe",
-      inputs: [
+      "name": "price_feed_unsafe",
+      "inputs": [
         {
-          name: "price_feed_id",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "price_feed_id",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "13eb7054501f8758f39326623a86e36908793ac7123adf2c5eddd0634d9c0809",
-      attributes: [
+      "output": "13eb7054501f8758f39326623a86e36908793ac7123adf2c5eddd0634d9c0809",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "single_update_fee",
-      inputs: [],
-      output:
-        "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
-      attributes: [
+      "name": "single_update_fee",
+      "inputs": [],
+      "output": "1506e6f44c1d6291cdf46395a8e573276a4fa79e8ace3fc891e092ef32d1b0a0",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "valid_data_sources",
-      inputs: [],
-      output:
-        "921bd92ab7bb109127518976318770057b0a4c95b21b83dbe6121d19cdf142dd",
-      attributes: [
+      "name": "valid_data_sources",
+      "inputs": [],
+      "output": "921bd92ab7bb109127518976318770057b0a4c95b21b83dbe6121d19cdf142dd",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "current_guardian_set_index",
-      inputs: [],
-      output:
-        "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
-      attributes: [
+      "name": "current_guardian_set_index",
+      "inputs": [],
+      "output": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "current_wormhole_provider",
-      inputs: [],
-      output:
-        "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
-      attributes: [
+      "name": "current_wormhole_provider",
+      "inputs": [],
+      "output": "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "governance_action_is_consumed",
-      inputs: [
+      "name": "governance_action_is_consumed",
+      "inputs": [
         {
-          name: "governance_action_hash",
-          concreteTypeId:
-            "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b",
-        },
+          "name": "governance_action_hash",
+          "concreteTypeId": "7c5ee1cecf5f8eacd1284feb5f0bf2bdea533a51e2f0c9aabe9236d335989f3b"
+        }
       ],
-      output:
-        "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
-      attributes: [
+      "output": "b760f44fa5965c2474a3b471467a22c43185152129295af588b022ae50b50903",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "guardian_set",
-      inputs: [
+      "name": "guardian_set",
+      "inputs": [
         {
-          name: "index",
-          concreteTypeId:
-            "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc",
-        },
+          "name": "index",
+          "concreteTypeId": "d7649d428b9ff33d188ecbf38a7e4d8fd167fa01b2e10fe9a8f9308e52f1d7cc"
+        }
       ],
-      output:
-        "c574f99b562987df1da975be7ed02d4658ad16bc1699fde46946bd14fbcc51ed",
-      attributes: [
+      "output": "c574f99b562987df1da975be7ed02d4658ad16bc1699fde46946bd14fbcc51ed",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
     },
     {
-      name: "submit_new_guardian_set",
-      inputs: [
+      "name": "submit_new_guardian_set",
+      "inputs": [
         {
-          name: "encoded_vm",
-          concreteTypeId:
-            "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
-        },
+          "name": "encoded_vm",
+          "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb"
+        }
       ],
-      output:
-        "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-      attributes: [
+      "output": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read", "write"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
     },
     {
-      name: "execute_governance_instruction",
-      inputs: [
+      "name": "execute_governance_instruction",
+      "inputs": [
         {
-          name: "encoded_vm",
-          concreteTypeId:
-            "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb",
-        },
+          "name": "encoded_vm",
+          "concreteTypeId": "cdd87b7d12fe505416570c294c884bca819364863efe3bf539245fa18515fbbb"
+        }
       ],
-      output:
-        "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
-      attributes: [
+      "output": "2e38e77b22c314a449e91fafed92a43826ac6aa403ae6a8acb6cf58239fbaf5d",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read", "write"],
-        },
-      ],
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
     },
     {
-      name: "governance_data_source",
-      inputs: [],
-      output:
-        "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
-      attributes: [
+      "name": "governance_data_source",
+      "inputs": [],
+      "output": "8f97b260b402ac61805cd653dbfa653d4991ae802756e74c009d8df9c6178bbb",
+      "attributes": [
         {
-          name: "storage",
-          arguments: ["read"],
-        },
-      ],
-    },
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
+    }
   ],
-  loggedTypes: [
+  "loggedTypes": [
     {
-      logId: "17263759643364419401",
-      concreteTypeId:
-        "ef9531eda675e74905aeb0648d5f0289c85f8506754060ccaae49f3e657d2946",
+      "logId": "17263759643364419401",
+      "concreteTypeId": "ef9531eda675e74905aeb0648d5f0289c85f8506754060ccaae49f3e657d2946"
     },
     {
-      logId: "6097575393373596634",
-      concreteTypeId:
-        "549ef08391322bda7ed2fc775474af0638edb3e851370d0d7fdecf5341640a44",
+      "logId": "6097575393373596634",
+      "concreteTypeId": "549ef08391322bda7ed2fc775474af0638edb3e851370d0d7fdecf5341640a44"
     },
     {
-      logId: "12825652816513834595",
-      concreteTypeId:
-        "b1fddf488ccb9e63d11888b2750bbd1280a1ae1c49f2d6637fd4cf1e930d1468",
+      "logId": "12825652816513834595",
+      "concreteTypeId": "b1fddf488ccb9e63d11888b2750bbd1280a1ae1c49f2d6637fd4cf1e930d1468"
     },
     {
-      logId: "10091762507985991074",
-      concreteTypeId:
-        "8c0d2488561c35a28ef795bb8bcc4c43999cdd1e3ecbd10c226e0a68660c54d4",
+      "logId": "10091762507985991074",
+      "concreteTypeId": "8c0d2488561c35a28ef795bb8bcc4c43999cdd1e3ecbd10c226e0a68660c54d4"
     },
     {
-      logId: "17376141311665587813",
-      concreteTypeId:
-        "f1247475d0d1466599267010f088190f8664dd31663a40c5d5e525d8e64b995d",
+      "logId": "17376141311665587813",
+      "concreteTypeId": "f1247475d0d1466599267010f088190f8664dd31663a40c5d5e525d8e64b995d"
     },
     {
-      logId: "17584211729093705968",
-      concreteTypeId:
-        "f407ab6707e340f081ad27d36c1d30ad14e67562f96d6267bf3082e9adb3e46d",
+      "logId": "17584211729093705968",
+      "concreteTypeId": "f407ab6707e340f081ad27d36c1d30ad14e67562f96d6267bf3082e9adb3e46d"
     },
     {
-      logId: "15458268789670052309",
-      concreteTypeId:
-        "d686cd9012ca81d56b62946d7a0bbec125a19237443e81495493c08426a76b1b",
+      "logId": "15458268789670052309",
+      "concreteTypeId": "d686cd9012ca81d56b62946d7a0bbec125a19237443e81495493c08426a76b1b"
     },
     {
-      logId: "10098701174489624218",
-      concreteTypeId:
-        "8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a",
+      "logId": "10098701174489624218",
+      "concreteTypeId": "8c25cb3686462e9a86d2883c5688a22fe738b0bbc85f458d2d2b5f3f667c6d5a"
     },
     {
-      logId: "15522444483018429170",
-      concreteTypeId:
-        "d76acd04100912f23d6d0798c810021f2332efc785fe432091a7f873140fb097",
+      "logId": "15522444483018429170",
+      "concreteTypeId": "d76acd04100912f23d6d0798c810021f2332efc785fe432091a7f873140fb097"
     },
     {
-      logId: "13658014858265200820",
-      concreteTypeId:
-        "bd8b04267be788b4834b73914421df35c49678d2056e5fe667c0726515bcb28a",
+      "logId": "13658014858265200820",
+      "concreteTypeId": "bd8b04267be788b4834b73914421df35c49678d2056e5fe667c0726515bcb28a"
     },
     {
-      logId: "13826841070488844162",
-      concreteTypeId:
-        "bfe2ceb22444f7821c75d478fb595c4642cbf8970f8ec8960637a7c9aa6690c2",
+      "logId": "13826841070488844162",
+      "concreteTypeId": "bfe2ceb22444f7821c75d478fb595c4642cbf8970f8ec8960637a7c9aa6690c2"
     },
     {
-      logId: "1142064842477676760",
-      concreteTypeId:
-        "0fd96dec5e5828d8a3e64d70e2d2962b1b7f4d0a8f1d6c9e035ce65e7c97679b",
+      "logId": "1142064842477676760",
+      "concreteTypeId": "0fd96dec5e5828d8a3e64d70e2d2962b1b7f4d0a8f1d6c9e035ce65e7c97679b"
     },
     {
-      logId: "6349313752173641777",
-      concreteTypeId:
-        "581d4b37add000314b9bfae1fcfade22b78d3a0c8daa006aabada1c49114920e",
+      "logId": "6349313752173641777",
+      "concreteTypeId": "581d4b37add000314b9bfae1fcfade22b78d3a0c8daa006aabada1c49114920e"
     },
     {
-      logId: "9922871334772410980",
-      concreteTypeId:
-        "89b51ee7c5040a64ca6af11d37b8583445937d042f24de1865407025999d41e8",
+      "logId": "9922871334772410980",
+      "concreteTypeId": "89b51ee7c5040a64ca6af11d37b8583445937d042f24de1865407025999d41e8"
     },
     {
-      logId: "10192771768357409321",
-      concreteTypeId:
-        "8d73ffeb7192d229077a509df2382f8b8979602df4e98faec0732d24f56589be",
+      "logId": "10192771768357409321",
+      "concreteTypeId": "8d73ffeb7192d229077a509df2382f8b8979602df4e98faec0732d24f56589be"
     },
     {
-      logId: "12784292968044359727",
-      concreteTypeId:
-        "b16aeeb868cef02f09f43d578ea970bd5f5b7d12692380200c8db6492d7ff3a0",
+      "logId": "12784292968044359727",
+      "concreteTypeId": "b16aeeb868cef02f09f43d578ea970bd5f5b7d12692380200c8db6492d7ff3a0"
     },
     {
-      logId: "2489113073291466941",
-      concreteTypeId:
-        "228b1b26fb5198bd07b4ff49c1e59f5ace59a97dbf91242b955cfc91a6b88fc3",
+      "logId": "2489113073291466941",
+      "concreteTypeId": "228b1b26fb5198bd07b4ff49c1e59f5ace59a97dbf91242b955cfc91a6b88fc3"
     },
     {
-      logId: "6138708451323859849",
-      concreteTypeId:
-        "553112cfecd8d38944c33cc4528f5b23e88d21148b19abca47d8e76fe7faf163",
+      "logId": "6138708451323859849",
+      "concreteTypeId": "553112cfecd8d38944c33cc4528f5b23e88d21148b19abca47d8e76fe7faf163"
     },
     {
-      logId: "18185755007736345251",
-      concreteTypeId:
-        "fc60c7d3c867f2a30c3e6be2cc21efd907b913f533f0f14ee397115a476c2f79",
-    },
+      "logId": "18185755007736345251",
+      "concreteTypeId": "fc60c7d3c867f2a30c3e6be2cc21efd907b913f533f0f14ee397115a476c2f79"
+    }
   ],
-  messagesTypes: [],
-  configurables: [
+  "messagesTypes": [],
+  "configurables": [
     {
-      name: "DEPLOYER",
-      concreteTypeId:
-        "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
-      offset: 105984,
-      indirect: false,
-    },
+      "name": "DEPLOYER",
+      "concreteTypeId": "ab7cd04e05be58e3fc15d424c2c4a57f824a2a2d97d67252440a3925ebdc1335",
+      "offset": 105984,
+      "indirect": false
+    }
   ],
-  errorCodes: {},
+  "errorCodes": {}
 };
 
 const storageSlots: StorageSlot[] = [
   {
-    key: "36e8558c35150c73e4bc688fda5e2c53b7fb4ffa026ccea7ee1c25052f83d2e9",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "36e8558c35150c73e4bc688fda5e2c53b7fb4ffa026ccea7ee1c25052f83d2e9",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "6986c6ef48d658024dc84a939ca793ff00ca2884b82ec779236b919569cb2aba",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "6986c6ef48d658024dc84a939ca793ff00ca2884b82ec779236b919569cb2aba",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "6aa668744c4b16239315579332db3cd369b80451df52e22fcd2955fcaee7f523",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "6aa668744c4b16239315579332db3cd369b80451df52e22fcd2955fcaee7f523",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "6aa668744c4b16239315579332db3cd369b80451df52e22fcd2955fcaee7f524",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "6aa668744c4b16239315579332db3cd369b80451df52e22fcd2955fcaee7f524",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "906952486d9fbda1d04fdd63896567f799dbcdf6bb532ce6e4b6d64ac0a54092",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "906952486d9fbda1d04fdd63896567f799dbcdf6bb532ce6e4b6d64ac0a54092",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "906952486d9fbda1d04fdd63896567f799dbcdf6bb532ce6e4b6d64ac0a54093",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "906952486d9fbda1d04fdd63896567f799dbcdf6bb532ce6e4b6d64ac0a54093",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "930836f94195ccc09273757d639232126122b0a9b243beb833f1b594e7da1d1d",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "930836f94195ccc09273757d639232126122b0a9b243beb833f1b594e7da1d1d",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "99a2f2469477e093a24c376b245e882cc871fc75468c36bb1a3236757073c94e",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "99a2f2469477e093a24c376b245e882cc871fc75468c36bb1a3236757073c94e",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "c2fd2e763e1bb38532acd4a7e7b02d67de9f6d45dfec9e1a98d38538cf81ee3f",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "c2fd2e763e1bb38532acd4a7e7b02d67de9f6d45dfec9e1a98d38538cf81ee3f",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "c2fd2e763e1bb38532acd4a7e7b02d67de9f6d45dfec9e1a98d38538cf81ee40",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "c2fd2e763e1bb38532acd4a7e7b02d67de9f6d45dfec9e1a98d38538cf81ee40",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "cef64358a04a358393899c7bf31869ba33ba79f2be043ac3b0eaf09fa80bc428",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
+    "key": "cef64358a04a358393899c7bf31869ba33ba79f2be043ac3b0eaf09fa80bc428",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   {
-    key: "e935ac0ef94f9b13fca075303825c8f4621d0a6ecc036893e56bf2276466f45f",
-    value: "0000000000000000000000000000000000000000000000000000000000000000",
-  },
-];
+    "key": "e935ac0ef94f9b13fca075303825c8f4621d0a6ecc036893e56bf2276466f45f",
+    "value": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+]
+;
+
 export class PythContractInterface extends Interface {
   constructor() {
     super(abi);
@@ -2218,55 +1788,19 @@ export class PythContract extends __Contract {
   declare functions: {
     owner: InvokeFunction<[], StateOutput>;
     ema_price: InvokeFunction<[price_feed_id: string], PriceOutput>;
-    ema_price_no_older_than: InvokeFunction<
-      [time_period: BigNumberish, price_feed_id: string],
-      PriceOutput
-    >;
+    ema_price_no_older_than: InvokeFunction<[time_period: BigNumberish, price_feed_id: string], PriceOutput>;
     ema_price_unsafe: InvokeFunction<[price_feed_id: string], PriceOutput>;
-    parse_price_feed_updates: InvokeFunction<
-      [
-        max_publish_time: BigNumberish,
-        min_publish_time: BigNumberish,
-        target_price_feed_ids: Vec<string>,
-        update_data: Vec<Bytes>,
-      ],
-      Vec<PriceFeedOutput>
-    >;
+    parse_price_feed_updates: InvokeFunction<[max_publish_time: BigNumberish, min_publish_time: BigNumberish, target_price_feed_ids: Vec<string>, update_data: Vec<Bytes>], Vec<PriceFeedOutput>>;
     price: InvokeFunction<[price_feed_id: string], PriceOutput>;
-    price_no_older_than: InvokeFunction<
-      [time_period: BigNumberish, price_feed_id: string],
-      PriceOutput
-    >;
+    price_no_older_than: InvokeFunction<[time_period: BigNumberish, price_feed_id: string], PriceOutput>;
     price_unsafe: InvokeFunction<[price_feed_id: string], PriceOutput>;
     update_fee: InvokeFunction<[update_data: Vec<Bytes>], BN>;
     update_price_feeds: InvokeFunction<[update_data: Vec<Bytes>], void>;
-    update_price_feeds_if_necessary: InvokeFunction<
-      [
-        price_feed_ids: Vec<string>,
-        publish_times: Vec<BigNumberish>,
-        update_data: Vec<Bytes>,
-      ],
-      void
-    >;
+    update_price_feeds_if_necessary: InvokeFunction<[price_feed_ids: Vec<string>, publish_times: Vec<BigNumberish>, update_data: Vec<Bytes>], void>;
     valid_time_period: InvokeFunction<[], BN>;
-    constructor: InvokeFunction<
-      [
-        data_sources: Vec<DataSourceInput>,
-        governance_data_source: DataSourceInput,
-        wormhole_governance_data_source: DataSourceInput,
-        single_update_fee: BigNumberish,
-        valid_time_period_seconds: BigNumberish,
-        wormhole_guardian_set_addresses: Vec<string>,
-        wormhole_guardian_set_index: BigNumberish,
-        chain_id: BigNumberish,
-      ],
-      void
-    >;
+    constructor: InvokeFunction<[data_sources: Vec<DataSourceInput>, governance_data_source: DataSourceInput, wormhole_governance_data_source: DataSourceInput, single_update_fee: BigNumberish, valid_time_period_seconds: BigNumberish, wormhole_guardian_set_addresses: Vec<string>, wormhole_guardian_set_index: BigNumberish, chain_id: BigNumberish], void>;
     chain_id: InvokeFunction<[], number>;
-    is_valid_data_source: InvokeFunction<
-      [data_source: DataSourceInput],
-      boolean
-    >;
+    is_valid_data_source: InvokeFunction<[data_source: DataSourceInput], boolean>;
     last_executed_governance_sequence: InvokeFunction<[], BN>;
     latest_publish_time: InvokeFunction<[price_feed_id: string], BN>;
     price_feed_exists: InvokeFunction<[price_feed_id: string], boolean>;
@@ -2275,17 +1809,17 @@ export class PythContract extends __Contract {
     valid_data_sources: InvokeFunction<[], Vec<DataSourceOutput>>;
     current_guardian_set_index: InvokeFunction<[], number>;
     current_wormhole_provider: InvokeFunction<[], DataSourceOutput>;
-    governance_action_is_consumed: InvokeFunction<
-      [governance_action_hash: string],
-      boolean
-    >;
+    governance_action_is_consumed: InvokeFunction<[governance_action_hash: string], boolean>;
     guardian_set: InvokeFunction<[index: BigNumberish], GuardianSetOutput>;
     submit_new_guardian_set: InvokeFunction<[encoded_vm: Bytes], void>;
     execute_governance_instruction: InvokeFunction<[encoded_vm: Bytes], void>;
     governance_data_source: InvokeFunction<[], DataSourceOutput>;
   };
 
-  constructor(id: string | Address, accountOrProvider: Account | Provider) {
+  constructor(
+    id: string | Address,
+    accountOrProvider: Account | Provider,
+  ) {
     super(id, abi, accountOrProvider);
   }
 }

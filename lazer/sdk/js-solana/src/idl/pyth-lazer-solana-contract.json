@@ -10,16 +10,7 @@
   "instructions": [
     {
       "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
       "accounts": [
         {
           "name": "payer",
@@ -33,15 +24,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  114,
-                  97,
-                  103,
-                  101
-                ]
+                "value": [115, 116, 111, 114, 97, 103, 101]
               }
             ]
           }
@@ -64,23 +47,12 @@
     },
     {
       "name": "update",
-      "discriminator": [
-        219,
-        200,
-        88,
-        176,
-        158,
-        63,
-        253,
-        127
-      ],
+      "discriminator": [219, 200, 88, 176, 158, 63, 253, 127],
       "accounts": [
         {
           "name": "top_authority",
           "signer": true,
-          "relations": [
-            "storage"
-          ]
+          "relations": ["storage"]
         },
         {
           "name": "storage",
@@ -89,15 +61,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  114,
-                  97,
-                  103,
-                  101
-                ]
+                "value": [115, 116, 111, 114, 97, 103, 101]
               }
             ]
           }
@@ -116,23 +80,12 @@
     },
     {
       "name": "update_ecdsa_signer",
-      "discriminator": [
-        22,
-        110,
-        222,
-        141,
-        112,
-        219,
-        27,
-        200
-      ],
+      "discriminator": [22, 110, 222, 141, 112, 219, 27, 200],
       "accounts": [
         {
           "name": "top_authority",
           "signer": true,
-          "relations": [
-            "storage"
-          ]
+          "relations": ["storage"]
         },
         {
           "name": "storage",
@@ -141,15 +94,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  114,
-                  97,
-                  103,
-                  101
-                ]
+                "value": [115, 116, 111, 114, 97, 103, 101]
               }
             ]
           }
@@ -159,10 +104,7 @@
         {
           "name": "trusted_signer",
           "type": {
-            "array": [
-              "u8",
-              20
-            ]
+            "array": ["u8", 20]
           }
         },
         {
@@ -173,16 +115,7 @@
     },
     {
       "name": "verify_ecdsa_message",
-      "discriminator": [
-        207,
-        170,
-        89,
-        179,
-        216,
-        67,
-        129,
-        146
-      ],
+      "discriminator": [207, 170, 89, 179, 216, 67, 129, 146],
       "accounts": [
         {
           "name": "payer",
@@ -195,15 +128,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  114,
-                  97,
-                  103,
-                  101
-                ]
+                "value": [115, 116, 111, 114, 97, 103, 101]
               }
             ]
           }
@@ -211,9 +136,7 @@
         {
           "name": "treasury",
           "writable": true,
-          "relations": [
-            "storage"
-          ]
+          "relations": ["storage"]
         },
         {
           "name": "system_program",
@@ -240,16 +163,7 @@
         "- `message_offset` is the offset of the signed message within the",
         "input data for the current instruction."
       ],
-      "discriminator": [
-        180,
-        193,
-        120,
-        55,
-        189,
-        135,
-        203,
-        83
-      ],
+      "discriminator": [180, 193, 120, 55, 189, 135, 203, 83],
       "accounts": [
         {
           "name": "payer",
@@ -262,15 +176,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  115,
-                  116,
-                  111,
-                  114,
-                  97,
-                  103,
-                  101
-                ]
+                "value": [115, 116, 111, 114, 97, 103, 101]
               }
             ]
           }
@@ -278,9 +184,7 @@
         {
           "name": "treasury",
           "writable": true,
-          "relations": [
-            "storage"
-          ]
+          "relations": ["storage"]
         },
         {
           "name": "system_program",
@@ -318,16 +222,7 @@
   "accounts": [
     {
       "name": "Storage",
-      "discriminator": [
-        209,
-        117,
-        255,
-        185,
-        196,
-        175,
-        68,
-        9
-      ]
+      "discriminator": [209, 117, 255, 185, 196, 175, 68, 9]
     }
   ],
   "types": [
@@ -386,10 +281,7 @@
                       {
                         "kind": "type",
                         "type": {
-                          "array": [
-                            "u8",
-                            20
-                          ]
+                          "array": ["u8", 20]
                         }
                       }
                     ]
@@ -402,10 +294,7 @@
           {
             "name": "_extra_space",
             "type": {
-              "array": [
-                "u8",
-                43
-              ]
+              "array": ["u8", 43]
             }
           }
         ]
@@ -437,24 +326,18 @@
     },
     {
       "name": "VerifiedMessage",
-      "docs": [
-        "A message with a verified ed25519 signature."
-      ],
+      "docs": ["A message with a verified ed25519 signature."],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "public_key",
-            "docs": [
-              "Public key that signed the message."
-            ],
+            "docs": ["Public key that signed the message."],
             "type": "pubkey"
           },
           {
             "name": "payload",
-            "docs": [
-              "Signed message payload."
-            ],
+            "docs": ["Signed message payload."],
             "type": "bytes"
           }
         ]

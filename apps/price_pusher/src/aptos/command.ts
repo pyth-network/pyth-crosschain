@@ -15,12 +15,12 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
 import {
+  APTOS_ACCOUNT_HD_PATH,
   AptosPriceListener,
   AptosPricePusher,
-  APTOS_ACCOUNT_HD_PATH,
 } from "./aptos.js";
-import { filterInvalidPriceItems } from "../utils.js";
 import { createAptosBalanceTracker } from "./balance-tracker.js";
 
 export default {
@@ -53,7 +53,7 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       endpoint,

@@ -1,5 +1,5 @@
 import { Disclosure, DisclosurePanel } from "@headlessui/react";
-import { LazyMotion, AnimatePresence, m, domAnimation } from "framer-motion";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import type { ComponentProps, Ref } from "react";
 import { forwardRef } from "react";
 

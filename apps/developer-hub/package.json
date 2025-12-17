@@ -53,7 +53,6 @@
   },
   "devDependencies": {
     "@pythnetwork/jest-config": "workspace:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@svgr/webpack": "catalog:",
     "@tailwindcss/postcss": "catalog:",
@@ -65,7 +64,6 @@
     "autoprefixer": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "prettier": "catalog:",
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",

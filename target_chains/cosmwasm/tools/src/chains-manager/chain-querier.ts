@@ -1,9 +1,9 @@
-import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
-import { QueryClient } from "@cosmjs/stargate";
 import {
-  type WasmExtension,
   setupWasmExtension,
+  type WasmExtension,
 } from "@cosmjs/cosmwasm-stargate";
+import { QueryClient } from "@cosmjs/stargate";
+import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 
 // TODO: expose the querier and consume them in price pusher
 

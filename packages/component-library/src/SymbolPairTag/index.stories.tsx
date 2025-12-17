@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { SymbolPairTag as SymbolPairTagComponent } from "./index.jsx";
+
 const meta = {
   component: SymbolPairTagComponent,
   argTypes: {

@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import { CLUSTER_NAMES } from "../../services/pyth";
+import type { CLUSTER_NAMES } from "../../services/pyth";
 import ConformanceReport from "../ConformanceReport/conformance-report";
 import type { Interval } from "../ConformanceReport/types";
 import { useDownloadReportForPublisher } from "../ConformanceReport/use-download-report-for-publisher";

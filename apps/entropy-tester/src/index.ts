@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import type { PrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { EvmChain } from "@pythnetwork/contract-manager/core/chains";
-import { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
+import type { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import type { Logger } from "pino";
 import { pino } from "pino";
@@ -168,8 +168,8 @@ const RUN_OPTIONS = {
   },
 } as const;
 
-export const main = function () {
-  return yargs(hideBin(process.argv))
+export const main = () =>
+  yargs(hideBin(process.argv))
     .parserConfiguration({
       "parse-numbers": false,
     })
@@ -226,7 +226,7 @@ export const main = function () {
                   if (attempt < retries) {
                     // Wait a bit before retrying (exponential backoff, max 10s)
                     const backoffDelay = Math.min(
-                      2000 * Math.pow(2, attempt - 1),
+                      2000 * 2 ** (attempt - 1),
                       10_000,
                     );
                     await new Promise((resolve) =>
@@ -254,4 +254,3 @@ export const main = function () {
     )
     .demandCommand()
     .help();
-};

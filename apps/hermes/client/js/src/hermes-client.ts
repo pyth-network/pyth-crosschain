@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-misused-spread */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { EventSource } from "eventsource";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { camelToSnakeCaseObject } from "./utils.js";
 import { schemas } from "./zodSchemas.js";

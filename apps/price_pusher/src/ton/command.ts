@@ -7,14 +7,13 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 import { Address, TonClient } from "@ton/ton";
 import { pino } from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
 import type { IPriceListener } from "../interface.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { TonPriceListener, TonPricePusher } from "./ton.js";
-import { Controller } from "../controller.js";
 import { filterInvalidPriceItems } from "../utils.js";
+import { TonPriceListener, TonPricePusher } from "./ton.js";
 
 export default {
   command: "ton",
@@ -42,7 +41,7 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     const {
       endpoint,
       privateKeyFile,

@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import { Wallet } from "@coral-xyz/anchor";
+import type { Wallet } from "@coral-xyz/anchor";
 import type { Signer } from "@solana/web3.js";
 import {
   PublicKey,
   SystemProgram,
-  TransactionInstruction,
-  VersionedTransaction,
+  type TransactionInstruction,
+  type VersionedTransaction,
 } from "@solana/web3.js";
 import bs58 from "bs58";
-import { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import { Bundle } from "jito-ts/dist/sdk/block-engine/types";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";

@@ -29,9 +29,7 @@
   },
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/entropy_sdk/solidity",
   "devDependencies": {
-    "abi_generator": "workspace:*",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:"
+    "abi_generator": "workspace:*"
   },
   "engines": {
     "node": ">=22.14.0"

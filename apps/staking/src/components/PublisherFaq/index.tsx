@@ -22,8 +22,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>
                 . It is highly recommended to read this guide first.
@@ -34,8 +33,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Documentation
                 </Link>
                 .
@@ -46,8 +44,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook#slashing-conditions"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   Slashing Rulebook
                 </Link>
                 .
@@ -98,8 +95,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 and follow the <strong>Opt Out of Rewards</strong> section.
@@ -123,8 +119,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 and follow the <strong>Opt Out of Rewards</strong> section.
@@ -160,8 +155,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Documentation
                 </Link>{" "}
                 for the requirements, rules, and calculations for these
@@ -195,8 +189,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 offers a quick guide on understanding whether OIS is right for
@@ -215,8 +208,7 @@ export const PublisherFaq = (
                 <Link
                   href="http://staking.pyth.network"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   staking.pyth.network
                 </Link>{" "}
                 before Sep 21, 2024 is the Pyth Governance (PG) program, which
@@ -225,8 +217,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   Pyth DAO Constitution
                 </Link>
                 .
@@ -292,8 +283,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS documentation
                 </Link>{" "}
                 for more details.
@@ -342,8 +332,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 for more details.
@@ -367,8 +356,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 for more details.
@@ -400,8 +388,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 for more details.
@@ -418,8 +405,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae?pvs=4"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS Guide for MDPs
                 </Link>{" "}
                 for a comprehensive guide on how to use OIS.
@@ -457,8 +443,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking/examples"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   reward calculation examples
                 </Link>
                 .
@@ -488,8 +473,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   OIS documentation
                 </Link>
                 .
@@ -507,8 +491,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://pyth.network/blog/oracle-integrity-staking-incentivizing-safer-price-feeds-for-a-more-secure-defi"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   official announcemen
                 </Link>
                 t for more information.
@@ -548,8 +531,7 @@ export const PublisherFaq = (
                 <Link
                   href="https://docs.pyth.network/home/oracle-integrity-staking/slashing-rulebook"
                   className="underline"
-                  target="_blank"
-                >
+                  target="_blank">
                   Slashing Rulebook
                 </Link>{" "}
                 for more details.

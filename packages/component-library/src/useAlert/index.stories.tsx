@@ -1,8 +1,7 @@
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { useAlert as useAlertImpl } from "./index.jsx";
 import { Button } from "../Button/index.jsx";
+import { useAlert as useAlertImpl } from "./index.jsx";
 
 const ShowButton = (
   props: Parameters<ReturnType<typeof useAlertImpl>["open"]>[0],
@@ -12,8 +11,7 @@ const ShowButton = (
     <Button
       onPress={() => {
         drawer.open(props);
-      }}
-    >
+      }}>
       Show alert
     </Button>
   );

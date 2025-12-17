@@ -2,45 +2,44 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable @typescript-eslint/no-deprecated */
 /* eslint-disable @typescript-eslint/no-floating-promises */
-import { Menu, Transition } from '@headlessui/react'
+import { Menu, Transition } from "@headlessui/react";
 import {
-  useQueryState,
   parseAsStringLiteral,
-} from '@pythnetwork/react-hooks/nuqs'
-import { useWallet } from '@solana/wallet-adapter-react'
-import type { TransactionAccount } from '@sqds/mesh/lib/types'
-import { useRouter } from 'next/router'
-import { useContext, useEffect, useState, useMemo, Fragment } from 'react'
+  useQueryState,
+} from "@pythnetwork/react-hooks/nuqs";
+import { useWallet } from "@solana/wallet-adapter-react";
+import type { TransactionAccount } from "@sqds/mesh/lib/types";
+import { useRouter } from "next/router";
+import { Fragment, useContext, useEffect, useMemo, useState } from "react";
+import { ClusterContext } from "../../../contexts/ClusterContext";
+import { useMultisigContext } from "../../../contexts/MultisigContext";
+import ClusterSwitch from "../../ClusterSwitch";
+import Loadbar from "../../loaders/Loadbar";
+import { Select } from "../../Select";
+import { Proposal } from "./Proposal";
+import { ProposalRow } from "./ProposalRow";
+import { getProposalStatus, PROPOSAL_STATUSES } from "./utils";
 
-import { Proposal } from './Proposal'
-import { ProposalRow } from './ProposalRow'
-import { PROPOSAL_STATUSES, getProposalStatus } from './utils'
-import { ClusterContext } from '../../../contexts/ClusterContext'
-import { useMultisigContext } from '../../../contexts/MultisigContext'
-import ClusterSwitch from '../../ClusterSwitch'
-import { Select } from '../../Select'
-import Loadbar from '../../loaders/Loadbar'
-
-type ProposalType = 'priceFeed' | 'governance' | 'lazer'
+type ProposalType = "priceFeed" | "governance" | "lazer";
 
 const PROPOSAL_TYPE_NAMES: Record<ProposalType, string> = {
-  priceFeed: 'Price Feed',
-  governance: 'Governance',
-  lazer: 'Lazer',
-}
+  priceFeed: "Price Feed",
+  governance: "Governance",
+  lazer: "Lazer",
+};
 
 const VOTE_STATUSES = [
-  'any',
-  'voted',
-  'approved',
-  'rejected',
-  'cancelled',
-  'notVoted',
-] as const
-const DEFAULT_VOTE_STATUS = 'any'
+  "any",
+  "voted",
+  "approved",
+  "rejected",
+  "cancelled",
+  "notVoted",
+] as const;
+const DEFAULT_VOTE_STATUS = "any";
 
-const PROPOSAL_STATUS_FILTERS = ['all', ...PROPOSAL_STATUSES] as const
-const DEFAULT_PROPOSAL_STATUS_FILTER = 'all'
+const PROPOSAL_STATUS_FILTERS = ["all", ...PROPOSAL_STATUSES] as const;
+const DEFAULT_PROPOSAL_STATUS_FILTER = "all";
 
 const Arrow = ({ className }: { className?: string }) => (
   <svg
@@ -49,8 +48,7 @@ const Arrow = ({ className }: { className?: string }) => (
     height="6"
     viewBox="0 0 10 6"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+    xmlns="http://www.w3.org/2000/svg">
     <path
       d="M1 1L5 5L9 1"
       stroke="currentColor"
@@ -59,24 +57,24 @@ const Arrow = ({ className }: { className?: string }) => (
       strokeLinejoin="round"
     />
   </svg>
-)
+);
 
 const Proposals = () => {
-  const router = useRouter()
-  const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
-  const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
+  const router = useRouter();
+  const [currentProposal, setCurrentProposal] = useState<TransactionAccount>();
+  const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>();
   const [statusFilter, setStatusFilter] = useQueryState(
-    'status',
+    "status",
     parseAsStringLiteral(PROPOSAL_STATUS_FILTERS).withDefault(
-      DEFAULT_PROPOSAL_STATUS_FILTER
-    )
-  )
+      DEFAULT_PROPOSAL_STATUS_FILTER,
+    ),
+  );
   const [voteStatus, setVoteStatus] = useQueryState(
-    'voteStatus',
-    parseAsStringLiteral(VOTE_STATUSES).withDefault(DEFAULT_VOTE_STATUS)
-  )
-  const { cluster } = useContext(ClusterContext)
-  const { publicKey: walletPublicKey } = useWallet()
+    "voteStatus",
+    parseAsStringLiteral(VOTE_STATUSES).withDefault(DEFAULT_VOTE_STATUS),
+  );
+  const { cluster } = useContext(ClusterContext);
+  const { publicKey: walletPublicKey } = useWallet();
 
   const {
     upgradeMultisigAccount,
@@ -85,93 +83,93 @@ const Proposals = () => {
     upgradeMultisigProposals,
     isLoading: isMultisigLoading,
     refreshData,
-  } = useMultisigContext()
+  } = useMultisigContext();
 
-  const [proposalType, setProposalType] = useState<ProposalType>('priceFeed')
+  const [proposalType, setProposalType] = useState<ProposalType>("priceFeed");
 
   const multisigAccount = useMemo(() => {
     switch (proposalType) {
-      case 'priceFeed': {
-        return priceFeedMultisigAccount
+      case "priceFeed": {
+        return priceFeedMultisigAccount;
       }
-      case 'governance': {
-        return upgradeMultisigAccount
+      case "governance": {
+        return upgradeMultisigAccount;
       }
       default: {
-        return priceFeedMultisigAccount
+        return priceFeedMultisigAccount;
       }
     }
-  }, [proposalType, priceFeedMultisigAccount, upgradeMultisigAccount])
+  }, [proposalType, priceFeedMultisigAccount, upgradeMultisigAccount]);
 
   const multisigProposals = useMemo(() => {
     switch (proposalType) {
-      case 'priceFeed': {
-        return priceFeedMultisigProposals
+      case "priceFeed": {
+        return priceFeedMultisigProposals;
       }
-      case 'governance': {
-        return upgradeMultisigProposals
+      case "governance": {
+        return upgradeMultisigProposals;
       }
-      case 'lazer': {
-        return []
+      case "lazer": {
+        return [];
       }
       default: {
-        return priceFeedMultisigProposals
+        return priceFeedMultisigProposals;
       }
     }
-  }, [proposalType, priceFeedMultisigProposals, upgradeMultisigProposals])
+  }, [proposalType, priceFeedMultisigProposals, upgradeMultisigProposals]);
 
   const handleClickBackToProposals = () => {
-    delete router.query.proposal
+    delete router.query.proposal;
     router.push(
       {
         pathname: router.pathname,
         query: router.query,
       },
       undefined,
-      { scroll: false }
-    )
-  }
+      { scroll: false },
+    );
+  };
 
   useEffect(() => {
     if (router.query.proposal) {
-      setCurrentProposalPubkey(router.query.proposal as string)
+      setCurrentProposalPubkey(router.query.proposal as string);
     } else {
-      setCurrentProposalPubkey(undefined)
+      setCurrentProposalPubkey(undefined);
     }
-  }, [router.query.proposal])
+  }, [router.query.proposal]);
 
   useEffect(() => {
     if (currentProposalPubkey) {
       const currProposal = multisigProposals.find(
-        (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
-      )
-      setCurrentProposal(currProposal)
+        (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey,
+      );
+      setCurrentProposal(currProposal);
       if (currProposal === undefined) {
         // Check if the proposal exists in other proposal types
-        const allProposalTypes: ProposalType[] = ['priceFeed', 'governance']
+        const allProposalTypes: ProposalType[] = ["priceFeed", "governance"];
         for (const type of allProposalTypes) {
-          if (type === proposalType) continue
+          if (type === proposalType) continue;
 
-          let otherProposals: TransactionAccount[] = []
+          let otherProposals: TransactionAccount[] = [];
           switch (type) {
-            case 'priceFeed': {
-              otherProposals = priceFeedMultisigProposals
-              break
+            case "priceFeed": {
+              otherProposals = priceFeedMultisigProposals;
+              break;
             }
-            case 'governance': {
-              otherProposals = upgradeMultisigProposals
-              break
+            case "governance": {
+              otherProposals = upgradeMultisigProposals;
+              break;
             }
           }
 
           if (
             otherProposals.some(
               (proposal) =>
-                proposal.publicKey.toBase58() === currentProposalPubkey
+                proposal.publicKey.toBase58() === currentProposalPubkey,
             )
           ) {
-            setProposalType(type)
-            break
+            setProposalType(type);
+            break;
           }
         }
       }
@@ -183,78 +181,78 @@ const Proposals = () => {
     currentProposalPubkey,
     multisigProposals,
     cluster,
-  ])
+  ]);
 
   const proposalsFilteredByStatus = useMemo(
     () =>
-      statusFilter === 'all'
+      statusFilter === "all"
         ? multisigProposals
         : multisigProposals.filter(
             (proposal) =>
-              getProposalStatus(proposal, multisigAccount) === statusFilter
+              getProposalStatus(proposal, multisigAccount) === statusFilter,
           ),
-    [statusFilter, multisigAccount, multisigProposals]
-  )
+    [statusFilter, multisigAccount, multisigProposals],
+  );
 
   const filteredProposals = useMemo(() => {
     if (walletPublicKey) {
       switch (voteStatus) {
-        case 'any': {
-          return proposalsFilteredByStatus
+        case "any": {
+          return proposalsFilteredByStatus;
         }
-        case 'voted': {
+        case "voted": {
           return proposalsFilteredByStatus.filter((proposal) =>
             [
               ...proposal.approved,
               ...proposal.rejected,
               ...proposal.cancelled,
-            ].some((vote) => vote.equals(walletPublicKey))
-          )
+            ].some((vote) => vote.equals(walletPublicKey)),
+          );
         }
-        case 'approved': {
+        case "approved": {
           return proposalsFilteredByStatus.filter((proposal) =>
-            proposal.approved.some((vote) => vote.equals(walletPublicKey))
-          )
+            proposal.approved.some((vote) => vote.equals(walletPublicKey)),
+          );
         }
-        case 'rejected': {
+        case "rejected": {
           return proposalsFilteredByStatus.filter((proposal) =>
-            proposal.rejected.some((vote) => vote.equals(walletPublicKey))
-          )
+            proposal.rejected.some((vote) => vote.equals(walletPublicKey)),
+          );
         }
-        case 'cancelled': {
+        case "cancelled": {
           return proposalsFilteredByStatus.filter((proposal) =>
-            proposal.cancelled.some((vote) => vote.equals(walletPublicKey))
-          )
+            proposal.cancelled.some((vote) => vote.equals(walletPublicKey)),
+          );
         }
-        case 'notVoted': {
+        case "notVoted": {
           return proposalsFilteredByStatus.filter((proposal) =>
             [
               ...proposal.approved,
               ...proposal.rejected,
               ...proposal.cancelled,
-            ].every((vote) => !vote.equals(walletPublicKey))
-          )
+            ].every((vote) => !vote.equals(walletPublicKey)),
+          );
         }
       }
     } else {
-      return proposalsFilteredByStatus
+      return proposalsFilteredByStatus;
     }
-  }, [proposalsFilteredByStatus, walletPublicKey, voteStatus])
+  }, [proposalsFilteredByStatus, walletPublicKey, voteStatus]);
 
   // Convert proposal types to array of options
   const proposalTypeOptions: ProposalType[] = [
-    'priceFeed',
-    'governance',
-    'lazer',
-  ]
+    "priceFeed",
+    "governance",
+    "lazer",
+  ];
 
   return (
     <div className="relative">
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">
-            {PROPOSAL_TYPE_NAMES[proposalType]}{' '}
-            {router.query.proposal === undefined ? 'Proposals' : 'Proposal'}
+            {PROPOSAL_TYPE_NAMES[proposalType]}{" "}
+            {router.query.proposal === undefined ? "Proposals" : "Proposal"}
           </h1>
         </div>
       </div>
@@ -271,27 +269,24 @@ const Proposals = () => {
                     disabled={isMultisigLoading}
                     className="sub-action-btn text-base"
                     onClick={() => {
-                      const { fetchData } = refreshData()
-                      fetchData()
-                    }}
-                  >
+                      const { fetchData } = refreshData();
+                      fetchData();
+                    }}>
                     Refresh
                   </button>
                 )}
                 <Menu
                   as="div"
-                  className="relative z-[5] block w-[180px] text-left"
-                >
+                  className="relative z-[5] block w-[180px] text-left">
                   {({ open }) => (
                     <>
                       <Menu.Button
                         className="inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 bg-darkGray2 action-btn"
-                        disabled={isMultisigLoading}
-                      >
+                        disabled={isMultisigLoading}>
                         <span className="mr-3">
                           {PROPOSAL_TYPE_NAMES[proposalType]} Proposals
                         </span>
-                        <Arrow className={open ? 'rotate-180' : ''} />
+                        <Arrow className={open ? "rotate-180" : ""} />
                       </Menu.Button>
                       <Transition
                         as={Fragment}
@@ -300,20 +295,18 @@ const Proposals = () => {
                         enterTo="transform opacity-100 scale-100"
                         leave="transition ease-in duration-75"
                         leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95"
-                      >
+                        leaveTo="transform opacity-0 scale-95">
                         <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
                           {proposalTypeOptions.map((type) => (
                             <Menu.Item key={type}>
                               {({ active }) => (
                                 <button
                                   className={`block w-full py-3 px-6 text-left text-sm ${
-                                    active ? 'bg-darkGray2' : 'bg-darkGray'
+                                    active ? "bg-darkGray2" : "bg-darkGray"
                                   }`}
                                   onClick={() => {
-                                    setProposalType(type)
-                                  }}
-                                >
+                                    setProposalType(type);
+                                  }}>
                                   {PROPOSAL_TYPE_NAMES[type]} Proposals
                                 </button>
                               )}
@@ -331,7 +324,7 @@ const Proposals = () => {
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : proposalType === 'lazer' ? (
+              ) : proposalType === "lazer" ? (
                 <div className="mt-4">
                   Lazer proposals are not supported yet.
                 </div>
@@ -385,11 +378,10 @@ const Proposals = () => {
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
               onClick={handleClickBackToProposals}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleClickBackToProposals()
+                if (e.key === "Enter") handleClickBackToProposals();
               }}
               role="button"
-              tabIndex={0}
-            >
+              tabIndex={0}>
               &#8592; back to proposals
             </div>
             <div className="relative mt-6">
@@ -403,7 +395,7 @@ const Proposals = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Proposals
+export default Proposals;

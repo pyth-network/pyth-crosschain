@@ -1,11 +1,11 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import { PACKET_DATA_SIZE } from "@solana/web3.js";
 import {
   type ChainId,
   type ChainName,
   toChainId,
   toChainName,
 } from "../chains";
-import * as BufferLayout from "@solana/buffer-layout";
-import { PACKET_DATA_SIZE } from "@solana/web3.js";
 
 /** Each of the actions that can be directed to the Executor Module */
 export const ExecutorAction = {
@@ -101,7 +101,7 @@ export class PythGovernanceHeader {
   }
   /** Decode Pyth Governance Header */
   static decode(data: Buffer): PythGovernanceHeader | undefined {
-    const deserialized = safeLayoutDecode(this.layout, data);
+    const deserialized = safeLayoutDecode(PythGovernanceHeader.layout, data);
 
     if (!deserialized) return undefined;
 

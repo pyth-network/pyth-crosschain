@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  Field,
+  Label,
   Tab,
   TabGroup,
   TabList,
   TabPanel,
   TabPanels,
-  Field,
-  Label,
 } from "@headlessui/react";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { getEvmPriceFeedContractAddress } from "@pythnetwork/contract-manager/utils/utils";
@@ -15,20 +15,15 @@ import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
 import { ChainIcon } from "connectkit";
 import type {
-  Dispatch,
-  SetStateAction,
   ComponentProps,
+  Dispatch,
   ElementType,
+  SetStateAction,
   SVGAttributes,
 } from "react";
-import { useState, useCallback, useMemo } from "react";
-import { useSwitchChain, useChainId, useConfig } from "wagmi";
+import { useCallback, useMemo, useState } from "react";
+import { useChainId, useConfig, useSwitchChain } from "wagmi";
 import { readContract } from "wagmi/actions";
-
-import type { Parameter } from "./parameter";
-import { ParameterInput } from "./parameter-input";
-import type { EvmApiType } from "./run-button";
-import { RunButton } from "./run-button";
 import { getLogger } from "../../browser-logger";
 import { useIsMounted } from "../../use-is-mounted";
 import type { SupportedLanguage } from "../Code";
@@ -37,6 +32,10 @@ import { ErrorTooltip } from "../ErrorTooltip";
 import { InlineLink } from "../InlineLink";
 import { Markdown } from "../Markdown";
 import { Select } from "../Select";
+import type { Parameter } from "./parameter";
+import { ParameterInput } from "./parameter-input";
+import type { EvmApiType } from "./run-button";
+import { RunButton } from "./run-button";
 
 export { ParameterType } from "./parameter";
 export { EvmApiType } from "./run-button";
@@ -233,8 +232,7 @@ export const EvmApi = <ParameterName extends string>({
             {code.map(({ language }) => (
               <Tab
                 key={LANGUAGE_TO_DISPLAY_NAME[language]}
-                className="mb-[-2px] border-b-2 border-transparent px-2 text-sm font-medium leading-loose hover:text-pythpurple-600 data-[selected]:cursor-default data-[selected]:border-pythpurple-600 data-[selected]:text-pythpurple-600 dark:hover:text-pythpurple-400 dark:data-[selected]:border-pythpurple-400 dark:data-[selected]:text-pythpurple-400"
-              >
+                className="mb-[-2px] border-b-2 border-transparent px-2 text-sm font-medium leading-loose hover:text-pythpurple-600 data-[selected]:cursor-default data-[selected]:border-pythpurple-600 data-[selected]:text-pythpurple-600 dark:hover:text-pythpurple-400 dark:data-[selected]:border-pythpurple-400 dark:data-[selected]:text-pythpurple-400">
                 {LANGUAGE_TO_DISPLAY_NAME[language]}
               </Tab>
             ))}
@@ -244,8 +242,7 @@ export const EvmApi = <ParameterName extends string>({
               <TabPanel key={LANGUAGE_TO_DISPLAY_NAME[language]}>
                 <Code
                   language={LANUGAGE_TO_SHIKI_NAME[language]}
-                  dimRange={dimRange}
-                >
+                  dimRange={dimRange}>
                   {codeContents(
                     isMounted
                       ? {
@@ -333,8 +330,7 @@ const Example = <ParameterName extends string>({
       <InlineLink
         as="button"
         onClick={updateValues}
-        className="flex flex-row items-center gap-2"
-      >
+        className="flex flex-row items-center gap-2">
         {Icon && <Icon className="h-4" />}
         <span>{example.name}</span>
       </InlineLink>

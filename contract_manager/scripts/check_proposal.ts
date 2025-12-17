@@ -29,10 +29,10 @@ import { hideBin } from "yargs/helpers";
 import { CosmWasmChain, EvmChain } from "../src/core/chains";
 import {
   EvmEntropyContract,
-  EvmPriceFeedContract,
-  getCodeDigestWithoutAddress,
-  EvmWormholeContract,
   EvmLazerContract,
+  EvmPriceFeedContract,
+  EvmWormholeContract,
+  getCodeDigestWithoutAddress,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
 

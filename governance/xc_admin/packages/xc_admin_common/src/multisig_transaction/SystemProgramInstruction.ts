@@ -1,4 +1,7 @@
-import { SystemInstruction, TransactionInstruction } from "@solana/web3.js";
+import {
+  SystemInstruction,
+  type TransactionInstruction,
+} from "@solana/web3.js";
 import {
   type MultisigInstruction,
   MultisigInstructionProgram,

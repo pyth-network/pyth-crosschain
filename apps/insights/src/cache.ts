@@ -1,6 +1,6 @@
 import type { Cache as ACDCache } from "async-cache-dedupe";
 import { createCache } from "async-cache-dedupe";
-import { stringify, parse } from "superjson";
+import { parse, stringify } from "superjson";
 
 import { getRedis } from "./config/server";
 

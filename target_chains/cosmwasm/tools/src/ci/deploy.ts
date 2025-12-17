@@ -4,8 +4,8 @@
 // to do that.
 
 import { readdirSync } from "fs";
-import { DeployerFactory } from "./deployer/index.js";
 import { CONFIG as NetworkConfig } from "./deployer/config.js";
+import { DeployerFactory } from "./deployer/index.js";
 import { NETWORKS } from "./network.js";
 
 async function deploy() {

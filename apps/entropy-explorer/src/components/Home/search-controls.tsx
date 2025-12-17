@@ -5,24 +5,24 @@ import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import type { Props as SelectProps } from "@pythnetwork/component-library/Select";
 import { Select } from "@pythnetwork/component-library/Select";
 import Image from "next/image";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ComponentProps } from "react";
 import { Suspense, useCallback, useMemo, useTransition } from "react";
 import { useCollator } from "react-aria";
 
 import type { ChainSlug } from "../../entropy-deployments";
+import {
+  CHAIN_LABELS,
+  EntropyDeployments,
+  getChainName,
+  isSpecialChainKey,
+  parseChainSlug,
+} from "../../entropy-deployments";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "../../pages";
 import { Status, StatusParams } from "../../requests";
 import type { ConstrainedOmit } from "../../type-utils";
 import { Status as StatusComponent } from "../Status";
 import { ChainTag } from "./chain-tag";
-import {
-  EntropyDeployments,
-  CHAIN_LABELS,
-  getChainName,
-  isSpecialChainKey,
-  parseChainSlug,
-} from "../../entropy-deployments";
 
 export const SearchBar = (props: ComponentProps<typeof ResolvedSearchBar>) => (
   <Suspense fallback={<SearchInput isPending {...props} />}>

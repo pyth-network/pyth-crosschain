@@ -521,7 +521,7 @@ export const EntropyDeployments = {
 export const isValidDeploymentSlug = (
   name: string,
 ): name is keyof typeof EntropyDeployments =>
-  Object.prototype.hasOwnProperty.call(EntropyDeployments, name);
+  Object.hasOwn(EntropyDeployments, name);
 
 export type ChainSlug =
   | keyof typeof EntropyDeployments

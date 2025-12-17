@@ -1,4 +1,4 @@
-import { tokensToString, stringToTokens } from "./tokens";
+import { stringToTokens, tokensToString } from "./tokens";
 
 const BIDIRECTIONAL_TESTS = [
   [1n, "0.000001"],

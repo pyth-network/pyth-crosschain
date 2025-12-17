@@ -1,5 +1,3 @@
-export { AptosPriceServiceConnection } from "./AptosPriceServiceConnection";
-
 export {
   type DurationInMs,
   type HexString,
@@ -8,3 +6,4 @@ export {
   type PriceServiceConnectionConfig,
   type UnixTimestamp,
 } from "@pythnetwork/price-service-client";
+export { AptosPriceServiceConnection } from "./AptosPriceServiceConnection";

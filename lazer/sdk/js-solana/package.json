@@ -55,7 +55,6 @@
   "devDependencies": {
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "catalog:",
-    "prettier": "catalog:",
     "typedoc": "catalog:"
   },
   "bugs": {

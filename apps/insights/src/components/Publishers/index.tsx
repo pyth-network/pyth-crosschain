@@ -4,23 +4,22 @@ import { Button } from "@pythnetwork/component-library/Button";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
-
-import styles from "./index.module.scss";
-import { PublishersCard } from "./publishers-card";
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import { getPublisherCaps } from "../../services/hermes";
 import { Cluster } from "../../services/pyth";
 import {
-  getDelState,
   getClaimableRewards,
+  getDelState,
   getDistributedRewards,
 } from "../../services/staking";
 import { ExplainAverage } from "../Explanations";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedTokens } from "../FormattedTokens";
 import { PublisherIcon } from "../PublisherIcon";
-import { SemicircleMeter, Label } from "../SemicircleMeter";
+import { Label, SemicircleMeter } from "../SemicircleMeter";
 import { TokenIcon } from "../TokenIcon";
+import styles from "./index.module.scss";
+import { PublishersCard } from "./publishers-card";
 
 const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
 
@@ -93,19 +92,16 @@ export const Publishers = async () => {
               target="_blank"
               size="sm"
               variant="outline"
-              afterIcon={<ArrowSquareOut />}
-            >
+              afterIcon={<ArrowSquareOut />}>
               Staking App
             </Button>
-          }
-        >
+          }>
           <SemicircleMeter
             width={340}
             height={340}
             value={Number(oisStats.totalStaked)}
             maxValue={oisStats.maxPoolSize ?? 0}
-            className={styles.oisPool ?? ""}
-          >
+            className={styles.oisPool ?? ""}>
             <Label className={styles.title}>PYTH Staking Pool</Label>
             <p className={styles.poolUsed}>
               <FormattedTokens mode="wholePart" tokens={oisStats.totalStaked} />

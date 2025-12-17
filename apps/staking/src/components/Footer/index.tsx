@@ -1,15 +1,14 @@
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
-
+import Logo from "../Header/logo.svg";
+import { Link } from "../Link";
+import { MaxWidth } from "../MaxWidth";
 import Discord from "./discord.svg";
 import Github from "./github.svg";
 import LinkedIn from "./linkedin.svg";
 import Telegram from "./telegram.svg";
 import X from "./x.svg";
 import Youtube from "./youtube.svg";
-import Logo from "../Header/logo.svg";
-import { Link } from "../Link";
-import { MaxWidth } from "../MaxWidth";
 
 const SOCIAL_LINKS = [
   { name: "X", icon: X, href: "https://x.com/PythNetwork" },
@@ -41,16 +40,14 @@ export const Footer = ({
       "text-xs font-light lg:sticky lg:bottom-0 lg:px-4",
       className,
     )}
-    {...props}
-  >
+    {...props}>
     <div className="border-t border-neutral-600/50 bg-pythpurple-800 lg:border-x">
       <MaxWidth className="flex h-48 flex-col items-center justify-between overflow-hidden pb-4 pt-8 text-center lg:-mx-4 lg:h-16 lg:flex-row lg:gap-10 lg:py-0">
         <div className="flex flex-col items-center gap-2 lg:flex-row lg:gap-8">
           <Link
             href="https://www.pyth.network"
             target="_blank"
-            className="focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
-          >
+            className="focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400">
             <Logo className="h-10 lg:h-8" />
             <span className="sr-only">Pyth homepage</span>
           </Link>
@@ -64,8 +61,7 @@ export const Footer = ({
                 href={href}
                 key={name}
                 className="grid h-full place-content-center px-3 transition hover:text-pythpurple-400 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
-                rel="noreferrer"
-              >
+                rel="noreferrer">
                 <Icon className="size-4" />
                 <span className="sr-only">{name}</span>
               </Link>
@@ -75,21 +71,18 @@ export const Footer = ({
             <Link
               className="-my-1 px-2 py-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
               target="_blank"
-              href="https://pythdataassociation.com/privacy-policy"
-            >
+              href="https://pythdataassociation.com/privacy-policy">
               Privacy Policy
             </Link>
             <Link
               className="-my-1 px-2 py-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
               target="_blank"
-              href="https://pythdataassociation.com/terms-of-use"
-            >
+              href="https://pythdataassociation.com/terms-of-use">
               Terms of Use
             </Link>
             <Link
               className="-my-1 px-2 py-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400"
-              href="/terms-of-service"
-            >
+              href="/terms-of-service">
               Terms of Service
             </Link>
           </div>

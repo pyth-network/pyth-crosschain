@@ -15,11 +15,6 @@ import {
   Tabs as UnstyledTabs,
 } from "@pythnetwork/component-library/unstyled/Tabs";
 import type { ElementType } from "react";
-
-import { AssetClassTable } from "./asset-class-table";
-import { ComingSoonList } from "./coming-soon-list";
-import styles from "./index.module.scss";
-import { PriceFeedsCard } from "./price-feeds-card";
 import { Cluster } from "../../services/pyth";
 import { getFeeds } from "../../services/pyth/get-feeds";
 import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-feeds";
@@ -27,10 +22,14 @@ import { activeChains } from "../../static-data/stats";
 import { Cards } from "../Cards";
 import { LivePrice } from "../LivePrices";
 import {
-  YesterdaysPricesProvider,
   PriceFeedChangePercent,
+  YesterdaysPricesProvider,
 } from "../PriceFeedChangePercent";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import { AssetClassTable } from "./asset-class-table";
+import { ComingSoonList } from "./coming-soon-list";
+import styles from "./index.module.scss";
+import { PriceFeedsCard } from "./price-feeds-card";
 
 const PRICE_FEEDS_ANCHOR = "priceFeeds";
 
@@ -166,8 +165,7 @@ const FeaturedFeeds = ({
           symbol,
           product.price_account,
         ]),
-      )}
-    >
+      )}>
       <FeaturedFeedsCard
         title="Featured"
         icon={<Star />}
@@ -204,8 +202,7 @@ const FeaturedFeeds = ({
                 }))}
               />
             ),
-          }}
-        >
+          }}>
           Show all
         </Button>
       }
@@ -242,8 +239,7 @@ const FeaturedFeedsCard = <T extends ElementType>({
         <Card
           key={feed.product.price_account}
           variant="tertiary"
-          href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}
-        >
+          href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}>
           <div className={styles.feedCardContents}>
             <SymbolPairTag
               displaySymbol={feed.product.display_symbol}

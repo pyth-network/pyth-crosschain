@@ -99,7 +99,7 @@ export function usePythCoreWebSocket(): UseDataProviderSocketHookReturnType {
           // Convert price with exponent: price * 10^expo
           const price =
             Number.parseFloat(priceFeed.price.price) *
-            Math.pow(10, priceFeed.price.expo);
+            10 ** priceFeed.price.expo;
 
           addDataPoint("pyth", symbol, {
             price: price,

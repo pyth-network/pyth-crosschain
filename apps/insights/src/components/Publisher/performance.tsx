@@ -11,25 +11,24 @@ import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { Table } from "@pythnetwork/component-library/Table";
 import { lookup } from "@pythnetwork/known-publishers";
 import { notFound } from "next/navigation";
-import type { ReactNode, ComponentProps } from "react";
-
-import { getPriceFeeds } from "./get-price-feeds";
-import styles from "./performance.module.scss";
-import { TopFeedsTable } from "./top-feeds-table";
+import type { ComponentProps, ReactNode } from "react";
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import type { Cluster } from "../../services/pyth";
 import { ClusterToName, parseCluster } from "../../services/pyth";
 import { Status } from "../../status";
 import {
   ExplainActive,
-  ExplainInactive,
   ExplainAverage,
+  ExplainInactive,
 } from "../Explanations";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
+import { getPriceFeeds } from "./get-price-feeds";
+import styles from "./performance.module.scss";
+import { TopFeedsTable } from "./top-feeds-table";
 
 const PUBLISHER_SCORE_WIDTH = 24;
 
@@ -72,8 +71,7 @@ export const Performance = async ({ params }: Props) => {
           <Link
             href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Active`}
             invert
-            prefetch={false}
-          >
+            prefetch={false}>
             {publisher.activeFeeds}
           </Link>
         ),
@@ -81,8 +79,7 @@ export const Performance = async ({ params }: Props) => {
           <Link
             href={`/publishers/${ClusterToName[parsedCluster]}/${publisher.key}/price-feeds?status=Inactive`}
             invert
-            prefetch={false}
-          >
+            prefetch={false}>
             {publisher.inactiveFeeds}
           </Link>
         ),
@@ -166,8 +163,7 @@ const PerformanceImpl = (props: PerformanceImplProps) => (
     <Card
       icon={<Broadcast />}
       title="Publishers Ranking"
-      className={styles.publishersRankingCard ?? ""}
-    >
+      className={styles.publishersRankingCard ?? ""}>
       <EntityList
         label="Publishers Ranking"
         className={styles.publishersRankingList ?? ""}

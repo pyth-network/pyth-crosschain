@@ -25,8 +25,7 @@ export const MARKDOWN_COMPONENTS = {
         <Code
           language={
             language && isSupportedLanguage(language) ? language : undefined
-          }
-        >
+          }>
           {codeNode !== undefined && "value" in codeNode ? codeNode.value : ""}
         </Code>
       );

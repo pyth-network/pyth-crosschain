@@ -18,24 +18,23 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import {
-  useQueryState,
   parseAsStringEnum,
+  useQueryState,
 } from "@pythnetwork/react-hooks/nuqs";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { Suspense, useMemo, useCallback } from "react";
-import { useFilter, useCollator } from "react-aria";
-
-import styles from "./publishers-card.module.scss";
+import { Suspense, useCallback, useMemo } from "react";
+import { useCollator, useFilter } from "react-aria";
 import { CLUSTER_NAMES } from "../../services/pyth";
 import {
-  ExplainPermissioned,
   ExplainActive,
+  ExplainPermissioned,
   ExplainRanking,
 } from "../Explanations";
 import { PublisherTag } from "../PublisherTag";
 import { Ranking } from "../Ranking";
 import { Score } from "../Score";
+import styles from "./publishers-card.module.scss";
 
 const PUBLISHER_SCORE_WIDTH = 38;
 
@@ -173,8 +172,7 @@ const ResolvedPublishersCard = ({
               <Link
                 href={`/publishers/${cluster}/${id}/price-feeds?status=Active`}
                 invert
-                prefetch={false}
-              >
+                prefetch={false}>
                 {activeFeeds}
               </Link>
             ),
@@ -307,8 +305,7 @@ const PublishersCardContents = ({
           mkPageLink={props.mkPageLink}
         />
       ),
-    })}
-  >
+    })}>
     <EntityList
       label="Publishers"
       className={styles.entityList ?? ""}

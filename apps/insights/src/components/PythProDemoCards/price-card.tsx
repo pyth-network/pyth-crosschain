@@ -5,9 +5,6 @@ import type { useWebSocket } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
-
-import { PriceCardUtils } from "./price-card-utils";
-import classes from "./price-card.module.scss";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
@@ -20,6 +17,8 @@ import {
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+import classes from "./price-card.module.scss";
+import { PriceCardUtils } from "./price-card-utils";
 
 type PriceCardProps = {
   apiToken: Nullish<string>;
@@ -67,8 +66,7 @@ export function PythProDemoCard({
       title={
         <span
           className={classes.dataSourceName}
-          style={{ color: getColorForDataSource(dataSource) }}
-        >
+          style={{ color: getColorForDataSource(dataSource) }}>
           <Button
             aria-label={toggleVisibilityTooltip}
             className={classes.toggleVisibilityBtn ?? ""}
@@ -76,15 +74,13 @@ export function PythProDemoCard({
               toggleDataSourceVisibility(dataSource);
             }}
             size="sm"
-            variant="ghost"
-          >
+            variant="ghost">
             {sourceVisible ? <Eye /> : <EyeSlash />}
           </Button>
           {formattedDataSource}
         </span>
       }
-      variant="secondary"
-    >
+      variant="secondary">
       <div className={classes.cardContents}>
         {socketStatus === "connected" && (
           <>

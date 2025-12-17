@@ -27,7 +27,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-module.exports = function (callback) {
+module.exports = (callback) => {
   const fn = async () => {
     while (true) {
       console.log(await advanceBlock());

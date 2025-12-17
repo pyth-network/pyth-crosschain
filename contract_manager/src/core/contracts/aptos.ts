@@ -8,7 +8,7 @@ import { ApiError, BCS, CoinClient, TxnBuilderTypes } from "aptos";
 
 import type { PriceFeed, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract } from "../base";
-import { AptosChain, Chain } from "../chains";
+import { AptosChain, type Chain } from "../chains";
 import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
 

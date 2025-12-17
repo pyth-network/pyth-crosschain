@@ -1,13 +1,18 @@
 "use client";
 
 import { PlusMinus } from "@phosphor-icons/react/dist/ssr/PlusMinus";
-import type { PriceData, PriceComponent } from "@pythnetwork/client";
+import type { PriceComponent, PriceData } from "@pythnetwork/client";
 import { PriceStatus } from "@pythnetwork/client";
 import { DocumentTitle } from "@pythnetwork/component-library/DocumentTitle";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import { useMemo } from "react";
 import { useDateFormatter } from "react-aria";
-
+import {
+  useLivePriceComponent,
+  useLivePriceData,
+} from "../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../hooks/use-price-formatter";
+import type { Cluster } from "../../services/pyth";
 import styles from "./index.module.scss";
 import type {
   LiveAggregatedPriceOrConfidenceProps,
@@ -17,12 +22,6 @@ import type {
   LiveValueProps,
   PriceProps,
 } from "./types";
-import {
-  useLivePriceComponent,
-  useLivePriceData,
-} from "../../hooks/use-live-price-data";
-import { usePriceFormatter } from "../../hooks/use-price-formatter";
-import type { Cluster } from "../../services/pyth";
 
 export const SKELETON_WIDTH = 20;
 
@@ -106,8 +105,7 @@ const Price = ({
       {updatePageTitle && <DocumentTitle prefix title={val} />}
       <span
         className={styles.price}
-        data-direction={prev ? getChangeDirection(prev, current) : "flat"}
-      >
+        data-direction={prev ? getChangeDirection(prev, current) : "flat"}>
         {val}
       </span>
     </>

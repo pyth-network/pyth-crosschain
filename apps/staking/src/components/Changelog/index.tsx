@@ -113,8 +113,7 @@ export const messages = [
               <Link
                 href="https://forum.pyth.network/c/oracle-integrity-staking-ois-discussion/8"
                 className="underline"
-                target="_blank"
-              >
+                target="_blank">
                 discussion catalogue
               </Link>{" "}
               opened in Pyth DAO forum. Let the community know your thoughts and
@@ -129,16 +128,14 @@ export const messages = [
             <Link
               href="https://github.com/pyth-network/governance/tree/main/staking/programs/staking"
               className="underline"
-              target="_blank"
-            >
+              target="_blank">
               open source
             </Link>{" "}
             and the upgrade authority is governed by the Pyth DAO. The official{" "}
             <Link
               href="https://github.com/pyth-network/audit-reports/blob/main/2024_09_11/pyth_cip_final_report.pdf"
               className="underline"
-              target="_blank"
-            >
+              target="_blank">
               audit report
             </Link>{" "}
             is publicly accessible. All on-chain contract codes are verified
@@ -146,8 +143,7 @@ export const messages = [
             <Link
               href="https://github.com/Ellipsis-Labs/solana-verifiable-build/"
               className="underline"
-              target="_blank"
-            >
+              target="_blank">
               Solana verifiable build
             </Link>{" "}
             and the Pyth DAO governs the upgrade authority.
@@ -176,16 +172,14 @@ export const messages = [
             <Link
               href="https://discord.com/invite/PythNetwork"
               className="underline"
-              target="_blank"
-            >
+              target="_blank">
               Pyth Discord
             </Link>{" "}
             or the{" "}
             <Link
               href="https://forum.pyth.network"
               className="underline"
-              target="_blank"
-            >
+              target="_blank">
               Pyth DAO Forum
             </Link>{" "}
             to share your questions, ideas, or feedback. We want to hear what

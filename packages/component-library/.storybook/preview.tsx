@@ -1,11 +1,10 @@
-import type { Preview, Decorator } from "@storybook/react";
+import type { Decorator, Preview } from "@storybook/react";
 import { useEffect } from "react";
-
-import styles from "./storybook.module.scss";
 import { BodyProviders } from "../src/AppShell/body-providers.jsx";
 import { sans } from "../src/AppShell/fonts";
 import { RootProviders } from "../src/AppShell/index.jsx";
 import shellStyles from "../src/AppShell/index.module.scss";
+import styles from "./storybook.module.scss";
 
 const preview = {
   globalTypes: {
@@ -74,8 +73,7 @@ export const decorators: Decorator[] = [
             })}
             {...(typeof globals.background === "string" && {
               "data-background": globals.background,
-            })}
-          >
+            })}>
             <Story />
           </BodyProviders>
         )}

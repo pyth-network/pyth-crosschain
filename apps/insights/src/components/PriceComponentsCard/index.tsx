@@ -10,39 +10,38 @@ import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { Select } from "@pythnetwork/component-library/Select";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import type {
-  RowConfig,
   ColumnConfig,
+  RowConfig,
   SortDescriptor,
 } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import {
-  useQueryState,
-  parseAsStringEnum,
   parseAsBoolean,
+  parseAsStringEnum,
+  useQueryState,
 } from "@pythnetwork/react-hooks/nuqs";
 import clsx from "clsx";
 import type { ReactNode } from "react";
-import { Fragment, Suspense, useMemo, useCallback } from "react";
-import { useFilter, useCollator } from "react-aria";
-
-import styles from "./index.module.scss";
-import { Cluster } from "../../services/pyth";
+import { Fragment, Suspense, useCallback, useMemo } from "react";
+import { useCollator, useFilter } from "react-aria";
+import type { Cluster } from "../../services/pyth";
 import type { StatusName } from "../../status";
 import {
   STATUS_NAMES,
-  Status as StatusType,
+  type Status as StatusType,
   statusNameToStatus,
 } from "../../status";
 import { Explain } from "../Explain";
 import { EvaluationTime } from "../Explanations";
 import { FormattedNumber } from "../FormattedNumber";
-import { LivePrice, LiveConfidence, LiveComponentValue } from "../LivePrices";
+import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { usePriceComponentDrawer } from "../PriceComponentDrawer";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
+import styles from "./index.module.scss";
 
 const SCORE_WIDTH = 32;
 
@@ -99,8 +98,7 @@ export const PriceComponentsCard = <
     const { isLoading, priceComponents, ...otherProps } = props;
     return (
       <Suspense
-        fallback={<PriceComponentsCardContents isLoading {...otherProps} />}
-      >
+        fallback={<PriceComponentsCardContents isLoading {...otherProps} />}>
         <ResolvedPriceComponentsCard
           priceComponents={priceComponents}
           {...otherProps}
@@ -455,8 +453,7 @@ export const PriceComponentsCardContents = <
             mkPageLink={props.mkPageLink}
           />
         ),
-      })}
-    >
+      })}>
       <EntityList
         label={label}
         className={styles.entityList ?? ""}
@@ -588,8 +585,7 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#uptime-1"
                     size="xs"
                     variant="solid"
-                    target="_blank"
-                  >
+                    target="_blank">
                     Read more
                   </Button>
                 </Explain>
@@ -620,8 +616,7 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#price-deviation-1"
                     size="xs"
                     variant="solid"
-                    target="_blank"
-                  >
+                    target="_blank">
                     Read more
                   </Button>
                 </Explain>
@@ -653,8 +648,7 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking#lack-of-stalled-prices-1"
                     size="xs"
                     variant="solid"
-                    target="_blank"
-                  >
+                    target="_blank">
                     Read more
                   </Button>
                 </Explain>
@@ -687,8 +681,7 @@ const otherColumns = ({
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     size="xs"
                     variant="solid"
-                    target="_blank"
-                  >
+                    target="_blank">
                     Read more
                   </Button>
                 </Explain>

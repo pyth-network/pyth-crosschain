@@ -40,17 +40,14 @@ export const Score = ({ width, fill, className, ...props }: Props) =>
       data-fill={fill ? "" : undefined}
       {...(!fill && {
         style: { "--width": width ?? SCORE_WIDTH } as CSSProperties,
-      })}
-    >
+      })}>
       {({ percentage }) => (
         <div
           className={styles.score}
-          data-size-class={getSizeClass(percentage)}
-        >
+          data-size-class={getSizeClass(percentage)}>
           <div
             className={styles.fill}
-            style={{ width: `${(50 + percentage / 2).toString()}%` }}
-          >
+            style={{ width: `${(50 + percentage / 2).toString()}%` }}>
             {props.score.toFixed(2)}
           </div>
         </div>

@@ -4,14 +4,13 @@ import { XCircle } from "@phosphor-icons/react/dist/ssr/XCircle";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Heading } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 import type { ModalDialogProps } from "../ModalDialog/index.jsx";
 import {
-  ModalDialog,
   createModalDialogContext,
+  ModalDialog,
 } from "../ModalDialog/index.jsx";
+import styles from "./index.module.scss";
 
 const CLOSE_DURATION_IN_S = 0.1;
 
@@ -50,8 +49,7 @@ const Alert = ({
       unmounted: { y: "calc(100% + 2rem)" },
     }}
     className={clsx(styles.alert, className)}
-    {...props}
-  >
+    {...props}>
     <Button
       className={styles.closeButton ?? ""}
       beforeIcon={<XCircle weight="fill" />}
@@ -59,8 +57,7 @@ const Alert = ({
       hideText
       rounded
       variant="ghost"
-      size="sm"
-    >
+      size="sm">
       Close
     </Button>
     <Heading className={styles.title} slot="title">

@@ -2,13 +2,13 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import {
+  Button,
   Dialog,
   DialogTrigger,
   OverlayArrow,
   Popover,
-  Button,
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
@@ -35,8 +35,7 @@ export const Term = ({ className, children, term, ...props }: Props) => {
           setIsOpen(false);
           didEscape.current = true;
         }
-      }}
-    >
+      }}>
       <Button
         className={clsx(className, styles.term)}
         onHoverStart={() => {
@@ -63,8 +62,7 @@ export const Term = ({ className, children, term, ...props }: Props) => {
         onPress={() => {
           setIsOpen(true);
         }}
-        {...props}
-      >
+        {...props}>
         {term}
         <span className={styles.question}>?</span>
       </Button>

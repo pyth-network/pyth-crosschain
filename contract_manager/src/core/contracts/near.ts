@@ -7,11 +7,11 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { BN } from "fuels";
-import * as nearAPI from "near-api-js";
+import type * as nearAPI from "near-api-js";
 
 import type { KeyValueConfig, PriceFeed, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract } from "../base";
-import { Chain, NearChain } from "../chains";
+import { type Chain, NearChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 export class NearWormholeContract extends WormholeContract {

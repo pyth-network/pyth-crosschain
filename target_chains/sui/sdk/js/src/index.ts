@@ -1,6 +1,3 @@
-export { SuiPriceServiceConnection } from "./SuiPriceServiceConnection.js";
-export { SuiPythClient } from "./client.js";
-
 export type {
   AssetType,
   BinaryPriceUpdate,
@@ -16,3 +13,5 @@ export type {
   TwapsResponse,
   UnixTimestamp,
 } from "@pythnetwork/hermes-client";
+export { SuiPythClient } from "./client.js";
+export { SuiPriceServiceConnection } from "./SuiPriceServiceConnection.js";

@@ -1,4 +1,4 @@
-import type { HighlighterCore, DecorationItem } from "shiki/core";
+import type { DecorationItem, HighlighterCore } from "shiki/core";
 import { createHighlighterCore } from "shiki/core";
 import { createOnigurumaEngine } from "shiki/engine/oniguruma";
 import javascript from "shiki/langs/javascript.mjs";

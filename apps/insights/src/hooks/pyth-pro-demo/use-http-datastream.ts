@@ -2,12 +2,6 @@ import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { wait } from "@pythnetwork/shared-lib/util";
 import { useEffect, useRef, useState } from "react";
-
-import type {
-  UseDataStreamReturnType,
-  UseHttpDataStreamOpts,
-  UseHttpDataStreamReturnType,
-} from "./types";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
@@ -21,6 +15,11 @@ import {
   ValidDateSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
+import type {
+  UseDataStreamReturnType,
+  UseHttpDataStreamOpts,
+  UseHttpDataStreamReturnType,
+} from "./types";
 
 const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
 

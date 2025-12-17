@@ -1,21 +1,20 @@
 import TTLCache from "@isaacs/ttlcache";
+import type WebSocket from "isomorphic-ws";
 import type { ErrorEvent } from "isomorphic-ws";
-import WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
-
-import type { Request, Response } from "../protocol.js";
-import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
-import { ResilientWebSocket } from "./resilient-websocket.js";
 import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
 } from "../constants.js";
+import type { Request, Response } from "../protocol.js";
 import {
   addAuthTokenToWebSocketUrl,
   bufferFromWebsocketData,
   envIsBrowserOrWorker,
 } from "../util/index.js";
+import type { ResilientWebSocketConfig } from "./resilient-websocket.js";
+import { ResilientWebSocket } from "./resilient-websocket.js";
 
 const DEFAULT_NUM_CONNECTIONS = 4;
 

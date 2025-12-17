@@ -1,17 +1,17 @@
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
 import {
+  Ed25519Keypair,
+  fromB64,
+  JsonRpcProvider,
+  normalizeSuiObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  fromB64,
-  normalizeSuiObjectId,
-  JsonRpcProvider,
-  Ed25519Keypair,
   testnetConnection,
 } from "@mysten/sui.js";
 import { execSync } from "child_process";
-import { resolve } from "path";
 import * as fs from "fs";
+import { resolve } from "path";
 
 const GOVERNANCE_EMITTER =
   "0000000000000000000000000000000000000000000000000000000000000004";
@@ -33,9 +33,9 @@ async function main() {
   const provider = new JsonRpcProvider(testnetConnection);
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(
-      Buffer.from(walletPrivateKey, "base64").subarray(1)
+      Buffer.from(walletPrivateKey, "base64").subarray(1),
     ),
-    provider
+    provider,
   );
 
   const srcWormholePath = resolve(`${__dirname}/../../wormhole`);
@@ -56,7 +56,7 @@ async function main() {
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex")
+    "0x" + digest.toString("hex"),
   );
   published.writeUInt16BE(21, published.length - 34);
 
@@ -69,7 +69,7 @@ async function main() {
     WORMHOLE_STATE_ID,
     modules,
     dependencies,
-    signedVaa
+    signedVaa,
   );
 
   console.log("tx digest", upgradeResults.digest);
@@ -104,13 +104,13 @@ function buildForBytecodeAndDigest(packagePath: string) {
   } = JSON.parse(
     execSync(
       `sui move build --dump-bytecode-as-base64 -p ${packagePath} 2> /dev/null`,
-      { encoding: "utf-8" }
-    )
+      { encoding: "utf-8" },
+    ),
   );
   return {
     modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
     dependencies: buildOutput.dependencies.map((d: string) =>
-      normalizeSuiObjectId(d)
+      normalizeSuiObjectId(d),
     ),
     digest: Buffer.from(buildOutput.digest),
   };
@@ -118,7 +118,7 @@ function buildForBytecodeAndDigest(packagePath: string) {
 
 async function getPackageId(
   provider: JsonRpcProvider,
-  stateId: string
+  stateId: string,
 ): Promise<string> {
   const state = await provider
     .getObject({
@@ -147,7 +147,7 @@ async function buildAndUpgradeWormhole(
   wormholeStateId: string,
   modules: number[][],
   dependencies: string[],
-  signedVaa: Buffer
+  signedVaa: Buffer,
 ) {
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 
@@ -207,7 +207,7 @@ async function buildAndUpgradeWormhole(
 async function migrateWormhole(
   signer: RawSigner,
   wormholeStateId: string,
-  signedUpgradeVaa: Buffer
+  signedUpgradeVaa: Buffer,
 ) {
   const contractPackage = await getPackageId(signer.provider, wormholeStateId);
 
@@ -232,7 +232,7 @@ async function migrateWormhole(
 
 function setUpWormholeDirectory(
   srcWormholePath: string,
-  dstWormholePath: string
+  dstWormholePath: string,
 ) {
   fs.cpSync(srcWormholePath, dstWormholePath, { recursive: true });
 
@@ -258,7 +258,7 @@ function setUpWormholeDirectory(
   fs.writeFileSync(
     moveTomlPath,
     moveToml.replace(`wormhole = "_"`, `wormhole = "0x0"`),
-    "utf-8"
+    "utf-8",
   );
 }
 

@@ -45,7 +45,6 @@
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.20",
     "jest": "^29.4.1",
-    "prettier": "catalog:",
     "web3": "^1.8.2",
     "yargs": "^17.0.20"
   },

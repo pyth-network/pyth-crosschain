@@ -1,10 +1,10 @@
-import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
-import { Provider, Wallet, Contract, hexlify, arrayify } from "fuels";
+import { HermesClient, type PriceUpdate } from "@pythnetwork/hermes-client";
+import { arrayify, Contract, hexlify, Provider, Wallet } from "fuels";
 
 import {
-  PYTH_CONTRACT_ADDRESS_SEPOLIA,
-  PYTH_CONTRACT_ABI,
   FUEL_ETH_ASSET_ID,
+  PYTH_CONTRACT_ABI,
+  PYTH_CONTRACT_ADDRESS_SEPOLIA,
 } from "../index";
 
 async function main() {

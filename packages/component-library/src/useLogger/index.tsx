@@ -3,7 +3,7 @@
 import type { Logger } from "pino";
 import { pino } from "pino";
 import type { ComponentProps } from "react";
-import { createContext, useMemo, use } from "react";
+import { createContext, use, useMemo } from "react";
 
 const LoggerContext = createContext<undefined | Logger<string>>(undefined);
 

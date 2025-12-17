@@ -18,7 +18,7 @@ import type {
   TxResult,
 } from "../base";
 import { PriceFeedContract } from "../base";
-import { Chain, StarknetChain } from "../chains";
+import { type Chain, StarknetChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 export class StarknetWormholeContract extends WormholeContract {

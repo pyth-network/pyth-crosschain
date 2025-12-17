@@ -7,62 +7,64 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-console */
-import { Wallet } from '@coral-xyz/anchor'
-import VerifiedIcon from '@images/icons/verified.inline.svg'
-import VotedIcon from '@images/icons/voted.inline.svg'
-import WarningIcon from '@images/icons/warning.inline.svg'
-import type { PythCluster } from '@pythnetwork/client'
-import { getPythProgramKeyForCluster } from '@pythnetwork/client'
-import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
-import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
+import type { Wallet } from "@coral-xyz/anchor";
+import VerifiedIcon from "@images/icons/verified.inline.svg";
+import VotedIcon from "@images/icons/voted.inline.svg";
+import WarningIcon from "@images/icons/warning.inline.svg";
+import type { PythCluster } from "@pythnetwork/client";
+import { getPythProgramKeyForCluster } from "@pythnetwork/client";
+import {
+  sendTransactions,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import type { MultisigInstruction } from "@pythnetwork/xc-admin-common";
 import {
   AnchorMultisigInstruction,
   ExecutePostedVaa,
-  MultisigParser,
-  PythMultisigInstruction,
-  WormholeMultisigInstruction,
   getManyProposalsInstructions,
   getMultisigCluster,
   getProgramName,
-} from '@pythnetwork/xc-admin-common'
-import * as Tooltip from '@radix-ui/react-tooltip'
-import { useWallet } from '@solana/wallet-adapter-react'
-import type { AccountMeta } from '@solana/web3.js'
+  MultisigParser,
+  PythMultisigInstruction,
+  WormholeMultisigInstruction,
+} from "@pythnetwork/xc-admin-common";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { useWallet } from "@solana/wallet-adapter-react";
+import type { AccountMeta } from "@solana/web3.js";
 import {
   PublicKey,
   SystemProgram,
-  TransactionInstruction,
-} from '@solana/web3.js'
-import SquadsMesh from '@sqds/mesh'
-import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import type { ReactNode } from 'react'
-import { Fragment, useContext, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
-
-import { InstructionsSummary } from './InstructionsSummary'
-import { StatusTag } from './StatusTag'
-import { getProposalStatus } from './utils'
-import { ClusterContext } from '../../../contexts/ClusterContext'
-import { useMultisigContext } from '../../../contexts/MultisigContext'
-import { usePythContext } from '../../../contexts/PythContext'
-import { capitalizeFirstLetter } from '../../../utils/capitalizeFirstLetter'
+  type TransactionInstruction,
+} from "@solana/web3.js";
+import type SquadsMesh from "@sqds/mesh";
+import type { MultisigAccount, TransactionAccount } from "@sqds/mesh/lib/types";
+import type { ReactNode } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { ClusterContext } from "../../../contexts/ClusterContext";
+import { useMultisigContext } from "../../../contexts/MultisigContext";
+import { usePythContext } from "../../../contexts/PythContext";
+import { capitalizeFirstLetter } from "../../../utils/capitalizeFirstLetter";
+import CopyText from "../../common/CopyText";
+import Spinner from "../../common/Spinner";
 import {
   ParsedAccountPubkeyRow,
   SignerTag,
   WritableTag,
-} from '../../InstructionViews/AccountUtils'
-import { WormholeInstructionView } from '../../InstructionViews/WormholeInstructionView'
-import { getMappingCluster, isPubkey } from '../../InstructionViews/utils'
-import CopyText from '../../common/CopyText'
-import Spinner from '../../common/Spinner'
-import Loadbar from '../../loaders/Loadbar'
+} from "../../InstructionViews/AccountUtils";
+import { getMappingCluster, isPubkey } from "../../InstructionViews/utils";
+import { WormholeInstructionView } from "../../InstructionViews/WormholeInstructionView";
+import Loadbar from "../../loaders/Loadbar";
+import { InstructionsSummary } from "./InstructionsSummary";
+import { StatusTag } from "./StatusTag";
+import { getProposalStatus } from "./utils";
 
 const IconWithTooltip = ({
   icon,
   tooltipText,
 }: {
-  icon: ReactNode
-  tooltipText: string
+  icon: ReactNode;
+  tooltipText: string;
 }) => {
   return (
     <div className="flex items-center">
@@ -77,8 +79,8 @@ const IconWithTooltip = ({
         </Tooltip.Root>
       </Tooltip.Provider>
     </div>
-  )
-}
+  );
+};
 
 const VerifiedIconWithTooltip = () => {
   return (
@@ -86,17 +88,17 @@ const VerifiedIconWithTooltip = () => {
       icon={<VerifiedIcon />}
       tooltipText="The instructions in this proposal are verified."
     />
-  )
-}
+  );
+};
 
 const UnverifiedIconWithTooltip = () => {
   return (
     <IconWithTooltip
-      icon={<WarningIcon style={{ fill: 'yellow' }} />}
+      icon={<WarningIcon style={{ fill: "yellow" }} />}
       tooltipText="Be careful! The instructions in this proposal are not verified."
     />
-  )
-}
+  );
+};
 
 const VotedIconWithTooltip = () => {
   return (
@@ -104,17 +106,17 @@ const VotedIconWithTooltip = () => {
       icon={<VotedIcon />}
       tooltipText="You have voted on this proposal."
     />
-  )
-}
+  );
+};
 
 const AccountList = ({
   listName,
   accounts,
 }: {
-  listName: string
-  accounts: PublicKey[]
+  listName: string;
+  accounts: PublicKey[];
 }) => {
-  const { multisigSignerKeyToNameMapping } = usePythContext()
+  const { multisigSignerKeyToNameMapping } = usePythContext();
   return (
     <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
       <h4 className="h4 font-semibold">
@@ -125,7 +127,7 @@ const AccountList = ({
         <div key={pubkey.toBase58()}>
           <div className="flex justify-between" key={pubkey.toBase58()}>
             <div>
-              Key {idx + 1}{' '}
+              Key {idx + 1}{" "}
               {pubkey.toBase58() in multisigSignerKeyToNameMapping &&
                 `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`}
             </div>
@@ -134,248 +136,248 @@ const AccountList = ({
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 export const Proposal = ({
   proposal,
   multisig,
 }: {
-  proposal?: TransactionAccount
-  multisig?: MultisigAccount
+  proposal?: TransactionAccount;
+  multisig?: MultisigAccount;
 }) => {
-  const [instructions, setInstructions] = useState<MultisigInstruction[]>([])
-  const [isTransactionLoading, setIsTransactionLoading] = useState(false)
-  const { cluster: contextCluster } = useContext(ClusterContext)
-  const multisigCluster = getMultisigCluster(contextCluster)
-  const targetClusters: (PythCluster | 'unknown')[] = []
+  const [instructions, setInstructions] = useState<MultisigInstruction[]>([]);
+  const [isTransactionLoading, setIsTransactionLoading] = useState(false);
+  const { cluster: contextCluster } = useContext(ClusterContext);
+  const multisigCluster = getMultisigCluster(contextCluster);
+  const targetClusters: (PythCluster | "unknown")[] = [];
   instructions.map((ix) => {
     if (!(ix instanceof WormholeMultisigInstruction)) {
-      targetClusters.push(multisigCluster)
+      targetClusters.push(multisigCluster);
     } else if (
       ix instanceof WormholeMultisigInstruction &&
       ix.governanceAction instanceof ExecutePostedVaa
     ) {
       ix.governanceAction.instructions.map((ix) => {
         const remoteClusters: PythCluster[] = [
-          'pythnet',
-          'pythtest-conformance',
-          'pythtest-crosschain',
-        ]
+          "pythnet",
+          "pythtest-conformance",
+          "pythtest-crosschain",
+        ];
         for (const remoteCluster of remoteClusters) {
           if (
             multisigCluster === getMultisigCluster(remoteCluster) &&
             (ix.programId.equals(getPythProgramKeyForCluster(remoteCluster)) ||
               ix.programId.equals(SystemProgram.programId))
           ) {
-            targetClusters.push(remoteCluster)
+            targetClusters.push(remoteCluster);
           }
         }
-      })
+      });
     } else {
-      targetClusters.push('unknown')
+      targetClusters.push("unknown");
     }
-  })
-  const uniqueTargetCluster = new Set(targetClusters).size === 1
+  });
+  const uniqueTargetCluster = new Set(targetClusters).size === 1;
   const cluster =
-    uniqueTargetCluster && targetClusters[0] !== 'unknown'
+    uniqueTargetCluster && targetClusters[0] !== "unknown"
       ? targetClusters[0]
-      : contextCluster
+      : contextCluster;
 
   const {
     walletSquads: squads,
     isLoading: isMultisigLoading,
     refreshData,
     readOnlySquads,
-  } = useMultisigContext()
+  } = useMultisigContext();
   const {
     priceAccountKeyToSymbolMapping,
     productAccountKeyToSymbolMapping,
     publisherKeyToNameMapping,
-  } = usePythContext()
+  } = usePythContext();
 
   const publisherKeyToNameMappingCluster =
-    publisherKeyToNameMapping[getMappingCluster(cluster)]
-  const { publicKey: signerPublicKey } = useWallet()
+    publisherKeyToNameMapping[getMappingCluster(cluster)];
+  const { publicKey: signerPublicKey } = useWallet();
 
-  const proposalStatus = getProposalStatus(proposal, multisig)
+  const proposalStatus = getProposalStatus(proposal, multisig);
 
   const verified =
     proposal &&
-    Object.keys(proposal.status)[0] !== 'draft' &&
+    Object.keys(proposal.status)[0] !== "draft" &&
     instructions.length > 0 &&
     instructions.every(
       (ix) =>
         ix instanceof PythMultisigInstruction ||
         (ix instanceof WormholeMultisigInstruction &&
-          ix.name === 'postMessage' &&
+          ix.name === "postMessage" &&
           ix.governanceAction instanceof ExecutePostedVaa &&
           ix.governanceAction.instructions.every((remoteIx) => {
             const innerMultisigParser = cluster
               ? MultisigParser.fromCluster(cluster)
-              : undefined
+              : undefined;
             const parsedRemoteInstruction =
               innerMultisigParser.parseInstruction({
                 programId: remoteIx.programId,
                 data: remoteIx.data,
                 keys: remoteIx.keys,
-              })
+              });
             return (
               parsedRemoteInstruction instanceof PythMultisigInstruction ||
               parsedRemoteInstruction instanceof AnchorMultisigInstruction
-            )
+            );
           }) &&
-          ix.governanceAction.targetChainId === 'pythnet')
-    )
+          ix.governanceAction.targetChainId === "pythnet"),
+    );
 
   const voted =
     proposal &&
     signerPublicKey &&
     (proposal.approved.some(
-      (p) => p.toBase58() === signerPublicKey.toBase58()
+      (p) => p.toBase58() === signerPublicKey.toBase58(),
     ) ||
       proposal.cancelled.some(
-        (p) => p.toBase58() === signerPublicKey.toBase58()
+        (p) => p.toBase58() === signerPublicKey.toBase58(),
       ) ||
       proposal.rejected.some(
-        (p) => p.toBase58() === signerPublicKey.toBase58()
-      ))
+        (p) => p.toBase58() === signerPublicKey.toBase58(),
+      ));
 
   useEffect(() => {
-    let isCancelled = false
+    let isCancelled = false;
     const fetchInstructions = async () => {
       if (proposal) {
         const [proposalInstructions] = await getManyProposalsInstructions(
           readOnlySquads,
-          [proposal]
-        )
+          [proposal],
+        );
 
         const multisigParser = cluster
           ? MultisigParser.fromCluster(getMultisigCluster(cluster))
-          : undefined
+          : undefined;
         const parsedInstructions = (
           proposalInstructions.map((ix) =>
             multisigParser.parseInstruction({
               programId: ix.programId,
               data: ix.data as Buffer,
               keys: ix.keys as AccountMeta[],
-            })
+            }),
           ) ?? []
-        ).filter(Boolean)
-        if (!isCancelled) setInstructions(parsedInstructions)
+        ).filter(Boolean);
+        if (!isCancelled) setInstructions(parsedInstructions);
       } else {
-        if (!isCancelled) setInstructions([])
+        if (!isCancelled) setInstructions([]);
       }
-    }
-    fetchInstructions().catch(console.error)
+    };
+    fetchInstructions().catch(console.error);
     return () => {
-      isCancelled = true
-    }
-  }, [cluster, proposal, readOnlySquads])
+      isCancelled = true;
+    };
+  }, [cluster, proposal, readOnlySquads]);
 
   const handleClick = async (
     instructionGenerator: (
       squad: SquadsMesh,
       vaultKey: PublicKey,
-      proposalKey: PublicKey
+      proposalKey: PublicKey,
     ) => Promise<TransactionInstruction>,
-    msg: string
+    msg: string,
   ) => {
     if (proposal && squads) {
       try {
-        setIsTransactionLoading(true)
+        setIsTransactionLoading(true);
         const instruction = await instructionGenerator(
           squads,
           proposal.ms,
-          proposal.publicKey
-        )
+          proposal.publicKey,
+        );
         const builder = new TransactionBuilder(
           squads.wallet.publicKey,
-          squads.connection
-        )
+          squads.connection,
+        );
         builder.addInstruction({
           instruction,
           signers: [],
           computeUnits: 20_000,
-        })
+        });
         const transactions = builder.buildLegacyTransactions({
           computeUnitPriceMicroLamports: 150_000,
           tightComputeBudget: true,
-        })
+        });
         await sendTransactions(
           transactions,
           squads.connection,
-          squads.wallet as Wallet
-        )
+          squads.wallet as Wallet,
+        );
 
-        if (refreshData) await refreshData().fetchData()
-        toast.success(msg)
+        if (refreshData) await refreshData().fetchData();
+        toast.success(msg);
       } catch (error: any) {
-        toast.error(capitalizeFirstLetter(error.message))
+        toast.error(capitalizeFirstLetter(error.message));
       } finally {
-        setIsTransactionLoading(false)
+        setIsTransactionLoading(false);
       }
     }
-  }
+  };
 
   const handleClickApprove = async () => {
     await handleClick(
       async (
         squad: SquadsMesh,
         vaultKey: PublicKey,
-        proposalKey: PublicKey
+        proposalKey: PublicKey,
       ): Promise<TransactionInstruction> => {
-        return await squad.buildApproveTransaction(vaultKey, proposalKey)
+        return await squad.buildApproveTransaction(vaultKey, proposalKey);
       },
-      `Approved proposal ${proposal.publicKey.toBase58()}`
-    )
-  }
+      `Approved proposal ${proposal.publicKey.toBase58()}`,
+    );
+  };
 
   const handleClickReject = async () => {
     await handleClick(
       async (
         squad: SquadsMesh,
         vaultKey: PublicKey,
-        proposalKey: PublicKey
+        proposalKey: PublicKey,
       ): Promise<TransactionInstruction> => {
-        return await squad.buildRejectTransaction(vaultKey, proposalKey)
+        return await squad.buildRejectTransaction(vaultKey, proposalKey);
       },
-      `Rejected proposal ${proposal.publicKey.toBase58()}`
-    )
-  }
+      `Rejected proposal ${proposal.publicKey.toBase58()}`,
+    );
+  };
 
   const handleClickExecute = async () => {
     await handleClick(
       async (
         squad: SquadsMesh,
         _: PublicKey,
-        proposalKey: PublicKey
+        proposalKey: PublicKey,
       ): Promise<TransactionInstruction> => {
-        return await squad.buildExecuteTransaction(proposalKey)
+        return await squad.buildExecuteTransaction(proposalKey);
       },
-      `Executed proposal ${proposal.publicKey.toBase58()}`
-    )
-  }
+      `Executed proposal ${proposal.publicKey.toBase58()}`,
+    );
+  };
 
   const handleClickCancel = async () => {
     await handleClick(
       async (
         squad: SquadsMesh,
         vaultKey: PublicKey,
-        proposalKey: PublicKey
+        proposalKey: PublicKey,
       ): Promise<TransactionInstruction> => {
-        return await squad.buildCancelTransaction(vaultKey, proposalKey)
+        return await squad.buildCancelTransaction(vaultKey, proposalKey);
       },
-      `Cancelled proposal ${proposal.publicKey.toBase58()}`
-    )
-  }
+      `Cancelled proposal ${proposal.publicKey.toBase58()}`,
+    );
+  };
 
   if (!proposal || !multisig || isMultisigLoading)
     return (
       <div className="mt-6">
         <Loadbar theme="light" />
       </div>
-    )
+    );
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -387,8 +389,8 @@ export const Proposal = ({
           {uniqueTargetCluster
             ? `Target network: ${targetClusters[0]}`
             : targetClusters.length === 0
-              ? ''
-              : `Multiple target networks detected ${targetClusters.join(' ')}`}
+              ? ""
+              : `Multiple target networks detected ${targetClusters.join(" ")}`}
         </h4>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
@@ -429,7 +431,7 @@ export const Proposal = ({
             <div className="font-bold">Confirmed</div>
             <div className="text-lg">{proposal.approved.length}</div>
           </div>
-          {proposalStatus === 'active' || proposalStatus === 'rejected' ? (
+          {proposalStatus === "active" || proposalStatus === "rejected" ? (
             <div>
               <div className="font-bold">Rejected</div>
               <div className="text-lg">{proposal.rejected.length}</div>
@@ -447,38 +449,34 @@ export const Proposal = ({
             </div>
           </div>
         </div>
-        {proposalStatus === 'active' ? (
+        {proposalStatus === "active" ? (
           <div className="flex items-center justify-center space-x-8 pt-3">
             <button
               disabled={isTransactionLoading}
               className="action-btn text-base"
-              onClick={handleClickApprove}
-            >
-              {isTransactionLoading ? <Spinner /> : 'Approve'}
+              onClick={handleClickApprove}>
+              {isTransactionLoading ? <Spinner /> : "Approve"}
             </button>
             <button
               disabled={isTransactionLoading}
               className="sub-action-btn text-base"
-              onClick={handleClickReject}
-            >
-              {isTransactionLoading ? <Spinner /> : 'Reject'}
+              onClick={handleClickReject}>
+              {isTransactionLoading ? <Spinner /> : "Reject"}
             </button>
           </div>
-        ) : proposalStatus === 'executeReady' ? (
+        ) : proposalStatus === "executeReady" ? (
           <div className="flex items-center justify-center space-x-8 pt-3">
             <button
               disabled={isTransactionLoading}
               className="action-btn text-base"
-              onClick={handleClickExecute}
-            >
-              {isTransactionLoading ? <Spinner /> : 'Execute'}
+              onClick={handleClickExecute}>
+              {isTransactionLoading ? <Spinner /> : "Execute"}
             </button>
             <button
               disabled={isTransactionLoading}
               className="sub-action-btn text-base"
-              onClick={handleClickCancel}
-            >
-              {isTransactionLoading ? <Spinner /> : 'Cancel'}
+              onClick={handleClickCancel}>
+              {isTransactionLoading ? <Spinner /> : "Cancel"}
             </button>
           </div>
         ) : undefined}
@@ -507,16 +505,14 @@ export const Proposal = ({
             </h4>
             <div
               key={`${index.toString()}_instructionType`}
-              className="flex justify-between"
-            >
+              className="flex justify-between">
               <div>Program</div>
               <div>{getProgramName(instruction.program)}</div>
             </div>
             {
               <div
                 key={`${index.toString()}_instructionName`}
-                className="flex justify-between"
-              >
+                className="flex justify-between">
                 <div>Instruction Name</div>
                 <div>{instruction.name}</div>
               </div>
@@ -526,8 +522,7 @@ export const Proposal = ({
               <>
                 <div
                   key={`${index.toString()}_targetChain`}
-                  className="flex justify-between"
-                >
+                  className="flex justify-between">
                   <div>Target Chain</div>
                   <div>{instruction.governanceAction.targetChainId}</div>
                 </div>
@@ -536,8 +531,7 @@ export const Proposal = ({
             {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div
                 key={`${index.toString()}_arguments`}
-                className="grid grid-cols-4 justify-between"
-              >
+                className="grid grid-cols-4 justify-between">
                 <div>Arguments</div>
                 {Object.keys(instruction.args).length > 0 ? (
                   <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
@@ -551,22 +545,22 @@ export const Proposal = ({
                           <div>{key}</div>
                           {instruction.args[key] instanceof PublicKey ? (
                             <CopyText text={instruction.args[key].toBase58()} />
-                          ) : typeof instruction.args[key] === 'string' &&
+                          ) : typeof instruction.args[key] === "string" &&
                             isPubkey(instruction.args[key]) ? (
                             <CopyText text={instruction.args[key]} />
                           ) : (
                             <div className="max-w-sm break-all">
-                              {typeof instruction.args[key] === 'string'
+                              {typeof instruction.args[key] === "string"
                                 ? instruction.args[key]
                                 : instruction.args[key] instanceof Uint8Array
                                   ? instruction.args[key].toString()
-                                  : typeof instruction.args[key] === 'bigint'
+                                  : typeof instruction.args[key] === "bigint"
                                     ? instruction.args[key].toString()
                                     : JSON.stringify(instruction.args[key])}
                             </div>
                           )}
                         </div>
-                        {key === 'pub' &&
+                        {key === "pub" &&
                         publisherKeyToNameMappingCluster &&
                         instruction.args[key].toBase58() in
                           publisherKeyToNameMappingCluster ? (
@@ -594,8 +588,7 @@ export const Proposal = ({
             {instruction instanceof WormholeMultisigInstruction ? undefined : (
               <div
                 key={`${index}_accounts`}
-                className="grid grid-cols-4 justify-between"
-              >
+                className="grid grid-cols-4 justify-between">
                 <div>Accounts</div>
                 {Object.keys(instruction.accounts.named).length > 0 ? (
                   <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
@@ -608,8 +601,7 @@ export const Proposal = ({
                         <>
                           <div
                             key={index}
-                            className="flex justify-between border-t border-beige-300 py-3"
-                          >
+                            className="flex justify-between border-t border-beige-300 py-3">
                             <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                               {key}
                             </div>
@@ -626,12 +618,12 @@ export const Proposal = ({
                                 text={
                                   instruction.accounts.named[
                                     key
-                                  ].pubkey.toBase58() ?? ''
+                                  ].pubkey.toBase58() ?? ""
                                 }
                               />
                             </div>
                           </div>
-                          {key === 'priceAccount' &&
+                          {key === "priceAccount" &&
                           instruction.accounts.named[key].pubkey.toBase58() in
                             priceAccountKeyToSymbolMapping ? (
                             <ParsedAccountPubkeyRow
@@ -641,10 +633,10 @@ export const Proposal = ({
                               pubkey={
                                 instruction.accounts.named[
                                   key
-                                ].pubkey.toBase58() ?? ''
+                                ].pubkey.toBase58() ?? ""
                               }
                             />
-                          ) : key === 'productAccount' &&
+                          ) : key === "productAccount" &&
                             instruction.accounts.named[key].pubkey.toBase58() in
                               productAccountKeyToSymbolMapping ? (
                             <ParsedAccountPubkeyRow
@@ -654,12 +646,12 @@ export const Proposal = ({
                               pubkey={
                                 instruction.accounts.named[
                                   key
-                                ].pubkey.toBase58() ?? ''
+                                ].pubkey.toBase58() ?? ""
                               }
                             />
                           ) : undefined}
                         </>
-                      )
+                      ),
                     )}
                   </div>
                 ) : (
@@ -674,5 +666,5 @@ export const Proposal = ({
         ))}
       </div>
     </div>
-  )
-}
+  );
+};

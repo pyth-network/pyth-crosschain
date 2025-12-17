@@ -3,7 +3,7 @@
 import { PythHttpClient } from "@pythnetwork/client";
 import { Connection, PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { z } from "zod";
 
 const PYTHNET_RPC_URL = "https://api2.pythnet.pyth.network";
@@ -38,8 +38,9 @@ export type PriceFeedListContext =
   | ReturnType<typeof Loaded>
   | ReturnType<typeof ErrorState>;
 
-const PriceFeedListContext =
-  createContext<PriceFeedListContext>(NotInitialized());
+const PriceFeedListContext = createContext<PriceFeedListContext>(
+  NotInitialized(),
+);
 
 export const PriceFeedListProvider = (
   props: Omit<ComponentProps<typeof PriceFeedListContext.Provider>, "value">,

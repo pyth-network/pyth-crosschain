@@ -1,12 +1,11 @@
-import { Transaction } from "@mysten/sui/transactions";
-
-import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
-
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { execSync } from "child_process";
-import { SuiClient } from "@mysten/sui/client";
 import { bcs } from "@mysten/sui/bcs";
+import type { SuiClient } from "@mysten/sui/client";
+
+import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
+import { execSync } from "child_process";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
@@ -152,7 +151,7 @@ export async function initPyth(
 
   tx.setGasBudget(MIST_PER_SUI / 10n); // 0.1 sui
 
-  let result = await provider.signAndExecuteTransaction({
+  const result = await provider.signAndExecuteTransaction({
     signer: keypair,
     transaction: tx,
     options: {

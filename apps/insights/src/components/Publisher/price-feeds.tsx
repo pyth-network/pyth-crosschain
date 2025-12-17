@@ -1,13 +1,12 @@
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { notFound } from "next/navigation";
-
-import { getPriceFeeds } from "./get-price-feeds";
 import type { Cluster } from "../../services/pyth";
 import { parseCluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import { getPriceFeeds } from "./get-price-feeds";
 
 type Props = {
   params: Promise<{

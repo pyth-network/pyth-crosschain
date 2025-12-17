@@ -1,7 +1,7 @@
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
 import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, type BN, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { AccountType, parseProductData } from "@pythnetwork/client";
 import {
@@ -9,30 +9,30 @@ import {
   type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
+  CLAIM_RECORD_SEED,
+  createDeterministicPublisherBufferAccountInstruction,
+  decodeGovernancePayload,
+  ExecutePostedVaa,
+  envOrErr,
+  getCreateAccountWithSeedInstruction,
+  MultisigParser,
+  mapKey,
+  PriceStoreMultisigInstruction,
+  PythMultisigInstruction,
+  REMOTE_EXECUTOR_ADDRESS,
+  WORMHOLE_ADDRESS,
+  WORMHOLE_API_ENDPOINT,
+} from "@pythnetwork/xc-admin-common";
+import {
   type AccountMeta,
   type Commitment,
   ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 import * as fs from "fs";
-import {
-  decodeGovernancePayload,
-  ExecutePostedVaa,
-  getCreateAccountWithSeedInstruction,
-  MultisigParser,
-  PythMultisigInstruction,
-  WORMHOLE_ADDRESS,
-  WORMHOLE_API_ENDPOINT,
-  CLAIM_RECORD_SEED,
-  mapKey,
-  REMOTE_EXECUTOR_ADDRESS,
-  envOrErr,
-  PriceStoreMultisigInstruction,
-  createDeterministicPublisherBufferAccountInstruction,
-} from "@pythnetwork/xc-admin-common";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
@@ -109,7 +109,7 @@ async function run() {
 
         console.log(`VAA ${lastSequenceNumber} relayed. executing ...`);
 
-        let extraAccountMetas: AccountMeta[] = [
+        const extraAccountMetas: AccountMeta[] = [
           { pubkey: executorKey, isSigner: false, isWritable: true },
         ];
 

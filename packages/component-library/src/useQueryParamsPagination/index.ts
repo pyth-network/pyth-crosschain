@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  parseAsString,
-  parseAsInteger,
-  parseAsBoolean,
-  useQueryStates,
   createSerializer,
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
 } from "@pythnetwork/react-hooks/nuqs";
 import { usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";

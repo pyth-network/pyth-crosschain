@@ -1,6 +1,3 @@
-import { expect } from "chai";
-
-import { WALLET_PRIVATE_KEY, WORMHOLE_STATE_ID } from "./helpers/consts";
 import {
   Ed25519Keypair,
   JsonRpcProvider,
@@ -9,6 +6,8 @@ import {
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
+import { expect } from "chai";
+import { WALLET_PRIVATE_KEY, WORMHOLE_STATE_ID } from "./helpers/consts";
 import { getPackageId } from "./helpers/utils";
 import { addPrepareMessageAndPublishMessage } from "./helpers/wormhole/testPublishMessage";
 
@@ -18,14 +17,14 @@ describe(" 1. Wormhole", () => {
   // User wallet.
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(WALLET_PRIVATE_KEY),
-    provider
+    provider,
   );
 
   describe("Publish Message", () => {
     it("Check `WormholeMessage` Event", async () => {
       const wormholePackage = await getPackageId(
         wallet.provider,
-        WORMHOLE_STATE_ID
+        WORMHOLE_STATE_ID,
       );
 
       const owner = await wallet.getAddress();
@@ -49,7 +48,7 @@ describe(" 1. Wormhole", () => {
           })
           .then((result) => {
             const found = result.objectChanges?.filter(
-              (item) => "created" === item.type!
+              (item) => "created" === item.type!,
             );
             if (found?.length == 1 && "objectId" in found[0]) {
               return found[0].objectId;
@@ -80,7 +79,7 @@ describe(" 1. Wormhole", () => {
             WORMHOLE_STATE_ID,
             emitterCapId,
             nonce,
-            payload
+            payload,
           );
         }
 

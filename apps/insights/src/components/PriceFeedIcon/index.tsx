@@ -3,9 +3,9 @@
 import type { ComponentProps } from "react";
 
 import Commodities from "./commodities.svg";
+import Crypto from "./crypto.svg";
 import CryptoIndex from "./crypto-index.svg";
 import CryptoRedemptionRate from "./crypto-redemption-rate.svg";
-import Crypto from "./crypto.svg";
 import Eco from "./eco.svg";
 import Equity from "./equity.svg";
 import Fx from "./fx.svg";

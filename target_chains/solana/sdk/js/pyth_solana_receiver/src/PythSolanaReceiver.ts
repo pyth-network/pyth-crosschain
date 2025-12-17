@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable tsdoc/syntax */
 import type { IdlAccounts } from "@coral-xyz/anchor";
-import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, type Wallet } from "@coral-xyz/anchor";
 import {
   parseAccumulatorUpdateData,
   parsePriceFeedMessage,
@@ -14,12 +14,12 @@ import type {
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
 import type { Signer } from "@solana/web3.js";
 import {
-  AddressLookupTableAccount,
-  Connection,
-  Transaction,
-  VersionedTransaction,
-  PublicKey,
+  type AddressLookupTableAccount,
+  type Connection,
   Keypair,
+  PublicKey,
+  type Transaction,
+  type VersionedTransaction,
 } from "@solana/web3.js";
 
 import {

@@ -1,10 +1,9 @@
+import type { SuiClient } from "@mysten/sui/client";
+import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
-import { SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-
+import type { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 import { execSync } from "child_process";
-import { SuiPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/sui";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {

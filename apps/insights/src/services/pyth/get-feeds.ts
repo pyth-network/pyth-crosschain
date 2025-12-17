@@ -1,7 +1,7 @@
-import { Cluster } from ".";
-import { getPythMetadata } from "./get-metadata";
 import { redisCache } from "../../cache";
 import { priceFeedsSchema } from "../../schemas/pyth/price-feeds-schema";
+import type { Cluster } from ".";
+import { getPythMetadata } from "./get-metadata";
 
 const _getFeeds = async (cluster: Cluster) => {
   const unfilteredData = await getPythMetadata(cluster);

@@ -1,13 +1,12 @@
 import clsx from "clsx";
 import type { ComponentProps, ElementType } from "react";
-
-import styles from "./index.module.scss";
-import Wordmark from "./wordmark.svg";
 import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import { SupportDrawer } from "../Header/index.jsx";
 import { Link } from "../Link/index.jsx";
 import { socialLinks } from "../social-links.jsx";
+import styles from "./index.module.scss";
+import Wordmark from "./wordmark.svg";
 
 export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
   <footer className={clsx(styles.footer, className)} {...props}>
@@ -43,8 +42,7 @@ export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
           important disclaimer before using them.{" "}
           <Link
             href="https://www.pyth.network/legal/disclaimer-for-pyth-network-price-feeds"
-            target="_blank"
-          >
+            target="_blank">
             Read disclaimer
           </Link>
           .
@@ -86,8 +84,7 @@ export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
         </Link>
         <Link
           href="https://www.pyth.network/trademark-disclaimer"
-          target="_blank"
-        >
+          target="_blank">
           Trademark Disclaimer
         </Link>
       </div>

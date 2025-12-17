@@ -22,8 +22,8 @@ import {
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 import type { PrivateKey, TxResult } from "../base";
-import { PriceFeedContract, getDefaultDeploymentConfig } from "../base";
-import { Chain, CosmWasmChain } from "../chains";
+import { getDefaultDeploymentConfig, PriceFeedContract } from "../base";
+import { type Chain, CosmWasmChain } from "../chains";
 import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
 

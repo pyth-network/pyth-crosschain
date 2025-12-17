@@ -2,10 +2,9 @@ import { Info } from "@phosphor-icons/react/dist/ssr/Info";
 import { Card } from "@pythnetwork/component-library/Card";
 import { Link } from "@pythnetwork/component-library/Link";
 import { Spinner } from "@pythnetwork/component-library/Spinner";
-
+import { getFeed } from "../get-feed";
 import { Chart } from "./chart";
 import styles from "./chart-page.module.scss";
-import { getFeed } from "../get-feed";
 import { ChartToolbar } from "./chart-toolbar";
 
 type Props = {
@@ -15,7 +14,7 @@ type Props = {
 };
 
 export const ChartPage = async ({ params }: Props) => (
-  <ChartPageImpl {...await getFeed(params)} />
+  <ChartPageImpl {...(await getFeed(params))} />
 );
 
 export const ChartPageLoading = () => <ChartPageImpl isLoading />;

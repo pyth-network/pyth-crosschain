@@ -1,13 +1,11 @@
 "use client";
 
 import {
-  QuestionMarkCircleIcon,
   ChevronDownIcon,
+  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useCallback } from "react";
-import { MenuTrigger, Button } from "react-aria-components";
-
-import { ProgramParameters } from "./program-parameters";
+import { useCallback, useState } from "react";
+import { Button, MenuTrigger } from "react-aria-components";
 import { StateType, useApi } from "../../hooks/use-api";
 import { useChangelog } from "../../hooks/use-changelog";
 import { GeneralFaq } from "../GeneralFaq";
@@ -15,6 +13,7 @@ import { GovernanceGuide } from "../GovernanceGuide";
 import { Menu, MenuItem, Section, Separator } from "../Menu";
 import { OracleIntegrityStakingGuide } from "../OracleIntegrityStakingGuide";
 import { PublisherFaq } from "../PublisherFaq";
+import { ProgramParameters } from "./program-parameters";
 
 export const HelpMenu = () => {
   const api = useApi();
@@ -70,8 +69,7 @@ export const HelpMenu = () => {
             <MenuItem onAction={openPublisherFaq}>Data Publisher FAQ</MenuItem>
             <MenuItem
               href="https://pyth-network.notion.site/Oracle-Integrity-Staking-OIS-Guide-for-Pyth-Network-MDPs-2755c872a7c44aefabfa9987ba7ec8ae"
-              target="_blank"
-            >
+              target="_blank">
               Data Publisher Guide
             </MenuItem>
           </Section>

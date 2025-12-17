@@ -1,19 +1,19 @@
-import createCLI from "yargs";
-import { hideBin } from "yargs/helpers";
-import { IotaChain } from "@pythnetwork/contract-manager/core/chains";
-import { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
+import type { IotaChain } from "@pythnetwork/contract-manager/core/chains";
+import type { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { execSync } from "child_process";
-import { initPyth, publishPackage } from "./pyth_deploy.js";
-import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { resolve } from "path";
+import createCLI from "yargs";
+import { hideBin } from "yargs/helpers";
+import { initPyth, publishPackage } from "./pyth_deploy.js";
 import {
   buildForBytecodeAndDigest,
   migratePyth,
   upgradePyth,
 } from "./upgrade_pyth.js";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 
 const OPTIONS = {
   "private-key": {

@@ -8,13 +8,12 @@ import { HermesClient } from "@pythnetwork/hermes-client";
 import { Provider, Wallet } from "fuels";
 import pino from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
-import { FuelPriceListener, FuelPricePusher } from "./fuel.js";
-import { Controller } from "../controller.js";
 import { filterInvalidPriceItems } from "../utils.js";
+import { FuelPriceListener, FuelPricePusher } from "./fuel.js";
 
 export default {
   command: "fuel",
@@ -42,7 +41,7 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     const {
       endpoint,
       privateKeyFile,

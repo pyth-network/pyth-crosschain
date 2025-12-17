@@ -3,11 +3,10 @@ import { Badge } from "@pythnetwork/component-library/Badge";
 import { Skeleton } from "@pythnetwork/component-library/Skeleton";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { omitKeys } from "../../omit-keys";
 import { Cluster } from "../../services/pyth";
 import { PublisherKey } from "../PublisherKey";
+import styles from "./index.module.scss";
 
 type Props = ComponentProps<"div"> & {
   compact?: boolean | undefined;
@@ -34,8 +33,7 @@ export const PublisherTag = ({ className, ...props }: Props) => (
       "publisherKey",
       "name",
       "icon",
-    ])}
-  >
+    ])}>
     {props.isLoading ? (
       <Skeleton fill className={styles.icon} />
     ) : (
@@ -47,8 +45,7 @@ export const PublisherTag = ({ className, ...props }: Props) => (
         variant="muted"
         style="filled"
         size="xs"
-        className={styles.testBadge}
-      >
+        className={styles.testBadge}>
         test
       </Badge>
     )}

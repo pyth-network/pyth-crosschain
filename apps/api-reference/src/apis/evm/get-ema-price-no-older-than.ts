@@ -1,5 +1,5 @@
-import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
+import { ethersJS, readApi, solidity } from "./common";
 
 export const getEmaPriceNoOlderThan = readApi<"id" | "age">({
   name: "getEmaPriceNoOlderThan",

@@ -1,5 +1,10 @@
 import type { ComponentProps } from "react";
-
+import { Guide } from "../Guide";
+import { Link } from "../Link";
+import ObtainRewards from "../NoWalletHome/obtain-rewards.svg";
+import Safebox from "../NoWalletHome/safebox.svg";
+import SelectPublishers from "../NoWalletHome/select-publishers.svg";
+import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 import addPythTokens from "./add-pyth-tokens.png";
 import availableRewards from "./available-rewards.png";
 import changingWallets from "./changing-wallets.png";
@@ -14,12 +19,6 @@ import stakingRewards from "./staking-rewards.png";
 import totalBalance from "./total-balance.png";
 import unlockedAndUnstaked from "./unlocked-and-unstaked.png";
 import warmupPeriods from "./warmup-periods.png";
-import { Guide } from "../Guide";
-import { Link } from "../Link";
-import ObtainRewards from "../NoWalletHome/obtain-rewards.svg";
-import Safebox from "../NoWalletHome/safebox.svg";
-import SelectPublishers from "../NoWalletHome/select-publishers.svg";
-import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 
 export const OracleIntegrityStakingGuide = (
   props: Omit<ComponentProps<typeof Guide>, "title" | "description" | "steps">,
@@ -214,8 +213,7 @@ export const OracleIntegrityStakingGuide = (
                   <Link
                     href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
                     target="_blank"
-                    className="underline"
-                  >
+                    className="underline">
                     documentation
                   </Link>
                   .
@@ -309,8 +307,7 @@ export const OracleIntegrityStakingGuide = (
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
                       className="underline"
-                      target="_blank"
-                    >
+                      target="_blank">
                       documentation
                     </Link>
                     .
@@ -333,8 +330,7 @@ export const OracleIntegrityStakingGuide = (
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
                       className="underline"
-                      target="_blank"
-                    >
+                      target="_blank">
                       documentation
                     </Link>
                     .

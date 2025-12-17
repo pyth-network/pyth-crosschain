@@ -1,8 +1,7 @@
 import cx from "clsx";
 import type { ComponentProps } from "react";
-
-import classes from "./index.module.scss";
 import { Input as BaseInput } from "../unstyled/TextField/index.js";
+import classes from "./index.module.scss";
 
 type InputProps = ComponentProps<typeof BaseInput> & {
   /**

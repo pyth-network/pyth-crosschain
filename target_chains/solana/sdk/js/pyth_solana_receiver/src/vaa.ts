@@ -1,9 +1,9 @@
-import { Program } from "@coral-xyz/anchor";
+import type { Program } from "@coral-xyz/anchor";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { sha256 } from "@noble/hashes/sha256";
 import type { AccumulatorUpdateData } from "@pythnetwork/price-service-sdk";
 import type { InstructionWithEphemeralSigners } from "@pythnetwork/solana-utils";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { type Connection, Keypair, PublicKey } from "@solana/web3.js";
 
 import { getGuardianSetPda } from "./address";
 import {

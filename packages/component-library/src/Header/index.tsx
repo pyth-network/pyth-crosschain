@@ -9,16 +9,15 @@ import { Plug } from "@phosphor-icons/react/dist/ssr/Plug";
 import { ShieldChevron } from "@phosphor-icons/react/dist/ssr/ShieldChevron";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import { socialLinks } from "../social-links.jsx";
-import styles from "./index.module.scss";
-import Logo from "./logo.svg";
-import { ThemeSwitch } from "./theme-switch.jsx";
 import { Button } from "../Button/index.jsx";
 import type { Props as CardProps } from "../Card/index.jsx";
 import { Card } from "../Card/index.jsx";
 import { Link } from "../Link/index.jsx";
+import { socialLinks } from "../social-links.jsx";
 import type { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
+import Logo from "./logo.svg";
+import { ThemeSwitch } from "./theme-switch.jsx";
 
 export { default as Logo } from "./logo.svg";
 
@@ -64,8 +63,7 @@ export const Header = ({
             rounded
             beforeIcon={<Lifebuoy />}
             drawer={SupportDrawer}
-            className={styles.supportButton ?? ""}
-          >
+            className={styles.supportButton ?? ""}>
             Support
           </Button>
         )}
@@ -76,8 +74,7 @@ export const Header = ({
           size="sm"
           rounded
           target="_blank"
-          className={styles.mainCta ?? ""}
-        >
+          className={styles.mainCta ?? ""}>
           {mainCta?.label ?? "Dev Docs"}
         </Button>
         <ThemeSwitch className={styles.themeSwitch ?? ""} />
@@ -104,8 +101,7 @@ const MobileMenu = ({
       hideHeading: true,
       title: "Menu",
       contents: <MobileMenuContents mainCta={mainCta} />,
-    }}
-  >
+    }}>
     Menu
   </Button>
 );
@@ -118,16 +114,14 @@ const MobileMenuContents = ({ mainCta }: { mainCta: Props["mainCta"] }) => (
         size="md"
         rounded
         beforeIcon={<Lifebuoy />}
-        drawer={SupportDrawer}
-      >
+        drawer={SupportDrawer}>
         Support
       </Button>
       <Button
         href={mainCta?.href ?? "https://docs.pyth.network"}
         size="md"
         rounded
-        target="_blank"
-      >
+        target="_blank">
         {mainCta?.label ?? "Dev Docs"}
       </Button>
     </div>

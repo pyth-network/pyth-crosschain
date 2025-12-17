@@ -35,8 +35,7 @@ export const SemicircleMeter = ({
   <Meter
     className={clsx(styles.semicircleChart, className)}
     style={{ "--height": `${height.toString()}px` } as CSSProperties}
-    {...props}
-  >
+    {...props}>
     {(...args) => (
       <>
         <Suspense>
@@ -48,8 +47,7 @@ export const SemicircleMeter = ({
             barSize={16}
             className={styles.chart ?? ""}
             {...(width && { width })}
-            {...(height && { height })}
-          >
+            {...(height && { height })}>
             <PolarAngleAxis
               type="number"
               domain={[0, 100]}

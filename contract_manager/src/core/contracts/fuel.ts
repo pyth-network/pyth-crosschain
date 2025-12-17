@@ -9,22 +9,22 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import type {
-  PriceFeedOutput,
   DataSourceOutput,
+  PriceFeedOutput,
 } from "@pythnetwork/pyth-fuel-js";
 import {
-  PYTH_CONTRACT_ABI as FuelContractAbi,
   FUEL_ETH_ASSET_ID,
+  PYTH_CONTRACT_ABI as FuelContractAbi,
 } from "@pythnetwork/pyth-fuel-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import type { DryRunResult } from "fuels";
-import { Account, Contract, Wallet, arrayify, hexlify } from "fuels";
+import { type Account, arrayify, Contract, hexlify, type Wallet } from "fuels";
 
 import type { PriceFeed, PrivateKey, TxResult } from "../base";
-import { Chain, FuelChain } from "../chains";
-import { WormholeContract } from "./wormhole";
 import { PriceFeedContract } from "../base";
+import { type Chain, FuelChain } from "../chains";
 import type { TokenQty } from "../token";
+import { WormholeContract } from "./wormhole";
 
 export class FuelWormholeContract extends WormholeContract {
   static type = "FuelWormholeContract";

@@ -4,7 +4,7 @@ import { Field, Label } from "@headlessui/react";
 import clsx from "clsx";
 import Link from "next/link";
 import { useSelectedLayoutSegments } from "next/navigation";
-import type { HTMLAttributes, ComponentProps, ElementType } from "react";
+import type { ComponentProps, ElementType, HTMLAttributes } from "react";
 import { useState } from "react";
 
 import * as apis from "../../apis";
@@ -43,8 +43,7 @@ export const Sidebar = ({
           "fixed inset-y-16 -ml-3 w-64 overflow-y-auto pr-4",
           className,
         )}
-        {...props}
-      >
+        {...props}>
         <Field className="sticky top-0 flex w-full flex-row items-center gap-2 bg-white pb-2 pl-3 pt-4 dark:bg-pythpurple-900">
           <Label className="text-sm font-bold">Chain</Label>
           <Select
@@ -57,8 +56,7 @@ export const Sidebar = ({
         </Field>
         <nav
           className="flex flex-col pb-4 pl-1 pt-2 text-sm text-neutral-600 dark:text-neutral-400"
-          aria-label="Methods"
-        >
+          aria-label="Methods">
           <ul className="contents">
             {MENU[chain]?.map(({ name, href }) => (
               <li className="contents" key={href}>
@@ -84,8 +82,7 @@ const MenuButton = ({ className, children, ...props }: MenuButtonProps) => {
   return `/price-feeds/${segments.join("/")}` === props.href ? (
     <MenuItem
       className={className}
-      nameClassName="font-bold text-pythpurple-600 dark:text-pythpurple-400"
-    >
+      nameClassName="font-bold text-pythpurple-600 dark:text-pythpurple-400">
       {children}
     </MenuItem>
   ) : (
@@ -96,8 +93,7 @@ const MenuButton = ({ className, children, ...props }: MenuButtonProps) => {
         className,
       )}
       nameClassName="group-hover:text-pythpurple-600 dark:group-hover:text-pythpurple-400"
-      {...props}
-    >
+      {...props}>
       {children}
     </MenuItem>
   );

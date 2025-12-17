@@ -1,8 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
 import {
   createPriceStoreInstruction,
-  parsePriceStoreInstruction,
   type PriceStoreInstruction,
+  parsePriceStoreInstruction,
 } from "../price_store";
 
 test("Price store instruction parse: roundtrip", (done) => {

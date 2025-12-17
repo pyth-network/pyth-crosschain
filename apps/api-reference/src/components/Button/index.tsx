@@ -3,11 +3,11 @@
 import clsx from "clsx";
 import type {
   ComponentProps,
+  CSSProperties,
   ElementType,
   MouseEvent,
-  CSSProperties,
 } from "react";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 const DEFAULT_GRADIENT_SIZE = "30rem";
 
@@ -62,8 +62,7 @@ export const Button = <T extends ElementType>({
         },
         className,
       )}
-      {...props}
-    >
+      {...props}>
       {gradient && !loading && !disabled && (
         <Gradient size={props.gradientSize} x={mouse.x} y={mouse.y} />
       )}
@@ -87,8 +86,7 @@ const Gradient = ({ size = DEFAULT_GRADIENT_SIZE, x, y }: GradientProps) => (
         "--gradient-size": size,
       } as CSSProperties
     }
-    className="pointer-events-none absolute left-0 top-0 -z-10 ml-[calc(-1_*_var(--gradient-size)_/_2)] mt-[calc(-1_*_var(--gradient-size)_/_2)] block size-[var(--gradient-size)] translate-x-[var(--gradient-left)] translate-y-[var(--gradient-top)]"
-  >
+    className="pointer-events-none absolute left-0 top-0 -z-10 ml-[calc(-1_*_var(--gradient-size)_/_2)] mt-[calc(-1_*_var(--gradient-size)_/_2)] block size-[var(--gradient-size)] translate-x-[var(--gradient-left)] translate-y-[var(--gradient-top)]">
     <div className="size-full scale-0 bg-gradient-radial from-pythpurple-400 to-70% opacity-10 transition duration-500 group-hover:scale-100 group-hover:opacity-30 group-active:scale-150 group-active:opacity-40 dark:from-pythpurple-600" />
   </div>
 );

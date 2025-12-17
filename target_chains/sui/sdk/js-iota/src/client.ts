@@ -5,8 +5,8 @@
 import { Buffer } from "node:buffer";
 
 import { bcs } from "@iota/iota-sdk/bcs";
-import { IotaClient } from "@iota/iota-sdk/client";
-import { Transaction } from "@iota/iota-sdk/transactions";
+import type { IotaClient } from "@iota/iota-sdk/client";
+import type { Transaction } from "@iota/iota-sdk/transactions";
 import { IOTA_CLOCK_OBJECT_ID } from "@iota/iota-sdk/utils";
 import type { HexString } from "@pythnetwork/price-service-client";
 
@@ -40,7 +40,7 @@ export class IotaPythClient {
       )
         throw new Error("Unable to fetch pyth state object");
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
     }
 
@@ -72,7 +72,7 @@ export class IotaPythClient {
 
     if ("upgrade_cap" in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return state.upgrade_cap.fields.package;
     }
@@ -256,7 +256,7 @@ export class IotaPythClient {
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         result.data.content.fields.value,
       );

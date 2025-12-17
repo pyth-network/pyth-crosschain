@@ -7,7 +7,10 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toPrivateKey } from "../src/core/base";
-import { SubmittedWormholeMessage, Vault } from "../src/node/utils/governance";
+import {
+  SubmittedWormholeMessage,
+  type Vault,
+} from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
 const parser = yargs(hideBin(process.argv))

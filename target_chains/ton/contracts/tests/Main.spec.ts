@@ -1,6 +1,10 @@
-import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { Cell, toNano } from "@ton/core";
-import { Main, MainConfig } from "../wrappers/Main";
+import { type Cell, toNano } from "@ton/core";
+import {
+  Blockchain,
+  type SandboxContract,
+  type TreasuryContract,
+} from "@ton/sandbox";
+import { Main, type MainConfig } from "../wrappers/Main";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 

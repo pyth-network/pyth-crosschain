@@ -74,8 +74,7 @@ export const InfoBox = ({
   <div
     className={clsx(className, styles.infoBox)}
     data-variant={variant}
-    {...props}
-  >
+    {...props}>
     <div className={styles.icon}>{icon ?? DEFAULTS[variant].icon}</div>
     <div className={styles.body}>
       <h3 className={styles.header}>{header ?? DEFAULTS[variant].header}</h3>

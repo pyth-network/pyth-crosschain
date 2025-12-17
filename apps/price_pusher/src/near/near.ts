@@ -7,16 +7,14 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-
-import type { HexString } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient, HexString } from "@pythnetwork/hermes-client";
 import { Account, Connection, KeyPair } from "near-api-js";
 import { InMemoryKeyStore } from "near-api-js/lib/key_stores";
 import type {
   ExecutionStatus,
+  ExecutionStatusBasic,
   FinalExecutionOutcome,
 } from "near-api-js/lib/providers/provider";
-import { ExecutionStatusBasic } from "near-api-js/lib/providers/provider";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
@@ -103,12 +101,7 @@ export class NearPricePusher implements IPricePusher {
         const failureMessages: (ExecutionStatus | ExecutionStatusBasic)[] = [];
         const is_success = Object.values(outcome.receipts_outcome).reduce(
           (is_success, receipt) => {
-            if (
-              Object.prototype.hasOwnProperty.call(
-                receipt.outcome.status,
-                "Failure",
-              )
-            ) {
+            if (Object.hasOwn(receipt.outcome.status, "Failure")) {
               failureMessages.push(receipt.outcome.status);
               return false;
             }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 export { PythFeedsDemoPage as default } from "../../components/PythFeedsDemoPage";
 
 export const metadata: Metadata = {

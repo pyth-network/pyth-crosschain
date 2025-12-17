@@ -8,13 +8,12 @@ import type {
 import { Table } from "@pythnetwork/component-library/Table";
 import IEntropyV2 from "@pythnetwork/entropy-sdk-solidity/abis/IEntropyV2.json";
 import { useEffect, useRef, useState } from "react";
-import type { PublicClient, Abi } from "viem";
+import type { Abi, PublicClient } from "viem";
 import { createPublicClient, formatEther, http, isAddress } from "viem";
-
+import CopyAddress from "../CopyAddress";
 import { FORTUNA_API_URLS } from "./constants";
 import type { EntropyDeployment } from "./entropy-api-data-fetcher";
 import { fetchEntropyDeployments } from "./entropy-api-data-fetcher";
-import CopyAddress from "../CopyAddress";
 import styles from "./index.module.scss";
 
 function isValidAddress(address: string): address is `0x${string}` {

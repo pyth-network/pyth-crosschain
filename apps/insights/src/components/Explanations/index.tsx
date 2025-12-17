@@ -57,8 +57,7 @@ export const ExplainAverage = ({
         size="xs"
         variant="solid"
         href="https://docs.pyth.network/home/oracle-integrity-staking/publisher-quality-ranking"
-        target="_blank"
-      >
+        target="_blank">
         Learn more
       </Button>
     </Explain>

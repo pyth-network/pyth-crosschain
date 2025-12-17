@@ -1,21 +1,22 @@
 import crypto from "crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
-import { AnchorProvider, Wallet, Program, type Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, type Idl, Program, Wallet } from "@coral-xyz/anchor";
 import {
   getPythClusterApiUrl,
   type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import type { MessageBuffer } from "message_buffer/idl/message_buffer";
+import messageBuffer from "message_buffer/idl/message_buffer.json";
 import {
   AnchorMultisigInstruction,
   MESSAGE_BUFFER_PROGRAM_ID,
   MultisigInstructionProgram,
   MultisigParser,
 } from "..";
-import messageBuffer from "message_buffer/idl/message_buffer.json";
-import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 test("Message buffer multisig instruction parse: create buffer", (done) => {
   jest.setTimeout(60000);

@@ -1,6 +1,13 @@
-import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { Cell, toNano } from "@ton/core";
-import { WormholeTest, WormholeTestConfig } from "../wrappers/WormholeTest";
+import { type Cell, toNano } from "@ton/core";
+import {
+  Blockchain,
+  type SandboxContract,
+  type TreasuryContract,
+} from "@ton/sandbox";
+import {
+  WormholeTest,
+  type WormholeTestConfig,
+} from "../wrappers/WormholeTest";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 import {

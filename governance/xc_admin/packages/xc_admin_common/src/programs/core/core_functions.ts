@@ -1,30 +1,33 @@
-import {
-  PublicKey,
-  TransactionInstruction,
-  type AccountInfo,
-  Connection,
-} from "@solana/web3.js";
+import type { Program } from "@coral-xyz/anchor";
 import {
   AccountType,
+  type Product,
   type PythCluster,
   parseBaseData,
   parseMappingData,
   parsePermissionData,
   parsePriceData,
   parseProductData,
-  type Product,
 } from "@pythnetwork/client";
+import type { PythOracle } from "@pythnetwork/client/lib/anchor";
 import {
+  type AccountInfo,
+  type Connection,
+  PublicKey,
+  type TransactionInstruction,
+} from "@solana/web3.js";
+import type { MessageBuffer } from "message_buffer/idl/message_buffer";
+import {
+  createDetermisticPriceStoreInitializePublisherInstruction,
   findDetermisticAccountAddress,
+  getMaximumNumberOfPublishers,
   getMessageBufferAddressForPrice,
   getPythOracleMessageBufferCpiAuth,
   isMessageBufferAvailable,
-  MESSAGE_BUFFER_BUFFER_SIZE,
-  PRICE_FEED_OPS_KEY,
-  getMaximumNumberOfPublishers,
   isPriceStoreInitialized,
   isPriceStorePublisherInitialized,
-  createDetermisticPriceStoreInitializePublisherInstruction,
+  MESSAGE_BUFFER_BUFFER_SIZE,
+  PRICE_FEED_OPS_KEY,
 } from "../../index";
 import type {
   DownloadableConfig,
@@ -34,9 +37,6 @@ import type {
   RawConfig,
   ValidationResult,
 } from "../types";
-import { Program } from "@coral-xyz/anchor";
-import type { PythOracle } from "@pythnetwork/client/lib/anchor";
-import type { MessageBuffer } from "message_buffer/idl/message_buffer";
 
 /**
  * Maximum sizes for instruction data to fit into transactions
@@ -263,8 +263,8 @@ export function getDownloadableConfig(
   // Convert the raw config to a user-friendly format for download
   if (rawConfig.mappingAccounts.length > 0) {
     const symbolToData = Object.fromEntries(
-      rawConfig
-        .mappingAccounts!.sort(
+      rawConfig.mappingAccounts
+        .sort(
           (mapping1, mapping2) =>
             mapping2.products.length - mapping1.products.length,
         )[0]!

@@ -1,11 +1,11 @@
 import {
-  Dialog,
-  TransitionChild,
-  Transition,
-  DialogTitle,
-  Description,
-  DialogPanel,
   CloseButton,
+  Description,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
 } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { ReactNode } from "react";
@@ -51,13 +51,11 @@ export const Modal = ({
             enterTo="opacity-100 scale-100"
             leave="ease-in duration-200"
             leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
+            leaveTo="opacity-0 scale-95">
             <DialogPanel className="relative w-full max-w-md rounded-2xl bg-white p-8 text-left align-middle shadow-xl transition-all dark:bg-neutral-900 dark:shadow-white/5 md:max-w-xl lg:max-w-2xl xl:max-w-4xl">
               <DialogTitle
                 as="h1"
-                className="text-lg font-medium leading-6 text-neutral-800 dark:text-neutral-200 md:text-xl lg:text-2xl"
-              >
+                className="text-lg font-medium leading-6 text-neutral-800 dark:text-neutral-200 md:text-xl lg:text-2xl">
                 {title}
               </DialogTitle>
               <CloseButton className="absolute right-3 top-3 rounded-md p-2 text-neutral-500 transition hover:bg-black/10 dark:hover:bg-white/5">

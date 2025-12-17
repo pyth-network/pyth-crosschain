@@ -1,4 +1,5 @@
 import crypto from "crypto";
+
 // @ts-expect-error
 globalThis.crypto = crypto;
 
@@ -10,22 +11,22 @@ import {
   type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
+  getSizeOfTransaction,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import {
   Connection,
   Keypair,
   PACKET_DATA_SIZE,
   PublicKey,
   Transaction,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 import {
   batchIntoExecutorPayload,
   getSizeOfExecutorInstructions,
   MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
-import {
-  getSizeOfTransaction,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
 
 it("Unit test for getSizeOfTransaction", async () => {
   jest.setTimeout(60000);
@@ -75,7 +76,7 @@ it("Unit test for getSizeOfTransaction", async () => {
   );
 
   const transaction = new Transaction();
-  for (let ix of ixsToSend) {
+  for (const ix of ixsToSend) {
     transaction.add(ix);
   }
 
@@ -126,7 +127,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     ),
   ).toBeTruthy();
 
-  for (let tx of txToSend) {
+  for (const tx of txToSend) {
     tx.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
     tx.feePayer = payer.publicKey;
     expect(tx.serialize({ requireAllSignatures: false }).length).toBe(

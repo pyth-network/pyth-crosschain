@@ -4,10 +4,9 @@ import clsx from "clsx";
 import type { ComponentProps, ElementType, ReactNode } from "react";
 import { use } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 export const VARIANTS = ["primary", "secondary", "tertiary"] as const;
 
@@ -76,8 +75,7 @@ const cardProps = <T extends ElementType>({
           {toolbar && (
             <div
               className={clsx(styles.toolbar, toolbarClassName)}
-              data-always-on-top={toolbarAlwaysOnTop ? "" : undefined}
-            >
+              data-always-on-top={toolbarAlwaysOnTop ? "" : undefined}>
               {toolbar}
             </div>
           )}

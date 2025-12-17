@@ -1,16 +1,15 @@
-import { Transaction } from "@iota/iota-sdk/transactions";
+import { bcs } from "@iota/iota-sdk/bcs";
+import type { IotaClient } from "@iota/iota-sdk/client";
 
+import type { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { Transaction } from "@iota/iota-sdk/transactions";
 import {
+  fromB64,
   NANOS_PER_IOTA,
   normalizeIotaObjectId,
-  fromB64,
 } from "@iota/iota-sdk/utils";
-
-import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-import { execSync } from "child_process";
-import { IotaClient } from "@iota/iota-sdk/client";
-import { bcs } from "@iota/iota-sdk/bcs";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
+import { execSync } from "child_process";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
@@ -156,7 +155,7 @@ export async function initPyth(
 
   tx.setGasBudget(NANOS_PER_IOTA / 10n); // 0.1 IOTA
 
-  let result = await provider.signAndExecuteTransaction({
+  const result = await provider.signAndExecuteTransaction({
     signer: keypair,
     transaction: tx,
     options: {

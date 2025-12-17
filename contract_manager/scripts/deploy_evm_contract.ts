@@ -13,11 +13,10 @@ import { readFileSync } from "node:fs";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_evm_contract.ts")

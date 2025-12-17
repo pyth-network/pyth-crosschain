@@ -24,24 +24,29 @@ import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import type { ChainName, DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  SetFee,
   CosmosUpgradeContract,
-  EvmUpgradeContract,
-  toChainId,
-  SetDataSources,
-  SetValidPeriod,
-  EvmSetWormholeAddress,
-  UpgradeContract256Bit,
   EvmExecute,
+  EvmSetWormholeAddress,
+  EvmUpgradeContract,
+  SetDataSources,
+  SetFee,
+  SetValidPeriod,
+  toChainId,
+  UpgradeContract256Bit,
 } from "@pythnetwork/xc-admin-common";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
-import { TonClient, WalletContractV4, Address } from "@ton/ton";
-import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
+import { Address, TonClient, WalletContractV4 } from "@ton/ton";
+import {
+  AptosAccount,
+  AptosClient,
+  CoinClient,
+  type TxnBuilderTypes,
+} from "aptos";
 import * as bs58 from "bs58";
-import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import { type BN, Provider, Wallet, type WalletUnlocked } from "fuels";
 import * as nearAPI from "near-api-js";
-import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
+import { Contract, ec, RpcProvider, Signer, shortString } from "starknet";
 import * as chains from "viem/chains";
 import Web3 from "web3";
 

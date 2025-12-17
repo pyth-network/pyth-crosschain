@@ -1,10 +1,10 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
-import fs from "fs";
-import os from "os";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import fs from "fs";
+import os from "os";
+import { type InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -24,13 +24,13 @@ async function main() {
   const connection = new Connection("https://api.devnet.solana.com");
   const keypair = await loadKeypairFromFile(keypairFile);
   console.log(
-    `Sending transactions from account: ${keypair.publicKey.toBase58()}`
+    `Sending transactions from account: ${keypair.publicKey.toBase58()}`,
   );
   const wallet = new Wallet(keypair);
 
   // Optionally use an account lookup table to reduce tx sizes.
   const addressLookupTableAccount = new PublicKey(
-    "5DNCErWQFBdvCxWQXaC1mrEFsvL3ftrzZ2gVZWNybaSX"
+    "5DNCErWQFBdvCxWQXaC1mrEFsvL3ftrzZ2gVZWNybaSX",
   );
   // Use a stable treasury ID of 0, since its address is indexed in the address lookup table.
   // This is a tx size optimization and is optional. If not provided, a random treasury account will be used.
@@ -52,7 +52,7 @@ async function main() {
     undefined;
   const transactionBuilder = pythSolanaReceiver.newTransactionBuilder(
     {},
-    lookupTableAccount
+    lookupTableAccount,
   );
 
   // Update the price feed accounts for the feed ids in priceUpdateData (in this example, SOL and ETH) and shard id.
@@ -63,19 +63,19 @@ async function main() {
       `The ${priceFeedId} price update will get posted to:`,
       pythSolanaReceiver
         .getPriceFeedAccountAddress(shardId, priceFeedId)
-        .toBase58()
+        .toBase58(),
     );
   }
 
   await transactionBuilder.addPriceConsumerInstructions(
     async (
-      getPriceUpdateAccount: (priceFeedId: string) => PublicKey
+      getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
     ): Promise<InstructionWithEphemeralSigners[]> => {
       // You can generate instructions here that use the price updates posted above.
       // getPriceUpdateAccount(<price feed id>) will give you the account you need.
       // These accounts will be packed into transactions by the builder.
       return [];
-    }
+    },
   );
 
   // Send the instructions in the builder in 1 or more transactions.
@@ -86,7 +86,7 @@ async function main() {
       tightComputeBudget: true,
     }),
     pythSolanaReceiver.connection,
-    pythSolanaReceiver.wallet
+    pythSolanaReceiver.wallet,
   );
 }
 
@@ -105,7 +105,7 @@ async function getPriceUpdateData(price_feed_ids: string[]) {
 async function loadKeypairFromFile(filePath: string): Promise<Keypair> {
   try {
     const keypairData = JSON.parse(
-      await fs.promises.readFile(filePath, "utf8")
+      await fs.promises.readFile(filePath, "utf8"),
     );
     return Keypair.fromSecretKey(Uint8Array.from(keypairData));
   } catch (error) {

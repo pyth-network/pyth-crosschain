@@ -1,4 +1,8 @@
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  type Connection,
+  LAMPORTS_PER_SOL,
+  type PublicKey,
+} from "@solana/web3.js";
 import type { Logger } from "pino";
 
 import type {
@@ -6,7 +10,7 @@ import type {
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
 
 /**

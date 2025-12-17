@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
 import { Tabs } from "../unstyled/Tabs/index.jsx";
+import { MainNavTabs as MainNavTabsComponent } from "./index.jsx";
 
 const meta = {
   component: MainNavTabsComponent,

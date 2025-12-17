@@ -6,7 +6,7 @@ import type {
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
 
 /**
@@ -57,7 +57,7 @@ export class AptosBalanceTracker extends BaseBalanceTracker {
       const balance = BigInt(accountAPTAmount);
 
       // Calculate the normalized balance for display
-      const normalizedBalance = Number(balance) / Math.pow(10, this.decimals);
+      const normalizedBalance = Number(balance) / 10 ** this.decimals;
 
       // Update metrics with the new balance
       this.metrics.updateWalletBalance(

@@ -1,31 +1,30 @@
 "use client";
 
 import type { Idl } from "@coral-xyz/anchor";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { WalletIcon } from "@heroicons/react/24/outline";
 import type { PythStakingWallet } from "@pythnetwork/staking-sdk";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import {
+  type Connection,
   PublicKey,
-  Connection,
-  VersionedTransaction,
   TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
-
-import WalletTesterIDL from "./wallet-tester-idl.json";
 import { StateType as ApiStateType, useApi } from "../../hooks/use-api";
 import {
-  useAsync,
   StateType as UseAsyncStateType,
+  useAsync,
 } from "../../hooks/use-async";
-import { useData, StateType as UseDataStateType } from "../../hooks/use-data";
+import { StateType as UseDataStateType, useData } from "../../hooks/use-data";
 import { useNetwork } from "../../hooks/use-network";
 import { useToast } from "../../hooks/use-toast";
 import { Button } from "../Button";
 import { Switch } from "../Switch";
+import WalletTesterIDL from "./wallet-tester-idl.json";
 
 export const WalletTester = () => (
   <div className="grid size-full place-content-center">
@@ -78,8 +77,7 @@ const ConnectWallet = ({ isLoading }: { isLoading?: boolean | undefined }) => {
           className="px-10 py-4"
           size="nopad"
           isLoading={isLoading}
-          {...(!isLoading && { onPress: showModal })}
-        >
+          {...(!isLoading && { onPress: showModal })}>
           {isLoading ? (
             "Loading..."
           ) : (
@@ -171,8 +169,7 @@ const Tester = ({ wallet }: { wallet: PythStakingWallet }) => {
               size="nopad"
               {...(state.type === UseAsyncStateType.Running
                 ? { isLoading: true }
-                : { onPress: doTest })}
-            >
+                : { onPress: doTest })}>
               Click to test
             </Button>
           </div>

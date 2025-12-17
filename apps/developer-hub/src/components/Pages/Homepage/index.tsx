@@ -1,9 +1,9 @@
+import { ProductCard } from "../../ProductCard";
 import styles from "./index.module.scss";
 import ResourcesForBuildersImage from "./resources-for-builders.svg";
 import { Section } from "./section";
-import { SectionCards, SectionCard } from "./section-card";
+import { SectionCard, SectionCards } from "./section-card";
 import SignalImage from "./signal.svg";
-import { ProductCard } from "../../ProductCard";
 
 export const Homepage = () => {
   return (
@@ -44,8 +44,7 @@ export const Homepage = () => {
         title="Additional Resources"
         subtitle="Explore the Pyth Network"
         isHighlight
-        image={<ResourcesForBuildersImage />}
-      >
+        image={<ResourcesForBuildersImage />}>
         <SectionCards>
           <SectionCard
             title="Pyth Token"
@@ -72,8 +71,7 @@ export const Homepage = () => {
       </Section>
       <Section
         title="Resources for Developers"
-        subtitle="Explore the Pyth Network for developers"
-      >
+        subtitle="Explore the Pyth Network for developers">
         <SectionCards>
           <SectionCard
             title="Get Your Access Token"

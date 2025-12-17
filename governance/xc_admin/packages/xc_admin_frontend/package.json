@@ -53,8 +53,6 @@
     "@types/react-dom": "catalog:",
     "autoprefixer": "^10.4.8",
     "postcss": "^8.4.16",
-    "prettier": "catalog:",
-    "prettier-plugin-tailwindcss": "^0.1.13",
     "tailwindcss": "^3.1.8",
     "vercel": "^37.12.1"
   }

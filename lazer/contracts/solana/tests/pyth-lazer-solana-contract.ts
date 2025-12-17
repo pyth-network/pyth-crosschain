@@ -1,7 +1,7 @@
+import type { Program } from "@coral-xyz/anchor";
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { PythLazerSolanaContract } from "../target/types/pyth_lazer_solana_contract";
 import { BN } from "bn.js";
+import type { PythLazerSolanaContract } from "../target/types/pyth_lazer_solana_contract";
 
 describe("pyth-lazer-solana-contract", () => {
   // Configure the client to use the local cluster.

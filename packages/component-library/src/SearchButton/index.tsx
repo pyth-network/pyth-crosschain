@@ -5,7 +5,7 @@ import clsx from "clsx";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { useIsSSR } from "react-aria";
-import { Button as BaseButton } from "react-aria-components";
+import type { Button as BaseButton } from "react-aria-components";
 
 import type { Props as ButtonProps } from "../Button";
 import { Button } from "../Button";
@@ -47,8 +47,7 @@ export const SearchButton = ({
         beforeIcon={beforeIcon ?? <MagnifyingGlass />}
         size="sm"
         rounded
-        {...props}
-      >
+        {...props}>
         {largeScreenContent ?? <SearchShortcutText />}
       </Button>
       <Button
@@ -58,8 +57,7 @@ export const SearchButton = ({
         beforeIcon={beforeIcon ?? <MagnifyingGlass />}
         size="sm"
         rounded
-        {...props}
-      >
+        {...props}>
         {smallScreenContent ?? <SearchShortcutText />}
       </Button>
     </div>

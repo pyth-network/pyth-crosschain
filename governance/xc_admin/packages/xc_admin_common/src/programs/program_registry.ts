@@ -1,25 +1,25 @@
-import { PublicKey } from "@solana/web3.js";
 import {
   getPythProgramKeyForCluster,
   type PythCluster,
 } from "@pythnetwork/client";
-import {
-  type DownloadableConfig,
-  ProgramType,
-  type ProgramConfig,
-  type ValidationResult,
-  type RawConfig,
-} from "./types";
+import type { PublicKey } from "@solana/web3.js";
+import type { CoreConfigParams } from "./core/core_functions";
 
 // Import functions from each program implementation
 import * as pythCore from "./core/core_functions";
 import * as pythLazer from "./lazer/lazer_functions";
 import {
-  type LazerConfig,
   LAZER_PROGRAM_ID,
+  type LazerConfig,
   type LazerConfigParams,
 } from "./lazer/lazer_functions";
-import type { CoreConfigParams } from "./core/core_functions";
+import {
+  type DownloadableConfig,
+  type ProgramConfig,
+  ProgramType,
+  type RawConfig,
+  type ValidationResult,
+} from "./types";
 
 /**
  * Function to get the program address for each program type

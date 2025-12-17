@@ -1,11 +1,10 @@
 import Link from "next/link";
 import type { ElementType, SVGProps } from "react";
-
+import { Button } from "../Button";
+import { MaxWidth } from "../MaxWidth";
 import Benchmarks from "./benchmarks.svg";
 import Entropy from "./entropy.svg";
 import PriceFeeds from "./price-feeds.svg";
-import { Button } from "../Button";
-import { MaxWidth } from "../MaxWidth";
 
 export const Home = () => (
   <main className="grid size-full place-content-center py-16 text-center">
@@ -15,15 +14,13 @@ export const Home = () => (
     <MaxWidth>
       <nav
         className="flex flex-col items-stretch justify-center gap-12"
-        aria-label="Products"
-      >
+        aria-label="Products">
         <ul className="contents">
           <li className="contents">
             <ProductLink
               icon={PriceFeeds}
               href="/price-feeds/evm/getPriceNoOlderThan"
-              name="Price Feeds"
-            >
+              name="Price Feeds">
               Fetch real-time low-latency market data, on 50+ chains or off
               chain
             </ProductLink>
@@ -33,8 +30,7 @@ export const Home = () => (
               icon={Benchmarks}
               href="https://benchmarks.pyth.network/docs#/"
               target="_blank"
-              name="Benchmarks"
-            >
+              name="Benchmarks">
               Get historical market data from any Pyth feed for use in both on-
               and off-chain applications
             </ProductLink>
@@ -71,8 +67,7 @@ const ProductLink = ({
     href={href}
     target={target}
     gradient
-    className="flex max-w-2xl flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left"
-  >
+    className="flex max-w-2xl flex-col items-center gap-2 p-6 text-center sm:flex-row sm:gap-6 sm:pr-12 sm:text-left">
     <Icon className="h-24 p-3 text-pythpurple-600 dark:text-pythpurple-400" />
     <div className="flex flex-col gap-2">
       <h2 className="text-2xl font-medium text-pythpurple-600 dark:text-pythpurple-400">

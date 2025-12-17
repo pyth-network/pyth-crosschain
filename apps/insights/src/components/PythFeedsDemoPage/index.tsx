@@ -1,6 +1,5 @@
 "use client";
 
-import classes from "./index.module.scss";
 import {
   PythProApiTokensProvider,
   PythProAppStateProvider,
@@ -10,6 +9,7 @@ import { PythProApiTokensMenu } from "../PythProApiTokensMenu";
 import { PythProDemoCards } from "../PythProDemoCards";
 import { PythProDemoPriceChart } from "../PythProDemoPriceChart";
 import { PythProDemoSourceSelector } from "../PythProDemoSourceSelector";
+import classes from "./index.module.scss";
 
 export function PythFeedsDemoPage() {
   return (

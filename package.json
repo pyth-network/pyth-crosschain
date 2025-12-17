@@ -10,6 +10,7 @@
     "install:modules": "[ $CI ] && true || pnpm install",
     "turbo": "[ ! -d node_modules ] && pnpm install; turbo",
     "fix:lint": "biome check --write",
+    "fix:lint:unsafe": "biome check --write --unsafe",
     "test:lint": "biome check"
   },
   "devDependencies": {
@@ -17,9 +18,6 @@
     "@biomejs/biome": "catalog:",
     "@pythnetwork/create-pyth-package": "workspace:",
     "@cprussin/tsconfig": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
   }

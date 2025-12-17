@@ -1,5 +1,5 @@
 import { bcs } from "@mysten/sui/bcs";
-import { Transaction } from "@mysten/sui/transactions";
+import type { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 
 export function addParseAndVerifyLeEcdsaUpdateCall({

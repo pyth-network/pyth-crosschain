@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { StatCard as StatCardComponent } from "./index.jsx";
 import cardMeta, { Card as CardStory } from "../Card/index.stories.jsx";
+import { StatCard as StatCardComponent } from "./index.jsx";
 
 const cardMetaArgTypes = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

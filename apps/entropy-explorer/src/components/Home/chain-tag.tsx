@@ -1,9 +1,8 @@
 import clsx from "clsx";
 import Image from "next/image";
 import type { ComponentProps } from "react";
-
-import styles from "./chain-tag.module.scss";
 import type { EntropyDeployment } from "../../entropy-deployments";
+import styles from "./chain-tag.module.scss";
 
 export const ChainTag = ({
   chain,

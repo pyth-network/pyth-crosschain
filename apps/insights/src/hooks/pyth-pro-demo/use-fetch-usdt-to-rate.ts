@@ -41,7 +41,7 @@ export function useFetchUsdtToUsdRate(opts?: UseFetchUsdtToUsdRateOpts) {
     fetch(url, { signal: a.signal })
       .then((r) => r.json())
       .then((data: HermesPriceResponse) => {
-        const price = Number(data.parsed[0]?.price.price) / Math.pow(10, 8);
+        const price = Number(data.parsed[0]?.price.price) / 10 ** 8;
         if (isNumber(price)) {
           setUsdtToUsdRate(price);
         } else {

@@ -3,18 +3,17 @@ import { Card } from "@pythnetwork/component-library/Card";
 import { ErrorPage } from "@pythnetwork/component-library/ErrorPage";
 import { NoResults } from "@pythnetwork/component-library/NoResults";
 import { Suspense } from "react";
-
-import styles from "./index.module.scss";
-import { Results as ResultsImpl, ResultsLoading } from "./results";
-import {
-  SearchBar,
-  Paginator as PaginatorImpl,
-  ChainSelect,
-  StatusSelect,
-} from "./search-controls";
 import { parseChainSlug } from "../../entropy-deployments";
 import type { Args } from "../../requests";
 import { getRequests, ResultType } from "../../requests";
+import styles from "./index.module.scss";
+import { Results as ResultsImpl, ResultsLoading } from "./results";
+import {
+  ChainSelect,
+  Paginator as PaginatorImpl,
+  SearchBar,
+  StatusSelect,
+} from "./search-controls";
 
 type Props = {
   searchParams: Promise<Args>;
@@ -57,8 +56,7 @@ export const Home = (props: Props) => (
           <Suspense>
             <Paginator {...props} />
           </Suspense>
-        }
-      >
+        }>
         <div className={styles.cardBody}>
           <Suspense fallback={<ResultsLoading />}>
             <Results {...props} />

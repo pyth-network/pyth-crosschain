@@ -1,14 +1,14 @@
 import {
-  Cell,
-  contractAddress,
-  type ContractProvider,
-  type Sender,
-} from "@ton/core";
-import { BaseWrapper } from "./BaseWrapper";
-import {
   createCellChain,
   parseGuardianSetKeys,
 } from "@pythnetwork/pyth-ton-js";
+import {
+  type Cell,
+  type ContractProvider,
+  contractAddress,
+  type Sender,
+} from "@ton/core";
+import { BaseWrapper } from "./BaseWrapper";
 
 export type WormholeTestConfig = {
   guardianSetIndex: number;

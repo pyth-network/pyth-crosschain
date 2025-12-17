@@ -1,11 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
-
+import { FRACTION_PRECISION_N } from "../constants.js";
+import type { PoolDataAccount, PublisherData } from "../types.js";
 import {
   computeDelegatorRewardPercentage,
   convertEpochYieldToApy,
 } from "./apy.js";
-import { FRACTION_PRECISION_N } from "../constants.js";
-import type { PoolDataAccount, PublisherData } from "../types.js";
 
 export const extractPublisherData = (
   poolData: PoolDataAccount,

@@ -1,7 +1,7 @@
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
 import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 /** Executes an action from the executor contract via the specified executorAddress, callAddress, value, and calldata */
 export class EvmExecute extends PythGovernanceActionImpl {
@@ -33,7 +33,7 @@ export class EvmExecute extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "Execute",
-      this.layout,
+      EvmExecute.layout,
     );
     if (!decoded) return undefined;
 

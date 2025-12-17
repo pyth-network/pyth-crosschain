@@ -1,5 +1,3 @@
-import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
-
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import {
   getTokenOwnerRecordAddress,
@@ -15,19 +13,20 @@ import {
   getMint,
 } from "@solana/spl-token";
 import {
-  Connection,
+  type Connection,
   PublicKey,
   SystemProgram,
   Transaction,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 import { JSONParser } from "@streamparser/json";
+import crypto from "crypto"; // eslint-disable-line unicorn/prefer-node-protocol
 import { z } from "zod";
 
 import {
+  FRACTION_PRECISION_N,
   GOVERNANCE_ADDRESS,
   MAX_VOTER_WEIGHT,
-  FRACTION_PRECISION_N,
   ONE_YEAR_IN_SECONDS,
   POSITIONS_ACCOUNT_SIZE,
 } from "./constants.js";
@@ -49,12 +48,12 @@ import type {
   GlobalConfig,
   PoolConfig,
   PoolDataAccount,
+  PositionState,
   StakeAccountPositions,
   TargetAccount,
-  VoterWeightAction,
   VestingSchedule,
+  VoterWeightAction,
 } from "./types.js";
-import { PositionState } from "./types.js";
 import { bigintMax, bigintMin } from "./utils/bigint.js";
 import { convertBigIntToBN, convertBNToBigInt } from "./utils/bn.js";
 import { epochToDate, getCurrentEpoch } from "./utils/clock.js";

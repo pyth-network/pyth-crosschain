@@ -3,72 +3,72 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Menu, Transition } from '@headlessui/react'
-import Arrow from '@images/icons/down.inline.svg'
-import type { PythCluster } from '@pythnetwork/client'
-import { useRouter } from 'next/router'
-import { Fragment, useCallback, useContext, useEffect } from 'react'
+import { Menu, Transition } from "@headlessui/react";
+import Arrow from "@images/icons/down.inline.svg";
+import type { PythCluster } from "@pythnetwork/client";
+import { useRouter } from "next/router";
+import { Fragment, useCallback, useContext, useEffect } from "react";
 
-import { ClusterContext, DEFAULT_CLUSTER } from '../contexts/ClusterContext'
+import { ClusterContext, DEFAULT_CLUSTER } from "../contexts/ClusterContext";
 
 const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
-  const router = useRouter()
+  const router = useRouter();
 
-  const { cluster, setCluster } = useContext(ClusterContext)
+  const { cluster, setCluster } = useContext(ClusterContext);
   const handleChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       if (event.target.value) {
-        router.query.cluster = event.target.value
-        setCluster(event.target.value)
+        router.query.cluster = event.target.value;
+        setCluster(event.target.value);
         router.push(
           {
             pathname: router.pathname,
             query: router.query,
           },
           undefined,
-          { scroll: false }
-        )
+          { scroll: false },
+        );
       }
     },
-    [setCluster, router]
-  )
+    [setCluster, router],
+  );
 
   useEffect(() => {
     if (router?.query?.cluster) {
-      setCluster(router.query.cluster as PythCluster)
-      return
+      setCluster(router.query.cluster as PythCluster);
+      return;
     } else {
-      setCluster(DEFAULT_CLUSTER)
+      setCluster(DEFAULT_CLUSTER);
     }
-  }, [setCluster, router])
+  }, [setCluster, router]);
 
   const clusters = [
     {
-      value: 'pythnet',
-      name: 'pythnet',
+      value: "pythnet",
+      name: "pythnet",
     },
     {
-      value: 'mainnet-beta',
-      name: 'mainnet-beta',
+      value: "mainnet-beta",
+      name: "mainnet-beta",
     },
     {
-      value: 'testnet',
-      name: 'testnet',
+      value: "testnet",
+      name: "testnet",
     },
     {
-      value: 'devnet',
-      name: 'devnet',
+      value: "devnet",
+      name: "devnet",
     },
     {
-      value: 'pythtest-conformance',
-      name: 'pythtest-conformance',
+      value: "pythtest-conformance",
+      name: "pythtest-conformance",
     },
     {
-      value: 'pythtest-crosschain',
-      name: 'pythtest-crosschain',
+      value: "pythtest-crosschain",
+      name: "pythtest-crosschain",
     },
-  ]
+  ];
 
   return (
     <Menu as="div" className="relative z-[3] block w-[180px] text-left">
@@ -76,11 +76,10 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
         <>
           <Menu.Button
             className={`inline-flex w-full items-center justify-between py-3 px-6 text-sm outline-0 ${
-              light ? 'bg-beige2' : 'bg-darkGray2'
-            }`}
-          >
+              light ? "bg-beige2" : "bg-darkGray2"
+            }`}>
             <span className="mr-3">{cluster}</span>
-            <Arrow className={open && 'rotate-180'} />
+            <Arrow className={open && "rotate-180"} />
           </Menu.Button>
           <Transition
             as={Fragment}
@@ -89,20 +88,18 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
             enterTo="transform opacity-100 scale-100"
             leave="transition ease-in duration-75"
             leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
+            leaveTo="transform opacity-0 scale-95">
             <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
               {clusters.map((c) => (
                 <Menu.Item key={c.name}>
                   <button
                     className={`block w-full py-3 px-6 text-left text-sm ${
                       light
-                        ? 'bg-beige2 hover:bg-beige3'
-                        : 'bg-darkGray hover:bg-darkGray2'
+                        ? "bg-beige2 hover:bg-beige3"
+                        : "bg-darkGray hover:bg-darkGray2"
                     } `}
                     value={c.value}
-                    onClick={handleChange}
-                  >
+                    onClick={handleChange}>
                     {c.name}
                   </button>
                 </Menu.Item>
@@ -112,7 +109,7 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
         </>
       )}
     </Menu>
-  )
-}
+  );
+};
 
-export default ClusterSwitch
+export default ClusterSwitch;

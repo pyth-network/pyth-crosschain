@@ -5,9 +5,8 @@ import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useId, useMemo } from "react";
-
-import styles from "./index.module.scss";
 import { Link } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 type Props = {
   className?: string | undefined;
@@ -44,8 +43,7 @@ const NavTab = ({ segment, bubbleId, children }: TabProps) => {
     <Link
       href={`/${segment}`}
       className={styles.mobileTab ?? ""}
-      data-is-selected={isSelected ? "" : undefined}
-    >
+      data-is-selected={isSelected ? "" : undefined}>
       {children}
       {isSelected && (
         <motion.span

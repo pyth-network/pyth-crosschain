@@ -8,15 +8,14 @@ import { readFileSync } from "node:fs";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
+import { toPrivateKey } from "../src/core/base";
+import { loadHotWallet } from "../src/node/utils/governance";
+import { DefaultStore } from "../src/node/utils/store";
 import {
   COMMON_UPGRADE_OPTIONS,
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
-import { toPrivateKey } from "../src/core/base";
-import { loadHotWallet } from "../src/node/utils/governance";
-import { DefaultStore } from "../src/node/utils/store";
 
 const EXECUTOR_CACHE_FILE = ".cache-upgrade-evm-executor-contract";
 const ENTROPY_CACHE_FILE = ".cache-upgrade-evm-entropy-contract";

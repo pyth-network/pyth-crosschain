@@ -1,13 +1,12 @@
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
-
+import { MaxWidth } from "../MaxWidth";
 import Discord from "./discord.svg";
 import Github from "./github.svg";
 import LinkedIn from "./linkedin.svg";
 import Telegram from "./telegram.svg";
 import X from "./x.svg";
 import Youtube from "./youtube.svg";
-import { MaxWidth } from "../MaxWidth";
 
 const SOCIAL_LINKS = [
   { name: "X", icon: X, href: "https://x.com/PythNetwork" },
@@ -40,8 +39,7 @@ export const Footer = ({
         "sticky bottom-0 w-full bg-white dark:bg-pythpurple-900",
         className,
       )}
-      {...props}
-    >
+      {...props}>
       <MaxWidth className="flex h-16 items-center justify-between text-xs font-light text-neutral-600 dark:text-neutral-400">
         <div className="flex h-full items-center gap-4">
           <span>© 2025 Pyth Data Association</span>
@@ -53,8 +51,7 @@ export const Footer = ({
               href={href}
               key={name}
               className="hover:text-pythpurple-600 dark:hover:text-pythpurple-400"
-              rel="noreferrer"
-            >
+              rel="noreferrer">
               <Icon className="h-4" />
               <span className="sr-only">{name}</span>
             </a>

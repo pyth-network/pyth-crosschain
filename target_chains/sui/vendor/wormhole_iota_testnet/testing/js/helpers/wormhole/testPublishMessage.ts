@@ -1,4 +1,4 @@
-import { SUI_CLOCK_OBJECT_ID, TransactionBlock } from "@mysten/sui.js";
+import { SUI_CLOCK_OBJECT_ID, type TransactionBlock } from "@mysten/sui.js";
 
 export function addPrepareMessageAndPublishMessage(
   tx: TransactionBlock,
@@ -6,7 +6,7 @@ export function addPrepareMessageAndPublishMessage(
   wormholeStateId: string,
   emitterCapId: string,
   nonce: number,
-  payload: number[] | string
+  payload: number[] | string,
 ): TransactionBlock {
   const [feeAmount] = tx.moveCall({
     target: `${wormholePackage}::state::message_fee`,

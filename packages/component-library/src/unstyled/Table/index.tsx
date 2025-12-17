@@ -6,9 +6,9 @@ import { Row as BaseRow } from "react-aria-components";
 import { usePrefetch } from "../../use-prefetch.js";
 
 export {
-  type SortDescriptor,
   Cell,
   Column,
+  type SortDescriptor,
   Table,
   TableBody,
   TableHeader,

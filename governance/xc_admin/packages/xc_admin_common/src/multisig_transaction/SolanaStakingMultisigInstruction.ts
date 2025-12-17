@@ -1,8 +1,10 @@
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {
-  Connection,
-  PublicKey,
+  type Connection,
+  type PublicKey,
+  StakeInstruction,
   StakeProgram,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 import {
   type MultisigInstruction,
@@ -10,8 +12,6 @@ import {
   UNRECOGNIZED_INSTRUCTION,
 } from ".";
 import type { AnchorAccounts } from "./anchor";
-import { StakeInstruction } from "@solana/web3.js";
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export class SolanaStakingMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.SolanaStakingProgram;
@@ -35,7 +35,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
     try {
       const type = StakeInstruction.decodeInstructionType(instruction);
       switch (type) {
-        case "Deactivate":
+        case "Deactivate": {
           const decodedDeactivate =
             StakeInstruction.decodeDeactivate(instruction);
           return new SolanaStakingMultisigInstruction(
@@ -57,7 +57,8 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             },
           );
-        case "Delegate":
+        }
+        case "Delegate": {
           const decodedDelegate = StakeInstruction.decodeDelegate(instruction);
           return new SolanaStakingMultisigInstruction(
             "Delegate",
@@ -83,7 +84,8 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             },
           );
-        case "Initialize":
+        }
+        case "Initialize": {
           const decodedInitialize =
             StakeInstruction.decodeInitialize(instruction);
           return new SolanaStakingMultisigInstruction(
@@ -103,6 +105,7 @@ export class SolanaStakingMultisigInstruction implements MultisigInstruction {
               remaining: [],
             },
           );
+        }
         case "Authorize":
         case "AuthorizeWithSeed":
 

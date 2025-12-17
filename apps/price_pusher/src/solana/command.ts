@@ -11,32 +11,31 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
-  Keypair,
   Connection,
+  Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
 import {
+  type SearcherClient,
   searcherClient,
-  SearcherClient,
 } from "jito-ts/dist/sdk/block-engine/searcher";
 import type { Logger } from "pino";
 import { pino } from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
+import type { IBalanceTracker } from "../interface.js";
+import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
+import { createSolanaBalanceTracker } from "./balance-tracker.js";
 import {
   SolanaPriceListener,
   SolanaPricePusher,
   SolanaPricePusherJito,
 } from "./solana.js";
-import { Controller } from "../controller.js";
-import type { IBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
-import { filterInvalidPriceItems } from "../utils.js";
-import { createSolanaBalanceTracker } from "./balance-tracker.js";
 
 export default {
   command: "solana",
@@ -119,7 +118,7 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     const {
       endpoint,
       keypairFile,

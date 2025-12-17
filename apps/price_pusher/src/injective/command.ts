@@ -7,13 +7,12 @@ import { getNetworkInfo } from "@injectivelabs/networks";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { pino } from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
-import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
-import { Controller } from "../controller.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
 import { filterInvalidPriceItems } from "../utils.js";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective.js";
 export default {
   command: "injective",
   describe: "run price pusher for injective",
@@ -54,7 +53,7 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       network,

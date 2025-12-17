@@ -1,18 +1,48 @@
-import { Program, BN, type Idl } from "@coral-xyz/anchor";
+import { BN, type Idl, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import {
-  pythOracleProgram,
-  parseBaseData,
   AccountType,
+  parseBaseData,
   parsePriceData,
+  pythOracleProgram,
 } from "@pythnetwork/client";
 import {
-  type PythCluster,
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
+  type PythCluster,
 } from "@pythnetwork/client/lib/cluster";
+import {
+  SOLANA_LAZER_PROGRAM_ID,
+  SOLANA_LAZER_STORAGE_ID,
+} from "@pythnetwork/pyth-lazer-sdk";
+import {
+  DEFAULT_RECEIVER_PROGRAM_ID,
+  getConfigPda,
+  pythSolanaReceiverIdl,
+} from "@pythnetwork/pyth-solana-receiver";
+import {
+  DEFAULT_PRIORITY_FEE_CONFIG,
+  TransactionBuilder,
+} from "@pythnetwork/solana-utils";
+import {
+  BPF_UPGRADABLE_LOADER,
+  createDetermisticPriceStoreInitializePublisherInstruction,
+  createPriceStoreInstruction,
+  fetchStakeAccounts,
+  findDetermisticStakeAccountAddress,
+  getMultisigCluster,
+  getProposalInstructions,
+  INTEGRITY_POOL_PROGRAM_ID,
+  idlSetBuffer,
+  integrityPoolIdl,
+  isPriceStorePublisherInitialized,
+  lazerIdl,
+  MultisigParser,
+  MultisigVault,
+  PROGRAM_AUTHORITY_ESCROW,
+} from "@pythnetwork/xc-admin-common";
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
@@ -24,48 +54,16 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
+  StakeProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  StakeProgram,
   SystemProgram,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 import SquadsMesh from "@sqds/mesh";
 import { program } from "commander";
 import fs from "fs";
-import {
-  BPF_UPGRADABLE_LOADER,
-  MultisigParser,
-  MultisigVault,
-  PROGRAM_AUTHORITY_ESCROW,
-  createDetermisticPriceStoreInitializePublisherInstruction,
-  createPriceStoreInstruction,
-  fetchStakeAccounts,
-  findDetermisticStakeAccountAddress,
-  getMultisigCluster,
-  getProposalInstructions,
-  idlSetBuffer,
-  isPriceStorePublisherInitialized,
-  lazerIdl,
-  integrityPoolIdl,
-  INTEGRITY_POOL_PROGRAM_ID,
-} from "@pythnetwork/xc-admin-common";
-
-import {
-  pythSolanaReceiverIdl,
-  getConfigPda,
-  DEFAULT_RECEIVER_PROGRAM_ID,
-} from "@pythnetwork/pyth-solana-receiver";
-import {
-  SOLANA_LAZER_PROGRAM_ID,
-  SOLANA_LAZER_STORAGE_ID,
-} from "@pythnetwork/pyth-lazer-sdk";
-
 import { LedgerNodeWallet } from "./ledger";
-import {
-  DEFAULT_PRIORITY_FEE_CONFIG,
-  TransactionBuilder,
-} from "@pythnetwork/solana-utils";
 
 export async function loadHotWalletOrLedger(
   wallet: string,
@@ -328,7 +326,7 @@ async function closeProgramOrBuffer(
   spill: PublicKey,
   programId?: PublicKey,
 ) {
-  let accounts = [
+  const accounts = [
     { pubkey: programDataOrBufferAccount, isSigner: false, isWritable: true },
     { pubkey: spill, isSigner: false, isWritable: true },
     {
@@ -421,16 +419,14 @@ multisigCommand(
           ),
         ),
       )
-    )
-      .map((stakeAccounts, index) => {
-        if (stakeAccounts.length === 0) {
-          console.log(
-            `Skipping vote account ${voteAccounts[index]?.toBase58()} - no stake accounts found`,
-          );
-        }
-        return stakeAccounts;
-      })
-      .flat();
+    ).flatMap((stakeAccounts, index) => {
+      if (stakeAccounts.length === 0) {
+        console.log(
+          `Skipping vote account ${voteAccounts[index]?.toBase58()} - no stake accounts found`,
+        );
+      }
+      return stakeAccounts;
+    });
 
     const instructions = stakeAccounts.flatMap(
       (stakeAccount) =>
@@ -700,7 +696,7 @@ multisigCommand("init-price-store-buffers", "Init price store buffers").action(
       }
     }
 
-    let instructions = [];
+    const instructions = [];
     for (const publisherKeyBase58 of allPublishers) {
       const publisherKey = new PublicKey(publisherKeyBase58);
       if (await isPriceStorePublisherInitialized(connection, publisherKey)) {
@@ -901,7 +897,7 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
       ? options.targetVaults.split(",").map((m: string) => new PublicKey(m))
       : [];
 
-    let proposalInstructions: TransactionInstruction[] = [];
+    const proposalInstructions: TransactionInstruction[] = [];
 
     const membersToAdd: PublicKey[] = options.add
       ? options.add.split(",").map((m: string) => new PublicKey(m))
@@ -1088,16 +1084,19 @@ multisigCommand(
     );
 
     // Use Anchor to create the instruction
-    let setPublisherStakeAccountInstruction = await integrityPoolProgram.methods
-      .setPublisherStakeAccount?.()
-      .accounts({
-        signer: await vault.getVaultAuthorityPDA(targetCluster),
-        publisher: new PublicKey(options.publisher),
-        poolData: new PublicKey("poo1zPoi5xrNzi4yk4i23oWcJrNNkDYAniBCewJY8kb"),
-        currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID, // This corresponds to `None` for optional accounts in Anchor
-        newStakeAccountPositionsOption,
-      })
-      .instruction();
+    const setPublisherStakeAccountInstruction =
+      await integrityPoolProgram.methods
+        .setPublisherStakeAccount?.()
+        .accounts({
+          signer: await vault.getVaultAuthorityPDA(targetCluster),
+          publisher: new PublicKey(options.publisher),
+          poolData: new PublicKey(
+            "poo1zPoi5xrNzi4yk4i23oWcJrNNkDYAniBCewJY8kb",
+          ),
+          currentStakeAccountPositionsOption: INTEGRITY_POOL_PROGRAM_ID, // This corresponds to `None` for optional accounts in Anchor
+          newStakeAccountPositionsOption,
+        })
+        .instruction();
 
     if (setPublisherStakeAccountInstruction) {
       await vault.proposeInstructions(

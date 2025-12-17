@@ -1,22 +1,22 @@
-import { readFileSync } from "fs";
-import { toHex, fromBech32 } from "@cosmjs/encoding";
-import { ethers } from "ethers";
-import assert from "assert";
-import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import { fromBech32, toHex } from "@cosmjs/encoding";
+import { getNetworkInfo, type Network } from "@injectivelabs/networks";
 import {
+  ChainGrpcWasmApi,
+  type ContractInfo,
+  createTransactionForAddressAndMsg,
   DEFAULT_STD_FEE,
-  MsgStoreCode,
   MsgInstantiateContract,
+  MsgMigrateContract,
+  MsgStoreCode,
+  type Msgs,
+  MsgUpdateAdmin,
   PrivateKey,
   TxGrpcClient,
   type TxResponse,
-  type Msgs,
-  MsgMigrateContract,
-  MsgUpdateAdmin,
-  createTransactionForAddressAndMsg,
-  ChainGrpcWasmApi,
-  type ContractInfo,
 } from "@injectivelabs/sdk-ts";
+import assert from "assert";
+import { ethers } from "ethers";
+import { readFileSync } from "fs";
 import type { Deployer } from "./index.js";
 
 export type InjectiveHost = {
@@ -224,5 +224,5 @@ function convert_injective_address_to_hex(human_addr: string) {
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
-  return rx.exec(rawLog)![1]!;
+  return rx.exec(rawLog)[1]!;
 }

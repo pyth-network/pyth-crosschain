@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { stringify } from "superjson";
 import { z } from "zod";
 import { parseSearchParams } from "zod-search-params";

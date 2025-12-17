@@ -3,9 +3,9 @@
 import type { PriceData } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { PublicKey } from "@solana/web3.js";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { Cluster, subscribe, unsubscribe } from "../services/pyth";
+import { type Cluster, subscribe, unsubscribe } from "../services/pyth";
 
 export const useLivePriceData = (cluster: Cluster, feedKey: string) => {
   const logger = useLogger();

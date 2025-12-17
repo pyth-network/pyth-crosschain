@@ -2,26 +2,25 @@ import { Badge } from "@pythnetwork/component-library/Badge";
 import { Button } from "@pythnetwork/component-library/Button";
 import { CrossfadeTabPanels } from "@pythnetwork/component-library/CrossfadeTabPanels";
 import { Tabs } from "@pythnetwork/component-library/unstyled/Tabs";
-
-import styles from "./index.module.scss";
-import PriceFeedsDark from "./price-feeds-dark.svg";
-import PriceFeedsLight from "./price-feeds-light.svg";
-import PublishersDark from "./publishers-dark.svg";
-import PublishersLight from "./publishers-light.svg";
-import { TabList } from "./tab-list";
 import { Cluster } from "../../services/pyth";
 import { getFeeds } from "../../services/pyth/get-feeds";
 import {
-  totalVolumeTraded,
   activeChains,
-  activePublishers,
   activeFeeds,
+  activePublishers,
+  totalVolumeTraded,
 } from "../../static-data/stats";
 import { Cards } from "../Cards";
 import { ChangePercent } from "../ChangePercent";
 import { ChartCard } from "../ChartCard";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
+import styles from "./index.module.scss";
+import PriceFeedsDark from "./price-feeds-dark.svg";
+import PriceFeedsLight from "./price-feeds-light.svg";
+import PublishersDark from "./publishers-dark.svg";
+import PublishersLight from "./publishers-light.svg";
+import { TabList } from "./tab-list";
 
 export const Overview = async () => {
   const priceFeeds = await getFeeds(Cluster.Pythnet);

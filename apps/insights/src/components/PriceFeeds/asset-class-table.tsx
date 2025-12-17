@@ -5,10 +5,10 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import {
-  parseAsString,
-  parseAsInteger,
-  useQueryStates,
   createSerializer,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
 } from "@pythnetwork/react-hooks/nuqs";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";

@@ -4,21 +4,20 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import type { ComponentProps, ReactNode } from "react";
-
+import { ComposeProviders } from "../compose-providers.jsx";
+import { Footer } from "../Footer/index.jsx";
+import { Header } from "../Header/index.jsx";
+import { MainNavTabs } from "../MainNavTabs/index.jsx";
+import { MobileNavTabs } from "../MobileNavTabs/index.jsx";
+import { LoggerProvider } from "../useLogger/index.jsx";
 import { Amplitude } from "./amplitude.jsx";
 import { BodyProviders } from "./body-providers.jsx";
 import { sans } from "./fonts.js";
 import { HtmlWithLang } from "./html-with-lang.jsx";
 import { I18nProvider } from "./i18n-provider.jsx";
 import styles from "./index.module.scss";
-import { TabRoot, TabPanel } from "./tabs.jsx";
-import { Footer } from "../Footer/index.jsx";
-import { Header } from "../Header/index.jsx";
-import { MainNavTabs } from "../MainNavTabs/index.jsx";
-import { MobileNavTabs } from "../MobileNavTabs/index.jsx";
-import { ComposeProviders } from "../compose-providers.jsx";
 import { RouterProvider } from "./router-provider.jsx";
-import { LoggerProvider } from "../useLogger/index.jsx";
+import { TabPanel, TabRoot } from "./tabs.jsx";
 
 import "./base.scss";
 
@@ -49,8 +48,7 @@ export const AppShellRoot = ({
     <HtmlWithLang
       // See https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       suppressHydrationWarning
-      className={clsx(sans.className, styles.html)}
-    >
+      className={clsx(sans.className, styles.html)}>
       <body className={styles.body}>{children}</body>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
       {amplitudeApiKey && <Amplitude apiKey={amplitudeApiKey} />}
@@ -70,8 +68,7 @@ export const AppShell = ({
     enableAccessibilityReporting={enableAccessibilityReporting}
     amplitudeApiKey={amplitudeApiKey}
     googleAnalyticsId={googleAnalyticsId}
-    providers={providers}
-  >
+    providers={providers}>
     <AppBody {...props} />
   </AppShellRoot>
 );

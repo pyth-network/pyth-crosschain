@@ -10,7 +10,8 @@ export const PYTH_CONTRACT_ADDRESS_MAINNET =
 export const FUEL_ETH_ASSET_ID =
   "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
 
+export { default as PYTH_CONTRACT_ABI } from "./abi/pyth-contract-abi.json" with {
+  type: "json",
+};
 export * from "./types/index.js";
 export type * from "./types/PythContract.js";
-
-export { default as PYTH_CONTRACT_ABI } from "./abi/pyth-contract-abi.json" with { type: "json" };

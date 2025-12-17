@@ -5,13 +5,12 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import type { PrivateKey } from "../src/core/base";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
-import { EvmEntropyContract } from "../src/core/contracts";
+import type { EvmEntropyContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(

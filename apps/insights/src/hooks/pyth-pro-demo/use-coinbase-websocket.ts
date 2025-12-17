@@ -3,7 +3,7 @@
 import type { UseWebSocketOpts } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined, isNumber } from "@pythnetwork/shared-lib/util";
-import { useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type { AllowedCryptoSymbolsType } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -92,10 +92,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
           break;
         }
         case "SOLUSDT": {
-          {
-            productId = "SOL-USD";
-            // No default
-          }
+          productId = "SOL-USD";
           break;
         }
       }
@@ -135,10 +132,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
             break;
           }
           case "SOL-USD": {
-            {
-              symbol = "SOLUSDT";
-              // No default
-            }
+            symbol = "SOLUSDT";
             break;
           }
         }

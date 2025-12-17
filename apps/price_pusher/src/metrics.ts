@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import express from "express";
 import type { Logger } from "pino";
-import { Registry, Counter, Gauge } from "prom-client";
+import { Counter, Gauge, Registry } from "prom-client";
 
 import { UpdateCondition } from "./price-config.js";
 

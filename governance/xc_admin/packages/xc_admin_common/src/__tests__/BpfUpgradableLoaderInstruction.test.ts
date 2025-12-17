@@ -1,17 +1,17 @@
 import type { PythCluster } from "@pythnetwork/client";
 import {
-  BpfUpgradableLoaderInstruction,
-  MultisigInstructionProgram,
-  MultisigParser,
-  UNRECOGNIZED_INSTRUCTION,
-} from "../multisig_transaction";
-import {
   PublicKey,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from "@solana/web3.js";
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
+import {
+  BpfUpgradableLoaderInstruction,
+  MultisigInstructionProgram,
+  MultisigParser,
+  UNRECOGNIZED_INSTRUCTION,
+} from "../multisig_transaction";
 
 test("Bpf Upgradable Loader multisig instruction parse", (done) => {
   jest.setTimeout(60000);

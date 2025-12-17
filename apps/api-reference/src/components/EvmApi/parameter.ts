@@ -78,4 +78,4 @@ const VALIDATIONS: Record<
   [ParameterType.IntArray]: [validateInt],
 };
 
-const HEX_REGEX = new RegExp("^(0|0x[0-9A-Fa-f]*)$");
+const HEX_REGEX = /^(0|0x[0-9A-Fa-f]*)$/;

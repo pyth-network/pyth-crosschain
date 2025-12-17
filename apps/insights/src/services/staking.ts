@@ -1,9 +1,9 @@
 import "server-only";
 
 import {
-  PythStakingClient,
   epochToDate,
   extractPublisherData,
+  PythStakingClient,
 } from "@pythnetwork/staking-sdk";
 import { Connection } from "@solana/web3.js";
 

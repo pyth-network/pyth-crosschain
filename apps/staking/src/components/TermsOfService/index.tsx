@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { ReactNode, ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { Link as BaseLink } from "../Link";
 
@@ -45,8 +45,7 @@ export const TermsOfService = () => (
               our{" "}
               <Link
                 href="https://pythdataassociation.com/terms-of-use"
-                target="_blank"
-              >
+                target="_blank">
                 Website Terms of Use
               </Link>
               , incorporated herein by reference; and
@@ -55,8 +54,7 @@ export const TermsOfService = () => (
               our{" "}
               <Link
                 href="https://pythdataassociation.com/privacy-policy"
-                target="_blank"
-              >
+                target="_blank">
                 Privacy Policy
               </Link>
               , incorporated herein by reference.
@@ -70,15 +68,13 @@ export const TermsOfService = () => (
           these Terms, the{" "}
           <Link
             href="https://pythdataassociation.com/terms-of-use"
-            target="_blank"
-          >
+            target="_blank">
             Website Terms of Use
           </Link>{" "}
           or the{" "}
           <Link
             href="https://pythdataassociation.com/privacy-policy"
-            target="_blank"
-          >
+            target="_blank">
             Privacy Policy
           </Link>
           , the terms of these Terms shall prevail.
@@ -171,15 +167,13 @@ export const TermsOfService = () => (
           your acceptance of and/or compliance with these Terms, the{" "}
           <Link
             href="https://pythdataassociation.com/terms-of-use"
-            target="_blank"
-          >
+            target="_blank">
             Website Terms of Use
           </Link>{" "}
           and our{" "}
           <Link
             href="https://pythdataassociation.com/privacy-policy"
-            target="_blank"
-          >
+            target="_blank">
             Privacy Policy
           </Link>
           . These Terms shall exclusively apply; any of your terms and
@@ -586,8 +580,7 @@ export const TermsOfService = () => (
           repository at{" "}
           <Link
             href="https://github.com/pyth-network/pyth-crosschain/tree/main/apps/staking"
-            target="_blank"
-          >
+            target="_blank">
             https://github.com/pyth-network/pyth-crosschain/tree/main/apps/staking
           </Link>
           .
@@ -1134,8 +1127,7 @@ type SectionProps = ComponentProps<"div"> & {
 const Section = ({ title, children, className, ...props }: SectionProps) => (
   <div
     className={clsx("list-item marker:text-xl marker:font-bold", className)}
-    {...props}
-  >
+    {...props}>
     <dd className="ml-2 inline text-xl font-bold">{title}</dd>
     <dt className="mt-4 flex flex-col gap-4">{children}</dt>
   </div>

@@ -5,15 +5,6 @@
 /* eslint-disable tsdoc/syntax */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  findExecutorContract,
-  getOrDeployWormholeContract,
-  getWeb3Contract,
-} from "./common";
 import type { DeploymentType } from "../src/core/base";
 import {
   getDefaultDeploymentConfig,
@@ -23,6 +14,14 @@ import {
 import { EvmChain } from "../src/core/chains";
 import { EvmExecutorContract } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  findExecutorContract,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+} from "./common";
 
 const CACHE_FILE = ".cache-deploy-evm-executor";
 

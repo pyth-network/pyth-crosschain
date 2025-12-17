@@ -23,8 +23,7 @@ export const ChangeValue = ({ className, children, ...props }: Props) => {
     <span
       className={clsx(styles.changeValue, className)}
       {...(!props.isLoading && { "data-direction": props.direction })}
-      {...propsWithoutIsLoading}
-    >
+      {...propsWithoutIsLoading}>
       <Contents {...props}>{children}</Contents>
     </span>
   );

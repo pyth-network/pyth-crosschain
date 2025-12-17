@@ -1,5 +1,5 @@
-import { DataSource } from "@pythnetwork/xc-admin-common";
-import { beginCell, Cell, Dictionary } from "@ton/core";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import { beginCell, type Cell, Dictionary } from "@ton/core";
 
 export const GUARDIAN_SET_0 = ["0x58CC3AE5C097B213CE3C81979E1B9F9570746AA5"];
 

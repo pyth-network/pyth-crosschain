@@ -44,10 +44,7 @@ export function useOKXWebSocket(): UseDataProviderSocketHookReturnType {
           break;
         }
         case "SOLUSDT": {
-          {
-            instId = "SOL-USDT";
-            // No default
-          }
+          instId = "SOL-USDT";
           break;
         }
       }

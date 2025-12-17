@@ -2,7 +2,7 @@ import type { Idl } from "@coral-xyz/anchor";
 import {
   type AccountMeta,
   PublicKey,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
 
 type NamedAccounts = Record<string, AccountMeta>;
@@ -48,7 +48,7 @@ export async function idlSetBuffer(
   buffer: PublicKey,
   idlAuthority: PublicKey,
 ): Promise<TransactionInstruction> {
-  let idlAddress = await getIdlAddress(programId);
+  const idlAddress = await getIdlAddress(programId);
   return {
     programId,
     data: IDL_SET_BUFFER_DISCRIMINATOR,

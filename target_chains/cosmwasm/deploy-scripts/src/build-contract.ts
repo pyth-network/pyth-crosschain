@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from "fs";
 import toml from "@ltd/j-toml";
 import { exec } from "child_process";
+import { readFileSync, writeFileSync } from "fs";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -32,10 +32,10 @@ function cargoPreSetup(contractTomlFilePath: string, feature: string) {
   const parsedToml = toml.parse(originalTomlContentStr);
 
   // add default feature to the cargo.toml
-  // @ts-ignore
+  // @ts-expect-error
   parsedToml.features.default = [feature];
 
-  // @ts-ignore
+  // @ts-expect-error
   const updatedToml = toml.stringify(parsedToml, {
     // don't remove this or else stringify will return an array of strings
     // where each string represents a line

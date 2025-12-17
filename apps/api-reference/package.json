@@ -45,7 +45,6 @@
   "devDependencies": {
     "@axe-core/react": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@svgr/webpack": "catalog:",
     "@tailwindcss/forms": "catalog:",
@@ -56,7 +55,6 @@
     "autoprefixer": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "vercel": "catalog:"
   }

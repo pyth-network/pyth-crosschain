@@ -1,7 +1,7 @@
-import type { ChainName } from "../chains";
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 export class EvmSetWormholeAddress extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
@@ -18,7 +18,7 @@ export class EvmSetWormholeAddress extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetWormholeAddress",
-      this.layout,
+      EvmSetWormholeAddress.layout,
     );
     if (!decoded) return undefined;
 
@@ -50,7 +50,7 @@ export class StarknetSetWormholeAddress extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetWormholeAddress",
-      this.layout,
+      StarknetSetWormholeAddress.layout,
     );
     if (!decoded) return undefined;
 

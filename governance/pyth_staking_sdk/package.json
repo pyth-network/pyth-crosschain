@@ -213,13 +213,11 @@
   },
   "devDependencies": {
     "@pythnetwork/jest-config": "workspace:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@solana/wallet-adapter-react": "catalog:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
-    "jest": "catalog:",
-    "prettier": "catalog:"
+    "jest": "catalog:"
   },
   "dependencies": {
     "@coral-xyz/anchor": "catalog:",

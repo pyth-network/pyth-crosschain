@@ -1,18 +1,18 @@
 import {
   type AccountMeta,
-  Connection,
+  type Connection,
   MAX_SEED_LENGTH,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { PRICE_FEED_OPS_KEY } from "./multisig";
 import {
   type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "./multisig_transaction";
-import { type AnchorAccounts } from "./multisig_transaction/anchor";
-import { PRICE_FEED_OPS_KEY } from "./multisig";
+import type { AnchorAccounts } from "./multisig_transaction/anchor";
 
 export const PRICE_STORE_PROGRAM_ID: PublicKey = new PublicKey(
   "3m6sv6HGqEbuyLV84mD7rJn4MAC9LhUa1y1AUNVqcPfr",

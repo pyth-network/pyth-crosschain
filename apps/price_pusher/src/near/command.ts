@@ -9,8 +9,8 @@ import { Controller } from "../controller";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
-import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
 import { filterInvalidPriceItems } from "../utils";
+import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
 
 export default {
   command: "near",
@@ -45,7 +45,7 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       nodeUrl,

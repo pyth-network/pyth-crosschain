@@ -35,13 +35,11 @@
     "pyth-entropy-tester": "./cli/run.js"
   },
   "devDependencies": {
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/express": "^4.17.21",
     "@types/node": "catalog:",
     "@types/yargs": "^17.0.10",
     "pino-pretty": "^11.2.1",
-    "prettier": "catalog:",
     "ts-node": "catalog:"
   },
   "dependencies": {

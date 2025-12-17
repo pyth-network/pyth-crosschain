@@ -1,10 +1,12 @@
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import Transport, {
-  StatusCodes,
-  TransportStatusError,
-} from "@ledgerhq/hw-transport";
+import type Transport from "@ledgerhq/hw-transport";
+import { StatusCodes, TransportStatusError } from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  type VersionedTransaction,
+} from "@solana/web3.js";
 
 export class LedgerNodeWallet implements Wallet {
   private _derivationPath: Buffer;

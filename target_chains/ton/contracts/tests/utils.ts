@@ -1,4 +1,4 @@
-import { Transaction } from "@ton/core";
+import type { Transaction } from "@ton/core";
 import { Buffer } from "buffer";
 
 const GOVERNANCE_MAGIC = 0x5054474d;

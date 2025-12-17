@@ -1,6 +1,6 @@
 import { PythStakingClient } from "@pythnetwork/staking-sdk";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
+import { Connection, clusterApiUrl, PublicKey } from "@solana/web3.js";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 

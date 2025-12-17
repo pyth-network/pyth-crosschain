@@ -2,16 +2,15 @@ import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Link } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import buttonStyles from "../Button/index.module.scss";
 import { Select } from "../Select/index.jsx";
 import { Spinner } from "../Spinner/index.jsx";
 import { Toolbar } from "../unstyled/Toolbar/index.jsx";
+import styles from "./index.module.scss";
 
 type Props = {
   numPages: number;
@@ -132,8 +131,7 @@ const PaginatorToolbar = ({
         isDisabled={currentPage === 1}
         page={1}
         onPageChange={onPageChange}
-        mkPageLink={mkPageLink}
-      >
+        mkPageLink={mkPageLink}>
         First Page
       </PageSelector>
       {pages.map((page) => {
@@ -145,8 +143,7 @@ const PaginatorToolbar = ({
             page={page}
             aria-label={`Page ${page.toString()}`}
             onPageChange={onPageChange}
-            mkPageLink={mkPageLink}
-          >
+            mkPageLink={mkPageLink}>
             {page.toString()}
           </PageSelector>
         );
@@ -157,8 +154,7 @@ const PaginatorToolbar = ({
         isDisabled={currentPage === numPages}
         page={numPages}
         onPageChange={onPageChange}
-        mkPageLink={mkPageLink}
-      >
+        mkPageLink={mkPageLink}>
         Last Page
       </PageSelector>
     </Toolbar>
@@ -249,8 +245,7 @@ const SelectedPage = ({ children }: { children: string }) => (
     data-size="sm"
     data-variant="ghost"
     data-pressed
-    key={children}
-  >
+    key={children}>
     <span className={buttonStyles.text}>{children}</span>
   </div>
 );

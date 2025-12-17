@@ -1,7 +1,7 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.jsx";
+import { Button as ButtonComponent, SIZES, VARIANTS } from "./index.jsx";
 
 const iconControl = {
   control: "select",

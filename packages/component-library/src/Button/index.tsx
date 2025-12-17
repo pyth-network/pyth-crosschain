@@ -2,10 +2,9 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ElementType, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 export const VARIANTS = [
   "primary",

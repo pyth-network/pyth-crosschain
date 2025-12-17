@@ -35,11 +35,11 @@ export function renderFeeds(
   });
 
   for (const [index, feed] of sortedFeeds.entries()) {
-    const readablePrice = feed.price * Math.pow(10, feed.exponent);
+    const readablePrice = feed.price * 10 ** feed.exponent;
     const readableConfidence =
       feed.confidence === undefined
         ? undefined
-        : feed.confidence * Math.pow(10, feed.exponent);
+        : feed.confidence * 10 ** feed.exponent;
     const timeAgo = Math.round(Date.now() - feed.lastUpdate.getTime());
 
     const symbolName = symbolsMap.get(Number(feed.priceFeedId));
@@ -111,9 +111,9 @@ export function displayParsedPrices(response: JsonUpdate) {
   if (response.parsed?.priceFeeds) {
     for (const [index, feed] of response.parsed.priceFeeds.entries()) {
       if (feed.price && feed.exponent !== undefined) {
-        const readablePrice = Number(feed.price) * Math.pow(10, feed.exponent);
+        const readablePrice = Number(feed.price) * 10 ** feed.exponent;
         const readableConfidence = feed.confidence
-          ? Number(feed.confidence) * Math.pow(10, feed.exponent)
+          ? Number(feed.confidence) * 10 ** feed.exponent
           : undefined;
 
         console.log(`Feed ${(index + 1).toString()}:`);

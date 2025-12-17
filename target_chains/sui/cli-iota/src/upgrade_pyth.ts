@@ -1,14 +1,13 @@
+import type { IotaClient } from "@iota/iota-sdk/client";
+import type { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { Transaction } from "@iota/iota-sdk/transactions";
 import {
   fromB64,
   NANOS_PER_IOTA,
   normalizeIotaObjectId,
 } from "@iota/iota-sdk/utils";
-import { IotaClient } from "@iota/iota-sdk/client";
-import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-
+import type { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
 import { execSync } from "child_process";
-import { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
 
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {

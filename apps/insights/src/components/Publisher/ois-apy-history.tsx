@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useState, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useDateFormatter, useNumberFormatter } from "react-aria";
-import { ResponsiveContainer, Tooltip, Area, XAxis, YAxis } from "recharts";
+import { Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 
 import styles from "./ois-apy-history.module.scss";
@@ -59,8 +59,7 @@ export const OisApyHistory = ({ apyHistory }: Props) => {
         </div>
       )}
       <Suspense
-        fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}
-      >
+        fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}>
         <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
           <AreaChart
             data={apyHistory}
@@ -68,8 +67,7 @@ export const OisApyHistory = ({ apyHistory }: Props) => {
             onMouseEnter={updateSelectedPoint}
             onMouseMove={updateSelectedPoint}
             onMouseLeave={updateSelectedPoint}
-            margin={{ bottom: 0, left: 0, top: 0, right: 0 }}
-          >
+            margin={{ bottom: 0, left: 0, top: 0, right: 0 }}>
             <Tooltip content={() => <></>} />
             <Area
               type="monotone"

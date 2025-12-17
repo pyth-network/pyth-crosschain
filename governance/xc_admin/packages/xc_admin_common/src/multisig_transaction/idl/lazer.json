@@ -101,10 +101,7 @@
         {
           "name": "trustedSigner",
           "type": {
-            "array": [
-              "u8",
-              20
-            ]
+            "array": ["u8", 20]
           }
         },
         {

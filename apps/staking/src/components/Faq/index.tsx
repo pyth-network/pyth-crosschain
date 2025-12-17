@@ -1,6 +1,6 @@
 import clsx from "clsx";
-import { LazyMotion, m, domAnimation } from "framer-motion";
-import type { HTMLProps, ReactNode, ComponentProps } from "react";
+import { domAnimation, LazyMotion, m } from "framer-motion";
+import type { ComponentProps, HTMLProps, ReactNode } from "react";
 import { useState } from "react";
 import { Button } from "react-aria-components";
 
@@ -19,8 +19,7 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
     <LazyMotion features={domAnimation}>
       <div
         className={clsx("flex flex-col gap-2 lg:flex-row lg:gap-10", className)}
-        {...props}
-      >
+        {...props}>
         {title && (
           <div className="flex-none text-3xl font-light lg:w-2/5">{title}</div>
         )}
@@ -32,16 +31,14 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
                   className="-mx-2 flex w-[calc(100%_+_1rem)] flex-row items-start justify-between gap-4 p-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400 md:gap-8"
                   onPress={() => {
                     setOpenItem(i);
-                  }}
-                >
+                  }}>
                   <div className="max-w-prose text-left font-bold lg:text-lg">
                     {question}
                   </div>
                   <svg
                     viewBox="0 0 8 8"
                     stroke="currentColor"
-                    className="relative mt-[.35rem] size-4 flex-none"
-                  >
+                    className="relative mt-[.35rem] size-4 flex-none">
                     <line
                       x1="4"
                       y1="0"
@@ -58,8 +55,7 @@ export const Faq = ({ title, questions, className, ...props }: Props) => {
               <m.dt
                 className="-mt-1 flex max-w-prose flex-col gap-4 overflow-hidden font-light"
                 initial={{ height: openItem === i ? "auto" : 0 }}
-                animate={{ height: openItem === i ? "auto" : 0 }}
-              >
+                animate={{ height: openItem === i ? "auto" : 0 }}>
                 {answer}
               </m.dt>
             </div>

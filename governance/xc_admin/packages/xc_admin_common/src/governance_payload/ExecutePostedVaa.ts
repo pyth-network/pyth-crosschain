@@ -1,17 +1,17 @@
-import type { ChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  type PythGovernanceAction,
-  PythGovernanceHeader,
-  safeLayoutDecode,
-} from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   type AccountMeta,
   PACKET_DATA_SIZE,
   PublicKey,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
+import type { ChainName } from "../chains";
+import {
+  type PythGovernanceAction,
+  PythGovernanceHeader,
+  safeLayoutDecode,
+} from ".";
 
 class Vector<T> extends Layout<T[]> {
   private element: Layout<T>;
@@ -84,21 +84,21 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     if (!header) return undefined;
 
     const deserialized = safeLayoutDecode(
-      this.layout,
+      ExecutePostedVaa.layout,
       data.subarray(PythGovernanceHeader.span),
     );
     if (!deserialized) return undefined;
 
-    let instructions: TransactionInstruction[] = deserialized.map((ix) => {
-      let programId: PublicKey = new PublicKey(ix.programId);
-      let keys: AccountMeta[] = ix.accounts.map((acc) => {
+    const instructions: TransactionInstruction[] = deserialized.map((ix) => {
+      const programId: PublicKey = new PublicKey(ix.programId);
+      const keys: AccountMeta[] = ix.accounts.map((acc) => {
         return {
           pubkey: new PublicKey(acc.pubkey),
           isSigner: Boolean(acc.isSigner),
           isWritable: Boolean(acc.isWritable),
         };
       });
-      let data: Buffer = Buffer.from(ix.data);
+      const data: Buffer = Buffer.from(ix.data);
       return { programId, keys, data };
     });
     return new ExecutePostedVaa(header.targetChainId, instructions);
@@ -113,16 +113,16 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
     // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway
     const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-    let instructions: InstructionData[] = this.instructions.map((ix) => {
-      let programId = ix.programId.toBytes();
-      let accounts: AccountMetadata[] = ix.keys.map((acc) => {
+    const instructions: InstructionData[] = this.instructions.map((ix) => {
+      const programId = ix.programId.toBytes();
+      const accounts: AccountMetadata[] = ix.keys.map((acc) => {
         return {
           pubkey: acc.pubkey.toBytes(),
           isSigner: acc.isSigner ? 1 : 0,
           isWritable: acc.isWritable ? 1 : 0,
         };
       });
-      let data = [...ix.data];
+      const data = [...ix.data];
       return { programId, accounts, data };
     });
 

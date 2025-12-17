@@ -29,9 +29,9 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
+  SystemProgram,
   Transaction,
 } from "@solana/web3.js";
 import SquadsMeshClass from "@sqds/mesh";
@@ -93,7 +93,7 @@ export class SubmittedWormholeMessage {
 
     const wormholeAddress = WORMHOLE_ADDRESS[cluster];
     if (!wormholeAddress) throw new Error(`Invalid cluster ${cluster}`);
-    let emitter: PublicKey | undefined = undefined;
+    let emitter: PublicKey | undefined;
 
     let allInstructions: (ParsedInstruction | PartiallyDecodedInstruction)[] =
       txDetails?.transaction.message.instructions ?? [];

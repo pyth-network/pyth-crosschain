@@ -25,8 +25,7 @@ export const TabList = ({ label, className, ...props }: Props) => {
     <UnstyledTabList
       aria-label={label}
       className={clsx(className, styles.tabList)}
-      {...props}
-    >
+      {...props}>
       {({ header, body, className: tabClassName, ...tabProps }) => (
         <Tab className={clsx(styles.tab, tabClassName)} {...tabProps}>
           {(args) => (

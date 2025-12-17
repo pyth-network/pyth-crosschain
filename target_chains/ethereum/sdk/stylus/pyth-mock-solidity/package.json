@@ -17,10 +17,7 @@
   "dependencies": {
     "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
   },
-  "devDependencies": {
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:"
-  },
+  "devDependencies": {},
   "files": [
     "dist/**/*"
   ],

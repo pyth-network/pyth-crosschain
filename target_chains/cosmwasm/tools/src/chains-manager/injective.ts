@@ -1,17 +1,23 @@
 import {
+  getNetworkEndpoints,
+  getNetworkInfo,
+  type Network,
+} from "@injectivelabs/networks";
+import {
   ChainGrpcAuthApi,
+  ChainGrpcBankApi,
+  createTransactionFromMsg,
   MsgExecuteContract,
   MsgInstantiateContract,
   MsgMigrateContract,
   MsgStoreCode,
-  MsgUpdateAdmin,
   type Msgs,
+  MsgUpdateAdmin,
   PrivateKey,
   TxGrpcClient,
   type TxResponse,
-  createTransactionFromMsg,
-  ChainGrpcBankApi,
 } from "@injectivelabs/sdk-ts";
+import assert from "assert";
 import type {
   ChainExecutor,
   ExecuteContractRequest,
@@ -25,12 +31,6 @@ import type {
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
 } from "./chain-executor.js";
-import assert from "assert";
-import {
-  getNetworkEndpoints,
-  getNetworkInfo,
-  Network,
-} from "@injectivelabs/networks";
 
 const DEFAULT_GAS_PRICE = 160000000;
 
@@ -160,7 +160,7 @@ export class InjectiveExecutor implements ChainExecutor {
       admin: this.getAddress(),
       codeId,
       label,
-      // @ts-ignore: bug in the injective's sdk
+      // @ts-expect-error: bug in the injective's sdk
       msg: instMsg,
     });
 
@@ -211,7 +211,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const txResponse = await this.signAndBroadcastMsg(migrate_msg);
 
-    let resultCodeId: number = parseInt(
+    const resultCodeId: number = parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
     );
     try {

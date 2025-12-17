@@ -9,8 +9,7 @@ export const DropdownCaretDown = (
     width="1em"
     height="1em"
     fill="currentColor"
-    {...props}
-  >
+    {...props}>
     <path d="m13.346 9.284-3.125 3.125a.311.311 0 0 1-.442 0L6.654 9.284a.312.312 0 0 1 .221-.534h6.25a.312.312 0 0 1 .221.534Z" />
   </svg>
 );

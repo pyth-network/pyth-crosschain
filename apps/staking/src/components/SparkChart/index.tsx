@@ -1,6 +1,6 @@
 "use client";
 
-import { ResponsiveContainer, LineChart, Tooltip, Line, XAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import resolveConfig from "tailwindcss/resolveConfig";
 
 import tailwindConfig from "../../../tailwind.config";

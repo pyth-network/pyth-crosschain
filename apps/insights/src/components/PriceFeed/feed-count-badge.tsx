@@ -1,9 +1,8 @@
 import { Badge } from "@pythnetwork/component-library/Badge";
 import { Suspense } from "react";
-
-import { getFeed } from "./get-feed";
 import { Cluster } from "../../services/pyth";
 import { LiveValue } from "../LivePrices";
+import { getFeed } from "./get-feed";
 
 type Props = {
   params: Promise<{

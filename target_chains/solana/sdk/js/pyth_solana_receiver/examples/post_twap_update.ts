@@ -1,10 +1,10 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
-import fs from "fs";
-import os from "os";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { sendTransactions } from "@pythnetwork/solana-utils";
+import { Connection, Keypair, type PublicKey } from "@solana/web3.js";
+import fs from "fs";
+import os from "os";
+import { type InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -23,7 +23,7 @@ async function main() {
   const connection = new Connection("https://api.devnet.solana.com");
   const keypair = await loadKeypairFromFile(keypairFile);
   console.log(
-    `Sending transactions from account: ${keypair.publicKey.toBase58()}`
+    `Sending transactions from account: ${keypair.publicKey.toBase58()}`,
   );
   const wallet = new Wallet(keypair);
   const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
@@ -42,17 +42,17 @@ async function main() {
   console.log(
     `\nThe SOL/USD TWAP update will get posted to: ${transactionBuilder
       .getTwapUpdateAccount(SOL_PRICE_FEED_ID)
-      .toBase58()}\n`
+      .toBase58()}\n`,
   );
 
   await transactionBuilder.addTwapConsumerInstructions(
     async (
-      getTwapUpdateAccount: (priceFeedId: string) => PublicKey
+      getTwapUpdateAccount: (priceFeedId: string) => PublicKey,
     ): Promise<InstructionWithEphemeralSigners[]> => {
       // You can generate instructions here that use the TWAP updates posted above.
       // getTwapUpdateAccount(<price feed id>) will give you the account you need.
       return [];
-    }
+    },
   );
 
   // Send the instructions in the builder in 1 or more transactions
@@ -62,7 +62,7 @@ async function main() {
       tightComputeBudget: true,
     }),
     pythSolanaReceiver.connection,
-    pythSolanaReceiver.wallet
+    pythSolanaReceiver.wallet,
   );
 }
 
@@ -74,7 +74,7 @@ async function getTwapUpdateData() {
   const response = await hermesConnection.getLatestTwaps(
     [SOL_PRICE_FEED_ID, ETH_PRICE_FEED_ID],
     300,
-    { encoding: "base64" }
+    { encoding: "base64" },
   );
 
   return response.binary.data;
@@ -84,7 +84,7 @@ async function getTwapUpdateData() {
 async function loadKeypairFromFile(filePath: string): Promise<Keypair> {
   try {
     const keypairData = JSON.parse(
-      await fs.promises.readFile(filePath, "utf8")
+      await fs.promises.readFile(filePath, "utf8"),
     );
     return Keypair.fromSecretKey(Uint8Array.from(keypairData));
   } catch (error) {

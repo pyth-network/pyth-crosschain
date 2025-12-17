@@ -15,9 +15,9 @@ import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 import type { PrivateKey, TxResult } from "../base";
-import { Chain, IotaChain } from "../chains";
-import { WormholeContract } from "./wormhole";
 import { PriceFeedContract } from "../base";
+import { type Chain, IotaChain } from "../chains";
+import { WormholeContract } from "./wormhole";
 
 type ObjectId = string;
 
@@ -140,13 +140,13 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     return {
       emaPrice: await this.parsePrice(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         priceInfo.data.content.fields.price_info.fields.price_feed.fields
           .ema_price,
       ),
       price: await this.parsePrice(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         priceInfo.data.content.fields.price_info.fields.price_feed.fields.price,
       ),
     };
@@ -324,7 +324,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getValidTimePeriod() {
     const fields = await this.getStateFields();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     return Number(fields.stale_price_threshold);
   }
 
@@ -346,7 +346,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
       throw new Error("Data Sources type mismatch");
     }
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     return result.data.content.fields.value.fields.keys.map(
       ({
         fields,
@@ -369,7 +369,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getGovernanceDataSource(): Promise<DataSource> {
     const fields = await this.getStateFields();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     const governanceFields = fields.governance_data_source.fields;
     const chainId = governanceFields.emitter_chain;
     const emitterAddress =
@@ -383,14 +383,14 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getBaseUpdateFee() {
     const fields = await this.getStateFields();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     return { amount: fields.base_update_fee };
   }
 
   async getLastExecutedGovernanceSequence() {
     const fields = await this.getStateFields();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    // @ts-expect-error
     return Number(fields.last_executed_governance_sequence);
   }
 

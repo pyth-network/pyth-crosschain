@@ -291,8 +291,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
           mkPageLink={props.mkPageLink}
         />
       ),
-    })}
-  >
+    })}>
     <EntityList
       label="Price Feeds"
       className={styles.entityList ?? ""}

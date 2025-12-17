@@ -1,20 +1,16 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
-import { Red_Hat_Text, Red_Hat_Mono } from "next/font/google";
-import type { ReactNode, CSSProperties, HTMLProps } from "react";
-
-import { I18nProvider } from "./i18n-provider";
-import { RestrictedRegionBanner } from "./restricted-region-banner";
-import { ToastRegion } from "./toast-region";
+import { Red_Hat_Mono, Red_Hat_Text } from "next/font/google";
+import type { CSSProperties, HTMLProps, ReactNode } from "react";
 import {
-  IS_PRODUCTION_SERVER,
-  GOOGLE_ANALYTICS_ID,
   AMPLITUDE_API_KEY,
-  WALLETCONNECT_PROJECT_ID,
-  MAINNET_RPC,
+  GOOGLE_ANALYTICS_ID,
   HERMES_URL,
+  IS_PRODUCTION_SERVER,
+  MAINNET_RPC,
   PYTHNET_RPC,
   SIMULATION_PAYER_ADDRESS,
+  WALLETCONNECT_PROJECT_ID,
 } from "../../config/server";
 import { ApiProvider } from "../../hooks/use-api";
 import { LoggerProvider } from "../../hooks/use-logger";
@@ -28,6 +24,9 @@ import { MaxWidth } from "../MaxWidth";
 import { ReportAccessibility } from "../ReportAccessibility";
 import { RouterProvider } from "../RouterProvider";
 import { WalletProvider } from "../WalletProvider";
+import { I18nProvider } from "./i18n-provider";
+import { RestrictedRegionBanner } from "./restricted-region-banner";
+import { ToastRegion } from "./toast-region";
 
 const redHatText = Red_Hat_Text({
   subsets: ["latin"],
@@ -56,8 +55,7 @@ export const Root = ({ children }: Props) => (
       "scroll-pt-header-height",
       redHatText.variable,
       redHatMono.variable,
-    )}
-  >
+    )}>
     <body className="grid min-h-dvh grid-rows-[auto_auto_auto_1fr_auto] text-pythpurple-100 [background:radial-gradient(20rem_50rem_at_50rem_10rem,_rgba(119,_49,_234,_0.20)_0%,_rgba(17,_15,_35,_0.00)_100rem),_#0A0814] selection:bg-pythpurple-600/60 lg:grid-rows-[auto_auto_1fr_auto]">
       <Header className="z-10" />
       <RestrictedRegionBanner />
@@ -81,13 +79,11 @@ const HtmlWithProviders = ({ lang, ...props }: HTMLProps<HTMLHtmlElement>) => (
         <NetworkProvider>
           <WalletProvider
             walletConnectProjectId={WALLETCONNECT_PROJECT_ID}
-            mainnetRpc={MAINNET_RPC}
-          >
+            mainnetRpc={MAINNET_RPC}>
             <ApiProvider
               hermesUrl={HERMES_URL}
               pythnetRpcUrl={PYTHNET_RPC}
-              simulationPayerAddress={SIMULATION_PAYER_ADDRESS}
-            >
+              simulationPayerAddress={SIMULATION_PAYER_ADDRESS}>
               <ToastProvider>
                 <html lang={lang} {...props} />
               </ToastProvider>

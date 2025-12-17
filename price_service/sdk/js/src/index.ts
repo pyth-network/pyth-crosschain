@@ -12,12 +12,12 @@ export type DurationInSeconds = number;
 export type HexString = string;
 
 export {
-  isAccumulatorUpdateData,
-  sliceAccumulatorUpdateData,
-  parseAccumulatorUpdateData,
   type AccumulatorUpdateData,
+  isAccumulatorUpdateData,
+  parseAccumulatorUpdateData,
   parsePriceFeedMessage,
   parseTwapMessage,
+  sliceAccumulatorUpdateData,
 } from "./AccumulatorUpdateData.js";
 
 /**

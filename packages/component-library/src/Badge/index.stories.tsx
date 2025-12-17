@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Badge as BadgeComponent, VARIANTS, SIZES, STYLES } from "./index.jsx";
+import { Badge as BadgeComponent, SIZES, STYLES, VARIANTS } from "./index.jsx";
 
 const meta = {
   component: BadgeComponent,

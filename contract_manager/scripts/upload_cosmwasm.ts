@@ -4,7 +4,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 import { toPrivateKey } from "../src/core/base";
-import { CosmWasmChain } from "../src/core/chains";
+import type { CosmWasmChain } from "../src/core/chains";
 import { CosmWasmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
 

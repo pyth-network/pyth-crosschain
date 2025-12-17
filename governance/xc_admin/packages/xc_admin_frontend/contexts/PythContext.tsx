@@ -1,27 +1,22 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-import { usePyth } from '../hooks/usePyth'
-import type { RawConfig } from '../hooks/usePyth'
-import { Connection } from '@solana/web3.js'
-import {
-  type MappingRawConfig,
-  type ProductRawConfig,
-} from '@pythnetwork/xc-admin-common'
+import type {
+  MappingRawConfig,
+  ProductRawConfig,
+} from "@pythnetwork/xc-admin-common";
+import type { Connection } from "@solana/web3.js";
+import type React from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import type { RawConfig } from "../hooks/usePyth";
+import { usePyth } from "../hooks/usePyth";
 
-type AccountKeyToSymbol = { [key: string]: string }
+type AccountKeyToSymbol = { [key: string]: string };
 interface PythContextProps {
-  rawConfig: RawConfig
-  dataIsLoading: boolean
-  connection?: Connection | undefined
-  priceAccountKeyToSymbolMapping: AccountKeyToSymbol
-  productAccountKeyToSymbolMapping: AccountKeyToSymbol
-  publisherKeyToNameMapping: Record<string, Record<string, string>>
-  multisigSignerKeyToNameMapping: Record<string, string>
+  rawConfig: RawConfig;
+  dataIsLoading: boolean;
+  connection?: Connection | undefined;
+  priceAccountKeyToSymbolMapping: AccountKeyToSymbol;
+  productAccountKeyToSymbolMapping: AccountKeyToSymbol;
+  publisherKeyToNameMapping: Record<string, Record<string, string>>;
+  multisigSignerKeyToNameMapping: Record<string, string>;
 }
 
 const PythContext = createContext<PythContextProps>({
@@ -31,43 +26,43 @@ const PythContext = createContext<PythContextProps>({
   productAccountKeyToSymbolMapping: {},
   publisherKeyToNameMapping: {},
   multisigSignerKeyToNameMapping: {},
-})
+});
 
-export const usePythContext = () => useContext(PythContext)
+export const usePythContext = () => useContext(PythContext);
 
 interface PythContextProviderProps {
-  children?: React.ReactNode
-  publisherKeyToNameMapping: Record<string, Record<string, string>>
-  multisigSignerKeyToNameMapping: Record<string, string>
+  children?: React.ReactNode;
+  publisherKeyToNameMapping: Record<string, Record<string, string>>;
+  multisigSignerKeyToNameMapping: Record<string, string>;
 }
 export const PythContextProvider: React.FC<PythContextProviderProps> = ({
   children,
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
 }) => {
-  const { isLoading, connection, rawConfig } = usePyth()
+  const { isLoading, connection, rawConfig } = usePyth();
   const [
     productAccountKeyToSymbolMapping,
     setProductAccountKeyToSymbolMapping,
-  ] = useState<AccountKeyToSymbol>({})
+  ] = useState<AccountKeyToSymbol>({});
   const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
-    useState<AccountKeyToSymbol>({})
+    useState<AccountKeyToSymbol>({});
 
   useEffect(() => {
     if (!isLoading) {
-      const productAccountMapping: AccountKeyToSymbol = {}
-      const priceAccountMapping: AccountKeyToSymbol = {}
+      const productAccountMapping: AccountKeyToSymbol = {};
+      const priceAccountMapping: AccountKeyToSymbol = {};
       rawConfig.mappingAccounts.map((acc: MappingRawConfig) =>
         acc.products.map((prod: ProductRawConfig) => {
-          productAccountMapping[prod.address.toBase58()] = prod.metadata.symbol
+          productAccountMapping[prod.address.toBase58()] = prod.metadata.symbol;
           priceAccountMapping[prod.priceAccounts[0].address.toBase58()] =
-            prod.metadata.symbol
-        })
-      )
-      setProductAccountKeyToSymbolMapping(productAccountMapping)
-      setPriceAccountKeyToSymbolMapping(priceAccountMapping)
+            prod.metadata.symbol;
+        }),
+      );
+      setProductAccountKeyToSymbolMapping(productAccountMapping);
+      setPriceAccountKeyToSymbolMapping(priceAccountMapping);
     }
-  }, [rawConfig, isLoading])
+  }, [rawConfig, isLoading]);
 
   const value = useMemo<PythContextProps>(
     () => ({
@@ -87,8 +82,8 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
       multisigSignerKeyToNameMapping,
       priceAccountKeyToSymbolMapping,
       productAccountKeyToSymbolMapping,
-    ]
-  )
+    ],
+  );
 
-  return <PythContext.Provider value={value}>{children}</PythContext.Provider>
-}
+  return <PythContext.Provider value={value}>{children}</PythContext.Provider>;
+};

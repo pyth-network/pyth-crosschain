@@ -12,13 +12,11 @@ import type { OpenDrawerArgs } from "@pythnetwork/component-library/useDrawer";
 import type { ComponentProps } from "react";
 import { useNumberFormatter } from "react-aria";
 import TimeAgo from "react-timeago";
-
-import styles from "./request-drawer.module.scss";
 import { getErrorDetails } from "../../errors";
 import type {
-  Request,
   CallbackErrorRequest,
   FailedRequest,
+  Request,
 } from "../../requests";
 import { Status } from "../../requests";
 import { truncate } from "../../truncate";
@@ -26,6 +24,7 @@ import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
 import { ChainTag } from "./chain-tag";
+import styles from "./request-drawer.module.scss";
 
 export const mkRequestDrawer = (
   request: Request,
@@ -259,8 +258,7 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
         header="Retry the callback yourself"
         icon={<Code />}
         className={styles.message}
-        variant="info"
-      >
+        variant="info">
         {`If you'd like to execute your callback, you can run the command in your
         terminal or connect your wallet to run it here.`}
         <div
@@ -270,8 +268,7 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
             justifyContent: "end",
             gap: "16px",
             marginTop: "16px",
-          }}
-        >
+          }}>
           <CopyButton text={retryCommand}>Copy Cast Command</CopyButton>
           <Button
             size="sm"
@@ -281,8 +278,7 @@ const CallbackErrorInfo = ({ request }: { request: CallbackErrorRequest }) => {
             hideText
             href="https://docs.pyth.network/entropy/debug-callback-failures"
             target="_blank"
-            className={styles.helpButton ?? ""}
-          >
+            className={styles.helpButton ?? ""}>
             Help
           </Button>
         </div>
@@ -301,8 +297,7 @@ const FailureInfo = ({
     icon={<Warning />}
     className={styles.message}
     variant="warning"
-    {...props}
-  >
+    {...props}>
     <Button
       hideText
       beforeIcon={<Question />}
@@ -311,8 +306,7 @@ const FailureInfo = ({
       variant="ghost"
       className={styles.helpButton ?? ""}
       href={getHelpLink(request)}
-      target="_blank"
-    >
+      target="_blank">
       Help
     </Button>
     <div className={styles.failureMessage}>

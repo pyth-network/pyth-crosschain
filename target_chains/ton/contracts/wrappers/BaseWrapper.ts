@@ -1,18 +1,18 @@
+import type { HexString, Price } from "@pythnetwork/price-service-sdk";
+import { createCellChain } from "@pythnetwork/pyth-ton-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  Address,
+  type Address,
   beginCell,
-  Cell,
-  Contract,
-  ContractProvider,
+  type Cell,
+  type Contract,
+  type ContractProvider,
   Dictionary,
-  Sender,
+  type Sender,
   SendMode,
   toNano,
 } from "@ton/core";
-import { createCellChain } from "@pythnetwork/pyth-ton-js";
 import { createGuardianSetsDict } from "../tests/utils/wormhole";
-import { HexString, Price } from "@pythnetwork/price-service-sdk";
-import { DataSource } from "@pythnetwork/xc-admin-common";
 
 export class BaseWrapper implements Contract {
   constructor(
@@ -21,7 +21,7 @@ export class BaseWrapper implements Contract {
   ) {}
 
   static createFromAddress(address: Address) {
-    return new this(address);
+    return new BaseWrapper(address);
   }
 
   static createInitData(config: {

@@ -16,9 +16,9 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
 import { createSuiBalanceTracker } from "./balance-tracker.js";
 import { SuiPriceListener, SuiPricePusher } from "./sui.js";
-import { filterInvalidPriceItems } from "../utils.js";
 
 export default {
   command: "sui",
@@ -85,7 +85,7 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     const {
       endpoint,
       priceConfigFile,

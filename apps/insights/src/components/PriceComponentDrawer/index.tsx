@@ -37,13 +37,13 @@ import { z } from "zod";
 import { Cluster, ClusterToName } from "../../services/pyth";
 import type { Status } from "../../status";
 import ConformanceReport from "../ConformanceReport/conformance-report";
+import type { Interval } from "../ConformanceReport/types";
+import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
 import { LiveComponentValue, LiveConfidence, LivePrice } from "../LivePrices";
 import { PriceName } from "../PriceName";
 import { Score } from "../Score";
 import { Status as StatusComponent } from "../Status";
 import styles from "./index.module.scss";
-import type { Interval } from "../ConformanceReport/types";
-import { useDownloadReportForFeed } from "../ConformanceReport/use-download-report-for-feed";
 
 const LineChart = dynamic(
   () => import("recharts").then((recharts) => recharts.LineChart),
@@ -155,8 +155,7 @@ export const usePriceComponentDrawer = ({
               <InfoBox
                 icon={<Flask />}
                 header={`This publisher is in test`}
-                className={styles.testFeedMessage}
-              >
+                className={styles.testFeedMessage}>
                 This is a test publisher. Its prices are not included in the
                 Pyth aggregate price for {component.displaySymbol}.
               </InfoBox>
@@ -384,8 +383,7 @@ const ScoreBreakdown = ({
           options={evaluationPeriods.map(({ label }) => ({ id: label }))}
           placement="bottom end"
         />
-      }
-    >
+      }>
       <ScoreHistory state={scoreHistoryState} />
     </Card>
   );
@@ -587,8 +585,7 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
       <div
         className={styles.scoreHistoryChart}
         data-hovered-score={hoveredScore}
-        data-focused-score={focusedScore}
-      >
+        data-focused-score={focusedScore}>
         <div className={styles.top}>
           <div className={styles.left}>
             <h3 className={styles.header}>
@@ -597,8 +594,7 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
           </div>
         </div>
         <Suspense
-          fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}
-        >
+          fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}>
           <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
             <LineChart
               data={scoreHistory}
@@ -606,8 +602,7 @@ const ResolvedScoreHistory = ({ scoreHistory }: ResolvedScoreHistoryProps) => {
               onMouseEnter={updateSelectedPoint}
               onMouseMove={updateSelectedPoint}
               onMouseLeave={updateSelectedPoint}
-              margin={{ bottom: 0, left: 0, top: 3, right: 0 }}
-            >
+              margin={{ bottom: 0, left: 0, top: 3, right: 0 }}>
               <Tooltip content={() => <></>} />
               <Line
                 type="monotone"

@@ -1,4 +1,4 @@
-import WebSocket from "isomorphic-ws";
+import type WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 import { dummyLogger } from "ts-log";
 
@@ -7,14 +7,14 @@ import {
   DEFAULT_PRICE_SERVICE_URL,
 } from "./constants.js";
 import type {
+  JsonUpdate,
+  LatestPriceRequest,
   ParsedPayload,
+  PriceRequest,
   Request,
   Response,
   SymbolResponse,
   SymbolsQueryParams,
-  LatestPriceRequest,
-  PriceRequest,
-  JsonUpdate,
 } from "./protocol.js";
 import { BINARY_UPDATE_FORMAT_MAGIC_LE, FORMAT_MAGICS_LE } from "./protocol.js";
 import type { WebSocketPoolConfig } from "./socket/websocket-pool.js";

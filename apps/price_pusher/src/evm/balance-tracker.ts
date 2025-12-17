@@ -1,13 +1,12 @@
 import type { Logger } from "pino";
-
-import type { SuperWalletClient } from "./super-wallet.js";
 import type {
   BaseBalanceTrackerConfig,
   IBalanceTracker,
 } from "../interface.js";
 import { BaseBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
+import type { PricePusherMetrics } from "../metrics.js";
 import type { DurationInSeconds } from "../utils.js";
+import type { SuperWalletClient } from "./super-wallet.js";
 
 /**
  * EVM-specific configuration for balance tracker

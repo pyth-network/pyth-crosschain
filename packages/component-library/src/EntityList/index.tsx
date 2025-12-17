@@ -2,10 +2,9 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Skeleton } from "../Skeleton/index.jsx";
 import { GridList, GridListItem } from "../unstyled/GridList";
+import styles from "./index.module.scss";
 
 type Props<T extends string> = ComponentProps<typeof GridList<RowConfig<T>>> & {
   headerLoadingSkeleton?: ReactNode | undefined;
@@ -49,8 +48,7 @@ export const EntityList = <T extends string>({
     className={clsx(styles.entityList, className)}
     items={isLoading ? [] : rows}
     aria-label={label}
-    {...props}
-  >
+    {...props}>
     {isLoading ? (
       <GridListItem className={styles.entityItem ?? ""} textValue="Loading">
         <div className={styles.itemHeader}>{headerLoadingSkeleton}</div>

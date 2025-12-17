@@ -5,10 +5,9 @@ import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useId } from "react";
-
-import styles from "./index.module.scss";
 import buttonStyles from "../Button/index.module.scss";
 import { Tab, TabList } from "../unstyled/Tabs/index.jsx";
+import styles from "./index.module.scss";
 
 type Tab = Omit<ComponentProps<typeof Tab>, "id" | "href"> & {
   segment: string;
@@ -33,8 +32,7 @@ export const MainNavTabs = ({ className, tabs, ...props }: Props) => {
         tabs.every((tab) => pathname !== `/${tab.segment}`) ? "" : undefined
       }
       items={tabs}
-      {...props}
-    >
+      {...props}>
       {({ className: tabClassName, children, ...tab }) => (
         <Tab
           className={clsx(styles.tab, buttonStyles.button, tabClassName)}
@@ -43,8 +41,7 @@ export const MainNavTabs = ({ className, tabs, ...props }: Props) => {
           data-rounded
           id={tab.segment}
           href={`/${tab.segment}`}
-          {...tab}
-        >
+          {...tab}>
           {(args) => (
             <>
               {args.isSelected && (

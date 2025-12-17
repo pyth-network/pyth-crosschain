@@ -1,12 +1,12 @@
+import type { Idl } from "@coral-xyz/anchor";
+import { pythIdl, pythOracleCoder } from "@pythnetwork/client";
+import type { TransactionInstruction } from "@solana/web3.js";
 import {
   type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from ".";
 import { type AnchorAccounts, resolveAccountNames } from "./anchor";
-import { pythIdl, pythOracleCoder } from "@pythnetwork/client";
-import { TransactionInstruction } from "@solana/web3.js";
-import type { Idl } from "@coral-xyz/anchor";
 
 export class PythMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.PythOracle;

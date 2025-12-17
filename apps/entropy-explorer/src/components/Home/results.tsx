@@ -7,10 +7,6 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
-
-import { ChainTag } from "./chain-tag";
-import { mkRequestDrawer } from "./request-drawer";
-import styles from "./results.module.scss";
 import type { ChainSlug } from "../../entropy-deployments";
 import { EntropyDeployments } from "../../entropy-deployments";
 import type { Request } from "../../requests";
@@ -18,6 +14,9 @@ import { Status } from "../../requests";
 import { Account, Transaction } from "../Address";
 import { Status as StatusComponent } from "../Status";
 import { Timestamp } from "../Timestamp";
+import { ChainTag } from "./chain-tag";
+import { mkRequestDrawer } from "./request-drawer";
+import styles from "./results.module.scss";
 import { ChainSelect } from "./search-controls";
 
 type Props = {

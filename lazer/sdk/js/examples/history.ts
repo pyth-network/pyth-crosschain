@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import { displayParsedPrices } from "./util.js";
 import { PythLazerClient } from "../src/index.js";
+import { displayParsedPrices } from "./util.js";
 
 const client = await PythLazerClient.create({
   token: "your-token-here",

@@ -2,11 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable unicorn/prefer-add-event-listener */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-import type { HexString, PriceUpdate } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type {
+  HermesClient,
+  HexString,
+  PriceUpdate,
+} from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
-import type { PriceInfo, IPriceListener, PriceItem } from "./interface.js";
+import type { IPriceListener, PriceInfo, PriceItem } from "./interface.js";
 import { sleep } from "./utils.js";
 
 type TimestampInMs = number & { readonly _: unique symbol };

@@ -111,8 +111,7 @@ export const TableGrid = <TData extends Record<string, unknown>>({
           />
         )
       }
-      {...cardProps}
-    >
+      {...cardProps}>
       {tableGrid}
     </Card>
   );

@@ -4,18 +4,17 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { getEvmPriceFeedContractAddress } from "@pythnetwork/contract-manager/utils/utils";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
-import { ConnectKitButton, Avatar } from "connectkit";
+import { Avatar, ConnectKitButton } from "connectkit";
 import { useCallback, useMemo, useState } from "react";
 import { ContractFunctionExecutionError } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { readContract, simulateContract, writeContract } from "wagmi/actions";
-
-import type { Parameter } from "./parameter";
-import { TRANSFORMS } from "./parameter";
 import { useIsMounted } from "../../use-is-mounted";
 import { Button } from "../Button";
 import { Code } from "../Code";
 import { InlineLink } from "../InlineLink";
+import type { Parameter } from "./parameter";
+import { TRANSFORMS } from "./parameter";
 
 const abi = [...PythAbi, ...PythErrorsAbi] as const;
 
@@ -58,8 +57,7 @@ export const RunButton = <ParameterName extends string>(
             <InlineLink
               as="button"
               onClick={show}
-              className="mb-2 flex flex-row items-center justify-center gap-2"
-            >
+              className="mb-2 flex flex-row items-center justify-center gap-2">
               {isConnected ? (
                 <>
                   <Avatar address={address} size={24} />
@@ -77,8 +75,7 @@ export const RunButton = <ParameterName extends string>(
           disabled={disabled}
           loading={status.type === StatusType.Loading}
           className="mb-8 flex h-10 w-full flex-row items-center justify-center gap-2"
-          onClick={run}
-        >
+          onClick={run}>
           {status.type === StatusType.Loading ? (
             <ArrowPathIcon className="size-4 animate-spin" />
           ) : (
@@ -101,8 +98,7 @@ export const RunButton = <ParameterName extends string>(
                   <InlineLink
                     href={status.data.link}
                     target="_blank"
-                    className="text-sm text-blue-500 hover:underline"
-                  >
+                    className="text-sm text-blue-500 hover:underline">
                     Open in explorer↗
                   </InlineLink>
                 )}

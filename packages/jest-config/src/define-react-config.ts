@@ -1,7 +1,7 @@
-import type { Config } from "jest";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { Config } from "jest";
 import { defineJestConfig } from "./define-config.js";
 
 function getThisDirname(): string {

@@ -11,12 +11,11 @@ import {
 import { useCallback } from "react";
 import { parse } from "superjson";
 import { z } from "zod";
-
-import { WEB_API_BASE_URL } from "./constants";
-import type { Interval } from "./types";
 import { useDownloadBlob } from "../../hooks/use-download-blob";
 import { priceFeedsSchema } from "../../schemas/pyth/price-feeds-schema";
-import { CLUSTER_NAMES } from "../../services/pyth";
+import type { CLUSTER_NAMES } from "../../services/pyth";
+import { WEB_API_BASE_URL } from "./constants";
+import type { Interval } from "./types";
 
 // If interval is 'daily', set interval_days=1
 // If interval is 'weekly', get the previous Sunday and set interval_days=7

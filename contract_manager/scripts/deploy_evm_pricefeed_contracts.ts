@@ -13,14 +13,6 @@
 import { HermesClient } from "@pythnetwork/hermes-client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  getWeb3Contract,
-  getOrDeployWormholeContract,
-} from "./common";
 import type { DeploymentType } from "../src/core/base";
 import {
   getDefaultDeploymentConfig,
@@ -30,6 +22,13 @@ import {
 import { EvmChain } from "../src/core/chains";
 import { EvmPriceFeedContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+} from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -151,8 +150,8 @@ async function main() {
     const priceInUsd = Number(price.price);
     const exponent = price.expo;
     singleUpdateFeeInWei = Math.round(
-      Math.pow(10, nativeTokenDecimals) *
-        (singleUpdateFeeInUsd / (priceInUsd * Math.pow(10, exponent))),
+      10 ** nativeTokenDecimals *
+        (singleUpdateFeeInUsd / (priceInUsd * 10 ** exponent)),
     );
     console.log(`Single update fee in wei: ${singleUpdateFeeInWei}`);
   }

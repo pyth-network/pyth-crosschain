@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import {
-  Status as StatusComponent,
-  VARIANTS,
   SIZES,
   STYLES,
+  Status as StatusComponent,
+  VARIANTS,
 } from "./index.jsx";
 
 const meta = {

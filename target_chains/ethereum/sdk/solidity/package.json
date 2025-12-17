@@ -28,8 +28,6 @@
   "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/sdk/solidity",
   "devDependencies": {
     "abi_generator": "workspace:*",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:",
     "solc": "^0.8.25"
   },
   "engines": {

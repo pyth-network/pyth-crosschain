@@ -1,14 +1,14 @@
 import type { PythCluster } from "@pythnetwork/client";
 import {
-  MultisigInstructionProgram,
-  MultisigParser,
-  UNRECOGNIZED_INSTRUCTION,
-} from "../multisig_transaction";
-import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+import {
+  MultisigInstructionProgram,
+  MultisigParser,
+  UNRECOGNIZED_INSTRUCTION,
+} from "../multisig_transaction";
 import { SystemProgramMultisigInstruction } from "../multisig_transaction/SystemProgramInstruction";
 
 test("System multisig instruction parse", (done) => {

@@ -1,10 +1,10 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
-import { InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 import { Wallet } from "@coral-xyz/anchor";
+import { HermesClient, PriceUpdate } from "@pythnetwork/hermes-client";
+import { sendTransactions } from "@pythnetwork/solana-utils";
+import { Connection, Keypair, type PublicKey } from "@solana/web3.js";
 import fs from "fs";
 import os from "os";
-import { sendTransactions } from "@pythnetwork/solana-utils";
+import { type InstructionWithEphemeralSigners, PythSolanaReceiver } from "../";
 
 // Get price feed ids from https://pyth.network/developers/price-feed-ids#pyth-evm-stable
 const SOL_PRICE_FEED_ID =
@@ -21,7 +21,7 @@ async function main() {
   const connection = new Connection("https://api.devnet.solana.com");
   const keypair = await loadKeypairFromFile(keypairFile);
   console.log(
-    `Sending transactions from account: ${keypair.publicKey.toBase58()}`
+    `Sending transactions from account: ${keypair.publicKey.toBase58()}`,
   );
   const wallet = new Wallet(keypair);
   const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
@@ -40,18 +40,18 @@ async function main() {
   await transactionBuilder.addPostPriceUpdates(priceUpdateData);
   console.log(
     "The SOL/USD price update will get posted to:",
-    transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58()
+    transactionBuilder.getPriceUpdateAccount(SOL_PRICE_FEED_ID).toBase58(),
   );
 
   await transactionBuilder.addPriceConsumerInstructions(
     async (
-      getPriceUpdateAccount: (priceFeedId: string) => PublicKey
+      getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
     ): Promise<InstructionWithEphemeralSigners[]> => {
       // You can generate instructions here that use the price updates posted above.
       // getPriceUpdateAccount(<price feed id>) will give you the account you need.
       // These accounts will be packed into transactions by the builder.
       return [];
-    }
+    },
   );
 
   // Send the instructions in the builder in 1 or more transactions.
@@ -62,7 +62,7 @@ async function main() {
       tightComputeBudget: true,
     }),
     pythSolanaReceiver.connection,
-    pythSolanaReceiver.wallet
+    pythSolanaReceiver.wallet,
   );
 }
 
@@ -74,7 +74,7 @@ async function getPriceUpdateDataFromOneDayAgo(): Promise<string[]> {
   const response = await hermesClient.getPriceUpdatesAtTimestamp(
     oneDayAgo,
     [SOL_PRICE_FEED_ID],
-    { encoding: "base64" }
+    { encoding: "base64" },
   );
   return response.binary.data;
 }
@@ -83,7 +83,7 @@ async function getPriceUpdateDataFromOneDayAgo(): Promise<string[]> {
 async function loadKeypairFromFile(filePath: string): Promise<Keypair> {
   try {
     const keypairData = JSON.parse(
-      await fs.promises.readFile(filePath, "utf8")
+      await fs.promises.readFile(filePath, "utf8"),
     );
     return Keypair.fromSecretKey(Uint8Array.from(keypairData));
   } catch (error) {

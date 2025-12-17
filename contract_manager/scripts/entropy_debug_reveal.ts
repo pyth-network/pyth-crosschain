@@ -11,11 +11,10 @@
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -106,7 +105,6 @@ async function main() {
       );
     } catch (error) {
       console.error("Error revealing request:", error);
-      continue;
     }
   }
 }

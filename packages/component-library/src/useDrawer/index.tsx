@@ -3,17 +3,16 @@ import { useMediaQuery } from "@react-hookz/web";
 import clsx from "clsx";
 import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
 import type { ComponentProps, ReactNode } from "react";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useIsSSR } from "react-aria";
 import { Heading } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../Button/index.jsx";
 import type { ModalDialogProps } from "../ModalDialog/index.jsx";
 import {
-  ModalDialog,
   createModalDialogContext,
+  ModalDialog,
 } from "../ModalDialog/index.jsx";
+import styles from "./index.module.scss";
 
 const CLOSE_DURATION_IN_S = 0.15;
 
@@ -94,8 +93,7 @@ const Drawer = ({
       data-fill={fill ? "" : undefined}
       data-hide-heading={hideHeading ? "" : undefined}
       {...animationProps}
-      {...props}
-    >
+      {...props}>
       <div
         className={styles.handle}
         onPointerDown={() => {
@@ -121,8 +119,7 @@ const Drawer = ({
               rounded
               variant="ghost"
               size="sm"
-              {...(closeHref && { href: closeHref })}
-            >
+              {...(closeHref && { href: closeHref })}>
               Close
             </Button>
           </div>

@@ -4,16 +4,15 @@ import type { ReactNode, RefObject } from "react";
 import {
   createContext,
   useContext,
-  useState,
-  useMemo,
   useEffect,
+  useMemo,
   useRef,
+  useState,
 } from "react";
 import type { OffsetOrPosition } from "shiki";
-
+import { getLogger } from "../../browser-logger";
 import type { Highlighter } from "./shiki";
 import type { SupportedLanguage } from "./supported-language";
-import { getLogger } from "../../browser-logger";
 
 const HighlighterContext = createContext<
   undefined | RefObject<undefined | Highlighter>

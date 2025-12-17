@@ -1,7 +1,5 @@
 import { BorshCoder } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-
-import { convertBNToBigInt } from "./bn.js";
 import {
   POSITION_BUFFER_SIZE,
   POSITIONS_ACCOUNT_HEADER_SIZE,
@@ -14,6 +12,7 @@ import type {
   TargetWithParameters,
 } from "../types.js";
 import { PositionState } from "../types.js";
+import { convertBNToBigInt } from "./bn.js";
 
 export const getPositionState = (
   position: Position,

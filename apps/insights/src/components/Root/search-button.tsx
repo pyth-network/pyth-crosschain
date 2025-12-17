@@ -9,10 +9,6 @@ import { SearchButton as SearchButtonComponent } from "@pythnetwork/component-li
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
-import {
-  ListLayout,
-  Virtualizer,
-} from "@pythnetwork/component-library/Virtualizer";
 import type { Button as UnstyledButton } from "@pythnetwork/component-library/unstyled/Button";
 import type { ListBoxItemProps } from "@pythnetwork/component-library/unstyled/ListBox";
 import {
@@ -21,11 +17,15 @@ import {
 } from "@pythnetwork/component-library/unstyled/ListBox";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import {
+  ListLayout,
+  Virtualizer,
+} from "@pythnetwork/component-library/Virtualizer";
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Cluster, ClusterToName } from "../../services/pyth";
+import { type Cluster, ClusterToName } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { PublisherTag } from "../PublisherTag";
 import { Score } from "../Score";
@@ -248,8 +248,7 @@ const SearchDialogContents = ({
           hideText
           rounded
           variant="ghost"
-          size="sm"
-        >
+          size="sm">
           Close
         </Button>
       </div>
@@ -269,8 +268,7 @@ const SearchDialogContents = ({
                   setSearch("");
                 }}
               />
-            )}
-          >
+            )}>
             {(result) => (
               <ListBoxItem
                 textValue={
@@ -286,8 +284,7 @@ const SearchDialogContents = ({
                 }
                 data-is-first={result.id === results[0]?.id ? "" : undefined}
                 onPointerDown={onLinkPointerDown}
-                onPointerUp={onLinkPointerUp}
-              >
+                onPointerUp={onLinkPointerUp}>
                 <div className={styles.smallScreen}>
                   {result.type === ResultType.PriceFeed ? (
                     <SymbolPairTag
@@ -318,8 +315,7 @@ const SearchDialogContents = ({
                               : "info"
                           }
                           style="filled"
-                          size="xs"
-                        >
+                          size="xs">
                           {result.type === ResultType.PriceFeed
                             ? "PRICE FEED"
                             : "PUBLISHER"}
@@ -358,8 +354,7 @@ const SearchDialogContents = ({
                           : "info"
                       }
                       style="filled"
-                      size="xs"
-                    >
+                      size="xs">
                       {result.type === ResultType.PriceFeed
                         ? "PRICE FEED"
                         : "PUBLISHER"}

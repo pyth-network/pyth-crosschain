@@ -2,20 +2,20 @@ import type {
   Account,
   Chain,
   Client,
-  RpcSchema,
-  WalletActions,
-  PublicActions,
-  WebSocketTransport,
   HttpTransport,
+  PublicActions,
+  RpcSchema,
   Transport,
+  WalletActions,
+  WebSocketTransport,
 } from "viem";
 import {
   createPublicClient,
   createWalletClient,
   defineChain,
   http,
-  webSocket,
   publicActions,
+  webSocket,
 } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import * as chains from "viem/chains";

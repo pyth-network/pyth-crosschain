@@ -3,29 +3,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/require-await */
-import type { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type {
+  HermesClient,
+  HexString,
+  UnixTimestamp,
+} from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 import type { WatchContractEventOnLogsParameter } from "viem";
 import {
-  TransactionExecutionError,
   BaseError,
+  ContractFunctionExecutionError,
   ContractFunctionRevertedError,
   FeeCapTooLowError,
-  InternalRpcError,
   InsufficientFundsError,
-  ContractFunctionExecutionError,
+  InternalRpcError,
+  TransactionExecutionError,
 } from "viem";
 
 import type { PushAttempt } from "../common.js";
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
-import type { DurationInSeconds } from "../utils.js";
-import { CustomGasStation } from "./custom-gas-station";
-import type { PythContract } from "./pyth-contract.js";
-import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
-import { PythAbi } from "./pyth-abi.js";
-import type { SuperWalletClient } from "./super-wallet.js";
 import { ChainPriceListener } from "../interface.js";
+import type { DurationInSeconds } from "../utils.js";
+import { addLeading0x, assertDefined, removeLeading0x } from "../utils.js";
+import type { CustomGasStation } from "./custom-gas-station";
+import type { PythAbi } from "./pyth-abi.js";
+import type { PythContract } from "./pyth-contract.js";
+import type { SuperWalletClient } from "./super-wallet.js";
 
 export class EvmPriceListener extends ChainPriceListener {
   constructor(
@@ -196,7 +199,7 @@ export class EvmPricePusher implements IPricePusher {
         address: this.pusherAddress,
       })) - 1;
 
-    let gasPriceToOverride = undefined;
+    let gasPriceToOverride;
 
     if (this.lastPushAttempt !== undefined) {
       if (this.lastPushAttempt.nonce <= lastExecutedNonce) {

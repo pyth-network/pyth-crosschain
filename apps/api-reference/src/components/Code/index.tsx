@@ -1,15 +1,14 @@
 import { Transition } from "@headlessui/react";
-import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { OffsetOrPosition } from "shiki";
-
+import { getLogger } from "../../browser-logger";
+import { Button } from "../Button";
 import style from "./style.module.css";
 import type { SupportedLanguage } from "./supported-language";
 import { useHighlightedCode } from "./use-highlighted-code";
-import { getLogger } from "../../browser-logger";
-import { Button } from "../Button";
 
 export * from "./supported-language";
 
@@ -30,8 +29,7 @@ export const Code = ({ language, children, dimRange }: CodeProps) => {
       <HighlightedCode
         language={language}
         className={style.code}
-        dimRange={dimRange}
-      >
+        dimRange={dimRange}>
         {chompedCode}
       </HighlightedCode>
     </div>
@@ -85,12 +83,10 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
   return (
     <div
       className={clsx("bg-neutral-100 dark:bg-neutral-800", className)}
-      {...props}
-    >
+      {...props}>
       <Button
         onClick={copy}
-        className="rounded-md p-2 text-neutral-800 dark:text-neutral-300"
-      >
+        className="rounded-md p-2 text-neutral-800 dark:text-neutral-300">
         <ClipboardDocumentIcon className="size-4" />
         <div className="sr-only">Copy code to clipboaord</div>
       </Button>
@@ -103,8 +99,7 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
         enterTo="opacity-100"
         leave="transition-opacity duration-150"
         leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
+        leaveTo="opacity-0">
         <CheckIcon className="size-4 stroke-2" />
       </Transition>
     </div>

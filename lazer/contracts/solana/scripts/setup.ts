@@ -1,10 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PythLazerSolanaContract } from "../target/types/pyth_lazer_solana_contract";
-import * as pythLazerSolanaContractIdl from "../target/idl/pyth_lazer_solana_contract.json";
-import yargs from "yargs/yargs";
-import { readFileSync } from "fs";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { readFileSync } from "fs";
+import yargs from "yargs/yargs";
+import * as pythLazerSolanaContractIdl from "../target/idl/pyth_lazer_solana_contract.json";
+import type { PythLazerSolanaContract } from "../target/types/pyth_lazer_solana_contract";
 
 // This script initializes the program. It should be run once after the program is deployed. Additionally, if the
 // top authority be the same as the given keypair and the trusted signer and expiry time are provided, the trusted
@@ -12,7 +12,7 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 //
 // Note: the program id is derived from the idl file (pytd...). Run `anchor test` to generate it.
 async function main() {
-  let argv = await yargs(process.argv.slice(2))
+  const argv = await yargs(process.argv.slice(2))
     .options({
       url: { type: "string", demandOption: true },
       "keypair-path": { type: "string", demandOption: true },

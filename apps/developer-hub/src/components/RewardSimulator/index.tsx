@@ -3,7 +3,7 @@
 import { Card } from "@pythnetwork/component-library/Card";
 import { Label } from "@pythnetwork/component-library/unstyled/Label";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import styles from "./index.module.scss";
 
@@ -77,8 +77,7 @@ const RewardSimulator: React.FC = () => {
       variant="secondary"
       title="Reward Simulator"
       nonInteractive
-      className={styles.card}
-    >
+      className={styles.card}>
       <form onSubmit={recalculateRewards} onChange={doSubmit}>
         <div className={styles.inputGrid}>
           <div className={styles.inputGroup}>

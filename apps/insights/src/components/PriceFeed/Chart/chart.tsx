@@ -2,11 +2,11 @@
 
 import { PriceStatus } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useResizeObserver, useMountEffect } from "@react-hookz/web";
+import { useMountEffect, useResizeObserver } from "@react-hookz/web";
 import {
-  startOfMinute,
-  startOfHour,
   startOfDay,
+  startOfHour,
+  startOfMinute,
   startOfSecond,
 } from "date-fns";
 import type {
@@ -19,24 +19,23 @@ import type {
 } from "lightweight-charts";
 import {
   AreaSeries,
+  createChart,
   LineSeries,
   LineStyle,
-  createChart,
 } from "lightweight-charts";
 import { useTheme } from "next-themes";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
-
+import { useLivePriceData } from "../../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../../hooks/use-price-formatter";
+import { Cluster } from "../../../services/pyth";
 import styles from "./chart.module.scss";
 import {
   quickSelectWindowToMilliseconds,
   useChartQuickSelectWindow,
   useChartResolution,
 } from "./use-chart-toolbar";
-import { useLivePriceData } from "../../../hooks/use-live-price-data";
-import { usePriceFormatter } from "../../../hooks/use-price-formatter";
-import { Cluster } from "../../../services/pyth";
 
 type Props = {
   symbol: string;

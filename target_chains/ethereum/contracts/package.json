@@ -6,9 +6,7 @@
   "devDependencies": {
     "@types/chai": "^4.3.4",
     "chai": "^4.2.0",
-    "mocha": "^8.2.1",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:"
+    "mocha": "^8.2.1"
   },
   "scripts": {
     "setup-foundry": "./setup-foundry.sh",

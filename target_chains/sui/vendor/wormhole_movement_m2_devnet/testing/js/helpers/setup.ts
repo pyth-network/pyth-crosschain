@@ -1,16 +1,16 @@
-import * as fs from "fs";
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
+import * as fs from "fs";
 import { GUARDIAN_PRIVATE_KEY, UTF8 } from "./consts";
 
 export function generateVaaFromDigest(
   digest: Buffer,
-  governance: mock.GovernanceEmitter
+  governance: mock.GovernanceEmitter,
 ) {
   const timestamp = 12345678;
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex")
+    "0x" + digest.toString("hex"),
   );
 
   // Sui is not supported yet by the SDK, so we need to adjust the payload.
@@ -24,7 +24,7 @@ export function generateVaaFromDigest(
 export function modifyHardCodedVersionControl(
   packagePath: string,
   currentVersion: number,
-  newVersion: number
+  newVersion: number,
 ) {
   const versionControlDotMove = `${packagePath}/sources/version_control.move`;
 
@@ -40,7 +40,7 @@ export function modifyHardCodedVersionControl(
 
 export function setUpWormholeDirectory(
   srcWormholePath: string,
-  dstWormholePath: string
+  dstWormholePath: string,
 ) {
   fs.cpSync(srcWormholePath, dstWormholePath, { recursive: true });
 
@@ -66,7 +66,7 @@ export function setUpWormholeDirectory(
   fs.writeFileSync(
     moveTomlPath,
     moveToml.replace(`wormhole = "_"`, `wormhole = "0x0"`),
-    UTF8
+    UTF8,
   );
 }
 

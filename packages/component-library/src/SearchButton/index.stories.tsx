@@ -1,8 +1,7 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { SearchButton as SearchButtonComponent } from "./index.jsx";
 import { SIZES } from "../Button/index.jsx";
+import { SearchButton as SearchButtonComponent } from "./index.jsx";
 
 const iconControl = {
   control: "select",

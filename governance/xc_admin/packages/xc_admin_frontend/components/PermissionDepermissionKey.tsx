@@ -4,10 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { Program } from '@coral-xyz/anchor'
-import { Dialog, Menu, Transition } from '@headlessui/react'
-import Arrow from '@images/icons/down.inline.svg'
-import type { PythOracle } from '@pythnetwork/client/lib/anchor'
+import type { Program } from "@coral-xyz/anchor";
+import { Dialog, Menu, Transition } from "@headlessui/react";
+import Arrow from "@images/icons/down.inline.svg";
+import type { PythOracle } from "@pythnetwork/client/lib/anchor";
 import {
   createDetermisticPriceStoreInitializePublisherInstruction,
   getMaximumNumberOfPublishers,
@@ -16,30 +16,30 @@ import {
   isRemoteCluster,
   mapKey,
   PRICE_FEED_MULTISIG,
-} from '@pythnetwork/xc-admin-common'
-import * as Label from '@radix-ui/react-label'
-import { PublicKey, TransactionInstruction } from '@solana/web3.js'
-import SquadsMesh from '@sqds/mesh'
-import axios from 'axios'
-import { Fragment, useContext, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+} from "@pythnetwork/xc-admin-common";
+import * as Label from "@radix-ui/react-label";
+import { PublicKey, type TransactionInstruction } from "@solana/web3.js";
+import type SquadsMesh from "@sqds/mesh";
+import axios from "axios";
+import { Fragment, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
-import { ClusterContext } from '../contexts/ClusterContext'
-import { usePythContext } from '../contexts/PythContext'
-import type { ProductRawConfig } from '../hooks/usePyth'
-import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
-import Spinner from './common/Spinner'
-import CloseIcon from './icons/CloseIcon'
+import { ClusterContext } from "../contexts/ClusterContext";
+import { usePythContext } from "../contexts/PythContext";
+import type { ProductRawConfig } from "../hooks/usePyth";
+import { capitalizeFirstLetter } from "../utils/capitalizeFirstLetter";
+import Spinner from "./common/Spinner";
+import CloseIcon from "./icons/CloseIcon";
 
 const assetTypes = [
-  'All',
-  'Crypto',
-  'Equity',
-  'FX',
-  'Metal',
-  'Rates',
-  'Commodities',
-]
+  "All",
+  "Crypto",
+  "Equity",
+  "FX",
+  "Metal",
+  "Rates",
+  "Commodities",
+];
 
 const PermissionDepermissionKey = ({
   isPermission,
@@ -47,53 +47,53 @@ const PermissionDepermissionKey = ({
   readOnlySquads,
   proposerServerUrl,
 }: {
-  isPermission: boolean
-  pythProgramClient?: Program<PythOracle>
-  readOnlySquads: SquadsMesh
-  proposerServerUrl: string
+  isPermission: boolean;
+  pythProgramClient?: Program<PythOracle>;
+  readOnlySquads: SquadsMesh;
+  proposerServerUrl: string;
 }) => {
   const [publisherKey, setPublisherKey] = useState(
-    'JTmFx5zX9mM94itfk2nQcJnQQDPjcv4UPD7SYj6xDCV'
-  )
-  const [selectedAssetType, setSelectedAssetType] = useState('All')
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isSubmitButtonLoading, setIsSubmitButtonLoading] = useState(false)
-  const [priceAccounts, setPriceAccounts] = useState<PublicKey[]>([])
-  const { cluster } = useContext(ClusterContext)
-  const { rawConfig, dataIsLoading, connection } = usePythContext()
+    "JTmFx5zX9mM94itfk2nQcJnQQDPjcv4UPD7SYj6xDCV",
+  );
+  const [selectedAssetType, setSelectedAssetType] = useState("All");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitButtonLoading, setIsSubmitButtonLoading] = useState(false);
+  const [priceAccounts, setPriceAccounts] = useState<PublicKey[]>([]);
+  const { cluster } = useContext(ClusterContext);
+  const { rawConfig, dataIsLoading, connection } = usePythContext();
 
   // get current input value
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (event: any) => {
-    setSelectedAssetType(event.target.value)
-    setIsModalOpen(true)
-  }
+    setSelectedAssetType(event.target.value);
+    setIsModalOpen(true);
+  };
 
   const closeModal = () => {
-    setIsModalOpen(false)
-  }
+    setIsModalOpen(false);
+  };
 
   const onKeyChange = (event: React.SyntheticEvent<HTMLInputElement>) => {
     const {
       currentTarget: { value },
-    } = event
-    setPublisherKey(value)
-  }
+    } = event;
+    setPublisherKey(value);
+  };
 
   const handleSubmitButton = async () => {
     if (pythProgramClient) {
-      const instructions: TransactionInstruction[] = []
+      const instructions: TransactionInstruction[] = [];
       const multisigAuthority = readOnlySquads.getAuthorityPDA(
         PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
-        1
-      )
-      const isRemote: boolean = isRemoteCluster(cluster)
+        1,
+      );
+      const isRemote: boolean = isRemoteCluster(cluster);
       const fundingAccount = isRemote
         ? mapKey(multisigAuthority)
-        : multisigAuthority
+        : multisigAuthority;
 
-      const publisherPublicKey = new PublicKey(publisherKey)
+      const publisherPublicKey = new PublicKey(publisherKey);
       for (const priceAccount of priceAccounts) {
         if (isPermission) {
           instructions.push(
@@ -103,8 +103,8 @@ const PermissionDepermissionKey = ({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
-              .instruction()
-          )
+              .instruction(),
+          );
         } else {
           instructions.push(
             await pythProgramClient.methods
@@ -113,8 +113,8 @@ const PermissionDepermissionKey = ({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
-              .instruction()
-          )
+              .instruction(),
+          );
         }
       }
       if (
@@ -122,47 +122,47 @@ const PermissionDepermissionKey = ({
         (!connection ||
           !(await isPriceStorePublisherInitialized(
             connection,
-            publisherPublicKey
+            publisherPublicKey,
           )))
       ) {
         instructions.push(
           await createDetermisticPriceStoreInitializePublisherInstruction(
             fundingAccount,
-            publisherPublicKey
-          )
-        )
+            publisherPublicKey,
+          ),
+        );
       }
-      setIsSubmitButtonLoading(true)
+      setIsSubmitButtonLoading(true);
       try {
-        const response = await axios.post(proposerServerUrl + '/api/propose', {
+        const response = await axios.post(proposerServerUrl + "/api/propose", {
           instructions,
           cluster,
-        })
-        const { proposalPubkey } = response.data
-        toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
-        setIsSubmitButtonLoading(false)
-        closeModal()
+        });
+        const { proposalPubkey } = response.data;
+        toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`);
+        setIsSubmitButtonLoading(false);
+        closeModal();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         if (error.response) {
-          toast.error(capitalizeFirstLetter(error.response.data))
+          toast.error(capitalizeFirstLetter(error.response.data));
         } else {
-          toast.error(capitalizeFirstLetter(error.message))
+          toast.error(capitalizeFirstLetter(error.message));
         }
-        setIsSubmitButtonLoading(false)
+        setIsSubmitButtonLoading(false);
       }
     }
-  }
+  };
 
   useEffect(() => {
     if (!dataIsLoading) {
-      const res: PublicKey[] = []
+      const res: PublicKey[] = [];
       rawConfig.mappingAccounts[0].products.map((product: ProductRawConfig) => {
         const publisherExists = product.priceAccounts[0].publishers.some(
-          (p) => p.toBase58() === publisherKey
-        )
+          (p) => p.toBase58() === publisherKey,
+        );
         if (
-          (selectedAssetType === 'All' ||
+          (selectedAssetType === "All" ||
             product.metadata.asset_type === selectedAssetType) &&
           ((isPermission &&
             product.priceAccounts[0].publishers.length <
@@ -170,10 +170,10 @@ const PermissionDepermissionKey = ({
             !publisherExists) ||
             (!isPermission && publisherExists))
         ) {
-          res.push(product.priceAccounts[0].address)
+          res.push(product.priceAccounts[0].address);
         }
-      })
-      setPriceAccounts(res)
+      });
+      setPriceAccounts(res);
     }
   }, [
     rawConfig,
@@ -182,7 +182,7 @@ const PermissionDepermissionKey = ({
     isPermission,
     publisherKey,
     cluster,
-  ])
+  ]);
 
   return (
     <>
@@ -190,12 +190,11 @@ const PermissionDepermissionKey = ({
         {({ open }) => (
           <>
             <Menu.Button
-              className={`inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0`}
-            >
+              className={`inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0`}>
               <span className="mr-3">
-                {isPermission ? 'Permission Key' : 'Depermission Key'}
+                {isPermission ? "Permission Key" : "Depermission Key"}
               </span>
-              <Arrow className={open && 'rotate-180'} />
+              <Arrow className={open && "rotate-180"} />
             </Menu.Button>
             <Transition
               as={Fragment}
@@ -204,16 +203,14 @@ const PermissionDepermissionKey = ({
               enterTo="transform opacity-100 scale-100"
               leave="transition ease-in duration-75"
               leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
+              leaveTo="transform opacity-0 scale-95">
               <Menu.Items className="absolute right-0 mt-2 w-full origin-top-right">
                 {assetTypes.map((a) => (
                   <Menu.Item key={a}>
                     <button
                       className={`block w-full bg-darkGray py-3 px-6 text-left text-sm hover:bg-darkGray2`}
                       value={a}
-                      onClick={handleChange}
-                    >
+                      onClick={handleChange}>
                       {a}
                     </button>
                   </Menu.Item>
@@ -228,9 +225,8 @@ const PermissionDepermissionKey = ({
           as="div"
           className="relative z-40"
           onClose={() => {
-            setIsModalOpen(false)
-          }}
-        >
+            setIsModalOpen(false);
+          }}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -238,8 +234,7 @@ const PermissionDepermissionKey = ({
             enterTo="opacity-100"
             leave="ease-in duration-200"
             leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
+            leaveTo="opacity-0">
             <div className="fixed inset-0 bg-black bg-opacity-50" />
           </Transition.Child>
           <div className="fixed inset-0 overflow-y-auto">
@@ -251,15 +246,14 @@ const PermissionDepermissionKey = ({
                 enterTo="opacity-100 scale-100"
                 leave="ease-in duration-200"
                 leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
+                leaveTo="opacity-0 scale-95">
                 <Dialog.Panel className="dialogPanel">
                   <button className="dialogClose" onClick={closeModal}>
                     <span className="mr-3">close</span> <CloseIcon />
                   </button>
                   <div className="max-w-full">
                     <Dialog.Title as="h3" className="dialogTitle">
-                      {isPermission ? 'Permission' : 'Depermission'} Publisher
+                      {isPermission ? "Permission" : "Depermission"} Publisher
                       Key
                     </Dialog.Title>
                     <div className="flex items-center justify-center">
@@ -280,12 +274,11 @@ const PermissionDepermissionKey = ({
                     <div className="mt-6">
                       <button
                         className="action-btn text-base"
-                        onClick={handleSubmitButton}
-                      >
+                        onClick={handleSubmitButton}>
                         {isSubmitButtonLoading ? (
                           <Spinner />
                         ) : (
-                          'Submit Proposal'
+                          "Submit Proposal"
                         )}
                       </button>
                     </div>
@@ -297,7 +290,7 @@ const PermissionDepermissionKey = ({
         </Dialog>
       </Transition>
     </>
-  )
-}
+  );
+};
 
-export default PermissionDepermissionKey
+export default PermissionDepermissionKey;

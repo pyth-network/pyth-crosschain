@@ -1,7 +1,7 @@
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { WalletError } from "@solana/wallet-adapter-base";
 import clsx from "clsx";
-import { LazyMotion, m, domAnimation } from "framer-motion";
+import { domAnimation, LazyMotion, m } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "react-aria-components";
 
@@ -51,8 +51,7 @@ const UnknownError = ({ error }: { error: unknown }) => {
       <m.div
         className="overflow-hidden pt-1 opacity-60"
         initial={{ height: 0 }}
-        animate={{ height: detailsOpen ? "auto" : 0 }}
-      >
+        animate={{ height: detailsOpen ? "auto" : 0 }}>
         {message}
       </m.div>
     </LazyMotion>

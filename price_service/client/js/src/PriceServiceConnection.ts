@@ -15,7 +15,7 @@ import { PriceFeed } from "@pythnetwork/price-service-sdk";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
 import axiosRetry from "axios-retry";
-import * as WebSocket from "isomorphic-ws";
+import type * as WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 
 import { ResilientWebSocket } from "./ResillientWebSocket";

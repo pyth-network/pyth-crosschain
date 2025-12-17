@@ -1,10 +1,9 @@
 import { CopyButton } from "@pythnetwork/component-library/CopyButton";
 import { Link } from "@pythnetwork/component-library/Link";
 import { useMemo } from "react";
-
-import styles from "./index.module.scss";
 import type { EntropyDeployment } from "../../entropy-deployments";
 import { truncate } from "../../truncate";
+import styles from "./index.module.scss";
 
 type Props = {
   value: string;
@@ -30,8 +29,7 @@ const Address = ({ value, chain, isAccount }: Props) => {
       <Link
         href={explorerTemplate.replace("$ADDRESS", value)}
         target="_blank"
-        rel="noreferrer"
-      >
+        rel="noreferrer">
         <code>{truncatedValue}</code>
       </Link>
       <CopyButton text={value} iconOnly />

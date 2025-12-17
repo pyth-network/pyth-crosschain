@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { TabList as TabListComponent } from "./index.jsx";
 import { Tabs as UnstyledTabs } from "../unstyled/Tabs/index.jsx";
+import { TabList as TabListComponent } from "./index.jsx";
 
 const meta = {
   component: TabListComponent,

@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { HermesClient, PriceUpdate } from "../HermesClient";
+import { HermesClient, type PriceUpdate } from "../HermesClient";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

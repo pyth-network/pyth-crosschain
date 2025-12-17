@@ -1,11 +1,11 @@
-import type { Argv } from "yargs";
-import { spawnSync } from "child_process";
+import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
+import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import { AptosAccount, AptosClient, BCS, TxnBuilderTypes } from "aptos";
+import { spawnSync } from "child_process";
 import fs from "fs";
 import sha3 from "js-sha3";
-import { AptosChain } from "@pythnetwork/contract-manager/core/chains";
-import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
+import type { Argv } from "yargs";
 
 const NETWORK_CHOICES = Object.entries(DefaultStore.chains)
   .filter(([_, config]) => {
@@ -315,7 +315,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           buildPackage(argv["package-dir"]!, namedAddresses),
         );
 
-        let pythAddress = argv.pyth;
+        const pythAddress = argv.pyth;
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${pythAddress}::contract_upgrade`,
@@ -419,7 +419,7 @@ function hexStringToByteArray(hexString: string) {
 }
 
 function generateDerivedAddress(signer_address: string, seed: string): string {
-  let derive_resource_account_scheme = Buffer.alloc(1);
+  const derive_resource_account_scheme = Buffer.alloc(1);
   derive_resource_account_scheme.writeUInt8(255);
   return sha3.sha3_256(
     Buffer.concat([

@@ -21,7 +21,7 @@ import type { PrivateKey } from "../src/core/base";
 import { getDefaultDeploymentConfig } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import {
-  EvmEntropyContract,
+  type EvmEntropyContract,
   EvmExecutorContract,
   EvmWormholeContract,
 } from "../src/core/contracts";

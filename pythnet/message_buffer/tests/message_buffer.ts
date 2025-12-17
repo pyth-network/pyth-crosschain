@@ -1,17 +1,17 @@
 import * as anchor from "@coral-xyz/anchor";
 import {
-  IdlAccounts,
-  IdlTypes,
-  Program,
   BorshAccountsCoder,
+  type IdlAccounts,
+  IdlTypes,
+  type Program,
 } from "@coral-xyz/anchor";
-import { MessageBuffer } from "../target/types/message_buffer";
-import { MockCpiCaller } from "../target/types/mock_cpi_caller";
+import type NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import lumina from "@lumina-dev/test";
-import { assert } from "chai";
-import { AccountMeta, ComputeBudgetProgram } from "@solana/web3.js";
+import { type AccountMeta, ComputeBudgetProgram } from "@solana/web3.js";
 import bs58 from "bs58";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { assert } from "chai";
+import type { MessageBuffer } from "../target/types/message_buffer";
+import type { MockCpiCaller } from "../target/types/mock_cpi_caller";
 
 // Enables tool that runs in local browser for easier debugging of
 // transactions in this test -  https://lumina.fyi/debug
@@ -74,11 +74,11 @@ const messageBufferPdaMeta2 = {
 const discriminator = BorshAccountsCoder.accountDiscriminator("MessageBuffer");
 const messageBufferDiscriminator = bs58.encode(discriminator);
 
-let provider = anchor.AnchorProvider.env();
+const provider = anchor.AnchorProvider.env();
 anchor.setProvider(provider);
 
 const payer = provider.wallet as NodeWallet;
-let whitelistAdmin = anchor.web3.Keypair.generate();
+const whitelistAdmin = anchor.web3.Keypair.generate();
 
 const [whitelistPubkey, whitelistBump] =
   anchor.web3.PublicKey.findProgramAddressSync(
@@ -355,7 +355,7 @@ describe("message_buffer", () => {
       emaExpo: new anchor.BN(8),
     };
 
-    let accumulatorPdaMeta = getAccumulatorPdaMeta(
+    const accumulatorPdaMeta = getAccumulatorPdaMeta(
       mockCpiCallerAuth,
       pythPriceAccountPk,
     );
@@ -408,10 +408,10 @@ describe("message_buffer", () => {
 
   it("Mock CPI Program - CPI Max Test", async () => {
     // with loosen CPI feature activated, max cpi instruction size len is 10KB
-    let testCases = [[1024], [1024, 2048], [1024, 2048, 4096]];
+    const testCases = [[1024], [1024, 2048], [1024, 2048, 4096]];
     // for (let i = 1; i < 8; i++) {
     for (let i = 0; i < testCases.length; i++) {
-      let testCase = testCases[i];
+      const testCase = testCases[i];
       console.info(`testCase: ${testCase}`);
       const updatePriceParams = {
         price: new anchor.BN(10 * (i + 5)),
@@ -421,7 +421,7 @@ describe("message_buffer", () => {
       };
       console.log(`updatePriceParams: ${JSON.stringify(updatePriceParams)}`);
 
-      let accumulatorPdaMeta = getAccumulatorPdaMeta(
+      const accumulatorPdaMeta = getAccumulatorPdaMeta(
         mockCpiCallerAuth,
         pythPriceAccountPk,
       );
@@ -459,7 +459,7 @@ describe("message_buffer", () => {
       );
 
       console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
-      let mockCpiMessageHeaderLen = 7;
+      const mockCpiMessageHeaderLen = 7;
 
       let currentExpectedOffset = 0;
       for (let j = 0; j < testCase.length; j++) {
@@ -478,10 +478,10 @@ describe("message_buffer", () => {
 
   it("Mock CPI Program - Exceed CPI Max Test ", async () => {
     // with loosen CPI feature activated, max cpi instruction size len is 10KB
-    let testCases = [[1024, 2048, 4096, 8192]];
+    const testCases = [[1024, 2048, 4096, 8192]];
     // for (let i = 1; i < 8; i++) {
     for (let i = 0; i < testCases.length; i++) {
-      let testCase = testCases[i];
+      const testCase = testCases[i];
       console.info(`testCase: ${testCase}`);
       const updatePriceParams = {
         price: new anchor.BN(10 * i + 5),
@@ -490,7 +490,7 @@ describe("message_buffer", () => {
         emaExpo: new anchor.BN(10 * i + 8),
       };
 
-      let accumulatorPdaMeta = getAccumulatorPdaMeta(
+      const accumulatorPdaMeta = getAccumulatorPdaMeta(
         mockCpiCallerAuth,
         pythPriceAccountPk,
       );
@@ -710,7 +710,7 @@ async function getMessageBuffer(
   connection: anchor.web3.Connection,
   accountKey: anchor.web3.PublicKey,
 ): Promise<Buffer | null> {
-  let accountInfo = await connection.getAccountInfo(accountKey);
+  const accountInfo = await connection.getAccountInfo(accountKey);
   return accountInfo ? accountInfo.data : null;
 }
 
@@ -728,7 +728,7 @@ function parseMessageBuffer(
   const accumulatorMessages = [];
   // let dataBuffer = Buffer.from(messages);
 
-  let dataBuffer = accountData.subarray(
+  const dataBuffer = accountData.subarray(
     msgBufferHeader.headerLen,
     accountData.length,
   );
@@ -796,7 +796,7 @@ function parseMessageBytes(data: Buffer): MessageBufferType {
     version,
     size,
   };
-  let messageData = data.subarray(offset, offset + size);
+  const messageData = data.subarray(offset, offset + size);
   return {
     header: messageHeader,
     data: messageData,

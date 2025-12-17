@@ -5,10 +5,9 @@ import { motion } from "motion/react";
 import type { ComponentProps } from "react";
 import { useId, useMemo } from "react";
 import type { Key } from "react-aria-components";
-import { ToggleButtonGroup, ToggleButton } from "react-aria-components";
-
-import styles from "./index.module.scss";
+import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import buttonStyles from "../Button/index.module.scss";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   selectedKey?: Key | undefined;
@@ -54,8 +53,7 @@ export const SingleToggleGroup = ({
         onSelectionChange: handleSelectionChange,
       })}
       {...(selectedKey !== undefined && { selectedKeys: [selectedKey] })}
-      {...props}
-    >
+      {...props}>
       {items.map(({ className: tabClassName, children, ...toggleButton }) => (
         <ToggleButton
           key={toggleButton.id}
@@ -67,8 +65,7 @@ export const SingleToggleGroup = ({
           data-size="sm"
           data-variant="ghost"
           data-rounded={rounded ? "" : undefined}
-          {...toggleButton}
-        >
+          {...toggleButton}>
           {(args) => (
             <>
               {args.isSelected && (

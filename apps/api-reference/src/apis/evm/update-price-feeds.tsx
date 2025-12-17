@@ -1,12 +1,12 @@
+import { ParameterType } from "../../components/EvmApi";
 import {
   BTCUSD,
   ETHUSD,
+  ethersJS,
   getLatestPriceUpdate,
   solidity,
-  ethersJS,
   writeApi,
 } from "./common";
-import { ParameterType } from "../../components/EvmApi";
 
 export const updatePriceFeeds = writeApi<"updateData" | "fee">({
   name: "updatePriceFeeds",

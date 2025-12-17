@@ -5,7 +5,7 @@ import {
   TabPanel as UnstyledTabPanel,
   Tabs as UnstyledTabs,
 } from "@pythnetwork/component-library/unstyled/Tabs";
-import { useSelectedLayoutSegment, usePathname } from "next/navigation";
+import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 

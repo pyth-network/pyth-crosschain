@@ -1,4 +1,4 @@
-import Web3 from 'web3'
+import Web3 from "web3";
 
 // Note: Currently, the ABI only contains the functions which take in primitives as inputs.
 // Though it is possible for EVM functions to accept structs as one of the inputs.
@@ -8,51 +8,51 @@ import Web3 from 'web3'
 const ABI = [
   {
     inputs: [],
-    name: 'acceptOwnership',
+    name: "acceptOwnership",
     outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
     inputs: [],
-    name: 'acceptAdmin',
+    name: "acceptAdmin",
     outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
     inputs: [
       {
-        internalType: 'address',
-        name: 'newImplementation',
-        type: 'address',
+        internalType: "address",
+        name: "newImplementation",
+        type: "address",
       },
     ],
-    name: 'upgradeTo',
+    name: "upgradeTo",
     outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    type: 'function',
-    name: 'setRelayer',
+    type: "function",
+    name: "setRelayer",
     inputs: [
       {
-        name: 'relayer',
-        type: 'address',
-        internalType: 'address',
+        name: "relayer",
+        type: "address",
+        internalType: "address",
       },
     ],
     outputs: [],
-    stateMutability: 'nonpayable',
+    stateMutability: "nonpayable",
   },
-]
+];
 
 type Input = {
-  internalType: string
-  name: string
-  type: string
-}
+  internalType: string;
+  name: string;
+  type: string;
+};
 
 /**
  * Parses the call data for an EVM contract call only if the call data matches one of the entry in ABI.
@@ -62,37 +62,37 @@ type Input = {
  */
 export function parseEvmExecuteCallData(callData: string):
   | {
-      method: string
-      inputs: [string, string][]
+      method: string;
+      inputs: [string, string][];
     }
   | undefined {
   for (const abi of ABI) {
-    const web3 = new Web3()
+    const web3 = new Web3();
     const methodSignature = web3.eth.abi
       .encodeFunctionSignature(abi)
-      .replace('0x', '')
+      .replace("0x", "");
 
     if (!callData.includes(methodSignature)) {
-      continue
+      continue;
     }
 
-    const inputs: Input[] = abi.inputs
+    const inputs: Input[] = abi.inputs;
 
     const decodedParams = web3.eth.abi.decodeParameters(
       inputs.map((input) => ({
         type: input.type,
         name: input.name,
       })),
-      callData.replace(methodSignature, '')
-    )
+      callData.replace(methodSignature, ""),
+    );
     return {
       method: abi.name,
       inputs: inputs.map((input) => [
         input.name,
         decodedParams[input.name] as string,
       ]),
-    }
+    };
   }
 
-  return undefined
+  return undefined;
 }

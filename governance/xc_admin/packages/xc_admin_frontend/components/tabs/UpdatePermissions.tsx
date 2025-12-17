@@ -4,235 +4,234 @@
 /* eslint-disable @typescript-eslint/prefer-optional-chain */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
-import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
-import CopyIcon from '@images/icons/copy.inline.svg'
+import { AnchorProvider, type Program } from "@coral-xyz/anchor";
+import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import CopyIcon from "@images/icons/copy.inline.svg";
 import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
-} from '@pythnetwork/client'
-import type { PythOracle } from '@pythnetwork/client/lib/anchor'
+} from "@pythnetwork/client";
+import type { PythOracle } from "@pythnetwork/client/lib/anchor";
 import {
   BPF_UPGRADABLE_LOADER,
   getMultisigCluster,
   isRemoteCluster,
+  MultisigVault,
   mapKey,
   UPGRADE_MULTISIG,
-  MultisigVault,
-} from '@pythnetwork/xc-admin-common'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
-import { PublicKey } from '@solana/web3.js'
+} from "@pythnetwork/xc-admin-common";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletModalButton } from "@solana/wallet-adapter-react-ui";
+import { PublicKey } from "@solana/web3.js";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from '@tanstack/react-table'
-import copy from 'copy-to-clipboard'
-import { useContext, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
+} from "@tanstack/react-table";
+import copy from "copy-to-clipboard";
+import { useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
-import { ClusterContext } from '../../contexts/ClusterContext'
-import { useMultisigContext } from '../../contexts/MultisigContext'
-import { usePythContext } from '../../contexts/PythContext'
-import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
-import ClusterSwitch from '../ClusterSwitch'
-import EditButton from '../EditButton'
-import Modal from '../common/Modal'
-import Spinner from '../common/Spinner'
-import Loadbar from '../loaders/Loadbar'
+import { ClusterContext } from "../../contexts/ClusterContext";
+import { useMultisigContext } from "../../contexts/MultisigContext";
+import { usePythContext } from "../../contexts/PythContext";
+import { capitalizeFirstLetter } from "../../utils/capitalizeFirstLetter";
+import ClusterSwitch from "../ClusterSwitch";
+import Modal from "../common/Modal";
+import Spinner from "../common/Spinner";
+import EditButton from "../EditButton";
+import Loadbar from "../loaders/Loadbar";
 
 type UpdatePermissionsProps = {
-  account: PermissionAccount
-  pubkey: string
-  newPubkey?: string
-}
+  account: PermissionAccount;
+  pubkey: string;
+  newPubkey?: string;
+};
 
 const DEFAULT_DATA: UpdatePermissionsProps[] = [
   {
-    account: 'Master Authority',
+    account: "Master Authority",
     pubkey: new PublicKey(0).toBase58(),
   },
   {
-    account: 'Data Curation Authority',
+    account: "Data Curation Authority",
     pubkey: new PublicKey(0).toBase58(),
   },
   {
-    account: 'Security Authority',
+    account: "Security Authority",
     pubkey: new PublicKey(0).toBase58(),
   },
-]
+];
 
-const columnHelper = createColumnHelper<UpdatePermissionsProps>()
+const columnHelper = createColumnHelper<UpdatePermissionsProps>();
 
 const defaultColumns = [
-  columnHelper.accessor('account', {
+  columnHelper.accessor("account", {
     cell: (info) => info.getValue(),
     header: () => <span>Account</span>,
   }),
-  columnHelper.accessor('pubkey', {
+  columnHelper.accessor("pubkey", {
     cell: (props) => {
-      const pubkey = props.getValue()
+      const pubkey = props.getValue();
       return (
         <>
           <div
             aria-label="copy public key"
             className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
             onClick={() => {
-              copy(pubkey)
+              copy(pubkey);
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') copy(pubkey)
+              if (e.key === "Enter") copy(pubkey);
             }}
             role="button"
-            tabIndex={0}
-          >
+            tabIndex={0}>
             <span className="mr-2 hidden lg:block">{pubkey}</span>
             <span className="mr-2 lg:hidden">
-              {pubkey.slice(0, 6) + '...' + pubkey.slice(-6)}
-            </span>{' '}
+              {pubkey.slice(0, 6) + "..." + pubkey.slice(-6)}
+            </span>{" "}
             <CopyIcon className="shrink-0" />
           </div>
         </>
-      )
+      );
     },
     header: () => <span>Public Key</span>,
   }),
-]
+];
 
 type PermissionAccount =
-  | 'Master Authority'
-  | 'Data Curation Authority'
-  | 'Security Authority'
+  | "Master Authority"
+  | "Data Curation Authority"
+  | "Security Authority";
 
 type PermissionAccountInfo = {
-  prev: string
-  new: string
-}
+  prev: string;
+  new: string;
+};
 
 // check if pubkey is valid
 const isValidPubkey = (pubkey: string) => {
   try {
-    new PublicKey(pubkey)
-    return true
+    new PublicKey(pubkey);
+    return true;
   } catch {
-    return false
+    return false;
   }
-}
+};
 
 const UpdatePermissions = () => {
-  const [data, setData] = useState(() => [...DEFAULT_DATA])
-  const [columns, setColumns] = useState(() => [...defaultColumns])
+  const [data, setData] = useState(() => [...DEFAULT_DATA]);
+  const [columns, setColumns] = useState(() => [...defaultColumns]);
   const [pubkeyChanges, setPubkeyChanges] =
-    useState<Partial<Record<PermissionAccount, PermissionAccountInfo>>>()
+    useState<Partial<Record<PermissionAccount, PermissionAccountInfo>>>();
   const [finalPubkeyChanges, setFinalPubkeyChanges] =
-    useState<Record<PermissionAccount, PermissionAccountInfo>>()
-  const [editable, setEditable] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+    useState<Record<PermissionAccount, PermissionAccountInfo>>();
+  const [editable, setEditable] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
-    useState(false)
-  const { cluster } = useContext(ClusterContext)
-  const { isLoading: isMultisigLoading, walletSquads } = useMultisigContext()
-  const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const { connected } = useWallet()
+    useState(false);
+  const { cluster } = useContext(ClusterContext);
+  const { isLoading: isMultisigLoading, walletSquads } = useMultisigContext();
+  const { rawConfig, dataIsLoading, connection } = usePythContext();
+  const { connected } = useWallet();
   const [pythProgramClient, setPythProgramClient] =
-    useState<Program<PythOracle>>()
+    useState<Program<PythOracle>>();
 
   useEffect(() => {
     if (rawConfig.permissionAccount) {
       const masterAuthority =
-        rawConfig.permissionAccount.masterAuthority.toBase58()
+        rawConfig.permissionAccount.masterAuthority.toBase58();
       const dataCurationAuthority =
-        rawConfig.permissionAccount.dataCurationAuthority.toBase58()
+        rawConfig.permissionAccount.dataCurationAuthority.toBase58();
       const securityAuthority =
-        rawConfig.permissionAccount.securityAuthority.toBase58()
+        rawConfig.permissionAccount.securityAuthority.toBase58();
       setData([
         {
-          account: 'Master Authority',
+          account: "Master Authority",
           pubkey: masterAuthority,
         },
         {
-          account: 'Data Curation Authority',
+          account: "Data Curation Authority",
           pubkey: dataCurationAuthority,
         },
         {
-          account: 'Security Authority',
+          account: "Security Authority",
           pubkey: securityAuthority,
         },
-      ])
+      ]);
     } else {
-      setData([...DEFAULT_DATA])
+      setData([...DEFAULT_DATA]);
     }
-  }, [rawConfig])
+  }, [rawConfig]);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-  })
+  });
 
   const backfillPubkeyChanges = () => {
     const newPubkeyChanges: Record<PermissionAccount, PermissionAccountInfo> = {
-      'Master Authority': {
+      "Master Authority": {
         prev: data[0].pubkey,
         new: data[0].pubkey,
       },
-      'Data Curation Authority': {
+      "Data Curation Authority": {
         prev: data[1].pubkey,
         new: data[1].pubkey,
       },
-      'Security Authority': {
+      "Security Authority": {
         prev: data[2].pubkey,
         new: data[2].pubkey,
       },
-    }
+    };
     if (pubkeyChanges) {
       for (const key of Object.keys(pubkeyChanges)) {
         newPubkeyChanges[key as PermissionAccount] =
-          pubkeyChanges[key as PermissionAccount]
+          pubkeyChanges[key as PermissionAccount];
       }
     }
 
-    return newPubkeyChanges
-  }
+    return newPubkeyChanges;
+  };
 
   const handleEditButtonClick = () => {
-    const nextState = !editable
+    const nextState = !editable;
     if (nextState) {
       const newColumns = [
         ...defaultColumns,
-        columnHelper.accessor('newPubkey', {
+        columnHelper.accessor("newPubkey", {
           cell: (info) => info.getValue(),
           header: () => <span>New Public Key</span>,
         }),
-      ]
-      setColumns(newColumns)
+      ];
+      setColumns(newColumns);
     } else {
       if (pubkeyChanges && Object.keys(pubkeyChanges).length > 0) {
-        openModal()
-        setFinalPubkeyChanges(backfillPubkeyChanges())
+        openModal();
+        setFinalPubkeyChanges(backfillPubkeyChanges());
       } else {
-        setColumns(defaultColumns)
+        setColumns(defaultColumns);
       }
     }
-    setEditable(nextState)
-  }
+    setEditable(nextState);
+  };
 
   const openModal = () => {
-    setIsModalOpen(true)
-  }
+    setIsModalOpen(true);
+  };
 
   const closeModal = () => {
-    setIsModalOpen(false)
-  }
+    setIsModalOpen(false);
+  };
 
   const handleEditPubkey = (
     e: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     account: PermissionAccount,
-    prevPubkey: string
+    prevPubkey: string,
   ) => {
-    const newPubkey = e.target.textContent
+    const newPubkey = e.target.textContent;
     if (isValidPubkey(newPubkey) && newPubkey !== prevPubkey) {
       setPubkeyChanges({
         ...pubkeyChanges,
@@ -240,32 +239,32 @@ const UpdatePermissions = () => {
           prev: prevPubkey,
           new: newPubkey,
         },
-      })
+      });
     } else {
       // delete account from pubkeyChanges if it exists
       if (pubkeyChanges && pubkeyChanges[account]) {
-        delete pubkeyChanges[account]
+        delete pubkeyChanges[account];
       }
-      setPubkeyChanges(pubkeyChanges)
+      setPubkeyChanges(pubkeyChanges);
     }
-  }
+  };
 
   const handleSendProposalButtonClick = () => {
     if (pythProgramClient && finalPubkeyChanges && walletSquads) {
       const programDataAccount = PublicKey.findProgramAddressSync(
         [pythProgramClient?.programId.toBuffer()],
-        BPF_UPGRADABLE_LOADER
-      )[0]
+        BPF_UPGRADABLE_LOADER,
+      )[0];
       const multisigAuthority = walletSquads.getAuthorityPDA(
         UPGRADE_MULTISIG[getMultisigCluster(cluster)],
-        1
-      )
+        1,
+      );
 
       pythProgramClient?.methods
         .updPermissions(
-          new PublicKey(finalPubkeyChanges['Master Authority'].new),
-          new PublicKey(finalPubkeyChanges['Data Curation Authority'].new),
-          new PublicKey(finalPubkeyChanges['Security Authority'].new)
+          new PublicKey(finalPubkeyChanges["Master Authority"].new),
+          new PublicKey(finalPubkeyChanges["Data Curation Authority"].new),
+          new PublicKey(finalPubkeyChanges["Security Authority"].new),
         )
         .accounts({
           upgradeAuthority: isRemoteCluster(cluster)
@@ -276,33 +275,33 @@ const UpdatePermissions = () => {
         .instruction()
         .then(async (instruction) => {
           if (!isMultisigLoading) {
-            setIsSendProposalButtonLoading(true)
+            setIsSendProposalButtonLoading(true);
             try {
               const vault = new MultisigVault(
                 walletSquads.wallet as Wallet,
                 getMultisigCluster(cluster),
                 walletSquads,
-                UPGRADE_MULTISIG[getMultisigCluster(cluster)]
-              )
+                UPGRADE_MULTISIG[getMultisigCluster(cluster)],
+              );
 
               const [proposalPubkey] = await vault.proposeInstructions(
                 [instruction],
-                cluster
-              )
+                cluster,
+              );
 
               toast.success(
-                `Proposal sent! 🚀 Proposal Pubkey: ${JSON.stringify(proposalPubkey)}`
-              )
-              setIsSendProposalButtonLoading(false)
+                `Proposal sent! 🚀 Proposal Pubkey: ${JSON.stringify(proposalPubkey)}`,
+              );
+              setIsSendProposalButtonLoading(false);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (error: any) {
-              toast.error(capitalizeFirstLetter(error.message))
-              setIsSendProposalButtonLoading(false)
+              toast.error(capitalizeFirstLetter(error.message));
+              setIsSendProposalButtonLoading(false);
             }
           }
-        })
+        });
     }
-  }
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ModalContent = ({ changes }: { changes: any }) => {
@@ -316,8 +315,7 @@ const UpdatePermissions = () => {
                   <>
                     <div
                       key={key}
-                      className="mb-4 flex items-center justify-between"
-                    >
+                      className="mb-4 flex items-center justify-between">
                       <span className="pr-4 text-left font-bold">{key}</span>
                       <span className="mr-2">
                         {changes[key].prev} &rarr; {changes[key].new}
@@ -325,7 +323,7 @@ const UpdatePermissions = () => {
                     </div>
                   </>
                 )
-              )
+              );
             })}
           </div>
         ) : (
@@ -335,9 +333,8 @@ const UpdatePermissions = () => {
           connected ? (
             <button
               className="action-btn text-base"
-              onClick={handleSendProposalButtonClick}
-            >
-              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+              onClick={handleSendProposalButtonClick}>
+              {isSendProposalButtonLoading ? <Spinner /> : "Send Proposal"}
             </button>
           ) : (
             <div className="flex justify-center">
@@ -346,8 +343,8 @@ const UpdatePermissions = () => {
           )
         ) : undefined}
       </>
-    )
-  }
+    );
+  };
 
   // create anchor wallet when connected
   useEffect(() => {
@@ -355,13 +352,13 @@ const UpdatePermissions = () => {
       const provider = new AnchorProvider(
         connection,
         walletSquads.wallet as Wallet,
-        AnchorProvider.defaultOptions()
-      )
+        AnchorProvider.defaultOptions(),
+      );
       setPythProgramClient(
-        pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
-      )
+        pythOracleProgram(getPythProgramKeyForCluster(cluster), provider),
+      );
     }
-  }, [connection, connected, cluster, walletSquads])
+  }, [connection, connected, cluster, walletSquads]);
 
   return (
     <div className="relative">
@@ -400,16 +397,15 @@ const UpdatePermissions = () => {
                         <th
                           key={header.id}
                           className={
-                            header.column.id === 'account'
-                              ? 'base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 xl:pl-14'
-                              : 'base16 pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60'
-                          }
-                        >
+                            header.column.id === "account"
+                              ? "base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 xl:pl-14"
+                              : "base16 pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60"
+                          }>
                           {header.isPlaceholder
                             ? undefined
                             : flexRender(
                                 header.column.columnDef.header,
-                                header.getContext()
+                                header.getContext(),
                               )}
                         </th>
                       ))}
@@ -426,24 +422,23 @@ const UpdatePermissions = () => {
                             handleEditPubkey(
                               e,
                               cell.row.original.account,
-                              cell.row.original.pubkey
-                            )
+                              cell.row.original.pubkey,
+                            );
                           }}
                           contentEditable={
-                            cell.column.id === 'newPubkey' && editable
+                            cell.column.id === "newPubkey" && editable
                               ? true
                               : false
                           }
                           suppressContentEditableWarning={true}
                           className={
-                            cell.column.id === 'account'
-                              ? 'py-3 pl-4 pr-2 xl:pl-14'
-                              : 'items-center py-3 pl-1 pr-4'
-                          }
-                        >
+                            cell.column.id === "account"
+                              ? "py-3 pl-4 pr-2 xl:pl-14"
+                              : "items-center py-3 pl-1 pr-4"
+                          }>
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </td>
                       ))}
@@ -456,7 +451,7 @@ const UpdatePermissions = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UpdatePermissions
+export default UpdatePermissions;

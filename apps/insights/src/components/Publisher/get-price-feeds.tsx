@@ -1,6 +1,6 @@
 import { getFeedsForPublisherRequest } from "../../server/pyth";
 import { getFeedRankingsByPublisher } from "../../services/clickhouse";
-import { Cluster, ClusterToName } from "../../services/pyth";
+import { type Cluster, ClusterToName } from "../../services/pyth";
 import { getStatus } from "../../status";
 
 export const getPriceFeeds = async (cluster: Cluster, key: string) => {

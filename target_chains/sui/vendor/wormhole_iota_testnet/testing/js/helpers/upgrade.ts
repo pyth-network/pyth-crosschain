@@ -1,5 +1,5 @@
 import {
-  RawSigner,
+  type RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
@@ -10,7 +10,7 @@ export async function buildAndUpgradeWormhole(
   signer: RawSigner,
   signedVaa: Buffer,
   wormholePath: string,
-  wormholeStateId: string
+  wormholeStateId: string,
 ) {
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 

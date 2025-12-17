@@ -9,10 +9,9 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
-
+import * as api from "../api";
 import { StateType as DataStateType, useData } from "./use-data";
 import { useNetwork } from "./use-network";
-import * as api from "../api";
 
 export enum StateType {
   NotLoaded,

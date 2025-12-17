@@ -2,33 +2,33 @@
 
 import type { Placement } from "@floating-ui/react";
 import {
+  arrow,
+  autoPlacement,
+  autoUpdate,
   FloatingArrow,
   FloatingPortal,
-  useFloating,
-  useInteractions,
-  useHover,
-  useFocus,
-  useRole,
-  useDismiss,
-  useTransitionStyles,
-  useMergeRefs,
-  useDelayGroup,
-  autoPlacement,
-  arrow,
-  offset,
-  autoUpdate,
   flip,
+  offset,
   shift,
+  useDelayGroup,
+  useDismiss,
+  useFloating,
+  useFocus,
+  useHover,
+  useInteractions,
+  useMergeRefs,
+  useRole,
+  useTransitionStyles,
 } from "@floating-ui/react";
 import type { ComponentProps, ElementType, Ref } from "react";
 import {
-  useState,
-  useMemo,
   createContext,
-  useContext,
-  forwardRef,
-  useRef,
   createElement,
+  forwardRef,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 
 type TooltipOptions = {

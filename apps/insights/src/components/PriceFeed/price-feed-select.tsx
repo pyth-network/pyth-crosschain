@@ -2,10 +2,6 @@
 
 import { DropdownCaretDown } from "@pythnetwork/component-library/DropdownCaretDown";
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
-import {
-  ListLayout,
-  Virtualizer,
-} from "@pythnetwork/component-library/Virtualizer";
 import { Button } from "@pythnetwork/component-library/unstyled/Button";
 import { Dialog } from "@pythnetwork/component-library/unstyled/Dialog";
 import {
@@ -16,6 +12,10 @@ import { Popover } from "@pythnetwork/component-library/unstyled/Popover";
 import { SearchField } from "@pythnetwork/component-library/unstyled/SearchField";
 import { Select } from "@pythnetwork/component-library/unstyled/Select";
 import { Input } from "@pythnetwork/component-library/unstyled/TextField";
+import {
+  ListLayout,
+  Virtualizer,
+} from "@pythnetwork/component-library/Virtualizer";
 import clsx from "clsx";
 import { matchSorter } from "match-sorter";
 import type { ReactNode } from "react";
@@ -85,8 +85,7 @@ const ResolvedPriceFeedSelect = ({
               className={styles.searchField ?? ""}
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
-              aria-label="Search"
-            >
+              aria-label="Search">
               <Input
                 className={styles.searchInput ?? ""}
                 placeholder="Symbol, asset class, or key"
@@ -97,8 +96,7 @@ const ResolvedPriceFeedSelect = ({
                 items={filteredAndSortedFeeds}
                 className={styles.listbox ?? ""}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
-                autoFocus={false}
-              >
+                autoFocus={false}>
                 {({ symbol, displaySymbol, description, icon, assetClass }) => (
                   <ListBoxItem
                     textValue={displaySymbol}
@@ -109,8 +107,7 @@ const ResolvedPriceFeedSelect = ({
                         ? ""
                         : undefined
                     }
-                    prefetch={false}
-                  >
+                    prefetch={false}>
                     <SymbolPairTag
                       displaySymbol={displaySymbol}
                       description={description}
@@ -147,12 +144,10 @@ const PriceFeedSelectImpl = ({
 }: PriceFeedSelectImplProps) => (
   <Select
     aria-label="Select a Price Feed"
-    className={clsx(className, styles.priceFeedSelect)}
-  >
+    className={clsx(className, styles.priceFeedSelect)}>
     <Button
       className={styles.trigger ?? ""}
-      isPending={props.isLoading ?? false}
-    >
+      isPending={props.isLoading ?? false}>
       {children}
       <DropdownCaretDown className={styles.caret} />
     </Button>

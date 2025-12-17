@@ -131,7 +131,6 @@
     "@cprussin/tsconfig": "catalog:",
     "@types/node": "^18.19.54",
     "@types/ws": "^8.5.12",
-    "prettier": "catalog:",
     "ts-node": "catalog:",
     "typedoc": "^0.26.8"
   },

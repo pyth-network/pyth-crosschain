@@ -13,24 +13,23 @@ import path from "node:path";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig, DefaultAddresses } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  getWeb3Contract,
-  getOrDeployWormholeContract,
-  topupAccountsIfNecessary,
-} from "./common";
 import type { DeploymentType } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import {
-  PULSE_DEFAULT_PROVIDER,
-  PULSE_DEFAULT_KEEPER,
   EvmPulseContract,
+  PULSE_DEFAULT_KEEPER,
+  PULSE_DEFAULT_PROVIDER,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig, DefaultAddresses } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+  topupAccountsIfNecessary,
+} from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;

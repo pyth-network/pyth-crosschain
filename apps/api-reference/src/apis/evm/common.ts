@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import type { ReadApi, WriteApi, NetworkInfo } from "../../components/EvmApi";
+import type { NetworkInfo, ReadApi, WriteApi } from "../../components/EvmApi";
 import { EvmApiType, Language } from "../../components/EvmApi";
-import { singletonArray, safeFetch } from "../../zod-utils";
+import { safeFetch, singletonArray } from "../../zod-utils";
 
 export const readApi = <ParameterName extends string>(
   spec: Omit<ReadApi<ParameterName>, "type">,

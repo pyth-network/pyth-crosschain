@@ -4,8 +4,6 @@ import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { lookup as lookupPublisher } from "@pythnetwork/known-publishers";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { ReactNode } from "react";
-
-import { SearchButton as SearchButtonImpl } from "./search-button";
 import {
   AMPLITUDE_API_KEY,
   ENABLE_ACCESSIBILITY_REPORTING,
@@ -16,6 +14,7 @@ import { Cluster } from "../../services/pyth";
 import { getFeeds } from "../../services/pyth/get-feeds";
 import { PriceFeedIcon } from "../PriceFeedIcon";
 import { PublisherIcon } from "../PublisherIcon";
+import { SearchButton as SearchButtonImpl } from "./search-button";
 
 export const TABS = [
   { segment: "", children: "Overview" },
@@ -35,8 +34,7 @@ export const Root = ({ children }: Props) => (
     enableAccessibilityReporting={ENABLE_ACCESSIBILITY_REPORTING}
     providers={[NuqsAdapter]}
     tabs={TABS}
-    extraCta={<SearchButton />}
-  >
+    extraCta={<SearchButton />}>
     {children}
   </AppShell>
 );

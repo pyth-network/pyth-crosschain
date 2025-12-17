@@ -17,9 +17,8 @@ import utc from "dayjs/plugin/utc";
 import fs from "fs-extra";
 import { glob } from "glob";
 import papa from "papaparse";
-
-import type { NBBOEntry, OutputEntry, PythEntry } from "./types";
 import { ALLOWED_EQUITY_SYMBOLS } from "../schemas/pyth/pyth-pro-demo-schema";
+import type { NBBOEntry, OutputEntry, PythEntry } from "./types";
 
 const { parse, unparse } = papa;
 

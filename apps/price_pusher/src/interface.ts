@@ -1,7 +1,7 @@
 import type { HexString, UnixTimestamp } from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
-import { PricePusherMetrics } from "./metrics.js";
+import type { PricePusherMetrics } from "./metrics.js";
 import type { DurationInSeconds } from "./utils.js";
 
 export type PriceItem = {

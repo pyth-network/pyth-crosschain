@@ -24,8 +24,7 @@ export const ChangePercent = (props: PriceDifferenceProps) =>
   ) : (
     <ChangeValue
       direction={getDirection(props.currentValue, props.previousValue)}
-      {...omitKeys(props, ["currentValue", "previousValue"])}
-    >
+      {...omitKeys(props, ["currentValue", "previousValue"])}>
       <FormattedNumber
         maximumFractionDigits={2}
         value={

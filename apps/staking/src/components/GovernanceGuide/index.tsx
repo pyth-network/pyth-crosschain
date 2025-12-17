@@ -1,5 +1,9 @@
 import type { ComponentProps } from "react";
-
+import { Guide } from "../Guide";
+import { Link } from "../Link";
+import Safebox from "../NoWalletHome/safebox.svg";
+import SelectPublishers from "../NoWalletHome/select-publishers.svg";
+import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 import addPythTokens from "./add-pyth-tokens.png";
 import changingWallets from "./changing-wallets.png";
 import epochs from "./epochs.png";
@@ -9,11 +13,6 @@ import stakedTokens from "./staked-tokens.png";
 import totalBalance from "./total-balance.png";
 import understandingRealms from "./understanding-realms.png";
 import warmupPeriods from "./warmup-periods.png";
-import { Guide } from "../Guide";
-import { Link } from "../Link";
-import Safebox from "../NoWalletHome/safebox.svg";
-import SelectPublishers from "../NoWalletHome/select-publishers.svg";
-import TokenWarmup from "../NoWalletHome/token-warmup.svg";
 
 export const GovernanceGuide = (
   props: Omit<ComponentProps<typeof Guide>, "title" | "description" | "steps">,
@@ -182,8 +181,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
-                >
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4">
                   Pyth Network Realm
                 </Link>
                 .
@@ -223,8 +221,7 @@ export const GovernanceGuide = (
             <Link
               className="underline"
               target="_blank"
-              href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
-            >
+              href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4">
               Realms page for the Pyth DAO
             </Link>
             . Connect your wallet, select a proposal from the Proposals tab, and
@@ -245,8 +242,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://forum.pyth.network"
-                >
+                  href="https://forum.pyth.network">
                   Pyth Governance Forum
                 </Link>{" "}
                 on Discourse. Successful forum proposals that pass temperature
@@ -255,8 +251,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24"
-                >
+                  href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24">
                   here
                 </Link>
                 .
@@ -273,8 +268,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
-                >
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4">
                   Pyth Network Realm
                 </Link>
                 , you can view all completed proposals and vote on pending ones.
@@ -293,8 +287,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4"
-                >
+                  href="https://v2.realms.today/dao/4ct8XU5tKbMNRphWy4rePsS9kBqPhDdvZoGpmprPaug4">
                   Pyth Network Realm
                 </Link>{" "}
                 interface will indicate whether a proposal has met the quorum by
@@ -305,8 +298,7 @@ export const GovernanceGuide = (
                 <Link
                   className="underline"
                   target="_blank"
-                  href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live"
-                >
+                  href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live">
                   blog post
                 </Link>
                 .
@@ -332,8 +324,7 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
-                  >
+                    href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md">
                     Pyth DAO constitution
                   </Link>
                   .
@@ -351,16 +342,14 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://ipfs.io/ipfs/QmP2GmL1n2WbHd7AtHqyXVWFyyHH36aZLfVZbNoqhommJi"
-                  >
+                    href="https://ipfs.io/ipfs/QmP2GmL1n2WbHd7AtHqyXVWFyyHH36aZLfVZbNoqhommJi">
                     Pyth DAO LLC Operating Agreement
                   </Link>{" "}
                   and applicable laws. Learn more about PIPs in the{" "}
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md"
-                  >
+                    href="https://github.com/pyth-network/governance/blob/main/docs/constitution/pyth-dao-constitution.md">
                     Pyth DAO Constitution
                   </Link>
                   .
@@ -375,8 +364,7 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://forum.pyth.network/"
-                  >
+                    href="https://forum.pyth.network/">
                     Pyth Governance Forum
                   </Link>{" "}
                   before it can proceed to on-chain voting on Realms. The
@@ -384,8 +372,7 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24"
-                  >
+                    href="https://forum.pyth.network/t/read-first-about-pyth-improvement-proposals-pips/24">
                     this forum post
                   </Link>
                   .
@@ -402,8 +389,7 @@ export const GovernanceGuide = (
                   <Link
                     className="underline"
                     target="_blank"
-                    href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live"
-                  >
+                    href="https://www.pyth.network/blog/permissionless-mainnet-token-led-governance-are-live">
                     Learn more
                   </Link>
                   .

@@ -1,12 +1,12 @@
+import { ParameterType } from "../../components/EvmApi";
 import {
   BTCUSD,
   ETHUSD,
+  ethersJS,
   getLatestPriceUpdate,
   solidity,
-  ethersJS,
   writeApi,
 } from "./common";
-import { ParameterType } from "../../components/EvmApi";
 
 export const parsePriceFeedUpdatesUnique = writeApi<
   "updateData" | "priceId" | "minPublishTime" | "maxPublishTime" | "fee"

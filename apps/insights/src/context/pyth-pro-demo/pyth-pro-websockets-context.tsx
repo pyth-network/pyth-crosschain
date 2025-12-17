@@ -3,9 +3,6 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import type { PropsWithChildren } from "react";
 import { createContext, useContext, useMemo } from "react";
-
-import { usePythProApiTokensContext } from "./pyth-pro-api-tokens-context";
-import { usePythProAppStateContext } from "./pyth-pro-app-state";
 import { useDataStream, useHttpDataStream } from "../../hooks/pyth-pro-demo";
 import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
 import { ALL_DATA_SOURCES } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -14,6 +11,8 @@ import {
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+import { usePythProApiTokensContext } from "./pyth-pro-api-tokens-context";
+import { usePythProAppStateContext } from "./pyth-pro-app-state";
 
 type WebSocketsContextVal = {
   statuses: Partial<

@@ -1,9 +1,21 @@
 import {
+  CosmWasmClient,
+  type DeliverTxResponse,
+  type MsgExecuteContractEncodeObject,
+  type MsgInstantiateContractEncodeObject,
+  type MsgMigrateContractEncodeObject,
+  type MsgStoreCodeEncodeObject,
+  type MsgUpdateAdminEncodeObject,
+  SigningCosmWasmClient,
+} from "@cosmjs/cosmwasm-stargate";
+import {
   DirectSecp256k1HdWallet,
   DirectSecp256k1Wallet,
   type EncodeObject,
   type OfflineSigner,
 } from "@cosmjs/proto-signing";
+import { GasPrice } from "@cosmjs/stargate";
+import assert from "assert";
 import type {
   ChainExecutor,
   ExecuteContractRequest,
@@ -17,18 +29,6 @@ import type {
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
 } from "./chain-executor.js";
-import {
-  CosmWasmClient,
-  type DeliverTxResponse,
-  type MsgExecuteContractEncodeObject,
-  type MsgInstantiateContractEncodeObject,
-  type MsgMigrateContractEncodeObject,
-  type MsgStoreCodeEncodeObject,
-  type MsgUpdateAdminEncodeObject,
-  SigningCosmWasmClient,
-} from "@cosmjs/cosmwasm-stargate";
-import { GasPrice } from "@cosmjs/stargate";
-import assert from "assert";
 
 export class CosmwasmExecutor implements ChainExecutor {
   constructor(
@@ -224,7 +224,7 @@ export class CosmwasmExecutor implements ChainExecutor {
     if (txResponse.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
 
-    let resultCodeId = parseInt(
+    const resultCodeId = parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
     );
 

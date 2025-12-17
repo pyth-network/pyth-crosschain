@@ -1,21 +1,21 @@
-import {
-  beginCell,
-  Cell,
-  contractAddress,
-  type ContractProvider,
-  type Sender,
-  SendMode,
-  toNano,
-  Address,
-} from "@ton/core";
-import { BaseWrapper } from "./BaseWrapper";
-import { type HexString, Price } from "@pythnetwork/price-service-sdk";
+import type { HexString, Price } from "@pythnetwork/price-service-sdk";
 import {
   createCellChain,
   parseDataSource,
   parseDataSources,
 } from "@pythnetwork/pyth-ton-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+import {
+  type Address,
+  beginCell,
+  type Cell,
+  type ContractProvider,
+  contractAddress,
+  type Sender,
+  SendMode,
+  toNano,
+} from "@ton/core";
+import { BaseWrapper } from "./BaseWrapper";
 
 export type PythTestConfig = {
   priceFeedId: HexString;

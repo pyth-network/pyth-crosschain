@@ -3,11 +3,10 @@
 import { Table } from "@pythnetwork/component-library/Table";
 import { useMemo } from "react";
 import { useCollator } from "react-aria";
-
-import styles from "./reference-data.module.scss";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { LiveValue } from "../LivePrices";
+import styles from "./reference-data.module.scss";
 
 type Props = {
   feed: {

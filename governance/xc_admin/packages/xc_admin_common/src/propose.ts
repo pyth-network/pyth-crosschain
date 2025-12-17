@@ -1,38 +1,36 @@
 import {
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  type PublicKey,
-  type Transaction,
-  type TransactionInstruction,
-  SYSVAR_CLOCK_PUBKEY,
-  type ConfirmOptions,
-} from "@solana/web3.js";
-import { BN } from "bn.js";
-import { AnchorProvider } from "@coral-xyz/anchor";
-import {
   createWormholeProgramInterface,
   deriveEmitterSequenceKey,
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
-import { getOpsKey } from "./multisig";
-import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { AnchorProvider } from "@coral-xyz/anchor";
+import type NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
-import type { MultisigAccount } from "@sqds/mesh/lib/types";
-import { mapKey } from "./remote_executor";
-import { WORMHOLE_ADDRESS } from "./wormhole";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import {
+  PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
+  type PriorityFeeConfig,
   sendTransactions,
   TransactionBuilder,
 } from "@pythnetwork/solana-utils";
 import {
-  PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET,
-  type PriorityFeeConfig,
-} from "@pythnetwork/solana-utils";
-import type NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+  type ConfirmOptions,
+  type PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
+  SystemProgram,
+  type Transaction,
+  type TransactionInstruction,
+} from "@solana/web3.js";
 import type SquadsMesh from "@sqds/mesh";
+import { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
+import type { MultisigAccount } from "@sqds/mesh/lib/types";
+import { BN } from "bn.js";
+import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
+import { getOpsKey } from "./multisig";
+import { mapKey } from "./remote_executor";
+import { WORMHOLE_ADDRESS } from "./wormhole";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE =
   PACKET_DATA_SIZE_WITH_ROOM_FOR_COMPUTE_BUDGET - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
@@ -229,7 +227,7 @@ export class MultisigVault {
   ): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
 
-    let ixToSend: TransactionInstruction[] = [];
+    const ixToSend: TransactionInstruction[] = [];
     let startingIndex = 0;
     if (proposalAddress === undefined) {
       const [proposalIx, newProposalAddress] = await this.createProposalIx(
@@ -296,7 +294,7 @@ export class MultisigVault {
 
     const remote = targetCluster != this.cluster;
 
-    let ixToSend: TransactionInstruction[] = [];
+    const ixToSend: TransactionInstruction[] = [];
     if (remote) {
       if (!this.wormholeAddress()) {
         throw new Error("Need wormhole address");
@@ -350,7 +348,7 @@ export class MultisigVault {
         ixToSend.push(proposalIx);
         newProposals.push(newProposalAddress);
 
-        for (let [i, instruction] of instructions
+        for (const [i, instruction] of instructions
           .slice(j, j + MAX_INSTRUCTIONS_PER_PROPOSAL)
           .entries()) {
           ixToSend.push(

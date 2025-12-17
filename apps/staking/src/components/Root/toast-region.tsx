@@ -4,13 +4,13 @@ import { XMarkIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ComponentProps } from "react";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
-  Button,
-  Text,
   UNSTABLE_Toast as BaseToast,
   UNSTABLE_ToastContent as BaseToastContent,
   UNSTABLE_ToastRegion as BaseToastRegion,
+  Button,
+  Text,
 } from "react-aria-components";
 
 import type { Toast as ToastContentType } from "../../hooks/use-toast";
@@ -31,8 +31,7 @@ export const ToastRegion = (
     <BaseToastRegion
       className="pointer-events-none fixed top-0 z-50 flex w-full flex-col-reverse items-center"
       queue={toast.queue}
-      {...props}
-    >
+      {...props}>
       {({ toast }) => <Toast key={toast.key} toast={toast} />}
     </BaseToastRegion>
   );
@@ -68,8 +67,7 @@ const Toast = (props: ComponentProps<typeof BaseToast<ToastContentType>>) => {
           animate={{ y: 0 }}
           exit={{ y: "-100%", transition: { ease: "linear", duration: 0.1 } }}
           onAnimationComplete={handlePresenceAnimationComplete}
-          {...props}
-        >
+          {...props}>
           <div className="pointer-events-auto w-96 bg-pythpurple-100 text-pythpurple-950">
             <div
               className={clsx(

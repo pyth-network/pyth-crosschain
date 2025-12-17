@@ -1,18 +1,17 @@
-import { expect } from "chai";
 import * as mock from "@certusone/wormhole-sdk/lib/cjs/mock";
-
-import {
-  CREATOR_PRIVATE_KEY,
-  GUARDIAN_PRIVATE_KEY,
-  RELAYER_PRIVATE_KEY,
-  WALLET_PRIVATE_KEY,
-} from "./helpers/consts";
 import {
   Ed25519Keypair,
   JsonRpcProvider,
   localnetConnection,
   RawSigner,
 } from "@mysten/sui.js";
+import { expect } from "chai";
+import {
+  CREATOR_PRIVATE_KEY,
+  GUARDIAN_PRIVATE_KEY,
+  RELAYER_PRIVATE_KEY,
+  WALLET_PRIVATE_KEY,
+} from "./helpers/consts";
 
 describe(" 0. Environment", () => {
   const provider = new JsonRpcProvider(localnetConnection);
@@ -20,19 +19,19 @@ describe(" 0. Environment", () => {
   // User wallet.
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(WALLET_PRIVATE_KEY),
-    provider
+    provider,
   );
 
   // Relayer wallet.
   const relayer = new RawSigner(
     Ed25519Keypair.fromSecretKey(RELAYER_PRIVATE_KEY),
-    provider
+    provider,
   );
 
   // Deployer wallet.
   const creator = new RawSigner(
     Ed25519Keypair.fromSecretKey(CREATOR_PRIVATE_KEY),
-    provider
+    provider,
   );
 
   describe("Verify Local Validator", () => {
@@ -44,7 +43,7 @@ describe(" 0. Environment", () => {
           .then((owner) =>
             provider
               .getCoins({ owner, coinType: "0x2::sui::SUI" })
-              .then((result) => result.data)
+              .then((result) => result.data),
           );
         expect(coinData).has.length(5);
       }
@@ -56,7 +55,7 @@ describe(" 0. Environment", () => {
           .then((owner) =>
             provider
               .getCoins({ owner, coinType: "0x2::sui::SUI" })
-              .then((result) => result.data)
+              .then((result) => result.data),
           );
         expect(coinData).has.length(5);
       }
@@ -69,7 +68,7 @@ describe(" 0. Environment", () => {
           .then((owner) =>
             provider
               .getCoins({ owner, coinType: "0x2::sui::SUI" })
-              .then((result) => result.data)
+              .then((result) => result.data),
           );
         expect(coinData).has.length(1);
       }

@@ -12,10 +12,8 @@ import type {
   Time,
   UTCTimestamp,
 } from "lightweight-charts";
-import { createChart, CrosshairMode, LineSeries } from "lightweight-charts";
+import { CrosshairMode, createChart, LineSeries } from "lightweight-charts";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-
-import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
@@ -28,6 +26,7 @@ import {
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+import classes from "./index.module.scss";
 
 type PythProDemoPriceChartImplProps = Pick<
   AppStateContextVal,
@@ -238,9 +237,7 @@ export function PythProDemoPriceChartImpl({
 
           try {
             series.setData(trimmed);
-          } catch {
-            continue;
-          }
+          } catch {}
         }
       }
     } catch {
@@ -264,36 +261,31 @@ export function PythProDemoPriceChartImpl({
             <Button
               onClick={createSelectPlaybackSpeed(1)}
               size="xs"
-              variant={playbackSpeed === 1 ? "success" : "outline"}
-            >
+              variant={playbackSpeed === 1 ? "success" : "outline"}>
               1x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(4)}
               size="xs"
-              variant={playbackSpeed === 4 ? "success" : "outline"}
-            >
+              variant={playbackSpeed === 4 ? "success" : "outline"}>
               4x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(8)}
               size="xs"
-              variant={playbackSpeed === 8 ? "success" : "outline"}
-            >
+              variant={playbackSpeed === 8 ? "success" : "outline"}>
               8x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(16)}
               size="xs"
-              variant={playbackSpeed === 16 ? "success" : "outline"}
-            >
+              variant={playbackSpeed === 16 ? "success" : "outline"}>
               16x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(32)}
               size="xs"
-              variant={playbackSpeed === 32 ? "success" : "outline"}
-            >
+              variant={playbackSpeed === 32 ? "success" : "outline"}>
               32x
             </Button>
             <div className={classes.verticalDivider} />
@@ -309,8 +301,7 @@ export function PythProDemoPriceChartImpl({
             }
           }}
           size="xs"
-          variant="outline"
-        >
+          variant="outline">
           Reset chart position
         </Button>
       </div>

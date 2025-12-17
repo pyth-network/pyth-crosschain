@@ -2,9 +2,9 @@
 
 import { ListboxButton } from "@headlessui/react";
 import {
-  SunIcon,
-  MoonIcon,
   ComputerDesktopIcon,
+  MoonIcon,
+  SunIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
@@ -63,8 +63,7 @@ export const ColorThemeSelector = () => {
           className={clsx(
             "hover:bg-neutral-100 dark:hover:bg-neutral-800",
             buttonClasses,
-          )}
-        >
+          )}>
           {createElement(THEME_ICONS[resolvedTheme], {
             className: "w-full stroke-2",
           })}

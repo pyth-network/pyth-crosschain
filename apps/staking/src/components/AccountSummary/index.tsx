@@ -3,13 +3,11 @@ import { epochToDate } from "@pythnetwork/staking-sdk";
 import clsx from "clsx";
 import Image from "next/image";
 import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   DialogTrigger,
   Button as ReactAriaButton,
 } from "react-aria-components";
-
-import background from "./background.png";
 import type { States } from "../../hooks/use-api";
 import { StateType as ApiStateType } from "../../hooks/use-api";
 import { StateType, useAsync } from "../../hooks/use-async";
@@ -20,6 +18,7 @@ import { ErrorMessage } from "../ErrorMessage";
 import { ModalDialog } from "../ModalDialog";
 import { Tokens } from "../Tokens";
 import { TransferButton } from "../TransferButton";
+import background from "./background.png";
 
 type Props = {
   api: States[ApiStateType.Loaded] | States[ApiStateType.LoadedNoStakeAccount];
@@ -100,8 +99,7 @@ export const AccountSummary = ({
               </ReactAriaButton>
               <ModalDialog
                 title="Unlock Schedule"
-                description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule"
-              >
+                description="Your tokens will become available for withdrawal and for participation in Integrity Staking according to this schedule">
                 <div className="border border-neutral-600/50 bg-pythpurple-100/10 p-4 sm:px-8 sm:py-6">
                   <table>
                     <thead className="font-medium">
@@ -340,8 +338,7 @@ const OisUnstake = ({
               variant="secondary"
               onPress={doUnstakeAll}
               isDisabled={state.type === StateType.Complete}
-              isLoading={state.type === StateType.Running}
-            >
+              isLoading={state.type === StateType.Running}>
               Unstake All
             </Button>
           )}
@@ -367,8 +364,7 @@ const WithdrawButton = ({ api, ...props }: WithdrawButtonProps) => (
     {...(api.type === ApiStateType.Loaded && {
       transfer: api.withdraw,
     })}
-    {...props}
-  >
+    {...props}>
     <div className="mb-4 flex max-w-96 flex-row gap-2 border border-neutral-600/50 bg-pythpurple-400/20 p-4">
       <InformationCircleIcon className="size-8 flex-none" />
       <div className="text-sm">
@@ -400,8 +396,7 @@ const BalanceCategory = ({
     className={clsx(
       "flex w-full flex-col justify-between border border-neutral-600/50 bg-pythpurple-800/60 p-4 backdrop-blur sm:px-6 xl:w-80 2xl:w-96",
       className,
-    )}
-  >
+    )}>
     <div>
       <div className="mb-2 inline-block border border-neutral-600/50 bg-neutral-900 px-4 py-1 text-xs text-neutral-400">
         {name}
@@ -504,8 +499,7 @@ const ClaimDialogContents = ({
           variant="secondary"
           className="w-full sm:w-auto"
           size="noshrink"
-          onPress={close}
-        >
+          onPress={close}>
           Cancel
         </Button>
         <Button
@@ -513,8 +507,7 @@ const ClaimDialogContents = ({
           size="noshrink"
           isDisabled={state.type === StateType.Complete}
           isLoading={state.type === StateType.Running}
-          onPress={doClaim}
-        >
+          onPress={doClaim}>
           Claim
         </Button>
       </div>
@@ -549,8 +542,7 @@ const ClaimButton = ({ api, ...props }: ClaimButtonProps) => {
       onPress={doClaim}
       isDisabled={state.type === StateType.Complete}
       isLoading={state.type === StateType.Running}
-      {...props}
-    >
+      {...props}>
       Claim
     </Button>
   );

@@ -2,9 +2,9 @@ import { z } from "zod";
 
 import type { ChainSlug, EntropyDeployment } from "./entropy-deployments";
 import {
+  EntropyDeployments,
   getChainNetworkId,
   parseChainSlug,
-  EntropyDeployments,
 } from "./entropy-deployments";
 import type { PAGE_SIZE } from "./pages";
 import { DEFAULT_PAGE_SIZE } from "./pages";

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { useDrawer as useDrawerImpl } from "./index.jsx";
 import { Button } from "../Button/index.jsx";
+import { useDrawer as useDrawerImpl } from "./index.jsx";
 
 const OpenButton = (
   props: Parameters<ReturnType<typeof useDrawerImpl>["open"]>[0],
@@ -11,8 +10,7 @@ const OpenButton = (
     <Button
       onPress={() => {
         drawer.open(props);
-      }}
-    >
+      }}>
       Open drawer
     </Button>
   );

@@ -1,12 +1,11 @@
 "use client";
 
-import { Copy, Check, Eye, OpenAiLogo } from "@phosphor-icons/react/dist/ssr";
+import { Check, Copy, Eye, OpenAiLogo } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
 import { useCopy } from "@pythnetwork/component-library/useCopy";
 import type { ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { ClaudeIcon } from "../../lib/icons";
+import styles from "./index.module.scss";
 
 type PageActionOption = {
   id: string;
@@ -122,8 +121,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
                   ) : (
                     option.icon
                   )
-                }
-              >
+                }>
                 {option.label}
               </Button>
               {!isLast && (

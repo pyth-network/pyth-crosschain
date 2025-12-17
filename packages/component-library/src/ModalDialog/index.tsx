@@ -13,18 +13,18 @@ import {
   createContext,
   use,
   useCallback,
-  useState,
   useEffect,
-  useRef,
   useMemo,
   useReducer,
+  useRef,
+  useState,
 } from "react";
 import type { ModalRenderProps } from "react-aria-components";
 import {
-  Modal,
-  ModalOverlay,
   Dialog,
   DialogTrigger,
+  Modal,
+  ModalOverlay,
   Select,
 } from "react-aria-components";
 
@@ -180,8 +180,7 @@ export const ModalDialog = ({
       {...(onOpenChange && { onOpenChange })}
       {...(overlayVariants && { variants: overlayVariants })}
       {...(overlayClassName && { className: overlayClassName })}
-      {...(isOpen !== undefined && { isOpen })}
-    >
+      {...(isOpen !== undefined && { isOpen })}>
       <Modal style={{ height: 0 }}>
         {(...args) => (
           <MotionDialog
@@ -190,8 +189,7 @@ export const ModalDialog = ({
               onDragEnd: (e, info) => {
                 onDragEnd(e, info, args[0]);
               },
-            })}
-          >
+            })}>
             {typeof children === "function" ? children(...args) : children}
           </MotionDialog>
         )}

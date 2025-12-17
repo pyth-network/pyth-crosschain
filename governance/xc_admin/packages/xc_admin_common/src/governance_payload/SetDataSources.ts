@@ -1,11 +1,11 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
 import {
   type ActionName,
   type PythGovernanceAction,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import type { ChainName } from "../chains";
-import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
 
 /** A data source is a wormhole emitter, i.e., a specific contract on a specific chain. */
 export interface DataSource {

@@ -1,9 +1,8 @@
 import clsx from "clsx";
 import { motion } from "motion/react";
 import type { ComponentProps } from "react";
-
-import styles from "./index.module.scss";
 import { Switch as UnstyledSwitch } from "../unstyled/Switch/index.jsx";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   isPending?: boolean | undefined;
@@ -22,8 +21,7 @@ export const Switch = ({
     className={clsx(styles.switch, className)}
     isDisabled={isDisabled === true || isPending === true}
     data-pending={isPending ? "" : undefined}
-    {...props}
-  >
+    {...props}>
     {(args) => (
       <>
         <div className={styles.indicator}>

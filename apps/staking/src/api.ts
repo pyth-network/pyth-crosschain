@@ -7,10 +7,10 @@ import {
   getAmountByTargetAndState,
   getCurrentEpoch,
   PositionState,
-  PythnetClient,
-  PythStakingClient,
+  type PythnetClient,
+  type PythStakingClient,
 } from "@pythnetwork/staking-sdk";
-import { PublicKey } from "@solana/web3.js";
+import type { PublicKey } from "@solana/web3.js";
 import { z } from "zod";
 
 const publishersRankingSchema = z

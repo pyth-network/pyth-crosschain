@@ -1,10 +1,10 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
 import {
   PythGovernanceActionImpl,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
-import type { ChainName } from "../chains";
 
 /** Set the fee on the target chain to newFeeValue * 10^newFeeExpo */
 export class SetFee extends PythGovernanceActionImpl {

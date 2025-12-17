@@ -3,10 +3,10 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import clsx from "clsx";
 import type { StaticImageData } from "next/image";
 import Image from "next/image";
-import type { ReactNode, ComponentType, SVGProps, ComponentProps } from "react";
-import { useCallback, useState, useRef, useEffect } from "react";
-import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
-
+import type { ComponentProps, ComponentType, ReactNode, SVGProps } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+import { Button } from "../Button";
 import governance from "./governance.png";
 import Info from "./info.svg";
 import ObtainRewards from "./obtain-rewards.svg";
@@ -14,7 +14,6 @@ import ois from "./ois.png";
 import Safebox from "./safebox.svg";
 import SelectPublishers from "./select-publishers.svg";
 import TokenWarmup from "./token-warmup.svg";
-import { Button } from "../Button";
 
 export const NoWalletHome = () => {
   const modal = useWalletModal();
@@ -93,8 +92,7 @@ export const NoWalletHome = () => {
                 <br />
                 <span className="font-semibold">to Earn Rewards</span>
               </>
-            }
-          >
+            }>
             Oracle Integrity Staking
           </ProgramTab>
           <ProgramTab
@@ -106,8 +104,7 @@ export const NoWalletHome = () => {
                 <br />
                 <span className="font-semibold">for Governance</span>
               </>
-            }
-          >
+            }>
             Pyth Governance
           </ProgramTab>
         </TabList>
@@ -207,8 +204,7 @@ const ProgramTab = ({
       "group flex flex-1 cursor-pointer flex-col items-center data-[selected]:cursor-default focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
       className,
     )}
-    {...props}
-  >
+    {...props}>
     <div className="relative hidden w-4/5 opacity-30 transition group-hover:opacity-60 group-data-[selected]:opacity-100 md:block">
       <div className="absolute inset-0 bg-[#E6DAFE] mix-blend-color" />
       <Image src={image} alt="" className="size-full" />
@@ -246,8 +242,7 @@ const ProgramPanel = ({
       "mx-auto max-w-[70rem] divide-y divide-neutral-600/50 border border-neutral-600/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
       className,
     )}
-    {...props}
-  >
+    {...props}>
     <div className="flex flex-col gap-8 bg-[#1C1B2C] px-8 pb-16 pt-12 md:px-12">
       <span className="text-sm/normal tracking-[0.5rem]">{eyebrow}</span>
       <h2 className="text-4xl font-light md:text-5xl">{header}</h2>
@@ -256,8 +251,7 @@ const ProgramPanel = ({
       {steps.map(({ icon: Icon, title, body }, i) => (
         <li
           key={i}
-          className="px-8 py-10 md:flex md:flex-row md:items-center md:gap-8 md:px-12"
-        >
+          className="px-8 py-10 md:flex md:flex-row md:items-center md:gap-8 md:px-12">
           <Icon className="hidden size-20 flex-none md:block" />
           <div className="flex flex-col gap-8 md:gap-6">
             <div className="flex flex-row items-center gap-4">

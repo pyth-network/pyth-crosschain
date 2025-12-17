@@ -5,8 +5,8 @@
 import { Buffer } from "node:buffer";
 
 import { bcs } from "@mysten/sui/bcs";
-import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import type { SuiClient } from "@mysten/sui/client";
+import type { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import type { HexString } from "@pythnetwork/hermes-client";
 
@@ -44,7 +44,7 @@ export class SuiPythClient {
       )
         throw new Error("Unable to fetch pyth state object");
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
     }
 
@@ -76,7 +76,7 @@ export class SuiPythClient {
 
     if ("upgrade_cap" in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       return state.upgrade_cap.fields.package;
     }
@@ -317,7 +317,7 @@ export class SuiPythClient {
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         result.data.content.fields.value,
       );

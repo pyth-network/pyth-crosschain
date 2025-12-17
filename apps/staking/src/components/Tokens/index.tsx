@@ -5,10 +5,9 @@ import * as dnum from "dnum";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 import { Button, TooltipTrigger, useLocale } from "react-aria-components";
-
-import Pyth from "./pyth.svg";
 import { DECIMALS } from "../../tokens";
 import { Tooltip } from "../Tooltip";
+import Pyth from "./pyth.svg";
 
 type Props = Omit<ComponentProps<typeof Button>, "children"> & {
   children: bigint;
@@ -48,8 +47,7 @@ const TokenButton = ({ children, className, ...props }: TokenButtonProps) => (
       "inline-flex cursor-default items-center gap-[0.25em] align-top active:outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
       className,
     )}
-    {...props}
-  >
+    {...props}>
     <Pyth className="aspect-square size-[1em]" />
     <span>{children}</span>
   </Button>

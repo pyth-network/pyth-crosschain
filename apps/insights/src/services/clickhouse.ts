@@ -4,10 +4,9 @@ import { createClient } from "@clickhouse/client";
 import { PriceStatus } from "@pythnetwork/client";
 import type { ZodSchema, ZodTypeDef } from "zod";
 import { z } from "zod";
-
-import { Cluster, ClusterToName } from "./pyth";
 import { redisCache } from "../cache";
 import { CLICKHOUSE } from "../config/server";
+import { type Cluster, ClusterToName } from "./pyth";
 
 const client = createClient(CLICKHOUSE);
 

@@ -15,15 +15,15 @@ import type { Contract } from "web3-eth-contract";
 
 import type { PrivateKey } from "../base";
 import { PriceFeedContract, Storable } from "../base";
-import { Chain, EvmChain } from "../chains";
+import { type Chain, EvmChain } from "../chains";
 import type { TokenQty } from "../token";
 import {
   EXECUTOR_ABI,
   EXTENDED_ENTROPY_ABI,
   EXTENDED_PYTH_ABI,
-  WORMHOLE_ABI,
-  PULSE_UPGRADEABLE_ABI,
   LAZER_ABI,
+  PULSE_UPGRADEABLE_ABI,
+  WORMHOLE_ABI,
 } from "./evm_abis";
 import { WormholeContract } from "./wormhole";
 

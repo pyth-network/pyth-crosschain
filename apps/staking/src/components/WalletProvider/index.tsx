@@ -8,8 +8,8 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   CoinbaseWalletAdapter,
-  PhantomWalletAdapter,
   LedgerWalletAdapter,
+  PhantomWalletAdapter,
   SolflareWalletAdapter,
   TorusWalletAdapter,
   WalletConnectWalletAdapter,

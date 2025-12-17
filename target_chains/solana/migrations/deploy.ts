@@ -4,7 +4,7 @@
 
 const anchor = require("@project-serum/anchor");
 
-module.exports = async function (provider) {
+module.exports = async (provider) => {
   // Configure client to use the provider.
   anchor.setProvider(provider);
 

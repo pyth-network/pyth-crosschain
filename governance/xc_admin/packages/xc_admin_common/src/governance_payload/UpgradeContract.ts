@@ -1,7 +1,7 @@
-import type { ChainName } from "../chains";
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 /** Upgrade a cosmos contract to the implementation at codeId. (Note that this requires someone to upload the new
  * contract code first to obtain a codeId.) */
@@ -53,7 +53,7 @@ export class UpgradeContract256Bit extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
-      this.layout,
+      UpgradeContract256Bit.layout,
     );
     if (!decoded) return undefined;
 
@@ -82,7 +82,7 @@ export class EvmUpgradeContract extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
-      this.layout,
+      EvmUpgradeContract.layout,
     );
     if (!decoded) return undefined;
 

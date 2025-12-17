@@ -1,18 +1,18 @@
-import createCLI from "yargs";
-import { hideBin } from "yargs/helpers";
-import { getWormholeConfig } from "./configs.js";
+import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
+import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import {
   CosmWasmPriceFeedContract,
   CosmWasmWormholeContract,
 } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
-import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
-import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
-import type { DeploymentType } from "./helper.js";
 import {
   DefaultStore,
   Store,
 } from "@pythnetwork/contract-manager/node/utils/store";
 import { CHAINS } from "@pythnetwork/xc-admin-common/chains";
+import createCLI from "yargs";
+import { hideBin } from "yargs/helpers";
+import { getWormholeConfig } from "./configs.js";
+import type { DeploymentType } from "./helper.js";
 
 const yargs = createCLI(hideBin(process.argv));
 

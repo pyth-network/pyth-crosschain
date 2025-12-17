@@ -1,17 +1,17 @@
-import { toNano } from "@ton/core";
-import type { MainConfig } from "../wrappers/Main";
-import { compile, sleep } from "@ton/blueprint";
-import type { NetworkProvider } from "@ton/blueprint";
-import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { HermesClient } from "@pythnetwork/hermes-client";
-import { Main } from "../wrappers/Main";
+import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
+import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { NetworkProvider } from "@ton/blueprint";
+import { compile, sleep } from "@ton/blueprint";
+import { toNano } from "@ton/core";
+import { BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID } from "../tests/utils/pyth";
 import {
   GOVERNANCE_DATA_SOURCE,
   GUARDIAN_SET_0,
   MAINNET_UPGRADE_VAAS,
 } from "../tests/utils/wormhole";
-import { BTC_PRICE_FEED_ID, ETH_PRICE_FEED_ID } from "../tests/utils/pyth";
-import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
+import type { MainConfig } from "../wrappers/Main";
+import { Main } from "../wrappers/Main";
 
 export async function run(provider: NetworkProvider) {
   const SINGLE_UPDATE_FEE = 1;

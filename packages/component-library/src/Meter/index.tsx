@@ -2,9 +2,8 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-
-import styles from "./index.module.scss";
 import { Meter as MeterComponent } from "../unstyled/Meter";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   label: string;

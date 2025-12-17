@@ -1,3 +1,13 @@
+import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import {
+  getPythClusterApiUrl,
+  type PythCluster,
+} from "@pythnetwork/client/lib/cluster";
+import {
+  envOrErr,
+  executeProposal,
+  getProposals,
+} from "@pythnetwork/xc-admin-common";
 import {
   type Commitment,
   Connection,
@@ -6,16 +16,6 @@ import {
 } from "@solana/web3.js";
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID } from "@sqds/mesh";
 import * as fs from "fs";
-import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
-import {
-  envOrErr,
-  executeProposal,
-  getProposals,
-} from "@pythnetwork/xc-admin-common";
-import {
-  getPythClusterApiUrl,
-  type PythCluster,
-} from "@pythnetwork/client/lib/cluster";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const VAULT: PublicKey = new PublicKey(envOrErr("VAULT"));

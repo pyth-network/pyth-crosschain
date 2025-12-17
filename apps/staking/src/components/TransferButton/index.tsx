@@ -1,12 +1,12 @@
-import type { ComponentProps, ReactNode, FormEvent } from "react";
+import type { ComponentProps, FormEvent, ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import {
   DialogTrigger,
-  TextField,
-  Label,
-  Input,
   Form,
   Group,
+  Input,
+  Label,
+  TextField,
 } from "react-aria-components";
 
 import { StateType, useAsync } from "../../hooks/use-async";
@@ -62,8 +62,7 @@ export const TransferButton = ({
         max={max}
         transfer={transfer}
         submitButtonText={submitButtonText ?? actionName}
-        successMessage={successMessage}
-      >
+        successMessage={successMessage}>
         {children}
       </TransferDialog>
     </DialogTrigger>
@@ -104,8 +103,7 @@ const TransferDialog = ({
           setCloseDisabled={setCloseDisabled}
           submitButtonText={submitButtonText}
           close={close}
-          successMessage={successMessage}
-        >
+          successMessage={successMessage}>
           {children}
         </DialogContents>
       )}
@@ -194,8 +192,7 @@ const DialogContents = ({
         onChange={setAmount}
         validationBehavior="aria"
         name="amount"
-        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96"
-      >
+        className="mb-8 flex w-full flex-col gap-1 sm:min-w-96">
         <div className="flex flex-row items-center justify-between">
           <Label className="text-sm">Amount</Label>
           <div className="flex flex-row items-center gap-2">
@@ -216,8 +213,7 @@ const DialogContents = ({
               variant="secondary"
               className="pointer-events-auto"
               onPress={setMax}
-              isDisabled={state.type === StateType.Running}
-            >
+              isDisabled={state.type === StateType.Running}>
               max
             </Button>
           </div>
@@ -237,8 +233,7 @@ const DialogContents = ({
         isLoading={state.type === StateType.Running}
         isDisabled={
           amount.type !== AmountType.Valid || state.type === StateType.Complete
-        }
-      >
+        }>
         {validationError ?? submitButtonText}
       </Button>
     </Form>

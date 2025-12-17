@@ -1,13 +1,13 @@
 import {
   PublicKey,
-  TransactionInstruction,
   SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
-import { LazerMultisigInstruction } from "../multisig_transaction/LazerMultisigInstruction";
 import {
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "../multisig_transaction";
+import { LazerMultisigInstruction } from "../multisig_transaction/LazerMultisigInstruction";
 
 describe("LazerMultisigInstruction", () => {
   const mockProgramId = new PublicKey(

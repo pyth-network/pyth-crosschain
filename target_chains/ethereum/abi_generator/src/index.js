@@ -11,7 +11,7 @@ function generateAbi(contracts) {
   var sources = {};
   var outputSelection = {};
 
-  for (let contract of contracts) {
+  for (const contract of contracts) {
     const contractFile = `${contract}.sol`;
     sources[contractFile] = {
       content: fs.readFileSync(contractFile).toString(),
@@ -59,7 +59,7 @@ function generateAbi(contracts) {
     }
   }
 
-  for (let contract of contracts) {
+  for (const contract of contracts) {
     const contractFile = `${contract}.sol`;
 
     if (!output.contracts[contractFile]) {

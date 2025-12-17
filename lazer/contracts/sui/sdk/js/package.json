@@ -40,8 +40,7 @@
   },
   "devDependencies": {
     "@cprussin/tsconfig": "catalog:",
-    "@types/node": "catalog:",
-    "prettier": "catalog:"
+    "@types/node": "catalog:"
   },
   "publishConfig": {
     "access": "public"

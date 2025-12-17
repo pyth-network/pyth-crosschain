@@ -39,7 +39,6 @@
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/node": "catalog:",
     "copyfiles": "^2.4.1",
-    "prettier": "catalog:",
     "ts-node": "catalog:"
   },
   "dependencies": {

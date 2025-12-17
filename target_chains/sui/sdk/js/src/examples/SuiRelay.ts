@@ -1,10 +1,9 @@
+import { SuiClient } from "@mysten/sui/client";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { Buffer } from "buffer";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-
-import { Buffer } from "buffer";
 import { SuiPythClient } from "../client";
 import { SuiPriceServiceConnection } from "../index";
 

@@ -5,13 +5,13 @@
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import type { SignatureResult, Signer } from "@solana/web3.js";
 import {
-  AddressLookupTableAccount,
+  type AddressLookupTableAccount,
   ComputeBudgetProgram,
   Connection,
   PACKET_DATA_SIZE,
   PublicKey,
   Transaction,
-  TransactionInstruction,
+  type TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";

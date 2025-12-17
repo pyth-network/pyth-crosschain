@@ -17,15 +17,15 @@ import { Suspense } from "react";
 
 import { getPublishersWithRankings } from "../../get-publishers-with-rankings";
 import {
-  getPublisherRankingHistory,
   getPublisherAverageScoreHistory,
+  getPublisherRankingHistory,
 } from "../../services/clickhouse";
 import { getPublisherCaps } from "../../services/hermes";
 import {
+  CLUSTER_NAMES,
+  Cluster,
   ClusterToName,
   parseCluster,
-  Cluster,
-  CLUSTER_NAMES,
 } from "../../services/pyth";
 import { getPublisherPoolData } from "../../services/staking";
 import { Cards } from "../Cards";
@@ -34,21 +34,21 @@ import { ChangeValue } from "../ChangeValue";
 import { ChartCard } from "../ChartCard";
 import { Explain } from "../Explain";
 import {
-  ExplainAverage,
   ExplainActive,
+  ExplainAverage,
   ExplainInactive,
 } from "../Explanations";
 import { FormattedDate } from "../FormattedDate";
 import { FormattedNumber } from "../FormattedNumber";
+import { FormattedTokens } from "../FormattedTokens";
 import { PublisherIcon } from "../PublisherIcon";
 import { PublisherKey } from "../PublisherKey";
 import { PublisherTag } from "../PublisherTag";
-import { getPriceFeeds } from "./get-price-feeds";
-import styles from "./layout.module.scss";
-import { FormattedTokens } from "../FormattedTokens";
 import { SemicircleMeter } from "../SemicircleMeter";
 import { TabPanel, TabRoot, Tabs } from "../Tabs";
 import { TokenIcon } from "../TokenIcon";
+import { getPriceFeeds } from "./get-price-feeds";
+import styles from "./layout.module.scss";
 import { OisApyHistory } from "./ois-apy-history";
 import { PublisherConformanceReport } from "./publisher-conformance-report";
 
@@ -416,8 +416,7 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
       ) : (
         <Link
           href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Active`}
-          invert
-        >
+          invert>
           {props.activeFeeds}
         </Link>
       )
@@ -428,8 +427,7 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
       ) : (
         <Link
           href={`/publishers/${ClusterToName[props.cluster]}/${props.publisherKey}/price-feeds?status=Inactive`}
-          invert
-        >
+          invert>
           {props.inactiveFeeds}
         </Link>
       )
@@ -453,8 +451,7 @@ const ActiveFeedsCardImpl = (props: ActiveFeedsCardImplProps) => (
               allFeeds: props.allFeeds,
             })}
       />
-    }
-  >
+    }>
     {!props.isLoading && props.activeFeeds !== undefined && (
       <Meter
         value={props.activeFeeds}
@@ -542,8 +539,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://staking.pyth.network"
             target="_blank"
-            beforeIcon={<Browsers />}
-          >
+            beforeIcon={<Browsers />}>
             Open Staking App
           </Button>
           <Button
@@ -551,8 +547,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
             size="sm"
             href="https://docs.pyth.network/home/oracle-integrity-staking"
             target="_blank"
-            beforeIcon={<BookOpenText />}
-          >
+            beforeIcon={<BookOpenText />}>
             Documentation
           </Button>
         </>
@@ -567,8 +562,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
                 value={Number(props.poolUtilization)}
                 maxValue={props.maxPoolSize}
                 className={styles.smallOisMeter ?? ""}
-                aria-label="OIS Pool Utilization"
-              >
+                aria-label="OIS Pool Utilization">
                 <TokenIcon className={styles.oisMeterIcon} />
                 <div className={styles.oisMeterLabel}>OIS Pool</div>
               </SemicircleMeter>
@@ -578,8 +572,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
                 value={Number(props.poolUtilization)}
                 maxValue={props.maxPoolSize}
                 className={styles.oisMeter ?? ""}
-                aria-label="OIS Pool Utilization"
-              >
+                aria-label="OIS Pool Utilization">
                 <TokenIcon className={styles.oisMeterIcon} />
                 <div className={styles.oisMeterLabel}>OIS Pool</div>
               </SemicircleMeter>
@@ -620,8 +613,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           <InfoBox
             className={styles.oisInfoBox}
             icon={<ShieldChevron />}
-            header="Oracle Integrity Staking (OIS)"
-          >
+            header="Oracle Integrity Staking (OIS)">
             OIS allows anyone to help secure Pyth and protect DeFi. Through
             decentralized staking rewards and slashing, OIS incentivizes Pyth
             publishers to maintain high-quality data contributions. PYTH holders
@@ -640,8 +632,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
           className={styles.oisAllocation}
           data-is-overallocated={
             Number(props.poolUtilization) > props.maxPoolSize ? "" : undefined
-          }
-        >
+          }>
           <FormattedNumber
             maximumFractionDigits={2}
             value={(100 * Number(props.poolUtilization)) / props.maxPoolSize}
@@ -650,8 +641,7 @@ const OisPoolCardImpl = (props: OisPoolCardImplProps) => (
         </span>
       )
     }
-    corner={<ArrowsOutSimple />}
-  >
+    corner={<ArrowsOutSimple />}>
     <Meter
       value={props.isLoading ? 0 : Number(props.poolUtilization)}
       maxValue={props.isLoading ? 0 : props.maxPoolSize}

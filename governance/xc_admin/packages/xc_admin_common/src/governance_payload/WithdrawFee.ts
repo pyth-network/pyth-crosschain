@@ -1,7 +1,7 @@
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
 import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 /** Withdraw fees from the target chain to the specified address */
 export class WithdrawFee extends PythGovernanceActionImpl {

@@ -1,10 +1,10 @@
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import type { PythCluster } from "@pythnetwork/client";
+import { PublicKey, type TransactionInstruction } from "@solana/web3.js";
 import {
-  type ValidationResult,
-  type DownloadableProduct,
   type DownloadableConfig,
+  type DownloadableProduct,
   ProgramType,
+  type ValidationResult,
 } from "../types";
 
 /**

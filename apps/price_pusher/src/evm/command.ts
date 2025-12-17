@@ -10,16 +10,16 @@ import pino from "pino";
 import type { Options } from "yargs";
 
 import { Controller } from "../controller.js";
+import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems, isWsEndpoint } from "../utils.js";
+import { createEvmBalanceTracker } from "./balance-tracker.js";
 import { getCustomGasStation } from "./custom-gas-station.js";
 import { EvmPriceListener, EvmPricePusher } from "./evm.js";
 import { createPythContract } from "./pyth-contract.js";
 import { createClient } from "./super-wallet.js";
-import { PricePusherMetrics } from "../metrics.js";
-import { isWsEndpoint, filterInvalidPriceItems } from "../utils.js";
-import { createEvmBalanceTracker } from "./balance-tracker.js";
 
 export default {
   command: "evm",
@@ -95,7 +95,7 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
-  handler: async function (argv: any) {
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       endpoint,

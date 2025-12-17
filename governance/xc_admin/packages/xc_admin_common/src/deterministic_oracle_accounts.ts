@@ -4,13 +4,13 @@ import {
   type PythCluster,
 } from "@pythnetwork/client";
 import {
-  Connection,
+  type Connection,
   PublicKey,
   SystemProgram,
-  TransactionInstruction,
+  type TransactionInstruction,
 } from "@solana/web3.js";
-import { PRICE_FEED_OPS_KEY } from "./multisig";
 import { isRemoteCluster } from "./cluster";
+import { PRICE_FEED_OPS_KEY } from "./multisig";
 
 /**
  * Get seed for deterministic creation of a price/product account
