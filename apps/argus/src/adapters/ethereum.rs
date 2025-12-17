@@ -59,13 +59,13 @@ impl<T: JsonRpcClient + 'static + Clone> SignablePythContractInner<T> {
         let gas_oracle = EthProviderOracle::new(
             provider.clone(),
             chain_config.priority_fee_multiplier_pct,
-            0, // min_reward_samples - default value
-            10, // fee_estimation_past_blocks - default value
-            5.0, // fee_estimation_reward_percentile - default value
-            3_000, // eip1559_fee_estimation_default_priority_fee - default value
+            0,       // min_reward_samples - default value
+            10,      // fee_estimation_past_blocks - default value
+            5.0,     // fee_estimation_reward_percentile - default value
+            3_000,   // eip1559_fee_estimation_default_priority_fee - default value
             100_000, // eip1559_fee_estimation_priority_fee_trigger - default value
-            200, // eip1559_fee_estimation_threshold_max_change - default value
-            40_000, // surge_threshold_1 - default value
+            200,     // eip1559_fee_estimation_threshold_max_change - default value
+            40_000,  // surge_threshold_1 - default value
             100_000, // surge_threshold_2 - default value
             200_000, // surge_threshold_3 - default value
         );
