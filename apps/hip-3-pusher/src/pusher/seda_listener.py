@@ -68,7 +68,8 @@ class SedaListener:
 
     def _parse_seda_message(self, feed_name, message):
         result = json.loads(message["data"]["result"])
-        price = result["composite_rate"]
-        timestamp = datetime.datetime.fromisoformat(result["timestamp"]).timestamp()
+        # XXX patch for SEDA
+        price = result["ema"]
+        timestamp = datetime.datetime.fromisoformat(result["ema_timestamp"]).timestamp()
         logger.debug("Parsed SEDA update for feed: {} price: {} timestamp: {}", feed_name, price, timestamp)
         self.seda_state.put(feed_name, PriceUpdate(price, timestamp))
