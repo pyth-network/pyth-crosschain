@@ -10,6 +10,7 @@ import { ResilientWebSocket } from "./resilient-websocket.js";
 import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
+  DEFAULT_STREAM_SERVICE_2_URL,
 } from "../constants.js";
 import {
   addAuthTokenToWebSocketUrl,
@@ -68,6 +69,7 @@ export class WebSocketPool {
     const urls = config.urls ?? [
       DEFAULT_STREAM_SERVICE_0_URL,
       DEFAULT_STREAM_SERVICE_1_URL,
+      DEFAULT_STREAM_SERVICE_2_URL,
     ];
     const log = logger ?? dummyLogger;
     const pool = new WebSocketPool(log);

@@ -101,6 +101,7 @@ let client = PythLazerStreamClientBuilder::new(access_token)
     .with_endpoints(vec![
         "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
         "wss://pyth-lazer-1.dourolabs.app/v1/stream".parse()?,
+        "wss://pyth-lazer-2.dourolabs.app/v1/stream".parse()?,
     ])
     .build()?;
 ```

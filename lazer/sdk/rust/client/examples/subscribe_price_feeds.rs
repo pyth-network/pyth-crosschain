@@ -41,6 +41,7 @@ async fn main() -> anyhow::Result<()> {
         .with_endpoints(vec![
             "wss://pyth-lazer-0.dourolabs.app/v1/stream".parse()?,
             "wss://pyth-lazer-1.dourolabs.app/v1/stream".parse()?,
+            "wss://pyth-lazer-2.dourolabs.app/v1/stream".parse()?,
         ])
         // Optionally set the number of connections
         .with_num_connections(4)

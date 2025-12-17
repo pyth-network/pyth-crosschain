@@ -48,6 +48,7 @@ async function main() {
       default: [
         "wss://pyth-lazer-0.dourolabs.app/v1/stream",
         "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+        "wss://pyth-lazer-2.dourolabs.app/v1/stream",
       ],
     })
     .option("lazerToken", {

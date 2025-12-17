@@ -21,11 +21,12 @@ The websocket servers are available at:
 
 - `wss://pyth-lazer-0.dourolabs.app/v1/stream`
 - `wss://pyth-lazer-1.dourolabs.app/v1/stream`
+- `wss://pyth-lazer-2.dourolabs.app/v1/stream`
 
 <Callout type="warning" title="Redundancy Required">
   For redundancy and to avoid interruptions during deployments, you must connect
-  to **both endpoints**. During deployments, a single endpoint will briefly go
-  down, so maintaining open connections to both endpoints ensures continuous
+  to **all endpoints**. During deployments, a single endpoint will briefly go
+  down, so maintaining open connections to all endpoints ensures continuous
   service availability.
 </Callout>
 
@@ -102,6 +103,7 @@ const client = await PythLazerClient.create(
   [
     "wss://pyth-lazer-0.dourolabs.app/v1/stream",
     "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
   ],
   "YOUR_ACCESS_TOKEN",
 );

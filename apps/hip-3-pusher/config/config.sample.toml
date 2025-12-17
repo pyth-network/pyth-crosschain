@@ -19,7 +19,7 @@ enable_kms = false
 aws_kms_key_id_path = "/path/to/aws_kms_key_id.txt"
 
 [lazer]
-lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]
+lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream", "wss://pyth-lazer-2.dourolabs.app/v1/stream"]
 lazer_api_key = "lazer_api_key"
 feed_ids = [1, 8] # BTC, USDT
 
