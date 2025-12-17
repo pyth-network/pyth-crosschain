@@ -41,6 +41,6 @@ jobs:
       - name: Install Forge dependencies
         run: cd target_chains/ethereum/contracts && pnpm run install-forge-deps
       - name: Cache for Turbo
-        uses: rharkor/caching-for-turbo@v2.3.5
+        uses: rharkor/caching-for-turbo@v1.5
       - name: Build
         run: pnpm run turbo build
