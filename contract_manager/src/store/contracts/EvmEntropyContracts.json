@@ -150,11 +150,6 @@
     "type": "EvmEntropyContract"
   },
   {
-    "chain": "monad_testnet",
-    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
-    "type": "EvmEntropyContract"
-  },
-  {
     "chain": "berachain_mainnet",
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "type": "EvmEntropyContract"
@@ -202,6 +197,11 @@
   {
     "chain": "sonic_evm_testnet",
     "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "type": "EvmEntropyContract"
+  },
+  {
+    "chain": "monad_testnet",
+    "address": "0x825c0390f379C631f3Cf11A82a37D20BddF93c07",
     "type": "EvmEntropyContract"
   }
 ]

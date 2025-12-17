@@ -109,7 +109,7 @@ export const COMMON_DEPLOY_OPTIONS = {
   "std-output-dir": {
     type: "string",
     demandOption: true,
-    desc: "Path to the Foundry output directory (contains Contract.sol/Contract.json structure)",
+    desc: "Path to the Foundry output directory (typically 'out/' directory, contains Contract.sol/Contract.json structure)",
   },
   "private-key": {
     type: "string",
@@ -413,6 +413,20 @@ export async function topupAccountsIfNecessary(
         deploymentConfig.privateKey,
       );
       web3.eth.accounts.wallet.add(signer);
+
+      // Get the current nonce to avoid conflicts with pending transactions
+      const nonce = await web3.eth.getTransactionCount(
+        signer.address,
+        "pending",
+      );
+      console.log(`Using nonce: ${nonce}`);
+
+      // Get gas price and apply multiplier
+      const baseGasPrice = await chain.getGasPrice();
+      const gasPrice = Math.trunc(
+        Number(baseGasPrice) * deploymentConfig.gasPriceMultiplier,
+      );
+
       const estimatedGas = await web3.eth.estimateGas({
         from: signer.address,
         to: accountAddress,
@@ -423,7 +437,12 @@ export async function topupAccountsIfNecessary(
         from: signer.address,
         to: accountAddress,
         gas: estimatedGas * deploymentConfig.gasMultiplier,
+        gasPrice: gasPrice.toString(),
+        nonce: nonce,
         value: web3.utils.toWei(`${minBalance}`, "ether"),
+        // // Uncomment this if your tx are getting stuck in the mempool. Or if you get this error:
+        // // "An existing transaction had higher priority"
+        // maxPriorityFeePerGas: gasPrice.toString(),
       });
 
       console.log(
