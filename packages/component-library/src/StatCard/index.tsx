@@ -51,7 +51,6 @@ export const StatCard = <T extends ElementType>({
     stat2,
     miniStat1,
     miniStat2,
-    /* eslint-enable @typescript-eslint/no-unused-vars */
     ...cardProps
   } = props;
   return (

@@ -9,10 +9,10 @@
   "scripts": {
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
-    "fix:lint:eslint": "biome check --write",
+    "fix:lint:biome": "biome check --write",
     "start:dev": "next dev --port 3627",
     "start:prod": "next start --port 3627",
-    "test:lint:eslint": "biome check",
+    "test:lint:biome": "biome check",
     "test:types": "tsc",
     "generate:docs": "tsx ./scripts/generate-docs.ts",
     "fix:lint": "biome check --write",

@@ -9,9 +9,9 @@
   "scripts": {
     "build:storybook": "storybook build",
     "clean": "rm -rf ./dist",
-    "fix:lint:eslint": "biome check --write",
+    "fix:lint:biome": "biome check --write",
     "start:dev": "storybook dev --port 4000 --no-open",
-    "test:lint:eslint": "biome check",
+    "test:lint:biome": "biome check",
     "test:types": "tsc",
     "test:unit": "test-unit",
     "fix:lint": "biome check --write",
