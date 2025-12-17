@@ -1,0 +1,93 @@
+/// Types and functions for processing governance messages.
+module pyth_lazer::governance;
+
+use wormhole::external_address::ExternalAddress;
+
+use pyth_lazer::parser::Parser;
+
+/// Reference:
+/// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/remote_executor/programs/remote-executor/src/state/governance_payload.rs#L81
+const MAGIC: vector<u8> = "PTGM";
+
+/// Governace message module. Always 2, as this contract is a "lazer" one.
+const MODULE: u8 = 2;
+
+/// Reference:
+/// https://wormhole.com/docs/products/reference/chain-ids/#__tabbed_1_1
+/// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/xc_admin/packages/xc_admin_common/src/chains.ts#L274
+const RECEIVER_CHAIN_ID: u16 = 21;
+
+#[error]
+const EMismatchedMagic: vector<u8> = "Mismatched governance header magic number, should be \"PTGM\"";
+#[error]
+const EMismatchedModule: vector<u8> = "Mismatched governance header module number, should be 2";
+#[error]
+const EMismatchedEmitterChainID: vector<u8> = "Mismatched governance emitter chain ID";
+#[error]
+const EMismatchedReceiverChainID: vector<u8> = "Mismatched governance receiver chain ID";
+#[error]
+const EMismatchedAddress: vector<u8> = "Mismatched governance emitter address";
+#[error]
+const EOldSequenceNumber: vector<u8> = "Incoming sequence number older than previously seen";
+
+/// State used to track and validate governance messages coming as VAAs.
+public struct Governance has copy, drop, store {
+    chain_id: u16,
+    address: ExternalAddress,
+    seen_sequence: u64,
+}
+
+public(package) fun new(chain_id: u16, address: ExternalAddress): Governance {
+    Governance {
+        chain_id,
+        address,
+        seen_sequence: 0,
+    }
+}
+
+/// Process incoming VAA message parameters, asserting that the message is safe
+/// to process further.
+public(package) fun process_incoming(
+    self: &mut Governance,
+    chain_id: u16,
+    address: ExternalAddress,
+    sequence: u64
+) {
+    assert!(self.chain_id == chain_id, EMismatchedEmitterChainID);
+    assert!(self.address == address, EMismatchedAddress);
+    // TODO: See https://wormhole.com/docs/protocol/infrastructure/vaas/#verified-action-approvals
+    // - is this enough to avoid replay attacks?
+    assert!(self.seen_sequence < sequence, EOldSequenceNumber);
+    self.seen_sequence = sequence;
+}
+
+/// Reference:
+/// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/remote_executor/programs/remote-executor/src/state/governance_payload.rs#L86
+public struct GovernanceHeader has drop {
+    action: u8,
+}
+
+// Governance action "enum" implemented as a collection of package-private
+// predicates to allow modification in the future, as Sui types cannot be
+// private (yet?):
+
+public(package) fun is_upgrade_contract(self: &GovernanceHeader): bool {
+    self.action == 0
+}
+
+public(package) fun is_update_trusted_signer(self: &GovernanceHeader): bool {
+    self.action == 1
+}
+
+/// Reference:
+/// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/xc_admin/packages/xc_admin_common/src/governance_payload/PythGovernanceAction.ts#L86
+public(package) fun parse_header(parser: &mut Parser): GovernanceHeader {
+    let magic = parser.take_bytes(4);
+    assert!(magic == MAGIC, EMismatchedMagic);
+    let module_ = parser.take_u8();
+    assert!(module_ == MODULE, EMismatchedModule);
+    let action = parser.take_u8();
+    let chain = parser.take_u16_be();
+    assert!(chain == RECEIVER_CHAIN_ID, EMismatchedReceiverChainID);
+    GovernanceHeader { action }
+}
