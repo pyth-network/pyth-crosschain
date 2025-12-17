@@ -1,7 +1,9 @@
 "use client";
 
+import type { PriceData } from "@pythnetwork/client";
 import { PriceStatus } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
+import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useResizeObserver, useMountEffect } from "@react-hookz/web";
 import {
   startOfMinute,
@@ -25,10 +27,12 @@ import {
 } from "lightweight-charts";
 import { useTheme } from "next-themes";
 import type { RefObject } from "react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import { z } from "zod";
 
+import type { ChartHoverCardProps } from "./chart-hover-card";
+import { ChartHoverCard } from "./chart-hover-card";
 import styles from "./chart.module.scss";
 import {
   quickSelectWindowToMilliseconds,
@@ -45,31 +49,46 @@ type Props = {
 };
 
 export const Chart = ({ symbol, feedId }: Props) => {
-  const chartContainerRef = useChart(symbol, feedId);
+  const { current: livePriceData } = useLivePriceData(Cluster.Pythnet, feedId);
+  const priceFormatter = usePriceFormatter(livePriceData?.exponent, {
+    subscriptZeros: false,
+  });
+
+  const { chartContainerRef, chartRef } = useChartElem(
+    symbol,
+    livePriceData,
+    priceFormatter,
+  );
+  const { hoverCardRef, hoverCardData } = useChartHoverCard(
+    chartRef,
+    chartContainerRef,
+    priceFormatter,
+  );
+  useChartResize(chartContainerRef, chartRef);
+  useChartColors(chartContainerRef, chartRef);
 
   return (
-    <div
-      style={{ width: "100%", height: "100%" }}
-      className={styles.chart}
-      ref={chartContainerRef}
-    />
+    <>
+      <div
+        style={{ width: "100%", height: "100%" }}
+        className={styles.chart}
+        ref={chartContainerRef}
+      />
+      <ChartHoverCard ref={hoverCardRef} {...hoverCardData} />
+    </>
   );
 };
 
-const useChart = (symbol: string, feedId: string) => {
-  const { chartContainerRef, chartRef } = useChartElem(symbol, feedId);
-  useChartResize(chartContainerRef, chartRef);
-  useChartColors(chartContainerRef, chartRef);
-  return chartContainerRef;
-};
-
-const useChartElem = (symbol: string, feedId: string) => {
+const useChartElem = (
+  symbol: string,
+  livePriceData: PriceData | undefined,
+  priceFormatter: ReturnType<typeof usePriceFormatter>,
+) => {
   const logger = useLogger();
   const [quickSelectWindow] = useChartQuickSelectWindow();
   const [resolution] = useChartResolution();
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<ChartRefContents | undefined>(undefined);
-  const tooltipRef = useRef<HTMLDivElement | undefined>(undefined);
   const isBackfilling = useRef(false);
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
   // Lightweight charts has [a
@@ -78,11 +97,6 @@ const useChartElem = (symbol: string, feedId: string) => {
   // to manually keep track of whitespace data so we can merge it at the
   // appropriate times.
   const whitespaceData = useRef<Set<WhitespaceData>>(new Set());
-
-  const { current: livePriceData } = useLivePriceData(Cluster.Pythnet, feedId);
-  const priceFormatter = usePriceFormatter(livePriceData?.exponent, {
-    subscriptZeros: false,
-  });
 
   const didResetVisibleRange = useRef(false);
   const didLoadInitialData = useRef(false);
@@ -266,15 +280,6 @@ const useChartElem = (symbol: string, feedId: string) => {
     if (chartRef.current) {
       chartRef.current.chart.remove();
     }
-    if (tooltipRef.current) {
-      tooltipRef.current.remove();
-    }
-
-    const tooltip = document.createElement("div");
-    tooltip.className = styles.tooltip ?? "";
-    tooltip.style.display = "none";
-    chartElem.append(tooltip);
-    tooltipRef.current = tooltip;
 
     const chart = createChart(chartElem, {
       layout: {
@@ -350,10 +355,6 @@ const useChartElem = (symbol: string, feedId: string) => {
 
     return () => {
       chart.remove();
-      if (tooltipRef.current) {
-        tooltipRef.current.remove();
-        tooltipRef.current = undefined;
-      }
     };
   });
 
@@ -399,110 +400,6 @@ const useChartElem = (symbol: string, feedId: string) => {
       });
     }
   }, [livePriceData?.exponent, priceFormatter]);
-
-  const dateFormatter = useDateFormatter({
-    year: "2-digit",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-  });
-
-  // Subscribe to crosshair move for tooltip updates
-  useEffect(() => {
-    const chartData = chartRef.current;
-    const tooltip = tooltipRef.current;
-    const chartElem = chartContainerRef.current;
-
-    if (!chartData || !tooltip || !chartElem) {
-      return;
-    }
-
-    const { chart, price, confidenceHigh, confidenceLow } = chartData;
-
-    const handleCrosshairMove: Parameters<
-      typeof chart.subscribeCrosshairMove
-    >[0] = (param) => {
-      const priceData = param.seriesData.get(price);
-      const confidenceHighData = param.seriesData.get(confidenceHigh);
-      const confidenceLowData = param.seriesData.get(confidenceLow);
-
-      const hasPrice = priceData && "value" in priceData;
-      const hasTime = param.time !== undefined;
-      const hasPoint = param.point && "x" in param.point && "y" in param.point;
-
-      if (!hasPrice || !hasTime || !hasPoint) {
-        tooltip.style.display = "none";
-        return;
-      }
-
-      const priceValue = priceData.value;
-      const date = new Date(Number(param.time) * 1000);
-      const formattedDate = dateFormatter.format(date);
-      const formattedPrice = priceFormatter.format(priceValue);
-
-      let confidenceText = "N/A";
-      if (
-        confidenceHighData &&
-        "value" in confidenceHigh &&
-        confidenceLowData &&
-        "value" in confidenceLow
-      ) {
-        confidenceText = `±${priceFormatter.format(confidenceHighData.value - priceValue)}`;
-      }
-
-      tooltip.innerHTML = `
-        <table class="${styles.tooltipTable ?? ""}">
-          <tbody>
-            <tr>
-              <td colspan="2">${formattedDate}</td>
-            </tr>
-            <tr>
-            <tr>
-              <td>Price</td>
-              <td>${formattedPrice}</td>
-            </tr>
-            <tr>
-              <td>Confidence</td>
-              <td>${confidenceText}</td>
-            </tr>
-          </tbody>
-        </table>
-        `;
-
-      const tooltipRect = tooltip.getBoundingClientRect();
-      const containerRect = chartElem.getBoundingClientRect();
-      const tooltipMargin = 20;
-
-      const left = Math.max(
-        0,
-        Math.min(
-          containerRect.width - tooltipRect.width,
-          param.point.x - tooltipRect.width / 2,
-        ),
-      );
-
-      const coordinate = price.priceToCoordinate(priceValue);
-      if (coordinate === null) {
-        tooltip.style.display = "none";
-        return;
-      }
-      const top = Math.max(0, coordinate - tooltipRect.height - tooltipMargin);
-
-      tooltip.style.left = `${String(left)}px`;
-      tooltip.style.top = `${String(top)}px`;
-      tooltip.style.display = "block";
-    };
-
-    chart.subscribeCrosshairMove(handleCrosshairMove);
-
-    return () => {
-      chart.unsubscribeCrosshairMove(handleCrosshairMove);
-    };
-  }, [priceFormatter, chartContainerRef, dateFormatter]);
 
   return { chartRef, chartContainerRef };
 };
@@ -564,6 +461,129 @@ const useChartColors = (
       applyColors(chartRef.current, chartContainerRef.current, resolvedTheme);
     }
   }, [resolvedTheme, chartRef, chartContainerRef]);
+};
+
+const useChartHoverCard = (
+  chartRef: RefObject<ChartRefContents | undefined>,
+  chartContainerRef: RefObject<HTMLDivElement | null>,
+  priceFormatter: ReturnType<typeof usePriceFormatter>,
+) => {
+  const dateFormatter = useDateFormatter({
+    year: "2-digit",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  });
+
+  const hoverCardRef = useRef<HTMLDivElement | null>(null);
+  const hoverCardElement = hoverCardRef.current;
+
+  const containerElement = chartContainerRef.current;
+
+  const [hoverCardData, setHoverCardData] = useState<
+    | (ChartHoverCardProps & {
+        style: {
+          left: string;
+          top: string;
+        };
+      })
+    | undefined
+  >(undefined);
+
+  useEffect(() => {
+    const chartData = chartRef.current;
+
+    if (!chartData || !containerElement || !hoverCardElement) {
+      return;
+    }
+
+    const { chart, price, confidenceHigh, confidenceLow } = chartData;
+
+    const handleCrosshairMove: Parameters<
+      typeof chart.subscribeCrosshairMove
+    >[0] = (param) => {
+      const priceData = param.seriesData.get(price);
+      const confidenceHighData = param.seriesData.get(confidenceHigh);
+      const confidenceLowData = param.seriesData.get(confidenceLow);
+
+      const hasPrice = priceData && "value" in priceData;
+
+      if (
+        isNullOrUndefined(param.point) ||
+        isNullOrUndefined(param.time) ||
+        !hasPrice
+      ) {
+        setHoverCardData(undefined);
+        return;
+      }
+
+      const priceValue = priceData.value;
+      const timestampValue = new Date(Number(param.time) * 1000);
+      const formattedTimestamp = dateFormatter.format(timestampValue);
+      const formattedPrice = priceFormatter.format(priceValue);
+
+      let formattedConfidence = "N/A";
+      if (
+        confidenceHighData &&
+        "value" in confidenceHighData &&
+        confidenceLowData &&
+        "value" in confidenceLowData
+      ) {
+        formattedConfidence = `±${priceFormatter.format(confidenceHighData.value - priceValue)}`;
+      }
+
+      const hoverCardRect = hoverCardElement.getBoundingClientRect();
+      const hoverCardMargin = 20;
+      const x = param.point.x;
+
+      const left = Math.max(
+        0,
+        Math.min(
+          chartData.chart.options().width - hoverCardRect.width,
+          x - hoverCardRect.width / 2,
+        ),
+      );
+
+      const coordinate = price.priceToCoordinate(priceValue);
+      if (coordinate === null) {
+        setHoverCardData(undefined);
+        return;
+      }
+      const top = Math.max(
+        0,
+        coordinate - hoverCardRect.height - hoverCardMargin,
+      );
+
+      setHoverCardData({
+        timestamp: formattedTimestamp,
+        price: formattedPrice,
+        confidence: formattedConfidence,
+        style: {
+          left: `${String(left)}px`,
+          top: `${String(top)}px`,
+          display: "block",
+        },
+      });
+    };
+
+    chart.subscribeCrosshairMove(handleCrosshairMove);
+
+    return () => {
+      chart.unsubscribeCrosshairMove(handleCrosshairMove);
+    };
+  }, [
+    priceFormatter,
+    containerElement,
+    dateFormatter,
+    chartRef,
+    hoverCardElement,
+  ]);
+
+  return { hoverCardRef, hoverCardData };
 };
 
 const applyColors = (
