@@ -9,8 +9,8 @@ use pyth_lazer::parser::Parser;
 /// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/remote_executor/programs/remote-executor/src/state/governance_payload.rs#L81
 const MAGIC: vector<u8> = "PTGM";
 
-/// Governace message module. Always 2, as this contract is a "lazer" one.
-const MODULE: u8 = 2;
+/// Governace message module. Always 3, as this contract uses "Lazer" actions.
+const MODULE: u8 = 3;
 
 /// Reference:
 /// https://wormhole.com/docs/products/reference/chain-ids/#__tabbed_1_1
@@ -71,7 +71,7 @@ public struct GovernanceHeader has drop {
 // predicates to allow modification in the future, as Sui types cannot be
 // private (yet?):
 
-public(package) fun is_upgrade_contract(self: &GovernanceHeader): bool {
+public(package) fun is_upgrade_lazer_contract(self: &GovernanceHeader): bool {
     self.action == 0
 }
 

@@ -11,6 +11,9 @@ import {
   EvmExecutorAction,
   EvmExecute,
   StarknetSetWormholeAddress,
+  LazerAction,
+  UpgradeLazerContract256Bit,
+  UpdateTrustedSigner264Bit,
 } from "..";
 import * as fc from "fast-check";
 import { type ChainName, CHAINS } from "../chains";
@@ -282,6 +285,39 @@ test("GovernancePayload ser/de", (done) => {
     ),
   ).toBeTruthy();
 
+  const upgradeLazerContract = new UpgradeLazerContract256Bit(
+    "sui",
+    "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee",
+  );
+  const upgradeLazerContractBuffer = upgradeLazerContract.encode();
+  console.log(upgradeLazerContractBuffer.toJSON());
+  expect(
+    upgradeLazerContractBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 0, 0, 21, 4, 61, 14, 216, 21, 82, 99, 175, 8, 98, 55,
+        45, 243, 175, 148, 3, 197, 2, 53, 134, 97, 243, 23, 246, 47, 189, 192,
+        38, 208, 59, 234, 238,
+      ]),
+    ),
+  ).toBeTruthy();
+
+  const updateTrustedSigner = new UpdateTrustedSigner264Bit(
+    "sui",
+    "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b",
+    10794n,
+  );
+  const updateTrustedSignerBuffer = updateTrustedSigner.encode();
+  console.log(updateTrustedSignerBuffer.toJSON());
+  expect(
+    updateTrustedSignerBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 1, 0, 21, 3, 164, 56, 15, 1, 19, 110, 178, 100, 15,
+        144, 193, 126, 30, 49, 158, 2, 187, 175, 190, 239, 46, 110, 103, 220,
+        72, 175, 83, 249, 130, 126, 21, 91, 0, 0, 0, 0, 0, 0, 42, 42,
+      ]),
+    ),
+  ).toBeTruthy();
+
   done();
 });
 
@@ -291,6 +327,7 @@ function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
     ...Object.keys(ExecutorAction),
     ...Object.keys(TargetAction),
     ...Object.keys(EvmExecutorAction),
+    ...Object.keys(LazerAction),
   ] as ActionName[];
   const actionArb = fc.constantFrom(...actions);
   const targetChainIdArb = fc.constantFrom(
@@ -449,6 +486,23 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             Buffer.from(targetAddress, "hex"),
             value,
             expo,
+          );
+        });
+    } else if (header.action === "UpgradeLazerContract") {
+      return hexBytesArb({ minLength: 32, maxLength: 32 }).map((buffer) => {
+        return new UpgradeLazerContract256Bit(header.targetChainId, buffer);
+      });
+    } else if (header.action === "UpdateTrustedSigner") {
+      return fc
+        .record({
+          publicKey: hexBytesArb({ minLength: 33, maxLength: 33 }),
+          expiresAt: fc.bigInt({ min: 0n, max: 2n ** 64n - 1n }),
+        })
+        .map(({ publicKey, expiresAt }) => {
+          return new UpdateTrustedSigner264Bit(
+            header.targetChainId,
+            publicKey,
+            expiresAt,
           );
         });
     } else {

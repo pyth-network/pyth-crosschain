@@ -228,6 +228,16 @@
         "default": "./dist/esm/governance_payload/SetWormholeAddress.mjs"
       }
     },
+    "./governance_payload/UpdateTrustedSigner": {
+      "require": {
+        "types": "./dist/cjs/governance_payload/UpdateTrustedSigner.d.ts",
+        "default": "./dist/cjs/governance_payload/UpdateTrustedSigner.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/governance_payload/UpdateTrustedSigner.d.ts",
+        "default": "./dist/esm/governance_payload/UpdateTrustedSigner.mjs"
+      }
+    },
     "./governance_payload/UpgradeContract": {
       "require": {
         "types": "./dist/cjs/governance_payload/UpgradeContract.d.ts",
@@ -236,6 +246,16 @@
       "import": {
         "types": "./dist/esm/governance_payload/UpgradeContract.d.ts",
         "default": "./dist/esm/governance_payload/UpgradeContract.mjs"
+      }
+    },
+    "./governance_payload/UpgradeLazerContract": {
+      "require": {
+        "types": "./dist/cjs/governance_payload/UpgradeLazerContract.d.ts",
+        "default": "./dist/cjs/governance_payload/UpgradeLazerContract.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/governance_payload/UpgradeLazerContract.d.ts",
+        "default": "./dist/esm/governance_payload/UpgradeLazerContract.mjs"
       }
     },
     "./governance_payload/WithdrawFee": {
