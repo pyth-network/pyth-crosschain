@@ -7,7 +7,7 @@
     "name": "Pyth Data Association"
   },
   "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "dist/**/*"
   ],
