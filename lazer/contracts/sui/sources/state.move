@@ -62,7 +62,8 @@ fun am_current_package(self: &State): bool {
     @pyth_lazer == self.upgrade_cap.package().to_address()
 }
 
-public(package) fun unwrap_vaa(
+/// Unpack Pyth Governance message wrapped in VAA, while checking its validity.
+public(package) fun unwrap_ptgm(
     self: &mut State,
     _: &CurrentCap,
     vaa: VAA

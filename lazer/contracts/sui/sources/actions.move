@@ -11,9 +11,9 @@ use pyth_lazer::{
 };
 
 #[error]
-const ENotUpgradeContractVAA: vector<u8> = "Expected upgrade contract VAA message";
+const ENotUpgradeLazerContract: vector<u8> = "Expected UpgradeLazerContract message";
 #[error]
-const ENotUpdateTrustedSignerVAA: vector<u8> = "Expected update trusted signer VAA message";
+const ENotUpdateTrustedSigner: vector<u8> = "Expected UpdateTrustedSigner message";
 
 /// Entrypoint for initializing the Lazer contract.
 entry fun init_lazer(
@@ -29,10 +29,12 @@ entry fun init_lazer(
     state::share(upgrade_cap, governance, ctx);
 }
 
-public fun upgrade_contract(state: &mut State, vaa: VAA): UpgradeTicket {
+// Reference: `UpgradeLazerContract256Bit`
+public fun upgrade(state: &mut State, vaa: VAA): UpgradeTicket {
     let current_cap = state.current_cap();
-    let (header, mut parser) = state.unwrap_vaa(&current_cap, vaa);
-    assert!(header.is_upgrade_contract(), ENotUpgradeContractVAA);
+    let (header, mut parser) = state.unwrap_ptgm(&current_cap, vaa);
+    assert!(header.is_upgrade_lazer_contract(), ENotUpgradeLazerContract);
+
     let digest = parser.take_bytes(32);
     parser.destroy_empty();
     state.authorize_upgrade(&current_cap, digest)
@@ -43,10 +45,12 @@ public fun commit_upgrade(state: &mut State, receipt: UpgradeReceipt) {
     state.commit_upgrade(&current_cap, receipt)
 }
 
+// Reference: `UpdateTrustedSigner264Bit`
 public fun update_trusted_signer(state: &mut State, vaa: VAA) {
     let current_cap = state.current_cap();
-    let (header, mut parser) = state.unwrap_vaa(&current_cap, vaa);
-    assert!(header.is_update_trusted_signer(), ENotUpdateTrustedSignerVAA);
+    let (header, mut parser) = state.unwrap_ptgm(&current_cap, vaa);
+    assert!(header.is_update_trusted_signer(), ENotUpdateTrustedSigner);
+
     let public_key = parser.take_bytes(secp256k1_compressed_pubkey_len());
     let expires_at = parser.take_u64_be();
     parser.destroy_empty();
