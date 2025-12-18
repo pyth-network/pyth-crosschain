@@ -1,6 +1,4 @@
 /* eslint-disable no-console */
-import path from "node:path";
-
 import { DuckDBInstance } from "@duckdb/node-api";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
@@ -8,6 +6,8 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 
+import { UNCOMPRESSED_DB_PATH } from "./constants";
+import { inflateHistoricalDataDb } from "./inflate-db";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
@@ -18,15 +18,10 @@ import type {
 import { appendReplaySymbolSuffix } from "../schemas/pyth/pyth-pro-demo-schema";
 import { isReplayDataSource, isReplaySymbol } from "../util/pyth-pro-demo";
 
+await inflateHistoricalDataDb();
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-const uncompressedDbPath = path.join(
-  process.cwd(),
-  "public",
-  "db",
-  "historical-demo-data.db",
-);
 
 type FetchHistoricalDataOpts = {
   datasources: AllDataSourcesType[];
@@ -64,7 +59,7 @@ export async function fetchHistoricalDataForPythFeedsDemo({
   console.info(`  endAt: ${endAt}`);
   console.info(`  symbol: ${symbol}`);
 
-  const instance = await DuckDBInstance.fromCache(uncompressedDbPath, {
+  const instance = await DuckDBInstance.fromCache(UNCOMPRESSED_DB_PATH, {
     access_mode: "READ_ONLY",
     temp_directory: "/tmp",
     threads: "4",

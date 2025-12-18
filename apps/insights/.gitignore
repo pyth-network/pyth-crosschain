@@ -1,3 +1,4 @@
 .env*.local
 
 dist/
+public/db/historical-demo-data.db
