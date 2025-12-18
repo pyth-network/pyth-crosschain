@@ -56,7 +56,7 @@
   --color-fd-card-foreground: hsl(0, 0%, 98%);
   --color-fd-border: hsla(240, 18%, 86%, 0.085);
   --color-fd-primary: rgb(197, 157, 254);
-  --color-fd-primary-foreground: hsl(139, 91%, 18%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
   --color-fd-secondary: hsl(0, 0%, 12.9%);
   --color-fd-secondary-foreground: hsl(250, 18%, 87%);
   --color-fd-accent: hsla(0, 0%, 100%, 0.079);

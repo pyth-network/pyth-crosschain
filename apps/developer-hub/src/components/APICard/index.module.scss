@@ -75,3 +75,24 @@
   line-height: 1.6;
   color: theme.color("muted");
 }
+
+.deprecated {
+  opacity: 0.7;
+  border: 1px dashed theme.pallette-color("amber", 500);
+
+  .name {
+    text-decoration: line-through;
+    text-decoration-color: theme.pallette-color("amber", 500);
+  }
+}
+
+.deprecatedBadge {
+  font-size: theme.font-size("xxs");
+  font-weight: theme.font-weight("semibold");
+  text-transform: uppercase;
+  letter-spacing: theme.letter-spacing("wide");
+  color: theme.pallette-color("amber", 500);
+  background-color: theme.pallette-color("amber", 100);
+  padding: theme.spacing(0.5) theme.spacing(1.5);
+  border-radius: theme.border-radius("sm");
+}

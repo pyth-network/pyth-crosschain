@@ -9,6 +9,7 @@ type APICardProps = {
   title: string;
   method: string;
   description?: string;
+  deprecated?: boolean;
 };
 
 type APICardsProps = {
@@ -19,11 +20,20 @@ export function APICards({ children }: APICardsProps) {
   return <div className={styles.grid}>{children}</div>;
 }
 
-export function APICard({ href, title, method, description }: APICardProps) {
+export function APICard({
+  href,
+  title,
+  method,
+  description,
+  deprecated,
+}: APICardProps) {
   const methodLower = method.toLowerCase();
 
   return (
-    <Link href={href} className={styles.card}>
+    <Link
+      href={href}
+      className={clsx(styles.card, deprecated && styles.deprecated)}
+    >
       <div className={styles.title}>
         <span className={styles.name}>{title}</span>
         <span
@@ -38,6 +48,9 @@ export function APICard({ href, title, method, description }: APICardProps) {
         >
           {method}
         </span>
+        {deprecated && (
+          <span className={styles.deprecatedBadge}>Deprecated</span>
+        )}
       </div>
       {description && <p className={styles.description}>{description}</p>}
     </Link>

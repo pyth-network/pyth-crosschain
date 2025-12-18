@@ -41,6 +41,8 @@ type ApiCardData = {
   route: string;
   method: string;
   description: string;
+  deprecated: boolean;
+  deprecationMessage: string;
 };
 
 type MetaFile = {
@@ -61,6 +63,8 @@ export async function generateDocs(): Promise<void> {
   await generateApiReferenceIndex();
 
   await updateMdxTitles();
+
+  await addDeprecationCallouts();
 
   await updateIndexCards();
 
@@ -234,17 +238,56 @@ async function generateProductAndServiceMetaFiles(
     // Generate service-level meta.json files
     for (const serviceName of services) {
       const endpoints = generatedEndpoints[serviceName] ?? [];
+      const serviceDir = path.join(productDir, serviceName);
+
+      // Separate active and deprecated endpoints
+      const { activeEndpoints, deprecatedEndpoints } =
+        await categorizeEndpoints(serviceDir, endpoints);
+
+      // Build pages array with separator if there are deprecated endpoints
+      const pages: string[] = ["index", ...activeEndpoints];
+      if (deprecatedEndpoints.length > 0) {
+        pages.push("---Deprecated---", ...deprecatedEndpoints);
+      }
+
       const serviceMeta: MetaFile = {
         title: formatServiceTitle(serviceName),
-        pages: ["index", ...endpoints],
+        pages,
       };
 
-      const serviceDir = path.join(productDir, serviceName);
       await writeJson(path.join(serviceDir, "meta.json"), serviceMeta);
       // eslint-disable-next-line no-console
       console.log(`  ✓ ${productName}/${serviceName}/meta.json`);
     }
   }
+}
+
+async function categorizeEndpoints(
+  serviceDir: string,
+  endpoints: string[],
+): Promise<{ activeEndpoints: string[]; deprecatedEndpoints: string[] }> {
+  const activeEndpoints: string[] = [];
+  const deprecatedEndpoints: string[] = [];
+
+  for (const operationId of endpoints) {
+    const mdxPath = path.join(serviceDir, `${operationId}.mdx`);
+
+    try {
+      const content = await fs.readFile(mdxPath, "utf8");
+      const { deprecated } = extractDescriptionFromFrontmatter(content);
+
+      if (deprecated) {
+        deprecatedEndpoints.push(operationId);
+      } else {
+        activeEndpoints.push(operationId);
+      }
+    } catch {
+      // File doesn't exist, treat as active
+      activeEndpoints.push(operationId);
+    }
+  }
+
+  return { activeEndpoints, deprecatedEndpoints };
 }
 
 function formatProductTitle(productName: string): string {
@@ -421,6 +464,88 @@ async function updateSingleMdxTitle(
 }
 
 /**
+ * Adds deprecation callout banners to deprecated endpoint MDX files.
+ */
+async function addDeprecationCallouts(): Promise<void> {
+  // eslint-disable-next-line no-console
+  console.log("\nAdding deprecation callouts to deprecated endpoints...");
+
+  for (const [serviceName, config] of Object.entries(products)) {
+    const serviceDir = path.join(OUTPUT_DIR, config.product, serviceName);
+    const endpoints = generatedEndpoints[serviceName] ?? [];
+
+    for (const operationId of endpoints) {
+      const mdxPath = path.join(serviceDir, `${operationId}.mdx`);
+
+      try {
+        const content = await fs.readFile(mdxPath, "utf8");
+        const { deprecated, deprecationMessage } =
+          extractDescriptionFromFrontmatter(content);
+
+        if (deprecated) {
+          const updatedContent = injectDeprecationCallout(
+            content,
+            deprecationMessage,
+          );
+          if (updatedContent !== content) {
+            await fs.writeFile(mdxPath, updatedContent);
+            // eslint-disable-next-line no-console
+            console.log(`  ✓ ${config.product}/${serviceName}/${operationId}`);
+          }
+        }
+      } catch {
+        // File doesn't exist, skip
+      }
+    }
+  }
+}
+
+function injectDeprecationCallout(
+  content: string,
+  deprecationMessage: string,
+): string {
+  // Check if callout already exists
+  if (content.includes('<Callout type="warn"')) {
+    return content;
+  }
+
+  // Escape curly braces in the message to prevent JSX interpretation
+  const escapedMessage = deprecationMessage
+    .replaceAll("{", "&#123;")
+    .replaceAll("}", "&#125;");
+
+  const calloutText = escapedMessage
+    ? `This endpoint is deprecated. ${escapedMessage}`
+    : "This endpoint is deprecated.";
+
+  const calloutBlock = `import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="warn" title="Deprecated">
+${calloutText}
+</Callout>
+
+`;
+
+  // Insert after the closing frontmatter (---)
+  // Find the second occurrence of ---
+  const firstDash = content.indexOf("---");
+  const secondDash = content.indexOf("---", firstDash + 3);
+
+  if (secondDash === -1) {
+    return content;
+  }
+
+  const insertPosition = secondDash + 3;
+  const beforeInsert = content.slice(0, insertPosition);
+  const afterInsert = content.slice(insertPosition);
+
+  // Skip any existing newlines/whitespace after frontmatter
+  const trimmedAfter = afterInsert.replace(/^\s*\n/, "\n");
+
+  return beforeInsert + "\n\n" + calloutBlock + trimmedAfter.trimStart();
+}
+
+/**
  * Updates index.mdx files to use APICard components.
  **/
 async function updateIndexCards(): Promise<void> {
@@ -498,17 +623,26 @@ function extractCardDataFromMdx(
   const methodMatch = /method:\s*([^\n]+)/.exec(content);
   const method = methodMatch?.[1]?.trim().toUpperCase() ?? "GET";
 
-  const description = extractDescriptionFromFrontmatter(content);
+  const { description, deprecated, deprecationMessage } =
+    extractDescriptionFromFrontmatter(content);
 
   return {
     href: `/api-reference/${productName}/${serviceName}/${operationId}`,
     route,
     method,
     description,
+    deprecated,
+    deprecationMessage,
   };
 }
 
-function extractDescriptionFromFrontmatter(content: string): string {
+type DescriptionResult = {
+  description: string;
+  deprecated: boolean;
+  deprecationMessage: string;
+};
+
+function extractDescriptionFromFrontmatter(content: string): DescriptionResult {
   let descText = "";
 
   const multilineMatch = /description:\s*>-\s*\n((?:\s{2}.*\n)+)/.exec(content);
@@ -526,16 +660,31 @@ function extractDescriptionFromFrontmatter(content: string): string {
     }
   }
 
+  // Check for deprecation
+  const deprecated =
+    descText.includes("**Deprecated") || descText.startsWith("Deprecated");
+
+  // Extract deprecation message (text between **Deprecated: and **)
+  let deprecationMessage = "";
+  const deprecationMatch = /\*\*Deprecated:\s*([^*]+)\*\*/.exec(descText);
+  if (deprecationMatch?.[1]) {
+    deprecationMessage = deprecationMatch[1].trim();
+  }
+
   // Extract first sentence and clean formatting
-  return getFirstSentence(descText);
+  return {
+    description: getFirstSentence(descText),
+    deprecated,
+    deprecationMessage,
+  };
 }
 
 function generateIndexContent(cardData: ApiCardData[]): string {
   const cards = cardData
-    .map(
-      (card) =>
-        `  <APICard href="${card.href}" title="${escapeQuotes(card.route)}" method="${card.method}" description="${escapeQuotes(card.description)}" />`,
-    )
+    .map((card) => {
+      const deprecatedProp = card.deprecated ? " deprecated={true}" : "";
+      return `  <APICard href="${card.href}" title="${escapeQuotes(card.route)}" method="${card.method}" description="${escapeQuotes(card.description)}"${deprecatedProp} />`;
+    })
     .join("\n");
 
   return `---
