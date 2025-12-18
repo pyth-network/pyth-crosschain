@@ -21,6 +21,8 @@ const EInvalidPubkeyLen: vector<u8> = "Invalid public key length, must be 33";
 const ERemovedSignerNotFound: vector<u8> = "Could not remove non-existent trusted signer";
 #[error]
 const EOldPackage: vector<u8> = "State can only be used with the current package version";
+#[error]
+const EDifferentUpgradeCap: vector<u8> = "Supplied UpgradeCap belongs to a different package";
 
 // Constant as a function to allow exporting
 public(package) fun secp256k1_compressed_pubkey_len(): u64 {
@@ -50,16 +52,13 @@ public(package) fun share(
     governance: Governance,
     ctx: &mut TxContext
 ) {
+    assert!(am_current_package(&upgrade_cap), EDifferentUpgradeCap);
     transfer::share_object(State {
         id: object::new(ctx),
         trusted_signers: vector[],
         upgrade_cap,
         governance,
     })
-}
-
-fun am_current_package(self: &State): bool {
-    @pyth_lazer == self.upgrade_cap.package().to_address()
 }
 
 /// Unpack Pyth Governance message wrapped in VAA, while checking its validity.
@@ -148,7 +147,7 @@ public(package) fun update_trusted_signer(
 public struct CurrentCap has drop {}
 
 public(package) fun current_cap(self: &State): CurrentCap {
-    assert!(self.am_current_package(), EOldPackage);
+    assert!(am_current_package(&self.upgrade_cap), EOldPackage);
     CurrentCap {}
 }
 
@@ -168,6 +167,10 @@ public(package) fun public_key(info: &TrustedSignerInfo): &vector<u8> {
 /// Get the trusted signer's expiry timestamp, converted to milliseconds.
 public(package) fun expires_at_ms(info: &TrustedSignerInfo): u64 {
     info.expires_at * 1000
+}
+
+fun am_current_package(upgrade_cap: &UpgradeCap): bool {
+    @pyth_lazer == upgrade_cap.package().to_address()
 }
 
 #[test_only]
