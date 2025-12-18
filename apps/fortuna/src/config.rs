@@ -10,12 +10,13 @@ use {
     std::{collections::HashMap, fs},
 };
 pub use {
-    generate::GenerateOptions, get_request::GetRequestOptions, inspect::InspectOptions,
-    prometheus_client::metrics::histogram::Histogram, register_provider::RegisterProviderOptions,
-    request_randomness::RequestRandomnessOptions, run::RunOptions,
-    setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
+    debug_gas::DebugGasOptions, generate::GenerateOptions, get_request::GetRequestOptions,
+    inspect::InspectOptions, prometheus_client::metrics::histogram::Histogram,
+    register_provider::RegisterProviderOptions, request_randomness::RequestRandomnessOptions,
+    run::RunOptions, setup_provider::SetupProviderOptions, withdraw_fees::WithdrawFeesOptions,
 };
 
+mod debug_gas;
 mod generate;
 mod get_request;
 mod inspect;
@@ -58,6 +59,9 @@ pub enum Options {
 
     /// Withdraw any of the provider's accumulated fees from the contract.
     WithdrawFees(WithdrawFeesOptions),
+
+    /// Debug gas estimation issues on a blockchain by watching blocks and calling get_gas_price.
+    DebugGas(DebugGasOptions),
 }
 
 #[derive(Args, Clone, Debug)]
