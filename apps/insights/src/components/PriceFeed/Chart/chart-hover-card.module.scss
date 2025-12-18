@@ -1,0 +1,40 @@
+@use "@pythnetwork/component-library/theme";
+
+.hoverCard {
+  @include theme.elevation("default", 2);
+
+  display: none;
+  background-color: theme.color("background", "tooltip");
+  border-radius: theme.border-radius("md");
+  color: theme.color("tooltip");
+  font-size: theme.font-size("xs");
+  padding: theme.spacing(3);
+  pointer-events: none;
+  position: absolute;
+  width: theme.spacing(60);
+  overflow: hidden;
+  z-index: 2; // 2 to render above chart crosshair
+}
+
+.hoverCardTable {
+  color-scheme: dark;
+  white-space: nowrap;
+  width: 100%;
+
+  td:last-child {
+    color: theme.color("foreground");
+    font-weight: theme.font-weight("medium");
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  td:first-child {
+    color: theme.color("muted");
+    font-weight: theme.font-weight("normal");
+    text-align: left;
+  }
+}
+
+:global([data-theme="dark"]) .hoverCardTable {
+  color-scheme: light;
+}
