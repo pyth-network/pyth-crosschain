@@ -5,13 +5,16 @@ edition = "2024.beta"
 
 [addresses]
 pyth_lazer = "0x0"
-# https://github.com/wormhole-foundation/wormhole/blob/c113791abd5241bc7a23655e3a7475085d51dab7/sui/wormhole/Move.mainnet.toml
-wormhole = "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a"
 
 [dependencies.Wormhole]
 git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
-rev = "c113791abd5241bc7a23655e3a7475085d51dab7"
+# "sui/mainnet" or "sui/testnet" respectively, as "main" doesn't have address
+# TODO(matej): It's hard to tell whether these branches are officially
+# supported, and testnet one is already outdated, so we either want to have the
+# package at MVR at some point, or maybe want to consider creating our own
+# branches with symlinked `Move.toml`.
+rev = "sui/mainnet"
 
 [dev-dependencies]
 
