@@ -27,6 +27,7 @@ Currently it:
 Create a configuration file by copying the sample:
 
 ```bash
+cd apps/hip-3-pusher
 cp config/config.sample.toml config/config.toml
 # Edit config.toml with your settings
 
