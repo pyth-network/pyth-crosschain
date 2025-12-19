@@ -1,0 +1,61 @@
+stale_price_threshold_seconds = 5
+prometheus_port = 9090
+
+[hyperliquid]
+hyperliquid_ws_urls = ["wss://api.hyperliquid-testnet.xyz/ws"]
+market_name = "pyth"
+asset_context_symbols = ["BTC", "pyth:BTC", "pyth:PYTH", "pyth:FOGO"]
+use_testnet = true
+oracle_pusher_key_path = "oracle-updater-subdeployer-private-key.txt"
+publish_interval = 3.0
+publish_timeout = 5.0
+enable_publish = true
+
+[multisig]
+enable_multisig = false
+
+[kms]
+enable_kms = false
+
+[lazer]
+lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]
+lazer_api_key = "<some lazer api key>"
+feed_ids = [1, 3, 8] # BTC, PYTH, USDT
+exponents = [-8, -8, -8]
+
+[hermes]
+hermes_urls = ["wss://hermes.pyth.network/ws"]
+feed_ids = [
+    "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", # BTC
+    "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff", # PYTH
+    "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"  # USDT
+]
+exponents = [-8, -8, -8]
+
+[seda]
+url = "https://fast-api.testnet.seda.xyz/execute"
+poll_interval = 2
+poll_failure_interval = 1
+poll_timeout = 3
+
+[price.oracle]
+BTC = [
+    { source_type = "single", source = { source_name = "hl_oracle", source_id = "BTC" } },
+    { source_type = "pair", base_source = { source_name = "lazer", source_id = 1, exponent = -8 }, quote_source = { source_name = "lazer", source_id = 8, exponent = -8 } },
+    { source_type = "pair", base_source = { source_name = "hermes", source_id = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", exponent = -8 }, quote_source = { source_name = "hermes", source_id = "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b", exponent = -8 } },
+]
+PYTH = [
+    { source_type = "pair", base_source = { source_name = "lazer", source_id = 3, exponent = -8 }, quote_source = { source_name = "lazer", source_id = 8, exponent = -8 } },
+    { source_type = "pair", base_source = { source_name = "hermes", source_id = "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff", exponent = -8 }, quote_source = { source_name = "hermes", source_id = "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b", exponent = -8 } },
+]
+FOGO = [{ source_type = "constant", value = "0.0100" }]
+
+[price.mark]
+BTC = [{ source_type = "oracle_mid_average", symbol = "pyth:BTC" }]
+PYTH = [{ source_type = "oracle_mid_average", symbol = "pyth:PYTH" }]
+FOGO = [{ source_type = "oracle_mid_average", symbol = "pyth:FOGO" }]
+
+[price.external]
+BTC = [{ source_type = "single", source = { source_name = "hl_mark", source_id = "BTC" } }]
+PYTH = [{ source_type = "constant", value = "0.10" },]
+FOGO = [{ source_type = "constant", value = "0.0100" },]
