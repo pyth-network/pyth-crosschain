@@ -89,11 +89,6 @@ const config = {
         permanent: true,
       },
       {
-        source: "/pyth-token/:path*",
-        destination: "/pyth-token/:path*",
-        permanent: true,
-      },
-      {
         source: "/documentation/publish-data/:slug*",
         destination: "/price-feeds/core/publish-data/:slug*",
         permanent: true,
