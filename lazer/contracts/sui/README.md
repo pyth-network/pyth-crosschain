@@ -22,4 +22,9 @@ sui move test test_parse_and_verify_le_ecdsa_update # run a specific test
 
 Deploy:
 
+Bump version in [`meta.move`]. **You must do this, otherwise we get locked out
+of the package after an upgrade!**
+
 TODO
+
+[`meta.move`]: sources/meta.move

@@ -2,16 +2,18 @@ module pyth_lazer::state;
 
 #[test_only]
 use std::unit_test::{assert_eq, destroy};
-
+use std::type_name;
 #[test_only]
 use sui::package;
 use sui::package::{UpgradeCap, UpgradeReceipt, UpgradeTicket};
+
 #[test_only]
 use wormhole::external_address;
 use wormhole::vaa::VAA;
 
 use pyth_lazer::{
     governance::{Self, Governance, GovernanceHeader},
+    meta,
     parser::{Self, Parser},
 };
 
@@ -20,7 +22,7 @@ const EInvalidPubkeyLen: vector<u8> = "Invalid public key length, must be 33";
 #[error]
 const ERemovedSignerNotFound: vector<u8> = "Could not remove non-existent trusted signer";
 #[error]
-const EOldPackage: vector<u8> = "State can only be used with the current package version";
+const EDifferentVersion: vector<u8> = "State can only be used with the current package version";
 #[error]
 const EDifferentUpgradeCap: vector<u8> = "Supplied UpgradeCap belongs to a different package";
 
@@ -52,7 +54,11 @@ public(package) fun share(
     governance: Governance,
     ctx: &mut TxContext
 ) {
-    assert!(am_current_package(&upgrade_cap), EDifferentUpgradeCap);
+    assert!(
+        upgrade_cap.package().to_address() == type_name::original_id<State>(),
+        EDifferentUpgradeCap,
+    );
+    assert!(meta::version() == upgrade_cap.version(), EDifferentVersion);
     transfer::share_object(State {
         id: object::new(ctx),
         trusted_signers: vector[],
@@ -147,7 +153,7 @@ public(package) fun update_trusted_signer(
 public struct CurrentCap has drop {}
 
 public(package) fun current_cap(self: &State): CurrentCap {
-    assert!(am_current_package(&self.upgrade_cap), EOldPackage);
+    assert!(meta::version() == self.upgrade_cap.version(), EDifferentVersion);
     CurrentCap {}
 }
 
@@ -167,10 +173,6 @@ public(package) fun public_key(info: &TrustedSignerInfo): &vector<u8> {
 /// Get the trusted signer's expiry timestamp, converted to milliseconds.
 public(package) fun expires_at_ms(info: &TrustedSignerInfo): u64 {
     info.expires_at * 1000
-}
-
-fun am_current_package(upgrade_cap: &UpgradeCap): bool {
-    @pyth_lazer == upgrade_cap.package().to_address()
 }
 
 #[test_only]
