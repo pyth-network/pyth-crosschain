@@ -30,6 +30,16 @@ feed_ids = [
     "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"  # USDT
 ]
 
+[seda]
+# Optional: SEDA is enabled only when `feeds` is non-empty.
+# This section is still required for config validation.
+url = "https://example.com/seda/endpoint"
+api_key_path = "/path/to/seda_api_key.txt"
+poll_interval = 5.0
+poll_failure_interval = 5.0
+poll_timeout = 5.0
+feeds = {}
+
 [price.oracle]
 BTC = [
     { source_type = "single", source = { source_name = "hl_oracle", source_id = "BTC" } },
