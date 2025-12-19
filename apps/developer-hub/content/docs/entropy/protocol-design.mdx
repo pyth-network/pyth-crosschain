@@ -19,6 +19,8 @@ Honesty means that (1) they draw their value at random, and (2) for A, they keep
 step 4. Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
 ensure that the result $$(r)$$ is random.
 
+![Commit and Reveal Protocol](./images/commit_and_reveal.png)
+
 Entropy implements a version of this protocol that is optimized for on-chain usage. The
 key difference is that one of the participants (the provider) commits to a sequence of random numbers
 up-front using a hash chain. Users of the protocol then simply grab the next random number in the sequence.
