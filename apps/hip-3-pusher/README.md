@@ -67,7 +67,10 @@ docker build -f Dockerfile -t hip-3-pusher .
 # Run the container  
 docker run --rm \
   -p 9090:9090 \
-  -v "$(pwd)/apps/hip-3-pusher/config/config.toml:/app/config/config.toml" \
+  -v "$(pwd)/config/config.toml:/app/config/config.toml" \
+  -v "/path/to/oracle_pusher_key.txt:/private-key.txt" \
   hip-3-pusher           
 ```
+
+Make sure to update `oracle_pusher_key_path` in your `config.toml` to match the mounted path (e.g., `/private-key.txt`).
 
