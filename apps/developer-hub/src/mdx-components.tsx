@@ -6,6 +6,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 
 import { APICard, APICards } from "./components/APICard";
+import { YouTubeEmbed } from "./components/YouTubeEmbed";
 import { openapi } from "./lib/openapi";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -20,5 +21,6 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Tab,
     ...components,
     InfoBox: InfoBox,
+    YouTubeEmbed,
   };
 }
