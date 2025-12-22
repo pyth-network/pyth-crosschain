@@ -13,7 +13,7 @@ This error occurs when the requested price feed has not been updated within the 
 
 To resolve this issue:
 
-- Update the prices by calling [`updatePriceFeeds()`](https://api-reference.pyth.network/price-feeds/evm/updatePriceFeeds)
+- Update the prices by calling [`updatePriceFeeds()`](https://github.com/pyth-network/pyth-crosschain/blob/9825470036fc24de3d52b139087ea0cd4117624a/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L90)
   by passing the latest updateData from [Hermes](https://hermes.pyth.network/docs/#/rest/latest_vaas).
 - Another method to fetch the price is [`getPriceUnsafe()`](https://github.com/pyth-network/pyth-crosschain/blob/9825470036fc24de3d52b139087ea0cd4117624a/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L43)
   If the price feed is available, the method will return the latest prices with timestamp of last update.
