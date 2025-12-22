@@ -1,3 +1,9 @@
 {
-  "pages": ["price-feeds", "express-relay", "entropy", "api-reference", "hip-3-service"]
+  "pages": [
+    "price-feeds",
+    "express-relay",
+    "entropy",
+    "api-reference",
+    "hip-3-service"
+  ]
 }

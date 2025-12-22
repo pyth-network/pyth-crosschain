@@ -1,6 +1,7 @@
 {
-    "title": "HIP-3 as a Service",
-    "pages": ["index"],
-    "root": true
-  }
-  
+  "title": "HIP-3 as a Service",
+  "description": "Complete oracle solution for Hyperliquid HIP-3 perpetual market deployers",
+  "icon": "Lightning",
+  "pages": ["index"],
+  "root": true
+}
