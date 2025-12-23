@@ -1,5 +1,13 @@
 {
   "title": "Push Feeds",
-  "pages": ["evm", "solana", "fogo", "aptos", "movement", "sui"],
+  "pages": [
+    "[HIP-3 as a Service](/price-feeds/hip-3-service)",
+    "evm",
+    "solana",
+    "fogo",
+    "aptos",
+    "movement",
+    "sui"
+  ],
   "defaultOpen": false
 }

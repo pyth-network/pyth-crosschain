@@ -263,6 +263,13 @@ const config = {
         permanent: true,
       },
 
+      // HIP-3 redirect - fumadocs meta.json links prepend parent path
+      {
+        source: "/price-feeds/core/hip-3-service",
+        destination: "/price-feeds/hip-3-service",
+        permanent: true,
+      },
+
       // some other price feed redirects
       {
         source: "/price-feeds/sponsored-feeds",
