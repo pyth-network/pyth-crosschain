@@ -1,0 +1,11 @@
+@use "@pythnetwork/component-library/theme";
+
+.iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: theme.spacing(6) 0;
+  border: none;
+  border-radius: theme.border-radius("xl");
+  background-color: theme.color("background", "primary");
+  box-shadow: 0 4px 24px rgb(0 0 0 / 12%);
+}
