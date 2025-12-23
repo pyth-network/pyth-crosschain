@@ -289,9 +289,9 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "WTIZ5/USD",
-      "account_address": "3MBVC4DW1KsJcH1CB61XNHMo7CPkKW21gFNUku1sJ33q",
-      "id": "0c62848c8afee091f2c132eef944e3075c6de476129efc872a4202d81ca34f99",
+      "alias": "WTIG6/USD",
+      "account_address": "8nMThr5gWoXaoWHR3gMXrz8ZULukjsBgoW83kuYCDzqG",
+      "id": "7e91242dfd2cea64715b26edaa3e51bafc712a56ac4228a77bd53b51fd66db52",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
@@ -316,14 +316,6 @@
       "alias": "INF/SOL",
       "account_address": "4MbCk4vH47K2gHee6nTg62KScpGu2bV3YDeTZtpQm3ro",
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "WTIX5/USD",
-      "account_address": "2SxsutiRd7TBmURrWW2tPR3xeHpJFuGVGAd4Wjddkk7D",
-      "id": "2e8c6b85cf4a79b6d8bce10be470eefb369810b642782cb6aa150f82362e65d1",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
