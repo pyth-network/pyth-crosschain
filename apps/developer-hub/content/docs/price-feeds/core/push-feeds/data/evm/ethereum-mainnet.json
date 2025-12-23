@@ -22,13 +22,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "USDTB/NAV",
-      "id": "967549f1ff4869f41cb354a7116b9e5a9a3091bebe0b2640eeed745ca1f7f90b",
-      "time_difference": 3600,
-      "price_deviation": 2,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "LINEA/USD",
       "id": "49e50653755fbf8018ab65a07be2f208ac8c4bdfc43200934304ca17ee663cab",
       "time_difference": 3600,
