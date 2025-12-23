@@ -13,16 +13,14 @@ export const YouTubeEmbed = ({
   title = "YouTube video player",
   className,
 }: YouTubeEmbedProps) => (
-  <div className={clsx(styles.container, className)}>
-    <iframe
-      className={styles.iframe}
-      src={`https://www.youtube.com/embed/${id}`}
-      title={title}
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      referrerPolicy="strict-origin-when-cross-origin"
-      allowFullScreen
-    />
-  </div>
+  <iframe
+    className={clsx(styles.iframe, className)}
+    src={`https://www.youtube.com/embed/${id}`}
+    title={title}
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerPolicy="strict-origin-when-cross-origin"
+    allowFullScreen
+  />
 );
 
 export default YouTubeEmbed;

@@ -1,21 +1,11 @@
 @use "@pythnetwork/component-library/theme";
 
-.container {
-  position: relative;
+.iframe {
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  aspect-ratio: 16 / 9;
   margin: theme.spacing(6) 0;
+  border: none;
   border-radius: theme.border-radius("xl");
-  overflow: hidden;
   background-color: theme.color("background", "primary");
   box-shadow: 0 4px 24px rgb(0 0 0 / 12%);
-}
-
-.iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
 }
