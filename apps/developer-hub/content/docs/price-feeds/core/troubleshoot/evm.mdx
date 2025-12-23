@@ -13,9 +13,9 @@ This error occurs when the requested price feed has not been updated within the 
 
 To resolve this issue:
 
-- Update the prices by calling [`updatePriceFeeds()`](https://github.com/pyth-network/pyth-crosschain/blob/9825470036fc24de3d52b139087ea0cd4117624a/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L90)
+- Update the prices by calling [`updatePriceFeeds()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L90)
   by passing the latest updateData from [Hermes](https://hermes.pyth.network/docs/#/rest/latest_vaas).
-- Another method to fetch the price is [`getPriceUnsafe()`](https://github.com/pyth-network/pyth-crosschain/blob/9825470036fc24de3d52b139087ea0cd4117624a/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L43)
+- Another method to fetch the price is [`getPriceUnsafe()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L43)
   If the price feed is available, the method will return the latest prices with timestamp of last update.
   NOTE: `getPriceUnsafe()` method does not check the freshness of the price.
 
@@ -34,5 +34,5 @@ To resolve this issue:
 This error occurs when the fee provided for updating the price feed is insufficient.
 To resolve this issue:
 
-- Fetch the latest fee by calling [`getUpdateFee()`](https://github.com/pyth-network/pyth-crosschain/blob/9825470036fc24de3d52b139087ea0cd4117624a/target_chains/ethereum/sdk/solidity/IPyth.sol#L93) method and
-  provide the required fee to `msg.value` when calling [`updatePriceFeeds()`](https://github.com/pyth-network/pyth-crosschain/blob/9825470036fc24de3d52b139087ea0cd4117624a/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L90) method.
+- Fetch the latest fee by calling [`getUpdateFee()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/IPyth.sol#L93) method and
+  provide the required fee to `msg.value` when calling [`updatePriceFeeds()`](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/ethereum/sdk/solidity/AbstractPyth.sol#L90) method.
