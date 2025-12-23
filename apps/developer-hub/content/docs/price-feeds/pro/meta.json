@@ -8,6 +8,7 @@
     "integrate-as-publisher",
     "---Reference Material---",
     "contract-addresses",
+    "[HIP-3 as a Service](/price-feeds/hip-3-service)",
     "price-feed-ids",
     "payload-reference",
     "[Websocket API Reference](https://pyth-lazer.dourolabs.app/docs)",
