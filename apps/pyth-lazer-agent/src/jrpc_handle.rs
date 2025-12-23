@@ -9,8 +9,8 @@ use pyth_lazer_protocol::jrpc::{
     FeedUpdateParams, GetMetadataParams, JrpcCall, JrpcError, JrpcErrorResponse, JrpcId,
     JrpcResponse, JrpcSuccessResponse, JsonRpcVersion, PythLazerAgentJrpcV1, SymbolMetadata,
 };
-use soketto::Sender;
 use soketto::handshake::http::Server;
+use soketto::{Incoming, Sender, data::ByteSlice125};
 use std::str::FromStr;
 use tokio::{pin, select};
 use tokio_util::compat::TokioAsyncReadCompatExt;
@@ -58,7 +58,7 @@ async fn try_handle_jrpc(
 
     loop {
         receive_buf.clear();
-        {
+        let receive_result = {
             // soketto is not cancel-safe, so we need to store the future and poll it
             // in the inner loop.
             let receive = async { ws_receiver.receive(&mut receive_buf).await };
@@ -66,30 +66,42 @@ async fn try_handle_jrpc(
             #[allow(clippy::never_loop, reason = "false positive")] // false positive
             loop {
                 select! {
-                    _result = &mut receive => {
-                        break
+                    result = &mut receive => {
+                        break result
                     }
                 }
             }
-        }
+        };
 
-        match handle_jrpc_inner(&config, &mut ws_sender, &mut receive_buf, &lazer_publisher).await {
-            Ok(_) => {}
-            Err(err) => {
-                debug!("Error handling JRPC request: {}", err);
-                send_text(
-                    &mut ws_sender,
-                    serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
-                        JrpcErrorResponse {
-                            jsonrpc: JsonRpcVersion::V2,
-                            error: JrpcError::InternalError(err.to_string()).into(),
-                            id: JrpcId::Null,
-                        },
-                    ))?
-                    .as_str(),
-                )
-                .await?;
+        let receive_result = receive_result?;
+
+        match receive_result {
+            Incoming::Data(_) => {
+                match handle_jrpc_inner(&config, &mut ws_sender, &mut receive_buf, &lazer_publisher)
+                    .await
+                {
+                    Ok(_) => {}
+                    Err(err) => {
+                        debug!("Error handling JRPC request: {}", err);
+                        send_text(
+                            &mut ws_sender,
+                            serde_json::to_string::<JrpcResponse<()>>(&JrpcResponse::Error(
+                                JrpcErrorResponse {
+                                    jsonrpc: JsonRpcVersion::V2,
+                                    error: JrpcError::InternalError(err.to_string()).into(),
+                                    id: JrpcId::Null,
+                                },
+                            ))?
+                            .as_str(),
+                        )
+                        .await?;
+                    }
+                }
             }
+            // `receive` automatically responds to ping control frames; PONG frames are
+            // acknowledgements that we can safely ignore here.
+            Incoming::Pong(_) => {}
+            Incoming::Closed(_) => return Ok(()),
         }
     }
 }
