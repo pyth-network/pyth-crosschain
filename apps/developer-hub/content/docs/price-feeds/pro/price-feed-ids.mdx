@@ -11,7 +11,13 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 <Callout type="info">
   You can also access the list of symbols programmatically via the [Symbols List
-  API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols).
+  API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols). The endpoint
+  supports two optional query parameters for filtering results: `query` to filter
+  by symbol name (e.g.,
+  `https://history.pyth-lazer.dourolabs.app/history/v1/symbols?query=AAPL`) and
+  `asset_type` to filter by asset type (e.g.,
+  `https://history.pyth-lazer.dourolabs.app/history/v1/symbols?asset_type=crypto`).
+  You can use either parameter, both, or neither.
 </Callout>
 
 <Suspense>
