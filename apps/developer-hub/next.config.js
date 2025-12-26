@@ -257,8 +257,16 @@ const config = {
       },
 
       {
-        source: "/price-feeds/:path((?!core(?:/|$)|pro(?:/|$)).*)",
+        source:
+          "/price-feeds/:path((?!core(?:/|$)|pro(?:/|$)|hip-3-service(?:/|$)).*)",
         destination: "/price-feeds/core/:path",
+        permanent: true,
+      },
+
+      // HIP-3 redirect - fumadocs meta.json links prepend parent path
+      {
+        source: "/price-feeds/core/hip-3-service",
+        destination: "/price-feeds/hip-3-service",
         permanent: true,
       },
 

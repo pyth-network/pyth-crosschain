@@ -5,10 +5,17 @@ slug: /price-feeds/core/push-feeds
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
+import Link from "next/link";
 
 The Pyth Data Association **pushes** price updates for various feeds on some networks.
 These feeds are updated at a specific heartbeat rate or when the price changes by a specific percentage.
 Applications can depend on receiving updates for these feeds, without having to pull them explicitly.
+
+## HIP-3 as a Service
+
+For deployers launching permissionless perpetual markets on Hyperliquid, Pyth Network offers a complete end-to-end solution that includes oracle data, managed infrastructure, capital support, and market operations. Learn more about <Link href="/price-feeds/hip-3-service">HIP-3 as a Service</Link>.
+
+## Push Feeds by Network
 
 The feeds can vary by network. Please see the relevant section below for the network of interest.
 
