@@ -4,8 +4,8 @@ use pyth_lazer::i16::{Self, I16};
 use pyth_lazer::i64::{Self, I64};
 use sui::bcs;
 
-// Error codes for feed parsing
-const EInvalidProperty: u64 = 2;
+#[error]
+const EInvalidProperty: vector<u8> = "Invalid property ID";
 
 /// The feed struct is based on the Lazer rust protocol definition defined here:
 /// https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/payload.rs

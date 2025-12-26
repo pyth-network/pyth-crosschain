@@ -1,5 +1,4 @@
 /// Adapted from pyth::i64, modified for i16
-
 module pyth_lazer::i16;
 
 const MAX_POSITIVE_MAGNITUDE: u64 = (1 << 15) - 1;  // 32767
