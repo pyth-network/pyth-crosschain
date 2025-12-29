@@ -6,9 +6,14 @@ import type { Page } from "fumadocs-core/source";
 import { remarkInclude } from "fumadocs-mdx/config";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import remarkMdx from "remark-mdx";
 
-const processor = remark().use(remarkMdx).use(remarkInclude).use(remarkGfm);
+const processor = remark()
+  .use(remarkMath)
+  .use(remarkMdx)
+  .use(remarkInclude)
+  .use(remarkGfm);
 
 function resolveMdxPath(page: Page): string {
   const appRelPath = [process.cwd(), "content", "docs", page.path] as [
