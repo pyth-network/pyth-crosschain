@@ -1,0 +1,83 @@
+---
+title: HIP-3 as a Service
+description: Complete oracle solution for Hyperliquid HIP-3 perpetual market deployers
+slug: /price-feeds/hip-3-service
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { IntegrationCard } from "../../../../src/components/IntegrationCard";
+import { Lightning, FileText, Shield } from "@phosphor-icons/react/dist/ssr";
+
+Pyth Network provides **HIP-3 as a Service**, a complete end-to-end solution for deployers launching permissionless perpetual markets on Hyperliquid. This service combines institutional-grade data, managed infrastructure, capital support, and market operations to help you successfully deploy and maintain HIP-3 markets.
+
+## What You Get
+
+HIP-3 as a Service provides everything you need to launch and maintain a successful perpetual market on Hyperliquid:
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+  <IntegrationCard
+    href="#oracle-data-infrastructure"
+    colorScheme="blue"
+    title="Oracle Data & Infrastructure"
+    description="Direct first-party data with automated 3 second updates and 24/7 monitoring"
+    icon={<Lightning size={16} />}
+  />
+  <IntegrationCard
+    href="#capital-liquidity-support"
+    colorScheme="green"
+    title="Capital & Liquidity Support"
+    description="Market maker relationships, loan capital, and HYPE sourcing assistance"
+    icon={<FileText size={16} />}
+  />
+  <IntegrationCard
+    href="#security-go-to-market"
+    colorScheme="purple"
+    title="Security & Go-to-Market"
+    description="Audit discounts, 24/7 technical support, and co-marketing packages"
+    icon={<Shield size={16} />}
+  />
+</div>
+
+## What problem this solves
+
+Deploying and operating a HIP-3 market typically requires all of the following:
+
+- Maintaining continuous **oracle updates every 3 seconds** to meet HIP-3 requirements
+- Securing keys and operational processes to reduce downtime and update failures
+- Coordinating market-maker liquidity and launch operations
+
+## How It Works
+
+The HIP-3 pusher service monitors price changes from multiple sources and submits signed updates to the Hyperliquid blockchain whenever specific conditions are met (e.g., price deviation or time-based heartbeat).
+
+1.  **Data Sourcing**: The service fetches real-time prices from [Pyth Pro](/price-feeds/pro), [Pythnet](/price-feeds/core/how-pyth-works/pythnet), [Hyperliquid](https://hyperliquid.xyz/), and [SEDA](https://www.seda.xyz/).
+2.  **Aggregation**: It combines these sources to ensure data integrity and robustness.
+3.  **Submission**: Signed transactions are sent to the Hyperliquid validator network to update the market's oracle state.
+
+## Why Pyth
+
+### First-Party Data
+
+Pyth sources data directly from 120+ institutional publishers including exchanges, market makers, and trading firms. This eliminates single points of failure that affect aggregated data providers.
+
+### Market Maker Trust
+
+Pyth's market maker publishers (Jump, Flowdesk, IMC, Amber, Selini) trust Pyth data because they create it themselves. This leads to:
+
+- Higher engagement rates for Pyth-powered markets
+- Faster liquidity onboarding
+
+### Redundant Infrastructure
+
+- Primary, secondary, and tertiary infrastructure across multiple regions
+- Multi-cloud key management with automatic failover
+- Support for multisig oracle updates for operational flexibility
+
+## Contact Us
+
+If you are interested in utilizing HIP-3 as a Service for your Hyperliquid markets, please get in touch with us.
+
+<Callout type="info">
+  To request access or learn more, please fill out our [contact
+  form](https://2fga8d.share-eu1.hsforms.com/2ftdPrASCTLCxtP5YMzAq_Q).
+</Callout>
