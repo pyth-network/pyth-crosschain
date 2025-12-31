@@ -77,6 +77,15 @@ export const HelpMenu = () => {
           </Section>
           <Separator />
           <Section>
+            <MenuItem
+              href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
+              target="_blank"
+            >
+              Reward Calculator
+            </MenuItem>
+          </Section>
+          <Separator />
+          <Section>
             {(api.type === StateType.Loaded ||
               api.type === StateType.LoadedNoStakeAccount) && (
               <MenuItem onAction={openParameters}>

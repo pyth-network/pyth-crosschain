@@ -141,8 +141,22 @@ export const GeneralFaq = (
 
         {
           question: "What is the expected rate of rewards?",
-          answer:
-            "The reward rate is a function of the rewards available in the program, the amount of PYTH that is staked in OIS, and the parameters of the OIS program. The Pyth DAO can vote to adjust these parameters.",
+          answer: (
+            <p>
+              The reward rate is a function of the rewards available in the
+              program, the amount of PYTH that is staked in OIS, and the
+              parameters of the OIS program. The Pyth DAO can vote to adjust
+              these parameters. Use the{" "}
+              <Link
+                href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
+                target="_blank"
+                className="underline"
+              >
+                Reward Calculator
+              </Link>{" "}
+              to estimate your potential rewards based on your stake.
+            </p>
+          ),
         },
 
         {
