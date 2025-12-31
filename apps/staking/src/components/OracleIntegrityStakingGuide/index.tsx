@@ -315,8 +315,8 @@ export const OracleIntegrityStakingGuide = (
                     publisher stake pool’s yield potential.
                   </p>
                   <p>
-                    The Pyth DAO can vote to adjust these parameters. You can use
-                    the{" "}
+                    The Pyth DAO can vote to adjust these parameters. You can
+                    use the{" "}
                     <Link
                       href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
                       className="underline"
@@ -356,8 +356,8 @@ export const OracleIntegrityStakingGuide = (
                     >
                       Rewards Calculator
                     </Link>{" "}
-                    to see how this affects your potential rewards, or learn more
-                    about how rewards are calculated in the{" "}
+                    to see how this affects your potential rewards, or learn
+                    more about how rewards are calculated in the{" "}
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
                       className="underline"
