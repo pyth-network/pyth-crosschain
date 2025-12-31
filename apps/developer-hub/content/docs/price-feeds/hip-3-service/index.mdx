@@ -48,10 +48,10 @@ Deploying and operating a HIP-3 market typically requires all of the following:
 
 ## How It Works
 
-The HIP-3 pusher service monitors price changes from multiple sources and submits signed updates to the Hyperliquid blockchain whenever specific conditions are met (e.g., price deviation or time-based heartbeat).
+The HIP-3 pusher service monitors price changes and submits signed updates to the Hyperliquid blockchain whenever specific conditions are met (e.g., price deviation or time-based heartbeat).
 
-1.  **Data Sourcing**: The service fetches real-time prices from [Pyth Pro](/price-feeds/pro), [Pythnet](/price-feeds/core/how-pyth-works/pythnet), [Hyperliquid](https://hyperliquid.xyz/), and [SEDA](https://www.seda.xyz/).
-2.  **Aggregation**: It combines these sources to ensure data integrity and robustness.
+1.  **Data Sourcing**: The relayer is fully configurable and can connect to any data source that exposes price data via REST API or WebSocket. You can use [Pyth Core](/price-feeds/core), [Pyth Pro](/price-feeds/pro), [SEDA](https://www.seda.xyz/) or [Hyperliquid](https://hyperliquid.xyz/), or plug in your own custom data feeds.
+2.  **Robustness & Redundancy**: The service supports fallback configurations to ensure reliability—if the primary data source is unavailable, the next source in the priority chain is used.
 3.  **Submission**: Signed transactions are sent to the Hyperliquid validator network to update the market's oracle state.
 
 ## Why Pyth
