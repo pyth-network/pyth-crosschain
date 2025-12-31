@@ -253,8 +253,19 @@ export const OracleIntegrityStakingGuide = (
                   Publishers charge a fixed percentage (20%) of the rewards from
                   stakers in their stake pool as a delegation fee (net of any
                   slashed amount). The Pyth DAO can vote to adjust this fee
-                  structure. Learn more about staking rewards in the
-                  documentation.
+                  structure.
+                </p>
+                <p>
+                  Use the{" "}
+                  <Link
+                    href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
+                    target="_blank"
+                    className="underline"
+                  >
+                    Rewards Calculator
+                  </Link>{" "}
+                  to estimate your potential rewards based on different staking
+                  scenarios.
                 </p>
               </>
             ),
@@ -304,7 +315,16 @@ export const OracleIntegrityStakingGuide = (
                     publisher stake pool’s yield potential.
                   </p>
                   <p>
-                    The Pyth DAO can vote to adjust these parameters. Learn more
+                    The Pyth DAO can vote to adjust these parameters. You can
+                    use the{" "}
+                    <Link
+                      href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
+                      className="underline"
+                      target="_blank"
+                    >
+                      Rewards Calculator
+                    </Link>{" "}
+                    to estimate rewards for different scenarios, or learn more
                     about how rewards are calculated in the{" "}
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
@@ -328,8 +348,16 @@ export const OracleIntegrityStakingGuide = (
                     exceeds its stake cap. In this situation, the programmatic
                     reward rate for stakers mathematically decreases as the
                     amount of remaining rewards in the pool must be shared with
-                    more delegated tokens. Learn more about how rewards are
-                    calculated in the{" "}
+                    more delegated tokens. Use the{" "}
+                    <Link
+                      href="https://docs.pyth.network/oracle-integrity-staking/reward-examples#reward-calculator"
+                      className="underline"
+                      target="_blank"
+                    >
+                      Rewards Calculator
+                    </Link>{" "}
+                    to see how this affects your potential rewards, or learn
+                    more about how rewards are calculated in the{" "}
                     <Link
                       href="https://docs.pyth.network/home/oracle-integrity-staking/mathematical-representation"
                       className="underline"
