@@ -57,8 +57,58 @@ library PythLazerLib {
         return ((feed.triStateMap >> (2 * propId)) & 3) != 0;
     }
 
+    // ============================================================================
+    // Parsing functions (for bytes memory payloads)
+    // ============================================================================
+
+    // Helper functions to read from bytes memory (since slicing doesn't work)
+    // These use assembly to read the correct number of bytes and handle endianness
+    function _readBytes1(
+        bytes memory data,
+        uint16 pos
+    ) private pure returns (uint8 value) {
+        assembly {
+            let word := mload(add(add(data, 0x20), pos))
+            // Read first byte (most significant byte in the word)
+            value := shr(248, word)
+        }
+    }
+
+    function _readBytes2(
+        bytes memory data,
+        uint16 pos
+    ) private pure returns (uint16 value) {
+        assembly {
+            let word := mload(add(add(data, 0x20), pos))
+            // Read first 2 bytes (most significant bytes in the word)
+            value := shr(240, word)
+        }
+    }
+
+    function _readBytes4(
+        bytes memory data,
+        uint16 pos
+    ) private pure returns (uint32 value) {
+        assembly {
+            let word := mload(add(add(data, 0x20), pos))
+            // Read first 4 bytes (most significant bytes in the word)
+            value := shr(224, word)
+        }
+    }
+
+    function _readBytes8(
+        bytes memory data,
+        uint16 pos
+    ) private pure returns (uint64 value) {
+        assembly {
+            let word := mload(add(add(data, 0x20), pos))
+            // Read first 8 bytes (most significant bytes in the word)
+            value := shr(192, word)
+        }
+    }
+
     function parsePayloadHeader(
-        bytes calldata update
+        bytes memory update
     )
         public
         pure
@@ -72,43 +122,43 @@ library PythLazerLib {
         uint32 FORMAT_MAGIC = 2479346549;
 
         pos = 0;
-        uint32 magic = uint32(bytes4(update[pos:pos + 4]));
+        uint32 magic = _readBytes4(update, pos);
         pos += 4;
         if (magic != FORMAT_MAGIC) {
             revert("invalid magic");
         }
-        timestamp = uint64(bytes8(update[pos:pos + 8]));
+        timestamp = _readBytes8(update, pos);
         pos += 8;
-        channel = PythLazerStructs.Channel(uint8(update[pos]));
+        channel = PythLazerStructs.Channel(_readBytes1(update, pos));
         pos += 1;
-        feedsLen = uint8(update[pos]);
+        feedsLen = uint8(_readBytes1(update, pos));
         pos += 1;
     }
 
     function parseFeedHeader(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     )
         public
         pure
         returns (uint32 feed_id, uint8 num_properties, uint16 new_pos)
     {
-        feed_id = uint32(bytes4(update[pos:pos + 4]));
+        feed_id = _readBytes4(update, pos);
         pos += 4;
-        num_properties = uint8(update[pos]);
+        num_properties = uint8(_readBytes1(update, pos));
         pos += 1;
         new_pos = pos;
     }
 
     function parseFeedProperty(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     )
         public
         pure
         returns (PythLazerStructs.PriceFeedProperty property, uint16 new_pos)
     {
-        uint8 propertyId = uint8(update[pos]);
+        uint8 propertyId = _readBytes1(update, pos);
         require(propertyId <= 9, "Unknown property");
         property = PythLazerStructs.PriceFeedProperty(propertyId);
         pos += 1;
@@ -116,46 +166,46 @@ library PythLazerLib {
     }
 
     function parseFeedValueUint64(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     ) internal pure returns (uint64 value, uint16 new_pos) {
-        value = uint64(bytes8(update[pos:pos + 8]));
+        value = _readBytes8(update, pos);
         pos += 8;
         new_pos = pos;
     }
 
     function parseFeedValueInt64(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     ) internal pure returns (int64 value, uint16 new_pos) {
-        value = int64(uint64(bytes8(update[pos:pos + 8])));
+        value = int64(_readBytes8(update, pos));
         pos += 8;
         new_pos = pos;
     }
 
     function parseFeedValueUint16(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     ) internal pure returns (uint16 value, uint16 new_pos) {
-        value = uint16(bytes2(update[pos:pos + 2]));
+        value = _readBytes2(update, pos);
         pos += 2;
         new_pos = pos;
     }
 
     function parseFeedValueInt16(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     ) internal pure returns (int16 value, uint16 new_pos) {
-        value = int16(uint16(bytes2(update[pos:pos + 2])));
+        value = int16(_readBytes2(update, pos));
         pos += 2;
         new_pos = pos;
     }
 
     function parseFeedValueUint8(
-        bytes calldata update,
+        bytes memory update,
         uint16 pos
     ) internal pure returns (uint8 value, uint16 new_pos) {
-        value = uint8(update[pos]);
+        value = _readBytes1(update, pos);
         pos += 1;
         new_pos = pos;
     }
@@ -165,8 +215,8 @@ library PythLazerLib {
     /// @param payload The payload bytes (after signature verification)
     /// @return update The parsed Update struct containing all feeds and their properties
     function parseUpdateFromPayload(
-        bytes calldata payload
-    ) internal pure returns (PythLazerStructs.Update memory update) {
+        bytes memory payload
+    ) public pure returns (PythLazerStructs.Update memory update) {
         // Parse payload header
         uint16 pos;
         uint8 feedsLen;
@@ -447,14 +497,14 @@ library PythLazerLib {
     /// @notice Check if price exists
     function hasPrice(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return _hasValue(feed, uint8(PythLazerStructs.PriceFeedProperty.Price));
     }
 
     /// @notice Check if best bid price exists
     function hasBestBidPrice(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -465,7 +515,7 @@ library PythLazerLib {
     /// @notice Check if best ask price exists
     function hasBestAskPrice(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -476,7 +526,7 @@ library PythLazerLib {
     /// @notice Check if publisher count exists
     function hasPublisherCount(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -487,7 +537,7 @@ library PythLazerLib {
     /// @notice Check if exponent exists
     function hasExponent(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(feed, uint8(PythLazerStructs.PriceFeedProperty.Exponent));
     }
@@ -495,7 +545,7 @@ library PythLazerLib {
     /// @notice Check if confidence exists
     function hasConfidence(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -506,7 +556,7 @@ library PythLazerLib {
     /// @notice Check if funding rate exists
     function hasFundingRate(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -517,7 +567,7 @@ library PythLazerLib {
     /// @notice Check if funding timestamp exists
     function hasFundingTimestamp(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -528,7 +578,7 @@ library PythLazerLib {
     /// @notice Check if funding rate interval exists
     function hasFundingRateInterval(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -539,7 +589,7 @@ library PythLazerLib {
     /// @notice Check if market session exists
     function hasMarketSession(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _hasValue(
                 feed,
@@ -550,14 +600,14 @@ library PythLazerLib {
     // Requested helpers — property included in this update
     function isPriceRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(feed, uint8(PythLazerStructs.PriceFeedProperty.Price));
     }
 
     function isBestBidPriceRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -567,7 +617,7 @@ library PythLazerLib {
 
     function isBestAskPriceRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -577,7 +627,7 @@ library PythLazerLib {
 
     function isPublisherCountRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -587,7 +637,7 @@ library PythLazerLib {
 
     function isExponentRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -597,7 +647,7 @@ library PythLazerLib {
 
     function isConfidenceRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -607,7 +657,7 @@ library PythLazerLib {
 
     function isFundingRateRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -617,7 +667,7 @@ library PythLazerLib {
 
     function isFundingTimestampRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -627,7 +677,7 @@ library PythLazerLib {
 
     function isFundingRateIntervalRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -637,7 +687,7 @@ library PythLazerLib {
 
     function isMarketSessionRequested(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (bool) {
+    ) public pure returns (bool) {
         return
             _isRequested(
                 feed,
@@ -650,7 +700,7 @@ library PythLazerLib {
     /// @notice Get price (reverts if not exists)
     function getPrice(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (int64) {
+    ) public pure returns (int64) {
         require(
             isPriceRequested(feed),
             "Price is not requested for the timestamp"
@@ -662,7 +712,7 @@ library PythLazerLib {
     /// @notice Get best bid price (reverts if not exists)
     function getBestBidPrice(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (int64) {
+    ) public pure returns (int64) {
         require(
             isBestBidPriceRequested(feed),
             "Best bid price is not requested for the timestamp"
@@ -677,7 +727,7 @@ library PythLazerLib {
     /// @notice Get best ask price (reverts if not exists)
     function getBestAskPrice(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (int64) {
+    ) public pure returns (int64) {
         require(
             isBestAskPriceRequested(feed),
             "Best ask price is not requested for the timestamp"
@@ -692,7 +742,7 @@ library PythLazerLib {
     /// @notice Get publisher count (reverts if not exists)
     function getPublisherCount(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (uint16) {
+    ) public pure returns (uint16) {
         require(
             isPublisherCountRequested(feed),
             "Publisher count is not requested for the timestamp"
@@ -707,7 +757,7 @@ library PythLazerLib {
     /// @notice Get exponent (reverts if not exists)
     function getExponent(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (int16) {
+    ) public pure returns (int16) {
         require(
             isExponentRequested(feed),
             "Exponent is not requested for the timestamp"
@@ -719,7 +769,7 @@ library PythLazerLib {
     /// @notice Get confidence (reverts if not exists)
     function getConfidence(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (uint64) {
+    ) public pure returns (uint64) {
         require(
             isConfidenceRequested(feed),
             "Confidence is not requested for the timestamp"
@@ -734,7 +784,7 @@ library PythLazerLib {
     /// @notice Get funding rate (reverts if not exists)
     function getFundingRate(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (int64) {
+    ) public pure returns (int64) {
         require(
             isFundingRateRequested(feed),
             "Funding rate is not requested for the timestamp"
@@ -749,7 +799,7 @@ library PythLazerLib {
     /// @notice Get funding timestamp (reverts if not exists)
     function getFundingTimestamp(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (uint64) {
+    ) public pure returns (uint64) {
         require(
             isFundingTimestampRequested(feed),
             "Funding timestamp is not requested for the timestamp"
@@ -764,7 +814,7 @@ library PythLazerLib {
     /// @notice Get funding rate interval (reverts if not exists)
     function getFundingRateInterval(
         PythLazerStructs.Feed memory feed
-    ) internal pure returns (uint64) {
+    ) public pure returns (uint64) {
         require(
             isFundingRateIntervalRequested(feed),
             "Funding rate interval is not requested for the timestamp"
