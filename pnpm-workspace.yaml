@@ -57,13 +57,13 @@ catalog:
   "@babel/preset-typescript": ^7.27.1
   "@better-builds/ts-duality": ^0.6.0
   "@bonfida/spl-name-service": ^3.0.10
-  "@clickhouse/client": ^1.11.0
+  "@clickhouse/client": ^1.15.0
   "@coral-xyz/anchor": ^0.30.1
   "@cprussin/eslint-config": ^4.0.2
   "@cprussin/jest-config": ^2.0.2
   "@cprussin/prettier-config": ^2.2.2
   "@cprussin/tsconfig": ^3.1.2
-  "@duckdb/node-api": ^1.4.3-r.1
+  "@duckdb/node-api": ^1.4.3-r.2
   "@floating-ui/react": ^0.27.6
   "@headlessui/react": ^2.2.0
   "@heroicons/react": ^2.2.0

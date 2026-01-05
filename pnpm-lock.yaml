@@ -31,8 +31,8 @@ catalogs:
       specifier: ^3.0.10
       version: 3.0.10
     '@clickhouse/client':
-      specifier: ^1.11.0
-      version: 1.11.0
+      specifier: ^1.15.0
+      version: 1.15.0
     '@coral-xyz/anchor':
       specifier: ^0.30.1
       version: 0.30.1
@@ -49,8 +49,8 @@ catalogs:
       specifier: ^3.1.2
       version: 3.1.2
     '@duckdb/node-api':
-      specifier: ^1.4.3-r.1
-      version: 1.4.3-r.1
+      specifier: ^1.4.3-r.2
+      version: 1.4.3-r.2
     '@floating-ui/react':
       specifier: ^0.27.6
       version: 0.27.6
@@ -941,10 +941,10 @@ importers:
     dependencies:
       '@clickhouse/client':
         specifier: 'catalog:'
-        version: 1.11.0
+        version: 1.15.0
       '@duckdb/node-api':
         specifier: 'catalog:'
-        version: 1.4.3-r.1
+        version: 1.4.3-r.2
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -4568,11 +4568,11 @@ packages:
   '@classic-terra/terra.proto@1.1.0':
     resolution: {integrity: sha512-bYhQG5LUaGF0KPRY9hYT/HEcd1QExZPQd6zLV/rQkCe/eDxfwFRLzZHpaaAdfWoAAZjsRWqJbUCqCg7gXBbJpw==}
 
-  '@clickhouse/client-common@1.11.0':
-    resolution: {integrity: sha512-O0xbwv7HiMXayokrf5dYIBpjBnYekcOXWz60T1cXLmiZ8vgrfNRCiOpybJkrMXKnw9D0mWCgPUu/rgMY7U1f4g==}
+  '@clickhouse/client-common@1.15.0':
+    resolution: {integrity: sha512-/1BXaNNsBzH2w5ALWiH6M9zS+cJwlM9uMnMj9e8ETwvDjJzO+nIYlyxzp8Prc+9pEDZ5iAilZ4F8c0YVCzzNaA==}
 
-  '@clickhouse/client@1.11.0':
-    resolution: {integrity: sha512-VYTQfR0y/BtrIDEjuSce1zv85OvHak5sUhZVyNYJzbAgWHy3jFf8Os7FdUSeqyKav0xGGy+2X+dRanTFjI5Oug==}
+  '@clickhouse/client@1.15.0':
+    resolution: {integrity: sha512-QmW+p4c/r0oa3X6Un6lcBs4GZtJEQUdvf//x8GeqM5ru6m4oIUg3WwvermP3HE31kpEGoFOQfKbMN5ooR5gvNw==}
     engines: {node: '>=16'}
 
   '@coinbase/wallet-sdk@3.9.3':
@@ -4830,36 +4830,36 @@ packages:
   '@dual-bundle/import-meta-resolve@4.1.0':
     resolution: {integrity: sha512-+nxncfwHM5SgAtrVzgpzJOI1ol0PkumhVo469KCf9lUi21IGcY90G98VuHm9VRrUypmAzawAHO9bs6hqeADaVg==}
 
-  '@duckdb/node-api@1.4.3-r.1':
-    resolution: {integrity: sha512-/L6nywAWDnMptERJiO3npCu8XqWYGSo2prw6RvxERtjT9J95cnUP+WM6uNAm+Nw2uYDm8PvPO2kASC3Moh2bBA==}
+  '@duckdb/node-api@1.4.3-r.2':
+    resolution: {integrity: sha512-2by72HWrmuZFLanVClXme8n2QwMN82bi+b2jVTH2xGhAVMUGSdbsp/kTf2zxhfmsLtcX9gYwSzqMApIdz5GI2A==}
 
-  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.1':
-    resolution: {integrity: sha512-2dShpy8HmdLwfRLPI+KZaJXN+wA68gOsuAh//Q1C/X0tQbd97WxHo8u7lZqMhaJMvGaInVAxR+KoFSfG2M5jwA==}
+  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.2':
+    resolution: {integrity: sha512-/hqVgl+jA8GX60ysO556e/vhUxDCD+PNcJFiqTT96Yvry8sqRwL5GOpB94wrUS+2fLZxQ5qTjH0WzqTGMeBHYw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@duckdb/node-bindings-darwin-x64@1.4.3-r.1':
-    resolution: {integrity: sha512-a6DUVpDolavw1ojq/IBKoEViGzL1oMIP5xlPrqEW+znyDxp85/UfZzCXnH+BYTKgLWBwCUcqlneMtCh4osZ9lQ==}
+  '@duckdb/node-bindings-darwin-x64@1.4.3-r.2':
+    resolution: {integrity: sha512-84Ix+4XU+JWyXP5Q/151fwS9piFI++rHLj9Jya2TMsdpBxSqxG7pUKfCRSLpsoxn7ej1AOVtZdcaO4TGTdl4Aw==}
     cpu: [x64]
     os: [darwin]
 
-  '@duckdb/node-bindings-linux-arm64@1.4.3-r.1':
-    resolution: {integrity: sha512-WQ/khu+KCEH34JxDAfa8IDCw0m5NUefpqT4izbH372OAAiY/858xrtcB8FYW0p9Yeb6P8dglHQ058FoLBQ7MhA==}
+  '@duckdb/node-bindings-linux-arm64@1.4.3-r.2':
+    resolution: {integrity: sha512-e/RfvosNxj97vsnKPm5ealyTeMXKFbJt7rgOHsF3nAqqzWL8WsVqJ3ZsW2fg6NWmJYkp7Mz3md/AR8mQNAuS4Q==}
     cpu: [arm64]
     os: [linux]
 
-  '@duckdb/node-bindings-linux-x64@1.4.3-r.1':
-    resolution: {integrity: sha512-GWZPi+eAsv2/6TQch+b6AgnPiVnXjhmT7l9gbZMZ17fDSIkKXSbWa9Y3dDJ8amDu/IJpwBMFVovfLHrELbMmlA==}
+  '@duckdb/node-bindings-linux-x64@1.4.3-r.2':
+    resolution: {integrity: sha512-YUnt2vJOXmn3y7dvgV2uw9hoKMy1IQIFV1uCX3ZeoIsmrshNwlhbBDyquGgt9HHn/2vz+omCGz0oGwTuifaKHA==}
     cpu: [x64]
     os: [linux]
 
-  '@duckdb/node-bindings-win32-x64@1.4.3-r.1':
-    resolution: {integrity: sha512-7II6t8/0opHz6NFosrn5VSv3uMadtOhVRfBK+HzEvxTSkGEpu6DzQ91mPaiehuFctdB2upPza4dP3rCLYDdHeQ==}
+  '@duckdb/node-bindings-win32-x64@1.4.3-r.2':
+    resolution: {integrity: sha512-TJoM4nUGuxPVv5G8S6wlgz2ojtOZKTSdud+brGSTKcxVlJF/UZ4tiXIa4gOhTEMmWMYes7Xc95I4YY7qF8DhUg==}
     cpu: [x64]
     os: [win32]
 
-  '@duckdb/node-bindings@1.4.3-r.1':
-    resolution: {integrity: sha512-I7rkYeNYDs9oV9AU076m9msrWb4wdVXapX1y2em8YkGItn4ehyp8q0KEJ2QZy45+PLqmkHt9b/QHlDo8xKnLZQ==}
+  '@duckdb/node-bindings@1.4.3-r.2':
+    resolution: {integrity: sha512-yUnOblF+xL41TtPadt1JYAZEIQiYcFr5CKnQCqM+h/KRd1ft/PsX2kex5hQBFGzS/yBKn27c305hjGMgBvIfGQ==}
 
   '@ecies/ciphers@0.2.3':
     resolution: {integrity: sha512-tapn6XhOueMwht3E2UzY0ZZjYokdaw9XtL9kEyjhQ/Fb9vL9xTFbOaI+fV0AWvTpYu4BNloC6getKW6NtSg4mA==}
@@ -24762,11 +24762,11 @@ snapshots:
       long: 4.0.0
       protobufjs: 6.11.4
 
-  '@clickhouse/client-common@1.11.0': {}
+  '@clickhouse/client-common@1.15.0': {}
 
-  '@clickhouse/client@1.11.0':
+  '@clickhouse/client@1.15.0':
     dependencies:
-      '@clickhouse/client-common': 1.11.0
+      '@clickhouse/client-common': 1.15.0
 
   '@coinbase/wallet-sdk@3.9.3':
     dependencies:
@@ -25791,32 +25791,32 @@ snapshots:
 
   '@dual-bundle/import-meta-resolve@4.1.0': {}
 
-  '@duckdb/node-api@1.4.3-r.1':
+  '@duckdb/node-api@1.4.3-r.2':
     dependencies:
-      '@duckdb/node-bindings': 1.4.3-r.1
+      '@duckdb/node-bindings': 1.4.3-r.2
 
-  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.1':
+  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.2':
     optional: true
 
-  '@duckdb/node-bindings-darwin-x64@1.4.3-r.1':
+  '@duckdb/node-bindings-darwin-x64@1.4.3-r.2':
     optional: true
 
-  '@duckdb/node-bindings-linux-arm64@1.4.3-r.1':
+  '@duckdb/node-bindings-linux-arm64@1.4.3-r.2':
     optional: true
 
-  '@duckdb/node-bindings-linux-x64@1.4.3-r.1':
+  '@duckdb/node-bindings-linux-x64@1.4.3-r.2':
     optional: true
 
-  '@duckdb/node-bindings-win32-x64@1.4.3-r.1':
+  '@duckdb/node-bindings-win32-x64@1.4.3-r.2':
     optional: true
 
-  '@duckdb/node-bindings@1.4.3-r.1':
+  '@duckdb/node-bindings@1.4.3-r.2':
     optionalDependencies:
-      '@duckdb/node-bindings-darwin-arm64': 1.4.3-r.1
-      '@duckdb/node-bindings-darwin-x64': 1.4.3-r.1
-      '@duckdb/node-bindings-linux-arm64': 1.4.3-r.1
-      '@duckdb/node-bindings-linux-x64': 1.4.3-r.1
-      '@duckdb/node-bindings-win32-x64': 1.4.3-r.1
+      '@duckdb/node-bindings-darwin-arm64': 1.4.3-r.2
+      '@duckdb/node-bindings-darwin-x64': 1.4.3-r.2
+      '@duckdb/node-bindings-linux-arm64': 1.4.3-r.2
+      '@duckdb/node-bindings-linux-x64': 1.4.3-r.2
+      '@duckdb/node-bindings-win32-x64': 1.4.3-r.2
 
   '@ecies/ciphers@0.2.3(@noble/ciphers@1.3.0)':
     dependencies:

@@ -7,9 +7,15 @@ import { z } from "zod";
 
 import { Cluster, ClusterToName } from "./pyth";
 import { redisCache } from "../cache";
-import { CLICKHOUSE } from "../config/server";
+import {
+  CLICKHOUSE,
+  CLICKHOUSE_PYTH_ANALYTICS,
+  CLICKHOUSE_PYTH_PRO,
+} from "../config/server";
 
-const client = createClient(CLICKHOUSE);
+const pythCoreClient = createClient(CLICKHOUSE);
+const pythProClient = createClient(CLICKHOUSE_PYTH_PRO);
+const pythAnalyticsClient = createClient(CLICKHOUSE_PYTH_ANALYTICS);
 
 const _getPublisherRankings = async (cluster: Cluster) =>
   safeQuery(
@@ -386,11 +392,160 @@ export const getHistoricalPrices = async ({
   );
 };
 
+const GetPriceFeedMetadataForSymbolSchema = z.object({
+  minChannel: z.string(),
+  name: z.string().nonempty(),
+  pythCoreId: z.string(),
+});
+
+/**
+ * Given a symbol, like AMZN, TSLA, BTCUSD or even EURUSD,
+ * grabs
+ */
+export async function getPythProPriceFeedMetadataForSymbol(symbol: string) {
+  if (!symbol) {
+    throw new Error(
+      "no symbol was provided when getPythProPriceFeedMetadataForSymbol called",
+    );
+  }
+
+  const results = await safeQuery(
+    z.array(GetPriceFeedMetadataForSymbolSchema),
+    {
+      query: `SELECT
+    DISTINCT f.pyth_lazer_id as pythLazerId,
+    f.name as name,
+    f.hermes_id as pythCoreId,
+    f.min_channel as minChannel
+FROM feeds_metadata_latest f
+PREWHERE
+    f.state = 'stable'
+        AND f.description not like '%deprecated%'
+WHERE name = {name: String}
+LIMIT 10
+OFFSET 0`,
+      query_params: { name: symbol },
+    },
+    pythProClient,
+  );
+
+  return results[0];
+}
+
+const GetPythProFeedPricesOptsSchema = z.object({
+  end: z.string().datetime().nonempty(),
+  symbol: z.string().nonempty(),
+  start: z.string().datetime().nonempty(),
+});
+
+type GetPythProFeedPricesOpts = z.infer<typeof GetPythProFeedPricesOptsSchema>;
+
+const GetPythHistoricalPricesFromDBSchema = z.object({
+  ask: z.number().optional().nullable(),
+  bid: z.number().optional().nullable(),
+  exponent: z.number(),
+  price: z.number().optional().nullable(),
+  timestamp: z.string().datetime(),
+});
+const GetPythHistoricalPricesSchema = GetPythHistoricalPricesFromDBSchema.omit({
+  exponent: true,
+}).extend({
+  source: z.enum(["nbbo", "pyth_pro"]),
+  symbol: z.string().nonempty(),
+});
+type GetPythHistoricalPricesType = z.infer<
+  typeof GetPythHistoricalPricesSchema
+>;
+
+const GetPythHistoricalPricesReturnTypeSchema = z.array(
+  GetPythHistoricalPricesSchema,
+);
+
+/**
+ * fetches only NBBO historical pricing data for the provided symbol
+ */
+export async function getNbboHistoricalPrices(
+  opts: GetPythProFeedPricesOpts,
+): Promise<GetPythHistoricalPricesType[]> {
+  const dbNames = [
+    "datascope_futures_benchmark_data",
+    "datascope_fx_benchmark_data",
+    "datascope_global_equities_benchmark_data",
+    "datascope_us_treasury_benchmark_data",
+  ];
+
+  const results = await Promise.all(dbNames.map(async (dbName) => {}));
+  return [];
+}
+
+/**
+ * fetches a chunk of pricing information for either PythPro, PythCore
+ * or NBBO sources
+ */
+export async function getPythProHistoricalPrices(
+  opts: GetPythProFeedPricesOpts,
+): Promise<GetPythHistoricalPricesType[]> {
+  const validatedOpts = GetPythProFeedPricesOptsSchema.safeParse(opts);
+  if (validatedOpts.error) {
+    throw new Error(validatedOpts.error.format()._errors.join(", "));
+  }
+
+  const {
+    data: { end, start, symbol },
+  } = validatedOpts;
+
+  const meta = await getPythProPriceFeedMetadataForSymbol(symbol);
+
+  if (!meta) {
+    throw new Error(`no feed metadata exists for symbol ${symbol}`);
+  }
+
+  const { name, pythCoreId } = meta;
+
+  const results = await safeQuery(
+    z.array(GetPythHistoricalPricesFromDBSchema),
+    {
+      query: `SELECT
+  pf.publish_time as timestamp,
+  pf.best_ask_price as ask,
+  pf.best_bid_price as bid,
+  pf.price,
+  pf.exponent
+FROM price_feeds pf
+PREWHERE
+  pf.price_feed_id = {feedId: UInt32}
+    AND pf.state = 'STABLE'
+WHERE pf.publish_time >= parseDateTimeBestEffort({start: String})
+    AND pf.publish_time < parseDateTimeBestEffort({end: String})
+ORDER BY pf.publish_time ASC
+OFFSET 0`,
+      query_params: {
+        end,
+        feedId: pythCoreId,
+        start,
+      },
+    },
+    pythProClient,
+  );
+
+  const out = results.map<GetPythHistoricalPricesType>((r) => ({
+    ...r,
+    symbol: name,
+    source: "pyth_pro",
+  }));
+  const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(out);
+  if (validatedOut.error) {
+    throw new Error(validatedOut.error.format()._errors.join(", "));
+  }
+  return validatedOut.data;
+}
+
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,
-  query: Omit<Parameters<typeof client.query>[0], "format">,
+  query: Omit<Parameters<typeof pythCoreClient.query>[0], "format">,
+  clientToUse = pythCoreClient,
 ) => {
-  const rows = await client.query({ ...query, format: "JSON" });
+  const rows = await clientToUse.query({ ...query, format: "JSON" });
   const result = await rows.json();
 
   return schema.parse(result.data);

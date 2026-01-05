@@ -54,6 +54,20 @@ export const CLICKHOUSE = {
   password: demand("CLICKHOUSE_PASSWORD"),
 };
 
+export const CLICKHOUSE_PYTH_PRO = {
+  ...CLICKHOUSE,
+  url:
+    process.env.CLICKHOUSE_PYTH_PRO_URL ??
+    "https://fonra6si8x.ap-northeast-1.aws.clickhouse.cloud:8443",
+};
+
+export const CLICKHOUSE_PYTH_ANALYTICS = {
+  ...CLICKHOUSE,
+  url:
+    process.env.CLICKHOUSE_PYTH_ANALYTICS_URL ??
+    "https://e3ovtrijn4.ap-northeast-1.aws.clickhouse.cloud:8443",
+};
+
 export const SOLANA_RPC =
   process.env.SOLANA_RPC ?? "https://api.mainnet-beta.solana.com";
 
