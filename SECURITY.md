@@ -2,19 +2,15 @@
 
 ## Bug Bounty Program
 
-Pyth operates a self hosted [bug bounty program](https://pyth.network/bounty) to financially incentivize independent researchers (with up to $500,000 USDC) for finding and responsibly disclosing security issues.
+Pyth operates a [bug bounty program](https://pyth.network/bounty) on Immunefi to financially incentivize independent researchers (with up to $250,000 USDC) for finding and responsibly disclosing security issues.
 
 - **Scopes**
-  - [Pyth Oracle](https://github.com/pyth-network/pyth-client/tree/main/program)
-  - [Pyth Crosschain Ethereum](/target_chains/ethereum/contracts/contracts/pyth)
-  - [Pyth Crosschain Aptos](/target_chains/aptos/contracts)
-  - [Pyth Crosschain Sui](/target_chains/sui/contracts)
-  - [Pyth Governance](https://github.com/pyth-network/governance/tree/master/staking/programs/staking)
+  Please see the [Immunefi scope list](https://immunefi.com/bug-bounty/pythnetwork/scope/#top) for an up-to-date list of the included scopes
 - **Rewards**
-  - Critical: Up to $500,000
-  - High: Up to $100,000
+  - Critical: Up to $250,000
+  - High: Up to $50,000
 
-If you find a security issue in Pyth, please [report the issue](https://yyyf63zqhtu.typeform.com/to/dBV4qcP0) immediately to our security team.
+If you find a security issue in Pyth, please report the issue immediately to our security team via a Immunefi submission.
 
 If there is a duplicate report, either the same reporter or different reporters, the first of the two by timestamp will be accepted as the official bug report and will be subject to the specific terms of the submitting program.
 
