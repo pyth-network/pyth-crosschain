@@ -2,7 +2,7 @@
 
 ## Bug Bounty Program
 
-Pyth operates a [bug bounty program](https://immunefi.com/bug-bounty/pythnetwork/information/) on Immunefi to financially incentivize independent researchers (with up to $250,000 USDC) for finding and responsibly disclosing security issues.
+Pyth operates a [bug bounty program](https://pyth.network/bounty) on Immunefi to financially incentivize independent researchers (with up to $250,000 USDC) for finding and responsibly disclosing security issues.
 
 - **Scopes**
   Please see the [Immunefi scope list](https://immunefi.com/bug-bounty/pythnetwork/scope/#top) for an up-to-date list of the included scopes
