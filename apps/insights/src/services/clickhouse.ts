@@ -566,7 +566,7 @@ export async function getPythProHistoricalPrices(
   }
 
   const {
-    data: { end, start, symbol },
+    data: { end, sources, start, symbol },
   } = validatedOpts;
 
   const meta = await getPythProPriceFeedMetadataForSymbol(symbol);
@@ -577,10 +577,11 @@ export async function getPythProHistoricalPrices(
 
   const { name, pythLazerId } = meta;
 
-  const results = await unsafeQuery(
-    z.array(GetPythHistoricalPricesFromDBSchema),
-    {
-      query: `SELECT
+  const fetchPythData = async () => {
+    const results = await unsafeQuery(
+      z.array(GetPythHistoricalPricesFromDBSchema),
+      {
+        query: `SELECT
   pf.publish_time as timestamp,
   pf.best_ask_price as ask,
   pf.best_bid_price as bid,
@@ -594,37 +595,52 @@ WHERE pf.publish_time >= parseDateTimeBestEffort({start: String})
     AND pf.publish_time < parseDateTimeBestEffort({end: String})
 ORDER BY pf.publish_time ASC
 OFFSET 0`,
-      query_params: {
-        end,
-        feedId: pythLazerId,
-        start,
+        query_params: {
+          end,
+          feedId: pythLazerId,
+          start,
+        },
       },
-    },
-    pythProClient,
+      pythProClient,
+    );
+
+    if (results.error) {
+      throw new Error(fromZodError(results.error).message);
+    }
+
+    return results.data.map<GetPythHistoricalPricesType>((d) => {
+      const exponent = d.exponent ?? 0;
+
+      const ask = typeof d.ask === "number" ? d.ask * 10 ** exponent : d.ask;
+      const bid = typeof d.bid === "number" ? d.bid * 10 ** exponent : d.bid;
+      const price =
+        typeof d.price === "number" ? d.price * 10 ** exponent : d.price;
+      return {
+        ...d,
+        ask,
+        bid,
+        price,
+        symbol: name,
+        source: "pyth_pro",
+      };
+    });
+  };
+
+  const allResults: GetPythHistoricalPricesType[][] = await Promise.all([
+    sources.includes("pyth_pro")
+      ? fetchPythData()
+      : Promise.resolve<GetPythHistoricalPricesType[]>([]),
+    sources.includes("nbbo")
+      ? getNbboHistoricalPricesForPythProFeedId({
+          ...opts,
+          feedId: pythLazerId,
+        })
+      : Promise.resolve<GetPythHistoricalPricesType[]>([]),
+  ]);
+
+  const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(
+    allResults.flat(),
   );
-
-  if (results.error) {
-    throw new Error(fromZodError(results.error).message);
-  }
-
-  const out = results.data.map<GetPythHistoricalPricesType>((r) => {
-    const exponent = r.exponent ?? 0;
-
-    const ask = typeof r.ask === "number" ? r.ask * 10 ** exponent : r.ask;
-    const bid = typeof r.bid === "number" ? r.bid * 10 ** exponent : r.bid;
-    const price =
-      typeof r.price === "number" ? r.price * 10 ** exponent : r.price;
-
-    return {
-      ...r,
-      ask,
-      bid,
-      price,
-      symbol: name,
-      source: "pyth_pro",
-    };
-  });
-  const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(out);
   if (validatedOut.error) {
     throw new Error(fromZodError(validatedOut.error).message);
   }
