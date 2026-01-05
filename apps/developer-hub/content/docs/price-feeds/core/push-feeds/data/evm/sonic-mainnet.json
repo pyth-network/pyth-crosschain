@@ -78,13 +78,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "GOGLZ/USD",
-      "id": "82465d1155ddbb2c73bf3491457163000f8e8d02dea90c548b1b7e56ae9fe4b1",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "SHADOW/USD",
       "id": "6f02ad2b8a307411fc3baedb9876e83efe9fa9f5b752aab8c99f4742c9e5f5d5",
       "time_difference": 3600,
