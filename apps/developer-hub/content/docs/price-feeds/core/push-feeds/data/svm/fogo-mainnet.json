@@ -1,29 +1,29 @@
 {
   "feeds": [
     {
-      "alias": "FOGO/USD",
-      "id": "d3cd2bae6315f4f940cbd3a4a915f675f8fba85e33bd6aa5f7b727a15a9c812f",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "fUSD/USD",
-      "id": "8d940f7b53df8dd4b3c33a84c3ba043214c3cdcd5243c03b7cb4b0b22746efd8",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "USDC/USD",
-      "id": "41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722",
+      "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "SOL/USD",
+      "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "ETH/USD",
+      "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
     },
     {
       "alias": "USDT/USD",
-      "id": "1fc18861232290221461220bd4e2acd1dcdfbc89c84092c93c18bdc7756c1588",
+      "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
