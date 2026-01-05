@@ -61,7 +61,7 @@ export function PageActions({ content, title, url }: PageActionsProps) {
   function handleShare(option: PageActionOption) {
     // Convert relative URL to absolute URL
     const absoluteUrl = url.startsWith("/")
-      ? `https://docs.pyth.network${url}`
+      ? `${globalThis.location.origin}${url}`
       : url;
 
     const prompt = `Please read and analyze this documentation page:
