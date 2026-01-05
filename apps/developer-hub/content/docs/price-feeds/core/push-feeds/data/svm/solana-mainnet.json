@@ -201,14 +201,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "BLZE/USD",
-      "account_address": "FFv5yoCGhEgWv6mXhwv4KX8A2dYcVAzi88a6Yu8Tf3iB",
-      "id": "93c3def9b169f49eed14c9d73ed0e942c666cf0e1290657ec82038ebb792c2a8",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "JLP/USD",
       "account_address": "2TTGSRSezqFzeLUH8JwRUbtN66XLLaymfYsWRTMjfiMw",
       "id": "c811abc82b4bad1f9bd711a2773ccaa935b03ecef974236942cec5e0eb845a3a",
