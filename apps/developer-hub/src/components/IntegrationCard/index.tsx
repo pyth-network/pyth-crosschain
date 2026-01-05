@@ -11,6 +11,7 @@ type IntegrationCardProps = {
   colorScheme?: "blue" | "green" | "purple" | "yellow";
   external?: boolean;
   showArrow?: boolean;
+  fullDescription?: boolean;
 };
 
 export function IntegrationCard({
@@ -21,6 +22,7 @@ export function IntegrationCard({
   colorScheme = "blue",
   external,
   showArrow,
+  fullDescription,
 }: IntegrationCardProps) {
   const shouldShowArrow = showArrow ?? !external;
   const commonProps = {
@@ -42,7 +44,14 @@ export function IntegrationCard({
           </span>
         )}
       </div>
-      <p className={styles.description}>{description}</p>
+      <p
+        className={clsx(
+          styles.description,
+          fullDescription && styles.fullDescription,
+        )}
+      >
+        {description}
+      </p>
     </>
   );
 

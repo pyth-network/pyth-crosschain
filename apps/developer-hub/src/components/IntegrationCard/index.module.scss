@@ -182,4 +182,11 @@
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  &.fullDescription {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+  }
 }

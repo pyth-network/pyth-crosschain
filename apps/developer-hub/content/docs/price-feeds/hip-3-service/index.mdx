@@ -7,6 +7,7 @@ slug: /price-feeds/hip-3-service
 import { Callout } from "fumadocs-ui/components/callout";
 import { IntegrationCard } from "../../../../src/components/IntegrationCard";
 import { Lightning, FileText, Shield } from "@phosphor-icons/react/dist/ssr";
+import styles from "./index.module.scss";
 
 Pyth Network provides **HIP-3 as a Service**, a complete end-to-end solution for deployers launching permissionless perpetual markets on Hyperliquid. This service combines institutional-grade data, managed infrastructure, capital support, and market operations to help you successfully deploy and maintain HIP-3 markets.
 
@@ -14,13 +15,14 @@ Pyth Network provides **HIP-3 as a Service**, a complete end-to-end solution for
 
 HIP-3 as a Service provides everything you need to launch and maintain a successful perpetual market on Hyperliquid:
 
-<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+<div className={styles.cardsGrid}>
   <IntegrationCard
     href="#oracle-data-infrastructure"
     colorScheme="blue"
     title="Oracle Data & Infrastructure"
     description="First-party data with automated updates and 24/7 monitoring"
     icon={<Lightning size={16} />}
+    fullDescription
   />
   <IntegrationCard
     href="#capital-liquidity-support"
@@ -28,6 +30,7 @@ HIP-3 as a Service provides everything you need to launch and maintain a success
     title="Capital & Liquidity Support"
     description="Market maker relationships, loan capital, and HYPE sourcing"
     icon={<FileText size={16} />}
+    fullDescription
   />
   <IntegrationCard
     href="#security-go-to-market"
@@ -35,6 +38,7 @@ HIP-3 as a Service provides everything you need to launch and maintain a success
     title="Security & Go-to-Market"
     description="Audit discounts, 24/7 support, and co-marketing"
     icon={<Shield size={16} />}
+    fullDescription
   />
 </div>
 
