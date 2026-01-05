@@ -2,8 +2,10 @@ import "server-only";
 
 import { createClient } from "@clickhouse/client";
 import { PriceStatus } from "@pythnetwork/client";
+import dayjs from "dayjs";
 import type { ZodSchema, ZodTypeDef } from "zod";
 import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
 
 import { Cluster, ClusterToName } from "./pyth";
 import { redisCache } from "../cache";
@@ -395,6 +397,7 @@ export const getHistoricalPrices = async ({
 const GetPriceFeedMetadataForSymbolSchema = z.object({
   minChannel: z.string(),
   name: z.string().nonempty(),
+  pythLazerId: z.number(),
   pythCoreId: z.string(),
 });
 
@@ -432,25 +435,52 @@ OFFSET 0`,
   return results[0];
 }
 
+const PythProHistoricalDataSources = z.enum(["nbbo", "pyth_pro"]);
+
+const LooseDate = z.union([
+  z.date(),
+  z
+    .string()
+    .nonempty()
+    .refine(
+      (val) => {
+        const d = dayjs(val);
+        return d.isValid();
+      },
+      { message: "invalid datetime format found" },
+    )
+    .transform((val) => new Date(val)),
+]);
+
 const GetPythProFeedPricesOptsSchema = z.object({
-  end: z.string().datetime().nonempty(),
+  end: LooseDate,
+  sources: z.array(PythProHistoricalDataSources),
   symbol: z.string().nonempty(),
-  start: z.string().datetime().nonempty(),
+  start: LooseDate,
 });
 
 type GetPythProFeedPricesOpts = z.infer<typeof GetPythProFeedPricesOptsSchema>;
 
+const LooseNumberSchema = z
+  .union([z.string(), z.number()])
+  .optional()
+  .nullable()
+  .transform((val) => {
+    if (val) return Number(val);
+    return;
+  });
+
 const GetPythHistoricalPricesFromDBSchema = z.object({
-  ask: z.number().optional().nullable(),
-  bid: z.number().optional().nullable(),
-  exponent: z.number(),
-  price: z.number().optional().nullable(),
-  timestamp: z.string().datetime(),
+  ask: LooseNumberSchema,
+  bid: LooseNumberSchema,
+  exponent: LooseNumberSchema,
+  price: LooseNumberSchema,
+  timestamp: LooseDate,
 });
 const GetPythHistoricalPricesSchema = GetPythHistoricalPricesFromDBSchema.omit({
   exponent: true,
 }).extend({
-  source: z.enum(["nbbo", "pyth_pro"]),
+  source: PythProHistoricalDataSources,
   symbol: z.string().nonempty(),
 });
 type GetPythHistoricalPricesType = z.infer<
@@ -464,9 +494,11 @@ const GetPythHistoricalPricesReturnTypeSchema = z.array(
 /**
  * fetches only NBBO historical pricing data for the provided symbol
  */
-export async function getNbboHistoricalPrices(
-  opts: GetPythProFeedPricesOpts,
+export async function getNbboHistoricalPricesForPythProFeedId(
+  opts: GetPythProFeedPricesOpts & { feedId: number },
 ): Promise<GetPythHistoricalPricesType[]> {
+  const { end, feedId, symbol, start } = opts;
+
   const dbNames = [
     "datascope_futures_benchmark_data",
     "datascope_fx_benchmark_data",
@@ -474,8 +506,51 @@ export async function getNbboHistoricalPrices(
     "datascope_us_treasury_benchmark_data",
   ];
 
-  const results = await Promise.all(dbNames.map(async (dbName) => {}));
-  return [];
+  const allResults = await Promise.all(
+    dbNames.map(async (dbName) => {
+      const results = await safeQuery(
+        z.array(GetPythHistoricalPricesFromDBSchema),
+        {
+          query: `SELECT
+    d.date_time as timestamp,
+    d.price,
+    d.bid_price as bid,
+    d.ask_price as ask,
+    0 as exponent
+FROM ${dbName} d
+PREWHERE
+    d.pyth_lazer_id = {feedId: UInt32}
+WHERE
+    d.date_time >= parseDateTimeBestEffort({start: String})
+    AND d.date_time < parseDateTimeBestEffort({end: String})
+ORDER BY d.date_time asc
+OFFSET 0;`,
+          query_params: {
+            end,
+            feedId,
+            start,
+          },
+        },
+        pythAnalyticsClient,
+      );
+
+      return results;
+    }),
+  );
+  const out = allResults.flatMap((results) =>
+    results.map<GetPythHistoricalPricesType>((r) => ({
+      ...r,
+      symbol,
+      source: "nbbo",
+    })),
+  );
+
+  const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(out);
+  if (validatedOut.error) {
+    throw new Error(fromZodError(validatedOut.error).message);
+  }
+
+  return out;
 }
 
 /**
@@ -487,7 +562,7 @@ export async function getPythProHistoricalPrices(
 ): Promise<GetPythHistoricalPricesType[]> {
   const validatedOpts = GetPythProFeedPricesOptsSchema.safeParse(opts);
   if (validatedOpts.error) {
-    throw new Error(validatedOpts.error.format()._errors.join(", "));
+    throw new Error(fromZodError(validatedOpts.error).message);
   }
 
   const {
@@ -500,9 +575,9 @@ export async function getPythProHistoricalPrices(
     throw new Error(`no feed metadata exists for symbol ${symbol}`);
   }
 
-  const { name, pythCoreId } = meta;
+  const { name, pythLazerId } = meta;
 
-  const results = await safeQuery(
+  const results = await unsafeQuery(
     z.array(GetPythHistoricalPricesFromDBSchema),
     {
       query: `SELECT
@@ -521,23 +596,46 @@ ORDER BY pf.publish_time ASC
 OFFSET 0`,
       query_params: {
         end,
-        feedId: pythCoreId,
+        feedId: pythLazerId,
         start,
       },
     },
     pythProClient,
   );
 
-  const out = results.map<GetPythHistoricalPricesType>((r) => ({
-    ...r,
-    symbol: name,
-    source: "pyth_pro",
-  }));
+  if (results.error) {
+    throw new Error(fromZodError(results.error).message);
+  }
+
+  const out = results.data.map<GetPythHistoricalPricesType>((r) => {
+    const exponent = r.exponent ?? 0;
+
+    const ask = typeof r.ask === "number" ? r.ask * 10 ** exponent : r.ask;
+    const bid = typeof r.bid === "number" ? r.bid * 10 ** exponent : r.bid;
+    const price =
+      typeof r.price === "number" ? r.price * 10 ** exponent : r.price;
+
+    return {
+      ...r,
+      ask,
+      bid,
+      price,
+      symbol: name,
+      source: "pyth_pro",
+    };
+  });
   const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(out);
   if (validatedOut.error) {
-    throw new Error(validatedOut.error.format()._errors.join(", "));
+    throw new Error(fromZodError(validatedOut.error).message);
   }
-  return validatedOut.data;
+
+  // there may be MULTIPLE entries per timestamp, depending on the channel,
+  // so we need to do an additional dedup pass here
+  return [
+    ...new Map(
+      validatedOut.data.map((d) => [d.timestamp.toISOString(), d]),
+    ).values(),
+  ];
 }
 
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
@@ -549,6 +647,17 @@ const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   const result = await rows.json();
 
   return schema.parse(result.data);
+};
+
+const unsafeQuery = async <Output, Def extends ZodTypeDef, Input>(
+  schema: ZodSchema<Output, Def, Input>,
+  query: Omit<Parameters<typeof pythCoreClient.query>[0], "format">,
+  clientToUse = pythCoreClient,
+) => {
+  const rows = await clientToUse.query({ ...query, format: "JSON" });
+  const result = await rows.json();
+
+  return schema.safeParse(result.data);
 };
 
 export const getRankingsBySymbol = redisCache.define(
