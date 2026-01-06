@@ -46,6 +46,8 @@ export const GetPythHistoricalPricesFromDBSchema = z.object({
   timestamp: LooseDate,
 });
 
+export type PriceData = z.infer<typeof GetPythHistoricalPricesFromDBSchema>;
+
 export const GetPythHistoricalPricesSchema =
   GetPythHistoricalPricesFromDBSchema.omit({
     exponent: true,
@@ -60,3 +62,7 @@ export type GetPythHistoricalPricesType = z.infer<
 export const GetPythHistoricalPricesReturnTypeSchema = z.array(
   GetPythHistoricalPricesSchema,
 );
+
+export type GetPythHistoricalPricesReturnType = z.infer<
+  typeof GetPythHistoricalPricesReturnTypeSchema
+>;

@@ -478,9 +478,9 @@ WHERE
 ORDER BY d.date_time asc
 OFFSET 0;`,
           query_params: {
-            end,
+            end: end.toISOString(),
             feedId,
-            start,
+            start: start.toISOString(),
           },
         },
         pythAnalyticsClient,
@@ -529,9 +529,9 @@ WHERE pf.publish_time >= parseDateTimeBestEffort({start: String})
 ORDER BY pf.publish_time ASC
 OFFSET 0`,
       query_params: {
-        end,
+        end: end.toISOString(),
         feedId,
-        start,
+        start: start.toISOString(),
       },
     },
     pythProClient,

@@ -105,7 +105,8 @@ export function PythProDemoCard({
             {/* the token is either missing or it's a bad token */}
             {!isReplaySymbol(selectedSource) &&
             requiresToken &&
-            (!apiToken || socketStatus === "closed") ? (
+            !apiToken &&
+            socketStatus === "closed" ? (
               <>
                 Please enter a good API token
                 <br />

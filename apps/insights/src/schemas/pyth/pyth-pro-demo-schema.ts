@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { GetPythHistoricalPricesSchema } from "../../services/clickhouse-schema";
+
 const BINANCE = "binance";
 const BYBIT = "bybit";
 const COINBASE = "coinbase";
@@ -104,15 +106,7 @@ export const ALL_ALLOWED_SYMBOLS = z.enum([
 ]);
 export type AllAllowedSymbols = z.infer<typeof ALL_ALLOWED_SYMBOLS>;
 
-export const PriceDataSchema = z.object({
-  ask: z.number().optional().nullable(),
-  bid: z.number().optional().nullable(),
-  price: z.number().optional().nullable(),
-  timestamp: z.string().datetime(),
-});
-export type PriceData = z.infer<typeof PriceDataSchema>;
-
-export const PriceDataSchemaWithSource = PriceDataSchema.extend({
+export const PriceDataSchemaWithSource = GetPythHistoricalPricesSchema.extend({
   source: ALL_DATA_SOURCES,
   symbol: ALL_ALLOWED_SYMBOLS,
 });
@@ -181,14 +175,6 @@ export const CurrentPricesStoreStateSchema = z.object({
 });
 export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema
->;
-
-export const HistoricalDataResponseSchema = z.object({
-  data: z.array(PriceDataSchemaWithSource),
-  hasNext: z.boolean(),
-});
-export type HistoricalDataResponseType = z.infer<
-  typeof HistoricalDataResponseSchema
 >;
 
 export const ValidDateSchema = z.date();

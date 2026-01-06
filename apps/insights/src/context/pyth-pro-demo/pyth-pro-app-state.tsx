@@ -18,7 +18,6 @@ import type {
   CurrentPriceMetrics,
   CurrentPricesStoreState,
   LatestMetric,
-  PriceData,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   ALL_DATA_SOURCES,
@@ -28,6 +27,7 @@ import {
   DATA_SOURCES_FUTURES,
   DATA_SOURCES_HISTORICAL,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PriceData } from "../../services/clickhouse-schema";
 import {
   isAllowedCryptoSymbol,
   isAllowedEquitySymbol,
@@ -130,7 +130,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
                   change,
                   changePercent,
                   price: dataPoint.price,
-                  timestamp: dataPoint.timestamp,
+                  timestamp: dataPoint.timestamp.toISOString(),
                 } satisfies CurrentPriceMetrics,
               } satisfies LatestMetric,
             },

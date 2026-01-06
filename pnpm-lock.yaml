@@ -48,9 +48,6 @@ catalogs:
     '@cprussin/tsconfig':
       specifier: ^3.1.2
       version: 3.1.2
-    '@duckdb/node-api':
-      specifier: ^1.4.3-r.2
-      version: 1.4.3-r.2
     '@floating-ui/react':
       specifier: ^0.27.6
       version: 0.27.6
@@ -942,9 +939,6 @@ importers:
       '@clickhouse/client':
         specifier: 'catalog:'
         version: 1.15.0
-      '@duckdb/node-api':
-        specifier: 'catalog:'
-        version: 1.4.3-r.2
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -4829,37 +4823,6 @@ packages:
 
   '@dual-bundle/import-meta-resolve@4.1.0':
     resolution: {integrity: sha512-+nxncfwHM5SgAtrVzgpzJOI1ol0PkumhVo469KCf9lUi21IGcY90G98VuHm9VRrUypmAzawAHO9bs6hqeADaVg==}
-
-  '@duckdb/node-api@1.4.3-r.2':
-    resolution: {integrity: sha512-2by72HWrmuZFLanVClXme8n2QwMN82bi+b2jVTH2xGhAVMUGSdbsp/kTf2zxhfmsLtcX9gYwSzqMApIdz5GI2A==}
-
-  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.2':
-    resolution: {integrity: sha512-/hqVgl+jA8GX60ysO556e/vhUxDCD+PNcJFiqTT96Yvry8sqRwL5GOpB94wrUS+2fLZxQ5qTjH0WzqTGMeBHYw==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@duckdb/node-bindings-darwin-x64@1.4.3-r.2':
-    resolution: {integrity: sha512-84Ix+4XU+JWyXP5Q/151fwS9piFI++rHLj9Jya2TMsdpBxSqxG7pUKfCRSLpsoxn7ej1AOVtZdcaO4TGTdl4Aw==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@duckdb/node-bindings-linux-arm64@1.4.3-r.2':
-    resolution: {integrity: sha512-e/RfvosNxj97vsnKPm5ealyTeMXKFbJt7rgOHsF3nAqqzWL8WsVqJ3ZsW2fg6NWmJYkp7Mz3md/AR8mQNAuS4Q==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@duckdb/node-bindings-linux-x64@1.4.3-r.2':
-    resolution: {integrity: sha512-YUnt2vJOXmn3y7dvgV2uw9hoKMy1IQIFV1uCX3ZeoIsmrshNwlhbBDyquGgt9HHn/2vz+omCGz0oGwTuifaKHA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@duckdb/node-bindings-win32-x64@1.4.3-r.2':
-    resolution: {integrity: sha512-TJoM4nUGuxPVv5G8S6wlgz2ojtOZKTSdud+brGSTKcxVlJF/UZ4tiXIa4gOhTEMmWMYes7Xc95I4YY7qF8DhUg==}
-    cpu: [x64]
-    os: [win32]
-
-  '@duckdb/node-bindings@1.4.3-r.2':
-    resolution: {integrity: sha512-yUnOblF+xL41TtPadt1JYAZEIQiYcFr5CKnQCqM+h/KRd1ft/PsX2kex5hQBFGzS/yBKn27c305hjGMgBvIfGQ==}
 
   '@ecies/ciphers@0.2.3':
     resolution: {integrity: sha512-tapn6XhOueMwht3E2UzY0ZZjYokdaw9XtL9kEyjhQ/Fb9vL9xTFbOaI+fV0AWvTpYu4BNloC6getKW6NtSg4mA==}
@@ -25790,33 +25753,6 @@ snapshots:
       postcss-selector-parser: 7.1.0
 
   '@dual-bundle/import-meta-resolve@4.1.0': {}
-
-  '@duckdb/node-api@1.4.3-r.2':
-    dependencies:
-      '@duckdb/node-bindings': 1.4.3-r.2
-
-  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.2':
-    optional: true
-
-  '@duckdb/node-bindings-darwin-x64@1.4.3-r.2':
-    optional: true
-
-  '@duckdb/node-bindings-linux-arm64@1.4.3-r.2':
-    optional: true
-
-  '@duckdb/node-bindings-linux-x64@1.4.3-r.2':
-    optional: true
-
-  '@duckdb/node-bindings-win32-x64@1.4.3-r.2':
-    optional: true
-
-  '@duckdb/node-bindings@1.4.3-r.2':
-    optionalDependencies:
-      '@duckdb/node-bindings-darwin-arm64': 1.4.3-r.2
-      '@duckdb/node-bindings-darwin-x64': 1.4.3-r.2
-      '@duckdb/node-bindings-linux-arm64': 1.4.3-r.2
-      '@duckdb/node-bindings-linux-x64': 1.4.3-r.2
-      '@duckdb/node-bindings-win32-x64': 1.4.3-r.2
 
   '@ecies/ciphers@0.2.3(@noble/ciphers@1.3.0)':
     dependencies:

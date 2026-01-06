@@ -63,7 +63,6 @@ catalog:
   "@cprussin/jest-config": ^2.0.2
   "@cprussin/prettier-config": ^2.2.2
   "@cprussin/tsconfig": ^3.1.2
-  "@duckdb/node-api": ^1.4.3-r.2
   "@floating-ui/react": ^0.27.6
   "@headlessui/react": ^2.2.0
   "@heroicons/react": ^2.2.0

@@ -12,14 +12,14 @@ import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
-  HistoricalDataResponseType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   appendReplaySymbolSuffix,
-  HistoricalDataResponseSchema,
   removeReplaySymbolSuffix,
   ValidDateSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { GetPythHistoricalPricesReturnType } from "../../services/clickhouse-schema";
+import { GetPythHistoricalPricesReturnTypeSchema } from "../../services/clickhouse-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
 const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
@@ -59,7 +59,7 @@ export async function fetchHistoricalData(
   url: string,
   maxRetries = 5,
   tryNum = 1,
-): Promise<HistoricalDataResponseType> {
+): Promise<GetPythHistoricalPricesReturnType> {
   try {
     const response = await fetch(url, { method: "GET" });
 
@@ -73,7 +73,7 @@ export async function fetchHistoricalData(
       throw new Error("Empty response");
     }
 
-    const validated = HistoricalDataResponseSchema.safeParse(
+    const validated = GetPythHistoricalPricesReturnTypeSchema.safeParse(
       JSON.parse(textResponse),
     );
     if (validated.error) {
@@ -108,6 +108,7 @@ export function useHttpDataStream({
   /** refs */
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
+  const startAtToFetchRef = useRef(INITIAL_START_AT);
 
   /** state */
   const [status, setStatus] =
@@ -119,6 +120,7 @@ export function useHttpDataStream({
   useEffect(() => {
     playbackSpeedRef.current = playbackSpeed;
     symbolRef.current = symbol;
+    startAtToFetchRef.current = startAtToFetch;
   });
 
   useEffect(() => {
@@ -136,7 +138,7 @@ export function useHttpDataStream({
     setStatus("connected");
 
     fetchHistoricalData(url)
-      .then(async ({ data, hasNext }) => {
+      .then(async (data) => {
         // all the results should be in order of timestamp, regardless of the datasource
         // so we'll just write them all out to the chart as they flow in.
         // this may mean that one data source runs further ahead than another for a bit,
@@ -147,7 +149,9 @@ export function useHttpDataStream({
           const nextPoint = data[i + 1];
 
           if (currPoint) {
-            const dataPointSymbol = appendReplaySymbolSuffix(currPoint.symbol);
+            const dataPointSymbol = appendReplaySymbolSuffix(
+              currPoint.symbol as AllAllowedSymbols,
+            );
 
             if (dataPointSymbol !== symbolRef.current) break;
 
@@ -164,8 +168,14 @@ export function useHttpDataStream({
 
         const lastPoint = data.at(-1);
 
-        if (lastPoint && hasNext) {
+        if (lastPoint) {
           setStartAtToFetch(new Date(lastPoint.timestamp));
+        } else {
+          // there wasn't any data for this chunk, so just keep adding 1 minute
+          // to the request until we get data back
+          const d = new Date(startAtToFetchRef.current);
+          d.setTime(d.getTime() + 1000 * 60);
+          setStartAtToFetch(d);
         }
       })
       .catch((error_: unknown) => {

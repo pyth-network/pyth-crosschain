@@ -18,10 +18,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
-import type {
-  AllDataSourcesType,
-  PriceData,
-} from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PriceData } from "../../services/clickhouse-schema";
 import {
   getColorForDataSource,
   getThemeCssVar,
