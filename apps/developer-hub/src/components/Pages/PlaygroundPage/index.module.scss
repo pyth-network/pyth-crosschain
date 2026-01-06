@@ -1,0 +1,149 @@
+@use "@pythnetwork/component-library/theme";
+
+.playground {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--fd-nav-height, 0px));
+  background-color: var(--color-fd-background);
+}
+
+.header {
+  border-bottom: 1px solid theme.color("border");
+  background: linear-gradient(
+    180deg,
+    theme.color("background", "primary") 0%,
+    color-mix(in srgb, theme.color("background", "secondary") 70%, transparent)
+      100%
+  );
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+  padding-top: theme.spacing(12);
+  padding-bottom: theme.spacing(12);
+
+  @include theme.max-width;
+}
+
+.title {
+  @include theme.text("4xl", "semibold");
+
+  line-height: 115%;
+  letter-spacing: theme.letter-spacing("tight");
+  color: theme.color("heading");
+  margin: 0;
+}
+
+.subtitle {
+  @include theme.text("lg", "normal");
+
+  line-height: 150%;
+  color: theme.color("paragraph");
+  margin: 0;
+  max-width: 40rem;
+}
+
+.content {
+  flex: 1;
+  padding-top: theme.spacing(8);
+  padding-bottom: theme.spacing(16);
+}
+
+.contentInner {
+  @include theme.max-width;
+}
+
+// Main two-column grid layout
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(8);
+
+  // Two-column layout for medium screens and up
+  @media (min-width: 768px) {
+    grid-template-columns: 350px 1fr;
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 400px 1fr;
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: 450px 1fr;
+  }
+}
+
+// Left panel - Configuration controls
+.configPanel {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(6);
+}
+
+.configSection {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
+
+.sectionTitle {
+  @include theme.text("sm", "semibold");
+
+  color: theme.color("heading");
+  margin: 0;
+  padding-bottom: theme.spacing(1);
+  border-bottom: 1px solid theme.color("border");
+}
+
+.configRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(6);
+
+  @include theme.breakpoint("sm") {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// Right panel - Code preview and run button
+.codePanel {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+
+  // Make code panel sticky on medium screens and up
+  @media (min-width: 768px) {
+    position: sticky;
+    top: calc(var(--fd-nav-height, 56px) + 16px);
+    max-height: calc(100vh - var(--fd-nav-height, 56px) - 32px);
+  }
+}
+
+.runSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: theme.spacing(2);
+
+  @include theme.breakpoint("sm") {
+    flex-direction: row;
+    align-items: center;
+    gap: theme.spacing(4);
+  }
+}
+
+.runButton {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.runHint {
+  @include theme.text("sm", "normal");
+
+  color: theme.color("muted");
+  margin: 0;
+}

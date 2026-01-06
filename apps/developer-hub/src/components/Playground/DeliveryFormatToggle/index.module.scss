@@ -1,0 +1,24 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.label {
+  @include theme.text("sm", "semibold");
+
+  color: theme.color("heading");
+}
+
+.toggleGroup {
+  align-self: flex-start;
+}
+
+.description {
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+}
+
