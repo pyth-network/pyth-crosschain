@@ -1,0 +1,221 @@
+@use "../theme";
+
+.datePicker {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1.5);
+}
+
+.label {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  line-height: theme.spacing(4);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(1);
+  padding: theme.spacing(1.5) theme.spacing(2);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background-color: theme.color("background", "primary");
+  outline: theme.spacing(1) solid transparent;
+  outline-offset: 0;
+  transition-property: border-color, outline-color, background-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &:hover {
+    border-color: theme.color("forms", "input", "hover", "border");
+  }
+
+  &:focus-within {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+}
+
+.input {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: theme.spacing(1);
+  min-width: 0;
+  color: theme.color("paragraph");
+}
+
+.segment {
+  @include theme.text("sm", "normal");
+
+  padding: 0 theme.spacing(0.5);
+  border-radius: theme.border-radius("sm");
+  line-height: theme.spacing(4);
+  font-variant-numeric: tabular-nums;
+  transition: background-color 100ms linear;
+
+  &[data-placeholder] {
+    color: theme.color("button", "disabled", "foreground");
+  }
+
+  &[data-focused] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-focus-visible] {
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: theme.spacing(1);
+  border-radius: theme.border-radius("sm");
+  color: theme.color("muted");
+  border: 1px solid transparent;
+  background-color: transparent;
+  transition-property: background-color, border-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &:hover {
+    background-color: theme.color("button", "outline", "background", "hover");
+    color: theme.color("paragraph");
+  }
+
+  &[data-focus-visible] {
+    border-color: theme.color("focus");
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+}
+
+.triggerIcon {
+  width: theme.spacing(4);
+  height: theme.spacing(4);
+}
+
+.popover {
+  background-color: theme.color("background", "modal");
+  border-radius: theme.border-radius("lg");
+  border: 1px solid theme.color("border");
+  color: theme.color("paragraph");
+  box-shadow:
+    0 4px 6px -4px rgb(from black r g b / 10%),
+    0 10px 15px -3px rgb(from black r g b / 10%);
+  padding: theme.spacing(3);
+}
+
+.dialog {
+  outline: none;
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: theme.spacing(2);
+}
+
+.heading {
+  @include theme.text("sm", "medium");
+
+  text-transform: uppercase;
+  letter-spacing: theme.letter-spacing("wide");
+}
+
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: theme.spacing(8);
+  height: theme.spacing(8);
+  border-radius: theme.border-radius("full");
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: theme.color("muted");
+  transition-property: background-color, border-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &:hover {
+    background-color: theme.color("button", "outline", "background", "hover");
+    color: theme.color("paragraph");
+  }
+
+  &[data-focus-visible] {
+    border-color: theme.color("focus");
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+}
+
+.navIcon {
+  width: theme.spacing(4);
+  height: theme.spacing(4);
+}
+
+.calendarGrid {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.headerCell {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  text-transform: uppercase;
+  padding: theme.spacing(1);
+  text-align: center;
+}
+
+.cell {
+  @include theme.text("sm", "medium");
+
+  width: theme.spacing(8);
+  height: theme.spacing(8);
+  text-align: center;
+  border-radius: theme.border-radius("sm");
+  cursor: pointer;
+  transition-property: background-color, color, border-color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &[data-outside-month] {
+    color: theme.color("muted");
+  }
+
+  &[data-hovered] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-focus-visible] {
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+
+  &[data-selected] {
+    background-color: theme.color("button", "primary", "background", "normal");
+    color: theme.color("button", "primary", "foreground");
+  }
+
+  &[data-disabled],
+  &[data-unavailable] {
+    color: theme.color("button", "disabled", "foreground");
+    cursor: not-allowed;
+  }
+
+  &[data-today] {
+    border: 1px solid theme.color("focus");
+  }
+}

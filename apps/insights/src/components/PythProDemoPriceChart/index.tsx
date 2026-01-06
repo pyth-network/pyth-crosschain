@@ -325,7 +325,9 @@ export function PythProDemoPriceChartImpl({
           Reset chart position
         </Button>
       </div>
-      <div className={classes.chartContainer} ref={containerRef} />
+      {selectedReplayDate && (
+        <div className={classes.chartContainer} ref={containerRef} />
+      )}
     </div>
   );
 }
