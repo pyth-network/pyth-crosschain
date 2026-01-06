@@ -1,0 +1,132 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  @include theme.text("sm", "semibold");
+
+  color: theme.color("heading");
+}
+
+.count {
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+}
+
+.selectedChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1);
+  padding: theme.spacing(1) theme.spacing(2);
+  background-color: theme.color("states", "data", "background");
+  border: 1px solid theme.color("states", "data", "border");
+  border-radius: theme.border-radius("full");
+
+  @include theme.text("xs", "medium");
+
+  color: theme.color("states", "data", "normal");
+}
+
+.chipText {
+  white-space: nowrap;
+}
+
+.chipRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: theme.spacing(4);
+  height: theme.spacing(4);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 100ms ease;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  svg {
+    width: theme.spacing(3);
+    height: theme.spacing(3);
+  }
+}
+
+.searchInput {
+  width: 100%;
+}
+
+.feedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(2);
+  max-height: 200px;
+  overflow-y: auto;
+  padding: theme.spacing(2);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  background-color: theme.color("background", "primary");
+}
+
+.loading,
+.error,
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: theme.spacing(4);
+
+  @include theme.text("sm", "normal");
+
+  color: theme.color("muted");
+}
+
+.error {
+  color: theme.color("states", "error", "normal");
+}
+
+.feedItem {
+  flex-shrink: 0;
+}
+
+.feedSymbol {
+  font-weight: theme.font-weight("medium");
+}
+
+.feedId {
+  opacity: 0.7;
+  margin-left: theme.spacing(1);
+}
+
+.link {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("link", "primary");
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+

@@ -1,0 +1,82 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+  padding: theme.spacing(4);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+  background-color: theme.color("background", "secondary");
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.icon {
+  width: theme.spacing(5);
+  height: theme.spacing(5);
+  color: theme.color("highlight");
+}
+
+.label {
+  @include theme.text("sm", "semibold");
+
+  color: theme.color("heading");
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+
+  @include theme.breakpoint("md") {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.inputWrapper {
+  flex: 1;
+}
+
+.input {
+  @include theme.text("sm", "normal");
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+  padding: 0 theme.spacing(2);
+
+  @include theme.breakpoint("md") {
+    padding: 0 theme.spacing(4);
+  }
+}
+
+.switchWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+  flex-shrink: 0;
+}
+
+.switch {
+  white-space: nowrap;
+}
+
+.hint {
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+  padding-left: theme.spacing(8);
+}
+

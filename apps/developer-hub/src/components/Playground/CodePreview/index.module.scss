@@ -1,0 +1,83 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+  background-color: #1e1e1e; // VS Code dark theme background
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: theme.spacing(2) theme.spacing(4);
+  border-bottom: 1px solid theme.color("border");
+  background-color: theme.color("background", "secondary");
+  flex-wrap: wrap;
+  gap: theme.spacing(2);
+}
+
+.tabs {
+  display: flex;
+  gap: theme.spacing(1);
+}
+
+.tab {
+  @include theme.text("sm", "medium");
+
+  padding: theme.spacing(2) theme.spacing(3);
+  border: none;
+  border-radius: theme.border-radius("md");
+  background-color: transparent;
+  color: theme.color("muted");
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+
+  &:hover {
+    background-color: theme.color("background", "primary");
+    color: theme.color("heading");
+  }
+
+  &.active {
+    background-color: theme.color("highlight");
+    color: theme.color("background", "primary");
+  }
+}
+
+.actions {
+  display: flex;
+  gap: theme.spacing(2);
+}
+
+.actionButton {
+  @include theme.text("xs", "medium");
+
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1);
+}
+
+.editorWrapper {
+  height: 400px;
+  min-height: 300px;
+
+  @include theme.breakpoint("lg") {
+    height: 500px;
+  }
+}
+
+.editorLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: theme.color("muted");
+
+  @include theme.text("sm", "normal");
+}
+
