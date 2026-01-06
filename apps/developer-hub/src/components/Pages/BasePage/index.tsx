@@ -1,3 +1,4 @@
+import type { TOCItemType } from "fumadocs-core/toc";
 import {
   DocsBody,
   DocsDescription,
@@ -8,16 +9,24 @@ import { notFound } from "next/navigation";
 
 import { getLLMText } from "../../../lib/get-llm-text";
 import { source } from "../../../lib/source";
-import { getMDXComponents } from "../../../mdx-components";
 import { PageActions } from "../../PageActions";
 
-export async function BasePage(props: { params: { slug: string[] } }) {
-  const page = source.getPage(props.params.slug);
+export async function BasePage(props: { params: Promise<{ slug: string[] }> }) {
+  const params = await props.params;
+  const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  const MDX = page.data.body;
+  // Type assertions for Fumadocs v16 compatibility
+  const pageData = page.data as {
+    body?: React.ComponentType;
+    toc?: TOCItemType[];
+    full?: boolean;
+    title?: string;
+    description?: string;
+  };
+  const MDX = pageData.body;
   const content = await getLLMText(page);
-  const title = page.data.title;
+  const title = pageData.title ?? "";
   const url = page.url;
 
   // Hide PageActions for api-reference pages
@@ -25,18 +34,16 @@ export async function BasePage(props: { params: { slug: string[] } }) {
 
   return (
     <DocsPage
-      toc={page.data.toc}
+      {...(pageData.toc ? { toc: pageData.toc } : {})}
       tableOfContent={{ style: "clerk" }}
-      full={page.data.full}
+      {...(pageData.full === undefined ? {} : { full: pageData.full })}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsTitle>{title}</DocsTitle>
+      <DocsDescription>{pageData.description ?? ""}</DocsDescription>
       {!isApiReference && (
         <PageActions content={content} title={title} url={url} />
       )}
-      <DocsBody>
-        <MDX components={getMDXComponents()} />
-      </DocsBody>
+      <DocsBody>{MDX ? <MDX /> : undefined}</DocsBody>
     </DocsPage>
   );
 }

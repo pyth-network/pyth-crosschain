@@ -102,7 +102,8 @@ export const { GET } = createSearchAPI("advanced", {
       description: page.data.description,
       url: page.url,
       id: page.url,
-      structuredData: page.data.structuredData,
+      structuredData: (page.data as { structuredData?: unknown })
+        .structuredData as AdvancedIndex["structuredData"],
     })) as AdvancedIndex[];
 
     // Added these two functions to get the price feeds from the Hermes and Pro APIs

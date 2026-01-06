@@ -5,6 +5,8 @@ export async function DocumentationPage(props: {
 }) {
   const params = await props.params;
   return (
-    <BasePage params={{ ...params, slug: [params.section, ...params.slug] }} />
+    <BasePage
+      params={Promise.resolve({ slug: [params.section, ...params.slug] })}
+    />
   );
 }

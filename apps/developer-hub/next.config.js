@@ -1,4 +1,10 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { createMDX } from "fumadocs-mdx/next";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const config = {
   reactStrictMode: true,
@@ -24,6 +30,29 @@ const config = {
       ".mjs": [".mts", ".mjs"],
       ".cjs": [".cts", ".cjs"],
     };
+
+    // Resolve workspace dependencies for pyth-solana-receiver
+    // Point to the built dist folders or source if not built
+    const priceServicePath = path.resolve(
+      __dirname,
+      "../../price_service/sdk/js",
+    );
+    const solanaUtilsPath = path.resolve(
+      __dirname,
+      "../../target_chains/solana/sdk/js/solana_utils",
+    );
+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@pythnetwork/price-service-sdk": priceServicePath,
+      "@pythnetwork/solana-utils": solanaUtilsPath,
+    };
+
+    // Also add to modules to help with resolution
+    if (!config.resolve.modules) {
+      config.resolve.modules = ["node_modules"];
+    }
+    config.resolve.modules.push(priceServicePath, solanaUtilsPath);
 
     return config;
   },
