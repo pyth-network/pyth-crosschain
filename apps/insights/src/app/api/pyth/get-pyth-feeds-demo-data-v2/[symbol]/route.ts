@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { GetPythFeedsDemoDataRequestSchema } from "../../../../../schemas/pyth/pyth-pro-demo-schema";
-import { getPythProHistoricalPrices } from "../../../../../services/clickhouse";
+import { getNbboAndPythProHistoricalPricesForSymbol } from "../../../../../services/clickhouse";
 
 export async function GET(
   req: NextRequest,
@@ -45,7 +45,7 @@ export async function GET(
   end.setTime(end.getTime() + 1000 * 60);
 
   try {
-    const response = await getPythProHistoricalPrices({
+    const response = await getNbboAndPythProHistoricalPricesForSymbol({
       end,
       sources: datasources,
       start: startAt,
