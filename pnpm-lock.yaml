@@ -2139,6 +2139,9 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
+      dayjs:
+        specifier: 'catalog:'
+        version: 1.11.19
       modern-normalize:
         specifier: 'catalog:'
         version: 3.0.1
@@ -2440,6 +2443,9 @@ importers:
 
   packages/shared-lib:
     dependencies:
+      dayjs:
+        specifier: 'catalog:'
+        version: 1.11.19
       uuid:
         specifier: 'catalog:'
         version: 13.0.0

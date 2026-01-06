@@ -14,6 +14,20 @@
   flex-shrink: 0;
 }
 
+.spinner {
+  align-items: center;
+  color: theme.color("muted");
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(4);
+  margin-top: theme.spacing(6);
+
+  & svg {
+    height: theme.spacing(10);
+    width: theme.spacing(10);
+  }
+}
+
 .verticalDivider {
   background-color: theme.color("border");
   height: theme.spacing(6);

@@ -1,6 +1,9 @@
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { wait } from "@pythnetwork/shared-lib/util";
+import { usePrevious } from "@react-hookz/web";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
@@ -22,16 +25,9 @@ import type { GetPythHistoricalPricesReturnType } from "../../services/clickhous
 import { GetPythHistoricalPricesReturnTypeSchema } from "../../services/clickhouse-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
+dayjs.extend(utc);
+
 const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
-
-// 🚨 DEMO HACK ALERT: we pick some point into trading
-// to ensure all APIs have saturated query results
-const INITIAL_START_AT = new Date("2025-12-05T19:00:00.000Z");
-
-// wait a maximum of 1 minute for data points to flush out.
-// we should only be getting 1 minutes-worth of data, anyways,
-// so this is even a fairly large waiting period
-const MAX_WAIT_TO_PROCESS_TIME = 1000 * 60 * 2;
 
 function getFetchHistoricalUrl(
   datasources: AllDataSourcesType[],
@@ -104,23 +100,35 @@ export function useHttpDataStream({
   enabled,
   symbol,
 }: UseHttpDataStreamOpts): UseHttpDataStreamReturnType {
+  /** context */
+  const {
+    addDataPoint,
+    handleSetIsLoadingInitialReplayData,
+    playbackSpeed,
+    selectedReplayDate,
+  } = usePythProAppStateContext();
+
   /** hooks */
   const { open: showAlert } = useAlert();
-
-  /** context */
-  const { addDataPoint, playbackSpeed } = usePythProAppStateContext();
+  const prevSymbol = usePrevious(symbol);
+  const prevSelectedReplayDate = usePrevious(selectedReplayDate);
 
   /** refs */
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
-  const startAtToFetchRef = useRef(INITIAL_START_AT);
+  const prevSymbolRef = useRef(prevSymbol);
   const canProcessRef = useRef(true);
+  const selectedReplayDateRef = useRef(selectedReplayDate);
+  const prevSelectedReplayDateRef = useRef(prevSelectedReplayDate);
+  const isMountedRef = useRef(false);
 
   /** state */
   const [status, setStatus] =
     useState<UseDataStreamReturnType["status"]>("closed");
   const [error, setError] = useState<Nullish<Error>>(undefined);
-  const [startAtToFetch, setStartAtToFetch] = useState(INITIAL_START_AT);
+  const [startAtToFetch, setStartAtToFetch] = useState(
+    dayjs(selectedReplayDate),
+  );
 
   /** callbacks */
   const handleFetchError = useCallback((error_: unknown) => {
@@ -131,23 +139,13 @@ export function useHttpDataStream({
     async (data: GetPythHistoricalPricesReturnType) => {
       // if we don't have the greelight to process results,
       // we'll just spin for a while.
-      // if we hit a max time, then we fully abort, doing nothing
-      const waitStartTime = Date.now();
       while (!canProcessRef.current) {
-        const now = Date.now();
-
-        // if we've waited long enough and the prior
-        // processor didn't free up the processing lock,
-        // just abort and show an error to the user
-        if (now - waitStartTime >= MAX_WAIT_TO_PROCESS_TIME) {
-          showAlert({
-            contents:
-              "A timeout occurred while waiting to process the next historical data chunk. This is a bug 🐛 and should be reported.",
-            title: "Historical playback error",
-          });
+        if (
+          symbolRef.current !== prevSymbolRef.current ||
+          prevSelectedReplayDateRef.current !== selectedReplayDateRef.current
+        ) {
           return;
         }
-
         await wait(10);
       }
 
@@ -168,20 +166,23 @@ export function useHttpDataStream({
             currPoint.symbol as AllAllowedSymbols,
           );
 
-          if (dataPointSymbol !== symbolRef.current) break;
+          if (
+            dataPointSymbol !== symbolRef.current ||
+            prevSelectedReplayDateRef.current !== selectedReplayDateRef.current
+          ) {
+            break;
+          }
 
           addDataPoint(currPoint.source, dataPointSymbol, currPoint);
         }
 
         if (i === quarterPoint) {
           if (lastPoint) {
-            setStartAtToFetch(new Date(lastPoint.timestamp));
+            setStartAtToFetch(dayjs(lastPoint.timestamp));
           } else {
             // there wasn't any data for this chunk, so just keep adding 1 minute
             // to the request until we get data back
-            const d = new Date(startAtToFetchRef.current);
-            d.setTime(d.getTime() + 1000 * 60);
-            setStartAtToFetch(d);
+            setStartAtToFetch(dayjs(startAtToFetch).add(1, "minute"));
           }
         }
 
@@ -194,23 +195,35 @@ export function useHttpDataStream({
       }
       canProcessRef.current = true;
     },
-    [addDataPoint, showAlert],
+    [addDataPoint, startAtToFetch],
   );
 
   /** effects */
   useEffect(() => {
     playbackSpeedRef.current = playbackSpeed;
+    prevSymbolRef.current = prevSymbol;
+    prevSelectedReplayDateRef.current = prevSelectedReplayDate;
+    selectedReplayDateRef.current = selectedReplayDate;
     symbolRef.current = symbol;
-    startAtToFetchRef.current = startAtToFetch;
   });
 
   useEffect(() => {
-    if (!enabled || !isReplaySymbol(symbol)) {
+    if (prevSelectedReplayDate !== selectedReplayDate) {
+      setStartAtToFetch(dayjs(selectedReplayDate));
+    }
+  }, [prevSelectedReplayDate, selectedReplayDate]);
+
+  useEffect(() => {
+    if (!enabled || !isReplaySymbol(symbol) || !startAtToFetch.isValid()) {
       setStatus("closed");
       return;
     }
 
-    const url = getFetchHistoricalUrl(dataSources, symbol, startAtToFetch);
+    const url = getFetchHistoricalUrl(
+      dataSources,
+      symbol,
+      startAtToFetch.toDate(),
+    );
     if (!url) {
       setStatus("closed");
       return;
@@ -218,11 +231,25 @@ export function useHttpDataStream({
 
     setStatus("connected");
 
-    fetchHistoricalData(url).then(processData).catch(handleFetchError);
+    if (!isMountedRef.current) {
+      handleSetIsLoadingInitialReplayData(true);
+    }
+
+    isMountedRef.current = true;
+
+    fetchHistoricalData(url)
+      .then((d) => {
+        void processData(d);
+      })
+      .catch(handleFetchError)
+      .finally(() => {
+        handleSetIsLoadingInitialReplayData(false);
+      });
   }, [
     dataSources,
     enabled,
     handleFetchError,
+    handleSetIsLoadingInitialReplayData,
     processData,
     startAtToFetch,
     symbol,

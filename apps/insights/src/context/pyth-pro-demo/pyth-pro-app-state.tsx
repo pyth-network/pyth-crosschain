@@ -50,13 +50,21 @@ export type AppStateContextVal = CurrentPricesStoreState & {
 
   dataSourceVisibility: Record<AllDataSourcesType, boolean>;
 
+  handleSetIsLoadingInitialReplayData: (isLoading: boolean) => void;
+
   handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => void;
 
   handleSelectSource: (source: AllAllowedSymbols) => void;
 
+  handleSetSelectedReplayDate: (dateStr: string) => void;
+
   handleToggleDataSourceVisibility: (datasource: AllDataSourcesType) => void;
 
+  isLoadingInitialReplayData: boolean;
+
   playbackSpeed: PlaybackSpeed;
+
+  selectedReplayDate: string;
 };
 
 const context = createContext<Nullish<AppStateContextVal>>(undefined);
@@ -92,6 +100,11 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   );
 
   const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
+
+  const [selectedReplayDate, setSelectedReplayDate] = useState("");
+
+  const [isLoadingInitialReplayData, setIsLoadingInitialReplayData] =
+    useState(false);
 
   /** refs */
   const selectedSymbolRef = useRef(appState.selectedSource);
@@ -154,6 +167,19 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       ...initialState,
       selectedSource: isAllowedSymbol(source) ? source : undefined,
     });
+    setSelectedReplayDate("");
+  }, []);
+
+  const handleSetSelectedReplayDate = useCallback<
+    AppStateContextVal["handleSetSelectedReplayDate"]
+  >((dateStr) => {
+    setSelectedReplayDate(dateStr);
+  }, []);
+
+  const handleSetIsLoadingInitialReplayData = useCallback<
+    AppStateContextVal["handleSetIsLoadingInitialReplayData"]
+  >((isLoading) => {
+    setIsLoadingInitialReplayData(isLoading);
   }, []);
 
   /** memos */
@@ -197,8 +223,12 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetIsLoadingInitialReplayData,
+      handleSetSelectedReplayDate,
       handleToggleDataSourceVisibility,
+      isLoadingInitialReplayData,
       playbackSpeed,
+      selectedReplayDate,
     }),
     [
       appState,
@@ -207,8 +237,12 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetIsLoadingInitialReplayData,
+      handleSetSelectedReplayDate,
       handleToggleDataSourceVisibility,
+      isLoadingInitialReplayData,
       playbackSpeed,
+      selectedReplayDate,
     ],
   );
 

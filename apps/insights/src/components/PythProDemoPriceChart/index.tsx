@@ -1,5 +1,7 @@
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
+import { NativeDatePicker } from "@pythnetwork/component-library/NativeDatePicker";
+import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { isNumber } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
@@ -32,7 +34,9 @@ type PythProDemoPriceChartImplProps = Pick<
   | "dataSourcesInUse"
   | "dataSourceVisibility"
   | "handleSelectPlaybackSpeed"
+  | "handleSetSelectedReplayDate"
   | "metrics"
+  | "selectedReplayDate"
   | "playbackSpeed"
   | "selectedSource"
 >;
@@ -50,8 +54,10 @@ export function PythProDemoPriceChartImpl({
   dataSourcesInUse,
   dataSourceVisibility,
   handleSelectPlaybackSpeed,
+  handleSetSelectedReplayDate,
   metrics,
   playbackSpeed,
+  selectedReplayDate,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
   /** hooks */
@@ -259,37 +265,44 @@ export function PythProDemoPriceChartImpl({
       <div className={classes.buttons}>
         {isReplaySymbol(selectedSource) && (
           <>
+            <NativeDatePicker
+              onChange={handleSetSelectedReplayDate}
+              placeholder="Select a datetime to begin"
+              type="datetime"
+              value={selectedReplayDate}
+            />
+            <div className={classes.verticalDivider} />
             <Button
               onClick={createSelectPlaybackSpeed(1)}
-              size="xs"
+              size="sm"
               variant={playbackSpeed === 1 ? "success" : "outline"}
             >
               1x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(4)}
-              size="xs"
+              size="sm"
               variant={playbackSpeed === 4 ? "success" : "outline"}
             >
               4x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(8)}
-              size="xs"
+              size="sm"
               variant={playbackSpeed === 8 ? "success" : "outline"}
             >
               8x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(16)}
-              size="xs"
+              size="sm"
               variant={playbackSpeed === 16 ? "success" : "outline"}
             >
               16x
             </Button>
             <Button
               onClick={createSelectPlaybackSpeed(32)}
-              size="xs"
+              size="sm"
               variant={playbackSpeed === 32 ? "success" : "outline"}
             >
               32x
@@ -306,7 +319,7 @@ export function PythProDemoPriceChartImpl({
               /* no-op */
             }
           }}
-          size="xs"
+          size="sm"
           variant="outline"
         >
           Reset chart position
@@ -323,20 +336,35 @@ export function PythProDemoPriceChart() {
     dataSourcesInUse,
     dataSourceVisibility,
     handleSelectPlaybackSpeed,
+    handleSetSelectedReplayDate,
+    isLoadingInitialReplayData,
     metrics,
     playbackSpeed,
+    selectedReplayDate,
     selectedSource,
   } = usePythProAppStateContext();
+
+  if (isReplaySymbol(selectedSource) && isLoadingInitialReplayData) {
+    const label = "Loading historical replay data...";
+    return (
+      <div className={classes.spinner}>
+        <div>{label}</div>
+        <Spinner isIndeterminate label={label} />
+      </div>
+    );
+  }
 
   return (
     <PythProDemoPriceChartImpl
       dataSourcesInUse={dataSourcesInUse}
       dataSourceVisibility={dataSourceVisibility}
-      key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}`}
+      key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
       handleSelectPlaybackSpeed={handleSelectPlaybackSpeed}
+      handleSetSelectedReplayDate={handleSetSelectedReplayDate}
       metrics={metrics}
       playbackSpeed={playbackSpeed}
       selectedSource={selectedSource}
+      selectedReplayDate={selectedReplayDate}
     />
   );
 }
