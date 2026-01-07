@@ -112,7 +112,6 @@ export function useHttpDataStream({
   /** hooks */
   const { open: showAlert } = useAlert();
   const prevSymbol = usePrevious(symbol);
-  const prevSelectedReplayDate = usePrevious(selectedReplayDate);
 
   /** refs */
   const abortControllerRef = useRef(new AbortController());
@@ -122,7 +121,6 @@ export function useHttpDataStream({
   const symbolRef = useRef(symbol);
   const prevSymbolRef = useRef(prevSymbol);
   const selectedReplayDateRef = useRef(selectedReplayDate);
-  const prevSelectedReplayDateRef = useRef(prevSelectedReplayDate);
   const isMountedRef = useRef(false);
 
   /** state */
@@ -131,10 +129,6 @@ export function useHttpDataStream({
   const [error, setError] = useState<Nullish<Error>>(undefined);
 
   /** callbacks */
-  const doAbort = useCallback(() => {
-    abortControllerRef.current.abort();
-  }, []);
-
   const handleError = useCallback((error_: unknown) => {
     setError(error_ instanceof Error ? error_ : new Error(String(error_)));
   }, []);
@@ -145,10 +139,14 @@ export function useHttpDataStream({
     enabledRef.current = enabled;
     playbackSpeedRef.current = playbackSpeed;
     prevSymbolRef.current = prevSymbol;
-    prevSelectedReplayDateRef.current = prevSelectedReplayDate;
     selectedReplayDateRef.current = selectedReplayDate;
     symbolRef.current = symbol;
   });
+
+  useEffect(() => {
+    // anytime this value changes, we need to abort all current processing
+    abortControllerRef.current.abort();
+  }, [selectedReplayDate]);
 
   useEffect(() => {
     if (
@@ -157,62 +155,28 @@ export function useHttpDataStream({
       !selectedReplayDate ||
       !isReplaySymbol(symbol)
     ) {
-      doAbort();
       return;
     }
 
-    // Reset the abort controller once per new stream start.
-    doAbort();
-    abortControllerRef.current = new AbortController();
+    // 1. Create a local controller for THIS specific effect execution
+    const controller = new AbortController();
+    const signal = controller.signal;
 
     /**
-     * checks if any of the refs have drifted while we're processing things
-     * asynchronously, and if they have, aborts via the abort controller
-     * and returns true.
-     * Otherwise, returns false
+     * Now accepts the specific signal to check against
      */
-    function guardAbort() {
-      const printAborted = (reason: string) => {
-        console.info(
-          `%caborted processing because ${reason}`,
-          "background-color: yellow; color: purple; font-size: 14px; padding: 2px;",
-        );
-      };
-      // if the signal has already been aborted,
-      // return early. no point in doing the rest of the checks
-      if (abortControllerRef.current.signal.aborted) {
-        printAborted("abort controller was already aborted");
+    function guardAbort(localSignal: AbortSignal) {
+      if (localSignal.aborted) {
         return true;
       }
 
-      // we could collapse this all into a mega ternary,
-      // but it's easier for fleshy meatbags a.k.a. humans
-      // to read this way
-      if (!enabledRef.current) {
-        printAborted("enabled is false");
-        doAbort();
-        return true;
-      }
-      if (!isReplaySymbol(symbolRef.current)) {
-        printAborted(
-          `symbol selected is not a replay symbol, ${symbolRef.current ?? "-unset-"}`,
-        );
-        doAbort();
-        return true;
-      }
-      if (!selectedReplayDateRef.current) {
-        printAborted("selected replay date changed is invalid.");
-        doAbort();
-        return true;
-      }
-      // if (selectedReplayDateRef.current !== prevSelectedReplayDateRef.current) {
-      //   printAborted("current and previous selected replay data are different");
-      //   doAbort();
-      //   return true;
-      // }
-      if (dataSourcesRef.current.length <= 0) {
-        printAborted("data sources are empty");
-        doAbort();
+      if (
+        !enabledRef.current ||
+        !isReplaySymbol(symbolRef.current) ||
+        !selectedReplayDateRef.current ||
+        dataSourcesRef.current.length <= 0
+      ) {
+        controller.abort(); // Abort the local one if refs drifted
         return true;
       }
 
@@ -221,8 +185,9 @@ export function useHttpDataStream({
 
     let canProcess = true;
 
-    async function doFetch(startAt: string) {
-      if (guardAbort()) return;
+    async function doFetch(startAt: string, localSignal: AbortSignal) {
+      // Pass the localSignal through every recursive call
+      if (guardAbort(localSignal)) return;
 
       const url = getFetchHistoricalUrl(
         dataSourcesRef.current,
@@ -233,7 +198,7 @@ export function useHttpDataStream({
       handleSetIsLoadingInitialReplayData(false);
 
       while (!canProcess) {
-        // wait until the previous consumer frees itself up and then continue
+        if (guardAbort(localSignal)) return;
         await wait(10);
       }
 
@@ -241,8 +206,8 @@ export function useHttpDataStream({
 
       const dataLen = thisData.length;
       const quarterPoint = Math.floor(dataLen / 4);
-
       const lastPoint = thisData.at(-1);
+
       const nextStartAt = lastPoint?.timestamp
         ? dayjs(lastPoint.timestamp).add(20, "milliseconds").toISOString()
         : dayjs(startAt).add(1, "minutes").toISOString();
@@ -251,15 +216,12 @@ export function useHttpDataStream({
         const currPoint = thisData[i];
         if (isNullOrUndefined(currPoint)) continue;
 
-        const nextPoint = thisData[i + 1];
-
-        if (guardAbort()) return;
+        if (guardAbort(localSignal)) return;
 
         if (i === quarterPoint) {
-          doFetch(nextStartAt).catch(handleError);
+          // Trigger next batch with the SAME signal
+          void doFetch(nextStartAt, localSignal).catch(handleError);
         }
-
-        if (guardAbort()) return;
 
         addDataPoint(
           currPoint.source,
@@ -268,7 +230,10 @@ export function useHttpDataStream({
           ) as AllowedReplaySymbolsType,
           currPoint,
         );
-        if (guardAbort()) return;
+
+        if (guardAbort(localSignal)) return;
+
+        const nextPoint = thisData[i + 1];
         if (nextPoint) {
           const delta =
             new Date(nextPoint.timestamp).valueOf() -
@@ -286,15 +251,16 @@ export function useHttpDataStream({
     }
 
     isMountedRef.current = true;
-    void doFetch(selectedReplayDate);
+    void doFetch(selectedReplayDate, signal);
 
     return () => {
-      doAbort();
+      // This ensures that when the date changes, the signal
+      // specific to THIS run is cancelled.
+      controller.abort();
     };
   }, [
     addDataPoint,
     dataSources,
-    doAbort,
     enabled,
     handleError,
     handleSetIsLoadingInitialReplayData,
