@@ -2,29 +2,31 @@
 
 import clsx from "clsx";
 
+import styles from "./index.module.scss";
+import { usePlaygroundContext } from "../PlaygroundContext";
 import type { ChainFormat } from "../types";
 import { CHAIN_OPTIONS } from "../types";
-import styles from "./index.module.scss";
 
 type ChainSelectorProps = {
-  selectedChains: ChainFormat[];
-  onSelectionChange: (chains: ChainFormat[]) => void;
   className?: string;
 };
 
-export function ChainSelector({
-  selectedChains,
-  onSelectionChange,
-  className,
-}: ChainSelectorProps) {
+export function ChainSelector({ className }: ChainSelectorProps) {
+  const { config, updateConfig } = usePlaygroundContext();
+  const selectedChains = config.formats;
+
   const handleToggle = (chain: ChainFormat) => {
     if (selectedChains.includes(chain)) {
       // Don't allow deselecting if it's the only one selected
       if (selectedChains.length > 1) {
-        onSelectionChange(selectedChains.filter((selectedChain) => selectedChain !== chain));
+        updateConfig({
+          formats: selectedChains.filter(
+            (selectedChain) => selectedChain !== chain
+          ),
+        });
       }
     } else {
-      onSelectionChange([...selectedChains, chain]);
+      updateConfig({ formats: [...selectedChains, chain] });
     }
   };
 
@@ -35,7 +37,11 @@ export function ChainSelector({
         <span className={styles.count}>{selectedChains.length} selected</span>
       </div>
 
-      <div className={styles.options} role="group" aria-label="Target chain selection">
+      <div
+        className={styles.options}
+        role="group"
+        aria-label="Target chain selection"
+      >
         {CHAIN_OPTIONS.map((option) => {
           const isSelected = selectedChains.includes(option.id);
           return (
@@ -51,7 +57,9 @@ export function ChainSelector({
               />
               <span className={styles.optionContent}>
                 <span className={styles.optionLabel}>{option.label}</span>
-                <span className={styles.optionDescription}>{option.description}</span>
+                <span className={styles.optionDescription}>
+                  {option.description}
+                </span>
               </span>
             </label>
           );
@@ -60,4 +68,3 @@ export function ChainSelector({
     </div>
   );
 }
-

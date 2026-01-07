@@ -9,20 +9,18 @@ import { useMemo, useState } from "react";
 
 import styles from "./index.module.scss";
 import { usePriceFeeds } from "./use-price-feeds";
+import { usePlaygroundContext } from "../PlaygroundContext";
 
 type PriceFeedSelectorProps = {
-  selectedIds: number[];
-  onSelectionChange: (ids: number[]) => void;
   className?: string;
 };
 
-export function PriceFeedSelector({
-  selectedIds,
-  onSelectionChange,
-  className,
-}: PriceFeedSelectorProps) {
+export function PriceFeedSelector({ className }: PriceFeedSelectorProps) {
+  const { config, updateConfig } = usePlaygroundContext();
   const feedsState = usePriceFeeds();
   const [search, setSearch] = useState("");
+
+  const selectedIds = config.priceFeedIds;
 
   const filteredFeeds = useMemo(() => {
     if (feedsState.status !== "loaded") return [];
@@ -49,14 +47,14 @@ export function PriceFeedSelector({
 
   const handleToggleFeed = (feedId: number) => {
     if (selectedIds.includes(feedId)) {
-      onSelectionChange(selectedIds.filter((id) => id !== feedId));
+      updateConfig({ priceFeedIds: selectedIds.filter((id) => id !== feedId) });
     } else {
-      onSelectionChange([...selectedIds, feedId]);
+      updateConfig({ priceFeedIds: [...selectedIds, feedId] });
     }
   };
 
   const handleRemoveFeed = (feedId: number) => {
-    onSelectionChange(selectedIds.filter((id) => id !== feedId));
+    updateConfig({ priceFeedIds: selectedIds.filter((id) => id !== feedId) });
   };
 
   return (
@@ -145,4 +143,3 @@ export function PriceFeedSelector({
     </div>
   );
 }
-

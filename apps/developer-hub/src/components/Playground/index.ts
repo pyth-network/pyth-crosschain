@@ -7,6 +7,9 @@
 // Types
 export * from "./types";
 
+// Context
+export { PlaygroundProvider, usePlaygroundContext } from "./PlaygroundContext";
+
 // Configuration Components
 export { AccessTokenInput } from "./AccessTokenInput";
 export { PriceFeedSelector } from "./PriceFeedSelector";

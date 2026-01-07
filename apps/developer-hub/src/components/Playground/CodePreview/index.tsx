@@ -7,10 +7,11 @@ import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 
-import { generateCode, getFileExtension, getMonacoLanguage } from "../CodeGenerators";
-import type { CodeLanguage, PlaygroundConfig } from "../types";
-import { CODE_LANGUAGE_OPTIONS } from "../types";
 import styles from "./index.module.scss";
+import { generateCode, getFileExtension, getMonacoLanguage } from "../CodeGenerators";
+import { usePlaygroundContext } from "../PlaygroundContext";
+import type { CodeLanguage } from "../types";
+import { CODE_LANGUAGE_OPTIONS } from "../types";
 
 // Dynamically import Monaco to avoid SSR issues
 const Editor = dynamic(() => import("@monaco-editor/react"), {
@@ -19,11 +20,11 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
 });
 
 type CodePreviewProps = {
-  config: PlaygroundConfig;
   className?: string;
 };
 
-export function CodePreview({ config, className }: CodePreviewProps) {
+export function CodePreview({ className }: CodePreviewProps) {
+  const { config } = usePlaygroundContext();
   const [activeLanguage, setActiveLanguage] = useState<CodeLanguage>("typescript");
   const [copied, setCopied] = useState(false);
 
@@ -143,4 +144,3 @@ export function CodePreview({ config, className }: CodePreviewProps) {
     </div>
   );
 }
-

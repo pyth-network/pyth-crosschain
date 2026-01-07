@@ -5,19 +5,15 @@ import { Input } from "@pythnetwork/component-library/Input";
 import clsx from "clsx";
 
 import styles from "./index.module.scss";
+import { usePlaygroundContext } from "../PlaygroundContext";
 
 type AccessTokenInputProps = {
-  accessToken: string;
-  onAccessTokenChange: (token: string) => void;
   className?: string;
 };
 
-export function AccessTokenInput({
-  accessToken,
-  onAccessTokenChange,
-  className,
-}: AccessTokenInputProps) {
-  const isUsingDemoToken = accessToken.trim() === "";
+export function AccessTokenInput({ className }: AccessTokenInputProps) {
+  const { config, updateConfig } = usePlaygroundContext();
+  const isUsingDemoToken = config.accessToken.trim() === "";
 
   return (
     <div className={clsx(styles.container, className)}>
@@ -31,9 +27,9 @@ export function AccessTokenInput({
           <Input
             type="password"
             placeholder="Leave empty to use demo token (rate limited)"
-            value={accessToken}
+            value={config.accessToken}
             onChange={(event) => {
-              onAccessTokenChange(event.target.value);
+              updateConfig({ accessToken: event.target.value });
             }}
             fullWidth
             className={styles.input ?? ""}

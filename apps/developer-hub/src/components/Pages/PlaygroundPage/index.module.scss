@@ -3,11 +3,13 @@
 .playground {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - var(--fd-nav-height, 0px));
+  height: calc(100vh - var(--fd-nav-height, 0px));
+  overflow: hidden;
   background-color: var(--color-fd-background);
 }
 
 .header {
+  flex-shrink: 0;
   border-bottom: 1px solid theme.color("border");
   background: linear-gradient(
     180deg,
@@ -46,24 +48,25 @@
 
 .content {
   flex: 1;
-  padding-top: theme.spacing(8);
-  padding-bottom: theme.spacing(16);
+  overflow: hidden;
 }
 
 .contentInner {
+  height: 100%;
+
   @include theme.max-width;
 }
 
-// Main two-column grid layout
+// Main two-column grid layout with independent scrolling
 .mainGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: theme.spacing(8);
+  height: 100%;
 
   // Two-column layout for medium screens and up
   @media (min-width: 768px) {
     grid-template-columns: 350px 1fr;
-    align-items: start;
   }
 
   @media (min-width: 1024px) {
@@ -75,26 +78,31 @@
   }
 }
 
-// Left panel - Configuration controls
+// Left panel - Configuration controls with independent scroll
 .configPanel {
   display: flex;
   flex-direction: column;
   gap: theme.spacing(6);
-}
+  overflow-y: auto;
+  padding-top: theme.spacing(6);
+  padding-bottom: theme.spacing(6);
 
-.configSection {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(3);
-}
+  // Custom scrollbar styling
+  scrollbar-width: thin;
+  scrollbar-color: theme.color("border") transparent;
 
-.sectionTitle {
-  @include theme.text("sm", "semibold");
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
 
-  color: theme.color("heading");
-  margin: 0;
-  padding-bottom: theme.spacing(1);
-  border-bottom: 1px solid theme.color("border");
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: theme.color("border");
+    border-radius: 3px;
+  }
 }
 
 .configRow {
@@ -107,21 +115,35 @@
   }
 }
 
-// Right panel - Code preview and run button
+// Right panel - Code preview with independent scroll
 .codePanel {
   display: flex;
   flex-direction: column;
   gap: theme.spacing(4);
+  overflow-y: auto;
+  padding-top: theme.spacing(6);
+  padding-bottom: theme.spacing(6);
 
-  // Make code panel sticky on medium screens and up
-  @media (min-width: 768px) {
-    position: sticky;
-    top: calc(var(--fd-nav-height, 56px) + 16px);
-    max-height: calc(100vh - var(--fd-nav-height, 56px) - 32px);
+  // Custom scrollbar styling
+  scrollbar-width: thin;
+  scrollbar-color: theme.color("border") transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: theme.color("border");
+    border-radius: 3px;
   }
 }
 
 .runSection {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
