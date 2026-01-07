@@ -20,29 +20,28 @@
 .headerContent {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(4);
-  padding-top: theme.spacing(12);
-  padding-bottom: theme.spacing(12);
+  gap: theme.spacing(2);
+  padding-top: theme.spacing(6);
+  padding-bottom: theme.spacing(6);
 
   @include theme.max-width;
 }
 
 .title {
-  @include theme.text("4xl", "semibold");
+  @include theme.text("2xl", "semibold");
 
-  line-height: 115%;
+  line-height: 120%;
   letter-spacing: theme.letter-spacing("tight");
   color: theme.color("heading");
   margin: 0;
 }
 
 .subtitle {
-  @include theme.text("lg", "normal");
+  @include theme.text("sm", "normal");
 
-  line-height: 150%;
+  line-height: 140%;
   color: theme.color("paragraph");
   margin: 0;
-  max-width: 40rem;
 }
 
 .content {

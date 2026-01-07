@@ -39,7 +39,6 @@ export type PriceFeed = {
 // Main configuration state for the playground
 export type PlaygroundConfig = {
   accessToken: string;
-  useDemoToken: boolean;
   priceFeedIds: number[];
   properties: PriceFeedProperty[];
   formats: ChainFormat[];
@@ -51,8 +50,7 @@ export type PlaygroundConfig = {
 
 // Default configuration values
 export const DEFAULT_CONFIG: PlaygroundConfig = {
-  accessToken: "",
-  useDemoToken: true,
+  accessToken: "", // Empty means use demo token
   priceFeedIds: [1, 2], // BTC/USD and ETH/USD
   properties: ["price"],
   formats: ["solana"],

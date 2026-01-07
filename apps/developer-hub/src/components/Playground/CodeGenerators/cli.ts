@@ -4,7 +4,8 @@ import type { PlaygroundConfig } from "../types";
  * Generates CLI code using wscat for WebSocket connections
  */
 export function generateCliCode(config: PlaygroundConfig): string {
-  const token = config.useDemoToken ? "DEMO_TOKEN" : config.accessToken || "YOUR_ACCESS_TOKEN";
+  // If accessToken is empty, use demo token placeholder
+  const token = config.accessToken.trim() || "DEMO_TOKEN";
   const priceFeedIds = config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties = config.properties.length > 0 ? config.properties : ["price"];
   const chains = config.formats.length > 0 ? config.formats : ["solana"];
@@ -47,4 +48,5 @@ curl -X POST "https://pyth-lazer-0.dourolabs.app/v1/latest_price" \\
 # - wss://pyth-lazer-2.dourolabs.app/v1/stream
 `;
 }
+
 
