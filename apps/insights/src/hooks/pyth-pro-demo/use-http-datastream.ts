@@ -205,11 +205,11 @@ export function useHttpDataStream({
         doAbort();
         return true;
       }
-      if (selectedReplayDateRef.current !== prevSelectedReplayDateRef.current) {
-        printAborted("current and previous selected replay data are different");
-        doAbort();
-        return true;
-      }
+      // if (selectedReplayDateRef.current !== prevSelectedReplayDateRef.current) {
+      //   printAborted("current and previous selected replay data are different");
+      //   doAbort();
+      //   return true;
+      // }
       if (dataSourcesRef.current.length <= 0) {
         printAborted("data sources are empty");
         doAbort();

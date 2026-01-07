@@ -325,7 +325,8 @@ export function PythProDemoPriceChartImpl({
           Reset chart position
         </Button>
       </div>
-      {selectedReplayDate && (
+      {((isReplaySymbol(selectedSource) && selectedReplayDate) ||
+        !isReplaySymbol(selectedSource)) && (
         <div className={classes.chartContainer} ref={containerRef} />
       )}
     </div>
@@ -360,7 +361,7 @@ export function PythProDemoPriceChart() {
     <PythProDemoPriceChartImpl
       dataSourcesInUse={dataSourcesInUse}
       dataSourceVisibility={dataSourceVisibility}
-      key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
+      key={`${selectedSource}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
       handleSelectPlaybackSpeed={handleSelectPlaybackSpeed}
       handleSetSelectedReplayDate={handleSetSelectedReplayDate}
       metrics={metrics}

@@ -171,7 +171,6 @@ export const CurrentPricesStoreStateSchema = z.object({
       latest: z.nullable(LatestMetricSchema),
     }),
   ),
-  selectedSource: ALL_ALLOWED_SYMBOLS.optional().nullable(),
 });
 export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema
