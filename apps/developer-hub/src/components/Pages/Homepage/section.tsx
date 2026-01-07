@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import styles from "./section.module.scss";
+import { SectionTitle } from "../../Shared/section-title";
 
 export const Section = ({
   title,
@@ -18,10 +19,7 @@ export const Section = ({
   <section data-highlight={isHighlight} className={styles.section}>
     <div className={styles.sectionContent}>
       <div className={styles.sectionHeader}>
-        <div>
-          <h2 className={styles.sectionHeaderTitle}>{title}</h2>
-          <p className={styles.sectionHeaderSubtitle}>{subtitle}</p>
-        </div>
+        <SectionTitle title={title} subtitle={subtitle} />
         {image}
       </div>
       {children}
