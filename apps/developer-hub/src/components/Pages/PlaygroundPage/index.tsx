@@ -28,10 +28,6 @@ export function PlaygroundPage() {
     setConfig((prev) => ({ ...prev, accessToken }));
   };
 
-  const handleUseDemoTokenChange = (useDemoToken: boolean) => {
-    setConfig((prev) => ({ ...prev, useDemoToken }));
-  };
-
   const handlePriceFeedIdsChange = (priceFeedIds: number[]) => {
     setConfig((prev) => ({ ...prev, priceFeedIds }));
   };
@@ -72,9 +68,7 @@ export function PlaygroundPage() {
               <div className={styles.configSection}>
                 <AccessTokenInput
                   accessToken={config.accessToken}
-                  useDemoToken={config.useDemoToken}
                   onAccessTokenChange={handleAccessTokenChange}
-                  onUseDemoTokenChange={handleUseDemoTokenChange}
                 />
               </div>
 

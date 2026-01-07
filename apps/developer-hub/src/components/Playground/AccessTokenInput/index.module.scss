@@ -31,12 +31,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(3);
-
-  @include theme.breakpoint("md") {
-    flex-direction: row;
-    align-items: center;
-  }
+  gap: theme.spacing(2);
 }
 
 .inputWrapper {
@@ -47,36 +42,8 @@
   @include theme.text("sm", "normal");
 }
 
-.divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  @include theme.text("xs", "normal");
-
-  color: theme.color("muted");
-  padding: 0 theme.spacing(2);
-
-  @include theme.breakpoint("md") {
-    padding: 0 theme.spacing(4);
-  }
-}
-
-.switchWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(1);
-  flex-shrink: 0;
-}
-
-.switch {
-  white-space: nowrap;
-}
-
 .hint {
   @include theme.text("xs", "normal");
 
   color: theme.color("muted");
-  padding-left: theme.spacing(8);
 }
-

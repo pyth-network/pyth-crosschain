@@ -4,7 +4,8 @@ import type { PlaygroundConfig } from "../types";
  * Generates Python code using websockets library
  */
 export function generatePythonCode(config: PlaygroundConfig): string {
-  const token = config.useDemoToken ? "DEMO_TOKEN" : config.accessToken || "YOUR_ACCESS_TOKEN";
+  // If accessToken is empty, use demo token placeholder
+  const token = config.accessToken.trim() || "DEMO_TOKEN";
   const priceFeedIds = config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties = config.properties.length > 0 ? config.properties : ["price"];
   const chains = config.formats.length > 0 ? config.formats : ["solana"];
@@ -154,4 +155,5 @@ if __name__ == "__main__":
     main()
 `;
 }
+
 
