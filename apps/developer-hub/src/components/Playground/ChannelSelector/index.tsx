@@ -34,7 +34,7 @@ export function ChannelSelector({ className }: ChannelSelectorProps) {
   return (
     <div className={clsx(styles.container, className)}>
       <Select
-        label="Update Channel"
+        label="Channel"
         options={selectOptions}
         selectedKey={config.channel}
         onSelectionChange={handleSelectionChange}
@@ -44,9 +44,6 @@ export function ChannelSelector({ className }: ChannelSelectorProps) {
         variant="outline"
         size="sm"
       />
-      <span className={styles.description}>
-        {CHANNEL_OPTIONS.find((opt) => opt.id === config.channel)?.description}
-      </span>
     </div>
   );
 }

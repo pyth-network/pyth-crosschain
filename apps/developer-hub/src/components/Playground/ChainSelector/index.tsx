@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import clsx from "clsx";
 
 import styles from "./index.module.scss";
@@ -21,7 +22,7 @@ export function ChainSelector({ className }: ChainSelectorProps) {
       if (selectedChains.length > 1) {
         updateConfig({
           formats: selectedChains.filter(
-            (selectedChain) => selectedChain !== chain
+            (selectedChain) => selectedChain !== chain,
           ),
         });
       }
@@ -38,30 +39,30 @@ export function ChainSelector({ className }: ChainSelectorProps) {
       </div>
 
       <div
-        className={styles.options}
+        className={styles.chipGrid}
         role="group"
         aria-label="Target chain selection"
       >
         {CHAIN_OPTIONS.map((option) => {
           const isSelected = selectedChains.includes(option.id);
           return (
-            <label key={option.id} className={styles.option}>
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => {
-                  handleToggle(option.id);
-                }}
-                className={styles.checkbox}
-                aria-label={option.label}
-              />
-              <span className={styles.optionContent}>
-                <span className={styles.optionLabel}>{option.label}</span>
-                <span className={styles.optionDescription}>
-                  {option.description}
-                </span>
-              </span>
-            </label>
+            <button
+              key={option.id}
+              type="button"
+              className={clsx(styles.chip, {
+                [styles.selected ?? ""]: isSelected,
+              })}
+              onClick={() => {
+                handleToggle(option.id);
+              }}
+              aria-pressed={isSelected}
+              title={option.description}
+            >
+              {isSelected && (
+                <Check weight="bold" className={styles.checkIcon} />
+              )}
+              <span className={styles.chipLabel}>{option.label}</span>
+            </button>
           );
         })}
       </div>

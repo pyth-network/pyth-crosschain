@@ -6,8 +6,10 @@ import type { PlaygroundConfig } from "../types";
 export function generateCliCode(config: PlaygroundConfig): string {
   // If accessToken is empty, use demo token placeholder
   const token = config.accessToken.trim() || "DEMO_TOKEN";
-  const priceFeedIds = config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
-  const properties = config.properties.length > 0 ? config.properties : ["price"];
+  const priceFeedIds =
+    config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
+  const properties =
+    config.properties.length > 0 ? config.properties : ["price"];
   const chains = config.formats.length > 0 ? config.formats : ["solana"];
   const channel = config.channel;
 
@@ -48,5 +50,3 @@ curl -X POST "https://pyth-lazer-0.dourolabs.app/v1/latest_price" \\
 # - wss://pyth-lazer-2.dourolabs.app/v1/stream
 `;
 }
-
-

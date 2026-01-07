@@ -25,18 +25,13 @@ export function DeliveryFormatToggle({ className }: DeliveryFormatToggleProps) {
 
   return (
     <div className={clsx(styles.container, className)}>
-      <span className={styles.label}>Delivery Format</span>
+      <span className={styles.label}>Format</span>
       <SingleToggleGroup
         items={formatOptions}
         selectedKey={config.deliveryFormat}
         onSelectionChange={handleChange}
         className={styles.toggleGroup ?? ""}
       />
-      <span className={styles.description}>
-        {config.deliveryFormat === "json"
-          ? "Human-readable JSON response"
-          : "Compact binary format for performance"}
-      </span>
     </div>
   );
 }

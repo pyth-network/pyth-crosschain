@@ -3,7 +3,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(3);
+  gap: theme.spacing(2);
 }
 
 .header {
@@ -24,51 +24,55 @@
   color: theme.color("muted");
 }
 
-.options {
+.chipGrid {
   display: flex;
-  flex-direction: column;
-  gap: theme.spacing(1);
+  flex-wrap: wrap;
+  gap: theme.spacing(2);
 }
 
-.option {
-  display: flex;
-  align-items: flex-start;
-  gap: theme.spacing(2);
-  padding: theme.spacing(2);
-  border-radius: theme.border-radius("md");
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1);
+  padding: theme.spacing(1.5) theme.spacing(3);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("full");
+  background-color: transparent;
   cursor: pointer;
-  transition: background-color 100ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 
   &:hover {
     background-color: theme.color("background", "secondary");
+    border-color: theme.color("muted");
+  }
+
+  &:focus-visible {
+    outline: 2px solid theme.color("highlight");
+    outline-offset: 2px;
   }
 }
 
-.checkbox {
+.chip.selected {
+  background-color: color-mix(
+    in srgb,
+    theme.color("highlight") 15%,
+    transparent
+  );
+  border-color: theme.color("highlight");
+  color: theme.color("highlight");
+}
+
+.checkIcon {
+  width: 12px;
+  height: 12px;
   flex-shrink: 0;
-  width: theme.spacing(4);
-  height: theme.spacing(4);
-  margin-top: theme.spacing(0.5);
-  accent-color: theme.color("highlight");
-  cursor: pointer;
 }
 
-.optionContent {
-  display: flex;
-  flex-direction: column;
-  gap: theme.spacing(0.5);
+.chipLabel {
+  @include theme.text("xs", "medium");
+
+  white-space: nowrap;
 }
-
-.optionLabel {
-  @include theme.text("sm", "medium");
-
-  color: theme.color("foreground");
-}
-
-.optionDescription {
-  @include theme.text("xs", "normal");
-
-  color: theme.color("muted");
-}
-
-

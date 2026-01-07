@@ -55,16 +55,16 @@ export function PlaygroundPage() {
                 <div className={styles.runSection}>
                   <Button
                     variant="primary"
-                    size="lg"
+                    size="sm"
+                    beforeIcon={<Play weight="fill" />}
                     onPress={handleRunCode}
                     className={styles.runButton ?? ""}
                   >
-                    <Play weight="fill" />
-                    Run Code
+                    Run
                   </Button>
-                  <p className={styles.runHint}>
-                    Execute the generated code to see live price updates
-                  </p>
+                  <span className={styles.runHint}>
+                    Execute code to test live price updates
+                  </span>
                 </div>
               </div>
             </div>
