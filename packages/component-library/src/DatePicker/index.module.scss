@@ -70,16 +70,16 @@
 }
 
 .trigger {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: theme.spacing(1);
+  display: inline-flex;
+  background-color: transparent;
+  border: 1px solid transparent;
   border-radius: theme.border-radius("sm");
   color: theme.color("muted");
-  border: 1px solid transparent;
-  background-color: transparent;
-  transition-property: background-color, border-color, color;
+  justify-content: center;
+  padding: theme.spacing(1);
   transition-duration: 100ms;
+  transition-property: background-color, border-color, color;
   transition-timing-function: linear;
 
   &:hover {
@@ -95,18 +95,18 @@
 }
 
 .triggerIcon {
-  width: theme.spacing(4);
   height: theme.spacing(4);
+  width: theme.spacing(4);
 }
 
 .popover {
   background-color: theme.color("background", "modal");
-  border-radius: theme.border-radius("lg");
   border: 1px solid theme.color("border");
-  color: theme.color("paragraph");
+  border-radius: theme.border-radius("lg");
   box-shadow:
     0 4px 6px -4px rgb(from black r g b / 10%),
     0 10px 15px -3px rgb(from black r g b / 10%);
+  color: theme.color("paragraph");
   padding: theme.spacing(3);
 }
 
@@ -121,32 +121,36 @@
 }
 
 .calendarHeader {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  display: flex;
   gap: theme.spacing(2);
+  justify-content: space-between;
 }
 
 .heading {
   @include theme.text("sm", "medium");
 
-  text-transform: uppercase;
   letter-spacing: theme.letter-spacing("wide");
+  text-transform: uppercase;
 }
 
 .navButton {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: theme.spacing(8);
-  height: theme.spacing(8);
-  border-radius: theme.border-radius("full");
-  border: 1px solid transparent;
   background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: theme.border-radius("full");
   color: theme.color("muted");
+  display: inline-flex;
+  height: theme.spacing(8);
+  justify-content: center;
   transition-property: background-color, border-color, color;
   transition-duration: 100ms;
   transition-timing-function: linear;
+  width: theme.spacing(8);
+
+  &:hover {
+    cursor: pointer;
+  }
 
   &:hover {
     background-color: theme.color("button", "outline", "background", "hover");
@@ -161,8 +165,8 @@
 }
 
 .navIcon {
-  width: theme.spacing(4);
   height: theme.spacing(4);
+  width: theme.spacing(4);
 }
 
 .calendarGrid {
@@ -174,22 +178,25 @@
   @include theme.text("xs", "medium");
 
   color: theme.color("muted");
-  text-transform: uppercase;
   padding: theme.spacing(1);
   text-align: center;
+  text-transform: uppercase;
 }
 
 .cell {
   @include theme.text("sm", "medium");
 
-  width: theme.spacing(8);
-  height: theme.spacing(8);
-  text-align: center;
+  align-items: center;
   border-radius: theme.border-radius("sm");
   cursor: pointer;
-  transition-property: background-color, color, border-color;
+  display: flex;
+  height: theme.spacing(8);
+  justify-content: center;
+  text-align: center;
   transition-duration: 100ms;
+  transition-property: background-color, color, border-color;
   transition-timing-function: linear;
+  width: theme.spacing(8);
 
   &[data-outside-month] {
     color: theme.color("muted");

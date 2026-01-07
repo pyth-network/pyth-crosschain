@@ -9,10 +9,12 @@ import {
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/ssr/CaretRight";
+import type { Nullish } from "@pythnetwork/shared-lib/types";
+import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import cx from "clsx";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { DateValue } from "react-aria-components";
 import {
   Button,
@@ -35,7 +37,10 @@ import {
 import type { InputProps } from "../Input";
 import styles from "./index.module.scss";
 
-type NativeDatePickerProps = Pick<InputProps, "max" | "min" | "placeholder"> & {
+export type DatePickerProps = Pick<
+  InputProps,
+  "max" | "min" | "placeholder"
+> & {
   /**
    * css class name overrides
    */
@@ -65,71 +70,86 @@ type NativeDatePickerProps = Pick<InputProps, "max" | "min" | "placeholder"> & {
 };
 
 /**
- * A datepicker that mirrors the NativeDatePicker API, but uses
- * react-aria-components for keyboard support and theming.
+ * A datepicker that uses react-aria-components for keyboard support and theming.
  */
-export function NativeDatePicker({
+export function DatePicker({
   className,
   label,
   onChange,
+  placeholder = "Select a date",
   value,
-  type,
+  type = "date",
   ...rest
-}: NativeDatePickerProps) {
-  const pickerType = type ?? "date";
+}: DatePickerProps) {
+  /** refs */
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
 
-  const valueToUse = useMemo(
-    () => parseDateValue(value, pickerType),
-    [pickerType, value],
-  );
+  /** callbacks */
+  const handleShowPickerOnClickOrFocus = useCallback(() => {
+    const { current: triggerBtn } = triggerButtonRef;
+    if (!triggerBtn) return;
+
+    // force the picker open
+    triggerBtn.click();
+  }, []);
+
+  /** memos */
+  const valueToUse = useMemo(() => parseDateValue(value, type), [type, value]);
 
   const minValue = useMemo(
-    () => parseDateValue(String(rest.min ?? ""), pickerType),
-    [pickerType, rest.min],
+    () => parseDateValue(String(rest.min ?? ""), type),
+    [type, rest.min],
   );
 
   const maxValue = useMemo(
-    () => parseDateValue(String(rest.max ?? ""), pickerType),
-    [pickerType, rest.max],
+    () => parseDateValue(String(rest.max ?? ""), type),
+    [type, rest.max],
   );
 
   const placeholderValue = useMemo(
-    () => parseDateValue(rest.placeholder ?? "", pickerType),
-    [pickerType, rest.placeholder],
+    () => parseDateValue(placeholder, type),
+    [placeholder, type],
   );
 
   return (
     <BaseDatePicker
+      aria-label={placeholder}
       className={cx(styles.datePicker, className)}
-      aria-label={rest.placeholder ?? "Select a date"}
-      granularity={pickerType === "datetime" ? "minute" : "day"}
-      minValue={minValue}
+      granularity={type === "datetime" ? "minute" : "day"}
       maxValue={maxValue}
-      placeholderValue={placeholderValue}
-      value={valueToUse}
+      minValue={minValue}
       onChange={(newValue) => {
         if (!newValue) {
           return;
         }
 
-        onChange(toIsoString(newValue, pickerType));
+        onChange(toIsoString(newValue, type));
       }}
+      placeholderValue={placeholderValue}
+      value={valueToUse}
     >
       {label && <Label className={styles.label}>{label}</Label>}
       <Group className={cx(styles.group)}>
-        <DateInput className={cx(styles.input)}>
+        <DateInput
+          className={cx(styles.input)}
+          onClick={handleShowPickerOnClickOrFocus}
+        >
           {(segment) => (
-            <DateSegment segment={segment} className={styles.segment ?? ""} />
+            <DateSegment className={cx(styles.segment)} segment={segment} />
           )}
         </DateInput>
-        <Button className={cx(styles.trigger)} aria-label="Open calendar">
+        <Button
+          aria-label="Open calendar"
+          className={cx(styles.trigger)}
+          ref={triggerButtonRef}
+        >
           <CalendarBlank className={styles.triggerIcon} />
         </Button>
       </Group>
       <Popover className={cx(styles.popover)}>
         <Dialog className={cx(styles.dialog)}>
           <Calendar className={cx(styles.calendar)}>
-            <header className={cx(styles.calendarHeader)}>
+            <div className={cx(styles.calendarHeader)}>
               <Button slot="previous" className={cx(styles.navButton)}>
                 <CaretLeft className={styles.navIcon} />
               </Button>
@@ -137,7 +157,7 @@ export function NativeDatePicker({
               <Button slot="next" className={cx(styles.navButton)}>
                 <CaretRight className={styles.navIcon} />
               </Button>
-            </header>
+            </div>
             <CalendarGrid className={cx(styles.calendarGrid)}>
               <CalendarGridHeader>
                 {(day) => (
@@ -159,34 +179,32 @@ export function NativeDatePicker({
   );
 }
 
-const parseDateValue = (
+function parseDateValue(
   value: string,
-  pickerType: "date" | "datetime",
-): DateValue | null => {
-  if (value === "") {
-    return null;
-  }
-
+  type: "date" | "datetime",
+): DateValue | null {
   const parsed = dayjs(value);
   if (!parsed.isValid()) {
     return null;
   }
 
-  if (pickerType === "datetime") {
+  if (type === "datetime") {
     return parseDateTime(parsed.format("YYYY-MM-DDTHH:mm"));
   }
 
   return parseDate(parsed.format("YYYY-MM-DD"));
-};
+}
 
-const toIsoString = (
-  value: DateValue,
-  pickerType: "date" | "datetime",
-): string => {
-  if (pickerType === "date") {
+function toIsoString(
+  value: Nullish<DateValue>,
+  type: "date" | "datetime",
+): string {
+  if (isNullOrUndefined(value)) return "";
+
+  if (type === "date") {
     const { year, month, day } = value;
     return new Date(Date.UTC(year, month - 1, day)).toISOString();
   }
 
   return value.toDate(getLocalTimeZone()).toISOString();
-};
+}

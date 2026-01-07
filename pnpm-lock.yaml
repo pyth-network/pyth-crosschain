@@ -2127,6 +2127,9 @@ importers:
       '@pythnetwork/react-hooks':
         specifier: 'workspace:'
         version: link:../react-hooks
+      '@pythnetwork/shared-lib':
+        specifier: 'workspace:'
+        version: link:../shared-lib
       '@react-hookz/web':
         specifier: 'catalog:'
         version: 25.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)

@@ -1,6 +1,6 @@
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
-import { NativeDatePicker } from "@pythnetwork/component-library/NativeDatePicker";
+import { DatePicker } from "@pythnetwork/component-library/DatePicker";
 import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { isNumber } from "@pythnetwork/shared-lib/util";
@@ -265,7 +265,7 @@ export function PythProDemoPriceChartImpl({
       <div className={classes.buttons}>
         {isReplaySymbol(selectedSource) && (
           <>
-            <NativeDatePicker
+            <DatePicker
               onChange={handleSetSelectedReplayDate}
               placeholder="Select a datetime to begin"
               type="datetime"
