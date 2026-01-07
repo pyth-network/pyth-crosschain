@@ -1,0 +1,245 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background-color: theme.color("background", "secondary");
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: theme.spacing(3) theme.spacing(4);
+  border-bottom: 1px solid theme.color("border");
+  background-color: theme.color("background", "primary");
+}
+
+.statusSection {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusIdle {
+  background-color: theme.color("muted");
+}
+
+.statusConnecting {
+  background-color: theme.color("states", "warning", "normal");
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.statusConnected {
+  background-color: theme.color("states", "success", "normal");
+}
+
+.statusError {
+  background-color: theme.color("states", "error", "normal");
+}
+
+.statusClosed {
+  background-color: theme.color("muted");
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.statusLabel {
+  @include theme.text("sm", "medium");
+
+  color: theme.color("foreground");
+}
+
+.messageCount {
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+  padding-left: theme.spacing(2);
+  border-left: 1px solid theme.color("border");
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+  padding: theme.spacing(3) theme.spacing(4);
+  background-color: color-mix(
+    in srgb,
+    theme.color("states", "error", "normal") 10%,
+    transparent
+  );
+  border-bottom: 1px solid theme.color("states", "error", "normal");
+}
+
+.errorIcon {
+  @include theme.text("sm", "normal");
+
+  color: theme.color("states", "error", "normal");
+}
+
+.errorMessage {
+  @include theme.text("sm", "normal");
+
+  color: theme.color("states", "error", "normal");
+}
+
+.messagesContainer {
+  flex: 1;
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+
+  // Custom scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: theme.color("border") transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: theme.color("border");
+    border-radius: 3px;
+  }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: theme.spacing(8);
+  text-align: center;
+
+  p {
+    @include theme.text("sm", "normal");
+
+    color: theme.color("muted");
+    margin: 0;
+  }
+}
+
+.emptyHint {
+  @include theme.text("xs", "normal");
+
+  margin-top: theme.spacing(1) !important;
+}
+
+.messagesList {
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  padding: theme.spacing(3) theme.spacing(4);
+  border-bottom: 1px solid theme.color("border");
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: color-mix(
+      in srgb,
+      theme.color("highlight") 5%,
+      transparent
+    );
+  }
+}
+
+.messageError {
+  background-color: color-mix(
+    in srgb,
+    theme.color("states", "error", "normal") 5%,
+    transparent
+  );
+}
+
+.messageSystem {
+  background-color: color-mix(
+    in srgb,
+    theme.color("highlight") 5%,
+    transparent
+  );
+}
+
+.messageHeader {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+  margin-bottom: theme.spacing(2);
+}
+
+.messageTime {
+  @include theme.text("xs", "normal");
+
+  font-family: theme.font-family("monospace");
+  color: theme.color("muted");
+}
+
+.messageEvent {
+  @include theme.text("xs", "semibold");
+
+  padding: theme.spacing(1) theme.spacing(2);
+  border-radius: theme.border-radius("sm");
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.eventMessage {
+  background-color: theme.color("highlight");
+  color: theme.color("background", "primary");
+}
+
+.eventSystem {
+  background-color: theme.color("muted");
+  color: theme.color("background", "primary");
+}
+
+.eventError {
+  background-color: theme.color("states", "error", "normal");
+  color: white;
+}
+
+.messageData {
+  @include theme.text("xs", "normal");
+
+  font-family: theme.font-family("monospace");
+  color: theme.color("foreground");
+  margin: 0;
+  padding: theme.spacing(2) theme.spacing(3);
+  background-color: theme.color("background", "primary");
+  border-radius: theme.border-radius("sm");
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

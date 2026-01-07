@@ -36,6 +36,7 @@
     "fumadocs-openapi": "catalog:",
     "fumadocs-typescript": "catalog:",
     "fumadocs-ui": "catalog:",
+    "isomorphic-ws": "^5.0.0",
     "katex": "catalog:",
     "match-sorter": "catalog:",
     "next": "catalog:",
@@ -51,6 +52,7 @@
     "shiki": "catalog:",
     "tsx": "catalog:",
     "viem": "catalog:",
+    "ws": "^8.19.0",
     "zod": "catalog:",
     "zod-validation-error": "catalog:"
   },
@@ -66,6 +68,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",

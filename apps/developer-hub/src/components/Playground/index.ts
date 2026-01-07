@@ -31,3 +31,12 @@ export {
 
 // Code Preview
 export { CodePreview } from "./CodePreview";
+
+// Output Panel
+export { OutputPanel } from "./OutputPanel";
+
+// Hooks
+export { useStreamExecution } from "./hooks/use-stream-execution";
+export type { StreamStatus } from "./hooks/use-stream-execution";
+// Note: StreamMessage is also exported from ./types with a different shape
+export type { StreamMessage as HookStreamMessage } from "./hooks/use-stream-execution";
