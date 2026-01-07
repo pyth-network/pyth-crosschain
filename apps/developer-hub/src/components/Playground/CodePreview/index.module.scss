@@ -16,7 +16,6 @@
   padding: theme.spacing(2) theme.spacing(4);
   border-bottom: 1px solid theme.color("border");
   background-color: theme.color("background", "secondary");
-  flex-wrap: wrap;
   gap: theme.spacing(2);
 }
 
@@ -80,4 +79,3 @@
 
   @include theme.text("sm", "normal");
 }
-

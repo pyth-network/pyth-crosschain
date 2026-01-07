@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import clsx from "clsx";
 
 import styles from "./index.module.scss";
@@ -38,30 +39,30 @@ export function PropertiesSelector({ className }: PropertiesSelectorProps) {
       </div>
 
       <div
-        className={styles.options}
+        className={styles.chipGrid}
         role="group"
         aria-label="Property selection"
       >
         {PROPERTY_OPTIONS.map((option) => {
           const isSelected = selectedProperties.includes(option.id);
           return (
-            <label key={option.id} className={styles.option}>
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => {
-                  handleToggle(option.id);
-                }}
-                className={styles.checkbox}
-                aria-label={option.label}
-              />
-              <span className={styles.optionContent}>
-                <span className={styles.optionLabel}>{option.label}</span>
-                <span className={styles.optionDescription}>
-                  {option.description}
-                </span>
-              </span>
-            </label>
+            <button
+              key={option.id}
+              type="button"
+              className={clsx(styles.chip, {
+                [styles.selected ?? ""]: isSelected,
+              })}
+              onClick={() => {
+                handleToggle(option.id);
+              }}
+              aria-pressed={isSelected}
+              title={option.description}
+            >
+              {isSelected && (
+                <Check weight="bold" className={styles.checkIcon} />
+              )}
+              <span className={styles.chipLabel}>{option.label}</span>
+            </button>
           );
         })}
       </div>

@@ -7,7 +7,10 @@ import { generateTypeScriptCode } from "./typescript";
 /**
  * Generates code for the specified language based on the playground configuration
  */
-export function generateCode(language: CodeLanguage, config: PlaygroundConfig): string {
+export function generateCode(
+  language: CodeLanguage,
+  config: PlaygroundConfig,
+): string {
   switch (language) {
     case "typescript": {
       return generateTypeScriptCode(config);
@@ -76,4 +79,3 @@ export function getMonacoLanguage(language: CodeLanguage): string {
     }
   }
 }
-

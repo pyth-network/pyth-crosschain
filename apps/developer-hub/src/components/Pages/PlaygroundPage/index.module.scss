@@ -82,7 +82,7 @@
 .configPanel {
   display: flex;
   flex-direction: column;
-  gap: theme.spacing(6);
+  gap: theme.spacing(5);
   overflow-y: auto;
   padding-top: theme.spacing(6);
   padding-bottom: theme.spacing(6);
@@ -105,14 +105,14 @@
   }
 }
 
+// Compact row for Channel and Format selectors
 .configRow {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: theme.spacing(6);
-
-  @include theme.breakpoint("sm") {
-    grid-template-columns: 1fr 1fr;
-  }
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: theme.spacing(4);
+  padding-top: theme.spacing(2);
+  border-top: 1px solid theme.color("border");
 }
 
 // Right panel - Code preview with independent scroll
@@ -145,26 +145,20 @@
 .runSection {
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: theme.spacing(2);
-
-  @include theme.breakpoint("sm") {
-    flex-direction: row;
-    align-items: center;
-    gap: theme.spacing(4);
-  }
+  align-items: center;
+  gap: theme.spacing(3);
+  padding-top: theme.spacing(3);
+  border-top: 1px solid theme.color("border");
 }
 
 .runButton {
   display: inline-flex;
   align-items: center;
-  gap: theme.spacing(2);
+  gap: theme.spacing(1.5);
 }
 
 .runHint {
-  @include theme.text("sm", "normal");
+  @include theme.text("xs", "normal");
 
   color: theme.color("muted");
-  margin: 0;
 }

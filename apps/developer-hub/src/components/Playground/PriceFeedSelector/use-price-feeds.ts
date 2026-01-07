@@ -40,7 +40,9 @@ export function usePriceFeeds(): UsePriceFeedsState {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch price feeds: ${String(response.status)}`);
+          throw new Error(
+            `Failed to fetch price feeds: ${String(response.status)}`,
+          );
         }
 
         const data: unknown = await response.json();
@@ -63,7 +65,10 @@ export function usePriceFeeds(): UsePriceFeedsState {
         }
         setState({
           status: "error",
-          error: error instanceof Error ? error.message : "Failed to load price feeds",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to load price feeds",
         });
       }
     };
@@ -79,5 +84,3 @@ export function usePriceFeeds(): UsePriceFeedsState {
 
   return state;
 }
-
-

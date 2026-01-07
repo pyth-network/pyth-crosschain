@@ -8,7 +8,11 @@ import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 
 import styles from "./index.module.scss";
-import { generateCode, getFileExtension, getMonacoLanguage } from "../CodeGenerators";
+import {
+  generateCode,
+  getFileExtension,
+  getMonacoLanguage,
+} from "../CodeGenerators";
 import { usePlaygroundContext } from "../PlaygroundContext";
 import type { CodeLanguage } from "../types";
 import { CODE_LANGUAGE_OPTIONS } from "../types";
@@ -25,7 +29,8 @@ type CodePreviewProps = {
 
 export function CodePreview({ className }: CodePreviewProps) {
   const { config } = usePlaygroundContext();
-  const [activeLanguage, setActiveLanguage] = useState<CodeLanguage>("typescript");
+  const [activeLanguage, setActiveLanguage] =
+    useState<CodeLanguage>("typescript");
   const [copied, setCopied] = useState(false);
 
   // Generate code for the active language
@@ -91,21 +96,25 @@ export function CodePreview({ className }: CodePreviewProps) {
           <Button
             variant="ghost"
             size="sm"
+            beforeIcon={<Copy weight="bold" />}
+            hideText
             onPress={() => {
               void handleCopy();
             }}
             className={styles.actionButton ?? ""}
+            aria-label={copied ? "Copied!" : "Copy"}
           >
-            <Copy weight="bold" />
             {copied ? "Copied!" : "Copy"}
           </Button>
           <Button
             variant="ghost"
             size="sm"
+            beforeIcon={<DownloadSimple weight="bold" />}
+            hideText
             onPress={handleDownload}
             className={styles.actionButton ?? ""}
+            aria-label="Download"
           >
-            <DownloadSimple weight="bold" />
             Download
           </Button>
         </div>

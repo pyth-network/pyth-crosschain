@@ -35,7 +35,7 @@ export function PriceFeedSelector({ className }: PriceFeedSelectorProps) {
         (feed) =>
           feed.symbol.toLowerCase().includes(searchLower) ||
           feed.name.toLowerCase().includes(searchLower) ||
-          String(feed.id).includes(searchLower)
+          String(feed.id).includes(searchLower),
       )
       .slice(0, 50);
   }, [feedsState, search]);

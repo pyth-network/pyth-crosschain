@@ -10,5 +10,3 @@ export default function PlaygroundLayout({ children }: PlaygroundLayoutProps) {
 type PlaygroundLayoutProps = {
   children: ReactNode;
 };
-
-

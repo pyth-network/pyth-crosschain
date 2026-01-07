@@ -69,25 +69,69 @@ export const PROPERTY_OPTIONS: {
   { id: "price", label: "Price", description: "Aggregate market price" },
   { id: "bestBidPrice", label: "Best Bid", description: "Highest bid price" },
   { id: "bestAskPrice", label: "Best Ask", description: "Lowest ask price" },
-  { id: "confidence", label: "Confidence", description: "Price confidence interval" },
+  {
+    id: "confidence",
+    label: "Confidence",
+    description: "Price confidence interval",
+  },
   { id: "exponent", label: "Exponent", description: "Decimal exponent" },
-  { id: "publisherCount", label: "Publisher Count", description: "Number of publishers" },
-  { id: "fundingRate", label: "Funding Rate", description: "Perpetual futures funding rate" },
-  { id: "fundingTimestamp", label: "Funding Timestamp", description: "Last funding calculation time" },
-  { id: "fundingRateInterval", label: "Funding Interval", description: "Duration between funding updates" },
+  {
+    id: "publisherCount",
+    label: "Publisher Count",
+    description: "Number of publishers",
+  },
+  {
+    id: "fundingRate",
+    label: "Funding Rate",
+    description: "Perpetual futures funding rate",
+  },
+  {
+    id: "fundingTimestamp",
+    label: "Funding Timestamp",
+    description: "Last funding calculation time",
+  },
+  {
+    id: "fundingRateInterval",
+    label: "Funding Interval",
+    description: "Duration between funding updates",
+  },
 ];
 
-export const CHAIN_OPTIONS: { id: ChainFormat; label: string; description: string }[] = [
+export const CHAIN_OPTIONS: {
+  id: ChainFormat;
+  label: string;
+  description: string;
+}[] = [
   { id: "solana", label: "Solana", description: "Ed25519 EdDSA signature" },
   { id: "evm", label: "EVM", description: "secp256k1 ECDSA signature" },
   { id: "leEcdsa", label: "LE ECDSA", description: "Little-endian secp256k1" },
-  { id: "leUnsigned", label: "Unsigned", description: "Raw payload without signature" },
+  {
+    id: "leUnsigned",
+    label: "Unsigned",
+    description: "Raw payload without signature",
+  },
 ];
 
-export const CHANNEL_OPTIONS: { id: Channel; label: string; description: string }[] = [
-  { id: "real_time", label: "Real Time", description: "Updates as fast as possible (1-50ms)" },
-  { id: "fixed_rate@50ms", label: "Fixed 50ms", description: "Updates every 50 milliseconds" },
-  { id: "fixed_rate@200ms", label: "Fixed 200ms", description: "Updates every 200 milliseconds" },
+export const CHANNEL_OPTIONS: {
+  id: Channel;
+  label: string;
+  description: string;
+}[] = [
+  {
+    id: "real_time",
+    label: "Real Time",
+    description: "Updates as fast as possible (1-50ms)",
+  },
+  {
+    id: "fixed_rate@50ms",
+    label: "Fixed 50ms",
+    description: "Updates every 50 milliseconds",
+  },
+  {
+    id: "fixed_rate@200ms",
+    label: "Fixed 200ms",
+    description: "Updates every 200 milliseconds",
+  },
 ];
 
 // Code language options for the code preview
@@ -101,7 +145,12 @@ export const CODE_LANGUAGE_OPTIONS: { id: CodeLanguage; label: string }[] = [
 ];
 
 // Execution state for the output console
-export type ExecutionStatus = "idle" | "connecting" | "connected" | "error" | "disconnected";
+export type ExecutionStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "error"
+  | "disconnected";
 
 export type ExecutionState = {
   status: ExecutionStatus;
@@ -124,5 +173,5 @@ export const PYTH_PRO_ENDPOINTS = [
 ];
 
 // API endpoint for symbols
-export const SYMBOLS_API_URL = "https://history.pyth-lazer.dourolabs.app/history/v1/symbols";
-
+export const SYMBOLS_API_URL =
+  "https://history.pyth-lazer.dourolabs.app/history/v1/symbols";

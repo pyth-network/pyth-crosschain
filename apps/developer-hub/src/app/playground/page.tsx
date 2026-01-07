@@ -11,5 +11,3 @@ export const metadata: Metadata = {
 export default function Playground() {
   return <PlaygroundPage />;
 }
-
-
