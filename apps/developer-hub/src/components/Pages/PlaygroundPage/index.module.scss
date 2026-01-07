@@ -65,15 +65,15 @@
   height: 100%;
 
   // Two-column layout for medium screens and up
-  @media (min-width: 768px) {
+  @media (width >= 768px) {
     grid-template-columns: 350px 1fr;
   }
 
-  @media (min-width: 1024px) {
+  @media (width >= 1024px) {
     grid-template-columns: 400px 1fr;
   }
 
-  @media (min-width: 1280px) {
+  @media (width >= 1280px) {
     grid-template-columns: 450px 1fr;
   }
 }
