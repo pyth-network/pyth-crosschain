@@ -3,13 +3,12 @@
 import { Select } from "@pythnetwork/component-library/Select";
 import clsx from "clsx";
 
+import styles from "./index.module.scss";
+import { usePlaygroundContext } from "../PlaygroundContext";
 import type { Channel } from "../types";
 import { CHANNEL_OPTIONS } from "../types";
-import styles from "./index.module.scss";
 
 type ChannelSelectorProps = {
-  selectedChannel: Channel;
-  onSelectionChange: (channel: Channel) => void;
   className?: string;
 };
 
@@ -23,14 +22,12 @@ const isValidChannel = (key: string | number): key is Channel => {
   return CHANNEL_OPTIONS.some((option) => option.id === key);
 };
 
-export function ChannelSelector({
-  selectedChannel,
-  onSelectionChange,
-  className,
-}: ChannelSelectorProps) {
+export function ChannelSelector({ className }: ChannelSelectorProps) {
+  const { config, updateConfig } = usePlaygroundContext();
+
   const handleSelectionChange = (key: string | number) => {
     if (isValidChannel(key)) {
-      onSelectionChange(key);
+      updateConfig({ channel: key });
     }
   };
 
@@ -39,7 +36,7 @@ export function ChannelSelector({
       <Select
         label="Update Channel"
         options={selectOptions}
-        selectedKey={selectedChannel}
+        selectedKey={config.channel}
         onSelectionChange={handleSelectionChange}
         show={(option) => (
           <span className={styles.optionDisplay}>{option.label}</span>
@@ -48,9 +45,8 @@ export function ChannelSelector({
         size="sm"
       />
       <span className={styles.description}>
-        {CHANNEL_OPTIONS.find((opt) => opt.id === selectedChannel)?.description}
+        {CHANNEL_OPTIONS.find((opt) => opt.id === config.channel)?.description}
       </span>
     </div>
   );
 }
-

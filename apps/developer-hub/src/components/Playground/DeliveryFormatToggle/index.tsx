@@ -3,12 +3,11 @@
 import { SingleToggleGroup } from "@pythnetwork/component-library/SingleToggleGroup";
 import clsx from "clsx";
 
-import type { DeliveryFormat } from "../types";
 import styles from "./index.module.scss";
+import { usePlaygroundContext } from "../PlaygroundContext";
+import type { DeliveryFormat } from "../types";
 
 type DeliveryFormatToggleProps = {
-  selectedFormat: DeliveryFormat;
-  onSelectionChange: (format: DeliveryFormat) => void;
   className?: string;
 };
 
@@ -17,13 +16,11 @@ const formatOptions = [
   { id: "binary", children: "Binary" },
 ];
 
-export function DeliveryFormatToggle({
-  selectedFormat,
-  onSelectionChange,
-  className,
-}: DeliveryFormatToggleProps) {
+export function DeliveryFormatToggle({ className }: DeliveryFormatToggleProps) {
+  const { config, updateConfig } = usePlaygroundContext();
+
   const handleChange = (key: string | number) => {
-    onSelectionChange(key as DeliveryFormat);
+    updateConfig({ deliveryFormat: key as DeliveryFormat });
   };
 
   return (
@@ -31,16 +28,15 @@ export function DeliveryFormatToggle({
       <span className={styles.label}>Delivery Format</span>
       <SingleToggleGroup
         items={formatOptions}
-        selectedKey={selectedFormat}
+        selectedKey={config.deliveryFormat}
         onSelectionChange={handleChange}
         className={styles.toggleGroup ?? ""}
       />
       <span className={styles.description}>
-        {selectedFormat === "json"
+        {config.deliveryFormat === "json"
           ? "Human-readable JSON response"
           : "Compact binary format for performance"}
       </span>
     </div>
   );
 }
-
