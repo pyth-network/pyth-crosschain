@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import {
   createContext,
@@ -36,6 +37,8 @@ import {
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+
+const START_AT_QUERY_PARAM_NAME = "startAt";
 
 type PlaybackSpeed = 1 | 2 | 4 | 8 | 16 | 32;
 
@@ -83,6 +86,11 @@ const initialState: CurrentPricesStoreState = {
 };
 
 export function PythProAppStateProvider({ children }: PropsWithChildren) {
+  /** hooks */
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   /** state */
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
@@ -101,8 +109,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
 
   const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
 
-  const [selectedReplayDate, setSelectedReplayDate] = useState("");
-
   const [isLoadingInitialReplayData, setIsLoadingInitialReplayData] =
     useState(false);
 
@@ -110,6 +116,20 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   const selectedSymbolRef = useRef(appState.selectedSource);
 
   /** callbacks */
+  const setSelectedReplayDate = useCallback(
+    (dateStr: string) => {
+      const existing = new URLSearchParams(searchParams.toString());
+
+      if (dateStr) {
+        existing.set(START_AT_QUERY_PARAM_NAME, dateStr);
+      } else {
+        existing.delete(START_AT_QUERY_PARAM_NAME);
+      }
+      router.push(`${pathname}?${existing.toString()}`);
+    },
+    [pathname, router, searchParams],
+  );
+
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
     (dataSource, symbol, dataPoint) => {
       // state is desynchronized, so we disallow setting of the metric here
@@ -167,14 +187,16 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       ...initialState,
       selectedSource: isAllowedSymbol(source) ? source : undefined,
     });
-    setSelectedReplayDate("");
   }, []);
 
   const handleSetSelectedReplayDate = useCallback<
     AppStateContextVal["handleSetSelectedReplayDate"]
-  >((dateStr) => {
-    setSelectedReplayDate(dateStr);
-  }, []);
+  >(
+    (dateStr) => {
+      setSelectedReplayDate(dateStr);
+    },
+    [setSelectedReplayDate],
+  );
 
   const handleSetIsLoadingInitialReplayData = useCallback<
     AppStateContextVal["handleSetIsLoadingInitialReplayData"]
@@ -183,6 +205,11 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   }, []);
 
   /** memos */
+  const selectedReplayDate = useMemo(
+    () => searchParams.get(START_AT_QUERY_PARAM_NAME) ?? "",
+    [searchParams],
+  );
+
   const dataSourcesInUse = useMemo(() => {
     let out: AllDataSourcesType[] = [];
     if (isAllowedCryptoSymbol(appState.selectedSource)) {

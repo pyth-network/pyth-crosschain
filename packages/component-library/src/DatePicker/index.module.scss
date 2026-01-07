@@ -120,6 +120,44 @@
   gap: theme.spacing(2);
 }
 
+.timeField {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+  margin-top: theme.spacing(2);
+}
+
+.timeLabel {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  line-height: theme.spacing(4);
+}
+
+.timeInput {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(1);
+  padding: theme.spacing(1.5) theme.spacing(2);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background-color: theme.color("background", "primary");
+  outline: theme.spacing(1) solid transparent;
+  outline-offset: 0;
+  transition-property: border-color, outline-color, background-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &:hover {
+    border-color: theme.color("forms", "input", "hover", "border");
+  }
+
+  &:focus-within {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+}
+
 .calendarHeader {
   align-items: center;
   display: flex;

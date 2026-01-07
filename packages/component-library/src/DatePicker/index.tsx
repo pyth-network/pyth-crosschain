@@ -14,7 +14,7 @@ import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import cx from "clsx";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useContext, useMemo, useRef } from "react";
 import type { DateValue } from "react-aria-components";
 import {
   Button,
@@ -25,6 +25,7 @@ import {
   CalendarGridHeader,
   CalendarHeaderCell,
   DateInput,
+  DatePickerStateContext,
   DatePicker as BaseDatePicker,
   DateSegment,
   Dialog,
@@ -32,6 +33,7 @@ import {
   Heading,
   Label,
   Popover,
+  TimeField,
 } from "react-aria-components";
 
 import type { InputProps } from "../Input";
@@ -173,9 +175,35 @@ export function DatePicker({
               </CalendarGridBody>
             </CalendarGrid>
           </Calendar>
+          {type === "datetime" && <DatePickerTimeField />}
         </Dialog>
       </Popover>
     </BaseDatePicker>
+  );
+}
+
+function DatePickerTimeField() {
+  const state = useContext(DatePickerStateContext);
+  if (!state?.hasTime) return null;
+
+  return (
+    <TimeField
+      aria-label="Time"
+      className={cx(styles.timeField)}
+      granularity="minute"
+      value={state.timeValue}
+      onChange={(newValue) => {
+        if (!newValue) return;
+        state.setTimeValue(newValue);
+      }}
+    >
+      <Label className={cx(styles.timeLabel)}>Time</Label>
+      <DateInput className={cx(styles.timeInput)}>
+        {(segment) => (
+          <DateSegment className={cx(styles.segment)} segment={segment} />
+        )}
+      </DateInput>
+    </TimeField>
   );
 }
 

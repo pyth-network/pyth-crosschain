@@ -1,6 +1,6 @@
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { wait } from "@pythnetwork/shared-lib/util";
+import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
 import { usePrevious } from "@react-hookz/web";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -15,6 +15,7 @@ import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
+  AllowedReplaySymbolsType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   appendReplaySymbolSuffix,
@@ -114,10 +115,12 @@ export function useHttpDataStream({
   const prevSelectedReplayDate = usePrevious(selectedReplayDate);
 
   /** refs */
+  const abortControllerRef = useRef(new AbortController());
+  const dataSourcesRef = useRef(dataSources);
+  const enabledRef = useRef(enabled);
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
   const prevSymbolRef = useRef(prevSymbol);
-  const canProcessRef = useRef(true);
   const selectedReplayDateRef = useRef(selectedReplayDate);
   const prevSelectedReplayDateRef = useRef(prevSelectedReplayDate);
   const isMountedRef = useRef(false);
@@ -126,80 +129,20 @@ export function useHttpDataStream({
   const [status, setStatus] =
     useState<UseDataStreamReturnType["status"]>("closed");
   const [error, setError] = useState<Nullish<Error>>(undefined);
-  const [startAtToFetch, setStartAtToFetch] = useState(
-    dayjs(selectedReplayDate),
-  );
 
   /** callbacks */
-  const handleFetchError = useCallback((error_: unknown) => {
-    if (!(error_ instanceof Error)) throw error_;
-    setError(error_);
+  const doAbort = useCallback(() => {
+    abortControllerRef.current.abort();
   }, []);
-  const processData = useCallback(
-    async (data: GetPythHistoricalPricesReturnType) => {
-      // if we don't have the greelight to process results,
-      // we'll just spin for a while.
-      while (!canProcessRef.current) {
-        if (
-          symbolRef.current !== prevSymbolRef.current ||
-          prevSelectedReplayDateRef.current !== selectedReplayDateRef.current
-        ) {
-          return;
-        }
-        await wait(10);
-      }
 
-      // all the results should be in order of timestamp, regardless of the datasource
-      // so we'll just write them all out to the chart as they flow in.
-
-      const dataLen = data.length;
-      const quarterPoint = Math.floor(dataLen / 4);
-      const lastPoint = data.at(-1);
-
-      for (let i = 0; i < dataLen; i++) {
-        canProcessRef.current = false;
-        const currPoint = data[i];
-        const nextPoint = data[i + 1];
-
-        if (currPoint) {
-          const dataPointSymbol = appendReplaySymbolSuffix(
-            currPoint.symbol as AllAllowedSymbols,
-          );
-
-          if (
-            dataPointSymbol !== symbolRef.current ||
-            prevSelectedReplayDateRef.current !== selectedReplayDateRef.current
-          ) {
-            break;
-          }
-
-          addDataPoint(currPoint.source, dataPointSymbol, currPoint);
-        }
-
-        if (i === quarterPoint) {
-          if (lastPoint) {
-            setStartAtToFetch(dayjs(lastPoint.timestamp));
-          } else {
-            // there wasn't any data for this chunk, so just keep adding 1 minute
-            // to the request until we get data back
-            setStartAtToFetch(dayjs(startAtToFetch).add(1, "minute"));
-          }
-        }
-
-        if (currPoint && nextPoint) {
-          const delta =
-            new Date(nextPoint.timestamp).valueOf() -
-            new Date(currPoint.timestamp).valueOf();
-          await wait(delta / playbackSpeedRef.current);
-        }
-      }
-      canProcessRef.current = true;
-    },
-    [addDataPoint, startAtToFetch],
-  );
+  const handleError = useCallback((error_: unknown) => {
+    setError(error_ instanceof Error ? error_ : new Error(String(error_)));
+  }, []);
 
   /** effects */
   useEffect(() => {
+    dataSourcesRef.current = dataSources;
+    enabledRef.current = enabled;
     playbackSpeedRef.current = playbackSpeed;
     prevSymbolRef.current = prevSymbol;
     prevSelectedReplayDateRef.current = prevSelectedReplayDate;
@@ -208,50 +151,154 @@ export function useHttpDataStream({
   });
 
   useEffect(() => {
-    if (prevSelectedReplayDate !== selectedReplayDate) {
-      setStartAtToFetch(dayjs(selectedReplayDate));
-    }
-  }, [prevSelectedReplayDate, selectedReplayDate]);
-
-  useEffect(() => {
-    if (!enabled || !isReplaySymbol(symbol) || !startAtToFetch.isValid()) {
-      setStatus("closed");
+    if (
+      !enabled ||
+      dataSources.length <= 0 ||
+      !selectedReplayDate ||
+      !isReplaySymbol(symbol)
+    ) {
+      doAbort();
       return;
     }
 
-    const url = getFetchHistoricalUrl(
-      dataSources,
-      symbol,
-      startAtToFetch.toDate(),
-    );
-    if (!url) {
-      setStatus("closed");
-      return;
+    // Reset the abort controller once per new stream start.
+    doAbort();
+    abortControllerRef.current = new AbortController();
+
+    /**
+     * checks if any of the refs have drifted while we're processing things
+     * asynchronously, and if they have, aborts via the abort controller
+     * and returns true.
+     * Otherwise, returns false
+     */
+    function guardAbort() {
+      const printAborted = (reason: string) => {
+        console.info(
+          `%caborted processing because ${reason}`,
+          "background-color: yellow; color: purple; font-size: 14px; padding: 2px;",
+        );
+      };
+      // if the signal has already been aborted,
+      // return early. no point in doing the rest of the checks
+      if (abortControllerRef.current.signal.aborted) {
+        printAborted("abort controller was already aborted");
+        return true;
+      }
+
+      // we could collapse this all into a mega ternary,
+      // but it's easier for fleshy meatbags a.k.a. humans
+      // to read this way
+      if (!enabledRef.current) {
+        printAborted("enabled is false");
+        doAbort();
+        return true;
+      }
+      if (!isReplaySymbol(symbolRef.current)) {
+        printAborted(
+          `symbol selected is not a replay symbol, ${symbolRef.current ?? "-unset-"}`,
+        );
+        doAbort();
+        return true;
+      }
+      if (!selectedReplayDateRef.current) {
+        printAborted("selected replay date changed is invalid.");
+        doAbort();
+        return true;
+      }
+      if (selectedReplayDateRef.current !== prevSelectedReplayDateRef.current) {
+        printAborted("current and previous selected replay data are different");
+        doAbort();
+        return true;
+      }
+      if (dataSourcesRef.current.length <= 0) {
+        printAborted("data sources are empty");
+        doAbort();
+        return true;
+      }
+
+      return false;
     }
 
-    setStatus("connected");
+    let canProcess = true;
+
+    async function doFetch(startAt: string) {
+      if (guardAbort()) return;
+
+      const url = getFetchHistoricalUrl(
+        dataSourcesRef.current,
+        symbolRef.current,
+        new Date(startAt),
+      );
+      const thisData = await fetchHistoricalData(url);
+      handleSetIsLoadingInitialReplayData(false);
+
+      while (!canProcess) {
+        // wait until the previous consumer frees itself up and then continue
+        await wait(10);
+      }
+
+      canProcess = false;
+
+      const dataLen = thisData.length;
+      const quarterPoint = Math.floor(dataLen / 4);
+
+      const lastPoint = thisData.at(-1);
+      const nextStartAt = lastPoint?.timestamp
+        ? dayjs(lastPoint.timestamp).add(20, "milliseconds").toISOString()
+        : dayjs(startAt).add(1, "minutes").toISOString();
+
+      for (let i = 0; i < dataLen; i++) {
+        const currPoint = thisData[i];
+        if (isNullOrUndefined(currPoint)) continue;
+
+        const nextPoint = thisData[i + 1];
+
+        if (guardAbort()) return;
+
+        if (i === quarterPoint) {
+          doFetch(nextStartAt).catch(handleError);
+        }
+
+        if (guardAbort()) return;
+
+        addDataPoint(
+          currPoint.source,
+          appendReplaySymbolSuffix(
+            currPoint.symbol as AllAllowedSymbols,
+          ) as AllowedReplaySymbolsType,
+          currPoint,
+        );
+        if (guardAbort()) return;
+        if (nextPoint) {
+          const delta =
+            new Date(nextPoint.timestamp).valueOf() -
+            new Date(currPoint.timestamp).valueOf();
+          await wait(delta / playbackSpeedRef.current);
+        }
+      }
+
+      canProcess = true;
+    }
 
     if (!isMountedRef.current) {
+      setStatus("connected");
       handleSetIsLoadingInitialReplayData(true);
     }
 
     isMountedRef.current = true;
+    void doFetch(selectedReplayDate);
 
-    fetchHistoricalData(url)
-      .then((d) => {
-        void processData(d);
-      })
-      .catch(handleFetchError)
-      .finally(() => {
-        handleSetIsLoadingInitialReplayData(false);
-      });
+    return () => {
+      doAbort();
+    };
   }, [
+    addDataPoint,
     dataSources,
+    doAbort,
     enabled,
-    handleFetchError,
+    handleError,
     handleSetIsLoadingInitialReplayData,
-    processData,
-    startAtToFetch,
+    selectedReplayDate,
     symbol,
   ]);
 
