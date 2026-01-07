@@ -59,13 +59,20 @@ export function PageActions({ content, title, url }: PageActionsProps) {
   }
 
   function handleShare(option: PageActionOption) {
+    // Convert relative URL to absolute URL
+    const absoluteUrl = url.startsWith("/")
+      ? `${globalThis.location.origin}${url}`
+      : url;
+
     const prompt = `Please read and analyze this documentation page:
 
         Title: ${title}
-        URL: ${url}
+        URL: ${absoluteUrl}
 
         Content:
         ${content}
+
+        Note: Please ignore any React import statements (e.g., "import ... from ...") and React component code in the content. Focus only on the documentation content itself.
 
         Please provide a summary and answer any questions I might have about this content.`;
 

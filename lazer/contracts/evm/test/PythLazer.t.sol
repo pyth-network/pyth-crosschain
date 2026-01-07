@@ -5,12 +5,10 @@ import {Test, console} from "forge-std/Test.sol";
 import {PythLazer} from "../src/PythLazer.sol";
 import {PythLazerLib} from "../src/PythLazerLib.sol";
 import {PythLazerStructs} from "../src/PythLazerStructs.sol";
-import {PythLazerLibTestHelper} from "./PythLazerLibTestHelper.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract PythLazerTest is Test {
     PythLazer public pythLazer;
-    PythLazerLibTestHelper public libHelper;
     address owner;
 
     function setUp() public {
@@ -22,7 +20,6 @@ contract PythLazerTest is Test {
             abi.encodeWithSelector(PythLazer.initialize.selector, owner)
         );
         pythLazer = PythLazer(address(proxy));
-        libHelper = new PythLazerLibTestHelper();
     }
 
     function test_update_add_signer() public {
@@ -198,7 +195,7 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         // Verify update header
@@ -228,16 +225,16 @@ contract PythLazerTest is Test {
         );
 
         // Verify exists flags (all should be set)
-        assertTrue(libHelper.hasPrice(feed));
-        assertTrue(libHelper.hasBestBidPrice(feed));
-        assertTrue(libHelper.hasBestAskPrice(feed));
-        assertTrue(libHelper.hasPublisherCount(feed));
-        assertTrue(libHelper.hasExponent(feed));
-        assertTrue(libHelper.hasConfidence(feed));
-        assertTrue(libHelper.hasFundingRate(feed));
-        assertTrue(libHelper.hasFundingTimestamp(feed));
-        assertTrue(libHelper.hasFundingRateInterval(feed));
-        assertTrue(libHelper.hasMarketSession(feed));
+        assertTrue(PythLazerLib.hasPrice(feed));
+        assertTrue(PythLazerLib.hasBestBidPrice(feed));
+        assertTrue(PythLazerLib.hasBestAskPrice(feed));
+        assertTrue(PythLazerLib.hasPublisherCount(feed));
+        assertTrue(PythLazerLib.hasExponent(feed));
+        assertTrue(PythLazerLib.hasConfidence(feed));
+        assertTrue(PythLazerLib.hasFundingRate(feed));
+        assertTrue(PythLazerLib.hasFundingTimestamp(feed));
+        assertTrue(PythLazerLib.hasFundingRateInterval(feed));
+        assertTrue(PythLazerLib.hasMarketSession(feed));
     }
 
     /// @notice Test parsing single feed with minimal properties
@@ -255,7 +252,7 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         assertEq(update.feeds.length, 1);
@@ -267,22 +264,22 @@ contract PythLazerTest is Test {
         assertEq(feed._exponent, -6);
 
         // Only price and exponent should exist
-        assertTrue(libHelper.hasPrice(feed));
-        assertTrue(libHelper.hasExponent(feed));
-        assertFalse(libHelper.hasBestBidPrice(feed));
-        assertFalse(libHelper.hasConfidence(feed));
+        assertTrue(PythLazerLib.hasPrice(feed));
+        assertTrue(PythLazerLib.hasExponent(feed));
+        assertFalse(PythLazerLib.hasBestBidPrice(feed));
+        assertFalse(PythLazerLib.hasConfidence(feed));
 
         // Requested checks (tri-state applicability)
-        assertTrue(libHelper.isPriceRequested(feed));
-        assertTrue(libHelper.isExponentRequested(feed));
-        assertFalse(libHelper.isBestBidPriceRequested(feed));
-        assertFalse(libHelper.isBestAskPriceRequested(feed));
-        assertFalse(libHelper.isPublisherCountRequested(feed));
-        assertFalse(libHelper.isConfidenceRequested(feed));
-        assertFalse(libHelper.isFundingRateRequested(feed));
-        assertFalse(libHelper.isFundingTimestampRequested(feed));
-        assertFalse(libHelper.isFundingRateIntervalRequested(feed));
-        assertFalse(libHelper.isMarketSessionRequested(feed));
+        assertTrue(PythLazerLib.isPriceRequested(feed));
+        assertTrue(PythLazerLib.isExponentRequested(feed));
+        assertFalse(PythLazerLib.isBestBidPriceRequested(feed));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(feed));
+        assertFalse(PythLazerLib.isPublisherCountRequested(feed));
+        assertFalse(PythLazerLib.isConfidenceRequested(feed));
+        assertFalse(PythLazerLib.isFundingRateRequested(feed));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(feed));
+        assertFalse(PythLazerLib.isFundingRateIntervalRequested(feed));
+        assertFalse(PythLazerLib.isMarketSessionRequested(feed));
     }
 
     /// @notice Test parsing multiple feeds
@@ -317,7 +314,7 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         assertEq(update.feeds.length, 3);
@@ -326,35 +323,39 @@ contract PythLazerTest is Test {
         assertEq(update.feeds[0].feedId, 1);
         assertEq(PythLazerLib.getFeedId(update.feeds[0]), 1);
         assertEq(update.feeds[0]._price, 50000000000);
-        assertTrue(libHelper.hasConfidence(update.feeds[0]));
+        assertTrue(PythLazerLib.hasConfidence(update.feeds[0]));
         // Requested checks for Feed 1 (props: price, publisherCount, exponent, confidence, bestBid)
-        assertTrue(libHelper.isPriceRequested(update.feeds[0]));
-        assertTrue(libHelper.isPublisherCountRequested(update.feeds[0]));
-        assertTrue(libHelper.isExponentRequested(update.feeds[0]));
-        assertTrue(libHelper.isConfidenceRequested(update.feeds[0]));
-        assertTrue(libHelper.isBestBidPriceRequested(update.feeds[0]));
-        assertFalse(libHelper.isBestAskPriceRequested(update.feeds[0]));
-        assertFalse(libHelper.isFundingRateRequested(update.feeds[0]));
-        assertFalse(libHelper.isFundingTimestampRequested(update.feeds[0]));
-        assertFalse(libHelper.isFundingRateIntervalRequested(update.feeds[0]));
-        assertFalse(libHelper.isMarketSessionRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isPriceRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isPublisherCountRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isExponentRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isConfidenceRequested(update.feeds[0]));
+        assertTrue(PythLazerLib.isBestBidPriceRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[0]));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[0]));
+        assertFalse(
+            PythLazerLib.isFundingRateIntervalRequested(update.feeds[0])
+        );
+        assertFalse(PythLazerLib.isMarketSessionRequested(update.feeds[0]));
 
         // Verify Feed 2
         assertEq(update.feeds[1].feedId, 2);
         assertEq(PythLazerLib.getFeedId(update.feeds[1]), 2);
         assertEq(update.feeds[1]._price, 3000000000);
-        assertFalse(libHelper.hasConfidence(update.feeds[1]));
+        assertFalse(PythLazerLib.hasConfidence(update.feeds[1]));
         // Requested checks for Feed 2 (props: price, exponent)
-        assertTrue(libHelper.isPriceRequested(update.feeds[1]));
-        assertTrue(libHelper.isExponentRequested(update.feeds[1]));
-        assertFalse(libHelper.isBestBidPriceRequested(update.feeds[1]));
-        assertFalse(libHelper.isBestAskPriceRequested(update.feeds[1]));
-        assertFalse(libHelper.isPublisherCountRequested(update.feeds[1]));
-        assertFalse(libHelper.isConfidenceRequested(update.feeds[1]));
-        assertFalse(libHelper.isFundingRateRequested(update.feeds[1]));
-        assertFalse(libHelper.isFundingTimestampRequested(update.feeds[1]));
-        assertFalse(libHelper.isFundingRateIntervalRequested(update.feeds[1]));
-        assertFalse(libHelper.isMarketSessionRequested(update.feeds[1]));
+        assertTrue(PythLazerLib.isPriceRequested(update.feeds[1]));
+        assertTrue(PythLazerLib.isExponentRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isBestBidPriceRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isPublisherCountRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isConfidenceRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[1]));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[1]));
+        assertFalse(
+            PythLazerLib.isFundingRateIntervalRequested(update.feeds[1])
+        );
+        assertFalse(PythLazerLib.isMarketSessionRequested(update.feeds[1]));
 
         // Verify Feed 3
         assertEq(update.feeds[2].feedId, 3);
@@ -362,16 +363,18 @@ contract PythLazerTest is Test {
         assertEq(update.feeds[2]._price, 100000000);
         assertEq(update.feeds[2]._publisherCount, 7);
         // Requested checks for Feed 3 (props: price, exponent, publisherCount)
-        assertTrue(libHelper.isPriceRequested(update.feeds[2]));
-        assertTrue(libHelper.isExponentRequested(update.feeds[2]));
-        assertTrue(libHelper.isPublisherCountRequested(update.feeds[2]));
-        assertFalse(libHelper.isBestBidPriceRequested(update.feeds[2]));
-        assertFalse(libHelper.isBestAskPriceRequested(update.feeds[2]));
-        assertFalse(libHelper.isConfidenceRequested(update.feeds[2]));
-        assertFalse(libHelper.isFundingRateRequested(update.feeds[2]));
-        assertFalse(libHelper.isFundingTimestampRequested(update.feeds[2]));
-        assertFalse(libHelper.isFundingRateIntervalRequested(update.feeds[2]));
-        assertFalse(libHelper.isMarketSessionRequested(update.feeds[2]));
+        assertTrue(PythLazerLib.isPriceRequested(update.feeds[2]));
+        assertTrue(PythLazerLib.isExponentRequested(update.feeds[2]));
+        assertTrue(PythLazerLib.isPublisherCountRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isBestBidPriceRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isBestAskPriceRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isConfidenceRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingRateRequested(update.feeds[2]));
+        assertFalse(PythLazerLib.isFundingTimestampRequested(update.feeds[2]));
+        assertFalse(
+            PythLazerLib.isFundingRateIntervalRequested(update.feeds[2])
+        );
+        assertFalse(PythLazerLib.isMarketSessionRequested(update.feeds[2]));
     }
 
     /// @notice Test parsing MarketSession property
@@ -390,7 +393,7 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
@@ -421,7 +424,7 @@ contract PythLazerTest is Test {
             feeds2
         );
 
-        PythLazerStructs.Update memory update2 = libHelper
+        PythLazerStructs.Update memory update2 = PythLazerLib
             .parseUpdateFromPayload(payload2);
 
         PythLazerStructs.Feed memory feed2 = update2.feeds[0];
@@ -450,13 +453,13 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
-        assertFalse(libHelper.isMarketSessionRequested(feed));
-        assertFalse(libHelper.hasMarketSession(feed));
+        assertFalse(PythLazerLib.isMarketSessionRequested(feed));
+        assertFalse(PythLazerLib.hasMarketSession(feed));
     }
 
     /// @notice Test when optional properties are zero
@@ -475,16 +478,16 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
         assertEq(feed._price, 0);
-        assertTrue(libHelper.isPriceRequested(feed));
-        assertFalse(libHelper.hasPrice(feed));
-        assertTrue(libHelper.hasExponent(feed));
-        assertTrue(libHelper.hasPublisherCount(feed));
+        assertTrue(PythLazerLib.isPriceRequested(feed));
+        assertFalse(PythLazerLib.hasPrice(feed));
+        assertTrue(PythLazerLib.hasExponent(feed));
+        assertTrue(PythLazerLib.hasPublisherCount(feed));
     }
 
     /// @notice Test confidence = 0
@@ -503,14 +506,14 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
 
-        assertTrue(libHelper.hasPrice(feed));
-        assertTrue(libHelper.isConfidenceRequested(feed));
-        assertFalse(libHelper.hasConfidence(feed));
+        assertTrue(PythLazerLib.hasPrice(feed));
+        assertTrue(PythLazerLib.isConfidenceRequested(feed));
+        assertFalse(PythLazerLib.hasConfidence(feed));
         assertEq(feed._confidence, 0);
     }
 
@@ -530,7 +533,7 @@ contract PythLazerTest is Test {
             feeds
         );
 
-        PythLazerStructs.Update memory update = libHelper
+        PythLazerStructs.Update memory update = PythLazerLib
             .parseUpdateFromPayload(payload);
 
         PythLazerStructs.Feed memory feed = update.feeds[0];
@@ -540,8 +543,8 @@ contract PythLazerTest is Test {
         assertEq(feed._fundingRate, -999);
 
         // Negative values should still count as "exists"
-        assertTrue(libHelper.hasPrice(feed));
-        assertTrue(libHelper.hasFundingRate(feed));
+        assertTrue(PythLazerLib.hasPrice(feed));
+        assertTrue(PythLazerLib.hasFundingRate(feed));
     }
 
     function test_parseUpdate_extraBytes() public {
@@ -564,7 +567,7 @@ contract PythLazerTest is Test {
         );
 
         vm.expectRevert("Payload has extra unknown bytes");
-        libHelper.parseUpdateFromPayload(payloadWithExtra);
+        PythLazerLib.parseUpdateFromPayload(payloadWithExtra);
     }
 
     /// @notice Test unknown property ID
@@ -585,6 +588,6 @@ contract PythLazerTest is Test {
         );
 
         vm.expectRevert("Unknown property");
-        libHelper.parseUpdateFromPayload(payload);
+        PythLazerLib.parseUpdateFromPayload(payload);
     }
 }

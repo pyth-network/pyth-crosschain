@@ -120,13 +120,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "LOFI/USD",
-      "id": "82eebc2c47490ba9c0f9bc35ea9fb57a7e2bbf69b84a04ea2a3525153b8090ea",
-      "time_difference": 60,
-      "price_deviation": 3,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "MUSD/USD",
       "id": "2ee09cdb656959379b9262f89de5ff3d4dfed0dd34c072b3e22518496a65249c",
       "time_difference": 60,
@@ -187,13 +180,6 @@
       "id": "67aed5a24fdad045475e7195c98a98aea119c763f272d4523f5bac93a4f33c2b",
       "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "TURBOS/USD",
-      "id": "f9c2e890443dd995d0baafc08eea3358be1ffb874f93f99c30b3816c460bbac3",
-      "time_difference": 60,
-      "price_deviation": 3,
       "confidence_ratio": 100
     },
     {

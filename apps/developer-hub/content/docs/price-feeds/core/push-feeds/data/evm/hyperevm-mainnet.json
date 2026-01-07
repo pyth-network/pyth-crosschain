@@ -183,13 +183,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "BUDDY/USD",
-      "id": "ac2adf4571a391da22a2d39e8c5eb32ceecd6ab38c386a9194d669deece74dee",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "XAU/USD",
       "id": "765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2",
       "time_difference": 3600,
@@ -206,13 +199,6 @@
     {
       "alias": "UFART/USD",
       "id": "a210f55ff119d315002b5dc4f763b4e4114197028e45d6aca16498ab1433fb6d",
-      "time_difference": 3600,
-      "price_deviation": 1,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "USH/USD",
-      "id": "eaa30c1ef2d9f4fde45d6e699bfda5187b3de200ea4cbab25d676b260ab728c1",
       "time_difference": 3600,
       "price_deviation": 1,
       "confidence_ratio": 100
