@@ -1,8 +1,10 @@
 "use client";
 
+import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import { Copy } from "@phosphor-icons/react/dist/ssr/Copy";
 import { DownloadSimple } from "@phosphor-icons/react/dist/ssr/DownloadSimple";
 import { Button } from "@pythnetwork/component-library/Button";
+import { useCopy } from "@pythnetwork/component-library/useCopy";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
@@ -31,7 +33,6 @@ export function CodePreview({ className }: CodePreviewProps) {
   const { config } = usePlaygroundContext();
   const [activeLanguage, setActiveLanguage] =
     useState<CodeLanguage>("typescript");
-  const [copied, setCopied] = useState(false);
 
   // Generate code for the active language
   const code = useMemo(() => {
@@ -43,18 +44,8 @@ export function CodePreview({ className }: CodePreviewProps) {
     return getMonacoLanguage(activeLanguage);
   }, [activeLanguage]);
 
-  // Copy code to clipboard
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch {
-      // Clipboard API may not be available in all contexts
-    }
-  }, [code]);
+  // Use component library's copy hook
+  const { isCopied, copy } = useCopy(code);
 
   // Download code as file
   const handleDownload = useCallback(() => {
@@ -96,15 +87,19 @@ export function CodePreview({ className }: CodePreviewProps) {
           <Button
             variant="ghost"
             size="sm"
-            beforeIcon={<Copy weight="bold" />}
+            beforeIcon={
+              isCopied ? (
+                <Check weight="bold" className={styles.checkIcon ?? ""} />
+              ) : (
+                <Copy weight="bold" />
+              )
+            }
             hideText
-            onPress={() => {
-              void handleCopy();
-            }}
+            onPress={copy}
             className={styles.actionButton ?? ""}
-            aria-label={copied ? "Copied!" : "Copy"}
+            aria-label={isCopied ? "Copied!" : "Copy"}
           >
-            {copied ? "Copied!" : "Copy"}
+            {isCopied ? "Copied!" : "Copy"}
           </Button>
           <Button
             variant="ghost"

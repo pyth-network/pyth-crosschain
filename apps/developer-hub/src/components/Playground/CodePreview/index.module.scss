@@ -61,6 +61,10 @@
   gap: theme.spacing(1);
 }
 
+.checkIcon {
+  color: theme.color("states", "success", "normal");
+}
+
 .editorWrapper {
   height: 400px;
   min-height: 300px;
