@@ -12,6 +12,7 @@ DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 class PriceUpdate:
     price: float | str
     timestamp: float
+    session_flag: bool = False
 
     def time_diff(self, now):
         return now - self.timestamp
@@ -110,13 +111,22 @@ class PriceState:
     def get_price_from_single_source(self, source: PriceSource):
         now = time.time()
         update: PriceUpdate | None = self.all_states.get(source.source_name, {}).get(source.source_id)
+
         if update is None:
             logger.warning("source {} id {} is missing", source.source_name, source.source_id)
             return None
+
+        # check session-aware source
+        if source.use_session_flag and not update.session_flag:
+            logger.warning("source {} id {} session flag is false for session-aware source, skipping", source.source_name, source.source_id)
+            return None
+
+        # check staleness
         time_diff = update.time_diff(now)
         if time_diff >= self.stale_price_threshold_seconds:
             logger.warning("source {} id {} is stale by {} seconds", source.source_name, source.source_id, time_diff)
             return None
+
         # valid price found
         if source.exponent is not None:
             return float(update.price) / (10.0 ** -source.exponent)

@@ -69,12 +69,16 @@ class SedaConfig(BaseModel):
     poll_failure_interval: float
     poll_timeout: float
     feeds: Optional[dict[str, SedaFeedConfig]] = {}
+    price_field: str = "price"
+    timestamp_field: str = "timestamp"
+    session_flag_field: Optional[str] = None
 
 
 class PriceSource(BaseModel):
     source_name: str
     source_id: str | int
     exponent: Optional[int] = None
+    use_session_flag: Optional[bool] = False
 
 
 class SingleSourceConfig(BaseModel):
