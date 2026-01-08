@@ -189,7 +189,9 @@ export class SuiPythClient {
       const hotPotatoIndex = feedIdToHotPotatoIndex.get(feedId);
       if (hotPotatoIndex === undefined) {
         throw new Error(
-          "Price feed " + feedId + " not found in any of the provided accumulator messages",
+          "Price feed " +
+            feedId +
+            " not found in any of the provided accumulator messages",
         );
       }
 
