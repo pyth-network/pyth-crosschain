@@ -27,7 +27,6 @@ import {
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
-  DATA_SOURCES_FUTURES,
   DATA_SOURCES_HISTORICAL,
   PlaybackSpeedSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -36,7 +35,6 @@ import {
   isAllowedCryptoSymbol,
   isAllowedEquitySymbol,
   isAllowedForexSymbol,
-  isAllowedFutureSymbol,
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
@@ -296,8 +294,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       out = Object.values(DATA_SOURCES_FOREX.Values);
     } else if (isAllowedEquitySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_EQUITY.Values);
-    } else if (isAllowedFutureSymbol(selectedSource)) {
-      out = Object.values(DATA_SOURCES_FUTURES.Values);
     } else if (isReplaySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_HISTORICAL.Values);
     }

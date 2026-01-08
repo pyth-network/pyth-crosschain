@@ -7,7 +7,6 @@ import type {
   AllowedCryptoSymbolsType,
   AllowedEquitySymbolsType,
   AllowedForexSymbolsType,
-  AllowedFutureSymbolsType,
   AllowedReplaySymbolsType,
   DataSourcesCryptoType,
   DataSourcesEquityType,
@@ -21,7 +20,6 @@ import {
   ALLOWED_CRYPTO_SYMBOLS,
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
-  ALLOWED_FUTURE_SYMBOLS,
   ALLOWED_REPLAY_SYMBOLS,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
@@ -84,12 +82,6 @@ export function isAllowedForexDataSource(
   dataSource: Nullish<string>,
 ): dataSource is DataSourcesForexType {
   return schemaEnumIncludes(dataSource, DATA_SOURCES_FOREX.options);
-}
-
-export function isAllowedFutureSymbol(
-  symbol: Nullish<string>,
-): symbol is AllowedFutureSymbolsType {
-  return schemaEnumIncludes(symbol, ALLOWED_FUTURE_SYMBOLS.options);
 }
 
 export function isAllowedDataSource(

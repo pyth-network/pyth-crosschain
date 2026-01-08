@@ -5,6 +5,8 @@ import type { useWebSocket } from "@pythnetwork/react-hooks/use-websocket";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
+import cx from "clsx";
+import { useEffect, useState } from "react";
 
 import { PriceCardUtils } from "./price-card-utils";
 import classes from "./price-card.module.scss";
@@ -17,9 +19,18 @@ import { removeReplaySymbolSuffix } from "../../schemas/pyth/pyth-pro-demo-schem
 import {
   datasourceRequiresApiToken,
   getColorForDataSource,
+  isAllowedCryptoSymbol,
+  isAllowedEquitySymbol,
+  isAllowedForexSymbol,
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
+import { PriceCard } from "../PriceCard";
+
+function transformDataSourceName(dataSource: AllDataSourcesType) {
+  if (dataSource === "nbbo") return dataSource.toUpperCase();
+  return capitalCase(dataSource);
+}
 
 type PriceCardProps = {
   apiToken: Nullish<string>;
@@ -48,7 +59,7 @@ export function PythProDemoCard({
   const toggleVisibilityTooltip = `${sourceVisible ? "Hide" : "Show"} this data source in the chart`;
   const formattedSymbol =
     removeReplaySymbolSuffix(selectedSource).toUpperCase();
-  const formattedDataSource = capitalCase(dataSource);
+  const formattedDataSource = transformDataSourceName(dataSource);
   let priceChangeClassName: Nullish<string> = "";
 
   if (!isNullOrUndefined(currentPriceMetrics?.change)) {
@@ -119,5 +130,92 @@ export function PythProDemoCard({
         )}
       </div>
     </Card>
+  );
+}
+
+export function PythProDemoCard2({
+  apiToken,
+  currentPriceMetrics,
+  dataSource,
+  selectedSource,
+  socketStatus,
+}: PriceCardProps) {
+  /** state */
+  const [cardRef, setCardRef] = useState<Nullish<HTMLDivElement>>(undefined);
+
+  /** effects */
+  useEffect(() => {
+    const nameElem: Nullish<HTMLElement> =
+      cardRef?.querySelector("[data-symbolname]");
+
+    if (!nameElem) return;
+
+    nameElem.style.color = getColorForDataSource(dataSource);
+  }, [cardRef, dataSource]);
+
+  /** local variables */
+  const formattedDataSource = transformDataSourceName(dataSource);
+  const requiresToken = datasourceRequiresApiToken(dataSource);
+  let assetClass = "";
+
+  /**
+   * these values were determined by looking at the source in
+   * apps/insights/src/components/PriceFeedIcon/index.tsx
+   */
+  if (isAllowedCryptoSymbol(selectedSource)) {
+    assetClass = "Crypto";
+  } else if (isAllowedEquitySymbol(selectedSource)) {
+    assetClass = "Equity";
+  } else if (isAllowedForexSymbol(selectedSource)) {
+    assetClass = "FX";
+  }
+
+  if (!isAllowedSymbol(selectedSource)) return;
+
+  let priceChangeClassName: Nullish<string> = "";
+
+  if (!isNullOrUndefined(currentPriceMetrics?.change)) {
+    const { change } = currentPriceMetrics;
+    if (change < 0) {
+      priceChangeClassName = classes.priceDropping;
+    } else if (change > 0) {
+      priceChangeClassName = classes.priceIncreasing;
+    }
+  }
+
+  return (
+    <PriceCard
+      assetClass={assetClass}
+      className={cx(classes.root)}
+      description={selectedSource.toUpperCase()}
+      displaySymbol={formattedDataSource}
+      ref={setCardRef}
+    >
+      <div className={classes.priceInfo}>
+        <div className={classes.price}>
+          {socketStatus === "connected" &&
+            PriceCardUtils.formatPrice(currentPriceMetrics?.price)}
+        </div>
+        <div className={cx(classes.priceChange, priceChangeClassName)}>
+          {socketStatus === "connected" &&
+            PriceCardUtils.formatChange(
+              currentPriceMetrics?.change,
+              currentPriceMetrics?.changePercent,
+            )}
+        </div>
+        <div className={classes.socketStatus}>
+          {!isReplaySymbol(selectedSource) && requiresToken && !apiToken ? (
+            <>
+              {/* the token is either missing or it's a bad token */}
+              Please enter a good API token
+              <br />
+              to continue with {formattedDataSource}
+            </>
+          ) : (
+            capitalCase(socketStatus ?? "closed")
+          )}
+        </div>
+      </div>
+    </PriceCard>
   );
 }

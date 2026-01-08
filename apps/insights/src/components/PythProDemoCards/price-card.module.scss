@@ -1,6 +1,6 @@
 @use "@pythnetwork/component-library/theme";
 
-$price-card-width: 250px;
+$price-card-width: 240px;
 
 .cardContents {
   display: flex;
@@ -18,13 +18,22 @@ $price-card-width: 250px;
 }
 
 .price {
-  font-size: 1.2rem;
   font-weight: bold;
-  margin-bottom: theme.spacing(2);
+}
+
+.priceChange {
+  font-size: theme.font-size("xs");
 }
 
 .priceDropping {
   color: theme.color("states", "error", "base");
+}
+
+.priceInfo {
+  display: flex;
+  flex-flow: column;
+  flex-grow: 1;
+  gap: theme.spacing(2);
 }
 
 .priceIncreasing {
@@ -51,8 +60,5 @@ $price-card-width: 250px;
 }
 
 .root {
-  @include theme.elevation("default", 1);
-
-  flex-basis: $price-card-width;
-  flex-grow: 1;
+  width: $price-card-width;
 }
