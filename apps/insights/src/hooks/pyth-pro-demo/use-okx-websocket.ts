@@ -92,7 +92,7 @@ export function useOKXWebSocket(): UseDataProviderSocketHookReturnType {
 
             addDataPoint("okx", selectedSource, {
               price: midPriceUSD,
-              timestamp: new Date().toISOString(),
+              timestamp: new Date(),
             });
           }
         }

@@ -74,9 +74,7 @@ export function PythProDemoSourceSelector() {
       onSelectionChange={handleSelectSource}
       optionGroups={GROUPED_OPTS}
       placeholder="Choose an asset"
-      selectedKey={
-        selectedSource ?? ALL_ALLOWED_SYMBOLS.Enum.no_symbol_selected
-      }
+      selectedKey={selectedSource}
       show={({ id }) => renderOptionLabel({ id, isValue: false })}
       textValue={({ id }) => renderOptionLabel({ id, isValue: true })}
     />

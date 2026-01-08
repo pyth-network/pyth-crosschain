@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import {
   createContext,
@@ -18,16 +19,19 @@ import type {
   CurrentPriceMetrics,
   CurrentPricesStoreState,
   LatestMetric,
-  PriceData,
+  PlaybackSpeed,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
+  ALL_ALLOWED_SYMBOLS,
   ALL_DATA_SOURCES,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
   DATA_SOURCES_FUTURES,
   DATA_SOURCES_HISTORICAL,
+  PlaybackSpeedSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PriceData } from "../../services/clickhouse-schema";
 import {
   isAllowedCryptoSymbol,
   isAllowedEquitySymbol,
@@ -37,7 +41,9 @@ import {
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
 
-type PlaybackSpeed = 1 | 2 | 4 | 8 | 16 | 32;
+const QUERY_PARAM_START_AT = "startAt";
+const QUERY_PARAM_PLAYBACK_SPEED = "playbackSpeed";
+const QUERY_PARAM_SELECTED_SOURCE = "selectedSource";
 
 export type AppStateContextVal = CurrentPricesStoreState & {
   addDataPoint: (
@@ -50,13 +56,23 @@ export type AppStateContextVal = CurrentPricesStoreState & {
 
   dataSourceVisibility: Record<AllDataSourcesType, boolean>;
 
+  handleSetIsLoadingInitialReplayData: (isLoading: boolean) => void;
+
   handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => void;
 
   handleSelectSource: (source: AllAllowedSymbols) => void;
 
+  handleSetSelectedReplayDate: (dateStr: string) => void;
+
   handleToggleDataSourceVisibility: (datasource: AllDataSourcesType) => void;
 
+  isLoadingInitialReplayData: boolean;
+
   playbackSpeed: PlaybackSpeed;
+
+  selectedReplayDate: string;
+
+  selectedSource: AllAllowedSymbols;
 };
 
 const context = createContext<Nullish<AppStateContextVal>>(undefined);
@@ -71,10 +87,50 @@ const initialState: CurrentPricesStoreState = {
     }),
     {} satisfies CurrentPricesStoreState["metrics"],
   ),
-  selectedSource: "no_symbol_selected",
 };
 
+function updateQueryString({
+  existingQuery,
+  pathname,
+  queryKey,
+  router,
+  val,
+}: {
+  existingQuery: string;
+  pathname: string;
+  queryKey: string;
+  router: ReturnType<typeof useRouter>;
+  val: string;
+}) {
+  const existing = new URLSearchParams(existingQuery);
+
+  if (val) {
+    existing.set(queryKey, val);
+  } else {
+    existing.delete(queryKey);
+  }
+  const updatedQuery = existing.toString();
+  router.push(`${pathname}?${updatedQuery}`);
+
+  return updatedQuery;
+}
+
 export function PythProAppStateProvider({ children }: PropsWithChildren) {
+  /** hooks */
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  /** local variables */
+  const selectedReplayDate = searchParams.get(QUERY_PARAM_START_AT) ?? "";
+  const playbackSpeed = Number(
+    searchParams.get(QUERY_PARAM_PLAYBACK_SPEED) ?? "1",
+  );
+  const validatedSelectedSource = ALL_ALLOWED_SYMBOLS.safeParse(
+    searchParams.get(QUERY_PARAM_SELECTED_SOURCE),
+  );
+  const selectedSource = validatedSelectedSource.data ?? "no_symbol_selected";
+
   /** state */
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
@@ -91,12 +147,38 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     ),
   );
 
-  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
+  const [isLoadingInitialReplayData, setIsLoadingInitialReplayData] =
+    useState(false);
 
   /** refs */
-  const selectedSymbolRef = useRef(appState.selectedSource);
+  const selectedSymbolRef = useRef(selectedSource);
 
   /** callbacks */
+  const setPlaybackSpeed = useCallback(
+    (speed: PlaybackSpeed) => {
+      updateQueryString({
+        existingQuery: searchParams.toString(),
+        pathname,
+        queryKey: QUERY_PARAM_PLAYBACK_SPEED,
+        router,
+        val: speed.toString(),
+      });
+    },
+    [pathname, router, searchParams],
+  );
+  const setSelectedReplayDate = useCallback(
+    (dateStr: string) => {
+      updateQueryString({
+        existingQuery: searchParams.toString(),
+        pathname,
+        queryKey: QUERY_PARAM_START_AT,
+        router,
+        val: dateStr,
+      });
+    },
+    [pathname, router, searchParams],
+  );
+
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
     (dataSource, symbol, dataPoint) => {
       // state is desynchronized, so we disallow setting of the metric here
@@ -130,7 +212,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
                   change,
                   changePercent,
                   price: dataPoint.price,
-                  timestamp: dataPoint.timestamp,
+                  timestamp: dataPoint.timestamp.toISOString(),
                 } satisfies CurrentPriceMetrics,
               } satisfies LatestMetric,
             },
@@ -141,37 +223,86 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [],
   );
 
-  const handleSelectSource = useCallback((source: AllAllowedSymbols) => {
-    // reset playback speed to 1x
-    setPlaybackSpeed(1);
+  const handleSelectSource = useCallback(
+    (source: AllAllowedSymbols) => {
+      // reset playback speed to 1x
+      setPlaybackSpeed(1);
 
-    // delay a few moments to let the http datastream events come down
-    // so we don't accidentally kill the new http requests
-    // (this is demo code, if we choose to keep this longer term, this will be revised)
-    setAppState({
-      // blast away all state, because we don't need the old
-      // data to be munged with the new data
-      ...initialState,
-      selectedSource: isAllowedSymbol(source) ? source : undefined,
-    });
+      // delay a few moments to let the http datastream events come down
+      // so we don't accidentally kill the new http requests
+      // (this is demo code, if we choose to keep this longer term, this will be revised)
+      setAppState({
+        // blast away all state, because we don't need the old
+        // data to be munged with the new data
+        ...initialState,
+      });
+      let query = updateQueryString({
+        existingQuery: searchParams.toString(),
+        pathname,
+        queryKey: QUERY_PARAM_SELECTED_SOURCE,
+        router,
+        val: isAllowedSymbol(source) ? source : "",
+      });
+      if (!isReplaySymbol(source)) {
+        query = updateQueryString({
+          existingQuery: query,
+          pathname,
+          queryKey: QUERY_PARAM_PLAYBACK_SPEED,
+          router,
+          val: "",
+        });
+        updateQueryString({
+          existingQuery: query,
+          pathname,
+          queryKey: QUERY_PARAM_START_AT,
+          router,
+          val: "",
+        });
+      }
+    },
+    [pathname, router, searchParams, setPlaybackSpeed],
+  );
+
+  const handleSelectPlaybackSpeed = useCallback<
+    AppStateContextVal["handleSelectPlaybackSpeed"]
+  >(
+    (speed) => {
+      setPlaybackSpeed(speed);
+    },
+    [setPlaybackSpeed],
+  );
+
+  const handleSetSelectedReplayDate = useCallback<
+    AppStateContextVal["handleSetSelectedReplayDate"]
+  >(
+    (dateStr) => {
+      setSelectedReplayDate(dateStr);
+    },
+    [setSelectedReplayDate],
+  );
+
+  const handleSetIsLoadingInitialReplayData = useCallback<
+    AppStateContextVal["handleSetIsLoadingInitialReplayData"]
+  >((isLoading) => {
+    setIsLoadingInitialReplayData(isLoading);
   }, []);
 
   /** memos */
   const dataSourcesInUse = useMemo(() => {
     let out: AllDataSourcesType[] = [];
-    if (isAllowedCryptoSymbol(appState.selectedSource)) {
+    if (isAllowedCryptoSymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_CRYPTO.Values);
-    } else if (isAllowedForexSymbol(appState.selectedSource)) {
+    } else if (isAllowedForexSymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_FOREX.Values);
-    } else if (isAllowedEquitySymbol(appState.selectedSource)) {
+    } else if (isAllowedEquitySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_EQUITY.Values);
-    } else if (isAllowedFutureSymbol(appState.selectedSource)) {
+    } else if (isAllowedFutureSymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_FUTURES.Values);
-    } else if (isReplaySymbol(appState.selectedSource)) {
+    } else if (isReplaySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_HISTORICAL.Values);
     }
     return out.sort();
-  }, [appState.selectedSource]);
+  }, [selectedSource]);
 
   const handleToggleDataSourceVisibility = useCallback<
     AppStateContextVal["handleToggleDataSourceVisibility"]
@@ -180,12 +311,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       ...prev,
       [datasource]: !prev[datasource],
     }));
-  }, []);
-
-  const handleSelectPlaybackSpeed = useCallback<
-    AppStateContextVal["handleSelectPlaybackSpeed"]
-  >((speed) => {
-    setPlaybackSpeed(speed);
   }, []);
 
   /** provider val */
@@ -197,8 +322,14 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetIsLoadingInitialReplayData,
+      handleSetSelectedReplayDate,
       handleToggleDataSourceVisibility,
-      playbackSpeed,
+      isLoadingInitialReplayData,
+      playbackSpeed: (PlaybackSpeedSchema.safeParse(playbackSpeed).data ??
+        1) as PlaybackSpeed,
+      selectedReplayDate,
+      selectedSource,
     }),
     [
       appState,
@@ -207,14 +338,19 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetIsLoadingInitialReplayData,
+      handleSetSelectedReplayDate,
       handleToggleDataSourceVisibility,
+      isLoadingInitialReplayData,
       playbackSpeed,
+      selectedReplayDate,
+      selectedSource,
     ],
   );
 
   /** effects */
   useEffect(() => {
-    selectedSymbolRef.current = appState.selectedSource;
+    selectedSymbolRef.current = selectedSource;
   });
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;

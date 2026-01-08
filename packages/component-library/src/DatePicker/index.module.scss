@@ -1,0 +1,281 @@
+@use "../theme";
+
+.datePicker {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1.5);
+  min-width: theme.spacing(72);
+}
+
+.label {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  line-height: theme.spacing(4);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(1);
+  padding: theme.spacing(1.5) theme.spacing(2);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background-color: theme.color("background", "primary");
+  outline: theme.spacing(1) solid transparent;
+  outline-offset: 0;
+  transition-property: border-color, outline-color, background-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &:hover {
+    border-color: theme.color("forms", "input", "hover", "border");
+  }
+
+  &:focus-within {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+}
+
+.input {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: theme.spacing(1);
+  min-width: 0;
+  color: theme.color("paragraph");
+}
+
+.segment {
+  @include theme.text("sm", "normal");
+
+  border-radius: theme.border-radius("sm");
+  font-variant-numeric: tabular-nums;
+  line-height: theme.spacing(4);
+  padding: 0 theme.spacing(0.5);
+  transition: background-color 100ms linear;
+
+  &[data-placeholder] {
+    color: theme.color("button", "disabled", "foreground");
+  }
+
+  &[data-focused] {
+    background-color: theme.color("button", "primary", "background", "normal");
+    color: theme.color("button", "primary", "foreground");
+  }
+
+  &[data-focus-visible] {
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+}
+
+.trigger {
+  align-items: center;
+  display: inline-flex;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: theme.border-radius("sm");
+  color: theme.color("muted");
+  justify-content: center;
+  padding: theme.spacing(1);
+  transition-duration: 100ms;
+  transition-property: background-color, border-color, color;
+  transition-timing-function: linear;
+
+  &:hover {
+    background-color: theme.color("button", "outline", "background", "hover");
+    color: theme.color("paragraph");
+  }
+
+  &[data-focus-visible] {
+    border-color: theme.color("focus");
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+}
+
+.triggerIcon {
+  height: theme.spacing(4);
+  width: theme.spacing(4);
+}
+
+.popover {
+  background-color: theme.color("background", "modal");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  box-shadow:
+    0 4px 6px -4px rgb(from black r g b / 10%),
+    0 10px 15px -3px rgb(from black r g b / 10%);
+  color: theme.color("paragraph");
+  padding: theme.spacing(3);
+  width: 90vw;
+
+  @include theme.breakpoint("sm") {
+    width: unset;
+  }
+}
+
+.dialog {
+  outline: none;
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.timeField {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+  margin-top: theme.spacing(2);
+}
+
+.timeLabel {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  line-height: theme.spacing(4);
+}
+
+.timeInput {
+  align-items: center;
+  background-color: theme.color("background", "primary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  display: flex;
+  gap: theme.spacing(1);
+  justify-content: center;
+  outline: theme.spacing(1) solid transparent;
+  outline-offset: 0;
+  padding: theme.spacing(1.5) theme.spacing(2);
+  transition-property: border-color, outline-color, background-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+
+  &:hover {
+    border-color: theme.color("forms", "input", "hover", "border");
+  }
+
+  &:focus-within {
+    border-color: theme.color("focus");
+    outline-color: theme.color("focus-dim");
+  }
+}
+
+.calendarHeader {
+  align-items: center;
+  display: flex;
+  gap: theme.spacing(2);
+  justify-content: space-between;
+}
+
+.footer {
+  align-items: center;
+  border-top: 1px solid theme.color("border");
+  display: flex;
+  gap: theme.spacing(2);
+  justify-content: space-between;
+  margin-top: theme.spacing(2);
+  padding-top: theme.spacing(2);
+}
+
+.heading {
+  @include theme.text("sm", "medium");
+
+  letter-spacing: theme.letter-spacing("wide");
+  text-transform: uppercase;
+}
+
+.navButton {
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: theme.border-radius("full");
+  color: theme.color("muted");
+  display: inline-flex;
+  height: theme.spacing(8);
+  justify-content: center;
+  transition-property: background-color, border-color, color;
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+  width: theme.spacing(8);
+
+  &:hover {
+    background-color: theme.color("button", "outline", "background", "hover");
+    color: theme.color("paragraph");
+    cursor: pointer;
+  }
+
+  &[data-focus-visible] {
+    border-color: theme.color("focus");
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+}
+
+.navIcon {
+  height: theme.spacing(4);
+  width: theme.spacing(4);
+}
+
+.calendarGrid {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.headerCell {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  padding: theme.spacing(1);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cell {
+  @include theme.text("sm", "medium");
+
+  align-items: center;
+  border-radius: theme.border-radius("sm");
+  cursor: pointer;
+  display: flex;
+  height: theme.spacing(8);
+  justify-content: center;
+  text-align: center;
+  transition-duration: 100ms;
+  transition-property: background-color, color, border-color;
+  transition-timing-function: linear;
+  width: theme.spacing(8);
+
+  &[data-outside-month] {
+    color: theme.color("muted");
+  }
+
+  &[data-hovered] {
+    background-color: theme.color("button", "outline", "background", "hover");
+  }
+
+  &[data-focus-visible] {
+    outline: theme.spacing(0.5) solid theme.color("focus-dim");
+    outline-offset: 0;
+  }
+
+  &[data-selected] {
+    background-color: theme.color("button", "primary", "background", "normal");
+    color: theme.color("button", "primary", "foreground");
+  }
+
+  &[data-disabled],
+  &[data-unavailable] {
+    color: theme.color("button", "disabled", "foreground");
+    cursor: not-allowed;
+  }
+
+  &[data-today] {
+    border: 1px solid theme.color("focus");
+  }
+}

@@ -103,7 +103,7 @@ export function usePythCoreWebSocket(): UseDataProviderSocketHookReturnType {
 
           addDataPoint("pyth", symbol, {
             price: price,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date(),
           });
         }
       }

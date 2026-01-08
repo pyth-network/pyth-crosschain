@@ -1,7 +1,10 @@
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { wait } from "@pythnetwork/shared-lib/util";
-import { useEffect, useRef, useState } from "react";
+import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
+import { usePrevious } from "@react-hookz/web";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   UseDataStreamReturnType,
@@ -12,21 +15,20 @@ import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
-  HistoricalDataResponseType,
+  AllowedReplaySymbolsType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   appendReplaySymbolSuffix,
-  HistoricalDataResponseSchema,
   removeReplaySymbolSuffix,
   ValidDateSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { GetPythHistoricalPricesReturnType } from "../../services/clickhouse-schema";
+import { GetPythHistoricalPricesReturnTypeSchema } from "../../services/clickhouse-schema";
 import { isReplayDataSource, isReplaySymbol } from "../../util/pyth-pro-demo";
 
-const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
+dayjs.extend(utc);
 
-// 🚨 DEMO HACK ALERT: we pick some point into trading
-// to ensure all APIs have saturated query results
-const INITIAL_START_AT = new Date("2025-12-05T19:00:00.000Z");
+const BASE_FETCH_HISTORICAL_DATA_RETRY_DELAY = 100; // 100 milliseconds
 
 function getFetchHistoricalUrl(
   datasources: AllDataSourcesType[],
@@ -59,7 +61,7 @@ export async function fetchHistoricalData(
   url: string,
   maxRetries = 5,
   tryNum = 1,
-): Promise<HistoricalDataResponseType> {
+): Promise<GetPythHistoricalPricesReturnType> {
   try {
     const response = await fetch(url, { method: "GET" });
 
@@ -73,7 +75,7 @@ export async function fetchHistoricalData(
       throw new Error("Empty response");
     }
 
-    const validated = HistoricalDataResponseSchema.safeParse(
+    const validated = GetPythHistoricalPricesReturnTypeSchema.safeParse(
       JSON.parse(textResponse),
     );
     if (validated.error) {
@@ -99,80 +101,174 @@ export function useHttpDataStream({
   enabled,
   symbol,
 }: UseHttpDataStreamOpts): UseHttpDataStreamReturnType {
+  /** context */
+  const {
+    addDataPoint,
+    handleSetIsLoadingInitialReplayData,
+    playbackSpeed,
+    selectedReplayDate,
+  } = usePythProAppStateContext();
+
   /** hooks */
   const { open: showAlert } = useAlert();
-
-  /** context */
-  const { addDataPoint, playbackSpeed } = usePythProAppStateContext();
+  const prevSymbol = usePrevious(symbol);
 
   /** refs */
+  const abortControllerRef = useRef(new AbortController());
+  const dataSourcesRef = useRef(dataSources);
+  const enabledRef = useRef(enabled);
   const playbackSpeedRef = useRef(playbackSpeed);
   const symbolRef = useRef(symbol);
+  const prevSymbolRef = useRef(prevSymbol);
+  const selectedReplayDateRef = useRef(selectedReplayDate);
+  const isMountedRef = useRef(false);
 
   /** state */
   const [status, setStatus] =
     useState<UseDataStreamReturnType["status"]>("closed");
   const [error, setError] = useState<Nullish<Error>>(undefined);
-  const [startAtToFetch, setStartAtToFetch] = useState(INITIAL_START_AT);
+
+  /** callbacks */
+  const handleError = useCallback((error_: unknown) => {
+    setError(error_ instanceof Error ? error_ : new Error(String(error_)));
+  }, []);
 
   /** effects */
   useEffect(() => {
+    dataSourcesRef.current = dataSources;
+    enabledRef.current = enabled;
     playbackSpeedRef.current = playbackSpeed;
+    prevSymbolRef.current = prevSymbol;
+    selectedReplayDateRef.current = selectedReplayDate;
     symbolRef.current = symbol;
   });
 
   useEffect(() => {
-    if (!enabled || !isReplaySymbol(symbol)) {
-      setStatus("closed");
+    // anytime this value changes, we need to abort all current processing
+    abortControllerRef.current.abort();
+    if (selectedReplayDate) handleSetIsLoadingInitialReplayData(true);
+    else handleSetIsLoadingInitialReplayData(false);
+  }, [handleSetIsLoadingInitialReplayData, selectedReplayDate]);
+
+  useEffect(() => {
+    if (
+      !enabled ||
+      dataSources.length <= 0 ||
+      !selectedReplayDate ||
+      !isReplaySymbol(symbol)
+    ) {
       return;
     }
 
-    const url = getFetchHistoricalUrl(dataSources, symbol, startAtToFetch);
-    if (!url) {
-      setStatus("closed");
-      return;
+    // 1. Create a local controller for THIS specific effect execution
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    /**
+     * Now accepts the specific signal to check against
+     */
+    function guardAbort(localSignal: AbortSignal) {
+      if (localSignal.aborted) {
+        return true;
+      }
+
+      if (
+        !enabledRef.current ||
+        !isReplaySymbol(symbolRef.current) ||
+        !selectedReplayDateRef.current ||
+        dataSourcesRef.current.length <= 0
+      ) {
+        controller.abort(); // Abort the local one if refs drifted
+        return true;
+      }
+
+      return false;
     }
 
-    setStatus("connected");
+    let canProcess = true;
 
-    fetchHistoricalData(url)
-      .then(async ({ data, hasNext }) => {
-        // all the results should be in order of timestamp, regardless of the datasource
-        // so we'll just write them all out to the chart as they flow in.
-        // this may mean that one data source runs further ahead than another for a bit,
-        // if there is no data for a certain time interval
+    async function doFetch(startAt: string, localSignal: AbortSignal) {
+      // Pass the localSignal through every recursive call
+      if (guardAbort(localSignal)) return;
 
-        for (let i = 0; i < data.length; i++) {
-          const currPoint = data[i];
-          const nextPoint = data[i + 1];
+      const url = getFetchHistoricalUrl(
+        dataSourcesRef.current,
+        symbolRef.current,
+        new Date(startAt),
+      );
+      const thisData = await fetchHistoricalData(url);
+      handleSetIsLoadingInitialReplayData(false);
 
-          if (currPoint) {
-            const dataPointSymbol = appendReplaySymbolSuffix(currPoint.symbol);
+      while (!canProcess) {
+        if (guardAbort(localSignal)) return;
+        await wait(10);
+      }
 
-            if (dataPointSymbol !== symbolRef.current) break;
+      canProcess = false;
 
-            addDataPoint(currPoint.source, dataPointSymbol, currPoint);
-          }
+      const dataLen = thisData.length;
+      const quarterPoint = Math.floor(dataLen / 4);
+      const lastPoint = thisData.at(-1);
 
-          if (currPoint && nextPoint) {
-            const delta =
-              new Date(nextPoint.timestamp).valueOf() -
-              new Date(currPoint.timestamp).valueOf();
-            await wait(delta / playbackSpeedRef.current);
-          }
+      const nextStartAt = lastPoint?.timestamp
+        ? dayjs(lastPoint.timestamp).add(20, "milliseconds").toISOString()
+        : dayjs(startAt).add(1, "minutes").toISOString();
+
+      for (let i = 0; i < dataLen; i++) {
+        const currPoint = thisData[i];
+        if (isNullOrUndefined(currPoint)) continue;
+
+        if (guardAbort(localSignal)) return;
+
+        if (i === quarterPoint) {
+          // Trigger next batch with the SAME signal
+          void doFetch(nextStartAt, localSignal).catch(handleError);
         }
 
-        const lastPoint = data.at(-1);
+        addDataPoint(
+          currPoint.source,
+          appendReplaySymbolSuffix(
+            currPoint.symbol as AllAllowedSymbols,
+          ) as AllowedReplaySymbolsType,
+          currPoint,
+        );
 
-        if (lastPoint && hasNext) {
-          setStartAtToFetch(new Date(lastPoint.timestamp));
+        if (guardAbort(localSignal)) return;
+
+        const nextPoint = thisData[i + 1];
+        if (nextPoint) {
+          const delta =
+            new Date(nextPoint.timestamp).valueOf() -
+            new Date(currPoint.timestamp).valueOf();
+          await wait(delta / playbackSpeedRef.current);
         }
-      })
-      .catch((error_: unknown) => {
-        if (!(error_ instanceof Error)) throw error_;
-        setError(error_);
-      });
-  }, [addDataPoint, dataSources, enabled, startAtToFetch, symbol]);
+      }
+
+      canProcess = true;
+    }
+
+    if (!isMountedRef.current) {
+      setStatus("connected");
+      handleSetIsLoadingInitialReplayData(true);
+    }
+
+    isMountedRef.current = true;
+    void doFetch(selectedReplayDate, signal);
+
+    return () => {
+      // This ensures that when the date changes, the signal
+      // specific to THIS run is cancelled.
+      controller.abort();
+    };
+  }, [
+    addDataPoint,
+    dataSources,
+    enabled,
+    handleError,
+    handleSetIsLoadingInitialReplayData,
+    selectedReplayDate,
+    symbol,
+  ]);
 
   useEffect(() => {
     if (!error) return;

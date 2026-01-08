@@ -1,5 +1,8 @@
 import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
+import { DatePicker } from "@pythnetwork/component-library/DatePicker";
+import { Select } from "@pythnetwork/component-library/Select";
+import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { isNumber } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
@@ -13,15 +16,21 @@ import type {
   UTCTimestamp,
 } from "lightweight-charts";
 import { createChart, CrosshairMode, LineSeries } from "lightweight-charts";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { Tooltip, TooltipTrigger } from "react-aria-components";
 
 import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
-import type {
-  AllDataSourcesType,
-  PriceData,
-} from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
+import { ALLOWED_PLAYBACK_SPEEDS } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PriceData } from "../../services/clickhouse-schema";
 import {
   getColorForDataSource,
   getThemeCssVar,
@@ -34,7 +43,9 @@ type PythProDemoPriceChartImplProps = Pick<
   | "dataSourcesInUse"
   | "dataSourceVisibility"
   | "handleSelectPlaybackSpeed"
+  | "handleSetSelectedReplayDate"
   | "metrics"
+  | "selectedReplayDate"
   | "playbackSpeed"
   | "selectedSource"
 >;
@@ -52,19 +63,23 @@ export function PythProDemoPriceChartImpl({
   dataSourcesInUse,
   dataSourceVisibility,
   handleSelectPlaybackSpeed,
+  handleSetSelectedReplayDate,
   metrics,
   playbackSpeed,
+  selectedReplayDate,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
   /** hooks */
   const { theme } = useAppTheme();
+
+  /** state */
+  const [datepickerOpen, setDatepickerOpen] = useState(false);
 
   /** refs */
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi>(undefined);
   const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
 
-  /** callbacks */
   const createSeriesIfNotExist = useCallback(
     (dataSource: AllDataSourcesType, metricType: (typeof metricsToPlot)[0]) => {
       if (!chartRef.current) return;
@@ -109,8 +124,8 @@ export function PythProDemoPriceChartImpl({
     [dataSourceVisibility],
   );
 
-  const createSelectPlaybackSpeed = useCallback(
-    (speed: typeof playbackSpeed) => () => {
+  const selectPlaybackSpeed = useCallback(
+    (speed: typeof playbackSpeed) => {
       if (speed === playbackSpeed) return;
 
       handleSelectPlaybackSpeed(speed);
@@ -261,41 +276,41 @@ export function PythProDemoPriceChartImpl({
       <div className={classes.buttons}>
         {isReplaySymbol(selectedSource) && (
           <>
-            <Button
-              onClick={createSelectPlaybackSpeed(1)}
-              size="xs"
-              variant={playbackSpeed === 1 ? "success" : "outline"}
+            <TooltipTrigger
+              delay={0}
+              isOpen={
+                isReplaySymbol(selectedSource) &&
+                !selectedReplayDate &&
+                !datepickerOpen
+              }
             >
-              1x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(4)}
-              size="xs"
-              variant={playbackSpeed === 4 ? "success" : "outline"}
-            >
-              4x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(8)}
-              size="xs"
-              variant={playbackSpeed === 8 ? "success" : "outline"}
-            >
-              8x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(16)}
-              size="xs"
-              variant={playbackSpeed === 16 ? "success" : "outline"}
-            >
-              16x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(32)}
-              size="xs"
-              variant={playbackSpeed === 32 ? "success" : "outline"}
-            >
-              32x
-            </Button>
+              <DatePicker
+                onChange={handleSetSelectedReplayDate}
+                onDatepickerOpenCloseChange={setDatepickerOpen}
+                placeholder="Select a datetime to begin"
+                type="datetime"
+                value={selectedReplayDate}
+              />
+              <Tooltip
+                className={classes.selectDateAndTimeMsg ?? ""}
+                placement="bottom end"
+              >
+                Select a date and time to continue
+              </Tooltip>
+            </TooltipTrigger>
+            <div className={classes.verticalDivider} />
+            <Select
+              label={undefined}
+              onSelectionChange={selectPlaybackSpeed}
+              options={[...ALLOWED_PLAYBACK_SPEEDS].map((speed) => ({
+                id: speed,
+              }))}
+              placeholder="Choose a playback speed"
+              selectedKey={playbackSpeed}
+              show={({ id: speed }) => `${speed.toString()}x`}
+              size="sm"
+              textValue={({ id: speed }) => `Speed: ${speed.toString()}x`}
+            />
             <div className={classes.verticalDivider} />
           </>
         )}
@@ -308,13 +323,16 @@ export function PythProDemoPriceChartImpl({
               /* no-op */
             }
           }}
-          size="xs"
+          size="sm"
           variant="outline"
         >
           Reset chart position
         </Button>
       </div>
-      <div className={classes.chartContainer} ref={containerRef} />
+      {((isReplaySymbol(selectedSource) && selectedReplayDate) ||
+        !isReplaySymbol(selectedSource)) && (
+        <div className={classes.chartContainer} ref={containerRef} />
+      )}
     </div>
   );
 }
@@ -325,20 +343,35 @@ export function PythProDemoPriceChart() {
     dataSourcesInUse,
     dataSourceVisibility,
     handleSelectPlaybackSpeed,
+    handleSetSelectedReplayDate,
+    isLoadingInitialReplayData,
     metrics,
     playbackSpeed,
+    selectedReplayDate,
     selectedSource,
   } = usePythProAppStateContext();
+
+  if (isReplaySymbol(selectedSource) && isLoadingInitialReplayData) {
+    const label = "Loading historical replay data...";
+    return (
+      <div className={classes.spinner}>
+        <div>{label}</div>
+        <Spinner isIndeterminate label={label} />
+      </div>
+    );
+  }
 
   return (
     <PythProDemoPriceChartImpl
       dataSourcesInUse={dataSourcesInUse}
       dataSourceVisibility={dataSourceVisibility}
-      key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}`}
+      key={`${selectedSource}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
       handleSelectPlaybackSpeed={handleSelectPlaybackSpeed}
+      handleSetSelectedReplayDate={handleSetSelectedReplayDate}
       metrics={metrics}
       playbackSpeed={playbackSpeed}
       selectedSource={selectedSource}
+      selectedReplayDate={selectedReplayDate}
     />
   );
 }

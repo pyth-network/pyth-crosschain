@@ -1,58 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchHistoricalDataForPythFeedsDemo } from "../../../../../pyth-feed-demo-data/fetch-historical-data-from-db";
 import { GetPythFeedsDemoDataRequestSchema } from "../../../../../schemas/pyth/pyth-pro-demo-schema";
+import { getNbboAndPythProHistoricalPricesForSymbol } from "../../../../../services/clickhouse";
 
-export const GET = async (
+export async function GET(
   req: NextRequest,
   ctx: { params: Promise<Record<string, string>> },
-) => {
+) {
   const params = await ctx.params;
+
   const {
     nextUrl: { searchParams },
   } = req;
+  const dataSourcesToUse = searchParams.getAll("datasources[]");
 
-  const searchParamsToUse = {
+  const query = {
     ...Object.fromEntries(searchParams),
-    datasources: searchParams.getAll("datasources[]"),
+    datasources: dataSourcesToUse,
   };
 
-  const paramsAndQueryValidation = GetPythFeedsDemoDataRequestSchema.safeParse({
+  const validatedParams = GetPythFeedsDemoDataRequestSchema.safeParse({
     params,
-    searchParams: searchParamsToUse,
+    searchParams: query,
   });
 
-  if (paramsAndQueryValidation.error) {
+  if (validatedParams.error) {
     return NextResponse.json(
-      {
-        error: paramsAndQueryValidation.error.format(),
-      },
+      { error: validatedParams.error.format() },
       { status: 400 },
     );
   }
 
   const {
-    params: { symbol: symbolToUse },
-    searchParams: { datasources, startAt },
-  } = paramsAndQueryValidation.data;
+    data: {
+      params: { symbol },
+      searchParams: { datasources, startAt },
+    },
+  } = validatedParams;
+
+  const end = new Date(startAt);
+  // enforce the end time for this API,
+  // when called by a public user,
+  // only allows for 1 minute beyond the startAt.
+  end.setTime(end.getTime() + 1000 * 60);
 
   try {
-    const { data, hasNext } = await fetchHistoricalDataForPythFeedsDemo({
-      datasources,
-      startAt: startAt.toISOString(),
-      symbol: symbolToUse,
+    const response = await getNbboAndPythProHistoricalPricesForSymbol({
+      end,
+      sources: datasources,
+      start: startAt,
+      symbol,
     });
 
-    return NextResponse.json({
-      data,
-      hasNext,
-    });
+    return NextResponse.json(response);
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message || error },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
-};
+}

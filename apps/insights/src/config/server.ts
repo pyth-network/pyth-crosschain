@@ -46,12 +46,35 @@ export const AMPLITUDE_API_KEY = defaultInProduction(
   "6faa78c51eff33087eb19f0f3dc76f33",
 );
 
-export const CLICKHOUSE = {
+type ClickhouseDbConfig = {
+  password: string;
+  url: string;
+  username: string;
+};
+
+export const CLICKHOUSE: ClickhouseDbConfig = {
   url:
     process.env.CLICKHOUSE_URL ??
     "https://ryf56suqpb.eu-west-2.aws.clickhouse.cloud:8443",
   username: process.env.CLICKHOUSE_USERNAME ?? "insights",
   password: demand("CLICKHOUSE_PASSWORD"),
+};
+
+export const CLICKHOUSE_PYTH_PRO: ClickhouseDbConfig = {
+  password: demand("CLICKHOUSE_PYTH_PRO_PASSWORD"),
+  url:
+    process.env.CLICKHOUSE_PYTH_PRO_URL ??
+    "https://fonra6si8x.ap-northeast-1.aws.clickhouse.cloud:8443",
+  username: process.env.CLICKHOUSE_PYTH_PRO_USERNAME ?? "pyth_lazer_read",
+};
+
+export const CLICKHOUSE_PYTH_ANALYTICS: ClickhouseDbConfig = {
+  password: demand("CLICKHOUSE_PYTH_ANALYTICS_PASSWORD"),
+  username:
+    process.env.CLICKHOUSE_PYTH_ANALYTICS_USERNAME ?? "analytics_readonly",
+  url:
+    process.env.CLICKHOUSE_PYTH_ANALYTICS_URL ??
+    "https://e3ovtrijn4.ap-northeast-1.aws.clickhouse.cloud:8443",
 };
 
 export const SOLANA_RPC =

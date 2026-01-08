@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@clickhouse/client": "catalog:",
-    "@duckdb/node-api": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/client": "catalog:",
     "@pythnetwork/component-library": "workspace:*",

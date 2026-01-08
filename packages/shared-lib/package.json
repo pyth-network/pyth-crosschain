@@ -36,20 +36,11 @@
     "jest": "catalog:"
   },
   "dependencies": {
+    "dayjs": "catalog:",
     "uuid": "catalog:"
   },
   "private": true,
   "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
-      }
-    },
     "./types": {
       "require": {
         "types": "./dist/cjs/types/index.d.ts",

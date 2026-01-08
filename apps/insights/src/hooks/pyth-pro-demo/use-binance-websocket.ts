@@ -36,7 +36,7 @@ export function useBinanceWebSocket(): UseDataProviderSocketHookReturnType {
 
           addDataPoint("binance", data.s, {
             price: midPriceUSD,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date(),
           });
         }
       } catch {

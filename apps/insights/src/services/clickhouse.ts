@@ -4,12 +4,28 @@ import { createClient } from "@clickhouse/client";
 import { PriceStatus } from "@pythnetwork/client";
 import type { ZodSchema, ZodTypeDef } from "zod";
 import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
 
+import type {
+  GetPythHistoricalPricesType,
+  GetPythProFeedPricesOpts,
+} from "./clickhouse-schema";
+import {
+  GetPythHistoricalPricesFromDBSchema,
+  GetPythHistoricalPricesReturnTypeSchema,
+  GetPythProFeedPricesOptsSchema,
+} from "./clickhouse-schema";
 import { Cluster, ClusterToName } from "./pyth";
 import { redisCache } from "../cache";
-import { CLICKHOUSE } from "../config/server";
+import {
+  CLICKHOUSE,
+  CLICKHOUSE_PYTH_ANALYTICS,
+  CLICKHOUSE_PYTH_PRO,
+} from "../config/server";
 
-const client = createClient(CLICKHOUSE);
+const pythCoreClient = createClient(CLICKHOUSE);
+const pythProClient = createClient(CLICKHOUSE_PYTH_PRO);
+const pythAnalyticsClient = createClient(CLICKHOUSE_PYTH_ANALYTICS);
 
 const _getPublisherRankings = async (cluster: Cluster) =>
   safeQuery(
@@ -386,14 +402,242 @@ export const getHistoricalPrices = async ({
   );
 };
 
+const GetPriceFeedMetadataForSymbolSchema = z.object({
+  minChannel: z.string(),
+  name: z.string().nonempty(),
+  pythLazerId: z.number(),
+  pythCoreId: z.string(),
+});
+
+/**
+ * Given a symbol, like AMZN, TSLA, BTCUSD or even EURUSD,
+ * grabs
+ */
+export async function getPythProPriceFeedMetadataForSymbol(symbol: string) {
+  if (!symbol) {
+    throw new Error(
+      "no symbol was provided when getPythProPriceFeedMetadataForSymbol called",
+    );
+  }
+
+  const results = await safeQuery(
+    z.array(GetPriceFeedMetadataForSymbolSchema),
+    {
+      query: `SELECT
+    DISTINCT f.pyth_lazer_id as pythLazerId,
+    f.name as name,
+    f.hermes_id as pythCoreId,
+    f.min_channel as minChannel
+FROM feeds_metadata_latest f
+PREWHERE
+    f.state = 'stable'
+        AND f.description not like '%deprecated%'
+WHERE name = {name: String}
+LIMIT 10
+OFFSET 0`,
+      query_params: { name: symbol },
+    },
+    pythProClient,
+  );
+
+  return results[0];
+}
+
+/**
+ * fetches only NBBO historical pricing data for the provided symbol
+ */
+export async function getNbboHistoricalPricesForPythProFeedId(
+  opts: GetPythProFeedPricesOpts & { feedId: number },
+): Promise<GetPythHistoricalPricesType[]> {
+  const { end, feedId, symbol, start } = opts;
+
+  const dbNames = [
+    "datascope_futures_benchmark_data",
+    "datascope_fx_benchmark_data",
+    "datascope_global_equities_benchmark_data",
+    "datascope_us_treasury_benchmark_data",
+  ];
+
+  const allResults = await Promise.all(
+    dbNames.map(async (dbName) => {
+      const results = await safeQuery(
+        z.array(GetPythHistoricalPricesFromDBSchema),
+        {
+          query: `SELECT
+    d.date_time as timestamp,
+    d.price,
+    d.bid_price as bid,
+    d.ask_price as ask,
+    0 as exponent
+FROM ${dbName} d
+PREWHERE
+    d.pyth_lazer_id = {feedId: UInt32}
+WHERE
+    d.date_time >= parseDateTimeBestEffort({start: String})
+    AND d.date_time < parseDateTimeBestEffort({end: String})
+ORDER BY d.date_time asc
+OFFSET 0;`,
+          query_params: {
+            end: end.toISOString(),
+            feedId,
+            start: start.toISOString(),
+          },
+        },
+        pythAnalyticsClient,
+      );
+
+      return results;
+    }),
+  );
+  const out = allResults.flatMap((results) =>
+    results.map<GetPythHistoricalPricesType>((r) => ({
+      ...r,
+      symbol,
+      source: "nbbo",
+    })),
+  );
+
+  const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(out);
+  if (validatedOut.error) {
+    throw new Error(fromZodError(validatedOut.error).message);
+  }
+
+  return out;
+}
+
+export async function getHistoricalPythProPrices({
+  end,
+  feedId,
+  start,
+  symbol,
+}: Omit<GetPythProFeedPricesOpts, "sources"> & { feedId: number }) {
+  const results = await unsafeQuery(
+    z.array(GetPythHistoricalPricesFromDBSchema),
+    {
+      query: `SELECT
+  pf.publish_time as timestamp,
+  pf.best_ask_price as ask,
+  pf.best_bid_price as bid,
+  pf.price,
+  pf.exponent
+FROM price_feeds pf
+PREWHERE
+  pf.price_feed_id = {feedId: UInt32}
+    AND pf.state = 'STABLE'
+WHERE pf.publish_time >= parseDateTimeBestEffort({start: String})
+    AND pf.publish_time < parseDateTimeBestEffort({end: String})
+ORDER BY pf.publish_time ASC
+OFFSET 0`,
+      query_params: {
+        end: end.toISOString(),
+        feedId,
+        start: start.toISOString(),
+      },
+    },
+    pythProClient,
+  );
+
+  if (results.error) {
+    throw new Error(fromZodError(results.error).message);
+  }
+
+  return results.data.map<GetPythHistoricalPricesType>((d) => {
+    const exponent = d.exponent ?? 0;
+
+    const ask = typeof d.ask === "number" ? d.ask * 10 ** exponent : d.ask;
+    const bid = typeof d.bid === "number" ? d.bid * 10 ** exponent : d.bid;
+    const price =
+      typeof d.price === "number" ? d.price * 10 ** exponent : d.price;
+    return {
+      ...d,
+      ask,
+      bid,
+      price,
+      symbol,
+      source: "pyth_pro",
+    };
+  });
+}
+
+/**
+ * fetches a chunk of pricing information for either PythPro or NBBO sources
+ */
+export async function getNbboAndPythProHistoricalPricesForSymbol(
+  opts: GetPythProFeedPricesOpts,
+): Promise<GetPythHistoricalPricesType[]> {
+  const validatedOpts = GetPythProFeedPricesOptsSchema.safeParse(opts);
+  if (validatedOpts.error) {
+    throw new Error(fromZodError(validatedOpts.error).message);
+  }
+
+  const {
+    data: { end, sources, start, symbol },
+  } = validatedOpts;
+
+  const meta = await getPythProPriceFeedMetadataForSymbol(symbol);
+
+  if (!meta) {
+    throw new Error(`no feed metadata exists for symbol ${symbol}`);
+  }
+
+  const { name, pythLazerId } = meta;
+
+  const allResults: GetPythHistoricalPricesType[][] = await Promise.all([
+    sources.includes("pyth_pro")
+      ? getHistoricalPythProPrices({
+          end,
+          feedId: pythLazerId,
+          start,
+          symbol: name,
+        })
+      : Promise.resolve<GetPythHistoricalPricesType[]>([]),
+    sources.includes("nbbo")
+      ? getNbboHistoricalPricesForPythProFeedId({
+          ...opts,
+          feedId: pythLazerId,
+        })
+      : Promise.resolve<GetPythHistoricalPricesType[]>([]),
+  ]);
+
+  const validatedOut = GetPythHistoricalPricesReturnTypeSchema.safeParse(
+    allResults.flat(),
+  );
+  if (validatedOut.error) {
+    throw new Error(fromZodError(validatedOut.error).message);
+  }
+
+  // there may be MULTIPLE entries per timestamp, depending on the channel,
+  // so we need to do an additional dedup pass here
+  return [
+    ...new Map(
+      validatedOut.data.map((d) => [
+        `${d.timestamp.toISOString()}-${d.source}`,
+        d,
+      ]),
+    ).values(),
+  ].sort((a, b) => a.timestamp.valueOf() - b.timestamp.valueOf());
+}
+
 const safeQuery = async <Output, Def extends ZodTypeDef, Input>(
   schema: ZodSchema<Output, Def, Input>,
-  query: Omit<Parameters<typeof client.query>[0], "format">,
+  query: Omit<Parameters<typeof pythCoreClient.query>[0], "format">,
+  clientToUse = pythCoreClient,
 ) => {
-  const rows = await client.query({ ...query, format: "JSON" });
+  const rows = await clientToUse.query({ ...query, format: "JSON" });
   const result = await rows.json();
 
   return schema.parse(result.data);
+};
+
+const unsafeQuery = async <Output, Def extends ZodTypeDef, Input>(
+  schema: ZodSchema<Output, Def, Input>,
+  query: Omit<Parameters<typeof pythCoreClient.query>[0], "format">,
+  clientToUse = pythCoreClient,
+) => {
+  const rows = await clientToUse.query({ ...query, format: "JSON" });
+  const result = await rows.json();
+
+  return schema.safeParse(result.data);
 };
 
 export const getRankingsBySymbol = redisCache.define(
