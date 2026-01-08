@@ -118,16 +118,20 @@ export class SuiPythClient {
     packageId: string,
   ): Promise<{
     hotPotatoes: NestedTransactionResult[];
-    feedIdsPerUpdate: string[][];
+    feedIdToHotPotatoIndex: Map<string, number>;
   }> {
     const hotPotatoes: NestedTransactionResult[] = [];
-    const feedIdsPerUpdate: string[][] = [];
+    const feedIdToHotPotatoIndex = new Map<string, number>();
 
-    for (const update of updates) {
+    for (const [updateIndex, update] of updates.entries()) {
       const vaa = this.extractVaaBytesFromAccumulatorMessage(update);
       const verifiedVaas = await this.verifyVaas([vaa], tx);
       const feedIds = this.extractPriceFeedIdsFromAccumulatorMessage(update);
-      feedIdsPerUpdate.push(feedIds);
+
+      // Build the mapping from feed ID to hot potato index
+      for (const feedId of feedIds) {
+        feedIdToHotPotatoIndex.set(feedId, updateIndex);
+      }
 
       const [priceUpdatesHotPotato] = tx.moveCall({
         target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
@@ -148,7 +152,7 @@ export class SuiPythClient {
       hotPotatoes.push(priceUpdatesHotPotato!);
     }
 
-    return { hotPotatoes, feedIdsPerUpdate };
+    return { hotPotatoes, feedIdToHotPotatoIndex };
   }
 
   async executePriceFeedUpdatesMultiple(
@@ -156,21 +160,13 @@ export class SuiPythClient {
     packageId: string,
     feedIds: HexString[],
     hotPotatoes: NestedTransactionResult[],
-    feedIdsPerUpdate: string[][],
+    feedIdToHotPotatoIndex: Map<string, number>,
     coins: NestedTransactionResult[],
   ) {
     const priceInfoObjects: ObjectId[] = [];
     const normalizedFeedIds: string[] = [];
     for (const id of feedIds) {
       normalizedFeedIds.push(id.replace("0x", ""));
-    }
-
-    // Build a map of feed ID to which hot potato index contains it
-    const feedIdToHotPotatoIndex = new Map<string, number>();
-    for (const [updateIndex, updateFeedIds] of feedIdsPerUpdate.entries()) {
-      for (const feedId of updateFeedIds) {
-        feedIdToHotPotatoIndex.set(feedId, updateIndex);
-      }
     }
 
     // Track which hot potatoes we've used and their current state
@@ -234,7 +230,7 @@ export class SuiPythClient {
     feedIds: HexString[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    const { hotPotatoes, feedIdsPerUpdate } =
+    const { hotPotatoes, feedIdToHotPotatoIndex } =
       await this.verifyVaasAndGetHotPotatoes(tx, updates, packageId);
 
     const baseUpdateFee = await this.getBaseUpdateFee();
@@ -248,7 +244,7 @@ export class SuiPythClient {
       packageId,
       feedIds,
       hotPotatoes,
-      feedIdsPerUpdate,
+      feedIdToHotPotatoIndex,
       coins,
     );
   }
@@ -268,7 +264,7 @@ export class SuiPythClient {
     coins: NestedTransactionResult[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    const { hotPotatoes, feedIdsPerUpdate } =
+    const { hotPotatoes, feedIdToHotPotatoIndex } =
       await this.verifyVaasAndGetHotPotatoes(tx, updates, packageId);
 
     return await this.executePriceFeedUpdatesMultiple(
@@ -276,7 +272,7 @@ export class SuiPythClient {
       packageId,
       feedIds,
       hotPotatoes,
-      feedIdsPerUpdate,
+      feedIdToHotPotatoIndex,
       coins,
     );
   }
