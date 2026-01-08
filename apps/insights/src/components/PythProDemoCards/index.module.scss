@@ -1,10 +1,8 @@
 @use "@pythnetwork/component-library/theme";
 
 .root {
-  background-color: theme.color("background", "secondary");
-  border-radius: theme.border-radius("2xl");
   display: flex;
   gap: theme.spacing(2);
   flex-wrap: wrap;
-  padding: theme.spacing(2);
+  margin-top: theme.spacing(2);
 }

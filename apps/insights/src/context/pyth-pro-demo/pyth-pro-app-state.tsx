@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
+import type { IChartApi } from "lightweight-charts";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import {
@@ -50,9 +51,13 @@ export type AppStateContextVal = CurrentPricesStoreState & {
     dataPoint: PriceData,
   ) => void;
 
+  chartRef: Nullish<IChartApi>;
+
   dataSourcesInUse: AllDataSourcesType[];
 
   dataSourceVisibility: Record<AllDataSourcesType, boolean>;
+
+  handleSetChartRef: (chart: Nullish<IChartApi>) => void;
 
   handleSetIsLoadingInitialReplayData: (isLoading: boolean) => void;
 
@@ -133,6 +138,8 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
 
+  const [chartRef, setChartRef] = useState<Nullish<IChartApi>>(undefined);
+
   const [dataSourceVisibility, setDataSourceVisibility] = useState<
     AppStateContextVal["dataSourceVisibility"]
   >(
@@ -152,6 +159,12 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   const selectedSymbolRef = useRef(selectedSource);
 
   /** callbacks */
+  const handleSetChartRef = useCallback<
+    AppStateContextVal["handleSetChartRef"]
+  >((chart) => {
+    setChartRef(chart);
+  }, []);
+
   const setPlaybackSpeed = useCallback(
     (speed: PlaybackSpeed) => {
       updateQueryString({
@@ -314,12 +327,14 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     () => ({
       ...appState,
       addDataPoint,
+      chartRef,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
       handleSetIsLoadingInitialReplayData,
       handleSetSelectedReplayDate,
+      handleSetChartRef,
       handleToggleDataSourceVisibility,
       isLoadingInitialReplayData,
       playbackSpeed: (PlaybackSpeedSchema.safeParse(playbackSpeed).data ??
@@ -330,12 +345,14 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [
       appState,
       addDataPoint,
+      chartRef,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
       handleSetIsLoadingInitialReplayData,
       handleSetSelectedReplayDate,
+      handleSetChartRef,
       handleToggleDataSourceVisibility,
       isLoadingInitialReplayData,
       playbackSpeed,

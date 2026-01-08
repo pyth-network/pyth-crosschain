@@ -126,6 +126,7 @@
     "./TableGrid": "./src/TableGrid/index.tsx",
     "./TableGrid/table-grid-props": "./src/TableGrid/table-grid-props.ts",
     "./Term": "./src/Term/index.tsx",
+    "./Tooltip": "./src/Tooltip/index.tsx",
     "./Virtualizer": "./src/Virtualizer/index.tsx",
     "./compose-providers": "./src/compose-providers.tsx",
     "./omit-keys": "./src/omit-keys.ts",

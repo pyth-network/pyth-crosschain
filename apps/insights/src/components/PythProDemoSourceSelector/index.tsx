@@ -71,7 +71,9 @@ export function PythProDemoSourceSelector() {
       placeholder="Choose an asset"
       selectedKey={selectedSource}
       show={({ id }) => renderOptionLabel({ id, isValue: false })}
+      size="sm"
       textValue={({ id }) => renderOptionLabel({ id, isValue: true })}
+      variant="outline"
     />
   );
 }

@@ -1,6 +1,6 @@
 import { EmptyState } from "./empty-state";
 import classes from "./index.module.scss";
-import { PythProDemoCard2 } from "./price-card";
+import { PythProDemoCard } from "./price-card";
 import {
   usePythProApiTokensContext,
   usePythProAppStateContext,
@@ -31,7 +31,7 @@ export function PythProDemoCards() {
         const socketStatus = statuses[dataSource];
 
         return (
-          <PythProDemoCard2
+          <PythProDemoCard
             apiToken={tokens[dataSource]}
             currentPriceMetrics={sourceMetrics?.[selectedSource]}
             dataSource={dataSource}
