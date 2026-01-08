@@ -31,7 +31,7 @@ const obfuscatedPassword = (
   thing: typeof CLICKHOUSE_PYTH_ANALYTICS,
 ): typeof thing => ({
   ...thing,
-  password: thing.password.replaceAll(/./, "*"),
+  password: thing.password.replaceAll(/./g, "*"),
 });
 
 // need to figure out what creds are being used in the preview env
