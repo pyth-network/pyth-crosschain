@@ -118,7 +118,7 @@ class PriceState:
 
         # check session-aware source
         if source.use_session_flag and not update.session_flag:
-            logger.warning("source {} id {} session flag is false for session-aware source, skipping", source.source_name, source.source_id)
+            logger.debug("source {} id {} session flag is false for session-aware source, skipping", source.source_name, source.source_id)
             return None
 
         # check staleness
