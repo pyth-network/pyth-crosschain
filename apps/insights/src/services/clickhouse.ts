@@ -27,22 +27,6 @@ const pythCoreClient = createClient(CLICKHOUSE);
 const pythProClient = createClient(CLICKHOUSE_PYTH_PRO);
 const pythAnalyticsClient = createClient(CLICKHOUSE_PYTH_ANALYTICS);
 
-const obfuscatedPassword = (thing: typeof CLICKHOUSE_PYTH_ANALYTICS) =>
-  JSON.stringify({
-    ...thing,
-    password: thing.password.replaceAll(/./g, "*"),
-  });
-
-// need to figure out what creds are being used in the preview env
-// because DB connections are failing
-// eslint-disable-next-line no-console
-console.info("CLICKHOUSE_PYTH_PRO", obfuscatedPassword(CLICKHOUSE_PYTH_PRO));
-// eslint-disable-next-line no-console
-console.info(
-  "CLICKHOUSE_PYTH_ANALYTICS",
-  obfuscatedPassword(CLICKHOUSE_PYTH_ANALYTICS),
-);
-
 const _getPublisherRankings = async (cluster: Cluster) =>
   safeQuery(
     z.array(
