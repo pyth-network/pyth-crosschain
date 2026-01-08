@@ -12,7 +12,7 @@
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
-    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TBkf9EyQjQF37gs4Vk0sQKJj97kE vercel env pull",
+    "pull:env": "[ $CI ] || (VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TBkf9EyQjQF37gs4Vk0sQKJj97kE vercel env pull && ../../scripts/nextjs/fix-env-vars.mjs)",
     "start:dev": "next dev --port 3003",
     "start:prod": "next start --port 3003",
     "test:format": "prettier --check .",
