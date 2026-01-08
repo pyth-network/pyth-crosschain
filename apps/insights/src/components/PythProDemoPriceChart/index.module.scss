@@ -26,7 +26,7 @@
   margin-top: theme.spacing(4);
   padding: theme.spacing(2);
 
-  &:before {
+  &::before {
     content: "";
     border-bottom: theme.spacing(2) solid theme.color("background", "tooltip");
     border-left: theme.spacing(2) solid transparent;
