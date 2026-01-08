@@ -196,7 +196,7 @@ export class SuiPythClient {
       }
 
       priceInfoObjects.push(priceInfoObjectId);
-      [hotPotatoStates[hotPotatoIndex]] = tx.moveCall({
+      const [updatedHotPotato] = tx.moveCall({
         target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
           tx.object(this.pythStateId),
@@ -206,6 +206,7 @@ export class SuiPythClient {
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
+      hotPotatoStates[hotPotatoIndex] = updatedHotPotato!;
       coinId++;
     }
 
