@@ -113,77 +113,115 @@ export class SuiPythClient {
     return verifiedVaas;
   }
 
-  async verifyVaasAndGetHotPotato(
+  async verifyVaasAndGetHotPotatoes(
     tx: Transaction,
     updates: Buffer[],
     packageId: string,
-  ): Promise<NestedTransactionResult> {
-    if (updates.length > 1) {
-      throw new Error(
-        "SDK does not support sending multiple accumulator messages in a single transaction",
-      );
+  ): Promise<{
+    hotPotatoes: NestedTransactionResult[];
+    feedIdsPerUpdate: string[][];
+  }> {
+    const hotPotatoes: NestedTransactionResult[] = [];
+    const feedIdsPerUpdate: string[][] = [];
+
+    for (const update of updates) {
+      const vaa = this.extractVaaBytesFromAccumulatorMessage(update);
+      const verifiedVaas = await this.verifyVaas([vaa], tx);
+      const feedIds = this.extractPriceFeedIdsFromAccumulatorMessage(update);
+      feedIdsPerUpdate.push(feedIds);
+
+      const [priceUpdatesHotPotato] = tx.moveCall({
+        target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
+        arguments: [
+          tx.object(this.pythStateId),
+          tx.pure(
+            bcs
+              .vector(bcs.U8)
+              .serialize([...update], {
+                maxSize: MAX_ARGUMENT_SIZE,
+              })
+              .toBytes(),
+          ),
+          verifiedVaas[0]!,
+          tx.object(SUI_CLOCK_OBJECT_ID),
+        ],
+      });
+      hotPotatoes.push(priceUpdatesHotPotato!);
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
-    const verifiedVaas = await this.verifyVaas([vaa], tx);
-    const [priceUpdatesHotPotato] = tx.moveCall({
-      target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
-      arguments: [
-        tx.object(this.pythStateId),
-        tx.pure(
-          bcs
-            .vector(bcs.U8)
-            .serialize([...updates[0]!], {
-              maxSize: MAX_ARGUMENT_SIZE,
-            })
-            .toBytes(),
-        ),
-        verifiedVaas[0]!,
-        tx.object(SUI_CLOCK_OBJECT_ID),
-      ],
-    });
-    return priceUpdatesHotPotato!;
+
+    return { hotPotatoes, feedIdsPerUpdate };
   }
 
-  async executePriceFeedUpdates(
+  async executePriceFeedUpdatesMultiple(
     tx: Transaction,
     packageId: string,
     feedIds: HexString[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    priceUpdatesHotPotato: any,
+    hotPotatoes: NestedTransactionResult[],
+    feedIdsPerUpdate: string[][],
     coins: NestedTransactionResult[],
   ) {
     const priceInfoObjects: ObjectId[] = [];
+    const normalizedFeedIds: string[] = [];
+    for (const id of feedIds) {
+      normalizedFeedIds.push(id.replace("0x", ""));
+    }
+
+    // Build a map of feed ID to which hot potato index contains it
+    const feedIdToHotPotatoIndex = new Map<string, number>();
+    for (const [updateIndex, updateFeedIds] of feedIdsPerUpdate.entries()) {
+      for (const feedId of updateFeedIds) {
+        feedIdToHotPotatoIndex.set(feedId, updateIndex);
+      }
+    }
+
+    // Track which hot potatoes we've used and their current state
+    const hotPotatoStates = [...hotPotatoes];
+
     let coinId = 0;
-    for (const feedId of feedIds) {
+    for (const feedId of normalizedFeedIds) {
       const priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
       if (!priceInfoObjectId) {
         throw new Error(
-          `Price feed ${feedId} not found, please create it first`,
+          "Price feed " + feedId + " not found, please create it first",
         );
       }
+
+      const hotPotatoIndex = feedIdToHotPotatoIndex.get(feedId);
+      if (hotPotatoIndex === undefined) {
+        throw new Error(
+          "Price feed " + feedId + " not found in any of the provided accumulator messages",
+        );
+      }
+
       priceInfoObjects.push(priceInfoObjectId);
-      [priceUpdatesHotPotato] = tx.moveCall({
+      [hotPotatoStates[hotPotatoIndex]] = tx.moveCall({
         target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
           tx.object(this.pythStateId),
-          priceUpdatesHotPotato,
+          hotPotatoStates[hotPotatoIndex]!,
           tx.object(priceInfoObjectId),
-          coins[coinId],
+          coins[coinId]!,
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
       coinId++;
     }
-    tx.moveCall({
-      target: `${packageId}::hot_potato_vector::destroy`,
-      arguments: [priceUpdatesHotPotato],
-      typeArguments: [`${packageId}::price_info::PriceInfo`],
-    });
+
+    // Destroy all hot potatoes
+    for (const hotPotato of hotPotatoStates) {
+      tx.moveCall({
+        target: `${packageId}::hot_potato_vector::destroy`,
+        arguments: [hotPotato],
+        typeArguments: [`${packageId}::price_info::PriceInfo`],
+      });
+    }
+
     return priceInfoObjects;
   }
 
   /**
    * Adds the necessary commands for updating the pyth price feeds to the transaction block.
+   * Supports multiple accumulator messages in a single transaction.
    * @param tx - transaction block to add commands to
    * @param updates - array of price feed updates received from the price service
    * @param feedIds - array of feed ids to update (in hex format)
@@ -194,11 +232,8 @@ export class SuiPythClient {
     feedIds: HexString[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(
-      tx,
-      updates,
-      packageId,
-    );
+    const { hotPotatoes, feedIdsPerUpdate } =
+      await this.verifyVaasAndGetHotPotatoes(tx, updates, packageId);
 
     const baseUpdateFee = await this.getBaseUpdateFee();
     const coins = tx.splitCoins(
@@ -206,17 +241,19 @@ export class SuiPythClient {
       feedIds.map(() => tx.pure.u64(baseUpdateFee)),
     );
 
-    return await this.executePriceFeedUpdates(
+    return await this.executePriceFeedUpdatesMultiple(
       tx,
       packageId,
       feedIds,
-      priceUpdatesHotPotato,
+      hotPotatoes,
+      feedIdsPerUpdate,
       coins,
     );
   }
 
   /**
    * Updates price feeds using the coin input for payment. Coins can be generated by calling splitCoin on tx.gas.
+   * Supports multiple accumulator messages in a single transaction.
    * @param tx - transaction block to add commands to
    * @param updates - array of price feed updates received from the price service
    * @param feedIds - array of feed ids to update (in hex format)
@@ -229,46 +266,48 @@ export class SuiPythClient {
     coins: NestedTransactionResult[],
   ): Promise<ObjectId[]> {
     const packageId = await this.getPythPackageId();
-    const priceUpdatesHotPotato = await this.verifyVaasAndGetHotPotato(
-      tx,
-      updates,
-      packageId,
-    );
+    const { hotPotatoes, feedIdsPerUpdate } =
+      await this.verifyVaasAndGetHotPotatoes(tx, updates, packageId);
 
-    return await this.executePriceFeedUpdates(
+    return await this.executePriceFeedUpdatesMultiple(
       tx,
       packageId,
       feedIds,
-      priceUpdatesHotPotato,
+      hotPotatoes,
+      feedIdsPerUpdate,
       coins,
     );
   }
 
+  /**
+   * Creates price feeds from accumulator messages.
+   * Supports multiple accumulator messages in a single transaction.
+   * @param tx - transaction block to add commands to
+   * @param updates - array of price feed updates received from the price service
+   */
   async createPriceFeed(tx: Transaction, updates: Buffer[]) {
     const packageId = await this.getPythPackageId();
-    if (updates.length > 1) {
-      throw new Error(
-        "SDK does not support sending multiple accumulator messages in a single transaction",
-      );
+
+    for (const update of updates) {
+      const vaa = this.extractVaaBytesFromAccumulatorMessage(update);
+      const verifiedVaas = await this.verifyVaas([vaa], tx);
+      tx.moveCall({
+        target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
+        arguments: [
+          tx.object(this.pythStateId),
+          tx.pure(
+            bcs
+              .vector(bcs.U8)
+              .serialize([...update], {
+                maxSize: MAX_ARGUMENT_SIZE,
+              })
+              .toBytes(),
+          ),
+          verifiedVaas[0]!,
+          tx.object(SUI_CLOCK_OBJECT_ID),
+        ],
+      });
     }
-    const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
-    const verifiedVaas = await this.verifyVaas([vaa], tx);
-    tx.moveCall({
-      target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
-      arguments: [
-        tx.object(this.pythStateId),
-        tx.pure(
-          bcs
-            .vector(bcs.U8)
-            .serialize([...updates[0]!], {
-              maxSize: MAX_ARGUMENT_SIZE,
-            })
-            .toBytes(),
-        ),
-        verifiedVaas[0]!,
-        tx.object(SUI_CLOCK_OBJECT_ID),
-      ],
-    });
   }
 
   /**
@@ -369,5 +408,58 @@ export class SuiPythClient {
     const vaaSize = accumulatorMessage.readUint16BE(vaaSizeOffset);
     const vaaOffset = vaaSizeOffset + 2;
     return accumulatorMessage.subarray(vaaOffset, vaaOffset + vaaSize);
+  }
+
+  /**
+   * Extracts the price feed IDs from an accumulator message.
+   * @param accumulatorMessage - the accumulator price update message
+   * @returns array of price feed IDs (as hex strings without 0x prefix)
+   */
+  extractPriceFeedIdsFromAccumulatorMessage(
+    accumulatorMessage: Buffer,
+  ): string[] {
+    const trailingPayloadSize = accumulatorMessage.readUint8(6);
+    const vaaSizeOffset =
+      7 + // header bytes (header(4) + major(1) + minor(1) + trailing payload size(1))
+      trailingPayloadSize + // trailing payload (variable number of bytes)
+      1; // proof_type (1 byte)
+    const vaaSize = accumulatorMessage.readUint16BE(vaaSizeOffset);
+    const vaaOffset = vaaSizeOffset + 2;
+
+    // Skip past the VAA to get to the price updates section
+    let offset = vaaOffset + vaaSize;
+
+    // Read the number of updates
+    const updateSize = accumulatorMessage.readUint8(offset);
+    offset += 1;
+
+    const feedIds: string[] = [];
+
+    for (let i = 0; i < updateSize; i++) {
+      // Read message size (2 bytes, big-endian)
+      const messageSize = accumulatorMessage.readUint16BE(offset);
+      offset += 2;
+
+      // Read message type (1 byte) - should be 0 for price feed message
+      const messageType = accumulatorMessage.readUint8(offset);
+      if (messageType === 0) {
+        // Price feed message type
+        // Price identifier is the next 32 bytes after message type
+        const priceIdentifier = accumulatorMessage
+          .subarray(offset + 1, offset + 1 + 32)
+          .toString("hex");
+        feedIds.push(priceIdentifier);
+      }
+
+      // Skip the message content
+      offset += messageSize;
+
+      // Skip the merkle proof
+      // Proof format: proof_size (1 byte) + proof_size * 20 bytes
+      const proofSize = accumulatorMessage.readUint8(offset);
+      offset += 1 + proofSize * 20;
+    }
+
+    return feedIds;
   }
 }
