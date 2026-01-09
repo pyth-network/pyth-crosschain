@@ -7,6 +7,7 @@ use sui::clock;
 
 use pyth_lazer::{
     channel::new_fixed_rate_200ms,
+    governance,
     i16,
     i64,
     pyth_lazer::{
@@ -67,7 +68,7 @@ The test data above is from the Lazer subscription:
 #[test]
 public fun test_parse_and_verify_le_ecdsa_update() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -137,7 +138,7 @@ public fun test_parse_and_verify_le_ecdsa_update() {
 #[test]
 public fun test_verify_le_ecdsa_message_success() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -156,7 +157,7 @@ public fun test_verify_le_ecdsa_message_success() {
 #[test, expected_failure(abort_code = ESignerNotTrusted)]
 public fun test_verify_le_ecdsa_message_no_signers() {
     let mut ctx = tx_context::dummy();
-    let state = state::new_for_test(&mut ctx);
+    let state = state::new_for_test(&mut ctx, governance::dummy());
     let clock = clock::create_for_testing(&mut ctx);
 
     // Don't add any trusted signers - this should fail with ESignerNotTrusted
@@ -170,7 +171,7 @@ public fun test_verify_le_ecdsa_message_no_signers() {
 #[test, expected_failure(abort_code = ESignerNotTrusted)]
 public fun test_verify_le_ecdsa_message_untrusted_signer() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -191,7 +192,7 @@ public fun test_verify_le_ecdsa_message_untrusted_signer() {
 #[test]
 public fun test_verify_le_ecdsa_message_nearly_expired_signer() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let mut clock = clock::create_for_testing(&mut ctx);
 
@@ -212,7 +213,7 @@ public fun test_verify_le_ecdsa_message_nearly_expired_signer() {
 #[test, expected_failure(abort_code = ESignerExpired)]
 public fun test_verify_le_ecdsa_message_expired_signer() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let mut clock = clock::create_for_testing(&mut ctx);
 
@@ -233,7 +234,7 @@ public fun test_verify_le_ecdsa_message_expired_signer() {
 #[test, expected_failure(abort_code = ESignerExpired)]
 public fun test_verify_le_ecdsa_message_recently_expired_signer() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let mut clock = clock::create_for_testing(&mut ctx);
 
@@ -254,7 +255,7 @@ public fun test_verify_le_ecdsa_message_recently_expired_signer() {
 #[test]
 public fun test_verify_le_ecdsa_message_multiple_signers() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -279,7 +280,7 @@ public fun test_verify_le_ecdsa_message_multiple_signers() {
 #[test, expected_failure(abort_code = EInvalidUpdateMagic)]
 public fun test_parse_invalid_update_magic() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -303,7 +304,7 @@ public fun test_parse_invalid_update_magic() {
 #[test, expected_failure(abort_code = EInvalidPayloadMagic)]
 public fun test_parse_invalid_payload_magic() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -328,7 +329,7 @@ public fun test_parse_invalid_payload_magic() {
 #[test, expected_failure(abort_code = EInvalidPayloadLength)]
 public fun test_parse_invalid_payload_length() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 
@@ -354,7 +355,7 @@ public fun test_parse_invalid_payload_length() {
 #[test, expected_failure(abort_code = 0, location = sui::bcs)]
 public fun test_parse_truncated_data() {
     let mut ctx = tx_context::dummy();
-    let mut state = state::new_for_test(&mut ctx);
+    let mut state = state::new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
     let clock = clock::create_for_testing(&mut ctx);
 

@@ -1,6 +1,8 @@
 /// Types and functions for processing governance messages.
 module pyth_lazer::governance;
 
+#[test_only]
+use wormhole::external_address;
 use wormhole::external_address::ExternalAddress;
 
 use pyth_lazer::parser::Parser;
@@ -43,6 +45,11 @@ public(package) fun new(chain_id: u16, address: ExternalAddress): Governance {
         address,
         seen_sequence: 0,
     }
+}
+
+#[test_only]
+public(package) fun dummy(): Governance {
+    new(0, external_address::default())
 }
 
 /// Process incoming VAA message parameters, asserting that the message is safe

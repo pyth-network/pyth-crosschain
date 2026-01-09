@@ -7,8 +7,6 @@ use std::type_name;
 use sui::package;
 use sui::package::{UpgradeCap, UpgradeReceipt, UpgradeTicket};
 
-#[test_only]
-use wormhole::external_address;
 use wormhole::vaa::VAA;
 
 use pyth_lazer::{
@@ -176,22 +174,35 @@ public(package) fun expires_at_ms(info: &TrustedSignerInfo): u64 {
 }
 
 #[test_only]
-public fun new_for_test(ctx: &mut TxContext): State {
+fun upgrade_cap_for_test(package: ID, ctx: &mut TxContext): UpgradeCap {
+    let mut upgrade_cap = package::test_publish(package, ctx);
+    let policy = upgrade_cap.policy();
+    let digest = x"0000000000000000000000000000000000000000000000000000000000000000";
+    // Run fake upgrades to increment test UpgradeCap to current package version
+    (meta::version() - 1).do!(|_| {
+        let ticket = upgrade_cap.authorize(policy, digest);
+        upgrade_cap.commit(ticket.test_upgrade());
+    });
+    upgrade_cap
+}
+
+#[test_only]
+public fun new_for_test(ctx: &mut TxContext, governance: Governance): State {
     State {
         id: object::new(ctx),
         trusted_signers: vector::empty<TrustedSignerInfo>(),
-        upgrade_cap: package::test_publish(
-            object::id_from_address(@0),
+        upgrade_cap: upgrade_cap_for_test(
+            @0x7e57.to_id(),
             ctx
         ),
-        governance: governance::new(0, external_address::default())
+        governance,
     }
 }
 
 #[test]
 public fun test_add_new_signer() {
     let mut ctx = tx_context::dummy();
-    let mut state = new_for_test(&mut ctx);
+    let mut state = new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
 
     let pk = x"030102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
@@ -210,7 +221,7 @@ public fun test_add_new_signer() {
 #[test]
 public fun test_update_existing_signer_expiry() {
     let mut ctx = tx_context::dummy();
-    let mut state = new_for_test(&mut ctx);
+    let mut state = new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
 
     state.update_trusted_signer(
@@ -234,7 +245,7 @@ public fun test_update_existing_signer_expiry() {
 #[test]
 public fun test_remove_signer_by_zero_expiry() {
     let mut ctx = tx_context::dummy();
-    let mut state = new_for_test(&mut ctx);
+    let mut state = new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
 
     state.update_trusted_signer(
@@ -256,7 +267,7 @@ public fun test_remove_signer_by_zero_expiry() {
 #[test, expected_failure(abort_code = EInvalidPubkeyLen)]
 public fun test_invalid_pubkey_length_rejected() {
     let mut ctx = tx_context::dummy();
-    let mut state = new_for_test(&mut ctx);
+    let mut state = new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
 
     state.update_trusted_signer(&current_cap, x"010203", 1);
@@ -267,7 +278,7 @@ public fun test_invalid_pubkey_length_rejected() {
 #[test, expected_failure(abort_code = ERemovedSignerNotFound)]
 public fun test_remove_nonexistent_signer_fails() {
     let mut ctx = tx_context::dummy();
-    let mut state = new_for_test(&mut ctx);
+    let mut state = new_for_test(&mut ctx, governance::dummy());
     let current_cap = state.current_cap();
 
     // Try to remove a signer that doesn't exist by setting expires_at to 0
