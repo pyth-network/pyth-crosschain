@@ -1,4 +1,5 @@
 import { GearSix, X } from "@phosphor-icons/react/dist/ssr";
+import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Input } from "@pythnetwork/component-library/Input";
 import { ModalDialog } from "@pythnetwork/component-library/ModalDialog";
@@ -11,7 +12,11 @@ import classes from "./index.module.scss";
 import { usePythProApiTokensContext } from "../../context/pyth-pro-demo";
 import { DATA_SOURCES_REQUIRING_API_TOKENS } from "../../schemas/pyth/pyth-pro-demo-schema";
 
-export function PythProApiTokensMenu() {
+type PythProApiTokensMenuProps = Partial<Pick<ButtonProps<never>, "variant">>;
+
+export function PythProApiTokensMenu({
+  variant = "outline",
+}: PythProApiTokensMenuProps) {
   /** context */
   const { tokens, updateApiToken } = usePythProApiTokensContext();
 
@@ -31,7 +36,7 @@ export function PythProApiTokensMenu() {
             setOpen(true);
           }}
           size="sm"
-          variant="outline"
+          variant={variant}
         >
           <GearSix />
         </Button>

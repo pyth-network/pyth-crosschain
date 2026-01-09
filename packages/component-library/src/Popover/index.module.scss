@@ -1,0 +1,25 @@
+@use "../theme.scss";
+
+.popoverRoot {
+  @include theme.elevation("default", 1);
+
+  background-color: theme.color("background", "tooltip");
+  border-radius: theme.border-radius("md");
+  color: theme.color("tooltip");
+  min-height: 0;
+  overflow-y: auto;
+  padding: theme.spacing(4);
+
+  &[data-placement="bottom"] {
+    margin-top: theme.spacing(2);
+  }
+  &[data-placement="left"] {
+    margin-right: theme.spacing(2);
+  }
+  &[data-placement="right"] {
+    margin-left: theme.spacing(2);
+  }
+  &[data-placement="top"] {
+    margin-bottom: theme.spacing(2);
+  }
+}

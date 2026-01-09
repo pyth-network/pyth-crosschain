@@ -111,6 +111,7 @@
     "./NoResults": "./src/NoResults/index.tsx",
     "./NotFoundPage": "./src/NotFoundPage/index.tsx",
     "./Paginator": "./src/Paginator/index.tsx",
+    "./Popover": "./src/Popover/index.tsx",
     "./SearchButton": "./src/SearchButton/index.tsx",
     "./SearchInput": "./src/SearchInput/index.tsx",
     "./Select": "./src/Select/index.tsx",

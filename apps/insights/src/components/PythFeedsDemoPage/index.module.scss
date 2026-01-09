@@ -3,6 +3,10 @@
 .body {
   background-color: theme.color("background", "secondary");
   border-radius: theme.border-radius("2xl");
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(2);
+  min-height: theme.spacing(80);
   padding: theme.spacing(2);
 }
 
@@ -33,19 +37,6 @@
 
   & > h4 {
     color: theme.color("muted");
-  }
-}
-
-.tools {
-  align-items: center;
-  display: flex;
-  gap: theme.spacing(2);
-  justify-content: space-between;
-
-  & > div {
-    align-items: center;
-    display: flex;
-    gap: theme.spacing(2);
   }
 }
 
