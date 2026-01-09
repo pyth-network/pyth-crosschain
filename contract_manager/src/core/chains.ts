@@ -674,7 +674,7 @@ export class SuiChain extends Chain {
   /**
    * Given a transaction block and a keypair, sign and execute it.
    * Sets the gas budget to 2x the estimated gas cost.
-   * 
+   *
    * @param tx - the transaction
    * @param keypair - the keypair
    * @param options - transaction response options
