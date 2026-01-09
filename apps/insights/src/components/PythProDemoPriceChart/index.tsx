@@ -211,11 +211,33 @@ export function PythProDemoPriceChartImpl({
           if (!series) continue;
 
           const seriesKey = `${dataSource}_${metricType}`;
-          const seriesData = seriesDataRef.current[seriesKey] ?? [];
+
+          // these checks ensure that, if a user selects a different datetime
+          // for visualization, that the chart has its data properly reset
+          // so the chart doesn't start drawing the new data points
+          // next to the existing data points, which can cause x-axis scale issues
+          // and is, generally, a really weird experience
+          let seriesData = seriesDataRef.current[seriesKey] ?? [];
           const lastPoint = seriesData.at(-1);
+          if (
+            lastPoint &&
+            isNumber(lastPoint.time) &&
+            timestamp < lastPoint.time
+          ) {
+            seriesDataRef.current[seriesKey] = [];
+            seriesData = [];
+            try {
+              series.setData([]);
+            } catch {
+              continue;
+            }
+          }
+
+          const lastPointAfterReset = seriesData.at(-1);
           const latestMetricIsFresh =
-            !lastPoint ||
-            (isNumber(lastPoint.time) && lastPoint.time < timestamp);
+            !lastPointAfterReset ||
+            (isNumber(lastPointAfterReset.time) &&
+              lastPointAfterReset.time < timestamp);
 
           if (!latestMetricIsFresh) continue;
 
