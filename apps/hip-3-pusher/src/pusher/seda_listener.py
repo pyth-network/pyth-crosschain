@@ -24,6 +24,10 @@ class SedaListener:
         self.poll_timeout = config.seda.poll_timeout
         self.seda_state = seda_state
 
+        self.price_field = config.seda.price_field
+        self.timestamp_field = config.seda.timestamp_field
+        self.session_flag_field = config.seda.session_flag_field
+
     async def run(self):
         if not self.feeds:
             logger.info("No SEDA feeds needed")
@@ -68,7 +72,13 @@ class SedaListener:
 
     def _parse_seda_message(self, feed_name, message):
         result = json.loads(message["data"]["result"])
-        price = result["composite_rate"]
-        timestamp = datetime.datetime.fromisoformat(result["timestamp"]).timestamp()
-        logger.debug("Parsed SEDA update for feed: {} price: {} timestamp: {}", feed_name, price, timestamp)
-        self.seda_state.put(feed_name, PriceUpdate(price, timestamp))
+
+        price = result[self.price_field]
+        timestamp = datetime.datetime.fromisoformat(result[self.timestamp_field]).timestamp()
+        if self.session_flag_field:
+            session_flag = result[self.session_flag_field]
+        else:
+            session_flag = False
+
+        logger.debug("Parsed SEDA update for feed: {} price: {} timestamp: {} session_flag: {}", feed_name, price, timestamp, session_flag)
+        self.seda_state.put(feed_name, PriceUpdate(price, timestamp, session_flag))
