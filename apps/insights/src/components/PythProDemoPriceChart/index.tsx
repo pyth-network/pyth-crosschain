@@ -61,17 +61,25 @@ export function PythProDemoPriceChartImpl({
   /** refs */
   const containerRef = useRef<HTMLDivElement | null>(null);
   const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
+  // we keep a local pointer to the chartRef
+  // because data updates happen async and the chart may be trying to
+  // render a datapoint even though the chart instance was disposed.
+  // we do some checks to see if the chartRef available in appState
+  // matches our local one, and if it does, we continue.
+  const chartInstanceRef = useRef<typeof chartRef>(undefined);
+  const seriesDataRef = useRef<Record<string, LineData[]>>({});
 
   const createSeriesIfNotExist = useCallback(
     (dataSource: AllDataSourcesType, metricType: (typeof metricsToPlot)[0]) => {
-      if (!chartRef) return;
+      const chartInstance = chartInstanceRef.current;
+      if (!chartInstance || chartInstance !== chartRef) return;
 
       try {
         const seriesKey = `${dataSource}_${metricType}`;
 
         let series = seriesMapRef.current[seriesKey];
         if (!series) {
-          series = chartRef.addSeries(LineSeries, {
+          series = chartInstance.addSeries(LineSeries, {
             pointMarkersVisible: true,
             priceScaleId: "right",
             title:
@@ -79,6 +87,7 @@ export function PythProDemoPriceChartImpl({
           });
 
           seriesMapRef.current[seriesKey] = series;
+          seriesDataRef.current[seriesKey] = [];
         }
 
         const visible = dataSourceVisibility[dataSource];
@@ -155,17 +164,24 @@ export function PythProDemoPriceChartImpl({
       },
     });
 
+    chartInstanceRef.current = chart;
     handleSetChartRef(chart);
 
     return () => {
+      chartInstanceRef.current = undefined;
       chart.remove();
       handleSetChartRef(undefined);
       seriesMapRef.current = {};
+      seriesDataRef.current = {};
     };
   }, [handleSetChartRef, theme]);
 
   useEffect(() => {
-    if (!chartRef || !isAllowedSymbol(selectedSource)) {
+    if (
+      !chartRef ||
+      chartInstanceRef.current !== chartRef ||
+      !isAllowedSymbol(selectedSource)
+    ) {
       return;
     }
 
@@ -194,9 +210,11 @@ export function PythProDemoPriceChartImpl({
           const series = createSeriesIfNotExist(dataSource, metricType);
           if (!series) continue;
 
-          const [lastPoint] = series.data().slice(-1);
+          const seriesKey = `${dataSource}_${metricType}`;
+          const seriesData = seriesDataRef.current[seriesKey] ?? [];
+          const lastPoint = seriesData.at(-1);
           const latestMetricIsFresh =
-            !lastPoint || lastPoint.time !== timestamp;
+            isNumber(lastPoint?.time) && lastPoint.time < timestamp;
 
           if (!latestMetricIsFresh) continue;
 
@@ -205,24 +223,21 @@ export function PythProDemoPriceChartImpl({
             value: metricVal,
           };
 
-          try {
-            series.update(newPoint);
-          } catch {
-            continue;
-          }
-
           // Trim old points
           const end = timestamp;
           const start = end - MAX_DATA_AGE;
 
-          const allData = series.data();
-          const trimmed = allData
+          const trimmed = [...seriesData, newPoint]
             .filter(
               (d) =>
                 (d.time as UTCTimestamp) >= start &&
                 (d.time as UTCTimestamp) <= end,
             )
             .slice(-MAX_DATA_POINTS);
+
+          seriesDataRef.current[seriesKey] = trimmed;
+
+          if (chartInstanceRef.current !== chartRef) return;
 
           try {
             series.setData(trimmed);

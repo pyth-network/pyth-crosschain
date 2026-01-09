@@ -5,5 +5,7 @@ import { isNullOrUndefined } from "./is-null-or-undefined.js";
  * properly typeguards the result for convenience
  */
 export function isNumber(thing: unknown): thing is number {
-  return !isNullOrUndefined(thing) && !Number.isNaN(thing);
+  return (
+    !isNullOrUndefined(thing) && !Number.isNaN(thing) && Number.isFinite(thing)
+  );
 }
