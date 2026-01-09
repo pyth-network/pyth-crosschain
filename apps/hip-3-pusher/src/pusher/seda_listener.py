@@ -89,7 +89,7 @@ class SedaListener:
             last_price = result.get(self.last_price_field)
             if last_price:
                 logger.debug("SEDA feed: {} last_price: {}", feed_name, last_price)
-                self.seda_last_state.put(feed_name, PriceUpdate(price, timestamp, session_flag))
+                self.seda_last_state.put(feed_name, PriceUpdate(last_price, timestamp, session_flag))
             else:
                 logger.debug("No last price field {} found", self.last_price_field)
                 self.seda_last_state.remove(feed_name)
