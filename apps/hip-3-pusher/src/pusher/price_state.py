@@ -39,9 +39,6 @@ class PriceSourceState:
     def put(self, symbol: str, value: PriceUpdate):
         self.state[symbol] = value
 
-    def remove(self, symbol: str):
-        self.state.pop(symbol, None)
-
 
 class PriceState:
     HL_ORACLE = "hl_oracle"
