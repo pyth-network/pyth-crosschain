@@ -214,7 +214,8 @@ export function PythProDemoPriceChartImpl({
           const seriesData = seriesDataRef.current[seriesKey] ?? [];
           const lastPoint = seriesData.at(-1);
           const latestMetricIsFresh =
-            isNumber(lastPoint?.time) && lastPoint.time < timestamp;
+            !lastPoint ||
+            (isNumber(lastPoint.time) && lastPoint.time < timestamp);
 
           if (!latestMetricIsFresh) continue;
 
