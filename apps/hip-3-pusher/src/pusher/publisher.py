@@ -85,6 +85,7 @@ class Publisher:
 
         self.market_name = config.hyperliquid.market_name
         self.enable_publish = config.hyperliquid.enable_publish
+        self.duplicate_mark_price = config.hyperliquid.duplicate_mark_price
 
         self.price_state = price_state
         self.metrics = metrics
@@ -107,8 +108,15 @@ class Publisher:
         if not oracle_pxs:
             logger.error("No valid oracle prices available")
             self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
-        # markPxs is a list of dicts of length 0-2, and so can be empty
-        mark_pxs = [mark_pxs] if mark_pxs else []
+
+        # markPxs is a list of dicts of length 0-2, and so can be empty.
+        if not mark_pxs:
+            mark_pxs = []
+        elif self.duplicate_mark_price:
+            # HL also takes the median with the local mark implicitly, so we can force it by doubling up.
+            mark_pxs = [mark_pxs, mark_pxs]
+        else:
+            mark_pxs = [mark_pxs]
 
         if self.enable_publish:
             try:

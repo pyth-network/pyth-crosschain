@@ -46,6 +46,7 @@ class HyperliquidConfig(BaseModel):
     publish_interval: float
     publish_timeout: float
     enable_publish: bool
+    duplicate_mark_price: bool = False
     user_limit_interval: int = USER_LIMIT_INTERVAL_SECONDS
     ws_ping_interval: int = HYPERLIQUID_WS_PING_INTERVAL_SECONDS
     stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
