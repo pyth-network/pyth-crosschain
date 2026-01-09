@@ -1,6 +1,8 @@
 "use client";
 
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
 import { Key } from "@phosphor-icons/react/dist/ssr/Key";
+import { Button } from "@pythnetwork/component-library/Button";
 import { Input } from "@pythnetwork/component-library/Input";
 import clsx from "clsx";
 
@@ -18,8 +20,24 @@ export function AccessTokenInput({ className }: AccessTokenInputProps) {
   return (
     <div className={clsx(styles.container, className)}>
       <div className={styles.header}>
-        <Key className={styles.icon} weight="duotone" />
-        <span className={styles.label}>Access Token</span>
+        <div className={styles.headerLeft}>
+          <Key className={styles.icon} weight="duotone" />
+          <span className={styles.label}>Access Token</span>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onPress={() => {
+            window.open(
+              "https://docs.pyth.network/price-feeds/pro/acquire-access-token#request-access-token",
+              "_blank",
+              "noopener,noreferrer",
+            );
+          }}
+          beforeIcon={<ArrowSquareOut weight="regular" />}
+        >
+          Get your Access Token
+        </Button>
       </div>
 
       <div className={styles.content}>

@@ -73,11 +73,20 @@ export function OutputPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  // Track if user explicitly toggled auto-scroll via button
+  const userToggledRef = useRef(false);
+  // Track if we're doing a programmatic scroll
+  const isProgrammaticScrollRef = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive (only if auto-scroll is enabled)
   useEffect(() => {
-    if (autoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (autoScroll && messagesEndRef.current) {
+      isProgrammaticScrollRef.current = true;
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      // Reset the flag after the scroll animation completes
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 100);
     }
   }, [messages, autoScroll]);
 
@@ -87,15 +96,19 @@ export function OutputPanel({
     if (!container) return;
 
     const handleScroll = () => {
+      // Ignore programmatic scrolls
+      if (isProgrammaticScrollRef.current) return;
+
       const { scrollTop, scrollHeight, clientHeight } = container;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 10; // 10px threshold
 
       // If user scrolls away from bottom, disable auto-scroll
       if (!isAtBottom && autoScroll) {
+        userToggledRef.current = false; // Reset user toggle since this is a scroll action
         setAutoScroll(false);
       }
-      // If user scrolls back to bottom, re-enable auto-scroll
-      else if (isAtBottom && !autoScroll) {
+      // If user scrolls back to bottom, re-enable auto-scroll (only if not explicitly toggled off)
+      else if (isAtBottom && !autoScroll && !userToggledRef.current) {
         setAutoScroll(true);
       }
     };
@@ -105,6 +118,11 @@ export function OutputPanel({
       container.removeEventListener("scroll", handleScroll);
     };
   }, [autoScroll]);
+
+  const handleToggleAutoScroll = () => {
+    userToggledRef.current = true;
+    setAutoScroll(!autoScroll);
+  };
 
   return (
     <div className={clsx(styles.container, className)}>
@@ -124,14 +142,12 @@ export function OutputPanel({
           <Button
             variant="ghost"
             size="sm"
-            onPress={() => {
-              setAutoScroll(!autoScroll);
-            }}
+            onPress={handleToggleAutoScroll}
             beforeIcon={
               autoScroll ? (
-                <ArrowLineDown weight="bold" />
-              ) : (
                 <Pause weight="bold" />
+              ) : (
+                <ArrowLineDown weight="bold" />
               )
             }
             hideText

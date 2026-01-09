@@ -76,6 +76,52 @@
   width: 100%;
 }
 
+.categoryTabs {
+  display: flex;
+  gap: theme.spacing(1);
+  flex-wrap: wrap;
+}
+
+.categoryTab {
+  @include theme.text("sm", "medium");
+
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(1);
+  padding: theme.spacing(2) theme.spacing(3);
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  background-color: theme.color("background", "primary");
+  color: theme.color("foreground");
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+
+  &:hover {
+    background-color: theme.color("background", "secondary");
+    border-color: theme.color("border");
+  }
+
+  &.active {
+    background-color: theme.color("highlight");
+    color: theme.color("background", "primary");
+    border-color: theme.color("highlight");
+  }
+}
+
+.tabLabel {
+  white-space: nowrap;
+}
+
+.tabCount {
+  @include theme.text("xs", "medium");
+
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
 .feedList {
   display: flex;
   flex-wrap: wrap;

@@ -3,19 +3,14 @@ import type { MessageEvent } from "ws";
 import WebSocket from "ws";
 import { z } from "zod";
 
+import {
+  PLAYGROUND_MAX_STREAM_DURATION_MS,
+  PLAYGROUND_RATE_LIMIT_MAX_REQUESTS,
+  PLAYGROUND_RATE_LIMIT_WINDOW_MS,
+  PYTH_PRO_DEMO_TOKEN,
+  PYTH_PRO_WS_ENDPOINT,
+} from "../../../../config/pyth-pro";
 import { checkRateLimit } from "../../../../lib/rate-limiter";
-
-// Pyth Pro WebSocket endpoint
-const PYTH_PRO_WS_ENDPOINT = "wss://pyth-lazer.dourolabs.app/v1/stream";
-
-// Maximum stream duration (60 seconds)
-const MAX_STREAM_DURATION_MS = 60 * 1000;
-
-// Rate limit config for demo token users
-const DEMO_RATE_LIMIT_CONFIG = {
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 5, // 5 connections per minute
-};
 
 // Request body schema
 const StreamRequestSchema = z.object({
@@ -25,7 +20,13 @@ const StreamRequestSchema = z.object({
     .min(1, "At least one price feed ID required"),
   properties: z.array(z.string()).min(1, "At least one property required"),
   chains: z.array(z.string()).min(1, "At least one chain required"),
-  channel: z.string(),
+  channel: z.enum([
+    "real_time",
+    "fixed_rate@1ms",
+    "fixed_rate@50ms",
+    "fixed_rate@200ms",
+    "fixed_rate@1000ms",
+  ]),
   deliveryFormat: z.enum(["json", "binary"]),
   jsonBinaryEncoding: z.enum(["hex", "base64"]).optional().default("hex"),
   parsed: z.boolean().optional().default(true),
@@ -92,8 +93,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Determine which token to use
-  // eslint-disable-next-line n/no-process-env, turbo/no-undeclared-env-vars
-  const demoToken = process.env.PYTH_PRO_DEMO_TOKEN;
+  const demoToken = PYTH_PRO_DEMO_TOKEN;
   const usesDemoToken = !config.accessToken;
 
   if (usesDemoToken && !demoToken) {
@@ -108,7 +108,10 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting for demo token users
   if (usesDemoToken) {
     const clientIp = getClientIp(request);
-    const rateLimitResult = checkRateLimit(clientIp, DEMO_RATE_LIMIT_CONFIG);
+    const rateLimitResult = checkRateLimit(clientIp, {
+      windowMs: PLAYGROUND_RATE_LIMIT_WINDOW_MS,
+      maxRequests: PLAYGROUND_RATE_LIMIT_MAX_REQUESTS,
+    });
 
     if (!rateLimitResult.allowed) {
       const retryAfterSeconds = Math.ceil(rateLimitResult.resetIn / 1000);
@@ -160,15 +163,18 @@ export async function POST(request: NextRequest) {
       };
 
       // Set up auto-close timeout
+      const maxDurationSeconds = Math.round(
+        PLAYGROUND_MAX_STREAM_DURATION_MS / 1000,
+      );
       timeoutId = setTimeout(() => {
         sendEvent("close", {
           timestamp: new Date().toISOString(),
           reason: "timeout",
-          message: "Stream closed after 60 seconds",
+          message: `Stream closed after ${String(maxDurationSeconds)} seconds`,
         });
         cleanup();
         controller.close();
-      }, MAX_STREAM_DURATION_MS);
+      }, PLAYGROUND_MAX_STREAM_DURATION_MS);
 
       // Connect to Pyth Pro WebSocket using Bearer token authentication
       try {
