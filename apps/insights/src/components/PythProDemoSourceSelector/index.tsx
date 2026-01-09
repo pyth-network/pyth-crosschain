@@ -8,7 +8,6 @@ import {
   ALLOWED_CRYPTO_SYMBOLS,
   ALLOWED_EQUITY_SYMBOLS,
   ALLOWED_FOREX_SYMBOLS,
-  ALLOWED_FUTURE_SYMBOLS,
   ALLOWED_REPLAY_SYMBOLS,
   NO_SELECTED_SYMBOL,
   removeReplaySymbolSuffix,
@@ -42,10 +41,6 @@ const GROUPED_OPTS: { name: string; options: SourceDropdownOptType[] }[] = [
     name: "Forex",
     options: Object.values(ALLOWED_FOREX_SYMBOLS.Values).map((id) => ({ id })),
   },
-  {
-    name: "Futures",
-    options: Object.values(ALLOWED_FUTURE_SYMBOLS.Values).map((id) => ({ id })),
-  },
 ];
 
 function renderOptionLabel({
@@ -76,7 +71,9 @@ export function PythProDemoSourceSelector() {
       placeholder="Choose an asset"
       selectedKey={selectedSource}
       show={({ id }) => renderOptionLabel({ id, isValue: false })}
+      size="sm"
       textValue={({ id }) => renderOptionLabel({ id, isValue: true })}
+      variant="outline"
     />
   );
 }

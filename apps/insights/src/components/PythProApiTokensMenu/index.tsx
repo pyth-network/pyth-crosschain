@@ -1,16 +1,22 @@
 import { GearSix, X } from "@phosphor-icons/react/dist/ssr";
+import type { Props as ButtonProps } from "@pythnetwork/component-library/Button";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Input } from "@pythnetwork/component-library/Input";
 import { ModalDialog } from "@pythnetwork/component-library/ModalDialog";
+import { Tooltip } from "@pythnetwork/component-library/Tooltip";
 import { sentenceCase } from "change-case";
 import { useState } from "react";
-import { Label, Tooltip, TooltipTrigger } from "react-aria-components";
+import { Label } from "react-aria-components";
 
 import classes from "./index.module.scss";
 import { usePythProApiTokensContext } from "../../context/pyth-pro-demo";
 import { DATA_SOURCES_REQUIRING_API_TOKENS } from "../../schemas/pyth/pyth-pro-demo-schema";
 
-export function PythProApiTokensMenu() {
+type PythProApiTokensMenuProps = Partial<Pick<ButtonProps<never>, "variant">>;
+
+export function PythProApiTokensMenu({
+  variant = "outline",
+}: PythProApiTokensMenuProps) {
   /** context */
   const { tokens, updateApiToken } = usePythProApiTokensContext();
 
@@ -23,20 +29,18 @@ export function PythProApiTokensMenu() {
 
   return (
     <>
-      <TooltipTrigger delay={0}>
+      <Tooltip delay={0} label={tooltip}>
         <Button
           aria-label={tooltip}
           onClick={() => {
             setOpen(true);
           }}
-          variant="outline"
+          size="sm"
+          variant={variant}
         >
           <GearSix />
         </Button>
-        <Tooltip className={classes.tooltip ?? ""} placement="bottom">
-          {tooltip}
-        </Tooltip>
-      </TooltipTrigger>
+      </Tooltip>
       <ModalDialog
         className={classes.modal ?? ""}
         isOpen={open}

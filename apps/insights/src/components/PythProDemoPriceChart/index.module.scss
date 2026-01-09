@@ -1,43 +1,8 @@
 @use "@pythnetwork/component-library/theme";
 
-.buttons {
-  display: flex;
-  flex-flow: column;
-  flex-grow: 0;
-  flex-shrink: 0;
-  gap: theme.spacing(2);
-
-  @include theme.breakpoint("sm") {
-    align-items: center;
-    flex-flow: initial;
-    justify-content: flex-end;
-  }
-}
-
 .chartContainer {
   flex-grow: 1;
   flex-shrink: 0;
-}
-
-.selectDateAndTimeMsg {
-  background-color: theme.color("background", "tooltip");
-  border-radius: theme.border-radius("md");
-  color: theme.color("tooltip");
-  margin-top: theme.spacing(4);
-  padding: theme.spacing(2);
-
-  &::before {
-    content: "";
-    border-bottom: theme.spacing(2) solid theme.color("background", "tooltip");
-    border-left: theme.spacing(2) solid transparent;
-    border-right: theme.spacing(2) solid transparent;
-    display: block;
-    height: 0;
-    left: 50%;
-    position: absolute;
-    top: calc((theme.spacing(2) * -1) + 1px);
-    width: 0;
-  }
 }
 
 .spinner {
@@ -54,22 +19,14 @@
   }
 }
 
-.verticalDivider {
-  display: none;
-
-  @include theme.breakpoint("sm") {
-    background-color: theme.color("border");
-    display: initial;
-    height: theme.spacing(6);
-    width: 1px;
-  }
-}
-
 .root {
+  background: theme.color("background", "primary");
+  border-radius: theme.border-radius("2xl");
   display: flex;
   flex-flow: column;
   gap: theme.spacing(2);
   height: theme.spacing(110);
+  margin-top: theme.spacing(2);
   position: relative;
   width: 100%;
 }

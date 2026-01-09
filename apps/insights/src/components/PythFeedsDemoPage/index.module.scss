@@ -1,11 +1,18 @@
 @use "@pythnetwork/component-library/theme";
 
 .body {
-  padding-top: theme.spacing(4);
+  background-color: theme.color("background", "secondary");
+  border-radius: theme.border-radius("2xl");
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(2);
+  min-height: theme.spacing(80);
+  padding: theme.spacing(2);
 }
 
 .suspenseLoader {
   @include theme.max-width;
+
   align-items: center;
   display: flex;
   flex-flow: column;
@@ -19,47 +26,21 @@
 }
 
 .subheader {
-  border-bottom: 1px solid theme.color("border");
   display: flex;
   flex-flow: column;
-  gap: theme.spacing(4);
-  padding-bottom: theme.spacing(4);
+  gap: theme.spacing(2);
+  margin-bottom: theme.spacing(4);
 
-  @include theme.breakpoint("sm") {
-    align-items: flex-end;
-    flex-flow: initial;
-    justify-content: space-between;
+  & > h3,
+  & > h4 {
+    margin: 0;
   }
 
-  & > div {
-    &:first-child {
-      display: flex;
-      flex-flow: column;
-      gap: theme.spacing(4);
-
-      & > h3,
-      & > h4 {
-        margin: 0;
-      }
-
-      & > h4 {
-        color: theme.color("muted");
-      }
-    }
-
-    &:last-child {
-      align-items: center;
-      display: flex;
-      gap: theme.spacing(2);
-    }
+  & > h4 {
+    color: theme.color("muted");
   }
 }
 
 .pythFeedsDemoPageRoot {
   @include theme.max-width;
-
-  // this holds the chart
-  & > aside {
-    margin-top: theme.spacing(2);
-  }
 }

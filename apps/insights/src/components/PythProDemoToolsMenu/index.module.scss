@@ -1,0 +1,47 @@
+@use "@pythnetwork/component-library/theme";
+
+.flexInlineOnMobile {
+  display: grid;
+  gap: theme.spacing(2);
+  grid-template-columns: 3fr auto auto;
+
+  @include theme.breakpoint("md") {
+    display: flex;
+    grid-template-columns: unset;
+  }
+}
+
+.mobileMenuButton {
+  @include theme.breakpoint("md") {
+    display: none;
+  }
+}
+
+.mobileMenuPopover {
+  // this needs to be less than the API tokens menu
+  z-index: auto !important;
+}
+
+.mobileToolsMenu {
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(2);
+}
+
+.rightHandSideTools {
+  display: none;
+
+  @include theme.breakpoint("md") {
+    display: flex;
+    gap: theme.spacing(2);
+  }
+}
+
+.toolsRoot {
+  align-items: center;
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 0;
+  gap: theme.spacing(2);
+  justify-content: space-between;
+}

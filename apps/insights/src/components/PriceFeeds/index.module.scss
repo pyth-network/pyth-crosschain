@@ -32,30 +32,10 @@
     & > * {
       min-width: 0;
     }
+  }
 
-    .feedCardContents {
-      display: flex;
-      flex-flow: column nowrap;
-      justify-content: space-between;
-      align-items: stretch;
-      padding: theme.spacing(3);
-      gap: theme.spacing(6);
-
-      .prices {
-        display: flex;
-        flex-flow: row nowrap;
-        justify-content: space-between;
-        align-items: center;
-        color: theme.color("heading");
-        font-weight: theme.font-weight("medium");
-        line-height: 1;
-        font-size: theme.font-size("base");
-
-        .changePercent {
-          font-size: theme.font-size("sm");
-        }
-      }
-    }
+  .changePercent {
+    font-size: theme.font-size("sm");
   }
 
   .bigScreenBody {

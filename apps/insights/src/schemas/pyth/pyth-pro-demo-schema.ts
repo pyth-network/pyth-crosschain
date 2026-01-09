@@ -50,17 +50,11 @@ export type DataSourcesHistoricalType = z.infer<typeof DATA_SOURCES_HISTORICAL>;
 export const DATA_SOURCES_FOREX = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesForexType = z.infer<typeof DATA_SOURCES_FOREX>;
 
-export const DATA_SOURCES_FUTURES = z.enum([PYTH, PYTH_PRO]);
-export type DataSourcesFuturesType = z.infer<typeof DATA_SOURCES_FUTURES>;
-
 export const DATA_SOURCES_TREASURY = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesTreasuryType = z.infer<typeof DATA_SOURCES_TREASURY>;
 
 export const DATA_SOURCES_REPLAY = z.enum([NBBO, PYTH_PRO]);
 export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
-
-export const ALLOWED_FUTURE_SYMBOLS = z.enum(["ESZ2025"]);
-export type AllowedFutureSymbolsType = z.infer<typeof ALLOWED_FUTURE_SYMBOLS>;
 
 export const ALLOWED_CRYPTO_SYMBOLS = z.enum(["BTCUSDT", "ETHUSDT", "SOLUSDT"]);
 export type AllowedCryptoSymbolsType = z.infer<typeof ALLOWED_CRYPTO_SYMBOLS>;
@@ -98,7 +92,6 @@ export type NoSelectedSymbolType = z.infer<typeof NO_SELECTED_SYMBOL>;
 export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...NO_SELECTED_SYMBOL.options,
   ...ALLOWED_FOREX_SYMBOLS.options,
-  ...ALLOWED_FUTURE_SYMBOLS.options,
   ...ALLOWED_CRYPTO_SYMBOLS.options,
   ...ALLOWED_EQUITY_SYMBOLS.options,
   ...ALLOWED_TREASURY_SYMBOLS.options,

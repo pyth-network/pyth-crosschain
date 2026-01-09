@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
+import type { IChartApi } from "lightweight-charts";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import {
@@ -27,7 +28,6 @@ import {
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
-  DATA_SOURCES_FUTURES,
   DATA_SOURCES_HISTORICAL,
   PlaybackSpeedSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
@@ -36,7 +36,6 @@ import {
   isAllowedCryptoSymbol,
   isAllowedEquitySymbol,
   isAllowedForexSymbol,
-  isAllowedFutureSymbol,
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
@@ -52,9 +51,13 @@ export type AppStateContextVal = CurrentPricesStoreState & {
     dataPoint: PriceData,
   ) => void;
 
+  chartRef: Nullish<IChartApi>;
+
   dataSourcesInUse: AllDataSourcesType[];
 
   dataSourceVisibility: Record<AllDataSourcesType, boolean>;
+
+  handleSetChartRef: (chart: Nullish<IChartApi>) => void;
 
   handleSetIsLoadingInitialReplayData: (isLoading: boolean) => void;
 
@@ -135,6 +138,8 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
 
+  const [chartRef, setChartRef] = useState<Nullish<IChartApi>>(undefined);
+
   const [dataSourceVisibility, setDataSourceVisibility] = useState<
     AppStateContextVal["dataSourceVisibility"]
   >(
@@ -154,6 +159,12 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   const selectedSymbolRef = useRef(selectedSource);
 
   /** callbacks */
+  const handleSetChartRef = useCallback<
+    AppStateContextVal["handleSetChartRef"]
+  >((chart) => {
+    setChartRef(chart);
+  }, []);
+
   const setPlaybackSpeed = useCallback(
     (speed: PlaybackSpeed) => {
       updateQueryString({
@@ -296,8 +307,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
       out = Object.values(DATA_SOURCES_FOREX.Values);
     } else if (isAllowedEquitySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_EQUITY.Values);
-    } else if (isAllowedFutureSymbol(selectedSource)) {
-      out = Object.values(DATA_SOURCES_FUTURES.Values);
     } else if (isReplaySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_HISTORICAL.Values);
     }
@@ -318,12 +327,14 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     () => ({
       ...appState,
       addDataPoint,
+      chartRef,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
       handleSetIsLoadingInitialReplayData,
       handleSetSelectedReplayDate,
+      handleSetChartRef,
       handleToggleDataSourceVisibility,
       isLoadingInitialReplayData,
       playbackSpeed: (PlaybackSpeedSchema.safeParse(playbackSpeed).data ??
@@ -334,12 +345,14 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [
       appState,
       addDataPoint,
+      chartRef,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
       handleSetIsLoadingInitialReplayData,
       handleSetSelectedReplayDate,
+      handleSetChartRef,
       handleToggleDataSourceVisibility,
       isLoadingInitialReplayData,
       playbackSpeed,
