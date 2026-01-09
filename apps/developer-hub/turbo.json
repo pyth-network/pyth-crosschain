@@ -7,7 +7,12 @@
       "env": [
         "VERCEL_ENV",
         "GOOGLE_ANALYTICS_ID",
-        "DISABLE_ACCESSIBILITY_REPORTING"
+        "DISABLE_ACCESSIBILITY_REPORTING",
+        "PYTH_PRO_DEMO_TOKEN",
+        "PYTH_PRO_WS_ENDPOINT",
+        "PLAYGROUND_MAX_STREAM_DURATION_MS",
+        "PLAYGROUND_RATE_LIMIT_WINDOW_MS",
+        "PLAYGROUND_RATE_LIMIT_MAX_REQUESTS"
       ]
     },
     "generate:docs": {
