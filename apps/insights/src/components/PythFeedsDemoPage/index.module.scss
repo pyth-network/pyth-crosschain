@@ -12,6 +12,7 @@
 
 .suspenseLoader {
   @include theme.max-width;
+
   align-items: center;
   display: flex;
   flex-flow: column;

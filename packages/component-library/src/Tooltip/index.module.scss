@@ -1,4 +1,4 @@
-@use "../theme.scss";
+@use "../theme";
 
 .tooltipRoot {
   @include theme.elevation("default", 1);
@@ -13,12 +13,15 @@
   &[data-placement="bottom"] {
     margin-top: theme.spacing(2);
   }
+
   &[data-placement="left"] {
     margin-right: theme.spacing(2);
   }
+
   &[data-placement="right"] {
     margin-left: theme.spacing(2);
   }
+
   &[data-placement="top"] {
     margin-bottom: theme.spacing(2);
   }
