@@ -8,13 +8,23 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable n/no-process-env */
+
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import type {
+  MoveValue as SuiMoveValue,
+  SuiTransactionBlockResponseOptions,
+} from "@mysten/sui/client";
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import { MIST_PER_SUI } from "@mysten/sui/utils";
+import { Transaction as SuiTransaction } from "@mysten/sui/transactions";
+import {
+  MIST_PER_SUI,
+  SUI_CLOCK_OBJECT_ID,
+  SUI_FRAMEWORK_ADDRESS,
+} from "@mysten/sui/utils";
 import {
   CosmwasmExecutor,
   CosmwasmQuerier,
@@ -33,6 +43,8 @@ import {
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
   EvmExecute,
+  UpgradeLazerContract256Bit,
+  UpdateTrustedSigner264Bit,
 } from "@pythnetwork/xc-admin-common";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
@@ -48,6 +60,7 @@ import Web3 from "web3";
 import type { KeyValueConfig, PrivateKey, TxResult } from "./base";
 import { Storable } from "./base";
 import type { TokenId } from "./token";
+import { execFileAsync, hasProperty } from "../utils/utils";
 
 function computeHashOnElements(elements: string[]): string {
   let hash = "0";
@@ -346,6 +359,38 @@ export class SuiChain extends Chain {
     return new UpgradeContract256Bit(this.wormholeChainName, digest).encode();
   }
 
+  /**
+   * Returns the payload for a governance contract upgrade instruction for Lazer
+   * contracts deployed on this chain.
+   *
+   * @param digest - hex string of the 32 byte digest for the new package
+   * without the 0x prefix
+   */
+  generateGovernanceUpgradeLazerPayload(digest: string): Buffer {
+    return new UpgradeLazerContract256Bit(
+      this.wormholeChainName,
+      digest,
+    ).encode();
+  }
+
+  /**
+   * Returns the payload for a governance update of a trusted signer for Lazer
+   * contracts deployed on this chain.
+   *
+   * @param publicKey - trusted signer public key
+   * @param expiresAt - timestamp of key expiration in seconds
+   */
+  generateGovernanceUpdateTrustedSignerPayload(
+    publicKey: string,
+    expiresAt: bigint,
+  ): Buffer {
+    return new UpdateTrustedSigner264Bit(
+      this.wormholeChainName,
+      publicKey,
+      expiresAt,
+    ).encode();
+  }
+
   getProvider(): SuiClient {
     return new SuiClient({ url: this.rpcUrl });
   }
@@ -364,7 +409,311 @@ export class SuiChain extends Chain {
     });
     return Number(balance.totalBalance) / Number(MIST_PER_SUI);
   }
+
+  async getCliEnv(): Promise<string> {
+    const { stdout } = await execFileAsync("sui", ["client", "active-env"]);
+    return stdout.trim();
+  }
+
+  async buildPackage(path: string): Promise<SuiPackage> {
+    const activeEnv = await this.getCliEnv();
+    if (`sui_${activeEnv}` !== this.getId()) {
+      throw new Error(
+        `Sui CLI is currently set to ${activeEnv}. Switch to correct environment and try again.`,
+      );
+    }
+
+    const result = await execFileAsync(
+      "sui",
+      ["move", "build", "--dump-bytecode-as-base64", "--path", path],
+      { encoding: "utf8" },
+    );
+    try {
+      return JSON.parse(result.stdout) as SuiPackage;
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        // eslint-disable-next-line unicorn/prefer-type-error
+        throw new Error(`${result.stdout}\n${result.stderr}`);
+      }
+      throw error;
+    }
+  }
+
+  async publishPackage(
+    { modules, dependencies }: SuiPackage,
+    signer: SuiEd25519Keypair,
+  ): Promise<{ packageId: string; upgradeCapId: string }> {
+    const tx = new SuiTransaction();
+    const upgrade_cap = tx.publish({ modules, dependencies });
+    tx.transferObjects([upgrade_cap], signer.toSuiAddress());
+
+    const { digest, objectChanges } = await this.executeTransaction(
+      tx,
+      signer,
+      { showObjectChanges: true },
+    );
+    await this.getProvider().waitForTransaction({ digest });
+
+    let packageId: string | undefined;
+    let upgradeCapId: string | undefined;
+    for (const change of objectChanges ?? []) {
+      if (change.type === "published") {
+        packageId = change.packageId;
+      } else if (
+        change.type === "created" &&
+        change.objectType === `${SUI_FRAMEWORK_ADDRESS}::package::UpgradeCap`
+      ) {
+        upgradeCapId = change.objectId;
+      }
+    }
+    if (!packageId) {
+      throw new Error("Could not find package ID in transaction results");
+    }
+    if (!upgradeCapId) {
+      throw new Error("Could not find UpgradeCap ID in transaction results");
+    }
+    return { packageId, upgradeCapId };
+  }
+
+  async initLazerContract(
+    packageId: string,
+    upgradeCapId: string,
+    { emitterChain, emitterAddress }: DataSource,
+    signer: SuiEd25519Keypair,
+  ): Promise<{ stateId: string }> {
+    const tx = new SuiTransaction();
+    tx.moveCall({
+      target: `${packageId}::actions::init_lazer`,
+      arguments: [
+        tx.object(upgradeCapId),
+        tx.pure.u16(emitterChain),
+        tx.pure.vector(
+          "u8",
+          Buffer.from(emitterAddress.replace(/^0x/, ""), "hex"),
+        ),
+      ],
+    });
+
+    const { objectChanges } = await this.executeTransaction(tx, signer, {
+      showObjectChanges: true,
+    });
+
+    let stateId: string | undefined;
+    for (const change of objectChanges ?? []) {
+      if (
+        change.type === "created" &&
+        change.objectType === `${packageId}::state::State`
+      ) {
+        stateId = change.objectId;
+      }
+    }
+
+    if (!stateId) {
+      throw new Error("Could not find State ID in transcation results");
+    }
+
+    return { stateId };
+  }
+
+  async getUpgradeCapPackage(upgradeCapId: string) {
+    const client = this.getProvider();
+    const { data, error } = await client.getObject({
+      id: upgradeCapId,
+      options: { showContent: true },
+    });
+    if (!data?.content || error) {
+      throw new Error(
+        `Failed to get UpgradeCap: ${error?.code ?? "undefined"}`,
+      );
+    }
+    if (data.content.dataType !== "moveObject") {
+      throw new Error("Supplied ID does not have a valid UpgradeCap object");
+    }
+
+    const upgradeCap = data.content;
+    if (
+      !this.hasStructField(upgradeCap, "package") ||
+      typeof upgradeCap.fields.package !== "string"
+    ) {
+      throw new TypeError("Could not find package string in UpgradeCap object");
+    }
+    return upgradeCap.fields.package;
+  }
+
+  /**
+   * Receive package ID from a state object following
+   * `{ .., upgrade_cap: UpgradeCap }` convention.
+   */
+  async getStatePackageId(client: SuiClient, stateId: string): Promise<string> {
+    const { data: stateObject, error } = await client.getObject({
+      id: stateId,
+      options: { showContent: true },
+    });
+    if (!stateObject?.content || error) {
+      throw new Error(
+        `Failed to get state object: ${error?.code ?? "undefined"}`,
+      );
+    }
+    if (stateObject.content.dataType !== "moveObject") {
+      throw new Error(
+        `State must be an object, got: ${stateObject.content.dataType}`,
+      );
+    }
+
+    const state = stateObject.content;
+    if (!this.hasStructField(state, "upgrade_cap")) {
+      throw new Error("Missing 'upgrade_cap' in state object");
+    }
+    const upgradeCap = state.fields.upgrade_cap;
+    if (
+      !this.hasStructField(upgradeCap, "package") ||
+      typeof upgradeCap.fields.package !== "string"
+    ) {
+      throw new Error("Could not find 'package' string in UpgradeCap");
+    }
+    return upgradeCap.fields.package;
+  }
+
+  private hasStructField<const F extends string>(
+    value: SuiMoveValue,
+    name: F,
+  ): value is { fields: Record<F, SuiMoveValue> } {
+    return hasProperty(value, "fields") && hasProperty(value.fields, name);
+  }
+
+  /**
+   * Executes `pyth_lazer::actions::update_trusted_signer` using signed VAA.
+   *
+   * @returns transaction digest
+   */
+  async updateTrustedSigner({
+    stateId,
+    wormholeStateId,
+    vaa,
+    signer,
+  }: {
+    stateId: string;
+    wormholeStateId: string;
+    vaa: Uint8Array;
+    signer: SuiEd25519Keypair;
+  }) {
+    const client = this.getProvider();
+    const tx = new SuiTransaction();
+    const wormholeId = await this.getStatePackageId(client, wormholeStateId);
+    const packageId = await this.getStatePackageId(client, stateId);
+
+    const verifiedVaa = tx.moveCall({
+      target: `${wormholeId}::vaa::parse_and_verify`,
+      arguments: [
+        tx.object(wormholeStateId),
+        tx.pure.vector("u8", vaa),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    tx.moveCall({
+      target: `${packageId}::actions::update_trusted_signer`,
+      arguments: [tx.object(stateId), verifiedVaa],
+    });
+
+    const { digest } = await this.executeTransaction(tx, signer);
+    return digest;
+  }
+
+  /**
+   * Executes `pyth_lazer::actions::{upgrade, commit_upgrade}` using signed VAA.
+   *
+   * @returns transaction digest
+   */
+  async upgradeLazerContract({
+    stateId,
+    wormholeStateId,
+    pkg: { modules, dependencies },
+    vaa,
+    signer,
+  }: {
+    stateId: string;
+    wormholeStateId: string;
+    pkg: SuiPackage;
+    vaa: Uint8Array;
+    signer: SuiEd25519Keypair;
+  }) {
+    const client = this.getProvider();
+    const tx = new SuiTransaction();
+    const wormholeId = await this.getStatePackageId(client, wormholeStateId);
+    const packageId = await this.getStatePackageId(client, stateId);
+
+    const verifiedVaa = tx.moveCall({
+      target: `${wormholeId}::vaa::parse_and_verify`,
+      arguments: [
+        tx.object(wormholeStateId),
+        tx.pure.vector("u8", vaa),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const ticket = tx.moveCall({
+      target: `${packageId}::actions::upgrade`,
+      arguments: [tx.object(stateId), verifiedVaa],
+    });
+    const receipt = tx.upgrade({
+      modules,
+      dependencies,
+      package: packageId,
+      ticket,
+    });
+    tx.moveCall({
+      target: `${packageId}::actions::commit_upgrade`,
+      arguments: [tx.object(stateId), receipt],
+    });
+
+    const { digest } = await this.executeTransaction(tx, signer);
+    return digest;
+  }
+
+  /**
+   * Given a transaction block and a keypair, sign and execute it.
+   * Sets the gas budget to 2x the estimated gas cost.
+   * 
+   * @param tx - the transaction
+   * @param keypair - the keypair
+   * @param options - transaction response options
+   */
+  async executeTransaction(
+    tx: SuiTransaction,
+    keypair: SuiEd25519Keypair,
+    options?: SuiTransactionBlockResponseOptions,
+  ) {
+    const provider = this.getProvider();
+
+    tx.setSender(keypair.toSuiAddress());
+    const dryRun = await provider.dryRunTransactionBlock({
+      transactionBlock: await tx.build({ client: provider }),
+    });
+    tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
+
+    const res = await provider.signAndExecuteTransaction({
+      signer: keypair,
+      transaction: tx,
+      options,
+    });
+
+    await provider.waitForTransaction({ digest: res.digest });
+    return res;
+  }
+
+  explorerUrl(type: "object" | "address" | "txblock", id: string): string {
+    return `https://explorer.polymedia.app/${type}/${id}?network=${
+      this.isMainnet() ? "mainnet" : "testnet"
+    }`;
+  }
 }
+
+type SuiPackage = {
+  modules: string[];
+  dependencies: string[];
+  digest: number[];
+};
 
 export class IotaChain extends Chain {
   static override type = "IotaChain";
