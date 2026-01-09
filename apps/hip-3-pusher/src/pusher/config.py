@@ -71,6 +71,7 @@ class SedaConfig(BaseModel):
     feeds: Optional[dict[str, SedaFeedConfig]] = {}
     price_field: str = "price"
     timestamp_field: str = "timestamp"
+    last_price_field: Optional[str] = None
     session_flag_field: Optional[str] = None
 
 

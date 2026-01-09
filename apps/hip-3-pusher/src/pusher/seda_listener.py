@@ -15,7 +15,7 @@ class SedaListener:
     """
     Subscribe to SEDA price updates for needed feeds.
     """
-    def __init__(self, config: Config, seda_state: PriceSourceState):
+    def __init__(self, config: Config, seda_state: PriceSourceState, seda_last_state: PriceSourceState):
         self.url = config.seda.url
         self.api_key = Path(config.seda.api_key_path).read_text().strip() if config.seda.api_key_path else None
         self.feeds = config.seda.feeds
@@ -23,10 +23,12 @@ class SedaListener:
         self.poll_failure_interval = config.seda.poll_failure_interval
         self.poll_timeout = config.seda.poll_timeout
         self.seda_state = seda_state
+        self.seda_last_state = seda_last_state
 
         self.price_field = config.seda.price_field
         self.timestamp_field = config.seda.timestamp_field
         self.session_flag_field = config.seda.session_flag_field
+        self.last_price_field = config.seda.last_price_field
 
     async def run(self):
         if not self.feeds:
@@ -82,3 +84,12 @@ class SedaListener:
 
         logger.debug("Parsed SEDA update for feed: {} price: {} timestamp: {} session_flag: {}", feed_name, price, timestamp, session_flag)
         self.seda_state.put(feed_name, PriceUpdate(price, timestamp, session_flag))
+
+        if self.last_price_field:
+            last_price = result.get(self.last_price_field)
+            if last_price:
+                logger.debug("SEDA feed: {} last_price: {}", feed_name, last_price)
+                self.seda_last_state.put(feed_name, PriceUpdate(price, timestamp, session_flag))
+            else:
+                logger.debug("No last price field {} found", self.last_price_field)
+                self.seda_last_state.remove(feed_name)

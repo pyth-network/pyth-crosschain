@@ -39,6 +39,9 @@ class PriceSourceState:
     def put(self, symbol: str, value: PriceUpdate):
         self.state[symbol] = value
 
+    def remove(self, symbol: str):
+        self.state.pop(symbol, None)
+
 
 class PriceState:
     HL_ORACLE = "hl_oracle"
@@ -47,6 +50,7 @@ class PriceState:
     LAZER = "lazer"
     HERMES = "hermes"
     SEDA = "seda"
+    SEDA_LAST = "seda_last"
 
     """
     Maintain latest prices seen across listeners and publisher.
@@ -62,6 +66,7 @@ class PriceState:
         self.lazer_state = PriceSourceState(self.LAZER)
         self.hermes_state = PriceSourceState(self.HERMES)
         self.seda_state = PriceSourceState(self.SEDA)
+        self.seda_last_state = PriceSourceState(self.SEDA_LAST)
 
         self.all_states = {
             self.HL_ORACLE: self.hl_oracle_state,
@@ -70,6 +75,7 @@ class PriceState:
             self.LAZER: self.lazer_state,
             self.HERMES: self.hermes_state,
             self.SEDA: self.seda_state,
+            self.SEDA_LAST: self.seda_last_state,
         }
 
     def get_all_prices(self) -> OracleUpdate:
