@@ -3,6 +3,7 @@
 import { Play } from "@phosphor-icons/react/dist/ssr/Play";
 import { Stop } from "@phosphor-icons/react/dist/ssr/Stop";
 import { Button } from "@pythnetwork/component-library/Button";
+import { Callout } from "fumadocs-ui/components/callout";
 
 import styles from "./index.module.scss";
 import { AccessTokenInput } from "../../Playground/AccessTokenInput";
@@ -43,9 +44,9 @@ function PlaygroundContent() {
             Configure subscription parameters, generate code, and test real-time
             price streams.
           </p>
-          <p className={styles.disclaimer}>
+          <Callout type="warning" className={styles.disclaimer}>
             This playground is for internal preview only and may contain bugs.
-          </p>
+          </Callout>
         </div>
       </section>
 
