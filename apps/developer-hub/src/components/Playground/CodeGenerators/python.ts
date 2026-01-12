@@ -10,12 +10,12 @@ export function generatePythonCode(config: PlaygroundConfig): string {
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
     config.properties.length > 0 ? config.properties : ["price"];
-  const chains = config.formats.length > 0 ? config.formats : ["solana"];
+  const formats = config.formats.length > 0 ? config.formats : ["solana"];
   const channel = config.channel;
 
   const priceFeedIdsStr = priceFeedIds.join(", ");
   const propertiesStr = properties.map((prop) => `"${prop}"`).join(", ");
-  const chainsStr = chains.map((chain) => `"${chain}"`).join(", ");
+  const formatsStr = formats.map((format) => `"${format}"`).join(", ");
 
   return `#!/usr/bin/env python3
 """
@@ -60,7 +60,7 @@ async def subscribe_to_prices():
         "subscriptionId": 1,
         "priceFeedIds": [${priceFeedIdsStr}],
         "properties": [${propertiesStr}],
-        "chains": [${chainsStr}],
+        "formats": [${formatsStr}],
         "channel": "${channel}",
         "deliveryFormat": "${config.deliveryFormat}",
         "jsonBinaryEncoding": "${config.jsonBinaryEncoding}",

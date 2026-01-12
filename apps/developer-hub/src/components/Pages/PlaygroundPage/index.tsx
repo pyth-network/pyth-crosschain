@@ -43,6 +43,9 @@ function PlaygroundContent() {
             Configure subscription parameters, generate code, and test real-time
             price streams.
           </p>
+          <p className={styles.disclaimer}>
+            This playground is for internal preview only and may contain bugs.
+          </p>
         </div>
       </section>
 

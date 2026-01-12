@@ -10,12 +10,12 @@ export function generateGoCode(config: PlaygroundConfig): string {
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
     config.properties.length > 0 ? config.properties : ["price"];
-  const chains = config.formats.length > 0 ? config.formats : ["solana"];
+  const formats = config.formats.length > 0 ? config.formats : ["solana"];
   const channel = config.channel;
 
   const priceFeedIdsStr = priceFeedIds.join(", ");
   const propertiesStr = properties.map((prop) => `"${prop}"`).join(", ");
-  const chainsStr = chains.map((chain) => `"${chain}"`).join(", ");
+  const formatsStr = formats.map((format) => `"${format}"`).join(", ");
 
   return `package main
 
@@ -36,7 +36,7 @@ type SubscribeRequest struct {
 	SubscriptionID     int      \`json:"subscriptionId"\`
 	PriceFeedIDs       []int    \`json:"priceFeedIds"\`
 	Properties         []string \`json:"properties"\`
-	Chains             []string \`json:"chains"\`
+	Formats            []string \`json:"formats"\`
 	Channel            string   \`json:"channel"\`
 	DeliveryFormat     string   \`json:"deliveryFormat"\`
 	JsonBinaryEncoding string   \`json:"jsonBinaryEncoding"\`
@@ -104,7 +104,7 @@ func main() {
 		SubscriptionID:     1,
 		PriceFeedIDs:       []int{${priceFeedIdsStr}},
 		Properties:         []string{${propertiesStr}},
-		Chains:             []string{${chainsStr}},
+		Formats:            []string{${formatsStr}},
 		Channel:            "${channel}",
 		DeliveryFormat:     "${config.deliveryFormat}",
 		JsonBinaryEncoding: "${config.jsonBinaryEncoding}",

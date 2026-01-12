@@ -19,7 +19,7 @@ const StreamRequestSchema = z.object({
     .array(z.number())
     .min(1, "At least one price feed ID required"),
   properties: z.array(z.string()).min(1, "At least one property required"),
-  chains: z.array(z.string()).min(1, "At least one chain required"),
+  formats: z.array(z.string()).min(1, "At least one format required"),
   channel: z.enum([
     "real_time",
     "fixed_rate@1ms",
@@ -65,7 +65,7 @@ function buildSubscriptionMessage(config: StreamRequest): string {
     subscriptionId: 1,
     priceFeedIds: config.priceFeedIds,
     properties: config.properties,
-    chains: config.chains,
+    formats: config.formats,
     deliveryFormat: config.deliveryFormat,
     channel: config.channel,
     jsonBinaryEncoding: config.jsonBinaryEncoding,
