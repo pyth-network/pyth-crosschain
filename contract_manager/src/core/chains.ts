@@ -541,10 +541,16 @@ export class SuiChain extends Chain {
   }
 
   /**
-   * Receive package ID from a state object following
+   * Receive package info from a state object following
    * `{ .., upgrade_cap: UpgradeCap }` convention.
    */
-  async getStatePackageId(client: SuiClient, stateId: string): Promise<string> {
+  async getStatePackageInfo(
+    client: SuiClient,
+    stateId: string,
+  ): Promise<{
+    package: string;
+    version: string;
+  }> {
     const { data: stateObject, error } = await client.getObject({
       id: stateId,
       options: { showContent: true },
@@ -571,7 +577,16 @@ export class SuiChain extends Chain {
     ) {
       throw new Error("Could not find 'package' string in UpgradeCap");
     }
-    return upgradeCap.fields.package;
+    if (
+      !this.hasStructField(upgradeCap, "version") ||
+      typeof upgradeCap.fields.version !== "string"
+    ) {
+      throw new Error("Could not find 'version' number in UpgradeCap");
+    }
+    return {
+      package: upgradeCap.fields.package,
+      version: upgradeCap.fields.version,
+    };
   }
 
   private hasStructField<const F extends string>(
@@ -599,8 +614,14 @@ export class SuiChain extends Chain {
   }) {
     const client = this.getProvider();
     const tx = new SuiTransaction();
-    const wormholeId = await this.getStatePackageId(client, wormholeStateId);
-    const packageId = await this.getStatePackageId(client, stateId);
+    const { package: wormholeId } = await this.getStatePackageInfo(
+      client,
+      wormholeStateId,
+    );
+    const { package: packageId } = await this.getStatePackageInfo(
+      client,
+      stateId,
+    );
 
     const verifiedVaa = tx.moveCall({
       target: `${wormholeId}::vaa::parse_and_verify`,
@@ -640,8 +661,14 @@ export class SuiChain extends Chain {
   }) {
     const client = this.getProvider();
     const tx = new SuiTransaction();
-    const wormholeId = await this.getStatePackageId(client, wormholeStateId);
-    const packageId = await this.getStatePackageId(client, stateId);
+    const { package: wormholeId } = await this.getStatePackageInfo(
+      client,
+      wormholeStateId,
+    );
+    const { package: packageId } = await this.getStatePackageInfo(
+      client,
+      stateId,
+    );
 
     const verifiedVaa = tx.moveCall({
       target: `${wormholeId}::vaa::parse_and_verify`,

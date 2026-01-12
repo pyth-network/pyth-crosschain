@@ -5,7 +5,7 @@ module pyth_lazer::governance;
 use wormhole::external_address;
 use wormhole::external_address::ExternalAddress;
 
-use pyth_lazer::parser::Parser;
+use pyth_lazer::{meta, parser::Parser};
 
 /// Reference:
 /// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/remote_executor/programs/remote-executor/src/state/governance_payload.rs#L81
@@ -13,11 +13,6 @@ const MAGIC: vector<u8> = "PTGM";
 
 /// Governace message module. Always 3, as this contract uses "Lazer" actions.
 const MODULE: u8 = 3;
-
-/// Reference:
-/// https://wormhole.com/docs/products/reference/chain-ids/#__tabbed_1_1
-/// https://github.com/pyth-network/pyth-crosschain/blob/b021cfe9b2716947f22d1724cd3fa7e3de6b026e/governance/xc_admin/packages/xc_admin_common/src/chains.ts#L274
-const RECEIVER_CHAIN_ID: u16 = 21;
 
 #[error]
 const EMismatchedMagic: vector<u8> = "Mismatched governance header magic number, should be \"PTGM\"";
@@ -95,6 +90,6 @@ public(package) fun parse_header(parser: &mut Parser): GovernanceHeader {
     assert!(module_ == MODULE, EMismatchedModule);
     let action = parser.take_u8();
     let chain = parser.take_u16_be();
-    assert!(chain == RECEIVER_CHAIN_ID, EMismatchedReceiverChainID);
+    assert!(chain == meta::receiver_chain_id(), EMismatchedReceiverChainID);
     GovernanceHeader { action }
 }

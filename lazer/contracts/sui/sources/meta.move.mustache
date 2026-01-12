@@ -8,12 +8,12 @@ module pyth_lazer::meta;
 /// `UpgradeCap` version, and thus attempts to publish or upgrade the package
 /// using an invalid version will result in the package becoming locked.
 public(package) fun version(): u64 {
-    1
+    {{version}}
 }
 
 /// References:
 /// - https://wormhole.com/docs/products/reference/chain-ids/#__tabbed_1_1
 /// - `/governance/xc_admin/packages/xc_admin_common/src/chains.ts`
 public(package) fun receiver_chain_id(): u16 {
-    21
+    {{receiver_chain_id}}
 }
