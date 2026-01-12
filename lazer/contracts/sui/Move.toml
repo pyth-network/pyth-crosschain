@@ -6,6 +6,14 @@ edition = "2024.beta"
 [addresses]
 pyth_lazer = "0x0"
 
+[dependencies.Wormhole]
+git = "https://github.com/wormhole-foundation/wormhole.git"
+subdir = "sui/wormhole"
+# "sui/mainnet" or "sui/testnet" respectively, as "main" doesn't have address
+# TODO: the branches are currently outdated, see:
+# https://github.com/pyth-network/pyth-crosschain/pull/3316#discussion_r2662256455
+rev = "sui/mainnet"
+
 [dev-dependencies]
 
 [dev-addresses]

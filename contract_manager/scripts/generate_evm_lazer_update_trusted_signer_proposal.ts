@@ -6,6 +6,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import { EvmLazerContract } from "../src/core/contracts";
 import { loadHotWallet } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
@@ -56,6 +57,9 @@ async function main() {
   const contract = DefaultStore.lazer_contracts[argv.contract];
   if (!contract) {
     throw new Error(`Contract with ID '${argv.contract}' does not exist.`);
+  }
+  if (!(contract instanceof EvmLazerContract)) {
+    throw new TypeError(`ID '${argv.contract}' is not an EVM Lazer contract.`);
   }
   const updatePayloads: Buffer[] = [];
   console.log(`Generating payload for contract ${contract.getId()}`);

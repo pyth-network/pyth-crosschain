@@ -44,6 +44,7 @@ import {
   EvmPulseContract,
   EvmExecutorContract,
   EvmLazerContract,
+  SuiLazerContract,
 } from "../../core/contracts";
 import {
   NearPriceFeedContract,
@@ -64,7 +65,8 @@ export class Store {
   public wormhole_contracts: Record<string, WormholeContract> = {};
   public tokens: Record<string, Token> = {};
   public vaults: Record<string, Vault> = {};
-  public lazer_contracts: Record<string, EvmLazerContract> = {};
+  public lazer_contracts: Record<string, EvmLazerContract | SuiLazerContract> =
+    {};
 
   constructor(public path: string) {
     this.loadAllChains();
@@ -197,6 +199,7 @@ export class Store {
       [IotaPriceFeedContract.type]: IotaPriceFeedContract,
       [IotaWormholeContract.type]: IotaWormholeContract,
       [EvmLazerContract.type]: EvmLazerContract,
+      [SuiLazerContract.type]: SuiLazerContract,
     };
     this.getJsonFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
       const parsedArray = JSON.parse(readFileSync(jsonFile, "utf8"));
@@ -225,7 +228,10 @@ export class Store {
           this.wormhole_contracts[chainContract.getId()] = chainContract;
         } else if (chainContract instanceof EvmExecutorContract) {
           this.executor_contracts[chainContract.getId()] = chainContract;
-        } else if (chainContract instanceof EvmLazerContract) {
+        } else if (
+          chainContract instanceof EvmLazerContract ||
+          chainContract instanceof SuiLazerContract
+        ) {
           this.lazer_contracts[chainContract.getId()] = chainContract;
         } else {
           this.contracts[chainContract.getId()] = chainContract;
