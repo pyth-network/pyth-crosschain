@@ -57,8 +57,6 @@ public(package) fun process_incoming(
 ) {
     assert!(self.chain_id == chain_id, EMismatchedEmitterChainID);
     assert!(self.address == address, EMismatchedAddress);
-    // TODO: See https://wormhole.com/docs/protocol/infrastructure/vaas/#verified-action-approvals
-    // - is this enough to avoid replay attacks?
     assert!(self.seen_sequence < sequence, EOldSequenceNumber);
     self.seen_sequence = sequence;
 }
