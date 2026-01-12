@@ -73,54 +73,46 @@ export function OutputPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
-  // Track if user explicitly toggled auto-scroll via button
-  const userToggledRef = useRef(false);
-  // Track if we're doing a programmatic scroll
-  const isProgrammaticScrollRef = useRef(false);
+  // Track previous message count to detect empty-to-content transition
+  const prevMessageCountRef = useRef(0);
+
+  // Reset auto-scroll state when a new stream starts
+  useEffect(() => {
+    if (status === "connecting") {
+      setAutoScroll(true);
+      prevMessageCountRef.current = 0;
+    }
+  }, [status]);
+
+  // Force scroll to bottom when messages transition from empty to having content
+  useEffect(() => {
+    const wasEmpty = prevMessageCountRef.current === 0;
+    const hasContent = messages.length > 0;
+
+    if (wasEmpty && hasContent && messagesEndRef.current) {
+      // Force immediate scroll to bottom when first message arrives
+      requestAnimationFrame(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+        }
+      });
+    }
+
+    prevMessageCountRef.current = messages.length;
+  }, [messages.length]);
 
   // Auto-scroll to bottom when new messages arrive (only if auto-scroll is enabled)
   useEffect(() => {
-    if (autoScroll && messagesEndRef.current) {
-      isProgrammaticScrollRef.current = true;
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      // Reset the flag after the scroll animation completes
-      setTimeout(() => {
-        isProgrammaticScrollRef.current = false;
-      }, 100);
+    if (autoScroll && messagesEndRef.current && messages.length > 0) {
+      requestAnimationFrame(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      });
     }
   }, [messages, autoScroll]);
 
-  // Detect manual scrolling and disable auto-scroll if user scrolls up
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      // Ignore programmatic scrolls
-      if (isProgrammaticScrollRef.current) return;
-
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 10; // 10px threshold
-
-      // If user scrolls away from bottom, disable auto-scroll
-      if (!isAtBottom && autoScroll) {
-        userToggledRef.current = false; // Reset user toggle since this is a scroll action
-        setAutoScroll(false);
-      }
-      // If user scrolls back to bottom, re-enable auto-scroll (only if not explicitly toggled off)
-      else if (isAtBottom && !autoScroll && !userToggledRef.current) {
-        setAutoScroll(true);
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, [autoScroll]);
-
   const handleToggleAutoScroll = () => {
-    userToggledRef.current = true;
     setAutoScroll(!autoScroll);
   };
 
