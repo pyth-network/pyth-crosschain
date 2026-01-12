@@ -6,5 +6,10 @@
     "declaration": true,
     "isolatedModules": false
   },
-  "exclude": ["node_modules", "dist", "examples/", "**/__tests__/*"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "examples/",
+    "**/__tests__/*"
+  ]
 }
