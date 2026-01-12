@@ -10,7 +10,7 @@ export function generateCliCode(config: PlaygroundConfig): string {
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
     config.properties.length > 0 ? config.properties : ["price"];
-  const chains = config.formats.length > 0 ? config.formats : ["solana"];
+  const formats = config.formats.length > 0 ? config.formats : ["solana"];
   const channel = config.channel;
 
   const subscribePayload = {
@@ -18,7 +18,7 @@ export function generateCliCode(config: PlaygroundConfig): string {
     subscriptionId: 1,
     priceFeedIds,
     properties,
-    chains,
+    formats,
     channel,
     deliveryFormat: config.deliveryFormat,
     jsonBinaryEncoding: config.jsonBinaryEncoding,
@@ -42,7 +42,7 @@ ${payloadStr}
 curl -X POST "https://pyth-lazer-0.dourolabs.app/v1/latest_price" \\
   -H "Authorization: Bearer ${token}" \\
   -H "Content-Type: application/json" \\
-  -d '${JSON.stringify({ priceFeedIds, properties, chains, parsed: config.parsed })}'
+  -d '${JSON.stringify({ priceFeedIds, properties, formats, parsed: config.parsed })}'
 
 # For redundancy, connect to multiple endpoints:
 # - wss://pyth-lazer-0.dourolabs.app/v1/stream

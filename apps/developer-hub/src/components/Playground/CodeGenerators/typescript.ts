@@ -10,11 +10,11 @@ export function generateTypeScriptCode(config: PlaygroundConfig): string {
     config.priceFeedIds.length > 0 ? config.priceFeedIds : [1, 2];
   const properties =
     config.properties.length > 0 ? config.properties : ["price"];
-  const chains = config.formats.length > 0 ? config.formats : ["solana"];
+  const formats = config.formats.length > 0 ? config.formats : ["solana"];
   const channel = config.channel;
 
   const propertiesStr = properties.map((prop) => `"${prop}"`).join(", ");
-  const chainsStr = chains.map((chain) => `"${chain}"`).join(", ");
+  const formatsStr = formats.map((format) => `"${format}"`).join(", ");
   const priceFeedIdsStr = priceFeedIds.join(", ");
 
   return `import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
@@ -37,7 +37,7 @@ client.subscribe({
   subscriptionId: 1,
   priceFeedIds: [${priceFeedIdsStr}],
   properties: [${propertiesStr}],
-  chains: [${chainsStr}],
+  formats: [${formatsStr}],
   channel: "${channel}",
   deliveryFormat: "${config.deliveryFormat}",
   jsonBinaryEncoding: "${config.jsonBinaryEncoding}",

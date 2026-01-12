@@ -92,7 +92,7 @@ export function useStreamExecution(): UseStreamExecutionReturn {
         accessToken: config.accessToken,
         priceFeedIds: config.priceFeedIds,
         properties: config.properties,
-        chains: config.formats,
+        formats: config.formats,
         channel: config.channel,
         deliveryFormat: config.deliveryFormat,
         jsonBinaryEncoding: config.jsonBinaryEncoding,
