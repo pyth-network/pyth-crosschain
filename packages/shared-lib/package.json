@@ -61,6 +61,16 @@
         "default": "./dist/esm/util/create-uuid.mjs"
       }
     },
+    "./util/error-to-string": {
+      "require": {
+        "types": "./dist/cjs/util/error-to-string.d.ts",
+        "default": "./dist/cjs/util/error-to-string.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/error-to-string.d.ts",
+        "default": "./dist/esm/util/error-to-string.mjs"
+      }
+    },
     "./util": {
       "require": {
         "types": "./dist/cjs/util/index.d.ts",

@@ -1,6 +1,10 @@
 import { useAlert } from "@pythnetwork/component-library/useAlert";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
-import { isNullOrUndefined, wait } from "@pythnetwork/shared-lib/util";
+import {
+  errorToString,
+  isNullOrUndefined,
+  wait,
+} from "@pythnetwork/shared-lib/util";
 import { usePrevious } from "@react-hookz/web";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -130,7 +134,7 @@ export function useHttpDataStream({
 
   /** callbacks */
   const handleError = useCallback((error_: unknown) => {
-    setError(error_ instanceof Error ? error_ : new Error(String(error_)));
+    setError(new Error(errorToString(error_)));
   }, []);
 
   /** effects */

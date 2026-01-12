@@ -102,12 +102,10 @@
 }
 
 .popover {
+  @include theme.elevation("default", 1);
   background-color: theme.color("background", "modal");
   border: 1px solid theme.color("border");
   border-radius: theme.border-radius("lg");
-  box-shadow:
-    0 4px 6px -4px rgb(from black r g b / 10%),
-    0 10px 15px -3px rgb(from black r g b / 10%);
   color: theme.color("paragraph");
   padding: theme.spacing(3);
   width: 90vw;
