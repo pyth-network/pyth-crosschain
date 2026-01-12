@@ -19,9 +19,10 @@ import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
-  AllowedReplaySymbolsType,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
+  ALL_ALLOWED_SYMBOLS,
+  ALLOWED_REPLAY_SYMBOLS,
   appendReplaySymbolSuffix,
   removeReplaySymbolSuffix,
   ValidDateSchema,
@@ -229,13 +230,13 @@ export function useHttpDataStream({
           void doFetch(nextStartAt, localSignal).catch(handleError);
         }
 
-        addDataPoint(
-          currPoint.source,
-          appendReplaySymbolSuffix(
-            currPoint.symbol as AllAllowedSymbols,
-          ) as AllowedReplaySymbolsType,
-          currPoint,
-        );
+        const currPointSymbol = ALL_ALLOWED_SYMBOLS.safeParse(currPoint.symbol);
+        if (!currPointSymbol.data) continue;
+        const appended = appendReplaySymbolSuffix(currPointSymbol.data);
+        const appendedValidated = ALLOWED_REPLAY_SYMBOLS.safeParse(appended);
+        if (!appendedValidated.data) continue;
+
+        addDataPoint(currPoint.source, appendedValidated.data, currPoint);
 
         if (guardAbort(localSignal)) return;
 

@@ -127,13 +127,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     setChartRef(chart);
   }, []);
 
-  const setPlaybackSpeed = useCallback(
-    async (speed: PlaybackSpeed) => {
-      await updateQuery("playbackSpeed", speed);
-    },
-    [updateQuery],
-  );
-
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
     (dataSource, symbol, dataPoint) => {
       // state is desynchronized, so we disallow setting of the metric here
@@ -180,9 +173,6 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
 
   const handleSelectSource = useCallback(
     async (source: AllAllowedSymbols) => {
-      // reset playback speed to 1x
-      await setPlaybackSpeed(1);
-
       // delay a few moments to let the http datastream events come down
       // so we don't accidentally kill the new http requests
       // (this is demo code, if we choose to keep this longer term, this will be revised)
@@ -200,14 +190,14 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
           isAllowedSymbol(source) ? source : "no_symbol_selected",
         ),
         selectedSourceIsReplay
-          ? updateQuery("playbackSpeed", undefined)
-          : Promise.resolve(),
+          ? Promise.resolve()
+          : updateQuery("playbackSpeed", undefined),
         selectedSourceIsReplay
-          ? updateQuery("startAt", undefined)
-          : Promise.resolve(),
+          ? Promise.resolve()
+          : updateQuery("startAt", undefined),
       ]);
     },
-    [setPlaybackSpeed, updateQuery],
+    [updateQuery],
   );
 
   const handleSelectPlaybackSpeed = useCallback<
