@@ -84,7 +84,7 @@ Test update of trusted signer:
 # See `deploy` above for env setup
 
 # Emitter key matching configuration used for deploy
-EMITTER_KEY="~/.config/solana/id.json"
+EMITTER_KEY="$HOME/.config/solana/id.json"
 
 # Contract ID taken from `deploy` output or `SuiLazerContracts.json`
 # CONTRACT_ID=""
