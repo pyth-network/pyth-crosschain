@@ -10,10 +10,8 @@ pyth_lazer = "0x0"
 git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
 # "sui/mainnet" or "sui/testnet" respectively, as "main" doesn't have address
-# TODO(matej): It's hard to tell whether these branches are officially
-# supported, and testnet one is already outdated, so we either want to have the
-# package at MVR at some point, or maybe want to consider creating our own
-# branches with symlinked `Move.toml`.
+# TODO: the branches are currently outdated, see:
+# https://github.com/pyth-network/pyth-crosschain/pull/3316#discussion_r2662256455
 rev = "sui/mainnet"
 
 [dev-dependencies]
