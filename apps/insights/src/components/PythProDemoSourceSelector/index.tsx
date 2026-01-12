@@ -66,7 +66,9 @@ export function PythProDemoSourceSelector() {
   return (
     <Select
       label={undefined}
-      onSelectionChange={handleSelectSource}
+      onSelectionChange={(val) => {
+        void handleSelectSource(val);
+      }}
       optionGroups={GROUPED_OPTS}
       placeholder="Choose an asset"
       selectedKey={selectedSource}

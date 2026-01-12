@@ -103,6 +103,7 @@
 
 .popover {
   @include theme.elevation("default", 1);
+
   background-color: theme.color("background", "modal");
   border: 1px solid theme.color("border");
   border-radius: theme.border-radius("lg");
