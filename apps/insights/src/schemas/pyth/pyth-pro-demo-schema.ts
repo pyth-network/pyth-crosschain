@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+import { GetPythHistoricalPricesSchema } from "../../services/clickhouse-schema";
+
+export const ValidDateString = z.string().datetime({ offset: true });
+
+export const ValidDateSchema = z.union([
+  z.date(),
+  ValidDateString.transform((val) => new Date(val)),
+]);
+export type ValidDateType = z.infer<typeof ValidDateSchema>;
+
 const BINANCE = "binance";
 const BYBIT = "bybit";
 const COINBASE = "coinbase";
@@ -48,17 +58,11 @@ export type DataSourcesHistoricalType = z.infer<typeof DATA_SOURCES_HISTORICAL>;
 export const DATA_SOURCES_FOREX = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesForexType = z.infer<typeof DATA_SOURCES_FOREX>;
 
-export const DATA_SOURCES_FUTURES = z.enum([PYTH, PYTH_PRO]);
-export type DataSourcesFuturesType = z.infer<typeof DATA_SOURCES_FUTURES>;
-
 export const DATA_SOURCES_TREASURY = z.enum([PYTH, PYTH_PRO]);
 export type DataSourcesTreasuryType = z.infer<typeof DATA_SOURCES_TREASURY>;
 
 export const DATA_SOURCES_REPLAY = z.enum([NBBO, PYTH_PRO]);
 export type DataSourcesReplayType = z.infer<typeof DATA_SOURCES_REPLAY>;
-
-export const ALLOWED_FUTURE_SYMBOLS = z.enum(["ESZ2025"]);
-export type AllowedFutureSymbolsType = z.infer<typeof ALLOWED_FUTURE_SYMBOLS>;
 
 export const ALLOWED_CRYPTO_SYMBOLS = z.enum(["BTCUSDT", "ETHUSDT", "SOLUSDT"]);
 export type AllowedCryptoSymbolsType = z.infer<typeof ALLOWED_CRYPTO_SYMBOLS>;
@@ -96,7 +100,6 @@ export type NoSelectedSymbolType = z.infer<typeof NO_SELECTED_SYMBOL>;
 export const ALL_ALLOWED_SYMBOLS = z.enum([
   ...NO_SELECTED_SYMBOL.options,
   ...ALLOWED_FOREX_SYMBOLS.options,
-  ...ALLOWED_FUTURE_SYMBOLS.options,
   ...ALLOWED_CRYPTO_SYMBOLS.options,
   ...ALLOWED_EQUITY_SYMBOLS.options,
   ...ALLOWED_TREASURY_SYMBOLS.options,
@@ -104,15 +107,7 @@ export const ALL_ALLOWED_SYMBOLS = z.enum([
 ]);
 export type AllAllowedSymbols = z.infer<typeof ALL_ALLOWED_SYMBOLS>;
 
-export const PriceDataSchema = z.object({
-  ask: z.number().optional().nullable(),
-  bid: z.number().optional().nullable(),
-  price: z.number().optional().nullable(),
-  timestamp: z.string().datetime(),
-});
-export type PriceData = z.infer<typeof PriceDataSchema>;
-
-export const PriceDataSchemaWithSource = PriceDataSchema.extend({
+export const PriceDataSchemaWithSource = GetPythHistoricalPricesSchema.extend({
   source: ALL_DATA_SOURCES,
   symbol: ALL_ALLOWED_SYMBOLS,
 });
@@ -124,7 +119,7 @@ export const CurrentPriceMetricsSchema = z.object({
   change: z.number().nullable().optional(),
   changePercent: z.number().nullable().optional(),
   price: z.number().nullable().optional(),
-  timestamp: z.string().datetime(),
+  timestamp: ValidDateString,
 });
 export type CurrentPriceMetrics = z.infer<typeof CurrentPriceMetricsSchema>;
 
@@ -177,22 +172,10 @@ export const CurrentPricesStoreStateSchema = z.object({
       latest: z.nullable(LatestMetricSchema),
     }),
   ),
-  selectedSource: ALL_ALLOWED_SYMBOLS.optional().nullable(),
 });
 export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema
 >;
-
-export const HistoricalDataResponseSchema = z.object({
-  data: z.array(PriceDataSchemaWithSource),
-  hasNext: z.boolean(),
-});
-export type HistoricalDataResponseType = z.infer<
-  typeof HistoricalDataResponseSchema
->;
-
-export const ValidDateSchema = z.date();
-export type ValidDateType = z.infer<typeof ValidDateSchema>;
 
 export const GetPythFeedsDemoDataRequestSchema = z.strictObject({
   params: z.object({
@@ -200,12 +183,18 @@ export const GetPythFeedsDemoDataRequestSchema = z.strictObject({
   }),
   searchParams: z.object({
     datasources: z.array(DATA_SOURCES_REPLAY),
-    startAt: z
-      .string()
-      .datetime({ offset: true })
-      .transform((val) => new Date(val)),
+    startAt: ValidDateSchema,
   }),
 });
 export type GetPythFeedsDemoDataRequestType = z.infer<
   typeof GetPythFeedsDemoDataRequestSchema
 >;
+
+export type PlaybackSpeed = 1 | 2 | 4 | 8 | 16 | 32;
+export const ALLOWED_PLAYBACK_SPEEDS = new Set<PlaybackSpeed>([
+  1, 2, 4, 8, 16, 32,
+]);
+
+export const PlaybackSpeedSchema = z
+  .number()
+  .refine((val) => ALLOWED_PLAYBACK_SPEEDS.has(val as PlaybackSpeed));

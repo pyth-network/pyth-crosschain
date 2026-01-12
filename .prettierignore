@@ -5,6 +5,14 @@ patches/
 target_chains/sui/vendor/
 lazer/contracts/evm/lib/
 
+package.json
+tsconfig*.json
+turbo.json
+
+**/package.json
+**/tsconfig*.json
+**/turbo.json
+
 # This should stay in sync with the list of workspaces from
 # `pnpm-workspace.yaml`
 apps/*

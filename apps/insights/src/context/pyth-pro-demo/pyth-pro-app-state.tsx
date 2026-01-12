@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-array-reduce */
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
+import type { IChartApi } from "lightweight-charts";
 import type { PropsWithChildren } from "react";
 import {
   createContext,
@@ -12,32 +13,31 @@ import {
   useState,
 } from "react";
 
+import { useDemoQueryParams } from "../../hooks/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
   CurrentPriceMetrics,
   CurrentPricesStoreState,
   LatestMetric,
-  PriceData,
+  PlaybackSpeed,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   ALL_DATA_SOURCES,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
   DATA_SOURCES_FOREX,
-  DATA_SOURCES_FUTURES,
   DATA_SOURCES_HISTORICAL,
+  PlaybackSpeedSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PriceData } from "../../services/clickhouse-schema";
 import {
   isAllowedCryptoSymbol,
   isAllowedEquitySymbol,
   isAllowedForexSymbol,
-  isAllowedFutureSymbol,
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
-
-type PlaybackSpeed = 1 | 2 | 4 | 8 | 16 | 32;
 
 export type AppStateContextVal = CurrentPricesStoreState & {
   addDataPoint: (
@@ -46,17 +46,31 @@ export type AppStateContextVal = CurrentPricesStoreState & {
     dataPoint: PriceData,
   ) => void;
 
+  chartRef: Nullish<IChartApi>;
+
   dataSourcesInUse: AllDataSourcesType[];
 
   dataSourceVisibility: Record<AllDataSourcesType, boolean>;
 
-  handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => void;
+  handleSetChartRef: (chart: Nullish<IChartApi>) => void;
 
-  handleSelectSource: (source: AllAllowedSymbols) => void;
+  handleSetIsLoadingInitialReplayData: (isLoading: boolean) => void;
+
+  handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => Promise<void>;
+
+  handleSelectSource: (source: AllAllowedSymbols) => Promise<void>;
+
+  handleSetSelectedReplayDate: (dateStr: string) => Promise<void>;
 
   handleToggleDataSourceVisibility: (datasource: AllDataSourcesType) => void;
 
+  isLoadingInitialReplayData: boolean;
+
   playbackSpeed: PlaybackSpeed;
+
+  selectedReplayDate: string;
+
+  selectedSource: AllAllowedSymbols;
 };
 
 const context = createContext<Nullish<AppStateContextVal>>(undefined);
@@ -71,13 +85,22 @@ const initialState: CurrentPricesStoreState = {
     }),
     {} satisfies CurrentPricesStoreState["metrics"],
   ),
-  selectedSource: "no_symbol_selected",
 };
 
 export function PythProAppStateProvider({ children }: PropsWithChildren) {
+  /** hooks */
+  const {
+    playbackSpeed,
+    selectedSource,
+    startAt: selectedReplayDate,
+    updateQuery,
+  } = useDemoQueryParams();
+
   /** state */
   const [appState, setAppState] =
     useState<CurrentPricesStoreState>(initialState);
+
+  const [chartRef, setChartRef] = useState<Nullish<IChartApi>>(undefined);
 
   const [dataSourceVisibility, setDataSourceVisibility] = useState<
     AppStateContextVal["dataSourceVisibility"]
@@ -91,12 +114,19 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     ),
   );
 
-  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1);
+  const [isLoadingInitialReplayData, setIsLoadingInitialReplayData] =
+    useState(false);
 
   /** refs */
-  const selectedSymbolRef = useRef(appState.selectedSource);
+  const selectedSymbolRef = useRef(selectedSource);
 
   /** callbacks */
+  const handleSetChartRef = useCallback<
+    AppStateContextVal["handleSetChartRef"]
+  >((chart) => {
+    setChartRef(chart);
+  }, []);
+
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
     (dataSource, symbol, dataPoint) => {
       // state is desynchronized, so we disallow setting of the metric here
@@ -130,7 +160,7 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
                   change,
                   changePercent,
                   price: dataPoint.price,
-                  timestamp: dataPoint.timestamp,
+                  timestamp: dataPoint.timestamp.toISOString(),
                 } satisfies CurrentPriceMetrics,
               } satisfies LatestMetric,
             },
@@ -141,37 +171,73 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     [],
   );
 
-  const handleSelectSource = useCallback((source: AllAllowedSymbols) => {
-    // reset playback speed to 1x
-    setPlaybackSpeed(1);
+  const handleSelectSource = useCallback(
+    async (source: AllAllowedSymbols) => {
+      // delay a few moments to let the http datastream events come down
+      // so we don't accidentally kill the new http requests
+      // (this is demo code, if we choose to keep this longer term, this will be revised)
+      setAppState({
+        // blast away all state, because we don't need the old
+        // data to be munged with the new data
+        ...initialState,
+      });
 
-    // delay a few moments to let the http datastream events come down
-    // so we don't accidentally kill the new http requests
-    // (this is demo code, if we choose to keep this longer term, this will be revised)
-    setAppState({
-      // blast away all state, because we don't need the old
-      // data to be munged with the new data
-      ...initialState,
-      selectedSource: isAllowedSymbol(source) ? source : undefined,
-    });
+      const selectedSourceIsReplay = isReplaySymbol(source);
+
+      await Promise.all([
+        updateQuery(
+          "selectedSource",
+          isAllowedSymbol(source) ? source : "no_symbol_selected",
+        ),
+        selectedSourceIsReplay
+          ? Promise.resolve()
+          : updateQuery("playbackSpeed", undefined),
+        selectedSourceIsReplay
+          ? Promise.resolve()
+          : updateQuery("startAt", undefined),
+      ]);
+    },
+    [updateQuery],
+  );
+
+  const handleSelectPlaybackSpeed = useCallback<
+    AppStateContextVal["handleSelectPlaybackSpeed"]
+  >(
+    async (speed) => {
+      await updateQuery("playbackSpeed", speed);
+    },
+    [updateQuery],
+  );
+
+  const handleSetSelectedReplayDate = useCallback<
+    AppStateContextVal["handleSetSelectedReplayDate"]
+  >(
+    async (dateStr) => {
+      await updateQuery("startAt", dateStr);
+    },
+    [updateQuery],
+  );
+
+  const handleSetIsLoadingInitialReplayData = useCallback<
+    AppStateContextVal["handleSetIsLoadingInitialReplayData"]
+  >((isLoading) => {
+    setIsLoadingInitialReplayData(isLoading);
   }, []);
 
   /** memos */
   const dataSourcesInUse = useMemo(() => {
     let out: AllDataSourcesType[] = [];
-    if (isAllowedCryptoSymbol(appState.selectedSource)) {
+    if (isAllowedCryptoSymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_CRYPTO.Values);
-    } else if (isAllowedForexSymbol(appState.selectedSource)) {
+    } else if (isAllowedForexSymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_FOREX.Values);
-    } else if (isAllowedEquitySymbol(appState.selectedSource)) {
+    } else if (isAllowedEquitySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_EQUITY.Values);
-    } else if (isAllowedFutureSymbol(appState.selectedSource)) {
-      out = Object.values(DATA_SOURCES_FUTURES.Values);
-    } else if (isReplaySymbol(appState.selectedSource)) {
+    } else if (isReplaySymbol(selectedSource)) {
       out = Object.values(DATA_SOURCES_HISTORICAL.Values);
     }
     return out.sort();
-  }, [appState.selectedSource]);
+  }, [selectedSource]);
 
   const handleToggleDataSourceVisibility = useCallback<
     AppStateContextVal["handleToggleDataSourceVisibility"]
@@ -182,39 +248,48 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
     }));
   }, []);
 
-  const handleSelectPlaybackSpeed = useCallback<
-    AppStateContextVal["handleSelectPlaybackSpeed"]
-  >((speed) => {
-    setPlaybackSpeed(speed);
-  }, []);
-
   /** provider val */
   const providerVal = useMemo<AppStateContextVal>(
     () => ({
       ...appState,
       addDataPoint,
+      chartRef,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetIsLoadingInitialReplayData,
+      handleSetSelectedReplayDate,
+      handleSetChartRef,
       handleToggleDataSourceVisibility,
-      playbackSpeed,
+      isLoadingInitialReplayData,
+      playbackSpeed: (PlaybackSpeedSchema.safeParse(playbackSpeed).data ??
+        1) as PlaybackSpeed,
+      selectedReplayDate,
+      selectedSource,
     }),
     [
       appState,
       addDataPoint,
+      chartRef,
       dataSourcesInUse,
       dataSourceVisibility,
       handleSelectPlaybackSpeed,
       handleSelectSource,
+      handleSetIsLoadingInitialReplayData,
+      handleSetSelectedReplayDate,
+      handleSetChartRef,
       handleToggleDataSourceVisibility,
+      isLoadingInitialReplayData,
       playbackSpeed,
+      selectedReplayDate,
+      selectedSource,
     ],
   );
 
   /** effects */
   useEffect(() => {
-    selectedSymbolRef.current = appState.selectedSource;
+    selectedSymbolRef.current = selectedSource;
   });
 
   return <context.Provider value={providerVal}>{children}</context.Provider>;

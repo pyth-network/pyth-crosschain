@@ -3,5 +3,12 @@
 .root {
   display: flex;
   gap: theme.spacing(2);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  margin-top: theme.spacing(2);
+  overflow-x: auto;
+
+  @include theme.breakpoint("sm") {
+    flex-wrap: wrap;
+    overflow-x: initial;
+  }
 }

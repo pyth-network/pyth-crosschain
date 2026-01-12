@@ -1,12 +1,10 @@
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@pythnetwork/component-library/Button";
+import { Spinner } from "@pythnetwork/component-library/Spinner";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
 import { isNumber } from "@pythnetwork/shared-lib/util";
 import { capitalCase } from "change-case";
 import color from "color";
 import { format } from "date-fns";
 import type {
-  IChartApi,
   ISeriesApi,
   LineData,
   Time,
@@ -18,10 +16,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import classes from "./index.module.scss";
 import type { AppStateContextVal } from "../../context/pyth-pro-demo";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
-import type {
-  AllDataSourcesType,
-  PriceData,
-} from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { AllDataSourcesType } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PriceData } from "../../services/clickhouse-schema";
 import {
   getColorForDataSource,
   getThemeCssVar,
@@ -31,10 +27,12 @@ import {
 
 type PythProDemoPriceChartImplProps = Pick<
   AppStateContextVal,
+  | "chartRef"
   | "dataSourcesInUse"
   | "dataSourceVisibility"
-  | "handleSelectPlaybackSpeed"
+  | "handleSetChartRef"
   | "metrics"
+  | "selectedReplayDate"
   | "playbackSpeed"
   | "selectedSource"
 >;
@@ -49,11 +47,12 @@ const metricsToPlot: (keyof Pick<PriceData, "ask" | "bid" | "price">)[] = [
 ];
 
 export function PythProDemoPriceChartImpl({
+  chartRef,
   dataSourcesInUse,
   dataSourceVisibility,
-  handleSelectPlaybackSpeed,
+  handleSetChartRef,
   metrics,
-  playbackSpeed,
+  selectedReplayDate,
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
   /** hooks */
@@ -61,20 +60,26 @@ export function PythProDemoPriceChartImpl({
 
   /** refs */
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const chartRef = useRef<IChartApi>(undefined);
   const seriesMapRef = useRef<Record<string, ISeriesApi<"Line">>>({});
+  // we keep a local pointer to the chartRef
+  // because data updates happen async and the chart may be trying to
+  // render a datapoint even though the chart instance was disposed.
+  // we do some checks to see if the chartRef available in appState
+  // matches our local one, and if it does, we continue.
+  const chartInstanceRef = useRef<typeof chartRef>(undefined);
+  const seriesDataRef = useRef<Record<string, LineData[]>>({});
 
-  /** callbacks */
   const createSeriesIfNotExist = useCallback(
     (dataSource: AllDataSourcesType, metricType: (typeof metricsToPlot)[0]) => {
-      if (!chartRef.current) return;
+      const chartInstance = chartInstanceRef.current;
+      if (!chartInstance || chartInstance !== chartRef) return;
 
       try {
         const seriesKey = `${dataSource}_${metricType}`;
 
         let series = seriesMapRef.current[seriesKey];
         if (!series) {
-          series = chartRef.current.addSeries(LineSeries, {
+          series = chartInstance.addSeries(LineSeries, {
             pointMarkersVisible: true,
             priceScaleId: "right",
             title:
@@ -82,6 +87,7 @@ export function PythProDemoPriceChartImpl({
           });
 
           seriesMapRef.current[seriesKey] = series;
+          seriesDataRef.current[seriesKey] = [];
         }
 
         const visible = dataSourceVisibility[dataSource];
@@ -106,16 +112,7 @@ export function PythProDemoPriceChartImpl({
         return;
       }
     },
-    [dataSourceVisibility],
-  );
-
-  const createSelectPlaybackSpeed = useCallback(
-    (speed: typeof playbackSpeed) => () => {
-      if (speed === playbackSpeed) return;
-
-      handleSelectPlaybackSpeed(speed);
-    },
-    [handleSelectPlaybackSpeed, playbackSpeed],
+    [chartRef, dataSourceVisibility],
   );
 
   /** effects */
@@ -167,17 +164,24 @@ export function PythProDemoPriceChartImpl({
       },
     });
 
-    chartRef.current = chart;
+    chartInstanceRef.current = chart;
+    handleSetChartRef(chart);
 
     return () => {
+      chartInstanceRef.current = undefined;
       chart.remove();
-      chartRef.current = undefined;
+      handleSetChartRef(undefined);
       seriesMapRef.current = {};
+      seriesDataRef.current = {};
     };
-  }, [theme]);
+  }, [handleSetChartRef, theme]);
 
   useEffect(() => {
-    if (!chartRef.current || !isAllowedSymbol(selectedSource)) {
+    if (
+      !chartRef ||
+      chartInstanceRef.current !== chartRef ||
+      !isAllowedSymbol(selectedSource)
+    ) {
       return;
     }
 
@@ -206,9 +210,34 @@ export function PythProDemoPriceChartImpl({
           const series = createSeriesIfNotExist(dataSource, metricType);
           if (!series) continue;
 
-          const [lastPoint] = series.data().slice(-1);
+          const seriesKey = `${dataSource}_${metricType}`;
+
+          // these checks ensure that, if a user selects a different datetime
+          // for visualization, that the chart has its data properly reset
+          // so the chart doesn't start drawing the new data points
+          // next to the existing data points, which can cause x-axis scale issues
+          // and is, generally, a really weird experience
+          let seriesData = seriesDataRef.current[seriesKey] ?? [];
+          const lastPoint = seriesData.at(-1);
+          if (
+            lastPoint &&
+            isNumber(lastPoint.time) &&
+            timestamp < lastPoint.time
+          ) {
+            seriesDataRef.current[seriesKey] = [];
+            seriesData = [];
+            try {
+              series.setData([]);
+            } catch {
+              continue;
+            }
+          }
+
+          const lastPointAfterReset = seriesData.at(-1);
           const latestMetricIsFresh =
-            !lastPoint || lastPoint.time !== timestamp;
+            !lastPointAfterReset ||
+            (isNumber(lastPointAfterReset.time) &&
+              lastPointAfterReset.time < timestamp);
 
           if (!latestMetricIsFresh) continue;
 
@@ -217,24 +246,21 @@ export function PythProDemoPriceChartImpl({
             value: metricVal,
           };
 
-          try {
-            series.update(newPoint);
-          } catch {
-            continue;
-          }
-
           // Trim old points
           const end = timestamp;
           const start = end - MAX_DATA_AGE;
 
-          const allData = series.data();
-          const trimmed = allData
+          const trimmed = [...seriesData, newPoint]
             .filter(
               (d) =>
                 (d.time as UTCTimestamp) >= start &&
                 (d.time as UTCTimestamp) <= end,
             )
             .slice(-MAX_DATA_POINTS);
+
+          seriesDataRef.current[seriesKey] = trimmed;
+
+          if (chartInstanceRef.current !== chartRef) return;
 
           try {
             series.setData(trimmed);
@@ -247,6 +273,7 @@ export function PythProDemoPriceChartImpl({
       /* no-op, lightweight-charts may have been destroyed midway through a write to it */
     }
   }, [
+    chartRef,
     createSeriesIfNotExist,
     dataSourceVisibility,
     dataSourcesInUse,
@@ -258,63 +285,10 @@ export function PythProDemoPriceChartImpl({
 
   return (
     <div className={classes.root}>
-      <div className={classes.buttons}>
-        {isReplaySymbol(selectedSource) && (
-          <>
-            <Button
-              onClick={createSelectPlaybackSpeed(1)}
-              size="xs"
-              variant={playbackSpeed === 1 ? "success" : "outline"}
-            >
-              1x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(4)}
-              size="xs"
-              variant={playbackSpeed === 4 ? "success" : "outline"}
-            >
-              4x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(8)}
-              size="xs"
-              variant={playbackSpeed === 8 ? "success" : "outline"}
-            >
-              8x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(16)}
-              size="xs"
-              variant={playbackSpeed === 16 ? "success" : "outline"}
-            >
-              16x
-            </Button>
-            <Button
-              onClick={createSelectPlaybackSpeed(32)}
-              size="xs"
-              variant={playbackSpeed === 32 ? "success" : "outline"}
-            >
-              32x
-            </Button>
-            <div className={classes.verticalDivider} />
-          </>
-        )}
-        <Button
-          beforeIcon={<ArrowCounterClockwise />}
-          onClick={() => {
-            try {
-              chartRef.current?.timeScale().scrollToRealTime();
-            } catch {
-              /* no-op */
-            }
-          }}
-          size="xs"
-          variant="outline"
-        >
-          Reset chart position
-        </Button>
-      </div>
-      <div className={classes.chartContainer} ref={containerRef} />
+      {((isReplaySymbol(selectedSource) && selectedReplayDate) ||
+        !isReplaySymbol(selectedSource)) && (
+        <div className={classes.chartContainer} ref={containerRef} />
+      )}
     </div>
   );
 }
@@ -322,23 +296,38 @@ export function PythProDemoPriceChartImpl({
 export function PythProDemoPriceChart() {
   /** context */
   const {
+    chartRef,
     dataSourcesInUse,
     dataSourceVisibility,
-    handleSelectPlaybackSpeed,
+    handleSetChartRef,
+    isLoadingInitialReplayData,
     metrics,
     playbackSpeed,
+    selectedReplayDate,
     selectedSource,
   } = usePythProAppStateContext();
 
+  if (isReplaySymbol(selectedSource) && isLoadingInitialReplayData) {
+    const label = "Loading historical replay data...";
+    return (
+      <div className={classes.spinner}>
+        <div>{label}</div>
+        <Spinner isIndeterminate label={label} />
+      </div>
+    );
+  }
+
   return (
     <PythProDemoPriceChartImpl
+      chartRef={chartRef}
       dataSourcesInUse={dataSourcesInUse}
       dataSourceVisibility={dataSourceVisibility}
-      key={`${selectedSource ?? "no_symbol_selected"}-${dataSourcesInUse.join(", ")}`}
-      handleSelectPlaybackSpeed={handleSelectPlaybackSpeed}
+      key={`${selectedSource}-${dataSourcesInUse.join(", ")}-${selectedReplayDate}`}
+      handleSetChartRef={handleSetChartRef}
       metrics={metrics}
       playbackSpeed={playbackSpeed}
       selectedSource={selectedSource}
+      selectedReplayDate={selectedReplayDate}
     />
   );
 }

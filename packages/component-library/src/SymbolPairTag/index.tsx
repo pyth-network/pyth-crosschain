@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 "use client";
 
 import clsx from "clsx";
@@ -31,20 +32,22 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
       <div className={styles.icon}>{props.icon}</div>
     )}
     <div className={styles.nameAndDescription}>
-      <div className={styles.name}>
+      <div className={styles.name} data-symbolname>
         {props.isLoading ? (
           <Skeleton width={30} />
         ) : (
           <SymbolName displaySymbol={props.displaySymbol} />
         )}
       </div>
-      <div className={styles.description}>
-        {props.isLoading ? (
-          <Skeleton width={50} />
-        ) : (
-          props.description.split("/")[0]
-        )}
-      </div>
+      {(props.isLoading || props.description) && (
+        <div className={styles.description} data-symboldescription>
+          {props.isLoading ? (
+            <Skeleton width={50} />
+          ) : (
+            props.description.split("/")[0]
+          )}
+        </div>
+      )}
     </div>
   </div>
 );

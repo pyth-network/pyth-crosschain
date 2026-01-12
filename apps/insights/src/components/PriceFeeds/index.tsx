@@ -8,7 +8,6 @@ import { Button } from "@pythnetwork/component-library/Button";
 import type { Props as CardProps } from "@pythnetwork/component-library/Card";
 import { Card } from "@pythnetwork/component-library/Card";
 import { StatCard } from "@pythnetwork/component-library/StatCard";
-import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { TabList } from "@pythnetwork/component-library/TabList";
 import {
   TabPanel as UnstyledTabPanel,
@@ -26,6 +25,7 @@ import { priceFeeds as priceFeedsStaticConfig } from "../../static-data/price-fe
 import { activeChains } from "../../static-data/stats";
 import { Cards } from "../Cards";
 import { LivePrice } from "../LivePrices";
+import { PriceCard } from "../PriceCard";
 import {
   YesterdaysPricesProvider,
   PriceFeedChangePercent,
@@ -239,31 +239,26 @@ const FeaturedFeedsCard = <T extends ElementType>({
   <Card {...props}>
     <div className={styles.featuredFeedsCard}>
       {feeds.map((feed) => (
-        <Card
-          key={feed.product.price_account}
-          variant="tertiary"
+        <PriceCard
+          assetClass={feed.product.asset_type}
+          description={feed.product.description}
+          displaySymbol={feed.product.display_symbol}
           href={`/price-feeds/${encodeURIComponent(feed.symbol)}`}
+          key={feed.product.price_account}
         >
-          <div className={styles.feedCardContents}>
-            <SymbolPairTag
-              displaySymbol={feed.product.display_symbol}
-              description={feed.product.description}
-              icon={<PriceFeedIcon assetClass={feed.product.asset_type} />}
-            />
-            {showPrices && (
-              <div className={styles.prices}>
-                <LivePrice
-                  feedKey={feed.product.price_account}
-                  cluster={Cluster.Pythnet}
-                />
-                <PriceFeedChangePercent
-                  className={styles.changePercent}
-                  feedKey={feed.product.price_account}
-                />
-              </div>
-            )}
-          </div>
-        </Card>
+          {showPrices && (
+            <>
+              <LivePrice
+                feedKey={feed.product.price_account}
+                cluster={Cluster.Pythnet}
+              />
+              <PriceFeedChangePercent
+                className={styles.changePercent}
+                feedKey={feed.product.price_account}
+              />
+            </>
+          )}
+        </PriceCard>
       ))}
     </div>
   </Card>

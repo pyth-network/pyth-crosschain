@@ -36,20 +36,11 @@
     "jest": "catalog:"
   },
   "dependencies": {
+    "dayjs": "catalog:",
     "uuid": "catalog:"
   },
   "private": true,
   "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
-      }
-    },
     "./types": {
       "require": {
         "types": "./dist/cjs/types/index.d.ts",
@@ -68,6 +59,16 @@
       "import": {
         "types": "./dist/esm/util/create-uuid.d.ts",
         "default": "./dist/esm/util/create-uuid.mjs"
+      }
+    },
+    "./util/error-to-string": {
+      "require": {
+        "types": "./dist/cjs/util/error-to-string.d.ts",
+        "default": "./dist/cjs/util/error-to-string.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/util/error-to-string.d.ts",
+        "default": "./dist/esm/util/error-to-string.mjs"
       }
     },
     "./util": {

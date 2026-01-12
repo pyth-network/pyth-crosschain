@@ -31,8 +31,8 @@ catalogs:
       specifier: ^3.0.10
       version: 3.0.10
     '@clickhouse/client':
-      specifier: ^1.11.0
-      version: 1.11.0
+      specifier: ^1.15.0
+      version: 1.15.0
     '@coral-xyz/anchor':
       specifier: ^0.30.1
       version: 0.30.1
@@ -48,9 +48,6 @@ catalogs:
     '@cprussin/tsconfig':
       specifier: ^3.1.2
       version: 3.1.2
-    '@duckdb/node-api':
-      specifier: ^1.4.3-r.1
-      version: 1.4.3-r.1
     '@floating-ui/react':
       specifier: ^0.27.6
       version: 0.27.6
@@ -941,10 +938,7 @@ importers:
     dependencies:
       '@clickhouse/client':
         specifier: 'catalog:'
-        version: 1.11.0
-      '@duckdb/node-api':
-        specifier: 'catalog:'
-        version: 1.4.3-r.1
+        version: 1.15.0
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -2136,12 +2130,18 @@ importers:
       '@axe-core/react':
         specifier: 'catalog:'
         version: 4.10.1
+      '@internationalized/date':
+        specifier: ^3.10.1
+        version: 3.10.1
       '@next/third-parties':
         specifier: 'catalog:'
         version: 15.3.2(next@15.5.9(@babel/core@7.27.1)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
       '@pythnetwork/react-hooks':
         specifier: 'workspace:'
         version: link:../react-hooks
+      '@pythnetwork/shared-lib':
+        specifier: 'workspace:'
+        version: link:../shared-lib
       '@react-hookz/web':
         specifier: 'catalog:'
         version: 25.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -2157,6 +2157,9 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
+      dayjs:
+        specifier: 'catalog:'
+        version: 1.11.19
       modern-normalize:
         specifier: 'catalog:'
         version: 3.0.1
@@ -2458,6 +2461,9 @@ importers:
 
   packages/shared-lib:
     dependencies:
+      dayjs:
+        specifier: 'catalog:'
+        version: 1.11.19
       uuid:
         specifier: 'catalog:'
         version: 13.0.0
@@ -4575,11 +4581,11 @@ packages:
   '@classic-terra/terra.proto@1.1.0':
     resolution: {integrity: sha512-bYhQG5LUaGF0KPRY9hYT/HEcd1QExZPQd6zLV/rQkCe/eDxfwFRLzZHpaaAdfWoAAZjsRWqJbUCqCg7gXBbJpw==}
 
-  '@clickhouse/client-common@1.11.0':
-    resolution: {integrity: sha512-O0xbwv7HiMXayokrf5dYIBpjBnYekcOXWz60T1cXLmiZ8vgrfNRCiOpybJkrMXKnw9D0mWCgPUu/rgMY7U1f4g==}
+  '@clickhouse/client-common@1.15.0':
+    resolution: {integrity: sha512-/1BXaNNsBzH2w5ALWiH6M9zS+cJwlM9uMnMj9e8ETwvDjJzO+nIYlyxzp8Prc+9pEDZ5iAilZ4F8c0YVCzzNaA==}
 
-  '@clickhouse/client@1.11.0':
-    resolution: {integrity: sha512-VYTQfR0y/BtrIDEjuSce1zv85OvHak5sUhZVyNYJzbAgWHy3jFf8Os7FdUSeqyKav0xGGy+2X+dRanTFjI5Oug==}
+  '@clickhouse/client@1.15.0':
+    resolution: {integrity: sha512-QmW+p4c/r0oa3X6Un6lcBs4GZtJEQUdvf//x8GeqM5ru6m4oIUg3WwvermP3HE31kpEGoFOQfKbMN5ooR5gvNw==}
     engines: {node: '>=16'}
 
   '@coinbase/wallet-sdk@3.9.3':
@@ -4836,37 +4842,6 @@ packages:
 
   '@dual-bundle/import-meta-resolve@4.1.0':
     resolution: {integrity: sha512-+nxncfwHM5SgAtrVzgpzJOI1ol0PkumhVo469KCf9lUi21IGcY90G98VuHm9VRrUypmAzawAHO9bs6hqeADaVg==}
-
-  '@duckdb/node-api@1.4.3-r.1':
-    resolution: {integrity: sha512-/L6nywAWDnMptERJiO3npCu8XqWYGSo2prw6RvxERtjT9J95cnUP+WM6uNAm+Nw2uYDm8PvPO2kASC3Moh2bBA==}
-
-  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.1':
-    resolution: {integrity: sha512-2dShpy8HmdLwfRLPI+KZaJXN+wA68gOsuAh//Q1C/X0tQbd97WxHo8u7lZqMhaJMvGaInVAxR+KoFSfG2M5jwA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@duckdb/node-bindings-darwin-x64@1.4.3-r.1':
-    resolution: {integrity: sha512-a6DUVpDolavw1ojq/IBKoEViGzL1oMIP5xlPrqEW+znyDxp85/UfZzCXnH+BYTKgLWBwCUcqlneMtCh4osZ9lQ==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@duckdb/node-bindings-linux-arm64@1.4.3-r.1':
-    resolution: {integrity: sha512-WQ/khu+KCEH34JxDAfa8IDCw0m5NUefpqT4izbH372OAAiY/858xrtcB8FYW0p9Yeb6P8dglHQ058FoLBQ7MhA==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@duckdb/node-bindings-linux-x64@1.4.3-r.1':
-    resolution: {integrity: sha512-GWZPi+eAsv2/6TQch+b6AgnPiVnXjhmT7l9gbZMZ17fDSIkKXSbWa9Y3dDJ8amDu/IJpwBMFVovfLHrELbMmlA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@duckdb/node-bindings-win32-x64@1.4.3-r.1':
-    resolution: {integrity: sha512-7II6t8/0opHz6NFosrn5VSv3uMadtOhVRfBK+HzEvxTSkGEpu6DzQ91mPaiehuFctdB2upPza4dP3rCLYDdHeQ==}
-    cpu: [x64]
-    os: [win32]
-
-  '@duckdb/node-bindings@1.4.3-r.1':
-    resolution: {integrity: sha512-I7rkYeNYDs9oV9AU076m9msrWb4wdVXapX1y2em8YkGItn4ehyp8q0KEJ2QZy45+PLqmkHt9b/QHlDo8xKnLZQ==}
 
   '@ecies/ciphers@0.2.3':
     resolution: {integrity: sha512-tapn6XhOueMwht3E2UzY0ZZjYokdaw9XtL9kEyjhQ/Fb9vL9xTFbOaI+fV0AWvTpYu4BNloC6getKW6NtSg4mA==}
@@ -6057,6 +6032,9 @@ packages:
 
   '@injectivelabs/utils@1.14.48':
     resolution: {integrity: sha512-ypqSVpEWrBKp2GB7UBbymhwShPT5x94NsvA7XZl7EW/5uQ9qyFevrd7vsOo81yiHsYscup3F7aTDQ7/C0+W0aQ==}
+
+  '@internationalized/date@3.10.1':
+    resolution: {integrity: sha512-oJrXtQiAXLvT9clCf1K4kxp3eKsQhIaZqxEyowkBcsvZDdZkbWrVmnGknxs5flTD0VGsxrxKgBCZty1EzoiMzA==}
 
   '@internationalized/date@3.8.2':
     resolution: {integrity: sha512-/wENk7CbvLbkUvX1tu0mwq49CVkkWpkXubGel6birjRPyo6uQ4nQpnq5xZu823zRCwwn82zgHrvgF1vZyvmVgA==}
@@ -24780,11 +24758,11 @@ snapshots:
       long: 4.0.0
       protobufjs: 6.11.4
 
-  '@clickhouse/client-common@1.11.0': {}
+  '@clickhouse/client-common@1.15.0': {}
 
-  '@clickhouse/client@1.11.0':
+  '@clickhouse/client@1.15.0':
     dependencies:
-      '@clickhouse/client-common': 1.11.0
+      '@clickhouse/client-common': 1.15.0
 
   '@coinbase/wallet-sdk@3.9.3':
     dependencies:
@@ -25808,33 +25786,6 @@ snapshots:
       postcss-selector-parser: 7.1.0
 
   '@dual-bundle/import-meta-resolve@4.1.0': {}
-
-  '@duckdb/node-api@1.4.3-r.1':
-    dependencies:
-      '@duckdb/node-bindings': 1.4.3-r.1
-
-  '@duckdb/node-bindings-darwin-arm64@1.4.3-r.1':
-    optional: true
-
-  '@duckdb/node-bindings-darwin-x64@1.4.3-r.1':
-    optional: true
-
-  '@duckdb/node-bindings-linux-arm64@1.4.3-r.1':
-    optional: true
-
-  '@duckdb/node-bindings-linux-x64@1.4.3-r.1':
-    optional: true
-
-  '@duckdb/node-bindings-win32-x64@1.4.3-r.1':
-    optional: true
-
-  '@duckdb/node-bindings@1.4.3-r.1':
-    optionalDependencies:
-      '@duckdb/node-bindings-darwin-arm64': 1.4.3-r.1
-      '@duckdb/node-bindings-darwin-x64': 1.4.3-r.1
-      '@duckdb/node-bindings-linux-arm64': 1.4.3-r.1
-      '@duckdb/node-bindings-linux-x64': 1.4.3-r.1
-      '@duckdb/node-bindings-win32-x64': 1.4.3-r.1
 
   '@ecies/ciphers@0.2.3(@noble/ciphers@1.3.0)':
     dependencies:
@@ -28056,6 +28007,10 @@ snapshots:
       http-status-codes: 2.3.0
     transitivePeerDependencies:
       - debug
+
+  '@internationalized/date@3.10.1':
+    dependencies:
+      '@swc/helpers': 0.5.15
 
   '@internationalized/date@3.8.2':
     dependencies:
@@ -30975,7 +30930,7 @@ snapshots:
 
   '@react-aria/calendar@3.9.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@react-aria/i18n': 3.12.11(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@react-aria/interactions': 3.25.4(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@react-aria/live-announcer': 3.4.4
@@ -31056,7 +31011,7 @@ snapshots:
 
   '@react-aria/datepicker@3.15.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@internationalized/number': 3.6.4
       '@internationalized/string': 3.2.7
       '@react-aria/focus': 3.21.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -31179,7 +31134,7 @@ snapshots:
 
   '@react-aria/i18n@3.12.11(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@internationalized/message': 3.1.8
       '@internationalized/number': 3.6.4
       '@internationalized/string': 3.2.7
@@ -31744,7 +31699,7 @@ snapshots:
 
   '@react-stately/calendar@3.8.3(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@react-stately/utils': 3.10.8(react@19.2.1)
       '@react-types/calendar': 3.7.3(react@19.2.1)
       '@react-types/shared': 3.31.0(react@19.2.1)
@@ -31800,7 +31755,7 @@ snapshots:
 
   '@react-stately/datepicker@3.15.0(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@internationalized/string': 3.2.7
       '@react-stately/form': 3.2.0(react@19.2.1)
       '@react-stately/overlays': 3.6.18(react@19.2.1)
@@ -32018,7 +31973,7 @@ snapshots:
 
   '@react-types/calendar@3.7.3(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@react-types/shared': 3.31.0(react@19.2.1)
       react: 19.2.1
 
@@ -32040,7 +31995,7 @@ snapshots:
 
   '@react-types/datepicker@3.13.0(react@19.2.1)':
     dependencies:
-      '@internationalized/date': 3.8.2
+      '@internationalized/date': 3.10.1
       '@react-types/calendar': 3.7.3(react@19.2.1)
       '@react-types/overlays': 3.9.0(react@19.2.1)
       '@react-types/shared': 3.31.0(react@19.2.1)

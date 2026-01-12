@@ -55,10 +55,6 @@ const SYMBOL_TO_PRICE_FEED_MAP = new Map<Nullish<AllAllowedSymbols>, string>([
   ["SPY", "19e09bb805456ada3979a7d1cbb4b6d63babc3a0f8e8a9509f68afa5c4c11cd5"],
   ["HOOD", "306736a4035846ba15a3496eed57225b64cc19230a50d14f3ed20fd7219b7849"],
   ["AMZN", "b5d0e0fa58a1f8b81498ae670ce93c872d14434b72c364885d4fa1b257cbb07a"],
-  [
-    "ESZ2025",
-    "2f007d2339327f9be181b61354ca0ec579d8c4ed37d575bb66921109ebffc2c9",
-  ],
   ["no_symbol_selected", ""],
 ]);
 
@@ -103,7 +99,7 @@ export function usePythCoreWebSocket(): UseDataProviderSocketHookReturnType {
 
           addDataPoint("pyth", symbol, {
             price: price,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date(),
           });
         }
       }

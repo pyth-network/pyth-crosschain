@@ -183,7 +183,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
           if (!isNullOrUndefined(midPrice)) {
             addDataPoint("coinbase", symbol, {
               price: midPrice,
-              timestamp: new Date().toISOString(),
+              timestamp: new Date(),
             });
           }
         }
@@ -225,7 +225,7 @@ export function useCoinbaseWebSocket(): UseDataProviderSocketHookReturnType {
             if (!isNullOrUndefined(midPrice)) {
               addDataPoint("coinbase", symbol, {
                 price: midPrice,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date(),
               });
             }
           }

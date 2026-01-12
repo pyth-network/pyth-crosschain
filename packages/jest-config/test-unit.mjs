@@ -12,7 +12,7 @@ const jestBinFilePath = path.join(
 // to benefit from ESM imports and use
 // our shared configs (especially for React component tests)
 execSync(
-  `NODE_OPTIONS="--experimental-vm-modules" '${jestBinFilePath}' ${process.argv.slice(2).join(" ")}`.trim(),
+  `NODE_OPTIONS="--experimental-vm-modules" '${jestBinFilePath}' --passWithNoTests ${process.argv.slice(2).join(" ")}`.trim(),
   {
     cwd: process.cwd(),
     shell: true,

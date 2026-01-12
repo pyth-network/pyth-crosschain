@@ -1,30 +1,32 @@
 @use "@pythnetwork/component-library/theme";
 
-.buttons {
-  align-items: center;
-  display: flex;
-  flex-grow: 0;
-  flex-shrink: 0;
-  gap: theme.spacing(2);
-  justify-content: flex-end;
-}
-
 .chartContainer {
   flex-grow: 1;
   flex-shrink: 0;
 }
 
-.verticalDivider {
-  background-color: theme.color("border");
-  height: theme.spacing(6);
-  width: 1px;
+.spinner {
+  align-items: center;
+  color: theme.color("muted");
+  display: flex;
+  flex-flow: column;
+  gap: theme.spacing(4);
+  margin-top: theme.spacing(6);
+
+  & svg {
+    height: theme.spacing(10);
+    width: theme.spacing(10);
+  }
 }
 
 .root {
+  background: theme.color("background", "primary");
+  border-radius: theme.border-radius("2xl");
   display: flex;
   flex-flow: column;
   gap: theme.spacing(2);
   height: theme.spacing(110);
+  margin-top: theme.spacing(2);
   position: relative;
   width: 100%;
 }
