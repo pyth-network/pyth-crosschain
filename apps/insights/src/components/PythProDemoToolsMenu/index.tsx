@@ -48,7 +48,9 @@ function RightHandSideTools() {
           {isReplaySymbol(selectedSource) && (
             <div>
               <DatePicker
-                onChange={handleSetSelectedReplayDate}
+                onChange={(val) => {
+                  void handleSetSelectedReplayDate(val);
+                }}
                 placeholder={datepickerPlaceholder}
                 type="datetime"
                 value={selectedReplayDate}
@@ -56,19 +58,23 @@ function RightHandSideTools() {
             </div>
           )}
           <div className={classes.flexInlineOnMobile}>
-            <Select
-              label={undefined}
-              onSelectionChange={handleSelectPlaybackSpeed}
-              options={[...ALLOWED_PLAYBACK_SPEEDS].map((speed) => ({
-                id: speed,
-              }))}
-              placeholder="Choose a playback speed"
-              selectedKey={playbackSpeed}
-              show={({ id: speed }) => `${speed.toString()}x`}
-              size="sm"
-              textValue={({ id: speed }) => `Speed: ${speed.toString()}x`}
-              variant={variant}
-            />
+            {isReplaySymbol(selectedSource) && (
+              <Select
+                label={undefined}
+                onSelectionChange={(val) => {
+                  void handleSelectPlaybackSpeed(val);
+                }}
+                options={[...ALLOWED_PLAYBACK_SPEEDS].map((speed) => ({
+                  id: speed,
+                }))}
+                placeholder="Choose a playback speed"
+                selectedKey={playbackSpeed}
+                show={({ id: speed }) => `${speed.toString()}x`}
+                size="sm"
+                textValue={({ id: speed }) => `Speed: ${speed.toString()}x`}
+                variant={variant}
+              />
+            )}
             <Button
               aria-label="Reset chart position"
               onClick={() => {

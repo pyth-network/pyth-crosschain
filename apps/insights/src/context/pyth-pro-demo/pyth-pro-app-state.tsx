@@ -2,7 +2,6 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNumber } from "@pythnetwork/shared-lib/util";
 import type { IChartApi } from "lightweight-charts";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import {
   createContext,
@@ -14,6 +13,7 @@ import {
   useState,
 } from "react";
 
+import { useDemoQueryParams } from "../../hooks/pyth-pro-demo";
 import type {
   AllAllowedSymbols,
   AllDataSourcesType,
@@ -23,7 +23,6 @@ import type {
   PlaybackSpeed,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
-  ALL_ALLOWED_SYMBOLS,
   ALL_DATA_SOURCES,
   DATA_SOURCES_CRYPTO,
   DATA_SOURCES_EQUITY,
@@ -39,10 +38,6 @@ import {
   isAllowedSymbol,
   isReplaySymbol,
 } from "../../util/pyth-pro-demo";
-
-const QUERY_PARAM_START_AT = "startAt";
-const QUERY_PARAM_PLAYBACK_SPEED = "playbackSpeed";
-const QUERY_PARAM_SELECTED_SOURCE = "selectedSource";
 
 export type AppStateContextVal = CurrentPricesStoreState & {
   addDataPoint: (
@@ -61,11 +56,11 @@ export type AppStateContextVal = CurrentPricesStoreState & {
 
   handleSetIsLoadingInitialReplayData: (isLoading: boolean) => void;
 
-  handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => void;
+  handleSelectPlaybackSpeed: (speed: PlaybackSpeed) => Promise<void>;
 
-  handleSelectSource: (source: AllAllowedSymbols) => void;
+  handleSelectSource: (source: AllAllowedSymbols) => Promise<void>;
 
-  handleSetSelectedReplayDate: (dateStr: string) => void;
+  handleSetSelectedReplayDate: (dateStr: string) => Promise<void>;
 
   handleToggleDataSourceVisibility: (datasource: AllDataSourcesType) => void;
 
@@ -92,47 +87,14 @@ const initialState: CurrentPricesStoreState = {
   ),
 };
 
-function updateQueryString({
-  existingQuery,
-  pathname,
-  queryKey,
-  router,
-  val,
-}: {
-  existingQuery: string;
-  pathname: string;
-  queryKey: string;
-  router: ReturnType<typeof useRouter>;
-  val: string;
-}) {
-  const existing = new URLSearchParams(existingQuery);
-
-  if (val) {
-    existing.set(queryKey, val);
-  } else {
-    existing.delete(queryKey);
-  }
-  const updatedQuery = existing.toString();
-  router.push(`${pathname}?${updatedQuery}`);
-
-  return updatedQuery;
-}
-
 export function PythProAppStateProvider({ children }: PropsWithChildren) {
   /** hooks */
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  /** local variables */
-  const selectedReplayDate = searchParams.get(QUERY_PARAM_START_AT) ?? "";
-  const playbackSpeed = Number(
-    searchParams.get(QUERY_PARAM_PLAYBACK_SPEED) ?? "1",
-  );
-  const validatedSelectedSource = ALL_ALLOWED_SYMBOLS.safeParse(
-    searchParams.get(QUERY_PARAM_SELECTED_SOURCE),
-  );
-  const selectedSource = validatedSelectedSource.data ?? "no_symbol_selected";
+  const {
+    playbackSpeed,
+    selectedSource,
+    startAt: selectedReplayDate,
+    updateQuery,
+  } = useDemoQueryParams();
 
   /** state */
   const [appState, setAppState] =
@@ -166,28 +128,10 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   }, []);
 
   const setPlaybackSpeed = useCallback(
-    (speed: PlaybackSpeed) => {
-      updateQueryString({
-        existingQuery: searchParams.toString(),
-        pathname,
-        queryKey: QUERY_PARAM_PLAYBACK_SPEED,
-        router,
-        val: speed.toString(),
-      });
+    async (speed: PlaybackSpeed) => {
+      await updateQuery("playbackSpeed", speed);
     },
-    [pathname, router, searchParams],
-  );
-  const setSelectedReplayDate = useCallback(
-    (dateStr: string) => {
-      updateQueryString({
-        existingQuery: searchParams.toString(),
-        pathname,
-        queryKey: QUERY_PARAM_START_AT,
-        router,
-        val: dateStr,
-      });
-    },
-    [pathname, router, searchParams],
+    [updateQuery],
   );
 
   const addDataPoint = useCallback<AppStateContextVal["addDataPoint"]>(
@@ -235,9 +179,9 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
   );
 
   const handleSelectSource = useCallback(
-    (source: AllAllowedSymbols) => {
+    async (source: AllAllowedSymbols) => {
       // reset playback speed to 1x
-      setPlaybackSpeed(1);
+      await setPlaybackSpeed(1);
 
       // delay a few moments to let the http datastream events come down
       // so we don't accidentally kill the new http requests
@@ -247,49 +191,41 @@ export function PythProAppStateProvider({ children }: PropsWithChildren) {
         // data to be munged with the new data
         ...initialState,
       });
-      let query = updateQueryString({
-        existingQuery: searchParams.toString(),
-        pathname,
-        queryKey: QUERY_PARAM_SELECTED_SOURCE,
-        router,
-        val: isAllowedSymbol(source) ? source : "",
-      });
-      if (!isReplaySymbol(source)) {
-        query = updateQueryString({
-          existingQuery: query,
-          pathname,
-          queryKey: QUERY_PARAM_PLAYBACK_SPEED,
-          router,
-          val: "",
-        });
-        updateQueryString({
-          existingQuery: query,
-          pathname,
-          queryKey: QUERY_PARAM_START_AT,
-          router,
-          val: "",
-        });
-      }
+
+      const selectedSourceIsReplay = isReplaySymbol(source);
+
+      await Promise.all([
+        updateQuery(
+          "selectedSource",
+          isAllowedSymbol(source) ? source : "no_symbol_selected",
+        ),
+        selectedSourceIsReplay
+          ? updateQuery("playbackSpeed", undefined)
+          : Promise.resolve(),
+        selectedSourceIsReplay
+          ? updateQuery("startAt", undefined)
+          : Promise.resolve(),
+      ]);
     },
-    [pathname, router, searchParams, setPlaybackSpeed],
+    [setPlaybackSpeed, updateQuery],
   );
 
   const handleSelectPlaybackSpeed = useCallback<
     AppStateContextVal["handleSelectPlaybackSpeed"]
   >(
-    (speed) => {
-      setPlaybackSpeed(speed);
+    async (speed) => {
+      await updateQuery("playbackSpeed", speed);
     },
-    [setPlaybackSpeed],
+    [updateQuery],
   );
 
   const handleSetSelectedReplayDate = useCallback<
     AppStateContextVal["handleSetSelectedReplayDate"]
   >(
-    (dateStr) => {
-      setSelectedReplayDate(dateStr);
+    async (dateStr) => {
+      await updateQuery("startAt", dateStr);
     },
-    [setSelectedReplayDate],
+    [updateQuery],
   );
 
   const handleSetIsLoadingInitialReplayData = useCallback<

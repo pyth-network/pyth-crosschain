@@ -2,6 +2,14 @@ import { z } from "zod";
 
 import { GetPythHistoricalPricesSchema } from "../../services/clickhouse-schema";
 
+export const ValidDateString = z.string().datetime({ offset: true });
+
+export const ValidDateSchema = z.union([
+  z.date(),
+  ValidDateString.transform((val) => new Date(val)),
+]);
+export type ValidDateType = z.infer<typeof ValidDateSchema>;
+
 const BINANCE = "binance";
 const BYBIT = "bybit";
 const COINBASE = "coinbase";
@@ -111,7 +119,7 @@ export const CurrentPriceMetricsSchema = z.object({
   change: z.number().nullable().optional(),
   changePercent: z.number().nullable().optional(),
   price: z.number().nullable().optional(),
-  timestamp: z.string().datetime(),
+  timestamp: ValidDateString,
 });
 export type CurrentPriceMetrics = z.infer<typeof CurrentPriceMetricsSchema>;
 
@@ -169,19 +177,13 @@ export type CurrentPricesStoreState = z.infer<
   typeof CurrentPricesStoreStateSchema
 >;
 
-export const ValidDateSchema = z.date();
-export type ValidDateType = z.infer<typeof ValidDateSchema>;
-
 export const GetPythFeedsDemoDataRequestSchema = z.strictObject({
   params: z.object({
     symbol: ALLOWED_EQUITY_SYMBOLS,
   }),
   searchParams: z.object({
     datasources: z.array(DATA_SOURCES_REPLAY),
-    startAt: z
-      .string()
-      .datetime({ offset: true })
-      .transform((val) => new Date(val)),
+    startAt: ValidDateSchema,
   }),
 });
 export type GetPythFeedsDemoDataRequestType = z.infer<
