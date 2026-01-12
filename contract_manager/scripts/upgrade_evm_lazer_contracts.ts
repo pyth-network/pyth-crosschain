@@ -14,6 +14,7 @@ import {
   getSelectedChains,
   makeCacheFunction,
 } from "./common";
+import { EvmLazerContract } from "../src/core/contracts";
 import { loadHotWallet } from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 import upgradeVaults from "../src/store/vaults/UpgradeVaults.json";
@@ -140,7 +141,10 @@ async function main() {
   // identify deployment problems (e.g., not enough gas) on every chain where they occur.
   const payloads: Buffer[] = [];
   const failures: string[] = [];
-  for (const contract of Object.values(DefaultStore.lazer_contracts)) {
+  const evmLazerContracts = Object.values(DefaultStore.lazer_contracts).filter(
+    (c) => c instanceof EvmLazerContract,
+  );
+  for (const contract of evmLazerContracts) {
     if (
       selectedChains.some((chain) => chain.getId() === contract.chain.getId())
     ) {

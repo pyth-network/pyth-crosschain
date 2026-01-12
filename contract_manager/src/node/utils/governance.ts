@@ -35,7 +35,7 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import SquadsMeshClass from "@sqds/mesh";
-import * as bs58 from "bs58";
+import bs58 from "bs58";
 
 import type { KeyValueConfig } from "../../core/base.js";
 import { Storable } from "../../core/base.js";

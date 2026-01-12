@@ -17,7 +17,7 @@ import type { DataSource } from "@pythnetwork/xc-admin-common";
 import type { PrivateKey, TxResult } from "../base";
 import { Chain, SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
-import { PriceFeedContract } from "../base";
+import { PriceFeedContract, Storable } from "../base";
 
 type ObjectId = string;
 
@@ -563,5 +563,48 @@ export class SuiWormholeContract extends WormholeContract {
         showEvents: true,
       },
     });
+  }
+}
+
+export class SuiLazerContract extends Storable {
+  static type = "SuiLazerContract";
+
+  constructor(
+    public readonly chain: SuiChain,
+    public readonly stateId: string,
+    public readonly wormholeStateId: string,
+  ) {
+    super();
+  }
+
+  getId(): string {
+    return `${this.chain.getId()}_${this.stateId}`;
+  }
+
+  getType(): string {
+    return SuiLazerContract.type;
+  }
+
+  toJson() {
+    return {
+      chain: this.chain.getId(),
+      stateId: this.stateId,
+      wormholeStateId: this.wormholeStateId,
+      type: SuiLazerContract.type,
+    };
+  }
+
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; stateId: string; wormholeStateId: string },
+  ): SuiLazerContract {
+    if (parsed.type !== SuiLazerContract.type) {
+      throw new Error("Invalid type");
+    }
+    return new SuiLazerContract(
+      chain as SuiChain,
+      parsed.stateId,
+      parsed.wormholeStateId,
+    );
   }
 }
