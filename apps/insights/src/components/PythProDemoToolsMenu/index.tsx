@@ -57,7 +57,10 @@ function RightHandSideTools() {
               />
             </div>
           )}
-          <div className={classes.flexInlineOnMobile}>
+          <div
+            className={classes.flexInlineOnMobile}
+            data-has-datepicker={isReplaySymbol(selectedSource)}
+          >
             {isReplaySymbol(selectedSource) && (
               <Select
                 label={undefined}

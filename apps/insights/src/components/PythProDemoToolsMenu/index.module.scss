@@ -3,17 +3,21 @@
 .flexInlineOnMobile {
   display: grid;
   gap: theme.spacing(2);
-  grid-template-columns: 3fr auto auto;
+  grid-template-columns: auto auto;
+
+  &[data-has-datepicker="true"] {
+    grid-template-columns: 3fr auto auto;
+  }
 
   @include theme.breakpoint("md") {
-    display: flex;
+    display: flex !important;
     grid-template-columns: unset;
   }
 }
 
 .mobileMenuButton {
   @include theme.breakpoint("md") {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -32,7 +36,7 @@
   display: none;
 
   @include theme.breakpoint("md") {
-    display: flex;
+    display: flex !important;
     gap: theme.spacing(2);
   }
 }
