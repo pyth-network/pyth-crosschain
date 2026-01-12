@@ -56,8 +56,8 @@ pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" deploy \
 `deploy` command updates contents of [`meta.move`] using [`meta.move.mustache`]
 to reflect its parameters.
 
-**DO NOT DEPLOY without correct [`meta.move`], otherwise we get locked out of
-the package after the upgrade!**
+**DO NOT DEPLOY OR UPGRADE without correct [`meta.move`], otherwise we get
+locked out of the package after the upgrade!**
 
 ### Test contract management
 
