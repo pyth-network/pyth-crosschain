@@ -196,5 +196,6 @@ export const ALLOWED_PLAYBACK_SPEEDS = new Set<PlaybackSpeed>([
 ]);
 
 export const PlaybackSpeedSchema = z
-  .number()
+  .union([z.string(), z.number()])
+  .transform(Number)
   .refine((val) => ALLOWED_PLAYBACK_SPEEDS.has(val as PlaybackSpeed));
