@@ -1,145 +1,148 @@
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import { Connection, Keypair, PublicKey } from '@solana/web3.js'
-import SquadsMesh from '@sqds/mesh'
-import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+/* eslint-disable no-console */
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   PRICE_FEED_MULTISIG,
   UPGRADE_MULTISIG,
   getMultisigCluster,
   getProposals,
-} from '@pythnetwork/xc-admin-common'
-import { ClusterContext } from '../contexts/ClusterContext'
-import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
+} from "@pythnetwork/xc-admin-common";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import SquadsMesh from "@sqds/mesh";
+import type { MultisigAccount, TransactionAccount } from "@sqds/mesh/lib/types";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-export interface MultisigHookData {
-  isLoading: boolean
-  walletSquads: SquadsMesh | undefined
-  readOnlySquads: SquadsMesh
-  upgradeMultisigAccount: MultisigAccount | undefined
-  priceFeedMultisigAccount: MultisigAccount | undefined
-  upgradeMultisigProposals: TransactionAccount[]
-  priceFeedMultisigProposals: TransactionAccount[]
-  connection: Connection
-  refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
-}
+import { ClusterContext } from "../contexts/ClusterContext";
+import { deriveWsUrl, pythClusterApiUrls } from "../utils/pythClusterApiUrl";
+
+export type MultisigHookData = {
+  isLoading: boolean;
+  walletSquads: SquadsMesh | undefined;
+  readOnlySquads: SquadsMesh;
+  upgradeMultisigAccount: MultisigAccount | undefined;
+  priceFeedMultisigAccount: MultisigAccount | undefined;
+  upgradeMultisigProposals: TransactionAccount[];
+  priceFeedMultisigProposals: TransactionAccount[];
+  connection: Connection;
+  refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void };
+};
 
 const getSortedProposals = async (
   readOnlySquads: SquadsMesh,
-  vault: PublicKey
+  vault: PublicKey,
 ): Promise<TransactionAccount[]> => {
-  const proposals = await getProposals(readOnlySquads, vault)
-  return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex)
-}
+  const proposals = await getProposals(readOnlySquads, vault);
+  return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex);
+};
 
 export const useMultisig = (): MultisigHookData => {
-  const wallet = useAnchorWallet()
-  const { cluster } = useContext(ClusterContext)
-  const [isLoading, setIsLoading] = useState(true)
+  const wallet = useAnchorWallet();
+  const { cluster } = useContext(ClusterContext);
+  const [isLoading, setIsLoading] = useState(true);
   const [upgradeMultisigAccount, setUpgradeMultisigAccount] =
-    useState<MultisigAccount>()
+    useState<MultisigAccount>();
   const [priceFeedMultisigAccount, setPriceFeedMultisigAccount] =
-    useState<MultisigAccount>()
+    useState<MultisigAccount>();
   const [upgradeMultisigProposals, setUpgradeMultisigProposals] = useState<
     TransactionAccount[]
-  >([])
+  >([]);
   const [priceFeedMultisigProposals, setPriceFeedMultisigProposals] = useState<
     TransactionAccount[]
-  >([])
+  >([]);
 
-  const [urlsIndex, setUrlsIndex] = useState(0)
+  const [urlsIndex, setUrlsIndex] = useState(0);
 
   useEffect(() => {
-    setUrlsIndex(0)
-  }, [cluster])
+    setUrlsIndex(0);
+  }, [cluster]);
 
-  const multisigCluster = useMemo(() => getMultisigCluster(cluster), [cluster])
+  const multisigCluster = useMemo(() => getMultisigCluster(cluster), [cluster]);
 
   const connection = useMemo(() => {
-    const urls = pythClusterApiUrls(multisigCluster)
-    return new Connection(urls[urlsIndex] ?? '', {
-      commitment: 'confirmed',
-      wsEndpoint: deriveWsUrl(urls[urlsIndex] ?? ''),
-    })
-  }, [urlsIndex, multisigCluster])
+    const urls = pythClusterApiUrls(multisigCluster);
+    return new Connection(urls[urlsIndex] ?? "", {
+      commitment: "confirmed",
+      wsEndpoint: deriveWsUrl(urls[urlsIndex] ?? ""),
+    });
+  }, [urlsIndex, multisigCluster]);
 
   const readOnlySquads = useMemo(() => {
     return new SquadsMesh({
       connection,
       wallet: new NodeWallet(new Keypair()),
-    })
-  }, [connection])
+    });
+  }, [connection]);
 
   const walletSquads = useMemo(() => {
-    if (!wallet) return undefined
+    // eslint-disable-next-line unicorn/no-useless-undefined
+    if (!wallet) return undefined;
     return new SquadsMesh({
       connection,
       wallet,
-    })
-  }, [connection, wallet])
+    });
+  }, [connection, wallet]);
 
   const refreshData = useCallback(() => {
-    let cancelled = false
+    let cancelled = false;
 
     const fetchData = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        if (cancelled) return
+        if (cancelled) return;
         const upgradeMultisigAccount = await readOnlySquads.getMultisig(
-          UPGRADE_MULTISIG[multisigCluster]
-        )
+          UPGRADE_MULTISIG[multisigCluster],
+        );
 
-        if (cancelled) return
+        if (cancelled) return;
         const priceFeedMultisigAccount = await readOnlySquads.getMultisig(
-          PRICE_FEED_MULTISIG[multisigCluster]
-        )
+          PRICE_FEED_MULTISIG[multisigCluster],
+        );
 
-        if (cancelled) return
+        if (cancelled) return;
         const upgradeProposals = await getSortedProposals(
           readOnlySquads,
-          UPGRADE_MULTISIG[multisigCluster]
-        )
+          UPGRADE_MULTISIG[multisigCluster],
+        );
 
-        if (cancelled) return
+        if (cancelled) return;
         const sortedPriceFeedMultisigProposals = await getSortedProposals(
           readOnlySquads,
-          PRICE_FEED_MULTISIG[multisigCluster]
-        )
+          PRICE_FEED_MULTISIG[multisigCluster],
+        );
 
-        setUpgradeMultisigAccount(upgradeMultisigAccount)
-        setPriceFeedMultisigAccount(priceFeedMultisigAccount)
-        setUpgradeMultisigProposals(upgradeProposals)
-        setPriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
+        setUpgradeMultisigAccount(upgradeMultisigAccount);
+        setPriceFeedMultisigAccount(priceFeedMultisigAccount);
+        setUpgradeMultisigProposals(upgradeProposals);
+        setPriceFeedMultisigProposals(sortedPriceFeedMultisigProposals);
 
-        setIsLoading(false)
-      } catch (e) {
-        console.log(e)
-        if (cancelled) return
-        const urls = pythClusterApiUrls(multisigCluster)
+        setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        if (cancelled) return;
+        const urls = pythClusterApiUrls(multisigCluster);
         if (urlsIndex === urls.length - 1) {
-          setIsLoading(false)
-          console.warn(`Failed to fetch accounts`)
+          setIsLoading(false);
+          console.warn(`Failed to fetch accounts`);
         } else if (urlsIndex < urls.length - 1) {
-          setUrlsIndex((urlsIndex) => urlsIndex + 1)
+          setUrlsIndex((urlsIndex) => urlsIndex + 1);
           console.warn(
-            `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
-          )
+            `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`,
+          );
         }
       }
-    }
+    };
     const cancel = () => {
-      cancelled = true
-    }
+      cancelled = true;
+    };
 
-    return { cancel, fetchData }
-  }, [readOnlySquads, multisigCluster, urlsIndex])
+    return { cancel, fetchData };
+  }, [readOnlySquads, multisigCluster, urlsIndex]);
 
   useEffect(() => {
-    const { cancel, fetchData } = refreshData()
-    fetchData()
-    return cancel
-  }, [refreshData])
+    const { cancel, fetchData } = refreshData();
+    void fetchData();
+    return cancel;
+  }, [refreshData]);
 
   return {
     isLoading,
@@ -151,5 +154,5 @@ export const useMultisig = (): MultisigHookData => {
     priceFeedMultisigProposals,
     refreshData,
     connection,
-  }
-}
+  };
+};

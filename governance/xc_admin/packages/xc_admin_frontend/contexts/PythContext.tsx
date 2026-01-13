@@ -1,3 +1,5 @@
+import type {MappingRawConfig, ProductRawConfig} from '@pythnetwork/xc-admin-common';
+import { Connection } from '@solana/web3.js'
 import React, {
   createContext,
   useContext,
@@ -5,16 +7,12 @@ import React, {
   useMemo,
   useState,
 } from 'react'
-import { usePyth } from '../hooks/usePyth'
-import type { RawConfig } from '../hooks/usePyth'
-import { Connection } from '@solana/web3.js'
-import {
-  type MappingRawConfig,
-  type ProductRawConfig,
-} from '@pythnetwork/xc-admin-common'
 
-type AccountKeyToSymbol = { [key: string]: string }
-interface PythContextProps {
+import type { RawConfig } from '../hooks/usePyth'
+import { usePyth } from '../hooks/usePyth'
+
+type AccountKeyToSymbol = Record<string, string>
+type PythContextProps = {
   rawConfig: RawConfig
   dataIsLoading: boolean
   connection?: Connection | undefined
@@ -35,7 +33,7 @@ const PythContext = createContext<PythContextProps>({
 
 export const usePythContext = () => useContext(PythContext)
 
-interface PythContextProviderProps {
+type PythContextProviderProps = {
   children?: React.ReactNode
   publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>

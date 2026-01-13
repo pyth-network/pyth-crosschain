@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+ 
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable unicorn/no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-misused-promises */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-console */
 import { Wallet } from '@coral-xyz/anchor'

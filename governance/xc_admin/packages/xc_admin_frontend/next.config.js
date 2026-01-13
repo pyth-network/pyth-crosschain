@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // eslint-disable-next-line n/no-process-env
+   
   output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
   turbopack: {
     resolveAlias: {

@@ -1,10 +1,11 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
 import { ProgramType } from '@pythnetwork/xc-admin-common'
+import type {ReactNode} from 'react';
+import { createContext, useContext, useState  } from 'react'
 
 /**
  * Interface defining the shape of the Program context
  */
-interface ProgramContextType {
+type ProgramContextType = {
   /**
    * Currently selected program type
    */
@@ -26,7 +27,7 @@ interface ProgramContextType {
  */
 const defaultContext: ProgramContextType = {
   programType: ProgramType.PYTH_CORE,
-  setProgramType: () => undefined,
+  setProgramType: () => {},
   isProgramSupported: true,
 }
 

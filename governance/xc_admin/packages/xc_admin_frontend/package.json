@@ -11,9 +11,9 @@
     "start:dev": "next dev --port 3004",
     "start:prod": "next start --port 3004",
     "fix:format": "prettier --write .",
-    "fix:lint": "next lint --fix --max-warnings 0",
+    "fix:lint": "eslint --fix .",
     "test:format": "prettier --check .",
-    "test:lint": "next lint --max-warnings 0",
+    "test:lint": "eslint .",
     "test:types": "tsc"
   },
   "dependencies": {

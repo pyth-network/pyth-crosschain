@@ -1,68 +1,63 @@
+/* eslint-disable no-console */
 import {
   AccountType,
-  type PythCluster,
   getPythProgramKeyForCluster,
   parseBaseData,
-} from '@pythnetwork/client'
-import { Connection } from '@solana/web3.js'
-import { useContext, useEffect, useRef, useState } from 'react'
-import { ClusterContext } from '../contexts/ClusterContext'
-import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
-import {
-  ProgramType,
-  getConfig,
-  type RawConfig,
-  type MappingRawConfig,
-  type ProductRawConfig,
-  type PriceRawConfig,
-} from '@pythnetwork/xc-admin-common'
+} from "@pythnetwork/client";
+import type { RawConfig } from "@pythnetwork/xc-admin-common";
+import { ProgramType, getConfig } from "@pythnetwork/xc-admin-common";
+import { Connection } from "@solana/web3.js";
+import { useContext, useEffect, useRef, useState } from "react";
 
-interface PythHookData {
-  isLoading: boolean
-  rawConfig: RawConfig
-  connection?: Connection | undefined
-}
+import { ClusterContext } from "../contexts/ClusterContext";
+import { deriveWsUrl, pythClusterApiUrls } from "../utils/pythClusterApiUrl";
+
+type PythHookData = {
+  isLoading: boolean;
+  rawConfig: RawConfig;
+  connection?: Connection | undefined;
+};
 
 export const usePyth = (): PythHookData => {
-  const connectionRef = useRef<Connection | undefined>(undefined)
-  const { cluster } = useContext(ClusterContext)
-  const [isLoading, setIsLoading] = useState(true)
+  const connectionRef = useRef<Connection | undefined>(undefined);
+  const { cluster } = useContext(ClusterContext);
+  const [isLoading, setIsLoading] = useState(true);
   const [rawConfig, setRawConfig] = useState<RawConfig>({
     mappingAccounts: [],
-  })
-  const [urlsIndex, setUrlsIndex] = useState(0)
+  });
+  const [urlsIndex, setUrlsIndex] = useState(0);
 
   useEffect(() => {
-    setIsLoading(true)
-  }, [urlsIndex, cluster])
+    setIsLoading(true);
+  }, [urlsIndex, cluster]);
 
   useEffect(() => {
-    setUrlsIndex(0)
-  }, [cluster])
+    setUrlsIndex(0);
+  }, [cluster]);
 
   useEffect(() => {
-    let cancelled = false
-    const urls = pythClusterApiUrls(cluster)
-    const connection = new Connection(urls[urlsIndex] ?? '', {
-      commitment: 'confirmed',
-      wsEndpoint: deriveWsUrl(urls[urlsIndex] ?? ''),
-    })
+    let cancelled = false;
+    const urls = pythClusterApiUrls(cluster);
+    const connection = new Connection(urls[urlsIndex] ?? "", {
+      commitment: "confirmed",
+      wsEndpoint: deriveWsUrl(urls[urlsIndex] ?? ""),
+    });
 
-    connectionRef.current = connection
-    ;(async () => {
+    connectionRef.current = connection;
+    void (async () => {
       try {
         const allPythAccounts = [
           ...(await connection.getProgramAccounts(
-            getPythProgramKeyForCluster(cluster as PythCluster)
+            getPythProgramKeyForCluster(cluster),
           )),
-        ]
-        if (cancelled) return
+        ];
+        if (cancelled) return;
 
         // Use the functional approach to parse the accounts
         const parsedConfig = getConfig[ProgramType.PYTH_CORE]({
           accounts: allPythAccounts,
-          cluster: cluster as PythCluster,
-        })
+          cluster: cluster,
+        });
 
         // Get all account pubkeys from the parsed config
         const processedPubkeys = new Set<string>([
@@ -71,54 +66,60 @@ export const usePyth = (): PythHookData => {
             mapping.products.flatMap((prod) => [
               prod.address.toBase58(),
               ...prod.priceAccounts.map((price) => price.address.toBase58()),
-            ])
+            ]),
           ),
-        ])
+        ]);
 
         // Find accounts that weren't included in the parsed config
         const unprocessedAccounts = allPythAccounts.filter((account) => {
-          const base = parseBaseData(account.account.data)
+          const base = parseBaseData(account.account.data);
           // Skip permission accounts entirely
           if (!base || base.type === AccountType.Permission) {
-            return false
+            return false;
           }
-          return !processedPubkeys.has(account.pubkey.toBase58())
-        })
+          return !processedPubkeys.has(account.pubkey.toBase58());
+        });
 
         if (unprocessedAccounts.length > 0) {
           console.warn(
-            `${unprocessedAccounts.length} accounts were not processed:`,
+            `${unprocessedAccounts.length.toString()} accounts were not processed:`,
             unprocessedAccounts.map((acc) => ({
               pubkey: acc.pubkey.toBase58(),
               type: parseBaseData(acc.account.data)?.type,
-            }))
-          )
+            })),
+          );
         }
 
-        setRawConfig(parsedConfig as RawConfig)
-        setIsLoading(false)
-      } catch (e) {
-        if (cancelled) return
+        setRawConfig(parsedConfig);
+        setIsLoading(false);
+      } catch {
+        if (cancelled) return;
         if (urlsIndex === urls.length - 1) {
-          setIsLoading(false)
-          console.warn(`Failed to fetch accounts`)
+          setIsLoading(false);
+          console.warn(`Failed to fetch accounts`);
         } else if (urlsIndex < urls.length - 1) {
-          setUrlsIndex((urlsIndex) => urlsIndex + 1)
+          setUrlsIndex((urlsIndex) => urlsIndex + 1);
         }
       }
-    })()
+    })();
 
     return () => {
-      cancelled = true
-    }
-  }, [urlsIndex, cluster])
+      cancelled = true;
+    };
+  }, [urlsIndex, cluster]);
 
   return {
     isLoading,
     connection: connectionRef.current,
     rawConfig,
-  }
-}
+  };
+};
 
 // Re-export the types for compatibility
-export type { RawConfig, MappingRawConfig, ProductRawConfig, PriceRawConfig }
+
+export {
+  type RawConfig,
+  type MappingRawConfig,
+  type ProductRawConfig,
+  type PriceRawConfig,
+} from "@pythnetwork/xc-admin-common";

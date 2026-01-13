@@ -10,7 +10,7 @@ const Modal: React.FC<{
   isModalOpen: boolean
   setIsModalOpen: Dispatch<SetStateAction<boolean>>
   closeModal: () => void
-  content: any // eslint-disable-line @typescript-eslint/no-explicit-any
+  content: any  
 }> = ({ isModalOpen, setIsModalOpen, closeModal, content }) => {
   return (
     <Transition appear show={isModalOpen} as={Fragment}>
