@@ -109,9 +109,13 @@
   border-radius: theme.border-radius("lg");
   color: theme.color("paragraph");
   padding: theme.spacing(3);
+  max-height: unset !important;
+  transform: translateY(-50%);
   width: 90vw;
 
   @include theme.breakpoint("sm") {
+    height: unset;
+    transform: unset;
     width: unset;
   }
 }
@@ -140,28 +144,13 @@
   line-height: theme.spacing(4);
 }
 
-.timeInput {
-  align-items: center;
-  background-color: theme.color("background", "primary");
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("md");
-  display: flex;
-  gap: theme.spacing(1);
-  justify-content: center;
-  outline: theme.spacing(1) solid transparent;
-  outline-offset: 0;
-  padding: theme.spacing(1.5) theme.spacing(2);
-  transition-property: border-color, outline-color, background-color, color;
-  transition-duration: 100ms;
-  transition-timing-function: linear;
+.timeSelects {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: theme.spacing(2);
 
-  &:hover {
-    border-color: theme.color("forms", "input", "hover", "border");
-  }
-
-  &:focus-within {
-    border-color: theme.color("focus");
-    outline-color: theme.color("focus-dim");
+  &[data-uses-ampm="true"] {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -175,9 +164,9 @@
 .footer {
   align-items: center;
   border-top: 1px solid theme.color("border");
-  display: flex;
+  display: grid;
   gap: theme.spacing(2);
-  justify-content: space-between;
+  grid-template-columns: repeat(3, 1fr);
   margin-top: theme.spacing(2);
   padding-top: theme.spacing(2);
 }

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getLLMText } from "../../../lib/get-llm-text";
 import { source } from "../../../lib/source";
 
+export const revalidate = false;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ slug: string[] }> },
@@ -19,8 +21,12 @@ export async function GET(
   return new NextResponse(content, {
     status: 200,
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=3600", // Cache for 1 hour
+      "Content-Type": "text/markdown; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
     },
   });
+}
+
+export function generateStaticParams() {
+  return source.generateParams();
 }

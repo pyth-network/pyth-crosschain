@@ -50,6 +50,12 @@ function RightHandSideTools() {
               <DatePicker
                 onChange={(val) => {
                   void handleSetSelectedReplayDate(val);
+                  // force close the mobile menu always, so it doesn't
+                  // look like something is still hanging around
+                  setMobileMenuOpen(false);
+                }}
+                onPickerClose={() => {
+                  setMobileMenuOpen(false);
                 }}
                 placeholder={datepickerPlaceholder}
                 type="datetime"

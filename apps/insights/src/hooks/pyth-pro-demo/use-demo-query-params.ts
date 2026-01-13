@@ -22,6 +22,7 @@ const QUERY_PARAM_KEY_MAPPINGS: Record<PythProDemoQueryParamKeys, string> = {
 
 function parsePlaybackSpeedFromQuery(val: string) {
   const validated = PlaybackSpeedSchema.safeParse(val);
+
   return validated.data ?? 1;
 }
 
