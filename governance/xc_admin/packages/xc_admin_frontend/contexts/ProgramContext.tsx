@@ -1,6 +1,6 @@
 import { ProgramType } from '@pythnetwork/xc-admin-common'
-import type {ReactNode} from 'react';
-import { createContext, useContext, useState  } from 'react'
+import type { ReactNode } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 /**
  * Interface defining the shape of the Program context

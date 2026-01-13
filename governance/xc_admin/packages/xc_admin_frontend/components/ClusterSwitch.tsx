@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
- 
+
 import { Menu, Transition } from '@headlessui/react'
 import Arrow from '@images/icons/down.inline.svg'
 import type { PythCluster } from '@pythnetwork/client'
@@ -16,7 +16,6 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
 
   const { cluster, setCluster } = useContext(ClusterContext)
   const handleChange = useCallback(
-     
     (event: any) => {
       if (event.target.value) {
         router.query.cluster = event.target.value

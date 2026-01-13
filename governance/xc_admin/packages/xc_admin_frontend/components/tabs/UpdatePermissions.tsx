@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-dynamic-delete */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/prefer-optional-chain */
- 
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
@@ -228,7 +228,7 @@ const UpdatePermissions = () => {
   }
 
   const handleEditPubkey = (
-    e: any,  
+    e: any,
     account: PermissionAccount,
     prevPubkey: string
   ) => {
@@ -294,7 +294,6 @@ const UpdatePermissions = () => {
                 `Proposal sent! 🚀 Proposal Pubkey: ${JSON.stringify(proposalPubkey)}`
               )
               setIsSendProposalButtonLoading(false)
-               
             } catch (error: any) {
               toast.error(capitalizeFirstLetter(error.message))
               setIsSendProposalButtonLoading(false)
@@ -304,7 +303,6 @@ const UpdatePermissions = () => {
     }
   }
 
-   
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>

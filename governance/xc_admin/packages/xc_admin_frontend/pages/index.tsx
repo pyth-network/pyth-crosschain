@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable unicorn/no-await-expression-member */
- 
+
 /* eslint-disable react/prop-types */
- 
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as fs from 'node:fs'
 

@@ -1,8 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": [
-    "//"
-  ],
+  "extends": ["//"],
   "tasks": {
     "build:vercel": {
       "env": [
@@ -36,45 +34,27 @@
       ]
     },
     "fix:lint:eslint": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build"
-      ],
+      "dependsOn": ["//#install:modules", "^build"],
       "cache": false
     },
     "fix:lint:stylelint": {
-      "dependsOn": [
-        "//#install:modules"
-      ],
+      "dependsOn": ["//#install:modules"],
       "cache": false
     },
     "start:dev": {
-      "with": [
-        "@pythnetwork/component-library#start:dev"
-      ]
+      "with": ["@pythnetwork/component-library#start:dev"]
     },
     "start:prod": {
-      "dependsOn": [
-        "//#install:modules",
-        "build:vercel"
-      ]
+      "dependsOn": ["//#install:modules", "build:vercel"]
     },
     "test:lint": {
-      "dependsOn": [
-        "test:lint:eslint",
-        "test:lint:stylelint"
-      ]
+      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
     },
     "test:lint:eslint": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build"
-      ]
+      "dependsOn": ["//#install:modules", "^build"]
     },
     "test:lint:stylelint": {
-      "dependsOn": [
-        "//#install:modules"
-      ]
+      "dependsOn": ["//#install:modules"]
     }
   }
 }

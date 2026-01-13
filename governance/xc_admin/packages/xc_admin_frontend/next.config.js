@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-   
-  output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
+
+  output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
   turbopack: {
     resolveAlias: {
       fs: {
@@ -15,26 +15,26 @@ const nextConfig = {
          * of this project, shimming accidental node imports with an
          * empty module is what we'll use
          */
-        browser: "./turbopack-hacks/empty.ts",
+        browser: './turbopack-hacks/empty.ts',
       },
     },
     resolveExtensions: [
-      ".ts",
-      ".tsx",
-      ".js",
-      ".jsx",
-      ".mts",
-      ".mjs",
-      ".cts",
-      ".cjs",
+      '.ts',
+      '.tsx',
+      '.js',
+      '.jsx',
+      '.mts',
+      '.mjs',
+      '.cts',
+      '.cjs',
     ],
     rules: {
-      "*.inline.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
+      '*.inline.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

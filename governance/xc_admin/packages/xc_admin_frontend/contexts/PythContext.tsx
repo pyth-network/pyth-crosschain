@@ -1,4 +1,7 @@
-import type {MappingRawConfig, ProductRawConfig} from '@pythnetwork/xc-admin-common';
+import type {
+  MappingRawConfig,
+  ProductRawConfig,
+} from '@pythnetwork/xc-admin-common'
 import { Connection } from '@solana/web3.js'
 import React, {
   createContext,
