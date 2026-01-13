@@ -1,21 +1,25 @@
-import React, { createContext, useContext, useMemo } from 'react'
-import { type MultisigHookData, useMultisig } from '../hooks/useMultisig'
+"use client";
 
-const MultisigContext = createContext<MultisigHookData | undefined>(undefined)
+import React, { createContext, useContext, useMemo } from "react";
+
+import type { MultisigHookData } from "../hooks/useMultisig";
+import { useMultisig } from "../hooks/useMultisig";
+
+const MultisigContext = createContext<MultisigHookData | undefined>(undefined);
 
 export const useMultisigContext = () => {
-  const context = useContext(MultisigContext)
+  const context = useContext(MultisigContext);
   if (!context) {
     throw new Error(
-      'useMultisigContext must be used within a MultisigContext.Provider'
-    )
+      "useMultisigContext must be used within a MultisigContext.Provider",
+    );
   }
-  return context
-}
+  return context;
+};
 
-interface MultisigContextProviderProps {
-  children?: React.ReactNode
-}
+type MultisigContextProviderProps = {
+  children?: React.ReactNode;
+};
 
 export const MultisigContextProvider: React.FC<
   MultisigContextProviderProps
@@ -30,7 +34,7 @@ export const MultisigContextProvider: React.FC<
     refreshData,
     connection,
     readOnlySquads,
-  } = useMultisig()
+  } = useMultisig();
 
   const value = useMemo(
     () => ({
@@ -54,12 +58,12 @@ export const MultisigContextProvider: React.FC<
       refreshData,
       connection,
       readOnlySquads,
-    ]
-  )
+    ],
+  );
 
   return (
     <MultisigContext.Provider value={value}>
       {children}
     </MultisigContext.Provider>
-  )
-}
+  );
+};

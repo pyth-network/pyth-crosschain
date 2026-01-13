@@ -79,5 +79,11 @@
     "stylelint-config-standard-scss": "catalog:",
     "tailwindcss": "^4.1.6",
     "vercel": "catalog:"
-  }
+  },
+  "browserslist": [
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version",
+    "not dead"
+  ]
 }

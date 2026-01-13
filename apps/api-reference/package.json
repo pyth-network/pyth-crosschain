@@ -63,5 +63,11 @@
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "vercel": "catalog:"
-  }
+  },
+  "browserslist": [
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version",
+    "not dead"
+  ]
 }
