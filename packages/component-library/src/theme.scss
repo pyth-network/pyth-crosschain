@@ -937,3 +937,7 @@ $header-height: var(--header-height);
   @include export-css-vars($color-pallette, "theme-palette");
   @include export-css-vars($color, "theme-color");
 }
+
+:root {
+  color-scheme: light dark;
+}

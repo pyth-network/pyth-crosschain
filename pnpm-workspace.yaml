@@ -55,7 +55,7 @@ catalog:
   "@babel/cli": ^7.27.2
   "@babel/core": ^7.27.1
   "@babel/preset-typescript": ^7.27.1
-  "@better-builds/ts-duality": ^0.6.0
+  "@better-builds/ts-duality": ^1.1.0
   "@bonfida/spl-name-service": ^3.0.10
   "@clickhouse/client": ^1.15.0
   "@coral-xyz/anchor": ^0.30.1
@@ -144,7 +144,7 @@ catalog:
   micromustache: ^8.0.3
   modern-normalize: ^3.0.1
   motion: ^12.9.2
-  next: ^15.5.9
+  next: ^16.1.1
   next-themes: ^0.4.6
   nuqs: ^2.4.1
   papaparse: ^5.5.3
