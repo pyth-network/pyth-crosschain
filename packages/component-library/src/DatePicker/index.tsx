@@ -75,13 +75,14 @@ export type DatePickerProps = Pick<
 export function DatePicker({
   className,
   label,
+  max,
+  min,
   onChange,
   onPickerClose,
   onPickerOpen,
   placeholder = "Select a date",
   value,
   type = "date",
-  ...rest
 }: DatePickerProps) {
   const [internalVal, setInternalVal] = useState(value);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -116,14 +117,15 @@ export function DatePicker({
     handleHidePicker();
   }, [handleHidePicker, internalVal, onChange]);
 
+  /** memos */
   const minValue = useMemo(
-    () => parseDateValue(String(rest.min ?? ""), type),
-    [type, rest.min],
+    () => parseDateValue(String(min ?? ""), type),
+    [type, min],
   );
 
   const maxValue = useMemo(
-    () => parseDateValue(String(rest.max ?? ""), type),
-    [type, rest.max],
+    () => parseDateValue(String(max ?? ""), type),
+    [type, max],
   );
 
   const placeholderValue = useMemo(
