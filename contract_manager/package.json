@@ -194,6 +194,16 @@
         "default": "./dist/esm/node/utils/store.mjs"
       }
     },
+    "./utils/exec-file-async": {
+      "require": {
+        "types": "./dist/cjs/utils/exec-file-async.d.ts",
+        "default": "./dist/cjs/utils/exec-file-async.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/utils/exec-file-async.d.ts",
+        "default": "./dist/esm/utils/exec-file-async.mjs"
+      }
+    },
     "./utils/utils": {
       "require": {
         "types": "./dist/cjs/utils/utils.d.ts",
