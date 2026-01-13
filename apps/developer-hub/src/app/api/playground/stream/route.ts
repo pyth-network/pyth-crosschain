@@ -12,6 +12,16 @@ import {
 } from "../../../../config/pyth-pro";
 import { checkRateLimit } from "../../../../lib/rate-limiter";
 
+function rawSocketDataToStr(data: WebSocket.Data) {
+  if (typeof data === "string") {
+    return data;
+  }
+  if (Buffer.isBuffer(data)) {
+    return data.toString("utf-16le");
+  }
+  return JSON.stringify(data);
+}
+
 // Request body schema
 const StreamRequestSchema = z.object({
   accessToken: z.string().optional().default(""),
@@ -206,13 +216,8 @@ export async function POST(request: NextRequest) {
         websocket.addEventListener("message", (event: MessageEvent) => {
           try {
             // event.data can be string, Buffer, ArrayBuffer, or Buffer[]
-            const rawData = event.data;
-            const messageData =
-              typeof rawData === "string"
-                ? rawData
-                : (Buffer.isBuffer(rawData)
-                  ? rawData.toString("utf8")
-                  : JSON.stringify(rawData));
+            const messageData = rawSocketDataToStr(event.data);
+
             const parsedData: unknown = JSON.parse(messageData);
             sendEvent("message", {
               timestamp: new Date().toISOString(),
@@ -220,13 +225,7 @@ export async function POST(request: NextRequest) {
             });
           } catch {
             // If not JSON, send as raw string
-            const rawData = event.data;
-            const dataStr =
-              typeof rawData === "string"
-                ? rawData
-                : (Buffer.isBuffer(rawData)
-                  ? rawData.toString("utf8")
-                  : JSON.stringify(rawData));
+            const dataStr = rawSocketDataToStr(event.data);
             sendEvent("message", {
               timestamp: new Date().toISOString(),
               data: dataStr,
