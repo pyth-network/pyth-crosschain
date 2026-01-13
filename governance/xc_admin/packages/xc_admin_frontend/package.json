@@ -37,7 +37,7 @@
     "gsap": "^3.11.4",
     "message_buffer": "workspace:^",
     "next": "catalog:",
-    "next-seo": "^5.15.0",
+    "next-seo": "^7.0.1",
     "@pythnetwork/react-hooks": "workspace:",
     "react": "catalog:",
     "react-dom": "catalog:",
