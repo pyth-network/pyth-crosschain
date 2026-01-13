@@ -3,6 +3,7 @@
 
 import {
   getLocalTimeZone,
+  Time,
   parseDate,
   parseDateTime,
   today,
@@ -26,6 +27,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useLocale } from "react-aria";
 import type { DateValue } from "react-aria-components";
 import {
   Button,
@@ -44,11 +46,11 @@ import {
   Heading,
   Label,
   Popover,
-  TimeField,
 } from "react-aria-components";
 
 import { Button as DesignSystemButton } from "../Button";
 import type { InputProps } from "../Input";
+import { Select } from "../Select";
 import styles from "./index.module.scss";
 
 export type DatePickerProps = Pick<
@@ -58,7 +60,14 @@ export type DatePickerProps = Pick<
   className?: string;
   label?: ReactNode;
   onChange: (dateStr: string) => void;
-  onDatepickerOpenCloseChange?: (isOpen: boolean) => void;
+  /**
+   * fired whenever somebody closes the datepicker
+   */
+  onPickerClose?: () => void;
+  /**
+   * fired whenever somebody opens the datepicker
+   */
+  onPickerOpen?: () => void;
   value: string;
   type?: "date" | "datetime";
 };
@@ -67,7 +76,8 @@ export function DatePicker({
   className,
   label,
   onChange,
-  onDatepickerOpenCloseChange,
+  onPickerClose,
+  onPickerOpen,
   placeholder = "Select a date",
   value,
   type = "date",
@@ -79,7 +89,8 @@ export function DatePicker({
 
   /** refs */
   const isClosingRef = useRef(false);
-  const onDatepickerOpenCloseChangeRef = useRef(onDatepickerOpenCloseChange);
+  const onPickerCloseRef = useRef(onPickerClose);
+  const onPickerOpenRef = useRef(onPickerOpen);
 
   /** hooks */
   const prevVal = usePrevious(value);
@@ -88,11 +99,13 @@ export function DatePicker({
   const handleShowPicker = useCallback(() => {
     if (isClosingRef.current) return;
     setPopoverOpen(true);
+    onPickerOpenRef.current?.();
   }, []);
 
   const handleHidePicker = useCallback(() => {
     isClosingRef.current = true;
     setPopoverOpen(false);
+    onPickerCloseRef.current?.();
     setTimeout(() => {
       isClosingRef.current = false;
     }, 200);
@@ -125,17 +138,14 @@ export function DatePicker({
 
   /** effects */
   useEffect(() => {
-    onDatepickerOpenCloseChangeRef.current = onDatepickerOpenCloseChange;
+    onPickerCloseRef.current = onPickerClose;
+    onPickerOpenRef.current = onPickerOpen;
   });
 
   useEffect(() => {
     if (prevVal === value) return;
     setInternalVal(value);
   }, [prevVal, value]);
-
-  useEffect(() => {
-    onDatepickerOpenCloseChangeRef.current?.(popoverOpen);
-  }, [popoverOpen]);
 
   return (
     <BaseDatePicker
@@ -237,19 +247,23 @@ export function DatePicker({
   );
 }
 
+type DatePickerFooterProps = {
+  onClear: () => void;
+  onFocusDate: (date: DateValue) => void;
+  onSubmit: () => void;
+  type: "date" | "datetime";
+};
+
 function DatePickerFooter({
   onClear,
   onFocusDate,
   onSubmit,
   type,
-}: {
-  onClear: () => void;
-  onFocusDate: (date: DateValue) => void;
-  onSubmit: () => void;
-  type: "date" | "datetime";
-}) {
+}: DatePickerFooterProps) {
+  /** context */
   const state = useContext(DatePickerStateContext);
 
+  /** callbacks */
   const handleTodayOrNow = useCallback(() => {
     if (isNullOrUndefined(state)) return;
 
@@ -304,27 +318,117 @@ function DatePickerFooter({
 }
 
 function DatePickerTimeField() {
+  /** context */
   const state = useContext(DatePickerStateContext);
+
+  /** hooks */
+  const { locale } = useLocale();
+
+  const timeValue = state?.timeValue ?? new Time(0, 0);
+
+  /** memos */
+  const uses24Hour = useMemo(() => {
+    const resolved = new Intl.DateTimeFormat(locale, {
+      hour: "numeric",
+    }).resolvedOptions();
+    return (
+      resolved.hour12 === false ||
+      resolved.hourCycle === "h23" ||
+      resolved.hourCycle === "h24"
+    );
+  }, [locale]);
+  const hourOptions = useMemo(
+    () =>
+      Array.from({ length: uses24Hour ? 24 : 12 }).map((_, index) => ({
+        id: uses24Hour ? index : index + 1,
+      })),
+    [uses24Hour],
+  );
+  const minuteOptions = useMemo(
+    () =>
+      Array.from({ length: 60 }).map((_, index) => ({
+        id: index,
+      })),
+    [],
+  );
+  const periodOptions = useMemo(
+    () => [{ id: "AM" }, { id: "PM" }] as const,
+    [],
+  );
+
+  /** local variables */
+  const hour24 = timeValue.hour;
+  const minute = timeValue.minute;
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = ((hour24 + 11) % 12) + 1;
+
+  /** callbacks */
+  const to24Hour = useCallback((hour: number, nextPeriod: "AM" | "PM") => {
+    const normalizedHour = hour % 12;
+    return nextPeriod === "PM" ? normalizedHour + 12 : normalizedHour;
+  }, []);
+
+  const updateTime = useCallback(
+    (nextHour: number, nextMinute: number) => {
+      state?.setTimeValue(new Time(nextHour, nextMinute));
+    },
+    [state],
+  );
+
   if (!state?.hasTime) return null;
 
   return (
-    <TimeField
-      aria-label="Time"
-      className={cx(styles.timeField)}
-      granularity="minute"
-      value={state.timeValue}
-      onChange={(newValue) => {
-        if (!newValue) return;
-        state.setTimeValue(newValue);
-      }}
-    >
+    <div className={cx(styles.timeField)} aria-label="Time">
       <Label className={cx(styles.timeLabel)}>Time</Label>
-      <DateInput className={cx(styles.timeInput)}>
-        {(segment) => (
-          <DateSegment className={cx(styles.segment)} segment={segment} />
+      <div className={cx(styles.timeSelects)} data-uses-ampm={!uses24Hour}>
+        <Select
+          className={cx(styles.timeSelect)}
+          label="Hour"
+          hideLabel
+          options={hourOptions}
+          selectedKey={uses24Hour ? hour24 : hour12}
+          onSelectionChange={(newHour) => {
+            const nextHour = Number(newHour);
+            updateTime(
+              uses24Hour ? nextHour : to24Hour(nextHour, period),
+              minute,
+            );
+          }}
+          show={(value) => value.id.toString().padStart(2, "0")}
+          size="sm"
+          variant="outline"
+        />
+        <Select
+          label="Minute"
+          hideLabel
+          options={minuteOptions}
+          selectedKey={minute}
+          onSelectionChange={(newMinute) => {
+            updateTime(hour24, Number(newMinute));
+          }}
+          show={(value) => value.id.toString().padStart(2, "0")}
+          size="sm"
+          variant="outline"
+        />
+        {!uses24Hour && (
+          <Select
+            label="AM/PM"
+            hideLabel
+            options={periodOptions}
+            selectedKey={period}
+            onSelectionChange={(newPeriod) => {
+              updateTime(
+                to24Hour(hour12, newPeriod === "PM" ? "PM" : "AM"),
+                minute,
+              );
+            }}
+            show={(value) => value.id}
+            size="sm"
+            variant="outline"
+          />
         )}
-      </DateInput>
-    </TimeField>
+      </div>
+    </div>
   );
 }
 
