@@ -329,6 +329,16 @@ const config = {
       },
     ];
   },
+
+  // Rewrite .mdx URLs to serve raw markdown for LLM consumption
+  async rewrites() {
+    return [
+      {
+        source: "/:path*.mdx",
+        destination: "/mdx/:path*",
+      },
+    ];
+  },
 };
 
 const withMDX = createMDX();
