@@ -82,7 +82,7 @@
     "@solana/web3.js": "catalog:"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "module": "./dist/esm/index.mjs"
 }
