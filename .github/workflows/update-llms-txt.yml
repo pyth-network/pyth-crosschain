@@ -1,0 +1,282 @@
+name: Update llms.txt
+
+on:
+  pull_request:
+    paths:
+      - "apps/developer-hub/content/docs/**"
+    types: [opened, synchronize]
+
+jobs:
+  update-llms-txt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get list of changed doc files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'apps/developer-hub/content/docs/**/*.mdx' | head -20)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Count changes
+          FILE_COUNT=$(echo "$CHANGED_FILES" | grep -c "." || echo "0")
+          echo "file_count=$FILE_COUNT" >> $GITHUB_OUTPUT
+
+          # Check for significant changes
+          SIGNIFICANT="false"
+
+          if echo "$CHANGED_FILES" | grep -qE "(index|getting-started|contract-addresses)"; then
+            SIGNIFICANT="true"
+          fi
+
+          # New files added?
+          NEW_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD -- 'apps/developer-hub/content/docs/**/*.mdx')
+          if [ -n "$NEW_FILES" ]; then
+            SIGNIFICANT="true"
+          fi
+
+          # Many files changed?
+          if [ "$FILE_COUNT" -gt 5 ]; then
+            SIGNIFICANT="true"
+          fi
+
+          echo "significant=$SIGNIFICANT" >> $GITHUB_OUTPUT
+          echo "Significant changes: $SIGNIFICANT (files: $FILE_COUNT)"
+
+      - name: Skip if no significant changes
+        if: steps.changed-files.outputs.significant != 'true'
+        run: |
+          echo "No significant documentation changes detected. Skipping llms.txt update."
+
+      - name: Read current llms.txt
+        if: steps.changed-files.outputs.significant == 'true'
+        id: current-llms
+        run: |
+          # Extract just the content string from the route file
+          CONTENT=$(sed -n '/const content = `/,/`;$/p' apps/developer-hub/src/app/llms.txt/route.ts | sed '1d;$d')
+          echo "content<<EOFMARKER" >> $GITHUB_OUTPUT
+          echo "$CONTENT" >> $GITHUB_OUTPUT
+          echo "EOFMARKER" >> $GITHUB_OUTPUT
+
+      - name: Gather context for Codex
+        if: steps.changed-files.outputs.significant == 'true'
+        id: context
+        run: |
+          # Get summaries of changed files
+          CHANGES=""
+          for file in ${{ steps.changed-files.outputs.files }}; do
+            if [ -f "$file" ]; then
+              # Extract title and description from frontmatter
+              TITLE=$(grep -m1 "^title:" "$file" | sed 's/title: //' | tr -d '"' || echo "")
+              DESC=$(grep -m1 "^description:" "$file" | sed 's/description: //' | tr -d '"' || echo "")
+              CHANGES="$CHANGES
+          - $file
+            Title: $TITLE
+            Description: $DESC"
+            fi
+          done
+
+          # Get list of all current sections (from meta.json files)
+          SECTIONS=$(find apps/developer-hub/content/docs -name "meta.json" -exec dirname {} \; | sed 's|apps/developer-hub/content/docs/||' | sort | head -20)
+
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "sections<<EOF" >> $GITHUB_OUTPUT
+          echo "$SECTIONS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate updated llms.txt with Codex
+        if: steps.changed-files.outputs.significant == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Prepare the prompt
+          cat > /tmp/prompt.json << 'PROMPTEOF'
+          {
+            "model": "gpt-4o",
+            "max_tokens": 4096,
+            "messages": [{
+              "role": "system",
+              "content": "You are updating the llms.txt file for Pyth Network documentation. This file helps LLMs understand Pyth's products and APIs. Be concise and accurate."
+            }, {
+              "role": "user",
+              "content": "Current llms.txt content:\n```\n$CURRENT_CONTENT\n```\n\nDocumentation changes in this PR:\n$CHANGES\n\nCurrent documentation sections:\n$SECTIONS\n\nINSTRUCTIONS:\n1. Review the changes and determine if llms.txt needs updating\n2. If updates are needed, output the COMPLETE updated llms.txt content\n3. If no updates needed, output exactly: NO_UPDATE_NEEDED\n\nRules:\n- Keep the same overall structure and formatting\n- Only add/modify sections that are affected by the changes\n- Keep code examples working and accurate\n- Contract addresses should match what's in the docs\n- Keep it concise - this is an overview, not full docs\n- Output ONLY the raw markdown content (no code fences, no explanations)\n\nOutput:"
+            }]
+          }
+          PROMPTEOF
+
+          # Substitute variables
+          CURRENT_CONTENT=$(cat << 'CONTENTEOF'
+          ${{ steps.current-llms.outputs.content }}
+          CONTENTEOF
+          )
+
+          CHANGES="${{ steps.context.outputs.changes }}"
+          SECTIONS="${{ steps.context.outputs.sections }}"
+
+          # Create the actual request
+          jq --arg content "$CURRENT_CONTENT" \
+             --arg changes "$CHANGES" \
+             --arg sections "$SECTIONS" \
+             '.messages[1].content = (.messages[1].content | gsub("\\$CURRENT_CONTENT"; $content) | gsub("\\$CHANGES"; $changes) | gsub("\\$SECTIONS"; $sections))' \
+             /tmp/prompt.json > /tmp/request.json
+
+          # Call OpenAI API (Codex)
+          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -d @/tmp/request.json)
+
+          # Extract response
+          UPDATED_CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "ERROR"')
+
+          if [ "$UPDATED_CONTENT" = "ERROR" ]; then
+            echo "Error calling OpenAI API"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+          echo "$UPDATED_CONTENT" > /tmp/updated-llms.txt
+
+          # Check if update is needed
+          if grep -q "NO_UPDATE_NEEDED" /tmp/updated-llms.txt; then
+            echo "no_update=true" >> $GITHUB_ENV
+            echo "Codex determined no update is needed"
+          else
+            echo "no_update=false" >> $GITHUB_ENV
+            echo "Codex generated updated content"
+          fi
+
+      - name: Update llms.txt route file
+        if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
+        run: |
+          UPDATED_CONTENT=$(cat /tmp/updated-llms.txt)
+
+          # Create the new route file
+          cat > apps/developer-hub/src/app/llms.txt/route.ts << 'ROUTEOF'
+          import { NextResponse } from "next/server";
+
+          export const revalidate = false;
+
+          export function GET() {
+            const content = `
+          ROUTEOF
+
+          # Append the content
+          echo "$UPDATED_CONTENT" >> apps/developer-hub/src/app/llms.txt/route.ts
+
+          # Close the template literal and function
+          cat >> apps/developer-hub/src/app/llms.txt/route.ts << 'ROUTEEND'
+          `;
+
+            return new NextResponse(content, {
+              status: 200,
+              headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "public, max-age=86400",
+              },
+            });
+          }
+          ROUTEEND
+
+      - name: Format updated file
+        if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
+        run: |
+          cd apps/developer-hub
+          npx prettier --write src/app/llms.txt/route.ts || true
+
+      - name: Commit and push changes
+        if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add apps/developer-hub/src/app/llms.txt/route.ts
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(developer-hub): auto-update llms.txt
+
+          Updated llms.txt based on documentation changes.
+
+          Co-Authored-By: Codex <noreply@openai.com>"
+
+            git push
+            echo "Changes committed and pushed"
+          fi
+
+      - name: Comment on PR
+        if: steps.changed-files.outputs.significant == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const noUpdate = process.env.no_update === 'true';
+
+            const body = noUpdate
+              ? `## 🤖 llms.txt Review
+
+            Analyzed documentation changes - no updates to \`llms.txt\` required.
+
+            <details>
+            <summary>Files analyzed</summary>
+
+            \`\`\`
+            ${{ steps.changed-files.outputs.files }}
+            \`\`\`
+            </details>`
+              : `## 🤖 llms.txt Updated
+
+            I've automatically updated \`llms.txt\` based on the documentation changes in this PR.
+
+            Please review the changes to \`apps/developer-hub/src/app/llms.txt/route.ts\`
+
+            <details>
+            <summary>Files that triggered this update</summary>
+
+            \`\`\`
+            ${{ steps.changed-files.outputs.files }}
+            \`\`\`
+            </details>`;
+
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('llms.txt')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
