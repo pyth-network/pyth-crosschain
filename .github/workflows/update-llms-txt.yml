@@ -2,12 +2,21 @@ name: Update llms.txt
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - "apps/developer-hub/content/docs/**"
     types: [opened, synchronize]
 
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: llms-txt-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   update-llms-txt:
+    # Only run if PR is from the same repo (not forks) and targets main
+    if: github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
