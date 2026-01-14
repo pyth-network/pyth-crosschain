@@ -1,1 +1,0 @@
-# pyth-lazer-sdk - Changelog

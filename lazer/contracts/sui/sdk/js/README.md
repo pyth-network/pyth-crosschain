@@ -73,5 +73,5 @@ const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
 ## References
 
 - Pyth Lazer Sui contract: `lazer/contracts/sui/`
-- Lazer JS SDK (data source): `lazer/sdk/js/`
+- Lazer JS SDK: https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk
 - Mysten Sui TS SDK docs: https://sdk.mystenlabs.com/typescript/transaction-building/basics

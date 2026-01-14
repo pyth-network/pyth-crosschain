@@ -30,7 +30,7 @@
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
-    "@pythnetwork/pyth-lazer-sdk": "workspace:*",
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",

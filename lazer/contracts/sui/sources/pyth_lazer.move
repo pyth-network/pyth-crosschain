@@ -66,7 +66,7 @@ public(package) fun verify_le_ecdsa_message(
 
 /// Parse the Lazer update message and validate the signature within.
 /// The parsing logic is based on the Lazer rust protocol definition defined here:
-/// https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/rust/protocol
+/// https://docs.rs/pyth-lazer-protocol/latest/pyth_lazer_protocol/payload/index.html
 ///
 /// # Arguments
 /// * `s` - The pyth_lazer::state::State

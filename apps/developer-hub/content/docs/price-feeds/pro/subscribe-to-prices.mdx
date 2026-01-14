@@ -87,14 +87,14 @@ Determine the most suitable values for your application -- they will be used in 
 
 To subscribe to the prices, send a request to the websocket server. The server will respond with a signed payload.
 
-1. Pyth Lazer provides an [SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js) to seamlessly integrate the websocket API into your application.
+1. Pyth Lazer provides an [SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) to seamlessly integrate the websocket API into your application.
    Install it using the following command:
 
 ```bash copy
 npm install --save @pythnetwork/pyth-lazer-sdk
 ```
 
-2. Then create a [`PythLazerClient`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/js/src/client.ts#L51) object using both endpoint URLs and the access token requested from our authorized distribution partners (Pyth Data Distributors) in the first step:
+2. Then create a `PythLazerClient` object using both endpoint URLs and the access token requested from our authorized distribution partners (Pyth Data Distributors) in the first step:
 
 ```js copy
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
