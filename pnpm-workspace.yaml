@@ -43,9 +43,6 @@ packages:
   - target_chains/ton/contracts
   - target_chains/ton/sdk/js
   - contract_manager
-  - lazer/contracts/solana
-  - lazer/sdk/js
-  - lazer/sdk/js-solana
   - lazer/contracts/sui/sdk/js
 
 catalog:

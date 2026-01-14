@@ -8,7 +8,7 @@ use sui::bcs;
 const EInvalidProperty: vector<u8> = "Invalid property ID";
 
 /// The feed struct is based on the Lazer rust protocol definition defined here:
-/// https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/payload.rs
+/// https://docs.rs/pyth-lazer-protocol/latest/pyth_lazer_protocol/payload/index.html
 ///
 /// Some fields in Lazer are optional, as in Lazer might return None for them due to some conditions (for example,
 /// not having enough publishers to calculate the price) and that is why they are represented as Option<Option<T>>.

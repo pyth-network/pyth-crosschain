@@ -4,12 +4,8 @@ resolver = "2"
 members = [
     "apps/argus",
     "apps/fortuna",
-    "apps/pyth-lazer-agent",
     "apps/quorum",
     "apps/hermes/client/rust",
-    "lazer/publisher_sdk/rust",
-    "lazer/sdk/rust/client",
-    "lazer/sdk/rust/protocol",
     "pythnet/pythnet_sdk",
     "target_chains/starknet/tools/test_vaas",
 ]
@@ -21,9 +17,6 @@ exclude = [
     "governance/remote_executor",
     "governance/remote_executor/cli",
     "governance/remote_executor/programs/remote-executor",
-    # Solana contract
-    "lazer/contracts/solana",
-    "lazer/contracts/solana/programs/pyth-lazer-solana-contract",
     # Solana contract
     "pythnet/message_buffer",
     "pythnet/message_buffer/programs/message_buffer",
