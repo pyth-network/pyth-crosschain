@@ -102,7 +102,7 @@ jobs:
       - name: Generate updated llms.txt with Codex
         if: steps.changed-files.outputs.significant == 'true'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.PYTH_NETWORK_PYTH_CROSSCHAIN_OPENAI_API_KEY }}
         run: |
           # Prepare the prompt
           cat > /tmp/prompt.json << 'PROMPTEOF'
