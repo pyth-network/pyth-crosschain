@@ -1,6 +1,13 @@
 {
   "feeds": [
     {
+      "alias": "FOGO/USD",
+      "id": "245f89fb8084840bd098d661a026032ee21062270003426797c9196d2d8d4e43",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "USDC/USD",
       "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
       "time_difference": 60,
