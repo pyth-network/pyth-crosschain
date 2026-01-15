@@ -39,14 +39,18 @@ jobs:
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          # Count changes
-          FILE_COUNT=$(echo "$CHANGED_FILES" | grep -c "." || echo "0")
+          # Count changes - handle empty case explicitly to avoid integer comparison issues
+          if [ -z "$CHANGED_FILES" ]; then
+            FILE_COUNT=0
+          else
+            FILE_COUNT=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')
+          fi
           echo "file_count=$FILE_COUNT" >> $GITHUB_OUTPUT
 
           # Check for significant changes
           SIGNIFICANT="false"
 
-          if echo "$CHANGED_FILES" | grep -qE "(index|getting-started|contract-addresses)"; then
+          if [ -n "$CHANGED_FILES" ] && echo "$CHANGED_FILES" | grep -qE "(index|getting-started|contract-addresses)"; then
             SIGNIFICANT="true"
           fi
 
