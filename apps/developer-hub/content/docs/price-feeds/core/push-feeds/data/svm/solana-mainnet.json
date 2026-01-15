@@ -161,46 +161,6 @@
       "confidence_ratio": 100
     },
     {
-      "alias": "AUD/USD",
-      "account_address": "6pPXqXcgFFoLEcXfedWJy3ypNZVJ1F3mgipaDFsvZ1co",
-      "id": "67a6f93030420c1c9e3fe37c1ab6b77966af82f995944a9fefce357a22854a80",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "GBP/USD",
-      "account_address": "G25Tm7UkVruTJ7mcbCxFm45XGWwsH72nJKNGcHEQw1tU",
-      "id": "84c2dde9633d93d1bcad84e7dc41c9d56578b7ec52fabedc1f335d673df0a7c1",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "EUR/USD",
-      "account_address": "Fu76ChamBDjE8UuGLV6GP2AcPPSU6gjhkNhAyuoPm7ny",
-      "id": "a995d00bb36a63cef7fd2c287dc105fc8f3d93779f062f09551b0af3e81ec30b",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "XAG/USD",
-      "account_address": "H9JxsWwtDZxjSL6m7cdCVsWibj3JBMD9sxqLjadoZnot",
-      "id": "f2fb02c32b055c805e7238d628e5e9dadef274376114eb1f012337cabe93871e",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "XAU/USD",
-      "account_address": "2uPQGpm8X4ZkxMHxrAW1QuhXcse1AHEgPih6Xp9NuEWW",
-      "id": "765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
       "alias": "JLP/USD",
       "account_address": "2TTGSRSezqFzeLUH8JwRUbtN66XLLaymfYsWRTMjfiMw",
       "id": "c811abc82b4bad1f9bd711a2773ccaa935b03ecef974236942cec5e0eb845a3a",
@@ -276,14 +236,6 @@
       "alias": "NAV.USCC/USD",
       "account_address": "823Y4cV7XH2TzkB9NdHfTRoCKLrqXv8EgQP5nzEG43Hp",
       "id": "5d73a5953dc86c4773adc778c30e8a6dfc94c5c3a74d7ebb56dd5e70350f044a",
-      "time_difference": 60,
-      "price_deviation": 0.5,
-      "confidence_ratio": 100
-    },
-    {
-      "alias": "WTIG6/USD",
-      "account_address": "8nMThr5gWoXaoWHR3gMXrz8ZULukjsBgoW83kuYCDzqG",
-      "id": "7e91242dfd2cea64715b26edaa3e51bafc712a56ac4228a77bd53b51fd66db52",
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
