@@ -1,7 +1,7 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { RootProviders } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
-import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider";
+import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider/next";
 import type { ReactNode } from "react";
 
 import "./global.css";
