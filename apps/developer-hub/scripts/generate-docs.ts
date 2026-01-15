@@ -291,8 +291,7 @@ async function generateApiReferenceIndex(): Promise<void> {
       product: "entropy",
       icon: "DiceSix",
       colorScheme: "green",
-      description:
-        "Random number generation API with callback support",
+      description: "Random number generation API with callback support",
     },
     hermes: {
       name: "hermes",
