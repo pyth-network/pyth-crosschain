@@ -323,7 +323,7 @@ fn update_trusted_signer<T: Copy + PartialEq + Default>(
         });
     }
 
-    if trusted_signers.len() > trusted_signers.len() {
+    if trusted_signers.len() > stored_trusted_signers.len() {
         return Err(ProgramError::AccountDataTooSmall.into());
     }
     if trusted_signers.len() > MAX_NUM_TRUSTED_SIGNERS {
