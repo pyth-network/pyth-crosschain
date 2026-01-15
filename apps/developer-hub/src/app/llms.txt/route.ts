@@ -3,9 +3,7 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 export function GET() {
-  const content = `# Pyth Network
-
-> First-party financial oracle delivering real-time market data to blockchain applications.
+  const content = `> First-party financial oracle delivering real-time market data to blockchain applications.
 
 Pyth Network provides low-latency price feeds for 500+ assets across 50+ blockchains. Data is sourced directly from first-party publishers including major exchanges and market makers.
 
@@ -171,7 +169,7 @@ Get any documentation page as markdown by appending .mdx:
     status: 200,
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+      "Cache-Control": "public, max-age=86400",
     },
   });
 }
