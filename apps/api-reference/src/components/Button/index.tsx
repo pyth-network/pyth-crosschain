@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import Link from "next/link";
 import type {
   ComponentProps,
   ElementType,
@@ -91,4 +92,10 @@ const Gradient = ({ size = DEFAULT_GRADIENT_SIZE, x, y }: GradientProps) => (
   >
     <div className="size-full scale-0 bg-gradient-radial from-pythpurple-400 to-70% opacity-10 transition duration-500 group-hover:scale-100 group-hover:opacity-30 group-active:scale-150 group-active:opacity-40 dark:from-pythpurple-600" />
   </div>
+);
+
+type ButtonLinkProps = Omit<ButtonProps<typeof Link>, "as">;
+
+export const ButtonLink = (props: ButtonLinkProps) => (
+  <Button as={Link} {...props} />
 );

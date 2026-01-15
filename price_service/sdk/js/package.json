@@ -47,7 +47,7 @@
     "bn.js": "^5.2.1"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "type": "module",
   "exports": {

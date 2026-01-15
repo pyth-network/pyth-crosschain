@@ -1,7 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Button } from "../Button";
+import { ButtonLink } from "../Button";
 
 type Props = {
   children: ReactNode;
@@ -13,8 +12,8 @@ export const ComingSoon = ({ children }: Props) => (
       Coming Soon
     </h1>
     <p className="mb-20 max-w-xl text-lg">{children}</p>
-    <Button as={Link} className="place-self-center px-24 py-3" href="/">
+    <ButtonLink className="place-self-center px-24 py-3" href="/">
       Go Home
-    </Button>
+    </ButtonLink>
   </main>
 );

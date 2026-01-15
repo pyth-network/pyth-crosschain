@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Program } from '@coral-xyz/anchor'
 import { Dialog, Menu, Transition } from '@headlessui/react'
@@ -64,7 +64,6 @@ const PermissionDepermissionKey = ({
 
   // get current input value
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (event: any) => {
     setSelectedAssetType(event.target.value)
     setIsModalOpen(true)
@@ -142,7 +141,6 @@ const PermissionDepermissionKey = ({
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSubmitButtonLoading(false)
         closeModal()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         if (error.response) {
           toast.error(capitalizeFirstLetter(error.response.data))

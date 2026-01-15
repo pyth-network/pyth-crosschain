@@ -1,10 +1,9 @@
-import Link from "next/link";
 import type { ElementType, SVGProps } from "react";
 
 import Benchmarks from "./benchmarks.svg";
 import Entropy from "./entropy.svg";
 import PriceFeeds from "./price-feeds.svg";
-import { Button } from "../Button";
+import { ButtonLink } from "../Button";
 import { MaxWidth } from "../MaxWidth";
 
 export const Home = () => (
@@ -66,8 +65,7 @@ const ProductLink = ({
   target,
   icon: Icon,
 }: ProductLinkProps) => (
-  <Button
-    as={Link}
+  <ButtonLink
     href={href}
     target={target}
     gradient
@@ -82,5 +80,5 @@ const ProductLink = ({
         {children}
       </p>
     </div>
-  </Button>
+  </ButtonLink>
 );

@@ -52,7 +52,7 @@
     "fuels": "catalog:"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "type": "module",
   "exports": {

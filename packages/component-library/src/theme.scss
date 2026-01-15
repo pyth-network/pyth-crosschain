@@ -937,3 +937,11 @@ $header-height: var(--header-height);
   @include export-css-vars($color-pallette, "theme-palette");
   @include export-css-vars($color, "theme-color");
 }
+
+:root {
+  // required for Nextv16 because it uses lightning.css by default,
+  // which will mess up our color scheme if we don't have this
+  // property set to inform it (and the browser) which system color schemes
+  // we should support.
+  color-scheme: light dark;
+}

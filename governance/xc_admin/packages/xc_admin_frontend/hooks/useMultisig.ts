@@ -1,19 +1,20 @@
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import { Connection, Keypair, PublicKey } from '@solana/web3.js'
-import SquadsMesh from '@sqds/mesh'
-import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   PRICE_FEED_MULTISIG,
   UPGRADE_MULTISIG,
   getMultisigCluster,
   getProposals,
 } from '@pythnetwork/xc-admin-common'
+import { useAnchorWallet } from '@solana/wallet-adapter-react'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import SquadsMesh from '@sqds/mesh'
+import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+
 import { ClusterContext } from '../contexts/ClusterContext'
 import { deriveWsUrl, pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
-export interface MultisigHookData {
+export type MultisigHookData = {
   isLoading: boolean
   walletSquads: SquadsMesh | undefined
   readOnlySquads: SquadsMesh
@@ -72,6 +73,7 @@ export const useMultisig = (): MultisigHookData => {
   }, [connection])
 
   const walletSquads = useMemo(() => {
+    // eslint-disable-next-line unicorn/no-useless-undefined
     if (!wallet) return undefined
     return new SquadsMesh({
       connection,
@@ -113,15 +115,18 @@ export const useMultisig = (): MultisigHookData => {
         setPriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
 
         setIsLoading(false)
-      } catch (e) {
-        console.log(e)
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(error)
         if (cancelled) return
         const urls = pythClusterApiUrls(multisigCluster)
         if (urlsIndex === urls.length - 1) {
           setIsLoading(false)
+          // eslint-disable-next-line no-console
           console.warn(`Failed to fetch accounts`)
         } else if (urlsIndex < urls.length - 1) {
           setUrlsIndex((urlsIndex) => urlsIndex + 1)
+          // eslint-disable-next-line no-console
           console.warn(
             `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
           )
@@ -137,7 +142,8 @@ export const useMultisig = (): MultisigHookData => {
 
   useEffect(() => {
     const { cancel, fetchData } = refreshData()
-    fetchData()
+    // eslint-disable-next-line no-console
+    fetchData().catch(console.error);
     return cancel
   }, [refreshData])
 

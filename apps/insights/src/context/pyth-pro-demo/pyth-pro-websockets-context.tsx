@@ -69,12 +69,14 @@ export function WebSocketsProvider({ children }: PropsWithChildren) {
     symbol: selectedSource,
   });
 
+  const replayDataSources = useMemo(
+    () => [ALL_DATA_SOURCES.Values.nbbo, ALL_DATA_SOURCES.Values.pyth_pro],
+    [],
+  );
+
   // "Fake" websocket-like contract for easier integration
   const { status: replay_status } = useHttpDataStream({
-    dataSources: [
-      ALL_DATA_SOURCES.Values.nbbo,
-      ALL_DATA_SOURCES.Values.pyth_pro,
-    ],
+    dataSources: replayDataSources,
     enabled: isGoodSymbol && isReplaySymbol(selectedSource),
     symbol: selectedSource,
   });

@@ -1,5 +1,6 @@
 import type { PythCluster } from '@pythnetwork/client/lib/cluster'
-import { type ReactNode, createContext, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import { createContext, useMemo, useState } from 'react'
 
 export const DEFAULT_CLUSTER: PythCluster = 'mainnet-beta'
 

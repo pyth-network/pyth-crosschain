@@ -1,4 +1,4 @@
 .env*.local
 
 dist/
-public/db/historical-demo-data.db
+next-env.d.ts

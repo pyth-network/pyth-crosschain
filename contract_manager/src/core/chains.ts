@@ -60,7 +60,8 @@ import Web3 from "web3";
 import type { KeyValueConfig, PrivateKey, TxResult } from "./base";
 import { Storable } from "./base";
 import type { TokenId } from "./token";
-import { execFileAsync, hasProperty } from "../utils/utils";
+import { execFileAsync } from "../utils/exec-file-async";
+import { hasProperty } from "../utils/utils";
 
 function computeHashOnElements(elements: string[]): string {
   let hash = "0";

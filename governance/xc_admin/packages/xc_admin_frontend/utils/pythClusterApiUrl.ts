@@ -1,7 +1,5 @@
-import {
-  type PythCluster,
-  getPythClusterApiUrl,
-} from '@pythnetwork/client/lib/cluster'
+import type { PythCluster } from '@pythnetwork/client/lib/cluster'
+import { getPythClusterApiUrl } from '@pythnetwork/client/lib/cluster'
 
 const CLUSTER_URLS: Record<PythCluster, string[]> = {
   'mainnet-beta': [
@@ -38,17 +36,13 @@ const CLUSTER_URLS: Record<PythCluster, string[]> = {
 }
 
 export function pythClusterApiUrls(cluster: PythCluster) {
-  if (CLUSTER_URLS.hasOwnProperty(cluster)) {
-    return CLUSTER_URLS[cluster]
-  } else {
-    return []
-  }
+  return Object.prototype.hasOwnProperty.call(CLUSTER_URLS, cluster)
+    ? CLUSTER_URLS[cluster]
+    : []
 }
 
 export function deriveWsUrl(httpUrl: string) {
-  if (httpUrl.startsWith('https://')) {
-    return 'wss://' + httpUrl.slice(8)
-  } else {
-    return 'ws://' + httpUrl.slice(7)
-  }
+  return httpUrl.startsWith('https://')
+    ? 'wss://' + httpUrl.slice(8)
+    : 'ws://' + httpUrl.slice(7)
 }

@@ -1,5 +1,9 @@
+'use client'
+
 import React, { createContext, useContext, useMemo } from 'react'
-import { type MultisigHookData, useMultisig } from '../hooks/useMultisig'
+
+import type { MultisigHookData } from '../hooks/useMultisig'
+import { useMultisig } from '../hooks/useMultisig'
 
 const MultisigContext = createContext<MultisigHookData | undefined>(undefined)
 
@@ -13,7 +17,7 @@ export const useMultisigContext = () => {
   return context
 }
 
-interface MultisigContextProviderProps {
+type MultisigContextProviderProps = {
   children?: React.ReactNode
 }
 

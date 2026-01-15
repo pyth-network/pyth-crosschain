@@ -1,6 +1,3 @@
-import child_process from "node:child_process";
-import { promisify } from "node:util";
-
 import * as chains from "viem/chains";
 
 import evmChainsData from "../store/chains/EvmChains.json" with { type: "json" };
@@ -60,8 +57,6 @@ export const getEvmChainRpcUrl = (chainId: number): string | undefined => {
     return;
   }
 };
-
-export const execFileAsync = promisify(child_process.execFile);
 
 export function hasProperty<const P extends string>(
   value: unknown,
