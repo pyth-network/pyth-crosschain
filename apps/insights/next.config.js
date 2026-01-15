@@ -7,6 +7,8 @@ const config = {
 
   pageExtensions: ["ts", "tsx", "mdx"],
 
+  reactCompiler: true,
+
   logging: {
     fetches: {
       fullUrl: true,
