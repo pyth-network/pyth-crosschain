@@ -111,6 +111,7 @@ catalog:
   babel-plugin-react-compiler: 19.1.0-rc.1
   bcp-47: ^2.1.0
   bs58: ^6.0.0
+  buffer: ^6.0.3
   chalk: ^5.6.2
   change-case: ^5.4.4
   class-variance-authority: ^0.7.1

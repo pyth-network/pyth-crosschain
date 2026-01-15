@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable tsdoc/syntax */
+
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer as IsomorphicBuffer } from "buffer";
+
 import type { IdlAccounts } from "@coral-xyz/anchor";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
@@ -519,7 +523,7 @@ export class PythSolanaReceiver {
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
-        Buffer.from(priceUpdateData, "base64"),
+        IsomorphicBuffer.from(priceUpdateData, "base64"),
       );
       const guardianSetIndex = getGuardianSetIndex(accumulatorUpdateData.vaa);
       const trimmedVaa = trimSignatures(accumulatorUpdateData.vaa);
@@ -587,7 +591,7 @@ export class PythSolanaReceiver {
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
-        Buffer.from(priceUpdateData, "base64"),
+        IsomorphicBuffer.from(priceUpdateData, "base64"),
       );
 
       const {
@@ -663,7 +667,7 @@ export class PythSolanaReceiver {
     }
 
     const [startUpdateData, endUpdateData] = twapUpdateDataArray.map((data) =>
-      parseAccumulatorUpdateData(Buffer.from(data, "base64")),
+      parseAccumulatorUpdateData(IsomorphicBuffer.from(data, "base64")),
     );
 
     if (!startUpdateData) {
@@ -759,7 +763,7 @@ export class PythSolanaReceiver {
 
     for (const priceUpdateData of priceUpdateDataArray) {
       const accumulatorUpdateData = parseAccumulatorUpdateData(
-        Buffer.from(priceUpdateData, "base64"),
+        IsomorphicBuffer.from(priceUpdateData, "base64"),
       );
 
       const {
@@ -963,14 +967,14 @@ export function getPriceFeedAccountForProgram(
 ): PublicKey {
   if (typeof priceFeedId == "string") {
     priceFeedId = priceFeedId.startsWith("0x")
-      ? Buffer.from(priceFeedId.slice(2), "hex")
-      : Buffer.from(priceFeedId, "hex");
+      ? IsomorphicBuffer.from(priceFeedId.slice(2), "hex")
+      : IsomorphicBuffer.from(priceFeedId, "hex");
   }
 
   if (priceFeedId.length != 32) {
     throw new Error("Feed ID should be 32 bytes long");
   }
-  const shardBuffer = Buffer.alloc(2);
+  const shardBuffer = IsomorphicBuffer.alloc(2);
   shardBuffer.writeUint16LE(shardId, 0);
 
   return PublicKey.findProgramAddressSync(
