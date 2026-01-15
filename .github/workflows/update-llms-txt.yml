@@ -83,9 +83,16 @@ jobs:
         if: steps.changed-files.outputs.significant == 'true'
         id: context
         run: |
+          # Save files list to temp file to avoid shell expansion issues
+          cat << 'FILESEOF' > /tmp/changed_files.txt
+          ${{ steps.changed-files.outputs.files }}
+          FILESEOF
+
           # Get summaries of changed files
           CHANGES=""
-          for file in ${{ steps.changed-files.outputs.files }}; do
+          while IFS= read -r file; do
+            # Skip empty lines
+            [ -z "$file" ] && continue
             if [ -f "$file" ]; then
               # Extract title and description from frontmatter
               TITLE=$(grep -m1 "^title:" "$file" | sed 's/title: //' | tr -d '"' || echo "")
@@ -95,7 +102,7 @@ jobs:
             Title: $TITLE
             Description: $DESC"
             fi
-          done
+          done < /tmp/changed_files.txt
 
           # Get list of all current sections (from meta.json files)
           SECTIONS=$(find apps/developer-hub/content/docs -name "meta.json" -exec dirname {} \; | sed 's|apps/developer-hub/content/docs/||' | sort | head -20)
