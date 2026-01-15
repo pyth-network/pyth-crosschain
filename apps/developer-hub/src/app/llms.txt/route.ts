@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 export function GET() {
-  const content = `# Pyth Network
+  const content = `
+```
 
 > First-party financial oracle delivering real-time market data to blockchain applications.
 
@@ -165,13 +166,14 @@ PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceId, maxAge);
 Get any documentation page as markdown by appending .mdx:
 - https://docs.pyth.network/price-feeds/core/getting-started.mdx
 - https://docs.pyth.network/entropy/generate-random-numbers-evm.mdx
+```
 `;
 
   return new NextResponse(content, {
     status: 200,
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+      "Cache-Control": "public, max-age=86400",
     },
   });
 }
