@@ -11,6 +11,7 @@ import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
 } from "../constants.js";
+import { IsomorphicEventEmitter } from "../emitter/index.js";
 import {
   addAuthTokenToWebSocketUrl,
   bufferFromWebsocketData,
@@ -24,13 +25,31 @@ type WebSocketOnMessageCallback = (
 ) => void | Promise<void>;
 
 export type WebSocketPoolConfig = {
-  urls?: string[];
+  /**
+   * Maximum number of open, parallel websocket connections
+   * @defaultValue 3
+   */
   numConnections?: number;
-  rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
+  /**
+   * Callback that will be executed whenever an error
+   * message or an error event occurs on an individual WebSocket connection
+   */
   onError?: (error: ErrorEvent) => void;
+  /**
+   * Additional websocket configuration
+   */
+  rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
+  /**
+   * Pyth URLs to use when creating a connection
+   */
+  urls?: string[];
 };
 
-export class WebSocketPool {
+export type WebSocketPoolEvents = {
+  error: (error: Error) => void;
+};
+
+export class WebSocketPool extends IsomorphicEventEmitter<WebSocketPoolEvents> {
   rwsPool: ResilientWebSocket[];
   private cache: TTLCache<string, boolean>;
   private subscriptions: Map<number, Request>; // id -> subscription Request
@@ -40,6 +59,7 @@ export class WebSocketPool {
   private checkConnectionStatesInterval: NodeJS.Timeout;
 
   private constructor(private readonly logger: Logger) {
+    super();
     this.rwsPool = [];
     this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
     this.subscriptions = new Map();
@@ -118,8 +138,7 @@ export class WebSocketPool {
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
       rws.onMessage = (data) => {
         pool.dedupeHandler(data).catch((error: unknown) => {
-          const errMsg = `An error occurred in the WebSocket pool's dedupeHandler: ${error instanceof Error ? error.message : String(error)}`;
-          throw new Error(errMsg);
+          pool.emitPoolError(error, "Error in WebSocketPool dedupeHandler");
         });
       };
       pool.rwsPool.push(rws);
@@ -139,6 +158,23 @@ export class WebSocketPool {
     );
 
     return pool;
+  }
+
+  private emitPoolError(error: unknown, context?: string): void {
+    const err = error instanceof Error ? error : new Error(String(error));
+    if (context) {
+      this.logger.error(context, err);
+    } else {
+      this.logger.error("WebSocketPool error", err);
+    }
+
+    for (const errHandler of this.getListeners("error")) {
+      try {
+        errHandler(err);
+      } catch (handlerError) {
+        this.logger.error("WebSocketPool error handler threw", handlerError);
+      }
+    }
   }
 
   /**
@@ -181,18 +217,27 @@ export class WebSocketPool {
       this.handleErrorMessages(data);
     }
 
-    await Promise.all(this.messageListeners.map((handler) => handler(data)));
+    try {
+      await Promise.all(this.messageListeners.map((handler) => handler(data)));
+    } catch (error) {
+      this.emitPoolError(error, "Error in WebSocketPool message handler");
+    }
   };
 
   sendRequest(request: Request) {
     for (const rws of this.rwsPool) {
-      rws.send(JSON.stringify(request));
+      try {
+        rws.send(JSON.stringify(request));
+      } catch (error) {
+        this.emitPoolError(error, "Failed to send WebSocket request");
+      }
     }
   }
 
   addSubscription(request: Request) {
     if (request.type !== "subscribe") {
-      throw new Error("Request must be a subscribe request");
+      this.emitPoolError(new Error("Request must be a subscribe request"));
+      return;
     }
     this.subscriptions.set(request.subscriptionId, request);
     this.sendRequest(request);
@@ -236,7 +281,11 @@ export class WebSocketPool {
       this.logger.error("All WebSocket connections are down or reconnecting");
       // Notify all listeners
       for (const listener of this.allConnectionsDownListeners) {
-        listener();
+        try {
+          listener();
+        } catch (error) {
+          this.emitPoolError(error, "All-connections-down listener threw");
+        }
       }
     }
     // If at least one connection was restored
