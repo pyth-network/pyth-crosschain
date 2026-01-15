@@ -101,9 +101,9 @@ export const usePyth = (): PythHookData => {
           setUrlsIndex((urlsIndex) => urlsIndex + 1)
         }
       }
-    })();
+    })()
 
-    result.catch(console.error);
+    result.catch(console.error)
 
     return () => {
       cancelled = true
