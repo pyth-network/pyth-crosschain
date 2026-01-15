@@ -1,4 +1,4 @@
-import { IsomorphicEventEmitter } from "../../../../../lazer/sdk/js/src/emitter/index.js";
+import { IsomorphicEventEmitter } from "../index.js";
 
 const FOOD_TYPES = ["pasta", "pizza", "rice", "tacos"] as const;
 type FoodType = (typeof FOOD_TYPES)[number];
