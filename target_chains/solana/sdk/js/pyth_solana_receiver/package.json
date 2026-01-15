@@ -49,7 +49,8 @@
     "@noble/hashes": "^1.4.0",
     "@pythnetwork/price-service-sdk": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:*",
-    "@solana/web3.js": "^1.90.0"
+    "@solana/web3.js": "^1.90.0",
+    "buffer": "catalog:"
   },
   "engines": {
     "node": "^24.0.0"

@@ -30,6 +30,7 @@
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/react-hooks": "workspace:",
     "@react-hookz/web": "catalog:",
+    "buffer": "catalog:",
     "clsx": "catalog:",
     "fumadocs-core": "catalog:",
     "fumadocs-mdx": "catalog:",

@@ -1,3 +1,6 @@
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer as IsomorphicBuffer } from "buffer";
+
 import { PublicKey } from "@solana/web3.js";
 
 /**
@@ -26,10 +29,10 @@ export const getGuardianSetPda = (
   guardianSetIndex: number,
   wormholeProgramId: PublicKey,
 ) => {
-  const guardianSetIndexBuf = Buffer.alloc(4);
+  const guardianSetIndexBuf = IsomorphicBuffer.alloc(4);
   guardianSetIndexBuf.writeUInt32BE(guardianSetIndex, 0);
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("GuardianSet"), guardianSetIndexBuf],
+    [IsomorphicBuffer.from("GuardianSet"), guardianSetIndexBuf],
     wormholeProgramId,
   )[0];
 };
@@ -50,7 +53,7 @@ export const getTreasuryPda = (
   receiverProgramId: PublicKey,
 ) => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("treasury"), Buffer.from([treasuryId])],
+    [IsomorphicBuffer.from("treasury"), IsomorphicBuffer.from([treasuryId])],
     receiverProgramId,
   )[0];
 };
@@ -60,7 +63,7 @@ export const getTreasuryPda = (
  */
 export const getConfigPda = (receiverProgramId: PublicKey) => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("config")],
+    [IsomorphicBuffer.from("config")],
     receiverProgramId,
   )[0];
 };

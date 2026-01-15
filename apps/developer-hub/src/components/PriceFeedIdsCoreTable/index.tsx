@@ -1,4 +1,6 @@
 "use client";
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer as IsomorphicBuffer } from "buffer";
 
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
@@ -167,7 +169,7 @@ const getFeeds = async () => {
       stableFeedId: `0x${feed.id}`,
       solanaPriceFeedAccount: getPriceFeedAccountForProgram(
         0,
-        Buffer.from(feed.id, "hex"),
+        IsomorphicBuffer.from(feed.id, "hex"),
       ).toBase58(),
     });
   }
