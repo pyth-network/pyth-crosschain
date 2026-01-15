@@ -38,6 +38,7 @@
     "@types/yargs": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",
+    "tsx": "catalog:",
     "yargs": "catalog:"
   },
   "dependencies": {

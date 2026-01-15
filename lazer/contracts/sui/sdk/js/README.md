@@ -20,16 +20,22 @@ A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 
 ### Run the example
 
-Install `tsx` to run TypeScript scripts:
-
 ```sh
-npm install -g tsx
-```
+# Your Sui private key in Bech32 format
+# SUI_KEY=
 
-Execute the example script:
+# Lazer contract state ID
+# STATE_ID=
 
-```sh
-SUI_KEY=<YOUR_SUI_PRIVATE_KEY> pnpm -F @pythnetwork/pyth-lazer-sui-js example:fetch-and-verify --fullnodeUrl <SUI_FULLNODE_URL> --packageId <PYTH_LAZER_PACKAGE_ID> --stateObjectId <PYTH_LAZER_STATE_OBJECT_ID> --token <LAZER_TOKEN>
+# Your Lazer API token
+# LAZER_TOKEN=
+
+SUI_FULLNODE_URL="https://fullnode.mainnet.sui.io:443"
+
+pnpm run example:fetch-and-verify \
+  --fullnode-url "$SUI_FULLNODE_URL" \
+  --state-id "$STATE_ID" \
+  --lazer-token "$LAZER_TOKEN"
 ```
 
 The script's core logic is summarized below:
@@ -37,38 +43,40 @@ The script's core logic is summarized below:
 ```ts
 import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
-import { SuiLazerClient } from "@pythnetwork/pyth-lazer-sui-js";
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+import { addParseAndVerifyLeEcdsaUpdateCall } from "@pythnetwork/pyth-lazer-sui-js";
 
-// Prepare Mysten Sui client
-const provider = new SuiClient({ url: "<sui-fullnode-url>" });
+// 1. Fetch the price update from Pyth Lazer in "leEcdsa" format:
+const lazer = await PythLazerClient.create({ token: lazerToken });
+const latestPrice = await lazer.getLatestPrice({
+  priceFeedIds: [1],
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+  formats: ["leEcdsa"],
+  channel: "fixed_rate@200ms",
+  jsonBinaryEncoding: "hex",
+});
+const update = Buffer.from(latestPrice.leEcdsa?.data ?? "", "hex");
 
-// Create SDK client
-const client = new SuiLazerClient(provider);
-
-// Obtain a Lazer leEcdsa payload using @pythnetwork/pyth-lazer-sdk.
-// See examples/FetchAndVerifyUpdate.ts for a runnable end-to-end example.
-const leEcdsa: Buffer = /* fetch via @pythnetwork/pyth-lazer-sdk */ Buffer.from(
-  [],
-);
-
-// Build transaction calling parse_and_verify_le_ecdsa_update
+// 2. Create a new Sui transaction:
+const client = new SuiClient({ url: fullnodeUrl });
 const tx = new Transaction();
-const packageId = "<pyth_lazer_package_id>";
-const stateObjectId = "<pyth_lazer_state_object_id>";
 
-const updateVal = client.addParseAndVerifyLeEcdsaUpdateCall({
+// 3. Add the parse and verify call:
+const verifiedUpdate = await addParseAndVerifyLeEcdsaUpdateCall({
+  client,
   tx,
-  packageId,
-  stateObjectId,
-  updateBytes: leEcdsa,
+  stateObjectId: stateId,
+  update,
 });
 
-// Sign and execute the transaction using your signer.
+// 4. Consume `verifiedUpdate` in your own contract with additional calls...
+
+// 5. Sign and execute the transaction:
+const result = await client.signAndExecuteTransaction({
+  transaction: tx,
+  signer,
+});
 ```
-
-## Notes
-
-- FIXME: Automatic `packageId` management is coming soon. The Lazer contract doesn't support upgradeability yet.
 
 ## References
 

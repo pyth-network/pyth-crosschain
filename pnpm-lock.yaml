@@ -2055,7 +2055,10 @@ importers:
         version: 9.23.0(jiti@2.4.2)
       jest:
         specifier: 'catalog:'
-        version: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.8)(@types/node@22.14.0)(typescript@5.9.3))
+        version: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.3)(@types/node@22.14.0)(typescript@5.9.3))
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
       yargs:
         specifier: 'catalog:'
         version: 18.0.0
