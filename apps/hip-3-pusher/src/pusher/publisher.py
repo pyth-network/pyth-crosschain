@@ -85,7 +85,6 @@ class Publisher:
 
         self.market_name = config.hyperliquid.market_name
         self.enable_publish = config.hyperliquid.enable_publish
-        self.duplicate_mark_price = config.hyperliquid.duplicate_mark_price
 
         self.price_state = price_state
         self.metrics = metrics
@@ -110,13 +109,7 @@ class Publisher:
             self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
 
         # markPxs is a list of dicts of length 0-2, and so can be empty.
-        if not mark_pxs:
-            mark_pxs = []
-        elif self.duplicate_mark_price:
-            # HL also takes the median with the local mark implicitly, so we can force it by doubling up.
-            mark_pxs = [mark_pxs, mark_pxs]
-        else:
-            mark_pxs = [mark_pxs]
+        mark_pxs = self.construct_mark_pxs(mark_pxs)
 
         if self.enable_publish:
             try:
@@ -273,3 +266,18 @@ class Publisher:
         else:
             logger.warning("Unrecognized error response: {}", response)
             return PushErrorReason.UNKNOWN
+
+    def construct_mark_pxs(self, mark_pxs):
+        if not mark_pxs:
+            return []
+        val = [{}]
+        for symbol, px in mark_pxs.items():
+            if isinstance(px, list):
+                while len(val) < len(px):
+                    val.append({})
+                for i, pxi in enumerate(px):
+                    val[i][symbol] = pxi
+            else:
+                val[0][symbol] = px
+        logger.debug("construct_mark_pxs: {}", val)
+        return val

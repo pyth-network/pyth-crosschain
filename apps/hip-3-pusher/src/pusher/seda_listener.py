@@ -17,7 +17,7 @@ class SedaListener:
     """
     Subscribe to SEDA price updates for needed feeds.
     """
-    def __init__(self, config: Config, seda_state: PriceSourceState, seda_last_state: PriceSourceState):
+    def __init__(self, config: Config, seda_state: PriceSourceState, seda_last_state: PriceSourceState, seda_ema_state: PriceSourceState):
         self.url = config.seda.url
         self.api_key = Path(config.seda.api_key_path).read_text().strip() if config.seda.api_key_path else None
         self.feeds = config.seda.feeds
@@ -26,11 +26,13 @@ class SedaListener:
         self.poll_timeout = config.seda.poll_timeout
         self.seda_state = seda_state
         self.seda_last_state = seda_last_state
+        self.seda_ema_state = seda_ema_state
 
         self.price_field = config.seda.price_field
         self.timestamp_field = config.seda.timestamp_field
         self.session_flag_field = config.seda.session_flag_field
         self.last_price_field = config.seda.last_price_field
+        self.session_mark_px_ema_field = config.seda.session_mark_px_ema_field
 
     async def run(self):
         if not self.feeds:
@@ -95,3 +97,8 @@ class SedaListener:
             last_price = result.get(self.last_price_field)
             logger.debug("SEDA feed: {} last_price: {}", feed_name, last_price)
             self.seda_last_state.put(feed_name, PriceUpdate(last_price, timestamp, session_flag))
+
+        if self.session_mark_px_ema_field:
+            ema_price = result.get(self.session_mark_px_ema_field)
+            logger.debug("SEDA feed: {} session_ema_price: {}", feed_name, ema_price)
+            self.seda_ema_state.put(feed_name, PriceUpdate(ema_price, timestamp, session_flag))

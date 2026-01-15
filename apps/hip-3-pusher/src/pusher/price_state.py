@@ -3,7 +3,7 @@ from loguru import logger
 import time
 
 from pusher.config import Config, PriceSource, PriceSourceConfig, ConstantSourceConfig, SingleSourceConfig, \
-    PairSourceConfig, OracleMidAverageConfig
+    PairSourceConfig, OracleMidAverageConfig, SessionEMASourceConfig
 
 DEFAULT_STALE_PRICE_THRESHOLD_SECONDS = 5
 
@@ -48,6 +48,7 @@ class PriceState:
     HERMES = "hermes"
     SEDA = "seda"
     SEDA_LAST = "seda_last"
+    SEDA_EMA = "seda_ema"
 
     """
     Maintain latest prices seen across listeners and publisher.
@@ -64,6 +65,7 @@ class PriceState:
         self.hermes_state = PriceSourceState(self.HERMES)
         self.seda_state = PriceSourceState(self.SEDA)
         self.seda_last_state = PriceSourceState(self.SEDA_LAST)
+        self.seda_ema_state = PriceSourceState(self.SEDA_EMA)
 
         self.all_states = {
             self.HL_ORACLE: self.hl_oracle_state,
@@ -73,6 +75,7 @@ class PriceState:
             self.HERMES: self.hermes_state,
             self.SEDA: self.seda_state,
             self.SEDA_LAST: self.seda_last_state,
+            self.SEDA_EMA: self.seda_ema_state,
         }
 
     def get_all_prices(self) -> OracleUpdate:
@@ -93,7 +96,9 @@ class PriceState:
                     # find first valid price in the waterfall
                     px = self.get_price(source_config, oracle_update)
                     if px is not None:
-                        pxs[f"{self.market_name}:{symbol}"] = str(px)
+                        if not isinstance(px, str) and not isinstance(px, list):
+                            px = str(px)
+                        pxs[f"{self.market_name}:{symbol}"] = px
                         break
                 except Exception as e:
                     logger.exception("get_price exception for symbol: {} source_config: {} error: {}", symbol, source_config, repr(e))
@@ -108,6 +113,8 @@ class PriceState:
             return self.get_price_from_pair_source(price_source_config.base_source, price_source_config.quote_source)
         elif isinstance(price_source_config, OracleMidAverageConfig):
             return self.get_price_from_oracle_mid_average(price_source_config.symbol, oracle_update)
+        elif isinstance(price_source_config, SessionEMASourceConfig):
+            return self.get_price_from_session_ema_source(price_source_config.oracle_source, price_source_config.ema_source)
         else:
             raise ValueError
 
@@ -161,3 +168,26 @@ class PriceState:
             return None
 
         return (float(oracle_price) + float(mid_price_update.price)) / 2.0
+
+    def get_price_from_session_ema_source(self, oracle_source: PriceSource, ema_source: PriceSource):
+        now = time.time()
+        oracle_update: PriceUpdate | None = self.all_states.get(oracle_source.source_name, {}).get(oracle_source.source_id)
+
+        if oracle_update is None:
+            logger.warning("source {} id {} is missing", oracle_source.source_name, oracle_source.source_id)
+            return None
+        # check staleness
+        time_diff = oracle_update.time_diff(now)
+        if time_diff >= self.stale_price_threshold_seconds:
+            logger.warning("source {} id {} is stale by {} seconds", oracle_source.source_name, oracle_source.source_id, time_diff)
+            return None
+
+        if oracle_update.session_flag:
+            return [oracle_update.price, oracle_update.price]
+
+        ema_price = self.get_price_from_single_source(ema_source)
+        if ema_price is None:
+            logger.warning("source {} id {} ema price is missing, reverting to just oracle", oracle_source.source_name, oracle_source.source_id)
+            return oracle_update.price
+
+        return [oracle_update.price, ema_price]

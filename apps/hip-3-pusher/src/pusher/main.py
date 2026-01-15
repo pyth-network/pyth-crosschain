@@ -52,7 +52,7 @@ async def main():
     hyperliquid_listener = HyperliquidListener(config, price_state.hl_oracle_state, price_state.hl_mark_state, price_state.hl_mid_state)
     lazer_listener = LazerListener(config, price_state.lazer_state)
     hermes_listener = HermesListener(config, price_state.hermes_state)
-    seda_listener = SedaListener(config, price_state.seda_state, price_state.seda_last_state)
+    seda_listener = SedaListener(config, price_state.seda_state, price_state.seda_last_state, price_state.seda_ema_state)
     user_limit_listener = UserLimitListener(config, metrics, publisher.user_limit_address)
 
     await asyncio.gather(

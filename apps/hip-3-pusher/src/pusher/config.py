@@ -74,6 +74,7 @@ class SedaConfig(BaseModel):
     timestamp_field: str = "timestamp"
     last_price_field: Optional[str] = None
     session_flag_field: Optional[str] = None
+    session_mark_px_ema_field: Optional[str] = None
 
 
 class PriceSource(BaseModel):
@@ -94,6 +95,12 @@ class PairSourceConfig(BaseModel):
     quote_source: PriceSource
 
 
+class SessionEMASourceConfig(BaseModel):
+    source_type: Literal["session_ema"]
+    oracle_source: PriceSource
+    ema_source: PriceSource
+
+
 class ConstantSourceConfig(BaseModel):
     source_type: Literal["constant"]
     value: str
@@ -104,7 +111,7 @@ class OracleMidAverageConfig(BaseModel):
     symbol: str
 
 
-PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig | OracleMidAverageConfig
+PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig | OracleMidAverageConfig | SessionEMASourceConfig
 
 
 class PriceConfig(BaseModel):
