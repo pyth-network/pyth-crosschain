@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import {
   PRICE_FEED_MULTISIG,
@@ -117,14 +116,17 @@ export const useMultisig = (): MultisigHookData => {
 
         setIsLoading(false)
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.log(error)
         if (cancelled) return
         const urls = pythClusterApiUrls(multisigCluster)
         if (urlsIndex === urls.length - 1) {
           setIsLoading(false)
+          // eslint-disable-next-line no-console
           console.warn(`Failed to fetch accounts`)
         } else if (urlsIndex < urls.length - 1) {
           setUrlsIndex((urlsIndex) => urlsIndex + 1)
+          // eslint-disable-next-line no-console
           console.warn(
             `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
           )
