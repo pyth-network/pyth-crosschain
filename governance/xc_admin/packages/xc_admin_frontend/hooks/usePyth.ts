@@ -44,7 +44,7 @@ export const usePyth = (): PythHookData => {
     })
 
     connectionRef.current = connection
-    void (async () => {
+    const result = (async () => {
       try {
         const allPythAccounts = [
           ...(await connection.getProgramAccounts(
@@ -101,7 +101,9 @@ export const usePyth = (): PythHookData => {
           setUrlsIndex((urlsIndex) => urlsIndex + 1)
         }
       }
-    })()
+    })();
+
+    result.catch(console.error);
 
     return () => {
       cancelled = true
