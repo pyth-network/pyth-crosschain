@@ -13,7 +13,7 @@
     "directory": "lazer/contracts/pyth-lazer-sui-js"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "sideEffects": false,
   "scripts": {
@@ -38,6 +38,7 @@
     "@types/yargs": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",
+    "tsx": "catalog:",
     "yargs": "catalog:"
   },
   "dependencies": {

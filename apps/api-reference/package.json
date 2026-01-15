@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "scripts": {
     "build:vercel": "next build",
@@ -63,5 +63,11 @@
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "vercel": "catalog:"
-  }
+  },
+  "browserslist": [
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version",
+    "not dead"
+  ]
 }

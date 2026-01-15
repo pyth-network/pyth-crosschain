@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-module */
 /** @type {import('tailwindcss').Config} */
 const plugin = require('tailwindcss/plugin')
 

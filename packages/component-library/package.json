@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "scripts": {
+    "build": "ts-duality --copyOtherFiles --noCjs",
     "build:storybook": "storybook build",
     "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
-    "start:dev": "storybook dev --port 4000 --no-open",
+    "start:dev": "ts-duality --copyOtherFiles --noCjs --watch",
+    "storybook": "storybook dev --port 4000 --no-open",
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
@@ -85,78 +87,333 @@
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:"
   },
+  "ts-duality": {
+    "extraExports": {
+      "./theme": "./dist/theme.scss"
+    }
+  },
   "exports": {
-    "./AppShell": "./src/AppShell/index.tsx",
-    "./Badge": "./src/Badge/index.tsx",
-    "./Breadcrumbs": "./src/Breadcrumbs/index.tsx",
-    "./Button": "./src/Button/index.tsx",
-    "./Card": "./src/Card/index.tsx",
-    "./CopyButton": "./src/CopyButton/index.tsx",
-    "./CrossfadeTabPanels": "./src/CrossfadeTabPanels/index.tsx",
-    "./DatePicker": "./src/DatePicker/index.tsx",
-    "./DocumentTitle": "./src/DocumentTitle/index.tsx",
-    "./DropdownCaretDown": "./src/DropdownCaretDown/index.tsx",
-    "./EntityList": "./src/EntityList/index.tsx",
-    "./ErrorPage": "./src/ErrorPage/index.tsx",
-    "./Footer": "./src/Footer/index.tsx",
-    "./Header": "./src/Header/index.tsx",
-    "./Header/theme-switch": "./src/Header/theme-switch.tsx",
-    "./InfoBox": "./src/InfoBox/index.tsx",
-    "./Input": "./src/Input/index.tsx",
-    "./Link": "./src/Link/index.tsx",
-    "./MainNavTabs": "./src/MainNavTabs/index.tsx",
-    "./Meter": "./src/Meter/index.tsx",
-    "./MobileNavTabs": "./src/MobileNavTabs/index.tsx",
-    "./ModalDialog": "./src/ModalDialog/index.tsx",
-    "./NoResults": "./src/NoResults/index.tsx",
-    "./NotFoundPage": "./src/NotFoundPage/index.tsx",
-    "./Paginator": "./src/Paginator/index.tsx",
-    "./Popover": "./src/Popover/index.tsx",
-    "./SearchButton": "./src/SearchButton/index.tsx",
-    "./SearchInput": "./src/SearchInput/index.tsx",
-    "./Select": "./src/Select/index.tsx",
-    "./SingleToggleGroup": "./src/SingleToggleGroup/index.tsx",
-    "./Skeleton": "./src/Skeleton/index.tsx",
-    "./Spinner": "./src/Spinner/index.tsx",
-    "./StatCard": "./src/StatCard/index.tsx",
-    "./Status": "./src/Status/index.tsx",
-    "./Switch": "./src/Switch/index.tsx",
-    "./SymbolPairTag": "./src/SymbolPairTag/index.tsx",
-    "./TabList": "./src/TabList/index.tsx",
-    "./Table": "./src/Table/index.tsx",
-    "./TableGrid": "./src/TableGrid/index.tsx",
-    "./TableGrid/table-grid-props": "./src/TableGrid/table-grid-props.ts",
-    "./Term": "./src/Term/index.tsx",
-    "./Tooltip": "./src/Tooltip/index.tsx",
-    "./Virtualizer": "./src/Virtualizer/index.tsx",
-    "./compose-providers": "./src/compose-providers.tsx",
-    "./omit-keys": "./src/omit-keys.ts",
-    "./overlay-visible-context": "./src/overlay-visible-context.tsx",
+    "./AppShell/amplitude": {
+      "types": "./dist/AppShell/amplitude.d.ts",
+      "default": "./dist/AppShell/amplitude.mjs"
+    },
+    "./AppShell/body-providers": {
+      "types": "./dist/AppShell/body-providers.d.ts",
+      "default": "./dist/AppShell/body-providers.mjs"
+    },
+    "./AppShell/fonts": {
+      "types": "./dist/AppShell/fonts.d.ts",
+      "default": "./dist/AppShell/fonts.mjs"
+    },
+    "./AppShell/html-with-lang": {
+      "types": "./dist/AppShell/html-with-lang.d.ts",
+      "default": "./dist/AppShell/html-with-lang.mjs"
+    },
+    "./AppShell/i18n-provider": {
+      "types": "./dist/AppShell/i18n-provider.d.ts",
+      "default": "./dist/AppShell/i18n-provider.mjs"
+    },
+    "./AppShell": {
+      "types": "./dist/AppShell/index.d.ts",
+      "default": "./dist/AppShell/index.mjs"
+    },
+    "./AppShell/report-accessibility": {
+      "types": "./dist/AppShell/report-accessibility.d.ts",
+      "default": "./dist/AppShell/report-accessibility.mjs"
+    },
+    "./AppShell/router-provider": {
+      "types": "./dist/AppShell/router-provider.d.ts",
+      "default": "./dist/AppShell/router-provider.mjs"
+    },
+    "./AppShell/tabs": {
+      "types": "./dist/AppShell/tabs.d.ts",
+      "default": "./dist/AppShell/tabs.mjs"
+    },
+    "./Badge": {
+      "types": "./dist/Badge/index.d.ts",
+      "default": "./dist/Badge/index.mjs"
+    },
+    "./Breadcrumbs": {
+      "types": "./dist/Breadcrumbs/index.d.ts",
+      "default": "./dist/Breadcrumbs/index.mjs"
+    },
+    "./Button": {
+      "types": "./dist/Button/index.d.ts",
+      "default": "./dist/Button/index.mjs"
+    },
+    "./Card": {
+      "types": "./dist/Card/index.d.ts",
+      "default": "./dist/Card/index.mjs"
+    },
+    "./CopyButton": {
+      "types": "./dist/CopyButton/index.d.ts",
+      "default": "./dist/CopyButton/index.mjs"
+    },
+    "./CrossfadeTabPanels": {
+      "types": "./dist/CrossfadeTabPanels/index.d.ts",
+      "default": "./dist/CrossfadeTabPanels/index.mjs"
+    },
+    "./DatePicker": {
+      "types": "./dist/DatePicker/index.d.ts",
+      "default": "./dist/DatePicker/index.mjs"
+    },
+    "./DocumentTitle/document-title.test": {
+      "types": "./dist/DocumentTitle/document-title.test.d.ts",
+      "default": "./dist/DocumentTitle/document-title.test.mjs"
+    },
+    "./DocumentTitle": {
+      "types": "./dist/DocumentTitle/index.d.ts",
+      "default": "./dist/DocumentTitle/index.mjs"
+    },
+    "./DropdownCaretDown": {
+      "types": "./dist/DropdownCaretDown/index.d.ts",
+      "default": "./dist/DropdownCaretDown/index.mjs"
+    },
+    "./EntityList": {
+      "types": "./dist/EntityList/index.d.ts",
+      "default": "./dist/EntityList/index.mjs"
+    },
+    "./ErrorPage": {
+      "types": "./dist/ErrorPage/index.d.ts",
+      "default": "./dist/ErrorPage/index.mjs"
+    },
+    "./Footer": {
+      "types": "./dist/Footer/index.d.ts",
+      "default": "./dist/Footer/index.mjs"
+    },
+    "./Header": {
+      "types": "./dist/Header/index.d.ts",
+      "default": "./dist/Header/index.mjs"
+    },
+    "./Header/theme-switch": {
+      "types": "./dist/Header/theme-switch.d.ts",
+      "default": "./dist/Header/theme-switch.mjs"
+    },
+    "./InfoBox": {
+      "types": "./dist/InfoBox/index.d.ts",
+      "default": "./dist/InfoBox/index.mjs"
+    },
+    "./Input": {
+      "types": "./dist/Input/index.d.ts",
+      "default": "./dist/Input/index.mjs"
+    },
+    "./Link": {
+      "types": "./dist/Link/index.d.ts",
+      "default": "./dist/Link/index.mjs"
+    },
+    "./MainNavTabs": {
+      "types": "./dist/MainNavTabs/index.d.ts",
+      "default": "./dist/MainNavTabs/index.mjs"
+    },
+    "./Meter": {
+      "types": "./dist/Meter/index.d.ts",
+      "default": "./dist/Meter/index.mjs"
+    },
+    "./MobileNavTabs": {
+      "types": "./dist/MobileNavTabs/index.d.ts",
+      "default": "./dist/MobileNavTabs/index.mjs"
+    },
+    "./ModalDialog": {
+      "types": "./dist/ModalDialog/index.d.ts",
+      "default": "./dist/ModalDialog/index.mjs"
+    },
+    "./NoResults": {
+      "types": "./dist/NoResults/index.d.ts",
+      "default": "./dist/NoResults/index.mjs"
+    },
+    "./NotFoundPage": {
+      "types": "./dist/NotFoundPage/index.d.ts",
+      "default": "./dist/NotFoundPage/index.mjs"
+    },
+    "./Paginator": {
+      "types": "./dist/Paginator/index.d.ts",
+      "default": "./dist/Paginator/index.mjs"
+    },
+    "./Popover": {
+      "types": "./dist/Popover/index.d.ts",
+      "default": "./dist/Popover/index.mjs"
+    },
+    "./SearchButton": {
+      "types": "./dist/SearchButton/index.d.ts",
+      "default": "./dist/SearchButton/index.mjs"
+    },
+    "./SearchInput": {
+      "types": "./dist/SearchInput/index.d.ts",
+      "default": "./dist/SearchInput/index.mjs"
+    },
+    "./Select": {
+      "types": "./dist/Select/index.d.ts",
+      "default": "./dist/Select/index.mjs"
+    },
+    "./SingleToggleGroup": {
+      "types": "./dist/SingleToggleGroup/index.d.ts",
+      "default": "./dist/SingleToggleGroup/index.mjs"
+    },
+    "./Skeleton": {
+      "types": "./dist/Skeleton/index.d.ts",
+      "default": "./dist/Skeleton/index.mjs"
+    },
+    "./Spinner": {
+      "types": "./dist/Spinner/index.d.ts",
+      "default": "./dist/Spinner/index.mjs"
+    },
+    "./StatCard": {
+      "types": "./dist/StatCard/index.d.ts",
+      "default": "./dist/StatCard/index.mjs"
+    },
+    "./Status": {
+      "types": "./dist/Status/index.d.ts",
+      "default": "./dist/Status/index.mjs"
+    },
+    "./Switch": {
+      "types": "./dist/Switch/index.d.ts",
+      "default": "./dist/Switch/index.mjs"
+    },
+    "./SymbolPairTag": {
+      "types": "./dist/SymbolPairTag/index.d.ts",
+      "default": "./dist/SymbolPairTag/index.mjs"
+    },
+    "./TabList": {
+      "types": "./dist/TabList/index.d.ts",
+      "default": "./dist/TabList/index.mjs"
+    },
+    "./Table": {
+      "types": "./dist/Table/index.d.ts",
+      "default": "./dist/Table/index.mjs"
+    },
+    "./TableGrid/dummy-row-data": {
+      "types": "./dist/TableGrid/dummy-row-data.d.ts",
+      "default": "./dist/TableGrid/dummy-row-data.mjs"
+    },
+    "./TableGrid": {
+      "types": "./dist/TableGrid/index.d.ts",
+      "default": "./dist/TableGrid/index.mjs"
+    },
+    "./TableGrid/table-grid-props": {
+      "types": "./dist/TableGrid/table-grid-props.d.ts",
+      "default": "./dist/TableGrid/table-grid-props.mjs"
+    },
+    "./Term": {
+      "types": "./dist/Term/index.d.ts",
+      "default": "./dist/Term/index.mjs"
+    },
+    "./Tooltip": {
+      "types": "./dist/Tooltip/index.d.ts",
+      "default": "./dist/Tooltip/index.mjs"
+    },
+    "./Virtualizer": {
+      "types": "./dist/Virtualizer/index.d.ts",
+      "default": "./dist/Virtualizer/index.mjs"
+    },
+    "./compose-providers": {
+      "types": "./dist/compose-providers.d.ts",
+      "default": "./dist/compose-providers.mjs"
+    },
+    "./omit-keys": {
+      "types": "./dist/omit-keys.d.ts",
+      "default": "./dist/omit-keys.mjs"
+    },
+    "./overlay-visible-context": {
+      "types": "./dist/overlay-visible-context.d.ts",
+      "default": "./dist/overlay-visible-context.mjs"
+    },
+    "./social-links": {
+      "types": "./dist/social-links.d.ts",
+      "default": "./dist/social-links.mjs"
+    },
+    "./unstyled/Breadcrumbs": {
+      "types": "./dist/unstyled/Breadcrumbs/index.d.ts",
+      "default": "./dist/unstyled/Breadcrumbs/index.mjs"
+    },
+    "./unstyled/Button": {
+      "types": "./dist/unstyled/Button/index.d.ts",
+      "default": "./dist/unstyled/Button/index.mjs"
+    },
+    "./unstyled/Dialog": {
+      "types": "./dist/unstyled/Dialog/index.d.ts",
+      "default": "./dist/unstyled/Dialog/index.mjs"
+    },
+    "./unstyled/GridList": {
+      "types": "./dist/unstyled/GridList/index.d.ts",
+      "default": "./dist/unstyled/GridList/index.mjs"
+    },
+    "./unstyled/Label": {
+      "types": "./dist/unstyled/Label/index.d.ts",
+      "default": "./dist/unstyled/Label/index.mjs"
+    },
+    "./unstyled/Link": {
+      "types": "./dist/unstyled/Link/index.d.ts",
+      "default": "./dist/unstyled/Link/index.mjs"
+    },
+    "./unstyled/ListBox": {
+      "types": "./dist/unstyled/ListBox/index.d.ts",
+      "default": "./dist/unstyled/ListBox/index.mjs"
+    },
+    "./unstyled/Meter": {
+      "types": "./dist/unstyled/Meter/index.d.ts",
+      "default": "./dist/unstyled/Meter/index.mjs"
+    },
+    "./unstyled/Popover": {
+      "types": "./dist/unstyled/Popover/index.d.ts",
+      "default": "./dist/unstyled/Popover/index.mjs"
+    },
+    "./unstyled/SearchField": {
+      "types": "./dist/unstyled/SearchField/index.d.ts",
+      "default": "./dist/unstyled/SearchField/index.mjs"
+    },
+    "./unstyled/Select": {
+      "types": "./dist/unstyled/Select/index.d.ts",
+      "default": "./dist/unstyled/Select/index.mjs"
+    },
+    "./unstyled/Switch": {
+      "types": "./dist/unstyled/Switch/index.d.ts",
+      "default": "./dist/unstyled/Switch/index.mjs"
+    },
+    "./unstyled/Table": {
+      "types": "./dist/unstyled/Table/index.d.ts",
+      "default": "./dist/unstyled/Table/index.mjs"
+    },
+    "./unstyled/Tabs": {
+      "types": "./dist/unstyled/Tabs/index.d.ts",
+      "default": "./dist/unstyled/Tabs/index.mjs"
+    },
+    "./unstyled/TextField": {
+      "types": "./dist/unstyled/TextField/index.d.ts",
+      "default": "./dist/unstyled/TextField/index.mjs"
+    },
+    "./unstyled/Toolbar": {
+      "types": "./dist/unstyled/Toolbar/index.d.ts",
+      "default": "./dist/unstyled/Toolbar/index.mjs"
+    },
+    "./use-prefetch": {
+      "types": "./dist/use-prefetch.d.ts",
+      "default": "./dist/use-prefetch.mjs"
+    },
+    "./useAlert": {
+      "types": "./dist/useAlert/index.d.ts",
+      "default": "./dist/useAlert/index.mjs"
+    },
+    "./useCopy": {
+      "types": "./dist/useCopy/index.d.ts",
+      "default": "./dist/useCopy/index.mjs"
+    },
+    "./useData": {
+      "types": "./dist/useData/index.d.ts",
+      "default": "./dist/useData/index.mjs"
+    },
+    "./useDrawer": {
+      "types": "./dist/useDrawer/index.d.ts",
+      "default": "./dist/useDrawer/index.mjs"
+    },
+    "./useLogger": {
+      "types": "./dist/useLogger/index.d.ts",
+      "default": "./dist/useLogger/index.mjs"
+    },
+    "./useQueryParamsPagination": {
+      "types": "./dist/useQueryParamsPagination/index.d.ts",
+      "default": "./dist/useQueryParamsPagination/index.mjs"
+    },
     "./package.json": "./package.json",
-    "./social-links": "./src/social-links.tsx",
-    "./theme": "./src/theme.scss",
-    "./unstyled/Breadcrumbs": "./src/unstyled/Breadcrumbs/index.tsx",
-    "./unstyled/Button": "./src/unstyled/Button/index.tsx",
-    "./unstyled/Dialog": "./src/unstyled/Dialog/index.tsx",
-    "./unstyled/GridList": "./src/unstyled/GridList/index.tsx",
-    "./unstyled/Label": "./src/unstyled/Label/index.tsx",
-    "./unstyled/Link": "./src/unstyled/Link/index.tsx",
-    "./unstyled/ListBox": "./src/unstyled/ListBox/index.tsx",
-    "./unstyled/Meter": "./src/unstyled/Meter/index.tsx",
-    "./unstyled/Popover": "./src/unstyled/Popover/index.tsx",
-    "./unstyled/SearchField": "./src/unstyled/SearchField/index.tsx",
-    "./unstyled/Select": "./src/unstyled/Select/index.tsx",
-    "./unstyled/Switch": "./src/unstyled/Switch/index.tsx",
-    "./unstyled/Table": "./src/unstyled/Table/index.tsx",
-    "./unstyled/Tabs": "./src/unstyled/Tabs/index.tsx",
-    "./unstyled/TextField": "./src/unstyled/TextField/index.tsx",
-    "./unstyled/Toolbar": "./src/unstyled/Toolbar/index.tsx",
-    "./use-prefetch": "./src/use-prefetch.ts",
-    "./useAlert": "./src/useAlert/index.tsx",
-    "./useCopy": "./src/useCopy/index.ts",
-    "./useData": "./src/useData/index.ts",
-    "./useDrawer": "./src/useDrawer/index.tsx",
-    "./useLogger": "./src/useLogger/index.tsx",
-    "./useQueryParamsPagination": "./src/useQueryParamsPagination/index.ts"
+    "./theme": "./dist/theme.scss"
   }
 }

@@ -11,8 +11,6 @@
 }
 
 .suspenseLoader {
-  @include theme.max-width;
-
   align-items: center;
   display: flex;
   flex-flow: column;
@@ -23,6 +21,8 @@
     height: theme.spacing(10);
     width: theme.spacing(10);
   }
+
+  @include theme.max-width;
 }
 
 .subheader {

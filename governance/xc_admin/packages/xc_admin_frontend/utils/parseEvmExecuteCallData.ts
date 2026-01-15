@@ -57,7 +57,7 @@ type Input = {
 /**
  * Parses the call data for an EVM contract call only if the call data matches one of the entry in ABI.
  * If there is a match, the method name and inputs are returned. Else, undefined is returned.
- * @param callData The call data in hex format.
+ * @param callData - The call data in hex format.
  * @returns The parsed call data or undefined.
  */
 export function parseEvmExecuteCallData(callData: string):

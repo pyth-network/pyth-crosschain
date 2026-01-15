@@ -2,11 +2,12 @@
 const config = {
   experimental: {
     useCache: true,
-    reactCompiler: true,
   },
   reactStrictMode: true,
 
   pageExtensions: ["ts", "tsx", "mdx"],
+
+  reactCompiler: true,
 
   logging: {
     fetches: {
@@ -15,30 +16,22 @@ const config = {
   },
 
   turbopack: {
+    resolveExtensions: [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".mts",
+      ".mjs",
+      ".cts",
+      ".cjs",
+    ],
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
         as: "*.js",
       },
     },
-  },
-
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.svg$/i,
-      use: ["@svgr/webpack"],
-    });
-
-    // make Next.js aware of how to import uncompiled TypeScript files
-    // from our component-library and other shared packages
-    config.resolve.extensionAlias = {
-      ".js": [".ts", ".tsx", ".js", ".jsx"],
-      ".jsx": [".tsx", ".jsx"],
-      ".mjs": [".mts", ".mjs"],
-      ".cjs": [".cts", ".cjs"],
-    };
-
-    return config;
   },
 
   headers: async () => [

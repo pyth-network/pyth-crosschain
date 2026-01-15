@@ -4,7 +4,7 @@
   "description": "collection of utility hooks used across react applications powering parts of the pyth network",
   "version": "0.1.0",
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "scripts": {
     "fix:format": "prettier --write .",

@@ -12,7 +12,7 @@
     "directory": "packages/shared-lib"
   },
   "engines": {
-    "node": ">=22.14.0"
+    "node": "^24.0.0"
   },
   "scripts": {
     "build": "ts-duality --copyOtherFiles",

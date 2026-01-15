@@ -1,19 +1,16 @@
 [package]
 name = "pyth_lazer"
 version = "0.0.0"
-edition = "2024.beta"
+edition = "2024"
 
-[addresses]
-pyth_lazer = "0x0"
-
-[dependencies.Wormhole]
-git = "https://github.com/wormhole-foundation/wormhole.git"
-subdir = "sui/wormhole"
-# "sui/mainnet" or "sui/testnet" respectively, as "main" doesn't have address
-# TODO: the branches are currently outdated, see:
+# TODO: upstream "sui/$ENV" branches are currently outdated, see:
 # https://github.com/pyth-network/pyth-crosschain/pull/3316#discussion_r2662256455
+[dependencies.wormhole]
+git = "https://github.com/pyth-network/wormhole.git"
+subdir = "sui/wormhole"
 rev = "sui/mainnet"
 
-[dev-dependencies]
-
-[dev-addresses]
+[dep-replacements.testnet.wormhole]
+git = "https://github.com/pyth-network/wormhole.git"
+subdir = "sui/wormhole"
+rev = "sui/testnet"
