@@ -382,6 +382,8 @@ pub enum AssetType {
     Commodities,
     CryptoIndex,
     CryptoNav,
+    Eco,
+    Kalshi,
 }
 
 impl Display for AssetType {
@@ -396,6 +398,8 @@ impl Display for AssetType {
             AssetType::Commodities => write!(f, "commodities"),
             AssetType::CryptoIndex => write!(f, "crypto_index"),
             AssetType::CryptoNav => write!(f, "crypto_nav"),
+            AssetType::Eco => write!(f, "eco"),
+            AssetType::Kalshi => write!(f, "kalshi"),
         }
     }
 }
@@ -458,6 +462,18 @@ mod tests {
         assert_eq!(
             AssetType::CryptoNav.to_string(),
             serde_json::to_string(&AssetType::CryptoNav)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::Eco.to_string(),
+            serde_json::to_string(&AssetType::Eco)
+                .unwrap()
+                .trim_matches('"')
+        );
+        assert_eq!(
+            AssetType::Kalshi.to_string(),
+            serde_json::to_string(&AssetType::Kalshi)
                 .unwrap()
                 .trim_matches('"')
         );
