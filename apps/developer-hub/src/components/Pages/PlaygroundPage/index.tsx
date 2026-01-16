@@ -4,6 +4,7 @@ import { Play } from "@phosphor-icons/react/dist/ssr/Play";
 import { Stop } from "@phosphor-icons/react/dist/ssr/Stop";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Callout } from "fumadocs-ui/components/callout";
+import { useCallback, useMemo, useRef } from "react";
 
 import styles from "./index.module.scss";
 import { AccessTokenInput } from "../../Playground/AccessTokenInput";
@@ -11,6 +12,7 @@ import { ChainSelector } from "../../Playground/ChainSelector";
 import { ChannelSelector } from "../../Playground/ChannelSelector";
 import { CodePreview } from "../../Playground/CodePreview";
 import { DeliveryFormatToggle } from "../../Playground/DeliveryFormatToggle";
+import type { OutputPanelHandle } from "../../Playground/OutputPanel";
 import { OutputPanel } from "../../Playground/OutputPanel";
 import {
   PlaygroundProvider,
@@ -18,12 +20,44 @@ import {
 } from "../../Playground/PlaygroundContext";
 import { PriceFeedSelector } from "../../Playground/PriceFeedSelector";
 import { PropertiesSelector } from "../../Playground/PropertiesSelector";
+import type { StreamCallbacks } from "../../Playground/hooks/use-stream-execution";
 import { useStreamExecution } from "../../Playground/hooks/use-stream-execution";
 
 function PlaygroundContent() {
   const { config } = usePlaygroundContext();
+  const outputPanelRef = useRef<OutputPanelHandle>(null);
+
+  // Define callbacks that imperatively control the OutputPanel
+  const handleFirstMessage = useCallback(() => {
+    // Instant scroll to bottom when first message arrives
+    outputPanelRef.current?.scrollToBottom("auto");
+  }, []);
+
+  const handleMessage = useCallback(() => {
+    // Smooth scroll if auto-scroll is enabled
+    if (outputPanelRef.current?.isAutoScrollEnabled()) {
+      outputPanelRef.current.scrollToBottom("smooth");
+    }
+  }, []);
+
+  const handleStatusChange = useCallback((newStatus: string) => {
+    // Reset auto-scroll when a new stream starts
+    if (newStatus === "connecting") {
+      outputPanelRef.current?.resetAutoScroll();
+    }
+  }, []);
+
+  const streamCallbacks = useMemo<StreamCallbacks>(
+    () => ({
+      onFirstMessage: handleFirstMessage,
+      onMessage: handleMessage,
+      onStatusChange: handleStatusChange,
+    }),
+    [handleFirstMessage, handleMessage, handleStatusChange],
+  );
+
   const { status, messages, error, startStream, stopStream, clearMessages } =
-    useStreamExecution();
+    useStreamExecution(streamCallbacks);
 
   const isStreaming = status === "connecting" || status === "connected";
 
@@ -95,6 +129,7 @@ function PlaygroundContent() {
               </div>
 
               <OutputPanel
+                ref={outputPanelRef}
                 status={status}
                 messages={messages}
                 error={error}

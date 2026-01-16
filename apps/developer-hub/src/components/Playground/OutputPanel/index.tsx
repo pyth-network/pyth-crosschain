@@ -5,7 +5,13 @@ import { Pause } from "@phosphor-icons/react/dist/ssr/Pause";
 import { Trash } from "@phosphor-icons/react/dist/ssr/Trash";
 import { Button } from "@pythnetwork/component-library/Button";
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
 import styles from "./index.module.scss";
 import type {
@@ -19,6 +25,15 @@ type OutputPanelProps = {
   error: { message: string } | undefined;
   onClear: () => void;
   className?: string | undefined;
+};
+
+export type OutputPanelHandle = {
+  /** Scroll to the bottom of the messages list */
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
+  /** Reset auto-scroll to enabled state */
+  resetAutoScroll: () => void;
+  /** Check if auto-scroll is currently enabled */
+  isAutoScrollEnabled: () => boolean;
 };
 
 const STATUS_LABELS: Record<StreamStatus, string> = {
@@ -63,58 +78,39 @@ function formatEventData(data: unknown): string {
   }
 }
 
-export function OutputPanel({
-  status,
-  messages,
-  error,
-  onClear,
-  className,
-}: OutputPanelProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [autoScroll, setAutoScroll] = useState(true);
-  // Track previous message count to detect empty-to-content transition
-  const prevMessageCountRef = useRef(0);
+export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
+  function OutputPanel({ status, messages, error, onClear, className }, ref) {
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    // State for UI, ref for immediate access in callbacks
+    const [autoScroll, setAutoScroll] = useState(true);
+    const autoScrollRef = useRef(autoScroll);
+    autoScrollRef.current = autoScroll; // Keep ref in sync with state
 
-  // Reset auto-scroll state when a new stream starts
-  useEffect(() => {
-    if (status === "connecting") {
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    }, []);
+
+    const resetAutoScroll = useCallback(() => {
       setAutoScroll(true);
-      prevMessageCountRef.current = 0;
-    }
-  }, [status]);
+    }, []);
 
-  // Force scroll to bottom when messages transition from empty to having content
-  useEffect(() => {
-    const wasEmpty = prevMessageCountRef.current === 0;
-    const hasContent = messages.length > 0;
+    const isAutoScrollEnabled = useCallback(() => autoScrollRef.current, []);
 
-    if (wasEmpty && hasContent && messagesEndRef.current) {
-      // Force immediate scroll to bottom when first message arrives
-      requestAnimationFrame(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
-        }
-      });
-    }
+    // Expose imperative methods to parent
+    useImperativeHandle(
+      ref,
+      () => ({
+        scrollToBottom,
+        resetAutoScroll,
+        isAutoScrollEnabled,
+      }),
+      [scrollToBottom, resetAutoScroll, isAutoScrollEnabled],
+    );
 
-    prevMessageCountRef.current = messages.length;
-  }, [messages.length]);
-
-  // Auto-scroll to bottom when new messages arrive (only if auto-scroll is enabled)
-  useEffect(() => {
-    if (autoScroll && messagesEndRef.current && messages.length > 0) {
-      requestAnimationFrame(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-      });
-    }
-  }, [messages, autoScroll]);
-
-  const handleToggleAutoScroll = () => {
-    setAutoScroll(!autoScroll);
-  };
+    const handleToggleAutoScroll = () => {
+      setAutoScroll((prev) => !prev);
+    };
 
   return (
     <div className={clsx(styles.container, className)}>
@@ -143,7 +139,9 @@ export function OutputPanel({
               )
             }
             hideText
-            aria-label={autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"}
+            aria-label={
+              autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"
+            }
           >
             {autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"}
           </Button>
@@ -219,4 +217,5 @@ export function OutputPanel({
       </div>
     </div>
   );
-}
+  },
+);
