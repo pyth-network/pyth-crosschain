@@ -1,7 +1,7 @@
 import * as Icon from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Card as CardComponent, VARIANTS } from "./index.jsx";
+import { Card as CardComponent, CARD_VARIANTS } from "./index.jsx";
 
 const meta = {
   component: CardComponent,
@@ -32,7 +32,7 @@ const meta = {
     },
     variant: {
       control: "inline-radio",
-      options: VARIANTS,
+      options: CARD_VARIANTS,
       table: {
         category: "Variant",
       },

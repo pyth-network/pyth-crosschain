@@ -46,6 +46,7 @@
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
+    "simplestyle-js": "catalog:",
     "swr": "catalog:"
   },
   "devDependencies": {

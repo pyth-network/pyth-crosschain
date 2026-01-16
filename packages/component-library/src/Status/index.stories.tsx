@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import {
   Status as StatusComponent,
-  VARIANTS,
-  SIZES,
-  STYLES,
+  STATUS_VARIANTS,
+  STATUS_SIZES,
+  STATUS_STYLES,
 } from "./index.jsx";
 
 const meta = {
@@ -18,21 +18,21 @@ const meta = {
     },
     variant: {
       control: "inline-radio",
-      options: VARIANTS,
+      options: STATUS_VARIANTS,
       table: {
         category: "Variant",
       },
     },
     style: {
       control: "inline-radio",
-      options: STYLES,
+      options: STATUS_STYLES,
       table: {
         category: "Variant",
       },
     },
     size: {
       control: "inline-radio",
-      options: SIZES,
+      options: STATUS_SIZES,
       table: {
         category: "Variant",
       },

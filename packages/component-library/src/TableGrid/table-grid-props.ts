@@ -1,7 +1,7 @@
 import type { ColDef } from "ag-grid-community";
 import type { AgGridReactProps } from "ag-grid-react";
 
-import type { Props as CardProps } from "../Card";
+import type { CardProps as CardProps } from "../Card";
 
 type ExtendedColDef<TData> = ColDef<TData> & {
   loadingCellRenderer?: ColDef<TData>["cellRenderer"];

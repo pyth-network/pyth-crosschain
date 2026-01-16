@@ -15,7 +15,7 @@ import styles from "./index.module.scss";
 import Logo from "./logo.svg";
 import { ThemeSwitch } from "./theme-switch.jsx";
 import { Button } from "../Button/index.jsx";
-import type { Props as CardProps } from "../Card/index.jsx";
+import type { CardProps as CardProps } from "../Card/index.jsx";
 import { Card } from "../Card/index.jsx";
 import { Link } from "../Link/index.jsx";
 import type { Link as UnstyledLink } from "../unstyled/Link/index.jsx";

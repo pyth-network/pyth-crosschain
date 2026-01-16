@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
 
-export const VARIANTS = [
+export const STATUS_VARIANTS = [
   "neutral",
   "info",
   "warning",
@@ -12,13 +12,13 @@ export const VARIANTS = [
   "success",
   "disabled",
 ] as const;
-export const STYLES = ["filled", "outline"] as const;
-export const SIZES = ["xs", "md"] as const;
+export const STATUS_STYLES = ["filled", "outline"] as const;
+export const STATUS_SIZES = ["xs", "md"] as const;
 
 type Props = ComponentProps<"span"> & {
-  variant?: (typeof VARIANTS)[number] | undefined;
-  style?: (typeof STYLES)[number] | undefined;
-  size?: (typeof SIZES)[number] | undefined;
+  variant?: (typeof STATUS_VARIANTS)[number] | undefined;
+  style?: (typeof STATUS_STYLES)[number] | undefined;
+  size?: (typeof STATUS_SIZES)[number] | undefined;
 };
 
 export const Status = ({

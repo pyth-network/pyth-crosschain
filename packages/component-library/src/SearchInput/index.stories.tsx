@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { SearchInput as SearchInputComponent, SIZES } from "./index.jsx";
+import { SearchInput as SearchInputComponent, SEARCH_INPUT_SIZES } from "./index.jsx";
 
 const meta = {
   component: SearchInputComponent,
@@ -12,7 +12,7 @@ const meta = {
     },
     size: {
       control: "inline-radio",
-      options: SIZES,
+      options: SEARCH_INPUT_SIZES,
       table: {
         category: "Size",
       },

@@ -13,7 +13,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import styles from "./index.module.scss";
 
-export const VARIANTS = [
+export const INFO_BOX_VARIANTS = [
   "neutral",
   "info",
   "warning",
@@ -50,7 +50,7 @@ const DEFAULTS: Default = {
 };
 
 type Default = Record<
-  (typeof VARIANTS)[number],
+  (typeof INFO_BOX_VARIANTS)[number],
   {
     header: string;
     icon: ReactNode;
@@ -60,7 +60,7 @@ type Default = Record<
 type Props = ComponentProps<"div"> & {
   icon?: ReactNode;
   header?: ReactNode;
-  variant?: (typeof VARIANTS)[number] | undefined;
+  variant?: (typeof INFO_BOX_VARIANTS)[number] | undefined;
 };
 
 export const InfoBox = ({

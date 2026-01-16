@@ -7,7 +7,7 @@ import styles from "./index.module.scss";
 import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
 
-export const VARIANTS = [
+export const BUTTON_VARIANTS = [
   "primary",
   "secondary",
   "solid",
@@ -16,11 +16,11 @@ export const VARIANTS = [
   "success",
   "danger",
 ] as const;
-export const SIZES = ["xs", "sm", "md", "lg"] as const;
+export const BUTTON_SIZES = ["xs", "sm", "md", "lg"] as const;
 
 type OwnProps = {
-  variant?: (typeof VARIANTS)[number] | undefined;
-  size?: (typeof SIZES)[number] | undefined;
+  variant?: (typeof BUTTON_VARIANTS)[number] | undefined;
+  size?: (typeof BUTTON_SIZES)[number] | undefined;
   rounded?: boolean | undefined;
   hideText?: boolean | undefined;
   children: ReactNode;

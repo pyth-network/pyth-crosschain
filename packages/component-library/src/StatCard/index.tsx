@@ -4,7 +4,7 @@ import clsx from "clsx";
 import type { ReactNode, ElementType } from "react";
 
 import styles from "./index.module.scss";
-import type { Props as CardProps } from "../Card/index.jsx";
+import type { CardProps as CardProps } from "../Card/index.jsx";
 import { Card } from "../Card/index.jsx";
 
 type OwnPropsSingle = {

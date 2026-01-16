@@ -9,10 +9,10 @@ import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
 
-export const VARIANTS = ["primary", "secondary", "tertiary"] as const;
+export const CARD_VARIANTS = ["primary", "secondary", "tertiary"] as const;
 
 type OwnProps = {
-  variant?: (typeof VARIANTS)[number] | undefined;
+  variant?: (typeof CARD_VARIANTS)[number] | undefined;
   icon?: ReactNode | undefined;
   title?: ReactNode | undefined;
   toolbar?: ReactNode | ReactNode[] | undefined;
@@ -22,7 +22,7 @@ type OwnProps = {
   toolbarAlwaysOnTop?: boolean | undefined;
 };
 
-export type Props<T extends ElementType> = Omit<
+export type CardProps<T extends ElementType> = Omit<
   ComponentProps<T>,
   keyof OwnProps
 > &
@@ -30,9 +30,9 @@ export type Props<T extends ElementType> = Omit<
 
 export const Card = (
   props:
-    | (Props<"div"> & { nonInteractive?: true })
-    | Props<typeof Link>
-    | Props<typeof Button>,
+    | (CardProps<"div"> & { nonInteractive?: true })
+    | CardProps<typeof Link>
+    | CardProps<typeof Button>,
 ) => {
   const overlayState = use(OverlayTriggerStateContext);
 
@@ -60,7 +60,7 @@ const cardProps = <T extends ElementType>({
   toolbarClassName,
   toolbarAlwaysOnTop,
   ...props
-}: Props<T>) => ({
+}: CardProps<T>) => ({
   ...props,
   "data-variant": variant,
   className: clsx(styles.card, className),

@@ -24,7 +24,7 @@ import {
   ListBoxSection,
 } from "../unstyled/ListBox/index.jsx";
 
-export type Props<T extends { id: string | number }> = Omit<
+export type SelectProps<T extends { id: string | number }> = Omit<
   ComponentProps<typeof BaseSelect>,
   "defaultSelectedKey" | "selectedKey" | "onSelectionChange"
 > &
@@ -89,7 +89,7 @@ export const Select = <T extends { id: string | number }>({
   buttonLabel,
   defaultButtonLabel,
   ...props
-}: Props<T>) => (
+}: SelectProps<T>) => (
   // @ts-expect-error react-aria coerces everything to Key for some reason...
   <BaseSelect
     className={clsx(styles.select, className)}
@@ -202,7 +202,7 @@ const getTextValue = <T extends { id: string | number }>({
 };
 
 type ButtonLabelProps<T extends { id: string | number }> = Pick<
-  Props<T>,
+  SelectProps<T>,
   "buttonLabel" | "defaultButtonLabel" | "show"
 >;
 
@@ -235,7 +235,7 @@ const ButtonLabel = <T extends { id: string | number }>({
 };
 
 type SelectedValueLabelProps<T extends { id: string | number }> = Pick<
-  Props<T>,
+  SelectProps<T>,
   "show"
 > & {
   selectedItem: T | null;

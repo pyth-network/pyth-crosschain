@@ -11,11 +11,11 @@ import { Button } from "../unstyled/Button/index.jsx";
 import { SearchField } from "../unstyled/SearchField/index.jsx";
 import { Input } from "../unstyled/TextField/index.jsx";
 
-export const SIZES = ["xs", "sm", "md", "lg"] as const;
+export const SEARCH_INPUT_SIZES = ["xs", "sm", "md", "lg"] as const;
 
 type Props = ComponentProps<typeof SearchField> & {
   label?: string | undefined;
-  size?: (typeof SIZES)[number] | undefined;
+  size?: (typeof SEARCH_INPUT_SIZES)[number] | undefined;
   width?: number | undefined;
   isPending?: boolean | undefined;
   placeholder?: string;

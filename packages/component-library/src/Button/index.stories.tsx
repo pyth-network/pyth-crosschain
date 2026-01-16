@@ -1,7 +1,7 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Button as ButtonComponent, VARIANTS, SIZES } from "./index.jsx";
+import { Button as ButtonComponent, BUTTON_VARIANTS, BUTTON_SIZES } from "./index.jsx";
 
 const iconControl = {
   control: "select",
@@ -31,14 +31,14 @@ const meta = {
     },
     variant: {
       control: "inline-radio",
-      options: VARIANTS,
+      options: BUTTON_VARIANTS,
       table: {
         category: "Variant",
       },
     },
     size: {
       control: "inline-radio",
-      options: SIZES,
+      options: BUTTON_SIZES,
       table: {
         category: "Variant",
       },

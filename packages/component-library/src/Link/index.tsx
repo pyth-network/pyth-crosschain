@@ -10,14 +10,14 @@ import { Link as UnstyledLink } from "../unstyled/Link/index.jsx";
 type OwnProps = {
   invert?: boolean | undefined;
 };
-export type Props<T extends ElementType> = Omit<
+export type LinkProps<T extends ElementType> = Omit<
   ComponentProps<T>,
   keyof OwnProps
 > &
   OwnProps;
 
 export const Link = (
-  props: Props<typeof Button> | Props<typeof UnstyledLink>,
+  props: LinkProps<typeof Button> | LinkProps<typeof UnstyledLink>,
 ) =>
   "href" in props ? (
     <UnstyledLink {...mkProps(props)} />
