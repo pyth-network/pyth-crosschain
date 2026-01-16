@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 export function GET() {
-  const content = `# Pyth Network
+  const content = `
+```
 
 > First-party financial oracle delivering real-time market data to blockchain applications.
 
@@ -47,7 +48,7 @@ MEV protection for DeFi protocols.
 ## Quick Start
 
 ### Solidity
-\`\`\`solidity
+```solidity
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
@@ -63,10 +64,10 @@ contract MyContract {
         return price.price;
     }
 }
-\`\`\`
+```
 
 ### TypeScript
-\`\`\`typescript
+```typescript
 import { HermesClient } from "@pythnetwork/hermes-client";
 
 const client = new HermesClient("https://hermes.pyth.network");
@@ -74,7 +75,7 @@ const ETH_USD = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0
 
 const priceUpdates = await client.getLatestPriceUpdates([ETH_USD]);
 console.log(priceUpdates.parsed[0].price);
-\`\`\`
+```
 
 ## Key Concepts
 
@@ -86,14 +87,14 @@ console.log(priceUpdates.parsed[0].price);
 - Full list: https://pyth.network/developers/price-feed-ids
 
 ### Price Structure
-\`\`\`
+```
 Price {
   price: int64      // Price as integer (multiply by 10^expo for actual value)
   conf: uint64      // Confidence interval (same scale as price)
   expo: int32       // Exponent (typically -8, so divide by 10^8)
   publishTime: uint // Unix timestamp when price was published
 }
-\`\`\`
+```
 
 ### Update Flow (Pull Oracle)
 1. Fetch price update from Hermes API: https://hermes.pyth.network
@@ -148,10 +149,10 @@ Most integrations follow this pattern:
 
 ### Staleness Check
 Always check price freshness in production:
-\`\`\`solidity
+```solidity
 uint maxAge = 60; // 60 seconds
 PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceId, maxAge);
-\`\`\`
+```
 
 ## Resources
 
@@ -165,6 +166,9 @@ PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceId, maxAge);
 Get any documentation page as markdown by appending .mdx:
 - https://docs.pyth.network/price-feeds/core/getting-started.mdx
 - https://docs.pyth.network/entropy/generate-random-numbers-evm.mdx
+- https://docs.pyth.network/price-feeds/core/error-codes/index.mdx
+- https://docs.pyth.network/price-feeds/core/error-codes/svm.mdx
+```
 `;
 
   return new NextResponse(content, {
