@@ -240,9 +240,7 @@ jobs:
           else
             git commit -m "chore(developer-hub): auto-update llms.txt
 
-          Updated llms.txt based on documentation changes.
-
-          Co-Authored-By: Codex <noreply@openai.com>"
+          Updated llms.txt based on documentation changes."
 
             git push
             echo "Changes committed and pushed"
