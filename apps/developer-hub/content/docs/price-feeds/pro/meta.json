@@ -5,7 +5,6 @@
     "acquire-access-token",
     "subscribe-to-prices",
     "integrate-as-consumer",
-    "integrate-as-publisher",
     "---Reference Material---",
     "contract-addresses",
     "[HIP-3 as a Service](https://docs.pyth.network/price-feeds/hip-3-service)",
