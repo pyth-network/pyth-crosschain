@@ -241,7 +241,10 @@ export function useHttpDataStream({
         const currTimestamp = currPoint.timestamp.valueOf();
         const seriesKey = `${currPoint.source}_${appendedValidated.data}`;
         const lastTimestamp = lastProcessedTimestampRef.current[seriesKey];
-        if (typeof lastTimestamp === "number" && currTimestamp <= lastTimestamp) {
+        if (
+          typeof lastTimestamp === "number" &&
+          currTimestamp <= lastTimestamp
+        ) {
           continue;
         }
         lastProcessedTimestampRef.current[seriesKey] = currTimestamp;
