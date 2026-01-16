@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { WalletIcon } from "@heroicons/react/24/outline";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import clsx from "clsx";
