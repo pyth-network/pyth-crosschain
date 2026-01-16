@@ -22,10 +22,10 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { InferMetaType, InferPageType } from "fumadocs-core/source";
 import { loader } from "fumadocs-core/source";
-import { transformerOpenAPI } from "fumadocs-openapi/server";
+import { openapiPlugin } from "fumadocs-openapi/server";
 import { createElement } from "react";
 
-import { docs } from "../../.source";
+import { docs } from "../../.source/server";
 
 const icons: Record<string, React.ComponentType> = {
   CardsThree,
@@ -55,11 +55,7 @@ export const source = loader({
     return icon ? createElement(icons[icon] ?? FolderSimpleDashed) : undefined;
   },
   source: docs.toFumadocsSource(),
-  pageTree: {
-    // types are very similar but not exactly the same
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    transformers: [transformerOpenAPI()],
-  },
+  plugins: [openapiPlugin()],
 });
 
 export type Page = InferPageType<typeof source>;

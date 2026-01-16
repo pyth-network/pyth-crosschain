@@ -171,7 +171,7 @@ Get any documentation page as markdown by appending .mdx:
     status: 200,
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+      "Cache-Control": "public, max-age=86400",
     },
   });
 }

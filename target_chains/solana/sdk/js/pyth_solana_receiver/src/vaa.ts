@@ -1,3 +1,6 @@
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer as IsomorphicBuffer } from "buffer";
+
 import { Program } from "@coral-xyz/anchor";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { sha256 } from "@noble/hashes/sha256";
@@ -71,7 +74,7 @@ export function trimSignatures(
     );
   }
 
-  const trimmedVaa = Buffer.concat([
+  const trimmedVaa = IsomorphicBuffer.concat([
     vaa.subarray(0, 6 + n * VAA_SIGNATURE_SIZE),
     vaa.subarray(6 + currentNumSignatures * VAA_SIGNATURE_SIZE),
   ]);
@@ -346,7 +349,7 @@ export async function findEncodedVaaAccountsByWriteAuthority(
         memcmp: {
           offset: 0,
           bytes: bs58.encode(
-            Buffer.from(sha256("account:EncodedVaa").slice(0, 8)),
+            IsomorphicBuffer.from(sha256("account:EncodedVaa").slice(0, 8)),
           ),
         },
       },

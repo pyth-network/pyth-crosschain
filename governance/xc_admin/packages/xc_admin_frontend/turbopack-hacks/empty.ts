@@ -8,4 +8,4 @@
  * empty module is what we'll use.
  * this file is used in the nearest next.config.js for this project
  */
-export {};
+export {}
