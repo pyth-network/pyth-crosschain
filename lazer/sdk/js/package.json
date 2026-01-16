@@ -142,6 +142,7 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@types/jest": "catalog:",
     "@types/node": "^18.19.54",
     "@types/ws": "^8.5.12",
     "eslint": "catalog:",
