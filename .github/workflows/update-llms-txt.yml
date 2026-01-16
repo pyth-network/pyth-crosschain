@@ -188,6 +188,9 @@ jobs:
       - name: Update llms.txt route file
         if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
         run: |
+          # Escape any unescaped backticks to prevent JS template literal syntax errors
+          sed -i 's/\\`/__ESC__/g; s/`/\\`/g; s/__ESC__/\\`/g' /tmp/updated-llms.txt
+
           UPDATED_CONTENT=$(cat /tmp/updated-llms.txt)
 
           # Create the new route file
