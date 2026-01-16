@@ -2,6 +2,7 @@
   "feeds": [
     {
       "alias": "FOGO/USD",
+      "account_address": "F8sWmNDxAChncYJ1L6Qh1uV47VMMYyvJLet7WCpC8MP8",
       "id": "245f89fb8084840bd098d661a026032ee21062270003426797c9196d2d8d4e43",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -9,6 +10,7 @@
     },
     {
       "alias": "USDC/USD",
+      "account_address": "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
       "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -16,6 +18,7 @@
     },
     {
       "alias": "SOL/USD",
+      "account_address": "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
       "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -23,6 +26,7 @@
     },
     {
       "alias": "ETH/USD",
+      "account_address": "42amVS4KgzR9rA28tkVYqVXjq9Qa8dcZQMbH5EYFX6XC",
       "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
       "time_difference": 60,
       "price_deviation": 0.5,
@@ -30,6 +34,7 @@
     },
     {
       "alias": "USDT/USD",
+      "account_address": "HT2PLQBcG5EiCcNSaMHAjSgd9F98ecpATbk4Sk5oYuM",
       "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
       "time_difference": 60,
       "price_deviation": 0.5,
