@@ -1,7 +1,7 @@
 import time
 
 from pusher.config import Config, LazerConfig, HermesConfig, PriceConfig, PriceSource, SingleSourceConfig, \
-    PairSourceConfig, HyperliquidConfig
+    PairSourceConfig, HyperliquidConfig, SessionEMASourceConfig
 from pusher.price_state import PriceState, PriceUpdate
 
 DEX = "pyth"
@@ -31,6 +31,28 @@ def get_config():
             ]
         },
         mark={},
+        external={}
+    )
+    return config
+
+
+def get_session_ema_config():
+    config: Config = Config.model_construct()
+    config.stale_price_threshold_seconds = 5
+    config.hyperliquid = HyperliquidConfig.model_construct()
+    config.hyperliquid.market_name = "pyth"
+    config.hyperliquid.asset_context_symbols = []
+    config.lazer = LazerConfig.model_construct()
+    config.lazer.feed_ids = []
+    config.hermes = HermesConfig.model_construct()
+    config.hermes.feed_ids = []
+    config.price = PriceConfig(
+        oracle={},
+        mark={SYMBOL: [
+            SessionEMASourceConfig(source_type="session_ema",
+                                   oracle_source=PriceSource(source_name="seda", source_id="BTC"),
+                                   ema_source=PriceSource(source_name="seda_ema", source_id="BTC"))
+        ]},
         external={}
     )
     return config
@@ -101,3 +123,85 @@ def test_all_fail():
 
     oracle_update = price_state.get_all_prices()
     assert oracle_update.oracle == {}
+
+
+def test_session_ema_on_hours():
+    """
+    All prices are stale, so return nothing.
+    """
+    config = get_session_ema_config()
+    price_state = PriceState(config)
+    now = time.time()
+    price_state.seda_state.put(SYMBOL, PriceUpdate("110000.00", now - 1.0, session_flag=False))
+    price_state.seda_ema_state.put(SYMBOL, PriceUpdate("105000.00", now - 1.0))
+
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.mark == {f"{DEX}:{SYMBOL}": ["110000.00", "105000.00"]}
+
+
+def test_session_ema_off_hours():
+    """
+    All prices are stale, so return nothing.
+    """
+    config = get_session_ema_config()
+    price_state = PriceState(config)
+    now = time.time()
+    price_state.seda_state.put(SYMBOL, PriceUpdate("110000.00", now - 1.0, session_flag=True))
+    price_state.seda_ema_state.put(SYMBOL, PriceUpdate("105000.00", now - 1.0))
+
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.mark == {f"{DEX}:{SYMBOL}": ["110000.00", "110000.00"]}
+
+
+def test_session_ema_oracle_missing():
+    """
+    All prices are stale, so return nothing.
+    """
+    config = get_session_ema_config()
+    price_state = PriceState(config)
+    now = time.time()
+    price_state.seda_ema_state.put(SYMBOL, PriceUpdate("105000.00", now - 1.0))
+
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.mark == {}
+
+
+def test_session_ema_ema_missing():
+    """
+    All prices are stale, so return nothing.
+    """
+    config = get_session_ema_config()
+    price_state = PriceState(config)
+    now = time.time()
+    price_state.seda_state.put(SYMBOL, PriceUpdate("110000.00", now - 1.0, session_flag=False))
+
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.mark == {f"{DEX}:{SYMBOL}": ["110000.00", "110000.00"]}
+
+
+def test_session_ema_oracle_stale():
+    """
+    All prices are stale, so return nothing.
+    """
+    config = get_session_ema_config()
+    price_state = PriceState(config)
+    now = time.time()
+    price_state.seda_state.put(SYMBOL, PriceUpdate("110000.00", now - price_state.stale_price_threshold_seconds - 1.0, session_flag=False))
+    price_state.seda_ema_state.put(SYMBOL, PriceUpdate("105000.00", now - price_state.stale_price_threshold_seconds - 1.0))
+
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.mark == {}
+
+
+def test_session_ema_ema_stale():
+    """
+    All prices are stale, so return nothing.
+    """
+    config = get_session_ema_config()
+    price_state = PriceState(config)
+    now = time.time()
+    price_state.seda_state.put(SYMBOL, PriceUpdate("110000.00", now - 1.0, session_flag=False))
+    price_state.seda_ema_state.put(SYMBOL, PriceUpdate("105000.00", now - price_state.stale_price_threshold_seconds - 1.0))
+
+    oracle_update = price_state.get_all_prices()
+    assert oracle_update.mark == {f"{DEX}:{SYMBOL}": ["110000.00", "110000.00"]}

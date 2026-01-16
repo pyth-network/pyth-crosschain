@@ -89,6 +89,12 @@ class PriceState:
         return oracle_update
 
     def get_prices(self, symbol_configs: dict[str, list[PriceSourceConfig]], oracle_update: OracleUpdate):
+        """
+        Return a dict of prices per symbol for a price type.
+        :param symbol_configs: Price configs for one of oracle, mark, external.
+        :param oracle_update: In certain mark price types we want to blend in the oracle price.
+        :return:
+        """
         pxs = {}
         for symbol in symbol_configs:
             for source_config in symbol_configs[symbol]:
@@ -96,6 +102,10 @@ class PriceState:
                     # find first valid price in the waterfall
                     px = self.get_price(source_config, oracle_update)
                     if px is not None:
+                        # Normalize to either a string or list of strings.
+                        # We could be working with numbers (as the result of a division or API type)
+                        # or a string, or in the case of dreamcash a list of mark prices.
+                        # The Hyperliquid API ultimately needs strings.
                         if not isinstance(px, str) and not isinstance(px, list):
                             px = str(px)
                         pxs[f"{self.market_name}:{symbol}"] = px
@@ -169,7 +179,13 @@ class PriceState:
 
         return (float(oracle_price) + float(mid_price_update.price)) / 2.0
 
-    def get_price_from_session_ema_source(self, oracle_source: PriceSource, ema_source: PriceSource):
+    def get_price_from_session_ema_source(self, oracle_source: PriceSource, ema_source: PriceSource) -> None | list[str] | str:
+        """
+        Use session-aware mark price of [oracle,oracle] or [oracle,ema] as per customer request.
+        :param oracle_source: Oracle price source config (probably SEDA feed price field)
+        :param ema_source: EMA price source config (probably SEDA feed mark_px_ema field)
+        :return: None if missing/stale, [oracle, oracle] off hours, [oracle, ema] during market hours
+        """
         now = time.time()
         oracle_update: PriceUpdate | None = self.all_states.get(oracle_source.source_name, {}).get(oracle_source.source_id)
 
@@ -182,12 +198,15 @@ class PriceState:
             logger.warning("source {} id {} is stale by {} seconds", oracle_source.source_name, oracle_source.source_id, time_diff)
             return None
 
+        # flag is true during off hours
         if oracle_update.session_flag:
             return [oracle_update.price, oracle_update.price]
 
+        # otherwise, during market hours, include ema
         ema_price = self.get_price_from_single_source(ema_source)
+        # unlikely as SEDA feed will include both fields, but in this case, use [oracle, oracle]
         if ema_price is None:
-            logger.warning("source {} id {} ema price is missing, reverting to just oracle", oracle_source.source_name, oracle_source.source_id)
-            return oracle_update.price
+            logger.warning("source {} id {} ema price is missing", oracle_source.source_name, oracle_source.source_id)
+            return [oracle_update.price, oracle_update.price]
 
         return [oracle_update.price, ema_price]
