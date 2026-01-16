@@ -7,9 +7,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-console */
 import { Wallet } from '@coral-xyz/anchor'
-import VerifiedIcon from '@images/icons/verified.inline.svg'
-import VotedIcon from '@images/icons/voted.inline.svg'
-import WarningIcon from '@images/icons/warning.inline.svg'
 import type { PythCluster } from '@pythnetwork/client'
 import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { TransactionBuilder, sendTransactions } from '@pythnetwork/solana-utils'
@@ -44,6 +41,9 @@ import { getProposalStatus } from './utils'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { useMultisigContext } from '../../../contexts/MultisigContext'
 import { usePythContext } from '../../../contexts/PythContext'
+import VerifiedIcon from '../../../images/icons/verified.inline.svg'
+import VotedIcon from '../../../images/icons/voted.inline.svg'
+import WarningIcon from '../../../images/icons/warning.inline.svg'
 import { capitalizeFirstLetter } from '../../../utils/capitalizeFirstLetter'
 import {
   ParsedAccountPubkeyRow,

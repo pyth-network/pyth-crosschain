@@ -1,10 +1,11 @@
-import Discord from '@images/icons/discord.inline.svg'
-import Github from '@images/icons/github.inline.svg'
-import LinkedIn from '@images/icons/linkedin.inline.svg'
-import Telegram from '@images/icons/telegram.inline.svg'
-import Twitter from '@images/icons/twitter.inline.svg'
-import Youtube from '@images/icons/youtube.inline.svg'
 import Link from 'next/link'
+
+import Discord from '../../images/icons/discord.inline.svg'
+import Github from '../../images/icons/github.inline.svg'
+import LinkedIn from '../../images/icons/linkedin.inline.svg'
+import Telegram from '../../images/icons/telegram.inline.svg'
+import Twitter from '../../images/icons/twitter.inline.svg'
+import Youtube from '../../images/icons/youtube.inline.svg'
 
 const SocialLinks = () => {
   return (

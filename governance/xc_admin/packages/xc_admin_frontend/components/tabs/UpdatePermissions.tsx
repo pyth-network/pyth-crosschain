@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import type { Wallet } from '@coral-xyz/anchor/dist/cjs/provider'
-import CopyIcon from '@images/icons/copy.inline.svg'
 import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
@@ -36,6 +35,7 @@ import toast from 'react-hot-toast'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
+import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import EditButton from '../EditButton'

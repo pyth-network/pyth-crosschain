@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import orb from '@images/burger.png'
 import { gsap } from 'gsap'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -8,6 +7,7 @@ import { useContext, useEffect, useRef } from 'react'
 
 import type { BurgerState } from './Header'
 import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
+import orb from '../../images/burger.png'
 
 type MenuProps = {
   headerState: BurgerState

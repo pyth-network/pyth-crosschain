@@ -1,4 +1,3 @@
-import Pyth from '@images/logomark.inline.svg'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -6,6 +5,7 @@ import { useContext, useEffect, useState } from 'react'
 
 import MobileMenu from './MobileMenu'
 import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
+import Pyth from '../../images/logomark.inline.svg'
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>

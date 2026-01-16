@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type { ComponentProps } from "react";
 
 import addPythTokens from "./add-pyth-tokens.png";
