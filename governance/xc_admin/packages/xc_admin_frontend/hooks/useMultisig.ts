@@ -143,7 +143,7 @@ export const useMultisig = (): MultisigHookData => {
   useEffect(() => {
     const { cancel, fetchData } = refreshData()
     // eslint-disable-next-line no-console
-    fetchData().catch(console.error);
+    fetchData().catch(console.error)
     return cancel
   }, [refreshData])
 

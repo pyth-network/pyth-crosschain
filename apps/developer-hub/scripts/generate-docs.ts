@@ -264,6 +264,11 @@ function formatServiceTitle(serviceName: string): string {
  * Creates a page that lists all products and their associated services using
  * IntegrationCard components in a simple grid layout.
  */
+const serviceDescriptions: Record<string, string> = {
+  fortuna: "Pyth Fortuna API Explorer",
+  hermes: "Pyth Hermes API Explorer",
+};
+
 async function generateApiReferenceIndex(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log("\nGenerating API Reference index page...");
@@ -446,7 +451,7 @@ async function updateIndexCards(): Promise<void> {
     );
 
     // Generate new index content with APICard components
-    const newIndexContent = generateIndexContent(cardData);
+    const newIndexContent = generateIndexContent(cardData, serviceName);
 
     await fs.writeFile(indexPath, newIndexContent);
     // eslint-disable-next-line no-console
@@ -530,7 +535,10 @@ function extractDescriptionFromFrontmatter(content: string): string {
   return getFirstSentence(descText);
 }
 
-function generateIndexContent(cardData: ApiCardData[]): string {
+function generateIndexContent(
+  cardData: ApiCardData[],
+  serviceName: string,
+): string {
   const cards = cardData
     .map(
       (card) =>
@@ -538,8 +546,13 @@ function generateIndexContent(cardData: ApiCardData[]): string {
     )
     .join("\n");
 
+  const description =
+    serviceDescriptions[serviceName] ??
+    `${formatServiceTitle(serviceName)} API Explorer`;
+
   return `---
 title: Overview
+description: ${description}
 ---
 
 <APICards>
