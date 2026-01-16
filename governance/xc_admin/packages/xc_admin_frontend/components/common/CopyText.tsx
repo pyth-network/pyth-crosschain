@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
-import CopyIcon from '@images/icons/copy.inline.svg'
 import copy from 'copy-to-clipboard'
+
+import CopyIcon from '../../images/icons/copy.inline.svg'
 
 const CopyText: React.FC<{
   text: string
