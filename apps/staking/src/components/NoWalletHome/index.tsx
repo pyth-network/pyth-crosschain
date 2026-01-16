@@ -3,7 +3,13 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import clsx from "clsx";
 import type { StaticImageData } from "next/image";
 import Image from "next/image";
-import type { ReactNode, ComponentType, SVGProps, ComponentProps } from "react";
+import type {
+  ReactNode,
+  ComponentType,
+  SVGProps,
+  ComponentProps,
+  SVGAttributes,
+} from "react";
 import { useCallback, useState, useRef, useEffect } from "react";
 import { Tabs, TabList, Tab, TabPanel } from "react-aria-components";
 
@@ -15,6 +21,8 @@ import Safebox from "./safebox.svg";
 import SelectPublishers from "./select-publishers.svg";
 import TokenWarmup from "./token-warmup.svg";
 import { Button } from "../Button";
+
+type SvgIcon = ComponentType<SVGAttributes<SVGSVGElement>>;
 
 export const NoWalletHome = () => {
   const modal = useWalletModal();
@@ -119,23 +127,23 @@ export const NoWalletHome = () => {
           steps={[
             {
               title: "Add Tokens",
-              body: "Add your PYTH tokens into the Staking Dashboard smart contract. Staking these tokens in Oracle Integrity Staking lets you secure Pyth’s price oracle and protect DeFi.",
-              icon: Safebox,
+              body: "Add your PYTH tokens into the Staking Dashboard smart contract. Staking these tokens in Oracle Integrity Staking lets you secure Pyth's price oracle and protect DeFi.",
+              icon: Safebox as SvgIcon,
             },
             {
               title: "Select Publishers",
               body: "Choose which data publishers to support by staking your tokens towards them to help secure the oracle. You can sort publishers by their stake pool details, quality ranking, and more.",
-              icon: SelectPublishers,
+              icon: SelectPublishers as SvgIcon,
             },
             {
               title: "Token Warmup",
               body: "Once you confirm your choice to stake to a publisher, your tokens will first enter a brief warmup period before they become staked. Staked tokens are subject to programmatic rewards and slashing penalties based on publisher performance.",
-              icon: TokenWarmup,
+              icon: TokenWarmup as SvgIcon,
             },
             {
               title: "Secure Pyth to Obtain Rewards",
               body: "The protocol programmatically distributes rewards to publishers who contributed high quality data, and then distributes remaining rewards to the stakers who supported these publishers. Rewards are calculated every epoch (i.e. one week period).",
-              icon: ObtainRewards,
+              icon: ObtainRewards as SvgIcon,
             },
           ]}
         />
@@ -148,17 +156,17 @@ export const NoWalletHome = () => {
             {
               title: "Add Tokens",
               body: "Add your PYTH tokens into the Staking Dashboard smart contract. Staking these tokens in Pyth Governance gives you voting power for key decisions in helping shape the oracle network.",
-              icon: Safebox,
+              icon: Safebox as SvgIcon,
             },
             {
               title: "Token Warmup",
               body: "Once you confirm your choice to stake, your tokens will first enter a brief warmup period before they become staked. Once your tokens become staked, they will confer voting power.",
-              icon: TokenWarmup,
+              icon: TokenWarmup as SvgIcon,
             },
             {
               title: "Vote & Govern",
               body: "You can cast your vote on Pyth Improvement Proposals (PIPs) in the Pyth Network Realm. By participating in governance, you help shape the direction of the Pyth Network and ensure its continued growth and stability.",
-              icon: SelectPublishers,
+              icon: SelectPublishers as SvgIcon,
             },
           ]}
         />

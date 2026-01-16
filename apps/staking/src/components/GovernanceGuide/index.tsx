@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType, SVGAttributes } from "react";
 
 import addPythTokens from "./add-pyth-tokens.png";
 import changingWallets from "./changing-wallets.png";
@@ -14,6 +14,8 @@ import { Link } from "../Link";
 import Safebox from "../NoWalletHome/safebox.svg";
 import SelectPublishers from "../NoWalletHome/select-publishers.svg";
 import TokenWarmup from "../NoWalletHome/token-warmup.svg";
+
+type SvgIcon = ComponentType<SVGAttributes<SVGSVGElement>>;
 
 export const GovernanceGuide = (
   props: Omit<ComponentProps<typeof Guide>, "title" | "description" | "steps">,
@@ -32,7 +34,7 @@ export const GovernanceGuide = (
     steps={[
       {
         title: "Add Tokens",
-        icon: Safebox,
+        icon: Safebox as SvgIcon,
         description: (
           <>
             <p>
@@ -121,7 +123,7 @@ export const GovernanceGuide = (
       },
       {
         title: "Token Warmup",
-        icon: TokenWarmup,
+        icon: TokenWarmup as SvgIcon,
         description: (
           <>
             <p>
@@ -216,7 +218,7 @@ export const GovernanceGuide = (
       },
       {
         title: "Vote & Govern",
-        icon: SelectPublishers,
+        icon: SelectPublishers as SvgIcon,
         description: (
           <p>
             To vote on Pyth Improvement Proposals (PIPs), go to the{" "}

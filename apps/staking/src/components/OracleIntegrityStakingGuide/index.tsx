@@ -1,4 +1,6 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType, SVGAttributes } from "react";
+
+type SvgIcon = ComponentType<SVGAttributes<SVGSVGElement>>;
 
 import addPythTokens from "./add-pyth-tokens.png";
 import availableRewards from "./available-rewards.png";
@@ -39,7 +41,7 @@ export const OracleIntegrityStakingGuide = (
     steps={[
       {
         title: "Add Tokens",
-        icon: Safebox,
+        icon: Safebox as SvgIcon,
         description: (
           <>
             <p>
@@ -155,7 +157,7 @@ export const OracleIntegrityStakingGuide = (
       },
       {
         title: "Select Publishers",
-        icon: SelectPublishers,
+        icon: SelectPublishers as SvgIcon,
         description: (
           <>
             <p>
@@ -424,7 +426,7 @@ export const OracleIntegrityStakingGuide = (
       },
       {
         title: "Token Warmup",
-        icon: TokenWarmup,
+        icon: TokenWarmup as SvgIcon,
         description: (
           <>
             <p>
@@ -515,7 +517,7 @@ export const OracleIntegrityStakingGuide = (
       },
       {
         title: "Obtain Rewards",
-        icon: ObtainRewards,
+        icon: ObtainRewards as SvgIcon,
         description: (
           <>
             <p>

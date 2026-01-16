@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import type { HTMLAttributes } from "react";
+import type { ComponentType, HTMLAttributes, SVGAttributes } from "react";
 
 import Discord from "./discord.svg";
 import Github from "./github.svg";
@@ -11,23 +11,33 @@ import Logo from "../Header/logo.svg";
 import { Link } from "../Link";
 import { MaxWidth } from "../MaxWidth";
 
-const SOCIAL_LINKS = [
-  { name: "X", icon: X, href: "https://x.com/PythNetwork" },
+type SvgIcon = ComponentType<SVGAttributes<SVGSVGElement>>;
+
+const SOCIAL_LINKS: { name: string; icon: SvgIcon; href: string }[] = [
+  { name: "X", icon: X as SvgIcon, href: "https://x.com/PythNetwork" },
   {
     name: "Discord",
-    icon: Discord,
+    icon: Discord as SvgIcon,
     href: "https://discord.gg/invite/PythNetwork",
   },
-  { name: "Telegram", icon: Telegram, href: "https://t.me/Pyth_Network" },
+  {
+    name: "Telegram",
+    icon: Telegram as SvgIcon,
+    href: "https://t.me/Pyth_Network",
+  },
   {
     name: "LinkedIn",
-    icon: LinkedIn,
+    icon: LinkedIn as SvgIcon,
     href: "https://www.linkedin.com/company/pyth-network",
   },
-  { name: "Github", icon: Github, href: "https://github.com/pyth-network" },
+  {
+    name: "Github",
+    icon: Github as SvgIcon,
+    href: "https://github.com/pyth-network",
+  },
   {
     name: "Youtube",
-    icon: Youtube,
+    icon: Youtube as SvgIcon,
     href: "https://www.youtube.com/channel/UCjCkvPN9ohl0UDvldfn1neg",
   },
 ];
