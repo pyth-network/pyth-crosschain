@@ -87,9 +87,12 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
     const autoScrollRef = useRef(autoScroll);
     autoScrollRef.current = autoScroll; // Keep ref in sync with state
 
-    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
-      messagesEndRef.current?.scrollIntoView({ behavior });
-    }, []);
+    const scrollToBottom = useCallback(
+      (behavior: ScrollBehavior = "smooth") => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
+      },
+      [],
+    );
 
     const resetAutoScroll = useCallback(() => {
       setAutoScroll(true);
@@ -112,110 +115,111 @@ export const OutputPanel = forwardRef<OutputPanelHandle, OutputPanelProps>(
       setAutoScroll((prev) => !prev);
     };
 
-  return (
-    <div className={clsx(styles.container, className)}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.statusSection}>
-          <span className={clsx(styles.statusDot, STATUS_COLORS[status])} />
-          <span className={styles.statusLabel}>{STATUS_LABELS[status]}</span>
-          {messages.length > 0 && (
-            <span className={styles.messageCount}>
-              {messages.length} message{messages.length === 1 ? "" : "s"}
-            </span>
-          )}
-        </div>
-
-        <div className={styles.headerActions}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={handleToggleAutoScroll}
-            beforeIcon={
-              autoScroll ? (
-                <Pause weight="bold" />
-              ) : (
-                <ArrowLineDown weight="bold" />
-              )
-            }
-            hideText
-            aria-label={
-              autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"
-            }
-          >
-            {autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onPress={onClear}
-            isDisabled={messages.length === 0}
-            beforeIcon={<Trash weight="bold" />}
-            hideText
-            aria-label="Clear messages"
-          >
-            Clear
-          </Button>
-        </div>
-      </div>
-
-      {/* Error banner */}
-      {error && (
-        <div className={styles.errorBanner}>
-          <span className={styles.errorIcon}>⚠</span>
-          <span className={styles.errorMessage}>{error.message}</span>
-        </div>
-      )}
-
-      {/* Messages */}
-      <div className={styles.messagesContainer} ref={messagesContainerRef}>
-        {messages.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>No messages yet.</p>
-            <p className={styles.emptyHint}>
-              Click &quot;Run&quot; to start streaming price updates.
-            </p>
+    return (
+      <div className={clsx(styles.container, className)}>
+        {/* Header */}
+        <div className={styles.header}>
+          <div className={styles.statusSection}>
+            <span className={clsx(styles.statusDot, STATUS_COLORS[status])} />
+            <span className={styles.statusLabel}>{STATUS_LABELS[status]}</span>
+            {messages.length > 0 && (
+              <span className={styles.messageCount}>
+                {messages.length} message{messages.length === 1 ? "" : "s"}
+              </span>
+            )}
           </div>
-        ) : (
-          <div className={styles.messagesList}>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={clsx(styles.message, {
-                  [styles.messageError ?? ""]: message.event === "error",
-                  [styles.messageSystem ?? ""]:
-                    message.event === "connected" ||
-                    message.event === "subscribed" ||
-                    message.event === "close",
-                })}
-              >
-                <div className={styles.messageHeader}>
-                  <span className={styles.messageTime}>
-                    {formatTimestamp(message.timestamp)}
-                  </span>
-                  <span
-                    className={clsx(styles.messageEvent, {
-                      [styles.eventError ?? ""]: message.event === "error",
-                      [styles.eventSystem ?? ""]:
-                        message.event === "connected" ||
-                        message.event === "subscribed" ||
-                        message.event === "close",
-                      [styles.eventMessage ?? ""]: message.event === "message",
-                    })}
-                  >
-                    {message.event}
-                  </span>
-                </div>
-                <pre className={styles.messageData}>
-                  {formatEventData(message.data)}
-                </pre>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
+
+          <div className={styles.headerActions}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={handleToggleAutoScroll}
+              beforeIcon={
+                autoScroll ? (
+                  <Pause weight="bold" />
+                ) : (
+                  <ArrowLineDown weight="bold" />
+                )
+              }
+              hideText
+              aria-label={
+                autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"
+              }
+            >
+              {autoScroll ? "Pause auto-scroll" : "Resume auto-scroll"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={onClear}
+              isDisabled={messages.length === 0}
+              beforeIcon={<Trash weight="bold" />}
+              hideText
+              aria-label="Clear messages"
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+
+        {/* Error banner */}
+        {error && (
+          <div className={styles.errorBanner}>
+            <span className={styles.errorIcon}>⚠</span>
+            <span className={styles.errorMessage}>{error.message}</span>
           </div>
         )}
+
+        {/* Messages */}
+        <div className={styles.messagesContainer} ref={messagesContainerRef}>
+          {messages.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No messages yet.</p>
+              <p className={styles.emptyHint}>
+                Click &quot;Run&quot; to start streaming price updates.
+              </p>
+            </div>
+          ) : (
+            <div className={styles.messagesList}>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={clsx(styles.message, {
+                    [styles.messageError ?? ""]: message.event === "error",
+                    [styles.messageSystem ?? ""]:
+                      message.event === "connected" ||
+                      message.event === "subscribed" ||
+                      message.event === "close",
+                  })}
+                >
+                  <div className={styles.messageHeader}>
+                    <span className={styles.messageTime}>
+                      {formatTimestamp(message.timestamp)}
+                    </span>
+                    <span
+                      className={clsx(styles.messageEvent, {
+                        [styles.eventError ?? ""]: message.event === "error",
+                        [styles.eventSystem ?? ""]:
+                          message.event === "connected" ||
+                          message.event === "subscribed" ||
+                          message.event === "close",
+                        [styles.eventMessage ?? ""]:
+                          message.event === "message",
+                      })}
+                    >
+                      {message.event}
+                    </span>
+                  </div>
+                  <pre className={styles.messageData}>
+                    {formatEventData(message.data)}
+                  </pre>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
   },
 );
