@@ -28,7 +28,7 @@ import { usePythContext } from '../contexts/PythContext'
 import type { ProductRawConfig } from '../hooks/usePyth'
 import Spinner from './common/Spinner'
 import CloseIcon from './icons/CloseIcon'
-import Arrow from '../images/icons/down.inline.svg';
+import Arrow from '../images/icons/down.inline.svg'
 import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
 
 const assetTypes = [

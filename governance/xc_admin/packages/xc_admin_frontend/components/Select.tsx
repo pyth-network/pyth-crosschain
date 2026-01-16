@@ -10,7 +10,7 @@ import {
 import type { ComponentProps } from 'react'
 import { Fragment } from 'react'
 
-import Arrow from '../images/icons/down.inline.svg';
+import Arrow from '../images/icons/down.inline.svg'
 
 type OwnProps<T> = {
   label: string
