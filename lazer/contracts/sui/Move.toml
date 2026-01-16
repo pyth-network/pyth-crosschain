@@ -3,14 +3,9 @@ name = "pyth_lazer"
 version = "0.0.0"
 edition = "2024"
 
-# TODO: upstream "sui/$ENV" branches are currently outdated, see:
-# https://github.com/pyth-network/pyth-crosschain/pull/3316#discussion_r2662256455
+# TODO: Waiting for upstream PR, change to `wormhole-foundation:main` before
+# merging.
 [dependencies.wormhole]
-git = "https://github.com/pyth-network/wormhole.git"
+git = "https://github.com/wormholelabs-xyz/wormhole.git"
 subdir = "sui/wormhole"
-rev = "sui/mainnet"
-
-[dep-replacements.testnet.wormhole]
-git = "https://github.com/pyth-network/wormhole.git"
-subdir = "sui/wormhole"
-rev = "sui/testnet"
+rev = "sui-package-update"
