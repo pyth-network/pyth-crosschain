@@ -119,7 +119,7 @@ export class WebSocketPool {
       rws.onMessage = (data) => {
         pool.dedupeHandler(data).catch((error: unknown) => {
           const errMsg = `An error occurred in the WebSocket pool's dedupeHandler: ${error instanceof Error ? error.message : String(error)}`;
-          throw new Error(errMsg);
+          rws.onError({ error: new Error(errMsg), message: errMsg, type: "error", target: rws.isConnected() ? rws.wsClient as WebSocket : undefined });
         });
       };
       pool.rwsPool.push(rws);
