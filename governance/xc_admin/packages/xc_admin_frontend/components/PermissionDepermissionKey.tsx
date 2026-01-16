@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Program } from '@coral-xyz/anchor'
 import { Dialog, Menu, Transition } from '@headlessui/react'
-import Arrow from '@images/icons/down.inline.svg'
 import type { PythOracle } from '@pythnetwork/client/lib/anchor'
 import {
   createDetermisticPriceStoreInitializePublisherInstruction,
@@ -27,9 +26,10 @@ import toast from 'react-hot-toast'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
 import type { ProductRawConfig } from '../hooks/usePyth'
-import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
 import Spinner from './common/Spinner'
 import CloseIcon from './icons/CloseIcon'
+import Arrow from '../images/icons/down.inline.svg'
+import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
 
 const assetTypes = [
   'All',

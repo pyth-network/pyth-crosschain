@@ -4,12 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { Menu, Transition } from '@headlessui/react'
-import Arrow from '@images/icons/down.inline.svg'
 import type { PythCluster } from '@pythnetwork/client'
 import { useRouter } from 'next/router'
 import { Fragment, useCallback, useContext, useEffect } from 'react'
 
 import { ClusterContext, DEFAULT_CLUSTER } from '../contexts/ClusterContext'
+import Arrow from '../images/icons/down.inline.svg'
 
 const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
   const router = useRouter()

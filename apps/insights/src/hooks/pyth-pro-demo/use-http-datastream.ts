@@ -127,6 +127,7 @@ export function useHttpDataStream({
   const prevSymbolRef = useRef(prevSymbol);
   const selectedReplayDateRef = useRef(selectedReplayDate);
   const isMountedRef = useRef(false);
+  const lastProcessedTimestampRef = useRef<Record<string, number>>({});
 
   /** state */
   const [status, setStatus] =
@@ -151,6 +152,7 @@ export function useHttpDataStream({
   useEffect(() => {
     // anytime this value changes, we need to abort all current processing
     abortControllerRef.current.abort();
+    lastProcessedTimestampRef.current = {};
     if (selectedReplayDate) handleSetIsLoadingInitialReplayData(true);
     else handleSetIsLoadingInitialReplayData(false);
   }, [handleSetIsLoadingInitialReplayData, selectedReplayDate]);
@@ -235,6 +237,17 @@ export function useHttpDataStream({
         const appended = appendReplaySymbolSuffix(currPointSymbol.data);
         const appendedValidated = ALLOWED_REPLAY_SYMBOLS.safeParse(appended);
         if (!appendedValidated.data) continue;
+
+        const currTimestamp = currPoint.timestamp.valueOf();
+        const seriesKey = `${currPoint.source}_${appendedValidated.data}`;
+        const lastTimestamp = lastProcessedTimestampRef.current[seriesKey];
+        if (
+          typeof lastTimestamp === "number" &&
+          currTimestamp <= lastTimestamp
+        ) {
+          continue;
+        }
+        lastProcessedTimestampRef.current[seriesKey] = currTimestamp;
 
         addDataPoint(currPoint.source, appendedValidated.data, currPoint);
 

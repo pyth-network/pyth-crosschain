@@ -1,7 +1,6 @@
 /* eslint-disable unicorn/no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-deprecated */
 import { Listbox, Transition } from '@headlessui/react'
-import Arrow from '@images/icons/down.inline.svg'
 import type { PythCluster } from '@pythnetwork/client'
 import type { MultisigInstruction } from '@pythnetwork/xc-admin-common'
 import { Fragment, useState, useMemo, useContext } from 'react'
@@ -9,6 +8,7 @@ import { Fragment, useState, useMemo, useContext } from 'react'
 import { getInstructionsSummary } from './utils'
 import { ClusterContext } from '../../../contexts/ClusterContext'
 import { usePythContext } from '../../../contexts/PythContext'
+import Arrow from '../../../images/icons/down.inline.svg'
 import { getMappingCluster } from '../../InstructionViews/utils'
 import CopyText from '../../common/CopyText'
 

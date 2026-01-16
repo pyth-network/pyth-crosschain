@@ -2,8 +2,9 @@
   "extends": "@cprussin/tsconfig/nextjs.json",
   "compilerOptions": {
     "paths": {
-      "@images/*": ["./images/*"],
-      "xc-admin-common": ["../xc_admin_common/src"]
+      "xc-admin-common": [
+        "../xc_admin_common/src"
+      ]
     },
     "exactOptionalPropertyTypes": false,
     "strictNullChecks": false,
@@ -16,5 +17,7 @@
     "contexts/PythContext.ks",
     "contexts/ClusterContext.js"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
