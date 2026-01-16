@@ -1,5 +1,5 @@
 {
   "title": "Error Codes",
-  "pages": ["evm"],
+  "pages": ["evm", "svm"],
   "defaultOpen": false
 }
