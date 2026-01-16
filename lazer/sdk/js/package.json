@@ -137,6 +137,7 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "ts-node": "catalog:",
+    "tsx": "catalog:",
     "typedoc": "^0.26.8"
   },
   "bugs": {

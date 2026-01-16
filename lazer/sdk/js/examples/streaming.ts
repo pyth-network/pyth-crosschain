@@ -2,33 +2,23 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable unicorn/prefer-top-level-await */
 
-import { renderFeeds, refreshFeedDisplay } from "./util.js";
-import type { JsonUpdate } from "../src/index.js";
+
 import { PythLazerClient } from "../src/index.js";
 
 // Ignore debug messages
 console.debug = () => {};
 
-// Store feed data for in-place updates
-const feedData = new Map<
-  string,
-  {
-    priceFeedId: number;
-    price: number;
-    confidence: number | undefined;
-    exponent: number;
-    lastUpdate: Date;
-  }
->();
-const symbolsMap = new Map<number, string>();
-
 const client = await PythLazerClient.create({
-  token: "your-token-here", // Replace with your actual access token
+  token: "-", // Replace with your actual access token
   logger: console, // Optionally log operations (to the console in this case.)
   webSocketPoolConfig: {
+    urls: [
+      "wss://router-0.pyth-lazer-yellow.dourolabs.app/v1/stream",
+      "wss://router-1.pyth-lazer-yellow.dourolabs.app/v1/stream",
+    ],
     numConnections: 4, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 4.
     onError: (error) => {
-      console.error("WebSocket error:", error);
+      // console.error("WebSocket error:", error);
     },
     // Optional configuration for resilient WebSocket connections
     rwsConfig: {
@@ -39,32 +29,30 @@ const client = await PythLazerClient.create({
   },
 });
 
-// Fetch current map of price feeds
-void client.getSymbols().then((symbols) => {
-  for (const symbol of symbols) {
-    symbolsMap.set(symbol.pyth_lazer_id, symbol.symbol);
-  }
-});
+let prev = 0;
 
 // Add a listener to read and display messages from the Lazer stream
 client.addMessageListener((message) => {
   switch (message.type) {
     case "json": {
       if (message.value.type == "streamUpdated") {
-        refreshFeedDisplay(message.value as JsonUpdate, feedData, symbolsMap);
+        const timestamp = message.value.parsed?.timestampUs;
+        const timestampint = Number.parseInt(timestamp ?? "0") / 200 / 1000;
+        const value = message.value.parsed?.priceFeeds[0]?.price;
+        const now = Date.now();
+
+        console.log(`Latency: ${now - (timestampint * 200)} ms ## Price: ${value}`);
+
+        if (timestampint > prev + 1) {
+          console.log(`Missed ${(timestampint - prev - 1).toString()} messages`);
+        }
+        if (timestampint % 10 === 0) {
+        console.log(timestampint)
+        }
+        prev = timestampint;
       }
       break;
-    }
-    case "binary": {
-      // Print out the binary hex messages if you want:
-      // if ("solana" in message.value) {
-      //   console.info("solana message:", message.value.solana?.toString("hex"));
-      // }
-      // if ("evm" in message.value) {
-      //   console.info("evm message:", message.value.evm?.toString("hex"));
-      // }
-      break;
-    }
+    } 
   }
 });
 
@@ -74,8 +62,6 @@ client.addAllConnectionsDownListener(() => {
   console.error("All connections are down!");
 });
 
-renderFeeds(feedData, symbolsMap);
-
 // Create and remove one or more subscriptions on the fly
 client.subscribe({
   type: "subscribe",
@@ -83,35 +69,14 @@ client.subscribe({
   priceFeedIds: [1, 2],
   properties: ["price"],
   formats: ["solana"],
-  deliveryFormat: "binary",
+  deliveryFormat: "json",
   channel: "fixed_rate@200ms",
-  parsed: false,
+  parsed: true,
   jsonBinaryEncoding: "base64",
 });
-client.subscribe({
-  type: "subscribe",
-  subscriptionId: 2,
-  priceFeedIds: [1, 2, 3, 4, 5],
-  properties: ["price", "exponent", "publisherCount", "confidence"],
-  formats: ["evm"],
-  deliveryFormat: "json",
-  channel: "fixed_rate@50ms",
-  parsed: true,
-  jsonBinaryEncoding: "hex",
-});
-client.subscribe({
-  type: "subscribe",
-  subscriptionId: 3,
-  priceFeedIds: [1],
-  properties: ["price", "confidence"],
-  formats: ["solana"],
-  deliveryFormat: "json",
-  channel: "real_time",
-  parsed: true,
-  jsonBinaryEncoding: "hex",
-});
 
-await new Promise((resolve) => setTimeout(resolve, 30_000));
+
+await new Promise((resolve) => setTimeout(resolve, 300_000_000));
 
 client.unsubscribe(1);
 client.unsubscribe(2);
