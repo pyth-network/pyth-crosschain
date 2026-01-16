@@ -23,6 +23,15 @@ type StreamError = {
   resetIn?: number;
 };
 
+export type StreamCallbacks = {
+  /** Called when the first message arrives after starting a stream */
+  onFirstMessage?: (message: StreamMessage) => void;
+  /** Called whenever a new message arrives */
+  onMessage?: (message: StreamMessage) => void;
+  /** Called when the stream status changes */
+  onStatusChange?: (status: StreamStatus) => void;
+};
+
 type UseStreamExecutionReturn = {
   status: StreamStatus;
   messages: StreamMessage[];
@@ -34,8 +43,13 @@ type UseStreamExecutionReturn = {
 
 /**
  * Hook to manage SSE connection for streaming Pyth Pro price updates.
+ *
+ * @param callbacks - Optional callbacks for stream events. These fire at the
+ *   exact moment events occur, avoiding the need for useEffect-based reactions.
  */
-export function useStreamExecution(): UseStreamExecutionReturn {
+export function useStreamExecution(
+  callbacks: StreamCallbacks = {},
+): UseStreamExecutionReturn {
   const [status, setStatus] = useState<StreamStatus>("idle");
   const [messages, setMessages] = useState<StreamMessage[]>([]);
   const [error, setError] = useState<StreamError | undefined>(undefined);
@@ -43,10 +57,20 @@ export function useStreamExecution(): UseStreamExecutionReturn {
   const eventSourceRef = useRef<EventSource | undefined>(undefined);
   const abortControllerRef = useRef<AbortController | undefined>(undefined);
   const messageIdRef = useRef(0);
+  const isFirstMessageRef = useRef(true);
+
+  // Store callbacks in a ref to avoid them being stale in closures
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
   const generateMessageId = useCallback(() => {
     messageIdRef.current += 1;
     return `msg-${String(messageIdRef.current)}`;
+  }, []);
+
+  const updateStatus = useCallback((newStatus: StreamStatus) => {
+    setStatus(newStatus);
+    callbacksRef.current.onStatusChange?.(newStatus);
   }, []);
 
   const addMessage = useCallback(
@@ -58,6 +82,13 @@ export function useStreamExecution(): UseStreamExecutionReturn {
         data,
       };
       setMessages((prev) => [...prev, message]);
+
+      // Fire callbacks imperatively at the moment the message is added
+      if (isFirstMessageRef.current) {
+        isFirstMessageRef.current = false;
+        callbacksRef.current.onFirstMessage?.(message);
+      }
+      callbacksRef.current.onMessage?.(message);
     },
     [generateMessageId],
   );
@@ -71,18 +102,19 @@ export function useStreamExecution(): UseStreamExecutionReturn {
       abortControllerRef.current.abort();
       abortControllerRef.current = undefined;
     }
-    setStatus("closed");
-  }, []);
+    updateStatus("closed");
+  }, [updateStatus]);
 
   const startStream = useCallback(
     (config: PlaygroundConfig) => {
       // Clean up any existing connection
       stopStream();
 
-      setStatus("connecting");
+      updateStatus("connecting");
       setError(undefined);
       setMessages([]);
       messageIdRef.current = 0;
+      isFirstMessageRef.current = true;
 
       // Create abort controller for fetch
       abortControllerRef.current = new AbortController();
@@ -126,7 +158,7 @@ export function useStreamExecution(): UseStreamExecutionReturn {
             throw new Error("No response body");
           }
 
-          setStatus("connected");
+          updateStatus("connected");
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
@@ -153,9 +185,9 @@ export function useStreamExecution(): UseStreamExecutionReturn {
                   setError({
                     message: eventData.error ?? "Unknown error",
                   });
-                  setStatus("error");
+                  updateStatus("error");
                 } else if (eventType === "close") {
-                  setStatus("closed");
+                  updateStatus("closed");
                 }
 
                 addMessage(
@@ -175,7 +207,7 @@ export function useStreamExecution(): UseStreamExecutionReturn {
           const readStream = async (): Promise<void> => {
             const { done, value } = await reader.read();
             if (done) {
-              setStatus("closed");
+              updateStatus("closed");
               return;
             }
 
@@ -200,16 +232,16 @@ export function useStreamExecution(): UseStreamExecutionReturn {
               return;
             }
             setError({ message: fetchError.message });
-            setStatus("error");
+            updateStatus("error");
             addMessage("error", { error: fetchError.message });
           } else {
             setError({ message: "Unknown error occurred" });
-            setStatus("error");
+            updateStatus("error");
             addMessage("error", { error: "Unknown error occurred" });
           }
         });
     },
-    [stopStream, addMessage],
+    [stopStream, addMessage, updateStatus],
   );
 
   const clearMessages = useCallback(() => {

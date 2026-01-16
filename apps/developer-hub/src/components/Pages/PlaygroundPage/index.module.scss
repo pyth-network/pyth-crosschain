@@ -47,12 +47,7 @@
 }
 
 .disclaimer {
-  @include theme.text("xs", "normal");
-
-  line-height: 140%;
-  color: theme.color("muted");
-  margin: 0;
-  margin-top: theme.spacing(1);
+  margin-top: theme.spacing(2);
 }
 
 .content {
