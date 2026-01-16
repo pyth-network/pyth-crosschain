@@ -9,6 +9,7 @@ import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import type { SuiLazerMeta } from "../src/core/chains";
 import { SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
@@ -18,11 +19,6 @@ function updateContractInStore(contract: SuiLazerContract) {
   DefaultStore.lazer_contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
 }
-
-type SuiLazerMeta = {
-  version: string;
-  receiver_chain_id: number;
-};
 
 async function updateContractMeta(packagePath: string, meta: SuiLazerMeta) {
   const templatePath = path.resolve(packagePath, "sources/meta.move.mustache");
@@ -146,10 +142,11 @@ parser.command(
       console.info("Found package:");
     } else {
       console.info("Initializing package metadata...");
-      await updateContractMeta(packagePath, {
+      const meta = {
         version: "1",
         receiver_chain_id: chain.getWormholeChainId(),
-      });
+      };
+      await updateContractMeta(packagePath, meta);
 
       console.info("Building package...");
       const pkg = await chain.buildPackage(packagePath);
@@ -157,7 +154,11 @@ parser.command(
       console.info(`Package digest: ${digest}`);
 
       console.info("Publishing package...");
-      ({ packageId, upgradeCapId } = await chain.publishPackage(pkg, signer));
+      ({ packageId, upgradeCapId } = await chain.publishLazerPackage(
+        pkg,
+        meta,
+        signer,
+      ));
       console.info("Package published:");
     }
     console.info(`  package: ${chain.explorerUrl("object", packageId)}`);
@@ -231,10 +232,11 @@ parser.command(
       chain.getProvider(),
       contract.stateId,
     );
-    await updateContractMeta(packagePath, {
+    const meta = {
       version: (BigInt(version) + 1n).toString(),
       receiver_chain_id: chain.getWormholeChainId(),
-    });
+    };
+    await updateContractMeta(packagePath, meta);
 
     console.info("Building package update...");
     const pkg = await chain.buildPackage(packagePath);
@@ -255,6 +257,7 @@ parser.command(
       stateId: contract.stateId,
       wormholeStateId: contract.wormholeStateId,
       pkg,
+      meta,
       vaa,
       signer,
     });
