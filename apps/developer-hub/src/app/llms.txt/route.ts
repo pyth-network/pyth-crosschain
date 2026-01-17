@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 export function GET() {
-  const content = `# Pyth Network
+  const content = `\`\`\`
 
 > First-party financial oracle delivering real-time market data to blockchain applications.
 
@@ -165,6 +165,9 @@ PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceId, maxAge);
 Get any documentation page as markdown by appending .mdx:
 - https://docs.pyth.network/price-feeds/core/getting-started.mdx
 - https://docs.pyth.network/entropy/generate-random-numbers-evm.mdx
+- https://docs.pyth.network/price-feeds/core/error-codes/index.mdx
+- https://docs.pyth.network/price-feeds/core/error-codes/svm.mdx
+\`\`\`
 `;
 
   return new NextResponse(content, {
