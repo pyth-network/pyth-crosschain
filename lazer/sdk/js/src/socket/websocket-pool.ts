@@ -11,6 +11,7 @@ import {
   DEFAULT_STREAM_SERVICE_0_URL,
   DEFAULT_STREAM_SERVICE_1_URL,
 } from "../constants.js";
+import { IsomorphicEventEmitter } from "../emitter/index.js";
 import {
   addAuthTokenToWebSocketUrl,
   bufferFromWebsocketData,
@@ -24,13 +25,49 @@ type WebSocketOnMessageCallback = (
 ) => void | Promise<void>;
 
 export type WebSocketPoolConfig = {
-  urls?: string[];
+  /**
+   * Maximum number of open, parallel websocket connections
+   * @defaultValue 3
+   */
   numConnections?: number;
-  rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
+  /**
+   * Callback that will be executed whenever an error
+   * message or an error event occurs on an individual WebSocket connection
+   *
+   * @deprecated use onWebSocketError() instead
+   */
   onError?: (error: ErrorEvent) => void;
+
+  /**
+   * Callback that will be executed whenever an error
+   * message or an error event occurs on an individual WebSocket connection
+   */
+  onWebSocketError?: (error: ErrorEvent) => void;
+
+  /**
+   * Callback that will be executed whenever an error occurs
+   * directly within the WebSocket pool. These can typically
+   * be errors that would normally manifest as "unhandledRejection" or "uncaughtException"
+   * errors.
+   */
+  onWebSocketPoolError?: (error: Error) => void;
+
+  /**
+   * Additional websocket configuration
+   */
+  rwsConfig?: Omit<ResilientWebSocketConfig, "logger" | "endpoint">;
+  /**
+   * Pyth URLs to use when creating a connection
+   */
+  urls?: string[];
 };
 
-export class WebSocketPool {
+export type WebSocketPoolEvents = {
+  error: (error: Error) => void;
+  shutdown: () => void;
+};
+
+export class WebSocketPool extends IsomorphicEventEmitter<WebSocketPoolEvents> {
   rwsPool: ResilientWebSocket[];
   private cache: TTLCache<string, boolean>;
   private subscriptions: Map<number, Request>; // id -> subscription Request
@@ -40,6 +77,7 @@ export class WebSocketPool {
   private checkConnectionStatesInterval: NodeJS.Timeout;
 
   private constructor(private readonly logger: Logger) {
+    super();
     this.rwsPool = [];
     this.cache = new TTLCache({ ttl: 1000 * 10 }); // TTL of 10 seconds
     this.subscriptions = new Map();
@@ -72,6 +110,16 @@ export class WebSocketPool {
     const log = logger ?? dummyLogger;
     const pool = new WebSocketPool(log);
     const numConnections = config.numConnections ?? DEFAULT_NUM_CONNECTIONS;
+
+    // bind a handler to capture any emitted errors and send them to the user-provided
+    // onWebSocketPoolError callback (if it is present)
+    if (typeof config.onWebSocketPoolError === "function") {
+      pool.on("error", config.onWebSocketPoolError);
+      pool.once("shutdown", () => {
+        // unbind all error handlers so we don't leak memory
+        pool.off("error");
+      });
+    }
 
     for (let i = 0; i < numConnections; i++) {
       const baseUrl = urls[i % urls.length];
@@ -112,14 +160,16 @@ export class WebSocketPool {
         }
       };
 
-      if (config.onError) {
-        rws.onError = config.onError;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      const onErrorHandler = config.onWebSocketError ?? config.onError;
+
+      if (typeof onErrorHandler === "function") {
+        rws.onError = onErrorHandler;
       }
       // Handle all client messages ourselves. Dedupe before sending to registered message handlers.
       rws.onMessage = (data) => {
         pool.dedupeHandler(data).catch((error: unknown) => {
-          const errMsg = `An error occurred in the WebSocket pool's dedupeHandler: ${error instanceof Error ? error.message : String(error)}`;
-          throw new Error(errMsg);
+          pool.emitPoolError(error, "Error in WebSocketPool dedupeHandler");
         });
       };
       pool.rwsPool.push(rws);
@@ -139,6 +189,23 @@ export class WebSocketPool {
     );
 
     return pool;
+  }
+
+  private emitPoolError(error: unknown, context?: string): void {
+    const err = error instanceof Error ? error : new Error(String(error));
+    if (context) {
+      this.logger.error(context, err);
+    } else {
+      this.logger.error("WebSocketPool error", err);
+    }
+
+    for (const errHandler of this.getListeners("error")) {
+      try {
+        errHandler(err);
+      } catch (handlerError) {
+        this.logger.error("WebSocketPool error handler threw", handlerError);
+      }
+    }
   }
 
   /**
@@ -181,18 +248,27 @@ export class WebSocketPool {
       this.handleErrorMessages(data);
     }
 
-    await Promise.all(this.messageListeners.map((handler) => handler(data)));
+    try {
+      await Promise.all(this.messageListeners.map((handler) => handler(data)));
+    } catch (error) {
+      this.emitPoolError(error, "Error in WebSocketPool message handler");
+    }
   };
 
   sendRequest(request: Request) {
     for (const rws of this.rwsPool) {
-      rws.send(JSON.stringify(request));
+      try {
+        rws.send(JSON.stringify(request));
+      } catch (error) {
+        this.emitPoolError(error, "Failed to send WebSocket request");
+      }
     }
   }
 
   addSubscription(request: Request) {
     if (request.type !== "subscribe") {
-      throw new Error("Request must be a subscribe request");
+      this.emitPoolError(new Error("Request must be a subscribe request"));
+      return;
     }
     this.subscriptions.set(request.subscriptionId, request);
     this.sendRequest(request);
@@ -236,7 +312,11 @@ export class WebSocketPool {
       this.logger.error("All WebSocket connections are down or reconnecting");
       // Notify all listeners
       for (const listener of this.allConnectionsDownListeners) {
-        listener();
+        try {
+          listener();
+        } catch (error) {
+          this.emitPoolError(error, "All-connections-down listener threw");
+        }
       }
     }
     // If at least one connection was restored
@@ -254,5 +334,17 @@ export class WebSocketPool {
     this.messageListeners = [];
     this.allConnectionsDownListeners = [];
     clearInterval(this.checkConnectionStatesInterval);
+
+    // execute all bound shutdown handlers
+    for (const shutdownHandler of this.getListeners("shutdown")) {
+      try {
+        shutdownHandler();
+      } catch (error) {
+        this.emitPoolError(error, "Shutdown handler threw");
+      }
+    }
+
+    // ensure any error handlers are removed to avoid leaks
+    this.off("error");
   }
 }

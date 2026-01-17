@@ -41,6 +41,16 @@
   },
   "private": true,
   "exports": {
+    "./emitter": {
+      "require": {
+        "types": "./dist/cjs/emitter/index.d.ts",
+        "default": "./dist/cjs/emitter/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/emitter/index.d.ts",
+        "default": "./dist/esm/emitter/index.mjs"
+      }
+    },
     "./types": {
       "require": {
         "types": "./dist/cjs/types/index.d.ts",
