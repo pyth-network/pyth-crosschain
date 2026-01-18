@@ -3,7 +3,7 @@
  */
 
 // Chain/format options for signed payloads
-export type ChainFormat = "evm" | "solana" | "leEcdsa" | "leUnsigned";
+export type ChainFormat = "evm" | \"solana\" | \"fogo\" | \"leEcdsa\" | "leUnsigned";
 
 // Delivery format for the response
 export type DeliveryFormat = "json" | "binary";
