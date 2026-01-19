@@ -23,7 +23,8 @@
   },
   "peerDependencies": {
     "next": "catalog:",
-    "react": "catalog:"
+    "react": "catalog:",
+    "simplestyle-js": "catalog:"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "catalog:",
@@ -46,7 +47,6 @@
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
-    "simplestyle-js": "catalog:",
     "swr": "catalog:"
   },
   "devDependencies": {
@@ -83,6 +83,7 @@
     "react": "catalog:",
     "sass": "catalog:",
     "sass-loader": "catalog:",
+    "simplestyle-js": "catalog:",
     "storybook": "catalog:",
     "style-loader": "catalog:",
     "stylelint": "catalog:",
@@ -138,9 +139,17 @@
       "types": "./dist/Breadcrumbs/index.d.ts",
       "default": "./dist/Breadcrumbs/index.mjs"
     },
+    "./Button/constants": {
+      "types": "./dist/Button/constants.d.ts",
+      "default": "./dist/Button/constants.mjs"
+    },
     "./Button": {
       "types": "./dist/Button/index.d.ts",
       "default": "./dist/Button/index.mjs"
+    },
+    "./Button/styles": {
+      "types": "./dist/Button/styles.d.ts",
+      "default": "./dist/Button/styles.mjs"
     },
     "./Card": {
       "types": "./dist/Card/index.d.ts",
@@ -322,6 +331,22 @@
       "types": "./dist/social-links.d.ts",
       "default": "./dist/social-links.mjs"
     },
+    "./styles/registry": {
+      "types": "./dist/styles/registry.d.ts",
+      "default": "./dist/styles/registry.mjs"
+    },
+    "./styles/style-funcs": {
+      "types": "./dist/styles/style-funcs.d.ts",
+      "default": "./dist/styles/style-funcs.mjs"
+    },
+    "./styles/theme": {
+      "types": "./dist/styles/theme.d.ts",
+      "default": "./dist/styles/theme.mjs"
+    },
+    "./taco": {
+      "types": "./dist/taco.d.ts",
+      "default": "./dist/taco.mjs"
+    },
     "./unstyled/Breadcrumbs": {
       "types": "./dist/unstyled/Breadcrumbs/index.d.ts",
       "default": "./dist/unstyled/Breadcrumbs/index.mjs"
@@ -416,5 +441,7 @@
     },
     "./package.json": "./package.json",
     "./theme": "./dist/theme.scss"
-  }
+  },
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs"
 }

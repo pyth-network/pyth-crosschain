@@ -3,20 +3,10 @@
 import clsx from "clsx";
 import type { ComponentProps, ElementType, ReactNode } from "react";
 
+import type { BUTTON_SIZES, BUTTON_VARIANTS } from "./constants";
 import styles from "./index.module.scss";
 import { Button as UnstyledButton } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
-
-export const BUTTON_VARIANTS = [
-  "primary",
-  "secondary",
-  "solid",
-  "outline",
-  "ghost",
-  "success",
-  "danger",
-] as const;
-export const BUTTON_SIZES = ["xs", "sm", "md", "lg"] as const;
 
 type OwnProps = {
   variant?: (typeof BUTTON_VARIANTS)[number] | undefined;
