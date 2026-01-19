@@ -2108,6 +2108,9 @@ importers:
       ts-node:
         specifier: 'catalog:'
         version: 10.9.2(@swc/core@1.15.8)(@types/node@18.19.86)(typescript@5.9.3)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.20.6
       typedoc:
         specifier: ^0.26.8
         version: 0.26.11(typescript@5.9.3)
