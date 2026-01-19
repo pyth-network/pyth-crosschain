@@ -1,0 +1,306 @@
+---
+title: Rate Limits
+description: Pyth Pro rate limiting policies, quotas, and best practices
+slug: /price-feeds/pro/rate-limits
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This page documents the rate limits and quotas for Pyth Pro APIs to help you design applications that work within these constraints.
+
+## WebSocket Rate Limits
+
+### Connection Limits
+
+| Limit | Value | Scope |
+|-------|-------|-------|
+| Connections per token | 10 | Per access token |
+| Reconnection attempts | 5 per minute | Per token per endpoint |
+
+### Subscription Limits
+
+| Limit | Value | Scope |
+|-------|-------|-------|
+| Subscriptions per connection | 100 | Per WebSocket connection |
+| Price feeds per subscription | 100 | Per subscribe message |
+| Subscribe messages per minute | 60 | Per connection |
+
+### Message Throughput
+
+| Channel | Max Messages/Second | Notes |
+|---------|---------------------|-------|
+| `real_time` | Variable (1-1000) | Depends on market activity |
+| `fixed_rate@1ms` | 1000 | Per subscription |
+| `fixed_rate@50ms` | 20 | Per subscription |
+| `fixed_rate@200ms` | 5 | Per subscription |
+| `fixed_rate@1000ms` | 1 | Per subscription |
+
+<Callout type="info">
+  Message rates are per subscription. If you have 3 subscriptions at `fixed_rate@200ms`,
+  you'll receive up to 15 messages per second total.
+</Callout>
+
+---
+
+## REST API Rate Limits
+
+| Endpoint | Limit | Window | Burst |
+|----------|-------|--------|-------|
+| `GET /v1/latest_price` | 100 requests | Per second | 200 |
+
+### Rate Limit Headers
+
+Every REST API response includes rate limit information:
+
+```http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1730986200
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed per window |
+| `X-RateLimit-Remaining` | Requests remaining in current window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+
+---
+
+## History Service Rate Limits
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `GET /history/v1/symbols` | 100 requests | Per minute |
+| `GET /history/v1/ohlc` | 60 requests | Per minute |
+| `GET /history/v1/prices` | 60 requests | Per minute |
+
+---
+
+## Handling Rate Limits
+
+### WebSocket: Subscription Batching
+
+Instead of sending multiple subscribe messages, batch your subscriptions:
+
+```typescript
+// Bad: Multiple subscribe messages
+client.subscribe({ subscriptionId: 1, priceFeedIds: [1], ... });
+client.subscribe({ subscriptionId: 2, priceFeedIds: [2], ... });
+client.subscribe({ subscriptionId: 3, priceFeedIds: [3], ... });
+
+// Good: Single batched subscription
+client.subscribe({
+  subscriptionId: 1,
+  priceFeedIds: [1, 2, 3],  // Up to 100 feeds
+  properties: ["price"],
+  channel: "fixed_rate@200ms",
+});
+```
+
+### REST: Implement Backoff
+
+Handle rate limit responses gracefully:
+
+```typescript
+async function fetchWithRateLimit(
+  url: string,
+  options: RequestInit
+): Promise<Response> {
+  const response = await fetch(url, options);
+
+  if (response.status === 429) {
+    // Parse rate limit headers
+    const resetTime = parseInt(
+      response.headers.get("X-RateLimit-Reset") || "0"
+    );
+    const waitMs = Math.max(0, resetTime * 1000 - Date.now()) + 100;
+
+    console.warn(`Rate limited. Waiting ${waitMs}ms...`);
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+
+    // Retry once
+    return fetch(url, options);
+  }
+
+  return response;
+}
+```
+
+### REST: Exponential Backoff
+
+For repeated failures, use exponential backoff:
+
+```typescript
+async function fetchWithExponentialBackoff<T>(
+  url: string,
+  options: RequestInit,
+  maxRetries = 5
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      if (response.ok) {
+        return response.json();
+      }
+
+      // Don't retry client errors (except rate limits)
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+
+      // Calculate backoff delay
+      const baseDelay = 1000;
+      const maxDelay = 30000;
+      const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+
+      // Add jitter to prevent thundering herd
+      const jitter = delay * 0.1 * Math.random();
+
+      console.warn(
+        `Request failed (attempt ${attempt + 1}/${maxRetries}). ` +
+        `Retrying in ${Math.round(delay + jitter)}ms...`
+      );
+
+      await new Promise(resolve => setTimeout(resolve, delay + jitter));
+    } catch (error) {
+      lastError = error as Error;
+
+      if (attempt === maxRetries - 1) {
+        throw lastError;
+      }
+    }
+  }
+
+  throw lastError || new Error("Max retries exceeded");
+}
+```
+
+### REST: Request Coalescing
+
+Batch multiple price requests into one:
+
+```typescript
+// Bad: Individual requests
+const btcPrice = await getPrice(1);
+const ethPrice = await getPrice(2);
+const solPrice = await getPrice(3);
+
+// Good: Single batched request
+const prices = await getPrices([1, 2, 3]);
+const [btcPrice, ethPrice, solPrice] = prices;
+```
+
+---
+
+## Best Practices
+
+### 1. Use WebSocket for Real-Time Data
+
+Don't poll the REST API for real-time updates. Use WebSocket streaming instead:
+
+```typescript
+// Bad: Polling REST API
+setInterval(async () => {
+  const price = await fetchLatestPrice(1);
+  updateDisplay(price);
+}, 200);
+
+// Good: WebSocket streaming
+client.subscribe({
+  priceFeedIds: [1],
+  channel: "fixed_rate@200ms",
+});
+
+client.addMessageListener((message) => {
+  updateDisplay(message.value.parsed.priceFeeds[0].price);
+});
+```
+
+### 2. Choose Appropriate Update Frequency
+
+Select the channel that matches your actual needs:
+
+| Use Case | Recommended Channel |
+|----------|---------------------|
+| High-frequency trading | `real_time` or `fixed_rate@1ms` |
+| Order book displays | `fixed_rate@50ms` |
+| Trading UI | `fixed_rate@200ms` |
+| Dashboards | `fixed_rate@1000ms` |
+
+### 3. Request Only Needed Properties
+
+Minimize bandwidth by requesting only the properties you need:
+
+```typescript
+// Bad: Request everything
+properties: ["price", "confidence", "bestBidPrice", "bestAskPrice",
+             "publisherCount", "exponent", "marketSession"]
+
+// Good: Request only what you need
+properties: ["price"]  // If you only need the price
+```
+
+### 4. Implement Connection Pooling
+
+If you need multiple concurrent requests, use connection pooling:
+
+```typescript
+import { Agent } from "https";
+
+const agent = new Agent({
+  keepAlive: true,
+  maxSockets: 10,  // Limit concurrent connections
+});
+
+const response = await fetch(url, { agent });
+```
+
+### 5. Cache When Appropriate
+
+For data that doesn't change frequently, implement caching:
+
+```typescript
+const symbolsCache = {
+  data: null as Symbol[] | null,
+  expiry: 0,
+};
+
+async function getSymbols(): Promise<Symbol[]> {
+  const now = Date.now();
+
+  if (symbolsCache.data && symbolsCache.expiry > now) {
+    return symbolsCache.data;
+  }
+
+  const symbols = await fetchSymbols();
+  symbolsCache.data = symbols;
+  symbolsCache.expiry = now + 60000;  // Cache for 1 minute
+
+  return symbols;
+}
+```
+
+---
+
+## Quota Increases
+
+If your application requires higher limits, contact Pyth support to discuss enterprise tier options:
+
+- Higher connection limits
+- Increased subscription quotas
+- Priority support
+- Custom SLAs
+
+Contact: [https://www.pyth.network/contact](https://www.pyth.network/contact)
+
+---
+
+## Related Resources
+
+- [Error Codes](/price-feeds/pro/error-codes) - Handle rate limit errors
+- [WebSocket API](/price-feeds/pro/api/websocket-api) - Real-time streaming
+- [REST API](/price-feeds/pro/api/rest-api) - On-demand queries

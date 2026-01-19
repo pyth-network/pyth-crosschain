@@ -1,0 +1,116 @@
+---
+title: API Reference
+description: Complete API reference for all Pyth Pro services
+slug: /price-feeds/pro/api
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+Pyth Pro provides multiple APIs to access real-time and historical price data. Choose the API that best fits your use case.
+
+## Available APIs
+
+<Cards>
+  <Card
+    title="WebSocket API"
+    description="Real-time streaming price updates with sub-millisecond latency"
+    href="/price-feeds/pro/api/websocket-api"
+  />
+  <Card
+    title="REST API"
+    description="On-demand price queries for periodic access"
+    href="/price-feeds/pro/api/rest-api"
+  />
+  <Card
+    title="History API"
+    description="Historical price data and OHLC candlestick data"
+    href="/price-feeds/pro/api/history-api"
+  />
+</Cards>
+
+## Choosing the Right API
+
+| Use Case | Recommended API | Why |
+|----------|-----------------|-----|
+| **Real-time trading** | WebSocket | Lowest latency, continuous updates |
+| **Price displays/dashboards** | WebSocket | Live updates without polling |
+| **Periodic price checks** | REST | Simple request/response |
+| **Bootstrap initial state** | REST | Single request for current prices |
+| **Charting applications** | History | OHLC data for candlestick charts |
+| **Backtesting** | History | Historical price data |
+| **Analytics** | History | Time-series data analysis |
+
+## Base URLs
+
+| Service | Base URL |
+|---------|----------|
+| WebSocket Streaming | `wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream` |
+| REST API | `https://pyth-lazer.dourolabs.app` |
+| History Service | `https://history.pyth-lazer.dourolabs.app` |
+
+## Authentication
+
+All Pyth Pro APIs require authentication with an access token. See [Acquire Access Token](/price-feeds/pro/acquire-access-token) for instructions.
+
+```typescript
+// WebSocket (via SDK)
+const client = await PythLazerClient.create(endpoints, "YOUR_TOKEN");
+
+// REST API
+const response = await fetch(url, {
+  headers: { Authorization: `Bearer YOUR_TOKEN` },
+});
+```
+
+<Callout type="warning">
+  **Security**: Never expose access tokens in frontend code or client-side applications.
+</Callout>
+
+## Quick Start
+
+### Real-time Prices (WebSocket)
+
+```typescript
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+  ],
+  process.env.ACCESS_TOKEN!
+);
+
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2], // BTC, ETH
+  properties: ["price"],
+  channel: "fixed_rate@200ms",
+});
+
+client.addMessageListener((message) => {
+  console.log(message);
+});
+```
+
+### Current Price (REST)
+
+```bash
+curl "https://pyth-lazer.dourolabs.app/v1/latest_price?price_feed_ids=1,2" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Historical Data (History)
+
+```bash
+curl "https://history.pyth-lazer.dourolabs.app/history/v1/ohlc?symbol=BTC/USD&resolution=60&from=1704067200&to=1704153600"
+```
+
+## Related Resources
+
+- [Getting Started](/price-feeds/pro/getting-started) - Full setup guide
+- [Payload Reference](/price-feeds/pro/payload-reference) - Data structures
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids) - Available feeds
+- [Error Codes](/price-feeds/pro/error-codes) - Troubleshooting

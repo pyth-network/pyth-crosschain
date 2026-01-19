@@ -1,0 +1,435 @@
+---
+title: History API Reference
+description: Complete reference for Pyth Pro History Service API for historical price data and OHLC
+slug: /price-feeds/pro/api/history-api
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+The History Service provides access to historical price data, OHLC (Open, High, Low, Close) candlestick data, and the list of available symbols.
+
+## Base URL
+
+```
+https://history.pyth-lazer.dourolabs.app
+```
+
+## Authentication
+
+{/* TODO: Confirm authentication requirements for History Service */}
+
+<Callout type="info">
+  Authentication requirements for the History Service may differ from the main Pyth Pro API.
+  Check the latest documentation or contact support for current authentication details.
+</Callout>
+
+---
+
+## Endpoints
+
+### List Symbols
+
+Retrieve the list of all available price feed symbols.
+
+```
+GET /history/v1/symbols
+```
+
+#### Request
+
+No authentication or parameters required for this endpoint.
+
+#### Request Example
+
+**cURL**
+
+```bash
+curl -X GET "https://history.pyth-lazer.dourolabs.app/history/v1/symbols"
+```
+
+**TypeScript**
+
+```typescript
+async function getSymbols(): Promise<Symbol[]> {
+  const response = await fetch(
+    "https://history.pyth-lazer.dourolabs.app/history/v1/symbols"
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+  }
+
+  return response.json();
+}
+
+// Usage
+const symbols = await getSymbols();
+console.log(`Available symbols: ${symbols.length}`);
+```
+
+#### Response
+
+**Success (200 OK)**
+
+```json
+[
+  {
+    "symbol": "BTC/USD",
+    "priceFeedId": 1,
+    "description": "Bitcoin / US Dollar",
+    "assetType": "crypto"
+  },
+  {
+    "symbol": "ETH/USD",
+    "priceFeedId": 2,
+    "description": "Ethereum / US Dollar",
+    "assetType": "crypto"
+  },
+  {
+    "symbol": "AAPL/USD",
+    "priceFeedId": 100,
+    "description": "Apple Inc. / US Dollar",
+    "assetType": "equity"
+  }
+]
+```
+
+**Response Schema**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `symbol` | `string` | Trading pair symbol (e.g., `BTC/USD`) |
+| `priceFeedId` | `number` | Numeric ID for use with other APIs |
+| `description` | `string` | Human-readable description |
+| `assetType` | `string` | Asset class: `crypto`, `equity`, `fx`, `commodity`, `metal` |
+
+---
+
+### Get OHLC Data
+
+Retrieve OHLC (Open, High, Low, Close) candlestick data for charting applications.
+
+```
+GET /history/v1/ohlc
+```
+
+#### Request
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `symbol` | `string` | Yes | Trading pair symbol | `BTC/USD` |
+| `resolution` | `string` | Yes | Candle resolution | `1`, `5`, `15`, `60`, `D` |
+| `from` | `number` | Yes | Start timestamp (Unix seconds) | `1704067200` |
+| `to` | `number` | Yes | End timestamp (Unix seconds) | `1704153600` |
+
+**Available Resolutions**
+
+| Resolution | Description |
+|------------|-------------|
+| `1` | 1 minute |
+| `5` | 5 minutes |
+| `15` | 15 minutes |
+| `30` | 30 minutes |
+| `60` | 1 hour |
+| `240` | 4 hours |
+| `D` | 1 day |
+| `W` | 1 week |
+| `M` | 1 month |
+
+#### Request Examples
+
+**cURL**
+
+```bash
+curl -X GET "https://history.pyth-lazer.dourolabs.app/history/v1/ohlc?symbol=BTC/USD&resolution=60&from=1704067200&to=1704153600"
+```
+
+**TypeScript**
+
+```typescript
+interface OHLCBar {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume?: number;
+}
+
+async function getOHLC(
+  symbol: string,
+  resolution: string,
+  from: number,
+  to: number
+): Promise<OHLCBar[]> {
+  const params = new URLSearchParams({
+    symbol,
+    resolution,
+    from: from.toString(),
+    to: to.toString(),
+  });
+
+  const response = await fetch(
+    `https://history.pyth-lazer.dourolabs.app/history/v1/ohlc?${params}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+  }
+
+  return response.json();
+}
+
+// Usage: Get hourly BTC/USD candles for the last 24 hours
+const now = Math.floor(Date.now() / 1000);
+const oneDayAgo = now - 86400;
+const candles = await getOHLC("BTC/USD", "60", oneDayAgo, now);
+console.log(`Fetched ${candles.length} candles`);
+```
+
+**Python**
+
+```python
+import requests
+import time
+
+def get_ohlc(symbol: str, resolution: str, from_ts: int, to_ts: int) -> list[dict]:
+    response = requests.get(
+        "https://history.pyth-lazer.dourolabs.app/history/v1/ohlc",
+        params={
+            "symbol": symbol,
+            "resolution": resolution,
+            "from": from_ts,
+            "to": to_ts,
+        },
+    )
+    response.raise_for_status()
+    return response.json()
+
+# Usage: Get daily BTC/USD candles for the last 30 days
+now = int(time.time())
+thirty_days_ago = now - (30 * 86400)
+candles = get_ohlc("BTC/USD", "D", thirty_days_ago, now)
+print(f"Fetched {len(candles)} candles")
+```
+
+#### Response
+
+**Success (200 OK)**
+
+```json
+{
+  "s": "ok",
+  "t": [1704067200, 1704070800, 1704074400],
+  "o": [42500.00, 42550.00, 42480.00],
+  "h": [42600.00, 42580.00, 42550.00],
+  "l": [42450.00, 42470.00, 42400.00],
+  "c": [42550.00, 42480.00, 42520.00],
+  "v": [1250.5, 980.2, 1100.8]
+}
+```
+
+**Response Schema (TradingView format)**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `s` | `string` | Status: `ok` or `error` |
+| `t` | `number[]` | Array of Unix timestamps (seconds) |
+| `o` | `number[]` | Array of open prices |
+| `h` | `number[]` | Array of high prices |
+| `l` | `number[]` | Array of low prices |
+| `c` | `number[]` | Array of close prices |
+| `v` | `number[]` | Array of volumes (if available) |
+
+<Callout type="info">
+  The response format is compatible with TradingView charting libraries.
+  Arrays are aligned by index - `t[0]`, `o[0]`, `h[0]`, `l[0]`, `c[0]` represent the same candle.
+</Callout>
+
+---
+
+### Get Historical Prices
+
+Retrieve historical price data points at specified intervals.
+
+```
+GET /history/v1/prices
+```
+
+#### Request
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `symbol` | `string` | Yes | Trading pair symbol | `BTC/USD` |
+| `from` | `number` | Yes | Start timestamp (Unix seconds) | `1704067200` |
+| `to` | `number` | Yes | End timestamp (Unix seconds) | `1704153600` |
+| `resolution` | `string` | No | Data resolution (default: `1`) | `60` |
+
+#### Request Example
+
+**cURL**
+
+```bash
+curl -X GET "https://history.pyth-lazer.dourolabs.app/history/v1/prices?symbol=ETH/USD&from=1704067200&to=1704070800&resolution=1"
+```
+
+**TypeScript**
+
+```typescript
+interface HistoricalPrice {
+  timestamp: number;
+  price: number;
+  confidence: number;
+}
+
+async function getHistoricalPrices(
+  symbol: string,
+  from: number,
+  to: number,
+  resolution?: string
+): Promise<HistoricalPrice[]> {
+  const params = new URLSearchParams({
+    symbol,
+    from: from.toString(),
+    to: to.toString(),
+    ...(resolution && { resolution }),
+  });
+
+  const response = await fetch(
+    `https://history.pyth-lazer.dourolabs.app/history/v1/prices?${params}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+  }
+
+  return response.json();
+}
+```
+
+#### Response
+
+**Success (200 OK)**
+
+```json
+[
+  {
+    "timestamp": 1704067200,
+    "price": 42500.00,
+    "confidence": 15.50
+  },
+  {
+    "timestamp": 1704067260,
+    "price": 42510.25,
+    "confidence": 14.80
+  }
+]
+```
+
+**Response Schema**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | `number` | Unix timestamp (seconds) |
+| `price` | `number` | Price at the given timestamp |
+| `confidence` | `number` | Confidence interval at the given timestamp |
+
+---
+
+## TradingView Integration
+
+The History API is designed to work with TradingView charting libraries. Here's how to integrate:
+
+```typescript
+// TradingView UDF Datafeed implementation
+const datafeed = {
+  onReady: (callback) => {
+    setTimeout(() => callback({
+      supported_resolutions: ["1", "5", "15", "30", "60", "240", "D", "W", "M"],
+      supports_time: true,
+      supports_marks: false,
+    }), 0);
+  },
+
+  searchSymbols: async (userInput, exchange, symbolType, onResult) => {
+    const symbols = await fetch(
+      "https://history.pyth-lazer.dourolabs.app/history/v1/symbols"
+    ).then(r => r.json());
+
+    const filtered = symbols.filter(s =>
+      s.symbol.toLowerCase().includes(userInput.toLowerCase())
+    );
+
+    onResult(filtered.map(s => ({
+      symbol: s.symbol,
+      full_name: s.symbol,
+      description: s.description,
+      type: s.assetType,
+    })));
+  },
+
+  getBars: async (symbolInfo, resolution, periodParams, onResult, onError) => {
+    try {
+      const response = await fetch(
+        `https://history.pyth-lazer.dourolabs.app/history/v1/ohlc?` +
+        `symbol=${symbolInfo.name}&resolution=${resolution}` +
+        `&from=${periodParams.from}&to=${periodParams.to}`
+      );
+
+      const data = await response.json();
+
+      if (data.s !== "ok") {
+        onResult([], { noData: true });
+        return;
+      }
+
+      const bars = data.t.map((time, i) => ({
+        time: time * 1000,
+        open: data.o[i],
+        high: data.h[i],
+        low: data.l[i],
+        close: data.c[i],
+        volume: data.v?.[i],
+      }));
+
+      onResult(bars, { noData: bars.length === 0 });
+    } catch (error) {
+      onError(error);
+    }
+  },
+};
+```
+
+---
+
+## Rate Limits
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `/history/v1/symbols` | 100 requests | Per minute |
+| `/history/v1/ohlc` | 60 requests | Per minute |
+| `/history/v1/prices` | 60 requests | Per minute |
+
+---
+
+## Error Responses
+
+| Status | Description | Example Response |
+|--------|-------------|------------------|
+| `400` | Invalid parameters | `{"error": "Invalid symbol"}` |
+| `404` | Symbol not found | `{"error": "Symbol not found: XYZ/USD"}` |
+| `429` | Rate limit exceeded | `{"error": "Rate limit exceeded"}` |
+| `500` | Server error | `{"error": "Internal server error"}` |
+
+---
+
+## Related Resources
+
+- [WebSocket API Reference](/price-feeds/pro/api/websocket-api) - Real-time streaming
+- [REST API Reference](/price-feeds/pro/api/rest-api) - On-demand current prices
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids) - Symbol to ID mapping
+- [Understanding Price Data](/price-feeds/pro/understanding-price-data) - Data interpretation guide

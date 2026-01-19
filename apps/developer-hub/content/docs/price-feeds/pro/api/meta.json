@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "index",
+    "websocket-api",
+    "rest-api",
+    "history-api"
+  ]
+}
