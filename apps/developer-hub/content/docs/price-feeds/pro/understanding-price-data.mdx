@@ -1,0 +1,75 @@
+---
+title: Understanding Price Data
+description: Learn about confidence intervals, best bid/ask, and what these metrics represent
+slug: /price-feeds/pro/understanding-price-data
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This page explains the key metrics in Pyth Pro price feeds and what they represent. Understanding these concepts is essential for properly interpreting price data and building robust applications. For technical field specifications and API details, see [Payload Reference](/price-feeds/pro/payload-reference).
+
+## Confidence Interval
+
+The confidence interval measures **the spread of price observations across publishers**. It measures how much individual publishers deviate from the aggregate price.
+
+<Callout type="warning">
+  **Important Distinction**: The confidence interval does NOT represent price
+  dislocation between trading venues. It reflects publisher uncertainty, which
+  does not always equal the market uncertainty.
+</Callout>
+
+### What High Confidence Means
+
+A **high confidence value** indicates **high uncertainty** - publishers are deviating from the aggregate more than usual. This could happen when:
+
+- Market conditions are volatile.
+- Publishers have varying views on the current price.
+- There is less agreement among data sources.
+
+A **low confidence value** indicates **low uncertainty** - publishers are in closer agreement about the price.
+
+### How Confidence Is Calculated
+
+The confidence interval is computed using the interquartile range of publisher data. Importantly, the calculation combines **all prices, bids, and asks** from publishers — not just mid-prices.
+
+1. **Combine All Data**: The system pools all publisher prices, bids, and asks into a single dataset.
+2. **Calculate Percentiles**: The 25th percentile (price25) and 75th percentile (price75) are computed from this combined dataset.
+3. **Left Confidence**: Calculated as `median_price - price25`.
+4. **Right Confidence**: Calculated as `price75 - median_price`.
+5. **Final Confidence**: The larger of left confidence and right confidence is used as the reported confidence value.
+
+This approach ensures the confidence interval reflects the full range of what publishers are reporting, including their view of market depth.
+
+## Best Bid and Best Ask
+
+Best Bid and Best Ask represent the **tightest bid and ask prices** across all contributing publishers.
+
+| Field          | Description                                              |
+| -------------- | -------------------------------------------------------- |
+| `bestBidPrice` | The highest bid price across all contributing publishers |
+| `bestAskPrice` | The lowest ask price across all contributing publishers  |
+
+### How Best Bid/Ask Differ from Confidence
+
+While both metrics provide insight into market conditions, they measure different things:
+
+| Metric                  | What It Measures                          | Use Case                                |
+| ----------------------- | ----------------------------------------- | --------------------------------------- |
+| **Confidence Interval** | Publisher agreement/disagreement on price | Risk management, uncertainty assessment |
+| **Best Bid/Ask**        | Inside market prices                      | Spread analysis, execution planning     |
+
+The spread between best bid and best ask (`bestAskPrice - bestBidPrice`) shows the current market spread as seen across publishers. This is different from the confidence interval, which shows how much publishers' prices vary from the aggregate.
+
+### Using Best Bid/Ask
+
+Best bid and ask are useful for:
+
+- **Spread analysis**: Understanding current market liquidity conditions
+- **Execution planning**: Estimating slippage for trades
+- **Market health monitoring**: Tracking spread widening during stress periods
+
+<Callout type="warning">
+  Remember: Publisher uncertainty (confidence interval) does not always reflect
+  market uncertainty. Use both confidence intervals and best bid/ask data
+  together for a more complete picture of market conditions.
+</Callout>
