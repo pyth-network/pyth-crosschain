@@ -2093,6 +2093,9 @@ importers:
       '@cprussin/tsconfig':
         specifier: 'catalog:'
         version: 3.1.2(typescript@5.9.3)
+      '@types/jest':
+        specifier: 'catalog:'
+        version: 29.5.14
       '@types/node':
         specifier: ^18.19.54
         version: 18.19.86

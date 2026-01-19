@@ -27,8 +27,11 @@ const client = await PythLazerClient.create({
   logger: console, // Optionally log operations (to the console in this case.)
   webSocketPoolConfig: {
     numConnections: 4, // Optionally specify number of parallel redundant connections to reduce the chance of dropped messages. The connections will round-robin across the provided URLs. Default is 4.
-    onError: (error) => {
-      console.error("WebSocket error:", error);
+    onWebSocketError: (errorEvent) => {
+      console.error("WebSocket error event:", errorEvent);
+    },
+    onWebSocketPoolError: (error) => {
+      console.error("An error occurred within the WebSocketPool:", error);
     },
     // Optional configuration for resilient WebSocket connections
     rwsConfig: {

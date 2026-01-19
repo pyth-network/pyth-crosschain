@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-lazer-sdk",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Pyth Lazer SDK",
   "engines": {
     "node": "^24.0.0"
@@ -32,6 +32,16 @@
       "import": {
         "types": "./dist/esm/constants.d.ts",
         "default": "./dist/esm/constants.mjs"
+      }
+    },
+    "./emitter": {
+      "require": {
+        "types": "./dist/cjs/emitter/index.d.ts",
+        "default": "./dist/cjs/emitter/index.cjs"
+      },
+      "import": {
+        "types": "./dist/esm/emitter/index.d.ts",
+        "default": "./dist/esm/emitter/index.mjs"
       }
     },
     ".": {
@@ -132,6 +142,7 @@
   "devDependencies": {
     "@cprussin/eslint-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@types/jest": "catalog:",
     "@types/node": "^18.19.54",
     "@types/ws": "^8.5.12",
     "eslint": "catalog:",
