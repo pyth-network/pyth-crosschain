@@ -1,6 +1,6 @@
 {
   "pages": [
-    "[EVM](https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan)",
-    "[Hermes](https://hermes.pyth.network/docs/)"
+    "external:[EVM](https://api-reference.pyth.network/price-feeds/evm/getPriceNoOlderThan)",
+    "external:[Hermes](https://hermes.pyth.network/docs/)"
   ]
 }
