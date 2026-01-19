@@ -55,7 +55,7 @@ The `parsed` object contains human-readable price data (if `parsed` is requested
 
 Each price feed in the `priceFeeds` array represents real-time market data for a specific trading pair (e.g., BTC/USD, ETH/USD). Think of a price feed as a comprehensive snapshot of market conditions for that asset.
 
-Here's what a typical StreamUpdated response that contains a PriceFeed looks like::
+Here's what a typical StreamUpdated response that contains a PriceFeed looks like:
 
 ```json
 {
@@ -148,13 +148,19 @@ Decimal exponent for price conversion
 
 #### Price Confidence Interval - `confidence`
 
-Confidence interval representing price uncertainty
+Confidence interval representing price uncertainty, calculated from all publisher prices, bids, and asks combined.
 
 - **Type**: `optional i64` (mantissa representation)
 - **Availability**: Only included if requested in subscription properties
 - **Algorithm**: Refer to [price aggregation](/price-feeds/core/how-pyth-works/price-aggregation) for the current algorithm
 - **Invariants**: Positive when present
 - **Usage**: Risk management and price quality assessment
+
+<Callout type="info">
+  A high confidence value means high uncertainty (publishers disagree more). See
+  [Understanding Price Data](/price-feeds/pro/understanding-price-data) for how
+  confidence differs from best bid/ask and when to use each metric.
+</Callout>
 
 #### Market Session - `marketSession`
 
@@ -166,6 +172,8 @@ This helps consumers understand whether a price comes from active trading hours 
 - **Availability**: Only included if requested in subscription properties
 
 ### Market Depth Properties
+
+Best bid and best ask represent the tightest prices across publishers. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
 
 #### Highest Market Bid - `best_bid_price`
 

@@ -15,6 +15,7 @@
     "external:[Websocket API Reference](https://pyth-lazer.dourolabs.app/docs)",
     "external:[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/lazer)",
     "---Understanding Pyth Pro---",
-    "how-lazer-works"
+    "how-lazer-works",
+    "understanding-price-data"
   ]
 }
