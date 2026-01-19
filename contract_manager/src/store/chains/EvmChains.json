@@ -1391,5 +1391,12 @@
     "rpcUrl": "https://forno.celo-sepolia.celo-testnet.org",
     "networkId": 11142220,
     "type": "EvmChain"
+  },
+  {
+    "id": "arc_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.testnet.arc.network",
+    "networkId": 5042002,
+    "type": "EvmChain"
   }
 ]

@@ -267,6 +267,7 @@ export const RECEIVER_CHAINS = {
   taiko_hoodi: 50135,
   morph_hoodi: 50136,
   celo_sepolia_testnet: 50137,
+  arc_testnet: 50138,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
