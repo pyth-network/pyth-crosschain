@@ -26,7 +26,7 @@
     "api-instances-and-providers",
     "contract-addresses",
     "pythnet-reference",
-    "[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds)",
+    "external:[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds)",
     "---Understanding Pyth---",
     "pull-updates",
     "why-update-prices",
