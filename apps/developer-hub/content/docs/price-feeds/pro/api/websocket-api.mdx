@@ -1,0 +1,345 @@
+---
+title: WebSocket API Reference
+description: Complete reference for Pyth Pro real-time WebSocket streaming API
+slug: /price-feeds/pro/api/websocket-api
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+This page provides a complete reference for the Pyth Pro WebSocket API, which delivers real-time price updates with sub-millisecond latency.
+
+## Connection
+
+### Endpoints
+
+Pyth Pro operates multiple WebSocket endpoints for redundancy. You should connect to **all endpoints** to ensure continuous service during deployments.
+
+| Endpoint | Status |
+|----------|--------|
+| `wss://pyth-lazer-0.dourolabs.app/v1/stream` | Primary |
+| `wss://pyth-lazer-1.dourolabs.app/v1/stream` | Secondary |
+| `wss://pyth-lazer-2.dourolabs.app/v1/stream` | Tertiary |
+
+<Callout type="warning" title="Redundancy Required">
+  Connect to **all three endpoints** simultaneously. During deployments, a single endpoint may briefly go down.
+  The SDK handles this automatically when you provide all URLs.
+</Callout>
+
+### Authentication
+
+Include your access token as a Bearer token in the connection headers:
+
+```typescript
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+  ],
+  "YOUR_ACCESS_TOKEN"
+);
+```
+
+For raw WebSocket connections (without SDK):
+
+```typescript
+const ws = new WebSocket("wss://pyth-lazer-0.dourolabs.app/v1/stream", {
+  headers: {
+    Authorization: `Bearer ${YOUR_ACCESS_TOKEN}`,
+  },
+});
+```
+
+<Callout type="warning">
+  **Security**: Never expose your access token in frontend applications or client-side code.
+  Access tokens should only be used in secure backend environments.
+</Callout>
+
+---
+
+## Client to Server Messages
+
+### Subscribe
+
+Request a price feed subscription. The server will begin streaming updates for the requested feeds.
+
+```json
+{
+  "type": "subscribe",
+  "subscriptionId": 1,
+  "priceFeedIds": [1, 2],
+  "properties": ["price", "confidence", "bestBidPrice", "bestAskPrice"],
+  "chains": ["solana", "evm"],
+  "channel": "fixed_rate@200ms",
+  "parsed": true,
+  "jsonBinaryEncoding": "hex"
+}
+```
+
+#### Parameters
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `type` | `string` | Yes | - | Must be `"subscribe"` |
+| `subscriptionId` | `number` | Yes | - | Your unique identifier for this subscription (any positive integer) |
+| `priceFeedIds` | `number[]` | Yes | - | Array of [price feed IDs](/price-feeds/pro/price-feed-ids) to subscribe to |
+| `properties` | `string[]` | Yes | - | Properties to include in updates (see [Available Properties](#available-properties)) |
+| `chains` | `string[]` | No | `[]` | Blockchain formats for signed payloads: `"solana"`, `"evm"`, `"leEcdsa"`, `"leUnsigned"` |
+| `channel` | `string` | No | `"real_time"` | Update frequency channel (see [Channels](#channels)) |
+| `parsed` | `boolean` | No | `true` | Include human-readable parsed data in responses |
+| `jsonBinaryEncoding` | `string` | No | `"base64"` | Encoding for binary data: `"hex"` or `"base64"` |
+| `deliveryFormat` | `string` | No | `"json"` | Response format: `"json"` or `"binary"` |
+
+#### Available Properties
+
+**Core Properties (all feed types):**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `price` | `i64` | Aggregate price (mantissa representation) |
+| `confidence` | `i64` | Price confidence interval |
+| `bestBidPrice` | `i64` | Highest bid price across publishers |
+| `bestAskPrice` | `i64` | Lowest ask price across publishers |
+| `publisherCount` | `u16` | Number of contributing data publishers |
+| `exponent` | `i16` | Decimal exponent for price conversion |
+| `marketSession` | `string` | Trading session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed` |
+
+**Derivatives Properties (FundingRate feeds only):**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fundingRate` | `i64` | Current funding rate for perpetual futures |
+| `fundingTimestamp` | `u64` | Timestamp of last funding rate calculation |
+| `fundingRateInterval` | `u64` | Duration between funding updates (microseconds) |
+
+#### Channels
+
+| Channel | Update Frequency | Use Case |
+|---------|------------------|----------|
+| `real_time` | As fast as available (1-50ms) | High-frequency trading, real-time analytics |
+| `fixed_rate@1ms` | Every 1 millisecond | Ultra-low latency applications |
+| `fixed_rate@50ms` | Every 50 milliseconds | Low-latency trading systems |
+| `fixed_rate@200ms` | Every 200 milliseconds | Standard trading applications |
+| `fixed_rate@1000ms` | Every 1 second | Dashboards, general applications |
+
+#### Example: Subscribe with SDK
+
+```typescript
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const client = await PythLazerClient.create(
+  [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-2.dourolabs.app/v1/stream",
+  ],
+  process.env.ACCESS_TOKEN!
+);
+
+// Subscribe to BTC and ETH prices with Solana-compatible signatures
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2], // BTC/USD, ETH/USD
+  properties: ["price", "confidence", "bestBidPrice", "bestAskPrice"],
+  chains: ["solana"],
+  channel: "fixed_rate@200ms",
+  parsed: true,
+  jsonBinaryEncoding: "hex",
+});
+
+// Handle incoming messages
+client.addMessageListener((message) => {
+  if (message.type === "json" && message.value.type === "streamUpdated") {
+    const { subscriptionId, parsed, solana } = message.value;
+    console.log(`Update for subscription ${subscriptionId}:`, parsed.priceFeeds);
+  }
+});
+```
+
+### Unsubscribe
+
+Stop receiving updates for a subscription.
+
+```json
+{
+  "type": "unsubscribe",
+  "subscriptionId": 1
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | `string` | Yes | Must be `"unsubscribe"` |
+| `subscriptionId` | `number` | Yes | The subscription ID to cancel |
+
+---
+
+## Server to Client Messages
+
+### StreamUpdated
+
+Price update containing requested data and signed payloads.
+
+```json
+{
+  "type": "streamUpdated",
+  "subscriptionId": 1,
+  "parsed": {
+    "timestampUs": "1730986152400000",
+    "priceFeeds": [
+      {
+        "priceFeedId": 1,
+        "price": "11223872331053",
+        "bestBidPrice": "11222498842767",
+        "bestAskPrice": "11224513591935",
+        "publisherCount": 9,
+        "exponent": -8,
+        "confidence": 1373488286,
+        "marketSession": "regular"
+      }
+    ]
+  },
+  "solana": {
+    "encoding": "hex",
+    "data": "b9011a82d239c094c52016990d6ca2b261dbb1157ad503..."
+  }
+}
+```
+
+#### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `string` | Always `"streamUpdated"` |
+| `subscriptionId` | `number` | Your subscription identifier |
+| `parsed` | `ParsedPayload` | Human-readable price data (when `parsed: true`) |
+| `parsed.timestampUs` | `string` | Unix timestamp in microseconds |
+| `parsed.priceFeeds` | `PriceFeed[]` | Array of price feed updates |
+| `solana` | `BinaryData` | Solana-compatible signed payload (Ed25519) |
+| `evm` | `BinaryData` | EVM-compatible signed payload (secp256k1) |
+| `leEcdsa` | `BinaryData` | Little-endian ECDSA payload |
+| `leUnsigned` | `BinaryData` | Unsigned payload (off-chain use only) |
+
+#### Price Feed Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `priceFeedId` | `number` | Unique price feed identifier |
+| `price` | `string` | Price mantissa. Calculate actual: `price * 10^exponent` |
+| `confidence` | `number` | Confidence interval (mantissa) |
+| `bestBidPrice` | `string` | Highest bid price (mantissa) |
+| `bestAskPrice` | `string` | Lowest ask price (mantissa) |
+| `exponent` | `number` | Decimal exponent (typically -8) |
+| `publisherCount` | `number` | Number of contributing publishers |
+| `marketSession` | `string` | Trading session status |
+
+<Callout type="info" title="Price Calculation">
+  Prices are returned as mantissa values. To get the actual price:
+  ```
+  actual_price = price * 10^exponent
+  ```
+  Example: `11223872331053 * 10^(-8) = $112,238.72`
+</Callout>
+
+### Error
+
+Error message from the server.
+
+```json
+{
+  "type": "error",
+  "code": "INVALID_SUBSCRIPTION",
+  "message": "Invalid price feed ID: 999"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `string` | Always `"error"` |
+| `code` | `string` | Error code (see [Error Codes](#error-codes)) |
+| `message` | `string` | Human-readable error description |
+
+---
+
+## Error Codes
+
+| Code | Description | Resolution |
+|------|-------------|------------|
+| `UNAUTHORIZED` | Invalid or missing access token | Check token validity, obtain new token |
+| `INVALID_SUBSCRIPTION` | Malformed subscription message | Verify message format and parameters |
+| `INVALID_PRICE_FEED` | Unknown price feed ID | Check [Price Feed IDs](/price-feeds/pro/price-feed-ids) |
+| `RATE_LIMITED` | Too many subscriptions or messages | Reduce request frequency |
+| `INTERNAL_ERROR` | Server-side error | Retry with exponential backoff |
+
+### WebSocket Close Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| `1000` | Normal closure | N/A - clean disconnect |
+| `1001` | Going away (server shutdown) | Reconnect to another endpoint |
+| `1008` | Policy violation | Check authentication |
+| `4001` | Unauthorized | Refresh token and reconnect |
+| `4003` | Rate limited | Wait before reconnecting |
+
+---
+
+## Connection Best Practices
+
+### Automatic Reconnection
+
+The SDK handles reconnection automatically. For raw WebSocket connections:
+
+```typescript
+function connectWithRetry(token: string, maxRetries = 5) {
+  let retries = 0;
+
+  function connect() {
+    const ws = new WebSocket("wss://pyth-lazer-0.dourolabs.app/v1/stream", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    ws.on("close", (code) => {
+      if (code !== 1000 && retries < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, retries), 30000);
+        retries++;
+        setTimeout(connect, delay);
+      }
+    });
+
+    ws.on("open", () => {
+      retries = 0; // Reset on successful connection
+      // Re-subscribe to feeds here
+    });
+
+    return ws;
+  }
+
+  return connect();
+}
+```
+
+### Heartbeat / Keep-Alive
+
+The server sends periodic ping frames. The SDK responds automatically. For raw connections, ensure your WebSocket client responds to pings to prevent disconnection.
+
+---
+
+## Rate Limits
+
+| Limit | Value |
+|-------|-------|
+| Connections per token | 10 |
+| Subscriptions per connection | 100 |
+| Subscribe messages per minute | 60 |
+
+---
+
+## Related Resources
+
+- [Subscribe to Prices Guide](/price-feeds/pro/subscribe-to-prices) - Step-by-step integration guide
+- [Payload Reference](/price-feeds/pro/payload-reference) - Detailed payload structure documentation
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids) - Complete list of available feeds
+- [SDK Repository](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js) - Source code and examples
