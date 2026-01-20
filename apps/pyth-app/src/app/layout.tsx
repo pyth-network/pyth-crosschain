@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "pyth-app",
-  description: "A single place to view Pyth data feeds and pricing information, as well as managing your Pyth Pro subscription and API keys",
+  description:
+    "A single place to view Pyth data feeds and pricing information, as well as managing your Pyth Pro subscription and API keys",
 };
 
 export default function RootLayout({

@@ -42,6 +42,8 @@
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
+    "stylelint": "catalog:",
+    "stylelint-config-standard-scss": "catalog:",
     "vercel": "catalog:"
   },
   "dependencies": {
