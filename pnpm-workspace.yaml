@@ -102,6 +102,7 @@ catalog:
   "@types/react": ^19.1.4
   "@types/react-dom": ^19.1.4
   "@types/yargs": "^17.0.33"
+  "@vercel/analytics": ^1.6.1
   "@vercel/functions": ^2.0.0
   "ag-grid-community": ^34.2.0
   "ag-grid-react": ^34.2.0
