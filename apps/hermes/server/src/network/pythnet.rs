@@ -5,11 +5,8 @@
 use {
     crate::{
         api::types::{PriceFeedMetadata, RpcPriceIdentifier},
-        config::{wormhole::GuardianSetSource, RunOptions},
-        network::{
-            ethereum::fetch_guardian_sets_from_ethereum,
-            wormhole::{BridgeData, GuardianSet, GuardianSetData},
-        },
+        config::RunOptions,
+        network::ethereum::fetch_guardian_sets_from_ethereum,
         state::{
             aggregate::{AccumulatorMessages, Aggregates, Update},
             price_feeds_metadata::{PriceFeedMeta, DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL},
@@ -37,78 +34,6 @@ use {
         tungstenite::{client::IntoClientRequest, Message},
     },
 };
-
-/// Using a Solana RPC endpoint, fetches the target GuardianSet based on an index.
-async fn fetch_guardian_set(
-    client: &RpcClient,
-    wormhole_contract_addr: Pubkey,
-    guardian_set_index: u32,
-) -> Result<GuardianSet> {
-    // Fetch GuardianSet account from Solana RPC.
-    let guardian_set = client
-        .get_account_with_commitment(
-            &Pubkey::find_program_address(
-                &[b"GuardianSet", &guardian_set_index.to_be_bytes()],
-                &wormhole_contract_addr,
-            )
-            .0,
-            CommitmentConfig::confirmed(),
-        )
-        .await;
-
-    let guardian_set = match guardian_set {
-        Ok(response) => match response.value {
-            Some(guardian_set) => guardian_set,
-            None => return Err(anyhow!("GuardianSet account not found")),
-        },
-        Err(err) => return Err(anyhow!("Failed to fetch GuardianSet account: {}", err)),
-    };
-
-    // Deserialize the result into a GuardianSet, this is where we can
-    // extract the new Signer set.
-    match GuardianSetData::deserialize(&mut guardian_set.data.as_ref()) {
-        Ok(guardian_set) => Ok(GuardianSet {
-            keys: guardian_set.keys,
-        }),
-
-        Err(err) => Err(anyhow!(
-            "Failed to deserialize GuardianSet account: {}",
-            err
-        )),
-    }
-}
-
-/// Using a Solana RPC endpoint, fetches the target Bridge state.
-///
-/// You can use this function to get access to metadata about the Wormhole state by reading the
-/// Bridge account. We currently use this to find the active guardian set index.
-async fn fetch_bridge_data(
-    client: &RpcClient,
-    wormhole_contract_addr: &Pubkey,
-) -> Result<BridgeData> {
-    // Fetch Bridge account from Solana RPC.
-    let bridge = client
-        .get_account_with_commitment(
-            &Pubkey::find_program_address(&[b"Bridge"], wormhole_contract_addr).0,
-            CommitmentConfig::confirmed(),
-        )
-        .await;
-
-    let bridge = match bridge {
-        Ok(response) => match response.value {
-            Some(bridge) => bridge,
-            None => return Err(anyhow!("Bridge account not found")),
-        },
-        Err(err) => return Err(anyhow!("Failed to fetch Bridge account: {}", err)),
-    };
-
-    // Deserialize the result into a BridgeData, this is where we can
-    // extract the new Signer set.
-    match BridgeData::deserialize(&mut bridge.data.as_ref()) {
-        Ok(bridge) => Ok(bridge),
-        Err(err) => Err(anyhow!("Failed to deserialize Bridge account: {}", err)),
-    }
-}
 
 pub async fn run<S>(store: Arc<S>, pythnet_ws_endpoint: String) -> Result<()>
 where
@@ -186,103 +111,28 @@ where
     Err(anyhow!("Pythnet network listener connection terminated"))
 }
 
-/// Fetch existing GuardianSet accounts from Pythnet Wormhole contract.
-///
-/// This method performs the necessary work to pull down the bridge state and associated guardian
-/// sets from a deployed Wormhole contract on Pythnet. Note that we only fetch the last two
-/// accounts due to the fact that during a Wormhole upgrade, there will only be messages
-/// produced from those two.
-async fn fetch_guardian_sets_from_pythnet<S>(
-    state: Arc<S>,
-    pythnet_http_endpoint: String,
-    wormhole_contract_addr: Pubkey,
-) -> Result<()>
-where
-    S: Wormhole,
-    S: Send + Sync + 'static,
-{
-    let client = RpcClient::new(pythnet_http_endpoint.to_string());
-    let bridge = fetch_bridge_data(&client, &wormhole_contract_addr).await?;
-
-    // Fetch the current GuardianSet we know is valid for signing.
-    let current =
-        fetch_guardian_set(&client, wormhole_contract_addr, bridge.guardian_set_index).await?;
-
-    tracing::info!(
-        guardian_set_index = bridge.guardian_set_index,
-        %current,
-        "Retrieved Current GuardianSet from Pythnet.",
-    );
-
-    Wormhole::update_guardian_set(&*state, bridge.guardian_set_index, current).await;
-
-    // If there are more than one guardian set, we want to fetch the previous one as well as it
-    // may still be in transition phase if a guardian upgrade has just occurred.
-    if bridge.guardian_set_index >= 1 {
-        let previous = fetch_guardian_set(
-            &client,
-            wormhole_contract_addr,
-            bridge.guardian_set_index - 1,
-        )
-        .await?;
-
-        tracing::info!(
-            previous_guardian_set_index = bridge.guardian_set_index - 1,
-            %previous,
-            "Retrieved Previous GuardianSet from Pythnet.",
-        );
-
-        Wormhole::update_guardian_set(&*state, bridge.guardian_set_index - 1, previous).await;
-    }
-
-    Ok(())
-}
-
-/// Fetch and update guardian sets based on the configured source.
-///
-/// This function dispatches to either Pythnet or Ethereum based on the configuration.
+/// Fetch and update guardian sets from Ethereum.
 async fn update_guardian_sets<S>(state: Arc<S>, opts: &RunOptions) -> Result<()>
 where
     S: Wormhole,
     S: Send + Sync + 'static,
 {
-    match &opts.wormhole.guardian_set_source {
-        GuardianSetSource::Pythnet => {
-            tracing::debug!("Fetching guardian sets from Pythnet...");
-            fetch_guardian_sets_from_pythnet(
-                state,
-                opts.pythnet.http_addr.clone(),
-                opts.wormhole.contract_addr,
-            )
-            .await
-        }
-        GuardianSetSource::Ethereum => {
-            tracing::debug!("Fetching guardian sets from Ethereum...");
-            let ethereum_rpc_addr = opts.wormhole.ethereum_rpc_addr.as_ref().ok_or_else(|| {
-                anyhow!(
-                    "Ethereum RPC address is required when guardian set source is 'ethereum'. \
-                         Set --wormhole-ethereum-rpc-addr or WORMHOLE_ETHEREUM_RPC_ADDR."
-                )
-            })?;
+    tracing::debug!("Fetching guardian sets from Ethereum...");
+    let (current_index, current_set, previous) = fetch_guardian_sets_from_ethereum(
+        &opts.wormhole.ethereum_rpc_addr,
+        &opts.wormhole.ethereum_contract_addr,
+    )
+    .await?;
 
-            tracing::debug!("Fetching guardian sets from Ethereum...");
-            let (current_index, current_set, previous) = fetch_guardian_sets_from_ethereum(
-                ethereum_rpc_addr,
-                &opts.wormhole.ethereum_contract_addr,
-            )
-            .await?;
+    // Update current guardian set
+    Wormhole::update_guardian_set(&*state, current_index, current_set).await;
 
-            // Update current guardian set
-            Wormhole::update_guardian_set(&*state, current_index, current_set).await;
-
-            // Update previous guardian set if available
-            if let Some((prev_index, prev_set)) = previous {
-                Wormhole::update_guardian_set(&*state, prev_index, prev_set).await;
-            }
-
-            Ok(())
-        }
+    // Update previous guardian set if available
+    if let Some((prev_index, prev_set)) = previous {
+        Wormhole::update_guardian_set(&*state, prev_index, prev_set).await;
     }
+
+    Ok(())
 }
 
 pub async fn fetch_and_store_price_feeds_metadata<S>(
@@ -390,11 +240,7 @@ where
     S: Wormhole,
     S: Send + Sync + 'static,
 {
-    tracing::info!(
-        endpoint = opts.pythnet.ws_addr,
-        guardian_set_source = %opts.wormhole.guardian_set_source,
-        "Started Pythnet Listener."
-    );
+    tracing::info!(endpoint = opts.pythnet.ws_addr, "Started Pythnet Listener.");
 
     // Create RpcClient instance here
     let rpc_client = RpcClient::new(opts.pythnet.http_addr.clone());
