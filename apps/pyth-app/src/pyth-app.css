@@ -1,0 +1,4 @@
+@layer ssjs-imports, ssjs-globals, ssjs-styles;
+@layer ssjs-imports {}
+@layer ssjs-globals {*{box-sizing:border-box;}body{background-color:red;}}
+@layer ssjs-styles {}

@@ -1,7 +1,11 @@
+import "./layout.styles";
+
+import "./globals.scss";
+import "../pyth-app.css";
+
 import { AppShell } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { Metadata } from "next";
-import "./globals.scss";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {

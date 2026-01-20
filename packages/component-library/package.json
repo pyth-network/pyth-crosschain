@@ -46,6 +46,7 @@
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
+    "simplestyle-js": "catalog:",
     "swr": "catalog:"
   },
   "devDependencies": {
@@ -324,6 +325,10 @@
     "./social-links": {
       "types": "./dist/social-links.d.ts",
       "default": "./dist/social-links.mjs"
+    },
+    "./styles/theme": {
+      "types": "./dist/styles/theme.d.ts",
+      "default": "./dist/styles/theme.mjs"
     },
     "./unstyled/Breadcrumbs": {
       "types": "./dist/unstyled/Breadcrumbs/index.d.ts",
