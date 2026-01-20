@@ -20,11 +20,6 @@ turbo.json @pyth-network/web-team
 
 /lazer/contracts/aptos @Riateche @ali-behjati
 /lazer/contracts/evm @Riateche @ali-behjati
-/lazer/contracts/solana @Riateche @ali-behjati
-/lazer/publisher_sdk @darunrs @Riateche
-/lazer/sdk/js @ali-behjati @keyvankhademi
-/lazer/sdk/js-solana @ali-behjati @keyvankhademi
-/lazer/sdk/rust @darunrs @Riateche
 
 flake.lock @cprussin
 *.nix @cprussin
