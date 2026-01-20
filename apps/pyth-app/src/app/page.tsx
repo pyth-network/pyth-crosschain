@@ -1,6 +1,6 @@
 import { Logo } from "@pythnetwork/component-library/Logo";
 
-import classes from "./page.module.scss";
+import { classes } from "./page.styles";
 
 export default function Home() {
   return (

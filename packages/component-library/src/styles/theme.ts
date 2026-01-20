@@ -717,8 +717,12 @@ export const theme = {
   h4,
   headerHeight,
   letterSpacing,
-  maxWidth,
-  maxWidthPadding,
+  maxWidth: (): SimpleStyleRules["key"] => ({
+    maxWidth,
+  }),
+  maxWidthPadding: (): SimpleStyleRules["key"] => ({
+    maxWidth: maxWidthPadding,
+  }),
   root,
   row,
   spacing,

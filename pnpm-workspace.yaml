@@ -163,7 +163,7 @@ catalog:
   sass: ^1.86.1
   sass-loader: ^16.0.5
   shiki: ^3.2.1
-  simplestyle-js: 5.5.1-alpha.104
+  simplestyle-js: 5.5.1-alpha.107
   sockette: ^2.0.6
   storybook: ^10.1.11
   style-loader: ^4.0.0

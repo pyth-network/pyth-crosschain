@@ -13,14 +13,15 @@
     "directory": "apps/pyth-app"
   },
   "scripts": {
-    "build:css": "ssjs --entrypoints ./src/app/layout.tsx --outfile ./src/pyth-app.css",
+    "build:css": "ssjs --entrypoints ./src/app/**/page.tsx --outfile ./src/pyth-app.css",
     "build:vercel": "next build",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "pull:env": "echo 'once @pythnetwork/pyth-app has been setup in the Vercel UI, you can replace this script with the contents in the pull:env:placeholder, below, as well as the VERCEL_PROJECT_ID variable value'",
     "pull:env:placeholder": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=TODO_FILL_ME_IN vercel env pull",
-    "start:dev": "pnpm build:css --watch & next dev --port 3344",
+    "start:dev": "pnpm start:dev:css & next dev --port 3344",
+    "start:dev:css": "pnpm build:css --watch",
     "start:prod": "next start --port 3344",
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",

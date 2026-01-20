@@ -1,6 +1,3 @@
-import "./layout.styles";
-
-import "./globals.scss";
 import "../pyth-app.css";
 
 import { AppShell } from "@pythnetwork/component-library/AppShell";

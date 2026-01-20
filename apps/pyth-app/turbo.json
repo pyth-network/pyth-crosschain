@@ -38,6 +38,9 @@
       ],
       "cache": false
     },
+    "start:dev:css": {
+      "cache": false
+    },
     "start:dev": {
       "with": [
         "@pythnetwork/component-library#start:dev"

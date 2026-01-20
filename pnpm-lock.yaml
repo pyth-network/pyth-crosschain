@@ -331,8 +331,8 @@ catalogs:
       specifier: ^3.2.1
       version: 3.12.2
     simplestyle-js:
-      specifier: 5.5.1-alpha.104
-      version: 5.5.1-alpha.104
+      specifier: 5.5.1-alpha.107
+      version: 5.5.1-alpha.107
     sockette:
       specifier: ^2.0.6
       version: 2.0.6
@@ -1321,7 +1321,7 @@ importers:
         version: 19.2.1(react@19.2.1)
       simplestyle-js:
         specifier: 'catalog:'
-        version: 5.5.1-alpha.104(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
+        version: 5.5.1-alpha.107(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.2.1)
@@ -2193,7 +2193,7 @@ importers:
         version: 19.2.1(react@19.2.1)
       simplestyle-js:
         specifier: 'catalog:'
-        version: 5.5.1-alpha.104(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
+        version: 5.5.1-alpha.107(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.2.1)
@@ -21132,8 +21132,8 @@ packages:
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
-  simplestyle-js@5.5.1-alpha.104:
-    resolution: {integrity: sha512-T7w6NDO5fEZCyBQtPdDl4x5g/InV6G0CQAsJTPVGA5zBlddjHrpTAyD2afDdGX2Z7f+1xGELc+nG26jdvMelLg==}
+  simplestyle-js@5.5.1-alpha.107:
+    resolution: {integrity: sha512-4b8QD/mw6BHb+6lgoT0xZ7YCE4RRzCvKOz810mTACCEdt/A3RXP3odF+lwCXSPaQBlV0CVXwcUdnHZL3w7pxHg==}
     hasBin: true
     peerDependencies:
       react: '>=16.8'
@@ -50531,7 +50531,7 @@ snapshots:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.19.86
+      '@types/node': 20.17.30
       long: 4.0.0
 
   protobufjs@7.4.0:
@@ -52228,7 +52228,7 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
-  simplestyle-js@5.5.1-alpha.104(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0):
+  simplestyle-js@5.5.1-alpha.107(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0):
     dependencies:
       '@babel/core': 7.28.6
       '@babel/preset-env': 7.28.6(@babel/core@7.28.6)
