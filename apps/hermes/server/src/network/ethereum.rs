@@ -1,147 +1,27 @@
 //! This module provides functionality to fetch the Wormhole guardian set from
 //! Ethereum mainnet.
 //!
-//! Uses `alloy-sol-types` for type-safe ABI encoding/decoding of Wormhole
-//! contract calls.
+//! Uses the `alloy` crate for type-safe Ethereum RPC calls and ABI encoding/decoding.
 
 use {
     crate::network::wormhole::GuardianSet,
-    alloy_primitives::Address,
-    alloy_sol_types::{sol, SolCall},
+    alloy::{primitives::Address, providers::ProviderBuilder, sol},
     anyhow::{anyhow, Context, Result},
-    serde::{Deserialize, Serialize},
-    serde_json::json,
 };
 
 // Define the Wormhole contract interface using alloy's sol! macro
+// This generates type-safe Rust types for ABI encoding/decoding and contract calls
 sol! {
-    struct WormholeGuardianSet {
-        address[] keys;
-        uint32 expirationTime;
+    #[sol(rpc)]
+    contract IWormhole {
+        struct GuardianSet {
+            address[] keys;
+            uint32 expirationTime;
+        }
+
+        function getCurrentGuardianSetIndex() external view returns (uint32);
+        function getGuardianSet(uint32 index) external view returns (GuardianSet);
     }
-
-    function getCurrentGuardianSetIndex() external view returns (uint32);
-
-    function getGuardianSet(uint32 index) external view returns (WormholeGuardianSet);
-}
-
-/// JSON-RPC request structure
-#[derive(Serialize)]
-struct JsonRpcRequest {
-    jsonrpc: &'static str,
-    method: &'static str,
-    params: serde_json::Value,
-    id: u64,
-}
-
-/// JSON-RPC response structure
-#[derive(Deserialize)]
-struct JsonRpcResponse {
-    result: Option<String>,
-    error: Option<JsonRpcError>,
-}
-
-#[derive(Deserialize, Debug)]
-struct JsonRpcError {
-    code: i64,
-    message: String,
-}
-
-/// Makes an eth_call to a contract and returns the raw bytes
-async fn eth_call(
-    client: &reqwest::Client,
-    rpc_url: &str,
-    to: &str,
-    data: &[u8],
-) -> Result<Vec<u8>> {
-    let request = JsonRpcRequest {
-        jsonrpc: "2.0",
-        method: "eth_call",
-        params: json!([
-            {
-                "to": to,
-                "data": format!("0x{}", hex::encode(data))
-            },
-            "latest"
-        ]),
-        id: 1,
-    };
-
-    let response = client
-        .post(rpc_url)
-        .json(&request)
-        .send()
-        .await
-        .context("Failed to send request to Ethereum RPC")?;
-
-    let json_response: JsonRpcResponse = response
-        .json()
-        .await
-        .context("Failed to parse Ethereum RPC response")?;
-
-    if let Some(error) = json_response.error {
-        return Err(anyhow!(
-            "Ethereum RPC error ({}): {}",
-            error.code,
-            error.message
-        ));
-    }
-
-    let hex_result = json_response
-        .result
-        .ok_or_else(|| anyhow!("Empty result from Ethereum RPC"))?;
-
-    let hex_data = hex_result.strip_prefix("0x").unwrap_or(&hex_result);
-    hex::decode(hex_data).context("Failed to decode hex response")
-}
-
-/// Fetches the current guardian set index from the Ethereum Wormhole contract.
-async fn fetch_current_guardian_set_index(
-    client: &reqwest::Client,
-    ethereum_rpc_url: &str,
-    wormhole_contract_addr: &str,
-) -> Result<u32> {
-    // Encode the function call using alloy-sol-types
-    let call = getCurrentGuardianSetIndexCall {};
-    let encoded = call.encode();
-
-    let result = eth_call(client, ethereum_rpc_url, wormhole_contract_addr, &encoded).await?;
-
-    // Decode the return value using alloy-sol-types
-    let decoded = getCurrentGuardianSetIndexCall::decode_returns(&result, true)
-        .context("Failed to decode getCurrentGuardianSetIndex return value")?;
-
-    Ok(decoded._0)
-}
-
-/// Fetches a specific guardian set by index from the Ethereum Wormhole contract.
-async fn fetch_guardian_set_by_index(
-    client: &reqwest::Client,
-    ethereum_rpc_url: &str,
-    wormhole_contract_addr: &str,
-    guardian_set_index: u32,
-) -> Result<GuardianSet> {
-    // Encode the function call using alloy-sol-types
-    let call = getGuardianSetCall {
-        index: guardian_set_index,
-    };
-    let encoded = call.encode();
-
-    let result = eth_call(client, ethereum_rpc_url, wormhole_contract_addr, &encoded).await?;
-
-    // Decode the return value using alloy-sol-types
-    let decoded = getGuardianSetCall::decode_returns(&result, true)
-        .context("Failed to decode getGuardianSet return value")?;
-
-    // Convert alloy Address array to our GuardianSet format
-    let keys: Vec<[u8; 20]> = decoded
-        ._0
-        .keys
-        .iter()
-        .map(|addr: &Address| addr.0 .0)
-        .collect();
-
-    Ok(GuardianSet { keys })
 }
 
 /// Fetches the current and previous guardian sets from Ethereum.
@@ -159,11 +39,26 @@ pub async fn fetch_guardian_sets_from_ethereum(
         ));
     }
 
-    let client = reqwest::Client::new();
+    // Create an alloy provider for Ethereum RPC
+    let provider = ProviderBuilder::new()
+        .connect(ethereum_rpc_url)
+        .await
+        .context("Failed to create Ethereum provider")?;
+
+    // Parse the contract address
+    let contract_addr: Address = wormhole_contract_addr
+        .parse()
+        .context("Failed to parse Wormhole contract address")?;
+
+    // Create contract instance
+    let wormhole = IWormhole::new(contract_addr, &provider);
 
     // Fetch current guardian set index
-    let current_index =
-        fetch_current_guardian_set_index(&client, ethereum_rpc_url, wormhole_contract_addr).await?;
+    let current_index = wormhole
+        .getCurrentGuardianSetIndex()
+        .call()
+        .await
+        .context("Failed to call getCurrentGuardianSetIndex")?;
 
     tracing::info!(
         guardian_set_index = current_index,
@@ -171,13 +66,20 @@ pub async fn fetch_guardian_sets_from_ethereum(
     );
 
     // Fetch current guardian set
-    let current_set = fetch_guardian_set_by_index(
-        &client,
-        ethereum_rpc_url,
-        wormhole_contract_addr,
-        current_index,
-    )
-    .await?;
+    let current_guardian_set = wormhole
+        .getGuardianSet(current_index)
+        .call()
+        .await
+        .context("Failed to call getGuardianSet for current index")?;
+
+    // Convert to our GuardianSet format
+    let current_set = GuardianSet {
+        keys: current_guardian_set
+            .keys
+            .iter()
+            .map(|addr| addr.0 .0)
+            .collect(),
+    };
 
     tracing::info!(
         guardian_set_index = current_index,
@@ -187,15 +89,11 @@ pub async fn fetch_guardian_sets_from_ethereum(
 
     // Fetch previous guardian set if it exists
     let previous = if current_index >= 1 {
-        match fetch_guardian_set_by_index(
-            &client,
-            ethereum_rpc_url,
-            wormhole_contract_addr,
-            current_index - 1,
-        )
-        .await
-        {
-            Ok(prev_set) => {
+        match wormhole.getGuardianSet(current_index - 1).call().await {
+            Ok(result) => {
+                let prev_set = GuardianSet {
+                    keys: result.keys.iter().map(|addr| addr.0 .0).collect(),
+                };
                 tracing::info!(
                     previous_guardian_set_index = current_index - 1,
                     %prev_set,
@@ -223,13 +121,14 @@ pub async fn fetch_guardian_sets_from_ethereum(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloy::sol_types::SolCall;
 
     #[test]
     fn test_sol_call_encoding() {
-        // Verify that alloy-sol-types generates the correct function selector
+        // Verify that alloy generates the correct function selector
         // for getCurrentGuardianSetIndex()
-        let call = getCurrentGuardianSetIndexCall {};
-        let encoded = call.encode();
+        let call = IWormhole::getCurrentGuardianSetIndexCall {};
+        let encoded = call.abi_encode();
         // Function selector should be 0x1cfe7951
         assert_eq!(hex::encode(&encoded[0..4]), "1cfe7951");
     }
@@ -237,8 +136,8 @@ mod tests {
     #[test]
     fn test_get_guardian_set_call_encoding() {
         // Verify that getGuardianSet(uint32) encoding is correct
-        let call = getGuardianSetCall { index: 4 };
-        let encoded = call.encode();
+        let call = IWormhole::getGuardianSetCall { index: 4 };
+        let encoded = call.abi_encode();
         // Function selector should be 0xf951975a
         assert_eq!(hex::encode(&encoded[0..4]), "f951975a");
         // Followed by uint32 value 4 encoded as 32 bytes
@@ -250,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_guardian_set_decoding() {
-        // Test decoding a guardian set response using alloy-sol-types
+        // Test decoding a guardian set response using alloy
         let data = hex::decode(concat!(
             "0000000000000000000000000000000000000000000000000000000000000020", // offset to struct
             "0000000000000000000000000000000000000000000000000000000000000040", // offset to keys
@@ -261,14 +160,14 @@ mod tests {
         ))
         .unwrap();
 
-        let decoded = getGuardianSetCall::decode_returns(&data, true).unwrap();
-        assert_eq!(decoded._0.keys.len(), 2);
+        let decoded = IWormhole::getGuardianSetCall::abi_decode_returns(&data).unwrap();
+        assert_eq!(decoded.keys.len(), 2);
         assert_eq!(
-            hex::encode(decoded._0.keys[0]),
+            hex::encode(decoded.keys[0]),
             "1111111111111111111111111111111111111111"
         );
         assert_eq!(
-            hex::encode(decoded._0.keys[1]),
+            hex::encode(decoded.keys[1]),
             "2222222222222222222222222222222222222222"
         );
     }
