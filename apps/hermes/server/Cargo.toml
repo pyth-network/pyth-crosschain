@@ -59,9 +59,6 @@ solana-client          = { version = "=1.16.19" }
 solana-sdk             = { version = "=1.16.19" }
 solana-account-decoder = { version = "=1.16.19" }
 
-# Fix tower version to avoid dependency conflicts.
-tower = { version = "0.5.3"}
-
 [build-dependencies]
 prost-build = { version = "0.12.1" }
 tonic-build = { version = "0.10.1" }
