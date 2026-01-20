@@ -1,7 +1,6 @@
-use {clap::Args, solana_sdk::pubkey::Pubkey};
+use clap::Args;
 
-const DEFAULT_CONTRACT_ADDR: &str = "H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU";
-const DEFAULT_ETHEREUM_CONTRACT_ADDR: &str = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B";
+const DEFAULT_CONTRACT_ADDR: &str = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B";
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Wormhole Options")]
@@ -11,7 +10,7 @@ pub struct Options {
     #[arg(long = "wormhole-contract-addr")]
     #[arg(default_value = DEFAULT_CONTRACT_ADDR)]
     #[arg(env = "WORMHOLE_CONTRACT_ADDR")]
-    pub contract_addr: Pubkey,
+    pub contract_addr: String,
 
     /// gRPC endpoint for a Wormhole spy.
     ///
@@ -27,10 +26,4 @@ pub struct Options {
     #[arg(long = "wormhole-ethereum-rpc-addr")]
     #[arg(env = "WORMHOLE_ETHEREUM_RPC_ADDR")]
     pub ethereum_rpc_addr: String,
-
-    /// Address of the Wormhole contract on Ethereum mainnet.
-    #[arg(long = "wormhole-ethereum-contract-addr")]
-    #[arg(default_value = DEFAULT_ETHEREUM_CONTRACT_ADDR)]
-    #[arg(env = "WORMHOLE_ETHEREUM_CONTRACT_ADDR")]
-    pub ethereum_contract_addr: String,
 }

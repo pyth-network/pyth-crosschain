@@ -120,7 +120,7 @@ where
     tracing::debug!("Fetching guardian sets from Ethereum...");
     let (current_index, current_set, previous) = fetch_guardian_sets_from_ethereum(
         &opts.wormhole.ethereum_rpc_addr,
-        &opts.wormhole.ethereum_contract_addr,
+        &opts.wormhole.contract_addr,
     )
     .await?;
 
