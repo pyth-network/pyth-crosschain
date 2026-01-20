@@ -6,9 +6,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "pyth-app",
   description:
     "A single place to view Pyth data feeds and pricing information, as well as managing your Pyth Pro subscription and API keys",
+  title: "Pyth App",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <AppShell
-      appName="pyth-app"
+      appName="Pyth App"
       enableAccessibilityReporting
       providers={[NuqsAdapter]}
     >
