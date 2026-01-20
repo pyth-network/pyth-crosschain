@@ -257,7 +257,7 @@ where
             .await
         }
         GuardianSetSource::Ethereum => {
-            tracing::warn!("Fetching guardian sets from Ethereum...");
+            tracing::debug!("Fetching guardian sets from Ethereum...");
             let ethereum_rpc_addr = opts.wormhole.ethereum_rpc_addr.as_ref().ok_or_else(|| {
                 anyhow!(
                     "Ethereum RPC address is required when guardian set source is 'ethereum'. \
