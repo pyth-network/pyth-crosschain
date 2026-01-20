@@ -1,5 +1,5 @@
 use {
-    super::ApiState,
+    super::{token, ApiState},
     crate::state::metrics::Metrics,
     axum::{
         extract::{MatchedPath, State},
@@ -88,6 +88,8 @@ pub struct Labels {
     pub method: String,
     pub path: String,
     pub status: u16,
+    /// Last 4 characters of the API token, or "none" if no token provided
+    pub token_suffix: String,
 }
 
 pub async fn track_metrics<B, S>(
@@ -103,6 +105,11 @@ pub async fn track_metrics<B, S>(
     };
 
     let method = req.method().clone();
+
+    // Extract the token from the request
+    let token = token::extract_token_from_headers_and_uri(req.headers(), req.uri());
+    let token_suffix = token::get_token_suffix(token.as_deref());
+
     let response = next.run(req).await;
     let latency = start.elapsed().as_secs_f64();
     let status = response.status().as_u16();
@@ -110,6 +117,7 @@ pub async fn track_metrics<B, S>(
         method: method.to_string(),
         path,
         status,
+        token_suffix,
     };
 
     api_state.metrics.requests.get_or_create(&labels).inc();
