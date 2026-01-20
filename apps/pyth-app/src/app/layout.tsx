@@ -27,18 +27,12 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <AppShell
-          appName="pyth-app"
-          enableAccessibilityReporting
-          providers={[NuqsAdapter]}
-        >
-          {children}
-        </AppShell>
-      </body>
-    </html>
+    <AppShell
+      appName="pyth-app"
+      enableAccessibilityReporting
+      providers={[NuqsAdapter]}
+    >
+      {children}
+    </AppShell>
   );
 }
