@@ -5,8 +5,11 @@
 use {
     crate::{
         api::types::{PriceFeedMetadata, RpcPriceIdentifier},
-        config::RunOptions,
-        network::wormhole::{BridgeData, GuardianSet, GuardianSetData},
+        config::{wormhole::GuardianSetSource, RunOptions},
+        network::{
+            ethereum::fetch_guardian_sets_from_ethereum,
+            wormhole::{BridgeData, GuardianSet, GuardianSetData},
+        },
         state::{
             aggregate::{AccumulatorMessages, Aggregates, Update},
             price_feeds_metadata::{PriceFeedMeta, DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL},
@@ -183,12 +186,13 @@ where
     Err(anyhow!("Pythnet network listener connection terminated"))
 }
 
-/// Fetch existing GuardianSet accounts from Wormhole.
+/// Fetch existing GuardianSet accounts from Pythnet Wormhole contract.
 ///
 /// This method performs the necessary work to pull down the bridge state and associated guardian
-/// sets from a deployed Wormhole contract. Note that we only fetch the last two accounts due to
-/// the fact that during a Wormhole upgrade, there will only be messages produces from those two.
-async fn fetch_existing_guardian_sets<S>(
+/// sets from a deployed Wormhole contract on Pythnet. Note that we only fetch the last two
+/// accounts due to the fact that during a Wormhole upgrade, there will only be messages
+/// produced from those two.
+async fn fetch_guardian_sets_from_pythnet<S>(
     state: Arc<S>,
     pythnet_http_endpoint: String,
     wormhole_contract_addr: Pubkey,
@@ -207,7 +211,7 @@ where
     tracing::info!(
         guardian_set_index = bridge.guardian_set_index,
         %current,
-        "Retrieved Current GuardianSet.",
+        "Retrieved Current GuardianSet from Pythnet.",
     );
 
     Wormhole::update_guardian_set(&*state, bridge.guardian_set_index, current).await;
@@ -225,13 +229,60 @@ where
         tracing::info!(
             previous_guardian_set_index = bridge.guardian_set_index - 1,
             %previous,
-            "Retrieved Previous GuardianSet.",
+            "Retrieved Previous GuardianSet from Pythnet.",
         );
 
         Wormhole::update_guardian_set(&*state, bridge.guardian_set_index - 1, previous).await;
     }
 
     Ok(())
+}
+
+/// Fetch and update guardian sets based on the configured source.
+///
+/// This function dispatches to either Pythnet or Ethereum based on the configuration.
+async fn update_guardian_sets<S>(state: Arc<S>, opts: &RunOptions) -> Result<()>
+where
+    S: Wormhole,
+    S: Send + Sync + 'static,
+{
+    match &opts.wormhole.guardian_set_source {
+        GuardianSetSource::Pythnet => {
+            tracing::debug!("Fetching guardian sets from Pythnet...");
+            fetch_guardian_sets_from_pythnet(
+                state,
+                opts.pythnet.http_addr.clone(),
+                opts.wormhole.contract_addr,
+            )
+            .await
+        }
+        GuardianSetSource::Ethereum => {
+            tracing::warn!("Fetching guardian sets from Ethereum...");
+            let ethereum_rpc_addr = opts.wormhole.ethereum_rpc_addr.as_ref().ok_or_else(|| {
+                anyhow!(
+                    "Ethereum RPC address is required when guardian set source is 'ethereum'. \
+                         Set --wormhole-ethereum-rpc-addr or WORMHOLE_ETHEREUM_RPC_ADDR."
+                )
+            })?;
+
+            tracing::debug!("Fetching guardian sets from Ethereum...");
+            let (current_index, current_set, previous) = fetch_guardian_sets_from_ethereum(
+                ethereum_rpc_addr,
+                &opts.wormhole.ethereum_contract_addr,
+            )
+            .await?;
+
+            // Update current guardian set
+            Wormhole::update_guardian_set(&*state, current_index, current_set).await;
+
+            // Update previous guardian set if available
+            if let Some((prev_index, prev_set)) = previous {
+                Wormhole::update_guardian_set(&*state, prev_index, prev_set).await;
+            }
+
+            Ok(())
+        }
+    }
 }
 
 pub async fn fetch_and_store_price_feeds_metadata<S>(
@@ -339,17 +390,17 @@ where
     S: Wormhole,
     S: Send + Sync + 'static,
 {
-    tracing::info!(endpoint = opts.pythnet.ws_addr, "Started Pythnet Listener.");
+    tracing::info!(
+        endpoint = opts.pythnet.ws_addr,
+        guardian_set_source = %opts.wormhole.guardian_set_source,
+        "Started Pythnet Listener."
+    );
 
     // Create RpcClient instance here
     let rpc_client = RpcClient::new(opts.pythnet.http_addr.clone());
 
-    fetch_existing_guardian_sets(
-        state.clone(),
-        opts.pythnet.http_addr.clone(),
-        opts.wormhole.contract_addr,
-    )
-    .await?;
+    // Fetch initial guardian sets from configured source
+    update_guardian_sets(state.clone(), &opts).await?;
 
     let task_listener = {
         let store = state.clone();
@@ -375,17 +426,16 @@ where
 
     let task_guardian_watcher = {
         let store = state.clone();
-        let pythnet_http_endpoint = opts.pythnet.http_addr.clone();
+        let opts_clone = opts.clone();
         let mut exit = crate::EXIT.subscribe();
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     _ = exit.changed() => break,
                     _ = tokio::time::sleep(Duration::from_secs(60)) => {
-                        if let Err(err) = fetch_existing_guardian_sets(
+                        if let Err(err) = update_guardian_sets(
                             store.clone(),
-                            pythnet_http_endpoint.clone(),
-                            opts.wormhole.contract_addr,
+                            &opts_clone,
                         )
                         .await
                         {
@@ -394,7 +444,7 @@ where
                     }
                 }
             }
-            tracing::info!("Shutting down Pythnet guardian set poller...");
+            tracing::info!("Shutting down guardian set poller...");
         })
     };
 

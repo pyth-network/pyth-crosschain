@@ -6,7 +6,7 @@ mod cache;
 mod metrics;
 mod pythnet;
 mod rpc;
-mod wormhole;
+pub mod wormhole;
 
 // `Options` is a structup definition to provide clean command-line args for Hermes.
 #[derive(Parser, Debug)]

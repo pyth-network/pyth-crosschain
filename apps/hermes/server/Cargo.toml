@@ -1,6 +1,6 @@
 [package]
 name        = "hermes"
-version     = "0.10.7"
+version     = "0.11.0"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 
@@ -57,6 +57,8 @@ wormhole-sdk       = { git     = "https://github.com/wormhole-foundation/wormhol
 solana-client          = { version = "=1.16.19" }
 solana-sdk             = { version = "=1.16.19" }
 solana-account-decoder = { version = "=1.16.19" }
+alloy-sol-types = "0.3"
+alloy-primitives = "0.3"
 
 
 [build-dependencies]
