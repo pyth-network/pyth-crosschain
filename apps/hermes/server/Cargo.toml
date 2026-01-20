@@ -59,6 +59,7 @@ solana-sdk             = { version = "=1.16.19" }
 solana-account-decoder = { version = "=1.16.19" }
 alloy-sol-types = "0.3"
 alloy-primitives = "0.3"
+alloy = "1.4.3"
 
 
 [build-dependencies]
@@ -71,6 +72,9 @@ tonic-build = { version = "0.10.1" }
 # dependency at git otherwise those relative imports will fail.
 [patch.crates-io]
 serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+
+curve25519-dalek = { git = "https://github.com/Riateche/curve25519-dalek.git", branch = "3.2.1-patch" }
+aes-gcm-siv = { git = "https://github.com/Riateche/AEADs.git", branch = "aes-gcm-siv-v0.10.3-patch" }
 
 [profile.release]
 panic                  = 'abort'
