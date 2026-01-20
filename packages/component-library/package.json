@@ -201,6 +201,10 @@
       "types": "./dist/Link/index.d.ts",
       "default": "./dist/Link/index.mjs"
     },
+    "./Logo": {
+      "types": "./dist/Logo/index.d.ts",
+      "default": "./dist/Logo/index.mjs"
+    },
     "./MainNavTabs": {
       "types": "./dist/MainNavTabs/index.d.ts",
       "default": "./dist/MainNavTabs/index.mjs"

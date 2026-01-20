@@ -1,0 +1,51 @@
+@use "@pythnetwork/component-library/theme";
+
+@keyframes colorwheel {
+  0% {
+    color: #f00;
+  }
+
+  14% {
+    color: #ff7f00;
+  }
+
+  28% {
+    color: #ff0;
+  }
+
+  42% {
+    color: #0f0;
+  }
+
+  56% {
+    color: #00f;
+  }
+
+  70% {
+    color: #4b0082;
+  }
+
+  84% {
+    color: #9400d3;
+  }
+
+  100% {
+    color: #f00;
+  }
+}
+
+.main {
+  @include theme.max-width;
+}
+
+.comingSoon {
+  font-size: theme.font-size("xl");
+  padding: theme.spacing(6);
+  text-align: center;
+
+  & > svg {
+    animation: colorwheel 2s linear infinite;
+    height: theme.spacing(20);
+    width: auto;
+  }
+}

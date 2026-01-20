@@ -5,8 +5,9 @@ import "./globals.scss";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "{{packageNameWithoutOrg}}",
-  description: "{{description}}",
+  title: "pyth-app",
+  description:
+    "A single place to view Pyth data feeds and pricing information, as well as managing your Pyth Pro subscription and API keys",
 };
 
 export default function RootLayout({
@@ -16,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <AppShell
-      appName="{{packageNameWithoutOrg}}"
+      appName="pyth-app"
       enableAccessibilityReporting
       providers={[NuqsAdapter]}
     >
