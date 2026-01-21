@@ -1,0 +1,53 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("xl");
+  background-color: #1e1e1e;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: theme.spacing(2) theme.spacing(4);
+  border-bottom: 1px solid theme.color("border");
+  background-color: theme.color("background", "secondary");
+}
+
+.languageLabel {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.actionButton {
+  @include theme.text("xs", "medium");
+
+  display: inline-flex;
+  align-items: center;
+  gap: theme.spacing(1);
+}
+
+.checkIcon {
+  color: theme.color("states", "success", "normal");
+}
+
+.editorWrapper {
+  min-height: 200px;
+}
+
+.editorLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: theme.color("muted");
+
+  @include theme.text("sm", "normal");
+}

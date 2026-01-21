@@ -1,0 +1,32 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(6);
+
+  @include theme.breakpoint("lg") {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: theme.spacing(8);
+    align-items: start;
+  }
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(4);
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+
+  &.sticky {
+    @include theme.breakpoint("lg") {
+      position: sticky;
+      top: theme.spacing(20);
+    }
+  }
+}
