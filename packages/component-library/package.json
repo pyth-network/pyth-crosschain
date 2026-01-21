@@ -506,6 +506,10 @@
       "types": "./dist/v2/theme/theme.d.ts",
       "default": "./dist/v2/theme/theme.mjs"
     },
+    "./v2/types/current-user": {
+      "types": "./dist/v2/types/current-user.d.ts",
+      "default": "./dist/v2/types/current-user.mjs"
+    },
     "./package.json": "./package.json",
     "./themeV2": "./dist/v2/v2-theme.css",
     "./resetV2": "./dist/v2/v2-reset.css",

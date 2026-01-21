@@ -21,9 +21,6 @@ export function LeftNav({
     onOpenChangeRef.current = onOpenChange;
   });
 
-  // eslint-disable-next-line no-console
-  console.info("onOpenChangeRef.current", onOpenChangeRef.current);
-
   return (
     <nav className={cx(classes.root, className)} data-open={open}>
       <div className={classes.top}>
@@ -32,6 +29,7 @@ export function LeftNav({
         </div>
       </div>
       <div className={classes.navLinks}>{children}</div>
+      <div className={classes.currentUser}>current user here</div>
     </nav>
   );
 }
