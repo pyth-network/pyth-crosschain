@@ -5,7 +5,9 @@ import { classes } from "./component.styles";
 import type { ButtonProps } from "./types";
 
 export function Button({
+  children,
   className,
+  leftIcon: LeftIcon,
   size = "base",
   variant = "primary",
   ...rest
@@ -16,6 +18,11 @@ export function Button({
       className={cx(classes.root, className)}
       data-buttonvariant={variant}
       data-buttonsize={size}
-    />
+    >
+      {LeftIcon && <LeftIcon className={classes.leftIcon} />}
+      {children}
+    </BaseButton>
   );
 }
+
+export { type ButtonProps } from "./types";

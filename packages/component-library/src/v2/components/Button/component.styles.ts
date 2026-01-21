@@ -35,10 +35,22 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
 
   return {
     /**
+     * icon displayed to the left of the button text
+     */
+    leftIcon: {
+      height: "1em",
+      width: "auto",
+    },
+
+    /**
      * root of the button
      */
     root: {
+      alignItems: "center",
       border: "none",
+      borderRadius: theme.borderRadius.lg,
+      display: "inline-flex",
+      gap: theme.spacing(2),
       fontSize: theme.fontSize.base,
       fontFamily: theme.fontFamily.normal,
       padding: `${theme.spacing(2)} ${theme.spacing(4)}`,

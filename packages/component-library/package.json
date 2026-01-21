@@ -442,6 +442,46 @@
       "types": "./dist/v2/components/Button/types.d.ts",
       "default": "./dist/v2/components/Button/types.mjs"
     },
+    "./v2/components/HtmlWithLang/HtmlWithLang": {
+      "types": "./dist/v2/components/HtmlWithLang/HtmlWithLang.d.ts",
+      "default": "./dist/v2/components/HtmlWithLang/HtmlWithLang.mjs"
+    },
+    "./v2/components/HtmlWithLang": {
+      "types": "./dist/v2/components/HtmlWithLang/index.d.ts",
+      "default": "./dist/v2/components/HtmlWithLang/index.mjs"
+    },
+    "./v2/components/HtmlWithLang/types": {
+      "types": "./dist/v2/components/HtmlWithLang/types.d.ts",
+      "default": "./dist/v2/components/HtmlWithLang/types.mjs"
+    },
+    "./v2/components/LeftNav/LeftNav": {
+      "types": "./dist/v2/components/LeftNav/LeftNav.d.ts",
+      "default": "./dist/v2/components/LeftNav/LeftNav.mjs"
+    },
+    "./v2/components/LeftNav/component.styles": {
+      "types": "./dist/v2/components/LeftNav/component.styles.d.ts",
+      "default": "./dist/v2/components/LeftNav/component.styles.mjs"
+    },
+    "./v2/components/LeftNav": {
+      "types": "./dist/v2/components/LeftNav/index.d.ts",
+      "default": "./dist/v2/components/LeftNav/index.mjs"
+    },
+    "./v2/components/LeftNav/types": {
+      "types": "./dist/v2/components/LeftNav/types.d.ts",
+      "default": "./dist/v2/components/LeftNav/types.mjs"
+    },
+    "./v2/components/LeftNavLink/LeftNavLink": {
+      "types": "./dist/v2/components/LeftNavLink/LeftNavLink.d.ts",
+      "default": "./dist/v2/components/LeftNavLink/LeftNavLink.mjs"
+    },
+    "./v2/components/LeftNavLink/component.styles": {
+      "types": "./dist/v2/components/LeftNavLink/component.styles.d.ts",
+      "default": "./dist/v2/components/LeftNavLink/component.styles.mjs"
+    },
+    "./v2/components/LeftNavLink": {
+      "types": "./dist/v2/components/LeftNavLink/index.d.ts",
+      "default": "./dist/v2/components/LeftNavLink/index.mjs"
+    },
     "./v2/components": {
       "types": "./dist/v2/components/index.d.ts",
       "default": "./dist/v2/components/index.mjs"
@@ -449,6 +489,10 @@
     "./v2": {
       "types": "./dist/v2/index.d.ts",
       "default": "./dist/v2/index.mjs"
+    },
+    "./v2/svg/PythLogo": {
+      "types": "./dist/v2/svg/PythLogo.d.ts",
+      "default": "./dist/v2/svg/PythLogo.mjs"
     },
     "./v2/theme": {
       "types": "./dist/v2/theme/index.d.ts",

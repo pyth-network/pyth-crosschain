@@ -13,7 +13,7 @@
     "directory": "apps/pyth-app"
   },
   "scripts": {
-    "build:css": "ssjs --entrypoints ./src/app/**/page.tsx --outfile ./src/pyth-app.css",
+    "build:css": "ssjs --entrypoints ./src/app/**/page.tsx --entrypoints ./src/app/layout.tsx --outfile ./src/pyth-app.css",
     "build:vercel": "next build",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",

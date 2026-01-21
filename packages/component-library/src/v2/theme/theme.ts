@@ -3,6 +3,13 @@ function spacing(increment: number) {
 }
 
 /**
+ * blends a color by a given decimal amount with another color
+ */
+function blendColor(colorInput: string, blendedWith: string, amount = 0.05) {
+  return `color-mix(in srgb, ${colorInput}, ${blendedWith} ${(amount * 100).toString()}%)`;
+}
+
+/**
  * preps a css light-dark() function to use
  * as a color value
  */
@@ -10,12 +17,25 @@ function lightDark(light: string, dark: string) {
   return `light-dark(${light}, ${dark})`;
 }
 
+const accentPrimaryLight = "#f7f7f4";
+const accentPrimaryDark = "#1e293b";
+const accentForegroundLight = "#1a1d2e";
+const accentForegroundDark = "#f1f5f9";
+
 const palette = {
   accent: {
-    primary: { light: "#f7f7f4", dark: "#1e293b" },
+    muted: {
+      light: blendColor(accentPrimaryLight, "black"),
+      dark: blendColor(accentForegroundDark, "white"),
+    },
+    primary: { light: accentPrimaryLight, dark: accentPrimaryDark },
   },
   accentForeground: {
-    primary: { light: "#1a1d2e", dark: "#f1f5f9" },
+    muted: {
+      light: blendColor(accentForegroundLight, "black"),
+      dark: blendColor(accentForegroundDark, "white"),
+    },
+    primary: { light: accentForegroundLight, dark: accentForegroundDark },
   },
   background: {
     primary: { light: "#fff", dark: "#020617" },
@@ -130,6 +150,13 @@ const palette = {
   },
 } as const;
 
+const widths = {
+  leftNav: {
+    desktop: "256px",
+    mobile: "256px",
+  },
+} as const;
+
 const color = {
   background: {
     primary: lightDark(
@@ -154,6 +181,14 @@ const color = {
         ),
       },
       outline: `1px solid ${lightDark(palette.ring.primary.light, palette.ring.primary.dark)}`,
+    },
+  },
+  leftNav: {
+    background: {
+      primary: lightDark(
+        palette.accent.primary.light,
+        palette.accent.primary.dark,
+      ),
     },
   },
 } as const;
@@ -216,12 +251,15 @@ const borderRadius = {
 } as const;
 
 export const ThemeV2 = {
+  blendColor,
   borderRadius,
   color,
   fontFamily,
   fontSize,
   fontWeight,
   letterSpacing,
+  lightDark,
   palette,
   spacing,
+  widths,
 };

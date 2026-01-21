@@ -68,7 +68,5 @@ export const { classes } = createStyles("root-layout-styles", (theme) => ({
       animation: `${jitter} 2s ease infinite`,
     },
   },
-  main: {
-    ...theme.maxWidth(),
-  },
+  main: {},
 }));
