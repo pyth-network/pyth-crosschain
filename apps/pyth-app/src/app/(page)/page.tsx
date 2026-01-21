@@ -1,4 +1,5 @@
 import { Logo } from "@pythnetwork/component-library/Logo";
+import { Button } from "@pythnetwork/component-library/v2";
 
 import { classes } from "./page.styles";
 
@@ -13,6 +14,9 @@ export default function Home() {
             space soon.
           </p>
           <p>Stay tuned for updates!</p>
+          <div>
+            <Button>Stuff is here!</Button>
+          </div>
         </div>
       </main>
     </div>

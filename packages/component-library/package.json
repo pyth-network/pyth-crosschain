@@ -8,12 +8,13 @@
   },
   "scripts": {
     "build": "ts-duality --copyOtherFiles --noCjs",
+    "build:css-in-js": "ssjs --entrypoints ./src/v2/components/index.ts --outfile ./src/v2/v2-theme.css",
     "build:storybook": "storybook build",
     "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
     "fix:lint:eslint": "eslint --fix .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
-    "start:dev": "ts-duality --copyOtherFiles --noCjs --watch",
+    "start:dev": "pnpm build:css-in-js --watch & ts-duality --copyOtherFiles --noCjs --watch",
     "storybook": "storybook dev --port 4000 --no-open",
     "test:format": "prettier --check .",
     "test:lint:eslint": "eslint . --max-warnings 0",
@@ -29,6 +30,7 @@
     "@amplitude/analytics-browser": "catalog:",
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
+    "@base-ui/react": "catalog:",
     "@internationalized/date": "^3.10.1",
     "@next/third-parties": "catalog:",
     "ag-grid-community": "catalog:",
@@ -90,6 +92,8 @@
   },
   "ts-duality": {
     "extraExports": {
+      "./themeV2": "./dist/v2/v2-theme.css",
+      "./resetV2": "./dist/v2/v2-reset.css",
       "./theme": "./dist/theme.scss"
     }
   },
@@ -422,7 +426,45 @@
       "types": "./dist/useQueryParamsPagination/index.d.ts",
       "default": "./dist/useQueryParamsPagination/index.mjs"
     },
+    "./v2/components/Button/Button": {
+      "types": "./dist/v2/components/Button/Button.d.ts",
+      "default": "./dist/v2/components/Button/Button.mjs"
+    },
+    "./v2/components/Button/component.styles": {
+      "types": "./dist/v2/components/Button/component.styles.d.ts",
+      "default": "./dist/v2/components/Button/component.styles.mjs"
+    },
+    "./v2/components/Button": {
+      "types": "./dist/v2/components/Button/index.d.ts",
+      "default": "./dist/v2/components/Button/index.mjs"
+    },
+    "./v2/components/Button/types": {
+      "types": "./dist/v2/components/Button/types.d.ts",
+      "default": "./dist/v2/components/Button/types.mjs"
+    },
+    "./v2/components": {
+      "types": "./dist/v2/components/index.d.ts",
+      "default": "./dist/v2/components/index.mjs"
+    },
+    "./v2": {
+      "types": "./dist/v2/index.d.ts",
+      "default": "./dist/v2/index.mjs"
+    },
+    "./v2/theme": {
+      "types": "./dist/v2/theme/index.d.ts",
+      "default": "./dist/v2/theme/index.mjs"
+    },
+    "./v2/theme/style-funcs": {
+      "types": "./dist/v2/theme/style-funcs.d.ts",
+      "default": "./dist/v2/theme/style-funcs.mjs"
+    },
+    "./v2/theme/theme": {
+      "types": "./dist/v2/theme/theme.d.ts",
+      "default": "./dist/v2/theme/theme.mjs"
+    },
     "./package.json": "./package.json",
+    "./themeV2": "./dist/v2/v2-theme.css",
+    "./resetV2": "./dist/v2/v2-reset.css",
     "./theme": "./dist/theme.scss"
   }
 }

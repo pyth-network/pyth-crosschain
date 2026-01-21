@@ -1,4 +1,4 @@
-import { createKeyframes, createStyles } from "../styles";
+import { createKeyframes, createStyles } from "../../styles";
 
 const { keyframe: colorWheel } = createKeyframes(
   "index-page-color-wheel",

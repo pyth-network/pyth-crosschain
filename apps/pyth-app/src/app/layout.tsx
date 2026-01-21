@@ -1,7 +1,8 @@
+import "@pythnetwork/component-library/resetV2";
+import "@pythnetwork/component-library/themeV2";
+
 import "../pyth-app.css";
 
-import { AppShell } from "@pythnetwork/component-library/AppShell";
-import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -17,12 +18,8 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <AppShell
-      appName="Pyth App"
-      enableAccessibilityReporting
-      providers={[NuqsAdapter]}
-    >
-      {children}
-    </AppShell>
+    <html lang="en">
+      <body className="root">{children}</body>
+    </html>
   );
 }
