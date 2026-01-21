@@ -150,7 +150,12 @@ const palette = {
   },
 } as const;
 
+const heights = {
+  avatar: spacing(10),
+} as const;
+
 const widths = {
+  avatar: heights.avatar,
   leftNav: {
     desktop: "256px",
     mobile: "256px",
@@ -165,6 +170,29 @@ const color = {
     ),
   },
   button: {
+    ghost: {
+      background: {
+        hover: lightDark(
+          blendColor(palette.muted.primary.light, "black"),
+          blendColor(palette.muted.primary.dark, "white"),
+        ),
+        primary: lightDark(
+          palette.muted.primary.light,
+          palette.muted.primary.dark,
+        ),
+      },
+      foreground: {
+        hover: lightDark(
+          palette.foreground.primary.light,
+          palette.foreground.primary.dark,
+        ),
+        primary: lightDark(
+          palette.foreground.primary.light,
+          palette.foreground.primary.dark,
+        ),
+      },
+      outline: "none",
+    },
     primary: {
       background: {
         hover: lightDark(palette.ring.primary.light, palette.ring.primary.dark),
@@ -257,6 +285,7 @@ export const ThemeV2 = {
   fontFamily,
   fontSize,
   fontWeight,
+  heights,
   letterSpacing,
   lightDark,
   palette,

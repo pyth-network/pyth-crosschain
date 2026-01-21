@@ -1,8 +1,23 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 
 import type { CurrentUser } from "../../types/current-user";
 
 export type LeftNavProps = PropsWithChildren & {
+  /**
+   * if present and non-empty, will display a vertical
+   * ellipsis next to the current user's info that is clickable
+   * and these items will be displayed in the menu that opens
+   * when clicked
+   */
+  actionMenuItems?: ReactNode[];
+
+  /**
+   * if specified, will render this right below the user's email
+   * address at the top of the left panel, right next to the
+   * user avatar
+   */
+  additionalUserMeta?: ReactNode;
+
   /**
    * css class name override
    */

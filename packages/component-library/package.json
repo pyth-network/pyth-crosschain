@@ -426,6 +426,18 @@
       "types": "./dist/useQueryParamsPagination/index.d.ts",
       "default": "./dist/useQueryParamsPagination/index.mjs"
     },
+    "./v2/components/Avatar/Avatar": {
+      "types": "./dist/v2/components/Avatar/Avatar.d.ts",
+      "default": "./dist/v2/components/Avatar/Avatar.mjs"
+    },
+    "./v2/components/Avatar/component.styles": {
+      "types": "./dist/v2/components/Avatar/component.styles.d.ts",
+      "default": "./dist/v2/components/Avatar/component.styles.mjs"
+    },
+    "./v2/components/Avatar": {
+      "types": "./dist/v2/components/Avatar/index.d.ts",
+      "default": "./dist/v2/components/Avatar/index.mjs"
+    },
     "./v2/components/Button/Button": {
       "types": "./dist/v2/components/Button/Button.d.ts",
       "default": "./dist/v2/components/Button/Button.mjs"

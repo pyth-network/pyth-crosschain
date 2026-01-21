@@ -1,5 +1,5 @@
 "use client";
-
+import { Menu } from "@base-ui/react/menu";
 import {
   CreditCard,
   HouseLine,
@@ -30,7 +30,11 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
 
   return (
     <div className={classes.root}>
-      <LeftNav currentUser={dummyCurrentUser}>
+      <LeftNav
+        actionMenuItems={[<Menu.Item key="settings">Stuff here</Menu.Item>]}
+        additionalUserMeta={"Free Plan"}
+        currentUser={dummyCurrentUser}
+      >
         <LeftNavLink
           active={pathname === uiRoutes.dashboard()}
           leftIcon={HouseLine}

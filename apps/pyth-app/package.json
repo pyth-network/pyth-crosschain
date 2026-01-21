@@ -48,6 +48,7 @@
     "vercel": "catalog:"
   },
   "dependencies": {
+    "@base-ui/react": "catalog:",
     "@next/third-parties": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",

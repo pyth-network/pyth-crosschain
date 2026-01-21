@@ -1277,6 +1277,9 @@ importers:
 
   apps/pyth-app:
     dependencies:
+      '@base-ui/react':
+        specifier: 'catalog:'
+        version: 1.1.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@next/third-parties':
         specifier: 'catalog:'
         version: 16.1.1(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
