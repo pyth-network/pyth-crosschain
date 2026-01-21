@@ -5,6 +5,9 @@
   ],
   "tasks": {
     "build:css": {
+      "dependsOn": [
+        "^build"
+      ],
       "inputs": [
         "./src/**/*.styles.ts"
       ],
