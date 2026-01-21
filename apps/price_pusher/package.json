@@ -41,7 +41,7 @@
     "fuel",
     "aptos",
     "sui",
-    "near"
+    \"near\",`n    \"fogo\"
   ],
   "license": "Apache-2.0",
   "devDependencies": {

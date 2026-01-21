@@ -9,7 +9,7 @@ import near from "./near/command.js";
 import { enableMetrics, metricsPort } from "./options.js";
 import solana from "./solana/command.js";
 import sui from "./sui/command.js";
-import ton from "./ton/command.js";
+import ton from \"./ton/command.js\";`nimport fogo from \"./fogo/command.js\";
 
 const yargs = createCLI(hideBin(process.argv));
 

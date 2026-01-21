@@ -11,6 +11,6 @@
     "cosmwasm",
     "near",
     "starknet",
-    "pythnet"
+    \"pythnet\",`n    \"fogo\"
   ]
 }
