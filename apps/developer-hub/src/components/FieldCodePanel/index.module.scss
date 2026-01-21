@@ -1,0 +1,158 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  margin: theme.spacing(4) 0;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  overflow: hidden;
+  background-color: theme.color("background", "secondary");
+}
+
+.hint {
+  @include theme.text("xs", "normal");
+
+  padding: theme.spacing(2) theme.spacing(4);
+  color: theme.color("muted");
+  background-color: theme.color("background", "primary");
+  border-bottom: 1px solid theme.color("border");
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+
+  @include theme.breakpoint("lg") {
+    flex-direction: row;
+  }
+}
+
+.fieldsColumn {
+  flex: none;
+  position: relative;
+  max-height: 300px;
+  overflow-y: auto;
+
+  @include theme.breakpoint("lg") {
+    flex: 0 0 50%;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+.tableWrapper {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  @include theme.text("xs", "normal");
+}
+
+.tableHeader {
+  @include theme.text("xs", "semibold");
+
+  padding: theme.spacing(2) theme.spacing(3);
+  text-align: left;
+  border-bottom: 1px solid theme.color("border");
+  color: theme.color("muted");
+  background-color: theme.color("background", "secondary");
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.tableCell {
+  padding: theme.spacing(2) theme.spacing(3);
+  text-align: left;
+  border-bottom: 1px solid theme.color("border");
+}
+
+.row {
+  transition: background-color 200ms ease-in-out;
+  cursor: pointer;
+
+  &:hover,
+  &.highlighted {
+    background-color: color-mix(
+      in srgb,
+      theme.color("highlight") 8%,
+      transparent
+    );
+  }
+
+  &:last-child .tableCell {
+    border-bottom: none;
+  }
+}
+
+.fieldName {
+  white-space: nowrap;
+}
+
+.fieldNameCode {
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("xs", "semibold");
+
+  color: theme.color("foreground");
+}
+
+.fieldType {
+  white-space: nowrap;
+}
+
+.typeBadge {
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+}
+
+.codeColumn {
+  flex: none;
+  background-color: theme.color("background", "primary");
+  border-top: 2px solid theme.color("border");
+
+  @include theme.breakpoint("lg") {
+    flex: 0 0 50%;
+    border-top: none;
+    border-left: 2px solid theme.color("border");
+  }
+}
+
+.codeBlock {
+  margin: 0;
+  padding: theme.spacing(4);
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("xs", "normal");
+
+  color: theme.color("foreground");
+  line-height: 1.7;
+  tab-size: 2;
+  white-space: pre;
+  display: block;
+}
+
+.codeLine {
+  display: block;
+  transition: background-color 200ms ease-in-out;
+  margin: 0 calc(-1 * theme.spacing(4));
+  padding: theme.spacing(0) theme.spacing(4);
+}
+
+.highlightedLine {
+  background-color: color-mix(
+    in srgb,
+    theme.color("highlight") 20%,
+    transparent
+  );
+  border-left: theme.spacing(0.75) solid theme.color("highlight");
+  padding-left: calc(theme.spacing(4) - theme.spacing(0.75));
+}

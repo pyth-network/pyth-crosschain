@@ -5,6 +5,7 @@ slug: /price-feeds/pro/payload-reference
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 This page provides a comprehensive reference for understanding Pyth Pro payload structure, field specifications, and available data formats. This information is essential for integrating with Pyth Pro as a consumer and understanding the data you receive.
 
@@ -18,47 +19,92 @@ This page provides a comprehensive reference for understanding Pyth Pro payload 
 
 A Pyth Pro payload is a real-time data update containing financial market information with cryptographic signatures for verification on blockchain. When you subscribe to Pyth Pro price feeds, you receive `StreamUpdated` messages containing this structured data.
 
-## Stream Response Structure
+## Available Properties
+
+When subscribing to Pyth Pro, specify which properties you want to receive. Select the tab below to view properties by feed type:
+
+<Tabs items={["Spot Trading", "Derivatives", "Common (All Feeds)"]}>
+  <Tab value="Spot Trading">
+    Properties for spot price feeds (e.g., BTC/USD, ETH/USD):
+
+    | Property | Type | Description |
+    | -------- | ---- | ----------- |
+    | `price` | `i64` | Aggregate market price from all publishers. Represented as mantissa; multiply by `10^exponent` for actual price. |
+    | `confidence` | `i64` | Price uncertainty interval representing publisher disagreement. Higher values = more uncertainty. Used for risk assessment. |
+    | `bestBidPrice` | `i64` | Highest bid price across all publishers. The best price at which you could sell. |
+    | `bestAskPrice` | `i64` | Lowest ask price across all publishers. The best price at which you could buy. |
+
+    **Example subscription:**
+    ```js
+    properties: ["price", "confidence", "bestBidPrice", "bestAskPrice"]
+    ```
+
+  </Tab>
+  <Tab value="Derivatives">
+    Properties for perpetual futures funding rate feeds:
+
+    | Property | Type | Description |
+    | -------- | ---- | ----------- |
+    | `fundingRate` | `i64` | Current funding rate for perpetual futures. Positive = longs pay shorts; negative = shorts pay longs. |
+    | `fundingTimestamp` | `u64` | Unix timestamp in microseconds when funding rate was last calculated by the exchange. |
+    | `fundingRateInterval` | `u64` | Duration in microseconds between funding rate updates. Typically 8 hours (28,800,000,000 μs) for major exchanges. |
+
+    **Example subscription:**
+    ```js
+    properties: ["fundingRate", "fundingTimestamp", "fundingRateInterval"]
+    ```
+
+  </Tab>
+  <Tab value="Common (All Feeds)">
+    Properties available for all feed types:
+
+    | Property | Type | Description |
+    | -------- | ---- | ----------- |
+    | `publisherCount` | `u16` | Number of data publishers currently contributing to this feed. More publishers = higher reliability. |
+    | `exponent` | `i16` | Decimal exponent for price conversion. Use formula: `actual_price = mantissa × 10^exponent`. Typically `-8` for USD prices. |
+    | `marketSession` | `string` | Current trading session status: `regular` (normal hours), `preMarket`, `postMarket`, `overNight`, or `closed`. |
+
+    **Example subscription:**
+    ```js
+    properties: ["price", "exponent", "publisherCount", "marketSession"]
+    ```
+
+  </Tab>
+</Tabs>
 
 <Callout type="info">
   **Customizable Payload**: The payload structure is customizable based on the
   properties you request in your subscription. Only the fields you specify will
-  be included in the response. See [Available Properties by Feed
-  Types](#available-properties-by-feed-types) for details on what you can
-  request.
+  be included in the response. See [Property
+  Specifications](#property-specifications) for detailed information on each
+  field.
 </Callout>
-
-When you receive a `StreamUpdated` message from Pyth Pro, it contains the following structure:
-
-### Top-Level Response Fields
-
-| Field            | Type            | Description                                            |
-| ---------------- | --------------- | ------------------------------------------------------ |
-| `type`           | `string`        | Always `"streamUpdated"` for price updates             |
-| `subscriptionId` | `number`        | Your subscription identifier, provided by the user     |
-| `parsed`         | `ParsedPayload` | Human-readable price data (when `parsed: true`)        |
-| `evm`            | `BinaryData`    | EVM-compatible binary payload (when requested)         |
-| `solana`         | `BinaryData`    | Solana-compatible binary payload (when requested)      |
-| `leEcdsa`        | `BinaryData`    | Little-endian ECDSA binary payload (when requested)    |
-| `leUnsigned`     | `BinaryData`    | Little-endian unsigned binary payload (when requested) |
-
-### Parsed Payload Structure
-
-The `parsed` object contains human-readable price data (if `parsed` is requested):
-
-| Field         | Type               | Description                                                |
-| ------------- | ------------------ | ---------------------------------------------------------- |
-| `timestampUs` | `string`           | Unix timestamp in microseconds when the data was generated |
-| `priceFeeds`  | `Array<PriceFeed>` | Array of price feed data objects                           |
 
 ## What does a price feed update look like?
 
-Each price feed in the `priceFeeds` array represents real-time market data for a specific trading pair (e.g., BTC/USD, ETH/USD). Think of a price feed as a comprehensive snapshot of market conditions for that asset.
+Each price feed in the priceFeeds array represents real-time market data for a specific trading pair (e.g., BTC/USD, ETH/USD).
 
-Here's what a typical StreamUpdated response that contains a PriceFeed looks like:
-
-```json
-{
+<FieldCodePanel
+  title="StreamUpdated Response"
+  fields={[
+    { name: "type", type: "string" },
+    { name: "subscriptionId", type: "number" },
+    { name: "parsed", type: "object" },
+    { name: "timestampUs", type: "string" },
+    { name: "priceFeeds", type: "array" },
+    { name: "priceFeedId", type: "u32" },
+    { name: "price", type: "i64" },
+    { name: "bestBidPrice", type: "i64" },
+    { name: "bestAskPrice", type: "i64" },
+    { name: "publisherCount", type: "u16" },
+    { name: "exponent", type: "i16" },
+    { name: "confidence", type: "i64" },
+    { name: "marketSession", type: "string" },
+    { name: "evm", type: "object" },
+    { name: "encoding", type: "string" },
+    { name: "data", type: "string" },
+  ]}
+  exampleJson={`{
   "type": "streamUpdated",
   "subscriptionId": 1,
   "parsed": {
@@ -73,25 +119,15 @@ Here's what a typical StreamUpdated response that contains a PriceFeed looks lik
         "exponent": -8,
         "confidence": 1373488286,
         "marketSession": "regular"
-      },
-      {
-        "priceFeedId": 2,
-        "price": "448480908040",
-        "bestBidPrice": "448475995765",
-        "bestAskPrice": "448508987987",
-        "publisherCount": 12,
-        "exponent": -8,
-        "confidence": 106965585,
-        "marketSession": "regular"
       }
     ]
   },
   "evm": {
     "encoding": "base64",
-    "data": "..."
+    "data": "0x..."
   }
-}
-```
+}`}
+/>
 
 <Callout type="warning">
   **Important**: The price is stored in two parts: an integer mantissa value
@@ -103,7 +139,7 @@ Here's what a typical StreamUpdated response that contains a PriceFeed looks lik
 
 ## Property Specifications
 
-Based on the protocol specification, here are the technical details for each property in a price feed:
+Based on the protocol specification, here are the technical details for each property in a price feed.
 
 ### Feed Structure
 
@@ -112,49 +148,67 @@ Based on the protocol specification, here are the technical details for each pro
 
 ### Core Price Properties
 
-#### Aggregate Market Price - `price`
-
-Main aggregate price calculated from all contributing publishers
-
-- **Type**: `optional non-zero i64` (mantissa representation)
-- **Availability**: Only included if requested in subscription properties
-- **Algorithm**: Refer to [price aggregation](/price-feeds/core/how-pyth-works/price-aggregation) for the current algorithm
-- **Invariants**: Non-zero when present (null values filtered out)
-
-<Callout type="warning">
-  **Missing Price Field**: In some cases, the `price` field may be absent from
-  the response. This indicates that the price could not be computed at that
-  moment. When this occurs, you should either use the last valid price you
-  received or wait for a fresh update with a valid price.
-</Callout>
-
-#### Data Publisher Count - `publisher_count`
-
-Number of data publishers contributing to this price feed
-
-- **Type**: `u16`
-- **Availability**: Always included when any price properties are present
-- **Invariants**: Always positive for valid price feeds
-
-#### Decimal Exponent - `exponent`
-
-Decimal exponent for price conversion
-
-- **Type**: `i16`
-- **Availability**: Always included when price properties are present
-- **Invariants**: Typically negative (e.g., -8 for USD prices, -18 for token prices)
-- **Usage**: Convert mantissa to actual price: `actual_price = mantissa × 10^exponent`
-- **Example**: With exponent `-8`, mantissa `1006900000000` becomes `$10,069.00`
-
-#### Price Confidence Interval - `confidence`
-
-Confidence interval representing price uncertainty, calculated from all publisher prices, bids, and asks combined.
-
-- **Type**: `optional i64` (mantissa representation)
-- **Availability**: Only included if requested in subscription properties
-- **Algorithm**: Refer to [price aggregation](/price-feeds/core/how-pyth-works/price-aggregation) for the current algorithm
-- **Invariants**: Positive when present
-- **Usage**: Risk management and price quality assessment
+<PropertyCard
+  properties={[
+    {
+      name: "price",
+      type: "optional non-zero i64",
+      description:
+        "Main aggregate price calculated from all contributing publishers, represented as mantissa.",
+      availability: "Only included if requested in subscription properties",
+      algorithm: "Refer to price aggregation for the current algorithm",
+      algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
+      invariants: ["Non-zero when present (null values filtered out)"],
+      warning:
+        "In some cases, the price field may be absent from the response. This indicates that the price could not be computed at that moment. When this occurs, you should either use the last valid price you received or wait for a fresh update with a valid price.",
+    },
+    {
+      name: "publisherCount",
+      type: "u16",
+      description: "Number of data publishers contributing to this price feed.",
+      availability: "Always included when any price properties are present",
+      invariants: ["Always positive for valid price feeds"],
+    },
+    {
+      name: "exponent",
+      type: "i16",
+      description: "Decimal exponent for price conversion.",
+      availability: "Always included when price properties are present",
+      invariants: [
+        "Typically negative (e.g., -8 for USD prices, -18 for token prices)",
+      ],
+      usage:
+        "Convert mantissa to actual price: actual_price = mantissa × 10^exponent",
+      example: "With exponent -8, mantissa 1006900000000 becomes $10,069.00",
+    },
+    {
+      name: "confidence",
+      type: "optional i64",
+      description:
+        "Confidence interval representing price uncertainty, calculated from all publisher prices, bids, and asks combined. Represented as mantissa.",
+      availability: "Only included if requested in subscription properties",
+      algorithm: "Refer to price aggregation for the current algorithm",
+      algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
+      invariants: ["Positive when present"],
+      usage:
+        "Risk management and price quality assessment. A high confidence value means high uncertainty (publishers disagree more).",
+    },
+    {
+      name: "marketSession",
+      type: "string",
+      description:
+        "Represents the trading session status during which the price update was produced. This helps consumers understand whether a price comes from active trading hours or a more illiquid session such as pre-market or overnight trading.",
+      availability: "Only included if requested in subscription properties",
+      possibleValues: [
+        "regular",
+        "preMarket",
+        "postMarket",
+        "overNight",
+        "closed",
+      ],
+    },
+  ]}
+/>
 
 <Callout type="info">
   A high confidence value means high uncertainty (publishers disagree more). See
@@ -162,86 +216,74 @@ Confidence interval representing price uncertainty, calculated from all publishe
   confidence differs from best bid/ask and when to use each metric.
 </Callout>
 
-#### Market Session - `marketSession`
-
-Represents the trading session status during which the price update was produced.
-This helps consumers understand whether a price comes from active trading hours or a more illiquid session such as pre-market or overnight trading.
-
-- **Type**: `string`
-- **Possible Values**: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`
-- **Availability**: Only included if requested in subscription properties
-
 ### Market Depth Properties
 
 Best bid and best ask represent the tightest prices across publishers. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
 
-#### Highest Market Bid - `best_bid_price`
-
-Highest bid price across all contributing publishers
-
-- **Type**: `optional non-zero i64` (mantissa representation)
-- **Availability**: Only included if requested in subscription properties
-- **Algorithm**: Refer to [price aggregation](/price-feeds/core/how-pyth-works/price-aggregation) for the current algorithm
-- **Invariants**: Non-zero when present, typically ≤ current price
-
-#### Lowest Market Ask - `best_ask_price`
-
-Lowest ask price across all contributing publishers
-
-- **Type**: `optional non-zero i64` (mantissa representation)
-- **Availability**: Only included if requested in subscription properties
-- **Algorithm**: Refer to [price aggregation](/price-feeds/core/how-pyth-works/price-aggregation) for the current algorithm
-- **Invariants**: Non-zero when present, typically ≥ current price
-
-### Derivatives Properties (FundingRate Feed Type Only)
-
-#### Perpetual Futures Funding Rate - `funding_rate`
-
-Current funding rate for perpetual futures contracts
-
-- **Type**: `optional i64` (mantissa representation)
-- **Availability**: Only for FeedKind::FundingRate feeds, only if requested in subscription
-- **Invariants**: Can be positive (longs pay shorts) or negative (shorts pay longs)
-
-#### Funding Payment Timestamp - `funding_timestamp`
-
-Timestamp when funding rate was last calculated or applied
-
-- **Type**: `optional u64` (microseconds)
-- **Availability**: Only for FeedKind::FundingRate feeds, only if requested in subscription
-- **Invariants**: Valid Unix timestamp in microseconds when present
-
-#### Funding Update Interval - `funding_interval`
-
-Duration between consecutive funding rate calculations
-
-- **Type**: `optional u64` (microseconds)
-- **Availability**: Only for FeedKind::FundingRate feeds, only if requested in subscription
-- **Invariants**: Positive value when present
-- **Typical Values**: 28,800,000,000 microseconds (8 hours) for major exchanges
-
-## Available Properties by Feed Types
-
-Based on the [API documentation](https://pyth-lazer.dourolabs.app/docs), you can request specific properties when subscribing:
-
-### Common Properties (All Feed Types)
-
-- `publisherCount` - Number of contributing data publishers
-- `exponent` - Decimal exponent for proper price representation
-- `marketSession` - Indicates the market session during which the price update was produced.
-
-### Spot Trading Properties
-
-- `price` - Primary aggregate price for the asset
-- `confidence` - Price confidence interval for risk assessment
-- `bestBidPrice` - Highest bid across all publishers (market depth)
-- `bestAskPrice` - Lowest ask across all publishers (market depth)
+<PropertyCard
+  properties={[
+    {
+      name: "bestBidPrice",
+      type: "optional non-zero i64",
+      description:
+        "Highest bid price across all contributing publishers, represented as mantissa.",
+      availability: "Only included if requested in subscription properties",
+      algorithm: "Refer to price aggregation for the current algorithm",
+      algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
+      invariants: ["Non-zero when present", "Typically ≤ current price"],
+    },
+    {
+      name: "bestAskPrice",
+      type: "optional non-zero i64",
+      description:
+        "Lowest ask price across all contributing publishers, represented as mantissa.",
+      availability: "Only included if requested in subscription properties",
+      algorithm: "Refer to price aggregation for the current algorithm",
+      algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
+      invariants: ["Non-zero when present", "Typically ≥ current price"],
+    },
+  ]}
+/>
 
 ### Derivatives Properties
 
-- `fundingRate` - Current funding rate for perpetual futures
-- `fundingTimestamp` - Most recent funding rate timestamp
-- `fundingRateInterval` - Duration between funding updates
+Available only for `FundingRate` feed types (perpetual futures contracts).
+
+<PropertyCard
+  properties={[
+    {
+      name: "fundingRate",
+      type: "optional i64",
+      description:
+        "Current funding rate for perpetual futures contracts, represented as mantissa.",
+      availability:
+        "Only for FundingRate feeds, only if requested in subscription",
+      invariants: [
+        "Can be positive (longs pay shorts) or negative (shorts pay longs)",
+      ],
+    },
+    {
+      name: "fundingTimestamp",
+      type: "optional u64",
+      description:
+        "Timestamp when funding rate was last calculated or applied, in microseconds.",
+      availability:
+        "Only for FundingRate feeds, only if requested in subscription",
+      invariants: ["Valid Unix timestamp in microseconds when present"],
+    },
+    {
+      name: "fundingRateInterval",
+      type: "optional u64",
+      description:
+        "Duration between consecutive funding rate calculations, in microseconds.",
+      availability:
+        "Only for FundingRate feeds, only if requested in subscription",
+      invariants: ["Positive value when present"],
+      typicalValues:
+        "28,800,000,000 microseconds (8 hours) for major exchanges",
+    },
+  ]}
+/>
 
 ## Subscription Channels
 
@@ -255,58 +297,15 @@ Pyth Pro offers multiple delivery channels to match your latency and frequency r
 | `fixed_rate@200ms`  | Updates every 200 milliseconds                                                                 | Standard trading applications               |
 | `fixed_rate@1000ms` | Updates every 1 second                                                                         | General applications, dashboards            |
 
-## Signature Schemes and Binary Formats
+## Binary Formats & Signature Schemes
 
-Pyth Pro provides multiple cryptographic formats to support different blockchain ecosystems. When you subscribe, you can request specific binary formats in the `formats` parameter:
+Pyth Pro provides multiple cryptographic formats to support different blockchain ecosystems. When you subscribe, you can request specific binary formats using the `formats` parameter.
 
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-
-<div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-  **EVM Format (`evm`)**
-
-- **Algorithm**: secp256k1 ECDSA
-- **Hash Function**: Keccak-256
-- **Signature Size**: 65 bytes
-- **Verification**: Recoverable ECDSA with Ethereum address derivation
-
-</div>
-
-<div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-  **Solana Format (`solana`)**
-
-- **Algorithm**: Ed25519 EdDSA
-- **Signature Size**: 64 bytes
-- **Public Key Size**: 32 bytes
-- **Verification**: Direct Ed25519 signature verification
-
-</div>
-
-<div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-  **Little-Endian ECDSA (`leEcdsa`)**
-
-- **Algorithm**: secp256k1 ECDSA (little-endian)
-- **Hash Function**: Keccak-256
-- **Byte Order**: Little-endian encoding
-
-**Perfect for**: Custom implementations requiring specific byte ordering
-
-</div>
-
-<div className="p-6 bg-gray-50 dark:bg-darkGray rounded-lg border border-gray-200 dark:border-gray-700">
-  **Unsigned Format (`leUnsigned`)**
-
-- **Signature**: None (raw payload)
-- **Use Cases**: Off-chain use, testing and development
-
-</div>
-
-</div>
+<BinaryFormatCards />
 
 <Callout type="info">
-  **How to Choose**: Select the optimal signing algorithm for your use case.
-  These formats are not blockchain-specific - for example, the `solana` format
-  (Ed25519) has been used on non-SVM blockchains when Ed25519 was the most
-  efficient algorithm for that specific chain. Choose `evm` for secp256k1 ECDSA,
-  `solana` for Ed25519, `leEcdsa` for little-endian secp256k1, and `leUnsigned`
-  for off-chain use.
+  **How to Choose**: Select the format based on your target blockchain's native
+  cryptographic primitives. The `evm` format works for all EVM chains, `solana`
+  for Ed25519-native chains, and `leUnsigned` for offchain applications that
+  don't need signature verification.
 </Callout>
