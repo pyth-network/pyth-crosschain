@@ -1,0 +1,11 @@
+{
+  "endpoint": "https://api.testnet.iota.cafe",
+  "pyth-package-id": "0x23994dd119480ea614f7623520337058dca913cb1bb6e5d8d51c7b067d3ca3bb",
+  "pyth-state-id": "0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1",
+  "wormhole-package-id": "0xfca58c557f09cddb7930588c4e2a4edbe3cdded1ac1ed2270aa2dfa8d2b9ae0d",
+  "wormhole-state-id": "0x8bc490f69520a97ca1b3de864c96aa2265a0cf5d90f5f3f016b2eddf0cf2af2b",
+  "price-feed-to-price-info-object-table-id": "0x68175c38eaaa171a63a771b2dfa8cce26955b38ce4ba93ee159cae6e620875cb",
+  "price-service-endpoint": "https://hermes.pyth.network",
+  "mnemonic-file": "./mnemonic",
+  "price-config-file": "./price-config.stable.sample.yaml"
+}
