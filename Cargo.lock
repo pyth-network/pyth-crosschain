@@ -5677,7 +5677,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-hermes-client-rust"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.8.25",
  "anyhow",
