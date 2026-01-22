@@ -26,6 +26,11 @@ export type ActionMenuItem = {
    * unique identifier for this action item
    */
   key: string;
+
+  /**
+   * called when the menu item is selected
+   */
+  onSelect?: (() => void) | undefined;
 };
 
 export type ActionsMenuProps = Pick<
@@ -67,8 +72,12 @@ export function ActionsMenu({
           <Menu.Popup className={cx(classes.menuPopover, className)}>
             <div className={classes.menuPopoverTitle}>{popoverTitle}</div>
             {menuItems.map(
-              ({ component, icon: MenuItemIcon, iconClassName, key }) => (
-                <Menu.Item className={classes.menuItem} key={key}>
+              ({ component, icon: MenuItemIcon, iconClassName, key, onSelect }) => (
+                <Menu.Item
+                  className={classes.menuItem}
+                  key={key}
+                  onSelect={onSelect}
+                >
                   <MenuItemIcon className={iconClassName} />
                   {component}
                 </Menu.Item>

@@ -12,6 +12,8 @@ import type { CurrentUser } from "@pythnetwork/component-library/v2";
 import { LeftNav, LeftNavLink } from "@pythnetwork/component-library/v2";
 import type { ActionMenuItem } from "@pythnetwork/component-library/v2/components/ActionsMenu";
 import { useQueryState } from "@pythnetwork/react-hooks/nuqs";
+import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
+import { capitalCase } from "change-case";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { useMemo } from "react";
@@ -38,6 +40,7 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
     QUERY_KEY_LEFT_PANEL_COLLAPSED,
     { defaultValue: false, parse: (val) => val === "true", shallow: true },
   );
+  const { effectiveTheme, isSystem, toggleTheme } = useAppTheme();
 
   /** memos */
   const actionMenuItems = useMemo<ActionMenuItem[]>(
@@ -48,7 +51,19 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
         key: "account-settings",
       },
       {
-        component: "Theme",
+        component: (
+          <div
+            aria-label={`Change theme to ${effectiveTheme === "dark" ? "light" : "dark"}`}
+            onClick={toggleTheme}
+            onKeyDown={(e) => {
+              if (e.key === "Space") toggleTheme();
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            Theme: {capitalCase(isSystem ? "auto" : effectiveTheme)}
+          </div>
+        ),
         icon: Lightning,
         key: "app-theme",
       },
@@ -59,7 +74,7 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
         key: "sign-out",
       },
     ],
-    [],
+    [effectiveTheme, isSystem, toggleTheme],
   );
 
   return (

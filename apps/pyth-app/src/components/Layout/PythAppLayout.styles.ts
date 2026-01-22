@@ -5,6 +5,7 @@ export const { classes } = createStyles("pyth-app-layout", (theme) => ({
    * <main /> element that holds the right-side content
    */
   main: {
+    flexGrow: 1,
     height: "100%",
     overflowY: "auto",
   },
@@ -21,8 +22,7 @@ export const { classes } = createStyles("pyth-app-layout", (theme) => ({
    */
   root: {
     bottom: 0,
-    display: "grid",
-    gridTemplateColumns: `${theme.widths.leftNav.desktop} 1fr`,
+    display: "flex",
     left: 0,
     position: "fixed",
     right: 0,
