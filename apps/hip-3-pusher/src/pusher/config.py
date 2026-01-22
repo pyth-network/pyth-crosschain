@@ -46,6 +46,7 @@ class HyperliquidConfig(BaseModel):
     publish_interval: float
     publish_timeout: float
     enable_publish: bool
+    duplicate_mark_price: bool = False
     user_limit_interval: int = USER_LIMIT_INTERVAL_SECONDS
     ws_ping_interval: int = HYPERLIQUID_WS_PING_INTERVAL_SECONDS
     stop_after_attempt: int = DEFAULT_STOP_AFTER_ATTEMPT
@@ -71,7 +72,9 @@ class SedaConfig(BaseModel):
     feeds: Optional[dict[str, SedaFeedConfig]] = {}
     price_field: str = "price"
     timestamp_field: str = "timestamp"
+    last_price_field: Optional[str] = None
     session_flag_field: Optional[str] = None
+    session_mark_px_ema_field: Optional[str] = None
 
 
 class PriceSource(BaseModel):
@@ -92,6 +95,12 @@ class PairSourceConfig(BaseModel):
     quote_source: PriceSource
 
 
+class SessionEMASourceConfig(BaseModel):
+    source_type: Literal["session_ema"]
+    oracle_source: PriceSource
+    ema_source: PriceSource
+
+
 class ConstantSourceConfig(BaseModel):
     source_type: Literal["constant"]
     value: str
@@ -102,7 +111,7 @@ class OracleMidAverageConfig(BaseModel):
     symbol: str
 
 
-PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig | OracleMidAverageConfig
+PriceSourceConfig = SingleSourceConfig | PairSourceConfig | ConstantSourceConfig | OracleMidAverageConfig | SessionEMASourceConfig
 
 
 class PriceConfig(BaseModel):

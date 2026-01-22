@@ -4,7 +4,7 @@ from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 
 from pusher.config import Config, PriceConfig, PriceSourceConfig, ConstantSourceConfig, SingleSourceConfig, \
-    PairSourceConfig, OracleMidAverageConfig, PriceSource
+    PairSourceConfig, OracleMidAverageConfig, PriceSource, SessionEMASourceConfig
 
 METER_NAME = "hip3pusher"
 
@@ -81,8 +81,13 @@ class Metrics:
             return f"pair({base_str},{quote_str})"
         elif isinstance(source_config, OracleMidAverageConfig):
             return f"oracle_mid_average({source_config.symbol})"
+        elif isinstance(source_config, SessionEMASourceConfig):
+            oracle_str = self._get_price_source_str(source_config.oracle_source)
+            ema_str = self._get_price_source_str(source_config.ema_source)
+            return f"session_ema({oracle_str},{ema_str})"
         else:
             return "unknown"
 
     def _get_price_source_str(self, price_source: PriceSource):
-        return f"{price_source.source_name}({str(price_source.source_id)[:8]})"
+        session_flag_str = ",use_session_flag" if price_source.use_session_flag else ""
+        return f"{price_source.source_name}({str(price_source.source_id)[:8]}{session_flag_str})"
