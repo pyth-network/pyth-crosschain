@@ -466,6 +466,22 @@
       "types": "./dist/v2/components/HtmlWithLang/types.d.ts",
       "default": "./dist/v2/components/HtmlWithLang/types.mjs"
     },
+    "./v2/components/Input/Input": {
+      "types": "./dist/v2/components/Input/Input.d.ts",
+      "default": "./dist/v2/components/Input/Input.mjs"
+    },
+    "./v2/components/Input/Input.styles": {
+      "types": "./dist/v2/components/Input/Input.styles.d.ts",
+      "default": "./dist/v2/components/Input/Input.styles.mjs"
+    },
+    "./v2/components/Input": {
+      "types": "./dist/v2/components/Input/index.d.ts",
+      "default": "./dist/v2/components/Input/index.mjs"
+    },
+    "./v2/components/Input/types": {
+      "types": "./dist/v2/components/Input/types.d.ts",
+      "default": "./dist/v2/components/Input/types.mjs"
+    },
     "./v2/components/LeftNav/LeftNav": {
       "types": "./dist/v2/components/LeftNav/LeftNav.d.ts",
       "default": "./dist/v2/components/LeftNav/LeftNav.mjs"
@@ -493,6 +509,22 @@
     "./v2/components/LeftNavLink": {
       "types": "./dist/v2/components/LeftNavLink/index.d.ts",
       "default": "./dist/v2/components/LeftNavLink/index.mjs"
+    },
+    "./v2/components/Select/Select": {
+      "types": "./dist/v2/components/Select/Select.d.ts",
+      "default": "./dist/v2/components/Select/Select.mjs"
+    },
+    "./v2/components/Select/Select.styles": {
+      "types": "./dist/v2/components/Select/Select.styles.d.ts",
+      "default": "./dist/v2/components/Select/Select.styles.mjs"
+    },
+    "./v2/components/Select": {
+      "types": "./dist/v2/components/Select/index.d.ts",
+      "default": "./dist/v2/components/Select/index.mjs"
+    },
+    "./v2/components/Select/types": {
+      "types": "./dist/v2/components/Select/types.d.ts",
+      "default": "./dist/v2/components/Select/types.mjs"
     },
     "./v2/components/StatCard/StatCard": {
       "types": "./dist/v2/components/StatCard/StatCard.d.ts",
