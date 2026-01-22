@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import type { ButtonProps } from "../Button";
 import { Button } from "../Button";
-import { classes } from "./component.styles";
+import { classes } from "./LeftNavLink.styles";
 
 export type LeftNavLinkProps = Omit<ButtonProps, "size" | "variant"> & {
   /**

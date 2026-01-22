@@ -5,7 +5,7 @@ import { CaretDown, DotsThreeVertical } from "@phosphor-icons/react/dist/ssr";
 import cx from "clsx";
 import { useEffect, useRef } from "react";
 
-import { classes } from "./component.styles";
+import { classes } from "./LeftNav.styles";
 import type { LeftNavProps } from "./types";
 import { PythLogo } from "../../svg/PythLogo";
 import { Avatar } from "../Avatar";

@@ -1,7 +1,7 @@
 import { Button as BaseButton } from "@base-ui/react/button";
 import cx from "clsx";
 
-import { classes } from "./component.styles";
+import { classes } from "./Button.styles";
 import type { ButtonProps } from "./types";
 
 export function Button({

@@ -53,7 +53,7 @@ catalog:
   "@babel/core": ^7.27.1
   "@babel/preset-typescript": ^7.27.1
   "@base-ui/react": ^1.1.0
-  "@better-builds/ts-duality": ^1.3.1
+  "@better-builds/ts-duality": ^1.3.2
   "@bonfida/spl-name-service": ^3.0.10
   "@clickhouse/client": ^1.15.0
   "@coral-xyz/anchor": ^0.30.1
@@ -164,7 +164,7 @@ catalog:
   sass: ^1.86.1
   sass-loader: ^16.0.5
   shiki: ^3.2.1
-  simplestyle-js: 5.5.1-alpha.110
+  simplestyle-js: 5.5.1-alpha.111
   sockette: ^2.0.6
   storybook: ^10.1.11
   style-loader: ^4.0.0

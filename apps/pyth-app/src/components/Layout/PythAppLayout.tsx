@@ -11,7 +11,7 @@ import { LeftNav, LeftNavLink } from "@pythnetwork/component-library/v2";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 
-import { classes } from "./component.styles";
+import { classes } from "./PythAppLayout.styles";
 import { uiRoutes } from "../../routes";
 
 type PythAppLayoutProps = PropsWithChildren;

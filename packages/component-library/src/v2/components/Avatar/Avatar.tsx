@@ -2,7 +2,7 @@ import { Avatar as BaseAvatar } from "@base-ui/react/avatar";
 import cx from "clsx";
 import { useMemo } from "react";
 
-import { classes } from "./component.styles";
+import { classes } from "./Avatar.styles";
 import type { CurrentUser } from "../../types/current-user";
 
 export type AvatarProps = {

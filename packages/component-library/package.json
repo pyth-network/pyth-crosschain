@@ -430,9 +430,9 @@
       "types": "./dist/v2/components/Avatar/Avatar.d.ts",
       "default": "./dist/v2/components/Avatar/Avatar.mjs"
     },
-    "./v2/components/Avatar/component.styles": {
-      "types": "./dist/v2/components/Avatar/component.styles.d.ts",
-      "default": "./dist/v2/components/Avatar/component.styles.mjs"
+    "./v2/components/Avatar/Avatar.styles": {
+      "types": "./dist/v2/components/Avatar/Avatar.styles.d.ts",
+      "default": "./dist/v2/components/Avatar/Avatar.styles.mjs"
     },
     "./v2/components/Avatar": {
       "types": "./dist/v2/components/Avatar/index.d.ts",
@@ -442,9 +442,9 @@
       "types": "./dist/v2/components/Button/Button.d.ts",
       "default": "./dist/v2/components/Button/Button.mjs"
     },
-    "./v2/components/Button/component.styles": {
-      "types": "./dist/v2/components/Button/component.styles.d.ts",
-      "default": "./dist/v2/components/Button/component.styles.mjs"
+    "./v2/components/Button/Button.styles": {
+      "types": "./dist/v2/components/Button/Button.styles.d.ts",
+      "default": "./dist/v2/components/Button/Button.styles.mjs"
     },
     "./v2/components/Button": {
       "types": "./dist/v2/components/Button/index.d.ts",
@@ -470,9 +470,9 @@
       "types": "./dist/v2/components/LeftNav/LeftNav.d.ts",
       "default": "./dist/v2/components/LeftNav/LeftNav.mjs"
     },
-    "./v2/components/LeftNav/component.styles": {
-      "types": "./dist/v2/components/LeftNav/component.styles.d.ts",
-      "default": "./dist/v2/components/LeftNav/component.styles.mjs"
+    "./v2/components/LeftNav/LeftNav.styles": {
+      "types": "./dist/v2/components/LeftNav/LeftNav.styles.d.ts",
+      "default": "./dist/v2/components/LeftNav/LeftNav.styles.mjs"
     },
     "./v2/components/LeftNav": {
       "types": "./dist/v2/components/LeftNav/index.d.ts",
@@ -486,9 +486,9 @@
       "types": "./dist/v2/components/LeftNavLink/LeftNavLink.d.ts",
       "default": "./dist/v2/components/LeftNavLink/LeftNavLink.mjs"
     },
-    "./v2/components/LeftNavLink/component.styles": {
-      "types": "./dist/v2/components/LeftNavLink/component.styles.d.ts",
-      "default": "./dist/v2/components/LeftNavLink/component.styles.mjs"
+    "./v2/components/LeftNavLink/LeftNavLink.styles": {
+      "types": "./dist/v2/components/LeftNavLink/LeftNavLink.styles.d.ts",
+      "default": "./dist/v2/components/LeftNavLink/LeftNavLink.styles.mjs"
     },
     "./v2/components/LeftNavLink": {
       "types": "./dist/v2/components/LeftNavLink/index.d.ts",
