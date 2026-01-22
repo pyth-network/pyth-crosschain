@@ -8,9 +8,14 @@
         "clean",
         "^build",
         "build:declarations",
+        "build:css-in-js",
         "build:scss",
         "build:svg"
       ]
+    },
+    "build:css-in-js": {
+      "inputs": ["src/**/*.styles.ts"],
+      "outputs": ["src/v2/v2-theme.css"]
     },
     "build:declarations": {
       "dependsOn": ["//#install:modules", "^build"],

@@ -1,0 +1,31 @@
+import { createStyles } from "../../styles";
+
+export const { classes } = createStyles("pyth-app-layout", (theme) => ({
+  /**
+   * <main /> element that holds the right-side content
+   */
+  main: {
+    flexGrow: 1,
+    height: "100%",
+    overflowY: "auto",
+  },
+
+  signOut: {
+    color: theme.lightDark(
+      theme.palette.destructive.primary.light,
+      theme.palette.destructive.primary.dark,
+    ),
+  },
+
+  /**
+   * root of the pyth app layout
+   */
+  root: {
+    bottom: 0,
+    display: "flex",
+    left: 0,
+    position: "fixed",
+    right: 0,
+    top: 0,
+  },
+}));

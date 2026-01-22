@@ -1,1 +1,3 @@
-export { nextjs as default } from "@cprussin/eslint-config";
+import { nextjs } from "@cprussin/eslint-config";
+
+export default [...nextjs, { rules: { "unicorn/filename-case": "off" } }];

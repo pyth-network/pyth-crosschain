@@ -4,7 +4,23 @@
     "//"
   ],
   "tasks": {
+    "build:css": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "./src/**/*.styles.ts"
+      ],
+      "outputs": [
+        "./src/pyth-app.css"
+      ]
+    },
     "build:vercel": {
+      "dependsOn": [
+        "^build",
+        "pull:env",
+        "build:css"
+      ],
       "env": []
     },
     "fix:lint": {
@@ -25,6 +41,9 @@
       "dependsOn": [
         "//#install:modules"
       ],
+      "cache": false
+    },
+    "start:dev:css": {
       "cache": false
     },
     "start:dev": {

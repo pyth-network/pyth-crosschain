@@ -1,6 +1,6 @@
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function getThemePreferenceMediaQuery() {
   return globalThis.window.matchMedia("(prefers-color-scheme: dark)");
@@ -23,7 +23,19 @@ export function useAppTheme() {
   >("system");
 
   /** hooks */
-  const { theme, ...rest } = useTheme();
+  const { theme, setTheme, ...rest } = useTheme();
+
+  /** callbacks */
+  const toggleTheme = useCallback(() => {
+    const currentTheme = theme ?? "system";
+    if (currentTheme === "system") {
+      setTheme("light");
+    } else if (currentTheme === "light") {
+      setTheme("dark");
+    } else {
+      setTheme("system");
+    }
+  }, [setTheme, theme]);
 
   /** effects */
   useEffect(() => {
@@ -47,10 +59,16 @@ export function useAppTheme() {
     };
   }, [darkQuery]);
 
+  const effectiveTheme =
+    !theme || theme === "system"
+      ? (browserThemePreference as "dark" | "light")
+      : (theme as "dark" | "light");
+
   return {
     ...rest,
-    theme: (!theme || theme === "system"
-      ? browserThemePreference
-      : theme) as typeof browserThemePreference,
+    effectiveTheme,
+    isSystem: !theme || theme === "system",
+    theme,
+    toggleTheme,
   };
 }
