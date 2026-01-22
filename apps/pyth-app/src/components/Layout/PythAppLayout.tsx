@@ -1,6 +1,7 @@
 "use client";
 import { Menu } from "@base-ui/react/menu";
 import {
+  Compass,
   CreditCard,
   HouseLine,
   Key,
@@ -35,6 +36,13 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
         additionalUserMeta={"Free Plan"}
         currentUser={dummyCurrentUser}
       >
+        <LeftNavLink
+          active={pathname === uiRoutes.explore()}
+          leftIcon={Compass}
+          href={uiRoutes.explore()}
+        >
+          Explore
+        </LeftNavLink>
         <LeftNavLink
           active={pathname === uiRoutes.dashboard()}
           leftIcon={HouseLine}

@@ -1,7 +1,11 @@
 "use client";
 
+<<<<<<< HEAD
 import { Funnel } from "@phosphor-icons/react/dist/ssr/Funnel";
 import { Button, Input, StatCard, TableGrid } from "@pythnetwork/component-library/v2";
+=======
+import { Input, StatCard, TableGrid } from "@pythnetwork/component-library/v2";
+>>>>>>> be10125c1 (feat: add explore page)
 
 type PriceFeedRow = {
   name: string;
