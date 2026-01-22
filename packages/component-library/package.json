@@ -494,6 +494,22 @@
       "types": "./dist/v2/components/LeftNavLink/index.d.ts",
       "default": "./dist/v2/components/LeftNavLink/index.mjs"
     },
+    "./v2/components/TableGrid/TableGrid": {
+      "types": "./dist/v2/components/TableGrid/TableGrid.d.ts",
+      "default": "./dist/v2/components/TableGrid/TableGrid.mjs"
+    },
+    "./v2/components/TableGrid/TableGrid.styles": {
+      "types": "./dist/v2/components/TableGrid/TableGrid.styles.d.ts",
+      "default": "./dist/v2/components/TableGrid/TableGrid.styles.mjs"
+    },
+    "./v2/components/TableGrid": {
+      "types": "./dist/v2/components/TableGrid/index.d.ts",
+      "default": "./dist/v2/components/TableGrid/index.mjs"
+    },
+    "./v2/components/TableGrid/types": {
+      "types": "./dist/v2/components/TableGrid/types.d.ts",
+      "default": "./dist/v2/components/TableGrid/types.mjs"
+    },
     "./v2/components": {
       "types": "./dist/v2/components/index.d.ts",
       "default": "./dist/v2/components/index.mjs"
