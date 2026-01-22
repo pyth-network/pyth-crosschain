@@ -494,6 +494,22 @@
       "types": "./dist/v2/components/LeftNavLink/index.d.ts",
       "default": "./dist/v2/components/LeftNavLink/index.mjs"
     },
+    "./v2/components/StatCard/StatCard": {
+      "types": "./dist/v2/components/StatCard/StatCard.d.ts",
+      "default": "./dist/v2/components/StatCard/StatCard.mjs"
+    },
+    "./v2/components/StatCard/StatCard.styles": {
+      "types": "./dist/v2/components/StatCard/StatCard.styles.d.ts",
+      "default": "./dist/v2/components/StatCard/StatCard.styles.mjs"
+    },
+    "./v2/components/StatCard": {
+      "types": "./dist/v2/components/StatCard/index.d.ts",
+      "default": "./dist/v2/components/StatCard/index.mjs"
+    },
+    "./v2/components/StatCard/types": {
+      "types": "./dist/v2/components/StatCard/types.d.ts",
+      "default": "./dist/v2/components/StatCard/types.mjs"
+    },
     "./v2/components/TableGrid/TableGrid": {
       "types": "./dist/v2/components/TableGrid/TableGrid.d.ts",
       "default": "./dist/v2/components/TableGrid/TableGrid.mjs"
