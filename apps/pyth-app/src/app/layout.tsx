@@ -1,4 +1,3 @@
-import "@pythnetwork/component-library/resetV2";
 import "@pythnetwork/component-library/themeV2";
 
 // eslint is extremely confused for some reason

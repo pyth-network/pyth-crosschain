@@ -52,7 +52,7 @@ export function LeftNav({
             <span title={currentUser.email}>{currentUser.email}</span>
             <span>{additionalUserMeta}</span>
           </span>
-          <span>
+          <span className={classes.ellipsis}>
             <DotsThreeVertical />
           </span>
         </span>

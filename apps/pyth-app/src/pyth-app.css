@@ -1,7 +1,0 @@
-@layer ssjs-imports, ssjs-globals, ssjs-styles;
-@layer ssjs-imports {}
-@layer ssjs-globals {}
-@layer ssjs-styles {@keyframes index-page-color-wheel_keyframes_1ghs41m{0%{color:#f00;}14%{color:#ff7f00;}28%{color:#ff0;}42%{color:#0f0;}56%{color:#00f;}70%{color:#4b0082;}84%{color:#9400d3;}100%{color:#f00;}}
-@keyframes index-page-jiter_keyframes_ofv2ec{0%{transform:translateX(0px) skew(0deg);}33%{transform:translateX(-2px) skew(-20deg);}66%{transform:translateX(2px) skew(20deg);}100%{transform:translateX(0px) skew(0deg);}}
-.root-layout-styles_comingSoon_12vs21j{font-size:1.25rem;padding:1.5rem;text-align:center;}.root-layout-styles_comingSoon_12vs21j > svg{animation:index-page-color-wheel_keyframes_1ghs41m 2s linear infinite;height:5rem;width:auto;}.root-layout-styles_comingSoon_12vs21j > p:last-child{animation:index-page-jiter_keyframes_ofv2ec 2s ease infinite;}
-.pyth-app-layout_main_jnhrtg{height:100%;overflow-y:auto;}.pyth-app-layout_signOut_1kx1j8x{color:light-dark(#d4183d, #7f1d1d);}.pyth-app-layout_root_15cfux4{bottom:0;display:grid;grid-template-columns:256px 1fr;left:0;position:fixed;right:0;top:0;}}

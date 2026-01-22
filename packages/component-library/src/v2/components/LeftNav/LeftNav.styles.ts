@@ -26,6 +26,11 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
   },
 
   /**
+   * class name applied to the <span /> that wraps around the vertical ellipsis
+   */
+  ellipsis: {},
+
+  /**
    * class name applied to the section that holds
    * a UI affordance to display the current user
    * and an additional actions menu on it
@@ -113,11 +118,55 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
     minHeight: 0,
     width: theme.widths.leftNav.desktop,
 
+    '&[data-open="false"]': {
+      width: theme.widths.leftNav.collapsed,
+
+      "& $logoWrapper": {
+        display: "flex",
+        justifyContent: "center",
+      },
+
+      "& $navLinks": {
+        '& [data-leftnavlink="true"]': {
+          fontSize: 0,
+          gap: 0,
+          justifyContent: "center",
+          overflow: "hidden",
+          padding: theme.spacing(2),
+          whiteSpace: "nowrap",
+
+          "& > svg": {
+            height: theme.spacing(5),
+            width: "auto",
+          },
+        },
+      },
+
+      "& $currentUser": {
+        gridTemplateColumns: "auto",
+        justifyItems: "center",
+        padding: theme.spacing(3),
+      },
+
+      "& $currentUserDetails": {
+        display: "none",
+      },
+    },
+
     '&[data-hasactionsmenu="true"]': {
       "& $currentUser": {
         gridTemplateColumns: "auto 1fr auto",
 
         "& > $currentUserDetails": {},
+      },
+    },
+
+    '&[data-open="false"][data-hasactionsmenu="true"]': {
+      "& $currentUser": {
+        gridTemplateColumns: "auto auto",
+        "& $ellipsis": {
+          display: "none",
+        },
       },
     },
   },

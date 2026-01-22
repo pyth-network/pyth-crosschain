@@ -93,7 +93,6 @@
   "ts-duality": {
     "extraExports": {
       "./themeV2": "./dist/v2/v2-theme.css",
-      "./resetV2": "./dist/v2/v2-reset.css",
       "./theme": "./dist/theme.scss"
     }
   },
@@ -522,6 +521,10 @@
       "types": "./dist/v2/theme/index.d.ts",
       "default": "./dist/v2/theme/index.mjs"
     },
+    "./v2/theme/reset.styles": {
+      "types": "./dist/v2/theme/reset.styles.d.ts",
+      "default": "./dist/v2/theme/reset.styles.mjs"
+    },
     "./v2/theme/style-funcs": {
       "types": "./dist/v2/theme/style-funcs.d.ts",
       "default": "./dist/v2/theme/style-funcs.mjs"
@@ -536,7 +539,6 @@
     },
     "./package.json": "./package.json",
     "./themeV2": "./dist/v2/v2-theme.css",
-    "./resetV2": "./dist/v2/v2-reset.css",
     "./theme": "./dist/theme.scss"
   }
 }

@@ -157,6 +157,7 @@ const heights = {
 const widths = {
   avatar: heights.avatar,
   leftNav: {
+    collapsed: spacing(18),
     desktop: "256px",
     mobile: "256px",
   },
