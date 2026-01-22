@@ -79,7 +79,13 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
    * simple <div /> wrapping around the <svg /> of the Pyth logo
    */
   logoWrapper: {
+    ...theme.flexRowCenter(theme.spacing(2)),
+    justifyContent: "space-between",
     padding: theme.spacing(4),
+
+    "& > button": {
+      marginRight: `calc(${theme.spacing(2)} * -1)`,
+    },
 
     "& > svg": {
       height: theme.fontSize.base,
@@ -124,6 +130,10 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
       "& $logoWrapper": {
         display: "flex",
         justifyContent: "center",
+
+        "& > button": {
+          marginRight: "unset",
+        },
       },
 
       "& $navLinks": {

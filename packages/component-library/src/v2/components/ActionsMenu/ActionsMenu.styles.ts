@@ -24,12 +24,7 @@ export const { classes } = createStyles("pyth-v2-actions-menu", (theme) => {
      * holds all of the menu items
      */
     menuPopover: {
-      backgroundColor: theme.lightDark(
-        theme.palette.popover.primary.light,
-        theme.palette.popover.primary.dark,
-      ),
-      borderRadius: theme.borderRadius.lg,
-      boxShadow: theme.elevation.md,
+      ...theme.tooltipStyles(),
     },
 
     /**

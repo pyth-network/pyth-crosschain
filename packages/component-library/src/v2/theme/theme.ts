@@ -1,3 +1,5 @@
+import type { SimpleStyleRules } from "simplestyle-js/ssr";
+
 function spacing(increment: number) {
   return `${(increment * 0.25).toString()}rem`;
 }
@@ -194,6 +196,23 @@ const color = {
       },
       outline: "none",
     },
+    outline: {
+      background: {
+        hover: lightDark(
+          blendColor(palette.muted.primary.light, "black"),
+          blendColor(palette.muted.primary.dark, "white"),
+        ),
+        primary: "transparent",
+      },
+      foreground: {
+        hover: lightDark(palette.ring.primary.light, palette.ring.primary.dark),
+        primary: lightDark(
+          palette.ring.primary.light,
+          palette.ring.primary.dark,
+        ),
+      },
+      outline: `1px solid ${lightDark(palette.ring.primary.light, palette.ring.primary.dark)}`,
+    },
     primary: {
       background: {
         hover: lightDark(palette.ring.primary.light, palette.ring.primary.dark),
@@ -210,6 +229,98 @@ const color = {
         ),
       },
       outline: `1px solid ${lightDark(palette.ring.primary.light, palette.ring.primary.dark)}`,
+    },
+    secondary: {
+      background: {
+        hover: lightDark(
+          blendColor(palette.secondary.primary.light, "black"),
+          blendColor(palette.secondary.primary.dark, "white"),
+        ),
+        primary: lightDark(
+          palette.secondary.primary.light,
+          palette.secondary.primary.dark,
+        ),
+      },
+      foreground: {
+        hover: lightDark(
+          palette.secondaryForeground.primary.light,
+          palette.secondaryForeground.primary.dark,
+        ),
+        primary: lightDark(
+          palette.secondaryForeground.primary.light,
+          palette.secondaryForeground.primary.dark,
+        ),
+      },
+      outline: "none",
+    },
+    success: {
+      background: {
+        hover: lightDark(
+          blendColor(palette.chart4.primary.light, "black"),
+          blendColor(palette.chart4.primary.dark, "white"),
+        ),
+        primary: lightDark(
+          palette.chart4.primary.light,
+          palette.chart4.primary.dark,
+        ),
+      },
+      foreground: {
+        hover: lightDark(
+          palette.foreground.primary.light,
+          palette.foreground.primary.dark,
+        ),
+        primary: lightDark(
+          palette.foreground.primary.light,
+          palette.foreground.primary.dark,
+        ),
+      },
+      outline: "none",
+    },
+    warning: {
+      background: {
+        hover: lightDark(
+          blendColor(palette.chart5.primary.light, "black"),
+          blendColor(palette.chart5.primary.dark, "white"),
+        ),
+        primary: lightDark(
+          palette.chart5.primary.light,
+          palette.chart5.primary.dark,
+        ),
+      },
+      foreground: {
+        hover: lightDark(
+          palette.foreground.primary.light,
+          palette.foreground.primary.dark,
+        ),
+        primary: lightDark(
+          palette.foreground.primary.light,
+          palette.foreground.primary.dark,
+        ),
+      },
+      outline: "none",
+    },
+    danger: {
+      background: {
+        hover: lightDark(
+          blendColor(palette.destructive.primary.light, "black"),
+          blendColor(palette.destructive.primary.dark, "white"),
+        ),
+        primary: lightDark(
+          palette.destructive.primary.light,
+          palette.destructive.primary.dark,
+        ),
+      },
+      foreground: {
+        hover: lightDark(
+          palette.destructiveForeground.primary.light,
+          palette.destructiveForeground.primary.dark,
+        ),
+        primary: lightDark(
+          palette.destructiveForeground.primary.light,
+          palette.destructiveForeground.primary.dark,
+        ),
+      },
+      outline: "none",
     },
   },
   leftNav: {
@@ -296,11 +407,62 @@ const elevation = {
   xl: `0 12px 28px ${elevationColor}, 0 4px 8px ${elevationColorSoft}`,
 } as const;
 
+const flexRow = (): SimpleStyleRules["key"] => ({
+  display: "flex",
+  flexFlow: "row",
+});
+
+const flexRowCenter = (gap?: string): SimpleStyleRules["key"] => {
+  const out: SimpleStyleRules["key"] = { alignItems: "center", ...flexRow() };
+
+  if (gap) {
+    out.gap = gap;
+  }
+
+  return out;
+};
+
+const flexVertical = (): SimpleStyleRules["key"] => ({
+  display: "flex",
+  flexFlow: "column",
+});
+
+const flexVerticalCenter = (gap?: string): SimpleStyleRules["key"] => {
+  const out: SimpleStyleRules["key"] = {
+    ...flexVertical(),
+    justifyContent: "center",
+  };
+
+  if (gap) {
+    out.gap = gap;
+  }
+
+  return out;
+};
+
+const tooltipStyles = (): SimpleStyleRules["key"] => ({
+  /**
+   * class name applied to the menu popover that
+   * holds all of the menu items
+   */
+  backgroundColor: lightDark(
+    palette.popover.primary.light,
+    palette.popover.primary.dark,
+  ),
+  borderRadius: borderRadius.lg,
+  boxShadow: elevation.md,
+  padding: spacing(2),
+});
+
 export const ThemeV2 = {
   blendColor,
   borderRadius,
   color,
   elevation,
+  flexRow,
+  flexRowCenter,
+  flexVertical,
+  flexVerticalCenter,
   fontFamily,
   fontSize,
   fontWeight,
@@ -309,5 +471,6 @@ export const ThemeV2 = {
   lightDark,
   palette,
   spacing,
+  tooltipStyles,
   widths,
 };

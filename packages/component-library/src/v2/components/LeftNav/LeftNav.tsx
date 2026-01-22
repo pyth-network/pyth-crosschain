@@ -1,41 +1,49 @@
 "use client";
 
-import { DotsThreeVertical } from "@phosphor-icons/react/dist/ssr";
+import {
+  CaretDoubleLeft,
+  CaretDoubleRight,
+  DotsThreeVertical,
+} from "@phosphor-icons/react/dist/ssr";
 import cx from "clsx";
-import { useEffect, useRef } from "react";
 
 import { classes } from "./LeftNav.styles";
 import type { LeftNavProps } from "./types";
 import { PythLogo } from "../../svg/PythLogo";
 import { ActionsMenu } from "../ActionsMenu";
 import { Avatar } from "../Avatar";
+import { Button } from "../Button";
 
 export function LeftNav({
   actionMenuItems,
   additionalUserMeta,
   children,
   className,
+  collapsed = false,
   currentUser,
-  onOpenChange,
-  open = true,
+  onCollapseChange,
 }: LeftNavProps) {
-  /** refs */
-  const onOpenChangeRef = useRef(onOpenChange);
-
-  /** effects */
-  useEffect(() => {
-    onOpenChangeRef.current = onOpenChange;
-  });
+  /** local variables */
+  const collapseButtonTooltip = `${collapsed ? "Expand" : "Collapse"} left navigation panel`;
 
   return (
     <nav
       className={cx(classes.root, className)}
       data-hasactionsmenu={actionMenuItems.length > 0}
-      data-open={open}
+      data-open={!collapsed}
     >
       <div className={classes.top}>
         <div className={classes.logoWrapper}>
-          <PythLogo />
+          {!collapsed && <PythLogo />}
+          <Button
+            aria-label={collapseButtonTooltip}
+            leftIcon={collapsed ? CaretDoubleRight : CaretDoubleLeft}
+            onClick={() => {
+              onCollapseChange?.(!collapsed);
+            }}
+            tooltip={collapseButtonTooltip}
+            variant="ghost"
+          />
         </div>
       </div>
       <div className={classes.navLinks}>{children}</div>

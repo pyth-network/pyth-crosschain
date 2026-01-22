@@ -11,6 +11,7 @@ import {
 import type { CurrentUser } from "@pythnetwork/component-library/v2";
 import { LeftNav, LeftNavLink } from "@pythnetwork/component-library/v2";
 import type { ActionMenuItem } from "@pythnetwork/component-library/v2/components/ActionsMenu";
+import { useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { useMemo } from "react";
@@ -25,12 +26,18 @@ const dummyCurrentUser: CurrentUser = {
   fullName: "Benjamin Duran",
 };
 
+const QUERY_KEY_LEFT_PANEL_COLLAPSED = "lpc";
+
 /**
  * main app layout for app.pyth.network
  */
 export function PythAppLayout({ children }: PythAppLayoutProps) {
   /** hooks */
   const pathname = usePathname();
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useQueryState(
+    QUERY_KEY_LEFT_PANEL_COLLAPSED,
+    { defaultValue: false, parse: (val) => val === "true", shallow: true },
+  );
 
   /** memos */
   const actionMenuItems = useMemo<ActionMenuItem[]>(
@@ -60,7 +67,13 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
       <LeftNav
         actionMenuItems={actionMenuItems}
         additionalUserMeta={"Free Plan"}
+        collapsed={leftPanelCollapsed}
         currentUser={dummyCurrentUser}
+        onCollapseChange={(isCollapsed) => {
+          setLeftPanelCollapsed(isCollapsed).catch(() => {
+            /* no-op */
+          });
+        }}
       >
         <LeftNavLink
           active={pathname === uiRoutes.dashboard()}

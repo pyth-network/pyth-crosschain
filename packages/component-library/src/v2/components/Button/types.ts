@@ -1,6 +1,7 @@
 import { Button as BaseButton } from "@base-ui/react/button";
+import type { TooltipPositionerProps } from "@base-ui/react/tooltip";
 import type { Icon } from "@phosphor-icons/react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import type { ThemeV2 } from "../../theme";
 
@@ -21,6 +22,25 @@ export type ButtonProps = ComponentProps<typeof BaseButton> & {
    * @defaultValue 'base'
    */
   size?: ButtonSizeVariant;
+
+  /**
+   * if specified, will wrap the button
+   * with a tooltip and display it on hover
+   */
+  tooltip?: ReactNode;
+
+  /**
+   * determines how long it takes for a tooltip to appear
+   * after mousing over
+   *
+   * @defaultValue 50
+   */
+  tooltipDelay?: number;
+
+  /**
+   * additional customizations for the positioner
+   */
+  tooltipPositionerProps?: TooltipPositionerProps;
 
   /**
    * which type of button to display

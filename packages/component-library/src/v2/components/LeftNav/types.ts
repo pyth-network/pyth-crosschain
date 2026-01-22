@@ -20,6 +20,13 @@ export type LeftNavProps = PropsWithChildren & {
   additionalUserMeta?: ReactNode;
 
   /**
+   * if true, collapses the panel
+   *
+   * @defaultValue false
+   */
+  collapsed?: boolean;
+
+  /**
    * css class name override
    */
   className?: string;
@@ -32,13 +39,5 @@ export type LeftNavProps = PropsWithChildren & {
   /**
    * fired whenever somebody toggles the menu open or closed
    */
-  onOpenChange?: (isOpen: boolean) => void;
-
-  /**
-   * if provided, controls the open or closed state
-   * of the left nav.
-   *
-   * @defaultValue true
-   */
-  open?: boolean;
+  onCollapseChange?: (isCollapse: boolean) => void;
 };

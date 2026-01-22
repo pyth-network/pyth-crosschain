@@ -43,6 +43,14 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
     },
 
     /**
+     * class name applied to a tooltip that wraps
+     * around a button, if specified
+     */
+    tooltip: {
+      ...theme.tooltipStyles(),
+    },
+
+    /**
      * root of the button
      */
     root: {
