@@ -1,15 +1,19 @@
 "use client";
-import { Menu } from "@base-ui/react/menu";
 import {
   CreditCard,
+  Gear,
   HouseLine,
   Key,
+  Lightning,
+  SignOut,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import type { CurrentUser } from "@pythnetwork/component-library/v2";
 import { LeftNav, LeftNavLink } from "@pythnetwork/component-library/v2";
+import type { ActionMenuItem } from "@pythnetwork/component-library/v2/components/ActionsMenu";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
+import { useMemo } from "react";
 
 import { classes } from "./PythAppLayout.styles";
 import { uiRoutes } from "../../routes";
@@ -28,10 +32,33 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
   /** hooks */
   const pathname = usePathname();
 
+  /** memos */
+  const actionMenuItems = useMemo<ActionMenuItem[]>(
+    () => [
+      {
+        component: "Settings",
+        icon: Gear,
+        key: "account-settings",
+      },
+      {
+        component: "Theme",
+        icon: Lightning,
+        key: "app-theme",
+      },
+      {
+        component: <span className={classes.signOut}>Sign out</span>,
+        icon: SignOut,
+        iconClassName: classes.signOut,
+        key: "sign-out",
+      },
+    ],
+    [],
+  );
+
   return (
     <div className={classes.root}>
       <LeftNav
-        actionMenuItems={[<Menu.Item key="settings">Stuff here</Menu.Item>]}
+        actionMenuItems={actionMenuItems}
         additionalUserMeta={"Free Plan"}
         currentUser={dummyCurrentUser}
       >

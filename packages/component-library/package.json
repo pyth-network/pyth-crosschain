@@ -426,6 +426,18 @@
       "types": "./dist/useQueryParamsPagination/index.d.ts",
       "default": "./dist/useQueryParamsPagination/index.mjs"
     },
+    "./v2/components/ActionsMenu/ActionsMenu": {
+      "types": "./dist/v2/components/ActionsMenu/ActionsMenu.d.ts",
+      "default": "./dist/v2/components/ActionsMenu/ActionsMenu.mjs"
+    },
+    "./v2/components/ActionsMenu/ActionsMenu.styles": {
+      "types": "./dist/v2/components/ActionsMenu/ActionsMenu.styles.d.ts",
+      "default": "./dist/v2/components/ActionsMenu/ActionsMenu.styles.mjs"
+    },
+    "./v2/components/ActionsMenu": {
+      "types": "./dist/v2/components/ActionsMenu/index.d.ts",
+      "default": "./dist/v2/components/ActionsMenu/index.mjs"
+    },
     "./v2/components/Avatar/Avatar": {
       "types": "./dist/v2/components/Avatar/Avatar.d.ts",
       "default": "./dist/v2/components/Avatar/Avatar.mjs"

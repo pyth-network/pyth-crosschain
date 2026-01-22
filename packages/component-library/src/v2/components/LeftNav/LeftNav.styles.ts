@@ -2,23 +2,27 @@ import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
   /**
+   * class name that applies to the actions menu popover
+   * that is displayed when a user clicks on the ellipsis near their
+   * name
+   */
+  actionsMenuPopover: {
+    width: `calc(${theme.widths.leftNav.desktop} - ${theme.spacing(2)})`,
+  },
+
+  /**
    * class name applied to the vertical ellipsis trigger
    * that opens the user actions menu
    */
-  actionsMenuTrigger: {
+  actionsMenuTriggerIcon: {
     background: "transparent",
     border: "none",
     borderRadius: theme.borderRadius.lg,
-    height: theme.spacing(8),
+    height: theme.spacing(6),
     outline: "none",
     padding: 0,
     transition: "background-color .2s ease, color .2s ease",
-    width: theme.spacing(8),
-
-    "&:hover": {
-      backgroundColor: theme.color.button.ghost.background.hover,
-      cursor: "pointer",
-    },
+    width: "auto",
   },
 
   /**
@@ -28,10 +32,11 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
    */
   currentUser: {
     borderTop: `1px solid ${theme.lightDark(theme.palette.border.primary.light, theme.palette.border.primary.dark)}`,
-    display: "grid",
+    display: "inline-grid",
     flexShrink: 0,
     gap: theme.spacing(2),
     gridTemplateColumns: "auto 1fr",
+    minWidth: 0,
     padding: theme.spacing(4),
   },
 
@@ -40,9 +45,21 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
    * displayed next to the user's avatar
    */
   currentUserDetails: {
+    alignItems: "flex-start",
+    display: "inline-flex",
+    flexFlow: "column",
     fontSize: theme.fontSize.base,
+    gap: theme.spacing(1),
+    minWidth: 0,
+    width: "100%",
 
-    "& > div": {
+    "& > span": {
+      display: "block",
+      maxWidth: "100%",
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
       "&:last-child": {
         color: theme.lightDark(
           theme.palette.mutedForeground.primary.light,
@@ -97,20 +114,10 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
     width: theme.widths.leftNav.desktop,
 
     '&[data-hasactionsmenu="true"]': {
-      "& > $currentUser": {
+      "& $currentUser": {
         gridTemplateColumns: "auto 1fr auto",
-        minWidth: 0,
 
-        "& > $currentUserDetails": {
-          minWidth: 0,
-
-          "& > div:first-child": {
-            // user's email needs truncating
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          },
-        },
+        "& > $currentUserDetails": {},
       },
     },
   },

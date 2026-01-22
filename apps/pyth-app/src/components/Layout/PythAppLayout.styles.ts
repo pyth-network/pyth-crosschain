@@ -8,6 +8,14 @@ export const { classes } = createStyles("pyth-app-layout", (theme) => ({
     height: "100%",
     overflowY: "auto",
   },
+
+  signOut: {
+    color: theme.lightDark(
+      theme.palette.destructive.primary.light,
+      theme.palette.destructive.primary.dark,
+    ),
+  },
+
   /**
    * root of the pyth app layout
    */

@@ -1,6 +1,7 @@
 import type { PropsWithChildren, ReactNode } from "react";
 
 import type { CurrentUser } from "../../types/current-user";
+import type { ActionMenuItem } from "../ActionsMenu";
 
 export type LeftNavProps = PropsWithChildren & {
   /**
@@ -9,7 +10,7 @@ export type LeftNavProps = PropsWithChildren & {
    * and these items will be displayed in the menu that opens
    * when clicked
    */
-  actionMenuItems?: ReactNode[];
+  actionMenuItems: ActionMenuItem[];
 
   /**
    * if specified, will render this right below the user's email

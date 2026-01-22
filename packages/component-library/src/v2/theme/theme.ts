@@ -278,10 +278,28 @@ const borderRadius = {
   xl: "0.75rem",
 } as const;
 
+const elevationColor = lightDark(
+  "rgba(15, 23, 42, 0.16)",
+  "rgba(0, 0, 0, 0.6)",
+);
+
+const elevationColorSoft = lightDark(
+  "rgba(15, 23, 42, 0.08)",
+  "rgba(0, 0, 0, 0.45)",
+);
+
+const elevation = {
+  sm: `0 1px 2px ${elevationColorSoft}`,
+  md: `0 2px 6px ${elevationColor}, 0 1px 2px ${elevationColorSoft}`,
+  lg: `0 6px 16px ${elevationColor}, 0 2px 4px ${elevationColorSoft}`,
+  xl: `0 12px 28px ${elevationColor}, 0 4px 8px ${elevationColorSoft}`,
+} as const;
+
 export const ThemeV2 = {
   blendColor,
   borderRadius,
   color,
+  elevation,
   fontFamily,
   fontSize,
   fontWeight,
