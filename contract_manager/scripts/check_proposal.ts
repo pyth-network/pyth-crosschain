@@ -247,14 +247,14 @@ async function main() {
 
         console.log(`Verifying UpgradeSuiLazerContract on '${targetChainId}'`);
 
-        const chain = DefaultStore.chains[targetChainId];
+        if (targetChainId === "sui") {
+          const chain = DefaultStore.chains.sui_mainnet;
 
-        if (!chain) {
-          console.log(`Unsupported target chain '${targetChainId}'`);
-          continue;
-        }
+          if (!(chain instanceof SuiChain)) {
+            console.error("Could not find valid Sui mainnet chain in store");
+            continue;
+          }
 
-        if (chain instanceof SuiChain) {
           const packagePath = path.resolve(
             scriptDir,
             "../../lazer/contracts/sui",
@@ -263,6 +263,11 @@ async function main() {
           const contracts = Object.values(DefaultStore.lazer_contracts)
             .filter((c) => c instanceof SuiLazerContract)
             .filter((c) => c.chain.isMainnet());
+
+          if (contracts.length === 0) {
+            console.error("Could not find valid Sui Lazer contract in store");
+            continue;
+          }
 
           const client = chain.getProvider();
           for (const contract of contracts) {
@@ -291,6 +296,8 @@ async function main() {
             console.log(`  expected ${buildHash}`);
             console.log(`     found ${hash}`);
           }
+        } else {
+          console.log(`Unsupported target chain '${targetChainId}'`);
         }
       }
     }
