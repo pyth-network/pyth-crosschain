@@ -6,6 +6,8 @@
 /* eslint-disable no-console */
 
 import { createHash } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
@@ -17,6 +19,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  UpgradeSuiLazerContract,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
 import type { AccountMeta } from "@solana/web3.js";
@@ -26,7 +29,8 @@ import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { CosmWasmChain, EvmChain } from "../src/core/chains";
+import { CosmWasmChain, EvmChain, SuiChain } from "../src/core/chains";
+import { SuiLazerContract } from "../src/core/contracts";
 import {
   EvmEntropyContract,
   EvmPriceFeedContract,
@@ -35,6 +39,8 @@ import {
   EvmLazerContract,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
 function getSquadsMesh() {
   // Handle nested default export from @sqds/mesh
@@ -234,6 +240,64 @@ async function main() {
               `${chain.getId()}    new implementation address:${newImplementationAddress} has code digest:${newImplementationCode}`,
             );
           }
+        }
+      }
+      if (instruction.governanceAction instanceof UpgradeSuiLazerContract) {
+        const { targetChainId, version, hash } = instruction.governanceAction;
+
+        console.log(`Verifying UpgradeSuiLazerContract on '${targetChainId}'`);
+
+        if (targetChainId === "sui") {
+          const chain = DefaultStore.chains.sui_mainnet;
+
+          if (!(chain instanceof SuiChain)) {
+            console.error("Could not find valid Sui mainnet chain in store");
+            continue;
+          }
+
+          const packagePath = path.resolve(
+            scriptDir,
+            "../../lazer/contracts/sui",
+          );
+
+          const contracts = Object.values(DefaultStore.lazer_contracts)
+            .filter((c) => c instanceof SuiLazerContract)
+            .filter((c) => c.chain.isMainnet());
+
+          if (contracts.length === 0) {
+            console.error("Could not find valid Sui Lazer contract in store");
+            continue;
+          }
+
+          const client = chain.getProvider();
+          for (const contract of contracts) {
+            const info = await chain.getStatePackageInfo(
+              client,
+              contract.stateId,
+            );
+            if (BigInt(info.version) + 1n !== version) {
+              console.log(
+                "Proposal upgrade version does not follow current version:",
+              );
+              console.log(
+                `  current version is ${info.version}, proposed ${version}`,
+              );
+            }
+          }
+
+          await chain.updateLazerContractMeta(packagePath, {
+            version: version.toString(),
+            receiver_chain_id: chain.getWormholeChainId(),
+          });
+          const pkg = await chain.buildPackage(packagePath);
+          const buildHash = Buffer.from(pkg.digest).toString("hex");
+          if (buildHash !== hash) {
+            console.log("Proposal package digest does not match local build:");
+            console.log(`  expected ${buildHash}`);
+            console.log(`     found ${hash}`);
+          }
+        } else {
+          console.log(`Unsupported target chain '${targetChainId}'`);
         }
       }
     }

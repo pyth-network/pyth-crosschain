@@ -1,14 +1,16 @@
 /* eslint-disable no-console */
-import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { Wallet } from "@coral-xyz/anchor";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
-import * as micromustache from "micromustache";
+import type { PythCluster } from "@pythnetwork/client";
+import { CHAINS } from "@pythnetwork/xc-admin-common";
 import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import type { SuiLazerMeta } from "../src/core/chains";
 import { SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
@@ -19,17 +21,50 @@ function updateContractInStore(contract: SuiLazerContract) {
   DefaultStore.saveAllContracts();
 }
 
-type SuiLazerMeta = {
-  version: string;
-  receiver_chain_id: number;
-};
+function getMainnetVault() {
+  const vault = Object.entries(DefaultStore.vaults).find(([id]) =>
+    id.startsWith("mainnet-beta_"),
+  )?.[1];
+  if (!vault) {
+    throw new Error("Could not find mainnet vault.");
+  }
+  return vault;
+}
 
-async function updateContractMeta(packagePath: string, meta: SuiLazerMeta) {
-  const templatePath = path.resolve(packagePath, "sources/meta.move.mustache");
-  const template = await readFile(templatePath, { encoding: "utf8" });
-  const outputPath = path.resolve(packagePath, "sources/meta.move");
-  const output = micromustache.render(template, meta);
-  await writeFile(outputPath, output, { encoding: "utf8" });
+function connectMainnetVault(wallet: Wallet) {
+  // Override these URLs to use a different RPC node for mainnet / testnet.
+  // TODO: extract these RPCs to a config file (?)
+  const RPCS = {
+    "mainnet-beta": "https://api.mainnet-beta.solana.com",
+    testnet: "https://api.testnet.solana.com",
+    devnet: "https://api.devnet.solana.com",
+  } as Record<PythCluster, string>;
+
+  const vault = getMainnetVault();
+  vault.connect(wallet, (rpc) => RPCS[rpc]);
+
+  return vault;
+}
+
+/**
+ * Bumps contract version in source based on on-chain version and returns new
+ * contract metadata.
+ */
+async function fetchAndBumpContractMeta(
+  chain: SuiChain,
+  contract: SuiLazerContract,
+  packagePath: string,
+): Promise<SuiLazerMeta> {
+  const { version } = await chain.getStatePackageInfo(
+    chain.getProvider(),
+    contract.stateId,
+  );
+  const meta = {
+    version: (BigInt(version) + 1n).toString(),
+    receiver_chain_id: chain.getWormholeChainId(),
+  };
+  await chain.updateLazerContractMeta(packagePath, meta);
+  return meta;
 }
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -107,11 +142,11 @@ parser.command(
         type: "number",
         description: "Wormhole chain ID where the governance is located",
         demandOption: true,
+        default: CHAINS.solana,
       },
       "governance-address": {
         type: "string",
         description: "address of the governance contract on its chain",
-        demandOption: true,
       },
       "upgrade-cap": {
         type: "string",
@@ -127,6 +162,18 @@ parser.command(
     governanceAddress,
     upgradeCap: existingUpgradeCapId,
   }) => {
+    if (!governanceAddress) {
+      if (governanceChain == CHAINS.solana) {
+        const emitterKey = await getMainnetVault().getEmitter();
+        governanceAddress = emitterKey.toBuffer().toString("hex");
+        console.info("Using mainnet vault as an emitter:", governanceAddress);
+      } else {
+        throw new Error(
+          `Missing governance address for selected chain '${governanceChain.toString()}'`,
+        );
+      }
+    }
+
     console.info(`Checking Wormhole state ${wormholeStateId}...`);
     const { package: wormholeId } = await chain.getStatePackageInfo(
       chain.getProvider(),
@@ -146,10 +193,11 @@ parser.command(
       console.info("Found package:");
     } else {
       console.info("Initializing package metadata...");
-      await updateContractMeta(packagePath, {
+      const meta = {
         version: "1",
         receiver_chain_id: chain.getWormholeChainId(),
-      });
+      };
+      await chain.updateLazerContractMeta(packagePath, meta);
 
       console.info("Building package...");
       const pkg = await chain.buildPackage(packagePath);
@@ -157,7 +205,11 @@ parser.command(
       console.info(`Package digest: ${digest}`);
 
       console.info("Publishing package...");
-      ({ packageId, upgradeCapId } = await chain.publishPackage(pkg, signer));
+      ({ packageId, upgradeCapId } = await chain.publishLazerPackage(
+        pkg,
+        meta,
+        signer,
+      ));
       console.info("Package published:");
     }
     console.info(`  package: ${chain.explorerUrl("object", packageId)}`);
@@ -196,7 +248,7 @@ parser.command(
       chain.getProvider(),
       contract.stateId,
     );
-    await updateContractMeta(packagePath, {
+    await chain.updateLazerContractMeta(packagePath, {
       version,
       receiver_chain_id: chain.getWormholeChainId(),
     });
@@ -227,14 +279,7 @@ parser.command(
     console.info("Upgrading package...");
 
     console.info("Updating package metadata...");
-    const { version } = await chain.getStatePackageInfo(
-      chain.getProvider(),
-      contract.stateId,
-    );
-    await updateContractMeta(packagePath, {
-      version: (BigInt(version) + 1n).toString(),
-      receiver_chain_id: chain.getWormholeChainId(),
-    });
+    const meta = await fetchAndBumpContractMeta(chain, contract, packagePath);
 
     console.info("Building package update...");
     const pkg = await chain.buildPackage(packagePath);
@@ -242,7 +287,10 @@ parser.command(
     console.info(`Package update digest: ${digest}`);
 
     console.info("Submitting governance message to Wormhole...");
-    const payload = chain.generateGovernanceUpgradeLazerPayload(digest);
+    const payload = chain.generateGovernanceUpgradeLazerPayload(
+      BigInt(meta.version),
+      digest,
+    );
     const submitted = await emitter.sendMessage(payload);
 
     console.info(
@@ -255,6 +303,7 @@ parser.command(
       stateId: contract.stateId,
       wormholeStateId: contract.wormholeStateId,
       pkg,
+      meta,
       vaa,
       signer,
     });
@@ -324,6 +373,48 @@ parser.command(
     console.info(
       `Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
     );
+  },
+);
+
+parser.command(
+  "propose-upgrade",
+  "propose upgrade of a specified contract to governance",
+  (b) =>
+    b.options({
+      path: commonOptions.packagePath,
+      contract: commonOptions.contract,
+      wallet: {
+        type: "string",
+        description: "path to solana wallet used for creating a proposal",
+        demandOption: true,
+      },
+    }),
+  async ({ chain, path: packagePath, contract, wallet: walletPath }) => {
+    const wallet = await loadHotWallet(walletPath);
+    const vault = connectMainnetVault(wallet);
+    console.info("Using wallet:", wallet.publicKey.toBase58());
+
+    console.info("Creating package upgrade proposal...");
+
+    console.info("Updating package metadata...");
+    const { version } = await fetchAndBumpContractMeta(
+      chain,
+      contract,
+      packagePath,
+    );
+
+    console.info("Building package update...");
+    const pkg = await chain.buildPackage(packagePath);
+    const digest = Buffer.from(pkg.digest).toString("hex");
+    console.info(`Package update digest: ${digest}`);
+
+    console.info("Submitting governance proposal...");
+    const payload = chain.generateGovernanceUpgradeLazerPayload(
+      BigInt(version),
+      digest,
+    );
+    const proposal = await vault.proposeWormholeMessage([payload]);
+    console.log("Proposal address:", proposal.address.toBase58());
   },
 );
 

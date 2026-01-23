@@ -9,10 +9,14 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable n/no-process-env */
 
+import assert from "node:assert/strict";
+import nodePath from "node:path";
+
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import * as suiBytecode from "@mysten/move-bytecode-template";
 import type {
   MoveValue as SuiMoveValue,
   SuiTransactionBlockResponseOptions,
@@ -43,7 +47,7 @@ import {
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
   EvmExecute,
-  UpgradeLazerContract256Bit,
+  UpgradeSuiLazerContract,
   UpdateTrustedSigner264Bit,
 } from "@pythnetwork/xc-admin-common";
 import { keyPairFromSeed } from "@ton/crypto";
@@ -52,6 +56,7 @@ import { TonClient, WalletContractV4, Address } from "@ton/ton";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import * as bs58 from "bs58";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import * as micromustache from "micromustache";
 import * as nearAPI from "near-api-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 import * as chains from "viem/chains";
@@ -62,6 +67,7 @@ import { Storable } from "./base";
 import type { TokenId } from "./token";
 import { execFileAsync } from "../utils/exec-file-async";
 import { hasProperty } from "../utils/utils";
+import { readFile, writeFile } from "node:fs/promises";
 
 function computeHashOnElements(elements: string[]): string {
   let hash = "0";
@@ -367,9 +373,13 @@ export class SuiChain extends Chain {
    * @param digest - hex string of the 32 byte digest for the new package
    * without the 0x prefix
    */
-  generateGovernanceUpgradeLazerPayload(digest: string): Buffer {
-    return new UpgradeLazerContract256Bit(
+  generateGovernanceUpgradeLazerPayload(
+    version: bigint,
+    digest: string,
+  ): Buffer {
+    return new UpgradeSuiLazerContract(
       this.wormholeChainName,
+      version,
       digest,
     ).encode();
   }
@@ -474,6 +484,62 @@ export class SuiChain extends Chain {
       throw new Error("Could not find UpgradeCap ID in transaction results");
     }
     return { packageId, upgradeCapId };
+  }
+
+  async publishLazerPackage(
+    pkg: SuiPackage,
+    meta: SuiLazerMeta,
+    signer: SuiEd25519Keypair,
+  ) {
+    this.verifyPackageMeta(pkg, meta);
+    return await this.publishPackage(pkg, signer);
+  }
+
+  async updateLazerContractMeta(packagePath: string, meta: SuiLazerMeta) {
+    const templatePath = nodePath.resolve(
+      packagePath,
+      "sources/meta.move.mustache",
+    );
+    const template = await readFile(templatePath, { encoding: "utf8" });
+    const outputPath = nodePath.resolve(packagePath, "sources/meta.move");
+    const output = micromustache.render(template, meta);
+    await writeFile(outputPath, output, { encoding: "utf8" });
+  }
+
+  /**
+   * Inspects `pyth_lazer::meta` module bytecode to ensure that metadata are
+   * set correctly.
+   */
+  verifyPackageMeta(
+    { modules }: SuiPackage,
+    { version, receiver_chain_id }: SuiLazerMeta,
+  ) {
+    for (const bytes of modules) {
+      const {
+        self_module_handle_idx,
+        module_handles,
+        identifiers,
+        function_handles,
+        function_defs,
+      } = suiBytecode.deserialize(Buffer.from(bytes, "base64"));
+      const name = identifiers[module_handles[self_module_handle_idx].name];
+      if (name === "meta") {
+        for (const def of function_defs) {
+          const funName = identifiers[function_handles[def.function].name];
+          if (funName === "version") {
+            assert.deepEqual(def.code.code, [
+              { LdU64: BigInt(version) },
+              "Ret",
+            ]);
+          } else if (funName === "receiver_chain_id") {
+            assert.deepEqual(def.code.code, [
+              { LdU16: receiver_chain_id },
+              "Ret",
+            ]);
+          }
+        }
+      }
+    }
   }
 
   async initLazerContract(
@@ -650,16 +716,20 @@ export class SuiChain extends Chain {
   async upgradeLazerContract({
     stateId,
     wormholeStateId,
-    pkg: { modules, dependencies },
+    pkg,
+    meta,
     vaa,
     signer,
   }: {
     stateId: string;
     wormholeStateId: string;
     pkg: SuiPackage;
+    meta: SuiLazerMeta;
     vaa: Uint8Array;
     signer: SuiEd25519Keypair;
   }) {
+    this.verifyPackageMeta(pkg, meta);
+
     const client = this.getProvider();
     const tx = new SuiTransaction();
     const { package: wormholeId } = await this.getStatePackageInfo(
@@ -685,8 +755,8 @@ export class SuiChain extends Chain {
       arguments: [tx.object(stateId), verifiedVaa],
     });
     const receipt = tx.upgrade({
-      modules,
-      dependencies,
+      modules: pkg.modules,
+      dependencies: pkg.dependencies,
       package: packageId,
       ticket,
     });
@@ -737,10 +807,15 @@ export class SuiChain extends Chain {
   }
 }
 
-type SuiPackage = {
+export type SuiPackage = {
   modules: string[];
   dependencies: string[];
   digest: number[];
+};
+
+export type SuiLazerMeta = {
+  version: string;
+  receiver_chain_id: number;
 };
 
 export class IotaChain extends Chain {

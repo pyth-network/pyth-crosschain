@@ -22,7 +22,7 @@ A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 
 ```sh
 # Your Sui private key in Bech32 format
-# SUI_KEY=
+# export SUI_KEY=
 
 # Lazer contract state ID
 # STATE_ID=
