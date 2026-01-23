@@ -80,7 +80,7 @@ class LazerListener:
                     )
                     data = json.loads(message)
                     self.parse_lazer_message(data)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     logger.warning(
                         "LazerListener: No messages in {} seconds, reconnecting...",
                         STALE_TIMEOUT_SECONDS,

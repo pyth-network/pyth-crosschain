@@ -196,7 +196,7 @@ class HyperliquidListener:
                     if now - last_ping_timestamp > self.ws_ping_interval:
                         await ws.send(json.dumps({"method": "ping"}))
                         last_ping_timestamp = now
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     logger.warning(
                         "HyperliquidListener: No messages overall in {} seconds, reconnecting...",
                         STALE_TIMEOUT_SECONDS,

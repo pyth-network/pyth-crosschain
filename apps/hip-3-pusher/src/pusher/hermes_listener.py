@@ -68,7 +68,7 @@ class HermesListener:
                     )
                     data = json.loads(message)
                     self.parse_hermes_message(data)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     logger.warning(
                         "HermesListener: No messages in {} seconds, reconnecting...",
                         STALE_TIMEOUT_SECONDS,
