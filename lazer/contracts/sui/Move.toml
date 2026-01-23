@@ -3,8 +3,8 @@ name = "pyth_lazer"
 version = "0.0.0"
 edition = "2024"
 
-# TODO: Waiting for upstream PR, change to `wormhole-foundation:main` before
-# merging.
+# TODO: Waiting for upstream PR, change to `wormhole-foundation:main` once it's
+# merged: https://github.com/wormhole-foundation/wormhole/pull/4639
 [dependencies.wormhole]
 git = "https://github.com/pyth-network/wormhole.git"
 subdir = "sui/wormhole"
