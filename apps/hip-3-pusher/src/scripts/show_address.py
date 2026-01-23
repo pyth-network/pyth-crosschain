@@ -4,7 +4,7 @@ from eth_account import Account
 from pathlib import Path
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Print address of given private key"
     )

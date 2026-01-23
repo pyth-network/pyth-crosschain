@@ -1,3 +1,6 @@
+# HIP-3 Pusher Sample Configuration (Pyth Testnet)
+# See README.md for detailed documentation on all options.
+
 stale_price_threshold_seconds = 5
 prometheus_port = 9090
 
@@ -18,19 +21,20 @@ enable_multisig = false
 enable_kms = false
 
 [lazer]
-lazer_urls = ["wss://pyth-lazer-0.dourolabs.app/v1/stream", "wss://pyth-lazer-1.dourolabs.app/v1/stream"]
-lazer_api_key = "<some lazer api key>"
+lazer_urls = [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+]
+lazer_api_key = "<your-lazer-api-key>"
 feed_ids = [1, 3, 8] # BTC, PYTH, USDT
-exponents = [-8, -8, -8]
 
 [hermes]
 hermes_urls = ["wss://hermes.pyth.network/ws"]
 feed_ids = [
-    "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", # BTC
-    "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff", # PYTH
-    "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"  # USDT
+    "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", # BTC/USD
+    "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff", # PYTH/USD
+    "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b", # USDT/USD
 ]
-exponents = [-8, -8, -8]
 
 [seda]
 url = "https://fast-api.testnet.seda.xyz/execute"
@@ -56,6 +60,8 @@ PYTH = [{ source_type = "oracle_mid_average", symbol = "pyth:PYTH" }]
 FOGO = [{ source_type = "oracle_mid_average", symbol = "pyth:FOGO" }]
 
 [price.external]
-BTC = [{ source_type = "single", source = { source_name = "hl_mark", source_id = "BTC" } }]
-PYTH = [{ source_type = "constant", value = "0.10" },]
-FOGO = [{ source_type = "constant", value = "0.0100" },]
+BTC = [
+    { source_type = "single", source = { source_name = "hl_mark", source_id = "BTC" } },
+]
+PYTH = [{ source_type = "constant", value = "0.10" }]
+FOGO = [{ source_type = "constant", value = "0.0100" }]

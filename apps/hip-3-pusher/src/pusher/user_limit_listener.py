@@ -22,7 +22,7 @@ class UserLimitListener:
     to call reserveRequestWeight.
     """
 
-    def __init__(self, config: Config, metrics: Metrics, address: str):
+    def __init__(self, config: Config, metrics: Metrics, address: str) -> None:
         self.address = address.lower()
         self.metrics = metrics
         self.interval = config.hyperliquid.user_limit_interval
@@ -31,10 +31,10 @@ class UserLimitListener:
         base_url = constants.TESTNET_API_URL if config.hyperliquid.use_testnet else constants.MAINNET_API_URL
         self.info = Info(base_url=base_url, skip_ws=True, meta=Meta(universe=[]), spot_meta=SpotMeta(universe=[], tokens=[]))
 
-    async def run(self):
+    async def run(self) -> None:
         logger.info("Starting user limit listener url: {} address: {} interval: {}", self.info.base_url, self.address, self.interval)
-        most_recent_timestamp = None
-        most_recent_balance = None
+        most_recent_timestamp: float | None = None
+        most_recent_balance: int | None = None
 
         while True:
             try:
@@ -42,18 +42,17 @@ class UserLimitListener:
                 if not most_recent_timestamp or now - most_recent_timestamp > self.interval:
                     response = await asyncio.to_thread(self._request)
                     logger.debug("userRateLimit response: {}", response)
-                    new_balance = response["nRequestsSurplus"] + response["nRequestsCap"] - response["nRequestsUsed"]
-                    logger.debug("userRateLimit user: {} balance: {}", self.address, new_balance)
-
+                    most_recent_balance = response["nRequestsSurplus"] + response["nRequestsCap"] - response["nRequestsUsed"]
+                    logger.debug("userRateLimit user: {} balance: {}", self.address, most_recent_balance)
                     most_recent_timestamp = now
-                    most_recent_balance = new_balance
 
-                self.metrics.user_request_balance.set(most_recent_balance, {"dex": self.dex, "user": self.address})
+                if most_recent_balance is not None:
+                    self.metrics.user_request_balance.set(most_recent_balance, {"dex": self.dex, "user": self.address})
             except Exception as e:
                 logger.exception("userRateLimit query failed: {}", repr(e))
 
             # want to update every 60s to keep metric populated in Grafana
             await asyncio.sleep(60)
 
-    def _request(self):
-        return self.info.user_rate_limit(self.address)
+    def _request(self) -> dict[str, int]:
+        return self.info.user_rate_limit(self.address)  # type: ignore[no-any-return]

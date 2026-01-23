@@ -22,12 +22,21 @@ requires = ["setuptools~=80.9", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [dependency-groups]
-dev = [
-    "pytest~=8.4.2",
-]
+dev = ["pytest~=8.4.2", "mypy~=1.15.0", "boto3-stubs[kms]~=1.40.38"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["tests/", "scripts/", "config/"]

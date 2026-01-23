@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+
 from loguru import logger
 import os
 import sys
@@ -16,7 +17,7 @@ from pusher.metrics import Metrics
 from pusher.user_limit_listener import UserLimitListener
 
 
-def load_config():
+def load_config() -> Config:
     parser = argparse.ArgumentParser(description="hip3-agent command-line arguments")
     parser.add_argument(
         "-c", "--config",
@@ -32,14 +33,14 @@ def load_config():
     return config
 
 
-def init_logging():
+def init_logging() -> None:
     logger.remove()
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     # serialize=True if we want json logging
     logger.add(sys.stderr, level=log_level, serialize=False)
 
 
-async def main():
+async def main() -> None:
     init_logging()
     logger.info("Starting hip-3-pusher...")
     config = load_config()

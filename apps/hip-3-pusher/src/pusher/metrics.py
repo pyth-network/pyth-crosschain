@@ -1,7 +1,13 @@
+from typing import Any, TYPE_CHECKING
+
 from prometheus_client import start_http_server
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.metrics import get_meter_provider, set_meter_provider
+from opentelemetry.metrics import get_meter_provider, set_meter_provider, Meter
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.metrics import Counter, Histogram
+
+if TYPE_CHECKING:
+    from opentelemetry.metrics._internal.instrument import Gauge
 
 from pusher.config import Config, PriceConfig, PriceSourceConfig, ConstantSourceConfig, SingleSourceConfig, \
     PairSourceConfig, OracleMidAverageConfig, PriceSource, SessionEMASourceConfig
@@ -10,7 +16,15 @@ METER_NAME = "hip3pusher"
 
 
 class Metrics:
-    def __init__(self, config: Config):
+    meter: Meter
+    last_pushed_time: "Gauge"
+    update_attempts_total: Counter
+    no_oracle_price_counter: Counter
+    push_interval_histogram: Histogram
+    price_config_counter: Counter
+    user_request_balance: "Gauge"
+
+    def __init__(self, config: Config) -> None:
         # Adapted from opentelemetry-exporter-prometheus example code.
         # Start Prometheus client
         start_http_server(port=config.prometheus_port)
@@ -21,7 +35,7 @@ class Metrics:
         self.meter = get_meter_provider().get_meter(METER_NAME)
         self._init_metrics()
 
-    def _init_metrics(self):
+    def _init_metrics(self) -> None:
         # labels: dex, symbol
         self.last_pushed_time = self.meter.create_gauge(
             name="hip_3_relayer_last_published_time",
@@ -54,12 +68,17 @@ class Metrics:
             description="Number of update requests left before rate limit",
         )
 
-    def set_price_configs(self, dex: str, price_config: PriceConfig):
+    def set_price_configs(self, dex: str, price_config: PriceConfig) -> None:
         self._set_price_config_type(dex, price_config.oracle, "oracle")
         self._set_price_config_type(dex, price_config.mark, "mark")
         self._set_price_config_type(dex, price_config.external, "external")
 
-    def _set_price_config_type(self, dex: str, price_source_config: dict[str, list[PriceSourceConfig]], price_type: str):
+    def _set_price_config_type(
+        self,
+        dex: str,
+        price_source_config: dict[str, list[PriceSourceConfig]],
+        price_type: str,
+    ) -> None:
         for symbol in price_source_config:
             source_config_str = ' | '.join(self._get_source_config_str(source_config) for source_config in price_source_config[symbol])
             labels = {
@@ -70,7 +89,7 @@ class Metrics:
             }
             self.price_config_counter.add(1, labels)
 
-    def _get_source_config_str(self, source_config: PriceSourceConfig):
+    def _get_source_config_str(self, source_config: PriceSourceConfig) -> str:
         if isinstance(source_config, ConstantSourceConfig):
             return f"constant({source_config.value})"
         elif isinstance(source_config, SingleSourceConfig):
@@ -88,6 +107,6 @@ class Metrics:
         else:
             return "unknown"
 
-    def _get_price_source_str(self, price_source: PriceSource):
+    def _get_price_source_str(self, price_source: PriceSource) -> str:
         session_flag_str = ",use_session_flag" if price_source.use_session_flag else ""
         return f"{price_source.source_name}({str(price_source.source_id)[:8]}{session_flag_str})"

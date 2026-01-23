@@ -1,13 +1,17 @@
+from typing import Any
+
 import boto3
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from eth_account.messages import encode_typed_data, _hash_eip191_message
-from eth_keys.backends.native.ecdsa import N as SECP256K1_N
+from eth_keys.backends.native.ecdsa import N as SECP256K1_N  # type: ignore[attr-defined]
 from eth_keys.datatypes import Signature
-from eth_utils import keccak, to_hex
+from eth_utils import keccak, to_hex  # type: ignore[attr-defined]
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.signing import get_timestamp_ms, action_hash, construct_phantom_agent, l1_payload
 from loguru import logger
+from mypy_boto3_kms import KMSClient
 from pathlib import Path
 
 from pusher.config import Config
@@ -16,7 +20,7 @@ from pusher.exception import PushError
 SECP256K1_N_HALF = SECP256K1_N // 2
 
 
-def _init_client():
+def _init_client() -> KMSClient:
     # AWS_DEFAULT_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY should be set as environment variables
     return boto3.client(
         "kms",
@@ -26,7 +30,13 @@ def _init_client():
 
 
 class KMSSigner:
-    def __init__(self, config: Config, publisher_exchanges: list[Exchange]):
+    client: KMSClient
+    aws_kms_key_id: str
+    pubkey: EllipticCurvePublicKey
+    address: str
+    raw_pubkey_bytes: bytes
+
+    def __init__(self, config: Config, publisher_exchanges: list[Exchange]) -> None:
         self.use_testnet = config.hyperliquid.use_testnet
         self.publisher_exchanges = publisher_exchanges
 
@@ -38,14 +48,19 @@ class KMSSigner:
             logger.exception("Failed to load public key from KMS; it might be incorrectly configured; error: {}", repr(e))
             raise Exception("Failed to load public key from KMS") from e
 
-    def _load_public_key(self, key_path: str):
+    def _load_public_key(self, key_path: Path | None) -> None:
+        if key_path is None:
+            raise ValueError("KMS key path is required")
         # Fetch public key once so we can derive address and check recovery id
-        self.aws_kms_key_id = Path(key_path).read_text().strip()
+        self.aws_kms_key_id = key_path.read_text().strip()
         pubkey_der = self.client.get_public_key(KeyId=self.aws_kms_key_id)["PublicKey"]
-        self.pubkey = serialization.load_der_public_key(pubkey_der)
+        pubkey = serialization.load_der_public_key(pubkey_der)
+        if not isinstance(pubkey, EllipticCurvePublicKey):
+            raise TypeError("Expected EllipticCurvePublicKey from KMS")
+        self.pubkey = pubkey
         self._construct_pubkey_address_and_bytes()
 
-    def _construct_pubkey_address_and_bytes(self):
+    def _construct_pubkey_address_and_bytes(self) -> None:
         # Construct eth address to log
         numbers = self.pubkey.public_numbers()
         x = numbers.x.to_bytes(32, "big")
@@ -62,7 +77,13 @@ class KMSSigner:
         # Strip leading 0x04 (uncompressed point indicator)
         self.raw_pubkey_bytes = pubkey_bytes[1:]
 
-    def set_oracle(self, dex, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    def set_oracle(
+        self,
+        dex: str,
+        oracle_pxs: dict[str, str],
+        all_mark_pxs: list[dict[str, Any]],
+        external_perp_pxs: dict[str, str],
+    ) -> dict[str, Any]:
         timestamp = get_timestamp_ms()
         oracle_pxs_wire = sorted(list(oracle_pxs.items()))
         mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
@@ -83,28 +104,39 @@ class KMSSigner:
         )
         return self._send_update(action, signature, timestamp)
 
-    def _send_update(self, action, signature, timestamp):
+    def _send_update(
+        self,
+        action: dict[str, Any],
+        signature: dict[str, Any],
+        timestamp: int,
+    ) -> dict[str, Any]:
         for exchange in self.publisher_exchanges:
             try:
-                return exchange._post_action(
+                result: dict[str, Any] = exchange._post_action(
                     action=action,
                     signature=signature,
                     nonce=timestamp,
                 )
+                return result
             except Exception as e:
                 logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
         raise PushError("all push endpoints failed")
 
-    def sign_l1_action(self, action, nonce, is_mainnet):
-        hash = action_hash(action, vault_address=None, nonce=nonce, expires_after=None)
-        phantom_agent = construct_phantom_agent(hash, is_mainnet)
+    def sign_l1_action(
+        self,
+        action: dict[str, Any],
+        nonce: int,
+        is_mainnet: bool,
+    ) -> dict[str, Any]:
+        action_hash_result = action_hash(action, vault_address=None, nonce=nonce, expires_after=None)
+        phantom_agent = construct_phantom_agent(action_hash_result, is_mainnet)
         data = l1_payload(phantom_agent)
         structured_data = encode_typed_data(full_message=data)
         message_hash = _hash_eip191_message(structured_data)
         return self.sign_message(message_hash)
 
-    def sign_message(self, message_hash: bytes) -> dict:
+    def sign_message(self, message_hash: bytes) -> dict[str, Any]:
         # Send message hash to KMS for signing
         resp = self.client.sign(
             KeyId=self.aws_kms_key_id,

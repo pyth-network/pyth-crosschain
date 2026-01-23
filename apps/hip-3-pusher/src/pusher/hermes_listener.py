@@ -1,7 +1,10 @@
 import asyncio
 import json
+from typing import Any
+
 from loguru import logger
 import websockets
+
 from tenacity import retry, retry_if_exception_type, wait_fixed, stop_after_attempt
 
 from pusher.config import Config, STALE_TIMEOUT_SECONDS
@@ -13,13 +16,13 @@ class HermesListener:
     """
     Subscribe to Hermes price updates for needed feeds.
     """
-    def __init__(self, config: Config, hermes_state: PriceSourceState):
+    def __init__(self, config: Config, hermes_state: PriceSourceState) -> None:
         self.hermes_urls = config.hermes.hermes_urls
         self.feed_ids = config.hermes.feed_ids
         self.hermes_state = hermes_state
         self.stop_after_attempt = config.hermes.stop_after_attempt
 
-    def get_subscribe_request(self):
+    def get_subscribe_request(self) -> dict[str, Any]:
         return {
             "type": "subscribe",
             "ids": self.feed_ids,
@@ -29,14 +32,14 @@ class HermesListener:
             "ignore_invalid_price_ids": False,
         }
 
-    async def subscribe_all(self):
+    async def subscribe_all(self) -> None:
         if not self.feed_ids:
             logger.info("No Hermes subscriptions needed")
             return
 
         await asyncio.gather(*(self.subscribe_single(url) for url in self.hermes_urls))
 
-    async def subscribe_single(self, url):
+    async def subscribe_single(self, url: str) -> None:
         logger.info("Starting Hermes listener loop: {}", url)
 
         @retry(
@@ -45,12 +48,12 @@ class HermesListener:
             stop=stop_after_attempt(self.stop_after_attempt),
             reraise=True,
         )
-        async def _run():
+        async def _run() -> None:
             return await self.subscribe_single_inner(url)
 
         return await _run()
 
-    async def subscribe_single_inner(self, url):
+    async def subscribe_single_inner(self, url: str) -> None:
         async with websockets.connect(url) as ws:
             subscribe_request = self.get_subscribe_request()
 
@@ -74,7 +77,7 @@ class HermesListener:
                 except Exception as e:
                     logger.exception("Unexpected exception: {}", repr(e))
 
-    def parse_hermes_message(self, data):
+    def parse_hermes_message(self, data: dict[str, Any]) -> None:
         """
         For now, simply insert received prices into price_state
 
@@ -85,12 +88,11 @@ class HermesListener:
             if data.get("type", "") != "price_update":
                 return
             price_feed = data["price_feed"]
-            id = price_feed["id"]
-            price_object = data["price_feed"]["price"]
+            feed_id = price_feed["id"]
+            price_object = price_feed["price"]
             price = price_object["price"]
-            expo = price_object["expo"]
             publish_time = price_object["publish_time"]
-            logger.debug("Hermes update: {} {} {} {}", id, price, expo, publish_time)
-            self.hermes_state.put(id, PriceUpdate(price, publish_time))
+            logger.debug("Hermes update: {} {} {} {}", feed_id, price, price_object["expo"], publish_time)
+            self.hermes_state.put(feed_id, PriceUpdate(price, publish_time))
         except Exception as e:
             logger.exception("parse_hermes_message error: {}", repr(e))

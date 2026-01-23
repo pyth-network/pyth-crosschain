@@ -1,6 +1,7 @@
 import asyncio
 from enum import StrEnum
 import time
+from typing import Any
 
 from hyperliquid.utils.types import Meta, SpotMeta
 from loguru import logger
@@ -46,7 +47,11 @@ class Publisher:
 
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions
     """
-    def __init__(self, config: Config, price_state: PriceState, metrics: Metrics):
+    kms_signer: KMSSigner | None
+    oracle_account: LocalAccount | None
+    multisig_address: str | None
+
+    def __init__(self, config: Config, price_state: PriceState, metrics: Metrics) -> None:
         self.publish_interval = float(config.hyperliquid.publish_interval)
         self.use_testnet = config.hyperliquid.use_testnet
         self.push_urls = config.hyperliquid.push_urls
@@ -55,17 +60,25 @@ class Publisher:
         self.kms_signer = None
         self.enable_kms = False
         self.oracle_account = None
+        self.user_limit_address = ""  # Will be set below
         if not config.kms.enable_kms:
-            oracle_pusher_key = Path(config.hyperliquid.oracle_pusher_key_path).read_text().strip()
-            self.oracle_account: LocalAccount = Account.from_key(oracle_pusher_key)
+            oracle_pusher_key_path = config.hyperliquid.oracle_pusher_key_path
+            if oracle_pusher_key_path is None:
+                raise ValueError("oracle_pusher_key_path is required when KMS is not enabled")
+            oracle_pusher_key = Path(oracle_pusher_key_path).read_text().strip()
+            self.oracle_account = Account.from_key(oracle_pusher_key)
             logger.info("oracle pusher local pubkey: {}", self.oracle_account.address)
             self.user_limit_address = self.oracle_account.address
-        self.publisher_exchanges = [Exchange(wallet=self.oracle_account,
-                                             base_url=url,
-                                             timeout=config.hyperliquid.publish_timeout,
-                                             meta=Meta(universe=[]),
-                                             spot_meta=SpotMeta(universe=[], tokens=[]))
-                                    for url in self.push_urls]
+        self.publisher_exchanges = [
+            Exchange(
+                wallet=self.oracle_account,
+                base_url=url,
+                timeout=config.hyperliquid.publish_timeout,
+                meta=Meta(universe=[]),
+                spot_meta=SpotMeta(universe=[], tokens=[]),
+            )
+            for url in (self.push_urls or [])
+        ]
         if config.kms.enable_kms:
             # TODO: Add KMS/multisig support
             if config.multisig.enable_multisig:
@@ -76,10 +89,11 @@ class Publisher:
             self.user_limit_address = self.kms_signer.address
 
         if config.multisig.enable_multisig:
-            if not config.multisig.multisig_address:
+            multisig_addr = config.multisig.multisig_address
+            if not multisig_addr:
                 raise Exception("Multisig enabled but missing multisig address")
-            self.multisig_address = config.multisig.multisig_address
-            self.user_limit_address = self.multisig_address
+            self.multisig_address = multisig_addr
+            self.user_limit_address = multisig_addr
         else:
             self.multisig_address = None
 
@@ -91,7 +105,7 @@ class Publisher:
         self.metrics_labels = {"dex": self.market_name}
         self.last_push_time = time.time()
 
-    async def run(self):
+    async def run(self) -> None:
         while True:
             await asyncio.sleep(self.publish_interval)
             try:
@@ -99,21 +113,23 @@ class Publisher:
             except Exception as e:
                 logger.exception("Publisher.publish() exception: {}", repr(e))
 
-    async def publish(self):
+    async def publish(self) -> None:
         oracle_update = self.price_state.get_all_prices()
         logger.debug("oracle_update: {}", oracle_update)
 
-        oracle_pxs, mark_pxs, external_perp_pxs = oracle_update.oracle, oracle_update.mark, oracle_update.external
+        oracle_pxs, mark_pxs_raw, external_perp_pxs = oracle_update.oracle, oracle_update.mark, oracle_update.external
         if not oracle_pxs:
             logger.error("No valid oracle prices available")
             self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
 
         # markPxs is a list of dicts of length 0-2, and so can be empty.
-        mark_pxs = self.construct_mark_pxs(mark_pxs)
+        mark_pxs = self.construct_mark_pxs(mark_pxs_raw)
 
         if self.enable_publish:
             try:
                 if self.enable_kms:
+                    if self.kms_signer is None:
+                        raise ValueError("KMS signer not initialized")
                     push_response = self.kms_signer.set_oracle(
                         dex=self.market_name,
                         oracle_pxs=oracle_pxs,
@@ -144,24 +160,38 @@ class Publisher:
 
         self._record_push_interval_metric()
 
-    async def _send_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    async def _send_update(
+        self,
+        oracle_pxs: dict[str, str],
+        all_mark_pxs: list[dict[str, Any]],
+        external_perp_pxs: dict[str, str],
+    ) -> dict[str, Any]:
         for exchange in self.publisher_exchanges:
             try:
-                return await asyncio.to_thread(self._request_single, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs)
+                return await asyncio.to_thread(
+                    self._request_single, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs
+                )
             except Exception as e:
                 logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
 
         raise PushError("all push endpoints failed")
 
-    def _request_single(self, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs):
-        return exchange.perp_deploy_set_oracle(
+    def _request_single(
+        self,
+        exchange: Exchange,
+        oracle_pxs: dict[str, str],
+        all_mark_pxs: list[dict[str, Any]],
+        external_perp_pxs: dict[str, str],
+    ) -> dict[str, Any]:
+        result: dict[str, Any] = exchange.perp_deploy_set_oracle(
             dex=self.market_name,
             oracle_pxs=oracle_pxs,
             all_mark_pxs=all_mark_pxs,
             external_perp_pxs=external_perp_pxs,
         )
+        return result
 
-    def _handle_response(self, response, symbols: list[str]):
+    def _handle_response(self, response: dict[str, Any], symbols: list[str]) -> None:
         logger.debug("oracle update response: {}", response)
         status = response.get("status")
         if status == "ok":
@@ -174,23 +204,30 @@ class Publisher:
                 self.metrics.last_pushed_time.set(time_secs, labels)
 
             # log any data in the ok response (likely price clamping issues)
-            ok_data = response.get("response", {}).get("data")
-            if ok_data:
-                logger.info("ok response data: {}", ok_data)
+            response_data = response.get("response")
+            if isinstance(response_data, dict):
+                ok_data = response_data.get("data")
+                if ok_data:
+                    logger.info("ok response data: {}", ok_data)
         elif status == "err":
             error_reason = self._get_error_reason(response)
             self._update_attempts_total("error", error_reason, symbols)
             if error_reason != "rate_limit":
                 logger.error("Error response: {}", response)
 
-    def _record_push_interval_metric(self):
+    def _record_push_interval_metric(self) -> None:
         now = time.time()
         push_interval = now - self.last_push_time
         self.metrics.push_interval_histogram.record(push_interval, self.metrics_labels)
         self.last_push_time = now
         logger.debug("Push interval: {}", push_interval)
 
-    async def _send_multisig_update(self, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    async def _send_multisig_update(
+        self,
+        oracle_pxs: dict[str, str],
+        all_mark_pxs: list[dict[str, Any]],
+        external_perp_pxs: dict[str, str],
+    ) -> dict[str, Any]:
         for exchange in self.publisher_exchanges:
             try:
                 return await self._send_single_multisig_update(
@@ -204,7 +241,15 @@ class Publisher:
 
         raise PushError("all push endpoints failed for multisig")
 
-    async def _send_single_multisig_update(self, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs):
+    async def _send_single_multisig_update(
+        self,
+        exchange: Exchange,
+        oracle_pxs: dict[str, str],
+        all_mark_pxs: list[dict[str, Any]],
+        external_perp_pxs: dict[str, str],
+    ) -> dict[str, Any]:
+        if self.oracle_account is None:
+            raise ValueError("Oracle account not initialized for multisig")
         timestamp = get_timestamp_ms()
         oracle_pxs_wire = sorted(list(oracle_pxs.items()))
         mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
@@ -230,10 +275,17 @@ class Publisher:
         )]
         return await asyncio.to_thread(self._request_multi_sig, exchange, action, signatures, timestamp)
 
-    def _request_multi_sig(self, exchange, action, signatures, timestamp):
-        return exchange.multi_sig(self.multisig_address, action, signatures, timestamp)
+    def _request_multi_sig(
+        self,
+        exchange: Exchange,
+        action: dict[str, Any],
+        signatures: list[dict[str, Any]],
+        timestamp: int,
+    ) -> dict[str, Any]:
+        result: dict[str, Any] = exchange.multi_sig(self.multisig_address, action, signatures, timestamp)
+        return result
 
-    def _update_attempts_total(self, status: str, error_reason: str | None, symbols: list[str]):
+    def _update_attempts_total(self, status: str, error_reason: PushErrorReason | None, symbols: list[str]) -> None:
         labels = {**self.metrics_labels, "status": status}
         if error_reason:
             # don't flag rate limiting as this is expected with redundancy
@@ -245,32 +297,34 @@ class Publisher:
             labels["symbol"] = symbol
             self.metrics.update_attempts_total.add(1, labels)
 
-    def _get_error_reason(self, response):
-        response = response.get("response")
-        if not response:
+    def _get_error_reason(self, response: dict[str, Any]) -> PushErrorReason | None:
+        response_str = response.get("response")
+        if not response_str:
             return None
-        elif "Oracle price update too often" in response:
+        if not isinstance(response_str, str):
+            return PushErrorReason.UNKNOWN
+        if "Oracle price update too often" in response_str:
             return PushErrorReason.RATE_LIMIT
-        elif "Too many cumulative requests" in response:
+        elif "Too many cumulative requests" in response_str:
             return PushErrorReason.USER_LIMIT
-        elif "Invalid nonce" in response:
+        elif "Invalid nonce" in response_str:
             return PushErrorReason.INVALID_NONCE
-        elif "externalPerpPxs missing perp" in response:
+        elif "externalPerpPxs missing perp" in response_str:
             return PushErrorReason.MISSING_EXTERNAL_PERP_PXS
-        elif "Invalid perp deployer or sub-deployer" in response:
+        elif "Invalid perp deployer or sub-deployer" in response_str:
             return PushErrorReason.INVALID_DEPLOYER_ACCOUNT
-        elif "User or API Wallet" in response:
+        elif "User or API Wallet" in response_str:
             return PushErrorReason.ACCOUNT_DOES_NOT_EXIST
-        elif "Invalid perp DEX" in response:
+        elif "Invalid perp DEX" in response_str:
             return PushErrorReason.INVALID_DEX
         else:
-            logger.warning("Unrecognized error response: {}", response)
+            logger.warning("Unrecognized error response: {}", response_str)
             return PushErrorReason.UNKNOWN
 
-    def construct_mark_pxs(self, mark_pxs):
+    def construct_mark_pxs(self, mark_pxs: dict[str, Any]) -> list[dict[str, Any]]:
         if not mark_pxs:
             return []
-        val = [{}]
+        val: list[dict[str, Any]] = [{}]
         for symbol, px in mark_pxs.items():
             if isinstance(px, list):
                 while len(val) < len(px):
