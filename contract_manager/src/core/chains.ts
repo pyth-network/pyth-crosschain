@@ -1005,6 +1005,30 @@ export class EvmChain extends Chain {
   }
 
   /**
+   * Gets the balance for Tempo network using TIP-20 balanceOf instead of eth_getBalance
+   * Tempo has no native gas token and uses TIP-20 tokens (pathUSD) for fees
+   * @param address - the address to check balance for
+   * @returns the balance in wei (as bigint)
+   */
+  private async getBalanceForTempo(address: string): Promise<bigint> {
+    const PATHUSD_ADDRESS = "0x20c0000000000000000000000000000000000000";
+    const ERC20_BALANCE_OF_ABI = [
+      {
+        constant: true,
+        inputs: [{ name: "account", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "", type: "uint256" }],
+        type: "function",
+      },
+    ] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    const web3 = this.getWeb3();
+    const contract = new web3.eth.Contract(ERC20_BALANCE_OF_ABI, PATHUSD_ADDRESS);
+    const balance = await contract.methods.balanceOf(address).call();
+    return BigInt(balance);
+  }
+
+  /**
    * Deploys a contract on this chain
    * @param privateKey - hex string of the 32 byte private key without the 0x prefix
    * @param abi - the abi of the contract, can be obtained from the compiled contract json file
@@ -1031,8 +1055,14 @@ export class EvmChain extends Chain {
     const gasPrice = Math.trunc(
       Number(await this.getGasPrice()) * gasPriceMultiplier,
     );
-    const deployerBalance = await web3.eth.getBalance(signer.address);
-    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
+    
+    // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
+    const deployerBalance =
+      this.networkId === 42_431
+        ? await this.getBalanceForTempo(signer.address)
+        : BigInt(await web3.eth.getBalance(signer.address));
+    
+    const gasDiff = BigInt(gas) * BigInt(gasPrice) - deployerBalance;
     if (gasDiff > 0n) {
       throw new Error(
         `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
@@ -1065,10 +1095,16 @@ export class EvmChain extends Chain {
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const address = await this.getAccountAddress(privateKey);
+    
+    // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
+    if (this.networkId === 42_431) {
+      const balance = await this.getBalanceForTempo(address);
+      return Number(balance) / 10 ** 18;
+    }
+
     const web3 = this.getWeb3();
-    const balance = await web3.eth.getBalance(
-      await this.getAccountAddress(privateKey),
-    );
+    const balance = await web3.eth.getBalance(address);
     return Number(balance) / 10 ** 18;
   }
 }
