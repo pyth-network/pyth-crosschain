@@ -1398,5 +1398,12 @@
     "rpcUrl": "https://rpc.testnet.arc.network",
     "networkId": 5042002,
     "type": "EvmChain"
+  },
+  {
+    "id": "tempo_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.moderato.tempo.xyz",
+    "networkId": 42431,
+    "type": "EvmChain"
   }
 ]
