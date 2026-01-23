@@ -46,7 +46,7 @@ import {
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
   EvmExecute,
-  UpgradeLazerContract256Bit,
+  UpgradeSuiLazerContract,
   UpdateTrustedSigner264Bit,
 } from "@pythnetwork/xc-admin-common";
 import { keyPairFromSeed } from "@ton/crypto";
@@ -370,9 +370,13 @@ export class SuiChain extends Chain {
    * @param digest - hex string of the 32 byte digest for the new package
    * without the 0x prefix
    */
-  generateGovernanceUpgradeLazerPayload(digest: string): Buffer {
-    return new UpgradeLazerContract256Bit(
+  generateGovernanceUpgradeLazerPayload(
+    version: bigint,
+    digest: string,
+  ): Buffer {
+    return new UpgradeSuiLazerContract(
       this.wormholeChainName,
+      version,
       digest,
     ).encode();
   }
