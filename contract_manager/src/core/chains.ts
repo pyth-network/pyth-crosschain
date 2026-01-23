@@ -10,6 +10,7 @@
 /* eslint-disable n/no-process-env */
 
 import assert from "node:assert/strict";
+import nodePath from "node:path";
 
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
@@ -55,6 +56,7 @@ import { TonClient, WalletContractV4, Address } from "@ton/ton";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import * as bs58 from "bs58";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import * as micromustache from "micromustache";
 import * as nearAPI from "near-api-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 import * as chains from "viem/chains";
@@ -65,6 +67,7 @@ import { Storable } from "./base";
 import type { TokenId } from "./token";
 import { execFileAsync } from "../utils/exec-file-async";
 import { hasProperty } from "../utils/utils";
+import { readFile, writeFile } from "node:fs/promises";
 
 function computeHashOnElements(elements: string[]): string {
   let hash = "0";
@@ -490,6 +493,17 @@ export class SuiChain extends Chain {
   ) {
     this.verifyPackageMeta(pkg, meta);
     return await this.publishPackage(pkg, signer);
+  }
+
+  async updateLazerContractMeta(packagePath: string, meta: SuiLazerMeta) {
+    const templatePath = nodePath.resolve(
+      packagePath,
+      "sources/meta.move.mustache",
+    );
+    const template = await readFile(templatePath, { encoding: "utf8" });
+    const outputPath = nodePath.resolve(packagePath, "sources/meta.move");
+    const output = micromustache.render(template, meta);
+    await writeFile(outputPath, output, { encoding: "utf8" });
   }
 
   /**

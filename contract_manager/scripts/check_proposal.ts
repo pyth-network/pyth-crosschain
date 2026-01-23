@@ -6,6 +6,8 @@
 /* eslint-disable no-console */
 
 import { createHash } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
@@ -37,6 +39,8 @@ import {
   EvmLazerContract,
 } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 
 function getSquadsMesh() {
   // Handle nested default export from @sqds/mesh
@@ -251,6 +255,11 @@ async function main() {
         }
 
         if (chain instanceof SuiChain) {
+          const packagePath = path.resolve(
+            scriptDir,
+            "../../lazer/contracts/sui",
+          );
+
           const contracts = Object.values(DefaultStore.lazer_contracts)
             .filter((c) => c instanceof SuiLazerContract)
             .filter((c) => c.chain.isMainnet());
@@ -261,15 +270,21 @@ async function main() {
               client,
               contract.stateId,
             );
-            if (BigInt(info.version) !== version) {
+            if (BigInt(info.version) + 1n !== version) {
               console.log(
-                "Proposal upgrade version does not match expected version:",
+                "Proposal upgrade version does not follow current version:",
               );
-              console.log(`  expected ${info.version}, found ${version}`);
+              console.log(
+                `  current version is ${info.version}, proposed ${version}`,
+              );
             }
           }
 
-          const pkg = await chain.buildPackage("../../lazer/contracts/sui");
+          await chain.updateLazerContractMeta(packagePath, {
+            version: version.toString(),
+            receiver_chain_id: chain.getWormholeChainId(),
+          });
+          const pkg = await chain.buildPackage(packagePath);
           const buildHash = Buffer.from(pkg.digest).toString("hex");
           if (buildHash !== hash) {
             console.log("Proposal package digest does not match local build:");

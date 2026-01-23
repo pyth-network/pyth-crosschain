@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,7 +6,6 @@ import type { Wallet } from "@coral-xyz/anchor";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import type { PythCluster } from "@pythnetwork/client";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
-import * as micromustache from "micromustache";
 import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -48,14 +46,6 @@ function connectMainnetVault(wallet: Wallet) {
   return vault;
 }
 
-async function updateContractMeta(packagePath: string, meta: SuiLazerMeta) {
-  const templatePath = path.resolve(packagePath, "sources/meta.move.mustache");
-  const template = await readFile(templatePath, { encoding: "utf8" });
-  const outputPath = path.resolve(packagePath, "sources/meta.move");
-  const output = micromustache.render(template, meta);
-  await writeFile(outputPath, output, { encoding: "utf8" });
-}
-
 /**
  * Bumps contract version in source based on on-chain version and returns new
  * contract metadata.
@@ -73,7 +63,7 @@ async function fetchAndBumpContractMeta(
     version: (BigInt(version) + 1n).toString(),
     receiver_chain_id: chain.getWormholeChainId(),
   };
-  await updateContractMeta(packagePath, meta);
+  await chain.updateLazerContractMeta(packagePath, meta);
   return meta;
 }
 
@@ -175,7 +165,7 @@ parser.command(
     if (!governanceAddress) {
       if (governanceChain == CHAINS.solana) {
         const emitterKey = await getMainnetVault().getEmitter();
-        governanceAddress = emitterKey.toBase58();
+        governanceAddress = emitterKey.toBuffer().toString("hex");
         console.info("Using mainnet vault as an emitter:", governanceAddress);
       } else {
         throw new Error(
@@ -207,7 +197,7 @@ parser.command(
         version: "1",
         receiver_chain_id: chain.getWormholeChainId(),
       };
-      await updateContractMeta(packagePath, meta);
+      await chain.updateLazerContractMeta(packagePath, meta);
 
       console.info("Building package...");
       const pkg = await chain.buildPackage(packagePath);
@@ -258,7 +248,7 @@ parser.command(
       chain.getProvider(),
       contract.stateId,
     );
-    await updateContractMeta(packagePath, {
+    await chain.updateLazerContractMeta(packagePath, {
       version,
       receiver_chain_id: chain.getWormholeChainId(),
     });
