@@ -17,6 +17,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  UpgradeSuiLazerContract,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
 import type { AccountMeta } from "@solana/web3.js";
@@ -26,7 +27,8 @@ import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { CosmWasmChain, EvmChain } from "../src/core/chains";
+import { CosmWasmChain, EvmChain, SuiChain } from "../src/core/chains";
+import { SuiLazerContract } from "../src/core/contracts";
 import {
   EvmEntropyContract,
   EvmPriceFeedContract,
@@ -233,6 +235,46 @@ async function main() {
             console.log(
               `${chain.getId()}    new implementation address:${newImplementationAddress} has code digest:${newImplementationCode}`,
             );
+          }
+        }
+      }
+      if (instruction.governanceAction instanceof UpgradeSuiLazerContract) {
+        const { targetChainId, version, hash } = instruction.governanceAction;
+
+        console.log(`Verifying UpgradeSuiLazerContract on '${targetChainId}'`);
+
+        const chain = DefaultStore.chains[targetChainId];
+
+        if (!chain) {
+          console.log(`Unsupported target chain '${targetChainId}'`);
+          continue;
+        }
+
+        if (chain instanceof SuiChain) {
+          const contracts = Object.values(DefaultStore.lazer_contracts)
+            .filter((c) => c instanceof SuiLazerContract)
+            .filter((c) => c.chain.isMainnet());
+
+          const client = chain.getProvider();
+          for (const contract of contracts) {
+            const info = await chain.getStatePackageInfo(
+              client,
+              contract.stateId,
+            );
+            if (BigInt(info.version) !== version) {
+              console.log(
+                "Proposal upgrade version does not match expected version:",
+              );
+              console.log(`  expected ${info.version}, found ${version}`);
+            }
+          }
+
+          const pkg = await chain.buildPackage("../../lazer/contracts/sui");
+          const buildHash = Buffer.from(pkg.digest).toString("hex");
+          if (buildHash !== hash) {
+            console.log("Proposal package digest does not match local build:");
+            console.log(`  expected ${buildHash}`);
+            console.log(`     found ${hash}`);
           }
         }
       }
