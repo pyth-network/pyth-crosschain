@@ -56,10 +56,16 @@ def main() -> None:
     print("amount:", args.amount)
 
     if args.dry_run:
-        print(f"dry run: {network_name}: would send {args.amount} USDC from {sender_account.address} to {args.recipient_address}")
+        print(
+            f"dry run: {network_name}: would send {args.amount} USDC from {sender_account.address} to {args.recipient_address}"
+        )
     else:
         print("calling usd_transfer...")
-        print(sender_exchange.usd_transfer(amount=args.amount, destination=args.recipient_address))
+        print(
+            sender_exchange.usd_transfer(
+                amount=args.amount, destination=args.recipient_address
+            )
+        )
 
 
 if __name__ == "__main__":

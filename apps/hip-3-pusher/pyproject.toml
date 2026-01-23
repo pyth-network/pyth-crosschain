@@ -28,7 +28,12 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [dependency-groups]
-dev = ["pytest~=8.4.2", "mypy~=1.15.0", "boto3-stubs[kms]~=1.40.38"]
+dev = [
+    "pytest~=8.4.2",
+    "mypy~=1.15.0",
+    "boto3-stubs[kms]~=1.40.38",
+    "ruff~=0.9.4",
+]
 
 [tool.mypy]
 python_version = "3.13"
@@ -40,3 +45,34 @@ disallow_incomplete_defs = true
 check_untyped_defs = true
 ignore_missing_imports = true
 exclude = ["tests/", "scripts/", "config/"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+src = ["src", "tests"]
+exclude = ["config/"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501", # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pusher"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true

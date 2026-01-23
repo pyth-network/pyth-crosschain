@@ -1,16 +1,30 @@
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-from prometheus_client import start_http_server
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
-from opentelemetry.metrics import get_meter_provider, set_meter_provider, Meter
+from opentelemetry.metrics import (
+    Counter,
+    Histogram,
+    Meter,
+    get_meter_provider,
+    set_meter_provider,
+)
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.metrics import Counter, Histogram
+from prometheus_client import start_http_server
 
 if TYPE_CHECKING:
     from opentelemetry.metrics._internal.instrument import Gauge
 
-from pusher.config import Config, PriceConfig, PriceSourceConfig, ConstantSourceConfig, SingleSourceConfig, \
-    PairSourceConfig, OracleMidAverageConfig, PriceSource, SessionEMASourceConfig
+from pusher.config import (
+    Config,
+    ConstantSourceConfig,
+    OracleMidAverageConfig,
+    PairSourceConfig,
+    PriceConfig,
+    PriceSource,
+    PriceSourceConfig,
+    SessionEMASourceConfig,
+    SingleSourceConfig,
+)
 
 METER_NAME = "hip3pusher"
 
@@ -80,7 +94,10 @@ class Metrics:
         price_type: str,
     ) -> None:
         for symbol in price_source_config:
-            source_config_str = ' | '.join(self._get_source_config_str(source_config) for source_config in price_source_config[symbol])
+            source_config_str = " | ".join(
+                self._get_source_config_str(source_config)
+                for source_config in price_source_config[symbol]
+            )
             labels = {
                 "dex": dex,
                 "symbol": symbol,

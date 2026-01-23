@@ -1,18 +1,25 @@
+from pathlib import Path
 from typing import Any
 
 import boto3
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from eth_account.messages import encode_typed_data, _hash_eip191_message
-from eth_keys.backends.native.ecdsa import N as SECP256K1_N  # type: ignore[attr-defined]
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from eth_account.messages import _hash_eip191_message, encode_typed_data
+from eth_keys.backends.native.ecdsa import (  # type: ignore[attr-defined]
+    N as SECP256K1_N,
+)
 from eth_keys.datatypes import Signature
 from eth_utils import keccak, to_hex  # type: ignore[attr-defined]
 from hyperliquid.exchange import Exchange
-from hyperliquid.utils.signing import get_timestamp_ms, action_hash, construct_phantom_agent, l1_payload
+from hyperliquid.utils.signing import (
+    action_hash,
+    construct_phantom_agent,
+    get_timestamp_ms,
+    l1_payload,
+)
 from loguru import logger
 from mypy_boto3_kms import KMSClient
-from pathlib import Path
 
 from pusher.config import Config
 from pusher.exception import PushError
@@ -45,7 +52,10 @@ class KMSSigner:
         try:
             self._load_public_key(config.kms.aws_kms_key_id_path)
         except Exception as e:
-            logger.exception("Failed to load public key from KMS; it might be incorrectly configured; error: {}", repr(e))
+            logger.exception(
+                "Failed to load public key from KMS; it might be incorrectly configured; error: {}",
+                repr(e),
+            )
             raise Exception("Failed to load public key from KMS") from e
 
     def _load_public_key(self, key_path: Path | None) -> None:
@@ -85,9 +95,9 @@ class KMSSigner:
         external_perp_pxs: dict[str, str],
     ) -> dict[str, Any]:
         timestamp = get_timestamp_ms()
-        oracle_pxs_wire = sorted(list(oracle_pxs.items()))
-        mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
-        external_perp_pxs_wire = sorted(list(external_perp_pxs.items()))
+        oracle_pxs_wire = sorted(oracle_pxs.items())
+        mark_pxs_wire = [sorted(mark_pxs.items()) for mark_pxs in all_mark_pxs]
+        external_perp_pxs_wire = sorted(external_perp_pxs.items())
         action = {
             "type": "perpDeploy",
             "setOracle": {
@@ -119,7 +129,11 @@ class KMSSigner:
                 )
                 return result
             except Exception as e:
-                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
+                logger.exception(
+                    "perp_deploy_set_oracle exception for endpoint: {} error: {}",
+                    exchange.base_url,
+                    repr(e),
+                )
 
         raise PushError("all push endpoints failed")
 
@@ -129,7 +143,9 @@ class KMSSigner:
         nonce: int,
         is_mainnet: bool,
     ) -> dict[str, Any]:
-        action_hash_result = action_hash(action, vault_address=None, nonce=nonce, expires_after=None)
+        action_hash_result = action_hash(
+            action, vault_address=None, nonce=nonce, expires_after=None
+        )
         phantom_agent = construct_phantom_agent(action_hash_result, is_mainnet)
         data = l1_payload(phantom_agent)
         structured_data = encode_typed_data(full_message=data)

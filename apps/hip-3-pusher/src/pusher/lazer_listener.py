@@ -2,11 +2,11 @@ import asyncio
 import json
 from typing import Any
 
-from loguru import logger
 import websockets
-from tenacity import retry, retry_if_exception_type, wait_fixed, stop_after_attempt
+from loguru import logger
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
-from pusher.config import Config, STALE_TIMEOUT_SECONDS
+from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceSourceState, PriceUpdate
 
@@ -15,6 +15,7 @@ class LazerListener:
     """
     Subscribe to Lazer price updates for needed feeds.
     """
+
     def __init__(self, config: Config, lazer_state: PriceSourceState) -> None:
         self.lazer_urls = config.lazer.lazer_urls
         self.api_key = config.lazer.lazer_api_key
@@ -40,7 +41,9 @@ class LazerListener:
             logger.info("No Lazer subscriptions needed")
             return
 
-        await asyncio.gather(*(self.subscribe_single(router_url) for router_url in self.lazer_urls))
+        await asyncio.gather(
+            *(self.subscribe_single(router_url) for router_url in self.lazer_urls)
+        )
 
     async def subscribe_single(self, router_url: str) -> None:
         logger.info("Starting Lazer listener loop: {}", router_url)
@@ -63,17 +66,28 @@ class LazerListener:
             subscribe_request = self.get_subscribe_request(1)
 
             await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent Lazer subscribe request to {} feed_ids {}", router_url, self.feed_ids)
+            logger.info(
+                "Sent Lazer subscribe request to {} feed_ids {}",
+                router_url,
+                self.feed_ids,
+            )
 
             # listen for updates
             while True:
                 try:
-                    message = await asyncio.wait_for(ws.recv(), timeout=STALE_TIMEOUT_SECONDS)
+                    message = await asyncio.wait_for(
+                        ws.recv(), timeout=STALE_TIMEOUT_SECONDS
+                    )
                     data = json.loads(message)
                     self.parse_lazer_message(data)
-                except asyncio.TimeoutError:
-                    logger.warning("LazerListener: No messages in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
-                    raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
+                except TimeoutError:
+                    logger.warning(
+                        "LazerListener: No messages in {} seconds, reconnecting...",
+                        STALE_TIMEOUT_SECONDS,
+                    )
+                    raise StaleConnectionError(
+                        f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting"
+                    ) from None
                 except websockets.ConnectionClosed:
                     logger.warning("LazerListener: Connection closed, reconnecting...")
                     raise
@@ -95,7 +109,9 @@ class LazerListener:
             price_feeds = data["parsed"]["priceFeeds"]
             # timestampUs is in micros, this is scaled to unix seconds the same as time.time()
             timestamp_seconds = int(data["parsed"]["timestampUs"]) / 1_000_000.0
-            logger.debug("price_feeds: {} timestamp: {}", price_feeds, timestamp_seconds)
+            logger.debug(
+                "price_feeds: {} timestamp: {}", price_feeds, timestamp_seconds
+            )
             for feed_update in price_feeds:
                 feed_id = feed_update.get("priceFeedId")
                 price = feed_update.get("price")

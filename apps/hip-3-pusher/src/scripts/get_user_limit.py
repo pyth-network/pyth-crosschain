@@ -5,9 +5,7 @@ from hyperliquid.utils import constants
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Check user rate limit"
-    )
+    parser = argparse.ArgumentParser(description="Check user rate limit")
     parser.add_argument(
         "--address",
         required=True,

@@ -96,6 +96,27 @@ uv sync --dev
 uv run mypy src/
 ```
 
+### Formatting & Linting
+
+This project uses [Ruff](https://docs.astral.sh/ruff/) for formatting and linting.
+
+```bash
+cd apps/hip-3-pusher
+uv sync --dev
+
+# Check formatting (no changes)
+uv run ruff format --check src/ tests/
+
+# Auto-format code
+uv run ruff format src/ tests/
+
+# Run linter
+uv run ruff check src/ tests/
+
+# Run linter with auto-fix
+uv run ruff check --fix src/ tests/
+```
+
 
 
 ---

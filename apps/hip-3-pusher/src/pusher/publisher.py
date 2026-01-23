@@ -1,16 +1,33 @@
-import asyncio
-from enum import StrEnum
-import time
-from typing import Any
+"""
+Oracle publisher for Hyperliquid HIP-3 markets.
 
-from hyperliquid.utils.types import Meta, SpotMeta
-from loguru import logger
+This module handles publishing oracle updates to Hyperliquid via the setOracle API.
+It supports three signing modes: local key, AWS KMS, and multisig.
+
+PUBLISHING FLOW:
+1. Publisher.run() loops continuously with publish_interval sleep
+2. Each cycle calls PriceState.get_all_prices() to compute prices via waterfall
+3. Prices are formatted for HL API (oracle_pxs, mark_pxs, external_perp_pxs)
+4. setOracle API call is made with signed transaction
+5. Response is logged and metrics are updated
+
+RATE LIMITING:
+Hyperliquid enforces a 2.5s rate limit per oracle update. If publish_interval < 2.5s,
+rate limit errors will occur. These are handled gracefully (no error log, just skipped).
+"""
+
+import asyncio
+import time
+from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils.signing import get_timestamp_ms, sign_multi_sig_l1_action_payload
+from hyperliquid.utils.types import Meta, SpotMeta
+from loguru import logger
 
 from pusher.config import Config
 from pusher.exception import PushError
@@ -20,25 +37,26 @@ from pusher.price_state import PriceState
 
 
 class PushErrorReason(StrEnum):
-    """ setOracle push failure modes """
-    # 2.5s rate limit reject, expected with redundant relayers
-    RATE_LIMIT = "rate_limit"
-    # Per-account limit, need to purchase more transactions with reserveRequestWeight
-    USER_LIMIT = "user_limit"
-    # Some exception thrown internally
-    INTERNAL_ERROR = "internal_error"
-    # Invalid nonce, if the pusher account pushes multiple transactions with the same ms timestamp
-    INVALID_NONCE = "invalid_nonce"
-    # Invalid account
-    INVALID_DEPLOYER_ACCOUNT = "invalid_deployer_account"
-    # User not activated
-    ACCOUNT_DOES_NOT_EXIST = "account_does_not_exist"
-    # Missing externalPerpPxs
-    MISSING_EXTERNAL_PERP_PXS = "missing_external_perp_pxs"
-    # Invalid dex (e.g. pointing to mainnet or testnet by mistake)
-    INVALID_DEX = "invalid_dex"
-    # Some error string we haven't categorized yet
-    UNKNOWN = "unknown"
+    """
+    Known setOracle push failure modes.
+
+    Used for metrics categorization and targeted error handling.
+    Rate limit errors are expected with redundant relayers and are suppressed.
+    """
+
+    RATE_LIMIT = "rate_limit"  # 2.5s rate limit - expected with redundant relayers
+    USER_LIMIT = "user_limit"  # Per-account quota exceeded - need reserveRequestWeight
+    INTERNAL_ERROR = "internal_error"  # Exception thrown internally
+    INVALID_NONCE = "invalid_nonce"  # Same ms timestamp used twice
+    INVALID_DEPLOYER_ACCOUNT = (
+        "invalid_deployer_account"  # Not a valid deployer/sub-deployer
+    )
+    ACCOUNT_DOES_NOT_EXIST = "account_does_not_exist"  # User not activated on HL
+    MISSING_EXTERNAL_PERP_PXS = (
+        "missing_external_perp_pxs"  # Required external price missing
+    )
+    INVALID_DEX = "invalid_dex"  # market_name doesn't match or wrong network
+    UNKNOWN = "unknown"  # Uncategorized error string
 
 
 class Publisher:
@@ -47,11 +65,14 @@ class Publisher:
 
     See https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions
     """
+
     kms_signer: KMSSigner | None
     oracle_account: LocalAccount | None
     multisig_address: str | None
 
-    def __init__(self, config: Config, price_state: PriceState, metrics: Metrics) -> None:
+    def __init__(
+        self, config: Config, price_state: PriceState, metrics: Metrics
+    ) -> None:
         self.publish_interval = float(config.hyperliquid.publish_interval)
         self.use_testnet = config.hyperliquid.use_testnet
         self.push_urls = config.hyperliquid.push_urls
@@ -64,7 +85,9 @@ class Publisher:
         if not config.kms.enable_kms:
             oracle_pusher_key_path = config.hyperliquid.oracle_pusher_key_path
             if oracle_pusher_key_path is None:
-                raise ValueError("oracle_pusher_key_path is required when KMS is not enabled")
+                raise ValueError(
+                    "oracle_pusher_key_path is required when KMS is not enabled"
+                )
             oracle_pusher_key = Path(oracle_pusher_key_path).read_text().strip()
             self.oracle_account = Account.from_key(oracle_pusher_key)
             logger.info("oracle pusher local pubkey: {}", self.oracle_account.address)
@@ -117,7 +140,11 @@ class Publisher:
         oracle_update = self.price_state.get_all_prices()
         logger.debug("oracle_update: {}", oracle_update)
 
-        oracle_pxs, mark_pxs_raw, external_perp_pxs = oracle_update.oracle, oracle_update.mark, oracle_update.external
+        oracle_pxs, mark_pxs_raw, external_perp_pxs = (
+            oracle_update.oracle,
+            oracle_update.mark,
+            oracle_update.external,
+        )
         if not oracle_pxs:
             logger.error("No valid oracle prices available")
             self.metrics.no_oracle_price_counter.add(1, self.metrics_labels)
@@ -154,7 +181,9 @@ class Publisher:
                 pass
             except Exception as e:
                 logger.exception("Unexpected exception in push request: {}", repr(e))
-                self._update_attempts_total("error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys()))
+                self._update_attempts_total(
+                    "error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys())
+                )
         else:
             logger.debug("push disabled")
 
@@ -169,10 +198,18 @@ class Publisher:
         for exchange in self.publisher_exchanges:
             try:
                 return await asyncio.to_thread(
-                    self._request_single, exchange, oracle_pxs, all_mark_pxs, external_perp_pxs
+                    self._request_single,
+                    exchange,
+                    oracle_pxs,
+                    all_mark_pxs,
+                    external_perp_pxs,
                 )
             except Exception as e:
-                logger.exception("perp_deploy_set_oracle exception for endpoint: {} error: {}", exchange.base_url, repr(e))
+                logger.exception(
+                    "perp_deploy_set_oracle exception for endpoint: {} error: {}",
+                    exchange.base_url,
+                    repr(e),
+                )
 
         raise PushError("all push endpoints failed")
 
@@ -237,7 +274,11 @@ class Publisher:
                     external_perp_pxs=external_perp_pxs,
                 )
             except Exception as e:
-                logger.exception("_send_single_multisig_update exception for endpoint: {} error: {}", exchange.base_url, repr(e))
+                logger.exception(
+                    "_send_single_multisig_update exception for endpoint: {} error: {}",
+                    exchange.base_url,
+                    repr(e),
+                )
 
         raise PushError("all push endpoints failed for multisig")
 
@@ -251,9 +292,9 @@ class Publisher:
         if self.oracle_account is None:
             raise ValueError("Oracle account not initialized for multisig")
         timestamp = get_timestamp_ms()
-        oracle_pxs_wire = sorted(list(oracle_pxs.items()))
-        mark_pxs_wire = [sorted(list(mark_pxs.items())) for mark_pxs in all_mark_pxs]
-        external_perp_pxs_wire = sorted(list(external_perp_pxs.items()))
+        oracle_pxs_wire = sorted(oracle_pxs.items())
+        mark_pxs_wire = [sorted(mark_pxs.items()) for mark_pxs in all_mark_pxs]
+        external_perp_pxs_wire = sorted(external_perp_pxs.items())
         action = {
             "type": "perpDeploy",
             "setOracle": {
@@ -263,17 +304,21 @@ class Publisher:
                 "externalPerpPxs": external_perp_pxs_wire,
             },
         }
-        signatures = [sign_multi_sig_l1_action_payload(
-            wallet=self.oracle_account,
-            action=action,
-            is_mainnet=not self.use_testnet,
-            vault_address=None,
-            timestamp=timestamp,
-            expires_after=None,
-            payload_multi_sig_user=self.multisig_address,
-            outer_signer=self.oracle_account.address,
-        )]
-        return await asyncio.to_thread(self._request_multi_sig, exchange, action, signatures, timestamp)
+        signatures = [
+            sign_multi_sig_l1_action_payload(
+                wallet=self.oracle_account,
+                action=action,
+                is_mainnet=not self.use_testnet,
+                vault_address=None,
+                timestamp=timestamp,
+                expires_after=None,
+                payload_multi_sig_user=self.multisig_address,
+                outer_signer=self.oracle_account.address,
+            )
+        ]
+        return await asyncio.to_thread(
+            self._request_multi_sig, exchange, action, signatures, timestamp
+        )
 
     def _request_multi_sig(
         self,
@@ -282,10 +327,14 @@ class Publisher:
         signatures: list[dict[str, Any]],
         timestamp: int,
     ) -> dict[str, Any]:
-        result: dict[str, Any] = exchange.multi_sig(self.multisig_address, action, signatures, timestamp)
+        result: dict[str, Any] = exchange.multi_sig(
+            self.multisig_address, action, signatures, timestamp
+        )
         return result
 
-    def _update_attempts_total(self, status: str, error_reason: PushErrorReason | None, symbols: list[str]) -> None:
+    def _update_attempts_total(
+        self, status: str, error_reason: PushErrorReason | None, symbols: list[str]
+    ) -> None:
         labels = {**self.metrics_labels, "status": status}
         if error_reason:
             # don't flag rate limiting as this is expected with redundancy
@@ -322,16 +371,35 @@ class Publisher:
             return PushErrorReason.UNKNOWN
 
     def construct_mark_pxs(self, mark_pxs: dict[str, Any]) -> list[dict[str, Any]]:
+        """
+        Transform mark prices into the format required by Hyperliquid's setOracle API.
+
+        HYPERLIQUID MARK PRICE FORMAT:
+        The API accepts markPxs as a list of up to 2 dictionaries, where each dict
+        maps symbol -> price. This allows specifying up to 2 mark prices per symbol.
+
+        Input formats handled:
+        - Single price: {"pyth:BTC": "65000.0"} -> [{"pyth:BTC": "65000.0"}]
+        - Dual prices: {"pyth:BTC": ["65000.0", "64999.5"]} -> [{"pyth:BTC": "65000.0"}, {"pyth:BTC": "64999.5"}]
+
+        The list format comes from session_ema source type which returns [oracle, ema]
+        for assets with trading sessions (different mark during vs outside market hours).
+
+        Returns:
+            List of 0-2 dicts, each mapping symbol -> price string
+        """
         if not mark_pxs:
             return []
         val: list[dict[str, Any]] = [{}]
         for symbol, px in mark_pxs.items():
             if isinstance(px, list):
+                # Session EMA returns [oracle_price, ema_price] - expand to 2 dicts
                 while len(val) < len(px):
                     val.append({})
                 for i, pxi in enumerate(px):
                     val[i][symbol] = pxi
             else:
+                # Single mark price - goes in first dict
                 val[0][symbol] = px
         logger.debug("construct_mark_pxs: {}", val)
         return val

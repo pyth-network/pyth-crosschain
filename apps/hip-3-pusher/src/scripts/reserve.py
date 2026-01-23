@@ -74,7 +74,9 @@ def main() -> None:
     print("weight:", args.weight)
 
     if args.dry_run:
-        print(f"dry run: {network_name}: would reserve {args.weight} request weight for account {account.address}")
+        print(
+            f"dry run: {network_name}: would reserve {args.weight} request weight for account {account.address}"
+        )
     else:
         print("calling reserveRequestWeight...")
         print(reserve_request_weight(exchange, args.weight))

@@ -17,9 +17,7 @@ def main() -> None:
         help="Path to private key file for deployer account",
     )
     parser.add_argument(
-        "--dex",
-        required=True,
-        help="HIP-3 dex name (should be short string)"
+        "--dex", required=True, help="HIP-3 dex name (should be short string)"
     )
     parser.add_argument(
         "--subdeployer-address",
@@ -69,20 +67,19 @@ def main() -> None:
     print("mode:", mode)
 
     if args.dry_run:
-        print(f"dry run: {network_name}: would {mode} setOracle for {args.subdeployer_address} in dex {args.dex}")
+        print(
+            f"dry run: {network_name}: would {mode} setOracle for {args.subdeployer_address} in dex {args.dex}"
+        )
     else:
         timestamp = get_timestamp_ms()
         sub_deployer = {
             "variant": "setOracle",
             "user": args.subdeployer_address.lower(),
-            "allowed": True if args.enable else False,
+            "allowed": bool(args.enable),
         }
         action = {
             "type": "perpDeploy",
-            "setSubDeployers": {
-                "dex": args.dex,
-                "subDeployers": [sub_deployer]
-            }
+            "setSubDeployers": {"dex": args.dex, "subDeployers": [sub_deployer]},
         }
         signature = sign_l1_action(
             deployer_exchange.wallet,

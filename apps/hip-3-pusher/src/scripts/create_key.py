@@ -4,9 +4,7 @@ from eth_account import Account
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Create new key"
-    )
+    parser = argparse.ArgumentParser(description="Create new key")
     output = parser.add_mutually_exclusive_group(required=True)
     output.add_argument(
         "--output-file",

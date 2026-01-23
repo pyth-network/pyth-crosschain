@@ -2,12 +2,11 @@ import asyncio
 import json
 from typing import Any
 
-from loguru import logger
 import websockets
+from loguru import logger
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
-from tenacity import retry, retry_if_exception_type, wait_fixed, stop_after_attempt
-
-from pusher.config import Config, STALE_TIMEOUT_SECONDS
+from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceSourceState, PriceUpdate
 
@@ -16,6 +15,7 @@ class HermesListener:
     """
     Subscribe to Hermes price updates for needed feeds.
     """
+
     def __init__(self, config: Config, hermes_state: PriceSourceState) -> None:
         self.hermes_urls = config.hermes.hermes_urls
         self.feed_ids = config.hermes.feed_ids
@@ -63,12 +63,19 @@ class HermesListener:
             # listen for updates
             while True:
                 try:
-                    message = await asyncio.wait_for(ws.recv(), timeout=STALE_TIMEOUT_SECONDS)
+                    message = await asyncio.wait_for(
+                        ws.recv(), timeout=STALE_TIMEOUT_SECONDS
+                    )
                     data = json.loads(message)
                     self.parse_hermes_message(data)
-                except asyncio.TimeoutError:
-                    logger.warning("HermesListener: No messages in {} seconds, reconnecting...", STALE_TIMEOUT_SECONDS)
-                    raise StaleConnectionError(f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting")
+                except TimeoutError:
+                    logger.warning(
+                        "HermesListener: No messages in {} seconds, reconnecting...",
+                        STALE_TIMEOUT_SECONDS,
+                    )
+                    raise StaleConnectionError(
+                        f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting"
+                    ) from None
                 except websockets.ConnectionClosed:
                     logger.warning("HermesListener: Connection closed, reconnecting...")
                     raise
@@ -92,7 +99,13 @@ class HermesListener:
             price_object = price_feed["price"]
             price = price_object["price"]
             publish_time = price_object["publish_time"]
-            logger.debug("Hermes update: {} {} {} {}", feed_id, price, price_object["expo"], publish_time)
+            logger.debug(
+                "Hermes update: {} {} {} {}",
+                feed_id,
+                price,
+                price_object["expo"],
+                publish_time,
+            )
             self.hermes_state.put(feed_id, PriceUpdate(price, publish_time))
         except Exception as e:
             logger.exception("parse_hermes_message error: {}", repr(e))

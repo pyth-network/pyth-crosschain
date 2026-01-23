@@ -1,13 +1,11 @@
 import argparse
+from pathlib import Path
 
 from eth_account import Account
-from pathlib import Path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Print address of given private key"
-    )
+    parser = argparse.ArgumentParser(description="Print address of given private key")
     parser.add_argument(
         "--private-key-file",
         required=True,

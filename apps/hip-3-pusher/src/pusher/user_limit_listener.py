@@ -1,11 +1,10 @@
 import asyncio
 import time
 
-from hyperliquid.utils.types import SpotMeta, Meta
-from loguru import logger
-
 from hyperliquid.info import Info
 from hyperliquid.utils import constants
+from hyperliquid.utils.types import Meta, SpotMeta
+from loguru import logger
 
 from pusher.config import Config
 from pusher.metrics import Metrics
@@ -28,26 +27,53 @@ class UserLimitListener:
         self.interval = config.hyperliquid.user_limit_interval
         self.dex = config.hyperliquid.market_name
 
-        base_url = constants.TESTNET_API_URL if config.hyperliquid.use_testnet else constants.MAINNET_API_URL
-        self.info = Info(base_url=base_url, skip_ws=True, meta=Meta(universe=[]), spot_meta=SpotMeta(universe=[], tokens=[]))
+        base_url = (
+            constants.TESTNET_API_URL
+            if config.hyperliquid.use_testnet
+            else constants.MAINNET_API_URL
+        )
+        self.info = Info(
+            base_url=base_url,
+            skip_ws=True,
+            meta=Meta(universe=[]),
+            spot_meta=SpotMeta(universe=[], tokens=[]),
+        )
 
     async def run(self) -> None:
-        logger.info("Starting user limit listener url: {} address: {} interval: {}", self.info.base_url, self.address, self.interval)
+        logger.info(
+            "Starting user limit listener url: {} address: {} interval: {}",
+            self.info.base_url,
+            self.address,
+            self.interval,
+        )
         most_recent_timestamp: float | None = None
         most_recent_balance: int | None = None
 
         while True:
             try:
                 now = time.time()
-                if not most_recent_timestamp or now - most_recent_timestamp > self.interval:
+                if (
+                    not most_recent_timestamp
+                    or now - most_recent_timestamp > self.interval
+                ):
                     response = await asyncio.to_thread(self._request)
                     logger.debug("userRateLimit response: {}", response)
-                    most_recent_balance = response["nRequestsSurplus"] + response["nRequestsCap"] - response["nRequestsUsed"]
-                    logger.debug("userRateLimit user: {} balance: {}", self.address, most_recent_balance)
+                    most_recent_balance = (
+                        response["nRequestsSurplus"]
+                        + response["nRequestsCap"]
+                        - response["nRequestsUsed"]
+                    )
+                    logger.debug(
+                        "userRateLimit user: {} balance: {}",
+                        self.address,
+                        most_recent_balance,
+                    )
                     most_recent_timestamp = now
 
                 if most_recent_balance is not None:
-                    self.metrics.user_request_balance.set(most_recent_balance, {"dex": self.dex, "user": self.address})
+                    self.metrics.user_request_balance.set(
+                        most_recent_balance, {"dex": self.dex, "user": self.address}
+                    )
             except Exception as e:
                 logger.exception("userRateLimit query failed: {}", repr(e))
 
