@@ -1,0 +1,105 @@
+---
+title: History API
+description: Historical price data and OHLC candlestick data
+slug: /price-feeds/pro/api/history
+---
+
+## Base URL
+
+```
+https://history.pyth-lazer.dourolabs.app
+```
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/history/v1/symbols` | List all available price feed symbols |
+| GET | `/history/v1/ohlc` | Get OHLC candlestick data |
+| GET | `/history/v1/prices` | Get historical price data points |
+
+### GET /history/v1/symbols
+
+**Response Schema**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `symbol` | `string` | Trading pair symbol (e.g., `BTC/USD`) |
+| `priceFeedId` | `number` | Numeric ID for use with other APIs |
+| `description` | `string` | Human-readable description |
+| `assetType` | `string` | Asset class: `crypto`, `equity`, `fx`, `commodity`, `metal` |
+
+### GET /history/v1/ohlc
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `symbol` | `string` | Yes | Trading pair symbol | `BTC/USD` |
+| `resolution` | `string` | Yes | Candle resolution | `1`, `5`, `15`, `60`, `D` |
+| `from` | `number` | Yes | Start timestamp (Unix seconds) | `1704067200` |
+| `to` | `number` | Yes | End timestamp (Unix seconds) | `1704153600` |
+
+**Available Resolutions**
+
+| Resolution | Description |
+|------------|-------------|
+| `1` | 1 minute |
+| `5` | 5 minutes |
+| `15` | 15 minutes |
+| `30` | 30 minutes |
+| `60` | 1 hour |
+| `240` | 4 hours |
+| `D` | 1 day |
+| `W` | 1 week |
+| `M` | 1 month |
+
+**Response Schema (TradingView format)**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `s` | `string` | Status: `ok` or `error` |
+| `t` | `number[]` | Array of Unix timestamps (seconds) |
+| `o` | `number[]` | Array of open prices |
+| `h` | `number[]` | Array of high prices |
+| `l` | `number[]` | Array of low prices |
+| `c` | `number[]` | Array of close prices |
+| `v` | `number[]` | Array of volumes (if available) |
+
+Arrays are aligned by index - `t[0]`, `o[0]`, `h[0]`, `l[0]`, `c[0]` represent the same candle.
+
+### GET /history/v1/prices
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `symbol` | `string` | Yes | Trading pair symbol | `BTC/USD` |
+| `from` | `number` | Yes | Start timestamp (Unix seconds) | `1704067200` |
+| `to` | `number` | Yes | End timestamp (Unix seconds) | `1704153600` |
+| `resolution` | `string` | No | Data resolution (default: `1`) | `60` |
+
+**Response Schema**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | `number` | Unix timestamp (seconds) |
+| `price` | `number` | Price at the given timestamp |
+| `confidence` | `number` | Confidence interval at the given timestamp |
+
+**Error Responses**
+
+| Status | Code | Description |
+|--------|------|-------------|
+| `400` | `INVALID_SYMBOL` | Symbol format is invalid |
+| `400` | `INVALID_RESOLUTION` | Resolution not supported |
+| `400` | `INVALID_TIME_RANGE` | From/to timestamps invalid |
+| `404` | `SYMBOL_NOT_FOUND` | Requested symbol doesn't exist |
+| `429` | `RATE_LIMITED` | Too many requests |
+| `500` | `INTERNAL_ERROR` | Server error |
+
+## Related
+
+- [Authentication, Rate Limits & Error Codes](/price-feeds/pro/api/common)
+- [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids) - Symbol to ID mapping

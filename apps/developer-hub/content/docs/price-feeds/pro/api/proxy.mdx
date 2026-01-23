@@ -1,0 +1,62 @@
+---
+title: Proxy API (Beta)
+description: Simplified access to Pyth Pro prices without authentication
+slug: /price-feeds/pro/api/proxy
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="warning" title="Beta Service">
+  **This service is in beta and is not meant for production use.** The service might go down and all interfaces, URLs, etc. might change without notice.
+</Callout>
+
+## Base URL
+
+```
+https://pyth-lazer-proxy-3.dourolabs.app
+```
+
+**API Documentation**: [https://pyth-lazer-proxy-3.dourolabs.app/docs/](https://pyth-lazer-proxy-3.dourolabs.app/docs/)
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/latest_price` | Fetch latest price for given feed IDs |
+| GET | `/v1/stream` | Stream continuous price updates (SSE) |
+
+### GET /v1/latest_price
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `price_feed_ids` | `number[]` | Yes | Price feed IDs (repeatable parameter) | `?price_feed_ids=1&price_feed_ids=2` |
+
+**Example**
+
+```
+https://pyth-lazer-proxy-3.dourolabs.app/v1/latest_price?price_feed_ids=1&price_feed_ids=2
+```
+
+### GET /v1/stream
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description | Example |
+|-----------|------|----------|-------------|---------|
+| `price_feed_ids` | `number[]` | Yes | Price feed IDs (repeatable parameter) | `?price_feed_ids=1&price_feed_ids=2` |
+
+**Example**
+
+```
+https://pyth-lazer-proxy-3.dourolabs.app/v1/stream?price_feed_ids=1&price_feed_ids=2
+```
+
+Returns Server-Sent Events (SSE) stream of continuous price updates.
+
+## Related
+
+- [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
+- [WebSocket API](/price-feeds/pro/api/websocket) - Production WebSocket streaming
+- [REST API](/price-feeds/pro/api/rest) - Production REST API

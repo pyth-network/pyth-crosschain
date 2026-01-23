@@ -1,8 +1,10 @@
 {
   "pages": [
     "index",
-    "websocket-api",
-    "rest-api",
-    "history-api"
+    "common",
+    "websocket",
+    "rest",
+    "history",
+    "proxy"
   ]
 }
