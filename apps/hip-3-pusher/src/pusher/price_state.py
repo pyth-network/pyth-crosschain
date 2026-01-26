@@ -357,9 +357,16 @@ class PriceState:
         """
         Compute session-aware mark price for assets with trading sessions.
 
-        BUSINESS LOGIC (customer-specific):
-        Hyperliquid supports up to 2 mark prices. This source type returns
-        different values based on whether the market is open or closed.
+        HYPERLIQUID MEDIAN HACK:
+        Hyperliquid calculates the final mark price as:
+            new_mark = median(markPxs[0], markPxs[1], local_mark)
+        where local_mark = median(best_bid, best_ask, last_trade).
+
+        By controlling the two markPxs values, we can influence the median:
+        - Off hours: [oracle, oracle] -> median of [oracle, oracle, local] = oracle
+          (oracle appears twice, so it's guaranteed to be the median)
+        - Market hours: [oracle, ema] -> median of [oracle, ema, local]
+          (all three values can influence the result)
 
         Returns:
             - During market hours (session_flag=false): [oracle_price, ema_price]

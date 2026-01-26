@@ -363,6 +363,15 @@ For assets with trading sessions (e.g., equity indices). Returns different value
   ema_source = { source_name = "seda_ema", source_id = "SPX" } }
 ```
 
+**Why two prices?** Hyperliquid calculates mark price as:
+```
+new_mark = median(markPxs[0], markPxs[1], local_mark)
+```
+where `local_mark = median(best_bid, best_ask, last_trade)`.
+
+- **Off hours**: Sending `[oracle, oracle]` forces the median to equal oracle (oracle appears twice, guaranteeing it's the median regardless of local_mark).
+- **Market hours**: Sending `[oracle, ema]` lets the median be influenced by all three values, allowing more market-responsive behavior.
+
 ### Available Source Names
 
 | source_name | Description | source_id Format |

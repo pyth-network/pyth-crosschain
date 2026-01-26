@@ -374,16 +374,20 @@ class Publisher:
         """
         Transform mark prices into the format required by Hyperliquid's setOracle API.
 
-        HYPERLIQUID MARK PRICE FORMAT:
-        The API accepts markPxs as a list of up to 2 dictionaries, where each dict
-        maps symbol -> price. This allows specifying up to 2 mark prices per symbol.
+        HYPERLIQUID MARK PRICE CALCULATION:
+        The API accepts markPxs as a list of 0-2 dictionaries. Hyperliquid then
+        calculates the final mark price as:
+            new_mark = median(markPxs[0], markPxs[1], local_mark)
+        where local_mark = median(best_bid, best_ask, last_trade).
 
         Input formats handled:
         - Single price: {"pyth:BTC": "65000.0"} -> [{"pyth:BTC": "65000.0"}]
         - Dual prices: {"pyth:BTC": ["65000.0", "64999.5"]} -> [{"pyth:BTC": "65000.0"}, {"pyth:BTC": "64999.5"}]
 
-        The list format comes from session_ema source type which returns [oracle, ema]
-        for assets with trading sessions (different mark during vs outside market hours).
+        The dual-price format comes from session_ema source type which exploits
+        the median calculation:
+        - Off hours: [oracle, oracle] forces median = oracle (appears twice)
+        - Market hours: [oracle, ema] lets all three values influence the median
 
         Returns:
             List of 0-2 dicts, each mapping symbol -> price string

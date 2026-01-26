@@ -209,7 +209,14 @@ class SessionEMASourceConfig(BaseModel):
     - During market hours (session_flag=false): [oracle_price, ema_price]
     - Off hours (session_flag=true): [oracle_price, oracle_price]
 
-    This allows different mark price behavior during vs outside trading sessions.
+    WHY TWO PRICES (Hyperliquid median hack):
+    Hyperliquid calculates mark price as:
+        new_mark = median(markPxs[0], markPxs[1], local_mark)
+    where local_mark = median(best_bid, best_ask, last_trade).
+
+    - Off hours: [oracle, oracle] forces median = oracle (appears twice, always wins)
+    - Market hours: [oracle, ema] lets all three values influence the median
+
     The session_flag typically comes from a SEDA feed's session_flag_field.
     """
 
