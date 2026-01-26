@@ -1,6 +1,6 @@
 [project]
 name = "hip-3-pusher"
-version = "0.2.7"
+version = "0.2.8"
 description = "Hyperliquid HIP-3 market oracle pusher"
 readme = "README.md"
 requires-python = "==3.13.*"
@@ -16,6 +16,9 @@ dependencies = [
     "tenacity~=9.1.2",
     "websockets~=15.0.1",
 ]
+
+[project.scripts]
+hip3-validate = "scripts.validate_config:main"
 
 [build-system]
 requires = ["setuptools~=80.9", "wheel"]

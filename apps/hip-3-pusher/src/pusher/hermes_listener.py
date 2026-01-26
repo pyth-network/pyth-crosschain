@@ -5,6 +5,7 @@ from typing import Any
 import websockets
 from loguru import logger
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
+from websockets import ClientConnection
 
 from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
@@ -55,41 +56,64 @@ class HermesListener:
 
     async def subscribe_single_inner(self, url: str) -> None:
         async with websockets.connect(url) as ws:
-            subscribe_request = self.get_subscribe_request()
-
-            await ws.send(json.dumps(subscribe_request))
-            logger.info("Sent Hermes subscribe request to {}", url)
+            await self.send_subscribe(ws, url)
 
             # listen for updates
             while True:
-                try:
-                    message = await asyncio.wait_for(
-                        ws.recv(), timeout=STALE_TIMEOUT_SECONDS
-                    )
-                    data = json.loads(message)
-                    self.parse_hermes_message(data)
-                except TimeoutError:
-                    logger.warning(
-                        "HermesListener: No messages in {} seconds, reconnecting...",
-                        STALE_TIMEOUT_SECONDS,
-                    )
-                    raise StaleConnectionError(
-                        f"No messages in {STALE_TIMEOUT_SECONDS} seconds, reconnecting"
-                    ) from None
-                except websockets.ConnectionClosed:
-                    logger.warning("HermesListener: Connection closed, reconnecting...")
-                    raise
-                except json.JSONDecodeError as e:
-                    logger.exception("Failed to decode JSON message: {}", repr(e))
-                except Exception as e:
-                    logger.exception("Unexpected exception: {}", repr(e))
+                await self.receive_and_parse_message(ws, STALE_TIMEOUT_SECONDS)
+
+    async def send_subscribe(self, ws: ClientConnection, url: str) -> None:
+        """Send subscribe request to WebSocket."""
+        subscribe_request = self.get_subscribe_request()
+        await ws.send(json.dumps(subscribe_request))
+        logger.info("Sent Hermes subscribe request to {}", url)
+
+    async def receive_and_parse_message(
+        self, ws: ClientConnection, timeout: float
+    ) -> bool:
+        """
+        Receive a single message from WebSocket and parse it.
+
+        Args:
+            ws: WebSocket connection
+            timeout: Timeout in seconds for receiving a message
+
+        Returns:
+            True if a message was received and parsed successfully
+
+        Raises:
+            StaleConnectionError: If no message received within timeout
+            websockets.ConnectionClosed: If connection was closed
+        """
+        try:
+            message = await asyncio.wait_for(ws.recv(), timeout=timeout)
+            data = json.loads(message)
+            self.parse_hermes_message(data)
+            return True
+        except TimeoutError:
+            logger.warning(
+                "HermesListener: No messages in {} seconds, reconnecting...",
+                timeout,
+            )
+            raise StaleConnectionError(
+                f"No messages in {timeout} seconds, reconnecting"
+            ) from None
+        except websockets.ConnectionClosed:
+            logger.warning("HermesListener: Connection closed, reconnecting...")
+            raise
+        except json.JSONDecodeError as e:
+            logger.exception("Failed to decode JSON message: {}", repr(e))
+            return False
+        except Exception as e:
+            logger.exception("Unexpected exception: {}", repr(e))
+            return False
 
     def parse_hermes_message(self, data: dict[str, Any]) -> None:
         """
-        For now, simply insert received prices into price_state
+        Parse a Hermes price update message and store in price_state.
 
         :param data: Hermes price update json message
-        :return: None (update price_state)
+        :return: None (update hermes_state)
         """
         try:
             if data.get("type", "") != "price_update":

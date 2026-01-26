@@ -66,9 +66,10 @@ class SedaListener:
         seda_state: PriceSourceState,
         seda_last_state: PriceSourceState,
         seda_ema_state: PriceSourceState,
+        api_key_override: str | None = None,
     ) -> None:
         self.url = config.seda.url
-        self.api_key = (
+        self.api_key = api_key_override or (
             Path(config.seda.api_key_path).read_text().strip()
             if config.seda.api_key_path
             else None
@@ -87,6 +88,28 @@ class SedaListener:
         self.last_price_field = config.seda.last_price_field
         self.session_mark_px_ema_field = config.seda.session_mark_px_ema_field
 
+    def get_request_headers(self) -> dict[str, str]:
+        """Build HTTP request headers for SEDA API."""
+        return {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+    def get_request_params(self) -> dict[str, str]:
+        """Build HTTP request query parameters for SEDA API."""
+        return {
+            "encoding": "json",
+            "injectLastResult": "success",
+        }
+
+    def get_request_data(self, feed_config: SedaFeedConfig) -> dict[str, Any]:
+        """Build HTTP request body for a specific feed."""
+        return {
+            "execProgramId": feed_config.exec_program_id,
+            "execInputs": json.loads(feed_config.exec_inputs),
+        }
+
     async def run(self) -> None:
         if not self.feeds:
             logger.info("No SEDA feeds needed")
@@ -100,36 +123,46 @@ class SedaListener:
         )
 
     async def _run_single(self, feed_name: str, feed_config: SedaFeedConfig) -> None:
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-        params = {
-            "encoding": "json",
-            "injectLastResult": "success",
-        }
-        data = {
-            "execProgramId": feed_config.exec_program_id,
-            "execInputs": json.loads(feed_config.exec_inputs),
-        }
+        """Run continuous polling loop for a single feed."""
         async with httpx.AsyncClient(timeout=self.poll_timeout) as client:
             while True:
-                result = await self._poll(client, headers, params, data)
-                if result["ok"]:
-                    json_data = result.get("json")
-                    if json_data is not None:
-                        self._parse_seda_message(feed_name, json_data)
-                else:
-                    logger.error(
-                        "SEDA poll request for {} failed: {}", feed_name, result
-                    )
-
+                result = await self.poll_single_feed(client, feed_name, feed_config)
                 await asyncio.sleep(
-                    self.poll_interval
-                    if result.get("ok")
-                    else self.poll_failure_interval
+                    self.poll_interval if result["ok"] else self.poll_failure_interval
                 )
+
+    async def poll_single_feed(
+        self,
+        client: httpx.AsyncClient,
+        feed_name: str,
+        feed_config: SedaFeedConfig,
+    ) -> PollResult:
+        """
+        Poll a single SEDA feed once and parse the result.
+
+        This method can be reused by validation scripts for one-shot polling.
+
+        Args:
+            client: HTTP client to use for the request
+            feed_name: Name of the feed being polled
+            feed_config: Configuration for the feed
+
+        Returns:
+            PollResult with ok=True if successful, containing the parsed data
+        """
+        headers = self.get_request_headers()
+        params = self.get_request_params()
+        data = self.get_request_data(feed_config)
+
+        result = await self._poll(client, headers, params, data)
+        if result["ok"]:
+            json_data = result.get("json")
+            if json_data is not None:
+                self._parse_seda_message(feed_name, json_data)
+        else:
+            logger.error("SEDA poll request for {} failed: {}", feed_name, result)
+
+        return result
 
     async def _poll(
         self,
@@ -138,6 +171,7 @@ class SedaListener:
         params: dict[str, str],
         data: dict[str, Any],
     ) -> PollResult:
+        """Execute HTTP POST request to SEDA API."""
         try:
             resp = await client.post(
                 self.url, headers=headers, params=params, json=data
@@ -150,6 +184,7 @@ class SedaListener:
             return {"ok": False, "status": None, "error": repr(e)}
 
     def _parse_seda_message(self, feed_name: str, message: dict[str, Any]) -> None:
+        """Parse SEDA response and store prices in state."""
         result = message["data"]["result"]
 
         price = result[self.price_field]
@@ -184,3 +219,30 @@ class SedaListener:
                 self.seda_ema_state.put(
                     feed_name, PriceUpdate(ema_price, timestamp, session_flag)
                 )
+
+    def get_parsed_result(self, feed_name: str) -> dict[str, Any] | None:
+        """
+        Get parsed result for a feed from state.
+
+        Returns a dict with price, timestamp, session_flag, last_price, ema_price.
+        Useful for validation/dry-run to report what was parsed.
+        """
+        update = self.seda_state.get(feed_name)
+        if update is None:
+            return None
+
+        result: dict[str, Any] = {
+            "price": update.price,
+            "timestamp": update.timestamp,
+            "session_flag": update.session_flag,
+        }
+
+        last_update = self.seda_last_state.get(feed_name)
+        if last_update is not None:
+            result["last_price"] = last_update.price
+
+        ema_update = self.seda_ema_state.get(feed_name)
+        if ema_update is not None:
+            result["ema_price"] = ema_update.price
+
+        return result
