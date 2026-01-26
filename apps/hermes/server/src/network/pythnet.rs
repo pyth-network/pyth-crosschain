@@ -6,7 +6,7 @@ use {
     crate::{
         api::types::{PriceFeedMetadata, RpcPriceIdentifier},
         config::RunOptions,
-        network::wormhole::{BridgeData, GuardianSet, GuardianSetData},
+        network::ethereum::fetch_guardian_sets_from_ethereum,
         state::{
             aggregate::{AccumulatorMessages, Aggregates, Update},
             price_feeds_metadata::{PriceFeedMeta, DEFAULT_PRICE_FEEDS_CACHE_UPDATE_INTERVAL},
@@ -34,78 +34,6 @@ use {
         tungstenite::{client::IntoClientRequest, Message},
     },
 };
-
-/// Using a Solana RPC endpoint, fetches the target GuardianSet based on an index.
-async fn fetch_guardian_set(
-    client: &RpcClient,
-    wormhole_contract_addr: Pubkey,
-    guardian_set_index: u32,
-) -> Result<GuardianSet> {
-    // Fetch GuardianSet account from Solana RPC.
-    let guardian_set = client
-        .get_account_with_commitment(
-            &Pubkey::find_program_address(
-                &[b"GuardianSet", &guardian_set_index.to_be_bytes()],
-                &wormhole_contract_addr,
-            )
-            .0,
-            CommitmentConfig::confirmed(),
-        )
-        .await;
-
-    let guardian_set = match guardian_set {
-        Ok(response) => match response.value {
-            Some(guardian_set) => guardian_set,
-            None => return Err(anyhow!("GuardianSet account not found")),
-        },
-        Err(err) => return Err(anyhow!("Failed to fetch GuardianSet account: {}", err)),
-    };
-
-    // Deserialize the result into a GuardianSet, this is where we can
-    // extract the new Signer set.
-    match GuardianSetData::deserialize(&mut guardian_set.data.as_ref()) {
-        Ok(guardian_set) => Ok(GuardianSet {
-            keys: guardian_set.keys,
-        }),
-
-        Err(err) => Err(anyhow!(
-            "Failed to deserialize GuardianSet account: {}",
-            err
-        )),
-    }
-}
-
-/// Using a Solana RPC endpoint, fetches the target Bridge state.
-///
-/// You can use this function to get access to metadata about the Wormhole state by reading the
-/// Bridge account. We currently use this to find the active guardian set index.
-async fn fetch_bridge_data(
-    client: &RpcClient,
-    wormhole_contract_addr: &Pubkey,
-) -> Result<BridgeData> {
-    // Fetch Bridge account from Solana RPC.
-    let bridge = client
-        .get_account_with_commitment(
-            &Pubkey::find_program_address(&[b"Bridge"], wormhole_contract_addr).0,
-            CommitmentConfig::confirmed(),
-        )
-        .await;
-
-    let bridge = match bridge {
-        Ok(response) => match response.value {
-            Some(bridge) => bridge,
-            None => return Err(anyhow!("Bridge account not found")),
-        },
-        Err(err) => return Err(anyhow!("Failed to fetch Bridge account: {}", err)),
-    };
-
-    // Deserialize the result into a BridgeData, this is where we can
-    // extract the new Signer set.
-    match BridgeData::deserialize(&mut bridge.data.as_ref()) {
-        Ok(bridge) => Ok(bridge),
-        Err(err) => Err(anyhow!("Failed to deserialize Bridge account: {}", err)),
-    }
-}
 
 pub async fn run<S>(store: Arc<S>, pythnet_ws_endpoint: String) -> Result<()>
 where
@@ -183,52 +111,25 @@ where
     Err(anyhow!("Pythnet network listener connection terminated"))
 }
 
-/// Fetch existing GuardianSet accounts from Wormhole.
-///
-/// This method performs the necessary work to pull down the bridge state and associated guardian
-/// sets from a deployed Wormhole contract. Note that we only fetch the last two accounts due to
-/// the fact that during a Wormhole upgrade, there will only be messages produces from those two.
-async fn fetch_existing_guardian_sets<S>(
-    state: Arc<S>,
-    pythnet_http_endpoint: String,
-    wormhole_contract_addr: Pubkey,
-) -> Result<()>
+/// Fetch and update guardian sets from Ethereum.
+async fn update_guardian_sets<S>(state: Arc<S>, opts: &RunOptions) -> Result<()>
 where
     S: Wormhole,
     S: Send + Sync + 'static,
 {
-    let client = RpcClient::new(pythnet_http_endpoint.to_string());
-    let bridge = fetch_bridge_data(&client, &wormhole_contract_addr).await?;
+    tracing::debug!("Fetching guardian sets from Ethereum...");
+    let (current_index, current_set, previous) = fetch_guardian_sets_from_ethereum(
+        &opts.wormhole.ethereum_rpc_addr,
+        &opts.wormhole.contract_addr,
+    )
+    .await?;
 
-    // Fetch the current GuardianSet we know is valid for signing.
-    let current =
-        fetch_guardian_set(&client, wormhole_contract_addr, bridge.guardian_set_index).await?;
+    // Update current guardian set
+    Wormhole::update_guardian_set(&*state, current_index, current_set).await;
 
-    tracing::info!(
-        guardian_set_index = bridge.guardian_set_index,
-        %current,
-        "Retrieved Current GuardianSet.",
-    );
-
-    Wormhole::update_guardian_set(&*state, bridge.guardian_set_index, current).await;
-
-    // If there are more than one guardian set, we want to fetch the previous one as well as it
-    // may still be in transition phase if a guardian upgrade has just occurred.
-    if bridge.guardian_set_index >= 1 {
-        let previous = fetch_guardian_set(
-            &client,
-            wormhole_contract_addr,
-            bridge.guardian_set_index - 1,
-        )
-        .await?;
-
-        tracing::info!(
-            previous_guardian_set_index = bridge.guardian_set_index - 1,
-            %previous,
-            "Retrieved Previous GuardianSet.",
-        );
-
-        Wormhole::update_guardian_set(&*state, bridge.guardian_set_index - 1, previous).await;
+    // Update previous guardian set if available
+    if let Some((prev_index, prev_set)) = previous {
+        Wormhole::update_guardian_set(&*state, prev_index, prev_set).await;
     }
 
     Ok(())
@@ -344,12 +245,8 @@ where
     // Create RpcClient instance here
     let rpc_client = RpcClient::new(opts.pythnet.http_addr.clone());
 
-    fetch_existing_guardian_sets(
-        state.clone(),
-        opts.pythnet.http_addr.clone(),
-        opts.wormhole.contract_addr,
-    )
-    .await?;
+    // Fetch initial guardian sets from configured source
+    update_guardian_sets(state.clone(), &opts).await?;
 
     let task_listener = {
         let store = state.clone();
@@ -375,17 +272,16 @@ where
 
     let task_guardian_watcher = {
         let store = state.clone();
-        let pythnet_http_endpoint = opts.pythnet.http_addr.clone();
+        let opts_clone = opts.clone();
         let mut exit = crate::EXIT.subscribe();
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     _ = exit.changed() => break,
                     _ = tokio::time::sleep(Duration::from_secs(60)) => {
-                        if let Err(err) = fetch_existing_guardian_sets(
+                        if let Err(err) = update_guardian_sets(
                             store.clone(),
-                            pythnet_http_endpoint.clone(),
-                            opts.wormhole.contract_addr,
+                            &opts_clone,
                         )
                         .await
                         {
@@ -394,7 +290,7 @@ where
                     }
                 }
             }
-            tracing::info!("Shutting down Pythnet guardian set poller...");
+            tracing::info!("Shutting down guardian set poller...");
         })
     };
 

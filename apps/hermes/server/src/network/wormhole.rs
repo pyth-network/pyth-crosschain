@@ -41,38 +41,6 @@ impl std::fmt::Display for GuardianSet {
     }
 }
 
-/// BridgeData extracted from wormhole bridge account, due to no API.
-#[derive(borsh::BorshDeserialize)]
-#[allow(
-    dead_code,
-    reason = "we have to deserialize all fields but we don't use all of them"
-)]
-pub struct BridgeData {
-    pub guardian_set_index: u32,
-    pub last_lamports: u64,
-    pub config: BridgeConfig,
-}
-
-/// BridgeConfig extracted from wormhole bridge account, due to no API.
-#[derive(borsh::BorshDeserialize)]
-#[allow(
-    dead_code,
-    reason = "we have to deserialize all fields but we don't use all of them"
-)]
-pub struct BridgeConfig {
-    pub guardian_set_expiration_time: u32,
-    pub fee: u64,
-}
-
-/// GuardianSetData extracted from wormhole bridge account, due to no API.
-#[derive(borsh::BorshDeserialize)]
-pub struct GuardianSetData {
-    pub _index: u32,
-    pub keys: Vec<[u8; 20]>,
-    pub _creation_time: u32,
-    pub _expiration_time: u32,
-}
-
 /// Wormhole `prost` compiled definitions.
 ///
 /// We use `prost` to build the protobuf definitions from the upstream Wormhole repository. Which
