@@ -15,6 +15,8 @@ What it does:
 4. Tests Hermes WebSocket by connecting and receiving prices
 5. Reports on all configured price sources
 6. Exits with code 0 on success, non-zero on failure
+
+Output is GitHub Markdown friendly for posting as PR comments.
 """
 
 import argparse
@@ -52,6 +54,11 @@ WS_RECEIVE_TIMEOUT_SECONDS = 10
 # Standard Pyth price exponent (prices are scaled by 10^exponent)
 # Most Pyth feeds use -8, meaning raw_price * 10^-8 = USD price
 PYTH_DEFAULT_EXPONENT = -8
+
+
+def md_print(msg: str = "") -> None:
+    """Print markdown-formatted output to stdout."""
+    print(msg)
 
 
 @dataclass
@@ -104,9 +111,8 @@ class ConfigValidator:
 
     def _validate_config_structure(self) -> bool:
         """Validate the config file structure using pydantic."""
-        logger.info("=" * 60)
-        logger.info("STEP 1: Validating config structure")
-        logger.info("=" * 60)
+        md_print("## 1. Config Structure Validation")
+        md_print()
 
         try:
             with open(self.config_path, "rb") as f:
@@ -120,7 +126,8 @@ class ConfigValidator:
                     details={"path": self.config_path},
                 )
             )
-            logger.success("✓ Config structure is valid")
+            md_print("✅ Config structure is valid")
+            md_print()
             return True
 
         except FileNotFoundError:
@@ -130,7 +137,8 @@ class ConfigValidator:
                     message=f"Config file not found: {self.config_path}",
                 )
             )
-            logger.error("✗ Config file not found: {}", self.config_path)
+            md_print(f"❌ Config file not found: `{self.config_path}`")
+            md_print()
             return False
 
         except tomllib.TOMLDecodeError as e:
@@ -140,7 +148,8 @@ class ConfigValidator:
                     message=f"Invalid TOML syntax: {e}",
                 )
             )
-            logger.error("✗ Invalid TOML syntax: {}", e)
+            md_print(f"❌ Invalid TOML syntax: `{e}`")
+            md_print()
             return False
 
         except ValidationError as e:
@@ -151,43 +160,55 @@ class ConfigValidator:
                     details={"errors": e.errors()},
                 )
             )
-            logger.error("✗ Config validation failed:")
+            md_print("❌ Config validation failed:")
+            md_print()
             for error in e.errors():
                 loc = ".".join(str(x) for x in error["loc"])
-                logger.error("  - {}: {}", loc, error["msg"])
+                md_print(f"- `{loc}`: {error['msg']}")
+            md_print()
             return False
 
     def _report_configured_sources(self) -> None:
         """Report what price sources are configured."""
         assert self.config is not None
 
-        logger.info("")
-        logger.info("=" * 60)
-        logger.info("STEP 2: Configured price sources")
-        logger.info("=" * 60)
+        md_print("## 2. Configured Price Sources")
+        md_print()
 
         price_config = self.config.price
 
         # Oracle prices
         if price_config.oracle:
-            logger.info("Oracle prices:")
+            md_print("### Oracle Prices")
+            md_print()
+            md_print("| Symbol | Sources |")
+            md_print("|--------|---------|")
             for symbol, sources in price_config.oracle.items():
                 source_names = [self._describe_source(s) for s in sources]
-                logger.info("  {} -> [{}]", symbol, ", ".join(source_names))
+                md_print(f"| `{symbol}` | {', '.join(source_names)} |")
+            md_print()
 
         # Mark prices
         if price_config.mark:
-            logger.info("Mark prices:")
+            md_print("### Mark Prices")
+            md_print()
+            md_print("| Symbol | Sources |")
+            md_print("|--------|---------|")
             for symbol, sources in price_config.mark.items():
                 source_names = [self._describe_source(s) for s in sources]
-                logger.info("  {} -> [{}]", symbol, ", ".join(source_names))
+                md_print(f"| `{symbol}` | {', '.join(source_names)} |")
+            md_print()
 
         # External prices
         if price_config.external:
-            logger.info("External prices:")
+            md_print("### External Prices")
+            md_print()
+            md_print("| Symbol | Sources |")
+            md_print("|--------|---------|")
             for symbol, sources in price_config.external.items():
                 source_names = [self._describe_source(s) for s in sources]
-                logger.info("  {} -> [{}]", symbol, ", ".join(source_names))
+                md_print(f"| `{symbol}` | {', '.join(source_names)} |")
+            md_print()
 
     def _describe_source(self, source: PriceSourceConfig) -> str:
         """Get a human-readable description of a price source config."""
@@ -216,14 +237,13 @@ class ConfigValidator:
         """
         assert self.config is not None
 
-        logger.info("")
-        logger.info("=" * 60)
-        logger.info("STEP 3: Testing SEDA endpoints")
-        logger.info("=" * 60)
+        md_print("## 3. SEDA Endpoint Tests")
+        md_print()
 
         seda_config = self.config.seda
         if not seda_config.feeds:
-            logger.info("No SEDA feeds configured, skipping")
+            md_print("_No SEDA feeds configured, skipping_")
+            md_print()
             return
 
         # Check for API key
@@ -231,12 +251,13 @@ class ConfigValidator:
             self.results.append(
                 ValidationResult(
                     success=False,
-                    message="SEDA API key not provided (use --seda-api-key or configure api_key_path)",
+                    message="SEDA API key not provided (set SEDA_API_KEY env var or configure api_key_path)",
                 )
             )
-            logger.error(
-                "✗ SEDA API key not provided. Use --seda-api-key flag or configure api_key_path"
+            md_print(
+                "❌ SEDA API key not provided. Set `SEDA_API_KEY` environment variable or configure `api_key_path`"
             )
+            md_print()
             return
 
         seda_state = PriceSourceState("seda_validation")
@@ -258,11 +279,14 @@ class ConfigValidator:
                     message="SEDA API key not provided or could not be read",
                 )
             )
-            logger.error("✗ SEDA API key not available")
+            md_print("❌ SEDA API key not available")
+            md_print()
             return
 
-        logger.info("SEDA URL: {}", listener.url)
-        logger.info("Testing {} feed(s)...", len(seda_config.feeds))
+        md_print(f"**URL:** `{listener.url}`")
+        md_print()
+        md_print(f"Testing {len(seda_config.feeds)} feed(s)...")
+        md_print()
 
         # Test each feed using listener's poll method
         async with httpx.AsyncClient(timeout=listener.poll_timeout) as client:
@@ -283,14 +307,14 @@ class ConfigValidator:
 
         feed_config_typed: SedaFeedConfig = feed_config  # type: ignore
 
-        logger.info("")
-        logger.info("  Feed: {}", feed_name)
-        logger.info("    Program ID: {}", feed_config_typed.exec_program_id)
+        md_print(f"### Feed: `{feed_name}`")
+        md_print()
+        md_print(f"- **Program ID:** `{feed_config_typed.exec_program_id}`")
 
         # Validate exec_inputs JSON before polling
         try:
             json.loads(feed_config_typed.exec_inputs)
-            logger.info("    Exec inputs: valid JSON")
+            md_print("- **Exec inputs:** Valid JSON ✅")
         except json.JSONDecodeError as e:
             self.results.append(
                 ValidationResult(
@@ -298,7 +322,8 @@ class ConfigValidator:
                     message=f"SEDA feed {feed_name} has invalid exec_inputs JSON: {e}",
                 )
             )
-            logger.error("    ✗ Exec inputs: invalid JSON - {}", e)
+            md_print(f"- **Exec inputs:** Invalid JSON ❌ - `{e}`")
+            md_print()
             return
 
         # Use listener's poll_single_feed method
@@ -308,25 +333,31 @@ class ConfigValidator:
             # Get parsed result from state
             parsed = listener.get_parsed_result(feed_name)
             if parsed:
-                logger.success("    ✓ Poll successful")
-                logger.info("      Price ({}):", listener.price_field)
-                logger.info("        {}", parsed["price"])
-                logger.info("      Timestamp ({}):", listener.timestamp_field)
-                logger.info("        {}", parsed["timestamp"])
+                md_print("- **Status:** Poll successful ✅")
+                md_print()
+                md_print("| Field | Value |")
+                md_print("|-------|-------|")
+                md_print(f"| Price (`{listener.price_field}`) | `{parsed['price']}` |")
+                md_print(
+                    f"| Timestamp (`{listener.timestamp_field}`) | `{parsed['timestamp']}` |"
+                )
 
                 if listener.session_flag_field:
-                    logger.info("      Session flag ({}):", listener.session_flag_field)
-                    logger.info("        {}", parsed["session_flag"])
+                    md_print(
+                        f"| Session Flag (`{listener.session_flag_field}`) | `{parsed['session_flag']}` |"
+                    )
 
                 if listener.last_price_field:
-                    logger.info("      Last price ({}):", listener.last_price_field)
-                    logger.info("        {}", parsed.get("last_price"))
+                    md_print(
+                        f"| Last Price (`{listener.last_price_field}`) | `{parsed.get('last_price')}` |"
+                    )
 
                 if listener.session_mark_px_ema_field:
-                    logger.info(
-                        "      EMA price ({}):", listener.session_mark_px_ema_field
+                    md_print(
+                        f"| EMA Price (`{listener.session_mark_px_ema_field}`) | `{parsed.get('ema_price')}` |"
                     )
-                    logger.info("        {}", parsed.get("ema_price"))
+
+                md_print()
 
                 self.results.append(
                     ValidationResult(
@@ -345,7 +376,8 @@ class ConfigValidator:
                         message=f"SEDA feed {feed_name} poll succeeded but no data parsed",
                     )
                 )
-                logger.error("    ✗ Poll succeeded but no data parsed")
+                md_print("- **Status:** Poll succeeded but no data parsed ❌")
+                md_print()
         else:
             error_msg = result.get("error", "Unknown error")
             status = result.get("status")
@@ -356,9 +388,10 @@ class ConfigValidator:
                     details={"status": status, "error": error_msg},
                 )
             )
-            logger.error(
-                "    ✗ Poll failed: {}", error_msg[:200] if error_msg else "Unknown"
+            md_print(
+                f"- **Status:** Poll failed ❌ - `{error_msg[:200] if error_msg else 'Unknown'}`"
             )
+            md_print()
 
     # =========================================================================
     # Lazer Testing (WebSocket)
@@ -374,18 +407,18 @@ class ConfigValidator:
         """
         assert self.config is not None
 
-        logger.info("")
-        logger.info("=" * 60)
-        logger.info("STEP 4: Testing Lazer WebSocket")
-        logger.info("=" * 60)
+        md_print("## 4. Lazer WebSocket Test")
+        md_print()
 
         lazer_config = self.config.lazer
         if not lazer_config.feed_ids:
-            logger.info("No Lazer feeds configured, skipping")
+            md_print("_No Lazer feeds configured, skipping_")
+            md_print()
             return
 
         if not lazer_config.lazer_urls:
-            logger.error("✗ No Lazer URLs configured")
+            md_print("❌ No Lazer URLs configured")
+            md_print()
             self.results.append(
                 ValidationResult(success=False, message="No Lazer URLs configured")
             )
@@ -396,15 +429,15 @@ class ConfigValidator:
         listener = LazerListener(self.config, lazer_state)
 
         url = lazer_config.lazer_urls[0]
-        logger.info("URL: {}", url)
-        logger.info("Feed IDs: {}", listener.feed_ids)
-        logger.info("Connecting...")
+        md_print(f"**URL:** `{url}`")
+        md_print()
+        md_print(f"**Feed IDs:** `{listener.feed_ids}`")
+        md_print()
 
         try:
             headers = listener.get_auth_headers()
             async with websockets.connect(url, additional_headers=headers) as ws:
                 await listener.send_subscribe(ws, url)
-                logger.info("  Sent subscribe request")
 
                 # Collect prices until we have all feeds or timeout
                 expected_feeds = set(listener.feed_ids)
@@ -422,18 +455,20 @@ class ConfigValidator:
                     except StaleConnectionError:
                         # Timeout is expected in validation mode
                         break
-                    except Exception as e:
-                        logger.warning("  Error receiving message: {}", repr(e))
+                    except Exception:
                         break
 
                 # Report results from the populated state
                 if lazer_state.state:
-                    logger.success("  ✓ Connection successful")
-                    logger.info("  Received {} price(s):", len(lazer_state.state))
+                    md_print("✅ Connection successful")
+                    md_print()
+                    md_print("| Feed ID | Price (USD) |")
+                    md_print("|---------|-------------|")
                     for feed_id, update in sorted(lazer_state.state.items()):
                         # Scale price by exponent to get USD value
                         scaled_price = float(update.price) * (10**PYTH_DEFAULT_EXPONENT)
-                        logger.info("    Feed {}: ${:,.2f}", feed_id, scaled_price)
+                        md_print(f"| {feed_id} | ${scaled_price:,.2f} |")
+                    md_print()
 
                     self.results.append(
                         ValidationResult(
@@ -451,9 +486,11 @@ class ConfigValidator:
                     # Check for missing feeds
                     missing = expected_feeds - set(lazer_state.state.keys())
                     if missing:
-                        logger.warning("  Missing feeds: {}", list(missing))
+                        md_print(f"⚠️ Missing feeds: `{list(missing)}`")
+                        md_print()
                 else:
-                    logger.error("  ✗ No prices received within timeout")
+                    md_print("❌ No prices received within timeout")
+                    md_print()
                     self.results.append(
                         ValidationResult(
                             success=False,
@@ -468,7 +505,8 @@ class ConfigValidator:
                     message=f"Lazer WebSocket connection rejected: {e.status_code}",
                 )
             )
-            logger.error("  ✗ Connection rejected with status {}", e.status_code)
+            md_print(f"❌ Connection rejected with status `{e.status_code}`")
+            md_print()
 
         except Exception as e:
             self.results.append(
@@ -477,7 +515,8 @@ class ConfigValidator:
                     message=f"Lazer WebSocket error: {e}",
                 )
             )
-            logger.error("  ✗ Connection error: {}", repr(e))
+            md_print(f"❌ Connection error: `{repr(e)}`")
+            md_print()
 
     # =========================================================================
     # Hermes Testing (WebSocket)
@@ -492,18 +531,18 @@ class ConfigValidator:
         """
         assert self.config is not None
 
-        logger.info("")
-        logger.info("=" * 60)
-        logger.info("STEP 5: Testing Hermes WebSocket")
-        logger.info("=" * 60)
+        md_print("## 5. Hermes WebSocket Test")
+        md_print()
 
         hermes_config = self.config.hermes
         if not hermes_config.feed_ids:
-            logger.info("No Hermes feeds configured, skipping")
+            md_print("_No Hermes feeds configured, skipping_")
+            md_print()
             return
 
         if not hermes_config.hermes_urls:
-            logger.error("✗ No Hermes URLs configured")
+            md_print("❌ No Hermes URLs configured")
+            md_print()
             self.results.append(
                 ValidationResult(success=False, message="No Hermes URLs configured")
             )
@@ -514,15 +553,15 @@ class ConfigValidator:
         listener = HermesListener(self.config, hermes_state)
 
         url = hermes_config.hermes_urls[0]
-        logger.info("URL: {}", url)
-        logger.info("Feed IDs: {}", [fid[:16] + "..." for fid in listener.feed_ids])
-        logger.info("Connecting...")
+        md_print(f"**URL:** `{url}`")
+        md_print()
+        md_print(f"**Feed IDs:** `{[fid[:16] + '...' for fid in listener.feed_ids]}`")
+        md_print()
 
         try:
             async with websockets.connect(url) as ws:
                 # Use listener's send_subscribe method
                 await listener.send_subscribe(ws, url)
-                logger.info("  Sent subscribe request")
 
                 # Collect prices until we have all feeds or timeout
                 expected_feeds = set(listener.feed_ids)
@@ -540,20 +579,20 @@ class ConfigValidator:
                     except StaleConnectionError:
                         # Timeout is expected in validation mode
                         break
-                    except Exception as e:
-                        logger.warning("  Error receiving message: {}", repr(e))
+                    except Exception:
                         break
 
                 # Report results from the populated state
                 if hermes_state.state:
-                    logger.success("  ✓ Connection successful")
-                    logger.info("  Received {} price(s):", len(hermes_state.state))
+                    md_print("✅ Connection successful")
+                    md_print()
+                    md_print("| Feed ID | Price (USD) |")
+                    md_print("|---------|-------------|")
                     for feed_id, update in hermes_state.state.items():
                         # Scale price by exponent to get USD value
                         scaled_price = float(update.price) * (10**PYTH_DEFAULT_EXPONENT)
-                        logger.info(
-                            "    Feed {}...: ${:,.2f}", str(feed_id)[:16], scaled_price
-                        )
+                        md_print(f"| `{str(feed_id)[:16]}...` | ${scaled_price:,.2f} |")
+                    md_print()
 
                     self.results.append(
                         ValidationResult(
@@ -571,12 +610,13 @@ class ConfigValidator:
                     # Check for missing feeds
                     missing = expected_feeds - set(hermes_state.state.keys())
                     if missing:
-                        logger.warning(
-                            "  Missing feeds: {}",
-                            [str(fid)[:16] + "..." for fid in missing],
+                        md_print(
+                            f"⚠️ Missing feeds: `{[str(fid)[:16] + '...' for fid in missing]}`"
                         )
+                        md_print()
                 else:
-                    logger.error("  ✗ No prices received within timeout")
+                    md_print("❌ No prices received within timeout")
+                    md_print()
                     self.results.append(
                         ValidationResult(
                             success=False,
@@ -591,7 +631,8 @@ class ConfigValidator:
                     message=f"Hermes WebSocket connection rejected: {e.status_code}",
                 )
             )
-            logger.error("  ✗ Connection rejected with status {}", e.status_code)
+            md_print(f"❌ Connection rejected with status `{e.status_code}`")
+            md_print()
 
         except Exception as e:
             self.results.append(
@@ -600,35 +641,38 @@ class ConfigValidator:
                     message=f"Hermes WebSocket error: {e}",
                 )
             )
-            logger.error("  ✗ Connection error: {}", repr(e))
+            md_print(f"❌ Connection error: `{repr(e)}`")
+            md_print()
 
     def _print_summary(self) -> bool:
         """Print validation summary and return True if all passed."""
-        logger.info("")
-        logger.info("=" * 60)
-        logger.info("SUMMARY")
-        logger.info("=" * 60)
+        md_print("---")
+        md_print()
+        md_print("## Summary")
+        md_print()
 
         successes = [r for r in self.results if r.success]
         failures = [r for r in self.results if not r.success]
 
-        logger.info("Total checks: {}", len(self.results))
-        logger.info("  ✓ Passed: {}", len(successes))
-        logger.info("  ✗ Failed: {}", len(failures))
+        md_print(f"**Total checks:** {len(self.results)}")
+        md_print(f"- ✅ Passed: {len(successes)}")
+        md_print(f"- ❌ Failed: {len(failures)}")
+        md_print()
 
         if failures:
-            logger.info("")
-            logger.error("Failed checks:")
+            md_print("### Failed Checks")
+            md_print()
             for result in failures:
-                logger.error("  - {}", result.message)
+                md_print(f"- ❌ {result.message}")
+            md_print()
             return False
 
-        logger.success("")
-        logger.success("All validations passed! ✓")
-        logger.info("")
-        logger.warning(
-            "REMINDER: Spot check the prices above to ensure they are reasonable."
+        md_print("### ✅ All validations passed!")
+        md_print()
+        md_print(
+            "> **⚠️ REMINDER:** Spot check the prices above to ensure they are reasonable."
         )
+        md_print()
         return True
 
 
@@ -654,18 +698,16 @@ def main() -> None:
     # Get SEDA API key from environment
     seda_api_key = os.environ.get("SEDA_API_KEY")
 
-    # Configure logging
+    # Disable loguru output - we output markdown to stdout
     logger.remove()
-    log_level = "DEBUG" if args.verbose else "INFO"
-    logger.add(
-        sys.stderr,
-        level=log_level,
-        format="<level>{level: <8}</level> | {message}",
-    )
+    if args.verbose:
+        logger.add(sys.stderr, level="DEBUG", format="{message}")
 
-    logger.info("HIP-3 Pusher Configuration Validator")
-    logger.info("Config file: {}", args.config)
-    logger.info("")
+    # Print markdown header
+    md_print("# HIP-3 Pusher Configuration Validation")
+    md_print()
+    md_print(f"**Config file:** `{args.config}`")
+    md_print()
 
     validator = ConfigValidator(args.config, seda_api_key)
     success = validator.validate_all()
