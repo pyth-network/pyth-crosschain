@@ -460,8 +460,6 @@ class ConfigValidator:
 
                 # Report results from the populated state
                 if lazer_state.state:
-                    md_print("✅ Connection successful")
-                    md_print()
                     md_print("| Feed ID | Price (USD) |")
                     md_print("|---------|-------------|")
                     for feed_id, update in sorted(lazer_state.state.items()):
@@ -470,24 +468,36 @@ class ConfigValidator:
                         md_print(f"| {feed_id} | ${scaled_price:,.2f} |")
                     md_print()
 
-                    self.results.append(
-                        ValidationResult(
-                            success=True,
-                            message=f"Lazer WebSocket received {len(lazer_state.state)} prices",
-                            details={
-                                "prices": {
-                                    k: {"price": v.price, "timestamp": v.timestamp}
-                                    for k, v in lazer_state.state.items()
-                                }
-                            },
-                        )
-                    )
-
-                    # Check for missing feeds
+                    # Check for missing feeds - this is a failure condition
                     missing = expected_feeds - set(lazer_state.state.keys())
                     if missing:
-                        md_print(f"⚠️ Missing feeds: `{list(missing)}`")
+                        md_print(f"❌ Missing feeds: `{sorted(missing)}`")
                         md_print()
+                        self.results.append(
+                            ValidationResult(
+                                success=False,
+                                message=f"Lazer WebSocket missing {len(missing)} feed(s): {sorted(missing)}",
+                                details={
+                                    "received": list(lazer_state.state.keys()),
+                                    "missing": sorted(missing),
+                                },
+                            )
+                        )
+                    else:
+                        md_print("✅ All configured feeds received")
+                        md_print()
+                        self.results.append(
+                            ValidationResult(
+                                success=True,
+                                message=f"Lazer WebSocket received all {len(lazer_state.state)} configured prices",
+                                details={
+                                    "prices": {
+                                        k: {"price": v.price, "timestamp": v.timestamp}
+                                        for k, v in lazer_state.state.items()
+                                    }
+                                },
+                            )
+                        )
                 else:
                     md_print("❌ No prices received within timeout")
                     md_print()
@@ -584,8 +594,6 @@ class ConfigValidator:
 
                 # Report results from the populated state
                 if hermes_state.state:
-                    md_print("✅ Connection successful")
-                    md_print()
                     md_print("| Feed ID | Price (USD) |")
                     md_print("|---------|-------------|")
                     for feed_id, update in hermes_state.state.items():
@@ -594,26 +602,39 @@ class ConfigValidator:
                         md_print(f"| `{str(feed_id)[:16]}...` | ${scaled_price:,.2f} |")
                     md_print()
 
-                    self.results.append(
-                        ValidationResult(
-                            success=True,
-                            message=f"Hermes WebSocket received {len(hermes_state.state)} prices",
-                            details={
-                                "prices": {
-                                    k: {"price": v.price, "timestamp": v.timestamp}
-                                    for k, v in hermes_state.state.items()
-                                }
-                            },
-                        )
-                    )
-
-                    # Check for missing feeds
+                    # Check for missing feeds - this is a failure condition
                     missing = expected_feeds - set(hermes_state.state.keys())
                     if missing:
-                        md_print(
-                            f"⚠️ Missing feeds: `{[str(fid)[:16] + '...' for fid in missing]}`"
-                        )
+                        missing_truncated = [
+                            f"{fid[:16]}..." for fid in sorted(missing)
+                        ]
+                        md_print(f"❌ Missing feeds: `{missing_truncated}`")
                         md_print()
+                        self.results.append(
+                            ValidationResult(
+                                success=False,
+                                message=f"Hermes WebSocket missing {len(missing)} feed(s): {missing_truncated}",
+                                details={
+                                    "received": list(hermes_state.state.keys()),
+                                    "missing": sorted(missing),
+                                },
+                            )
+                        )
+                    else:
+                        md_print("✅ All configured feeds received")
+                        md_print()
+                        self.results.append(
+                            ValidationResult(
+                                success=True,
+                                message=f"Hermes WebSocket received all {len(hermes_state.state)} configured prices",
+                                details={
+                                    "prices": {
+                                        k: {"price": v.price, "timestamp": v.timestamp}
+                                        for k, v in hermes_state.state.items()
+                                    }
+                                },
+                            )
+                        )
                 else:
                     md_print("❌ No prices received within timeout")
                     md_print()
