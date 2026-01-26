@@ -18,6 +18,7 @@
     "test:lint:eslint": "eslint . --max-warnings 0",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc",
+    "count:llm-tokens": "tsx ./scripts/count-llm-tokens.ts",
     "generate:docs": "tsx ./scripts/generate-docs.ts"
   },
   "dependencies": {
@@ -74,6 +75,7 @@
     "autoprefixer": "catalog:",
     "eslint": "catalog:",
     "jest": "catalog:",
+    "js-tiktoken": "^1.0.21",
     "postcss": "catalog:",
     "prettier": "catalog:",
     "sass": "catalog:",
