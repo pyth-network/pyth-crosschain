@@ -207,18 +207,16 @@ class SedaListener:
         if self.last_price_field:
             last_price = result.get(self.last_price_field)
             logger.debug("SEDA feed: {} last_price: {}", feed_name, last_price)
-            if last_price is not None:
-                self.seda_last_state.put(
-                    feed_name, PriceUpdate(last_price, timestamp, session_flag)
-                )
+            self.seda_last_state.put(
+                feed_name, PriceUpdate(last_price, timestamp, session_flag)
+            )
 
         if self.session_mark_px_ema_field:
             ema_price = result.get(self.session_mark_px_ema_field)
             logger.debug("SEDA feed: {} session_ema_price: {}", feed_name, ema_price)
-            if ema_price is not None:
-                self.seda_ema_state.put(
-                    feed_name, PriceUpdate(ema_price, timestamp, session_flag)
-                )
+            self.seda_ema_state.put(
+                feed_name, PriceUpdate(ema_price, timestamp, session_flag)
+            )
 
     def get_parsed_result(self, feed_name: str) -> dict[str, Any] | None:
         """
