@@ -515,7 +515,7 @@ class ConfigValidator:
                     message=f"Lazer WebSocket error: {e}",
                 )
             )
-            md_print(f"❌ Connection error: `{repr(e)}`")
+            md_print(f"❌ Connection error: `{e!r}`")
             md_print()
 
     # =========================================================================
@@ -641,7 +641,7 @@ class ConfigValidator:
                     message=f"Hermes WebSocket error: {e}",
                 )
             )
-            md_print(f"❌ Connection error: `{repr(e)}`")
+            md_print(f"❌ Connection error: `{e!r}`")
             md_print()
 
     def _print_summary(self) -> bool:
