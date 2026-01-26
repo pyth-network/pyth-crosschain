@@ -9,6 +9,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkMdx from "remark-mdx";
 
+import { source } from "./source";
+
 const processor = remark()
   .use(remarkMath)
   .use(remarkMdx)
@@ -38,4 +40,14 @@ export async function getLLMText(page: Page) {
 URL: ${page.url}
 
 ${String(processed.value)}`;
+}
+
+export async function getLLMTextByPaths(
+  pathPrefixes: string[]
+): Promise<string[]> {
+  const pages = source.getPages();
+  const filtered = pages.filter((page) =>
+    pathPrefixes.some((prefix) => page.url.startsWith(prefix))
+  );
+  return Promise.all(filtered.map((page) => getLLMText(page)));
 }
