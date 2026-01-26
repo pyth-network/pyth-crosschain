@@ -1,25 +1,78 @@
+"""
+SEDA oracle HTTP polling listener.
+
+SEDA provides custom oracle feeds via HTTP polling (not WebSocket).
+Used for specialized feeds not available through Pyth, such as:
+- Traditional finance assets with trading sessions
+- Custom composite indices
+- Assets requiring specific data transformations
+
+DATA SOURCES PROVIDED:
+- seda: Primary oracle price (from price_field)
+- seda_last: Previous/last session price (from last_price_field)
+- seda_ema: EMA price for mark calculations (from session_mark_px_ema_field)
+
+SESSION-AWARE PRICING:
+SEDA feeds can include a session_flag field indicating market hours:
+- session_flag=true: Market is CLOSED (off hours)
+- session_flag=false: Market is OPEN (trading hours)
+
+This enables session_ema source type to return different mark prices
+during vs outside trading sessions (e.g., for equity index perpetuals).
+"""
+
 import asyncio
 import datetime
-from typing import Any
+import json
+from pathlib import Path
+from typing import Any, TypedDict
 
 import httpx
-import json
 from loguru import logger
-from pathlib import Path
 
 from pusher.config import Config, SedaFeedConfig
 from pusher.price_state import PriceSourceState, PriceUpdate
 
 
+class PollResult(TypedDict, total=False):
+    ok: bool
+    status: int | None
+    json: dict[str, Any]
+    error: str
+
+
 class SedaListener:
+    """
+    Poll SEDA HTTP API for custom oracle feeds.
+
+    Unlike Lazer/Hermes (WebSocket), SEDA uses HTTP polling.
+    Each configured feed is polled independently in parallel.
+
+    MULTI-STATE STORAGE:
+    A single SEDA response can populate multiple price states:
+    - seda_state: Primary price (always populated)
+    - seda_last_state: Last/previous price (if last_price_field configured)
+    - seda_ema_state: EMA price (if session_mark_px_ema_field configured)
+
+    This allows session_ema source type to access both oracle and EMA
+    prices from the same SEDA feed.
+    """
+
     SOURCE_NAME = "seda"
 
-    """
-    Subscribe to SEDA price updates for needed feeds.
-    """
-    def __init__(self, config: Config, seda_state: PriceSourceState, seda_last_state: PriceSourceState, seda_ema_state: PriceSourceState):
+    def __init__(
+        self,
+        config: Config,
+        seda_state: PriceSourceState,
+        seda_last_state: PriceSourceState,
+        seda_ema_state: PriceSourceState,
+    ) -> None:
         self.url = config.seda.url
-        self.api_key = Path(config.seda.api_key_path).read_text().strip() if config.seda.api_key_path else None
+        self.api_key = (
+            Path(config.seda.api_key_path).read_text().strip()
+            if config.seda.api_key_path
+            else None
+        )
         self.feeds = config.seda.feeds
         self.poll_interval = config.seda.poll_interval
         self.poll_failure_interval = config.seda.poll_failure_interval
@@ -34,12 +87,17 @@ class SedaListener:
         self.last_price_field = config.seda.last_price_field
         self.session_mark_px_ema_field = config.seda.session_mark_px_ema_field
 
-    async def run(self):
+    async def run(self) -> None:
         if not self.feeds:
             logger.info("No SEDA feeds needed")
             return
 
-        await asyncio.gather(*[self._run_single(feed_name, self.feeds[feed_name]) for feed_name in self.feeds])
+        await asyncio.gather(
+            *[
+                self._run_single(feed_name, self.feeds[feed_name])
+                for feed_name in self.feeds
+            ]
+        )
 
     async def _run_single(self, feed_name: str, feed_config: SedaFeedConfig) -> None:
         headers = {
@@ -59,20 +117,31 @@ class SedaListener:
             while True:
                 result = await self._poll(client, headers, params, data)
                 if result["ok"]:
-                    self._parse_seda_message(feed_name, result["json"])
+                    json_data = result.get("json")
+                    if json_data is not None:
+                        self._parse_seda_message(feed_name, json_data)
                 else:
-                    logger.error("SEDA poll request for {} failed: {}", feed_name, result)
+                    logger.error(
+                        "SEDA poll request for {} failed: {}", feed_name, result
+                    )
 
-                await asyncio.sleep(self.poll_interval if result.get("ok") else self.poll_failure_interval)
+                await asyncio.sleep(
+                    self.poll_interval
+                    if result.get("ok")
+                    else self.poll_failure_interval
+                )
 
-    async def _poll(self,
+    async def _poll(
+        self,
         client: httpx.AsyncClient,
         headers: dict[str, str],
         params: dict[str, str],
         data: dict[str, Any],
-    ) -> dict:
+    ) -> PollResult:
         try:
-            resp = await client.post(self.url, headers=headers, params=params, json=data)
+            resp = await client.post(
+                self.url, headers=headers, params=params, json=data
+            )
             resp.raise_for_status()
             return {"ok": True, "status": resp.status_code, "json": resp.json()}
         except httpx.HTTPStatusError as e:
@@ -80,25 +149,38 @@ class SedaListener:
         except Exception as e:
             return {"ok": False, "status": None, "error": repr(e)}
 
-    def _parse_seda_message(self, feed_name, message):
+    def _parse_seda_message(self, feed_name: str, message: dict[str, Any]) -> None:
         result = message["data"]["result"]
 
         price = result[self.price_field]
-        timestamp = datetime.datetime.fromisoformat(result[self.timestamp_field]).timestamp()
-        if self.session_flag_field:
-            session_flag = result[self.session_flag_field]
-        else:
-            session_flag = False
+        timestamp = datetime.datetime.fromisoformat(
+            result[self.timestamp_field]
+        ).timestamp()
+        session_flag = (
+            result[self.session_flag_field] if self.session_flag_field else False
+        )
 
-        logger.debug("Parsed SEDA update for feed: {} price: {} timestamp: {} session_flag: {}", feed_name, price, timestamp, session_flag)
+        logger.debug(
+            "Parsed SEDA update for feed: {} price: {} timestamp: {} session_flag: {}",
+            feed_name,
+            price,
+            timestamp,
+            session_flag,
+        )
         self.seda_state.put(feed_name, PriceUpdate(price, timestamp, session_flag))
 
         if self.last_price_field:
             last_price = result.get(self.last_price_field)
             logger.debug("SEDA feed: {} last_price: {}", feed_name, last_price)
-            self.seda_last_state.put(feed_name, PriceUpdate(last_price, timestamp, session_flag))
+            if last_price is not None:
+                self.seda_last_state.put(
+                    feed_name, PriceUpdate(last_price, timestamp, session_flag)
+                )
 
         if self.session_mark_px_ema_field:
             ema_price = result.get(self.session_mark_px_ema_field)
             logger.debug("SEDA feed: {} session_ema_price: {}", feed_name, ema_price)
-            self.seda_ema_state.put(feed_name, PriceUpdate(ema_price, timestamp, session_flag))
+            if ema_price is not None:
+                self.seda_ema_state.put(
+                    feed_name, PriceUpdate(ema_price, timestamp, session_flag)
+                )

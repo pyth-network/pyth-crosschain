@@ -7,7 +7,7 @@ from hyperliquid.utils import constants
 from hyperliquid.utils.signing import get_timestamp_ms, sign_l1_action
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Permission/depermission subdeployer account for setOracle for HIP-3 dex"
     )
@@ -17,9 +17,7 @@ def main():
         help="Path to private key file for deployer account",
     )
     parser.add_argument(
-        "--dex",
-        required=True,
-        help="HIP-3 dex name (should be short string)"
+        "--dex", required=True, help="HIP-3 dex name (should be short string)"
     )
     parser.add_argument(
         "--subdeployer-address",
@@ -56,34 +54,32 @@ def main():
 
     args = parser.parse_args()
 
-    network = "testnet" if args.testnet else "mainnet"
+    network_name = "testnet" if args.testnet else "mainnet"
     base_url = constants.TESTNET_API_URL if args.testnet else constants.MAINNET_API_URL
-    print(f"Using {network} URL: {base_url}")
+    print(f"Using {network_name} URL: {base_url}")
 
     deployer_account = Account.from_key(Path(args.private_key_file).read_text().strip())
     deployer_exchange = Exchange(wallet=deployer_account, base_url=base_url)
     print("deployer address:", deployer_account.address)
-    subdeployer_address = args.subdeployer_address
     print("dex:", args.dex)
-    print("subdeployer address:", subdeployer_address)
+    print("subdeployer address:", args.subdeployer_address)
     mode = "enable" if args.enable else "disable"
     print("mode:", mode)
 
     if args.dry_run:
-        print(f"dry run: {network}: would {mode} setOracle for {subdeployer_address} in dex {args.dex}")
+        print(
+            f"dry run: {network_name}: would {mode} setOracle for {args.subdeployer_address} in dex {args.dex}"
+        )
     else:
         timestamp = get_timestamp_ms()
         sub_deployer = {
             "variant": "setOracle",
-            "user": subdeployer_address.lower(),
-            "allowed": True if args.enable else False,
+            "user": args.subdeployer_address.lower(),
+            "allowed": bool(args.enable),
         }
         action = {
             "type": "perpDeploy",
-            "setSubDeployers": {
-                "dex": args.dex,
-                "subDeployers": [sub_deployer]
-            }
+            "setSubDeployers": {"dex": args.dex, "subDeployers": [sub_deployer]},
         }
         signature = sign_l1_action(
             deployer_exchange.wallet,
