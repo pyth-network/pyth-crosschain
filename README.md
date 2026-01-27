@@ -12,7 +12,8 @@ Within this monorepo you will find the following subprojects:
 - [Fortuna](#fortuna)
 - [Local Development](#local-development)
   - [Setup](#setup)
-  - [Pull requests](#pull-requests)
+  - [Contribution workflow](#contribution-workflow)
+  - [Testing](#testing)
   - [Releases](#releases)
   - [Typescript Monorepo](#typescript-monorepo)
     - [Setting up](#setting-up)
@@ -66,27 +67,34 @@ Please install the following tools in order to work in this repository:
   - After installing, please run `pre-commit install` in the root of the repo to configure the checks to run on each git commit.
 - [Rust](https://www.rust-lang.org/tools/install)
 
-### Pull requests
+### Contribution workflow
 
-Use the [Conventional Commits](https://www.conventionalcommits.org) format for your commit messages and PR titles.
-In the PR description, please include a summary of the changes and any relevant context. Also, please make sure
-to update the package versions following the [Semantic Versioning](https://semver.org/) rules.
+Use the [Conventional Commits](https://www.conventionalcommits.org) format for commit messages and PR titles. In PRs,
+include a short summary plus relevant context, and update versions following [Semantic Versioning](https://semver.org/).
+Install and use `pre-commit` (`pre-commit install`) so formatting and lint checks run before each commit.
 
-See also: [Code guidelines](doc/code-guidelines.md)
+See also: [Code guidelines](doc/code-guidelines.md) and [JavaScript/TypeScript guidelines](doc/js-code-guidelines.md).
+Security reports should follow [SECURITY.md](./SECURITY.md).
+
+### Testing
+
+- `pnpm turbo test` runs tests, linting, and formatting checks for the JS/TS monorepo.
+- `pnpm turbo fix` applies auto-fixes where available.
+- `cargo test` / `cargo build` apply for Rust components when relevant.
+- `pre-commit run --all-files` runs the repo-wide checks locally.
 
 ### Releases
 
-The repository has several CI workflows that automatically release new versions of the various components when a new Github release is published.
-Each component's workflow uses a specific tag format including the component name and version number (e.g., Fortuna uses the tag `fortuna-vX.Y.Z`).
-The general process for creating a new release is:
+CI workflows release components when a GitHub release is published. Each component uses a tag format that includes the
+component name and version (e.g., `fortuna-vX.Y.Z`). JavaScript packages are released together with a `pyth-js-v<number>`
+tag. See the GitHub Releases page for existing tags and naming. The general process is:
 
 1. Update the version number of the component in the repo, e.g., in `package.json` or `Cargo.toml` or wherever. Please follow [Semantic Versioning](https://semver.org/) for package versions.
 2. Submit a PR with the changes and merge them in to main.
-3. Create a new release on github. Configure the release to create a new tag when published. Set the tag name and version for the component you wish to release -- see the [Releases](https://github.com/pyth-network/pyth-crosschain/releases) page to identify the relevant tag.
-4. Publish the release. This step will automatically trigger a Github Action to build the package and release it. This step will e.g., publish packages to NPM, or build and push docker images.
+3. Create a GitHub release that creates the appropriate tag on publish (see [Releases](https://github.com/pyth-network/pyth-crosschain/releases)).
+4. Publish the release to trigger the GitHub Actions workflow (e.g., publish to npm or build/push Docker images).
    - Note that when publishing a public package, you should prune the auto-generated Github release notes to only include changes relevant to the release. Otherwise, the changelog will include commits from unrelated projects in the monorepo since the previous release.
 
-Note that all javascript packages are released together using a tag of the form `pyth-js-v<number>`. (The `number` is arbitrary.)
 If you have a javascript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
 and it will be excluded from the publishing workflow. If you are creating a new public javascript package, you should add
 the following config option to `package.json`:
@@ -149,7 +157,7 @@ If you'd like to read more about the best practices, checkout this best practice
 ## Audit / Feature Status
 
 ⚠ **This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-implied. See the License for the specific language governing permissions and limitations under the License.** Or plainly
+implied. See the [License](./LICENSE) for the specific language governing permissions and limitations under the License.** Or plainly
 spoken - this is a very complex piece of software which targets a bleeding-edge, experimental smart contract runtime.
 Mistakes happen, and no matter how hard you try and whether you pay someone to audit it, it may eat your tokens, set
 your printer on fire or startle your cat. Cryptocurrencies are a high-risk investment, no matter how fancy.
