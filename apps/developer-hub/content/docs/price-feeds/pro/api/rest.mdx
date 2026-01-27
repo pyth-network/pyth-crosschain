@@ -12,57 +12,37 @@ https://pyth-lazer.dourolabs.app
 
 ## Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/latest_price` | Fetch latest price for one or more price feeds |
+| Method | Path               | Description                                         |
+| ------ | ------------------ | --------------------------------------------------- |
+| POST   | `/v1/latest_price` | Fetch the latest price for one or more price feeds  |
+| POST   | `/v1/price`        | Fetch price data at a specific historical timestamp |
 
-### GET /v1/latest_price
+### POST /v1/latest_price
 
-**Query Parameters**
+Returns the most recent price data for the requested feeds. The request body follows the same schema as the WebSocket subscribe message — see the [Payload Reference](/price-feeds/pro/payload-reference) for full details.
 
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `price_feed_ids` | `string` | Yes | Comma-separated list of price feed IDs | `1,2,3` |
-| `properties` | `string` | No | Comma-separated list of properties | `price,confidence` |
-| `chains` | `string` | No | Comma-separated list of chains for signed payloads | `solana,evm` |
-| `parsed` | `boolean` | No | Include human-readable parsed data (default: `true`) | `true` |
-| `encoding` | `string` | No | Binary encoding: `hex` or `base64` (default: `base64`) | `hex` |
+### POST /v1/price
 
-**Response Schema**
+Returns price data at a specific historical timestamp.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `timestampUs` | `string` | Unix timestamp in microseconds |
-| `priceFeeds` | `PriceFeed[]` | Array of price feed data |
-| `solana` | `BinaryData` | Solana-compatible signed payload (when requested) |
-| `evm` | `BinaryData` | EVM-compatible signed payload (when requested) |
+**Request Body**
 
-**PriceFeed Object**
+All fields from `/v1/latest_price`, plus:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `priceFeedId` | `number` | Unique price feed identifier |
-| `price` | `string` | Price mantissa. Calculate: `price * 10^exponent` |
-| `confidence` | `number` | Confidence interval (mantissa) |
-| `bestBidPrice` | `string` | Highest bid price (mantissa) |
-| `bestAskPrice` | `string` | Lowest ask price (mantissa) |
-| `exponent` | `number` | Decimal exponent (typically -8) |
-| `publisherCount` | `number` | Number of contributing publishers |
-| `marketSession` | `string` | Trading session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed` |
+| Field       | Type     | Required | Description                    |
+| ----------- | -------- | -------- | ------------------------------ |
+| `timestamp` | `string` | Yes      | Unix timestamp in microseconds |
 
-**Error Responses**
+For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
 
-| Status | Code | Description |
-|--------|------|-------------|
-| `400` | `INVALID_REQUEST` | Invalid request parameters |
-| `401` | `UNAUTHORIZED` | Missing or invalid token |
-| `403` | `FORBIDDEN` | Token lacks required permissions |
-| `404` | `NOT_FOUND` | Price feed not found |
-| `429` | `RATE_LIMITED` | Rate limit exceeded |
-| `500` | `INTERNAL_ERROR` | Server error |
+## OpenAPI Schema
+
+The REST API is part of the Pyth Pro Router API. The full OpenAPI specification is available at:
+
+- [Interactive Docs](https://pyth-lazer-0.dourolabs.app/docs)
+- [OpenAPI JSON](https://pyth-lazer-0.dourolabs.app/docs/openapi.json)
 
 ## Related
 
-- [Authentication, Rate Limits & Error Codes](/price-feeds/pro/api/common)
 - [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
 - [WebSocket API](/price-feeds/pro/api/websocket) - For real-time updates
