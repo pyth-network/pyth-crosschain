@@ -6,105 +6,26 @@ slug: /price-feeds/pro/api/websocket
 
 ## Base URL
 
-```
-wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream
-```
+| Endpoint  | URL                                          |
+| --------- | -------------------------------------------- |
+| Primary   | `wss://pyth-lazer-0.dourolabs.app/v1/stream` |
+| Secondary | `wss://pyth-lazer-1.dourolabs.app/v1/stream` |
+| Tertiary  | `wss://pyth-lazer-2.dourolabs.app/v1/stream` |
 
-Connect to all three endpoints (`-0`, `-1`, `-2`) for redundancy during deployments.
+Connect to all three endpoints for redundancy during deployments. See [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices) for a detailed guide on establishing connections.
 
-## Endpoints
+## Messages
 
-| Method | Path | Description |
-|--------|------|-------------|
-| WebSocket | `/v1/stream` | Real-time price streaming connection |
+The WebSocket API uses JSON messages for communication. For the full request/response schema — including subscribe/unsubscribe parameters, available properties, channels, and response structure — see the [Payload Reference](/price-feeds/pro/payload-reference).
 
-## Client to Server Messages
+## OpenAPI Schema
 
-### Subscribe
+The WebSocket API is part of the Pyth Pro Router API. The full OpenAPI specification is available at:
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `type` | `string` | Yes | - | Must be `"subscribe"` |
-| `subscriptionId` | `number` | Yes | - | Unique identifier for this subscription |
-| `priceFeedIds` | `number[]` | Yes | - | Array of [price feed IDs](/price-feeds/pro/price-feed-ids) |
-| `properties` | `string[]` | Yes | - | Properties to include (see [Available Properties](#available-properties)) |
-| `chains` | `string[]` | No | `[]` | Blockchain formats: `"solana"`, `"evm"`, `"leEcdsa"`, `"leUnsigned"` |
-| `channel` | `string` | No | `"real_time"` | Update frequency (see [Channels](#channels)) |
-| `parsed` | `boolean` | No | `true` | Include human-readable parsed data |
-| `jsonBinaryEncoding` | `string` | No | `"base64"` | Encoding: `"hex"` or `"base64"` |
-| `deliveryFormat` | `string` | No | `"json"` | Response format: `"json"` or `"binary"` |
-
-**Available Properties**
-
-| Property | Type | Description |
-|---------|------|-------------|
-| `price` | `i64` | Aggregate price (mantissa) |
-| `confidence` | `i64` | Price confidence interval |
-| `bestBidPrice` | `i64` | Highest bid price |
-| `bestAskPrice` | `i64` | Lowest ask price |
-| `publisherCount` | `u16` | Number of contributing publishers |
-| `exponent` | `i16` | Decimal exponent for price conversion |
-| `marketSession` | `string` | Trading session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed` |
-| `fundingRate` | `i64` | Current funding rate (derivatives only) |
-| `fundingTimestamp` | `u64` | Timestamp of last funding rate calculation |
-| `fundingRateInterval` | `u64` | Duration between funding updates (microseconds) |
-
-**Channels**
-
-| Channel | Update Frequency | Use Case |
-|---------|------------------|----------|
-| `real_time` | As fast as available (1-50ms) | High-frequency trading |
-| `fixed_rate@1ms` | Every 1 millisecond | Ultra-low latency |
-| `fixed_rate@50ms` | Every 50 milliseconds | Low-latency trading |
-| `fixed_rate@200ms` | Every 200 milliseconds | Standard trading |
-| `fixed_rate@1000ms` | Every 1 second | Dashboards |
-
-### Unsubscribe
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `type` | `string` | Yes | Must be `"unsubscribe"` |
-| `subscriptionId` | `number` | Yes | The subscription ID to cancel |
-
-## Server to Client Messages
-
-### StreamUpdated
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | `string` | Always `"streamUpdated"` |
-| `subscriptionId` | `number` | Your subscription identifier |
-| `parsed` | `ParsedPayload` | Human-readable price data (when `parsed: true`) |
-| `parsed.timestampUs` | `string` | Unix timestamp in microseconds |
-| `parsed.priceFeeds` | `PriceFeed[]` | Array of price feed updates |
-| `solana` | `BinaryData` | Solana-compatible signed payload (Ed25519) |
-| `evm` | `BinaryData` | EVM-compatible signed payload (secp256k1) |
-| `leEcdsa` | `BinaryData` | Little-endian ECDSA payload |
-| `leUnsigned` | `BinaryData` | Unsigned payload (off-chain use only) |
-
-**PriceFeed Object**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `priceFeedId` | `number` | Unique price feed identifier |
-| `price` | `string` | Price mantissa. Calculate: `price * 10^exponent` |
-| `confidence` | `number` | Confidence interval (mantissa) |
-| `bestBidPrice` | `string` | Highest bid price (mantissa) |
-| `bestAskPrice` | `string` | Lowest ask price (mantissa) |
-| `exponent` | `number` | Decimal exponent (typically -8) |
-| `publisherCount` | `number` | Number of contributing publishers |
-| `marketSession` | `string` | Trading session status |
-
-### Error
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | `string` | Always `"error"` |
-| `code` | `string` | Error code (see [Error Codes](/price-feeds/pro/api/common#websocket-application-errors)) |
-| `message` | `string` | Human-readable error description |
+- [Interactive Docs](https://pyth-lazer-0.dourolabs.app/docs)
+- [OpenAPI JSON](https://pyth-lazer-0.dourolabs.app/docs/openapi.json)
 
 ## Related
 
-- [Authentication, Rate Limits & Error Codes](/price-feeds/pro/api/common)
 - [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
 - [SDK Repository](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js)

@@ -1,0 +1,38 @@
+---
+title: Error Codes
+description: Error responses for Pyth Pro APIs
+slug: /price-feeds/pro/error-codes
+---
+
+## WebSocket Errors
+
+The WebSocket API uses message-based error responses rather than numeric status codes.
+
+### Error Response
+
+Returned for general errors such as validation failures or malformed messages.
+
+```json
+{
+  "type": "error",
+  "message": "Human-readable error description"
+}
+```
+
+### SubscriptionError Response
+
+Returned for subscription-specific errors.
+
+```json
+{
+  "type": "subscriptionError",
+  "subscriptionId": 1,
+  "message": "Human-readable error description"
+}
+```
+
+**Common causes:**
+
+- Invalid or unknown price feed IDs
+- Not entitled to requested feeds
+- Duplicate subscription IDs

@@ -7,6 +7,8 @@
     "integrate-as-consumer",
     "---API Reference---",
     "api",
+    "rate-limits",
+    "error-codes",
     "payload-reference",
     "---Resources---",
     "price-feed-ids",

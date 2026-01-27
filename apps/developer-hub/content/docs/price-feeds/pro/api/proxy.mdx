@@ -7,7 +7,8 @@ slug: /price-feeds/pro/api/proxy
 import { Callout } from "fumadocs-ui/components/callout";
 
 <Callout type="warning" title="Beta Service">
-  **This service is in beta and is not meant for production use.** The service might go down and all interfaces, URLs, etc. might change without notice.
+  **This service is in beta and is not meant for production use.** The service
+  might go down and all interfaces, URLs, etc. might change without notice.
 </Callout>
 
 ## Base URL
@@ -20,18 +21,18 @@ https://pyth-lazer-proxy-3.dourolabs.app
 
 ## Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/v1/latest_price` | Fetch latest price for given feed IDs |
-| GET | `/v1/stream` | Stream continuous price updates (SSE) |
+| Method | Path               | Description                           |
+| ------ | ------------------ | ------------------------------------- |
+| GET    | `/v1/latest_price` | Fetch latest price for given feed IDs |
+| GET    | `/v1/stream`       | Stream continuous price updates (SSE) |
 
 ### GET /v1/latest_price
 
 **Query Parameters**
 
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `price_feed_ids` | `number[]` | Yes | Price feed IDs (repeatable parameter) | `?price_feed_ids=1&price_feed_ids=2` |
+| Parameter        | Type       | Required | Description                           | Example                              |
+| ---------------- | ---------- | -------- | ------------------------------------- | ------------------------------------ |
+| `price_feed_ids` | `number[]` | Yes      | Price feed IDs (repeatable parameter) | `?price_feed_ids=1&price_feed_ids=2` |
 
 **Example**
 
@@ -43,9 +44,9 @@ https://pyth-lazer-proxy-3.dourolabs.app/v1/latest_price?price_feed_ids=1&price_
 
 **Query Parameters**
 
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `price_feed_ids` | `number[]` | Yes | Price feed IDs (repeatable parameter) | `?price_feed_ids=1&price_feed_ids=2` |
+| Parameter        | Type       | Required | Description                           | Example                              |
+| ---------------- | ---------- | -------- | ------------------------------------- | ------------------------------------ |
+| `price_feed_ids` | `number[]` | Yes      | Price feed IDs (repeatable parameter) | `?price_feed_ids=1&price_feed_ids=2` |
 
 **Example**
 

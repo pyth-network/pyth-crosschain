@@ -1,6 +1,6 @@
 ---
 title: History API
-description: Historical price data and OHLC candlestick data
+description: Historical price data, OHLC candlesticks, and TradingView integration
 slug: /price-feeds/pro/api/history
 ---
 
@@ -10,96 +10,176 @@ slug: /price-feeds/pro/api/history
 https://history.pyth-lazer.dourolabs.app
 ```
 
+All `{channel}` path segments refer to a price channel (e.g. `real_time`, `fixed_rate@200ms`).
+
 ## Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/history/v1/symbols` | List all available price feed symbols |
-| GET | `/history/v1/ohlc` | Get OHLC candlestick data |
-| GET | `/history/v1/prices` | Get historical price data points |
+| Method | Path                   | Auth | Description                   |
+| ------ | ---------------------- | ---- | ----------------------------- |
+| GET    | `/live`                | No   | Health check                  |
+| GET    | `/symbols`             | No   | List available symbols        |
+| GET    | `/{channel}/price`     | No   | Price at a specific timestamp |
+| GET    | `/{channel}/history`   | No   | OHLC candlestick data         |
+| GET    | `/{channel}/search`    | No   | Search symbols                |
+| GET    | `/{channel}/symbols`   | No   | Resolve a single symbol       |
+| GET    | `/{channel}/streaming` | No   | SSE price stream              |
+| GET    | `/{channel}/config`    | No   | TradingView configuration     |
+| GET    | `/publisher_updates`   | Yes  | Raw publisher updates         |
+| GET    | `/state`               | Yes  | Governance state              |
 
-### GET /history/v1/symbols
+---
 
-**Response Schema**
+### GET /symbols
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `symbol` | `string` | Trading pair symbol (e.g., `BTC/USD`) |
-| `priceFeedId` | `number` | Numeric ID for use with other APIs |
-| `description` | `string` | Human-readable description |
-| `assetType` | `string` | Asset class: `crypto`, `equity`, `fx`, `commodity`, `metal` |
-
-### GET /history/v1/ohlc
+List all available price feed symbols, optionally filtered.
 
 **Query Parameters**
 
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `symbol` | `string` | Yes | Trading pair symbol | `BTC/USD` |
-| `resolution` | `string` | Yes | Candle resolution | `1`, `5`, `15`, `60`, `D` |
-| `from` | `number` | Yes | Start timestamp (Unix seconds) | `1704067200` |
-| `to` | `number` | Yes | End timestamp (Unix seconds) | `1704153600` |
+| Parameter    | Type     | Required | Description                                                                                          |
+| ------------ | -------- | -------- | ---------------------------------------------------------------------------------------------------- |
+| `query`      | `string` | No       | Text filter for symbol names                                                                         |
+| `asset_type` | `string` | No       | Filter by asset type: `crypto`, `fx`, `equity`, `metal`, `rates`, `nav`, `commodity`, `funding-rate` |
+
+---
+
+### GET /\{channel\}/price
+
+Returns price data at a specific historical timestamp.
+
+**Query Parameters**
+
+| Parameter   | Type       | Required | Description                        | Example            |
+| ----------- | ---------- | -------- | ---------------------------------- | ------------------ |
+| `ids`       | `number[]` | Yes      | Price feed IDs                     | `1,2`              |
+| `timestamp` | `number`   | Yes      | Unix timestamp in **microseconds** | `1704067200000000` |
+
+---
+
+### GET /\{channel\}/history
+
+Returns OHLC candlestick data in TradingView format.
+
+**Query Parameters**
+
+| Parameter    | Type     | Required | Description                            | Example      |
+| ------------ | -------- | -------- | -------------------------------------- | ------------ |
+| `symbol`     | `string` | Yes      | Trading pair symbol (case-insensitive) | `BTC/USD`    |
+| `from`       | `number` | Yes      | Start timestamp (Unix seconds)         | `1704067200` |
+| `to`         | `number` | Yes      | End timestamp (Unix seconds)           | `1704153600` |
+| `resolution` | `string` | Yes      | Candle resolution (see below)          | `60`         |
 
 **Available Resolutions**
 
 | Resolution | Description |
-|------------|-------------|
-| `1` | 1 minute |
-| `5` | 5 minutes |
-| `15` | 15 minutes |
-| `30` | 30 minutes |
-| `60` | 1 hour |
-| `240` | 4 hours |
-| `D` | 1 day |
-| `W` | 1 week |
-| `M` | 1 month |
-
-**Response Schema (TradingView format)**
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `s` | `string` | Status: `ok` or `error` |
-| `t` | `number[]` | Array of Unix timestamps (seconds) |
-| `o` | `number[]` | Array of open prices |
-| `h` | `number[]` | Array of high prices |
-| `l` | `number[]` | Array of low prices |
-| `c` | `number[]` | Array of close prices |
-| `v` | `number[]` | Array of volumes (if available) |
-
-Arrays are aligned by index - `t[0]`, `o[0]`, `h[0]`, `l[0]`, `c[0]` represent the same candle.
-
-### GET /history/v1/prices
-
-**Query Parameters**
-
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `symbol` | `string` | Yes | Trading pair symbol | `BTC/USD` |
-| `from` | `number` | Yes | Start timestamp (Unix seconds) | `1704067200` |
-| `to` | `number` | Yes | End timestamp (Unix seconds) | `1704153600` |
-| `resolution` | `string` | No | Data resolution (default: `1`) | `60` |
+| ---------- | ----------- |
+| `1`        | 1 minute    |
+| `2`        | 2 minutes   |
+| `5`        | 5 minutes   |
+| `15`       | 15 minutes  |
+| `30`       | 30 minutes  |
+| `60`       | 1 hour      |
+| `120`      | 2 hours     |
+| `240`      | 4 hours     |
+| `360`      | 6 hours     |
+| `720`      | 12 hours    |
+| `D`        | 1 day       |
+| `W`        | 1 week      |
+| `M`        | 1 month     |
 
 **Response Schema**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `timestamp` | `number` | Unix timestamp (seconds) |
-| `price` | `number` | Price at the given timestamp |
-| `confidence` | `number` | Confidence interval at the given timestamp |
+| Field | Type       | Description               |
+| ----- | ---------- | ------------------------- |
+| `s`   | `string`   | Status: `ok` or `error`   |
+| `t`   | `number[]` | Unix timestamps (seconds) |
+| `o`   | `number[]` | Open prices               |
+| `h`   | `number[]` | High prices               |
+| `l`   | `number[]` | Low prices                |
+| `c`   | `number[]` | Close prices              |
+| `v`   | `number[]` | Volumes (if available)    |
 
-**Error Responses**
+Arrays are aligned by index — `t[0]`, `o[0]`, `h[0]`, `l[0]`, `c[0]` represent the same candle.
 
-| Status | Code | Description |
-|--------|------|-------------|
-| `400` | `INVALID_SYMBOL` | Symbol format is invalid |
-| `400` | `INVALID_RESOLUTION` | Resolution not supported |
-| `400` | `INVALID_TIME_RANGE` | From/to timestamps invalid |
-| `404` | `SYMBOL_NOT_FOUND` | Requested symbol doesn't exist |
-| `429` | `RATE_LIMITED` | Too many requests |
-| `500` | `INTERNAL_ERROR` | Server error |
+---
+
+### GET /\{channel\}/search
+
+Search for symbols by name and type.
+
+**Query Parameters**
+
+| Parameter  | Type     | Required | Description                       |
+| ---------- | -------- | -------- | --------------------------------- |
+| `query`    | `string` | Yes      | Search text                       |
+| `type`     | `string` | Yes      | Asset type filter                 |
+| `exchange` | `string` | Yes      | Exchange name (default: `"PYTH"`) |
+| `limit`    | `number` | Yes      | Max results (default: `15`)       |
+
+---
+
+### GET /\{channel\}/symbols
+
+Resolve a single symbol to its full configuration.
+
+**Query Parameters**
+
+| Parameter | Type     | Required | Description                    |
+| --------- | -------- | -------- | ------------------------------ |
+| `symbol`  | `string` | Yes      | Symbol name (case-insensitive) |
+
+---
+
+### GET /\{channel\}/streaming
+
+Server-sent events (SSE) stream of live price updates.
+
+---
+
+### GET /\{channel\}/config
+
+Returns TradingView-compatible configuration including supported resolutions and data capabilities.
+
+---
+
+### GET /publisher_updates
+
+Returns raw publisher price updates. Requires authentication.
+
+**Query Parameters**
+
+| Parameter       | Type       | Required | Description                               |
+| --------------- | ---------- | -------- | ----------------------------------------- |
+| `price_feed_id` | `number[]` | No       | Filter by price feed IDs                  |
+| `min_timestamp` | `string`   | No       | ISO 8601 start time (default: 7 days ago) |
+| `max_timestamp` | `string`   | No       | ISO 8601 end time                         |
+| `sort`          | `string`   | Yes      | `"Ascending"` or `"Descending"`           |
+| `limit`         | `number`   | No       | Max results, 1–10000 (default: `15`)      |
+
+---
+
+### GET /state
+
+Returns the current governance state. Requires authentication.
+
+**Query Parameters**
+
+| Parameter            | Type      | Required | Description                |
+| -------------------- | --------- | -------- | -------------------------- |
+| `all`                | `boolean` | No       | Return all state           |
+| `publishers`         | `boolean` | No       | Include publisher data     |
+| `assets`             | `boolean` | No       | Include asset data         |
+| `feeds`              | `boolean` | No       | Include feed data          |
+| `governance_sources` | `boolean` | No       | Include governance sources |
+| `feature_flags`      | `boolean` | No       | Include feature flags      |
+
+## OpenAPI Schema
+
+The full OpenAPI specification is available at:
+
+- [Interactive Docs](https://history.pyth-lazer.dourolabs.app/docs)
+- [OpenAPI JSON](https://history.pyth-lazer.dourolabs.app/docs/v1/openapi.json)
 
 ## Related
 
-- [Authentication, Rate Limits & Error Codes](/price-feeds/pro/api/common)
 - [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
 - [Price Feed IDs](/price-feeds/pro/price-feed-ids) - Symbol to ID mapping
