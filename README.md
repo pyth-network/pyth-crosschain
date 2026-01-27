@@ -3,10 +3,24 @@
 This repository acts as a monorepo for the various components that make up
 Pyth protocols.
 
-Within this monorepo you will find the following subprojects:
+## Overview
+
+This is a multi-language monorepo that groups on-chain programs, off-chain
+services, SDKs, and tooling in one place. Major top-level areas include:
+
+- apps/
+- contract_manager/
+- governance/
+- packages/
+- price_service/
+- pythnet/
+- scripts/
+- target_chains/
 
 ## Table of Contents
 
+- [Overview](#overview)
+- [Repository Layout](#repository-layout)
 - [Target Chains](#target-chains)
 - [Hermes](#hermes)
 - [Fortuna](#fortuna)
@@ -19,6 +33,25 @@ Within this monorepo you will find the following subprojects:
     - [Common tasks](#common-tasks)
     - [Building a new web app, JS / TS library or CLI tool](#building-a-new-web-app-js--ts-library-or-cli-tool)
 - [Audit / Feature Status](#audit--feature-status)
+
+## Repository Layout
+
+- [apps](./apps/): User-facing services and applications such as Hermes and
+  Fortuna, plus related runtime configuration.
+- [contract_manager](./contract_manager/): Tooling and deployment workflows for
+  managing on-chain contracts across supported networks.
+- [governance](./governance/): Governance programs, configuration, and related
+  tooling for protocol-level changes.
+- [packages](./packages/): Shared JavaScript/TypeScript packages, SDKs, and
+  libraries used by apps and integrations.
+- [price_service](./price_service/): Core price service code, APIs, and client
+  libraries used to consume Pyth prices.
+- [pythnet](./pythnet/): Pythnet-specific programs, configs, and operational
+  tooling.
+- [scripts](./scripts/): Repository automation, release helpers, and developer
+  utilities.
+- [target_chains](./target_chains/): Chain-specific contracts and SDKs for the
+  networks Pyth supports.
 
 ## Target Chains
 
