@@ -2,7 +2,7 @@
 
 .container {
   margin: theme.spacing(4) 0;
-  border: 1px solid theme.color("border");
+  border: theme.spacing(0.25) solid theme.color("border");
   border-radius: theme.border-radius("lg");
   overflow: hidden;
   background-color: theme.color("background", "secondary");
@@ -14,7 +14,7 @@
   padding: theme.spacing(2) theme.spacing(4);
   color: theme.color("muted");
   background-color: theme.color("background", "primary");
-  border-bottom: 1px solid theme.color("border");
+  border-bottom: theme.spacing(0.25) solid theme.color("border");
 }
 
 .content {
@@ -28,22 +28,14 @@
 
 .fieldsColumn {
   flex: none;
-  position: relative;
-  max-height: 300px;
-  overflow-y: auto;
 
   @include theme.breakpoint("lg") {
     flex: 0 0 50%;
-    max-height: none;
-    overflow-y: visible;
   }
 }
 
 .tableWrapper {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  scroll-behavior: smooth;
+  width: 100%;
 }
 
 .table {
@@ -58,7 +50,7 @@
 
   padding: theme.spacing(2) theme.spacing(3);
   text-align: left;
-  border-bottom: 1px solid theme.color("border");
+  border-bottom: theme.spacing(0.25) solid theme.color("border");
   color: theme.color("muted");
   background-color: theme.color("background", "secondary");
   position: sticky;
@@ -69,12 +61,15 @@
 .tableCell {
   padding: theme.spacing(2) theme.spacing(3);
   text-align: left;
-  border-bottom: 1px solid theme.color("border");
+  border-bottom: theme.spacing(0.25) solid theme.color("border");
 }
 
 .row {
   transition: background-color 200ms ease-in-out;
-  cursor: pointer;
+
+  &.clickable {
+    cursor: pointer;
+  }
 
   &:hover,
   &.highlighted {
@@ -92,6 +87,7 @@
 
 .fieldName {
   white-space: nowrap;
+  position: relative;
 }
 
 .fieldNameCode {
@@ -100,6 +96,25 @@
   @include theme.text("xs", "semibold");
 
   color: theme.color("foreground");
+}
+
+.fieldHint {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: theme.spacing(1);
+  padding: theme.spacing(1.5) theme.spacing(2);
+  background-color: theme.color("background", "primary");
+  border: theme.spacing(0.25) solid theme.color("border");
+  border-radius: theme.border-radius("sm");
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+  box-shadow: 0 theme.spacing(0.5) theme.spacing(2) rgb(0 0 0 / 10%);
 }
 
 .fieldType {
@@ -117,12 +132,12 @@
 .codeColumn {
   flex: none;
   background-color: theme.color("background", "primary");
-  border-top: 2px solid theme.color("border");
+  border-top: theme.spacing(0.5) solid theme.color("border");
 
   @include theme.breakpoint("lg") {
     flex: 0 0 50%;
     border-top: none;
-    border-left: 2px solid theme.color("border");
+    border-left: theme.spacing(0.5) solid theme.color("border");
   }
 }
 
@@ -138,6 +153,7 @@
   tab-size: 2;
   white-space: pre;
   display: block;
+  overflow: visible;
 }
 
 .codeLine {
