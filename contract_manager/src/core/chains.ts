@@ -10,6 +10,7 @@
 /* eslint-disable n/no-process-env */
 
 import assert from "node:assert/strict";
+import { readFile, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
 
 import { Network } from "@injectivelabs/networks";
@@ -67,7 +68,6 @@ import { Storable } from "./base";
 import type { TokenId } from "./token";
 import { execFileAsync } from "../utils/exec-file-async";
 import { hasProperty } from "../utils/utils";
-import { readFile, writeFile } from "node:fs/promises";
 
 function computeHashOnElements(elements: string[]): string {
   let hash = "0";
