@@ -81,6 +81,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
     numResults,
     numPages,
     mkPageLink,
+    isPending,
   } = useQueryParamFilterPagination(
     feedsFilteredByAssetClass,
     () => true,
@@ -188,6 +189,7 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
       onPageChange={updatePage}
       mkPageLink={mkPageLink}
       rows={rows}
+      isPending={isPending}
       {...props}
     />
   );
@@ -221,6 +223,7 @@ type PriceFeedsCardContents = Pick<Props, "id"> &
           | "exponent"
           | "numPublishers"
         > & { textValue: string })[];
+        isPending: boolean;
       }
   );
 
@@ -252,6 +255,7 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
             : {
                 value: props.search,
                 onChange: props.onSearchChange,
+                isPending: props.isPending,
               })}
         />
         <Select
