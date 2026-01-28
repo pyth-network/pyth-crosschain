@@ -1,3 +1,5 @@
 {
-  "pages": ["index", "websocket", "rest", "history", "proxy"]
+  "title": "API Reference",
+  "pages": ["[WebSocket](/price-feeds/pro/api/websocket)", "[REST](/price-feeds/pro/api/rest)", "[History](/price-feeds/pro/api/history)", "[Proxy (Beta)](/price-feeds/pro/api/proxy)"],
+  "defaultOpen": true
 }

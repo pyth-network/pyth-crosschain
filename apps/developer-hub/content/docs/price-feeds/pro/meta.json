@@ -5,10 +5,10 @@
     "acquire-access-token",
     "subscribe-to-prices",
     "integrate-as-consumer",
-    "---API Reference---",
-    "payload-reference",
+    
     "---Resources---",
     "api",
+    "payload-reference",
     "rate-limits",
     "error-codes",
     "price-feed-ids",
