@@ -72,7 +72,8 @@ Here's what a typical StreamUpdated response that contains a PriceFeed looks lik
         "publisherCount": 9,
         "exponent": -8,
         "confidence": 1373488286,
-        "marketSession": "regular"
+        "marketSession": "regular",
+        "feedUpdateTimestamp": "1758690761750000"
       },
       {
         "priceFeedId": 2,
@@ -82,7 +83,8 @@ Here's what a typical StreamUpdated response that contains a PriceFeed looks lik
         "publisherCount": 12,
         "exponent": -8,
         "confidence": 106965585,
-        "marketSession": "regular"
+        "marketSession": "regular",
+        "feedUpdateTimestamp": "1758690761750000"
       }
     ]
   },
@@ -122,10 +124,15 @@ Main aggregate price calculated from all contributing publishers
 - **Invariants**: Non-zero when present (null values filtered out)
 
 <Callout type="warning">
-  **Missing Price Field**: In some cases, the `price` field may be absent from
-  the response. This indicates that the price could not be computed at that
-  moment. When this occurs, you should either use the last valid price you
-  received or wait for a fresh update with a valid price.
+  **Price Availability Semantics**: In rare cases, the `price` field may be absent from
+  the response. This can only happen when a feed has been recently activated and 
+  no price has ever been produced yet. Once a feed produces its first valid price, 
+  a price will always be provided for that feed going forward. To determine when the price was generated, 
+  consumers must check `feedUpdateTimestamp`:
+    - If `feedUpdateTimestamp` is equal to the update’s `timestampUs`, the price was generated as part of this update.
+    - If `feedUpdateTimestamp` is earlier than `timestampUs`, the price is the most recent available price, 
+      carried forward from the time indicated by `feedUpdateTimestamp`, not generated at the current update time.
+  Consumers should always rely on `feedUpdateTimestamp` to understand the freshness and origin of the price.
 </Callout>
 
 #### Data Publisher Count - `publisher_count`
@@ -169,6 +176,18 @@ This helps consumers understand whether a price comes from active trading hours 
 
 - **Type**: `string`
 - **Possible Values**: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`
+- **Availability**: Only included if requested in subscription properties
+
+#### Feed Update Timestamp - `feedUpdateTimestamp`
+
+Represents the timestamp at which the price for this specific feed was last generated. This enables consumers to assess the actual 
+freshness of the price and determine whether it was produced as part of the current update or carried forward from a previous one. 
+If the value is equal to the update's `timestampUs`, the price was generated in this update. If it is earlier than `timestampUs`, 
+the price is the most recent available value and was generated at an earlier time.
+For more details, see the [Price Availability Semantics](#aggregate-market-price---price).
+
+- **Type**: `string`
+- **Description**: Microseconds since Unix epoch
 - **Availability**: Only included if requested in subscription properties
 
 ### Market Depth Properties
