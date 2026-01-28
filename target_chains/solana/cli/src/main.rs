@@ -7,7 +7,7 @@ use {
     clap::Parser,
     cli::{Action, Cli},
     pyth_solana_receiver::sdk::{
-        deserialize_accumulator_update_data, get_random_treasury_id, VAA_SPLIT_INDEX,
+        VAA_SPLIT_INDEX, deserialize_accumulator_update_data, get_random_treasury_id
     },
     pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
@@ -16,24 +16,22 @@ use {
     solana_sdk::{
         commitment_config::CommitmentConfig,
         compute_budget::ComputeBudgetInstruction,
-        instruction::Instruction,
+        instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         rent::Rent,
-        signature::{read_keypair_file, Keypair},
+        signature::{Keypair, read_keypair_file},
         signer::Signer,
         system_instruction,
         transaction::Transaction,
     },
-    wormhole_core_bridge_solana::sdk::{WriteEncodedVaaArgs, VAA_START},
+    wormhole_core_bridge_solana::sdk::{VAA_START, WriteEncodedVaaArgs},
     wormhole_sdk::{
-        vaa::{Body, Header},
-        Vaa,
+        Vaa, vaa::{Body, Header}
     },
     wormhole_solana::{
-        instructions::{
-            initialize, post_vaa, upgrade_guardian_set, verify_signatures_txs, PostVAAData,
-        },
-        Account, Config as BridgeConfig, GuardianSet, VAA as LegacyPostedVaa,
+        Account, Config as BridgeConfig, GuardianSet, VAA as LegacyPostedVaa, instructions::{
+            PostVAAData, initialize, post_vaa, upgrade_guardian_set, verify_signatures_txs
+        }
     },
 };
 
@@ -193,6 +191,22 @@ fn main() -> Result<()> {
                     false,
                 )?;
             }
+        }
+
+        Action::UpdateGuardianSetTtl {} => {
+            let rpc_client = RpcClient::new(url);
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+            let wormhole_config = BridgeConfig::key(&wormhole, ());
+
+            let instruction = Instruction {
+                program_id: wormhole,
+                accounts: vec![
+                    AccountMeta::new(wormhole_config, false),
+                ],
+                data: vec![9], // UpdateGuardianSetTtl
+            };
+            process_transaction(&rpc_client, vec![instruction], &vec![&payer])?;
         }
 
         Action::InitializePythReceiver {
