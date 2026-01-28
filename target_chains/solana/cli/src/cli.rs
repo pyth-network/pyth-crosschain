@@ -67,6 +67,8 @@ pub enum Action {
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
     )]
     InitializeWormholeReceiver {},
+    #[clap(about = "Update the guardian set TTL to 24h")]
+    UpdateGuardianSetTtl {},
     InitializePythReceiver {
         #[clap(short = 'f', long, help = "Fee in lamports")]
         fee: u64,
