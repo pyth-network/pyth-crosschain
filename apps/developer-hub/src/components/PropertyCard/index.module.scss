@@ -50,10 +50,15 @@
 
 .detailItem {
   display: grid;
-  grid-template-columns: theme.spacing(35) 1fr;
-  gap: theme.spacing(3);
+  grid-template-columns: 1fr;
+  gap: theme.spacing(2);
   padding: theme.spacing(2) 0;
   border-bottom: 1px solid theme.color("border");
+
+  @include theme.breakpoint("sm") {
+    grid-template-columns: theme.spacing(35) 1fr;
+    gap: theme.spacing(3);
+  }
 
   &:last-child {
     border-bottom: none;
@@ -71,6 +76,7 @@
 
   margin: 0;
   color: theme.color("muted");
+  line-height: 1.6;
 }
 
 .detailCode {
@@ -78,9 +84,13 @@
 
   @include theme.text("sm", "normal");
 
-  background-color: theme.color("background", "primary");
-  padding: theme.spacing(1) theme.spacing(2);
+  background-color: color-mix(in srgb, theme.color("border") 30%, transparent);
+  padding: theme.spacing(0.5) theme.spacing(1.5);
   border-radius: theme.border-radius("sm");
+  display: inline;
+  vertical-align: baseline;
+  line-height: inherit;
+  white-space: nowrap;
 }
 
 .detailLink {

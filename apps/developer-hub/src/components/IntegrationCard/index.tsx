@@ -46,11 +46,12 @@ export function IntegrationCard({
     </>
   );
 
-  return external ? (
-    <a {...commonProps} target="_blank" rel="noopener noreferrer">
+  return (
+    <Link
+      {...commonProps}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
       {content}
-    </a>
-  ) : (
-    <Link {...commonProps}>{content}</Link>
+    </Link>
   );
 }

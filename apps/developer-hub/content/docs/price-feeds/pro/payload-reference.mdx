@@ -7,70 +7,36 @@ slug: /price-feeds/pro/payload-reference
 import { Callout } from "fumadocs-ui/components/callout";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-This page provides a comprehensive reference for understanding Pyth Pro payload structure, field specifications, and available data formats. This information is essential for integrating with Pyth Pro as a consumer and understanding the data you receive.
+This page provides a comprehensive reference for understanding Pyth Pro payload structure, field specifications, and available data formats.
 
 <Callout type="info">
   This reference is designed for both technical and non-technical stakeholders
   to understand Pyth Pro's data offering. For implementation details, see our
-  [integration guides](/price-feeds/pro/integrate-as-consumer).
+  [integration guides](/price-feeds/pro/integrate-as-consumer) for onchain
+  integration, or [subscribe to prices](/price-feeds/pro/subscribe-to-prices)
+  for offchain consumption via SDKs.
 </Callout>
 
 ## What is a Pyth Pro Payload?
 
 A Pyth Pro payload is a real-time data update containing financial market information with cryptographic signatures for verification on blockchain. When you subscribe to Pyth Pro price feeds, you receive `StreamUpdated` messages containing this structured data.
 
-## Available Properties
+### Quick reference
 
-When subscribing to Pyth Pro, specify which properties you want to receive. Select the tab below to view properties by feed type:
+| Property              | Type     | Scope       | Description                                                              |
+| --------------------- | -------- | ----------- | ------------------------------------------------------------------------ |
+| `publisherCount`      | `u16`    | All         | Number of contributing publishers.                                       |
+| `exponent`            | `i16`    | All         | Decimal exponent: `actual_price = mantissa × 10^exponent`.               |
+| `marketSession`       | `string` | All         | Session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`.    |
+| `price`               | `i64`    | Spot        | Aggregate market price (mantissa). Use with `exponent` for actual price. |
+| `confidence`          | `i64`    | Spot        | Price uncertainty; higher = more disagreement.                           |
+| `bestBidPrice`        | `i64`    | Spot        | Highest bid across publishers.                                           |
+| `bestAskPrice`        | `i64`    | Spot        | Lowest ask across publishers.                                            |
+| `fundingRate`         | `i64`    | Derivatives | Funding rate (perpetual futures).                                        |
+| `fundingTimestamp`    | `u64`    | Derivatives | When funding rate was last calculated (μs).                              |
+| `fundingRateInterval` | `u64`    | Derivatives | Interval between funding updates (μs).                                   |
 
-<Tabs items={["Spot Trading", "Derivatives", "Common (All Feeds)"]}>
-  <Tab value="Spot Trading">
-    Properties for spot price feeds (e.g., BTC/USD, ETH/USD):
-
-    | Property | Type | Description |
-    | -------- | ---- | ----------- |
-    | `price` | `i64` | Aggregate market price from all publishers. Represented as mantissa; multiply by `10^exponent` for actual price. |
-    | `confidence` | `i64` | Price uncertainty interval representing publisher disagreement. Higher values = more uncertainty. Used for risk assessment. |
-    | `bestBidPrice` | `i64` | Highest bid price across all publishers. The best price at which you could sell. |
-    | `bestAskPrice` | `i64` | Lowest ask price across all publishers. The best price at which you could buy. |
-
-    **Example subscription:**
-    ```js
-    properties: ["price", "confidence", "bestBidPrice", "bestAskPrice"]
-    ```
-
-  </Tab>
-  <Tab value="Derivatives">
-    Properties for perpetual futures funding rate feeds:
-
-    | Property | Type | Description |
-    | -------- | ---- | ----------- |
-    | `fundingRate` | `i64` | Current funding rate for perpetual futures. Positive = longs pay shorts; negative = shorts pay longs. |
-    | `fundingTimestamp` | `u64` | Unix timestamp in microseconds when funding rate was last calculated by the exchange. |
-    | `fundingRateInterval` | `u64` | Duration in microseconds between funding rate updates. Typically 8 hours (28,800,000,000 μs) for major exchanges. |
-
-    **Example subscription:**
-    ```js
-    properties: ["fundingRate", "fundingTimestamp", "fundingRateInterval"]
-    ```
-
-  </Tab>
-  <Tab value="Common (All Feeds)">
-    Properties available for all feed types:
-
-    | Property | Type | Description |
-    | -------- | ---- | ----------- |
-    | `publisherCount` | `u16` | Number of data publishers currently contributing to this feed. More publishers = higher reliability. |
-    | `exponent` | `i16` | Decimal exponent for price conversion. Use formula: `actual_price = mantissa × 10^exponent`. Typically `-8` for USD prices. |
-    | `marketSession` | `string` | Current trading session status: `regular` (normal hours), `preMarket`, `postMarket`, `overNight`, or `closed`. |
-
-    **Example subscription:**
-    ```js
-    properties: ["price", "exponent", "publisherCount", "marketSession"]
-    ```
-
-  </Tab>
-</Tabs>
+**Scope:** _All_ = every feed type; _Spot_ = spot price feeds; _Derivatives_ = funding rate feeds.
 
 <Callout type="info">
   **Customizable Payload**: The payload structure is customizable based on the
@@ -80,12 +46,13 @@ When subscribing to Pyth Pro, specify which properties you want to receive. Sele
   field.
 </Callout>
 
-## What does a price feed update look like?
+## Stream Response Structure
 
-Each price feed in the priceFeeds array represents real-time market data for a specific trading pair (e.g., BTC/USD, ETH/USD).
+<PropertyFieldLinker />
+
+When you receive a `StreamUpdated` message from Pyth Pro, it contains the following structure:
 
 <FieldCodePanel
-  title="StreamUpdated Response"
   fields={[
     { name: "type", type: "string" },
     { name: "subscriptionId", type: "number" },
@@ -100,6 +67,7 @@ Each price feed in the priceFeeds array represents real-time market data for a s
     { name: "exponent", type: "i16" },
     { name: "confidence", type: "i64" },
     { name: "marketSession", type: "string" },
+    { name: "feedUpdateTimestamp", type: "string" },
     { name: "evm", type: "object" },
     { name: "encoding", type: "string" },
     { name: "data", type: "string" },
@@ -118,7 +86,8 @@ Each price feed in the priceFeeds array represents real-time market data for a s
         "publisherCount": 9,
         "exponent": -8,
         "confidence": 1373488286,
-        "marketSession": "regular"
+        "marketSession": "regular",
+        "feedUpdateTimestamp": "1758690761750000"
       }
     ]
   },
@@ -128,14 +97,6 @@ Each price feed in the priceFeeds array represents real-time market data for a s
   }
 }`}
 />
-
-<Callout type="warning">
-  **Important**: The price is stored in two parts: an integer mantissa value
-  (the `price` field) and a power-of-ten `exponent`.
-  <br /> The actual decimal representation of the price is given by:
-  `decimal_price = price × 10^exponent`.
-  <br /> For example: `1006900000000 × 10^(-8) = $10,069.00`
-</Callout>
 
 ## Property Specifications
 
@@ -159,8 +120,8 @@ Based on the protocol specification, here are the technical details for each pro
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
       invariants: ["Non-zero when present (null values filtered out)"],
-      warning:
-        "In some cases, the price field may be absent from the response. This indicates that the price could not be computed at that moment. When this occurs, you should either use the last valid price you received or wait for a fresh update with a valid price.",
+      usage:
+        "The price is stored in two parts: an integer mantissa value (the `price` field) and a power-of-ten `exponent`. The actual decimal representation of the price is given by: `decimal_price = price × 10^exponent`. For example: `1006900000000 × 10^(-8) = $10,069.00`",
     },
     {
       name: "publisherCount",
@@ -192,6 +153,7 @@ Based on the protocol specification, here are the technical details for each pro
       invariants: ["Positive when present"],
       usage:
         "Risk management and price quality assessment. A high confidence value means high uncertainty (publishers disagree more).",
+      note: "A high confidence value means high uncertainty (publishers disagree more). See [Understanding Price Data](/price-feeds/pro/understanding-price-data) for how confidence differs from best bid/ask and when to use each metric.",
     },
     {
       name: "marketSession",
@@ -207,13 +169,35 @@ Based on the protocol specification, here are the technical details for each pro
         "closed",
       ],
     },
+    {
+      name: "feedUpdateTimestamp",
+      type: "string",
+      description:
+        "Represents the timestamp at which the price for this specific feed was last generated. This enables consumers to assess the actual freshness of the price and determine whether it was produced as part of the current update or carried forward from a previous one. If the value is equal to the update's `timestampUs`, the price was generated in this update. If it is earlier than `timestampUs`, the price is the most recent available value and was generated at an earlier time.",
+      availability: "Only included if requested in subscription properties",
+    },
   ]}
 />
 
 <Callout type="info">
-  A high confidence value means high uncertainty (publishers disagree more). See
-  [Understanding Price Data](/price-feeds/pro/understanding-price-data) for how
-  confidence differs from best bid/ask and when to use each metric.
+  **Price Availability Semantics**: In rare cases, the `price` field may be
+  absent from the response. This can only happen when a feed has been recently
+  activated and no price has ever been produced yet. Once a feed produces its
+  first valid price, a price will always be provided for that feed going
+  forward.
+
+To determine when the price was generated, consumers must check
+`feedUpdateTimestamp`:
+
+- If `feedUpdateTimestamp` is equal to the update's `timestampUs`, the price
+  was generated as part of this update.
+- If `feedUpdateTimestamp` is earlier than `timestampUs`, the price is the
+  most recent available price, carried forward from the time indicated by
+  `feedUpdateTimestamp`, not generated at the current update time.
+
+Consumers should always rely on `feedUpdateTimestamp` to understand the
+freshness and origin of the price.
+
 </Callout>
 
 ### Market Depth Properties

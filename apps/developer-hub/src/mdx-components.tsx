@@ -8,6 +8,7 @@ import { APICard, APICards } from "./components/APICard";
 import { BinaryFormatCards } from "./components/BinaryFormatCards";
 import { FieldCodePanel } from "./components/FieldCodePanel";
 import { PropertyCard } from "./components/PropertyCard";
+import { PropertyFieldLinker } from "./components/PropertyFieldLinker";
 import { YouTubeEmbed } from "./components/YouTubeEmbed";
 import { openapi } from "./lib/openapi";
 
@@ -27,5 +28,6 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     BinaryFormatCards,
     FieldCodePanel,
     PropertyCard,
+    PropertyFieldLinker,
   };
 }
