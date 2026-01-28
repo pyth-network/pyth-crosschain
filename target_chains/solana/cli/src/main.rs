@@ -7,7 +7,7 @@ use {
     clap::Parser,
     cli::{Action, Cli},
     pyth_solana_receiver::sdk::{
-        VAA_SPLIT_INDEX, deserialize_accumulator_update_data, get_random_treasury_id
+        deserialize_accumulator_update_data, get_random_treasury_id, VAA_SPLIT_INDEX,
     },
     pyth_solana_receiver_sdk::config::DataSource,
     pythnet_sdk::wire::v1::MerklePriceUpdate,
@@ -19,19 +19,21 @@ use {
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         rent::Rent,
-        signature::{Keypair, read_keypair_file},
+        signature::{read_keypair_file, Keypair},
         signer::Signer,
         system_instruction,
         transaction::Transaction,
     },
-    wormhole_core_bridge_solana::sdk::{VAA_START, WriteEncodedVaaArgs},
+    wormhole_core_bridge_solana::sdk::{WriteEncodedVaaArgs, VAA_START},
     wormhole_sdk::{
-        Vaa, vaa::{Body, Header}
+        vaa::{Body, Header},
+        Vaa,
     },
     wormhole_solana::{
-        Account, Config as BridgeConfig, GuardianSet, VAA as LegacyPostedVaa, instructions::{
-            PostVAAData, initialize, post_vaa, upgrade_guardian_set, verify_signatures_txs
-        }
+        instructions::{
+            initialize, post_vaa, upgrade_guardian_set, verify_signatures_txs, PostVAAData,
+        },
+        Account, Config as BridgeConfig, GuardianSet, VAA as LegacyPostedVaa,
     },
 };
 
@@ -201,9 +203,7 @@ fn main() -> Result<()> {
 
             let instruction = Instruction {
                 program_id: wormhole,
-                accounts: vec![
-                    AccountMeta::new(wormhole_config, false),
-                ],
+                accounts: vec![AccountMeta::new(wormhole_config, false)],
                 data: vec![9], // UpdateGuardianSetTtl
             };
             process_transaction(&rpc_client, vec![instruction], &vec![&payer])?;
