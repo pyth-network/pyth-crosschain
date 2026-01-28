@@ -120,6 +120,13 @@ export const products: ProductCardConfigType[] = [
 
 export const additionalResources = [
   {
+    title: "HIP-3 something",
+    description:
+      "The native token powering governance and staking across the Pyth Network.",
+    href: "/pyth-token",
+    icon: <CurrencyDollarSimple />,
+  },
+  {
     title: "Pyth Token",
     description:
       "The native token powering governance and staking across the Pyth Network.",
