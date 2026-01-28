@@ -1,8 +1,9 @@
 import { Logo } from "@pythnetwork/component-library/Header";
 import type { DocsLayoutProps } from "fumadocs-ui/layouts/docs";
-import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+import type { BaseLayoutProps, CustomItemType } from "fumadocs-ui/layouts/shared";
 
 import { source } from "../lib/source";
+import { additionalResources } from "../components/Pages/Homepage/home-content-cards";
 
 export const baseOptions: BaseLayoutProps = {
   nav: {
@@ -13,6 +14,7 @@ export const baseOptions: BaseLayoutProps = {
         Developer Hub
       </>
     ),
+
   },
   // these are commented out because we don't have the app shell anymore
   // themeSwitch: {
@@ -21,6 +23,19 @@ export const baseOptions: BaseLayoutProps = {
   // searchToggle: {
   //   enabled: false,
   // },
+  links: [
+    {
+      type: 'menu',
+      text: 'Resources',
+      items: [
+        ...additionalResources.map((item, index) => {
+          return {
+            label: 'label'
+          }
+        })
+      ]
+    },
+  ]
 };
 
 export const docsOptions: DocsLayoutProps = {
