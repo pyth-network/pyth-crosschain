@@ -4,6 +4,8 @@ description: Historical price data, OHLC candlesticks, and TradingView integrati
 slug: /price-feeds/pro/api/history
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 ## Base URL
 
 ```
@@ -11,6 +13,10 @@ https://history.pyth-lazer.dourolabs.app
 ```
 
 All `{channel}` path segments refer to a price channel (e.g. `real_time`, `fixed_rate@200ms`).
+
+<Callout type="info">
+  The `/{channel}/...` endpoints conform to the [TradingView UDF specification](https://www.tradingview.com/rest-api-spec/), allowing you to connect TradingView charting UIs directly to this API.
+</Callout>
 
 ## Endpoints
 
