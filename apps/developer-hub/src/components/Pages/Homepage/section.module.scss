@@ -4,6 +4,7 @@
   padding: theme.spacing(34) 0;
   padding-left: theme.spacing(20);
   padding-right: theme.spacing(20);
+  background: var(--color-fd-card);
 
   .sectionContent {
     margin: 0 auto;
@@ -34,9 +35,5 @@
       theme.pallette-color("stone", 500),
       theme.pallette-color("steel", 400)
     );
-  }
-
-  &[data-highlight] {
-    background-color: theme.color("background", "secondary");
   }
 }

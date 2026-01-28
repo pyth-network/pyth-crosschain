@@ -1,120 +1,74 @@
 "use client";
 
-import { Lightning } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@pythnetwork/component-library/Button";
-import { clsx } from "clsx";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { Link } from "@pythnetwork/component-library/Link";
 
-import styles from "./index.module.scss";
-
-type Feature = {
-  label: string;
-  icon?: ReactNode;
-};
-
-type QuickLink = {
-  label: string;
-  href: string;
-};
-
-type ProductCardProps = {
-  title: string;
-  description?: string;
-  icon?: ReactNode;
-  features?: Feature[];
-  quickLinks?: QuickLink[];
-  buttonLabel?: string;
-  buttonHref?: string;
-  external?: boolean;
-  className?: string;
-};
+import type { ProductCardConfigType } from "../Pages/Homepage/home-content-cards";
 
 export function ProductCard({
   title,
   description,
-  icon,
   features,
   quickLinks,
   buttonLabel,
-  buttonHref,
-  external,
-  className,
-}: ProductCardProps) {
-  const router = useRouter();
-
-  const handleButtonClick = () => {
-    if (!buttonHref) return;
-
-    if (external) {
-      window.open(buttonHref, "_blank", "noopener,noreferrer");
-    } else {
-      router.push(buttonHref);
-    }
-  };
-
+  href,
+  badge,
+}: ProductCardConfigType) {
   return (
-    <div className={clsx(styles.card, className)}>
-      <div className={styles.content}>
-        <div className={styles.mainContent}>
-          <div className={styles.header}>
-            <h3 className={styles.title}>{title}</h3>
-            {description && <p className={styles.description}>{description}</p>}
-            {icon && <div className={styles.icon}>{icon}</div>}
+    <div className="bg-fd-card rounded-xl border border-fd-border overflow-hidden">
+      <div className="p-6 border-b border-fd-border h-[250px] flex flex-col justify-between items-start">
+        <div className="flex flex-col gap-4 items-start">
+          <div className="flex items-center gap-2">
+            <h3 className="text-2xl font-medium">{title}</h3>
+            {badge && <ProductBadge badge={badge} />}
           </div>
-
-          {features && features.length > 0 && (
-            <div className={styles.featuresSection}>
-              <p className={styles.sectionLabel}>FEATURES</p>
-              <div className={styles.features}>
-                {features.map((feature) => (
-                  <div key={feature.label} className={styles.featureItem}>
-                    <div className={styles.featureIcon}>
-                      {feature.icon ?? <Lightning size={12.5} />}
-                    </div>
-                    <span className={styles.featureLabel}>{feature.label}</span>
-                    <div className={styles.featureShadow} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {quickLinks && quickLinks.length > 0 && (
-            <div className={styles.quickLinksSection}>
-              <p className={styles.sectionLabel}>QUICK LINKS</p>
-              <div className={styles.quickLinks}>
-                {quickLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={styles.quickLink}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
+          {description && (
+            <p className="opacity-75 text-lg leading-normal">{description}</p>
           )}
         </div>
-
-        {buttonLabel && (
-          <div className={styles.buttonWrapper}>
-            <Button
-              onClick={(e) => {
-                e.preventDefault();
-                handleButtonClick();
-              }}
-              size="md"
-              variant="primary"
-              className={clsx(styles.button, className)}
-            >
-              {buttonLabel}
-            </Button>
-          </div>
-        )}
+        <Button href={href} size="sm" variant="solid">
+          {buttonLabel}
+        </Button>
+      </div>
+      <div className="p-6 bg-fd-background flex flex-col gap-10">
+        <div className="flex flex-col gap-4">
+          <small className="text-sm font-medium uppercase opacity-50">
+            Features
+          </small>
+          <ul className="flex flex-col gap-2">
+            {features?.map((feature, index) => (
+              <li key={index} className="inline-flex gap-2">
+                {feature.icon && (
+                  <span className="opacity-50">{feature.icon}</span>
+                )}{" "}
+                {feature.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex flex-col gap-4">
+          <small className="text-sm font-medium uppercase opacity-50">
+            Quick Links
+          </small>
+          <ul className="flex flex-col gap-2">
+            {quickLinks?.map((link, index) => (
+              <li key={index}>
+                <Link href={link.href}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
 }
+
+const ProductBadge = ({ badge }: { badge: string }) => {
+  return (
+    <div
+      className={`rounded-lg  px-2 py-1 text-base border font-medium bg-fd-accent/10 shadow`}
+    >
+      {badge}
+    </div>
+  );
+};
