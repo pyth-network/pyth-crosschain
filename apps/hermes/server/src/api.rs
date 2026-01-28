@@ -16,6 +16,7 @@ use {
 mod doc_examples;
 mod metrics_middleware;
 mod rest;
+pub mod token;
 pub mod types;
 mod ws;
 

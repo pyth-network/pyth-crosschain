@@ -1,5 +1,6 @@
 use {
     super::{
+        token,
         types::{PriceIdInput, RpcPriceFeed},
         ApiState,
     },
@@ -81,6 +82,8 @@ pub enum Status {
 pub struct Labels {
     pub interaction: Interaction,
     pub status: Status,
+    /// Last 4 characters of the API token, or "none" if no token provided
+    pub token_suffix: String,
 }
 
 pub struct WsMetrics {
@@ -202,6 +205,7 @@ pub async fn ws_route_handler<S>(
     ws: WebSocketUpgrade,
     AxumState(state): AxumState<ApiState<S>>,
     headers: HeaderMap,
+    uri: axum::http::Uri,
 ) -> impl IntoResponse
 where
     S: Aggregates,
@@ -216,13 +220,21 @@ where
         .and_then(|value| value.split(',').next()) // Only take the first ip if there are multiple
         .and_then(|value| value.parse().ok());
 
+    // Extract the token from the request
+    let api_token = token::extract_token_from_headers_and_uri(&headers, &uri);
+    let token_suffix = token::get_token_suffix(api_token.as_deref());
+
     ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE)
-        .on_upgrade(move |socket| websocket_handler(socket, state, requester_ip))
+        .on_upgrade(move |socket| websocket_handler(socket, state, requester_ip, token_suffix))
 }
 
-#[tracing::instrument(skip(stream, state, subscriber_ip))]
-async fn websocket_handler<S>(stream: WebSocket, state: ApiState<S>, subscriber_ip: Option<IpAddr>)
-where
+#[tracing::instrument(skip(stream, state, subscriber_ip, token_suffix))]
+async fn websocket_handler<S>(
+    stream: WebSocket,
+    state: ApiState<S>,
+    subscriber_ip: Option<IpAddr>,
+    token_suffix: String,
+) where
     S: Aggregates,
     S: Send,
 {
@@ -241,6 +253,7 @@ where
         .get_or_create(&Labels {
             interaction: Interaction::NewConnection,
             status: Status::Success,
+            token_suffix: token_suffix.clone(),
         })
         .inc();
 
@@ -249,6 +262,7 @@ where
     let mut subscriber = Subscriber::new(
         id,
         subscriber_ip,
+        token_suffix,
         state.state.clone(),
         state.ws.clone(),
         notify_receiver,
@@ -266,6 +280,7 @@ pub type SubscriberId = usize;
 pub struct Subscriber<S> {
     id: SubscriberId,
     ip_addr: Option<IpAddr>,
+    token_suffix: String,
     closed: bool,
     state: Arc<S>,
     ws_state: Arc<WsState>,
@@ -283,9 +298,14 @@ impl<S> Subscriber<S>
 where
     S: Aggregates,
 {
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "constructor requires all fields for Subscriber"
+    )]
     pub fn new(
         id: SubscriberId,
         ip_addr: Option<IpAddr>,
+        token_suffix: String,
         state: Arc<S>,
         ws_state: Arc<WsState>,
         notify_receiver: Receiver<AggregationEvent>,
@@ -295,6 +315,7 @@ where
         Self {
             id,
             ip_addr,
+            token_suffix,
             closed: false,
             state,
             ws_state,
@@ -340,6 +361,7 @@ where
                         .get_or_create(&Labels {
                             interaction: Interaction::ClientHeartbeat,
                             status: Status::Error,
+                            token_suffix: self.token_suffix.clone(),
                         })
                         .inc();
 
@@ -473,6 +495,7 @@ where
                         .get_or_create(&Labels {
                             interaction: Interaction::RateLimit,
                             status: Status::Error,
+                            token_suffix: self.token_suffix.clone(),
                         })
                         .inc();
 
@@ -500,6 +523,7 @@ where
                 .get_or_create(&Labels {
                     interaction: Interaction::PriceUpdate,
                     status: Status::Success,
+                    token_suffix: self.token_suffix.clone(),
                 })
                 .inc();
         }
@@ -538,6 +562,7 @@ where
                     .get_or_create(&Labels {
                         interaction: Interaction::CloseConnection,
                         status: Status::Success,
+                        token_suffix: self.token_suffix.clone(),
                     })
                     .inc();
 
@@ -562,6 +587,7 @@ where
                     .get_or_create(&Labels {
                         interaction: Interaction::ClientHeartbeat,
                         status: Status::Success,
+                        token_suffix: self.token_suffix.clone(),
                     })
                     .inc();
 
@@ -578,6 +604,7 @@ where
                     .get_or_create(&Labels {
                         interaction: Interaction::ClientMessage,
                         status: Status::Error,
+                        token_suffix: self.token_suffix.clone(),
                     })
                     .inc();
                 self.sender
@@ -654,6 +681,7 @@ where
             .get_or_create(&Labels {
                 interaction: Interaction::ClientMessage,
                 status: Status::Success,
+                token_suffix: self.token_suffix.clone(),
             })
             .inc();
 
