@@ -16,7 +16,7 @@ use {
     solana_sdk::{
         commitment_config::CommitmentConfig,
         compute_budget::ComputeBudgetInstruction,
-        instruction::Instruction,
+        instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         rent::Rent,
         signature::{read_keypair_file, Keypair},
@@ -193,6 +193,20 @@ fn main() -> Result<()> {
                     false,
                 )?;
             }
+        }
+
+        Action::UpdateGuardianSetTtl {} => {
+            let rpc_client = RpcClient::new(url);
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+            let wormhole_config = BridgeConfig::key(&wormhole, ());
+
+            let instruction = Instruction {
+                program_id: wormhole,
+                accounts: vec![AccountMeta::new(wormhole_config, false)],
+                data: vec![9], // UpdateGuardianSetTtl
+            };
+            process_transaction(&rpc_client, vec![instruction], &vec![&payer])?;
         }
 
         Action::InitializePythReceiver {
