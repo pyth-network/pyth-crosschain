@@ -19,136 +19,113 @@ function lightDark(light: string, dark: string) {
   return `light-dark(${light}, ${dark})`;
 }
 
-const accentPrimaryLight = "#f7f7f4";
-const accentPrimaryDark = "#1e293b";
-const accentForegroundLight = "#1a1d2e";
-const accentForegroundDark = "#f1f5f9";
+const lightPalette = {
+  background: "#f7f4f4",
+  badgeBadgeDefaultBg: "#1b1b1b1a",
+  badgeBadgeDefaultFg: "#1b1b1bb2",
+  border: "#e4e4e4",
+  borderGlass: "#ffffff",
+  brandPythPrimary: "#844ff5",
+  card: "#ffffff",
+  cardGlass: "#ffffff80",
+  debugBg: "#d9d6d6",
+  foreground: "#1b1b1b",
+  inputFocusRing: "#844ff533",
+  inputInputBg: "#ffffff",
+  inputInputBorder: "#e4e4e4",
+  inputInputBorderFocus: "#844ff5",
+  inputInputBorderHover: "#bfbfbf",
+  muted: "#1b1b1b99",
+  paragraph: "#1b1b1be5",
+  sky: "#BAE6FD",
+  stateHover: "#1b1b1b0d",
+  stateHoverInverted: "#f7f6f526",
+  statePressed: "#1b1b1b1a",
+  statePressedInverted: "#f7f6f540",
+} as const;
+
+const darkPalette = {
+  background: "#22222a",
+  badgeBadgeDefaultBg: "#f7f6f51a",
+  badgeBadgeDefaultFg: "#f7f6f5b2",
+  border: "#3b3b45",
+  borderGlass: "#3e3e49",
+  brandPythPrimary: "#8655f1",
+  card: "#2c2c35",
+  cardGlass: "#2c2c3580",
+  debugBg: "#54545c",
+  foreground: "#f7f6f5",
+  inputFocusRing: "#a782f833",
+  inputInputBg: "#2c2c35",
+  inputInputBorder: "#3b3b45",
+  inputInputBorderFocus: "#a782f8",
+  inputInputBorderHover: "#545463",
+  muted: "#f7f6f599",
+  paragraph: "#f7f6f5e5",
+  sky: "#BAE6FD",
+  stateHover: "#f7f6f50d",
+  stateHoverInverted: "#1b1b1b26",
+  statePressed: "#f7f6f51a",
+  statePressedInverted: "#1b1b1b40",
+} as const;
 
 const palette = {
-  accent: {
-    muted: {
-      light: blendColor(accentPrimaryLight, "black"),
-      dark: blendColor(accentForegroundDark, "white"),
-    },
-    primary: { light: accentPrimaryLight, dark: accentPrimaryDark },
+  background: { light: lightPalette.background, dark: darkPalette.background },
+  badgeBadgeDefaultBg: {
+    light: lightPalette.badgeBadgeDefaultBg,
+    dark: darkPalette.badgeBadgeDefaultBg,
   },
-  accentForeground: {
-    muted: {
-      light: blendColor(accentForegroundLight, "black"),
-      dark: blendColor(accentForegroundDark, "white"),
-    },
-    primary: { light: accentForegroundLight, dark: accentForegroundDark },
+  badgeBadgeDefaultFg: {
+    light: lightPalette.badgeBadgeDefaultFg,
+    dark: darkPalette.badgeBadgeDefaultFg,
   },
-  background: {
-    primary: { light: "#fff", dark: "#020617" },
+  border: { light: lightPalette.border, dark: darkPalette.border },
+  borderGlass: {
+    light: lightPalette.borderGlass,
+    dark: darkPalette.borderGlass,
   },
-  border: {
-    primary: { light: "#3328281a", dark: "#1e293b" },
+  brandPythPrimary: {
+    light: lightPalette.brandPythPrimary,
+    dark: darkPalette.brandPythPrimary,
   },
-  card: {
-    primary: { light: "#f7f7f4", dark: "#0f172a" },
+  card: { light: lightPalette.card, dark: darkPalette.card },
+  cardGlass: { light: lightPalette.cardGlass, dark: darkPalette.cardGlass },
+  debugBg: { light: lightPalette.debugBg, dark: darkPalette.debugBg },
+  foreground: { light: lightPalette.foreground, dark: darkPalette.foreground },
+  inputFocusRing: {
+    light: lightPalette.inputFocusRing,
+    dark: darkPalette.inputFocusRing,
   },
-  cardForeground: {
-    primary: { light: "#1a1d2e", dark: "#f8fafc" },
+  inputInputBg: {
+    light: lightPalette.inputInputBg,
+    dark: darkPalette.inputInputBg,
   },
-  chart1: {
-    primary: { light: "#0dbbdc", dark: "#22d3ee" },
+  inputInputBorder: {
+    light: lightPalette.inputInputBorder,
+    dark: darkPalette.inputInputBorder,
   },
-  chart2: {
-    primary: { light: "#f2f316", dark: "#eab308" },
+  inputInputBorderFocus: {
+    light: lightPalette.inputInputBorderFocus,
+    dark: darkPalette.inputInputBorderFocus,
   },
-  chart3: {
-    primary: { light: "#b8dcf6", dark: "#38bdf8" },
+  inputInputBorderHover: {
+    light: lightPalette.inputInputBorderHover,
+    dark: darkPalette.inputInputBorderHover,
   },
-  chart4: {
-    primary: { light: "#22d38c", dark: "#34d399" },
+  muted: { light: lightPalette.muted, dark: darkPalette.muted },
+  paragraph: { light: lightPalette.paragraph, dark: darkPalette.paragraph },
+  stateHover: { light: lightPalette.stateHover, dark: darkPalette.stateHover },
+  stateHoverInverted: {
+    light: lightPalette.stateHoverInverted,
+    dark: darkPalette.stateHoverInverted,
   },
-  chart5: {
-    primary: {
-      light: "oklch(76.9% 0.188 70.08)",
-      dark: "oklch(65% 0.15 70.08)",
-    },
+  statePressed: {
+    light: lightPalette.statePressed,
+    dark: darkPalette.statePressed,
   },
-  destructive: {
-    primary: { light: "#d4183d", dark: "#7f1d1d" },
-  },
-  destructiveForeground: {
-    primary: { light: "#fff", dark: "#fef2f2" },
-  },
-  fontSize: {
-    primary: { light: "16px", dark: "16px" },
-  },
-  fontWeightMedium: {
-    primary: { light: 500, dark: 500 },
-  },
-  fontWeightNormal: {
-    primary: { light: 400, dark: 400 },
-  },
-  foreground: {
-    primary: { light: "#1a1d2e", dark: "#f8fafc" },
-  },
-  input: {
-    primary: { light: "transparent", dark: "transparent" },
-  },
-  inputBackground: {
-    primary: { light: "#f7f7f4", dark: "#0f172a" },
-  },
-  muted: {
-    primary: { light: "#f7f7f4", dark: "#1e293b" },
-  },
-  mutedForeground: {
-    primary: { light: "#727270", dark: "#94a3b8" },
-  },
-  popover: {
-    primary: { light: "#fff", dark: "#0f172a" },
-  },
-  popoverForeground: {
-    primary: { light: "#1a1d2e", dark: "#f8fafc" },
-  },
-  primary: {
-    primary: { light: "#8b5cf6", dark: "#a78bfa" },
-  },
-  primaryForeground: {
-    primary: { light: "#fff", dark: "#0f172a" },
-  },
-  radius: {
-    primary: { light: ".625rem", dark: ".625rem" },
-  },
-  ring: {
-    primary: { light: "#8b5cf6", dark: "#a78bfa" },
-  },
-  secondary: {
-    primary: { light: "#f7f7f4", dark: "#1e293b" },
-  },
-  secondaryForeground: {
-    primary: { light: "#1a1d2e", dark: "#f1f5f9" },
-  },
-  sidebar: {
-    primary: { light: "#fff", dark: "#020617" },
-  },
-  sidebarAccent: {
-    primary: { light: "#f7f7f4", dark: "#1e293b" },
-  },
-  sidebarAccentForeground: {
-    primary: { light: "#1a1d2e", dark: "#f1f5f9" },
-  },
-  sidebarBorder: {
-    primary: { light: "#3328281a", dark: "#1e293b" },
-  },
-  sidebarForeground: {
-    primary: { light: "#1a1d2e", dark: "#f8fafc" },
-  },
-  sidebarPrimary: {
-    primary: { light: "#8b5cf6", dark: "#a78bfa" },
-  },
-  sidebarPrimaryForeground: {
-    primary: { light: "#fff", dark: "#0f172a" },
-  },
-  sidebarRing: {
-    primary: { light: "#8b5cf6", dark: "#a78bfa" },
-  },
-  switchBackground: {
-    primary: { light: "#cbced4", dark: "#334155" },
+  statePressedInverted: {
+    light: lightPalette.statePressedInverted,
+    dark: darkPalette.statePressedInverted,
   },
 } as const;
 
@@ -167,181 +144,127 @@ const widths = {
 
 const color = {
   background: {
-    primary: lightDark(
-      palette.background.primary.light,
-      palette.background.primary.dark,
-    ),
+    primary: lightDark(palette.background.light, palette.background.dark),
   },
   dialog: {
-    background: lightDark(
-      palette.card.primary.light,
-      palette.card.primary.dark,
-    ),
-    border: lightDark(
-      palette.border.primary.light,
-      palette.border.primary.dark,
-    ),
-    description: lightDark(
-      palette.mutedForeground.primary.light,
-      palette.mutedForeground.primary.dark,
-    ),
-    foreground: lightDark(
-      palette.cardForeground.primary.light,
-      palette.cardForeground.primary.dark,
-    ),
+    background: lightDark(palette.card.light, palette.card.dark),
+    border: lightDark(palette.border.light, palette.border.dark),
+    description: lightDark(palette.paragraph.light, palette.paragraph.dark),
+    foreground: lightDark(palette.foreground.light, palette.foreground.dark),
   },
   overlay: {
-    backdrop: lightDark(
-      blendColor(palette.background.primary.light, "black", 0.6),
-      blendColor(palette.background.primary.dark, "black", 0.5),
-    ),
+    backdrop: lightDark(palette.statePressed.light, palette.statePressed.dark),
   },
   button: {
     ghost: {
       background: {
-        hover: lightDark(
-          blendColor(palette.muted.primary.light, "black"),
-          blendColor(palette.muted.primary.dark, "white"),
-        ),
-        primary: lightDark(
-          palette.muted.primary.light,
-          palette.muted.primary.dark,
-        ),
+        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
+        primary: "transparent",
       },
       foreground: {
-        hover: lightDark(
-          palette.foreground.primary.light,
-          palette.foreground.primary.dark,
-        ),
-        primary: lightDark(
-          palette.foreground.primary.light,
-          palette.foreground.primary.dark,
-        ),
+        hover: lightDark(palette.foreground.light, palette.foreground.dark),
+        primary: lightDark(palette.foreground.light, palette.foreground.dark),
       },
       outline: "none",
     },
     outline: {
       background: {
-        hover: lightDark(
-          blendColor(palette.muted.primary.light, "black"),
-          blendColor(palette.muted.primary.dark, "white"),
-        ),
+        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
         primary: "transparent",
       },
       foreground: {
-        hover: lightDark(palette.ring.primary.light, palette.ring.primary.dark),
-        primary: lightDark(
-          palette.ring.primary.light,
-          palette.ring.primary.dark,
-        ),
+        hover: lightDark(palette.foreground.light, palette.foreground.dark),
+        primary: lightDark(palette.foreground.light, palette.foreground.dark),
       },
-      outline: `1px solid ${lightDark(palette.ring.primary.light, palette.ring.primary.dark)}`,
+      outline: `1px solid ${lightDark(palette.border.light, palette.border.dark)}`,
     },
     primary: {
       background: {
-        hover: lightDark(palette.ring.primary.light, palette.ring.primary.dark),
+        hover: lightDark(
+          blendColor(palette.brandPythPrimary.light, "black"),
+          blendColor(palette.brandPythPrimary.dark, "white"),
+        ),
         primary: lightDark(
-          palette.background.primary.light,
-          palette.background.primary.dark,
+          palette.brandPythPrimary.light,
+          palette.brandPythPrimary.dark,
         ),
       },
       foreground: {
-        hover: lightDark("#fff", palette.foreground.primary.dark),
-        primary: lightDark(
-          palette.ring.primary.light,
-          palette.ring.primary.dark,
-        ),
+        hover: lightDark(palette.card.light, palette.foreground.dark),
+        primary: lightDark(palette.card.light, palette.foreground.dark),
       },
-      outline: `1px solid ${lightDark(palette.ring.primary.light, palette.ring.primary.dark)}`,
+      outline: `1px solid ${lightDark(
+        palette.brandPythPrimary.light,
+        palette.brandPythPrimary.dark,
+      )}`,
     },
     secondary: {
       background: {
-        hover: lightDark(
-          blendColor(palette.secondary.primary.light, "black"),
-          blendColor(palette.secondary.primary.dark, "white"),
-        ),
-        primary: lightDark(
-          palette.secondary.primary.light,
-          palette.secondary.primary.dark,
-        ),
+        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
+        primary: lightDark(palette.card.light, palette.card.dark),
       },
       foreground: {
-        hover: lightDark(
-          palette.secondaryForeground.primary.light,
-          palette.secondaryForeground.primary.dark,
-        ),
-        primary: lightDark(
-          palette.secondaryForeground.primary.light,
-          palette.secondaryForeground.primary.dark,
-        ),
+        hover: lightDark(palette.foreground.light, palette.foreground.dark),
+        primary: lightDark(palette.foreground.light, palette.foreground.dark),
       },
       outline: "none",
     },
     success: {
       background: {
-        hover: lightDark(
-          blendColor(palette.chart4.primary.light, "black"),
-          blendColor(palette.chart4.primary.dark, "white"),
-        ),
+        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
         primary: lightDark(
-          palette.chart4.primary.light,
-          palette.chart4.primary.dark,
+          palette.badgeBadgeDefaultBg.light,
+          palette.badgeBadgeDefaultBg.dark,
         ),
       },
       foreground: {
         hover: lightDark(
-          palette.foreground.primary.light,
-          palette.foreground.primary.dark,
+          palette.badgeBadgeDefaultFg.light,
+          palette.badgeBadgeDefaultFg.dark,
         ),
         primary: lightDark(
-          palette.foreground.primary.light,
-          palette.foreground.primary.dark,
+          palette.badgeBadgeDefaultFg.light,
+          palette.badgeBadgeDefaultFg.dark,
         ),
       },
       outline: "none",
     },
     warning: {
       background: {
-        hover: lightDark(
-          blendColor(palette.chart5.primary.light, "black"),
-          blendColor(palette.chart5.primary.dark, "white"),
-        ),
+        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
         primary: lightDark(
-          palette.chart5.primary.light,
-          palette.chart5.primary.dark,
+          palette.badgeBadgeDefaultBg.light,
+          palette.badgeBadgeDefaultBg.dark,
         ),
       },
       foreground: {
         hover: lightDark(
-          palette.foreground.primary.light,
-          palette.foreground.primary.dark,
+          palette.badgeBadgeDefaultFg.light,
+          palette.badgeBadgeDefaultFg.dark,
         ),
         primary: lightDark(
-          palette.foreground.primary.light,
-          palette.foreground.primary.dark,
+          palette.badgeBadgeDefaultFg.light,
+          palette.badgeBadgeDefaultFg.dark,
         ),
       },
       outline: "none",
     },
     danger: {
       background: {
-        hover: lightDark(
-          blendColor(palette.destructive.primary.light, "black"),
-          blendColor(palette.destructive.primary.dark, "white"),
-        ),
+        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
         primary: lightDark(
-          palette.destructive.primary.light,
-          palette.destructive.primary.dark,
+          palette.badgeBadgeDefaultBg.light,
+          palette.badgeBadgeDefaultBg.dark,
         ),
       },
       foreground: {
         hover: lightDark(
-          palette.destructiveForeground.primary.light,
-          palette.destructiveForeground.primary.dark,
+          palette.badgeBadgeDefaultFg.light,
+          palette.badgeBadgeDefaultFg.dark,
         ),
         primary: lightDark(
-          palette.destructiveForeground.primary.light,
-          palette.destructiveForeground.primary.dark,
+          palette.badgeBadgeDefaultFg.light,
+          palette.badgeBadgeDefaultFg.dark,
         ),
       },
       outline: "none",
@@ -349,10 +272,7 @@ const color = {
   },
   leftNav: {
     background: {
-      primary: lightDark(
-        palette.accent.primary.light,
-        palette.accent.primary.dark,
-      ),
+      primary: lightDark(palette.background.light, palette.background.dark),
     },
   },
 } as const;
@@ -377,14 +297,14 @@ const fontFamily = {
 } as const;
 
 const fontSize = {
-  "2xl": "1.5rem",
-  "3xl": "1.875rem",
-  "4xl": "2.25rem",
-  "5xl": "3rem",
-  "6xl": "3.75rem",
-  "7xl": "4.5rem",
-  "8xl": "6rem",
-  "9xl": "8rem",
+  xxl: "1.5rem",
+  xxxl: "1.875rem",
+  xxxxl: "2.25rem",
+  xxxxxl: "3rem",
+  xxxxxxl: "3.75rem",
+  xxxxxxxl: "4.5rem",
+  xxxxxxxxl: "6rem",
+  xxxxxxxxxl: "8rem",
   base: "1rem",
   lg: "1.125rem",
   sm: "0.875rem",
@@ -403,15 +323,12 @@ const letterSpacing = {
 } as const;
 
 const borderRadius = {
-  "2xl": "1rem",
-  "3xl": "1.5rem",
-  base: "0.25rem",
-  full: "9999px",
-  lg: "0.5rem",
-  md: "0.375rem",
-  none: "0px",
-  sm: "0.125rem",
-  xl: "0.75rem",
+  avatar: "40px",
+  badge: "24px",
+  button: "8px",
+  card: "16px",
+  cardNested: "12px",
+  popover: "8px",
 } as const;
 
 const elevationColor = lightDark(
@@ -469,11 +386,8 @@ const tooltipStyles = (): SimpleStyleRules["key"] => ({
    * class name applied to the menu popover that
    * holds all of the menu items
    */
-  backgroundColor: lightDark(
-    palette.popover.primary.light,
-    palette.popover.primary.dark,
-  ),
-  borderRadius: borderRadius.lg,
+  backgroundColor: lightDark(palette.card.light, palette.card.dark),
+  borderRadius: borderRadius.popover,
   boxShadow: elevation.md,
   padding: spacing(2),
 });
@@ -482,10 +396,7 @@ function labelStyles(
   yourStyles?: SimpleStyleRules["key"],
 ): SimpleStyleRules["key"] {
   return {
-    color: lightDark(
-      palette.mutedForeground.primary.light,
-      palette.mutedForeground.primary.dark,
-    ),
+    color: lightDark(palette.muted.light, palette.muted.dark),
     fontSize: fontSize.xs,
     ...yourStyles,
   };

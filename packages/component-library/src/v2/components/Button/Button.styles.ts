@@ -56,11 +56,12 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
     root: {
       alignItems: "center",
       border: "none",
-      borderRadius: theme.borderRadius.lg,
+      borderRadius: theme.borderRadius.button,
       display: "inline-flex",
       gap: theme.spacing(2),
       fontSize: theme.fontSize.base,
       fontFamily: theme.fontFamily.normal,
+      justifyContent: "center",
       padding: `${theme.spacing(2)} ${theme.spacing(4)}`,
 
       "&:hover": {

@@ -8,10 +8,7 @@ export const { classes } = createStyles("v2-text-component", (theme) => {
     colorVariants = {
       ...colorVariants,
       [`&[data-color="${colorName}"]`]: {
-        color: theme.lightDark(
-          colorVal.primary.light.toString(),
-          colorVal.primary.dark.toString(),
-        ),
+        color: theme.lightDark(colorVal.light, colorVal.dark),
       },
     };
   }

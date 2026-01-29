@@ -43,7 +43,10 @@ export function Dialog({
             </BaseDialog.Description>
             <div className={classes.actions}>
               {saveAction}
-              <BaseDialog.Close className={classes.close} render={<Button />}>
+              <BaseDialog.Close
+                className={classes.close}
+                render={<Button variant="outline" />}
+              >
                 Close
               </BaseDialog.Close>
             </div>

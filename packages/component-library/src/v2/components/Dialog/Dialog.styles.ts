@@ -23,7 +23,7 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
     ...theme.flexVertical(),
     backgroundColor: theme.color.dialog.background,
     border: `1px solid ${theme.color.dialog.border}`,
-    borderRadius: theme.borderRadius.xl,
+    borderRadius: theme.borderRadius.popover,
     boxShadow: theme.elevation.lg,
     color: theme.color.dialog.foreground,
     maxWidth: "min(600px, calc(100vw - 2.5rem))",

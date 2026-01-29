@@ -36,7 +36,10 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
    * and an additional actions menu on it
    */
   currentUser: {
-    borderTop: `1px solid ${theme.lightDark(theme.palette.border.primary.light, theme.palette.border.primary.dark)}`,
+    borderTop: `1px solid ${theme.lightDark(
+      theme.palette.border.light,
+      theme.palette.border.dark,
+    )}`,
     display: "inline-grid",
     flexShrink: 0,
     gap: theme.spacing(2),
@@ -67,8 +70,8 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
       whiteSpace: "nowrap",
       "&:last-child": {
         color: theme.lightDark(
-          theme.palette.mutedForeground.primary.light,
-          theme.palette.mutedForeground.primary.dark,
+          theme.palette.muted.light,
+          theme.palette.muted.dark,
         ),
         fontSize: theme.fontSize.sm,
       },
@@ -117,7 +120,10 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
    */
   root: {
     backgroundColor: theme.color.leftNav.background.primary,
-    borderRight: `1px solid ${theme.lightDark(theme.palette.sidebarBorder.primary.light, theme.palette.sidebarBorder.primary.dark)}`,
+    borderRight: `1px solid ${theme.lightDark(
+      theme.palette.border.light,
+      theme.palette.border.dark,
+    )}`,
     display: "flex",
     flexFlow: "column",
     height: "100vh",

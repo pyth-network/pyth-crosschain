@@ -7,8 +7,8 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
   root: {
     alignItems: "center",
     color: theme.lightDark(
-      theme.palette.mutedForeground.primary.light,
-      theme.palette.mutedForeground.primary.dark,
+      theme.palette.muted.light,
+      theme.palette.muted.dark,
     ),
     cursor: "pointer",
     display: "inline-flex",
@@ -22,12 +22,12 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
 
     "&[data-checked]": {
       borderColor: theme.lightDark(
-        theme.palette.ring.primary.light,
-        theme.palette.ring.primary.dark,
+        theme.palette.inputInputBorderFocus.light,
+        theme.palette.inputInputBorderFocus.dark,
       ),
       color: theme.lightDark(
-        theme.palette.foreground.primary.light,
-        theme.palette.foreground.primary.dark,
+        theme.palette.foreground.light,
+        theme.palette.foreground.dark,
       ),
       '& [data-checkbox-icon="unchecked"]': {
         opacity: 0,
@@ -51,12 +51,12 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
     },
     "&:focus-visible": {
       borderColor: theme.lightDark(
-        theme.palette.ring.primary.light,
-        theme.palette.ring.primary.dark,
+        theme.palette.inputInputBorderFocus.light,
+        theme.palette.inputInputBorderFocus.dark,
       ),
       boxShadow: `0 0 0 3px ${theme.lightDark(
-        theme.palette.ring.primary.light,
-        theme.palette.ring.primary.dark,
+        theme.palette.inputFocusRing.light,
+        theme.palette.inputFocusRing.dark,
       )}`,
       outline: "none",
     },

@@ -2,21 +2,21 @@ import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
   const foregroundColor = theme.lightDark(
-    theme.palette.foreground.primary.light,
-    theme.palette.foreground.primary.dark,
+    theme.palette.foreground.light,
+    theme.palette.foreground.dark,
   );
   const activeBackgroundColor = theme.lightDark(
-    theme.palette.background.primary.dark,
-    theme.palette.background.primary.light,
+    theme.palette.statePressed.light,
+    theme.palette.statePressed.dark,
   );
   // TODO: This is likely not right, but we'll investigate later
   const activeForegroundColor = theme.lightDark(
-    theme.palette.foreground.primary.dark,
-    theme.palette.foreground.primary.light,
+    theme.palette.foreground.light,
+    theme.palette.foreground.dark,
   );
   const hoverBackgroundColor = theme.lightDark(
-    theme.palette.accent.muted.light,
-    theme.palette.accent.muted.dark,
+    theme.palette.stateHover.light,
+    theme.palette.stateHover.dark,
   );
 
   return {

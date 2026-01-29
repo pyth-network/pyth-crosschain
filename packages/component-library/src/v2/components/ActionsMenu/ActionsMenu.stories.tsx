@@ -1,7 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react";
 import { Gear, SignOut, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import type { Meta, StoryObj } from "@storybook/react";
 
-import { ActionsMenu, type ActionMenuItem } from "./ActionsMenu";
+import type { ActionMenuItem } from "./ActionsMenu";
+import { ActionsMenu } from "./ActionsMenu";
+import { Button } from "../Button";
 
 const menuItems: ActionMenuItem[] = [
   {
@@ -26,7 +28,7 @@ const meta = {
   component: ActionsMenu,
   args: {
     align: "start",
-    children: <span>Open menu</span>,
+    children: <Button variant="outline">Open menu</Button>,
     menuItems,
     popoverTitle: "My Account",
     side: "bottom",

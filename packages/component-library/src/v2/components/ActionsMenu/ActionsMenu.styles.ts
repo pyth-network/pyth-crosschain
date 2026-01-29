@@ -33,8 +33,8 @@ export const { classes } = createStyles("pyth-v2-actions-menu", (theme) => {
      */
     menuPopoverTitle: {
       color: theme.lightDark(
-        theme.palette.mutedForeground.primary.light,
-        theme.palette.mutedForeground.primary.dark,
+        theme.palette.muted.light,
+        theme.palette.muted.dark,
       ),
       fontSize: theme.fontSize.xs,
       padding: theme.spacing(2),
@@ -48,7 +48,7 @@ export const { classes } = createStyles("pyth-v2-actions-menu", (theme) => {
     trigger: {
       background: "none transparent",
       border: "none",
-      borderRadius: theme.borderRadius.lg,
+      borderRadius: theme.borderRadius.button,
       outline: "none",
       padding: 0,
       transition: "background-color .2s ease, color .2s ease",
