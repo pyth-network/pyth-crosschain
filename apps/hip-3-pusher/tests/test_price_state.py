@@ -421,9 +421,7 @@ class TestConstantSourceConfig:
         config.hermes.feed_ids = []
         config.price = PriceConfig(
             oracle={
-                "STABLE": [
-                    ConstantSourceConfig(source_type="constant", value="1.0000")
-                ]
+                "STABLE": [ConstantSourceConfig(source_type="constant", value="1.0000")]
             },
             mark={},
             external={},
@@ -446,9 +444,7 @@ class TestConstantSourceConfig:
         config.hermes.feed_ids = []
         config.price = PriceConfig(
             oracle={
-                "STABLE": [
-                    ConstantSourceConfig(source_type="constant", value="1.0000")
-                ]
+                "STABLE": [ConstantSourceConfig(source_type="constant", value="1.0000")]
             },
             mark={},
             external={},
