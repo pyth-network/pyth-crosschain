@@ -84,6 +84,7 @@ pub struct HermesClient {
     backoff: ExponentialBackoff,
     timeout: Duration,
     channel_capacity: usize,
+    access_token: Option<String>,
 }
 
 impl HermesClient {
@@ -115,6 +116,7 @@ impl HermesClient {
         backoff: HermesExponentialBackoff,
         timeout: Duration,
         channel_capacity: usize,
+        access_token: Option<String>,
     ) -> Result<Self> {
         if endpoints.is_empty() {
             bail!("At least one endpoint must be provided");
@@ -126,6 +128,7 @@ impl HermesClient {
             backoff: backoff.into(),
             timeout,
             channel_capacity,
+            access_token,
         })
     }
 
@@ -158,7 +161,13 @@ impl HermesClient {
             mpsc::channel::<HermesServerMessage>(CHANNEL_CAPACITY);
 
         for i in 0..self.num_connections {
-            let endpoint = self.endpoints[i % self.endpoints.len()].clone();
+            let mut endpoint = self.endpoints[i % self.endpoints.len()].clone();
+            // Add access token as query parameter if provided
+            if let Some(ref token) = self.access_token {
+                endpoint
+                    .query_pairs_mut()
+                    .append_pair("ACCESS_TOKEN", token);
+            }
             let connection = HermesResilientWSConnection::new(
                 endpoint,
                 self.backoff.clone(),
@@ -265,6 +274,7 @@ impl HermesClient {
 /// - **Timeout**: 5 seconds for WebSocket operations
 /// - **Backoff**: Exponential backoff with default settings
 /// - **Channel Capacity**: Uses the default 1000
+/// - **Access Token**: None (no authentication)
 ///
 pub struct HermesClientBuilder {
     endpoints: Vec<Url>,
@@ -272,6 +282,7 @@ pub struct HermesClientBuilder {
     backoff: HermesExponentialBackoff,
     timeout: Duration,
     channel_capacity: usize,
+    access_token: Option<String>,
 }
 
 impl Default for HermesClientBuilder {
@@ -285,6 +296,7 @@ impl Default for HermesClientBuilder {
             backoff: HermesExponentialBackoffBuilder::default().build(),
             timeout: DEFAULT_TIMEOUT,
             channel_capacity: CHANNEL_CAPACITY,
+            access_token: None,
         }
     }
 }
@@ -362,6 +374,20 @@ impl HermesClientBuilder {
         self
     }
 
+    /// Sets the API access token for authentication.
+    ///
+    /// When provided, this token will be included in all WebSocket connections
+    /// as an `ACCESS_TOKEN` query parameter.
+    ///
+    /// # Arguments
+    ///
+    /// * `access_token` - The API access token for authentication
+    ///
+    pub fn with_access_token(mut self, access_token: String) -> Self {
+        self.access_token = Some(access_token);
+        self
+    }
+
     /// Builds the configured [`HermesClient`] instance.
     ///
     /// This consumes the builder and creates a new client with the specified
@@ -386,6 +412,7 @@ impl HermesClientBuilder {
             self.backoff,
             self.timeout,
             self.channel_capacity,
+            self.access_token,
         )
     }
 }
