@@ -1,4 +1,9 @@
-import { Gear, SignOut, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import {
+  Gear,
+  Gauge,
+  SignOut,
+  UserCircle,
+} from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -26,7 +31,9 @@ const actionMenuItems: ActionMenuItem[] = [
 
 const defaultLinks = (
   <>
-    <NavLink href="/dashboard">Dashboard</NavLink>
+    <NavLink beforeIcon={Gauge} href="/dashboard">
+      Dashboard
+    </NavLink>
     <NavLink href="/feeds" beforeIcon={UserCircle}>
       Feeds
     </NavLink>
