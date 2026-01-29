@@ -1,10 +1,11 @@
 [package]
 name        = "hermes"
-version     = "0.10.7"
+version     = "0.11.0"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 
 [dependencies]
+alloy              = { version = "1.4.3" }
 anyhow             = { version = "1.0.69" }
 async-trait        = { version = "0.1.73" }
 axum               = { version = "0.6.20", features = ["json", "ws", "macros"] }
@@ -58,7 +59,6 @@ solana-client          = { version = "=1.16.19" }
 solana-sdk             = { version = "=1.16.19" }
 solana-account-decoder = { version = "=1.16.19" }
 
-
 [build-dependencies]
 prost-build = { version = "0.12.1" }
 tonic-build = { version = "0.10.1" }
@@ -69,6 +69,10 @@ tonic-build = { version = "0.10.1" }
 # dependency at git otherwise those relative imports will fail.
 [patch.crates-io]
 serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+
+# Patching dependencies to avoid conflicts with alloy.
+curve25519-dalek       = { git = "https://github.com/Riateche/curve25519-dalek.git", branch = "3.2.1-patch" }
+aes-gcm-siv            = { git = "https://github.com/Riateche/AEADs.git", branch = "aes-gcm-siv-v0.10.3-patch" }
 
 [profile.release]
 panic                  = 'abort'
