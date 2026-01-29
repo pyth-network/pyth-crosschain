@@ -7,9 +7,10 @@ import { classes } from "./Button.styles";
 import type { ButtonProps } from "./types";
 
 export function Button({
+  afterIcon: AfterIcon,
+  beforeIcon: BeforeIcon,
   children,
   className,
-  leftIcon: LeftIcon,
   size = "base",
   tooltip,
   tooltipDelay = 50,
@@ -31,8 +32,9 @@ export function Button({
           <BaseTooltip.Trigger
             {...(propsToSpread as unknown as ComponentProps<BaseTooltip.Trigger>)}
           >
-            {LeftIcon && <LeftIcon className={classes.leftIcon} />}
+            {BeforeIcon && <BeforeIcon className={classes.icon} />}
             {children}
+            {AfterIcon && <AfterIcon className={classes.icon} />}
           </BaseTooltip.Trigger>
           <BaseTooltip.Portal>
             <BaseTooltip.Positioner {...tooltipPositionerProps}>
@@ -48,8 +50,9 @@ export function Button({
 
   return (
     <BaseButton {...propsToSpread}>
-      {LeftIcon && <LeftIcon className={classes.leftIcon} />}
+      {BeforeIcon && <BeforeIcon className={classes.icon} />}
       {children}
+      {AfterIcon && <AfterIcon className={classes.icon} />}
     </BaseButton>
   );
 }

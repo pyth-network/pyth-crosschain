@@ -4,4 +4,5 @@ import "../theme/reset.styles";
 export * from "./Avatar";
 export * from "./Button";
 export * from "./LeftNav";
-export * from "./LeftNavLink";
+export * from "./NavLink";
+export * from "./Text";

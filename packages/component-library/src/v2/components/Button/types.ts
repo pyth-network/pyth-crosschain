@@ -11,10 +11,16 @@ export type ButtonSizeVariant = keyof typeof ThemeV2.fontSize;
 
 export type ButtonProps = ComponentProps<typeof BaseButton> & {
   /**
+   * if provided, displays this icon to the right of the
+   * button content as a suffix
+   */
+  afterIcon?: Icon;
+
+  /**
    * if provided, displays this icon to the left of the
    * button content as a prefix
    */
-  leftIcon?: Icon;
+  beforeIcon?: Icon;
 
   /**
    * which size button to display

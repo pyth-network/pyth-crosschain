@@ -1,6 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [
@@ -14,26 +16,56 @@
       ]
     },
     "build:css-in-js": {
-      "inputs": ["src/**/*.styles.ts"],
-      "outputs": ["src/v2/v2-theme.css"]
+      "inputs": [
+        "src/**/*.styles.ts"
+      ],
+      "outputs": [
+        "src/v2/v2-theme.css"
+      ]
+    },
+    "build:css-in-js:watch": {
+      "cache": false,
+      "persistent": true
     },
     "build:declarations": {
-      "dependsOn": ["//#install:modules", "^build"],
-      "inputs": ["src/**/*.ts", "src/**/*.tsx"],
-      "outputs": ["dist/**/*.d.ts"]
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+      ],
+      "outputs": [
+        "dist/**/*.d.ts"
+      ]
     },
     "build:scss": {
-      "dependsOn": ["//#install:modules"],
-      "inputs": ["src/**/*.scss"],
-      "outputs": ["dist/**/*.scss"]
+      "dependsOn": [
+        "//#install:modules"
+      ],
+      "inputs": [
+        "src/**/*.scss"
+      ],
+      "outputs": [
+        "dist/**/*.scss"
+      ]
     },
     "build:storybook": {
-      "outputs": ["storybook-static/**"]
+      "outputs": [
+        "storybook-static/**"
+      ]
     },
     "build:svg": {
-      "dependsOn": ["//#install:modules"],
-      "inputs": ["src/**/*.svg"],
-      "outputs": ["dist/**/*.svg"]
+      "dependsOn": [
+        "//#install:modules"
+      ],
+      "inputs": [
+        "src/**/*.svg"
+      ],
+      "outputs": [
+        "dist/**/*.svg"
+      ]
     },
     "clean": {
       "cache": false,
@@ -47,21 +79,43 @@
       ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build"],
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ],
       "cache": false
     },
     "fix:lint:stylelint": {
-      "dependsOn": ["//#install:modules"],
+      "dependsOn": [
+        "//#install:modules"
+      ],
       "cache": false
     },
+    "storybook": {
+      "cache": false,
+      "dependsOn": [
+        "build:css-in-js"
+      ],
+      "with": [
+        "build:css-in-js:watch"
+      ]
+    },
     "test:lint": {
-      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
+      "dependsOn": [
+        "test:lint:eslint",
+        "test:lint:stylelint"
+      ]
     },
     "test:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build"]
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ]
     },
     "test:lint:stylelint": {
-      "dependsOn": ["//#install:modules"]
+      "dependsOn": [
+        "//#install:modules"
+      ]
     }
   }
 }

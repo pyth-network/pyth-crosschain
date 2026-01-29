@@ -37,7 +37,7 @@ export function Avatar({ className, user }: AvatarProps) {
 
   return (
     <BaseAvatar.Root className={cx(classes.root, className)}>
-      <BaseAvatar.Image src={user.avatarUrl} />
+      <BaseAvatar.Image className={classes.img} src={user.avatarUrl} />
       <BaseAvatar.Fallback>{initials}</BaseAvatar.Fallback>
     </BaseAvatar.Root>
   );

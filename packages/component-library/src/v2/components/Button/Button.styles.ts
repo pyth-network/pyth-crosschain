@@ -35,9 +35,9 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
 
   return {
     /**
-     * icon displayed to the left of the button text
+     * icon displayed to the left or right of the button text
      */
-    leftIcon: {
+    icon: {
       height: "1em",
       width: "auto",
     },

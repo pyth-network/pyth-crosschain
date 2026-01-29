@@ -37,7 +37,7 @@ export function LeftNav({
           {!collapsed && <PythLogo />}
           <Button
             aria-label={collapseButtonTooltip}
-            leftIcon={collapsed ? CaretDoubleRight : CaretDoubleLeft}
+            beforeIcon={collapsed ? CaretDoubleRight : CaretDoubleLeft}
             onClick={() => {
               onCollapseChange?.(!collapsed);
             }}

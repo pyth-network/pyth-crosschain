@@ -80,7 +80,7 @@ catalog:
   "@solana/wallet-adapter-react-ui": ^0.9.36
   "@solana/wallet-adapter-wallets": ^0.19.33
   "@solana/web3.js": ^1.98.0
-  "@storybook/addon-styling-webpack": ^2.0.0
+  "@storybook/addon-styling-webpack": ^3.0.0
   "@storybook/addon-themes": ^10.1.11
   "@storybook/nextjs": ^10.1.11
   "@storybook/react": ^10.1.11
@@ -164,7 +164,7 @@ catalog:
   sass: ^1.86.1
   sass-loader: ^16.0.5
   shiki: ^3.2.1
-  simplestyle-js: 6.0.0
+  simplestyle-js: ^6.1.2
   sockette: ^2.0.6
   storybook: ^10.1.11
   style-loader: ^4.0.0

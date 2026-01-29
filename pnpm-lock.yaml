@@ -91,8 +91,8 @@ catalogs:
       specifier: ^1.98.0
       version: 1.98.0
     '@storybook/addon-styling-webpack':
-      specifier: ^2.0.0
-      version: 2.0.0
+      specifier: ^3.0.0
+      version: 3.0.0
     '@storybook/addon-themes':
       specifier: ^10.1.11
       version: 10.1.11
@@ -334,8 +334,8 @@ catalogs:
       specifier: ^3.2.1
       version: 3.12.2
     simplestyle-js:
-      specifier: 6.0.0
-      version: 6.0.0
+      specifier: ^6.1.2
+      version: 6.1.2
     sockette:
       specifier: ^2.0.6
       version: 2.0.6
@@ -1333,7 +1333,7 @@ importers:
         version: 19.2.1(react@19.2.1)
       simplestyle-js:
         specifier: 'catalog:'
-        version: 6.0.0(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
+        version: 6.1.2(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.2.1)
@@ -2208,7 +2208,7 @@ importers:
         version: 19.2.1(react@19.2.1)
       simplestyle-js:
         specifier: 'catalog:'
-        version: 6.0.0(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
+        version: 6.1.2(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0)
       swr:
         specifier: 'catalog:'
         version: 2.3.3(react@19.2.1)
@@ -2239,7 +2239,7 @@ importers:
         version: link:../jest-config
       '@storybook/addon-styling-webpack':
         specifier: 'catalog:'
-        version: 2.0.0(storybook@10.1.11(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3))(webpack@5.98.0(@swc/core@1.15.10))
+        version: 3.0.0(storybook@10.1.11(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3))(webpack@5.98.0(@swc/core@1.15.10))
       '@storybook/addon-themes':
         specifier: 'catalog:'
         version: 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3))
@@ -10950,10 +10950,10 @@ packages:
   '@starknet-io/types-js@0.7.10':
     resolution: {integrity: sha512-1VtCqX4AHWJlRRSYGSn+4X1mqolI1Tdq62IwzoU2vUuEE72S1OlEeGhpvd6XsdqXcfHmVzYfj8k1XtKBQqwo9w==}
 
-  '@storybook/addon-styling-webpack@2.0.0':
-    resolution: {integrity: sha512-N8jWhWnk3/nbL4P9zl0OEV/47P0Cxn/kPzSHjdAClyDYnqj9jI6upeLsraZgIV9Ro3QSeqeIloeXb1zMasWpOw==}
+  '@storybook/addon-styling-webpack@3.0.0':
+    resolution: {integrity: sha512-6iI7wGf/tEt5awB8NYAWU+I/hI7PwOdoaNb5V8Z+GkhEko4nZFpXfp8jz2nMblAnx9Jsl95LfIaH9Spa0JksuQ==}
     peerDependencies:
-      storybook: ^9.0.0
+      storybook: ^10.0.0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0
       webpack: ^5.0.0
 
   '@storybook/addon-themes@10.1.11':
@@ -21190,8 +21190,8 @@ packages:
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
 
-  simplestyle-js@6.0.0:
-    resolution: {integrity: sha512-2kFz+svJ0OzTHVk2OyiuYdPzbQvuDFrdi/p3Yf3mtRUpPBDM+RZoEbdwVHBisiX3Gzt1a52vRYYarkpmt7n39Q==}
+  simplestyle-js@6.1.2:
+    resolution: {integrity: sha512-UbzJE70tMatpEuDOVeVMPWS1A4Ggi0G5Kddmijow37/iZWGCx/03yN3fROA79DhI9HqRtZmZB6fJbxughBTXJw==}
     hasBin: true
     peerDependencies:
       react: '>=16.8'
@@ -37140,7 +37140,7 @@ snapshots:
 
   '@starknet-io/types-js@0.7.10': {}
 
-  '@storybook/addon-styling-webpack@2.0.0(storybook@10.1.11(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3))(webpack@5.98.0(@swc/core@1.15.10))':
+  '@storybook/addon-styling-webpack@3.0.0(storybook@10.1.11(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3))(webpack@5.98.0(@swc/core@1.15.10))':
     dependencies:
       storybook: 10.1.11(@testing-library/dom@10.4.1)(bufferutil@4.0.9)(prettier@3.5.3)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(utf-8-validate@6.0.3)
       webpack: 5.98.0(@swc/core@1.15.10)
@@ -52346,7 +52346,7 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.2
 
-  simplestyle-js@6.0.0(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0):
+  simplestyle-js@6.1.2(@opentelemetry/api@1.9.0)(@types/node@22.14.0)(babel-plugin-react-compiler@19.1.0-rc.1)(idb-keyval@6.2.1)(ioredis@5.7.0)(lightningcss@1.29.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.52.5)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.0):
     dependencies:
       '@babel/core': 7.28.6
       '@babel/preset-env': 7.28.6(@babel/core@7.28.6)

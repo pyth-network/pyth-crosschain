@@ -3,9 +3,9 @@ import Link from "next/link";
 
 import type { ButtonProps } from "../Button";
 import { Button } from "../Button";
-import { classes } from "./LeftNavLink.styles";
+import { classes } from "./NavLink.styles";
 
-export type LeftNavLinkProps = Omit<ButtonProps, "size" | "variant"> & {
+export type NavLinkProps = Omit<ButtonProps, "size" | "variant"> & {
   /**
    * if set, indicates that this is the current route
    * and that the styling should be changed to reflect this
@@ -20,12 +20,12 @@ export type LeftNavLinkProps = Omit<ButtonProps, "size" | "variant"> & {
   href: string;
 };
 
-export function LeftNavLink({
+export function NavLink({
   active = false,
   className,
   href,
   ...rest
-}: LeftNavLinkProps) {
+}: NavLinkProps) {
   return (
     <Button
       {...rest}
