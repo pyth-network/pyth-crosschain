@@ -172,6 +172,30 @@ const color = {
       palette.background.primary.dark,
     ),
   },
+  dialog: {
+    background: lightDark(
+      palette.card.primary.light,
+      palette.card.primary.dark,
+    ),
+    border: lightDark(
+      palette.border.primary.light,
+      palette.border.primary.dark,
+    ),
+    description: lightDark(
+      palette.mutedForeground.primary.light,
+      palette.mutedForeground.primary.dark,
+    ),
+    foreground: lightDark(
+      palette.cardForeground.primary.light,
+      palette.cardForeground.primary.dark,
+    ),
+  },
+  overlay: {
+    backdrop: lightDark(
+      blendColor(palette.background.primary.light, "black", 0.6),
+      blendColor(palette.background.primary.dark, "black", 0.5),
+    ),
+  },
   button: {
     ghost: {
       background: {
@@ -454,6 +478,19 @@ const tooltipStyles = (): SimpleStyleRules["key"] => ({
   padding: spacing(2),
 });
 
+function labelStyles(
+  yourStyles?: SimpleStyleRules["key"],
+): SimpleStyleRules["key"] {
+  return {
+    color: lightDark(
+      palette.mutedForeground.primary.light,
+      palette.mutedForeground.primary.dark,
+    ),
+    fontSize: fontSize.xs,
+    ...yourStyles,
+  };
+}
+
 export const ThemeV2 = {
   blendColor,
   borderRadius,
@@ -467,6 +504,7 @@ export const ThemeV2 = {
   fontSize,
   fontWeight,
   heights,
+  labelStyles,
   letterSpacing,
   lightDark,
   palette,
