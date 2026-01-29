@@ -120,7 +120,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => ({
     borderRight: `1px solid ${theme.lightDark(theme.palette.sidebarBorder.primary.light, theme.palette.sidebarBorder.primary.dark)}`,
     display: "flex",
     flexFlow: "column",
-    height: "100%",
+    height: "100vh",
     minHeight: 0,
     width: theme.widths.leftNav.desktop,
 

@@ -1,9 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react";
 import { Gear, SignOut, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import type { Meta, StoryObj } from "@storybook/react";
+import { useState } from "react";
 
 import type { ActionMenuItem } from "../ActionsMenu";
 import { LeftNav } from "./LeftNav";
-import { LeftNavLink } from "../NavLink";
+import { NavLink } from "../NavLink";
 
 const actionMenuItems: ActionMenuItem[] = [
   {
@@ -25,15 +26,29 @@ const actionMenuItems: ActionMenuItem[] = [
 
 const defaultLinks = (
   <>
-    <LeftNavLink href="/dashboard">Dashboard</LeftNavLink>
-    <LeftNavLink href="/feeds" beforeIcon={UserCircle}>
+    <NavLink href="/dashboard">Dashboard</NavLink>
+    <NavLink href="/feeds" beforeIcon={UserCircle}>
       Feeds
-    </LeftNavLink>
-    <LeftNavLink href="/settings" beforeIcon={Gear}>
+    </NavLink>
+    <NavLink href="/settings" beforeIcon={Gear}>
       Settings
-    </LeftNavLink>
+    </NavLink>
   </>
 );
+
+const LeftNavStory: Meta<typeof LeftNav>["render"] = (args) => {
+  /** state */
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div>
+      <LeftNav {...args} collapsed={collapsed} onCollapseChange={setCollapsed}>
+        {args.children ?? defaultLinks}
+      </LeftNav>
+      <div style={{ flex: 1 }} />
+    </div>
+  );
+};
 
 const meta = {
   title: "V2/LeftNav",
@@ -55,12 +70,7 @@ const meta = {
     children: { control: false },
     onCollapseChange: { action: "onCollapseChange" },
   },
-  render: (args) => (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <LeftNav {...args}>{args.children ?? defaultLinks}</LeftNav>
-      <div style={{ flex: 1 }} />
-    </div>
-  ),
+  render: LeftNavStory,
 } satisfies Meta<typeof LeftNav>;
 
 export default meta;
