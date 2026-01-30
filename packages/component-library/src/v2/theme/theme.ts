@@ -17,7 +17,14 @@ const resolveThemeColor = (
         light: string;
         dark: string;
       },
-) => (typeof value === "string" ? value : lightDark(value.light, value.dark));
+  flip = false,
+) =>
+  typeof value === "string"
+    ? value
+    : lightDark(
+        flip ? value.dark : value.light,
+        flip ? value.light : value.dark,
+      );
 
 const breakpoints = {
   lg: "1024px",
@@ -422,11 +429,16 @@ const buttonOutlineColors = {
   foreground: { dark: palette.steel[50], light: palette.stone[900] },
 } as const;
 
+const foreground = {
+  dark: palette.steel[50],
+  light: palette.steel[900],
+} as const;
+
 const states = {
   data: {
-    background: { dark: palette.slate[950], light: palette.violet[50] },
-    border: { dark: palette.slate[800], light: palette.violet[200] },
-    normal: { dark: palette.violet[400], light: palette.violet[600] },
+    background: { dark: palette.violet[900], light: palette.violet[200] },
+    border: { dark: palette.violet[700], light: palette.violet[400] },
+    normal: { dark: palette.violet[400], light: palette.violet[700] },
   },
   error: {
     background: { dark: palette.red[950], light: palette.red[50] },
@@ -439,7 +451,10 @@ const states = {
     normal: { dark: palette.indigo[400], light: palette.indigo[600] },
   },
   neutral: {
-    normal: { dark: palette.steel[50], light: palette.steel[900] },
+    normal: {
+      dark: Color(palette.beige[50]).alpha(0.2).hexa(),
+      light: Color(palette.steel[900]).alpha(0.2).hexa(),
+    },
     border: { dark: palette.steel[300], light: palette.steel[600] },
     background: { dark: palette.white, light: palette.steel[900] },
   },
@@ -504,7 +519,7 @@ const colors = {
     dark: Color(palette.violet[500]).alpha(0.3).hexa(),
     light: Color(palette.violet[700]).alpha(0.3).hexa(),
   },
-  foreground: { dark: palette.steel[50], light: palette.steel[900] },
+  foreground,
   forms: {
     input: {
       hover: {
@@ -642,6 +657,14 @@ export const ThemeV2 = {
       rules: SimpleStyleRules["key"],
     ): SimpleStyleRules["key"] => ({
       [`@media (max-width: ${ThemeV2.breakpoints[size]})`]: rules,
+    }),
+    prefersDark: (rules: SimpleStyleRules["key"]): SimpleStyleRules["key"] => ({
+      "@media (prefers-color-scheme: dark)": rules,
+    }),
+    prefersLight: (
+      rules: SimpleStyleRules["key"],
+    ): SimpleStyleRules["key"] => ({
+      "@media (prefers-color-scheme: light)": rules,
     }),
     up: (
       size: BreakpointSize,

@@ -5,19 +5,22 @@ import { createStyles } from "../../theme/style-funcs";
 export const { classes } = createStyles("v2-badge", (theme) => {
   let variantStyles: SimpleStyleRules["key"] = {};
   for (const [variant, values] of Object.entries(theme.colors.states)) {
-    const normalColor = theme.resolveThemeColor(values.normal);
+    const background = theme.resolveThemeColor(values.background);
+    const border = theme.resolveThemeColor(values.border);
+
     variantStyles = {
       ...variantStyles,
       [`&[data-variant="${variant}"]`]: {
-        borderColor: normalColor,
+        borderColor: border,
 
         '&[data-style="filled"]': {
-          background: normalColor,
+          background: background,
         },
 
-        '&[data-style="outline"]': {
-          color: normalColor,
-        },
+        color: theme.resolveThemeColor(
+          theme.colors.foreground,
+          variant === "neutral",
+        ),
       },
     };
   }
@@ -30,6 +33,7 @@ export const { classes } = createStyles("v2-badge", (theme) => {
       borderRadius: theme.tokens.borderRadius.xxxl,
       borderStyle: "solid",
       borderWidth: "1px",
+      color: theme.resolveThemeColor(theme.colors.foreground),
       display: "inline-flex",
       flexFlow: "row nowrap",
       justifyContent: "center",
