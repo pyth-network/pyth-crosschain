@@ -508,6 +508,12 @@ const colors = {
       foreground: palette.steel[900],
     },
   },
+  card: {
+    background: {
+      dark: Color(palette.white).alpha(0.5).hexa(),
+      light: Color(palette.steel[200]).alpha(0.5).hexa(),
+    },
+  },
   chart: {
     series: {
       neutral: { dark: palette.steel[300], light: palette.stone[500] },
@@ -620,10 +626,34 @@ const popoverTooltipStyles = (): SimpleStyleRules["key"] => ({
   padding: spacing(2),
 });
 
+const flexHorizontalCenter = (
+  opts?: Partial<{ inline: boolean }>,
+): SimpleStyleRules["key"] => ({
+  alignItems: "center",
+  display: `${opts?.inline ? "inline-" : ""}flex`,
+});
+
+const alphaColor = (inputColor: string, alpha: number) => {
+  if (alpha > 1) {
+    throw new Error(
+      "cannot specify an alpha / opacity greater than 1 (which is equal to 100%)",
+    );
+  }
+  if (alpha < 0) {
+    throw new Error(
+      "cannot specify an alpha / opacity less than 0 (which is equal to 0%)",
+    );
+  }
+
+  return Color(inputColor).alpha(alpha).hexa();
+};
+
 /**
  * The Unified Theme Object
  */
 export const ThemeV2 = {
+  alphaColor,
+
   /**
    * Breakpoints for responsive design
    */
@@ -643,6 +673,8 @@ export const ThemeV2 = {
    * Box Shadows and Elevations
    */
   elevations,
+
+  flexHorizontalCenter,
 
   lightDark,
 

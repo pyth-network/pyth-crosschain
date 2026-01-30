@@ -9,4 +9,5 @@ export * from "./CheckboxGroup";
 export * from "./Dialog";
 export * from "./LeftNav";
 export * from "./NavigationButtonLink";
+export * from "./Switch";
 export * from "./Text";

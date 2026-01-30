@@ -621,8 +621,8 @@ const srOnly = (): SimpleStyleRules["key"] => ({
   clip: "rect(0, 0, 0, 0)",
   height: "1px",
   margin: "-1px",
-  padding: 0,
   overflow: "hidden",
+  padding: 0,
   position: "absolute",
   whiteSpace: "nowrap",
   width: "1px",
@@ -642,9 +642,9 @@ const elevation = (
 });
 
 const h3 = (): SimpleStyleRules["key"] => ({
-  fontWeight: fontWeight.semibold.toString(),
   fontSize: fontSize.xl,
   fontStyle: "normal",
+  fontWeight: fontWeight.semibold.toString(),
   letterSpacing: letterSpacing.tighter,
   lineHeight: "125%",
   margin: 0,
