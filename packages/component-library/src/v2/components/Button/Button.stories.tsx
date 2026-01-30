@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Button } from "./Button";
+import { buttonVariants } from "./types";
 import { IconControl } from "../../__stories__/helpers";
 import { ThemeV2 } from "../../theme";
 
@@ -9,7 +10,7 @@ const meta = {
   component: Button,
   args: {
     children: "Button",
-    size: "base",
+    size: "md",
     tooltip: "",
     variant: "primary",
   },
@@ -23,12 +24,12 @@ const meta = {
     onClick: { action: "onClick" },
     size: {
       control: { type: "select" },
-      options: Object.keys(ThemeV2.fontSize),
+      options: Object.keys(ThemeV2.buttonSizes),
     },
     tooltipPositionerProps: { control: false },
     variant: {
       control: { type: "select" },
-      options: Object.keys(ThemeV2.color.button),
+      options: buttonVariants,
     },
   },
 } satisfies Meta<typeof Button>;

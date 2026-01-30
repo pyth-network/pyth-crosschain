@@ -11,10 +11,7 @@ export const { classes } = createStyles("pyth-app-layout", (theme) => ({
   },
 
   signOut: {
-    color: theme.lightDark(
-      theme.palette.destructive.primary.light,
-      theme.palette.destructive.primary.dark,
-    ),
+    color: theme.colors.states.error.normal,
   },
 
   /**

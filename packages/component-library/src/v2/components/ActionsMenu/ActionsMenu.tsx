@@ -66,13 +66,24 @@ export function ActionsMenu({
 }: ActionsMenuProps) {
   return (
     <Menu.Root>
-      <Menu.Trigger className={classes.trigger}>{children}</Menu.Trigger>
+      <Menu.Trigger
+        nativeButton={false}
+        render={<div className={classes.trigger} />}
+      >
+        {children}
+      </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner {...positionerProps}>
           <Menu.Popup className={cx(classes.menuPopover, className)}>
             <div className={classes.menuPopoverTitle}>{popoverTitle}</div>
             {menuItems.map(
-              ({ component, icon: MenuItemIcon, iconClassName, key, onSelect }) => (
+              ({
+                component,
+                icon: MenuItemIcon,
+                iconClassName,
+                key,
+                onSelect,
+              }) => (
                 <Menu.Item
                   className={classes.menuItem}
                   key={key}

@@ -2,12 +2,17 @@ import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("v2-dialog", (theme) => ({
   actions: {
-    ...theme.flexRowCenter(theme.spacing(2)),
+    alignItems: "center",
+    display: "flex",
+    gap: theme.spacing(2),
     justifyContent: "flex-end",
     marginTop: theme.spacing(5),
   },
   backdrop: {
-    backgroundColor: theme.color.overlay.backdrop,
+    backgroundColor: theme.lightDark(
+      "rgba(0, 0, 0, 0.4)",
+      "rgba(0, 0, 0, 0.6)",
+    ),
     inset: 0,
     position: "fixed",
   },
@@ -15,26 +20,42 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
     minWidth: theme.spacing(20),
   },
   description: {
-    color: theme.color.dialog.description,
-    fontSize: theme.fontSize.base,
+    color: theme.lightDark(
+      theme.colors.paragraph.light,
+      theme.colors.paragraph.dark,
+    ),
+    fontSize: theme.tokens.fontSizes.base,
     marginTop: theme.spacing(3),
   },
   popup: {
-    ...theme.flexVertical(),
-    backgroundColor: theme.color.dialog.background,
-    border: `1px solid ${theme.color.dialog.border}`,
-    borderRadius: theme.borderRadius.popover,
-    boxShadow: theme.elevation.lg,
-    color: theme.color.dialog.foreground,
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: theme.lightDark(
+      theme.colors.background.modal.light,
+      theme.colors.background.modal.dark,
+    ),
+    border: `1px solid ${theme.lightDark(
+      theme.colors.border.light,
+      theme.colors.border.dark,
+    )}`,
+    borderRadius: theme.tokens.borderRadius.xl2,
+    boxShadow: theme.elevations.default[2],
+    color: theme.lightDark(
+      theme.colors.foreground.light,
+      theme.colors.foreground.dark,
+    ),
     maxWidth: "min(600px, calc(100vw - 2.5rem))",
     padding: theme.spacing(6),
     width: "100%",
   },
   title: {
-    color: theme.color.dialog.foreground,
-    fontSize: theme.fontSize.xl,
-    fontWeight: theme.fontWeight.semibold,
-    letterSpacing: theme.letterSpacing.tight,
+    color: theme.lightDark(
+      theme.colors.foreground.light,
+      theme.colors.foreground.dark,
+    ),
+    fontSize: theme.tokens.fontSizes.xl,
+    fontWeight: theme.tokens.fontWeights.semibold,
+    letterSpacing: theme.tokens.letterSpacing.tight,
   },
   viewport: {
     alignItems: "center",

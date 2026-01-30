@@ -37,7 +37,7 @@ export function Checkbox({
         {...rest}
         className={cx(classes.root, className)}
         data-compact={isCompact}
-        value={opt?.value}
+        value={opt?.value ?? ""}
       >
         <span className={classes.iconSlot}>
           <Square

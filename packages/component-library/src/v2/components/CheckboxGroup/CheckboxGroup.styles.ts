@@ -7,7 +7,7 @@ export const { classes } = createStyles("v2-checkbox-group", (theme) => ({
     gap: theme.spacing(2),
   },
   label: {
-    ...theme.labelStyles(),
+    // ...theme.labelStyles(),
   },
   checkboxGroup: {
     display: "flex",

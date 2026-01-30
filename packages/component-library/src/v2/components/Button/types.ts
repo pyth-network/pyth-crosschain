@@ -5,9 +5,11 @@ import type { ComponentProps, ReactNode } from "react";
 
 import type { ThemeV2 } from "../../theme";
 
-export type ButtonVariant = keyof typeof ThemeV2.color.button;
+export const buttonVariants = ["primary", "secondary", "outline", "ghost"] as const;
 
-export type ButtonSizeVariant = keyof typeof ThemeV2.fontSize;
+export type ButtonVariant = (typeof buttonVariants)[number];
+
+export type ButtonSizeVariant = keyof typeof ThemeV2.buttonSizes;
 
 export type ButtonProps = ComponentProps<typeof BaseButton> & {
   /**

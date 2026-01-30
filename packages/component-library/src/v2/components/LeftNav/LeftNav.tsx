@@ -54,7 +54,11 @@ export function LeftNav({
         popoverTitle="My Account"
         side="top"
       >
-        <span className={classes.currentUser}>
+        <Button
+          className={classes.currentUser}
+          data-currentusermenu
+          variant="ghost"
+        >
           <Avatar user={currentUser} />
           <span className={classes.currentUserDetails}>
             <span title={currentUser.email}>{currentUser.email}</span>
@@ -63,7 +67,7 @@ export function LeftNav({
           <span className={classes.ellipsis}>
             <DotsThreeVertical />
           </span>
-        </span>
+        </Button>
       </ActionsMenu>
     </nav>
   );

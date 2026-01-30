@@ -1,425 +1,645 @@
+import { omitKeys } from "@pythnetwork/shared-lib/util";
+import Color from "color";
 import type { SimpleStyleRules } from "simplestyle-js/ssr";
 
-function spacing(increment: number) {
-  return `${(increment * 0.25).toString()}rem`;
-}
+/** util functions */
+const spacing = (increment: number) => `${(increment * 0.25).toString()}rem`;
+const lightDark = (light: string, dark: string) =>
+  `light-dark(${light}, ${dark})`;
 
-/**
- * blends a color by a given decimal amount with another color
- */
-function blendColor(colorInput: string, blendedWith: string, amount = 0.05) {
-  return `color-mix(in srgb, ${colorInput}, ${blendedWith} ${(amount * 100).toString()}%)`;
-}
-
-/**
- * preps a css light-dark() function to use
- * as a color value
- */
-function lightDark(light: string, dark: string) {
-  return `light-dark(${light}, ${dark})`;
-}
-
-const lightPalette = {
-  background: "#f7f4f4",
-  badgeBadgeDefaultBg: "#1b1b1b1a",
-  badgeBadgeDefaultFg: "#1b1b1bb2",
-  border: "#e4e4e4",
-  borderGlass: "#ffffff",
-  brandPythPrimary: "#844ff5",
-  card: "#ffffff",
-  cardGlass: "#ffffff80",
-  debugBg: "#d9d6d6",
-  foreground: "#1b1b1b",
-  inputFocusRing: "#844ff533",
-  inputInputBg: "#ffffff",
-  inputInputBorder: "#e4e4e4",
-  inputInputBorderFocus: "#844ff5",
-  inputInputBorderHover: "#bfbfbf",
-  muted: "#1b1b1b99",
-  paragraph: "#1b1b1be5",
-  sky: "#BAE6FD",
-  stateHover: "#1b1b1b0d",
-  stateHoverInverted: "#f7f6f526",
-  statePressed: "#1b1b1b1a",
-  statePressedInverted: "#f7f6f540",
+const breakpoints = {
+  lg: "1024px",
+  md: "768px",
+  sm: "640px",
+  xl: "1280px",
+  xl2: "1536px",
 } as const;
 
-const darkPalette = {
-  background: "#22222a",
-  badgeBadgeDefaultBg: "#f7f6f51a",
-  badgeBadgeDefaultFg: "#f7f6f5b2",
-  border: "#3b3b45",
-  borderGlass: "#3e3e49",
-  brandPythPrimary: "#8655f1",
-  card: "#2c2c35",
-  cardGlass: "#2c2c3580",
-  debugBg: "#54545c",
-  foreground: "#f7f6f5",
-  inputFocusRing: "#a782f833",
-  inputInputBg: "#2c2c35",
-  inputInputBorder: "#3b3b45",
-  inputInputBorderFocus: "#a782f8",
-  inputInputBorderHover: "#545463",
-  muted: "#f7f6f599",
-  paragraph: "#f7f6f5e5",
-  sky: "#BAE6FD",
-  stateHover: "#f7f6f50d",
-  stateHoverInverted: "#1b1b1b26",
-  statePressed: "#f7f6f51a",
-  statePressedInverted: "#1b1b1b40",
+const buttonSizes = {
+  lg: {
+    borderRadius: "1.5rem",
+    fontSize: "1.25rem",
+    gap: "0.75rem",
+    height: "3.5rem",
+    iconSize: "1.5rem",
+    padding: "1rem",
+  },
+  md: {
+    borderRadius: "0.75rem",
+    fontSize: "1rem",
+    gap: "0.5rem",
+    height: "3rem",
+    iconSize: "1.5rem",
+    padding: "0.75rem",
+  },
+  sm: {
+    borderRadius: "0.5rem",
+    fontSize: "0.875rem",
+    gap: "0.5rem",
+    height: "2.25rem",
+    iconSize: "1.25rem",
+    padding: "0.5rem",
+  },
+  xs: {
+    borderRadius: "0.375rem",
+    fontSize: "0.6875rem",
+    gap: "0.25rem",
+    height: "1.5rem",
+    iconSize: "1rem",
+    padding: "0.25rem",
+  },
 } as const;
 
 const palette = {
-  background: { light: lightPalette.background, dark: darkPalette.background },
-  badgeBadgeDefaultBg: {
-    light: lightPalette.badgeBadgeDefaultBg,
-    dark: darkPalette.badgeBadgeDefaultBg,
+  amber: {
+    50: "#fffbeb",
+    100: "#fef3c7",
+    200: "#fde68a",
+    300: "#fcd34d",
+    400: "#fbbf24",
+    500: "#f59e0b",
+    600: "#d97706",
+    700: "#b45309",
+    800: "#92400e",
+    900: "#78350f",
+    950: "#451a03",
   },
-  badgeBadgeDefaultFg: {
-    light: lightPalette.badgeBadgeDefaultFg,
-    dark: darkPalette.badgeBadgeDefaultFg,
+  beige: {
+    50: "#f7f4f4",
+    100: "#f3eded",
+    200: "#e9dfdf",
+    300: "#d9c8c8",
+    400: "#c1a8a8",
+    500: "#a98a8a",
+    600: "#927070",
+    700: "#795c5c",
+    800: "#664e4e",
+    900: "#574545",
+    950: "#2d2222",
   },
-  border: { light: lightPalette.border, dark: darkPalette.border },
-  borderGlass: {
-    light: lightPalette.borderGlass,
-    dark: darkPalette.borderGlass,
+  black: "#000",
+  blue: {
+    50: "#eff6ff",
+    100: "#dbeafe",
+    200: "#bfdbfe",
+    300: "#93c5fd",
+    400: "#60a5fa",
+    500: "#3b82f6",
+    600: "#2563eb",
+    700: "#1d4ed8",
+    800: "#1e40af",
+    900: "#1e3a8a",
+    950: "#172554",
   },
-  brandPythPrimary: {
-    light: lightPalette.brandPythPrimary,
-    dark: darkPalette.brandPythPrimary,
+  cyan: {
+    50: "#ecfeff",
+    100: "#cffafe",
+    200: "#a5f3fc",
+    300: "#67e8f9",
+    400: "#22d3ee",
+    500: "#06b6d4",
+    600: "#0891b2",
+    700: "#0e7490",
+    800: "#155e75",
+    900: "#164e63",
+    950: "#083344",
   },
-  card: { light: lightPalette.card, dark: darkPalette.card },
-  cardGlass: { light: lightPalette.cardGlass, dark: darkPalette.cardGlass },
-  debugBg: { light: lightPalette.debugBg, dark: darkPalette.debugBg },
-  foreground: { light: lightPalette.foreground, dark: darkPalette.foreground },
-  inputFocusRing: {
-    light: lightPalette.inputFocusRing,
-    dark: darkPalette.inputFocusRing,
+  emerald: {
+    50: "#ecfdf5",
+    100: "#d1fae5",
+    200: "#a7f3d0",
+    300: "#6ee7b7",
+    400: "#34d399",
+    500: "#10b981",
+    600: "#059669",
+    700: "#047857",
+    800: "#065f46",
+    900: "#064e3b",
+    950: "#022c22",
   },
-  inputInputBg: {
-    light: lightPalette.inputInputBg,
-    dark: darkPalette.inputInputBg,
+  fuchsia: {
+    50: "#fdf4ff",
+    100: "#fae8ff",
+    200: "#f5d0fe",
+    300: "#f0abfc",
+    400: "#e879f9",
+    500: "#d946ef",
+    600: "#c026d3",
+    700: "#a21caf",
+    800: "#86198f",
+    900: "#701a75",
+    950: "#4a044e",
   },
-  inputInputBorder: {
-    light: lightPalette.inputInputBorder,
-    dark: darkPalette.inputInputBorder,
+  gray: {
+    50: "#f9fafb",
+    100: "#f3f4f6",
+    200: "#e5e7eb",
+    300: "#d1d5db",
+    400: "#9ca3af",
+    500: "#6b7280",
+    600: "#4b5563",
+    700: "#374151",
+    800: "#1f2937",
+    900: "#111827",
+    950: "#030712",
   },
-  inputInputBorderFocus: {
-    light: lightPalette.inputInputBorderFocus,
-    dark: darkPalette.inputInputBorderFocus,
+  green: {
+    50: "#f0fdf4",
+    100: "#dcfce7",
+    200: "#bbf7d0",
+    300: "#86efac",
+    400: "#4ade80",
+    500: "#22c55e",
+    600: "#16a34a",
+    700: "#15803d",
+    800: "#166534",
+    900: "#14532d",
+    950: "#052e16",
   },
-  inputInputBorderHover: {
-    light: lightPalette.inputInputBorderHover,
-    dark: darkPalette.inputInputBorderHover,
+  indigo: {
+    50: "#eef2ff",
+    100: "#e0e7ff",
+    200: "#c7d2fe",
+    300: "#a5b4fc",
+    400: "#818cf8",
+    500: "#6366f1",
+    600: "#4f46e5",
+    700: "#4338ca",
+    800: "#3730a3",
+    900: "#312e81",
+    950: "#1e1b4b",
   },
-  muted: { light: lightPalette.muted, dark: darkPalette.muted },
-  paragraph: { light: lightPalette.paragraph, dark: darkPalette.paragraph },
-  stateHover: { light: lightPalette.stateHover, dark: darkPalette.stateHover },
-  stateHoverInverted: {
-    light: lightPalette.stateHoverInverted,
-    dark: darkPalette.stateHoverInverted,
+  lime: {
+    50: "#f7fee7",
+    100: "#ecfccb",
+    200: "#d9f99d",
+    300: "#bef264",
+    400: "#a3e635",
+    500: "#84cc16",
+    600: "#65a30d",
+    700: "#4d7c0f",
+    800: "#3f6212",
+    900: "#365314",
+    950: "#1a2e05",
   },
-  statePressed: {
-    light: lightPalette.statePressed,
-    dark: darkPalette.statePressed,
+  neutral: {
+    50: "#fafafa",
+    100: "#f5f5f5",
+    200: "#e5e5e5",
+    300: "#d4d4d4",
+    400: "#a3a3a3",
+    500: "#737373",
+    600: "#525252",
+    700: "#404040",
+    800: "#262626",
+    900: "#171717",
+    950: "#0a0a0a",
   },
-  statePressedInverted: {
-    light: lightPalette.statePressedInverted,
-    dark: darkPalette.statePressedInverted,
+  orange: {
+    50: "#fff7ed",
+    100: "#ffedd5",
+    200: "#fed7aa",
+    300: "#fdba74",
+    400: "#fb923c",
+    500: "#f97316",
+    600: "#ea580c",
+    700: "#c2410c",
+    800: "#9a3412",
+    900: "#7c2d12",
+    950: "#431407",
+  },
+  pink: {
+    50: "#fdf2f8",
+    100: "#fce7f3",
+    200: "#fbcfe8",
+    300: "#f9a8d4",
+    400: "#f472b6",
+    500: "#ec4899",
+    600: "#db2777",
+    700: "#be185d",
+    800: "#9d174d",
+    900: "#831843",
+    950: "#500724",
+  },
+  purple: {
+    50: "#faf5ff",
+    100: "#f3e8ff",
+    200: "#e9d5ff",
+    300: "#d8b4fe",
+    400: "#c084fc",
+    500: "#a855f7",
+    600: "#9333ea",
+    700: "#7e22ce",
+    800: "#6b21a8",
+    900: "#581c87",
+    950: "#3b0764",
+  },
+  red: {
+    50: "#fef2f2",
+    100: "#fee2e2",
+    200: "#fecaca",
+    300: "#fca5a5",
+    400: "#f87171",
+    500: "#ef4444",
+    600: "#dc2626",
+    700: "#b91c1c",
+    800: "#991b1b",
+    900: "#7f1d1d",
+    950: "#450a0a",
+  },
+  rose: {
+    50: "#fff1f2",
+    100: "#ffe4e6",
+    200: "#fecdd3",
+    300: "#fda4af",
+    400: "#fb7185",
+    500: "#f43f5e",
+    600: "#e11d48",
+    700: "#be123c",
+    800: "#9f1239",
+    900: "#881337",
+    950: "#4c0519",
+  },
+  sky: {
+    50: "#f0f9ff",
+    100: "#e0f2fe",
+    200: "#bae6fd",
+    300: "#7dd3fc",
+    400: "#38bdf8",
+    500: "#0ea5e9",
+    600: "#0284c7",
+    700: "#0369a1",
+    800: "#075985",
+    900: "#0c4a6e",
+    950: "#082f49",
+  },
+  slate: {
+    50: "#f8fafc",
+    100: "#f1f5f9",
+    200: "#e2e80",
+    300: "#cbd5e1",
+    400: "#94a3b8",
+    500: "#64748b",
+    600: "#475569",
+    700: "#334155",
+    800: "#1e293b",
+    900: "#0f172a",
+    950: "#020617",
+  },
+  steel: {
+    50: "#f8f9fc",
+    100: "#f1f2f9",
+    200: "#e2e3f0",
+    300: "#cbcee1",
+    400: "#9497b8",
+    500: "#64678b",
+    600: "#474a69",
+    700: "#333655",
+    800: "#25253e",
+    900: "#27253d",
+    950: "#100e23",
+  },
+  stone: {
+    50: "#fafaf9",
+    100: "#f5f5f4",
+    200: "#e7e5e4",
+    300: "#d6d3d1",
+    400: "#a8a29e",
+    500: "#78716c",
+    600: "#57534e",
+    700: "#44403c",
+    800: "#292524",
+    900: "#1c1917",
+    950: "#0c0a09",
+  },
+  teal: {
+    50: "#f0fdfa",
+    100: "#ccfbf1",
+    200: "#99f6e4",
+    300: "#5eead4",
+    400: "#2dd4bf",
+    500: "#14b8a6",
+    600: "#0d9488",
+    700: "#0f766e",
+    800: "#115e59",
+    900: "#134e4a",
+    950: "#042f2e",
+  },
+  violet: {
+    50: "#f5f3ff",
+    100: "#ede9fe",
+    200: "#ddd6fe",
+    300: "#c4b5fd",
+    400: "#a78bfa",
+    500: "#8b5cf6",
+    600: "#7c3aed",
+    700: "#6d28d9",
+    800: "#5b21b6",
+    900: "#4c1d95",
+    950: "#2e1065",
+  },
+  white: "#fff",
+  yellow: {
+    50: "#fefce8",
+    100: "#fef9c3",
+    200: "#fef08a",
+    300: "#fde047",
+    400: "#facc15",
+    500: "#eab308",
+    600: "#ca8a04",
+    700: "#a16207",
+    800: "#854d0e",
+    900: "#713f12",
+    950: "#422006",
+  },
+  zinc: {
+    50: "#fafafa",
+    100: "#f4f4f5",
+    200: "#e4e4e7",
+    300: "#d4d4d8",
+    400: "#a1a1aa",
+    500: "#71717a",
+    600: "#52525b",
+    700: "#3f3f46",
+    800: "#27272a",
+    900: "#18181b",
+    950: "#09090b",
   },
 } as const;
 
-const heights = {
-  avatar: spacing(10),
-} as const;
+const black = Color(palette.black);
+const stone600 = Color(palette.stone[600]);
+const violet600 = Color(palette.violet[600]);
 
-const widths = {
-  avatar: heights.avatar,
-  leftNav: {
-    collapsed: spacing(18),
-    desktop: "256px",
-    mobile: "256px",
+const elevations = {
+  primary: {
+    2: [
+      `0px 66px 18px 0px ${violet600.alpha(0).hexa()}`,
+      `0px 42px 17px 0px ${violet600.alpha(0.03).hexa()}`,
+      `0px 24px 14px 0px ${violet600.alpha(0.08).hexa()}`,
+      `0px 11px 11px 0px ${violet600.alpha(0.14).hexa()}`,
+      `0px 3px 6px 0px ${violet600.alpha(0.17).hexa()}`,
+    ].join(", "),
+  },
+  default: {
+    1: [
+      `0px 4px 6px -4px ${black.alpha(0.1).hexa()}`,
+      `0px 10px 15px -3px ${black.alpha(0.1).hexa()}`,
+    ].join(", "),
+    2: [
+      `0px 29px 12px 0px ${lightDark(stone600.alpha(0.02).hexa(), black.alpha(0.08).hexa())}`,
+      `0px 16px 10px 0px ${lightDark(stone600.alpha(0.06).hexa(), black.alpha(0.12).hexa())}`,
+      `0px 7px 7px 0px ${lightDark(stone600.alpha(0.12).hexa(), black.alpha(0.2).hexa())}`,
+      `0px 2px 4px 0px ${lightDark(stone600.alpha(0.14).hexa(), black.alpha(0.3).hexa())}`,
+    ].join(", "),
   },
 } as const;
 
-const color = {
+const buttonOutlineColors = {
   background: {
-    primary: lightDark(palette.background.light, palette.background.dark),
+    active: {
+      dark: Color(palette.steel[50]).alpha(0.1).hexa(),
+      light: Color(palette.beige[950]).alpha(0.1).hexa(),
+    },
+    hover: {
+      dark: Color(palette.steel[50]).alpha(0.05).hexa(),
+      light: Color(palette.beige[950]).alpha(0.05).hexa(),
+    },
   },
-  dialog: {
-    background: lightDark(palette.card.light, palette.card.dark),
-    border: lightDark(palette.border.light, palette.border.dark),
-    description: lightDark(palette.paragraph.light, palette.paragraph.dark),
-    foreground: lightDark(palette.foreground.light, palette.foreground.dark),
+  border: { dark: "none", light: "none" },
+  foreground: { dark: palette.steel[50], light: palette.stone[900] },
+} as const;
+
+const colors = {
+  background: {
+    cardHighlight: { dark: palette.slate[950], light: palette.violet[50] },
+    cardSecondary: { dark: palette.steel[950], light: palette.white },
+    modal: { dark: palette.steel[950], light: palette.white },
+    navBlur: {
+      dark: Color(palette.steel[950]).alpha(0.7).hexa(),
+      light: Color(palette.white).alpha(0.7).hexa(),
+    },
+    primary: { dark: palette.steel[950], light: palette.white },
+    secondary: { dark: palette.steel[900], light: palette.beige[100] },
+    tooltip: { dark: palette.steel[200], light: palette.steel[700] },
   },
-  overlay: {
-    backdrop: lightDark(palette.statePressed.light, palette.statePressed.dark),
-  },
+  border: { dark: palette.steel[600], light: palette.stone[300] },
   button: {
-    ghost: {
-      background: {
-        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
-        primary: "transparent",
-      },
-      foreground: {
-        hover: lightDark(palette.foreground.light, palette.foreground.dark),
-        primary: lightDark(palette.foreground.light, palette.foreground.dark),
-      },
-      outline: "none",
+    disabled: {
+      background: { dark: palette.steel[600], light: palette.stone[200] },
+      foreground: { dark: palette.steel[400], light: palette.stone[400] },
     },
-    outline: {
-      background: {
-        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
-        primary: "transparent",
-      },
-      foreground: {
-        hover: lightDark(palette.foreground.light, palette.foreground.dark),
-        primary: lightDark(palette.foreground.light, palette.foreground.dark),
-      },
-      outline: `1px solid ${lightDark(palette.border.light, palette.border.dark)}`,
-    },
+    ghost: omitKeys(buttonOutlineColors, ["border"]),
+    outline: buttonOutlineColors,
     primary: {
       background: {
-        hover: lightDark(
-          blendColor(palette.brandPythPrimary.light, "black"),
-          blendColor(palette.brandPythPrimary.dark, "white"),
-        ),
-        primary: lightDark(
-          palette.brandPythPrimary.light,
-          palette.brandPythPrimary.dark,
-        ),
+        active: { dark: palette.slate[800], light: palette.slate[900] },
+        hover: { dark: palette.slate[700], light: palette.slate[800] },
+        normal: { dark: palette.slate[600], light: palette.slate[700] },
       },
-      foreground: {
-        hover: lightDark(palette.card.light, palette.foreground.dark),
-        primary: lightDark(palette.card.light, palette.foreground.dark),
-      },
-      outline: `1px solid ${lightDark(
-        palette.brandPythPrimary.light,
-        palette.brandPythPrimary.dark,
-      )}`,
+      foreground: palette.white,
     },
     secondary: {
       background: {
-        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
-        primary: lightDark(palette.card.light, palette.card.dark),
+        active: palette.purple[400],
+        hover: palette.purple[300],
+        normal: palette.purple[200],
       },
-      foreground: {
-        hover: lightDark(palette.foreground.light, palette.foreground.dark),
-        primary: lightDark(palette.foreground.light, palette.foreground.dark),
+      foreground: palette.steel[900],
+    },
+  },
+  chart: {
+    series: {
+      neutral: { dark: palette.steel[300], light: palette.stone[500] },
+      primary: { dark: palette.violet[400], light: palette.violet[500] },
+    },
+  },
+  focus: { dark: palette.violet[500], light: palette.violet[700] },
+  focusDim: {
+    dark: Color(palette.violet[500]).alpha(0.3).hexa(),
+    light: Color(palette.violet[700]).alpha(0.3).hexa(),
+  },
+  foreground: { dark: palette.steel[50], light: palette.steel[900] },
+  forms: {
+    input: {
+      hover: {
+        border: { dark: palette.steel[500], light: palette.stone[400] },
       },
-      outline: "none",
+    },
+  },
+  heading: { dark: palette.steel[200], light: palette.steel[900] },
+  highlight: { dark: palette.violet[500], light: palette.violet[600] },
+  link: {
+    normal: { dark: palette.steel[50], light: palette.steel[900] },
+    primary: { dark: palette.violet[300], light: palette.violet[700] },
+  },
+  muted: { dark: palette.steel[300], light: palette.stone[700] },
+  paragraph: { dark: palette.steel[300], light: palette.stone[600] },
+  selection: {
+    background: { dark: palette.violet[400], light: palette.violet[600] },
+    foreground: { dark: palette.slate[950], light: palette.steel[50] },
+  },
+  states: {
+    data: {
+      background: { dark: palette.slate[950], light: palette.violet[50] },
+      border: { dark: palette.slate[800], light: palette.violet[200] },
+      normal: { dark: palette.violet[400], light: palette.violet[600] },
+    },
+    error: {
+      background: { dark: palette.red[950], light: palette.red[50] },
+      border: { dark: palette.red[900], light: palette.red[400] },
+      normal: palette.red[500],
+    },
+    info: {
+      background: { dark: palette.indigo[950], light: palette.indigo[50] },
+      border: { dark: palette.indigo[800], light: palette.indigo[400] },
+      normal: { dark: palette.indigo[400], light: palette.indigo[600] },
     },
     success: {
-      background: {
-        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
-        primary: lightDark(
-          palette.badgeBadgeDefaultBg.light,
-          palette.badgeBadgeDefaultBg.dark,
-        ),
-      },
-      foreground: {
-        hover: lightDark(
-          palette.badgeBadgeDefaultFg.light,
-          palette.badgeBadgeDefaultFg.dark,
-        ),
-        primary: lightDark(
-          palette.badgeBadgeDefaultFg.light,
-          palette.badgeBadgeDefaultFg.dark,
-        ),
-      },
-      outline: "none",
+      background: { dark: palette.green[950], light: palette.green[50] },
+      border: { dark: palette.green[800], light: palette.green[400] },
+      normal: { dark: palette.green[500], light: palette.green[600] },
     },
     warning: {
-      background: {
-        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
-        primary: lightDark(
-          palette.badgeBadgeDefaultBg.light,
-          palette.badgeBadgeDefaultBg.dark,
-        ),
-      },
-      foreground: {
-        hover: lightDark(
-          palette.badgeBadgeDefaultFg.light,
-          palette.badgeBadgeDefaultFg.dark,
-        ),
-        primary: lightDark(
-          palette.badgeBadgeDefaultFg.light,
-          palette.badgeBadgeDefaultFg.dark,
-        ),
-      },
-      outline: "none",
-    },
-    danger: {
-      background: {
-        hover: lightDark(palette.stateHover.light, palette.stateHover.dark),
-        primary: lightDark(
-          palette.badgeBadgeDefaultBg.light,
-          palette.badgeBadgeDefaultBg.dark,
-        ),
-      },
-      foreground: {
-        hover: lightDark(
-          palette.badgeBadgeDefaultFg.light,
-          palette.badgeBadgeDefaultFg.dark,
-        ),
-        primary: lightDark(
-          palette.badgeBadgeDefaultFg.light,
-          palette.badgeBadgeDefaultFg.dark,
-        ),
-      },
-      outline: "none",
+      background: { dark: palette.orange[950], light: palette.orange[50] },
+      border: { dark: palette.orange[700], light: palette.orange[400] },
+      normal: { dark: palette.orange[400], light: palette.orange[600] },
     },
   },
-  leftNav: {
-    background: {
-      primary: lightDark(palette.background.light, palette.background.dark),
-    },
+  tooltip: { dark: palette.steel[900], light: palette.steel[200] },
+  transparent: "transparent",
+} as const;
+
+const tokens = {
+  borderRadius: {
+    base: "0.25rem",
+    full: "9999px",
+    lg: "0.5rem",
+    md: "0.375rem",
+    none: "0px",
+    sm: "0.125rem",
+    xl: "0.75rem",
+    xl2: "1rem",
+    xl3: "1.5rem",
+  },
+  fontFamilies: {
+    monospace:
+      '"ui-monospace", "sfmono-regular", "consolas", "Liberation Mono", "menlo", "monospace"',
+  },
+  fontSizes: {
+    base: "1rem",
+    lg: "1.125rem",
+    sm: "0.875rem",
+    xl: "1.25rem",
+    xl2: "1.5rem",
+    xl3: "1.875rem",
+    xl4: "2.25rem",
+    xl5: "3rem",
+    xl6: "3.75rem",
+    xl7: "4.5rem",
+    xl8: "6rem",
+    xl9: "8rem",
+    xs: "0.75rem",
+    xxs: "0.6875rem",
+  },
+  fontWeights: {
+    black: 900,
+    bold: 700,
+    extrabold: 800,
+    extralight: 200,
+    light: 300,
+    medium: 500,
+    normal: 400,
+    semibold: 600,
+    thin: 100,
+  },
+  letterSpacing: {
+    normal: "0em",
+    tight: "-0.025em",
+    tighter: "-0.05em",
+    wide: "0.025em",
+    wider: "0.05em",
+    widest: "0.1em",
   },
 } as const;
 
-const fontWeight = {
-  black: 900,
-  bold: 700,
-  extrabold: 800,
-  extralight: 200,
-  light: 300,
-  medium: 500,
-  normal: 400,
-  semibold: 600,
-  thin: 100,
-} as const;
+/**
+ * Supporting Types
+ */
+export type BreakpointSize = keyof typeof breakpoints;
+export type ButtonSizes = keyof typeof buttonSizes;
+export type ThemeColor = keyof typeof colors;
+export type Elevation = keyof typeof elevations;
+export type PaletteColor = keyof typeof palette;
 
-const fontFamily = {
-  monospace:
-    'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-  normal:
-    'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-} as const;
-
-const fontSize = {
-  xxl: "1.5rem",
-  xxxl: "1.875rem",
-  xxxxl: "2.25rem",
-  xxxxxl: "3rem",
-  xxxxxxl: "3.75rem",
-  xxxxxxxl: "4.5rem",
-  xxxxxxxxl: "6rem",
-  xxxxxxxxxl: "8rem",
-  base: "1rem",
-  lg: "1.125rem",
-  sm: "0.875rem",
-  xl: "1.25rem",
-  xs: "0.75rem",
-  xxs: "0.6875rem",
-} as const;
-
-const letterSpacing = {
-  normal: "0em",
-  tight: "-0.025em",
-  tighter: "-0.05em",
-  wide: "0.025em",
-  wider: "0.05em",
-  widest: "0.1em",
-} as const;
-
-const borderRadius = {
-  avatar: "40px",
-  badge: "24px",
-  button: "8px",
-  card: "16px",
-  cardNested: "12px",
-  popover: "8px",
-} as const;
-
-const elevationColor = lightDark(
-  "rgba(15, 23, 42, 0.16)",
-  "rgba(0, 0, 0, 0.6)",
-);
-
-const elevationColorSoft = lightDark(
-  "rgba(15, 23, 42, 0.08)",
-  "rgba(0, 0, 0, 0.45)",
-);
-
-const elevation = {
-  sm: `0 1px 2px ${elevationColorSoft}`,
-  md: `0 2px 6px ${elevationColor}, 0 1px 2px ${elevationColorSoft}`,
-  lg: `0 6px 16px ${elevationColor}, 0 2px 4px ${elevationColorSoft}`,
-  xl: `0 12px 28px ${elevationColor}, 0 4px 8px ${elevationColorSoft}`,
-} as const;
-
-const flexRow = (): SimpleStyleRules["key"] => ({
-  display: "flex",
-  flexFlow: "row",
-});
-
-const flexRowCenter = (gap?: string): SimpleStyleRules["key"] => {
-  const out: SimpleStyleRules["key"] = { alignItems: "center", ...flexRow() };
-
-  if (gap) {
-    out.gap = gap;
-  }
-
-  return out;
-};
-
-const flexVertical = (): SimpleStyleRules["key"] => ({
-  display: "flex",
-  flexFlow: "column",
-});
-
-const flexVerticalCenter = (gap?: string): SimpleStyleRules["key"] => {
-  const out: SimpleStyleRules["key"] = {
-    ...flexVertical(),
-    justifyContent: "center",
-  };
-
-  if (gap) {
-    out.gap = gap;
-  }
-
-  return out;
-};
-
-const tooltipStyles = (): SimpleStyleRules["key"] => ({
-  /**
-   * class name applied to the menu popover that
-   * holds all of the menu items
-   */
-  backgroundColor: lightDark(palette.card.light, palette.card.dark),
-  borderRadius: borderRadius.popover,
-  boxShadow: elevation.md,
+const popoverTooltipStyles = (): SimpleStyleRules["key"] => ({
+  backgroundColor: lightDark(
+    colors.background.modal.light,
+    colors.background.modal.dark,
+  ),
+  border: `1px solid ${lightDark(colors.border.light, colors.border.dark)}`,
+  borderRadius: tokens.borderRadius.xl,
+  boxShadow: elevations.default[2],
+  color: lightDark(colors.foreground.light, colors.foreground.dark),
+  minWidth: "160px",
   padding: spacing(2),
 });
 
-function labelStyles(
-  yourStyles?: SimpleStyleRules["key"],
-): SimpleStyleRules["key"] {
-  return {
-    color: lightDark(palette.muted.light, palette.muted.dark),
-    fontSize: fontSize.xs,
-    ...yourStyles,
-  };
-}
-
+/**
+ * The Unified Theme Object
+ */
 export const ThemeV2 = {
-  blendColor,
-  borderRadius,
-  color,
-  elevation,
-  flexRow,
-  flexRowCenter,
-  flexVertical,
-  flexVerticalCenter,
-  fontFamily,
-  fontSize,
-  fontWeight,
-  heights,
-  labelStyles,
-  letterSpacing,
+  /**
+   * Breakpoints for responsive design
+   */
+  breakpoints,
+
+  /**
+   * Button Size Tokens
+   */
+  buttonSizes,
+
+  /**
+   * Functional Color Tokens (Light/Dark support)
+   */
+  colors,
+
+  /**
+   * Box Shadows and Elevations
+   */
+  elevations,
+
   lightDark,
+
+  /**
+   * Media Query Methods
+   */
+  mediaQueries: {
+    down: (
+      size: BreakpointSize,
+      rules: SimpleStyleRules["key"],
+    ): SimpleStyleRules["key"] => ({
+      [`@media (max-width: ${ThemeV2.breakpoints[size]})`]: rules,
+    }),
+    up: (
+      size: BreakpointSize,
+      rules: SimpleStyleRules["key"],
+    ): SimpleStyleRules["key"] => ({
+      [`@media (min-width: ${ThemeV2.breakpoints[size]})`]: rules,
+    }),
+  },
+
+  /**
+   * Raw Color Palette
+   */
   palette,
+
+  popoverTooltipStyles,
+
   spacing,
-  tooltipStyles,
-  widths,
-};
+
+  /**
+   * General Design Tokens
+   */
+  tokens,
+} as const;

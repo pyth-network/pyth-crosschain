@@ -7,8 +7,8 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
   root: {
     alignItems: "center",
     color: theme.lightDark(
-      theme.palette.muted.light,
-      theme.palette.muted.dark,
+      theme.colors.muted.light,
+      theme.colors.muted.dark,
     ),
     cursor: "pointer",
     display: "inline-flex",
@@ -16,18 +16,18 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
     justifyContent: "center",
 
     "& svg": {
-      height: theme.fontSize.xl,
+      height: theme.tokens.fontSizes.xl,
       width: "auto",
     },
 
     "&[data-checked]": {
       borderColor: theme.lightDark(
-        theme.palette.inputInputBorderFocus.light,
-        theme.palette.inputInputBorderFocus.dark,
+        theme.colors.focus.light,
+        theme.colors.focus.dark,
       ),
       color: theme.lightDark(
-        theme.palette.foreground.light,
-        theme.palette.foreground.dark,
+        theme.colors.foreground.light,
+        theme.colors.foreground.dark,
       ),
       '& [data-checkbox-icon="unchecked"]': {
         opacity: 0,
@@ -43,7 +43,7 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
       opacity: 0,
     },
     '&[data-compact="true"]': {
-      borderRadius: theme.borderRadius.sm,
+      borderRadius: theme.tokens.borderRadius.sm,
       padding: theme.spacing(1),
       width: theme.spacing(8),
       height: theme.spacing(8),
@@ -51,12 +51,12 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
     },
     "&:focus-visible": {
       borderColor: theme.lightDark(
-        theme.palette.inputInputBorderFocus.light,
-        theme.palette.inputInputBorderFocus.dark,
+        theme.colors.focus.light,
+        theme.colors.focus.dark,
       ),
       boxShadow: `0 0 0 3px ${theme.lightDark(
-        theme.palette.inputFocusRing.light,
-        theme.palette.inputFocusRing.dark,
+        theme.colors.focusDim.light,
+        theme.colors.focusDim.dark,
       )}`,
       outline: "none",
     },
@@ -67,8 +67,8 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    height: theme.fontSize.xl,
-    width: theme.fontSize.xl,
+    height: theme.tokens.fontSizes.xl,
+    width: theme.tokens.fontSizes.xl,
   },
   uncheckedIcon: {
     position: "absolute",
@@ -89,7 +89,7 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
     width: "100%",
   },
   checkedIcon: {
-    height: theme.fontSize.xl,
+    height: theme.tokens.fontSizes.xl,
     width: "auto",
   },
 }));

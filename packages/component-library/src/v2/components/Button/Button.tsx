@@ -11,7 +11,7 @@ export function Button({
   beforeIcon: BeforeIcon,
   children,
   className,
-  size = "base",
+  size = "md",
   tooltip,
   tooltipDelay = 50,
   tooltipPositionerProps,

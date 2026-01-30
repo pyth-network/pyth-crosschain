@@ -2,7 +2,7 @@ import cx from "clsx";
 import type { ReactElement, HTMLAttributes } from "react";
 import { cloneElement, isValidElement } from "react";
 
-import { classes } from "./Text.styles";
+import { classes, type TextColorToken } from "./Text.styles";
 import type { ThemeV2 } from "../../theme";
 
 export type TextProps = HTMLAttributes<HTMLElement> & {
@@ -11,14 +11,14 @@ export type TextProps = HTMLAttributes<HTMLElement> & {
    * of your choice
    */
 
-  bold?: keyof typeof ThemeV2.fontWeight;
+  bold?: keyof typeof ThemeV2.tokens.fontWeights;
 
   /**
    * if specified, will use this color
    * when rendering the text
    */
 
-  color?: keyof typeof ThemeV2.palette;
+  color?: TextColorToken;
 
   /**
    * if true, will render this in italics

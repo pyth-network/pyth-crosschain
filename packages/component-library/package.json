@@ -39,6 +39,7 @@
     "@react-hookz/web": "catalog:",
     "bcp-47": "catalog:",
     "clsx": "catalog:",
+    "color": "catalog:",
     "dayjs": "catalog:",
     "modern-normalize": "catalog:",
     "motion": "catalog:",

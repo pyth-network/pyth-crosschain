@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import { Text } from "./Text";
 import { ThemeV2 } from "../../theme";
+import { textColorTokens } from "./Text.styles";
 
 const meta = {
   title: "V2/Text",
@@ -13,11 +14,11 @@ const meta = {
   argTypes: {
     bold: {
       control: { type: "select" },
-      options: Object.keys(ThemeV2.fontWeight),
+      options: Object.keys(ThemeV2.tokens.fontWeights),
     },
     color: {
       control: { type: "select" },
-      options: Object.keys(ThemeV2.palette),
+      options: textColorTokens,
     },
     render: { control: false },
   },

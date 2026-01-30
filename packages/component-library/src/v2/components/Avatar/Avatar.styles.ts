@@ -1,7 +1,7 @@
 import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("pyth-v2-avatar", (theme) => {
-  const withBorderRadius = { borderRadius: theme.borderRadius.avatar };
+  const withBorderRadius = { borderRadius: theme.tokens.borderRadius.full };
   return {
     img: {
       ...withBorderRadius,
@@ -14,17 +14,14 @@ export const { classes } = createStyles("pyth-v2-avatar", (theme) => {
       ...withBorderRadius,
       alignItems: "center",
       backgroundColor: theme.lightDark(
-        theme.palette.brandPythPrimary.light,
-        theme.palette.brandPythPrimary.dark,
+        theme.colors.highlight.light,
+        theme.colors.highlight.dark,
       ),
-      color: theme.lightDark(
-        theme.palette.card.light,
-        theme.palette.foreground.dark,
-      ),
+      color: theme.colors.button.primary.foreground,
       display: "inline-flex",
-      height: theme.heights.avatar,
+      height: theme.spacing(10),
       justifyContent: "center",
-      width: theme.widths.avatar,
+      width: theme.spacing(10),
     },
   };
 });
