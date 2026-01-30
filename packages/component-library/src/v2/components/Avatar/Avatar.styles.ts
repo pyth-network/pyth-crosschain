@@ -13,10 +13,7 @@ export const { classes } = createStyles("pyth-v2-avatar", (theme) => {
     root: {
       ...withBorderRadius,
       alignItems: "center",
-      backgroundColor: theme.lightDark(
-        theme.colors.highlight.light,
-        theme.colors.highlight.dark,
-      ),
+      backgroundColor: theme.resolveThemeColor(theme.colors.highlight),
       color: theme.colors.button.primary.foreground,
       display: "inline-flex",
       height: theme.spacing(10),

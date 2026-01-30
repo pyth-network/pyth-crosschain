@@ -6,10 +6,7 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
   },
   root: {
     alignItems: "center",
-    color: theme.lightDark(
-      theme.colors.muted.light,
-      theme.colors.muted.dark,
-    ),
+    color: theme.resolveThemeColor(theme.colors.muted),
     cursor: "pointer",
     display: "inline-flex",
     gap: theme.spacing(1),
@@ -21,14 +18,8 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
     },
 
     "&[data-checked]": {
-      borderColor: theme.lightDark(
-        theme.colors.focus.light,
-        theme.colors.focus.dark,
-      ),
-      color: theme.lightDark(
-        theme.colors.foreground.light,
-        theme.colors.foreground.dark,
-      ),
+      borderColor: theme.resolveThemeColor(theme.colors.focus),
+      color: theme.resolveThemeColor(theme.colors.foreground),
       '& [data-checkbox-icon="unchecked"]': {
         opacity: 0,
       },
@@ -50,14 +41,8 @@ export const { classes } = createStyles("v2-checkbox", (theme) => ({
       gap: 0,
     },
     "&:focus-visible": {
-      borderColor: theme.lightDark(
-        theme.colors.focus.light,
-        theme.colors.focus.dark,
-      ),
-      boxShadow: `0 0 0 3px ${theme.lightDark(
-        theme.colors.focusDim.light,
-        theme.colors.focusDim.dark,
-      )}`,
+      borderColor: theme.resolveThemeColor(theme.colors.focus),
+      boxShadow: `0 0 0 3px ${theme.resolveThemeColor(theme.colors.focusDim)}`,
       outline: "none",
     },
   },

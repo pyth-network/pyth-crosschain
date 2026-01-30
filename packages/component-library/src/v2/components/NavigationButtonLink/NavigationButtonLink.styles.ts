@@ -1,22 +1,14 @@
 import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
-  const foregroundColor = theme.lightDark(
-    theme.colors.foreground.light,
-    theme.colors.foreground.dark,
-  );
-  const activeBackgroundColor = theme.lightDark(
-    theme.colors.button.outline.background.active.light,
-    theme.colors.button.outline.background.active.dark,
+  const foregroundColor = theme.resolveThemeColor(theme.colors.foreground);
+  const activeBackgroundColor = theme.resolveThemeColor(
+    theme.colors.button.outline.background.active,
   );
   // TODO: This is likely not right, but we'll investigate later
-  const activeForegroundColor = theme.lightDark(
-    theme.colors.foreground.light,
-    theme.colors.foreground.dark,
-  );
-  const hoverBackgroundColor = theme.lightDark(
-    theme.colors.button.outline.background.hover.light,
-    theme.colors.button.outline.background.hover.dark,
+  const activeForegroundColor = theme.resolveThemeColor(theme.colors.foreground);
+  const hoverBackgroundColor = theme.resolveThemeColor(
+    theme.colors.button.outline.background.hover,
   );
 
   return {

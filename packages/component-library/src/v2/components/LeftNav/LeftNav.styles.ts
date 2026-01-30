@@ -49,10 +49,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
     currentUser: {
       "&[data-currentusermenu]": {
         borderRadius: 0,
-        borderTop: `1px solid ${theme.lightDark(
-          theme.colors.border.light,
-          theme.colors.border.dark,
-        )}`,
+        borderTop: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
         display: "inline-grid",
         flexShrink: 0,
         gap: theme.spacing(2),
@@ -84,10 +81,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
         "&:last-child": {
-          color: theme.lightDark(
-            theme.colors.muted.light,
-            theme.colors.muted.dark,
-          ),
+          color: theme.resolveThemeColor(theme.colors.muted),
           fontSize: theme.tokens.fontSizes.sm,
         },
       },
@@ -136,14 +130,10 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
      * root of the <nav />
      */
     root: {
-      backgroundColor: theme.lightDark(
-        theme.colors.background.secondary.light,
-        theme.colors.background.secondary.dark,
+      backgroundColor: theme.resolveThemeColor(
+        theme.colors.background.secondary,
       ),
-      borderRight: `1px solid ${theme.lightDark(
-        theme.colors.border.light,
-        theme.colors.border.dark,
-      )}`,
+      borderRight: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
       display: "flex",
       flexFlow: "column",
       height: "100vh",

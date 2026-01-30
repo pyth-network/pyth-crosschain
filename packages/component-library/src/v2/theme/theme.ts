@@ -6,6 +6,10 @@ import type { SimpleStyleRules } from "simplestyle-js/ssr";
 const spacing = (increment: number) => `${(increment * 0.25).toString()}rem`;
 const lightDark = (light: string, dark: string) =>
   `light-dark(${light}, ${dark})`;
+/**
+ * Normalize theme color tokens to a CSS-ready value.
+ * Use this in createStyles callbacks to handle light/dark tokens consistently.
+ */
 const resolveThemeColor = (
   value:
     | string

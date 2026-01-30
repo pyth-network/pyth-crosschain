@@ -58,7 +58,7 @@ export const { classes } = createStyles("v2-text-component", (theme) => {
     if (typeof value === "string") {
       return value;
     }
-    return theme.lightDark(value.light, value.dark);
+    return theme.resolveThemeColor(value);
   };
   let colorVariants: SimpleStyleRules["key"] = {};
   for (const colorName of textColorTokens) {

@@ -2,9 +2,8 @@ import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("pyth-v2-actions-menu", (theme) => {
   const triggerHover = {
-    backgroundColor: theme.lightDark(
-      theme.colors.button.outline.background.hover.light,
-      theme.colors.button.outline.background.hover.dark,
+    backgroundColor: theme.resolveThemeColor(
+      theme.colors.button.outline.background.hover,
     ),
     cursor: "pointer",
   };
@@ -36,7 +35,7 @@ export const { classes } = createStyles("pyth-v2-actions-menu", (theme) => {
      * that appears at the top of the menu popover
      */
     menuPopoverTitle: {
-      color: theme.lightDark(theme.colors.muted.light, theme.colors.muted.dark),
+      color: theme.resolveThemeColor(theme.colors.muted),
       fontSize: theme.tokens.fontSizes.xs,
       padding: theme.spacing(2),
       textTransform: "uppercase",
