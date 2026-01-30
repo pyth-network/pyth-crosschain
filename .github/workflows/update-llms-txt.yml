@@ -363,10 +363,13 @@ jobs:
 
             let body;
 
+            const dynamicContentNote = '\n\n> Note: New documentation pages are automatically included in the dynamic content section at build time.';
+
             if (affectedProducts.length === 0) {
               body = `## 🤖 llms.txt Static Header Review
 
             Documentation changes detected, but no product-specific llms.txt files were affected.
+            ${dynamicContentNote}
             ${newProductWarning}
             <details>
             <summary>Files analyzed</summary>
@@ -381,6 +384,7 @@ jobs:
             Analyzed documentation changes — no updates to product static headers required.
 
             **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
+            ${dynamicContentNote}
             ${newProductWarning}
             <details>
             <summary>Files analyzed</summary>
@@ -398,6 +402,7 @@ jobs:
             **Products updated:** ${updatedProducts.map(p => `\`${p.trim()}\``).join(', ') || 'none'}
 
             Please review the changes to the route files in \`apps/developer-hub/src/app/\`.
+            ${dynamicContentNote}
             ${newProductWarning}
             <details>
             <summary>Files that triggered this update</summary>
