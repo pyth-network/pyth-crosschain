@@ -45,6 +45,12 @@ export type ActionsMenuProps = Pick<
     className?: string;
 
     /**
+     * class name override applied specifically to the trigger
+     * that opens the actions menu popover
+     */
+    triggerClassName?: string;
+
+    /**
      * items to display in the menu popover.
      * each will be rendered inside of a Menu.Item
      */
@@ -62,11 +68,13 @@ export function ActionsMenu({
   children,
   menuItems,
   popoverTitle,
+  triggerClassName,
   ...positionerProps
 }: ActionsMenuProps) {
   return (
     <Menu.Root>
       <Menu.Trigger
+        className={cx(triggerClassName)}
         nativeButton={false}
         render={<div className={classes.trigger} />}
       >

@@ -14,6 +14,14 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
     },
 
     /**
+     * class name applied specifically to the trigger
+     * that opens the actions menu
+     */
+    actionsMenuTrigger: {
+      flexShrink: 0,
+    },
+
+    /**
      * class name applied to the vertical ellipsis trigger
      * that opens the user actions menu
      */
@@ -49,7 +57,9 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
         flexShrink: 0,
         gap: theme.spacing(2),
         gridTemplateColumns: "auto 1fr",
+        height: "100%",
         minWidth: 0,
+        width: "100%",
       },
     },
 
@@ -189,7 +199,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
 
       '&[data-open="false"][data-hasactionsmenu="true"]': {
         "& $currentUser": {
-          gridTemplateColumns: "auto auto",
+          gridTemplateColumns: "auto",
           "& $ellipsis": {
             display: "none",
           },

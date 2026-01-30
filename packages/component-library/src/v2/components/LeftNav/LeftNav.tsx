@@ -50,6 +50,7 @@ export function LeftNav({
       <ActionsMenu
         align="center"
         className={classes.actionsMenuPopover}
+        triggerClassName={classes.actionsMenuTrigger}
         menuItems={actionMenuItems}
         popoverTitle="My Account"
         side="top"
