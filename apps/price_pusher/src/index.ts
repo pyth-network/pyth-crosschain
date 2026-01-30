@@ -9,6 +9,7 @@ import near from "./near/command.js";
 import { enableMetrics, metricsPort } from "./options.js";
 import solana from "./solana/command.js";
 import sui from "./sui/command.js";
+import iota from "./iota/command.js";
 import ton from "./ton/command.js";
 
 const yargs = createCLI(hideBin(process.argv));
@@ -27,6 +28,7 @@ void yargs
   .command(injective)
   .command(aptos)
   .command(sui)
+  .command(iota)
   .command(near)
   .command(solana)
   .command(ton)
