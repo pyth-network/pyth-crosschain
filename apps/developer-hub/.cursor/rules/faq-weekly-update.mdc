@@ -1,0 +1,111 @@
+---
+description: Workflow for updating Pyth Pro FAQ from weekly data dumps. Read this rule when the user provides a data dump for FAQ updates.
+globs: content/docs/price-feeds/pro/faq.mdx
+---
+
+# Pyth Pro FAQ Weekly Update — State
+
+**Last updated (FAQ content):** 2025-01-30
+
+Update this date at the end of every successful FAQ update so the next run knows when the FAQ was last changed.
+
+<!--
+HOW TO USE THIS RULE
+--------------------
+1. When you have a weekly data dump (new Q&A to add or update in the Pyth Pro FAQ):
+   - Paste the dump in your message, or attach the file.
+   - Mention this rule so the agent uses it, e.g. "Using the FAQ weekly update rule" or @faq-weekly-update.
+
+2. The agent will:
+   - Check when the FAQ was last updated (using the date above).
+   - Parse the dump and compare with the current FAQ (new vs. modified vs. duplicate).
+   - Show you a list of proposed adds and modifications and ask for your approval.
+
+3. You approve (e.g. "Yes, go ahead" / "Add all" / "Skip the one about X").
+
+4. The agent will then:
+   - Update content/docs/price-feeds/pro/faq.mdx with the approved changes.
+   - Set "Last updated (FAQ content)" at the top of this file to today's date.
+   - Summarize what was added, updated, and skipped.
+-->
+
+---
+
+# Pyth Pro FAQ Weekly Update Workflow
+
+Use this workflow when the user provides a **data dump** (file or pasted content) to update the Pyth Pro FAQ.
+
+## 1. Check Last Updated Date
+
+- Read the **Last updated (FAQ content)** date at the top of this file.
+- Compare with the date range or context of the data dump (e.g. “questions from week of …”).
+- Use this to reason about what is “new” since the last update and avoid re-processing old content.
+
+## 2. Parse the Data Dump
+
+- Treat the user’s message or attached file as the **data dump**.
+- Extract every **question** and its **answer** (and any metadata: category, source, etc. if present).
+- Normalize phrasing so you can match against existing FAQ questions (e.g. strip extra punctuation, lowercase for comparison).
+- If the dump is messy (logs, mixed formats), identify only the Q&A pairs and ignore the rest.
+
+## 3. Diff Against Current FAQ
+
+- Open **content/docs/price-feeds/pro/faq.mdx** and list all current questions (the `####` headings).
+- For each Q&A in the dump:
+  - **New:** No matching question in the FAQ → candidate to **add**.
+  - **Modified:** Same or very similar question exists but the answer differs or is improved → candidate to **update**.
+  - **Duplicate:** Same question and same (or equivalent) answer → **skip**, do not add a duplicate.
+- Produce a clear list:
+  - **To add:** question + proposed answer + suggested category.
+  - **To modify:** existing question + proposed new/merged answer.
+  - **Skipped (duplicate):** question (optional one-line reason).
+
+## 4. Verify With the User
+
+- **Before editing the FAQ**, present your findings to the user:
+  - How many new, modified, and skipped items.
+  - For **add**: list each new question, suggested category, and a short summary of the answer.
+  - For **modify**: list each existing question and what you would change (e.g. “Update answer to include X and link to Y”).
+- Ask the user to confirm:
+  - “Do you want to add all of these?” or “Which of these should I add?”
+  - “Do you approve these modifications?” or “Which edits should I apply?”
+- Do **not** change **content/docs/price-feeds/pro/faq.mdx** or this rule file until the user explicitly approves (e.g. “Yes, go ahead” / “Apply all” / “Add these and skip those”).
+
+## 5. Update the FAQ (After Approval)
+
+- Edit **content/docs/price-feeds/pro/faq.mdx**:
+  - **Add** new Q&As under the correct category. Use the same format as existing items:
+    - Category heading: `## Category Name` (only if the category already exists).
+    - Question: `#### Question text?` (exact H4 style).
+    - Answer: one or more paragraphs below, no extra heading.
+  - **Modify** only the approved existing questions: replace or extend the answer; keep the same `####` question text unless the user asked to rephrase.
+- Preserve existing structure and order:
+  - Categories in order: Connection & Subscription → Data Format & Payloads → Market Hours & Schedules → On-Chain Integration → Historical Data → Access Tokens & Permissions → Troubleshooting → Infrastructure.
+  - If a new question clearly belongs to a new topic, suggest a new category to the user before adding it; if they agree, add the category in a sensible place (e.g. before “Additional Resources”).
+- Conventions:
+  - Use **access token** (not “API key”).
+  - Prefer internal doc links where relevant: [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices), [Payload Reference](/price-feeds/pro/payload-reference), [Rate Limits](/price-feeds/pro/rate-limits), [Contract Addresses](/price-feeds/pro/contract-addresses), [Market Hours](/price-feeds/pro/market-hours), [REST API](/price-feeds/pro/api/rest), [History API](/price-feeds/pro/api/history), [Integrate as Consumer](/price-feeds/pro/integrate-as-consumer), [Price Feed IDs](/price-feeds/pro/price-feed-ids), [Error Codes](/price-feeds/pro/error-codes).
+  - Keep tone concise, technical, second person (“you”).
+  - Add links to Pyth Pro Playground or other official URLs when they help (e.g. for “how do I try this?”).
+
+## 6. Update the Last Updated Date in This File
+
+- After all approved changes are written to **content/docs/price-feeds/pro/faq.mdx**, update this rule file:
+  - Set **Last updated (FAQ content):** to **today’s date** in `YYYY-MM-DD` format.
+- This ensures the next weekly run knows when the FAQ was last updated.
+
+## 7. Confirm to the User
+
+- Summarize what was done: “Added N questions, updated M, skipped L duplicates.”
+- Optionally list the new/updated questions.
+- Remind them where the FAQ lives: **content/docs/price-feeds/pro/faq.mdx** and that the “Last updated” date in this rule file was set to today.
+
+---
+
+## Quick Reference
+
+- **FAQ path:** `content/docs/price-feeds/pro/faq.mdx`
+- **This state/prompt path:** `.cursor/rules/faq-weekly-update.mdc`
+- **Categories (order):** Connection & Subscription | Data Format & Payloads | Market Hours & Schedules | On-Chain Integration | Historical Data | Access Tokens & Permissions | Troubleshooting | Infrastructure
+- **Format:** `#### Question?` then answer paragraph(s); use `## Category` for sections.
+- **Terminology:** access token (not API key).
