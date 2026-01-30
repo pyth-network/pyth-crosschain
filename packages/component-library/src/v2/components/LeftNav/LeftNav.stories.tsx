@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import type { ActionMenuItem } from "../ActionsMenu";
 import { LeftNav } from "./LeftNav";
-import { NavLink } from "../NavLink";
+import { NavigationButtonLink } from "../NavigationButtonLink";
 
 const actionMenuItems: ActionMenuItem[] = [
   {
@@ -31,15 +31,15 @@ const actionMenuItems: ActionMenuItem[] = [
 
 const defaultLinks = (
   <>
-    <NavLink beforeIcon={Gauge} href="/dashboard">
+    <NavigationButtonLink beforeIcon={Gauge} href="/dashboard">
       Dashboard
-    </NavLink>
-    <NavLink href="/feeds" beforeIcon={UserCircle}>
+    </NavigationButtonLink>
+    <NavigationButtonLink href="/feeds" beforeIcon={UserCircle}>
       Feeds
-    </NavLink>
-    <NavLink href="/settings" beforeIcon={Gear}>
+    </NavigationButtonLink>
+    <NavigationButtonLink href="/settings" beforeIcon={Gear}>
       Settings
-    </NavLink>
+    </NavigationButtonLink>
   </>
 );
 

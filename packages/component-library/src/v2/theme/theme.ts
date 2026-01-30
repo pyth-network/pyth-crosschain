@@ -6,6 +6,14 @@ import type { SimpleStyleRules } from "simplestyle-js/ssr";
 const spacing = (increment: number) => `${(increment * 0.25).toString()}rem`;
 const lightDark = (light: string, dark: string) =>
   `light-dark(${light}, ${dark})`;
+const resolveThemeColor = (
+  value:
+    | string
+    | {
+        light: string;
+        dark: string;
+      },
+) => (typeof value === "string" ? value : lightDark(value.light, value.dark));
 
 const breakpoints = {
   lg: "1024px",
@@ -406,8 +414,41 @@ const buttonOutlineColors = {
       light: Color(palette.beige[950]).alpha(0.05).hexa(),
     },
   },
-  border: { dark: "none", light: "none" },
+  border: { dark: palette.stone[300], light: palette.steel[600] },
   foreground: { dark: palette.steel[50], light: palette.stone[900] },
+} as const;
+
+const states = {
+  data: {
+    background: { dark: palette.slate[950], light: palette.violet[50] },
+    border: { dark: palette.slate[800], light: palette.violet[200] },
+    normal: { dark: palette.violet[400], light: palette.violet[600] },
+  },
+  error: {
+    background: { dark: palette.red[950], light: palette.red[50] },
+    border: { dark: palette.red[900], light: palette.red[400] },
+    normal: palette.red[500],
+  },
+  info: {
+    background: { dark: palette.indigo[950], light: palette.indigo[50] },
+    border: { dark: palette.indigo[800], light: palette.indigo[400] },
+    normal: { dark: palette.indigo[400], light: palette.indigo[600] },
+  },
+  neutral: {
+    normal: { dark: palette.steel[50], light: palette.steel[900] },
+    border: { dark: palette.steel[300], light: palette.steel[600] },
+    background: { dark: palette.white, light: palette.steel[900] },
+  },
+  success: {
+    background: { dark: palette.green[950], light: palette.green[50] },
+    border: { dark: palette.green[800], light: palette.green[400] },
+    normal: { dark: palette.green[500], light: palette.green[600] },
+  },
+  warning: {
+    background: { dark: palette.orange[950], light: palette.orange[50] },
+    border: { dark: palette.orange[700], light: palette.orange[400] },
+    normal: { dark: palette.orange[400], light: palette.orange[600] },
+  },
 } as const;
 
 const colors = {
@@ -479,33 +520,7 @@ const colors = {
     background: { dark: palette.violet[400], light: palette.violet[600] },
     foreground: { dark: palette.slate[950], light: palette.steel[50] },
   },
-  states: {
-    data: {
-      background: { dark: palette.slate[950], light: palette.violet[50] },
-      border: { dark: palette.slate[800], light: palette.violet[200] },
-      normal: { dark: palette.violet[400], light: palette.violet[600] },
-    },
-    error: {
-      background: { dark: palette.red[950], light: palette.red[50] },
-      border: { dark: palette.red[900], light: palette.red[400] },
-      normal: palette.red[500],
-    },
-    info: {
-      background: { dark: palette.indigo[950], light: palette.indigo[50] },
-      border: { dark: palette.indigo[800], light: palette.indigo[400] },
-      normal: { dark: palette.indigo[400], light: palette.indigo[600] },
-    },
-    success: {
-      background: { dark: palette.green[950], light: palette.green[50] },
-      border: { dark: palette.green[800], light: palette.green[400] },
-      normal: { dark: palette.green[500], light: palette.green[600] },
-    },
-    warning: {
-      background: { dark: palette.orange[950], light: palette.orange[50] },
-      border: { dark: palette.orange[700], light: palette.orange[400] },
-      normal: { dark: palette.orange[400], light: palette.orange[600] },
-    },
-  },
+  states,
   tooltip: { dark: palette.steel[900], light: palette.steel[200] },
   transparent: "transparent",
 } as const;
@@ -519,8 +534,8 @@ const tokens = {
     none: "0px",
     sm: "0.125rem",
     xl: "0.75rem",
-    xl2: "1rem",
-    xl3: "1.5rem",
+    xxl: "1rem",
+    xxxl: "1.5rem",
   },
   fontFamilies: {
     monospace:
@@ -531,14 +546,14 @@ const tokens = {
     lg: "1.125rem",
     sm: "0.875rem",
     xl: "1.25rem",
-    xl2: "1.5rem",
-    xl3: "1.875rem",
-    xl4: "2.25rem",
-    xl5: "3rem",
-    xl6: "3.75rem",
-    xl7: "4.5rem",
-    xl8: "6rem",
-    xl9: "8rem",
+    xxl: "1.5rem",
+    xxxl: "1.875rem",
+    xxxxl: "2.25rem",
+    xxxxxl: "3rem",
+    xxxxxxl: "3.75rem",
+    xxxxxxxl: "4.5rem",
+    xxxxxxxxl: "6rem",
+    xxxxxxxxxl: "8rem",
     xs: "0.75rem",
     xxs: "0.6875rem",
   },
@@ -571,6 +586,7 @@ export type ButtonSizes = keyof typeof buttonSizes;
 export type ThemeColor = keyof typeof colors;
 export type Elevation = keyof typeof elevations;
 export type PaletteColor = keyof typeof palette;
+export type ThemeState = keyof typeof states;
 
 const popoverTooltipStyles = (): SimpleStyleRules["key"] => ({
   backgroundColor: lightDark(
@@ -610,6 +626,8 @@ export const ThemeV2 = {
   elevations,
 
   lightDark,
+
+  resolveThemeColor,
 
   /**
    * Media Query Methods

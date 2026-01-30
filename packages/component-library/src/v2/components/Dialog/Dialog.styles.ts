@@ -38,7 +38,7 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
       theme.colors.border.light,
       theme.colors.border.dark,
     )}`,
-    borderRadius: theme.tokens.borderRadius.xl2,
+    borderRadius: theme.tokens.borderRadius.xxl,
     boxShadow: theme.elevations.default[2],
     color: theme.lightDark(
       theme.colors.foreground.light,
