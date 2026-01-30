@@ -2,5 +2,4 @@
 // so storybook rendering doesn't break.
 // this will not impact any of our application's rendering behavior
 @layer ssjs-imports, ssjs-globals, ssjs-styles;
-
 @import "modern-normalize" layer(ssjs-imports);

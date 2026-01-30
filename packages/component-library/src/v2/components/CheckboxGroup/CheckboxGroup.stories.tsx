@@ -1,3 +1,4 @@
+import { NOOP } from "@pythnetwork/shared-lib/constants";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
@@ -10,12 +11,28 @@ const options = [
   { key: "research", label: "Research", value: "research" },
 ];
 
+const CheckboxGroupStory: Meta<typeof CheckboxGroup>["render"] = (args) => {
+  const [value, setValue] = useState<string[]>(["alerts", "product"]);
+
+  return (
+    <CheckboxGroup
+      {...args}
+      options={options}
+      value={value}
+      onChange={(nextValue) => {
+        setValue(nextValue);
+        args.onChange(nextValue);
+      }}
+    />
+  );
+};
+
 const meta = {
   title: "V2/CheckboxGroup",
   component: CheckboxGroup,
   args: {
     label: "Notifications",
-    onChange: () => {},
+    onChange: NOOP,
     options,
     value: ["alerts", "product"],
   },
@@ -24,21 +41,7 @@ const meta = {
     options: { control: false },
     value: { control: false },
   },
-  render: (args) => {
-    const [value, setValue] = useState<string[]>(["alerts", "product"]);
-
-    return (
-      <CheckboxGroup
-        {...args}
-        options={options}
-        value={value}
-        onChange={(nextValue) => {
-          setValue(nextValue);
-          args.onChange?.(nextValue);
-        }}
-      />
-    );
-  },
+  render: CheckboxGroupStory,
 } satisfies Meta<typeof CheckboxGroup>;
 
 export default meta;
@@ -46,7 +49,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    onChange: () => {},
     options,
     value: ["alerts", "product"],
   },

@@ -1,3 +1,4 @@
+import { NOOP } from "@pythnetwork/shared-lib/constants";
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Dialog } from "./Dialog";
@@ -10,7 +11,7 @@ const meta = {
   component: Dialog,
   args: {
     open: true,
-    onClose: () => {},
+    onClose: NOOP,
     title: "Update profile",
     saveAction: <Button variant="primary">Save changes</Button>,
   },

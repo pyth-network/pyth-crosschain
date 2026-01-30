@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import { Text } from "./Text";
-import { ThemeV2 } from "../../theme";
 import { textColorTokens } from "./Text.styles";
+import { ThemeV2 } from "../../theme";
 
 const meta = {
   title: "V2/Text",

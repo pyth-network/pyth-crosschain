@@ -16,6 +16,9 @@
       ]
     },
     "build:css-in-js": {
+      "dependsOn": [
+        "^build"
+      ],
       "inputs": [
         "src/**/*.styles.ts"
       ],

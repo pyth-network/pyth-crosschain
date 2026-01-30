@@ -9,7 +9,10 @@ import {
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import type { CurrentUser } from "@pythnetwork/component-library/v2";
-import { LeftNav, LeftNavLink } from "@pythnetwork/component-library/v2";
+import {
+  LeftNav,
+  NavigationButtonLink,
+} from "@pythnetwork/component-library/v2";
 import type { ActionMenuItem } from "@pythnetwork/component-library/v2/components/ActionsMenu";
 import { useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
@@ -90,34 +93,34 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
           });
         }}
       >
-        <LeftNavLink
+        <NavigationButtonLink
           active={pathname === uiRoutes.dashboard()}
-          leftIcon={HouseLine}
+          beforeIcon={HouseLine}
           href={uiRoutes.dashboard()}
         >
           Dashboard
-        </LeftNavLink>
-        <LeftNavLink
+        </NavigationButtonLink>
+        <NavigationButtonLink
           active={pathname === uiRoutes.billing()}
-          leftIcon={CreditCard}
+          beforeIcon={CreditCard}
           href={uiRoutes.billing()}
         >
           Billing
-        </LeftNavLink>
-        <LeftNavLink
+        </NavigationButtonLink>
+        <NavigationButtonLink
           active={pathname === uiRoutes.integration()}
-          leftIcon={Key}
+          beforeIcon={Key}
           href={uiRoutes.integration()}
         >
           Integration
-        </LeftNavLink>
-        <LeftNavLink
+        </NavigationButtonLink>
+        <NavigationButtonLink
           active={pathname === uiRoutes.feeds()}
-          leftIcon={TrendUp}
+          beforeIcon={TrendUp}
           href={uiRoutes.feeds()}
         >
           Feeds
-        </LeftNavLink>
+        </NavigationButtonLink>
       </LeftNav>
       <main className={classes.main}>{children}</main>
     </div>

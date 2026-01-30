@@ -23,34 +23,48 @@ export type TextColorToken = (typeof textColorTokens)[number];
 export const { classes } = createStyles("v2-text-component", (theme) => {
   const getTextColorValue = (token: TextColorToken) => {
     switch (token) {
-      case "foreground":
+      case "foreground": {
         return theme.colors.foreground;
-      case "muted":
+      }
+      case "muted": {
         return theme.colors.muted;
-      case "paragraph":
+      }
+      case "paragraph": {
         return theme.colors.paragraph;
-      case "heading":
+      }
+      case "heading": {
         return theme.colors.heading;
-      case "highlight":
+      }
+      case "highlight": {
         return theme.colors.highlight;
-      case "tooltip":
+      }
+      case "tooltip": {
         return theme.colors.tooltip;
-      case "link":
+      }
+      case "link": {
         return theme.colors.link.normal;
-      case "linkPrimary":
+      }
+      case "linkPrimary": {
         return theme.colors.link.primary;
-      case "stateData":
+      }
+      case "stateData": {
         return theme.colors.states.data.normal;
-      case "stateError":
+      }
+      case "stateError": {
         return theme.colors.states.error.normal;
-      case "stateInfo":
+      }
+      case "stateInfo": {
         return theme.colors.states.info.normal;
-      case "stateSuccess":
+      }
+      case "stateSuccess": {
         return theme.colors.states.success.normal;
-      case "stateWarning":
+      }
+      case "stateWarning": {
         return theme.colors.states.warning.normal;
-      default:
+      }
+      default: {
         return theme.colors.foreground;
+      }
     }
   };
   const resolveTextColor = (token: TextColorToken) => {
@@ -72,9 +86,7 @@ export const { classes } = createStyles("v2-text-component", (theme) => {
 
   let boldVariants: SimpleStyleRules["key"] = {};
 
-  for (const [boldName, boldVal] of Object.entries(
-    theme.tokens.fontWeights,
-  )) {
+  for (const [boldName, boldVal] of Object.entries(theme.tokens.fontWeights)) {
     boldVariants = {
       ...boldVariants,
       [`&[data-bold="${boldName}"]`]: {

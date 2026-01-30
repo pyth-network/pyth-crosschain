@@ -54,7 +54,7 @@ const { keyframe: jitter } = createKeyframes("index-page-jiter", () => ({
 
 export const { classes } = createStyles("root-layout-styles", (theme) => ({
   comingSoon: {
-    fontSize: theme.fontSize.xl,
+    fontSize: theme.tokens.fontSizes.xl,
     padding: theme.spacing(6),
     textAlign: "center",
 

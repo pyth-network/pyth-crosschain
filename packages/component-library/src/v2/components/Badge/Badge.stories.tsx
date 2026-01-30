@@ -4,9 +4,9 @@ import { Badge } from "./Badge";
 import { BadgeSizes, BadgeStyles } from "./types";
 import { ThemeV2 } from "../../theme";
 
-const badgeVariants = Object.keys(ThemeV2.colors.states) as Array<
-  keyof typeof ThemeV2.colors.states
->;
+const badgeVariants = Object.keys(
+  ThemeV2.colors.states,
+) as (keyof typeof ThemeV2.colors.states)[];
 
 const meta = {
   title: "V2/Badge",

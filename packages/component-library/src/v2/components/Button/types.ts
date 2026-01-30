@@ -5,7 +5,12 @@ import type { ComponentProps, ReactNode } from "react";
 
 import type { ThemeV2 } from "../../theme";
 
-export const buttonVariants = ["primary", "secondary", "outline", "ghost"] as const;
+export const buttonVariants = [
+  "primary",
+  "secondary",
+  "outline",
+  "ghost",
+] as const;
 
 export type ButtonVariant = (typeof buttonVariants)[number];
 

@@ -6,7 +6,9 @@ export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
     theme.colors.button.outline.background.active,
   );
   // TODO: This is likely not right, but we'll investigate later
-  const activeForegroundColor = theme.resolveThemeColor(theme.colors.foreground);
+  const activeForegroundColor = theme.resolveThemeColor(
+    theme.colors.foreground,
+  );
   const hoverBackgroundColor = theme.resolveThemeColor(
     theme.colors.button.outline.background.hover,
   );

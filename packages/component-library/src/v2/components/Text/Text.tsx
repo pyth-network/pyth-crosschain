@@ -2,7 +2,8 @@ import cx from "clsx";
 import type { ReactElement, HTMLAttributes } from "react";
 import { cloneElement, isValidElement } from "react";
 
-import { classes, type TextColorToken } from "./Text.styles";
+import type { TextColorToken } from "./Text.styles";
+import { classes } from "./Text.styles";
 import type { ThemeV2 } from "../../theme";
 
 export type TextProps = HTMLAttributes<HTMLElement> & {
