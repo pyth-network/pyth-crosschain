@@ -52,6 +52,14 @@ export const { classes } = createStyles("v2-switch", (theme) => {
         width: "auto",
       },
 
+      '&[data-variant="normal"] [role="switch"]': {
+        height: `calc(${thumbSize} + ${theme.spacing(1)})`,
+
+        "& $thumb": {
+          top: theme.spacing(0.5),
+        },
+      },
+
       '& [role="switch"]': {
         alignItems: "center",
         backgroundColor: theme.resolveThemeColor(
