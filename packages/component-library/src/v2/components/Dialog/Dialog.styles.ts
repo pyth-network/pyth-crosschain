@@ -29,7 +29,7 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
     flexDirection: "column",
     backgroundColor: theme.resolveThemeColor(theme.colors.background.modal),
     border: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
-    borderRadius: theme.tokens.borderRadius.xxl,
+    borderRadius: theme.tokens.borderRadius.xl2,
     boxShadow: theme.elevations.default[2],
     color: theme.resolveThemeColor(theme.colors.foreground),
     maxWidth: "min(600px, calc(100vw - 2.5rem))",

@@ -4,12 +4,10 @@ import type { ComponentProps } from "react";
 
 import type { ButtonProps } from "../Button";
 import { Button } from "../Button";
-import { classes } from "./NavigationButtonLink.styles";
+import { classes } from "./ButtonLink.styles";
 
-type AnchorProps = ComponentProps<"a">;
-
-export type NavigationButtonLinkProps = Omit<ButtonProps, "variant"> &
-  Pick<AnchorProps, "target"> & {
+export type ButtonLinkProps = Omit<ButtonProps, "variant"> &
+  Pick<ComponentProps<"a">, "target"> & {
     /**
      * if set, indicates that this is the current route
      * and that the styling should be changed to reflect this
@@ -24,18 +22,19 @@ export type NavigationButtonLinkProps = Omit<ButtonProps, "variant"> &
     href: string;
   };
 
-export function NavigationButtonLink({
+export function ButtonLink({
   active = false,
   className,
   href,
   ...rest
-}: NavigationButtonLinkProps) {
+}: ButtonLinkProps) {
   return (
     <Button
       {...rest}
       data-active={active}
       data-leftnavlink
       className={cx(classes.root, className)}
+      nativeButton={false}
       render={<Link href={href} prefetch={false} />}
     />
   );

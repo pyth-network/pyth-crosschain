@@ -1,8 +1,6 @@
 import "@pythnetwork/component-library/themeV2";
 import "../pyth-app.css";
 
-// eslint is extremely confused for some reason
-
 import { Spinner } from "@pythnetwork/component-library/v2";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
 import type { Metadata } from "next";

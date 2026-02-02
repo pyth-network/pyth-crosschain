@@ -74,7 +74,7 @@ export const { classes } = createStyles("v2-switch", (theme) => {
         backgroundColor: theme.resolveThemeColor(
           theme.colors.background.secondary,
         ),
-        borderRadius: theme.tokens.borderRadius.xxl,
+        borderRadius: theme.tokens.borderRadius.xl2,
         display: "inline-flex",
         justifyContent: "space-between",
         padding: `${theme.spacing(0.5)} ${theme.spacing(1)}`,

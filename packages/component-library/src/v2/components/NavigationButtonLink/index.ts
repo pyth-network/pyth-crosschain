@@ -1,1 +1,1 @@
-export * from "./NavigationButtonLink";
+export * from "./ButtonLink";

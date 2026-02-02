@@ -14,10 +14,7 @@ import {
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import type { CurrentUser } from "@pythnetwork/component-library/v2";
-import {
-  LeftNav,
-  NavigationButtonLink,
-} from "@pythnetwork/component-library/v2";
+import { ButtonLink, LeftNav } from "@pythnetwork/component-library/v2";
 import type { ActionMenuItem } from "@pythnetwork/component-library/v2/components/ActionsMenu";
 import { useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import { useAppTheme } from "@pythnetwork/react-hooks/use-app-theme";
@@ -95,7 +92,7 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
         currentUser={dummyCurrentUser}
         supportLinks={
           <>
-            <NavigationButtonLink
+            <ButtonLink
               afterIcon={ArrowSquareOut}
               beforeIcon={Lifebuoy}
               href={externalRoutes.support()}
@@ -103,8 +100,8 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
               target="_blank"
             >
               Support
-            </NavigationButtonLink>
-            <NavigationButtonLink
+            </ButtonLink>
+            <ButtonLink
               afterIcon={ArrowSquareOut}
               beforeIcon={BookOpenText}
               href={externalRoutes.documentation()}
@@ -112,8 +109,8 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
               target="_blank"
             >
               Documentation
-            </NavigationButtonLink>
-            <NavigationButtonLink
+            </ButtonLink>
+            <ButtonLink
               afterIcon={ArrowSquareOut}
               beforeIcon={Question}
               href={externalRoutes.faq()}
@@ -121,7 +118,7 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
               target="_blank"
             >
               FAQ
-            </NavigationButtonLink>
+            </ButtonLink>
           </>
         }
         onCollapseChange={(isCollapsed) => {
@@ -130,27 +127,27 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
           });
         }}
       >
-        <NavigationButtonLink
+        <ButtonLink
           active={pathname === uiRoutes.dashboard()}
           beforeIcon={HouseLine}
           href={uiRoutes.dashboard()}
         >
           Dashboard
-        </NavigationButtonLink>
-        <NavigationButtonLink
+        </ButtonLink>
+        <ButtonLink
           active={pathname === uiRoutes.billing()}
           beforeIcon={CreditCard}
           href={uiRoutes.billing()}
         >
           Billing
-        </NavigationButtonLink>
-        <NavigationButtonLink
+        </ButtonLink>
+        <ButtonLink
           active={pathname === uiRoutes.integration()}
           beforeIcon={Key}
           href={uiRoutes.integration()}
         >
           Integration
-        </NavigationButtonLink>
+        </ButtonLink>
         <ComingSoonNavLink
           active={pathname === uiRoutes.feeds()}
           beforeIcon={TrendUp}

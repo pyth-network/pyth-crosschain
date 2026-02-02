@@ -30,7 +30,7 @@ export const { classes } = createStyles("v2-badge", (theme) => {
   return {
     root: {
       alignItems: "center",
-      borderRadius: theme.tokens.borderRadius.xxxl,
+      borderRadius: theme.tokens.borderRadius.xl3,
       borderStyle: "solid",
       borderWidth: "1px",
       color: theme.resolveThemeColor(theme.colors.foreground),
@@ -44,7 +44,7 @@ export const { classes } = createStyles("v2-badge", (theme) => {
       whiteSpace: "nowrap",
 
       '&[data-size="xs"]': {
-        fontSize: theme.tokens.fontSizes.xxs,
+        fontSize: theme.tokens.fontSizes.xs2,
         fontWeight: theme.tokens.fontWeights.medium,
         height: theme.spacing(4),
         padding: `0 ${theme.spacing(2)}`,

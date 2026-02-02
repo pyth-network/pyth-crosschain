@@ -11,7 +11,7 @@ import { useState } from "react";
 
 import type { ActionMenuItem } from "../ActionsMenu";
 import { LeftNav } from "./LeftNav";
-import { NavigationButtonLink } from "../NavigationButtonLink";
+import { ButtonLink } from "../NavigationButtonLink";
 
 const actionMenuItems: ActionMenuItem[] = [
   {
@@ -33,15 +33,15 @@ const actionMenuItems: ActionMenuItem[] = [
 
 const defaultLinks = (
   <>
-    <NavigationButtonLink beforeIcon={Gauge} href="/dashboard">
+    <ButtonLink beforeIcon={Gauge} href="/dashboard">
       Dashboard
-    </NavigationButtonLink>
-    <NavigationButtonLink href="/feeds" beforeIcon={UserCircle}>
+    </ButtonLink>
+    <ButtonLink href="/feeds" beforeIcon={UserCircle}>
       Feeds
-    </NavigationButtonLink>
-    <NavigationButtonLink href="/settings" beforeIcon={Gear}>
+    </ButtonLink>
+    <ButtonLink href="/settings" beforeIcon={Gear}>
       Settings
-    </NavigationButtonLink>
+    </ButtonLink>
   </>
 );
 
@@ -76,7 +76,7 @@ const meta = {
     },
     supportLinks: (
       <>
-        <NavigationButtonLink
+        <ButtonLink
           beforeIcon={Lifebuoy}
           href="#"
           onClick={(e) => {
@@ -85,8 +85,8 @@ const meta = {
           size="sm"
         >
           Support
-        </NavigationButtonLink>
-        <NavigationButtonLink
+        </ButtonLink>
+        <ButtonLink
           beforeIcon={BookOpen}
           href="#"
           onClick={(e) => {
@@ -95,7 +95,7 @@ const meta = {
           size="sm"
         >
           Documentation
-        </NavigationButtonLink>
+        </ButtonLink>
       </>
     ),
   },
