@@ -291,6 +291,8 @@ export class HermesClient {
    * This endpoint can be customized by specifying the encoding type and whether the results should also return the calculated TWAP using the options object.
    * This will throw an error if there is a network problem or the price service returns a non-ok response.
    *
+   * @deprecated This endpoint has been deprecated and will return a 400 error.
+   *
    * @param ids - Array of hex-encoded price feed IDs for which updates are requested.
    * @param window_seconds - The time window in seconds over which to calculate the TWAP, ending at the current time.
    *  For example, a value of 300 would return the most recent 5 minute TWAP. Must be greater than 0 and less than or equal to 600 seconds (10 minutes).

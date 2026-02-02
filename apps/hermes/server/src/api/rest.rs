@@ -43,6 +43,7 @@ pub enum RestError {
     InvalidCCIPInput,
     PriceIdsNotFound { missing_ids: Vec<PriceIdentifier> },
     RpcConnectionError { message: String },
+    DeprecatedEndpoint { message: String },
 }
 
 impl IntoResponse for RestError {
@@ -82,6 +83,9 @@ impl IntoResponse for RestError {
             }
             RestError::RpcConnectionError { message } => {
                 (StatusCode::INTERNAL_SERVER_ERROR, message).into_response()
+            }
+            RestError::DeprecatedEndpoint { message } => {
+                (StatusCode::BAD_REQUEST, message).into_response()
             }
         }
     }

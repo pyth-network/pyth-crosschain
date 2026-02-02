@@ -1,19 +1,18 @@
 use {
     crate::{
         api::{
-            rest::{validate_price_ids, RestError},
-            types::{BinaryUpdate, EncodingType, ParsedPriceFeedTwap, PriceIdInput, TwapsResponse},
+            rest::RestError,
+            types::{EncodingType, PriceIdInput, TwapsResponse},
             ApiState,
         },
-        state::aggregate::{Aggregates, RequestTime},
+        state::aggregate::Aggregates,
     },
     anyhow::Result,
     axum::{
         extract::{Path, State},
         Json,
     },
-    base64::{engine::general_purpose::STANDARD as base64_standard_engine, Engine as _},
-    pyth_sdk::{DurationInSeconds, PriceIdentifier},
+    pyth_sdk::DurationInSeconds,
     serde::Deserialize,
     serde_qs::axum::QsQuery,
     utoipa::IntoParams,
@@ -79,13 +78,12 @@ fn default_true() -> bool {
 
 /// Get the latest TWAP by price feed id with a custom time window.
 ///
-/// Given a collection of price feed ids, retrieve the latest Pyth TWAP price for each price feed.
+/// **DEPRECATED**: This endpoint has been deprecated and is no longer available.
 #[utoipa::path(
     get,
     path = "/v2/updates/twap/{window_seconds}/latest",
     responses(
-        (status = 200, description = "TWAPs retrieved successfully", body = TwapsResponse),
-        (status = 404, description = "Price ids not found", body = String)
+        (status = 400, description = "This endpoint has been deprecated", body = String)
     ),
     params(
         LatestTwapsPathParams,
@@ -93,60 +91,14 @@ fn default_true() -> bool {
     )
 )]
 pub async fn latest_twaps<S>(
-    State(state): State<ApiState<S>>,
-    Path(path_params): Path<LatestTwapsPathParams>,
-    QsQuery(params): QsQuery<LatestTwapsQueryParams>,
+    State(_state): State<ApiState<S>>,
+    Path(_path_params): Path<LatestTwapsPathParams>,
+    QsQuery(_params): QsQuery<LatestTwapsQueryParams>,
 ) -> Result<Json<TwapsResponse>, RestError>
 where
     S: Aggregates,
 {
-    let price_id_inputs: Vec<PriceIdentifier> =
-        params.ids.into_iter().map(|id| id.into()).collect();
-    let price_ids: Vec<PriceIdentifier> =
-        validate_price_ids(&state, &price_id_inputs, params.ignore_invalid_price_ids).await?;
-
-    // Calculate the average
-    let twaps_with_update_data = Aggregates::get_twaps_with_update_data(
-        &*state.state,
-        &price_ids,
-        path_params.window_seconds,
-        RequestTime::LatestTimeEarliestSlot,
-    )
-    .await
-    .map_err(|e| {
-        tracing::debug!(
-            "Error getting TWAPs for price IDs {:?} with update data: {:?}",
-            price_ids,
-            e
-        );
-        RestError::UpdateDataNotFound
-    })?;
-
-    let twap_update_data = twaps_with_update_data.update_data;
-    let encoded_data = twap_update_data
-        .into_iter()
-        .map(|data| match params.encoding {
-            EncodingType::Base64 => base64_standard_engine.encode(data),
-            EncodingType::Hex => hex::encode(data),
-        })
-        .collect();
-    let binary = BinaryUpdate {
-        encoding: params.encoding,
-        data: encoded_data,
-    };
-
-    let parsed: Option<Vec<ParsedPriceFeedTwap>> = if params.parsed {
-        Some(
-            twaps_with_update_data
-                .twaps
-                .into_iter()
-                .map(Into::into)
-                .collect(),
-        )
-    } else {
-        None
-    };
-
-    let twap_resp = TwapsResponse { binary, parsed };
-    Ok(Json(twap_resp))
+    Err(RestError::DeprecatedEndpoint {
+        message: "This endpoint has been deprecated and is no longer available.".to_string(),
+    })
 }
