@@ -59,7 +59,6 @@ pub type UnixTimestamp = i64;
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum RequestTime {
     Latest,
-    LatestTimeEarliestSlot,
     FirstAfter(UnixTimestamp),
     AtSlot(Slot),
 }

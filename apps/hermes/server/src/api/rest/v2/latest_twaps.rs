@@ -9,9 +9,7 @@ use {
 /// Get the latest TWAP by price feed id with a custom time window.
 ///
 /// This endpoint has been deprecated.
-pub async fn latest_twaps<S>(
-    State(_state): State<ApiState<S>>,
-) -> Result<(), RestError>
+pub async fn latest_twaps<S>(State(_state): State<ApiState<S>>) -> Result<(), RestError>
 where
     S: Aggregates,
 {
