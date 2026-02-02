@@ -117,5 +117,18 @@ pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" propose-upgrade \
   --wallet "$WALLET_KEY"
 ```
 
+Execute unseen governance actions:
+
+```bash
+# See `deploy` above for env setup
+
+# Contract ID taken from `deploy` output or `SuiLazerContracts.json`
+# CONTRACT_ID=""
+
+pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" execute-proposals \
+  --private-key "$SUI_KEY" \
+  --contract "$CONTRACT_ID"
+```
+
 [`meta.move`]: sources/meta.move
 [`meta.move.mustache`]: sources/meta.move.mustache

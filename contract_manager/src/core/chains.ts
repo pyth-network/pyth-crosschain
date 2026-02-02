@@ -19,6 +19,7 @@ import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
 import * as suiBytecode from "@mysten/move-bytecode-template";
 import type {
+  MoveStruct as SuiMoveStruct,
   MoveValue as SuiMoveValue,
   SuiTransactionBlockResponseOptions,
 } from "@mysten/sui/client";
@@ -618,22 +619,8 @@ export class SuiChain extends Chain {
     package: string;
     version: string;
   }> {
-    const { data: stateObject, error } = await client.getObject({
-      id: stateId,
-      options: { showContent: true },
-    });
-    if (!stateObject?.content || error) {
-      throw new Error(
-        `Failed to get state object: ${error?.code ?? "undefined"}`,
-      );
-    }
-    if (stateObject.content.dataType !== "moveObject") {
-      throw new Error(
-        `State must be an object, got: ${stateObject.content.dataType}`,
-      );
-    }
+    const state = await this.getStateObject(client, stateId);
 
-    const state = stateObject.content;
     if (!this.hasStructField(state, "upgrade_cap")) {
       throw new Error("Missing 'upgrade_cap' in state object");
     }
@@ -654,6 +641,44 @@ export class SuiChain extends Chain {
       package: upgradeCap.fields.package,
       version: upgradeCap.fields.version,
     };
+  }
+
+  async getStateGovernanceInfo(client: SuiClient, stateId: string) {
+    const state = await this.getStateObject(client, stateId);
+
+    if (!this.hasStructField(state, "governance")) {
+      throw new Error("Missing 'governance' in state object");
+    }
+    const governance = state.fields.governance;
+    if (
+      !this.hasStructField(governance, "seen_sequence") ||
+      typeof governance.fields.seen_sequence !== "string"
+    ) {
+      throw new Error("Could not find 'seen_sequence' BigInt in Governance");
+    }
+    return { seen_sequence: BigInt(governance.fields.seen_sequence) };
+  }
+
+  private async getStateObject(
+    client: SuiClient,
+    stateId: string,
+  ): Promise<SuiMoveStruct> {
+    const { data: stateObject, error } = await client.getObject({
+      id: stateId,
+      options: { showContent: true },
+    });
+    if (!stateObject?.content || error) {
+      throw new Error(
+        `Failed to get state object: ${error?.code ?? "undefined"}`,
+      );
+    }
+    if (stateObject.content.dataType !== "moveObject") {
+      throw new Error(
+        `State must be an object, got: ${stateObject.content.dataType}`,
+      );
+    }
+
+    return stateObject.content;
   }
 
   private hasStructField<const F extends string>(

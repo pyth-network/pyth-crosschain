@@ -2,10 +2,16 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseVaa } from "@certusone/wormhole-sdk";
 import type { Wallet } from "@coral-xyz/anchor";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import type { PythCluster } from "@pythnetwork/client";
-import { CHAINS } from "@pythnetwork/xc-admin-common";
+import {
+  CHAINS,
+  decodeGovernancePayload,
+  UpdateTrustedSigner264Bit,
+  UpgradeSuiLazerContract,
+} from "@pythnetwork/xc-admin-common";
 import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -13,7 +19,11 @@ import { hideBin } from "yargs/helpers";
 import type { SuiLazerMeta } from "../src/core/chains";
 import { SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
-import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
+import {
+  loadHotWallet,
+  SubmittedWormholeMessage,
+  WormholeEmitter,
+} from "../src/node/utils/governance";
 import { DefaultStore } from "../src/node/utils/store";
 
 function updateContractInStore(contract: SuiLazerContract) {
@@ -415,6 +425,108 @@ parser.command(
     );
     const proposal = await vault.proposeWormholeMessage([payload]);
     console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
+parser.command(
+  "execute-proposals",
+  "execute unseen compatible proposals",
+  (b) =>
+    b
+      .options({
+        "private-key": commonOptions["private-key"],
+        contract: commonOptions.contract,
+        path: commonOptions.packagePath,
+        since: {
+          type: "number",
+          description: "VAA sequence ID to start from (inclusive)",
+        },
+      })
+      .array("ids"),
+  async ({ chain, privateKey, contract, path: packagePath, since }) => {
+    const signer = Ed25519Keypair.fromSecretKey(privateKey);
+    const client = chain.getProvider();
+    const vault = getMainnetVault();
+    const emitterKey = await vault.getEmitter();
+
+    if (since === undefined) {
+      console.info("Fetching last seen sequence ID...");
+
+      const { seen_sequence } = await chain.getStateGovernanceInfo(
+        client,
+        contract.stateId,
+      );
+
+      if (seen_sequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("'seen_sequence' bigger than JS integer");
+      }
+
+      since = Number(seen_sequence);
+    }
+
+    for (let i = since; ; i++) {
+      const vaaRef = new SubmittedWormholeMessage(emitterKey, i, vault.cluster);
+      let vaa: Uint8Array;
+      try {
+        vaa = await vaaRef.fetchVaa();
+      } catch {
+        console.warn(`Could not find VAA #${i.toString()}, ending.`);
+        break;
+      }
+      const action = decodeGovernancePayload(parseVaa(vaa).payload);
+      if (!action) {
+        console.warn(
+          `Could not parse VAA #${i.toString()} action, skipping...`,
+        );
+        continue;
+      }
+
+      if (action.targetChainId !== chain.wormholeChainName) {
+        console.warn(
+          `Expected chain '${chain.wormholeChainName}',`,
+          `VAA #${i.toString()} targets '${action.targetChainId}', skipping... `,
+        );
+        continue;
+      }
+      if (action instanceof UpgradeSuiLazerContract) {
+        console.info(
+          `Attempting contract upgrade to version ${action.version.toString()}...`,
+        );
+        console.info("  (will fail if not on correct source version)");
+        const meta = await fetchAndBumpContractMeta(
+          chain,
+          contract,
+          packagePath,
+        );
+        const pkg = await chain.buildPackage(packagePath);
+        const digest = await chain.upgradeLazerContract({
+          stateId: contract.stateId,
+          wormholeStateId: contract.wormholeStateId,
+          pkg,
+          meta,
+          vaa,
+          signer,
+        });
+        console.info(
+          `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
+        );
+      } else if (action instanceof UpdateTrustedSigner264Bit) {
+        console.info(`Updating trusted signer ${action.publicKey}...`);
+        const digest = await chain.updateTrustedSigner({
+          stateId: contract.stateId,
+          wormholeStateId: contract.wormholeStateId,
+          vaa,
+          signer,
+        });
+        console.info(
+          `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
+        );
+      } else {
+        console.warn(
+          `Unknown governance action in VAA #${i.toString()}, skipping...`,
+        );
+      }
+    }
   },
 );
 
