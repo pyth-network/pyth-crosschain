@@ -69,7 +69,6 @@ const buttonSizes = {
   },
 } as const;
 
-
 const palette = {
   amber: {
     50: "#fffbeb",
@@ -652,6 +651,29 @@ const formFieldSizes = {
   },
 } as const;
 
+const spinnerSizes = {
+  xs: {
+    borderWidth: "2px",
+    fontSize: tokens.fontSizes.xs,
+    height: buttonSizes.sm.height,
+  },
+  sm: {
+    borderWidth: "3px",
+    fontSize: tokens.fontSizes.sm,
+    height: buttonSizes.sm.height,
+  },
+  md: {
+    borderWidth: "4px",
+    fontSize: tokens.fontSizes.base,
+    height: buttonSizes.md.height,
+  },
+  lg: {
+    borderWidth: "5px",
+    fontSize: tokens.fontSizes.lg,
+    height: buttonSizes.lg.height,
+  },
+} as const;
+
 /**
  * Supporting Types
  */
@@ -662,6 +684,7 @@ export type ThemeColor = keyof typeof colors;
 export type Elevation = keyof typeof elevations;
 export type PaletteColor = keyof typeof palette;
 export type ThemeState = keyof typeof states;
+export type SpinnerSize = keyof typeof spinnerSizes;
 
 const popoverTooltipStyles = (): SimpleStyleRules["key"] => ({
   backgroundColor: lightDark(
@@ -769,6 +792,7 @@ export const ThemeV2 = {
   popoverTooltipStyles,
 
   spacing,
+  spinnerSizes,
 
   /**
    * General Design Tokens

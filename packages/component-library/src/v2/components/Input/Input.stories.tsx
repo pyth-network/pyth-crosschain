@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
-import { Input, type InputSize } from "./Input";
+import { Input } from "./Input";
+import type { InputSize } from "../../theme";
 import { Text } from "../Text";
 
 const InputStory: Meta<typeof Input>["render"] = (args) => {
@@ -65,7 +66,7 @@ export const Default: Story = {
 
 const SizeStory: StoryObj<typeof Input>["render"] = () => {
   const sizes: InputSize[] = ["xs", "sm", "md", "lg"];
-  const [values, setValues] = useState<{ [key in InputSize]: string }>({
+  const [values, setValues] = useState<Record<InputSize, string>>({
     xs: "",
     sm: "",
     md: "",
@@ -78,15 +79,26 @@ const SizeStory: StoryObj<typeof Input>["render"] = () => {
         <h3>Input Sizes</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {sizes.map((size) => (
-            <div key={size} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div style={{ minWidth: "60px", fontSize: "0.875rem", color: "#666" }}>
+            <div
+              key={size}
+              style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+            >
+              <div
+                style={{
+                  minWidth: "60px",
+                  fontSize: "0.875rem",
+                  color: "#666",
+                }}
+              >
                 {size.toUpperCase()}
               </div>
               <Input
                 size={size}
                 placeholder={`Size ${size} input`}
                 value={values[size]}
-                onChange={(e) => setValues({ ...values, [size]: e.target.value })}
+                onChange={(e) => {
+                  setValues({ ...values, [size]: e.target.value });
+                }}
               />
             </div>
           ))}
@@ -97,8 +109,18 @@ const SizeStory: StoryObj<typeof Input>["render"] = () => {
         <h3>Input Sizes with Labels</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {sizes.map((size) => (
-            <div key={size} style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-              <div style={{ minWidth: "60px", fontSize: "0.875rem", color: "#666", paddingTop: "0.25rem" }}>
+            <div
+              key={size}
+              style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}
+            >
+              <div
+                style={{
+                  minWidth: "60px",
+                  fontSize: "0.875rem",
+                  color: "#666",
+                  paddingTop: "0.25rem",
+                }}
+              >
                 {size.toUpperCase()}
               </div>
               <Input
@@ -106,7 +128,9 @@ const SizeStory: StoryObj<typeof Input>["render"] = () => {
                 label={`Label for ${size}`}
                 placeholder={`Size ${size} with label`}
                 value={values[size]}
-                onChange={(e) => setValues({ ...values, [size]: e.target.value })}
+                onChange={(e) => {
+                  setValues({ ...values, [size]: e.target.value });
+                }}
               />
             </div>
           ))}

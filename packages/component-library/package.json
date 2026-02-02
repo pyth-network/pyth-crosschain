@@ -475,6 +475,10 @@
       "types": "./dist/v2/components/Button/Button.styles.d.ts",
       "default": "./dist/v2/components/Button/Button.styles.mjs"
     },
+    "./v2/components/Button/IconButton": {
+      "types": "./dist/v2/components/Button/IconButton.d.ts",
+      "default": "./dist/v2/components/Button/IconButton.mjs"
+    },
     "./v2/components/Button": {
       "types": "./dist/v2/components/Button/index.d.ts",
       "default": "./dist/v2/components/Button/index.mjs"
@@ -531,6 +535,18 @@
       "types": "./dist/v2/components/HtmlWithLang/types.d.ts",
       "default": "./dist/v2/components/HtmlWithLang/types.mjs"
     },
+    "./v2/components/Input/Input": {
+      "types": "./dist/v2/components/Input/Input.d.ts",
+      "default": "./dist/v2/components/Input/Input.mjs"
+    },
+    "./v2/components/Input/Input.styles": {
+      "types": "./dist/v2/components/Input/Input.styles.d.ts",
+      "default": "./dist/v2/components/Input/Input.styles.mjs"
+    },
+    "./v2/components/Input": {
+      "types": "./dist/v2/components/Input/index.d.ts",
+      "default": "./dist/v2/components/Input/index.mjs"
+    },
     "./v2/components/LeftNav/LeftNav": {
       "types": "./dist/v2/components/LeftNav/LeftNav.d.ts",
       "default": "./dist/v2/components/LeftNav/LeftNav.mjs"
@@ -558,6 +574,30 @@
     "./v2/components/NavigationButtonLink": {
       "types": "./dist/v2/components/NavigationButtonLink/index.d.ts",
       "default": "./dist/v2/components/NavigationButtonLink/index.mjs"
+    },
+    "./v2/components/Spinner/Spinner": {
+      "types": "./dist/v2/components/Spinner/Spinner.d.ts",
+      "default": "./dist/v2/components/Spinner/Spinner.mjs"
+    },
+    "./v2/components/Spinner/Spinner.styles": {
+      "types": "./dist/v2/components/Spinner/Spinner.styles.d.ts",
+      "default": "./dist/v2/components/Spinner/Spinner.styles.mjs"
+    },
+    "./v2/components/Spinner": {
+      "types": "./dist/v2/components/Spinner/index.d.ts",
+      "default": "./dist/v2/components/Spinner/index.mjs"
+    },
+    "./v2/components/Switch/Switch": {
+      "types": "./dist/v2/components/Switch/Switch.d.ts",
+      "default": "./dist/v2/components/Switch/Switch.mjs"
+    },
+    "./v2/components/Switch/Switch.styles": {
+      "types": "./dist/v2/components/Switch/Switch.styles.d.ts",
+      "default": "./dist/v2/components/Switch/Switch.styles.mjs"
+    },
+    "./v2/components/Switch": {
+      "types": "./dist/v2/components/Switch/index.d.ts",
+      "default": "./dist/v2/components/Switch/index.mjs"
     },
     "./v2/components/Text/Text": {
       "types": "./dist/v2/components/Text/Text.d.ts",

@@ -10,5 +10,6 @@ export * from "./Dialog";
 export * from "./Input";
 export * from "./LeftNav";
 export * from "./NavigationButtonLink";
+export * from "./Spinner";
 export * from "./Switch";
 export * from "./Text";
