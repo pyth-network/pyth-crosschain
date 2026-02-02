@@ -30,7 +30,7 @@ export const EvmExecutorAction = {
 } as const;
 
 export const LazerAction = {
-  UpgradeLazerContract: 0,
+  UpgradeSuiLazerContract: 0,
   UpdateTrustedSigner: 1,
 };
 
@@ -71,7 +71,7 @@ export function toActionName(
   } else if (deserialized.moduleId == MODULE_LAZER) {
     switch (deserialized.actionId) {
       case 0:
-        return "UpgradeLazerContract";
+        return "UpgradeSuiLazerContract";
       case 1:
         return "UpdateTrustedSigner";
     }

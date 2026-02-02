@@ -1,0 +1,31 @@
+---
+title: WebSocket API
+description: Real-time streaming price updates via WebSocket
+slug: /price-feeds/pro/api/websocket
+---
+
+## Base URL
+
+| Endpoint  | URL                                          |
+| --------- | -------------------------------------------- |
+| Primary   | `wss://pyth-lazer-0.dourolabs.app/v1/stream` |
+| Secondary | `wss://pyth-lazer-1.dourolabs.app/v1/stream` |
+| Tertiary  | `wss://pyth-lazer-2.dourolabs.app/v1/stream` |
+
+Connect to all three endpoints for redundancy during deployments. See [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices) for a detailed guide on establishing connections.
+
+## Messages
+
+The WebSocket API uses JSON messages for communication. For the full request/response schema — including subscribe/unsubscribe parameters, available properties, channels, and response structure — see the [Payload Reference](/price-feeds/pro/payload-reference).
+
+## OpenAPI Schema
+
+The WebSocket API is part of the Pyth Pro Router API. The full OpenAPI specification is available at:
+
+- [Interactive Docs](https://pyth-lazer-0.dourolabs.app/docs)
+- [OpenAPI JSON](https://pyth-lazer-0.dourolabs.app/docs/openapi.json)
+
+## Related
+
+- [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
+- [SDK Repository](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js)

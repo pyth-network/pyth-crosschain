@@ -22,7 +22,7 @@ import {
 import { EvmExecute } from "./ExecuteAction";
 import { SetTransactionFee } from "./SetTransactionFee";
 import { WithdrawFee } from "./WithdrawFee";
-import { UpgradeLazerContract256Bit } from "./UpgradeLazerContract";
+import { UpgradeSuiLazerContract } from "./UpgradeLazerContract";
 import { UpdateTrustedSigner264Bit } from "./UpdateTrustedSigner";
 
 /** Decode a governance payload */
@@ -81,8 +81,8 @@ export function decodeGovernancePayload(
       return SetTransactionFee.decode(data);
     case "WithdrawFee":
       return WithdrawFee.decode(data);
-    case "UpgradeLazerContract":
-      return UpgradeLazerContract256Bit.decode(data);
+    case "UpgradeSuiLazerContract":
+      return UpgradeSuiLazerContract.decode(data);
     case "UpdateTrustedSigner":
       return UpdateTrustedSigner264Bit.decode(data);
     default:

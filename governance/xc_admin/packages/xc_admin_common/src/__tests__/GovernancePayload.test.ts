@@ -12,7 +12,7 @@ import {
   EvmExecute,
   StarknetSetWormholeAddress,
   LazerAction,
-  UpgradeLazerContract256Bit,
+  UpgradeSuiLazerContract,
   UpdateTrustedSigner264Bit,
 } from "..";
 import * as fc from "fast-check";
@@ -285,18 +285,19 @@ test("GovernancePayload ser/de", (done) => {
     ),
   ).toBeTruthy();
 
-  const upgradeLazerContract = new UpgradeLazerContract256Bit(
+  const upgradeSuiLazerContract = new UpgradeSuiLazerContract(
     "sui",
+    1n,
     "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee",
   );
-  const upgradeLazerContractBuffer = upgradeLazerContract.encode();
-  console.log(upgradeLazerContractBuffer.toJSON());
+  const upgradeSuiLazerContractBuffer = upgradeSuiLazerContract.encode();
+  console.log(upgradeSuiLazerContractBuffer.toJSON());
   expect(
-    upgradeLazerContractBuffer.equals(
+    upgradeSuiLazerContractBuffer.equals(
       Buffer.from([
-        80, 84, 71, 77, 3, 0, 0, 21, 4, 61, 14, 216, 21, 82, 99, 175, 8, 98, 55,
-        45, 243, 175, 148, 3, 197, 2, 53, 134, 97, 243, 23, 246, 47, 189, 192,
-        38, 208, 59, 234, 238,
+        80, 84, 71, 77, 3, 0, 0, 21, 0, 0, 0, 0, 0, 0, 0, 1, 4, 61, 14, 216, 21,
+        82, 99, 175, 8, 98, 55, 45, 243, 175, 148, 3, 197, 2, 53, 134, 97, 243,
+        23, 246, 47, 189, 192, 38, 208, 59, 234, 238,
       ]),
     ),
   ).toBeTruthy();
@@ -488,10 +489,19 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             expo,
           );
         });
-    } else if (header.action === "UpgradeLazerContract") {
-      return hexBytesArb({ minLength: 32, maxLength: 32 }).map((buffer) => {
-        return new UpgradeLazerContract256Bit(header.targetChainId, buffer);
-      });
+    } else if (header.action === "UpgradeSuiLazerContract") {
+      return fc
+        .record({
+          version: fc.bigInt({ min: 0n, max: 2n ** 64n - 1n }),
+          buffer: hexBytesArb({ minLength: 32, maxLength: 32 }),
+        })
+        .map(({ version, buffer }) => {
+          return new UpgradeSuiLazerContract(
+            header.targetChainId,
+            version,
+            buffer,
+          );
+        });
     } else if (header.action === "UpdateTrustedSigner") {
       return fc
         .record({

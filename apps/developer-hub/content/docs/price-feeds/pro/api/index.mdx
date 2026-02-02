@@ -1,0 +1,21 @@
+---
+title: API Reference
+description: Complete API reference for all Pyth Pro services
+slug: /price-feeds/pro/api
+---
+
+## Services
+
+| Service                                     | Base URL                                           | Use Case                                  |
+| ------------------------------------------- | -------------------------------------------------- | ----------------------------------------- |
+| [WebSocket](/price-feeds/pro/api/websocket) | `wss://pyth-lazer-{0,1,2}.dourolabs.app/v1/stream` | Real-time streaming price updates         |
+| [REST](/price-feeds/pro/api/rest)           | `https://pyth-lazer.dourolabs.app`                 | On-demand price queries                   |
+| [History](/price-feeds/pro/api/history)     | `https://history.pyth-lazer.dourolabs.app`         | Historical data and OHLC candlestick data |
+| [Proxy (Beta)](/price-feeds/pro/api/proxy)  | `https://pyth-lazer-proxy-3.dourolabs.app`         | Simplified access without authentication  |
+
+## Resources
+
+- [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer) - Code examples for all APIs
+- [SDK Repository](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js) - JavaScript/TypeScript SDK
+- [Price Feed IDs](/price-feeds/pro/price-feed-ids) - Complete list of available feeds
+- [Payload Reference](/price-feeds/pro/payload-reference) - Data structure documentation

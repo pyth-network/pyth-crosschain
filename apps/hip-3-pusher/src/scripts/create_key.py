@@ -3,10 +3,8 @@ import argparse
 from eth_account import Account
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Create new key"
-    )
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Create new key")
     output = parser.add_mutually_exclusive_group(required=True)
     output.add_argument(
         "--output-file",
@@ -26,7 +24,8 @@ def main():
     if args.stdout:
         print("private key:", private_key_hex)
     else:
-        open(args.output_file, "w").write(private_key_hex)
+        with open(args.output_file, "w") as f:
+            f.write(private_key_hex)
         print("wrote private key to file:", args.output_file)
 
 

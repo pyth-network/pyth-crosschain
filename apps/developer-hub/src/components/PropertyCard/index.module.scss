@@ -1,0 +1,103 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  margin: theme.spacing(4) 0;
+}
+
+.groupTitle {
+  margin: 0 0 theme.spacing(4);
+
+  @include theme.text("base", "semibold");
+
+  color: theme.color("foreground");
+}
+
+.description {
+  margin: 0 0 theme.spacing(4);
+
+  @include theme.text("sm", "normal");
+
+  color: theme.color("muted");
+  line-height: 1.6;
+}
+
+.detailsList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(1);
+  margin: 0;
+  padding: theme.spacing(3);
+  background-color: theme.color("background", "secondary");
+  border-radius: theme.border-radius("md");
+}
+
+// valuesList must come before detailItem to satisfy stylelint no-descending-specificity
+.valuesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(1);
+}
+
+.valueCode {
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("xs", "normal");
+
+  background-color: theme.color("background", "primary");
+  padding: theme.spacing(1) theme.spacing(2);
+  border-radius: theme.border-radius("sm");
+}
+
+.detailItem {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(2);
+  padding: theme.spacing(2) 0;
+  border-bottom: 1px solid theme.color("border");
+
+  @include theme.breakpoint("sm") {
+    grid-template-columns: theme.spacing(35) 1fr;
+    gap: theme.spacing(3);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.detailTerm {
+  @include theme.text("sm", "medium");
+
+  color: theme.color("foreground");
+}
+
+.detailDescription {
+  @include theme.text("sm", "normal");
+
+  margin: 0;
+  color: theme.color("muted");
+  line-height: 1.6;
+}
+
+.detailCode {
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("sm", "normal");
+
+  background-color: color-mix(in srgb, theme.color("border") 30%, transparent);
+  padding: theme.spacing(0.5) theme.spacing(1.5);
+  border-radius: theme.border-radius("sm");
+  display: inline;
+  vertical-align: baseline;
+  line-height: inherit;
+  white-space: nowrap;
+}
+
+.detailLink {
+  color: theme.color("highlight");
+  text-decoration: underline;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}

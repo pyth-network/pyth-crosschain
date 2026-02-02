@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from typing import Any
 
 from eth_account import Account
 from hyperliquid.exchange import Exchange
@@ -8,7 +9,7 @@ from hyperliquid.utils.constants import MAINNET_API_URL
 from hyperliquid.utils.signing import get_timestamp_ms, sign_l1_action
 
 
-def reserve_request_weight(exchange: Exchange, weight: int):
+def reserve_request_weight(exchange: Exchange, weight: int) -> dict[str, Any]:
     timestamp = get_timestamp_ms()
     reserve_action = {
         "type": "reserveRequestWeight",
@@ -29,7 +30,7 @@ def reserve_request_weight(exchange: Exchange, weight: int):
     )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Reserve requests for a single account (0.0005 USDC per transaction)"
     )
@@ -63,21 +64,22 @@ def main():
 
     args = parser.parse_args()
 
-    network = "testnet" if args.testnet else "mainnet"
+    network_name = "testnet" if args.testnet else "mainnet"
     base_url = constants.TESTNET_API_URL if args.testnet else constants.MAINNET_API_URL
-    print(f"Using {network} URL: {base_url}")
+    print(f"Using {network_name} URL: {base_url}")
 
     account = Account.from_key(Path(args.private_key_file).read_text().strip())
     exchange = Exchange(wallet=account, base_url=base_url)
     print("address:", account.address)
-    weight = args.weight
-    print("weight:", weight)
+    print("weight:", args.weight)
 
     if args.dry_run:
-        print(f"dry run: {network}: would reserve {weight} request weight for account {account.address}")
+        print(
+            f"dry run: {network_name}: would reserve {args.weight} request weight for account {account.address}"
+        )
     else:
         print("calling reserveRequestWeight...")
-        print(reserve_request_weight(exchange, weight))
+        print(reserve_request_weight(exchange, args.weight))
 
 
 if __name__ == "__main__":

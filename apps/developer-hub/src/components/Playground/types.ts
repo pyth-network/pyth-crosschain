@@ -21,7 +21,8 @@ export type PriceFeedProperty =
   | "confidence"
   | "fundingRate"
   | "fundingTimestamp"
-  | "fundingRateInterval";
+  | "fundingRateInterval"
+  | "marketSession";
 
 // Update channel options
 export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
@@ -94,6 +95,11 @@ export const PROPERTY_OPTIONS: {
     id: "fundingRateInterval",
     label: "Funding Interval",
     description: "Duration between funding updates",
+  },
+  {
+    id: "marketSession",
+    label: "Market Session",
+    description: "Market session enum (e.g., regular, pre/post)",
   },
 ];
 
