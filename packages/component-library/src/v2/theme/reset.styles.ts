@@ -9,18 +9,13 @@ createRawStyles("v2-additional-reset", (theme) => ({
     background: "black",
     "-webkit-font-smoothing": "antialiased",
     "-moz-osx-font-smoothing": "grayscale",
+    color: theme.resolveThemeColor(theme.colors.foreground),
     scrollbehavior: "smooth",
     lineHeight: 1,
   },
 
   "*::selection": {
-    background: theme.lightDark(
-      theme.colors.selection.background.light,
-      theme.colors.selection.background.dark,
-    ),
-    color: theme.lightDark(
-      theme.colors.selection.foreground.light,
-      theme.colors.selection.foreground.dark,
-    ),
+    background: theme.resolveThemeColor(theme.colors.selection.background),
+    color: theme.resolveThemeColor(theme.colors.selection.foreground),
   },
 }));

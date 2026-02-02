@@ -430,8 +430,8 @@ const buttonOutlineColors = {
 } as const;
 
 const foreground = {
-  dark: palette.steel[50],
-  light: palette.steel[900],
+  dark: palette.neutral[50],
+  light: palette.neutral[900],
 } as const;
 
 const states = {

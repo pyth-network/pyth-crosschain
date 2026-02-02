@@ -31,7 +31,7 @@ export const { classes } = createStyles("v2-switch", (theme) => {
         lineHeight: 0,
         opacity: 0,
         position: "absolute",
-        transition: "opacity .2s ease",
+        transition: "color .2s ease, opacity .2s ease",
       },
     },
 
@@ -47,12 +47,21 @@ export const { classes } = createStyles("v2-switch", (theme) => {
       },
 
       "& svg": {
+        color: "currentColor",
         display: "block",
         height: "1em",
         width: "auto",
       },
 
       '&[data-variant="normal"] [role="switch"]': {
+        height: `calc(${thumbSize} + ${theme.spacing(1)})`,
+
+        "& $thumb": {
+          top: theme.spacing(0.5),
+        },
+      },
+
+      '&[data-variant="icon"] [role="switch"]': {
         height: `calc(${thumbSize} + ${theme.spacing(1)})`,
 
         "& $thumb": {
@@ -88,6 +97,10 @@ export const { classes } = createStyles("v2-switch", (theme) => {
                 opacity: 0,
               },
               "&:last-child": {
+                color: theme.lightDark(
+                  theme.colors.foreground.dark,
+                  theme.colors.foreground.light,
+                ),
                 opacity: 1,
               },
             },
@@ -97,6 +110,10 @@ export const { classes } = createStyles("v2-switch", (theme) => {
           "& $thumb": {
             "& > span": {
               "&:first-child": {
+                color: theme.lightDark(
+                  theme.colors.foreground.dark,
+                  theme.colors.foreground.light,
+                ),
                 opacity: 1,
               },
               "&:last-child": {
