@@ -57,8 +57,8 @@ export const { classes } = createStyles("v2-checkbox", (theme) => {
 
       '&[data-checked="true"]': {
         "& $indicator": {
-          backgroundColor: theme.palette.violet[500],
-          borderColor: theme.palette.violet[500],
+          backgroundColor: theme.palette.violet500,
+          borderColor: theme.palette.violet500,
           color: theme.palette.white,
 
           "& > svg": {
