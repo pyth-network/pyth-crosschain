@@ -1405,5 +1405,12 @@
     "rpcUrl": "https://rpc.moderato.tempo.xyz",
     "networkId": 42431,
     "type": "EvmChain"
+  },
+  {
+    "id": "tempo",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.tempo.xyz", // Mainnet RPC URL, May need authentication
+    "networkId": 4217,
+    "type": "EvmChain"
   }
 ]
