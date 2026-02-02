@@ -2,9 +2,7 @@ import cx from "clsx";
 import type { ComponentProps } from "react";
 
 import { classes } from "./Spinner.styles";
-import type { ButtonSizes } from "../../theme/theme";
-
-export type SpinnerSize = ButtonSizes;
+import type { SpinnerSize } from "../../theme";
 
 export type SpinnerProps = ComponentProps<"div"> & {
   size?: SpinnerSize;
