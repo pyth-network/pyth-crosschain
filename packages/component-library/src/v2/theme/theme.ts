@@ -470,6 +470,8 @@ const states = {
   },
 } as const;
 
+const border = { dark: palette.steel[600], light: palette.stone[300] };
+
 const colors = {
   background: {
     cardHighlight: { dark: palette.slate[950], light: palette.violet[50] },
@@ -483,7 +485,7 @@ const colors = {
     secondary: { dark: palette.steel[900], light: palette.beige[100] },
     tooltip: { dark: palette.steel[200], light: palette.steel[700] },
   },
-  border: { dark: palette.steel[600], light: palette.stone[300] },
+  border,
   button: {
     disabled: {
       background: { dark: palette.steel[600], light: palette.stone[200] },
@@ -528,9 +530,30 @@ const colors = {
   foreground,
   forms: {
     input: {
+      border,
+      disabled: {
+        background: {
+          dark: palette.zinc[800],
+          light: palette.zinc[200],
+        },
+        foreground: {
+          dark: palette.neutral[500],
+          light: palette.neutral[500],
+        },
+        placeholder: {
+          dark: palette.neutral[600],
+          light: palette.neutral[400],
+        },
+      },
+      focusRing: {
+        dark: palette.violet[500],
+        light: palette.violet[500],
+      },
+      foreground,
       hover: {
         border: { dark: palette.steel[500], light: palette.stone[400] },
       },
+      placeholder: foreground,
     },
   },
   heading: { dark: palette.steel[200], light: palette.steel[900] },
@@ -565,6 +588,8 @@ const tokens = {
   fontFamilies: {
     monospace:
       '"ui-monospace", "sfmono-regular", "consolas", "Liberation Mono", "menlo", "monospace"',
+    normal:
+      '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
   },
   fontSizes: {
     base: "1rem",
@@ -608,6 +633,7 @@ const tokens = {
  */
 export type BreakpointSize = keyof typeof breakpoints;
 export type ButtonSizes = keyof typeof buttonSizes;
+export type InputSize = "xs" | "sm" | "md" | "lg";
 export type ThemeColor = keyof typeof colors;
 export type Elevation = keyof typeof elevations;
 export type PaletteColor = keyof typeof palette;

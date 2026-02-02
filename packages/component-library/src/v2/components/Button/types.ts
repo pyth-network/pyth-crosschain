@@ -62,3 +62,10 @@ export type ButtonProps = ComponentProps<typeof BaseButton> & {
    */
   variant?: ButtonVariant;
 };
+
+export type IconButtonProps = Omit<
+  ButtonProps,
+  "afterIcon" | "beforeIcon" | "children"
+> & {
+  icon: Icon;
+};

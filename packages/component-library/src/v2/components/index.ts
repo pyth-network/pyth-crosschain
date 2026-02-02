@@ -7,6 +7,7 @@ export * from "./Button";
 export * from "./Checkbox";
 export * from "./CheckboxGroup";
 export * from "./Dialog";
+export * from "./Input";
 export * from "./LeftNav";
 export * from "./NavigationButtonLink";
 export * from "./Switch";

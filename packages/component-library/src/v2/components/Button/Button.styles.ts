@@ -71,6 +71,10 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
         gap: sizes.gap,
         height: sizes.height,
         padding: sizes.padding,
+
+        "&[data-iconbutton]": {
+          width: sizes.height,
+        },
       },
     };
   }
