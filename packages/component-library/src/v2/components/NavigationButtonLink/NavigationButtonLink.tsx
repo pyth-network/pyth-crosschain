@@ -1,27 +1,28 @@
 import cx from "clsx";
 import Link from "next/link";
+import type { ComponentProps } from "react";
 
 import type { ButtonProps } from "../Button";
 import { Button } from "../Button";
 import { classes } from "./NavigationButtonLink.styles";
 
-export type NavigationButtonLinkProps = Omit<
-  ButtonProps,
-  "size" | "variant"
-> & {
-  /**
-   * if set, indicates that this is the current route
-   * and that the styling should be changed to reflect this
-   *
-   * @defaultValue false
-   */
-  active?: boolean;
+type AnchorProps = ComponentProps<"a">;
 
-  /**
-   * URL or path for navigation
-   */
-  href: string;
-};
+export type NavigationButtonLinkProps = Omit<ButtonProps, "variant"> &
+  Pick<AnchorProps, "target"> & {
+    /**
+     * if set, indicates that this is the current route
+     * and that the styling should be changed to reflect this
+     *
+     * @defaultValue false
+     */
+    active?: boolean;
+
+    /**
+     * URL or path for navigation
+     */
+    href: string;
+  };
 
 export function NavigationButtonLink({
   active = false,

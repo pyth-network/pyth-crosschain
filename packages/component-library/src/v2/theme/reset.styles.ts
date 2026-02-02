@@ -7,11 +7,11 @@ createImports("pyth-v2-imports", () => [
 
 createRawStyles("v2-additional-reset", (theme) => ({
   body: {
-    background: "black",
     "-webkit-font-smoothing": "antialiased",
     "-moz-osx-font-smoothing": "grayscale",
+    background: theme.resolveThemeColor(theme.colors.background.primary),
     color: theme.resolveThemeColor(theme.colors.foreground),
-    scrollbehavior: "smooth",
+    scrollBehavior: "smooth",
     lineHeight: 1,
   },
 

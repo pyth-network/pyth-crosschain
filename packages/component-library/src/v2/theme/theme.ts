@@ -69,6 +69,9 @@ const buttonSizes = {
   },
 } as const;
 
+const black = "#000";
+const white = "#fff";
+
 const palette = {
   amber: {
     50: "#fffbeb",
@@ -96,7 +99,7 @@ const palette = {
     900: "#574545",
     950: "#2d2222",
   },
-  black: "#000",
+  black,
   blue: {
     50: "#eff6ff",
     100: "#dbeafe",
@@ -357,7 +360,7 @@ const palette = {
     900: "#4c1d95",
     950: "#2e1065",
   },
-  white: "#fff",
+  white,
   yellow: {
     50: "#fefce8",
     100: "#fef9c3",
@@ -386,7 +389,7 @@ const palette = {
   },
 } as const;
 
-const black = Color(palette.black);
+const blackBase = Color(palette.black);
 const stone600 = Color(palette.stone[600]);
 const violet600 = Color(palette.violet[600]);
 
@@ -402,14 +405,14 @@ const elevations = {
   },
   default: {
     1: [
-      `0px 4px 6px -4px ${black.alpha(0.1).hexa()}`,
-      `0px 10px 15px -3px ${black.alpha(0.1).hexa()}`,
+      `0px 4px 6px -4px ${blackBase.alpha(0.1).hexa()}`,
+      `0px 10px 15px -3px ${blackBase.alpha(0.1).hexa()}`,
     ].join(", "),
     2: [
-      `0px 29px 12px 0px ${lightDark(stone600.alpha(0.02).hexa(), black.alpha(0.08).hexa())}`,
-      `0px 16px 10px 0px ${lightDark(stone600.alpha(0.06).hexa(), black.alpha(0.12).hexa())}`,
-      `0px 7px 7px 0px ${lightDark(stone600.alpha(0.12).hexa(), black.alpha(0.2).hexa())}`,
-      `0px 2px 4px 0px ${lightDark(stone600.alpha(0.14).hexa(), black.alpha(0.3).hexa())}`,
+      `0px 29px 12px 0px ${lightDark(stone600.alpha(0.02).hexa(), blackBase.alpha(0.08).hexa())}`,
+      `0px 16px 10px 0px ${lightDark(stone600.alpha(0.06).hexa(), blackBase.alpha(0.12).hexa())}`,
+      `0px 7px 7px 0px ${lightDark(stone600.alpha(0.12).hexa(), blackBase.alpha(0.2).hexa())}`,
+      `0px 2px 4px 0px ${lightDark(stone600.alpha(0.14).hexa(), blackBase.alpha(0.3).hexa())}`,
     ].join(", "),
   },
 } as const;
@@ -470,7 +473,7 @@ const states = {
   },
 } as const;
 
-const border = { dark: palette.steel[600], light: palette.stone[300] };
+const border = { dark: palette.stone[800], light: palette.stone[300] };
 
 const colors = {
   background: {
@@ -481,7 +484,7 @@ const colors = {
       dark: Color(palette.steel[950]).alpha(0.7).hexa(),
       light: Color(palette.white).alpha(0.7).hexa(),
     },
-    primary: { dark: palette.steel[950], light: palette.white },
+    primary: { dark: palette.black, light: palette.white },
     secondary: { dark: palette.steel[900], light: palette.beige[100] },
     tooltip: { dark: palette.steel[200], light: palette.steel[700] },
   },
@@ -493,11 +496,40 @@ const colors = {
     },
     ghost: omitKeys(buttonOutlineColors, ["border"]),
     outline: buttonOutlineColors,
+    navlink: {
+      background: {
+        active: buttonOutlineColors.background.active,
+        disabled: {
+          dark: "transparent",
+          light: "transparent",
+        },
+        normal: "transparent",
+        hover: buttonOutlineColors.background.hover,
+      },
+      border: {
+        active: {
+          dark: palette.stone[600],
+          light: palette.stone[500],
+        },
+        normal: "transparent",
+        hover: {
+          dark: palette.stone[600],
+          light: palette.stone[500],
+        },
+      },
+      foreground: {
+        disabled: {
+          dark: Color(foreground.dark).lighten(0.1).hexa(),
+          light: Color(foreground.light).darken(0.1).hexa(),
+        },
+        normal: foreground,
+      },
+    },
     primary: {
       background: {
-        active: { dark: palette.slate[800], light: palette.slate[900] },
-        hover: { dark: palette.slate[700], light: palette.slate[800] },
-        normal: { dark: palette.slate[600], light: palette.slate[700] },
+        active: { dark: palette.violet[800], light: palette.violet[900] },
+        hover: { dark: palette.violet[700], light: palette.violet[800] },
+        normal: { dark: palette.violet[600], light: palette.violet[700] },
       },
       foreground: palette.white,
     },
@@ -706,6 +738,13 @@ const flexHorizontalCenter = (
   display: `${opts?.inline ? "inline-" : ""}flex`,
 });
 
+const flexVertical = (
+  opts?: Partial<{ inline: boolean }>,
+): SimpleStyleRules["key"] => ({
+  display: `${opts?.inline ? "inline-" : ""}flex`,
+  flexFlow: "column",
+});
+
 const alphaColor = (inputColor: string, alpha: number) => {
   if (alpha > 1) {
     throw new Error(
@@ -753,6 +792,7 @@ export const ThemeV2 = {
   elevations,
 
   flexHorizontalCenter,
+  flexVertical,
 
   lightDark,
 

@@ -22,6 +22,7 @@ export function LeftNav({
   collapsed = false,
   currentUser,
   onCollapseChange,
+  supportLinks,
 }: LeftNavProps) {
   /** local variables */
   const collapseButtonTooltip = `${collapsed ? "Expand" : "Collapse"} left navigation panel`;
@@ -30,6 +31,7 @@ export function LeftNav({
     <nav
       className={cx(classes.root, className)}
       data-hasactionsmenu={actionMenuItems.length > 0}
+      data-collapsed={collapsed}
       data-open={!collapsed}
     >
       <div className={classes.top}>
@@ -47,6 +49,7 @@ export function LeftNav({
         </div>
       </div>
       <div className={classes.navLinks}>{children}</div>
+      <div className={classes.supportLinks}>{supportLinks}</div>
       <ActionsMenu
         align="center"
         className={classes.actionsMenuPopover}

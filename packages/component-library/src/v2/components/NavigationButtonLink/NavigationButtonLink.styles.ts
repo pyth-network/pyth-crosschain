@@ -1,22 +1,22 @@
 import { createStyles } from "../../theme/style-funcs";
 
 export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
-  const foregroundColor = theme.resolveThemeColor(theme.colors.foreground);
-  const activeBackgroundColor = theme.resolveThemeColor(
-    theme.colors.button.outline.background.active,
+  const foregroundColor = theme.resolveThemeColor(
+    theme.colors.button.navlink.foreground.normal,
   );
-  // TODO: This is likely not right, but we'll investigate later
-  const activeForegroundColor = theme.resolveThemeColor(
-    theme.colors.foreground,
+  const activeBackgroundColor = theme.resolveThemeColor(
+    theme.colors.button.navlink.background.active,
   );
   const hoverBackgroundColor = theme.resolveThemeColor(
-    theme.colors.button.outline.background.hover,
+    theme.colors.button.navlink.background.hover,
   );
 
   return {
     root: {
       '&[data-leftnavlink="true"]': {
-        background: "transparent",
+        background: theme.resolveThemeColor(
+          theme.colors.button.navlink.background.normal,
+        ),
         color: foregroundColor,
         justifyContent: "flex-start",
         marginLeft: theme.spacing(2),
@@ -30,12 +30,26 @@ export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
         "&:hover": {
           // we flip the colors so the contrast works when we go to the dark theme
           backgroundColor: hoverBackgroundColor,
+          borderColor: theme.resolveThemeColor(
+            theme.colors.button.navlink.border.hover,
+          ),
           color: "inherit",
         },
 
         '&[data-active="true"]': {
           backgroundColor: activeBackgroundColor,
-          color: activeForegroundColor,
+          borderColor: theme.resolveThemeColor(
+            theme.colors.button.navlink.border.active,
+          ),
+        },
+        "&[data-disabled]": {
+          backgroundColor: theme.resolveThemeColor(
+            theme.colors.button.navlink.background.disabled,
+          ),
+          color: theme.resolveThemeColor(
+            theme.colors.button.navlink.foreground.disabled,
+          ),
+          cursor: "not-allowed",
         },
       },
     },

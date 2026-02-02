@@ -37,6 +37,12 @@ export type LeftNavProps = PropsWithChildren & {
   currentUser: CurrentUser;
 
   /**
+   * additional links to be displayed at the bottom above the
+   * currently logged-in user
+   */
+  supportLinks: ReactNode;
+
+  /**
    * fired whenever somebody toggles the menu open or closed
    */
   onCollapseChange?: (isCollapse: boolean) => void;

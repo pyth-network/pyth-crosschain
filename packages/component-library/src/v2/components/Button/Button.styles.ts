@@ -30,6 +30,11 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
     }
     return theme.colors.transparent;
   };
+  const mutedMixBase = theme.resolveThemeColor(theme.colors.background.primary);
+  const muteColor = (color: string) =>
+    color === theme.colors.transparent
+      ? color
+      : `color-mix(in srgb, ${color} 70%, ${mutedMixBase} 30%)`;
   const resolvedButtonVariants = {
     ghost: theme.colors.button.ghost,
     outline: theme.colors.button.outline,
@@ -42,13 +47,18 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
       "border" in rules
         ? `1px solid ${theme.resolveThemeColor(rules.border)}`
         : "1px solid transparent";
+    const normalBackground = resolveBackgroundColor(rules.background, "normal");
+    const normalForeground = theme.resolveThemeColor(rules.foreground);
+    const disabledBackground = muteColor(normalBackground);
+    const disabledForeground = muteColor(normalForeground);
     buttonVariants = {
       ...buttonVariants,
       [`&[data-buttonvariant="${variant}"]`]: {
-        backgroundColor: resolveBackgroundColor(rules.background, "normal"),
+        backgroundColor: normalBackground,
         border: borderValue,
-        color: theme.resolveThemeColor(rules.foreground),
-        transition: "background-color .2s ease, color .2s ease",
+        color: normalForeground,
+        transition:
+          "background-color .2s ease, border .2s ease, color .2s ease",
 
         "&:hover": {
           backgroundColor: resolveBackgroundColor(rules.background, "hover"),
@@ -57,6 +67,12 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
 
         "&:active": {
           backgroundColor: resolveBackgroundColor(rules.background, "active"),
+        },
+
+        '&:disabled, &[aria-disabled="true"]': {
+          backgroundColor: disabledBackground,
+          border: borderValue,
+          color: disabledForeground,
         },
       },
     };
@@ -109,11 +125,6 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
       },
 
       '&:disabled, &[aria-disabled="true"]': {
-        backgroundColor: theme.resolveThemeColor(
-          theme.colors.button.disabled.background,
-        ),
-        border: "1px solid transparent",
-        color: theme.resolveThemeColor(theme.colors.button.disabled.foreground),
         cursor: "not-allowed",
       },
 

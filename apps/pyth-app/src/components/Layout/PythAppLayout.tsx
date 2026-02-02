@@ -1,10 +1,15 @@
 "use client";
 import {
+  ArrowSquareOut,
+  BookOpenText,
   CreditCard,
+  CurrencyCircleDollar,
   Gear,
   HouseLine,
   Key,
+  Lifebuoy,
   Lightning,
+  Question,
   SignOut,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
@@ -22,7 +27,8 @@ import type { PropsWithChildren } from "react";
 import { useMemo } from "react";
 
 import { classes } from "./PythAppLayout.styles";
-import { uiRoutes } from "../../routes";
+import { externalRoutes, uiRoutes } from "../../routes";
+import { ComingSoonNavLink } from "../ComingSoonNavLink";
 
 type PythAppLayoutProps = PropsWithChildren;
 
@@ -87,6 +93,37 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
         additionalUserMeta={"Free Plan"}
         collapsed={leftPanelCollapsed}
         currentUser={dummyCurrentUser}
+        supportLinks={
+          <>
+            <NavigationButtonLink
+              afterIcon={ArrowSquareOut}
+              beforeIcon={Lifebuoy}
+              href={externalRoutes.support()}
+              size="sm"
+              target="_blank"
+            >
+              Support
+            </NavigationButtonLink>
+            <NavigationButtonLink
+              afterIcon={ArrowSquareOut}
+              beforeIcon={BookOpenText}
+              href={externalRoutes.documentation()}
+              size="sm"
+              target="_blank"
+            >
+              Documentation
+            </NavigationButtonLink>
+            <NavigationButtonLink
+              afterIcon={ArrowSquareOut}
+              beforeIcon={Question}
+              href={externalRoutes.faq()}
+              size="sm"
+              target="_blank"
+            >
+              FAQ
+            </NavigationButtonLink>
+          </>
+        }
         onCollapseChange={(isCollapsed) => {
           setLeftPanelCollapsed(isCollapsed).catch(() => {
             /* no-op */
@@ -114,13 +151,20 @@ export function PythAppLayout({ children }: PythAppLayoutProps) {
         >
           Integration
         </NavigationButtonLink>
-        <NavigationButtonLink
+        <ComingSoonNavLink
           active={pathname === uiRoutes.feeds()}
           beforeIcon={TrendUp}
           href={uiRoutes.feeds()}
         >
+          Metrics
+        </ComingSoonNavLink>
+        <ComingSoonNavLink
+          active={pathname === uiRoutes.feeds()}
+          beforeIcon={CurrencyCircleDollar}
+          href={uiRoutes.feeds()}
+        >
           Feeds
-        </NavigationButtonLink>
+        </ComingSoonNavLink>
       </LeftNav>
       <main className={classes.main}>{children}</main>
     </div>
