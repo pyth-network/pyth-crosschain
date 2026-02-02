@@ -4,20 +4,22 @@ description: Common questions about integrating and using Pyth Pro
 slug: /price-feeds/pro/faq
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 This page answers frequently asked questions about Pyth Pro (formerly known as Lazer).
 If you have questions that are not answered here, feel free to add a question to our [developer forum](https://dev-forum.pyth.network/c/help-price-feeds/7).
 
 ## Connection & Subscription
 
-#### Is the feed ordering preserved when subscribing to multiple price feeds?
+#### Q. Is the feed ordering preserved when subscribing to multiple price feeds?
 
 **Yes**. The payload **preserves** the ordering of the feed IDs in your subscription request. If you subscribe with feed IDs in the order [3, 2, 1], the update data **will maintain** that order. Feed ordering is maintained even when data is omitted by a market session filter. You can verify this in the [Pyth Pro Playground](https://docs.pyth.network/playground).
 
-#### How many price feed IDs can I subscribe to per stream?
+#### Q. How many price feed IDs can I subscribe to per stream?
 
-There is **no hard cap**, but for optimal performance we recommend splitting large subscriptions across multiple connections. If you need to subscribe to many feeds, contact support for guidance on high-volume subscriptions. For more on rate limits, see [Rate Limits](/price-feeds/pro/rate-limits).
+There is **no hard cap**, but for optimal performance we recommend splitting large subscriptions across multiple connections. The number of connections is limited by your specific usage agreement. If you need to subscribe to many feeds, contact support for guidance on high-volume subscriptions. For more on rate limits, see [Rate Limits](/price-feeds/pro/rate-limits).
 
-#### What is the "client too slow" error?
+#### Q. What is the "client too slow" error?
 
 This error occurs when the client cannot process incoming messages fast enough. Common causes:
 
@@ -29,23 +31,32 @@ To resolve:
 - Optimize your message processing code to handle the incoming messages faster
 - Ensure adequate network bandwidth
 
-#### Which WebSocket endpoints should I connect to for redundancy?
+#### Q. Which WebSocket endpoints should I connect to for redundancy?
 
-For redundancy and to avoid interruptions during deployments, connect to all three endpoints:
+<Callout type="warning" title="Redundancy required">
+  It is **critical** to connect to multiple endpoints in parallel to maintain a
+  reliable connection and avoid downtimes. Individual endpoints can briefly go
+  offline due to upgrades and network disruptions. The [official
+  SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) handles
+  connecting redundantly to all available endpoints and deduplicating messages
+  for you.
+</Callout>
+
+Connect to all three endpoints:
 
 - `wss://pyth-lazer-0.dourolabs.app/v1/stream`
 - `wss://pyth-lazer-1.dourolabs.app/v1/stream`
 - `wss://pyth-lazer-2.dourolabs.app/v1/stream`
 
-During deployments, a single endpoint may briefly go down; maintaining open connections to all endpoints ensures continuous service. See [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices) for full setup details.
+See [Subscribe to Prices](/price-feeds/pro/subscribe-to-prices) for full setup details.
 
 ## Data Format & Payloads
 
-#### How do equities work outside of market hours (24/5)?
+#### Q. How do equities work outside of market hours (24/5)?
 
 Pyth Pro can be configured to behave as needed for your use case via **market session filtering**. You can control which market sessions you receive data for so that out-of-hours behavior matches your application—see the [sessions property under Property Specifications](/price-feeds/pro/payload-reference#core-price-properties) in the Payload Reference. Pyth Pro does not keep pushing stale prices when markets are closed, because those prices become invalid—unlike Pyth Core, which may still send the latest data when the market is closed. For out-of-hours equities, you will receive prices during extended trading sessions but not during closed market periods. See [Market Hours](/price-feeds/pro/market-hours) for detailed schedules.
 
-#### Is it mandatory to call `verifyUpdate` to get the payload when using Pyth Pro on-chain?
+#### Q. Is it mandatory to call `verifyUpdate` to get the payload when using Pyth Pro on-chain?
 
 **No**. You can trim the payload off-chain and extract the data (from byte 71 onwards) without calling `verifyUpdate`. See the [verify function](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/evm/src/PythLazer.sol#L70-L106) in the contract or the [Rust SDK protocol module](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/rust/protocol/src/message.rs).
 
@@ -53,28 +64,30 @@ We strongly discourage using the data on-chain without signature verification, a
 
 ## Market Hours & Schedules
 
-#### How does Pyth Pro handle daylight saving time?
+#### Q. How does Pyth Pro handle daylight saving time?
 
 Schedules handle daylight saving transitions automatically. The schedule string uses [IANA timezone names](https://timeapi.io/documentation/iana-timezones), which include daylight saving information. The time values (e.g., 1700) are local to the timezone. When the timezone enters or leaves daylight saving time, the local time does not change—only the offset from UTC. This is handled automatically by timezone-aware client libraries such as the [Python client market schedule module](https://github.com/pyth-network/pyth-client-py/blob/552b19ecdabb0ee943af0e1b7f604a6ccd50ad93/pythclient/market_schedule.py).
 
-#### What are the market hours for Gold (XAU) and Silver (XAG)?
+#### Q. What are the market hours for Gold (XAU) and Silver (XAG)?
 
 Pyth follows CME futures market hours for precious metals, since the spot price is derived from futures. According to CME Globex:
 
 - **Trading hours:** Sunday 6:00 p.m. ET through Friday 5:00 p.m. ET
-- **Daily break:** 60-minute break each day at 5:00 p.m. ET (17:00–18:00)
+- **Daily break:** 60-minute break each day at 5:00 p.m. ET (17:00-18:00)
 
 For full schedules by asset class, see [Market Hours](/price-feeds/pro/market-hours).
 
+Moreover, one can fetch market hours from the [Symbols API of the History Service](/price-feeds/pro/api/history#get-symbols).
+
 ## On-Chain Integration
 
-#### Where can I find Pyth Pro (Lazer) contract deployments?
+#### Q. Where can I find Pyth Pro (Lazer) contract deployments?
 
 Contract addresses for Pyth Pro on **Solana, Fogo, and EVM networks (including Base, Ethereal, Polynomial, Soneium, and testnets) **are listed on the [Contract Addresses](/price-feeds/pro/contract-addresses) page. Check that page for the current deployment address for your chain.
 
 ## Historical Data
 
-#### How do I access historical price data for Pyth Pro?
+#### Q. How do I access historical price data for Pyth Pro?
 
 Use the History API for OHLC candlestick data and TradingView-style integration. Base URL:
 
@@ -82,15 +95,15 @@ Use the History API for OHLC candlestick data and TradingView-style integration.
 https://history.pyth-lazer.dourolabs.app/v1/
 ```
 
-For OHLC history, use `GET /{channel}/history`. Example for BTC/USD in the last year with the `fixed_rate` channel:
+For OHLC history, use `GET /{channel}/history`. Example for BTC/USD in the last year with the `fixed_rate@200ms` channel:
 
 ```
-https://history.pyth-lazer.dourolabs.app/v1/fixed_rate/history?symbol=Crypto.BTC/USD&from=<start_timestamp>&to=<end_timestamp>&resolution=1D
+https://history.pyth-lazer.dourolabs.app/v1/fixed_rate@200ms/history?symbol=Crypto.BTC/USD&from=<start_timestamp>&to=<end_timestamp>&resolution=1D
 ```
 
 See the [History API](/price-feeds/pro/api/history) for full endpoint details, query parameters, and resolutions.
 
-#### How do I fetch the latest price via HTTP?
+#### Q. How do I fetch the latest price via HTTP?
 
 Use the REST API. Base URL:
 
@@ -105,28 +118,27 @@ See the [REST API](/price-feeds/pro/api/rest) for request/response schemas and e
 
 ## Access Tokens & Permissions
 
-#### How are access tokens permissioned for different asset classes?
+#### Q. How are access tokens permissioned for different asset classes?
 
 Each access token is permissioned for a specific set of:
 
 - **Asset types** (e.g., crypto, equity, fx, metals, rates)
-- **Minimum channel** (e.g., `fixed_rate`, `real_time`)
+- **Minimum channel** (e.g., `fixed_rate@200ms`, `real_time`)
 - **Optional specific feed IDs**
 
 One customer might have access to all asset types; another might be restricted to crypto only. Contact your account manager to adjust permissions.
 
-#### Why am I getting HTTP 403 or "not entitled" errors?
+#### Q. Why am I getting HTTP 403 or "not entitled" errors?
 
 Common causes:
 
 1. **Wrong endpoint:** Ensure you are using the correct WebSocket or REST endpoint for your token.
 2. **Asset class restriction:** Your access token may not be entitled to the requested feed types.
-3. **IP whitelist:** Some mainnet tokens require IP whitelisting—contact support.
-4. **Expired token:** Demo tokens expire; request a production token for long-term use.
+3. **Expired token:** Demo tokens expire; request a production token for long-term use.
 
 ## Troubleshooting
 
-#### Why am I getting stale prices (2+ seconds old)?
+#### Q. Why am I getting stale prices (2+ seconds old)?
 
 Do not use Pyth Core methods such as `getPriceFeedsUpdateData` with Pyth Pro. Instead:
 
@@ -136,7 +148,7 @@ Do not use Pyth Core methods such as `getPriceFeedsUpdateData` with Pyth Pro. In
 
 Pyth Pro provides sub-second latency when connected correctly. For on-chain integration, follow the [Integrate as Consumer](/price-feeds/pro/integrate-as-consumer) guide.
 
-#### I'm seeing latency spikes in production. What should I check?
+#### Q. I'm seeing latency spikes in production. What should I check?
 
 Latency spikes can occur due to:
 
@@ -152,11 +164,11 @@ For high availability:
 
 ## Infrastructure
 
-#### What are the Pyth Pro data center locations?
+#### Q. What are the Pyth Pro data center locations?
 
 Pyth Pro infrastructure is deployed across multiple data centers for low latency and redundancy, including multiple facilities in the Tokyo region. Additional regions are available. Contact support for details relevant to your latency requirements.
 
-#### What is the precision of Pyth Pro timestamps?
+#### Q. What is the precision of Pyth Pro timestamps?
 
 Pyth Pro has a 1 ms update frequency, but timestamp precision may not be accurate to that level. Even with very precise server time, consumers typically do not have matching precision and would not benefit from it. For latency comparison, relative time matters more than precise timestamps: an observer compares the latency of price streams as received with their local receive time, not the source timestamp.
 
