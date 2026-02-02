@@ -11,33 +11,10 @@ export const { classes } = createStyles("v2-input", (theme) => {
 
   let sizeVariants: SimpleStyleRules["key"] = {};
 
-  const inputSizes = {
-    xs: {
-      fontSize: theme.tokens.fontSizes.xxs,
-      padding: `${theme.spacing(0.5)} ${theme.spacing(2)}`,
-      height: theme.spacing(6),
-    },
-    sm: {
-      fontSize: theme.tokens.fontSizes.xs,
-      padding: `${theme.spacing(0.75)} ${theme.spacing(2.5)}`,
-      height: theme.spacing(8),
-    },
-    md: {
-      fontSize: theme.tokens.fontSizes.sm,
-      padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
-      height: theme.spacing(10),
-    },
-    lg: {
-      fontSize: theme.tokens.fontSizes.base,
-      padding: `${theme.spacing(1.25)} ${theme.spacing(4)}`,
-      height: theme.spacing(12),
-    },
-  } as const;
-
-  for (const [size, styles] of Object.entries(inputSizes)) {
+  for (const [size, styles] of Object.entries(theme.formFieldSizes)) {
     sizeVariants = {
       ...sizeVariants,
-      [`&[data-size="${size}"] $input`]: {
+      [`&[data-inputsize="${size}"] $input`]: {
         borderRadius: theme.tokens.borderRadius.lg,
         fontSize: styles.fontSize,
         padding: styles.padding,

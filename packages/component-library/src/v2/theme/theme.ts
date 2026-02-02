@@ -69,6 +69,7 @@ const buttonSizes = {
   },
 } as const;
 
+
 const palette = {
   amber: {
     50: "#fffbeb",
@@ -628,12 +629,35 @@ const tokens = {
   },
 } as const;
 
+const formFieldSizes = {
+  xs: {
+    fontSize: tokens.fontSizes.xxs,
+    padding: `${spacing(0.5)} ${spacing(2)}`,
+    height: buttonSizes.xs.height,
+  },
+  sm: {
+    fontSize: tokens.fontSizes.xs,
+    padding: `${spacing(0.75)} ${spacing(2.5)}`,
+    height: buttonSizes.sm.height,
+  },
+  md: {
+    fontSize: tokens.fontSizes.sm,
+    padding: `${spacing(1)} ${spacing(3)}`,
+    height: buttonSizes.md.height,
+  },
+  lg: {
+    fontSize: tokens.fontSizes.base,
+    padding: `${spacing(1.25)} ${spacing(4)}`,
+    height: buttonSizes.lg.height,
+  },
+} as const;
+
 /**
  * Supporting Types
  */
 export type BreakpointSize = keyof typeof breakpoints;
 export type ButtonSizes = keyof typeof buttonSizes;
-export type InputSize = "xs" | "sm" | "md" | "lg";
+export type InputSize = keyof typeof formFieldSizes;
 export type ThemeColor = keyof typeof colors;
 export type Elevation = keyof typeof elevations;
 export type PaletteColor = keyof typeof palette;
@@ -689,6 +713,11 @@ export const ThemeV2 = {
    * Button Size Tokens
    */
   buttonSizes,
+
+  /**
+   * Form Field Sizes
+   */
+  formFieldSizes,
 
   /**
    * Functional Color Tokens (Light/Dark support)

@@ -1,11 +1,13 @@
 /** biome-ignore-all lint/a11y/noLabelWithoutControl: base-ui doesn't require this */
 
 import { Checkbox as BaseCheckbox } from "@base-ui/react/checkbox";
-import { CheckSquare, Square } from "@phosphor-icons/react/dist/ssr";
+import { Field } from "@base-ui/react/field";
+import { Check } from "@phosphor-icons/react/dist/ssr";
 import cx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 
 import { classes } from "./Checkbox.styles";
+import type { InputSize } from "../../theme/theme";
 
 export type Checkboxvalue = {
   key: string;
@@ -15,45 +17,40 @@ export type Checkboxvalue = {
 
 export type CheckboxProps = Omit<
   ComponentProps<typeof BaseCheckbox.Root>,
-  "value"
+  "value" | "size"
 > & {
   className?: string;
   value?: Checkboxvalue;
   label?: ReactNode;
+  size?: InputSize;
 };
 
 export function Checkbox({
   className,
   value: opt,
   label,
+  size = "md",
   ...rest
 }: CheckboxProps) {
   const resolvedLabel = label ?? opt?.label;
-  const isCompact = !resolvedLabel;
 
   return (
-    <label className={classes.wrapper} data-compact={isCompact}>
+    <Field.Root
+      className={cx(className, classes.root)}
+      data-checked={rest.checked ?? false}
+      data-haslabel={Boolean(resolvedLabel)}
+      data-size={size}
+    >
       <BaseCheckbox.Root
         {...rest}
-        className={cx(classes.root, className)}
-        data-compact={isCompact}
+        className={classes.checkbox}
         value={opt?.value ?? ""}
       >
-        <span className={classes.iconSlot}>
-          <Square
-            className={classes.uncheckedIcon}
-            data-checkbox-icon="unchecked"
-          />
-          <BaseCheckbox.Indicator
-            keepMounted
-            className={classes.checkedIndicator}
-            data-checkbox-icon="checked"
-          >
-            <CheckSquare className={classes.checkedIcon} />
-          </BaseCheckbox.Indicator>
-        </span>
+        <BaseCheckbox.Indicator className={classes.indicator} keepMounted>
+          <Check />
+        </BaseCheckbox.Indicator>
         {resolvedLabel}
       </BaseCheckbox.Root>
-    </label>
+    </Field.Root>
   );
 }
