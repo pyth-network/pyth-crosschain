@@ -1,6 +1,6 @@
 import { createStyles } from "../../theme/style-funcs";
 
-export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
+export const { classes } = createStyles("v2-button-link", (theme) => {
   const foregroundColor = theme.resolveThemeColor(theme.colors.foreground);
   const activeBackgroundColor = theme.resolveThemeColor(
     theme.colors.button.outline.background.active,

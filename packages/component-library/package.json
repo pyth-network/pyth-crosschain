@@ -563,13 +563,13 @@
       "types": "./dist/v2/components/LeftNav/types.d.ts",
       "default": "./dist/v2/components/LeftNav/types.mjs"
     },
-    "./v2/components/NavigationButtonLink/NavigationButtonLink": {
-      "types": "./dist/v2/components/NavigationButtonLink/NavigationButtonLink.d.ts",
-      "default": "./dist/v2/components/NavigationButtonLink/NavigationButtonLink.mjs"
+    "./v2/components/NavigationButtonLink/ButtonLink": {
+      "types": "./dist/v2/components/NavigationButtonLink/ButtonLink.d.ts",
+      "default": "./dist/v2/components/NavigationButtonLink/ButtonLink.mjs"
     },
-    "./v2/components/NavigationButtonLink/NavigationButtonLink.styles": {
-      "types": "./dist/v2/components/NavigationButtonLink/NavigationButtonLink.styles.d.ts",
-      "default": "./dist/v2/components/NavigationButtonLink/NavigationButtonLink.styles.mjs"
+    "./v2/components/NavigationButtonLink/ButtonLink.styles": {
+      "types": "./dist/v2/components/NavigationButtonLink/ButtonLink.styles.d.ts",
+      "default": "./dist/v2/components/NavigationButtonLink/ButtonLink.styles.mjs"
     },
     "./v2/components/NavigationButtonLink": {
       "types": "./dist/v2/components/NavigationButtonLink/index.d.ts",
