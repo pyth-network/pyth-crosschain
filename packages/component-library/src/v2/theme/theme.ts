@@ -496,8 +496,8 @@ const colors = {
   },
   card: {
     background: {
-      dark: Color(palette.white).alpha(0.5).hexa(),
-      light: Color(palette.steel200).alpha(0.5).hexa(),
+      dark: palette.steel800,
+      light: palette.steel50,
     },
   },
   chart: {
@@ -612,6 +612,21 @@ const tokens = {
   },
 } as const;
 
+const cardSizes = {
+  sm: {
+    borderRadius: tokens.borderRadius.lg,
+    padding: spacing(3),
+  },
+  md: {
+    borderRadius: tokens.borderRadius.xl,
+    padding: spacing(4),
+  },
+  lg: {
+    borderRadius: tokens.borderRadius.xxl,
+    padding: spacing(6),
+  },
+} as const;
+
 const formFieldSizes = {
   xs: {
     fontSize: tokens.fontSizes.xxs,
@@ -663,6 +678,7 @@ const spinnerSizes = {
  */
 export type BreakpointSize = keyof typeof breakpoints;
 export type ButtonSizes = keyof typeof buttonSizes;
+export type CardSizes = keyof typeof cardSizes;
 export type InputSize = keyof typeof formFieldSizes;
 export type ThemeColor = keyof typeof colors;
 export type Elevation = keyof typeof elevations;
@@ -727,6 +743,11 @@ export const ThemeV2 = {
    * Button Size Tokens
    */
   buttonSizes,
+
+  /**
+   * Card Size Tokens
+   */
+  cardSizes,
 
   /**
    * Form Field Sizes

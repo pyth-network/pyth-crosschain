@@ -3,6 +3,8 @@ import {
   Gauge,
   SignOut,
   UserCircle,
+  Lifebuoy,
+  BookOpen,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
@@ -72,6 +74,30 @@ const meta = {
       email: "riley.chen@pyth.network",
       fullName: "Riley Chen",
     },
+    supportLinks: (
+      <>
+        <NavigationButtonLink
+          beforeIcon={Lifebuoy}
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+          }}
+          size="sm"
+        >
+          Support
+        </NavigationButtonLink>
+        <NavigationButtonLink
+          beforeIcon={BookOpen}
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+          }}
+          size="sm"
+        >
+          Documentation
+        </NavigationButtonLink>
+      </>
+    ),
   },
   argTypes: {
     children: { control: false },
