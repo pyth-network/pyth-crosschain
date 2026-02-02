@@ -1023,7 +1023,10 @@ export class EvmChain extends Chain {
     ] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     const web3 = this.getWeb3();
-    const contract = new web3.eth.Contract(ERC20_BALANCE_OF_ABI, PATHUSD_ADDRESS);
+    const contract = new web3.eth.Contract(
+      ERC20_BALANCE_OF_ABI,
+      PATHUSD_ADDRESS,
+    );
     const balance = await contract.methods.balanceOf(address).call();
     return BigInt(balance);
   }
@@ -1055,13 +1058,13 @@ export class EvmChain extends Chain {
     const gasPrice = Math.trunc(
       Number(await this.getGasPrice()) * gasPriceMultiplier,
     );
-    
+
     // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
     const deployerBalance =
-      this.networkId === 42_431
+      this.networkId === 42_431 || this.networkId === 4217
         ? await this.getBalanceForTempo(signer.address)
         : BigInt(await web3.eth.getBalance(signer.address));
-    
+    // Comment it when you are interactive with Tempo testnet or mainnet
     const gasDiff = BigInt(gas) * BigInt(gasPrice) - deployerBalance;
     if (gasDiff > 0n) {
       throw new Error(
@@ -1096,7 +1099,7 @@ export class EvmChain extends Chain {
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
     const address = await this.getAccountAddress(privateKey);
-    
+
     // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
     if (this.networkId === 42_431) {
       const balance = await this.getBalanceForTempo(address);
