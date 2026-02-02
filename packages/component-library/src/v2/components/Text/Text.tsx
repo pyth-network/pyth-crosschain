@@ -4,7 +4,7 @@ import { cloneElement, isValidElement } from "react";
 
 import type { TextColorToken } from "./Text.styles";
 import { classes } from "./Text.styles";
-import type { ThemeV2 } from "../../theme";
+import type { FontSize, ThemeV2 } from "../../theme";
 
 export type TextProps = HTMLAttributes<HTMLElement> & {
   /**
@@ -37,15 +37,21 @@ export type TextProps = HTMLAttributes<HTMLElement> & {
    */
 
   render?: ReactElement;
+
+  /**
+   * if specified, will render the text in this specific font size
+   */
+  size?: FontSize;
 };
 
 export function Text({
   bold,
+  className,
   children,
   color,
   italic = false,
   render = <span />,
-  className,
+  size,
   ...otherProps
 }: TextProps) {
   const internalProps = {
@@ -54,6 +60,7 @@ export function Text({
     "data-color": color,
     "data-bold": bold,
     "data-italic": italic,
+    "data-size": size,
     ...otherProps,
   };
 

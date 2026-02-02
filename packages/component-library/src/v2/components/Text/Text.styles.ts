@@ -95,10 +95,22 @@ export const { classes } = createStyles("v2-text-component", (theme) => {
     };
   }
 
+  let sizeVariants: SimpleStyleRules["key"] = {};
+
+  for (const [size, rule] of Object.entries(theme.tokens.fontSizes)) {
+    sizeVariants = {
+      ...sizeVariants,
+      [`&[data-size="${size}"]`]: {
+        fontSize: rule,
+      },
+    };
+  }
+
   return {
     root: {
       ...boldVariants,
       ...colorVariants,
+      ...sizeVariants,
       '&[data-italic="true"]': {
         fontStyle: "italic",
       },

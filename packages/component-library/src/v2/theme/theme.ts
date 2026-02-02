@@ -573,6 +573,24 @@ const colors = {
   transparent: "transparent",
 } as const;
 
+const fontSizes = {
+  base: "1rem",
+  lg: "1.125rem",
+  sm: "0.875rem",
+  xl: "1.25rem",
+  xl2: "1.5rem",
+  xl3: "1.875rem",
+  xl4: "2.25rem",
+  xl5: "3rem",
+  xl6: "3.75rem",
+  xl7: "4.5rem",
+  xl8: "6rem",
+  xl9: "8rem",
+  xs: "0.75rem",
+  xs2: "0.6875rem",
+} as const;
+export type FontSize = keyof typeof fontSizes;
+
 const tokens = {
   borderRadius: {
     base: "0.25rem",
@@ -582,8 +600,8 @@ const tokens = {
     none: "0px",
     sm: "0.125rem",
     xl: "0.75rem",
-    xxl: "1rem",
-    xxxl: "1.5rem",
+    xl2: "1rem",
+    xl3: "1.5rem",
   },
   fontFamilies: {
     monospace:
@@ -591,22 +609,7 @@ const tokens = {
     normal:
       '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
   },
-  fontSizes: {
-    base: "1rem",
-    lg: "1.125rem",
-    sm: "0.875rem",
-    xl: "1.25rem",
-    xxl: "1.5rem",
-    xxxl: "1.875rem",
-    xxxxl: "2.25rem",
-    xxxxxl: "3rem",
-    xxxxxxl: "3.75rem",
-    xxxxxxxl: "4.5rem",
-    xxxxxxxxl: "6rem",
-    xxxxxxxxxl: "8rem",
-    xs: "0.75rem",
-    xxs: "0.6875rem",
-  },
+  fontSizes,
   fontWeights: {
     black: 900,
     bold: 700,
@@ -630,7 +633,7 @@ const tokens = {
 
 const formFieldSizes = {
   xs: {
-    fontSize: tokens.fontSizes.xxs,
+    fontSize: tokens.fontSizes.xs2,
     padding: `${spacing(0.5)} ${spacing(2)}`,
     height: buttonSizes.xs.height,
   },
