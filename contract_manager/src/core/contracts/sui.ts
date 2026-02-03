@@ -7,14 +7,22 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-base-to-string */
+import { parseVaa } from "@certusone/wormhole-sdk";
 import { uint8ArrayToBCS } from "@certusone/wormhole-sdk/lib/cjs/sui";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+import {
+  decodeGovernancePayload,
+  UpdateTrustedSigner264Bit,
+  UpgradeSuiLazerContract,
+} from "@pythnetwork/xc-admin-common";
 
+import { SubmittedWormholeMessage, Vault } from "../../node/utils/governance";
 import type { PrivateKey, TxResult } from "../base";
+import type { SuiLazerMeta } from "../chains";
 import { Chain, SuiChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 import { PriceFeedContract, Storable } from "../base";
@@ -606,5 +614,113 @@ export class SuiLazerContract extends Storable {
       parsed.stateId,
       parsed.wormholeStateId,
     );
+  }
+
+  async executeGovernanceProposals(
+    signer: Ed25519Keypair,
+    chain: SuiChain,
+    vault: Vault,
+    packagePath: string,
+    since?: number,
+    // support overriding outside of CLI
+    console_: Pick<Console, "info" | "warn"> = console,
+  ) {
+    const client = chain.getProvider();
+    const emitterKey = await vault.getEmitter();
+
+    if (since === undefined) {
+      console_.info("Fetching last seen sequence ID...");
+
+      const { seen_sequence } = await chain.getStateGovernanceInfo(
+        client,
+        this.stateId,
+      );
+
+      if (seen_sequence >= BigInt(Number.MAX_SAFE_INTEGER)) {
+        throw new Error("'seen_sequence' bigger than JS integer");
+      }
+
+      since = Number(seen_sequence);
+    }
+
+    for (let i = since; ; i++) {
+      const vaaRef = new SubmittedWormholeMessage(emitterKey, i, vault.cluster);
+      let vaa: Uint8Array;
+      try {
+        vaa = await vaaRef.fetchVaa();
+      } catch {
+        console_.warn(`Could not find VAA #${i.toString()}, ending.`);
+        break;
+      }
+      const action = decodeGovernancePayload(parseVaa(vaa).payload);
+      if (!action) {
+        console_.warn(
+          `Could not parse VAA #${i.toString()} action, skipping...`,
+        );
+        continue;
+      }
+
+      if (action.targetChainId !== chain.wormholeChainName) {
+        console_.warn(
+          `Expected chain '${chain.wormholeChainName}',`,
+          `VAA #${i.toString()} targets '${action.targetChainId}', skipping... `,
+        );
+        continue;
+      }
+      if (action instanceof UpgradeSuiLazerContract) {
+        console_.info(
+          `Attempting contract upgrade to version ${action.version.toString()}...`,
+        );
+        console_.info("  (will fail if not on correct source version)");
+        const meta = await this.fetchAndBumpMeta(chain, packagePath);
+        const pkg = await chain.buildPackage(packagePath);
+        const digest = await chain.upgradeLazerContract({
+          stateId: this.stateId,
+          wormholeStateId: this.wormholeStateId,
+          pkg,
+          meta,
+          vaa,
+          signer,
+        });
+        console_.info(
+          `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
+        );
+      } else if (action instanceof UpdateTrustedSigner264Bit) {
+        console_.info(`Updating trusted signer ${action.publicKey}...`);
+        const digest = await chain.updateTrustedSigner({
+          stateId: this.stateId,
+          wormholeStateId: this.wormholeStateId,
+          vaa,
+          signer,
+        });
+        console_.info(
+          `  Transaction finished: ${chain.explorerUrl("txblock", digest)}`,
+        );
+      } else {
+        console_.warn(
+          `Unknown governance action in VAA #${i.toString()}, skipping...`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Bumps contract version in source based on on-chain version and returns new
+   * contract metadata.
+   */
+  async fetchAndBumpMeta(
+    chain: SuiChain,
+    packagePath: string,
+  ): Promise<SuiLazerMeta> {
+    const { version } = await chain.getStatePackageInfo(
+      chain.getProvider(),
+      this.stateId,
+    );
+    const meta = {
+      version: (BigInt(version) + 1n).toString(),
+      receiver_chain_id: chain.getWormholeChainId(),
+    };
+    await chain.updateLazerMeta(packagePath, meta);
+    return meta;
   }
 }

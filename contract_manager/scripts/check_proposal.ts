@@ -285,7 +285,7 @@ async function main() {
             }
           }
 
-          await chain.updateLazerContractMeta(packagePath, {
+          await chain.updateLazerMeta(packagePath, {
             version: version.toString(),
             receiver_chain_id: chain.getWormholeChainId(),
           });

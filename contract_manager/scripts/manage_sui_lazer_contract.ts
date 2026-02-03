@@ -10,7 +10,6 @@ import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import type { SuiLazerMeta } from "../src/core/chains";
 import { SuiChain } from "../src/core/chains";
 import { SuiLazerContract } from "../src/core/contracts";
 import { loadHotWallet, WormholeEmitter } from "../src/node/utils/governance";
@@ -44,27 +43,6 @@ function connectMainnetVault(wallet: Wallet) {
   vault.connect(wallet, (rpc) => RPCS[rpc]);
 
   return vault;
-}
-
-/**
- * Bumps contract version in source based on on-chain version and returns new
- * contract metadata.
- */
-async function fetchAndBumpContractMeta(
-  chain: SuiChain,
-  contract: SuiLazerContract,
-  packagePath: string,
-): Promise<SuiLazerMeta> {
-  const { version } = await chain.getStatePackageInfo(
-    chain.getProvider(),
-    contract.stateId,
-  );
-  const meta = {
-    version: (BigInt(version) + 1n).toString(),
-    receiver_chain_id: chain.getWormholeChainId(),
-  };
-  await chain.updateLazerContractMeta(packagePath, meta);
-  return meta;
 }
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -127,6 +105,22 @@ const commonOptions = {
       }
       return contract;
     },
+  },
+  "trusted-signer": {
+    type: "string",
+    description: "trusted signer to update",
+    demandOption: true,
+  },
+  expires: {
+    type: "string",
+    description: "timestamp of expiration in seconds",
+    demandOption: true,
+    coerce: BigInt,
+  },
+  "solana-wallet": {
+    type: "string",
+    description: "path to solana wallet used for creating a proposal",
+    demandOption: true,
   },
 } as const satisfies Record<string, Options>;
 
@@ -197,7 +191,7 @@ parser.command(
         version: "1",
         receiver_chain_id: chain.getWormholeChainId(),
       };
-      await chain.updateLazerContractMeta(packagePath, meta);
+      await chain.updateLazerMeta(packagePath, meta);
 
       console.info("Building package...");
       const pkg = await chain.buildPackage(packagePath);
@@ -248,7 +242,7 @@ parser.command(
       chain.getProvider(),
       contract.stateId,
     );
-    await chain.updateLazerContractMeta(packagePath, {
+    await chain.updateLazerMeta(packagePath, {
       version,
       receiver_chain_id: chain.getWormholeChainId(),
     });
@@ -279,7 +273,7 @@ parser.command(
     console.info("Upgrading package...");
 
     console.info("Updating package metadata...");
-    const meta = await fetchAndBumpContractMeta(chain, contract, packagePath);
+    const meta = await contract.fetchAndBumpMeta(chain, packagePath);
 
     console.info("Building package update...");
     const pkg = await chain.buildPackage(packagePath);
@@ -322,17 +316,8 @@ parser.command(
       "private-key": commonOptions["private-key"],
       contract: commonOptions.contract,
       emitter: commonOptions.emitter,
-      signer: {
-        type: "string",
-        description: "trusted signer to update",
-        demandOption: true,
-      },
-      expires: {
-        type: "string",
-        description: "timestamp of expiration in seconds",
-        demandOption: true,
-        coerce: BigInt,
-      },
+      signer: commonOptions["trusted-signer"],
+      expires: commonOptions.expires,
     }),
   async ({
     chain,
@@ -383,11 +368,7 @@ parser.command(
     b.options({
       path: commonOptions.packagePath,
       contract: commonOptions.contract,
-      wallet: {
-        type: "string",
-        description: "path to solana wallet used for creating a proposal",
-        demandOption: true,
-      },
+      wallet: commonOptions["solana-wallet"],
     }),
   async ({ chain, path: packagePath, contract, wallet: walletPath }) => {
     const wallet = await loadHotWallet(walletPath);
@@ -397,11 +378,7 @@ parser.command(
     console.info("Creating package upgrade proposal...");
 
     console.info("Updating package metadata...");
-    const { version } = await fetchAndBumpContractMeta(
-      chain,
-      contract,
-      packagePath,
-    );
+    const { version } = await contract.fetchAndBumpMeta(chain, packagePath);
 
     console.info("Building package update...");
     const pkg = await chain.buildPackage(packagePath);
@@ -415,6 +392,59 @@ parser.command(
     );
     const proposal = await vault.proposeWormholeMessage([payload]);
     console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
+parser.command(
+  "propose-update-trusted-signer",
+  "propose update of a trusted signer",
+  (b) =>
+    b.options({
+      signer: commonOptions["trusted-signer"],
+      expires: commonOptions.expires,
+      wallet: commonOptions["solana-wallet"],
+    }),
+  async ({ chain, signer, expires, wallet: walletPath }) => {
+    const wallet = await loadHotWallet(walletPath);
+    const vault = connectMainnetVault(wallet);
+    console.info("Using wallet:", wallet.publicKey.toBase58());
+
+    console.info("Submitting governance proposal...");
+    const payload = chain.generateGovernanceUpdateTrustedSignerPayload(
+      signer,
+      expires,
+    );
+    const proposal = await vault.proposeWormholeMessage([payload]);
+    console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
+parser.command(
+  "execute-proposals",
+  "execute unseen compatible proposals",
+  (b) =>
+    b
+      .options({
+        "private-key": commonOptions["private-key"],
+        contract: commonOptions.contract,
+        path: commonOptions.packagePath,
+        since: {
+          type: "number",
+          description: "VAA sequence ID to start from (inclusive)",
+        },
+      })
+      .array("ids"),
+  async ({ chain, privateKey, contract, path: packagePath, since }) => {
+    const signer = Ed25519Keypair.fromSecretKey(privateKey);
+    const vault = getMainnetVault();
+
+    await contract.executeGovernanceProposals(
+      signer,
+      chain,
+      vault,
+      packagePath,
+      since,
+    );
   },
 );
 

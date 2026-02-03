@@ -1,8 +1,17 @@
 /// Adapted from pyth::i64
 module pyth_lazer::i64;
 
+use std::u64;
+
 const MAX_POSITIVE_MAGNITUDE: u64 = (1 << 63) - 1;
 const MAX_NEGATIVE_MAGNITUDE: u64 = (1 << 63);
+
+#[error]
+const EMagnitudeTooLarge: vector<u8> = "Supplied magnitude too large";
+#[error]
+const ENegativeValue: vector<u8> = "Supplied I64 is negative";
+#[error]
+const EPositiveValue: vector<u8> = "Supplied I64 is positive";
 
 /// To consume these values, first call `get_is_negative()` to determine if the I64
 /// represents a negative or positive value. Then call `get_magnitude_if_positive()` or
@@ -18,7 +27,7 @@ public fun new(magnitude: u64, mut negative: bool): I64 {
     if (negative) {
         max_magnitude = MAX_NEGATIVE_MAGNITUDE;
     };
-    assert!(magnitude <= max_magnitude, 0); //error::magnitude_too_large()
+    assert!(magnitude <= max_magnitude, EMagnitudeTooLarge);
 
 
     // Ensure we have a single zero representation: (0, false).
@@ -38,32 +47,27 @@ public fun get_is_negative(i: &I64): bool {
 }
 
 public fun get_magnitude_if_positive(in: &I64): u64 {
-    assert!(!in.negative, 0); // error::negative_value()
+    assert!(!in.negative, ENegativeValue);
     in.magnitude
 }
 
 public fun get_magnitude_if_negative(in: &I64): u64 {
-    assert!(in.negative, 0); //error::positive_value()
+    assert!(in.negative, EPositiveValue);
     in.magnitude
 }
 
 public fun from_u64(from: u64): I64 {
     // Use the MSB to determine whether the number is negative or not.
     let negative = (from >> 63) == 1;
-    let magnitude = parse_magnitude(from, negative);
-
-    new(magnitude, negative)
-}
-
-fun parse_magnitude(from: u64, negative: bool): u64 {
-    // If positive, then return the input verbatamin
-    if (!negative) {
-        return from
+    let magnitude = if (!negative) {
+        // If positive, then return the input verbatim
+        from
+    } else {
+        // Otherwise convert from two's complement by inverting and adding 1
+        (from ^ u64::max_value!()) + 1
     };
 
-    // Otherwise convert from two's complement by inverting and adding 1
-    let inverted = from ^ 0xFFFFFFFFFFFFFFFF;
-    inverted + 1
+    new(magnitude, negative)
 }
 
 #[test]
