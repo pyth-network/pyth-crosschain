@@ -431,6 +431,10 @@ const colors = {
   background: {
     cardHighlight: { dark: palette.slate950, light: palette.violet50 },
     cardSecondary: { dark: palette.steel950, light: palette.white },
+    backdrop: {
+      dark: Color(palette.black).alpha(0.6).hexa(),
+      light: Color(palette.black).alpha(0.4).hexa(),
+    },
     modal: { dark: palette.steel950, light: palette.white },
     navBlur: {
       dark: Color(palette.steel950).alpha(0.7).hexa(),
