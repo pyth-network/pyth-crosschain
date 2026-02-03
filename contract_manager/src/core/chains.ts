@@ -492,11 +492,11 @@ export class SuiChain extends Chain {
     meta: SuiLazerMeta,
     signer: SuiEd25519Keypair,
   ) {
-    this.verifyPackageMeta(pkg, meta);
+    this.verifyLazerMeta(pkg, meta);
     return await this.publishPackage(pkg, signer);
   }
 
-  async updateLazerContractMeta(packagePath: string, meta: SuiLazerMeta) {
+  async updateLazerMeta(packagePath: string, meta: SuiLazerMeta) {
     const templatePath = nodePath.resolve(
       packagePath,
       "sources/meta.move.mustache",
@@ -511,7 +511,7 @@ export class SuiChain extends Chain {
    * Inspects `pyth_lazer::meta` module bytecode to ensure that metadata are
    * set correctly.
    */
-  verifyPackageMeta(
+  verifyLazerMeta(
     { modules }: SuiPackage,
     { version, receiver_chain_id }: SuiLazerMeta,
   ) {
@@ -753,7 +753,7 @@ export class SuiChain extends Chain {
     vaa: Uint8Array;
     signer: SuiEd25519Keypair;
   }) {
-    this.verifyPackageMeta(pkg, meta);
+    this.verifyLazerMeta(pkg, meta);
 
     const client = this.getProvider();
     const tx = new SuiTransaction();
