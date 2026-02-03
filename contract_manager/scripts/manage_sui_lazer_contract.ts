@@ -106,6 +106,22 @@ const commonOptions = {
       return contract;
     },
   },
+  "trusted-signer": {
+    type: "string",
+    description: "trusted signer to update",
+    demandOption: true,
+  },
+  expires: {
+    type: "string",
+    description: "timestamp of expiration in seconds",
+    demandOption: true,
+    coerce: BigInt,
+  },
+  "solana-wallet": {
+    type: "string",
+    description: "path to solana wallet used for creating a proposal",
+    demandOption: true,
+  },
 } as const satisfies Record<string, Options>;
 
 parser.command(
@@ -300,17 +316,8 @@ parser.command(
       "private-key": commonOptions["private-key"],
       contract: commonOptions.contract,
       emitter: commonOptions.emitter,
-      signer: {
-        type: "string",
-        description: "trusted signer to update",
-        demandOption: true,
-      },
-      expires: {
-        type: "string",
-        description: "timestamp of expiration in seconds",
-        demandOption: true,
-        coerce: BigInt,
-      },
+      signer: commonOptions["trusted-signer"],
+      expires: commonOptions.expires,
     }),
   async ({
     chain,
@@ -361,11 +368,7 @@ parser.command(
     b.options({
       path: commonOptions.packagePath,
       contract: commonOptions.contract,
-      wallet: {
-        type: "string",
-        description: "path to solana wallet used for creating a proposal",
-        demandOption: true,
-      },
+      wallet: commonOptions["solana-wallet"],
     }),
   async ({ chain, path: packagePath, contract, wallet: walletPath }) => {
     const wallet = await loadHotWallet(walletPath);
@@ -386,6 +389,30 @@ parser.command(
     const payload = chain.generateGovernanceUpgradeLazerPayload(
       BigInt(version),
       digest,
+    );
+    const proposal = await vault.proposeWormholeMessage([payload]);
+    console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
+parser.command(
+  "propose-update-trusted-signer",
+  "propose update of a trusted signer",
+  (b) =>
+    b.options({
+      signer: commonOptions["trusted-signer"],
+      expires: commonOptions.expires,
+      wallet: commonOptions["solana-wallet"],
+    }),
+  async ({ chain, signer, expires, wallet: walletPath }) => {
+    const wallet = await loadHotWallet(walletPath);
+    const vault = connectMainnetVault(wallet);
+    console.info("Using wallet:", wallet.publicKey.toBase58());
+
+    console.info("Submitting governance proposal...");
+    const payload = chain.generateGovernanceUpdateTrustedSignerPayload(
+      signer,
+      expires,
     );
     const proposal = await vault.proposeWormholeMessage([payload]);
     console.log("Proposal address:", proposal.address.toBase58());
