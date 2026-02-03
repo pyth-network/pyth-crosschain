@@ -7,14 +7,14 @@ import type { ReactNode } from "react";
 
 import { classes } from "./Switch.styles";
 
-type IconToggle = {
+type IconSwitchProps = {
   children?: never;
   offIcon: Icon;
   onIcon: Icon;
   variant: "icon";
 };
 
-type NormalToggle = {
+type NormalSwitchProps = {
   children: ReactNode;
   offIcon?: never;
   onIcon?: never;
@@ -24,13 +24,13 @@ type NormalToggle = {
   variant?: "normal";
 };
 
-export type ToggleProps = {
+export type SwitchProps = {
   className?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
-} & (IconToggle | NormalToggle);
+} & (IconSwitchProps | NormalSwitchProps);
 
-export function Toggle(props: ToggleProps) {
+export function Switch(props: SwitchProps) {
   /** local variables */
   const { checked, className, onChange } = props;
 

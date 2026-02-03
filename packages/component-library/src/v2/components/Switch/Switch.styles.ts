@@ -40,11 +40,8 @@ export const { classes } = createStyles("v2-switch", (theme) => {
      * around the switch component
      */
     root: {
+      cursor: "pointer",
       display: "inline-block",
-
-      "&:hover": {
-        cursor: "pointer",
-      },
 
       "& svg": {
         color: "currentColor",
@@ -97,10 +94,7 @@ export const { classes } = createStyles("v2-switch", (theme) => {
                 opacity: 0,
               },
               "&:last-child": {
-                color: theme.lightDark(
-                  theme.colors.foreground.dark,
-                  theme.colors.foreground.light,
-                ),
+                color: theme.resolveThemeColor(theme.colors.foreground.dark),
                 opacity: 1,
               },
             },
@@ -110,10 +104,7 @@ export const { classes } = createStyles("v2-switch", (theme) => {
           "& $thumb": {
             "& > span": {
               "&:first-child": {
-                color: theme.lightDark(
-                  theme.colors.foreground.dark,
-                  theme.colors.foreground.light,
-                ),
+                color: theme.resolveThemeColor(theme.colors.foreground.dark),
                 opacity: 1,
               },
               "&:last-child": {

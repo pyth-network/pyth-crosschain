@@ -3,10 +3,10 @@ import { NOOP } from "@pythnetwork/shared-lib/constants";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, useEffect } from "react";
 
-import { Toggle } from "./Switch";
+import { Switch } from "./Switch";
 import { IconControl } from "../../__stories__/helpers";
 
-const SwitchStory: Meta<typeof Toggle>["render"] = (args) => {
+const SwitchStory: Meta<typeof Switch>["render"] = (args) => {
   const [checked, setChecked] = useState(args.checked);
 
   // This ensures that when you toggle the control in the Storybook UI,
@@ -16,7 +16,7 @@ const SwitchStory: Meta<typeof Toggle>["render"] = (args) => {
   }, [args.checked]);
 
   return (
-    <Toggle
+    <Switch
       {...args}
       checked={checked}
       onChange={(nextChecked) => {
@@ -29,7 +29,7 @@ const SwitchStory: Meta<typeof Toggle>["render"] = (args) => {
 
 const meta = {
   title: "V2/Switch",
-  component: Toggle,
+  component: Switch,
   args: {
     checked: true,
     onChange: NOOP,
@@ -47,7 +47,7 @@ const meta = {
   },
   // Moving the state logic into a wrapper component
   render: SwitchStory,
-} satisfies Meta<typeof Toggle>;
+} satisfies Meta<typeof Switch>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

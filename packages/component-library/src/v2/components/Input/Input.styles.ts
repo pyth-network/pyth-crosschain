@@ -7,6 +7,7 @@ export const { classes } = createStyles("v2-input", (theme) => {
     display: "inline-flex",
     flexFlow: "column",
     gap: theme.spacing(1),
+    position: "relative",
   };
 
   let sizeVariants: SimpleStyleRules["key"] = {};
@@ -14,7 +15,7 @@ export const { classes } = createStyles("v2-input", (theme) => {
   for (const [size, styles] of Object.entries(theme.sizes.formField)) {
     sizeVariants = {
       ...sizeVariants,
-      [`&[data-inputsize="${size}"] $input`]: {
+      [`&[data-size="${size}"] $input`]: {
         borderRadius: theme.tokens.borderRadius.lg,
         fontSize: styles.fontSize,
         padding: styles.padding,
@@ -24,6 +25,42 @@ export const { classes } = createStyles("v2-input", (theme) => {
   }
 
   return {
+    /**
+     * class name applied to the icon that is visible to the right-side of the input
+     */
+    afterIcon: {
+      ...theme.flexHorizontalCenter(),
+      bottom: 0,
+      justifyContent: "center",
+      position: "absolute",
+      right: 0,
+      top: 0,
+      width: "2.5em",
+
+      "& > svg": {
+        height: "auto",
+        width: "50%",
+      },
+    },
+
+    /**
+     * class name applied to the icon that is visible to the left-side of the input
+     */
+    beforeIcon: {
+      ...theme.flexHorizontalCenter(),
+      bottom: 0,
+      justifyContent: "center",
+      left: 0,
+      position: "absolute",
+      top: 0,
+      width: "2.5em",
+
+      "& > svg": {
+        height: "auto",
+        width: "50%",
+      },
+    },
+
     /**
      * class name applied to the input, itself
      */
@@ -35,6 +72,8 @@ export const { classes } = createStyles("v2-input", (theme) => {
       padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
       transition:
         "background-color .2s ease, box-shadow .2s ease, color .2s ease",
+
+      width: "100%",
 
       "&::placeholder": {
         color: theme.resolveThemeColor(theme.colors.forms.input.placeholder),
@@ -61,6 +100,12 @@ export const { classes } = createStyles("v2-input", (theme) => {
         },
       },
     },
+    inputWrapper: {
+      display: "inline-block",
+      position: "relative",
+      width: "100%",
+    },
+
     /**
      * class name applied to the optional label that appears above
      * the text input
@@ -86,6 +131,18 @@ export const { classes } = createStyles("v2-input", (theme) => {
         "& $label": {
           ...inputContainerStyles,
           color: theme.resolveThemeColor(theme.colors.muted),
+        },
+      },
+
+      '&[data-hasbeforeicon="true"]': {
+        "& $inputWrapper > $input": {
+          paddingLeft: "2em",
+        },
+      },
+
+      '&[data-hasaftericon="true"]': {
+        "& $inputWrapper > $input": {
+          paddingRight: "2em",
         },
       },
 

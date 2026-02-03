@@ -26,16 +26,24 @@ export function useAppTheme() {
   const { theme, setTheme, ...rest } = useTheme();
 
   /** callbacks */
-  const toggleTheme = useCallback(() => {
-    const currentTheme = theme ?? "system";
-    if (currentTheme === "system") {
-      setTheme("light");
-    } else if (currentTheme === "light") {
-      setTheme("dark");
-    } else {
-      setTheme("system");
-    }
-  }, [setTheme, theme]);
+  const toggleTheme = useCallback(
+    (explicitTheme?: typeof theme) => {
+      if (explicitTheme) {
+        setTheme(explicitTheme);
+        return;
+      }
+
+      const currentTheme = theme ?? "system";
+      if (currentTheme === "system") {
+        setTheme("light");
+      } else if (currentTheme === "light") {
+        setTheme("dark");
+      } else {
+        setTheme("system");
+      }
+    },
+    [setTheme, theme],
+  );
 
   /** effects */
   useEffect(() => {

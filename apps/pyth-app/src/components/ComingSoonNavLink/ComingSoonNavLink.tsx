@@ -9,7 +9,7 @@ export function ComingSoonNavLink({
 }: Omit<ButtonLinkProps, "disabled">) {
   return (
     <ButtonLink {...rest} disabled>
-      <span className={classes.root}>
+      <span className={classes.root} data-pizzapasta>
         {children}
         <Badge size="xs" variant="neutral">
           COMING SOON

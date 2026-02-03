@@ -3,7 +3,8 @@ import Color from "color";
 import type { SimpleStyleRules } from "simplestyle-js/ssr";
 
 /** util functions */
-const spacing = (increment: number) => `${(increment * 0.25).toString()}rem`;
+const spacing = (increment: number, useRem = true) =>
+  `${(increment * 0.25).toString()}${useRem ? "r" : ""}em`;
 const lightDark = (light: string, dark: string) =>
   `light-dark(${light}, ${dark})`;
 /**
@@ -67,6 +68,13 @@ const buttonSizes = {
     iconSize: "1rem",
     padding: "0.25rem",
   },
+} as const;
+
+const dividerSizes = {
+  xs: "1px",
+  sm: "2px",
+  md: "3px",
+  lg: "4px",
 } as const;
 
 const black = "#000000";
@@ -636,23 +644,23 @@ const cardSizes = {
 
 const formFieldSizes = {
   xs: {
-    fontSize: tokens.fontSizes.xs2,
-    padding: `${spacing(0.5)} ${spacing(2)}`,
+    fontSize: tokens.fontSizes.xs,
+    padding: `${spacing(0.5, false)} ${spacing(2, false)}`,
     height: buttonSizes.xs.height,
   },
   sm: {
-    fontSize: tokens.fontSizes.xs,
-    padding: `${spacing(0.75)} ${spacing(2.5)}`,
+    fontSize: tokens.fontSizes.sm,
+    padding: `${spacing(0.75, false)} ${spacing(2.5, false)}`,
     height: buttonSizes.sm.height,
   },
   md: {
-    fontSize: tokens.fontSizes.sm,
-    padding: `${spacing(1)} ${spacing(3)}`,
+    fontSize: tokens.fontSizes.base,
+    padding: `${spacing(1, false)} ${spacing(3, false)}`,
     height: buttonSizes.md.height,
   },
   lg: {
-    fontSize: tokens.fontSizes.base,
-    padding: `${spacing(1.25)} ${spacing(4)}`,
+    fontSize: tokens.fontSizes.lg,
+    padding: `${spacing(1, false)} ${spacing(3, false)}`,
     height: buttonSizes.lg.height,
   },
 } as const;
@@ -686,6 +694,7 @@ const spinnerSizes = {
 export type BreakpointSize = keyof typeof breakpoints;
 export type ButtonSizes = keyof typeof buttonSizes;
 export type CardSizes = keyof typeof cardSizes;
+export type DividerSize = keyof typeof dividerSizes;
 export type InputSize = keyof typeof formFieldSizes;
 export type ThemeColor = keyof typeof colors;
 export type Elevation = keyof typeof elevations;
@@ -753,6 +762,7 @@ export const ThemeV2 = {
     button: buttonSizes,
     card: cardSizes,
     checkbox: formFieldSizes,
+    divider: dividerSizes,
     formField: formFieldSizes,
     spinner: spinnerSizes,
   },

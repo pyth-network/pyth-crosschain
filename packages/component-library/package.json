@@ -539,6 +539,18 @@
       "types": "./dist/v2/components/Dialog/index.d.ts",
       "default": "./dist/v2/components/Dialog/index.mjs"
     },
+    "./v2/components/Divider/Divider": {
+      "types": "./dist/v2/components/Divider/Divider.d.ts",
+      "default": "./dist/v2/components/Divider/Divider.mjs"
+    },
+    "./v2/components/Divider/Divider.styles": {
+      "types": "./dist/v2/components/Divider/Divider.styles.d.ts",
+      "default": "./dist/v2/components/Divider/Divider.styles.mjs"
+    },
+    "./v2/components/Divider": {
+      "types": "./dist/v2/components/Divider/index.d.ts",
+      "default": "./dist/v2/components/Divider/index.mjs"
+    },
     "./v2/components/HtmlWithLang/HtmlWithLang": {
       "types": "./dist/v2/components/HtmlWithLang/HtmlWithLang.d.ts",
       "default": "./dist/v2/components/HtmlWithLang/HtmlWithLang.mjs"
@@ -610,6 +622,10 @@
     "./v2/components/Switch/Switch.styles": {
       "types": "./dist/v2/components/Switch/Switch.styles.d.ts",
       "default": "./dist/v2/components/Switch/Switch.styles.mjs"
+    },
+    "./v2/components/Switch/ThemeSwitch": {
+      "types": "./dist/v2/components/Switch/ThemeSwitch.d.ts",
+      "default": "./dist/v2/components/Switch/ThemeSwitch.mjs"
     },
     "./v2/components/Switch": {
       "types": "./dist/v2/components/Switch/index.d.ts",

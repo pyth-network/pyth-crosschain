@@ -8,8 +8,6 @@ import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 
-import { PythAppLayout } from "../components/Layout";
-
 export const metadata: Metadata = {
   description:
     "A single place to view Pyth data feeds and pricing information, as well as managing your Pyth Pro subscription and API keys",
@@ -34,7 +32,7 @@ export default function RootLayout({
               enableColorScheme
               enableSystem
             >
-              <PythAppLayout>{children}</PythAppLayout>
+              {children}
             </ThemeProvider>
           </Suspense>
         </body>

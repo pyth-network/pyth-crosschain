@@ -8,6 +8,7 @@ export * from "./Card";
 export * from "./Checkbox";
 export * from "./CheckboxGroup";
 export * from "./Dialog";
+export * from "./Divider";
 export * from "./Input";
 export * from "./LeftNav";
 export * from "./NavigationButtonLink";
