@@ -5,6 +5,7 @@
   "engines": {
     "node": "^24.0.0"
   },
+  "type": "module",
   "scripts": {
     "build": "next build",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
