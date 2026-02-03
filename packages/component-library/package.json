@@ -487,6 +487,22 @@
       "types": "./dist/v2/components/Button/types.d.ts",
       "default": "./dist/v2/components/Button/types.mjs"
     },
+    "./v2/components/Card/Card": {
+      "types": "./dist/v2/components/Card/Card.d.ts",
+      "default": "./dist/v2/components/Card/Card.mjs"
+    },
+    "./v2/components/Card/Card.styles": {
+      "types": "./dist/v2/components/Card/Card.styles.d.ts",
+      "default": "./dist/v2/components/Card/Card.styles.mjs"
+    },
+    "./v2/components/Card": {
+      "types": "./dist/v2/components/Card/index.d.ts",
+      "default": "./dist/v2/components/Card/index.mjs"
+    },
+    "./v2/components/Card/types": {
+      "types": "./dist/v2/components/Card/types.d.ts",
+      "default": "./dist/v2/components/Card/types.mjs"
+    },
     "./v2/components/Checkbox/Checkbox": {
       "types": "./dist/v2/components/Checkbox/Checkbox.d.ts",
       "default": "./dist/v2/components/Checkbox/Checkbox.mjs"

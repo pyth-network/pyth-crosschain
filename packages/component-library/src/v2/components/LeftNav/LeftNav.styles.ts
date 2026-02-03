@@ -102,6 +102,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
       },
 
       "& > svg": {
+        color: "currentColor",
         height: theme.tokens.fontSizes.base,
         width: "auto",
       },
@@ -120,6 +121,22 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
     },
 
     /**
+     * class name for the wrapper that contains additional
+     * links that are displayed near the bottom of the left nav
+     */
+    supportLinks: {
+      ...theme.flexVertical(),
+      borderTop: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
+      flexGrow: 0,
+      flexShrink: 0,
+      marginBottom: theme.spacing(2),
+
+      "& > a": {
+        display: "flex",
+      },
+    },
+
+    /**
      * top-most area that contains the PYTH logo
      */
     top: {
@@ -130,9 +147,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
      * root of the <nav />
      */
     root: {
-      backgroundColor: theme.resolveThemeColor(
-        theme.colors.background.secondary,
-      ),
+      backgroundColor: theme.resolveThemeColor(theme.colors.background.primary),
       borderRight: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
       display: "flex",
       flexFlow: "column",
@@ -152,7 +167,7 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
           },
         },
 
-        "& $navLinks": {
+        "& $navLinks, & $supportLinks": {
           '& [data-leftnavlink="true"]': {
             fontSize: 0,
             gap: 0,
@@ -160,6 +175,10 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
             overflow: "hidden",
             padding: theme.spacing(2),
             whiteSpace: "nowrap",
+
+            "& > *:not(svg), & > [data-aftericon]": {
+              display: "none",
+            },
 
             "& > svg": {
               height: theme.spacing(5),

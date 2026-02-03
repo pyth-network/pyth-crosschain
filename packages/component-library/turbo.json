@@ -61,6 +61,10 @@
       "dependsOn": ["//#install:modules"],
       "cache": false
     },
+    "start:dev": {
+      "dependsOn": ["build"],
+      "with": ["build:css-in-js:watch"]
+    },
     "storybook": {
       "cache": false,
       "dependsOn": ["build:css-in-js"],

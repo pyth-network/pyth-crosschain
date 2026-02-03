@@ -32,9 +32,11 @@ export function Button({
           <BaseTooltip.Trigger
             {...(propsToSpread as unknown as ComponentProps<BaseTooltip.Trigger>)}
           >
-            {BeforeIcon && <BeforeIcon className={classes.icon} />}
+            {BeforeIcon && (
+              <BeforeIcon className={classes.icon} data-beforeicon />
+            )}
             {children}
-            {AfterIcon && <AfterIcon className={classes.icon} />}
+            {AfterIcon && <AfterIcon className={classes.icon} data-aftericon />}
           </BaseTooltip.Trigger>
           <BaseTooltip.Portal>
             <BaseTooltip.Positioner {...tooltipPositionerProps}>
@@ -50,9 +52,9 @@ export function Button({
 
   return (
     <BaseButton {...propsToSpread}>
-      {BeforeIcon && <BeforeIcon className={classes.icon} />}
+      {BeforeIcon && <BeforeIcon className={classes.icon} data-beforeicon />}
       {children}
-      {AfterIcon && <AfterIcon className={classes.icon} />}
+      {AfterIcon && <AfterIcon className={classes.icon} data-aftericon />}
     </BaseButton>
   );
 }
