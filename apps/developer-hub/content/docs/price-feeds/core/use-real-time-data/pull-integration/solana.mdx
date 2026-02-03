@@ -241,137 +241,17 @@ The [SDK documentation](https://github.com/pyth-network/pyth-crosschain/tree/mai
   partially verified price updates.
 </Callout>
 
-## Time-Weighted Average Price (TWAP)
-
-Pyth also provides Time-Weighted Average Price (TWAP) for Solana applications. TWAP represents the average price over a specified time window, which can be useful for reducing the impact of short-term price volatility. The TWAP window is currently limited to a maximum of 10 minutes (600 seconds).
-
-### Using TWAP in Solana Programs
-
-To use TWAP in your Solana program, import the `TwapUpdate` struct from the Pyth Solana receiver SDK. The process for fetching and posting TWAP updates is similar to regular price updates from Hermes.
-
-```rust copy
-use pyth_solana_receiver_sdk::price_update::{TwapUpdate};
-
-#[derive(Accounts)]
-#[instruction(twap_window_seconds: u64)]
-pub struct SampleWithTwap<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    // Add this account to any instruction Context that needs TWAP data
-    pub twap_update: Account<'info, TwapUpdate>,
-}
-```
-
-Update your instruction logic to read the TWAP from the update account:
-
-```rust copy
-pub fn sample_with_twap(
-    ctx: Context<SampleWithTwap>,
-    twap_window_seconds: u64,
-) -> Result<()> {
-    let twap_update = &mut ctx.accounts.twap_update;
-    // get_twap_no_older_than will fail if the price update is more than 30 seconds old
-    let maximum_age: u64 = 30;
-    // Specify the price feed ID and the window in seconds for the TWAP
-    let feed_id: [u8; 32] = get_feed_id_from_hex("0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")?;
-    let price = twap_update.get_twap_no_older_than(
-        &Clock::get()?,
-        maximum_age,
-        twap_window_seconds,
-        &feed_id,
-    )?;
-
-    // Sample output:
-    // The TWAP price is (7160106530699 ± 5129162301) * 10^-8
-    msg!("The TWAP price is ({} ± {}) * 10^{}", price.price, price.conf, price.exponent);
-
-    Ok(())
-}
-```
-
-### Fetching and Posting TWAP Updates
-
-To use TWAP updates in your application, you need to fetch them from Hermes and post them to Solana:
-
-#### Fetch TWAP updates from Hermes
-
-Use `HermesClient` from `@pythnetwork/hermes-client` to fetch TWAP updates:
-
-```typescript copy
-import { HermesClient } from "@pythnetwork/hermes-client";
-
-// The URL below is a public Hermes instance operated by the Pyth Data Association.
-// Hermes is also available from several third-party providers listed here:
-// https://docs.pyth.network/price-feeds/api-instances-and-providers/hermes
-const hermesClient = new HermesClient("https://hermes.pyth.network/", {});
-
-// Specify the price feed ID and the TWAP window in seconds (maximum 600 seconds)
-const twapWindowSeconds = 300; // 5 minutes
-const twapUpdateData = await hermesClient.getLatestTwaps(
-  ["0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"], // BTC/USD feed ID
-  twapWindowSeconds,
-  { encoding: "base64" },
-);
-
-// TWAP updates are strings of base64-encoded binary data
-console.log(twapUpdateData.binary.data);
-```
-
-For a complete example of fetching TWAP updates from Hermes, see the [HermesClient example script](https://github.com/pyth-network/pyth-crosschain/blob/main/apps/hermes/client/js/src/examples/HermesClient.ts) in the Pyth crosschain repository.
-
-#### Post TWAP updates to Solana
-
-Use `PythSolanaReceiver` to post the TWAP updates and consume them in your application:
-
-```typescript copy
-import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
-
-// You will need a Connection from @solana/web3.js and a Wallet from @coral-xyz/anchor
-const connection: Connection;
-const wallet: Wallet;
-const pythSolanaReceiver = new PythSolanaReceiver({ connection, wallet });
-
-// Create a transaction builder
-const transactionBuilder = pythSolanaReceiver.newTransactionBuilder({
-  closeUpdateAccounts: false,
-});
-
-// Add the TWAP update to the transaction
-await transactionBuilder.addPostTwapUpdates(twapUpdateData.binary.data);
-
-// Add your application's instructions that use the TWAP update
-await transactionBuilder.addTwapConsumerInstructions(
-  async (
-    getTwapUpdateAccount: (priceFeedId: string) => PublicKey,
-  ): Promise<InstructionWithEphemeralSigners[]> => {
-    // Generate instructions here that use the TWAP updates posted above
-    // getTwapUpdateAccount(<price feed id>) will give you the account for each TWAP update
-    return []; // Replace with your actual instructions
-  },
-);
-
-// Send the instructions
-await pythSolanaReceiver.provider.sendAll(
-  await transactionBuilder.buildVersionedTransactions({
-    computeUnitPriceMicroLamports: 50000,
-  }),
-  { skipPreflight: true },
-);
-```
-
-For a complete example of posting TWAP updates to Solana, see the [post_twap_update.ts example script](https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/solana/sdk/js/pyth_solana_receiver/examples/post_twap_update.ts) in the Pyth crosschain repository.
-
 ## Additional Resources
 
 You may find these additional resources helpful for developing your Solana application.
 
 ### Example Application
 
-See an end-to-end example of using Pyth Network prices in the [SendUSD Solana Demo App](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/solana/send_usd). The app allows users to send a USD-denominated amount of SOL using either spot prices or TWAP prices.
+See an end-to-end example of using Pyth Network prices in the [SendUSD Solana Demo App](https://github.com/pyth-network/pyth-examples/tree/main/price_feeds/solana/send_usd). The app allows users to send a USD-denominated amount of SOL using spot prices.
 It demonstrates how to fetch price data from Hermes from a frontend, post it to the Solana blockchain, and consume it from a smart contract.
 
 The example includes:
 
 - A React frontend for interacting with the contract
-- Solana programs that consumes spot price updates (Price Update Accounts) and time-averaged price updates (TWAP Accounts)
+- Solana programs that consume spot price updates (Price Update Accounts)
 - Complete transaction building for posting and consuming price data
