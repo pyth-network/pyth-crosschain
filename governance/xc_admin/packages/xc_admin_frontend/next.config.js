@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['@pythnetwork/client'],
 
   output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
   turbopack: {
