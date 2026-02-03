@@ -1,6 +1,7 @@
 import type { Preview, Decorator } from "@storybook/react";
 import { useEffect } from "react";
 
+import "../src/v2/v2-theme.css";
 import styles from "./storybook.module.scss";
 import { BodyProviders } from "../src/AppShell/body-providers.jsx";
 import { sans } from "../src/AppShell/fonts";

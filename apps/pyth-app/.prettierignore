@@ -12,3 +12,4 @@ node_modules/
 package.json
 tsconfig*.json
 turbo.json
+src/pyth-app.css
