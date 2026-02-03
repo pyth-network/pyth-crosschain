@@ -9,9 +9,7 @@ export const { classes } = createStyles("v2-dialog", (theme) => ({
     marginTop: theme.spacing(5),
   },
   backdrop: {
-    backgroundColor: theme.resolveThemeColor(
-      theme.colors.background.backdrop,
-    ),
+    backgroundColor: theme.resolveThemeColor(theme.colors.background.backdrop),
     inset: 0,
     position: "fixed",
   },
