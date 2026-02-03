@@ -19,12 +19,7 @@ files and can be used to decode error codes programmatically.
 | 6003       | UnsupportedMessageType                        | This type of message is not supported currently.                              |
 | 6004       | InvalidDataSource                             | The tuple emitter chain, emitter doesn't match one of the valid data sources. |
 | 6005       | InsufficientFunds                             | Funds are insufficient to pay the receiving fee.                              |
-| 6006       | FeedIdMismatch                                | Cannot calculate TWAP, end slot must be greater than start slot.              |
 | 6007       | ExponentMismatch                              | The start and end messages must have the same feed ID.                        |
-| 6008       | InvalidTwapSlots                              | The start and end messages must have the same exponent.                       |
-| 6009       | InvalidTwapStartMessage                       | Start message is not the first update for its timestamp.                      |
-| 6010       | InvalidTwapEndMessage                         | End message is not the first update for its timestamp.                        |
-| 6011       | TwapCalculationOverflow                       | Overflow in TWAP calculation.                                                 |
 | 6012       | WrongWriteAuthority                           | This signer can't write to price update account.                              |
 | 6013       | WrongVaaOwner                                 | The posted VAA account has the wrong owner.                                   |
 | 6014       | DeserializeVaaFailed                          | An error occurred when deserializing the VAA.                                 |
@@ -50,7 +45,6 @@ These errors are returned by the Pyth Solana Receiver SDK when reading price dat
 | Error Code | Error                         | Error Description                                                             |
 | ---------- | ----------------------------- | ----------------------------------------------------------------------------- |
 | 10000      | PriceTooOld                   | This price feed update's age exceeds the requested maximum age.               |
-| 10001      | InvalidWindowSize             | This TWAP update's window size is invalid.                                    |
 | 10002      | MismatchedFeedId              | The price feed update doesn't match the requested feed id.                    |
 | 10003      | InsufficientVerificationLevel | This price feed update has a lower verification level than the one requested. |
 | 10004      | FeedIdMustBe32Bytes           | Feed id must be 32 Bytes, that's 64 hex characters or 66 with a 0x prefix.    |
