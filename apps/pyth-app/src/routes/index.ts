@@ -1,9 +1,9 @@
 const billing = () => "/billing";
-const dashboard = () => "/";
+const dashboard = () => "/dashboard";
 const feeds = () => "/feeds";
 const integration = () => "/integration";
 const metrics = () => "/metrics";
-const home = dashboard;
+const home = () => "/";
 
 export const uiRoutes = {
   billing,

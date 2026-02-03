@@ -27,6 +27,9 @@ catalogs:
     '@base-ui/react':
       specifier: ^1.1.0
       version: 1.1.0
+    '@better-auth/passkey':
+      specifier: ^1.4.18
+      version: 1.4.18
     '@better-builds/ts-duality':
       specifier: ^1.3.2
       version: 1.3.2
@@ -177,6 +180,9 @@ catalogs:
     bcp-47:
       specifier: ^2.1.0
       version: 2.1.0
+    better-auth:
+      specifier: ^1.4.8
+      version: 1.4.18
     bs58:
       specifier: ^6.0.0
       version: 6.0.0
@@ -379,8 +385,8 @@ catalogs:
       specifier: 4.20.6
       version: 4.20.6
     turbo:
-      specifier: ^2.7.4
-      version: 2.7.4
+      specifier: ^2.8.2
+      version: 2.8.2
     type-fest:
       specifier: ^5.2.0
       version: 5.4.0
@@ -447,7 +453,7 @@ importers:
         version: 1.4.2(prettier@3.5.3)
       turbo:
         specifier: 'catalog:'
-        version: 2.7.4
+        version: 2.8.2
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -535,7 +541,7 @@ importers:
         version: 4.10.1
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -698,7 +704,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -801,7 +807,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -883,7 +889,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -932,7 +938,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../packages/jest-config
@@ -1086,7 +1092,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -1246,7 +1252,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../packages/jest-config
@@ -1289,6 +1295,9 @@ importers:
       '@base-ui/react':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@better-auth/passkey':
+        specifier: 'catalog:'
+        version: 1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-auth@1.4.18(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)))(better-call@1.1.8(zod@3.24.4))(nanostores@1.1.0)
       '@next/third-parties':
         specifier: 'catalog:'
         version: 16.1.1(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react@19.2.1)
@@ -1307,6 +1316,9 @@ importers:
       '@react-hookz/web':
         specifier: 'catalog:'
         version: 25.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      better-auth:
+        specifier: 'catalog:'
+        version: 1.4.18(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0))
       change-case:
         specifier: 'catalog:'
         version: 5.4.4
@@ -1355,7 +1367,7 @@ importers:
         version: 4.10.1
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -1503,7 +1515,7 @@ importers:
         version: 4.10.1
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -1696,7 +1708,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/pyth-crosschain':
         specifier: link:..
         version: link:..
@@ -1745,7 +1757,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -2075,7 +2087,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@svgr/webpack':
         specifier: ^6.3.1
         version: 6.5.1
@@ -2118,7 +2130,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -2239,7 +2251,7 @@ importers:
         version: 7.27.1(@babel/core@7.28.6)
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -2366,7 +2378,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/tsconfig':
         specifier: 'catalog:'
         version: 3.1.2(typescript@5.9.3)
@@ -2412,7 +2424,7 @@ importers:
         version: 1.3.2(typescript@5.9.3)
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/jest-config':
         specifier: 'catalog:'
         version: 2.0.2(@babel/core@7.28.6)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.6))(bufferutil@4.0.9)(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3)))(next@15.5.9(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(prettier@3.5.3)(typescript@5.9.3)(utf-8-validate@6.0.3)
@@ -2430,7 +2442,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -2485,7 +2497,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/tsconfig':
         specifier: 'catalog:'
         version: 3.1.2(typescript@5.9.3)
@@ -2513,7 +2525,44 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
+      '@cprussin/prettier-config':
+        specifier: 'catalog:'
+        version: 2.2.2(prettier@3.5.3)
+      '@cprussin/tsconfig':
+        specifier: 'catalog:'
+        version: 3.1.2(typescript@5.9.3)
+      '@pythnetwork/jest-config':
+        specifier: 'workspace:'
+        version: link:../jest-config
+      '@types/jest':
+        specifier: 'catalog:'
+        version: 29.5.14
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.14.0
+      '@types/yargs':
+        specifier: 'catalog:'
+        version: 17.0.33
+      eslint:
+        specifier: 'catalog:'
+        version: 9.23.0(jiti@2.6.1)
+      jest:
+        specifier: 'catalog:'
+        version: 29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))
+
+  packages/webauth:
+    dependencies:
+      '@pythnetwork/shared-lib':
+        specifier: 'workspace:'
+        version: link:../shared-lib
+      better-auth:
+        specifier: 'catalog:'
+        version: 1.4.18(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0))
+    devDependencies:
+      '@cprussin/eslint-config':
+        specifier: 'catalog:'
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@cprussin/prettier-config':
         specifier: 'catalog:'
         version: 2.2.2(prettier@3.5.3)
@@ -2565,7 +2614,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@types/jest':
         specifier: ^29.4.0
         version: 29.5.14
@@ -2596,7 +2645,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@16.18.126)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@16.18.126)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../packages/jest-config
@@ -2701,7 +2750,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../packages/jest-config
@@ -3027,7 +3076,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../packages/jest-config
@@ -3101,7 +3150,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/hermes-client':
         specifier: workspace:*
         version: link:../../../../apps/hermes/client/js
@@ -3150,7 +3199,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/hermes-client':
         specifier: workspace:*
         version: link:../../../../../apps/hermes/client/js
@@ -3199,7 +3248,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../../packages/jest-config
@@ -3232,7 +3281,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@types/node':
         specifier: ^18.11.18
         version: 18.19.86
@@ -3334,7 +3383,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../packages/jest-config
@@ -3392,7 +3441,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../packages/jest-config
@@ -3491,7 +3540,7 @@ importers:
     devDependencies:
       '@cprussin/eslint-config':
         specifier: 'catalog:'
-        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)
+        version: 4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)
       '@ton/core':
         specifier: ^0.59.0
         version: 0.59.1(@ton/crypto@3.3.0)
@@ -5033,12 +5082,43 @@ packages:
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
 
+  '@better-auth/core@1.4.18':
+    resolution: {integrity: sha512-q+awYgC7nkLEBdx2sW0iJjkzgSHlIxGnOpsN1r/O1+a4m7osJNHtfK2mKJSL1I+GfNyIlxJF8WvD/NLuYMpmcg==}
+    peerDependencies:
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      better-call: 1.1.8
+      jose: ^6.1.0
+      kysely: ^0.28.5
+      nanostores: ^1.0.1
+
+  '@better-auth/passkey@1.4.18':
+    resolution: {integrity: sha512-27YfrHCc95fm9e6V3RSN44JZunGHbQd0Lc26ErndPl2bCQ0VMJQi70WNLu6iqEiZYG8YSnxbMOg4/ivk8D7+lA==}
+    peerDependencies:
+      '@better-auth/core': 1.4.18
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      better-auth: 1.4.18
+      better-call: 1.1.8
+      nanostores: ^1.0.1
+
+  '@better-auth/telemetry@1.4.18':
+    resolution: {integrity: sha512-e5rDF8S4j3Um/0LIVATL2in9dL4lfO2fr2v1Wio4qTMRbfxqnUDTa+6SZtwdeJrbc4O+a3c+IyIpjG9Q/6GpfQ==}
+    peerDependencies:
+      '@better-auth/core': 1.4.18
+
+  '@better-auth/utils@0.3.0':
+    resolution: {integrity: sha512-W+Adw6ZA6mgvnSnhOki270rwJ42t4XzSK6YWGF//BbVXL6SwCLWfyzBc1lN2m/4RM28KubdBKQ4X5VMoLRNPQw==}
+
   '@better-builds/ts-duality@1.3.2':
     resolution: {integrity: sha512-OJYIEPE4vlCtC6Q2OeTjDhAQApW3TSOhB37LeueFow05yghsVFbuJ5pExCfs0f2gZvJgS6qxfu5iVd9/KbDGKg==}
     engines: {bun: '>=1.3.0', node: '>=22.14.0'}
     hasBin: true
     peerDependencies:
       typescript: ^5
+
+  '@better-fetch/fetch@1.1.21':
+    resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
 
   '@biomejs/biome@2.3.11':
     resolution: {integrity: sha512-/zt+6qazBWguPG6+eWmiELqO+9jRsMZ/DBU3lfuU2ngtIQYzymocHhKiZRyrbra4aCOoyTg/BmY+6WH5mv9xmQ==}
@@ -6420,6 +6500,9 @@ packages:
     peerDependencies:
       react: '>= 16 || ^19.0.0-rc'
 
+  '@hexagon/base64@1.1.28':
+    resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
+
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
     engines: {node: '>=18.18.0'}
@@ -7023,6 +7106,9 @@ packages:
   '@ledgerhq/logs@6.12.0':
     resolution: {integrity: sha512-ExDoj1QV5eC6TEbMdLUMMk9cfvNKhhv5gXol4SmULRVCx/3iyCPhJ74nsb3S0Vb+/f+XujBEj3vQn5+cwS0fNA==}
 
+  '@levischuck/tiny-cbor@0.2.11':
+    resolution: {integrity: sha512-llBRm4dT4Z89aRsm6u2oEZ8tfwL/2l6BwpZ7JcyieouniDECM5AqNgr/y08zalEIvW3RSK4upYyybDcmjXqAow==}
+
   '@lit-labs/ssr-dom-shim@1.3.0':
     resolution: {integrity: sha512-nQIWonJ6eFAvUUrSlwyHDm/aE8PBDu5kRpL0vHMg6K8fK3Diq1xdPjTnsJSwxABhaZ+5eBi1btQB5ShUTKo4nQ==}
 
@@ -7423,6 +7509,10 @@ packages:
     resolution: {integrity: sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==}
     engines: {node: ^14.21.3 || >=16}
 
+  '@noble/ciphers@2.1.1':
+    resolution: {integrity: sha512-bysYuiVfhxNJuldNXlFEitTVdNnYUc+XNJZd7Qm2a5j1vZHgY+fazadNFWFaMK/2vye0JVlxV3gHmC0WDfAOQw==}
+    engines: {node: '>= 20.19.0'}
+
   '@noble/curves@1.2.0':
     resolution: {integrity: sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==}
 
@@ -7488,6 +7578,10 @@ packages:
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
+
+  '@noble/hashes@2.0.1':
+    resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
+    engines: {node: '>= 20.19.0'}
 
   '@noble/secp256k1@1.6.3':
     resolution: {integrity: sha512-T04e4iTurVy7I8Sw4+c5OSN9/RkPlo1uKxAomtxQNLq8j1uPAqnsqG1bqvY3Jv7c13gyr6dui0zmh/I3+f/JaQ==}
@@ -8033,6 +8127,43 @@ packages:
   '@paulmillr/qr@0.2.1':
     resolution: {integrity: sha512-IHnV6A+zxU7XwmKFinmYjUcwlyK9+xkG3/s9KcQhI9BjQKycrJ1JRO+FbNYPwZiPKW3je/DR0k7w8/gLa5eaxQ==}
     deprecated: 'The package is now available as "qr": npm install qr'
+
+  '@peculiar/asn1-android@2.6.0':
+    resolution: {integrity: sha512-cBRCKtYPF7vJGN76/yG8VbxRcHLPF3HnkoHhKOZeHpoVtbMYfY9ROKtH3DtYUY9m8uI1Mh47PRhHf2hSK3xcSQ==}
+
+  '@peculiar/asn1-cms@2.6.0':
+    resolution: {integrity: sha512-2uZqP+ggSncESeUF/9Su8rWqGclEfEiz1SyU02WX5fUONFfkjzS2Z/F1Li0ofSmf4JqYXIOdCAZqIXAIBAT1OA==}
+
+  '@peculiar/asn1-csr@2.6.0':
+    resolution: {integrity: sha512-BeWIu5VpTIhfRysfEp73SGbwjjoLL/JWXhJ/9mo4vXnz3tRGm+NGm3KNcRzQ9VMVqwYS2RHlolz21svzRXIHPQ==}
+
+  '@peculiar/asn1-ecc@2.6.0':
+    resolution: {integrity: sha512-FF3LMGq6SfAOwUG2sKpPXblibn6XnEIKa+SryvUl5Pik+WR9rmRA3OCiwz8R3lVXnYnyRkSZsSLdml8H3UiOcw==}
+
+  '@peculiar/asn1-pfx@2.6.0':
+    resolution: {integrity: sha512-rtUvtf+tyKGgokHHmZzeUojRZJYPxoD/jaN1+VAB4kKR7tXrnDCA/RAWXAIhMJJC+7W27IIRGe9djvxKgsldCQ==}
+
+  '@peculiar/asn1-pkcs8@2.6.0':
+    resolution: {integrity: sha512-KyQ4D8G/NrS7Fw3XCJrngxmjwO/3htnA0lL9gDICvEQ+GJ+EPFqldcJQTwPIdvx98Tua+WjkdKHSC0/Km7T+lA==}
+
+  '@peculiar/asn1-pkcs9@2.6.0':
+    resolution: {integrity: sha512-b78OQ6OciW0aqZxdzliXGYHASeCvvw5caqidbpQRYW2mBtXIX2WhofNXTEe7NyxTb0P6J62kAAWLwn0HuMF1Fw==}
+
+  '@peculiar/asn1-rsa@2.6.0':
+    resolution: {integrity: sha512-Nu4C19tsrTsCp9fDrH+sdcOKoVfdfoQQ7S3VqjJU6vedR7tY3RLkQ5oguOIB3zFW33USDUuYZnPEQYySlgha4w==}
+
+  '@peculiar/asn1-schema@2.6.0':
+    resolution: {integrity: sha512-xNLYLBFTBKkCzEZIw842BxytQQATQv+lDTCEMZ8C196iJcJJMBUZxrhSTxLaohMyKK8QlzRNTRkUmanucnDSqg==}
+
+  '@peculiar/asn1-x509-attr@2.6.0':
+    resolution: {integrity: sha512-MuIAXFX3/dc8gmoZBkwJWxUWOSvG4MMDntXhrOZpJVMkYX+MYc/rUAU2uJOved9iJEoiUx7//3D8oG83a78UJA==}
+
+  '@peculiar/asn1-x509@2.6.0':
+    resolution: {integrity: sha512-uzYbPEpoQiBoTq0/+jZtpM6Gq6zADBx+JNFP3yqRgziWBxQ/Dt/HcuvRfm9zJTPdRcBqPNdaRHTVwpyiq6iNMA==}
+
+  '@peculiar/x509@1.14.3':
+    resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
+    engines: {node: '>=20.0.0'}
 
   '@phosphor-icons/react@2.1.7':
     resolution: {integrity: sha512-g2e2eVAn1XG2a+LI09QU3IORLhnFNAFkNbo2iwbX6NOKSLOwvEMmTa7CgOzEbgNWR47z8i8kwjdvYZ5fkGx1mQ==}
@@ -9733,6 +9864,13 @@ packages:
 
   '@sideway/pinpoint@2.0.0':
     resolution: {integrity: sha512-RNiOoTPkptFtSVzQevY/yWtZwf/RxyVnPy/OcA9HBM3MlGDnBEYL5B41H0MTn0Uec8Hi+2qUtTfG2WWZBmMejQ==}
+
+  '@simplewebauthn/browser@13.2.2':
+    resolution: {integrity: sha512-FNW1oLQpTJyqG5kkDg5ZsotvWgmBaC6jCHR7Ej0qUNep36Wl9tj2eZu7J5rP+uhXgHaLk+QQ3lqcw2vS5MX1IA==}
+
+  '@simplewebauthn/server@13.2.2':
+    resolution: {integrity: sha512-HcWLW28yTMGXpwE9VLx9J+N2KEUaELadLrkPEEI9tpI5la70xNEVEsu/C+m3u7uoq4FulLqZQhgBCzR9IZhFpA==}
+    engines: {node: '>=20.0.0'}
 
   '@sinclair/typebox@0.25.24':
     resolution: {integrity: sha512-XJfwUVUKDHF5ugKwIcxEgc9k8b7HbznCp6eUfWgu710hMPNIO4aw4/zB5RogDQz8nd6gyCDpU9O/m6qYEWY6yQ==}
@@ -13111,6 +13249,10 @@ packages:
   asn1@0.2.6:
     resolution: {integrity: sha512-ix/FxPn0MDjeyJ7i/yoHGFt/EX6LyNbxSEhPPXODPL+KB0VPk86UYfL0lMdy+KCnv+fmvIzySwaK5COwqVbWTQ==}
 
+  asn1js@3.0.7:
+    resolution: {integrity: sha512-uLvq6KJu04qoQM6gvBfKFjlh6Gl0vOKQuR5cJMDHQkmwfMOQeN3F3SHCv9SNYSL+CRoHvOGFfllDlVz03GQjvQ==}
+    engines: {node: '>=12.0.0'}
+
   assert-plus@1.0.0:
     resolution: {integrity: sha512-NfJ4UzBCcQGLDlQq7nHxH+tv3kyZ0hHQqF5BO6J7tNJeP5do1llPr8dZ8zHonfhAu0PHAdMkSo+8o0wxg9lZWw==}
     engines: {node: '>=0.8'}
@@ -13397,6 +13539,76 @@ packages:
 
   bech32@2.0.0:
     resolution: {integrity: sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==}
+
+  better-auth@1.4.18:
+    resolution: {integrity: sha512-bnyifLWBPcYVltH3RhS7CM62MoelEqC6Q+GnZwfiDWNfepXoQZBjEvn4urcERC7NTKgKq5zNBM8rvPvRBa6xcg==}
+    peerDependencies:
+      '@lynx-js/react': '*'
+      '@prisma/client': ^5.0.0 || ^6.0.0 || ^7.0.0
+      '@sveltejs/kit': ^2.0.0
+      '@tanstack/react-start': ^1.0.0
+      '@tanstack/solid-start': ^1.0.0
+      better-sqlite3: ^12.0.0
+      drizzle-kit: '>=0.31.4'
+      drizzle-orm: '>=0.41.0'
+      mongodb: ^6.0.0 || ^7.0.0
+      mysql2: ^3.0.0
+      next: ^14.0.0 || ^15.0.0 || ^16.0.0
+      pg: ^8.0.0
+      prisma: ^5.0.0 || ^6.0.0 || ^7.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      solid-js: ^1.0.0
+      svelte: ^4.0.0 || ^5.0.0
+      vitest: ^2.0.0 || ^3.0.0 || ^4.0.0
+      vue: ^3.0.0
+    peerDependenciesMeta:
+      '@lynx-js/react':
+        optional: true
+      '@prisma/client':
+        optional: true
+      '@sveltejs/kit':
+        optional: true
+      '@tanstack/react-start':
+        optional: true
+      '@tanstack/solid-start':
+        optional: true
+      better-sqlite3:
+        optional: true
+      drizzle-kit:
+        optional: true
+      drizzle-orm:
+        optional: true
+      mongodb:
+        optional: true
+      mysql2:
+        optional: true
+      next:
+        optional: true
+      pg:
+        optional: true
+      prisma:
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vitest:
+        optional: true
+      vue:
+        optional: true
+
+  better-call@1.1.8:
+    resolution: {integrity: sha512-XMQ2rs6FNXasGNfMjzbyroSwKwYbZ/T3IxruSS6U2MJRsSYh3wYtG3o6H00ZlKZ/C/UPOAD97tqgQJNsxyeTXw==}
+    peerDependencies:
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   big-integer@1.6.36:
     resolution: {integrity: sha512-t70bfa7HYEA1D9idDbmuv7YbsbVkQ+Hp+8KFSul4aE5e/i1bjCNIRYJZlA8Q8p0r9T8cF/RVvwUgRA//FydEyg==}
@@ -17689,6 +17901,9 @@ packages:
   jose@5.9.6:
     resolution: {integrity: sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ==}
 
+  jose@6.1.3:
+    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -17929,6 +18144,10 @@ packages:
 
   known-css-properties@0.35.0:
     resolution: {integrity: sha512-a/RAk2BfKk+WFGhhOCAYqSiFLc34k8Mt/6NWRI4joER0EYUzXIcFivjjnoD3+XU1DggLn/tZc3DOAgke7l8a4A==}
+
+  kysely@0.28.11:
+    resolution: {integrity: sha512-zpGIFg0HuoC893rIjYX1BETkVWdDnzTzF5e0kWXJFg5lE0k1/LfNWBejrcnOFu8Q2Rfq/hTDTU7XLUM8QOrpzg==}
+    engines: {node: '>=20.0.0'}
 
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
@@ -18903,6 +19122,10 @@ packages:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+
+  nanostores@1.1.0:
+    resolution: {integrity: sha512-yJBmDJr18xy47dbNVlHcgdPrulSn1nhSE6Ns9vTG+Nx9VPT6iV1MD6aQFp/t52zpf82FhLLTXAXr30NuCnxvwA==}
+    engines: {node: ^20.0.0 || >=22.0.0}
 
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
@@ -20080,6 +20303,13 @@ packages:
   pushdata-bitcoin@1.0.1:
     resolution: {integrity: sha512-hw7rcYTJRAl4olM8Owe8x0fBuJJ+WGbMhQuLWOXEMN3PxPCKQHRkhfL+XG0+iXUmSHjkMmb3Ba55Mt21cZc9kQ==}
 
+  pvtsutils@1.3.6:
+    resolution: {integrity: sha512-PLgQXQ6H2FWCaeRak8vvk1GW462lMxB5s3Jm673N82zI4vqtVUPuZdffdZbPDFRoU8kAhItWFtPCWiPpp4/EDg==}
+
+  pvutils@1.1.5:
+    resolution: {integrity: sha512-KTqnxsgGiQ6ZAzZCVlJH5eOjSnvlyEgx1m8bkRJfOhmGRqfo5KLvmAlACQkrjEtOQ4B7wF9TdSLIs9O90MX9xA==}
+    engines: {node: '>=16.0.0'}
+
   qr.js@0.0.0:
     resolution: {integrity: sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==}
 
@@ -20493,6 +20723,9 @@ packages:
     resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
 
+  reflect-metadata@0.2.2:
+    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
+
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
     engines: {node: '>= 0.4'}
@@ -20779,6 +21012,9 @@ packages:
     resolution: {integrity: sha512-3GuObel8h7Kqdjt0gxkEzaifHTqLVW56Y/bjN7PSQtkKr0w3V/QYSdt6QWYtd7A1xUtYQigtdUfgj1RvWVtorw==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
+
+  rou3@0.7.12:
+    resolution: {integrity: sha512-iFE4hLDuloSWcD7mjdCDhx2bKcIsYbtOTpfH5MHHLSKMOUyjqQXTeZVa289uuwEGEKFoE/BAPbhaU4B774nceg==}
 
   rpc-websockets@7.11.0:
     resolution: {integrity: sha512-IkLYjayPv6Io8C/TdCL5gwgzd1hFz2vmBZrjMw/SPEXo51ETOhnzgS4Qy5GWi2JQN7HKHa66J3+2mv0fgNh/7w==}
@@ -22103,44 +22339,48 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
+  tsyringe@4.10.0:
+    resolution: {integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==}
+    engines: {node: '>= 6.0.0'}
+
   tty-browserify@0.0.1:
     resolution: {integrity: sha512-C3TaO7K81YvjCgQH9Q1S3R3P3BtN3RIM8n+OvX4il1K1zgE8ZhI0op7kClgkxtutIE8hQrcrHBXvIheqKUUCxw==}
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
 
-  turbo-darwin-64@2.7.4:
-    resolution: {integrity: sha512-xDR30ltfkSsRfGzABBckvl1nz1cZ3ssTujvdj+TPwOweeDRvZ0e06t5DS0rmRBvyKpgGs42K/EK6Mn2qLlFY9A==}
+  turbo-darwin-64@2.8.2:
+    resolution: {integrity: sha512-sumREbxABHxrWIwlK67sZEaDRE7+BFSU8gZj8OK+X7dLpgW1vTjsHzTECB5m2qzWlXHRdueAk8sKv7wyHqv9jw==}
     cpu: [x64]
     os: [darwin]
 
-  turbo-darwin-arm64@2.7.4:
-    resolution: {integrity: sha512-P7sjqXtOL/+nYWPvcDGWhi8wf8M8mZHHB8XEzw2VX7VJrS8IGHyJHGD1AYfDvhAEcr7pnk3gGifz3/xyhI655w==}
+  turbo-darwin-arm64@2.8.2:
+    resolution: {integrity: sha512-J3zoDkf+k9yozdJmdNUOc9YfIoFs01Zm+GgNyfY8pU6siMWlPlgdt+3ezbIMeOns6CAQUzUcqo9awowykAS9Vw==}
     cpu: [arm64]
     os: [darwin]
 
-  turbo-linux-64@2.7.4:
-    resolution: {integrity: sha512-GofFOxRO/IhG8BcPyMSSB3Y2+oKQotsaYbHxL9yD6JPb20/o35eo+zUSyazOtilAwDHnak5dorAJFoFU8MIg2A==}
+  turbo-linux-64@2.8.2:
+    resolution: {integrity: sha512-iVYUM+tyNAPd34HhMSjYWi7OSXnxnDhPjFKVvzSb7cZmQS6GlDSr7MALc5Wt/zn6/7jm1FuS7c5Wffg9WD2e1Q==}
     cpu: [x64]
     os: [linux]
 
-  turbo-linux-arm64@2.7.4:
-    resolution: {integrity: sha512-+RQKgNjksVPxYAyAgmDV7w/1qj++qca+nSNTAOKGOfJiDtSvRKoci89oftJ6anGs00uamLKVEQ712TI/tfNAIw==}
+  turbo-linux-arm64@2.8.2:
+    resolution: {integrity: sha512-v7FJAHUhY2nSEE87mr5ZBO51GmsFKp0EmK2P6rO+vGimCPmnGlLNj1at/eVcnp/cHRDnJj8J+b3QHWdUzTPTkg==}
     cpu: [arm64]
     os: [linux]
 
-  turbo-windows-64@2.7.4:
-    resolution: {integrity: sha512-rfak1+g+ON3czs1mDYsCS4X74ZmK6gOgRQTXjDICtzvR4o61paqtgAYtNPofcVsMWeF4wvCajSeoAkkeAnQ1kg==}
+  turbo-windows-64@2.8.2:
+    resolution: {integrity: sha512-d1X+U5JLhyAse0VXM0rpmu6iLbBTAvjwc7MX0PBkEaTz2aZQqOHBpQkkrxia7bZzRNbfXHbGSqY/vbE3GSFWzw==}
     cpu: [x64]
     os: [win32]
 
-  turbo-windows-arm64@2.7.4:
-    resolution: {integrity: sha512-1ZgBNjNRbDu/fPeqXuX9i26x3CJ/Y1gcwUpQ+Vp7kN9Un6RZ9kzs164f/knrjcu5E+szCRexVjRSJay1k5jApA==}
+  turbo-windows-arm64@2.8.2:
+    resolution: {integrity: sha512-fMln07/l/5kscs79V0kTwdf17gkZW+E2iyqnzz691gLM7Jf6la0afd3IMsNtLzUh+dxKIFCswNiFVmHe8g+2jA==}
     cpu: [arm64]
     os: [win32]
 
-  turbo@2.7.4:
-    resolution: {integrity: sha512-bkO4AddmDishzJB2ze7aYYPaejMoJVfS0XnaR6RCdXFOY8JGJfQE+l9fKiV7uDPa5Ut44gmOWJL3894CIMeH9g==}
+  turbo@2.8.2:
+    resolution: {integrity: sha512-biW/S5hENCcJ5vxxJszCozEKcXtwGK29vxXzNbdfY/0q7QpYTCoyKdj0e8k/ADA6qkqaKDJwgrrHbC8Vy6wszg==}
     hasBin: true
 
   tweetnacl-util@0.15.1:
@@ -26501,6 +26741,54 @@ snapshots:
 
   '@bcoe/v8-coverage@0.2.3': {}
 
+  '@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)':
+    dependencies:
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      '@standard-schema/spec': 1.1.0
+      better-call: 1.1.8(zod@3.24.4)
+      jose: 6.1.3
+      kysely: 0.28.11
+      nanostores: 1.1.0
+      zod: 4.3.5
+
+  '@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)':
+    dependencies:
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      '@standard-schema/spec': 1.1.0
+      better-call: 1.1.8(zod@4.3.5)
+      jose: 6.1.3
+      kysely: 0.28.11
+      nanostores: 1.1.0
+      zod: 4.3.5
+
+  '@better-auth/passkey@1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-auth@1.4.18(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)))(better-call@1.1.8(zod@3.24.4))(nanostores@1.1.0)':
+    dependencies:
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      '@simplewebauthn/browser': 13.2.2
+      '@simplewebauthn/server': 13.2.2
+      better-auth: 1.4.18(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0))
+      better-call: 1.1.8(zod@3.24.4)
+      nanostores: 1.1.0
+      zod: 4.3.5
+
+  '@better-auth/telemetry@1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))':
+    dependencies:
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+
+  '@better-auth/telemetry@1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))':
+    dependencies:
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+
+  '@better-auth/utils@0.3.0': {}
+
   '@better-builds/ts-duality@1.3.2(typescript@5.9.3)':
     dependencies:
       '@swc/core': 1.15.10
@@ -26519,6 +26807,8 @@ snapshots:
       prettier: 3.5.3
     transitivePeerDependencies:
       - '@swc/helpers'
+
+  '@better-fetch/fetch@1.1.21': {}
 
   '@biomejs/biome@2.3.11':
     optionalDependencies:
@@ -27306,14 +27596,14 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27343,14 +27633,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27380,14 +27670,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27417,14 +27707,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27454,14 +27744,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@16.18.126)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@16.18.126)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@16.18.126)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@16.18.126)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27491,14 +27781,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@18.19.86)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@18.19.86)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27528,14 +27818,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@20.17.30)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@20.17.30)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27565,14 +27855,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.0)(@types/node@22.14.0)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -27602,14 +27892,14 @@ snapshots:
       - turbo
       - typescript
 
-  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.7.4)(typescript@5.9.3)':
+  '@cprussin/eslint-config@4.0.2(@testing-library/dom@10.4.1)(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3))(turbo@2.8.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/eslintrc': 3.3.1
       '@eslint/js': 9.23.0
       '@next/eslint-plugin-next': 15.2.4
       eslint: 9.23.0(jiti@2.6.1)
       eslint-config-prettier: 10.1.1(eslint@9.23.0(jiti@2.6.1))
-      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
+      eslint-config-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
       eslint-plugin-import: 2.31.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))
       eslint-plugin-jest: 28.11.0(@typescript-eslint/eslint-plugin@8.29.0(@typescript-eslint/parser@8.29.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(jest@29.7.0(@types/node@22.14.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@22.14.0)(typescript@5.9.3)))(typescript@5.9.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@10.4.1)(eslint@9.23.0(jiti@2.6.1))
@@ -29443,6 +29733,8 @@ snapshots:
     dependencies:
       react: 19.2.1
 
+  '@hexagon/base64@1.1.28': {}
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -30696,6 +30988,8 @@ snapshots:
 
   '@ledgerhq/logs@6.12.0': {}
 
+  '@levischuck/tiny-cbor@0.2.11': {}
+
   '@lit-labs/ssr-dom-shim@1.3.0': {}
 
   '@lit/reactive-element@1.6.3':
@@ -31535,6 +31829,8 @@ snapshots:
 
   '@noble/ciphers@1.3.0': {}
 
+  '@noble/ciphers@2.1.1': {}
+
   '@noble/curves@1.2.0':
     dependencies:
       '@noble/hashes': 1.3.2
@@ -31584,6 +31880,8 @@ snapshots:
   '@noble/hashes@1.7.1': {}
 
   '@noble/hashes@1.8.0': {}
+
+  '@noble/hashes@2.0.1': {}
 
   '@noble/secp256k1@1.6.3': {}
 
@@ -32280,6 +32578,102 @@ snapshots:
       bs58: 5.0.0
 
   '@paulmillr/qr@0.2.1': {}
+
+  '@peculiar/asn1-android@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-cms@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      '@peculiar/asn1-x509-attr': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-csr@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-ecc@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-pfx@2.6.0':
+    dependencies:
+      '@peculiar/asn1-cms': 2.6.0
+      '@peculiar/asn1-pkcs8': 2.6.0
+      '@peculiar/asn1-rsa': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-pkcs8@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-pkcs9@2.6.0':
+    dependencies:
+      '@peculiar/asn1-cms': 2.6.0
+      '@peculiar/asn1-pfx': 2.6.0
+      '@peculiar/asn1-pkcs8': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      '@peculiar/asn1-x509-attr': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-rsa@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-schema@2.6.0':
+    dependencies:
+      asn1js: 3.0.7
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-x509-attr@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      asn1js: 3.0.7
+      tslib: 2.8.1
+
+  '@peculiar/asn1-x509@2.6.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.6.0
+      asn1js: 3.0.7
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
+
+  '@peculiar/x509@1.14.3':
+    dependencies:
+      '@peculiar/asn1-cms': 2.6.0
+      '@peculiar/asn1-csr': 2.6.0
+      '@peculiar/asn1-ecc': 2.6.0
+      '@peculiar/asn1-pkcs9': 2.6.0
+      '@peculiar/asn1-rsa': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      pvtsutils: 1.3.6
+      reflect-metadata: 0.2.2
+      tslib: 2.8.1
+      tsyringe: 4.10.0
 
   '@phosphor-icons/react@2.1.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
@@ -33705,7 +34099,7 @@ snapshots:
 
   '@react-native/babel-plugin-codegen@0.78.2(@babel/preset-env@7.29.0(@babel/core@7.28.6))':
     dependencies:
-      '@babel/traverse': 7.28.6(supports-color@5.5.0)
+      '@babel/traverse': 7.29.0
       '@react-native/codegen': 0.78.2(@babel/preset-env@7.29.0(@babel/core@7.28.6))
     transitivePeerDependencies:
       - '@babel/preset-env'
@@ -33719,40 +34113,40 @@ snapshots:
       '@babel/plugin-syntax-export-default-from': 7.25.9(@babel/core@7.28.6)
       '@babel/plugin-syntax-nullish-coalescing-operator': 7.8.3(@babel/core@7.28.6)
       '@babel/plugin-syntax-optional-chaining': 7.8.3(@babel/core@7.28.6)
-      '@babel/plugin-transform-arrow-functions': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-async-generator-functions': 7.26.8(@babel/core@7.28.6)
-      '@babel/plugin-transform-async-to-generator': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-block-scoping': 7.27.0(@babel/core@7.28.6)
-      '@babel/plugin-transform-class-properties': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-classes': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-computed-properties': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-destructuring': 7.25.9(@babel/core@7.28.6)
+      '@babel/plugin-transform-arrow-functions': 7.27.1(@babel/core@7.28.6)
+      '@babel/plugin-transform-async-generator-functions': 7.29.0(@babel/core@7.28.6)
+      '@babel/plugin-transform-async-to-generator': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-block-scoping': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-class-properties': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-classes': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-computed-properties': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-destructuring': 7.28.5(@babel/core@7.28.6)
       '@babel/plugin-transform-flow-strip-types': 7.26.5(@babel/core@7.28.6)
-      '@babel/plugin-transform-for-of': 7.26.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-function-name': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-literals': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-logical-assignment-operators': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-modules-commonjs': 7.27.1(@babel/core@7.28.6)
-      '@babel/plugin-transform-named-capturing-groups-regex': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-nullish-coalescing-operator': 7.26.6(@babel/core@7.28.6)
-      '@babel/plugin-transform-numeric-separator': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-object-rest-spread': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-optional-catch-binding': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-optional-chaining': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-parameters': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-private-methods': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-private-property-in-object': 7.25.9(@babel/core@7.28.6)
+      '@babel/plugin-transform-for-of': 7.27.1(@babel/core@7.28.6)
+      '@babel/plugin-transform-function-name': 7.27.1(@babel/core@7.28.6)
+      '@babel/plugin-transform-literals': 7.27.1(@babel/core@7.28.6)
+      '@babel/plugin-transform-logical-assignment-operators': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-modules-commonjs': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-named-capturing-groups-regex': 7.29.0(@babel/core@7.28.6)
+      '@babel/plugin-transform-nullish-coalescing-operator': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-numeric-separator': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-object-rest-spread': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-optional-catch-binding': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-optional-chaining': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-parameters': 7.27.7(@babel/core@7.28.6)
+      '@babel/plugin-transform-private-methods': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-private-property-in-object': 7.28.6(@babel/core@7.28.6)
       '@babel/plugin-transform-react-display-name': 7.25.9(@babel/core@7.28.6)
       '@babel/plugin-transform-react-jsx': 7.25.9(@babel/core@7.28.6)
       '@babel/plugin-transform-react-jsx-self': 7.25.9(@babel/core@7.28.6)
       '@babel/plugin-transform-react-jsx-source': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-regenerator': 7.27.0(@babel/core@7.28.6)
+      '@babel/plugin-transform-regenerator': 7.29.0(@babel/core@7.28.6)
       '@babel/plugin-transform-runtime': 7.26.10(@babel/core@7.28.6)
-      '@babel/plugin-transform-shorthand-properties': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-spread': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-sticky-regex': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-typescript': 7.27.1(@babel/core@7.28.6)
-      '@babel/plugin-transform-unicode-regex': 7.25.9(@babel/core@7.28.6)
+      '@babel/plugin-transform-shorthand-properties': 7.27.1(@babel/core@7.28.6)
+      '@babel/plugin-transform-spread': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-sticky-regex': 7.27.1(@babel/core@7.28.6)
+      '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-unicode-regex': 7.27.1(@babel/core@7.28.6)
       '@babel/template': 7.28.6
       '@react-native/babel-plugin-codegen': 0.78.2(@babel/preset-env@7.29.0(@babel/core@7.28.6))
       babel-plugin-syntax-hermes-parser: 0.25.1
@@ -33764,7 +34158,7 @@ snapshots:
 
   '@react-native/codegen@0.78.2(@babel/preset-env@7.29.0(@babel/core@7.28.6))':
     dependencies:
-      '@babel/parser': 7.28.6
+      '@babel/parser': 7.29.0
       '@babel/preset-env': 7.29.0(@babel/core@7.28.6)
       glob: 7.2.3
       hermes-parser: 0.25.1
@@ -34630,6 +35024,19 @@ snapshots:
   '@sideway/formula@3.0.1': {}
 
   '@sideway/pinpoint@2.0.0': {}
+
+  '@simplewebauthn/browser@13.2.2': {}
+
+  '@simplewebauthn/server@13.2.2':
+    dependencies:
+      '@hexagon/base64': 1.1.28
+      '@levischuck/tiny-cbor': 0.2.11
+      '@peculiar/asn1-android': 2.6.0
+      '@peculiar/asn1-ecc': 2.6.0
+      '@peculiar/asn1-rsa': 2.6.0
+      '@peculiar/asn1-schema': 2.6.0
+      '@peculiar/asn1-x509': 2.6.0
+      '@peculiar/x509': 1.14.3
 
   '@sinclair/typebox@0.25.24': {}
 
@@ -37203,7 +37610,7 @@ snapshots:
       ipfs-unixfs-importer: 9.0.10(encoding@0.1.13)
       json-bigint: 1.0.0
       path-normalize: 6.0.13
-      zod: 3.24.4
+      zod: 3.25.76
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -40296,6 +40703,12 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
+  asn1js@3.0.7:
+    dependencies:
+      pvtsutils: 1.3.6
+      pvutils: 1.1.5
+      tslib: 2.8.1
+
   assert-plus@1.0.0: {}
 
   assert@2.1.0:
@@ -40801,6 +41214,64 @@ snapshots:
   bech32@1.1.4: {}
 
   bech32@2.0.0: {}
+
+  better-auth@1.4.18(next@16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)):
+    dependencies:
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/telemetry': 1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.24.4))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      '@noble/ciphers': 2.1.1
+      '@noble/hashes': 2.0.1
+      better-call: 1.1.8(zod@4.3.5)
+      defu: 6.1.4
+      jose: 6.1.3
+      kysely: 0.28.11
+      nanostores: 1.1.0
+      zod: 4.3.5
+    optionalDependencies:
+      next: 16.1.1(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
+      vitest: 3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)
+
+  better-auth@1.4.18(next@16.1.1(@opentelemetry/api@1.9.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(vitest@3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)):
+    dependencies:
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/telemetry': 1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.5))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      '@noble/ciphers': 2.1.1
+      '@noble/hashes': 2.0.1
+      better-call: 1.1.8(zod@4.3.5)
+      defu: 6.1.4
+      jose: 6.1.3
+      kysely: 0.28.11
+      nanostores: 1.1.0
+      zod: 4.3.5
+    optionalDependencies:
+      next: 16.1.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(sass@1.86.1)
+      react: 19.2.1
+      react-dom: 19.2.1(react@19.2.1)
+      vitest: 3.0.9(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(jiti@2.6.1)(jsdom@20.0.3(bufferutil@4.0.9)(utf-8-validate@6.0.3))(lightningcss@1.29.2)(sass@1.86.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.0)
+
+  better-call@1.1.8(zod@3.24.4):
+    dependencies:
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      rou3: 0.7.12
+      set-cookie-parser: 2.7.1
+    optionalDependencies:
+      zod: 3.24.4
+
+  better-call@1.1.8(zod@4.3.5):
+    dependencies:
+      '@better-auth/utils': 0.3.0
+      '@better-fetch/fetch': 1.1.21
+      rou3: 0.7.12
+      set-cookie-parser: 2.7.1
+    optionalDependencies:
+      zod: 4.3.5
 
   big-integer@1.6.36: {}
 
@@ -43094,11 +43565,11 @@ snapshots:
     dependencies:
       eslint: 8.56.0
 
-  eslint-config-turbo@2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4):
+  eslint-config-turbo@2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2):
     dependencies:
       eslint: 9.23.0(jiti@2.6.1)
-      eslint-plugin-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4)
-      turbo: 2.7.4
+      eslint-plugin-turbo: 2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2)
+      turbo: 2.8.2
 
   eslint-import-resolver-node@0.3.9:
     dependencies:
@@ -43509,11 +43980,11 @@ snapshots:
       '@microsoft/tsdoc': 0.15.1
       '@microsoft/tsdoc-config': 0.17.1
 
-  eslint-plugin-turbo@2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.7.4):
+  eslint-plugin-turbo@2.4.4(eslint@9.23.0(jiti@2.6.1))(turbo@2.8.2):
     dependencies:
       dotenv: 16.0.3
       eslint: 9.23.0(jiti@2.6.1)
-      turbo: 2.7.4
+      turbo: 2.8.2
 
   eslint-plugin-unicorn@57.0.0(eslint@9.23.0(jiti@2.6.1)):
     dependencies:
@@ -47212,6 +47683,8 @@ snapshots:
 
   jose@5.9.6: {}
 
+  jose@6.1.3: {}
+
   joycon@3.1.1: {}
 
   js-base64@3.7.7: {}
@@ -47260,14 +47733,14 @@ snapshots:
   jscodeshift@17.3.0(@babel/preset-env@7.29.0(@babel/core@7.28.6)):
     dependencies:
       '@babel/core': 7.28.6
-      '@babel/parser': 7.28.6
-      '@babel/plugin-transform-class-properties': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-modules-commonjs': 7.27.1(@babel/core@7.28.6)
-      '@babel/plugin-transform-nullish-coalescing-operator': 7.26.6(@babel/core@7.28.6)
-      '@babel/plugin-transform-optional-chaining': 7.25.9(@babel/core@7.28.6)
-      '@babel/plugin-transform-private-methods': 7.25.9(@babel/core@7.28.6)
+      '@babel/parser': 7.29.0
+      '@babel/plugin-transform-class-properties': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-modules-commonjs': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-nullish-coalescing-operator': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-optional-chaining': 7.28.6(@babel/core@7.28.6)
+      '@babel/plugin-transform-private-methods': 7.28.6(@babel/core@7.28.6)
       '@babel/preset-flow': 7.25.9(@babel/core@7.28.6)
-      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.6)
+      '@babel/preset-typescript': 7.28.5(@babel/core@7.28.6)
       '@babel/register': 7.25.9(@babel/core@7.28.6)
       flow-parser: 0.266.1
       graceful-fs: 4.2.11
@@ -47508,6 +47981,8 @@ snapshots:
   kleur@3.0.3: {}
 
   known-css-properties@0.35.0: {}
+
+  kysely@0.28.11: {}
 
   language-subtag-registry@0.3.23: {}
 
@@ -48154,9 +48629,9 @@ snapshots:
 
   metro-source-map@0.81.4:
     dependencies:
-      '@babel/traverse': 7.28.6(supports-color@5.5.0)
-      '@babel/traverse--for-generate-function-map': '@babel/traverse@7.28.6(supports-color@5.5.0)'
-      '@babel/types': 7.28.6
+      '@babel/traverse': 7.29.0
+      '@babel/traverse--for-generate-function-map': '@babel/traverse@7.29.0'
+      '@babel/types': 7.29.0
       flow-enums-runtime: 0.0.6
       invariant: 2.2.4
       metro-symbolicate: 0.81.4
@@ -48181,9 +48656,9 @@ snapshots:
   metro-transform-plugins@0.81.4:
     dependencies:
       '@babel/core': 7.28.6
-      '@babel/generator': 7.28.6
+      '@babel/generator': 7.29.0
       '@babel/template': 7.28.6
-      '@babel/traverse': 7.28.6(supports-color@5.5.0)
+      '@babel/traverse': 7.29.0
       flow-enums-runtime: 0.0.6
       nullthrows: 1.1.1
     transitivePeerDependencies:
@@ -48192,9 +48667,9 @@ snapshots:
   metro-transform-worker@0.81.4(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
       '@babel/core': 7.28.6
-      '@babel/generator': 7.28.6
-      '@babel/parser': 7.28.6
-      '@babel/types': 7.28.6
+      '@babel/generator': 7.29.0
+      '@babel/parser': 7.29.0
+      '@babel/types': 7.29.0
       flow-enums-runtime: 0.0.6
       metro: 0.81.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       metro-babel-transformer: 0.81.4
@@ -48211,13 +48686,13 @@ snapshots:
 
   metro@0.81.4(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
-      '@babel/code-frame': 7.28.6
+      '@babel/code-frame': 7.29.0
       '@babel/core': 7.28.6
-      '@babel/generator': 7.28.6
-      '@babel/parser': 7.28.6
+      '@babel/generator': 7.29.0
+      '@babel/parser': 7.29.0
       '@babel/template': 7.28.6
-      '@babel/traverse': 7.28.6(supports-color@5.5.0)
-      '@babel/types': 7.28.6
+      '@babel/traverse': 7.29.0
+      '@babel/types': 7.29.0
       accepts: 1.3.8
       chalk: 4.1.2
       ci-info: 2.0.0
@@ -48851,6 +49326,8 @@ snapshots:
   nanoid@3.3.1: {}
 
   nanoid@3.3.11: {}
+
+  nanostores@1.1.0: {}
 
   napi-build-utils@2.0.0: {}
 
@@ -50176,7 +50653,7 @@ snapshots:
     dependencies:
       fill-keys: 1.0.2
       module-not-found-error: 1.0.1
-      resolve: 1.22.10
+      resolve: 1.22.11
 
   prr@1.0.1: {}
 
@@ -50214,6 +50691,12 @@ snapshots:
   pushdata-bitcoin@1.0.1:
     dependencies:
       bitcoin-ops: 1.4.1
+
+  pvtsutils@1.3.6:
+    dependencies:
+      tslib: 2.8.1
+
+  pvutils@1.1.5: {}
 
   qr.js@0.0.0: {}
 
@@ -50926,6 +51409,8 @@ snapshots:
     dependencies:
       redis-errors: 1.2.0
 
+  reflect-metadata@0.2.2: {}
+
   reflect.getprototypeof@1.0.10:
     dependencies:
       call-bind: 1.0.8
@@ -51157,7 +51642,7 @@ snapshots:
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
       module-details-from-path: 1.0.3
-      resolve: 1.22.10
+      resolve: 1.22.11
     transitivePeerDependencies:
       - supports-color
 
@@ -51360,6 +51845,8 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.52.5
       '@rollup/rollup-win32-x64-msvc': 4.52.5
       fsevents: 2.3.3
+
+  rou3@0.7.12: {}
 
   rpc-websockets@7.11.0:
     dependencies:
@@ -53371,38 +53858,42 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
+  tsyringe@4.10.0:
+    dependencies:
+      tslib: 1.14.1
+
   tty-browserify@0.0.1: {}
 
   tunnel-agent@0.6.0:
     dependencies:
       safe-buffer: 5.2.1
 
-  turbo-darwin-64@2.7.4:
+  turbo-darwin-64@2.8.2:
     optional: true
 
-  turbo-darwin-arm64@2.7.4:
+  turbo-darwin-arm64@2.8.2:
     optional: true
 
-  turbo-linux-64@2.7.4:
+  turbo-linux-64@2.8.2:
     optional: true
 
-  turbo-linux-arm64@2.7.4:
+  turbo-linux-arm64@2.8.2:
     optional: true
 
-  turbo-windows-64@2.7.4:
+  turbo-windows-64@2.8.2:
     optional: true
 
-  turbo-windows-arm64@2.7.4:
+  turbo-windows-arm64@2.8.2:
     optional: true
 
-  turbo@2.7.4:
+  turbo@2.8.2:
     optionalDependencies:
-      turbo-darwin-64: 2.7.4
-      turbo-darwin-arm64: 2.7.4
-      turbo-linux-64: 2.7.4
-      turbo-linux-arm64: 2.7.4
-      turbo-windows-64: 2.7.4
-      turbo-windows-arm64: 2.7.4
+      turbo-darwin-64: 2.8.2
+      turbo-darwin-arm64: 2.8.2
+      turbo-linux-64: 2.8.2
+      turbo-linux-arm64: 2.8.2
+      turbo-windows-64: 2.8.2
+      turbo-windows-arm64: 2.8.2
 
   tweetnacl-util@0.15.1: {}
 
@@ -54978,7 +55469,7 @@ snapshots:
       util: 0.12.5
       web3-errors: 1.3.1
       web3-types: 1.10.0
-      zod: 3.24.4
+      zod: 3.25.76
 
   web3@1.10.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10):
     dependencies:
@@ -55679,8 +56170,7 @@ snapshots:
 
   zod@3.24.4: {}
 
-  zod@3.25.76:
-    optional: true
+  zod@3.25.76: {}
 
   zod@4.3.5: {}
 

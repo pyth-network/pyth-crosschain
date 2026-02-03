@@ -48,6 +48,7 @@
     "vercel": "catalog:"
   },
   "dependencies": {
+    "@better-auth/passkey": "catalog:",
     "@base-ui/react": "catalog:",
     "@next/third-parties": "catalog:",
     "@phosphor-icons/react": "catalog:",
@@ -55,6 +56,7 @@
     "@pythnetwork/react-hooks": "workspace:*",
     "@pythnetwork/shared-lib": "workspace:",
     "@react-hookz/web": "catalog:",
+    "better-auth": "catalog:",
     "change-case": "catalog:",
     "clsx": "catalog:",
     "framer-motion": "catalog:",

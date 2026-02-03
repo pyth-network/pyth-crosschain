@@ -21,7 +21,23 @@
         "pull:env",
         "build:css"
       ],
-      "env": []
+      "env": [
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_SITE_URL",
+        "BETTER_AUTH_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "MICROSOFT_CLIENT_ID",
+        "MICROSOFT_CLIENT_SECRET",
+        "APPLE_CLIENT_ID",
+        "APPLE_CLIENT_SECRET",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
+        "GITLAB_CLIENT_ID",
+        "GITLAB_CLIENT_SECRET",
+        "LINKEDIN_CLIENT_ID",
+        "LINKEDIN_CLIENT_SECRET"
+      ]
     },
     "fix:lint": {
       "dependsOn": [
