@@ -20,7 +20,7 @@ export const { classes } = createStyles("pyth-v2-card", (theme) => {
     };
   }
 
-  for (const [size, sizes] of Object.entries(theme.cardSizes)) {
+  for (const [size, sizes] of Object.entries(theme.sizes.card)) {
     sizeVariants = {
       ...sizeVariants,
       [`&[data-size="${size}"]`]: {

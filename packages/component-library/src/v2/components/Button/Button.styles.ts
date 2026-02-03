@@ -43,19 +43,17 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
   } as const;
 
   for (const [variant, rules] of Object.entries(resolvedButtonVariants)) {
-    const borderValue =
-      "border" in rules
-        ? `1px solid ${theme.resolveThemeColor(rules.border)}`
-        : "1px solid transparent";
+    const border = `1px solid ${"border" in rules ? theme.resolveThemeColor(rules.border) : "transparent"}`;
+
     const normalBackground = resolveBackgroundColor(rules.background, "normal");
     const normalForeground = theme.resolveThemeColor(rules.foreground);
     const disabledBackground = muteColor(normalBackground);
     const disabledForeground = muteColor(normalForeground);
     buttonVariants = {
       ...buttonVariants,
-      [`&[data-buttonvariant="${variant}"]`]: {
+      [`&[data-variant="${variant}"]`]: {
         backgroundColor: normalBackground,
-        border: borderValue,
+        border,
         color: normalForeground,
         transition:
           "background-color .2s ease, border .2s ease, color .2s ease",
@@ -71,17 +69,17 @@ export const { classes } = createStyles("pyth-v2-button", (theme) => {
 
         '&:disabled, &[aria-disabled="true"]': {
           backgroundColor: disabledBackground,
-          border: borderValue,
+          border,
           color: disabledForeground,
         },
       },
     };
   }
 
-  for (const [size, sizes] of Object.entries(theme.buttonSizes)) {
+  for (const [size, sizes] of Object.entries(theme.sizes.button)) {
     sizeVariants = {
       ...sizeVariants,
-      [`&[data-buttonsize="${size}"]`]: {
+      [`&[data-size="${size}"]`]: {
         borderRadius: sizes.borderRadius,
         fontSize: sizes.fontSize,
         gap: sizes.gap,

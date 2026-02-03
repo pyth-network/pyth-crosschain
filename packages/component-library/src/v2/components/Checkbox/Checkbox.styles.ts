@@ -5,7 +5,7 @@ import { createStyles } from "../../theme/style-funcs";
 export const { classes } = createStyles("v2-checkbox", (theme) => {
   let sizeVariants: SimpleStyleRules["key"] = {};
 
-  for (const [size, styles] of Object.entries(theme.formFieldSizes)) {
+  for (const [size, styles] of Object.entries(theme.sizes.checkbox)) {
     sizeVariants = {
       ...sizeVariants,
       [`&[data-size="${size}"]`]: {

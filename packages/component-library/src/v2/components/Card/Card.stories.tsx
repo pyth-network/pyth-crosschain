@@ -5,8 +5,8 @@ import { cardElevations } from "./types";
 import { ThemeV2 } from "../../theme";
 
 const cardSizes = Object.keys(
-  ThemeV2.cardSizes,
-) as (keyof typeof ThemeV2.cardSizes)[];
+  ThemeV2.sizes.card,
+) as (keyof typeof ThemeV2.sizes.card)[];
 
 const meta = {
   title: "V2/Card",

@@ -32,7 +32,7 @@ export const { classes } = createStyles("v2-spinner", (theme) => {
 
   let sizeVariants: SimpleStyleRules["key"] = {};
 
-  for (const [size, rules] of Object.entries(theme.spinnerSizes)) {
+  for (const [size, rules] of Object.entries(theme.sizes.spinner)) {
     sizeVariants = {
       ...sizeVariants,
       [`&[data-size="${size}"]`]: {

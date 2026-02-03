@@ -13,7 +13,7 @@ const meta = {
   argTypes: {
     size: {
       control: { type: "select" },
-      options: Object.keys(ThemeV2.buttonSizes),
+      options: Object.keys(ThemeV2.sizes.spinner),
     },
   },
 } satisfies Meta<typeof Spinner>;

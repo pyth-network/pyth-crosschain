@@ -11,7 +11,7 @@ export const { classes } = createStyles("v2-input", (theme) => {
 
   let sizeVariants: SimpleStyleRules["key"] = {};
 
-  for (const [size, styles] of Object.entries(theme.formFieldSizes)) {
+  for (const [size, styles] of Object.entries(theme.sizes.formField)) {
     sizeVariants = {
       ...sizeVariants,
       [`&[data-inputsize="${size}"] $input`]: {

@@ -24,7 +24,7 @@ const meta = {
     onClick: { action: "onClick" },
     size: {
       control: { type: "select" },
-      options: Object.keys(ThemeV2.buttonSizes),
+      options: Object.keys(ThemeV2.sizes.button),
     },
     tooltipPositionerProps: { control: false },
     variant: {

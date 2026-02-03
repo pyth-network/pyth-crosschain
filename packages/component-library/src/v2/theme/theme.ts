@@ -743,19 +743,15 @@ export const ThemeV2 = {
   breakpoints,
 
   /**
-   * Button Size Tokens
+   * Consolidated Size Tokens
    */
-  buttonSizes,
-
-  /**
-   * Card Size Tokens
-   */
-  cardSizes,
-
-  /**
-   * Form Field Sizes
-   */
-  formFieldSizes,
+  sizes: {
+    button: buttonSizes,
+    card: cardSizes,
+    checkbox: formFieldSizes,
+    formField: formFieldSizes,
+    spinner: spinnerSizes,
+  },
 
   /**
    * Functional Color Tokens (Light/Dark support)
@@ -808,7 +804,6 @@ export const ThemeV2 = {
   popoverTooltipStyles,
 
   spacing,
-  spinnerSizes,
 
   /**
    * General Design Tokens

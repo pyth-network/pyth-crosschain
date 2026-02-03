@@ -3,7 +3,7 @@ import type { TooltipPositionerProps } from "@base-ui/react/tooltip";
 import type { Icon } from "@phosphor-icons/react";
 import type { ComponentProps, ReactNode } from "react";
 
-import type { ThemeV2 } from "../../theme";
+import type { ButtonSize } from "../../../styles/theme";
 
 export const buttonVariants = [
   "primary",
@@ -13,8 +13,6 @@ export const buttonVariants = [
 ] as const;
 
 export type ButtonVariant = (typeof buttonVariants)[number];
-
-export type ButtonSizeVariant = keyof typeof ThemeV2.buttonSizes;
 
 export type ButtonProps = ComponentProps<typeof BaseButton> & {
   /**
@@ -34,7 +32,7 @@ export type ButtonProps = ComponentProps<typeof BaseButton> & {
    *
    * @defaultValue 'base'
    */
-  size?: ButtonSizeVariant;
+  size?: ButtonSize;
 
   /**
    * if specified, will wrap the button

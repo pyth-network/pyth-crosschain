@@ -21,8 +21,8 @@ export function Button({
   const propsToSpread = {
     ...rest,
     className: cx(classes.root, className),
-    "data-buttonvariant": variant,
-    "data-buttonsize": size,
+    "data-variant": variant,
+    "data-size": size,
   };
 
   if (tooltip) {
