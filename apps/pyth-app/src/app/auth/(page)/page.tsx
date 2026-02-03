@@ -30,7 +30,9 @@ export default function AuthPage() {
   const [otpRequested, setOtpRequested] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
 
-  const handleSocialSignIn = async (provider: SocialProvider): Promise<void> => {
+  const handleSocialSignIn = async (
+    provider: SocialProvider,
+  ): Promise<void> => {
     setIsWorking(true);
     setStatus(undefined);
     const { error } = await authClient.signIn.social({
@@ -43,25 +45,21 @@ export default function AuthPage() {
     setIsWorking(false);
   };
 
-  const handlePasskey = () => {
-    const doHandlePasskey = async () => {
-      setIsWorking(true);
-      setStatus(undefined);
-      const { error } = await authClient.signIn.passkey({
-        autoFill: false,
-        fetchOptions: {
-          onSuccess() {
-            globalThis.location.href = "/dashboard";
-          },
+  const handlePasskey = async () => {
+    setIsWorking(true);
+    setStatus(undefined);
+    const { error } = await authClient.signIn.passkey({
+      autoFill: false,
+      fetchOptions: {
+        onSuccess() {
+          globalThis.location.href = "/dashboard";
         },
-      });
-      if (error?.message) {
-        setStatus(error.message);
-      }
-      setIsWorking(false);
-
-    };
-    doHandlePasskey().catch((error: unknown) => { setStatus('message' in error ? error.message : String(error)); });
+      },
+    });
+    if (error?.message) {
+      setStatus(error.message);
+    }
+    setIsWorking(false);
   };
 
   const handleSendOtp = async (): Promise<void> => {
@@ -128,7 +126,12 @@ export default function AuthPage() {
       </section>
 
       <section style={{ display: "grid", gap: 12 }}>
-        <Button disabled={isWorking} onClick={handlePasskey}>
+        <Button
+          disabled={isWorking}
+          onClick={() => {
+            void handlePasskey();
+          }}
+        >
           Continue with a passkey
         </Button>
       </section>
@@ -146,7 +149,12 @@ export default function AuthPage() {
           type="email"
           value={email}
         />
-        <Button disabled={isWorking || email.length === 0} onClick={handleSendOtp}>
+        <Button
+          disabled={isWorking || email.length === 0}
+          onClick={() => {
+            void handleSendOtp();
+          }}
+        >
           Send OTP
         </Button>
 
@@ -163,7 +171,12 @@ export default function AuthPage() {
               type="text"
               value={otp}
             />
-            <Button disabled={isWorking || otp.length === 0} onClick={handleVerifyOtp}>
+            <Button
+              disabled={isWorking || otp.length === 0}
+              onClick={() => {
+                void handleVerifyOtp();
+              }}
+            >
               Verify OTP
             </Button>
           </>
