@@ -136,13 +136,13 @@ export const { classes } = createStyles("v2-input", (theme) => {
 
       '&[data-hasbeforeicon="true"]': {
         "& $inputWrapper > $input": {
-          paddingLeft: "2em",
+          paddingLeft: "2.25em",
         },
       },
 
       '&[data-hasaftericon="true"]': {
         "& $inputWrapper > $input": {
-          paddingRight: "2em",
+          paddingRight: "2.25em",
         },
       },
 

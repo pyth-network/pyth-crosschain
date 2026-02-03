@@ -16,6 +16,27 @@ export const { classes } = createStyles("auth-page", (theme) => ({
       },
     },
   },
+  orDivider: {
+    ...theme.flexHorizontalCenter(),
+    justifyContent: "center",
+    position: "relative",
+    width: "100%",
+
+    "& > span": {
+      backgroundColor: theme.resolveThemeColor(theme.colors.background.primary),
+      display: "inline-block",
+      padding: theme.spacing(2),
+      zIndex: 1,
+    },
+
+    "& > hr": {
+      left: 0,
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+      right: 0,
+    },
+  },
   root: {
     ...theme.flexVertical(),
     alignItems: "flex-start",
