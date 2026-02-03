@@ -105,7 +105,6 @@ where
             rest::latest_vaas,
             rest::price_feed_ids,
             rest::latest_price_updates,
-            rest::latest_twaps,
             rest::latest_publisher_stake_caps,
             rest::timestamp_price_updates,
             rest::price_feeds_metadata,
@@ -131,8 +130,6 @@ where
                 types::ParsedPublisherStakeCapsUpdate,
                 types::ParsedPublisherStakeCap,
                 types::AssetType,
-                types::TwapsResponse,
-                types::ParsedPriceFeedTwap,
             )
         ),
         tags(
