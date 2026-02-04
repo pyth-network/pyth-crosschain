@@ -48,6 +48,13 @@ export type PriceServiceConnectionConfig = {
   verbose?: boolean | undefined;
   /* Configuration for the price feed requests */
   priceFeedRequestConfig?: PriceFeedRequestConfig | undefined;
+  /**
+   * Optional API access token for authentication.
+   * When provided, this token will be included in all requests either:
+   * - As a Bearer token in the Authorization header (for HTTP requests)
+   * - As an ACCESS_TOKEN query parameter (for WebSocket connections)
+   */
+  accessToken?: string | undefined;
 };
 
 type ClientMessage = {
@@ -84,6 +91,8 @@ export class PriceServiceConnection {
 
   private priceFeedRequestConfig: PriceFeedRequestConfig;
 
+  private accessToken: string | undefined;
+
   /**
    * Custom handler for web socket errors (connection and message parsing).
    *
@@ -98,9 +107,15 @@ export class PriceServiceConnection {
    * @param config - Optional PriceServiceConnectionConfig for custom configurations.
    */
   constructor(endpoint: string, config?: PriceServiceConnectionConfig) {
+    this.accessToken = config?.accessToken;
+
     this.httpClient = axios.create({
       baseURL: endpoint,
       timeout: config?.timeout || 5000,
+      headers:
+        this.accessToken === undefined
+          ? {}
+          : { Authorization: `Bearer ${this.accessToken}` },
     });
     axiosRetry(this.httpClient, {
       retries: config?.httpRetries || 3,
@@ -143,6 +158,14 @@ export class PriceServiceConnection {
     };
 
     this.wsEndpoint = makeWebsocketUrl(endpoint);
+
+    // Append access token as query param for WebSocket connections
+    // since browser WebSocket API does not support custom headers.
+    if (this.accessToken && this.wsEndpoint) {
+      const wsUrl = new URL(this.wsEndpoint);
+      wsUrl.searchParams.append("ACCESS_TOKEN", this.accessToken);
+      this.wsEndpoint = wsUrl.toString();
+    }
   }
 
   /**

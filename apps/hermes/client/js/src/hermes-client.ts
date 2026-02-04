@@ -40,6 +40,13 @@ export type HermesClientConfig = {
    * Optional headers to be included in every request.
    */
   headers?: HeadersInit;
+  /**
+   * Optional API access token for authentication.
+   * When provided, this token will be included in all requests either:
+   * - As a Bearer token in the Authorization header (for HTTP requests)
+   * - As an ACCESS_TOKEN query parameter (for WebSocket/SSE connections)
+   */
+  accessToken?: string;
 };
 
 export class HermesClient {
@@ -47,6 +54,7 @@ export class HermesClient {
   private timeout: DurationInMs;
   private httpRetries: number;
   private headers: HeadersInit;
+  private accessToken: string | undefined;
 
   /**
    * Constructs a new Connection.
@@ -59,6 +67,7 @@ export class HermesClient {
     this.timeout = config?.timeout ?? DEFAULT_TIMEOUT;
     this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;
     this.headers = config?.headers ?? {};
+    this.accessToken = config?.accessToken;
   }
 
   private async httpRequest<ResponseData>(
@@ -69,6 +78,12 @@ export class HermesClient {
     backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
   ): Promise<ResponseData> {
     try {
+      // Build auth headers if access token is provided
+      const authHeaders: Record<string, string> = {};
+      if (this.accessToken !== undefined) {
+        authHeaders.Authorization = `Bearer ${this.accessToken}`;
+      }
+
       const response = await fetch(url, {
         ...options,
         signal: AbortSignal.any([
@@ -76,7 +91,7 @@ export class HermesClient {
           AbortSignal.timeout(this.timeout),
         ]),
 
-        headers: { ...this.headers, ...options?.headers },
+        headers: { ...authHeaders, ...this.headers, ...options?.headers },
       });
       if (!response.ok) {
         const errorBody = await response.text();
@@ -273,12 +288,19 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
+    // Build auth headers for SSE fetch
+    const authHeaders: Record<string, string> = {};
+    if (this.accessToken !== undefined) {
+      authHeaders.Authorization = `Bearer ${this.accessToken}`;
+    }
+
     return new EventSource(url.toString(), {
       fetch: (input, init) =>
         fetch(input, {
           ...init,
           headers: {
             ...init?.headers,
+            ...authHeaders,
             ...this.headers,
           },
         }),
