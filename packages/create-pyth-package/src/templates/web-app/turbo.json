@@ -20,6 +20,9 @@
       "dependsOn": ["//#install:modules"],
       "cache": false
     },
+    "start:dev": {
+      "with": ["@pythnetwork/component-library#start:dev"]
+    },
     "start:prod": {
       "dependsOn": ["//#install:modules", "build:vercel"]
     },

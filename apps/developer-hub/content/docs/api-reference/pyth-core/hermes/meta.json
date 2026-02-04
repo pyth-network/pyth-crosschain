@@ -12,7 +12,6 @@
     "latest_price_updates",
     "price_stream_sse_handler",
     "timestamp_price_updates",
-    "latest_publisher_stake_caps",
-    "latest_twaps"
+    "latest_publisher_stake_caps"
   ]
 }

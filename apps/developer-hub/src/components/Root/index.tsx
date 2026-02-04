@@ -1,6 +1,7 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { RootProviders } from "@pythnetwork/component-library/AppShell";
 import { NuqsAdapter } from "@pythnetwork/react-hooks/nuqs-adapters-next";
+import { Analytics } from "@vercel/analytics/next";
 import { RootProvider as FumadocsRootProvider } from "fumadocs-ui/provider/next";
 import type { ReactNode } from "react";
 
@@ -29,6 +30,7 @@ export const Root = ({ children, googleAnalyticsId }: Props) => (
         </FumadocsRootProvider>
       </RootProviders>
       {googleAnalyticsId && <GoogleAnalytics gaId={googleAnalyticsId} />}
+      <Analytics />
     </body>
   </html>
 );

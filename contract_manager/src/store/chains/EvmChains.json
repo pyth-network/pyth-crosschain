@@ -1391,5 +1391,26 @@
     "rpcUrl": "https://forno.celo-sepolia.celo-testnet.org",
     "networkId": 11142220,
     "type": "EvmChain"
+  },
+  {
+    "id": "arc_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.testnet.arc.network",
+    "networkId": 5042002,
+    "type": "EvmChain"
+  },
+  {
+    "id": "tempo_testnet",
+    "mainnet": false,
+    "rpcUrl": "https://rpc.moderato.tempo.xyz",
+    "networkId": 42431,
+    "type": "EvmChain"
+  },
+  {
+    "id": "tempo",
+    "mainnet": true,
+    "rpcUrl": "https://rpc.tempo.xyz", // Mainnet RPC URL, May need authentication
+    "networkId": 4217,
+    "type": "EvmChain"
   }
 ]

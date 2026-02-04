@@ -46,6 +46,7 @@ GOVERNANCE_ADDRESS="a36234ef3749a2c94136b6345bceff450791ef1ebc99e918f16f8075a441
 
 cd "$REPO/contract_manager"
 
+# Defaults to Pyth governance when chain and address are omitted
 pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" deploy \
   --private-key "$SUI_KEY" \
   --wormhole "$WORMHOLE" \
@@ -96,6 +97,52 @@ pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" \
   --emitter "$EMITTER_KEY" \
   --signer "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b" \
   --expires "1799422709"
+```
+
+### Production contract management
+
+Production contract upgrade:
+
+```bash
+# See `deploy` above for env setup
+
+# Key for ops wallet capable of submitting proposals
+WALLET_KEY="$HOME/.config/solana/id.json"
+
+# Contract ID taken from `deploy` output or `SuiLazerContracts.json`
+# CONTRACT_ID=""
+
+pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" propose-upgrade \
+  --contract "$CONTRACT_ID" \
+  --wallet "$WALLET_KEY"
+```
+
+Production trusted signer update:
+
+```bash
+# See `deploy` above for env setup
+
+# Key for ops wallet capable of submitting proposals
+WALLET_KEY="$HOME/.config/solana/id.json"
+
+pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" \
+  propose-update-trusted-signer \
+  --wallet "$WALLET_KEY" \
+  --signer "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b" \
+  --expires "1799422709"
+```
+
+Execute unseen governance actions:
+
+```bash
+# See `deploy` above for env setup
+
+# Contract ID taken from `deploy` output or `SuiLazerContracts.json`
+# CONTRACT_ID=""
+
+pnpm tsx scripts/manage_sui_lazer_contract.ts -c "$CHAIN" execute-proposals \
+  --private-key "$SUI_KEY" \
+  --contract "$CONTRACT_ID"
 ```
 
 [`meta.move`]: sources/meta.move

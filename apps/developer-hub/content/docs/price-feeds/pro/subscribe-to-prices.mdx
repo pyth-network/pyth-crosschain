@@ -59,7 +59,7 @@ client.send({
   subscriptionId: 1,
   priceFeedIds: [1, 2],
   properties: ["price"],
-  chains: ["solana"],
+  formats: ["solana"],
   channel: "fixed_rate@200ms",
 });
 ```
@@ -69,7 +69,7 @@ The most significant parameters are:
 - `subscriptionId` is an arbitrary numeric identifier for a subscription. It will be returned back in response by the server. It does not affect the signed payload.
 - `priceFeedIds` is the list of price feeds to receive price data for. It will also include the verified payloads for the price feeds. Refer to the [Price Feed IDs list](/price-feeds/pro/price-feed-ids) for the supported price feeds.
 - `properties` is the list of properties to retrieve, such as **price**, **bestBidPrice**, **bestAskPrice**, etc.
-- `chains` is the list of chains to receive a signed payload for, such as **evm**, **solana**, etc.
+- `formats`(formerly known as `chains`) is the list of chains to receive a signed payload for, such as **evm**, **solana**, etc.
 - `channel` determines the update rate: updates in the **real_time** channel are sent as frequently as possible, while **fixed_rate@200ms** and **fixed_rate@50ms** channels are updated at fixed rates.
 
 There are also a few other configuration parameters -- see the [API documentation](https://pyth-lazer.dourolabs.app/docs) for more details.
@@ -87,14 +87,14 @@ Determine the most suitable values for your application -- they will be used in 
 
 To subscribe to the prices, send a request to the websocket server. The server will respond with a signed payload.
 
-1. Pyth Lazer provides an [SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/sdk/js) to seamlessly integrate the websocket API into your application.
+1. Pyth Lazer provides an [SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) to seamlessly integrate the websocket API into your application.
    Install it using the following command:
 
 ```bash copy
 npm install --save @pythnetwork/pyth-lazer-sdk
 ```
 
-2. Then create a [`PythLazerClient`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/sdk/js/src/client.ts#L51) object using both endpoint URLs and the access token requested from our authorized distribution partners (Pyth Data Distributors) in the first step:
+2. Then create a `PythLazerClient` object using both endpoint URLs and the access token requested from our authorized distribution partners (Pyth Data Distributors) in the first step:
 
 ```js copy
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
@@ -117,7 +117,7 @@ client.subscribe({
   subscriptionId: 1,
   priceFeedIds: [1, 2],
   properties: ["price"],
-  chains: ["solana"],
+  formats: ["solana"],
   channel: "fixed_rate@200ms",
 });
 ```

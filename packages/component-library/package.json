@@ -8,6 +8,8 @@
   },
   "scripts": {
     "build": "ts-duality --copyOtherFiles --noCjs",
+    "build:css-in-js": "ssjs --entrypoints ./src/v2/components/index.ts --outfile ./src/v2/v2-theme.css",
+    "build:css-in-js:watch": "pnpm build:css-in-js --watch",
     "build:storybook": "storybook build",
     "clean": "rm -rf ./dist",
     "fix:format": "prettier --write .",
@@ -29,6 +31,7 @@
     "@amplitude/analytics-browser": "catalog:",
     "@amplitude/plugin-autocapture-browser": "catalog:",
     "@axe-core/react": "catalog:",
+    "@base-ui/react": "catalog:",
     "@internationalized/date": "^3.10.1",
     "@next/third-parties": "catalog:",
     "ag-grid-community": "catalog:",
@@ -36,6 +39,7 @@
     "@react-hookz/web": "catalog:",
     "bcp-47": "catalog:",
     "clsx": "catalog:",
+    "color": "catalog:",
     "dayjs": "catalog:",
     "modern-normalize": "catalog:",
     "motion": "catalog:",
@@ -46,6 +50,7 @@
     "react-aria": "catalog:",
     "react-aria-components": "catalog:",
     "react-dom": "catalog:",
+    "simplestyle-js": "catalog:",
     "swr": "catalog:"
   },
   "devDependencies": {
@@ -89,6 +94,7 @@
   },
   "ts-duality": {
     "extraExports": {
+      "./themeV2": "./dist/v2/v2-theme.css",
       "./theme": "./dist/theme.scss"
     }
   },
@@ -201,6 +207,10 @@
       "types": "./dist/Link/index.d.ts",
       "default": "./dist/Link/index.mjs"
     },
+    "./Logo": {
+      "types": "./dist/Logo/index.d.ts",
+      "default": "./dist/Logo/index.mjs"
+    },
     "./MainNavTabs": {
       "types": "./dist/MainNavTabs/index.d.ts",
       "default": "./dist/MainNavTabs/index.mjs"
@@ -309,10 +319,6 @@
       "types": "./dist/compose-providers.d.ts",
       "default": "./dist/compose-providers.mjs"
     },
-    "./omit-keys": {
-      "types": "./dist/omit-keys.d.ts",
-      "default": "./dist/omit-keys.mjs"
-    },
     "./overlay-visible-context": {
       "types": "./dist/overlay-visible-context.d.ts",
       "default": "./dist/overlay-visible-context.mjs"
@@ -320,6 +326,10 @@
     "./social-links": {
       "types": "./dist/social-links.d.ts",
       "default": "./dist/social-links.mjs"
+    },
+    "./styles/theme": {
+      "types": "./dist/styles/theme.d.ts",
+      "default": "./dist/styles/theme.mjs"
     },
     "./unstyled/Breadcrumbs": {
       "types": "./dist/unstyled/Breadcrumbs/index.d.ts",
@@ -413,7 +423,244 @@
       "types": "./dist/useQueryParamsPagination/index.d.ts",
       "default": "./dist/useQueryParamsPagination/index.mjs"
     },
+    "./v2/__stories__/helpers": {
+      "types": "./dist/v2/__stories__/helpers.d.ts",
+      "default": "./dist/v2/__stories__/helpers.mjs"
+    },
+    "./v2/components/ActionsMenu/ActionsMenu": {
+      "types": "./dist/v2/components/ActionsMenu/ActionsMenu.d.ts",
+      "default": "./dist/v2/components/ActionsMenu/ActionsMenu.mjs"
+    },
+    "./v2/components/ActionsMenu/ActionsMenu.styles": {
+      "types": "./dist/v2/components/ActionsMenu/ActionsMenu.styles.d.ts",
+      "default": "./dist/v2/components/ActionsMenu/ActionsMenu.styles.mjs"
+    },
+    "./v2/components/ActionsMenu": {
+      "types": "./dist/v2/components/ActionsMenu/index.d.ts",
+      "default": "./dist/v2/components/ActionsMenu/index.mjs"
+    },
+    "./v2/components/Avatar/Avatar": {
+      "types": "./dist/v2/components/Avatar/Avatar.d.ts",
+      "default": "./dist/v2/components/Avatar/Avatar.mjs"
+    },
+    "./v2/components/Avatar/Avatar.styles": {
+      "types": "./dist/v2/components/Avatar/Avatar.styles.d.ts",
+      "default": "./dist/v2/components/Avatar/Avatar.styles.mjs"
+    },
+    "./v2/components/Avatar": {
+      "types": "./dist/v2/components/Avatar/index.d.ts",
+      "default": "./dist/v2/components/Avatar/index.mjs"
+    },
+    "./v2/components/Badge/Badge": {
+      "types": "./dist/v2/components/Badge/Badge.d.ts",
+      "default": "./dist/v2/components/Badge/Badge.mjs"
+    },
+    "./v2/components/Badge/Badge.styles": {
+      "types": "./dist/v2/components/Badge/Badge.styles.d.ts",
+      "default": "./dist/v2/components/Badge/Badge.styles.mjs"
+    },
+    "./v2/components/Badge": {
+      "types": "./dist/v2/components/Badge/index.d.ts",
+      "default": "./dist/v2/components/Badge/index.mjs"
+    },
+    "./v2/components/Badge/types": {
+      "types": "./dist/v2/components/Badge/types.d.ts",
+      "default": "./dist/v2/components/Badge/types.mjs"
+    },
+    "./v2/components/Button/Button": {
+      "types": "./dist/v2/components/Button/Button.d.ts",
+      "default": "./dist/v2/components/Button/Button.mjs"
+    },
+    "./v2/components/Button/Button.styles": {
+      "types": "./dist/v2/components/Button/Button.styles.d.ts",
+      "default": "./dist/v2/components/Button/Button.styles.mjs"
+    },
+    "./v2/components/Button/IconButton": {
+      "types": "./dist/v2/components/Button/IconButton.d.ts",
+      "default": "./dist/v2/components/Button/IconButton.mjs"
+    },
+    "./v2/components/Button": {
+      "types": "./dist/v2/components/Button/index.d.ts",
+      "default": "./dist/v2/components/Button/index.mjs"
+    },
+    "./v2/components/Button/types": {
+      "types": "./dist/v2/components/Button/types.d.ts",
+      "default": "./dist/v2/components/Button/types.mjs"
+    },
+    "./v2/components/Card/Card": {
+      "types": "./dist/v2/components/Card/Card.d.ts",
+      "default": "./dist/v2/components/Card/Card.mjs"
+    },
+    "./v2/components/Card/Card.styles": {
+      "types": "./dist/v2/components/Card/Card.styles.d.ts",
+      "default": "./dist/v2/components/Card/Card.styles.mjs"
+    },
+    "./v2/components/Card": {
+      "types": "./dist/v2/components/Card/index.d.ts",
+      "default": "./dist/v2/components/Card/index.mjs"
+    },
+    "./v2/components/Card/types": {
+      "types": "./dist/v2/components/Card/types.d.ts",
+      "default": "./dist/v2/components/Card/types.mjs"
+    },
+    "./v2/components/Checkbox/Checkbox": {
+      "types": "./dist/v2/components/Checkbox/Checkbox.d.ts",
+      "default": "./dist/v2/components/Checkbox/Checkbox.mjs"
+    },
+    "./v2/components/Checkbox/Checkbox.styles": {
+      "types": "./dist/v2/components/Checkbox/Checkbox.styles.d.ts",
+      "default": "./dist/v2/components/Checkbox/Checkbox.styles.mjs"
+    },
+    "./v2/components/Checkbox": {
+      "types": "./dist/v2/components/Checkbox/index.d.ts",
+      "default": "./dist/v2/components/Checkbox/index.mjs"
+    },
+    "./v2/components/CheckboxGroup/CheckboxGroup": {
+      "types": "./dist/v2/components/CheckboxGroup/CheckboxGroup.d.ts",
+      "default": "./dist/v2/components/CheckboxGroup/CheckboxGroup.mjs"
+    },
+    "./v2/components/CheckboxGroup/CheckboxGroup.styles": {
+      "types": "./dist/v2/components/CheckboxGroup/CheckboxGroup.styles.d.ts",
+      "default": "./dist/v2/components/CheckboxGroup/CheckboxGroup.styles.mjs"
+    },
+    "./v2/components/CheckboxGroup": {
+      "types": "./dist/v2/components/CheckboxGroup/index.d.ts",
+      "default": "./dist/v2/components/CheckboxGroup/index.mjs"
+    },
+    "./v2/components/Dialog/Dialog": {
+      "types": "./dist/v2/components/Dialog/Dialog.d.ts",
+      "default": "./dist/v2/components/Dialog/Dialog.mjs"
+    },
+    "./v2/components/Dialog/Dialog.styles": {
+      "types": "./dist/v2/components/Dialog/Dialog.styles.d.ts",
+      "default": "./dist/v2/components/Dialog/Dialog.styles.mjs"
+    },
+    "./v2/components/Dialog": {
+      "types": "./dist/v2/components/Dialog/index.d.ts",
+      "default": "./dist/v2/components/Dialog/index.mjs"
+    },
+    "./v2/components/HtmlWithLang/HtmlWithLang": {
+      "types": "./dist/v2/components/HtmlWithLang/HtmlWithLang.d.ts",
+      "default": "./dist/v2/components/HtmlWithLang/HtmlWithLang.mjs"
+    },
+    "./v2/components/HtmlWithLang": {
+      "types": "./dist/v2/components/HtmlWithLang/index.d.ts",
+      "default": "./dist/v2/components/HtmlWithLang/index.mjs"
+    },
+    "./v2/components/HtmlWithLang/types": {
+      "types": "./dist/v2/components/HtmlWithLang/types.d.ts",
+      "default": "./dist/v2/components/HtmlWithLang/types.mjs"
+    },
+    "./v2/components/Input/Input": {
+      "types": "./dist/v2/components/Input/Input.d.ts",
+      "default": "./dist/v2/components/Input/Input.mjs"
+    },
+    "./v2/components/Input/Input.styles": {
+      "types": "./dist/v2/components/Input/Input.styles.d.ts",
+      "default": "./dist/v2/components/Input/Input.styles.mjs"
+    },
+    "./v2/components/Input": {
+      "types": "./dist/v2/components/Input/index.d.ts",
+      "default": "./dist/v2/components/Input/index.mjs"
+    },
+    "./v2/components/LeftNav/LeftNav": {
+      "types": "./dist/v2/components/LeftNav/LeftNav.d.ts",
+      "default": "./dist/v2/components/LeftNav/LeftNav.mjs"
+    },
+    "./v2/components/LeftNav/LeftNav.styles": {
+      "types": "./dist/v2/components/LeftNav/LeftNav.styles.d.ts",
+      "default": "./dist/v2/components/LeftNav/LeftNav.styles.mjs"
+    },
+    "./v2/components/LeftNav": {
+      "types": "./dist/v2/components/LeftNav/index.d.ts",
+      "default": "./dist/v2/components/LeftNav/index.mjs"
+    },
+    "./v2/components/LeftNav/types": {
+      "types": "./dist/v2/components/LeftNav/types.d.ts",
+      "default": "./dist/v2/components/LeftNav/types.mjs"
+    },
+    "./v2/components/NavigationButtonLink/ButtonLink": {
+      "types": "./dist/v2/components/NavigationButtonLink/ButtonLink.d.ts",
+      "default": "./dist/v2/components/NavigationButtonLink/ButtonLink.mjs"
+    },
+    "./v2/components/NavigationButtonLink/ButtonLink.styles": {
+      "types": "./dist/v2/components/NavigationButtonLink/ButtonLink.styles.d.ts",
+      "default": "./dist/v2/components/NavigationButtonLink/ButtonLink.styles.mjs"
+    },
+    "./v2/components/NavigationButtonLink": {
+      "types": "./dist/v2/components/NavigationButtonLink/index.d.ts",
+      "default": "./dist/v2/components/NavigationButtonLink/index.mjs"
+    },
+    "./v2/components/Spinner/Spinner": {
+      "types": "./dist/v2/components/Spinner/Spinner.d.ts",
+      "default": "./dist/v2/components/Spinner/Spinner.mjs"
+    },
+    "./v2/components/Spinner/Spinner.styles": {
+      "types": "./dist/v2/components/Spinner/Spinner.styles.d.ts",
+      "default": "./dist/v2/components/Spinner/Spinner.styles.mjs"
+    },
+    "./v2/components/Spinner": {
+      "types": "./dist/v2/components/Spinner/index.d.ts",
+      "default": "./dist/v2/components/Spinner/index.mjs"
+    },
+    "./v2/components/Switch/Switch": {
+      "types": "./dist/v2/components/Switch/Switch.d.ts",
+      "default": "./dist/v2/components/Switch/Switch.mjs"
+    },
+    "./v2/components/Switch/Switch.styles": {
+      "types": "./dist/v2/components/Switch/Switch.styles.d.ts",
+      "default": "./dist/v2/components/Switch/Switch.styles.mjs"
+    },
+    "./v2/components/Switch": {
+      "types": "./dist/v2/components/Switch/index.d.ts",
+      "default": "./dist/v2/components/Switch/index.mjs"
+    },
+    "./v2/components/Text/Text": {
+      "types": "./dist/v2/components/Text/Text.d.ts",
+      "default": "./dist/v2/components/Text/Text.mjs"
+    },
+    "./v2/components/Text/Text.styles": {
+      "types": "./dist/v2/components/Text/Text.styles.d.ts",
+      "default": "./dist/v2/components/Text/Text.styles.mjs"
+    },
+    "./v2/components/Text": {
+      "types": "./dist/v2/components/Text/index.d.ts",
+      "default": "./dist/v2/components/Text/index.mjs"
+    },
+    "./v2/components": {
+      "types": "./dist/v2/components/index.d.ts",
+      "default": "./dist/v2/components/index.mjs"
+    },
+    "./v2": {
+      "types": "./dist/v2/index.d.ts",
+      "default": "./dist/v2/index.mjs"
+    },
+    "./v2/svg/PythLogo": {
+      "types": "./dist/v2/svg/PythLogo.d.ts",
+      "default": "./dist/v2/svg/PythLogo.mjs"
+    },
+    "./v2/theme": {
+      "types": "./dist/v2/theme/index.d.ts",
+      "default": "./dist/v2/theme/index.mjs"
+    },
+    "./v2/theme/reset.styles": {
+      "types": "./dist/v2/theme/reset.styles.d.ts",
+      "default": "./dist/v2/theme/reset.styles.mjs"
+    },
+    "./v2/theme/style-funcs": {
+      "types": "./dist/v2/theme/style-funcs.d.ts",
+      "default": "./dist/v2/theme/style-funcs.mjs"
+    },
+    "./v2/theme/theme": {
+      "types": "./dist/v2/theme/theme.d.ts",
+      "default": "./dist/v2/theme/theme.mjs"
+    },
+    "./v2/types/current-user": {
+      "types": "./dist/v2/types/current-user.d.ts",
+      "default": "./dist/v2/types/current-user.mjs"
+    },
     "./package.json": "./package.json",
+    "./themeV2": "./dist/v2/v2-theme.css",
     "./theme": "./dist/theme.scss"
   }
 }

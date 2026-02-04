@@ -918,5 +918,20 @@
     "chain": "monad_testnet",
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
     "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "arc_testnet",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "tempo_testnet",
+    "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "type": "EvmPriceFeedContract"
+  },
+  {
+    "chain": "tempo",
+    "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "type": "EvmPriceFeedContract"
   }
 ]

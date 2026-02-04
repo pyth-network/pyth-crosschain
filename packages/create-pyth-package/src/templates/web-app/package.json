@@ -42,10 +42,13 @@
     "jest": "catalog:",
     "postcss": "catalog:",
     "prettier": "catalog:",
+    "stylelint": "catalog:",
+    "stylelint-config-standard-scss": "catalog:",
     "vercel": "catalog:"
   },
   "dependencies": {
     "@next/third-parties": "catalog:",
+    "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
     "@pythnetwork/react-hooks": "workspace:*",
     "@pythnetwork/shared-lib": "workspace:",

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build:css": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "./src/**/*.styles.ts"
+      ],
+      "outputs": [
+        "./src/pyth-app.css"
+      ]
+    },
+    "build:vercel": {
+      "dependsOn": [
+        "^build",
+        "pull:env",
+        "build:css"
+      ],
+      "env": []
+    },
+    "fix:lint": {
+      "dependsOn": [
+        "//#install:modules",
+        "fix:lint:eslint",
+        "fix:lint:stylelint"
+      ]
+    },
+    "fix:lint:eslint": {
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ],
+      "cache": false
+    },
+    "fix:lint:stylelint": {
+      "dependsOn": [
+        "//#install:modules"
+      ],
+      "cache": false
+    },
+    "start:dev:css": {
+      "cache": false
+    },
+    "start:dev": {
+      "with": [
+        "@pythnetwork/component-library#start:dev"
+      ]
+    },
+    "start:prod": {
+      "dependsOn": [
+        "//#install:modules",
+        "build:vercel"
+      ]
+    },
+    "test:lint": {
+      "dependsOn": [
+        "test:lint:eslint",
+        "test:lint:stylelint"
+      ]
+    },
+    "test:lint:eslint": {
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ]
+    },
+    "test:lint:stylelint": {
+      "dependsOn": [
+        "//#install:modules"
+      ]
+    }
+  }
+}

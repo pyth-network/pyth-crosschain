@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get changed files
+      - name: Get changed files and detect affected products
         id: changed-files
         run: |
           # Get list of changed doc files
@@ -70,25 +70,87 @@ jobs:
           fi
 
           echo "significant=$SIGNIFICANT" >> $GITHUB_OUTPUT
-          echo "Significant changes: $SIGNIFICANT (files: $FILE_COUNT)"
+
+          # Determine which product route files are affected by the doc changes
+          AFFECTED=""
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/price-feeds/core/"; then
+            AFFECTED="$AFFECTED llms-price-feeds-core.txt llms-price-feeds.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/price-feeds/pro/"; then
+            AFFECTED="$AFFECTED llms-price-feeds-pro.txt llms-price-feeds.txt"
+          fi
+
+          # Top-level price-feeds pages (not under core/ or pro/)
+          if echo "$CHANGED_FILES" | grep "content/docs/price-feeds/" | grep -qvE "content/docs/price-feeds/(core|pro)/"; then
+            AFFECTED="$AFFECTED llms-price-feeds.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/entropy/"; then
+            AFFECTED="$AFFECTED llms-entropy.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/api-reference/pyth-core/"; then
+            AFFECTED="$AFFECTED llms-price-feeds-core.txt llms-price-feeds.txt"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "content/docs/api-reference/entropy/"; then
+            AFFECTED="$AFFECTED llms-entropy.txt"
+          fi
+
+          # Deduplicate
+          AFFECTED=$(echo "$AFFECTED" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ' | xargs)
+          echo "affected_products=$AFFECTED" >> $GITHUB_OUTPUT
+
+          # Check for new top-level doc directories that don't map to existing products
+          NEW_PRODUCT="false"
+          if [ -n "$NEW_FILES" ]; then
+            NEW_DIRS=$(echo "$NEW_FILES" \
+              | sed 's|apps/developer-hub/content/docs/||' \
+              | cut -d'/' -f1 \
+              | sort -u)
+            KNOWN_DIRS="price-feeds entropy api-reference"
+            for dir in $NEW_DIRS; do
+              if ! echo "$KNOWN_DIRS" | grep -qw "$dir"; then
+                NEW_PRODUCT="true"
+                break
+              fi
+            done
+          fi
+          echo "new_product=$NEW_PRODUCT" >> $GITHUB_OUTPUT
+
+          echo "Significant: $SIGNIFICANT | Affected: $AFFECTED | New product: $NEW_PRODUCT"
 
       - name: Skip if no significant changes
         if: steps.changed-files.outputs.significant != 'true'
         run: |
-          echo "No significant documentation changes detected. Skipping llms.txt update."
+          echo "No significant documentation changes detected. Skipping."
 
-      - name: Read current llms.txt
-        if: steps.changed-files.outputs.significant == 'true'
-        id: current-llms
+      - name: Read static headers from affected product files
+        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
+        id: headers
         run: |
-          # Extract just the content string from the route file
-          CONTENT=$(sed -n '/const content = `/,/`;$/p' apps/developer-hub/src/app/llms.txt/route.ts | sed '1d;$d')
-          echo "content<<EOFMARKER" >> $GITHUB_OUTPUT
-          echo "$CONTENT" >> $GITHUB_OUTPUT
-          echo "EOFMARKER" >> $GITHUB_OUTPUT
+          ROUTE_DIR="apps/developer-hub/src/app"
+          AFFECTED="${{ steps.changed-files.outputs.affected_products }}"
 
-      - name: Gather context for Codex
-        if: steps.changed-files.outputs.significant == 'true'
+          # Build a JSON object mapping product filename -> current STATIC_HEADER content
+          HEADERS_JSON="{}"
+
+          for product in $AFFECTED; do
+            ROUTE_FILE="$ROUTE_DIR/$product/route.ts"
+            if [ -f "$ROUTE_FILE" ]; then
+              # Extract STATIC_HEADER content (between opening backtick and closing `; line)
+              sed -n '/const STATIC_HEADER = `/,/^`;/{/const STATIC_HEADER = `/d;/^`;/d;p}' "$ROUTE_FILE" > "/tmp/header-${product}.txt"
+              HEADERS_JSON=$(jq --arg key "$product" --rawfile val "/tmp/header-${product}.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
+            fi
+          done
+
+          echo "$HEADERS_JSON" > /tmp/current-headers.json
+          echo "Extracted headers for: $AFFECTED"
+
+      - name: Gather context
+        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
         id: context
         run: |
           # Save files list to temp file to avoid shell expansion issues
@@ -112,135 +174,173 @@ jobs:
             fi
           done < /tmp/changed_files.txt
 
-          # Get list of all current sections (from meta.json files)
-          SECTIONS=$(find apps/developer-hub/content/docs -name "meta.json" -exec dirname {} \; | sed 's|apps/developer-hub/content/docs/||' | sort | head -20)
-
           echo "changes<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          echo "sections<<EOF" >> $GITHUB_OUTPUT
-          echo "$SECTIONS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Generate updated llms.txt with Codex
-        if: steps.changed-files.outputs.significant == 'true'
+      - name: Review static headers with GPT-4o
+        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
         env:
           OPENAI_API_KEY: ${{ secrets.PYTH_NETWORK_PYTH_CROSSCHAIN_OPENAI_API_KEY }}
         run: |
-          # Prepare the prompt
-          cat > /tmp/prompt.json << 'PROMPTEOF'
-          {
-            "model": "gpt-4o",
-            "max_tokens": 4096,
-            "messages": [{
-              "role": "system",
-              "content": "You review documentation changes and determine if llms.txt needs updating. Be VERY CONSERVATIVE - most changes do NOT require llms.txt updates. The llms.txt file is a high-level overview, not a mirror of all documentation."
-            }, {
-              "role": "user",
-              "content": "Current llms.txt content:\n```\n$CURRENT_CONTENT\n```\n\nDocumentation changes in this PR:\n$CHANGES\n\nCurrent documentation sections:\n$SECTIONS\n\nINSTRUCTIONS:\n1. Review the changes and determine if llms.txt REALLY needs updating\n2. Output exactly NO_UPDATE_NEEDED unless there is a MAJOR change like:\n   - A completely NEW product or service being added\n   - Contract addresses changing\n   - API endpoints changing\n   - Critical getting-started information changing\n3. Minor doc fixes, typos, clarifications, or expanded explanations do NOT require updates\n4. If you DO need to make changes, make MINIMAL targeted edits - do NOT rewrite sections that weren't affected\n\nCRITICAL FORMATTING RULES:\n- The output will be placed inside a JavaScript template literal (backtick string)\n- You MUST escape ALL backticks in your output as \\` (backslash backtick)\n- Code blocks must use \\`\\`\\` instead of ```\n- Inline code must use \\` instead of `\n- This is CRITICAL - unescaped backticks will break the build\n- Preserve the EXACT structure and formatting of the current content\n- Output ONLY the raw content (no code fences around the whole thing, no explanations)\n\nOutput NO_UPDATE_NEEDED or the minimally updated content with properly escaped backticks:"
-            }]
-          }
-          PROMPTEOF
+          # Write system prompt to file (avoids shell quoting issues)
+          cat > /tmp/system-msg.txt << 'SYSMSG'
+          You review documentation changes and determine if product-specific llms.txt static headers need updating.
 
-          # Substitute variables
-          CURRENT_CONTENT=$(cat << 'CONTENTEOF'
-          ${{ steps.current-llms.outputs.content }}
-          CONTENTEOF
-          )
+          Architecture: Each product has a route file with a STATIC_HEADER constant (quick-start code, key IDs, contract addresses, API endpoints, SDKs) plus dynamically generated detailed docs from MDX pages. The dynamic content auto-updates at build time — you are ONLY reviewing the static headers.
 
-          CHANGES="${{ steps.context.outputs.changes }}"
-          SECTIONS="${{ steps.context.outputs.sections }}"
+          Be VERY CONSERVATIVE. Most changes do NOT require header updates. Only update for:
+          - New or changed contract addresses
+          - New or changed API endpoints or base URLs
+          - New or changed SDK package names
+          - Major restructuring of quick-start code examples
+          - New key features that should be highlighted in the header
 
-          # Create the actual request
-          jq --arg content "$CURRENT_CONTENT" \
-             --arg changes "$CHANGES" \
-             --arg sections "$SECTIONS" \
-             '.messages[1].content = (.messages[1].content | gsub("\\$CURRENT_CONTENT"; $content) | gsub("\\$CHANGES"; $changes) | gsub("\\$SECTIONS"; $sections))' \
-             /tmp/prompt.json > /tmp/request.json
+          Do NOT update for: typos, expanded explanations, new tutorial pages, minor doc fixes, clarifications.
 
-          # Call OpenAI API (Codex)
+          Return a JSON object where each key is a product filename and the value is either the string "NO_UPDATE_NEEDED" or the complete updated header content.
+
+          CRITICAL FORMATTING RULES for updated headers:
+          - The content is placed inside a JavaScript template literal (backtick string)
+          - You MUST escape ALL backticks as \` (backslash backtick)
+          - Code blocks must use \`\`\` instead of raw backticks
+          - Preserve the exact structure of headers you don't change
+          - Make MINIMAL targeted edits — do not rewrite unaffected sections
+          SYSMSG
+
+          # Write user message to file
+          CURRENT_HEADERS=$(cat /tmp/current-headers.json)
+          cat > /tmp/user-msg.txt << USRMSG
+          Current static headers for affected product files:
+
+          $CURRENT_HEADERS
+
+          Documentation changes in this PR:
+          ${{ steps.context.outputs.changes }}
+
+          For each product file listed above, determine if its static header needs updating. Return ONLY valid JSON.
+          USRMSG
+
+          # Assemble JSON request using jq with --rawfile to avoid shell quoting issues
+          jq -n \
+            --rawfile sys_msg /tmp/system-msg.txt \
+            --rawfile usr_msg /tmp/user-msg.txt \
+            '{
+              model: "gpt-4o",
+              max_tokens: 8192,
+              response_format: { type: "json_object" },
+              messages: [
+                { role: "system", content: $sys_msg },
+                { role: "user", content: $usr_msg }
+              ]
+            }' > /tmp/request.json
+
+          # Call OpenAI API
           RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -d @/tmp/request.json)
 
-          # Extract response
-          UPDATED_CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "ERROR"')
+          # Extract response content
+          RESULT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "ERROR"')
 
-          if [ "$UPDATED_CONTENT" = "ERROR" ]; then
+          if [ "$RESULT" = "ERROR" ]; then
             echo "Error calling OpenAI API"
             echo "$RESPONSE"
             exit 1
           fi
 
-          echo "$UPDATED_CONTENT" > /tmp/updated-llms.txt
+          echo "$RESULT" > /tmp/update-decisions.json
 
-          # Check if update is needed
-          if grep -q "NO_UPDATE_NEEDED" /tmp/updated-llms.txt; then
+          # Check if any updates are needed
+          ANY_UPDATES=$(echo "$RESULT" | jq -r 'to_entries[] | select(.value != "NO_UPDATE_NEEDED") | .key' | head -1)
+          if [ -z "$ANY_UPDATES" ]; then
             echo "no_update=true" >> $GITHUB_ENV
-            echo "Codex determined no update is needed"
+            echo "No header updates needed"
           else
+            UPDATED_LIST=$(echo "$RESULT" | jq -r 'to_entries[] | select(.value != "NO_UPDATE_NEEDED") | .key' | tr '\n' ', ' | sed 's/,$//')
             echo "no_update=false" >> $GITHUB_ENV
-            echo "Codex generated updated content"
+            echo "updated_products=$UPDATED_LIST" >> $GITHUB_ENV
+            echo "Updates needed for: $UPDATED_LIST"
           fi
 
-      - name: Update llms.txt route file
-        if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
+      - name: Update product route files
+        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
         run: |
-          # Escape any unescaped backticks to prevent JS template literal syntax errors
-          sed -i 's/\\`/__ESC__/g; s/`/\\`/g; s/__ESC__/\\`/g' /tmp/updated-llms.txt
+          ROUTE_DIR="apps/developer-hub/src/app"
+          DECISIONS=$(cat /tmp/update-decisions.json)
 
-          UPDATED_CONTENT=$(cat /tmp/updated-llms.txt)
+          # Process each file that needs updating
+          echo "$DECISIONS" | jq -r 'to_entries[] | select(.value != "NO_UPDATE_NEEDED") | .key' | while read -r product; do
+            ROUTE_FILE="$ROUTE_DIR/$product/route.ts"
 
-          # Create the new route file
-          cat > apps/developer-hub/src/app/llms.txt/route.ts << 'ROUTEOF'
-          import { NextResponse } from "next/server";
+            if [ ! -f "$ROUTE_FILE" ]; then
+              echo "Warning: $ROUTE_FILE not found, skipping"
+              continue
+            fi
 
-          export const revalidate = false;
+            # Extract the new header content from the JSON decision
+            echo "$DECISIONS" | jq -r --arg key "$product" '.[$key]' > /tmp/new-header.txt
 
-          export function GET() {
-            const content = `
-          ROUTEOF
+            # Escape any unescaped backticks for JS template literal safety
+            sed -i 's/\\`/__ESC__/g; s/`/\\`/g; s/__ESC__/\\`/g' /tmp/new-header.txt
 
-          # Append the content
-          echo "$UPDATED_CONTENT" >> apps/developer-hub/src/app/llms.txt/route.ts
+            # Use Python to safely replace the STATIC_HEADER content in the route file
+            cat > /tmp/replace-header.py << 'PYEOF'
+          import sys
 
-          # Close the template literal and function
-          cat >> apps/developer-hub/src/app/llms.txt/route.ts << 'ROUTEEND'
-          `;
+          file_path = sys.argv[1]
+          header_path = sys.argv[2]
 
-            return new NextResponse(content, {
-              status: 200,
-              headers: {
-                "Content-Type": "text/plain; charset=utf-8",
-                "Cache-Control": "public, max-age=86400",
-              },
-            });
-          }
-          ROUTEEND
+          with open(file_path) as f:
+              source = f.read()
 
-      - name: Format updated file
-        if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
+          with open(header_path) as f:
+              new_header = f.read()
+
+          start_marker = "const STATIC_HEADER = `"
+          end_marker = "\n`;"
+
+          start = source.index(start_marker) + len(start_marker)
+          end = source.index(end_marker, start)
+
+          result = source[:start] + new_header + source[end:]
+
+          with open(file_path, "w") as f:
+              f.write(result)
+
+          print(f"Updated {file_path}")
+          PYEOF
+            python3 /tmp/replace-header.py "$ROUTE_FILE" "/tmp/new-header.txt"
+          done
+
+      - name: Format updated files
+        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
         run: |
           cd apps/developer-hub
-          npx prettier --write src/app/llms.txt/route.ts || true
+          AFFECTED="${{ steps.changed-files.outputs.affected_products }}"
+          for product in $AFFECTED; do
+            npx prettier --write "src/app/$product/route.ts" || true
+          done
 
       - name: Commit and push changes
-        if: steps.changed-files.outputs.significant == 'true' && env.no_update != 'true'
+        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          git add apps/developer-hub/src/app/llms.txt/route.ts
+          AFFECTED="${{ steps.changed-files.outputs.affected_products }}"
+          for product in $AFFECTED; do
+            git add "apps/developer-hub/src/app/$product/route.ts"
+          done
 
           # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(developer-hub): auto-update llms.txt
+            git commit -m "chore(developer-hub): auto-update llms.txt product headers
 
-          Updated llms.txt based on documentation changes."
+          Updated static headers based on documentation changes."
 
             git push
             echo "Changes committed and pushed"
@@ -252,25 +352,58 @@ jobs:
         with:
           script: |
             const noUpdate = process.env.no_update === 'true';
+            const affectedRaw = '${{ steps.changed-files.outputs.affected_products }}';
+            const affectedProducts = affectedRaw.split(' ').filter(Boolean);
+            const newProduct = '${{ steps.changed-files.outputs.new_product }}' === 'true';
+            const updatedProducts = (process.env.updated_products || '').split(',').filter(Boolean);
 
-            const body = noUpdate
-              ? `## 🤖 llms.txt Review
+            const newProductWarning = newProduct
+              ? `\n> ⚠️ **New product directory detected.** Please check if the \`llms.txt\` routing hub needs a new entry.\n`
+              : '';
 
-            Analyzed documentation changes - no updates to \`llms.txt\` required.
+            let body;
 
+            const dynamicContentNote = '\n\n> Note: New documentation pages are automatically included in the dynamic content section at build time.';
+
+            if (affectedProducts.length === 0) {
+              body = `## 🤖 llms.txt Static Header Review
+
+            Documentation changes detected, but no product-specific llms.txt files were affected.
+            ${dynamicContentNote}
+            ${newProductWarning}
             <details>
             <summary>Files analyzed</summary>
 
             \`\`\`
             ${{ steps.changed-files.outputs.files }}
             \`\`\`
-            </details>`
-              : `## 🤖 llms.txt Updated
+            </details>`;
+            } else if (noUpdate) {
+              body = `## 🤖 llms.txt Static Header Review
 
-            I've automatically updated \`llms.txt\` based on the documentation changes in this PR.
+            Analyzed documentation changes — no updates to product static headers required.
 
-            Please review the changes to \`apps/developer-hub/src/app/llms.txt/route.ts\`
+            **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
+            ${dynamicContentNote}
+            ${newProductWarning}
+            <details>
+            <summary>Files analyzed</summary>
 
+            \`\`\`
+            ${{ steps.changed-files.outputs.files }}
+            \`\`\`
+            </details>`;
+            } else {
+              body = `## 🤖 llms.txt Product Headers Updated
+
+            I've automatically updated static headers in product-specific llms.txt files based on documentation changes.
+
+            **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
+            **Products updated:** ${updatedProducts.map(p => `\`${p.trim()}\``).join(', ') || 'none'}
+
+            Please review the changes to the route files in \`apps/developer-hub/src/app/\`.
+            ${dynamicContentNote}
+            ${newProductWarning}
             <details>
             <summary>Files that triggered this update</summary>
 
@@ -278,6 +411,7 @@ jobs:
             ${{ steps.changed-files.outputs.files }}
             \`\`\`
             </details>`;
+            }
 
             // Check if we already commented
             const { data: comments } = await github.rest.issues.listComments({

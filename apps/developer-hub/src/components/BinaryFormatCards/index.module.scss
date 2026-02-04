@@ -1,0 +1,252 @@
+@use "@pythnetwork/component-library/theme";
+
+.container {
+  margin: theme.spacing(4) 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: theme.spacing(3);
+
+  @include theme.breakpoint("md") {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(3);
+  padding: theme.spacing(4);
+  background-color: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  cursor: pointer;
+  transition: all 150ms ease-out;
+  text-align: left;
+
+  &:hover {
+    border-color: theme.color("muted");
+  }
+
+  &.selected {
+    border-width: 2px;
+    border-color: theme.color("highlight");
+    background-color: color-mix(
+      in srgb,
+      theme.color("highlight") 8%,
+      transparent
+    );
+  }
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(1);
+}
+
+.formatName {
+  margin: 0;
+
+  @include theme.text("sm", "semibold");
+
+  color: theme.color("foreground");
+}
+
+.algorithm {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+  font-family: theme.font-family("monospace");
+}
+
+.specs {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+  padding: theme.spacing(3);
+  background-color: color-mix(
+    in srgb,
+    theme.color("background", "primary") 50%,
+    transparent
+  );
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.specLabel {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+}
+
+.specValue {
+  @include theme.text("xs", "semibold");
+
+  color: theme.color("foreground");
+  font-family: theme.font-family("monospace");
+}
+
+.useCases {
+  display: flex;
+  flex-direction: column;
+  gap: theme.spacing(2);
+}
+
+.useCasesLabel {
+  @include theme.text("xs", "medium");
+
+  color: theme.color("muted");
+}
+
+.useCasesTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: theme.spacing(1);
+}
+
+.tag {
+  @include theme.text("xxs", "medium");
+
+  padding: theme.spacing(1) theme.spacing(2);
+  background-color: color-mix(in srgb, theme.color("border") 50%, transparent);
+  border-radius: theme.border-radius("full");
+  color: theme.color("foreground");
+}
+
+.clickHint {
+  @include theme.text("xxs", "medium");
+
+  color: theme.color("muted");
+  text-align: center;
+  margin-top: auto;
+  padding-top: theme.spacing(2);
+  border-top: 1px solid theme.color("border");
+  opacity: 0.6;
+  transition: opacity 150ms ease-out;
+
+  .card:hover & {
+    opacity: 1;
+    color: theme.color("highlight");
+  }
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: theme.spacing(2);
+
+  @include theme.text("xxs", "medium");
+
+  color: theme.color("muted");
+  padding-top: theme.spacing(2);
+  border-top: 1px solid theme.color("border");
+}
+
+.details {
+  margin-top: theme.spacing(4);
+  padding: theme.spacing(4);
+  background-color: color-mix(
+    in srgb,
+    theme.color("highlight") 5%,
+    transparent
+  );
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+}
+
+.detailsHeader {
+  margin: 0;
+  margin-bottom: theme.spacing(3);
+
+  @include theme.text("sm", "semibold");
+
+  color: theme.color("foreground");
+}
+
+.codeBlock {
+  margin: 0;
+  padding: theme.spacing(3);
+  background-color: theme.color("background", "secondary");
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("md");
+  overflow-x: auto;
+
+  @include theme.text("sm", "medium");
+
+  font-family: theme.font-family("monospace");
+  color: theme.color("highlight");
+}
+
+.comparisonTable {
+  overflow-x: auto;
+  border: 1px solid theme.color("border");
+  border-radius: theme.border-radius("lg");
+  background-color: theme.color("background", "secondary");
+  width: 100%;
+  border-collapse: collapse;
+
+  @include theme.text("xs", "normal");
+}
+
+.tableHeader {
+  @include theme.text("xs", "semibold");
+
+  padding: theme.spacing(3.5) theme.spacing(3);
+  text-align: left;
+  border-bottom: 1px solid theme.color("border");
+  line-height: 1.6;
+  color: theme.color("muted");
+  background-color: color-mix(in srgb, theme.color("border") 30%, transparent);
+  white-space: nowrap;
+}
+
+.tableCell {
+  padding: theme.spacing(3.5) theme.spacing(3);
+  text-align: left;
+  border-bottom: 1px solid theme.color("border");
+  line-height: 1.6;
+  color: theme.color("foreground");
+  vertical-align: top;
+}
+
+.tableRow {
+  transition: background-color 150ms ease-out;
+
+  &:hover {
+    background-color: color-mix(
+      in srgb,
+      theme.color("highlight") 5%,
+      transparent
+    );
+  }
+
+  &:last-child .tableCell {
+    border-bottom: none;
+  }
+}
+
+.formatCode {
+  font-family: theme.font-family("monospace");
+
+  @include theme.text("xs", "medium");
+
+  color: theme.color("foreground");
+  line-height: 1.6;
+}
+
+.useCasesList {
+  @include theme.text("xs", "normal");
+
+  color: theme.color("muted");
+  margin: 0;
+  line-height: inherit;
+}

@@ -63,5 +63,20 @@
     "chain": "arbitrum_sepolia",
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "type": "EvmLazerContract"
+  },
+  {
+    "chain": "arc_testnet",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "tempo_testnet",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
+  },
+  {
+    "chain": "tempo",
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "type": "EvmLazerContract"
   }
 ]

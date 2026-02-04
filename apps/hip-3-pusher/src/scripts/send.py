@@ -6,7 +6,7 @@ from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Send USDC from one Hyperliquid account to another (at least 6 to activate new one)"
     )
@@ -45,23 +45,27 @@ def main():
 
     args = parser.parse_args()
 
-    network = "testnet" if args.testnet else "mainnet"
+    network_name = "testnet" if args.testnet else "mainnet"
     base_url = constants.TESTNET_API_URL if args.testnet else constants.MAINNET_API_URL
-    print(f"Using {network} URL: {base_url}")
+    print(f"Using {network_name} URL: {base_url}")
 
     sender_account = Account.from_key(Path(args.private_key_file).read_text().strip())
     sender_exchange = Exchange(wallet=sender_account, base_url=base_url)
     print("sender address:", sender_account.address)
-    recipient_address = args.recipient_address
-    print("recipient address:", recipient_address)
-    amount = args.amount
-    print("amount:", amount)
+    print("recipient address:", args.recipient_address)
+    print("amount:", args.amount)
 
     if args.dry_run:
-        print(f"dry run: {network}: would send {amount} USDC from {sender_account.address} to {recipient_address}")
+        print(
+            f"dry run: {network_name}: would send {args.amount} USDC from {sender_account.address} to {args.recipient_address}"
+        )
     else:
         print("calling usd_transfer...")
-        print(sender_exchange.usd_transfer(amount=amount, destination=recipient_address))
+        print(
+            sender_exchange.usd_transfer(
+                amount=args.amount, destination=args.recipient_address
+            )
+        )
 
 
 if __name__ == "__main__":

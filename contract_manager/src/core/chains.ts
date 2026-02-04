@@ -9,11 +9,17 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable n/no-process-env */
 
+import assert from "node:assert/strict";
+import { readFile, writeFile } from "node:fs/promises";
+import nodePath from "node:path";
+
 import { Network } from "@injectivelabs/networks";
 import { IotaClient } from "@iota/iota-sdk/client";
 import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
+import * as suiBytecode from "@mysten/move-bytecode-template";
 import type {
+  MoveStruct as SuiMoveStruct,
   MoveValue as SuiMoveValue,
   SuiTransactionBlockResponseOptions,
 } from "@mysten/sui/client";
@@ -43,7 +49,7 @@ import {
   EvmSetWormholeAddress,
   UpgradeContract256Bit,
   EvmExecute,
-  UpgradeLazerContract256Bit,
+  UpgradeSuiLazerContract,
   UpdateTrustedSigner264Bit,
 } from "@pythnetwork/xc-admin-common";
 import { keyPairFromSeed } from "@ton/crypto";
@@ -52,6 +58,7 @@ import { TonClient, WalletContractV4, Address } from "@ton/ton";
 import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
 import * as bs58 from "bs58";
 import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import * as micromustache from "micromustache";
 import * as nearAPI from "near-api-js";
 import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
 import * as chains from "viem/chains";
@@ -367,9 +374,13 @@ export class SuiChain extends Chain {
    * @param digest - hex string of the 32 byte digest for the new package
    * without the 0x prefix
    */
-  generateGovernanceUpgradeLazerPayload(digest: string): Buffer {
-    return new UpgradeLazerContract256Bit(
+  generateGovernanceUpgradeLazerPayload(
+    version: bigint,
+    digest: string,
+  ): Buffer {
+    return new UpgradeSuiLazerContract(
       this.wormholeChainName,
+      version,
       digest,
     ).encode();
   }
@@ -476,6 +487,62 @@ export class SuiChain extends Chain {
     return { packageId, upgradeCapId };
   }
 
+  async publishLazerPackage(
+    pkg: SuiPackage,
+    meta: SuiLazerMeta,
+    signer: SuiEd25519Keypair,
+  ) {
+    this.verifyLazerMeta(pkg, meta);
+    return await this.publishPackage(pkg, signer);
+  }
+
+  async updateLazerMeta(packagePath: string, meta: SuiLazerMeta) {
+    const templatePath = nodePath.resolve(
+      packagePath,
+      "sources/meta.move.mustache",
+    );
+    const template = await readFile(templatePath, { encoding: "utf8" });
+    const outputPath = nodePath.resolve(packagePath, "sources/meta.move");
+    const output = micromustache.render(template, meta);
+    await writeFile(outputPath, output, { encoding: "utf8" });
+  }
+
+  /**
+   * Inspects `pyth_lazer::meta` module bytecode to ensure that metadata are
+   * set correctly.
+   */
+  verifyLazerMeta(
+    { modules }: SuiPackage,
+    { version, receiver_chain_id }: SuiLazerMeta,
+  ) {
+    for (const bytes of modules) {
+      const {
+        self_module_handle_idx,
+        module_handles,
+        identifiers,
+        function_handles,
+        function_defs,
+      } = suiBytecode.deserialize(Buffer.from(bytes, "base64"));
+      const name = identifiers[module_handles[self_module_handle_idx].name];
+      if (name === "meta") {
+        for (const def of function_defs) {
+          const funName = identifiers[function_handles[def.function].name];
+          if (funName === "version") {
+            assert.deepEqual(def.code.code, [
+              { LdU64: BigInt(version) },
+              "Ret",
+            ]);
+          } else if (funName === "receiver_chain_id") {
+            assert.deepEqual(def.code.code, [
+              { LdU16: receiver_chain_id },
+              "Ret",
+            ]);
+          }
+        }
+      }
+    }
+  }
+
   async initLazerContract(
     packageId: string,
     upgradeCapId: string,
@@ -552,22 +619,8 @@ export class SuiChain extends Chain {
     package: string;
     version: string;
   }> {
-    const { data: stateObject, error } = await client.getObject({
-      id: stateId,
-      options: { showContent: true },
-    });
-    if (!stateObject?.content || error) {
-      throw new Error(
-        `Failed to get state object: ${error?.code ?? "undefined"}`,
-      );
-    }
-    if (stateObject.content.dataType !== "moveObject") {
-      throw new Error(
-        `State must be an object, got: ${stateObject.content.dataType}`,
-      );
-    }
+    const state = await this.getStateObject(client, stateId);
 
-    const state = stateObject.content;
     if (!this.hasStructField(state, "upgrade_cap")) {
       throw new Error("Missing 'upgrade_cap' in state object");
     }
@@ -588,6 +641,44 @@ export class SuiChain extends Chain {
       package: upgradeCap.fields.package,
       version: upgradeCap.fields.version,
     };
+  }
+
+  async getStateGovernanceInfo(client: SuiClient, stateId: string) {
+    const state = await this.getStateObject(client, stateId);
+
+    if (!this.hasStructField(state, "governance")) {
+      throw new Error("Missing 'governance' in state object");
+    }
+    const governance = state.fields.governance;
+    if (
+      !this.hasStructField(governance, "seen_sequence") ||
+      typeof governance.fields.seen_sequence !== "string"
+    ) {
+      throw new Error("Could not find 'seen_sequence' BigInt in Governance");
+    }
+    return { seen_sequence: BigInt(governance.fields.seen_sequence) };
+  }
+
+  private async getStateObject(
+    client: SuiClient,
+    stateId: string,
+  ): Promise<SuiMoveStruct> {
+    const { data: stateObject, error } = await client.getObject({
+      id: stateId,
+      options: { showContent: true },
+    });
+    if (!stateObject?.content || error) {
+      throw new Error(
+        `Failed to get state object: ${error?.code ?? "undefined"}`,
+      );
+    }
+    if (stateObject.content.dataType !== "moveObject") {
+      throw new Error(
+        `State must be an object, got: ${stateObject.content.dataType}`,
+      );
+    }
+
+    return stateObject.content;
   }
 
   private hasStructField<const F extends string>(
@@ -650,16 +741,20 @@ export class SuiChain extends Chain {
   async upgradeLazerContract({
     stateId,
     wormholeStateId,
-    pkg: { modules, dependencies },
+    pkg,
+    meta,
     vaa,
     signer,
   }: {
     stateId: string;
     wormholeStateId: string;
     pkg: SuiPackage;
+    meta: SuiLazerMeta;
     vaa: Uint8Array;
     signer: SuiEd25519Keypair;
   }) {
+    this.verifyLazerMeta(pkg, meta);
+
     const client = this.getProvider();
     const tx = new SuiTransaction();
     const { package: wormholeId } = await this.getStatePackageInfo(
@@ -685,8 +780,8 @@ export class SuiChain extends Chain {
       arguments: [tx.object(stateId), verifiedVaa],
     });
     const receipt = tx.upgrade({
-      modules,
-      dependencies,
+      modules: pkg.modules,
+      dependencies: pkg.dependencies,
       package: packageId,
       ticket,
     });
@@ -737,10 +832,15 @@ export class SuiChain extends Chain {
   }
 }
 
-type SuiPackage = {
+export type SuiPackage = {
   modules: string[];
   dependencies: string[];
   digest: number[];
+};
+
+export type SuiLazerMeta = {
+  version: string;
+  receiver_chain_id: number;
 };
 
 export class IotaChain extends Chain {
@@ -930,6 +1030,33 @@ export class EvmChain extends Chain {
   }
 
   /**
+   * Gets the balance for Tempo network using TIP-20 balanceOf instead of eth_getBalance
+   * Tempo has no native gas token and uses TIP-20 tokens (pathUSD) for fees
+   * @param address - the address to check balance for
+   * @returns the balance in wei (as bigint)
+   */
+  private async getBalanceForTempo(address: string): Promise<bigint> {
+    const PATHUSD_ADDRESS = "0x20c0000000000000000000000000000000000000";
+    const ERC20_BALANCE_OF_ABI = [
+      {
+        constant: true,
+        inputs: [{ name: "account", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "", type: "uint256" }],
+        type: "function",
+      },
+    ] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    const web3 = this.getWeb3();
+    const contract = new web3.eth.Contract(
+      ERC20_BALANCE_OF_ABI,
+      PATHUSD_ADDRESS,
+    );
+    const balance = await contract.methods.balanceOf(address).call();
+    return BigInt(balance);
+  }
+
+  /**
    * Deploys a contract on this chain
    * @param privateKey - hex string of the 32 byte private key without the 0x prefix
    * @param abi - the abi of the contract, can be obtained from the compiled contract json file
@@ -956,8 +1083,14 @@ export class EvmChain extends Chain {
     const gasPrice = Math.trunc(
       Number(await this.getGasPrice()) * gasPriceMultiplier,
     );
-    const deployerBalance = await web3.eth.getBalance(signer.address);
-    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
+
+    // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
+    const deployerBalance =
+      this.networkId === 42_431 || this.networkId === 4217
+        ? await this.getBalanceForTempo(signer.address)
+        : BigInt(await web3.eth.getBalance(signer.address));
+    // Comment it when you are interactive with Tempo testnet or mainnet
+    const gasDiff = BigInt(gas) * BigInt(gasPrice) - deployerBalance;
     if (gasDiff > 0n) {
       throw new Error(
         `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
@@ -990,10 +1123,16 @@ export class EvmChain extends Chain {
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const address = await this.getAccountAddress(privateKey);
+
+    // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
+    if (this.networkId === 42_431) {
+      const balance = await this.getBalanceForTempo(address);
+      return Number(balance) / 10 ** 18;
+    }
+
     const web3 = this.getWeb3();
-    const balance = await web3.eth.getBalance(
-      await this.getAccountAddress(privateKey),
-    );
+    const balance = await web3.eth.getBalance(address);
     return Number(balance) / 10 ** 18;
   }
 }

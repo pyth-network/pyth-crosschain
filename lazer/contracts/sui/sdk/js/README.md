@@ -22,7 +22,7 @@ A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 
 ```sh
 # Your Sui private key in Bech32 format
-# SUI_KEY=
+# export SUI_KEY=
 
 # Lazer contract state ID
 # STATE_ID=
@@ -81,5 +81,5 @@ const result = await client.signAndExecuteTransaction({
 ## References
 
 - Pyth Lazer Sui contract: `lazer/contracts/sui/`
-- Lazer JS SDK (data source): `lazer/sdk/js/`
+- Lazer JS SDK: https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk
 - Mysten Sui TS SDK docs: https://sdk.mystenlabs.com/typescript/transaction-building/basics

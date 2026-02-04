@@ -1,0 +1,48 @@
+---
+title: REST API
+description: On-demand price queries via REST
+slug: /price-feeds/pro/api/rest
+---
+
+## Base URL
+
+```
+https://pyth-lazer.dourolabs.app
+```
+
+## Endpoints
+
+| Method | Path               | Description                                         |
+| ------ | ------------------ | --------------------------------------------------- |
+| POST   | `/v1/latest_price` | Fetch the latest price for one or more price feeds  |
+| POST   | `/v1/price`        | Fetch price data at a specific historical timestamp |
+
+### POST /v1/latest_price
+
+Returns the most recent price data for the requested feeds. The request body follows the same schema as the WebSocket subscribe message — see the [Payload Reference](/price-feeds/pro/payload-reference) for full details.
+
+### POST /v1/price
+
+Returns price data at a specific historical timestamp.
+
+**Request Body**
+
+All fields from `/v1/latest_price`, plus:
+
+| Field       | Type     | Required | Description                    |
+| ----------- | -------- | -------- | ------------------------------ |
+| `timestamp` | `string` | Yes      | Unix timestamp in microseconds |
+
+For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
+
+## OpenAPI Schema
+
+The REST API is part of the Pyth Pro Router API. The full OpenAPI specification is available at:
+
+- [Interactive Docs](https://pyth-lazer-0.dourolabs.app/docs)
+- [OpenAPI JSON](https://pyth-lazer-0.dourolabs.app/docs/openapi.json)
+
+## Related
+
+- [Examples Repository](https://github.com/pyth-network/pyth-examples/tree/main/lazer)
+- [WebSocket API](/price-feeds/pro/api/websocket) - For real-time updates

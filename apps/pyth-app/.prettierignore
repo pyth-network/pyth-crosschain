@@ -1,0 +1,15 @@
+.next/
+coverage/
+node_modules/
+*.tsbuildinfo
+.env*.local
+.env
+.DS_Store
+dist/
+lib/
+build/
+node_modules/
+package.json
+tsconfig*.json
+turbo.json
+src/pyth-app.css
