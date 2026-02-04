@@ -16,12 +16,15 @@ pub fn extract_token_from_headers_and_uri(
     uri: &axum::http::Uri,
 ) -> Option<String> {
     // First, try to get from Authorization header
+    // RFC 7235: auth scheme is case-insensitive
     if let Some(auth_header) = headers.get(axum::http::header::AUTHORIZATION) {
         if let Ok(auth_str) = auth_header.to_str() {
-            if let Some(token) = auth_str.strip_prefix("Bearer ") {
-                let token = token.trim();
-                if !token.is_empty() {
-                    return Some(token.to_string());
+            if let Some((scheme, token)) = auth_str.split_once(' ') {
+                if scheme.eq_ignore_ascii_case("bearer") {
+                    let token = token.trim();
+                    if !token.is_empty() {
+                        return Some(token.to_string());
+                    }
                 }
             }
         }
@@ -81,6 +84,26 @@ mod tests {
 
         let token = extract_token_from_headers_and_uri(&headers, &uri);
         assert_eq!(token, Some("my_secret_token_1234".to_string()));
+    }
+
+    #[test]
+    fn test_extract_token_from_bearer_header_case_insensitive() {
+        for scheme in &["bearer", "BEARER", "Bearer", "bEaReR"] {
+            let mut headers = HeaderMap::new();
+            let value = format!("{scheme} my_secret_token_1234");
+            headers.insert(
+                axum::http::header::AUTHORIZATION,
+                HeaderValue::from_str(&value).unwrap(),
+            );
+            let uri: Uri = "/api/test".parse().unwrap();
+
+            let token = extract_token_from_headers_and_uri(&headers, &uri);
+            assert_eq!(
+                token,
+                Some("my_secret_token_1234".to_string()),
+                "Failed for scheme: {scheme}",
+            );
+        }
     }
 
     #[test]
