@@ -288,11 +288,6 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
-    // Add access token as query param for SSE connections
-    if (this.accessToken) {
-      url.searchParams.append("ACCESS_TOKEN", this.accessToken);
-    }
-
     // Build auth headers for SSE fetch
     const authHeaders: Record<string, string> = {};
     if (this.accessToken !== undefined) {
