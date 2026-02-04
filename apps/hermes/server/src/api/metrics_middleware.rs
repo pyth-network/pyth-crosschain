@@ -17,7 +17,7 @@ use {
 
 pub struct ApiMetrics {
     pub requests: Family<Labels, Counter>,
-    pub latencies: Family<Labels, Histogram>,
+    pub latencies: Family<LatencyLabels, Histogram>,
     pub sse_broadcast_latency: Histogram,
 }
 
@@ -92,6 +92,13 @@ pub struct Labels {
     pub token_suffix: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash, EncodeLabelSet)]
+pub struct LatencyLabels {
+    pub method: String,
+    pub path: String,
+    pub status: u16,
+}
+
 pub async fn track_metrics<B, S>(
     State(api_state): State<ApiState<S>>,
     req: Request<B>,
@@ -115,16 +122,21 @@ pub async fn track_metrics<B, S>(
     let status = response.status().as_u16();
     let labels = Labels {
         method: method.to_string(),
-        path,
+        path: path.clone(),
         status,
         token_suffix,
+    };
+    let latency_labels = LatencyLabels {
+        method: method.to_string(),
+        path,
+        status,
     };
 
     api_state.metrics.requests.get_or_create(&labels).inc();
     api_state
         .metrics
         .latencies
-        .get_or_create(&labels)
+        .get_or_create(&latency_labels)
         .observe(latency);
 
     response
