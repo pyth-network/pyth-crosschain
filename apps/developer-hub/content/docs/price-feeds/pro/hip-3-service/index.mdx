@@ -1,0 +1,90 @@
+---
+title: HIP-3 as a Service
+description: Complete oracle solution for Hyperliquid HIP-3 perpetual market deployers
+slug: /price-feeds/pro/hip-3-service
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { IntegrationCard } from "../../../../../src/components/IntegrationCard";
+import {
+  Lightning,
+  FileText,
+  Shield,
+  RocketLaunch,
+} from "@phosphor-icons/react/dist/ssr";
+
+Pyth Network provides **HIP-3 as a Service**, a complete end-to-end solution for deployers launching permissionless perpetual markets on Hyperliquid. This service combines institutional-grade data, managed infrastructure, capital support, and market operations to help you successfully deploy and maintain HIP-3 markets.
+
+<Callout type="info">
+  New to HIP-3? Learn about Hyperliquid's permissionless perpetual markets in
+  the [official Hyperliquid
+  documentation](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals).
+</Callout>
+
+## What You Get
+
+HIP-3 as a Service provides everything you need to launch and maintain a successful perpetual market on Hyperliquid:
+
+<Cards>
+  <Card icon={<Lightning size={18} />} title="Oracle Data & Infrastructure">
+    First-party data with automated updates and 24/7 monitoring
+  </Card>
+  <Card icon={<FileText size={18} />} title="Capital & Liquidity Support">
+    Market maker relationships, loan capital, and HYPE sourcing
+  </Card>
+  <Card icon={<Shield size={18} />} title="Security & Go-to-Market">
+    Audit discounts, 24/7 support, and co-marketing
+  </Card>
+</Cards>
+
+## What problem this solves
+
+Deploying and operating a HIP-3 market typically requires all of the following:
+
+- Maintaining continuous **oracle updates every 3 seconds** to meet HIP-3 requirements
+- Securing **keys and operational processes** to reduce downtime and update failures
+- Coordinating **market-maker liquidity** and launch operations
+
+## How It Works
+
+The HIP-3 pusher service monitors price changes and submits signed updates to the Hyperliquid blockchain whenever specific conditions are met (e.g., price deviation or time-based heartbeat).
+
+1.  **Data Sourcing**: The relayer is fully configurable and can connect to any data source that exposes price data via REST API or WebSocket. You can use [Pyth Core](/price-feeds/core), [Pyth Pro](/price-feeds/pro), [SEDA](https://www.seda.xyz/) or [Hyperliquid](https://hyperliquid.xyz/), or plug in your own custom data feeds.
+2.  **Robustness & Redundancy**: The service supports fallback configurations to ensure reliability—if the primary data source is unavailable, the next source in the priority chain is used.
+3.  **Submission**: Signed transactions are sent to the Hyperliquid validator network to update the market's oracle state.
+
+## Why Pyth
+
+Pyth Network offers unique advantages that make it the ideal oracle partner for your HIP-3 market:
+
+### First-Party Data
+
+Pyth sources data directly from 120+ institutional publishers including exchanges, market makers, and trading firms. This eliminates single points of failure that affect aggregated data providers.
+
+### Market Maker Trust
+
+Pyth's market maker publishers (Jump, Flowdesk, IMC, Amber, Selini) trust Pyth data because they create it themselves. This leads to:
+
+- Higher engagement rates for Pyth-powered markets
+- Faster liquidity onboarding
+
+### Redundant Infrastructure
+
+- Primary, secondary, and tertiary infrastructure across multiple regions
+- Multi-cloud key management with automatic failover
+- Support for multisig oracle updates for operational flexibility
+
+## Get Started
+
+Ready to launch your HIP-3 market? Get in touch with our team to discuss your requirements and get started.
+
+<div className="mt-6">
+  <IntegrationCard
+    href="https://2fga8d.share-eu1.hsforms.com/2ftdPrASCTLCxtP5YMzAq_Q"
+    colorScheme="yellow"
+    title="Request Access"
+    description="Fill out our contact form to get started with HIP-3 as a Service."
+    icon={<RocketLaunch size={16} />}
+    external
+  />
+</div>
