@@ -19,7 +19,7 @@ import {
 
 This page describes the technical specification for the HIP-3 price pusher. The pusher is a production-grade price publishing service that delivers continuous, robust prices for perpetual futures markets on Hyperliquid as part of [HIP-3 as a Service](/price-feeds/pro/hip-3-service).
 
-### Features
+### Features of HIP-3 Price Pusher
 
 The price pusher provides the following capabilities:
 
@@ -31,18 +31,20 @@ The price pusher provides the following capabilities:
 ### Scope
 
 The pusher handles:
+
 - Aggregating spot prices from configured sources
 - Constructing mark prices per your configuration
 - Publishing `setOracle` calls to Hyperliquid at ~3 second intervals
 - Monitoring and alerting on price gaps or source failures
 
 The pusher does **not** handle:
+
 - Market listing/delisting
-- Risk parameter configuration (margin tables, OI caps, fees)
+- Risk parameter configuration (margin tables, open interest caps, fees)
 - Trading halts
 - Any deployer-level operations
 
-## How It Works
+## How HIP-3 Price Pusher Works
 
 ### The Publishing Cycle
 
@@ -52,7 +54,9 @@ Every ~3 seconds, the pusher:
   <Step>**Collects** the latest prices from all connected sources</Step>
   <Step>**Resolves** each symbol's price using the waterfall priority</Step>
   <Step>**Constructs** mark prices according to your configuration</Step>
-  <Step>**Publishes** a single `setOracle` call containing all asset prices</Step>
+  <Step>
+    **Publishes** a single `setOracle` call containing all asset prices
+  </Step>
 </Steps>
 
 ### Waterfall Price Resolution
@@ -67,55 +71,66 @@ BTC Price Resolution:
   (not checked, already resolved)
 ```
 
+{/* prettier-ignore */}
 <Callout type="info" title="Key behaviors">
-- A price is considered **stale** if older than the configured threshold (default: 5 seconds).
-- If **all sources fail** for a symbol, that symbol is excluded from the update. No fabricated prices are ever published.
-- Sources are checked in **configuration order**, giving you control over priority.
+  - A price is considered **stale** if older than the configured threshold
+  (default: 5 seconds). 
+  - If **all sources fail** for a symbol, that symbol is
+  excluded from the update. No fabricated prices are ever published. 
+  - Sources are checked in **configuration order**, giving you control over priority.
 </Callout>
 
 #### Example: Multi-Source Resilience
 
 Consider a configuration with three sources for ETH:
 
-| Priority | Source | Status | Age |
-|----------|--------|--------|-----|
-| 1 | Pyth Pro | Disconnected | n/a |
-| 2 | Pythnet/Hermes | Fresh | 1.2s |
-| 3 | Hyperliquid Oracle | Fresh | 0.5s |
+| Priority | Source             | Status       | Age  |
+| -------- | ------------------ | ------------ | ---- |
+| 1        | Pyth Pro           | Disconnected | n/a  |
+| 2        | Pythnet/Hermes     | Fresh        | 1.2s |
+| 3        | Hyperliquid Oracle | Fresh        | 0.5s |
 
-Result: Pythnet price is used. If Pythnet also fails, Hyperliquid Oracle provides the fallback. The system degrades gracefully through the chain.
+**Result**: Pythnet price is used. If Pythnet also fails, Hyperliquid Oracle provides the fallback. The system degrades gracefully through the chain.
 
 ## Price Sources
 
-The pusher supports four primary data source types, each suited to different use cases:
+The pusher supports four primary data source types, each suited to different use cases. Any **custom source** is also accepted.
 
 <Cards>
   <Card icon={<Lightning size={18} />} title="Pyth Pro">
     **Best for:** Primary low-latency feeds
+
     - Sub-second price updates (200ms intervals)
     - WebSocket connection with automatic reconnection
     - Multiple endpoint support for redundancy
+
   </Card>
   <Card icon={<Database size={18} />} title="Pythnet/Hermes">
     **Best for:** Broad asset coverage, Pyth Pro fallback
+
     - Extensive feed catalog
     - WebSocket streaming
     - Natural fallback when Pyth Pro is unavailable
+
   </Card>
   <Card icon={<CalendarBlank size={18} />} title="SEDA">
     **Best for:** Custom oracle feeds, session-aware data, specialized assets
+
     - HTTP polling with configurable intervals
     - **Session awareness**: knows when markets are open or closed
     - Custom field mapping for non-standard data formats
     - Ideal for traditional assets with trading hours (equities, commodities)
+
   </Card>
   <Card icon={<LinkIcon size={18} />} title="Hyperliquid Reference">
     **Best for:** on-chain reference prices, mark construction
+
     - **Channels:** `activeAssetCtx` (oracle and mark), `allMids` (mid prices)
     - **Three Price Types:**
       - `hl_oracle`: Oracle prices
       - `hl_mark`: Mark prices
       - `hl_mid`: Mid prices from order book
+
   </Card>
 </Cards>
 
@@ -147,45 +162,56 @@ You can assign a fixed value to a symbol when appropriate (for example, stable o
 
 Hyperliquid and the pusher use the following timing constraints:
 
-| Constraint | Value | Notes |
-|------------|-------|-------|
-| Minimum interval | 2.5 seconds | Hyperliquid rate limit |
-| Target cadence | ~3 seconds | Normal operation |
-| Incident threshold | 10+ seconds | Triggers alerts |
+| Constraint         | Value       | Notes                  |
+| ------------------ | ----------- | ---------------------- |
+| Minimum interval   | 2.5 seconds | Hyperliquid rate limit |
+| Target cadence     | ~3 seconds  | Normal operation       |
+| Incident threshold | 10+ seconds | Triggers alerts        |
 
 ### Protocol Safeguards
 
 Hyperliquid enforces additional safeguards on all oracle updates. The following apply regardless of what the pusher publishes:
 
-<Callout type="default" title="Enforced by Hyperliquid">
-Hyperliquid applies additional safeguards to all oracle updates. These are enforced regardless of what the pusher publishes:
-
 - **Daily price cap**: Prices clamped at 10× start-of-day price
 - **Mark change limit**: Each update clamped to ±1% from previous mark
-- **OI protection**: Updates rejected if implied OI would exceed 10× configured cap
+- **Open Interest protection**: Updates rejected if implied open interest would exceed 10× configured cap
+
+<Callout>
+  See [Hyperliquid's HIP-3 deployer
+  actions](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions)
+  (`SetOracle` type) for the protocol-level specification of these safeguards.
 </Callout>
 
 ### What Gets Published
 
 Each update sent to Hyperliquid includes the following per-asset fields:
 
-<Callout type="info" title="Per-asset fields">
-Each `setOracle` call includes, per asset, the fields below. If mark prices are not provided, Hyperliquid uses its local mark exclusively. See the [HIP-3 as a Service](/price-feeds/pro/hip-3-service) overview for context.
-</Callout>
+| Field             | Description                        | Required |
+| ----------------- | ---------------------------------- | -------- |
+| `oraclePxs`       | Aggregated spot price              | Yes      |
+| `markPxs`         | Mark price candidates (0-2 values) | No       |
+| `externalPerpPxs` | External reference price           | No       |
 
-| Field | Description | Required |
-|-------|-------------|----------|
-| `oraclePxs` | Aggregated spot price | Yes |
-| `markPxs` | Mark price candidates (0-2 values) | No |
-| `externalPerpPxs` | External reference price | No |
+<Callout type="info" title="Per-asset fields">
+  Each `setOracle` call includes, per asset, the fields below. If mark prices
+  are not provided, Hyperliquid uses its local mark exclusively. For more
+  context, see `SetOracle` type in [Hyperliquid's HIP-3 deployer
+  actions](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions)
+  for the full API specification.
+</Callout>
 
 ## Key Security Model
 
 The pusher supports multiple signing configurations to match your security requirements. Choose the option that fits your environment (development, production standard, or high-value production).
 
+{/* prettier-ignore */}
 <Cards>
-  <Card icon={<Key size={18} />} title="Local Key: Development / Low-value testing">
-    Private key stored in environment or configuration file. Suitable for testnet or development environments.
+  <Card
+    icon={<Key size={18} />}
+    title="Local Key: Development / Low-value testing"
+  >
+    - Private key stored in environment or configuration file
+    - Suitable for testnet or development environments
   </Card>
   <Card icon={<LockKey size={18} />} title="AWS KMS: Production / Standard">
     - Private key never leaves AWS KMS HSM
@@ -193,26 +219,15 @@ The pusher supports multiple signing configurations to match your security requi
     - Supports IAM-based access control
     - Audit trail via CloudTrail
   </Card>
-  <Card icon={<UsersThree size={18} />} title="Multisig: Production / High-value">
+  <Card
+    icon={<UsersThree size={18} />}
+    title="Multisig: Production / High-value"
+  >
     - Requires multiple signatures for each update
     - Supports threshold schemes (e.g., 2-of-3)
     - Maximum security for high-value deployments
   </Card>
 </Cards>
-
-### Permission Boundaries
-
-The pusher's signing key is restricted to price updates only. The following permissions apply:
-
-<Callout type="default" title="Sub-deployer permissions">
-The pusher's signing key is configured as a **sub-deployer** with restricted permissions:
-
-**Allowed:** `setOracle` (all price inputs)
-
-**Not Allowed:** Risk parameter changes (OI caps, margin tables, fees), trading halts, market listing/delisting, and any deployer-level operations.
-
-This separation ensures the pusher can only publish prices. It cannot modify market parameters or halt trading, even if the signing key were compromised.
-</Callout>
 
 ## Reliability Features
 
@@ -230,20 +245,25 @@ The waterfall model ensures the system degrades gracefully:
 
 <Steps>
   <Step>Primary source fails → Secondary source used</Step>
-  <Step>All sources for a symbol fail → Symbol excluded (no stale/fabricated prices)</Step>
-  <Step>Critical sources unavailable → Alerts triggered, publishing continues for healthy symbols</Step>
+  <Step>
+    All sources for a symbol fail → Symbol excluded (no stale/fabricated prices)
+  </Step>
+  <Step>
+    Critical sources unavailable → Alerts triggered, publishing continues for
+    healthy symbols
+  </Step>
 </Steps>
 
 ### Staleness Protection
 
 Every price includes a timestamp from its source. Prices older than the staleness threshold (configurable, default 5 seconds) are rejected regardless of source priority.
 
-| Source | Timestamp Origin |
-|--------|------------------|
-| Pyth Pro | `timestampUs` from feed |
+| Source         | Timestamp Origin                 |
+| -------------- | -------------------------------- |
+| Pyth Pro       | `timestampUs` from feed          |
 | Pythnet/Hermes | `publish_time` from price object |
-| SEDA | ISO datetime from response |
-| Hyperliquid | Message receipt time |
+| SEDA           | ISO datetime from response       |
+| Hyperliquid    | Message receipt time             |
 
 ## Limitations
 
@@ -253,27 +273,23 @@ The following constraints and dependencies apply to the pusher. Understanding th
 
 The pusher cannot override protocol rules or bypass source requirements. The following limitations apply:
 
+{/* prettier-ignore */}
 <Callout type="warning" title="Limitations">
-- **Override protocol safeguards**: Hyperliquid's price clamps and OI limits are enforced regardless of pusher inputs
-- **Guarantee sub-second latency**: Publishing is rate-limited to ~3 second intervals by protocol design
-- **Publish without valid sources**: If all sources fail for a symbol, no price is published (by design)
+  - **Override protocol safeguards**: Hyperliquid's price clamps and open interest limits are enforced regardless of pusher inputs
+  - **Guarantee sub-second latency**: Publishing is rate-limited to ~3 second intervals by protocol design
+  - **Publish without valid sources**: If all sources fail for a symbol, no price is published (by design)
 </Callout>
-
-### Source Dependencies
-
-Each data source has its own requirements. The following apply:
-
-- **Pyth Pro / Pythnet**: Requires valid API credentials and network connectivity to Pyth infrastructure
-- **SEDA**: Requires network access to configured endpoints
-- **Hyperliquid**: Requires WebSocket connectivity to Hyperliquid nodes
-
 
 ### Staleness Tradeoffs
 
 The staleness threshold balances freshness against availability:
+
 - **Too tight** (e.g., 2s): May reject valid prices during minor network delays
 - **Too loose** (e.g., 30s): May publish prices that don't reflect current market
 
 <Callout type="info" title="Recommended">
-Set the staleness threshold to **3–5 seconds** for production. This balances freshness against availability and avoids rejecting valid prices during minor network delays while still excluding prices that no longer reflect current market conditions.
+  Set the staleness threshold to **3–5 seconds** for production. This balances
+  freshness against availability and avoids rejecting valid prices during minor
+  network delays while still excluding prices that no longer reflect current
+  market conditions.
 </Callout>
