@@ -10,7 +10,7 @@ import { useQueryParamFilterPagination } from "@pythnetwork/component-library/us
 import clsx from "clsx";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
@@ -209,8 +209,13 @@ export const PriceFeedIdsProTable = () => {
     },
   );
 
-  // Reset page when status filter changes
+  // Reset page when status filter changes (skip initial render to preserve deep links)
+  const isInitialRender = useRef(true);
   useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
     updatePage(1);
   }, [selectedStates, updatePage]);
 
@@ -273,7 +278,9 @@ export const PriceFeedIdsProTable = () => {
                 type="button"
                 className={clsx(styles.chip, isSelected && styles.selected)}
                 data-variant={FEED_STATE_BADGE_VARIANT[feedState]}
-                onClick={() => { toggleState(feedState); }}
+                onClick={() => {
+                  toggleState(feedState);
+                }}
               >
                 {isSelected && <Check className={styles.checkIcon} />}
                 <span className={styles.chipLabel}>
