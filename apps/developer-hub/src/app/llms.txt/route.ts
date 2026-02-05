@@ -9,6 +9,12 @@ export function GET() {
 
 Pyth Network provides low-latency price feeds and secure random numbers across 100+ blockchains.
 
+## AI Agent Skill: pyth-dev
+
+End-to-end Pyth Network oracle integration playbook. Covers pull-based price feeds, random numbers, and MEV protection with opinionated SDK choices, 5-step operating procedure, security checklists, and ready-to-use code snippets.
+
+→ [SKILL.md](https://docs.pyth.network/SKILL.md)
+
 ## Instructions
 
 This file is a routing index. To help users with Pyth Network, you MUST:
