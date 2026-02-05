@@ -39,6 +39,22 @@
       "time_difference": 60,
       "price_deviation": 0.5,
       "confidence_ratio": 100
+    },
+    {
+      "alias": "IFOGO/FOGO",
+      "account_address": "6D38R3ufqMUp2yyVnybWjMKdKrQw59zNfQAf4EHRYDnd",
+      "id": "73cb634654bb300aa53ad8e2c60e31eb897eb0af317f8313ca13caad34f75f02",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
+      "alias": "STFOGO/FOGO",
+      "account_address": "6JC2CLDNZdXSWwJYMDcEAySaTFazNRTHNwkS3pUB15CM",
+      "id": "98601fdcfe6c4600f0788380e87631c3d4488c737991aeea27737ec31676f55d",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
     }
   ]
 }
