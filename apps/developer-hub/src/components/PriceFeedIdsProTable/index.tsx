@@ -7,7 +7,6 @@ import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import type { ColumnConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
-import clsx from "clsx";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -263,12 +262,17 @@ export const PriceFeedIdsProTable = () => {
         >
           <button
             type="button"
-            className={clsx(styles.chip, allSelected && styles.selected)}
+            className={styles.filterButton}
             onClick={toggleAll}
           >
-            {allSelected && <Check className={styles.checkIcon} />}
-            <span className={styles.chipLabel}>All</span>
-            <span className={styles.chipCount}>{statusCounts.all}</span>
+            <Badge
+              variant={allSelected ? "info" : "neutral"}
+              style="outline"
+              size="md"
+            >
+              {allSelected && <Check className={styles.checkIcon} />}
+              All ({statusCounts.all})
+            </Badge>
           </button>
           {FEED_STATES.map((feedState) => {
             const isSelected = selectedStates.has(feedState);
@@ -276,19 +280,21 @@ export const PriceFeedIdsProTable = () => {
               <button
                 key={feedState}
                 type="button"
-                className={clsx(styles.chip, isSelected && styles.selected)}
-                data-variant={FEED_STATE_BADGE_VARIANT[feedState]}
+                className={styles.filterButton}
                 onClick={() => {
                   toggleState(feedState);
                 }}
               >
-                {isSelected && <Check className={styles.checkIcon} />}
-                <span className={styles.chipLabel}>
-                  {FEED_STATE_LABELS[feedState]}
-                </span>
-                <span className={styles.chipCount}>
-                  {statusCounts[feedState]}
-                </span>
+                <Badge
+                  variant={
+                    isSelected ? FEED_STATE_BADGE_VARIANT[feedState] : "neutral"
+                  }
+                  style="outline"
+                  size="md"
+                >
+                  {isSelected && <Check className={styles.checkIcon} />}
+                  {FEED_STATE_LABELS[feedState]} ({statusCounts[feedState]})
+                </Badge>
               </button>
             );
           })}
