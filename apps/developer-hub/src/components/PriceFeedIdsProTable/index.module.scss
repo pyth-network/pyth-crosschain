@@ -15,24 +15,12 @@
   margin-top: theme.spacing(4);
 }
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: theme.spacing(1);
-  padding: theme.spacing(1.5) theme.spacing(3);
-  border: 1px solid theme.color("border");
-  border-radius: theme.border-radius("full");
-  background-color: transparent;
+.filterButton {
+  padding: 0;
+  border: none;
+  background: none;
   cursor: pointer;
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease;
-
-  &:hover {
-    background-color: theme.color("background", "secondary");
-    border-color: theme.color("muted");
-  }
+  border-radius: theme.border-radius("full");
 
   &:focus-visible {
     outline: 2px solid theme.color("highlight");
@@ -40,58 +28,8 @@
   }
 }
 
-.chip.selected {
-  background-color: color-mix(
-    in srgb,
-    theme.color("highlight") 15%,
-    transparent
-  );
-  border-color: theme.color("highlight");
-  color: theme.color("highlight");
-
-  &[data-variant="success"] {
-    --chip-color: light-dark(#16a34a, #22c55e);
-
-    background-color: color-mix(in srgb, var(--chip-color) 15%, transparent);
-    border-color: var(--chip-color);
-    color: var(--chip-color);
-  }
-
-  &[data-variant="warning"] {
-    --chip-color: light-dark(#ea580c, #f97316);
-
-    background-color: color-mix(in srgb, var(--chip-color) 15%, transparent);
-    border-color: var(--chip-color);
-    color: var(--chip-color);
-  }
-
-  &[data-variant="neutral"] {
-    --chip-color: light-dark(#78716c, #a8a29e);
-
-    background-color: color-mix(in srgb, var(--chip-color) 15%, transparent);
-    border-color: var(--chip-color);
-    color: var(--chip-color);
-  }
-}
-
 .checkIcon {
-  width: 12px;
-  height: 12px;
+  width: theme.spacing(3);
+  height: theme.spacing(3);
   flex-shrink: 0;
-}
-
-.chipLabel {
-  @include theme.text("xs", "medium");
-
-  white-space: nowrap;
-}
-
-.chipCount {
-  @include theme.text("xs", "normal");
-
-  color: theme.color("muted");
-
-  .selected & {
-    color: inherit;
-  }
 }
