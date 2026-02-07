@@ -1,7 +1,7 @@
 {
   "title": "Push Feeds",
   "pages": [
-    "[HIP-3 as a Service](/price-feeds/hip-3-service)",
+    "[HIP-3 as a Service](/price-feeds/core/hip-3-service)",
     "evm",
     "solana",
     "fogo",
