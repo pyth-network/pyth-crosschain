@@ -1,5 +1,7 @@
 "use client";
 
+import { Check } from "@phosphor-icons/react/dist/ssr/Check";
+import { Badge } from "@pythnetwork/component-library/Badge";
 import { Paginator } from "@pythnetwork/component-library/Paginator";
 import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import type { ColumnConfig } from "@pythnetwork/component-library/Table";
@@ -7,13 +9,35 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
 
+const FEED_STATES = ["stable", "coming_soon", "inactive"] as const;
+type FeedState = (typeof FEED_STATES)[number];
+
+const FEED_STATE_LABELS: Record<FeedState, string> = {
+  stable: "Stable",
+  coming_soon: "Coming Soon",
+  inactive: "Inactive",
+};
+
+const FEED_STATE_BADGE_VARIANT: Record<
+  FeedState,
+  "success" | "warning" | "neutral"
+> = {
+  stable: "success",
+  coming_soon: "warning",
+  inactive: "neutral",
+};
+
 export const PriceFeedIdsProTable = () => {
   const [state, setState] = useState<State>(State.NotLoaded());
+  const [selectedStates, setSelectedStates] = useState<Set<FeedState>>(
+    new Set(FEED_STATES),
+  );
+
   useEffect(() => {
     setState(State.Loading());
     getPythProFeeds()
@@ -25,6 +49,46 @@ export const PriceFeedIdsProTable = () => {
       });
   }, []);
 
+  const statusCounts = useMemo(() => {
+    if (state.type !== StateType.Loaded) return;
+    const counts: Record<string, number> = { all: state.feeds.length };
+    for (const s of FEED_STATES) counts[s] = 0;
+    for (const f of state.feeds) counts[f.state] = (counts[f.state] ?? 0) + 1;
+    return counts;
+  }, [state]);
+
+  const filteredByStatus = useMemo(() => {
+    if (state.type !== StateType.Loaded) return [];
+    if (selectedStates.size === FEED_STATES.length) return state.feeds;
+    return state.feeds.filter((feed) => selectedStates.has(feed.state));
+  }, [state, selectedStates]);
+
+  const toggleState = useCallback((feedState: FeedState) => {
+    setSelectedStates((prev) => {
+      const next = new Set(prev);
+      if (next.has(feedState)) {
+        next.delete(feedState);
+      } else {
+        next.add(feedState);
+      }
+      // If the set would become empty, keep just the clicked item
+      if (next.size === 0) {
+        return new Set([feedState]);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleAll = useCallback(() => {
+    setSelectedStates((prev) => {
+      if (prev.size === FEED_STATES.length) {
+        // All selected → select only "stable" as default
+        return new Set<FeedState>(["stable"]);
+      }
+      return new Set(FEED_STATES);
+    });
+  }, []);
+
   const columns: ColumnConfig<Col>[] = [
     { id: "asset_type", name: "Asset Type" },
     { id: "description", name: "Description" },
@@ -32,6 +96,7 @@ export const PriceFeedIdsProTable = () => {
     { id: "symbol", name: "Symbol" },
     { id: "pyth_lazer_id", name: "Pyth Pro ID", isRowHeader: true },
     { id: "exponent", name: "Exponent" },
+    { id: "state", name: "Status" },
   ];
 
   const {
@@ -47,7 +112,7 @@ export const PriceFeedIdsProTable = () => {
     numPages,
     mkPageLink,
   } = useQueryParamFilterPagination(
-    state.type === StateType.Loaded ? state.feeds : [],
+    filteredByStatus,
     () => true,
     (a, b, { column, direction }) => {
       if (column === "pyth_lazer_id") {
@@ -143,12 +208,24 @@ export const PriceFeedIdsProTable = () => {
     },
   );
 
+  // Reset page when status filter changes (skip initial render to preserve deep links)
+  const isInitialRender = useRef(true);
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    updatePage(1);
+  }, [selectedStates, updatePage]);
+
   if (state.type === StateType.Error) {
     return <Callout type="error">{errorToString(state.error)}</Callout>;
   }
 
   const isLoading =
     state.type === StateType.Loading || state.type === StateType.NotLoaded;
+
+  const allSelected = selectedStates.size === FEED_STATES.length;
 
   const rows = paginatedItems.map((feed) => ({
     id: feed.pyth_lazer_id,
@@ -159,6 +236,11 @@ export const PriceFeedIdsProTable = () => {
       symbol: feed.symbol,
       pyth_lazer_id: feed.pyth_lazer_id,
       exponent: feed.exponent,
+      state: (
+        <Badge variant={FEED_STATE_BADGE_VARIANT[feed.state]} size="xs">
+          {FEED_STATE_LABELS[feed.state]}
+        </Badge>
+      ),
     },
   }));
 
@@ -171,6 +253,53 @@ export const PriceFeedIdsProTable = () => {
         onChange={updateSearch}
         className={styles.searchInput ?? ""}
       />
+
+      {statusCounts && (
+        <div
+          className={styles.statusFilters}
+          role="group"
+          aria-label="Filter by status"
+        >
+          <button
+            type="button"
+            className={styles.filterButton}
+            onClick={toggleAll}
+          >
+            <Badge
+              variant={allSelected ? "info" : "neutral"}
+              style="outline"
+              size="md"
+            >
+              {allSelected && <Check className={styles.checkIcon} />}
+              All ({statusCounts.all})
+            </Badge>
+          </button>
+          {FEED_STATES.map((feedState) => {
+            const isSelected = selectedStates.has(feedState);
+            return (
+              <button
+                key={feedState}
+                type="button"
+                className={styles.filterButton}
+                onClick={() => {
+                  toggleState(feedState);
+                }}
+              >
+                <Badge
+                  variant={
+                    isSelected ? FEED_STATE_BADGE_VARIANT[feedState] : "neutral"
+                  }
+                  style="outline"
+                  size="md"
+                >
+                  {isSelected && <Check className={styles.checkIcon} />}
+                  {FEED_STATE_LABELS[feedState]} ({statusCounts[feedState]})
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <Table<Col>
         {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
@@ -232,6 +361,7 @@ const pythProSchema = z.array(
     symbol: z.string(),
     pyth_lazer_id: z.number().int().positive(),
     exponent: z.number(),
+    state: z.enum(["stable", "coming_soon", "inactive"]),
   }),
 );
 
@@ -241,7 +371,8 @@ type Col =
   | "name"
   | "symbol"
   | "pyth_lazer_id"
-  | "exponent";
+  | "exponent"
+  | "state";
 
 const errorToString = (error: unknown) => {
   if (error instanceof Error) {
