@@ -19,6 +19,7 @@ import { Ed25519Keypair as IotaEd25519Keypair } from "@iota/iota-sdk/keypairs/ed
 import { NANOS_PER_IOTA } from "@iota/iota-sdk/utils";
 import * as suiBytecode from "@mysten/move-bytecode-template";
 import type {
+  MoveStruct as SuiMoveStruct,
   MoveValue as SuiMoveValue,
   SuiTransactionBlockResponseOptions,
 } from "@mysten/sui/client";
@@ -491,11 +492,11 @@ export class SuiChain extends Chain {
     meta: SuiLazerMeta,
     signer: SuiEd25519Keypair,
   ) {
-    this.verifyPackageMeta(pkg, meta);
+    this.verifyLazerMeta(pkg, meta);
     return await this.publishPackage(pkg, signer);
   }
 
-  async updateLazerContractMeta(packagePath: string, meta: SuiLazerMeta) {
+  async updateLazerMeta(packagePath: string, meta: SuiLazerMeta) {
     const templatePath = nodePath.resolve(
       packagePath,
       "sources/meta.move.mustache",
@@ -510,7 +511,7 @@ export class SuiChain extends Chain {
    * Inspects `pyth_lazer::meta` module bytecode to ensure that metadata are
    * set correctly.
    */
-  verifyPackageMeta(
+  verifyLazerMeta(
     { modules }: SuiPackage,
     { version, receiver_chain_id }: SuiLazerMeta,
   ) {
@@ -618,22 +619,8 @@ export class SuiChain extends Chain {
     package: string;
     version: string;
   }> {
-    const { data: stateObject, error } = await client.getObject({
-      id: stateId,
-      options: { showContent: true },
-    });
-    if (!stateObject?.content || error) {
-      throw new Error(
-        `Failed to get state object: ${error?.code ?? "undefined"}`,
-      );
-    }
-    if (stateObject.content.dataType !== "moveObject") {
-      throw new Error(
-        `State must be an object, got: ${stateObject.content.dataType}`,
-      );
-    }
+    const state = await this.getStateObject(client, stateId);
 
-    const state = stateObject.content;
     if (!this.hasStructField(state, "upgrade_cap")) {
       throw new Error("Missing 'upgrade_cap' in state object");
     }
@@ -654,6 +641,44 @@ export class SuiChain extends Chain {
       package: upgradeCap.fields.package,
       version: upgradeCap.fields.version,
     };
+  }
+
+  async getStateGovernanceInfo(client: SuiClient, stateId: string) {
+    const state = await this.getStateObject(client, stateId);
+
+    if (!this.hasStructField(state, "governance")) {
+      throw new Error("Missing 'governance' in state object");
+    }
+    const governance = state.fields.governance;
+    if (
+      !this.hasStructField(governance, "seen_sequence") ||
+      typeof governance.fields.seen_sequence !== "string"
+    ) {
+      throw new Error("Could not find 'seen_sequence' BigInt in Governance");
+    }
+    return { seen_sequence: BigInt(governance.fields.seen_sequence) };
+  }
+
+  private async getStateObject(
+    client: SuiClient,
+    stateId: string,
+  ): Promise<SuiMoveStruct> {
+    const { data: stateObject, error } = await client.getObject({
+      id: stateId,
+      options: { showContent: true },
+    });
+    if (!stateObject?.content || error) {
+      throw new Error(
+        `Failed to get state object: ${error?.code ?? "undefined"}`,
+      );
+    }
+    if (stateObject.content.dataType !== "moveObject") {
+      throw new Error(
+        `State must be an object, got: ${stateObject.content.dataType}`,
+      );
+    }
+
+    return stateObject.content;
   }
 
   private hasStructField<const F extends string>(
@@ -728,7 +753,7 @@ export class SuiChain extends Chain {
     vaa: Uint8Array;
     signer: SuiEd25519Keypair;
   }) {
-    this.verifyPackageMeta(pkg, meta);
+    this.verifyLazerMeta(pkg, meta);
 
     const client = this.getProvider();
     const tx = new SuiTransaction();
@@ -1005,6 +1030,33 @@ export class EvmChain extends Chain {
   }
 
   /**
+   * Gets the balance for Tempo network using TIP-20 balanceOf instead of eth_getBalance
+   * Tempo has no native gas token and uses TIP-20 tokens (pathUSD) for fees
+   * @param address - the address to check balance for
+   * @returns the balance in wei (as bigint)
+   */
+  private async getBalanceForTempo(address: string): Promise<bigint> {
+    const PATHUSD_ADDRESS = "0x20c0000000000000000000000000000000000000";
+    const ERC20_BALANCE_OF_ABI = [
+      {
+        constant: true,
+        inputs: [{ name: "account", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "", type: "uint256" }],
+        type: "function",
+      },
+    ] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    const web3 = this.getWeb3();
+    const contract = new web3.eth.Contract(
+      ERC20_BALANCE_OF_ABI,
+      PATHUSD_ADDRESS,
+    );
+    const balance = await contract.methods.balanceOf(address).call();
+    return BigInt(balance);
+  }
+
+  /**
    * Deploys a contract on this chain
    * @param privateKey - hex string of the 32 byte private key without the 0x prefix
    * @param abi - the abi of the contract, can be obtained from the compiled contract json file
@@ -1031,8 +1083,14 @@ export class EvmChain extends Chain {
     const gasPrice = Math.trunc(
       Number(await this.getGasPrice()) * gasPriceMultiplier,
     );
-    const deployerBalance = await web3.eth.getBalance(signer.address);
-    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
+
+    // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
+    const deployerBalance =
+      this.networkId === 42_431 || this.networkId === 4217
+        ? await this.getBalanceForTempo(signer.address)
+        : BigInt(await web3.eth.getBalance(signer.address));
+    // Comment it when you are interactive with Tempo testnet or mainnet
+    const gasDiff = BigInt(gas) * BigInt(gasPrice) - deployerBalance;
     if (gasDiff > 0n) {
       throw new Error(
         `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
@@ -1065,10 +1123,16 @@ export class EvmChain extends Chain {
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
+    const address = await this.getAccountAddress(privateKey);
+
+    // Tempo testnet (networkId 42431) has no native gas token, use TIP-20 balanceOf instead
+    if (this.networkId === 42_431) {
+      const balance = await this.getBalanceForTempo(address);
+      return Number(balance) / 10 ** 18;
+    }
+
     const web3 = this.getWeb3();
-    const balance = await web3.eth.getBalance(
-      await this.getAccountAddress(privateKey),
-    );
+    const balance = await web3.eth.getBalance(address);
     return Number(balance) / 10 ** 18;
   }
 }

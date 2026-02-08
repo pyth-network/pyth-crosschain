@@ -258,8 +258,7 @@ const config = {
       },
 
       {
-        source:
-          "/price-feeds/:path((?!core(?:/|$)|pro(?:/|$)|hip-3-service(?:/|$)).*)",
+        source: String.raw`/price-feeds/:path((?!core(?:/|$|\.mdx?$)|pro(?:/|$|\.mdx?$)|hip-3-service(?:/|$|\.mdx?$)).*)`,
         destination: "/price-feeds/core/:path",
         permanent: true,
       },
@@ -331,11 +330,15 @@ const config = {
     ];
   },
 
-  // Rewrite .mdx URLs to serve raw markdown for LLM consumption
+  // Rewrite .mdx and .md URLs to serve raw markdown for LLM consumption
   async rewrites() {
     return [
       {
         source: "/:path*.mdx",
+        destination: "/mdx/:path*",
+      },
+      {
+        source: "/:path*.md",
         destination: "/mdx/:path*",
       },
     ];

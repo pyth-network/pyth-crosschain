@@ -3,7 +3,10 @@ module pyth_lazer::governance;
 
 #[test_only]
 use wormhole::external_address;
-use wormhole::external_address::ExternalAddress;
+use wormhole::{
+    external_address::ExternalAddress,
+    vaa::VAA,
+};
 
 use pyth_lazer::{meta, parser::Parser};
 
@@ -17,7 +20,7 @@ const MODULE: u8 = 3;
 #[error]
 const EMismatchedMagic: vector<u8> = "Mismatched governance header magic number, should be \"PTGM\"";
 #[error]
-const EMismatchedModule: vector<u8> = "Mismatched governance header module number, should be 2";
+const EMismatchedModule: vector<u8> = "Mismatched governance header module number, should be 3";
 #[error]
 const EMismatchedEmitterChainID: vector<u8> = "Mismatched governance emitter chain ID";
 #[error]
@@ -48,17 +51,18 @@ public(package) fun dummy(): Governance {
 }
 
 /// Process incoming VAA message parameters, asserting that the message is safe
-/// to process further.
+/// to process further. Returns message payload.
 public(package) fun process_incoming(
     self: &mut Governance,
-    chain_id: u16,
-    address: ExternalAddress,
-    sequence: u64
-) {
+    vaa: VAA
+): vector<u8> {
+    let sequence = vaa.sequence();
+    let (chain_id, address, payload) = vaa.take_emitter_info_and_payload();
     assert!(self.chain_id == chain_id, EMismatchedEmitterChainID);
     assert!(self.address == address, EMismatchedAddress);
     assert!(self.seen_sequence < sequence, EOldSequenceNumber);
     self.seen_sequence = sequence;
+    payload
 }
 
 /// Reference:

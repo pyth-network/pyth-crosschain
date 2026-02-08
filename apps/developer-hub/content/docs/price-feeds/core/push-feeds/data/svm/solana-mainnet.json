@@ -366,6 +366,13 @@
       "id": "8ed858a2214e892c9371694fb6c8a9037b6ed4052c4edf209f8cb988484e81d9",
       "time_difference": 60,
       "price_deviation": 0.5,
+    },
+    {
+      "alias": "WSTUSR/USR.RR",
+      "account_address": "4iG7tnQXmhPfUHxn7F54T6g3j3UZEFyYcoD6PWeF1YVF",
+      "id": "b74c2bc175c2dab850ce5a5451608501c293fe8410cb4aba7449dd1c355ab706",
+      "time_difference": 540,
+      "price_deviation": 0.001,
       "confidence_ratio": 100
     }
   ]

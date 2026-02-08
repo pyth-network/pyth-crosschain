@@ -13,6 +13,5 @@ export type {
   PriceIdInput,
   PriceUpdate,
   PublisherCaps,
-  TwapsResponse,
   UnixTimestamp,
 } from "@pythnetwork/hermes-client";

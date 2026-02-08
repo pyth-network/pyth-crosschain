@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 "use client";
 
+import { omitKeys } from "@pythnetwork/shared-lib/util";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
 import { Fragment } from "react";
 
 import styles from "./index.module.scss";
 import { Skeleton } from "../Skeleton/index.jsx";
-import { omitKeys } from "../omit-keys";
 
 type OwnProps =
   | { isLoading: true }
@@ -24,7 +24,11 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
   <div
     className={clsx(styles.symbolPairTag, className)}
     data-loading={props.isLoading ? "" : undefined}
-    {...omitKeys(props, ["displaySymbol", "description", "isLoading"])}
+    {...omitKeys<Record<string, unknown>>(props, [
+      "displaySymbol",
+      "description",
+      "isLoading",
+    ])}
   >
     {props.isLoading ? (
       <Skeleton fill className={styles.icon} />

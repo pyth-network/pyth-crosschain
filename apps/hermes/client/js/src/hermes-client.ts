@@ -14,7 +14,6 @@ export type EncodingType = z.infer<typeof schemas.EncodingType>;
 export type PriceFeedMetadata = z.infer<typeof schemas.PriceFeedMetadata>;
 export type PriceIdInput = z.infer<typeof schemas.PriceIdInput>;
 export type PriceUpdate = z.infer<typeof schemas.PriceUpdate>;
-export type TwapsResponse = z.infer<typeof schemas.TwapsResponse>;
 export type PublisherCaps = z.infer<
   typeof schemas.LatestPublisherStakeCapsUpdateDataResponse
 >;
@@ -41,6 +40,13 @@ export type HermesClientConfig = {
    * Optional headers to be included in every request.
    */
   headers?: HeadersInit;
+  /**
+   * Optional API access token for authentication.
+   * When provided, this token will be included in all requests either:
+   * - As a Bearer token in the Authorization header (for HTTP requests)
+   * - As an ACCESS_TOKEN query parameter (for WebSocket/SSE connections)
+   */
+  accessToken?: string;
 };
 
 export class HermesClient {
@@ -48,6 +54,7 @@ export class HermesClient {
   private timeout: DurationInMs;
   private httpRetries: number;
   private headers: HeadersInit;
+  private accessToken: string | undefined;
 
   /**
    * Constructs a new Connection.
@@ -60,6 +67,7 @@ export class HermesClient {
     this.timeout = config?.timeout ?? DEFAULT_TIMEOUT;
     this.httpRetries = config?.httpRetries ?? DEFAULT_HTTP_RETRIES;
     this.headers = config?.headers ?? {};
+    this.accessToken = config?.accessToken;
   }
 
   private async httpRequest<ResponseData>(
@@ -70,6 +78,12 @@ export class HermesClient {
     backoff = 100 + Math.floor(Math.random() * 100), // Adding randomness to the initial backoff to avoid "thundering herd" scenario where a lot of clients that get kicked off all at the same time (say some script or something) and fail to connect all retry at exactly the same time too
   ): Promise<ResponseData> {
     try {
+      // Build auth headers if access token is provided
+      const authHeaders: Record<string, string> = {};
+      if (this.accessToken !== undefined) {
+        authHeaders.Authorization = `Bearer ${this.accessToken}`;
+      }
+
       const response = await fetch(url, {
         ...options,
         signal: AbortSignal.any([
@@ -77,7 +91,7 @@ export class HermesClient {
           AbortSignal.timeout(this.timeout),
         ]),
 
-        headers: { ...this.headers, ...options?.headers },
+        headers: { ...authHeaders, ...this.headers, ...options?.headers },
       });
       if (!response.ok) {
         const errorBody = await response.text();
@@ -274,60 +288,23 @@ export class HermesClient {
       this.appendUrlSearchParams(url, transformedOptions);
     }
 
+    // Build auth headers for SSE fetch
+    const authHeaders: Record<string, string> = {};
+    if (this.accessToken !== undefined) {
+      authHeaders.Authorization = `Bearer ${this.accessToken}`;
+    }
+
     return new EventSource(url.toString(), {
       fetch: (input, init) =>
         fetch(input, {
           ...init,
           headers: {
             ...init?.headers,
+            ...authHeaders,
             ...this.headers,
           },
         }),
     });
-  }
-
-  /**
-   * Fetch the latest TWAP (time weighted average price) for a set of price feed IDs.
-   * This endpoint can be customized by specifying the encoding type and whether the results should also return the calculated TWAP using the options object.
-   * This will throw an error if there is a network problem or the price service returns a non-ok response.
-   *
-   * @param ids - Array of hex-encoded price feed IDs for which updates are requested.
-   * @param window_seconds - The time window in seconds over which to calculate the TWAP, ending at the current time.
-   *  For example, a value of 300 would return the most recent 5 minute TWAP. Must be greater than 0 and less than or equal to 600 seconds (10 minutes).
-   * @param options - Optional parameters:
-   *        - encoding: Encoding type. If specified, return the TWAP binary data in the encoding specified by the encoding parameter. Default is hex.
-   *        - parsed: Boolean to specify if the calculated TWAP should be included in the response. Default is false.
-   *        - ignoreInvalidPriceIds: Boolean to specify if invalid price IDs should be ignored instead of returning an error. Default is false.
-   *
-   * @returns TwapsResponse object containing the latest TWAPs.
-   */
-  async getLatestTwaps(
-    ids: HexString[],
-    window_seconds: number,
-    options?: {
-      encoding?: EncodingType;
-      parsed?: boolean;
-      ignoreInvalidPriceIds?: boolean;
-    },
-    fetchOptions?: RequestInit,
-  ): Promise<TwapsResponse> {
-    const url = this.buildURL(
-      `updates/twap/${window_seconds.toString()}/latest`,
-    );
-    for (const id of ids) {
-      url.searchParams.append("ids[]", id);
-    }
-
-    if (options) {
-      const transformedOptions = camelToSnakeCaseObject(options);
-      this.appendUrlSearchParams(url, transformedOptions);
-    }
-
-    return this.httpRequest(
-      url.toString(),
-      schemas.TwapsResponse,
-      fetchOptions,
-    );
   }
 
   private appendUrlSearchParams(

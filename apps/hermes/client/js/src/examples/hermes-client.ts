@@ -71,11 +71,6 @@ async function run() {
   const priceUpdates = await connection.getLatestPriceUpdates(priceIds);
   console.log(priceUpdates);
 
-  // Get the latest 5 second TWAPs
-  console.log(`Latest 5 second TWAPs for price IDs ${priceIds}`);
-  const twapUpdates = await connection.getLatestTwaps(priceIds, 5);
-  console.log(twapUpdates);
-
   // Streaming price updates
   console.log(`Streaming latest prices for price IDs ${priceIds}...`);
   const eventSource = await connection.getPriceUpdatesStream(priceIds, {

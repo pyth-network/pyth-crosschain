@@ -123,6 +123,7 @@ export const RECEIVER_CHAINS = {
   ethereal: 60091,
   injective_evm: 60092,
   orange: 60093,
+  tempo: 60094,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
@@ -268,6 +269,7 @@ export const RECEIVER_CHAINS = {
   morph_hoodi: 50136,
   celo_sepolia_testnet: 50137,
   arc_testnet: 50138,
+  tempo_testnet: 50139,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-service-client",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Pyth price service client",
   "deprecated": "This package is deprecated and is no longer maintained. Please use @pythnetwork/hermes-client instead.",
   "author": {

@@ -18,7 +18,5 @@ pub async fn index() -> impl IntoResponse {
         "/v2/updates/price/stream?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&encoding=hex|base64)(&parsed=false)(&allow_unordered=false)(&benchmarks_only=false)",
         "/v2/updates/price/<timestamp>?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&encoding=hex|base64)(&parsed=false)",
         "/v2/price_feeds?(query=btc)(&asset_type=crypto|equity|fx|metal|rates)",
-        "/v2/updates/twap/<window_seconds>/latest?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&encoding=hex|base64)(&parsed=false)",
-        "/v2/updates/twap/<window_seconds>/<timestamp>?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&encoding=hex|base64)(&parsed=false)",
     ])
 }

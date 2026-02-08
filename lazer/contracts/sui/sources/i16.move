@@ -1,24 +1,33 @@
 /// Adapted from pyth::i64, modified for i16
 module pyth_lazer::i16;
 
-const MAX_POSITIVE_MAGNITUDE: u64 = (1 << 15) - 1;  // 32767
-const MAX_NEGATIVE_MAGNITUDE: u64 = (1 << 15);      // 32768
+use std::u16;
+
+const MAX_POSITIVE_MAGNITUDE: u16 = (1 << 15) - 1;  // 32767
+const MAX_NEGATIVE_MAGNITUDE: u16 = (1 << 15);      // 32768
+
+#[error]
+const EMagnitudeTooLarge: vector<u8> = "Supplied magnitude too large";
+#[error]
+const ENegativeValue: vector<u8> = "Supplied I16 is negative";
+#[error]
+const EPositiveValue: vector<u8> = "Supplied I16 is positive";
 
 /// To consume these values, first call `get_is_negative()` to determine if the I16
 /// represents a negative or positive value. Then call `get_magnitude_if_positive()` or
-/// `get_magnitude_if_negative()` to get the magnitude of the number in unsigned u64 format.
+/// `get_magnitude_if_negative()` to get the magnitude of the number in unsigned u16 format.
 /// This API forces consumers to handle positive and negative numbers safely.
 public struct I16 has copy, drop, store {
     negative: bool,
-    magnitude: u64,
+    magnitude: u16,
 }
 
-public fun new(magnitude: u64, mut negative: bool): I16 {
+public fun new(magnitude: u16, mut negative: bool): I16 {
     let mut max_magnitude = MAX_POSITIVE_MAGNITUDE;
     if (negative) {
         max_magnitude = MAX_NEGATIVE_MAGNITUDE;
     };
-    assert!(magnitude <= max_magnitude, 0); //error::magnitude_too_large()
+    assert!(magnitude <= max_magnitude, EMagnitudeTooLarge);
 
     // Ensure we have a single zero representation: (0, false).
     // (0, true) is invalid.
@@ -36,35 +45,28 @@ public fun get_is_negative(i: &I16): bool {
     i.negative
 }
 
-public fun get_magnitude_if_positive(in: &I16): u64 {
-    assert!(!in.negative, 0); // error::negative_value()
+public fun get_magnitude_if_positive(in: &I16): u16 {
+    assert!(!in.negative, ENegativeValue);
     in.magnitude
 }
 
-public fun get_magnitude_if_negative(in: &I16): u64 {
-    assert!(in.negative, 0); //error::positive_value()
+public fun get_magnitude_if_negative(in: &I16): u16 {
+    assert!(in.negative, EPositiveValue);
     in.magnitude
 }
 
 public fun from_u16(from: u16): I16 {
     // Use the MSB to determine whether the number is negative or not.
-    let from_u64 = from as u64;
-    let negative = (from_u64 >> 15) == 1;
-    let magnitude = parse_magnitude(from_u64, negative);
-
-    new(magnitude, negative)
-}
-
-fun parse_magnitude(from: u64, negative: bool): u64 {
-    // If positive, then return the input verbatim
-    if (!negative) {
-        return from
+    let negative = (from >> 15) == 1;
+    let magnitude = if (!negative) {
+        // If positive, then return the input verbatim
+        from
+    } else {
+        // Otherwise convert from two's complement by inverting and adding 1
+        (from ^ u16::max_value!()) + 1
     };
 
-    // Otherwise convert from two's complement by inverting and adding 1
-    // For 16-bit numbers, we only invert the lower 16 bits
-    let inverted = from ^ 0xFFFF;
-    inverted + 1
+    new(magnitude, negative)
 }
 
 #[test]

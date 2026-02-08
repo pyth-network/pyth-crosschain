@@ -71,9 +71,7 @@ public(package) fun unwrap_ptgm(
     _: &CurrentCap,
     vaa: VAA
 ): (GovernanceHeader, Parser) {
-    let sequence = vaa.sequence();
-    let (chain, address, payload) = vaa.take_emitter_info_and_payload();
-    self.governance.process_incoming(chain, address, sequence);
+    let payload = self.governance.process_incoming(vaa);
     let mut parser = parser::new(payload);
     let header = governance::parse_header(&mut parser);
     (header, parser)
