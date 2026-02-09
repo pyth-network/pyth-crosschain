@@ -1,13 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./tsconfig",
   "compilerOptions": {
     "incremental": false,
-    "noEmit": false,
-    "isolatedModules": false
+    "isolatedModules": false,
+    "noEmit": false
   },
-  "exclude": [
-    "dist/",
-    "node_modules/"
-  ]
+  "exclude": ["dist/", "node_modules/"],
+  "extends": "./tsconfig"
 }

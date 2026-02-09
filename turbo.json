@@ -6,28 +6,27 @@
   "globalPassThroughEnv": [
     "COREPACK_HOME"
   ],
-  "ui": "tui",
   "tasks": {
     "//#fix": {
+      "cache": false,
       "dependsOn": [
         "//#fix:lint",
         "//#fix:format"
-      ],
-      "cache": false
+      ]
     },
     "//#fix:format": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules",
         "//#fix:lint"
-      ],
-      "cache": false
+      ]
     },
     "//#fix:lint": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules",
         "^build"
-      ],
-      "cache": false
+      ]
     },
     "//#install:modules": {
       "inputs": [
@@ -56,6 +55,12 @@
         "//#install:modules"
       ]
     },
+    "//#test:integration": {
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ]
+    },
     "//#test:lint": {
       "dependsOn": [
         "//#install:modules",
@@ -69,12 +74,6 @@
       ]
     },
     "//#test:unit": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build"
-      ]
-    },
-    "//#test:integration": {
       "dependsOn": [
         "//#install:modules",
         "^build"
@@ -130,54 +129,55 @@
       "outputs": []
     },
     "fix": {
+      "cache": false,
       "dependsOn": [
         "fix:lint",
         "fix:format"
-      ],
-      "cache": false
+      ]
     },
     "fix:format": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules",
         "fix:lint"
-      ],
-      "cache": false
+      ]
     },
     "fix:lint": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules",
         "^build"
-      ],
-      "cache": false
+      ]
     },
     "pull:env": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules"
       ],
       "outputs": [
         ".env.local"
-      ],
-      "cache": false
+      ]
     },
     "start:dev": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules",
         "pull:env",
         "^build"
       ],
-      "persistent": true,
-      "cache": false
+      "persistent": true
     },
     "start:prod": {
+      "cache": false,
       "dependsOn": [
         "//#install:modules",
         "build"
       ],
-      "persistent": true,
-      "cache": false
+      "persistent": true
     },
     "test": {
       "dependsOn": [
+        "//#test:lint",
         "test:types",
         "test:unit",
         "test:integration",
@@ -188,6 +188,12 @@
     "test:format": {
       "dependsOn": [
         "//#install:modules"
+      ]
+    },
+    "test:integration": {
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
       ]
     },
     "test:lint": {
@@ -207,12 +213,7 @@
         "//#install:modules",
         "^build"
       ]
-    },
-    "test:integration": {
-      "dependsOn": [
-        "//#install:modules",
-        "^build"
-      ]
     }
-  }
+  },
+  "ui": "tui"
 }
