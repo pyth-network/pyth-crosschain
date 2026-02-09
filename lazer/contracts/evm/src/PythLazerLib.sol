@@ -159,7 +159,7 @@ library PythLazerLib {
         returns (PythLazerStructs.PriceFeedProperty property, uint16 new_pos)
     {
         uint8 propertyId = _readBytes1(update, pos);
-        require(propertyId <= 9, "Unknown property");
+        require(propertyId <= 12, "Unknown property");
         property = PythLazerStructs.PriceFeedProperty(propertyId);
         pos += 1;
         new_pos = pos;
@@ -478,6 +478,75 @@ library PythLazerLib {
                         feed,
                         uint8(PythLazerStructs.PriceFeedProperty.MarketSession)
                     );
+                    // EMA Price Property
+                } else if (
+                    property == PythLazerStructs.PriceFeedProperty.EmaPrice
+                ) {
+                    (feed._emaPrice, pos) = parseFeedValueInt64(payload, pos);
+                    if (feed._emaPrice != 0) {
+                        _setPresent(
+                            feed,
+                            uint8(PythLazerStructs.PriceFeedProperty.EmaPrice)
+                        );
+                    } else {
+                        _setApplicableButMissing(
+                            feed,
+                            uint8(PythLazerStructs.PriceFeedProperty.EmaPrice)
+                        );
+                    }
+                    // EMA Confidence Property
+                } else if (
+                    property == PythLazerStructs.PriceFeedProperty.EmaConfidence
+                ) {
+                    (feed._emaConfidence, pos) = parseFeedValueUint64(
+                        payload,
+                        pos
+                    );
+                    if (feed._emaConfidence != 0) {
+                        _setPresent(
+                            feed,
+                            uint8(
+                                PythLazerStructs.PriceFeedProperty.EmaConfidence
+                            )
+                        );
+                    } else {
+                        _setApplicableButMissing(
+                            feed,
+                            uint8(
+                                PythLazerStructs.PriceFeedProperty.EmaConfidence
+                            )
+                        );
+                    }
+                    // Feed Update Timestamp Property
+                } else if (
+                    property ==
+                    PythLazerStructs.PriceFeedProperty.FeedUpdateTimestamp
+                ) {
+                    uint8 exists;
+                    (exists, pos) = parseFeedValueUint8(payload, pos);
+                    if (exists != 0) {
+                        (feed._feedUpdateTimestamp, pos) = parseFeedValueUint64(
+                            payload,
+                            pos
+                        );
+                        _setPresent(
+                            feed,
+                            uint8(
+                                PythLazerStructs
+                                    .PriceFeedProperty
+                                    .FeedUpdateTimestamp
+                            )
+                        );
+                    } else {
+                        _setApplicableButMissing(
+                            feed,
+                            uint8(
+                                PythLazerStructs
+                                    .PriceFeedProperty
+                                    .FeedUpdateTimestamp
+                            )
+                        );
+                    }
                 } else {
                     // This should never happen due to validation in parseFeedProperty
                     revert("Unexpected property");
@@ -597,6 +666,36 @@ library PythLazerLib {
             );
     }
 
+    /// @notice Check if EMA price exists
+    function hasEmaPrice(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _hasValue(feed, uint8(PythLazerStructs.PriceFeedProperty.EmaPrice));
+    }
+
+    /// @notice Check if EMA confidence exists
+    function hasEmaConfidence(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _hasValue(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.EmaConfidence)
+            );
+    }
+
+    /// @notice Check if feed update timestamp exists
+    function hasFeedUpdateTimestamp(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _hasValue(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.FeedUpdateTimestamp)
+            );
+    }
+
     // Requested helpers — property included in this update
     function isPriceRequested(
         PythLazerStructs.Feed memory feed
@@ -692,6 +791,36 @@ library PythLazerLib {
             _isRequested(
                 feed,
                 uint8(PythLazerStructs.PriceFeedProperty.MarketSession)
+            );
+    }
+
+    function isEmaPriceRequested(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _isRequested(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.EmaPrice)
+            );
+    }
+
+    function isEmaConfidenceRequested(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _isRequested(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.EmaConfidence)
+            );
+    }
+
+    function isFeedUpdateTimestampRequested(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (bool) {
+        return
+            _isRequested(
+                feed,
+                uint8(PythLazerStructs.PriceFeedProperty.FeedUpdateTimestamp)
             );
     }
 
@@ -839,6 +968,51 @@ library PythLazerLib {
             "Market session is not present for the timestamp"
         );
         return feed._marketSession;
+    }
+
+    /// @notice Get EMA price (reverts if not exists)
+    function getEmaPrice(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (int64) {
+        require(
+            isEmaPriceRequested(feed),
+            "EMA price is not requested for the timestamp"
+        );
+        require(
+            hasEmaPrice(feed),
+            "EMA price is not present for the timestamp"
+        );
+        return feed._emaPrice;
+    }
+
+    /// @notice Get EMA confidence (reverts if not exists)
+    function getEmaConfidence(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (uint64) {
+        require(
+            isEmaConfidenceRequested(feed),
+            "EMA confidence is not requested for the timestamp"
+        );
+        require(
+            hasEmaConfidence(feed),
+            "EMA confidence is not present for the timestamp"
+        );
+        return feed._emaConfidence;
+    }
+
+    /// @notice Get feed update timestamp (reverts if not exists)
+    function getFeedUpdateTimestamp(
+        PythLazerStructs.Feed memory feed
+    ) public pure returns (uint64) {
+        require(
+            isFeedUpdateTimestampRequested(feed),
+            "feed update timestamp is not requested for the timestamp"
+        );
+        require(
+            hasFeedUpdateTimestamp(feed),
+            "feed update timestamp is not present for the timestamp"
+        );
+        return feed._feedUpdateTimestamp;
     }
 
     /// @notice Get feed ID
