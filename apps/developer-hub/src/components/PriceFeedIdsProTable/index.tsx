@@ -9,7 +9,7 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useQueryParamFilterPagination } from "@pythnetwork/component-library/useQueryParamsPagination";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 import styles from "./index.module.scss";
@@ -62,32 +62,6 @@ export const PriceFeedIdsProTable = () => {
     if (selectedStates.size === FEED_STATES.length) return state.feeds;
     return state.feeds.filter((feed) => selectedStates.has(feed.state));
   }, [state, selectedStates]);
-
-  const toggleState = useCallback((feedState: FeedState) => {
-    setSelectedStates((prev) => {
-      const next = new Set(prev);
-      if (next.has(feedState)) {
-        next.delete(feedState);
-      } else {
-        next.add(feedState);
-      }
-      // If the set would become empty, keep just the clicked item
-      if (next.size === 0) {
-        return new Set([feedState]);
-      }
-      return next;
-    });
-  }, []);
-
-  const toggleAll = useCallback(() => {
-    setSelectedStates((prev) => {
-      if (prev.size === FEED_STATES.length) {
-        // All selected → select only "stable" as default
-        return new Set<FeedState>(["stable"]);
-      }
-      return new Set(FEED_STATES);
-    });
-  }, []);
 
   const columns: ColumnConfig<Col>[] = [
     { id: "asset_type", name: "Asset Type" },
@@ -208,15 +182,36 @@ export const PriceFeedIdsProTable = () => {
     },
   );
 
-  // Reset page when status filter changes (skip initial render to preserve deep links)
-  const isInitialRender = useRef(true);
-  useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      return;
-    }
+  const toggleState = useCallback(
+    (feedState: FeedState) => {
+      setSelectedStates((prev) => {
+        const next = new Set(prev);
+        if (next.has(feedState)) {
+          next.delete(feedState);
+        } else {
+          next.add(feedState);
+        }
+        // If the set would become empty, keep just the clicked item
+        if (next.size === 0) {
+          return new Set([feedState]);
+        }
+        return next;
+      });
+      updatePage(1);
+    },
+    [updatePage],
+  );
+
+  const toggleAll = useCallback(() => {
+    setSelectedStates((prev) => {
+      if (prev.size === FEED_STATES.length) {
+        // All selected → select only "stable" as default
+        return new Set<FeedState>(["stable"]);
+      }
+      return new Set(FEED_STATES);
+    });
     updatePage(1);
-  }, [selectedStates, updatePage]);
+  }, [updatePage]);
 
   if (state.type === StateType.Error) {
     return <Callout type="error">{errorToString(state.error)}</Callout>;
