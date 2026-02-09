@@ -1,13 +1,4 @@
 {
-  "name": "message_buffer",
-  "version": "0.2.0",
-  "private": "true",
-  "type": "module",
-  "scripts": {
-    "init-buffer": "ts-node scripts/setup_message_buffer.ts",
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
-  },
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
     "@lumina-dev/test": "^0.0.12",
@@ -20,10 +11,16 @@
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
     "mocha": "^9.0.3",
-    "prettier": "catalog:",
     "ts-mocha": "^10.0.0"
   },
   "engines": {
     "node": "^24.0.0"
-  }
+  },
+  "name": "message_buffer",
+  "private": "true",
+  "scripts": {
+    "init-buffer": "ts-node scripts/setup_message_buffer.ts"
+  },
+  "type": "module",
+  "version": "0.2.0"
 }

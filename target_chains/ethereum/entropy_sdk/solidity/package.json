@@ -1,39 +1,35 @@
 {
-  "name": "@pythnetwork/entropy-sdk-solidity",
-  "version": "2.2.1",
+  "author": "Douro Labs",
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
   "description": "Generate secure random numbers with Pyth Entropy",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/ethereum/entropy_sdk/solidity"
+  "devDependencies": {
+    "abi_generator": "workspace:*"
   },
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": "^24.0.0"
   },
-  "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
-    "build": "generate-abis IEntropy IEntropyV2 IEntropyConsumer EntropyErrors EntropyEvents EntropyEventsV2 EntropyStructs EntropyStructsV2 EntropyStatusConstants PRNG",
-    "test": "git diff --exit-code abis"
-  },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/entropy_sdk/solidity",
   "keywords": [
     "pyth",
     "solidity",
     "random"
   ],
-  "author": "Douro Labs",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  "name": "@pythnetwork/entropy-sdk-solidity",
+  "publishConfig": {
+    "access": "public"
   },
-  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/entropy_sdk/solidity",
-  "devDependencies": {
-    "abi_generator": "workspace:*",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:"
+  "repository": {
+    "directory": "target_chains/ethereum/entropy_sdk/solidity",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
   },
-  "engines": {
-    "node": "^24.0.0"
-  }
+  "scripts": {
+    "build": "generate-abis IEntropy IEntropyV2 IEntropyConsumer EntropyErrors EntropyEvents EntropyEventsV2 EntropyStructs EntropyStructsV2 EntropyStatusConstants PRNG",
+    "test": "git diff --exit-code abis"
+  },
+  "type": "module",
+  "version": "2.2.1"
 }

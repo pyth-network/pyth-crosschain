@@ -38,9 +38,7 @@
   "scripts": {
     "build": "ts-duality --noEsm",
     "clean": "rm -rf ./dist",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "start": "node dist/index.js",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "start": "node dist/index.js"
   },
   "type": "module",
   "types": "./dist/index.d.ts",

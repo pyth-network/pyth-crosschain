@@ -18,7 +18,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@svgr/webpack": "catalog:",
@@ -30,7 +29,6 @@
     "babel-plugin-react-compiler": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "prettier": "catalog:",
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
@@ -43,12 +41,10 @@
   "private": true,
   "scripts": {
     "build:vercel": "next build",
-    "fix:format": "prettier --write .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_34F8THr7mZ3eAOQoCLdo8xWj9fdT vercel env pull",
     "start:dev": "next dev --port 3006",
     "start:prod": "next start --port 3006",
-    "test:format": "prettier --check .",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc"
   },

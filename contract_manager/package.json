@@ -51,7 +51,6 @@
     "@pythnetwork/pyth-crosschain": "link:..",
     "@types/node": "catalog:",
     "@types/web3": "^1.2.2",
-    "prettier": "catalog:",
     "typedoc": "^0.25.7"
   },
   "engines": {
@@ -295,9 +294,7 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
-    "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
-    "shell": "ts-node ./src/node/utils/shell.ts",
-    "test:format": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\""
+    "shell": "ts-node ./src/node/utils/shell.ts"
   },
   "ts-duality": {
     "extraExports": {

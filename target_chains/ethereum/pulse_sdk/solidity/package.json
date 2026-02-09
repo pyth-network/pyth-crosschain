@@ -1,46 +1,42 @@
 {
-  "name": "@pythnetwork/pulse-sdk-solidity",
-  "version": "1.1.0",
+  "author": "Douro Labs",
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*"
+  },
   "description": "Automatically update price feeds with Pyth Pulse",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/ethereum/pulse_sdk/solidity"
+  "devDependencies": {
+    "abi_generator": "workspace:*"
   },
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": "^24.0.0"
   },
-  "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
-    "build": "generate-abis IScheduler SchedulerConstants SchedulerErrors SchedulerEvents SchedulerStructs",
-    "test": "git diff --exit-code abis"
-  },
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/pulse_sdk/solidity",
   "keywords": [
     "pyth",
     "solidity",
     "price feed",
     "pulse"
   ],
-  "author": "Douro Labs",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  "name": "@pythnetwork/pulse-sdk-solidity",
+  "publishConfig": {
+    "access": "public"
   },
-  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/pulse_sdk/solidity",
-  "devDependencies": {
-    "abi_generator": "workspace:*",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:"
+  "repository": {
+    "directory": "target_chains/ethereum/pulse_sdk/solidity",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
   },
-  "dependencies": {
-    "@pythnetwork/pyth-sdk-solidity": "workspace:*"
+  "scripts": {
+    "build": "generate-abis IScheduler SchedulerConstants SchedulerErrors SchedulerEvents SchedulerStructs",
+    "test": "git diff --exit-code abis"
   },
-  "files": [
-    "dist/**/*"
-  ],
-  "engines": {
-    "node": "^24.0.0"
-  }
+  "type": "module",
+  "version": "1.1.0"
 }

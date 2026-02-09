@@ -182,9 +182,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "deploy": "ts-node ./src/ci/deploy.ts",
-    "fix:format": "prettier --write .",
-    "test:format": "prettier --check ."
+    "deploy": "ts-node ./src/ci/deploy.ts"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",

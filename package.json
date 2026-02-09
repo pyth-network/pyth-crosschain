@@ -2,11 +2,8 @@
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
     "@biomejs/biome": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/create-pyth-package": "workspace:",
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
   },

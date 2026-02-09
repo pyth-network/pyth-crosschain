@@ -17,7 +17,6 @@
     "@types/jest": "^29.4.0",
     "@types/yargs": "^17.0.10",
     "jest": "^29.4.0",
-    "prettier": "catalog:",
     "ts-jest": "^29.0.5",
     "yargs": "^17.4.1"
   },
@@ -91,9 +90,7 @@
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
     "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "test:format": "prettier --check \"src/**/*.ts\""
+    "test:e2e": "jest --testPathPattern=.*.e2e.test.ts"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",

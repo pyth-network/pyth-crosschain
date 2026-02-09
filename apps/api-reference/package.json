@@ -34,7 +34,6 @@
   },
   "devDependencies": {
     "@axe-core/react": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@svgr/webpack": "catalog:",
@@ -46,7 +45,6 @@
     "autoprefixer": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "vercel": "catalog:"
   },
@@ -57,11 +55,9 @@
   "private": true,
   "scripts": {
     "build:vercel": "next build",
-    "fix:format": "prettier --write .",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_gbljYVzp0m5EpCuOF6nZpM4WMFM6 vercel env pull",
     "start:dev": "next dev --port 3002",
     "start:prod": "next start --port 3002",
-    "test:format": "prettier --check .",
     "test:types": "tsc"
   },
   "type": "module",

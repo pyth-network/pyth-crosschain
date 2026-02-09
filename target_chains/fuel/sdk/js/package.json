@@ -10,7 +10,6 @@
     "@pythnetwork/hermes-client": "workspace:*",
     "@types/node": "catalog:",
     "copyfiles": "^2.4.1",
-    "prettier": "catalog:",
     "ts-node": "catalog:"
   },
   "engines": {
@@ -92,10 +91,8 @@
   "scripts": {
     "build": "pnpm run generate-fuel-types && ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
     "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:format",
     "prepublishOnly": "pnpm run build",
-    "test:format": "prettier --check \"src/**/*.ts\"",
     "usage-example": "ts-node src/examples/usage.ts",
     "version": "pnpm run test:format && git add -A src"
   },

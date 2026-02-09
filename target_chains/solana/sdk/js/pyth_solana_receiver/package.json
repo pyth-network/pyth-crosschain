@@ -13,7 +13,6 @@
     "@types/jest": "^29.4.0",
     "@types/node": "catalog:",
     "jest": "^29.4.0",
-    "prettier": "catalog:",
     "quicktype": "^23.0.76",
     "ts-jest": "^29.0.5",
     "ts-node": "catalog:"
@@ -128,7 +127,6 @@
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
     "prepublishOnly": "pnpm run build",
-    "test:format": "prettier --check \"src/**/*.ts\"",
     "version": "pnpm run format && git add -A src"
   },
   "type": "module",

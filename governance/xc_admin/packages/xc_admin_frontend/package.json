@@ -44,8 +44,6 @@
     "@types/react-dom": "catalog:",
     "autoprefixer": "^10.4.8",
     "postcss": "^8.4.16",
-    "prettier": "catalog:",
-    "prettier-plugin-tailwindcss": "^0.1.13",
     "tailwindcss": "^3.1.8",
     "vercel": "^37.12.1"
   },
@@ -56,11 +54,9 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "fix:format": "prettier --write .",
     "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
     "start:dev": "next dev --port 3004",
     "start:prod": "next start --port 3004",
-    "test:format": "prettier --check .",
     "test:types": "tsc"
   },
   "type": "module",

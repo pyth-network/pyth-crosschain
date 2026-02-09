@@ -1,32 +1,13 @@
 {
-  "name": "@pythnetwork/xc-admin-common",
-  "version": "0.1.0",
-  "description": "",
-  "private": "true",
-  "author": "",
-  "homepage": "https://github.com/pyth-network/pyth-crosschain",
-  "license": "ISC",
-  "main": "./dist/cjs/index.cjs",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
-  },
-  "bugs": {
-    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
-  },
-  "scripts": {
-    "build": "ts-duality --copyOtherFiles",
-    "test:unit": "jest",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "clean": "rm -rf ./dist"
-  },
   "//": [
     "The injectivelabs/token-metadata package is pinned to a specific version to ensure that",
     "wormhole-sdk can be built with the correct version of the package in nextjs (@pythnetwork/xc-admin-frontend).",
     "Otherwise, the nextjs build will fail due to using a different version of the package."
   ],
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.10.15",
     "@coral-xyz/anchor": "^0.29.0",
@@ -45,441 +26,457 @@
     "lodash": "^4.17.21",
     "message_buffer": "workspace:^"
   },
+  "description": "",
   "devDependencies": {
-    "@types/bn.js": "^5.1.1",
     "@pythnetwork/jest-config": "workspace:",
+    "@types/bn.js": "^5.1.1",
     "@types/jest": "^29.2.5",
     "@types/lodash": "^4.14.191",
     "fast-check": "^3.10.0",
-    "jest": "^29.3.1",
-    "prettier": "catalog:"
+    "jest": "^29.3.1"
   },
   "engines": {
     "node": "^24.0.0"
   },
   "exports": {
-    "./bpf_upgradable_loader": {
-      "require": {
-        "types": "./dist/cjs/bpf_upgradable_loader.d.ts",
-        "default": "./dist/cjs/bpf_upgradable_loader.cjs"
-      },
+    ".": {
       "import": {
-        "types": "./dist/esm/bpf_upgradable_loader.d.ts",
-        "default": "./dist/esm/bpf_upgradable_loader.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
+      }
+    },
+    "./bpf_upgradable_loader": {
+      "import": {
+        "default": "./dist/esm/bpf_upgradable_loader.mjs",
+        "types": "./dist/esm/bpf_upgradable_loader.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/bpf_upgradable_loader.cjs",
+        "types": "./dist/cjs/bpf_upgradable_loader.d.ts"
       }
     },
     "./chains": {
-      "require": {
-        "types": "./dist/cjs/chains.d.ts",
-        "default": "./dist/cjs/chains.cjs"
-      },
       "import": {
-        "types": "./dist/esm/chains.d.ts",
-        "default": "./dist/esm/chains.mjs"
+        "default": "./dist/esm/chains.mjs",
+        "types": "./dist/esm/chains.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/chains.cjs",
+        "types": "./dist/cjs/chains.d.ts"
       }
     },
     "./cluster": {
-      "require": {
-        "types": "./dist/cjs/cluster.d.ts",
-        "default": "./dist/cjs/cluster.cjs"
-      },
       "import": {
-        "types": "./dist/esm/cluster.d.ts",
-        "default": "./dist/esm/cluster.mjs"
+        "default": "./dist/esm/cluster.mjs",
+        "types": "./dist/esm/cluster.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/cluster.cjs",
+        "types": "./dist/cjs/cluster.d.ts"
       }
     },
     "./cranks": {
-      "require": {
-        "types": "./dist/cjs/cranks.d.ts",
-        "default": "./dist/cjs/cranks.cjs"
-      },
       "import": {
-        "types": "./dist/esm/cranks.d.ts",
-        "default": "./dist/esm/cranks.mjs"
+        "default": "./dist/esm/cranks.mjs",
+        "types": "./dist/esm/cranks.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/cranks.cjs",
+        "types": "./dist/cjs/cranks.d.ts"
       }
     },
     "./deterministic_oracle_accounts": {
-      "require": {
-        "types": "./dist/cjs/deterministic_oracle_accounts.d.ts",
-        "default": "./dist/cjs/deterministic_oracle_accounts.cjs"
-      },
       "import": {
-        "types": "./dist/esm/deterministic_oracle_accounts.d.ts",
-        "default": "./dist/esm/deterministic_oracle_accounts.mjs"
+        "default": "./dist/esm/deterministic_oracle_accounts.mjs",
+        "types": "./dist/esm/deterministic_oracle_accounts.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/deterministic_oracle_accounts.cjs",
+        "types": "./dist/cjs/deterministic_oracle_accounts.d.ts"
       }
     },
     "./deterministic_stake_accounts": {
-      "require": {
-        "types": "./dist/cjs/deterministic_stake_accounts.d.ts",
-        "default": "./dist/cjs/deterministic_stake_accounts.cjs"
-      },
       "import": {
-        "types": "./dist/esm/deterministic_stake_accounts.d.ts",
-        "default": "./dist/esm/deterministic_stake_accounts.mjs"
+        "default": "./dist/esm/deterministic_stake_accounts.mjs",
+        "types": "./dist/esm/deterministic_stake_accounts.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/deterministic_stake_accounts.cjs",
+        "types": "./dist/cjs/deterministic_stake_accounts.d.ts"
       }
     },
     "./executor": {
-      "require": {
-        "types": "./dist/cjs/executor.d.ts",
-        "default": "./dist/cjs/executor.cjs"
-      },
       "import": {
-        "types": "./dist/esm/executor.d.ts",
-        "default": "./dist/esm/executor.mjs"
-      }
-    },
-    "./governance_payload/BufferLayoutExt": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/BufferLayoutExt.d.ts",
-        "default": "./dist/cjs/governance_payload/BufferLayoutExt.cjs"
+        "default": "./dist/esm/executor.mjs",
+        "types": "./dist/esm/executor.d.ts"
       },
-      "import": {
-        "types": "./dist/esm/governance_payload/BufferLayoutExt.d.ts",
-        "default": "./dist/esm/governance_payload/BufferLayoutExt.mjs"
-      }
-    },
-    "./governance_payload/ExecuteAction": {
       "require": {
-        "types": "./dist/cjs/governance_payload/ExecuteAction.d.ts",
-        "default": "./dist/cjs/governance_payload/ExecuteAction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/ExecuteAction.d.ts",
-        "default": "./dist/esm/governance_payload/ExecuteAction.mjs"
-      }
-    },
-    "./governance_payload/ExecutePostedVaa": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/ExecutePostedVaa.d.ts",
-        "default": "./dist/cjs/governance_payload/ExecutePostedVaa.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/ExecutePostedVaa.d.ts",
-        "default": "./dist/esm/governance_payload/ExecutePostedVaa.mjs"
-      }
-    },
-    "./governance_payload/GovernanceDataSourceTransfer": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/GovernanceDataSourceTransfer.d.ts",
-        "default": "./dist/cjs/governance_payload/GovernanceDataSourceTransfer.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/GovernanceDataSourceTransfer.d.ts",
-        "default": "./dist/esm/governance_payload/GovernanceDataSourceTransfer.mjs"
-      }
-    },
-    "./governance_payload/PythGovernanceAction": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/PythGovernanceAction.d.ts",
-        "default": "./dist/cjs/governance_payload/PythGovernanceAction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/PythGovernanceAction.d.ts",
-        "default": "./dist/esm/governance_payload/PythGovernanceAction.mjs"
-      }
-    },
-    "./governance_payload/SetDataSources": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/SetDataSources.d.ts",
-        "default": "./dist/cjs/governance_payload/SetDataSources.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/SetDataSources.d.ts",
-        "default": "./dist/esm/governance_payload/SetDataSources.mjs"
-      }
-    },
-    "./governance_payload/SetFee": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/SetFee.d.ts",
-        "default": "./dist/cjs/governance_payload/SetFee.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/SetFee.d.ts",
-        "default": "./dist/esm/governance_payload/SetFee.mjs"
-      }
-    },
-    "./governance_payload/SetTransactionFee": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/SetTransactionFee.d.ts",
-        "default": "./dist/cjs/governance_payload/SetTransactionFee.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/SetTransactionFee.d.ts",
-        "default": "./dist/esm/governance_payload/SetTransactionFee.mjs"
-      }
-    },
-    "./governance_payload/SetValidPeriod": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/SetValidPeriod.d.ts",
-        "default": "./dist/cjs/governance_payload/SetValidPeriod.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/SetValidPeriod.d.ts",
-        "default": "./dist/esm/governance_payload/SetValidPeriod.mjs"
-      }
-    },
-    "./governance_payload/SetWormholeAddress": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/SetWormholeAddress.d.ts",
-        "default": "./dist/cjs/governance_payload/SetWormholeAddress.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/SetWormholeAddress.d.ts",
-        "default": "./dist/esm/governance_payload/SetWormholeAddress.mjs"
-      }
-    },
-    "./governance_payload/UpdateTrustedSigner": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/UpdateTrustedSigner.d.ts",
-        "default": "./dist/cjs/governance_payload/UpdateTrustedSigner.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/UpdateTrustedSigner.d.ts",
-        "default": "./dist/esm/governance_payload/UpdateTrustedSigner.mjs"
-      }
-    },
-    "./governance_payload/UpgradeContract": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/UpgradeContract.d.ts",
-        "default": "./dist/cjs/governance_payload/UpgradeContract.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/UpgradeContract.d.ts",
-        "default": "./dist/esm/governance_payload/UpgradeContract.mjs"
-      }
-    },
-    "./governance_payload/UpgradeLazerContract": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/UpgradeLazerContract.d.ts",
-        "default": "./dist/cjs/governance_payload/UpgradeLazerContract.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/UpgradeLazerContract.d.ts",
-        "default": "./dist/esm/governance_payload/UpgradeLazerContract.mjs"
-      }
-    },
-    "./governance_payload/WithdrawFee": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/WithdrawFee.d.ts",
-        "default": "./dist/cjs/governance_payload/WithdrawFee.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/governance_payload/WithdrawFee.d.ts",
-        "default": "./dist/esm/governance_payload/WithdrawFee.mjs"
+        "default": "./dist/cjs/executor.cjs",
+        "types": "./dist/cjs/executor.d.ts"
       }
     },
     "./governance_payload": {
-      "require": {
-        "types": "./dist/cjs/governance_payload/index.d.ts",
-        "default": "./dist/cjs/governance_payload/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/governance_payload/index.d.ts",
-        "default": "./dist/esm/governance_payload/index.mjs"
+        "default": "./dist/esm/governance_payload/index.mjs",
+        "types": "./dist/esm/governance_payload/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/index.cjs",
+        "types": "./dist/cjs/governance_payload/index.d.ts"
       }
     },
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
+    "./governance_payload/BufferLayoutExt": {
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/governance_payload/BufferLayoutExt.mjs",
+        "types": "./dist/esm/governance_payload/BufferLayoutExt.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/BufferLayoutExt.cjs",
+        "types": "./dist/cjs/governance_payload/BufferLayoutExt.d.ts"
+      }
+    },
+    "./governance_payload/ExecuteAction": {
+      "import": {
+        "default": "./dist/esm/governance_payload/ExecuteAction.mjs",
+        "types": "./dist/esm/governance_payload/ExecuteAction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/ExecuteAction.cjs",
+        "types": "./dist/cjs/governance_payload/ExecuteAction.d.ts"
+      }
+    },
+    "./governance_payload/ExecutePostedVaa": {
+      "import": {
+        "default": "./dist/esm/governance_payload/ExecutePostedVaa.mjs",
+        "types": "./dist/esm/governance_payload/ExecutePostedVaa.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/ExecutePostedVaa.cjs",
+        "types": "./dist/cjs/governance_payload/ExecutePostedVaa.d.ts"
+      }
+    },
+    "./governance_payload/GovernanceDataSourceTransfer": {
+      "import": {
+        "default": "./dist/esm/governance_payload/GovernanceDataSourceTransfer.mjs",
+        "types": "./dist/esm/governance_payload/GovernanceDataSourceTransfer.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/GovernanceDataSourceTransfer.cjs",
+        "types": "./dist/cjs/governance_payload/GovernanceDataSourceTransfer.d.ts"
+      }
+    },
+    "./governance_payload/PythGovernanceAction": {
+      "import": {
+        "default": "./dist/esm/governance_payload/PythGovernanceAction.mjs",
+        "types": "./dist/esm/governance_payload/PythGovernanceAction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/PythGovernanceAction.cjs",
+        "types": "./dist/cjs/governance_payload/PythGovernanceAction.d.ts"
+      }
+    },
+    "./governance_payload/SetDataSources": {
+      "import": {
+        "default": "./dist/esm/governance_payload/SetDataSources.mjs",
+        "types": "./dist/esm/governance_payload/SetDataSources.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/SetDataSources.cjs",
+        "types": "./dist/cjs/governance_payload/SetDataSources.d.ts"
+      }
+    },
+    "./governance_payload/SetFee": {
+      "import": {
+        "default": "./dist/esm/governance_payload/SetFee.mjs",
+        "types": "./dist/esm/governance_payload/SetFee.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/SetFee.cjs",
+        "types": "./dist/cjs/governance_payload/SetFee.d.ts"
+      }
+    },
+    "./governance_payload/SetTransactionFee": {
+      "import": {
+        "default": "./dist/esm/governance_payload/SetTransactionFee.mjs",
+        "types": "./dist/esm/governance_payload/SetTransactionFee.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/SetTransactionFee.cjs",
+        "types": "./dist/cjs/governance_payload/SetTransactionFee.d.ts"
+      }
+    },
+    "./governance_payload/SetValidPeriod": {
+      "import": {
+        "default": "./dist/esm/governance_payload/SetValidPeriod.mjs",
+        "types": "./dist/esm/governance_payload/SetValidPeriod.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/SetValidPeriod.cjs",
+        "types": "./dist/cjs/governance_payload/SetValidPeriod.d.ts"
+      }
+    },
+    "./governance_payload/SetWormholeAddress": {
+      "import": {
+        "default": "./dist/esm/governance_payload/SetWormholeAddress.mjs",
+        "types": "./dist/esm/governance_payload/SetWormholeAddress.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/SetWormholeAddress.cjs",
+        "types": "./dist/cjs/governance_payload/SetWormholeAddress.d.ts"
+      }
+    },
+    "./governance_payload/UpdateTrustedSigner": {
+      "import": {
+        "default": "./dist/esm/governance_payload/UpdateTrustedSigner.mjs",
+        "types": "./dist/esm/governance_payload/UpdateTrustedSigner.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/UpdateTrustedSigner.cjs",
+        "types": "./dist/cjs/governance_payload/UpdateTrustedSigner.d.ts"
+      }
+    },
+    "./governance_payload/UpgradeContract": {
+      "import": {
+        "default": "./dist/esm/governance_payload/UpgradeContract.mjs",
+        "types": "./dist/esm/governance_payload/UpgradeContract.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/UpgradeContract.cjs",
+        "types": "./dist/cjs/governance_payload/UpgradeContract.d.ts"
+      }
+    },
+    "./governance_payload/UpgradeLazerContract": {
+      "import": {
+        "default": "./dist/esm/governance_payload/UpgradeLazerContract.mjs",
+        "types": "./dist/esm/governance_payload/UpgradeLazerContract.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/UpgradeLazerContract.cjs",
+        "types": "./dist/cjs/governance_payload/UpgradeLazerContract.d.ts"
+      }
+    },
+    "./governance_payload/WithdrawFee": {
+      "import": {
+        "default": "./dist/esm/governance_payload/WithdrawFee.mjs",
+        "types": "./dist/esm/governance_payload/WithdrawFee.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/governance_payload/WithdrawFee.cjs",
+        "types": "./dist/cjs/governance_payload/WithdrawFee.d.ts"
       }
     },
     "./message_buffer": {
-      "require": {
-        "types": "./dist/cjs/message_buffer.d.ts",
-        "default": "./dist/cjs/message_buffer.cjs"
-      },
       "import": {
-        "types": "./dist/esm/message_buffer.d.ts",
-        "default": "./dist/esm/message_buffer.mjs"
+        "default": "./dist/esm/message_buffer.mjs",
+        "types": "./dist/esm/message_buffer.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/message_buffer.cjs",
+        "types": "./dist/cjs/message_buffer.d.ts"
       }
     },
     "./multisig": {
-      "require": {
-        "types": "./dist/cjs/multisig.d.ts",
-        "default": "./dist/cjs/multisig.cjs"
-      },
       "import": {
-        "types": "./dist/esm/multisig.d.ts",
-        "default": "./dist/esm/multisig.mjs"
-      }
-    },
-    "./multisig_transaction/AnchorMultisigInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/AnchorMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/AnchorMultisigInstruction.cjs"
+        "default": "./dist/esm/multisig.mjs",
+        "types": "./dist/esm/multisig.d.ts"
       },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/AnchorMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/AnchorMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/BpfUpgradableLoaderMultisigInstruction": {
       "require": {
-        "types": "./dist/cjs/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/LazerMultisigInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/LazerMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/LazerMultisigInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/LazerMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/LazerMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/PythMultisigInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/PythMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/PythMultisigInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/PythMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/PythMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/SolanaStakingMultisigInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/SolanaStakingMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/SolanaStakingMultisigInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/SolanaStakingMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/SolanaStakingMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/SystemProgramInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/SystemProgramInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/SystemProgramInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/SystemProgramInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/SystemProgramInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/WormholeMultisigInstruction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/WormholeMultisigInstruction.d.ts",
-        "default": "./dist/cjs/multisig_transaction/WormholeMultisigInstruction.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/WormholeMultisigInstruction.d.ts",
-        "default": "./dist/esm/multisig_transaction/WormholeMultisigInstruction.mjs"
-      }
-    },
-    "./multisig_transaction/anchor": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/anchor.d.ts",
-        "default": "./dist/cjs/multisig_transaction/anchor.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/multisig_transaction/anchor.d.ts",
-        "default": "./dist/esm/multisig_transaction/anchor.mjs"
+        "default": "./dist/cjs/multisig.cjs",
+        "types": "./dist/cjs/multisig.d.ts"
       }
     },
     "./multisig_transaction": {
-      "require": {
-        "types": "./dist/cjs/multisig_transaction/index.d.ts",
-        "default": "./dist/cjs/multisig_transaction/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/multisig_transaction/index.d.ts",
-        "default": "./dist/esm/multisig_transaction/index.mjs"
+        "default": "./dist/esm/multisig_transaction/index.mjs",
+        "types": "./dist/esm/multisig_transaction/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/index.cjs",
+        "types": "./dist/cjs/multisig_transaction/index.d.ts"
       }
     },
-    "./price_store": {
-      "require": {
-        "types": "./dist/cjs/price_store.d.ts",
-        "default": "./dist/cjs/price_store.cjs"
-      },
+    "./multisig_transaction/AnchorMultisigInstruction": {
       "import": {
-        "types": "./dist/esm/price_store.d.ts",
-        "default": "./dist/esm/price_store.mjs"
+        "default": "./dist/esm/multisig_transaction/AnchorMultisigInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/AnchorMultisigInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/AnchorMultisigInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/AnchorMultisigInstruction.d.ts"
+      }
+    },
+    "./multisig_transaction/anchor": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/anchor.mjs",
+        "types": "./dist/esm/multisig_transaction/anchor.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/anchor.cjs",
+        "types": "./dist/cjs/multisig_transaction/anchor.d.ts"
+      }
+    },
+    "./multisig_transaction/BpfUpgradableLoaderMultisigInstruction": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/BpfUpgradableLoaderMultisigInstruction.d.ts"
+      }
+    },
+    "./multisig_transaction/LazerMultisigInstruction": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/LazerMultisigInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/LazerMultisigInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/LazerMultisigInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/LazerMultisigInstruction.d.ts"
+      }
+    },
+    "./multisig_transaction/PythMultisigInstruction": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/PythMultisigInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/PythMultisigInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/PythMultisigInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/PythMultisigInstruction.d.ts"
+      }
+    },
+    "./multisig_transaction/SolanaStakingMultisigInstruction": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/SolanaStakingMultisigInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/SolanaStakingMultisigInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/SolanaStakingMultisigInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/SolanaStakingMultisigInstruction.d.ts"
+      }
+    },
+    "./multisig_transaction/SystemProgramInstruction": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/SystemProgramInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/SystemProgramInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/SystemProgramInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/SystemProgramInstruction.d.ts"
+      }
+    },
+    "./multisig_transaction/WormholeMultisigInstruction": {
+      "import": {
+        "default": "./dist/esm/multisig_transaction/WormholeMultisigInstruction.mjs",
+        "types": "./dist/esm/multisig_transaction/WormholeMultisigInstruction.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multisig_transaction/WormholeMultisigInstruction.cjs",
+        "types": "./dist/cjs/multisig_transaction/WormholeMultisigInstruction.d.ts"
+      }
+    },
+    "./package.json": "./package.json",
+    "./price_store": {
+      "import": {
+        "default": "./dist/esm/price_store.mjs",
+        "types": "./dist/esm/price_store.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/price_store.cjs",
+        "types": "./dist/cjs/price_store.d.ts"
       }
     },
     "./programs/core/core_functions": {
-      "require": {
-        "types": "./dist/cjs/programs/core/core_functions.d.ts",
-        "default": "./dist/cjs/programs/core/core_functions.cjs"
-      },
       "import": {
-        "types": "./dist/esm/programs/core/core_functions.d.ts",
-        "default": "./dist/esm/programs/core/core_functions.mjs"
+        "default": "./dist/esm/programs/core/core_functions.mjs",
+        "types": "./dist/esm/programs/core/core_functions.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/programs/core/core_functions.cjs",
+        "types": "./dist/cjs/programs/core/core_functions.d.ts"
       }
     },
     "./programs/lazer/lazer_functions": {
-      "require": {
-        "types": "./dist/cjs/programs/lazer/lazer_functions.d.ts",
-        "default": "./dist/cjs/programs/lazer/lazer_functions.cjs"
-      },
       "import": {
-        "types": "./dist/esm/programs/lazer/lazer_functions.d.ts",
-        "default": "./dist/esm/programs/lazer/lazer_functions.mjs"
+        "default": "./dist/esm/programs/lazer/lazer_functions.mjs",
+        "types": "./dist/esm/programs/lazer/lazer_functions.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/programs/lazer/lazer_functions.cjs",
+        "types": "./dist/cjs/programs/lazer/lazer_functions.d.ts"
       }
     },
     "./programs/program_registry": {
-      "require": {
-        "types": "./dist/cjs/programs/program_registry.d.ts",
-        "default": "./dist/cjs/programs/program_registry.cjs"
-      },
       "import": {
-        "types": "./dist/esm/programs/program_registry.d.ts",
-        "default": "./dist/esm/programs/program_registry.mjs"
+        "default": "./dist/esm/programs/program_registry.mjs",
+        "types": "./dist/esm/programs/program_registry.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/programs/program_registry.cjs",
+        "types": "./dist/cjs/programs/program_registry.d.ts"
       }
     },
     "./programs/types": {
-      "require": {
-        "types": "./dist/cjs/programs/types.d.ts",
-        "default": "./dist/cjs/programs/types.cjs"
-      },
       "import": {
-        "types": "./dist/esm/programs/types.d.ts",
-        "default": "./dist/esm/programs/types.mjs"
+        "default": "./dist/esm/programs/types.mjs",
+        "types": "./dist/esm/programs/types.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/programs/types.cjs",
+        "types": "./dist/cjs/programs/types.d.ts"
       }
     },
     "./propose": {
-      "require": {
-        "types": "./dist/cjs/propose.d.ts",
-        "default": "./dist/cjs/propose.cjs"
-      },
       "import": {
-        "types": "./dist/esm/propose.d.ts",
-        "default": "./dist/esm/propose.mjs"
+        "default": "./dist/esm/propose.mjs",
+        "types": "./dist/esm/propose.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/propose.cjs",
+        "types": "./dist/cjs/propose.d.ts"
       }
     },
     "./remote_executor": {
-      "require": {
-        "types": "./dist/cjs/remote_executor.d.ts",
-        "default": "./dist/cjs/remote_executor.cjs"
-      },
       "import": {
-        "types": "./dist/esm/remote_executor.d.ts",
-        "default": "./dist/esm/remote_executor.mjs"
+        "default": "./dist/esm/remote_executor.mjs",
+        "types": "./dist/esm/remote_executor.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/remote_executor.cjs",
+        "types": "./dist/cjs/remote_executor.d.ts"
       }
     },
     "./wormhole": {
-      "require": {
-        "types": "./dist/cjs/wormhole.d.ts",
-        "default": "./dist/cjs/wormhole.cjs"
-      },
       "import": {
-        "types": "./dist/esm/wormhole.d.ts",
-        "default": "./dist/esm/wormhole.mjs"
+        "default": "./dist/esm/wormhole.mjs",
+        "types": "./dist/esm/wormhole.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/wormhole.cjs",
+        "types": "./dist/cjs/wormhole.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/xc-admin-common",
+  "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "test:unit": "jest"
+  },
+  "type": "module",
   "types": "./dist/cjs/index.d.ts",
-  "module": "./dist/esm/index.mjs"
+  "version": "0.1.0"
 }

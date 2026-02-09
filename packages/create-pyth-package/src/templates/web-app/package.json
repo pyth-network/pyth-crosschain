@@ -27,7 +27,6 @@
   "description": "{{description}}",
   "devDependencies": {
     "@axe-core/react": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "catalog:",
@@ -37,7 +36,6 @@
     "autoprefixer": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "prettier": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
     "vercel": "catalog:"
@@ -54,13 +52,11 @@
   },
   "scripts": {
     "build:vercel": "next build",
-    "fix:format": "prettier --write .",
     "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
     "pull:env": "echo 'once {{name}} has been setup in the Vercel UI, you can replace this script with the contents in the pull:env:placeholder, below, as well as the VERCEL_PROJECT_ID variable value'",
     "pull:env:placeholder": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=TODO_FILL_ME_IN vercel env pull",
     "start:dev": "next dev --port {{serverPort}}",
     "start:prod": "next start --port {{serverPort}}",
-    "test:format": "prettier --check .",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc",
     "test:unit": "test-unit"

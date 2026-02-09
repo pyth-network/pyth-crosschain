@@ -1,12 +1,10 @@
 {
   "devDependencies": {
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
     "jest": "catalog:",
-    "prettier": "catalog:",
     "react": "catalog:"
   },
   "engines": {
@@ -35,8 +33,6 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf dist/",
-    "fix:format": "prettier --write .",
-    "test:format": "prettier --check .",
     "test:types": "tsc"
   },
   "type": "module",

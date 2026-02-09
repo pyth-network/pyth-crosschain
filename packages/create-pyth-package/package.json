@@ -16,7 +16,6 @@
     "@cprussin/tsconfig": "catalog:",
     "@types/fs-extra": "catalog:",
     "@types/prompts": "catalog:",
-    "prettier": "catalog:",
     "type-fest": "catalog:"
   },
   "engines": {
@@ -30,9 +29,7 @@
   "name": "@pythnetwork/create-pyth-package",
   "private": true,
   "scripts": {
-    "fix:format": "prettier --write .",
     "start": "tsx ./src/create-pyth-package.ts",
-    "test:format": "prettier --check .",
     "test:types": "tsc"
   },
   "type": "module",

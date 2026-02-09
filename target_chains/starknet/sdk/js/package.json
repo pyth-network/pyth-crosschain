@@ -6,7 +6,6 @@
   "devDependencies": {
     "@types/node": "^18.11.18",
     "jest": "^29.4.1",
-    "prettier": "catalog:",
     "ts-jest": "^29.0.5",
     "ts-node": "catalog:"
   },
@@ -49,9 +48,7 @@
   "scripts": {
     "build": "ts-duality",
     "clean": "rm -rf ./dist",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
     "prepublishOnly": "pnpm run build",
-    "test:format": "prettier --check \"src/**/*.ts\"",
     "usage-example": "ts-node src/examples/usage.ts",
     "version": "pnpm run format && git add -A src"
   },

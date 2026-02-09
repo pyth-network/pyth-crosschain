@@ -30,8 +30,6 @@
   "name": "@pythnetwork/react-hooks",
   "private": true,
   "scripts": {
-    "fix:format": "prettier --write .",
-    "test:format": "prettier --check .",
     "test:types": "tsc"
   },
   "type": "module",
