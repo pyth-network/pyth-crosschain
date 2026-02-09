@@ -15,7 +15,7 @@ export const YouTubeEmbed = ({
 }: YouTubeEmbedProps) => (
   <iframe
     className={clsx(styles.iframe, className)}
-    src={`https://www.youtube.com/embed/${id}`}
+    src={`https://www.youtube.com/embed/${id}?enablejsapi=1`}
     title={title}
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
     referrerPolicy="strict-origin-when-cross-origin"
