@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+if [ ! "$CI" ]; then
+  biome check --staged --no-errors-on-unmatched --max-diagnostics=none "$@"
+  biome check --changed --no-errors-on-unmatched --max-diagnostics=none "$@"
+else
+  # CI: always check changed files
+  biome ci --changed --no-errors-on-unmatched --max-diagnostics=none "$@"
+fi

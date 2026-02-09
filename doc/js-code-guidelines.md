@@ -27,7 +27,7 @@ This guide has code samples and examples for projects related to pyth in the `py
 
 - Put your code in a `src/` folder
 - Use a very strict TypeScript `tsconfig.json` file that leverages a common base
-- Use a very strict eslint configuration (helps standardize on code quality)
+- Use Biome for linting and formatting (helps standardize on code quality)
 - Use [prettier](https://prettier.io/) to help format your code ([VSCode extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [CLI](https://www.npmjs.com/package/prettier))
 - Write your code using the most modern syntax
 - Compile your code to both [CommonJS (CJS)](https://nodejs.org/api/modules.html#modules-commonjs-modules) and [ECMAScript Module (ESM)](https://nodejs.org/api/esm.html#introduction)

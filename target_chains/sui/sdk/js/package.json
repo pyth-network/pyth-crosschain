@@ -1,45 +1,14 @@
 {
-  "name": "@pythnetwork/pyth-sui-js",
-  "version": "3.0.0",
-  "description": "Pyth Network Sui Utilities",
-  "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
-  "type": "module",
-  "files": [
-    "dist/**/*"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/sui/sdk/js"
+  "dependencies": {
+    "@mysten/sui": "^1.3.0",
+    "@pythnetwork/hermes-client": "workspace:*",
+    "buffer": "^6.0.3"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "ts-duality",
-    "example-relay": "node lib/examples/SuiRelay.js",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "prepublishOnly": "pnpm run build && pnpm test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle",
-    "sui"
-  ],
-  "license": "Apache-2.0",
+  "description": "Pyth Network Sui Utilities",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
@@ -47,54 +16,77 @@
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.20",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "web3": "^1.8.2",
     "yargs": "^17.0.20"
   },
-  "dependencies": {
-    "@mysten/sui": "^1.3.0",
-    "@pythnetwork/hermes-client": "workspace:*",
-    "buffer": "^6.0.3"
-  },
   "engines": {
     "node": "^24.0.0"
   },
   "exports": {
-    "./SuiPriceServiceConnection": {
-      "require": {
-        "types": "./dist/cjs/SuiPriceServiceConnection.d.ts",
-        "default": "./dist/cjs/SuiPriceServiceConnection.cjs"
-      },
+    ".": {
       "import": {
-        "types": "./dist/esm/SuiPriceServiceConnection.d.ts",
-        "default": "./dist/esm/SuiPriceServiceConnection.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
       }
     },
     "./client": {
-      "require": {
-        "types": "./dist/cjs/client.d.ts",
-        "default": "./dist/cjs/client.cjs"
-      },
       "import": {
-        "types": "./dist/esm/client.d.ts",
-        "default": "./dist/esm/client.mjs"
+        "default": "./dist/esm/client.mjs",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/client.cjs",
+        "types": "./dist/cjs/client.d.ts"
       }
     },
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
+    "./package.json": "./package.json",
+    "./SuiPriceServiceConnection": {
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/SuiPriceServiceConnection.mjs",
+        "types": "./dist/esm/SuiPriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/SuiPriceServiceConnection.cjs",
+        "types": "./dist/cjs/SuiPriceServiceConnection.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
-  "module": "./dist/esm/index.mjs"
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle",
+    "sui"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-sui-js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "target_chains/sui/sdk/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf ./dist",
+    "example-relay": "node lib/examples/SuiRelay.js",
+    "prepublishOnly": "pnpm run build",
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "version": "pnpm run format && git add -A src"
+  },
+  "type": "module",
+  "types": "./dist/cjs/index.d.ts",
+  "version": "3.0.0"
 }

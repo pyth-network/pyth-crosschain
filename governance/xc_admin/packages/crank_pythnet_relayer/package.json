@@ -31,7 +31,6 @@
     "@sqds/mesh": "^1.0.6",
     "ts-node": "catalog:"
   },
-  "devDependencies": {},
   "engines": {
     "node": "^24.0.0"
   },

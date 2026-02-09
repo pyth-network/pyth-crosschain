@@ -1,41 +1,10 @@
 {
-  "name": "@pythnetwork/known-publishers",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
-      }
-    },
-    "./package.json": "./package.json"
-  },
-  "scripts": {
-    "build": "ts-duality",
-    "clean": "rm -rf dist/",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:types": "tsc"
-  },
-  "peerDependencies": {
-    "react": "catalog:"
-  },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "catalog:",
     "@types/react": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "prettier": "catalog:",
     "react": "catalog:"
@@ -43,7 +12,34 @@
   "engines": {
     "node": "^24.0.0"
   },
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/known-publishers",
+  "peerDependencies": {
+    "react": "catalog:"
+  },
+  "private": true,
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf dist/",
+    "fix:format": "prettier --write .",
+    "test:format": "prettier --check .",
+    "test:types": "tsc"
+  },
+  "type": "module",
   "types": "./dist/cjs/index.d.ts",
-  "main": "./dist/cjs/index.cjs"
+  "version": "0.1.0"
 }

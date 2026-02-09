@@ -1,75 +1,74 @@
 {
-  "private": true,
-  "name": "@pythnetwork/jest-config",
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "build": "ts-duality",
-    "clean": "rm -rf dist/"
+  "bin": {
+    "test-unit": "./test-unit.mjs"
+  },
+  "dependencies": {
+    "@swc/core": "^1.15.0",
+    "@swc/jest": "^0.2.39",
+    "jest": "^29",
+    "jest-ts-webcompat-resolver": "^1.0.1",
+    "react": "catalog:",
+    "ts-deepmerge": "^7.0.3"
   },
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/jest-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@types/jest": "^29",
     "@types/react": "catalog:"
   },
-  "dependencies": {
-    "@swc/core": "^1.15.0",
-    "@swc/jest": "^0.2.39",
-    "jest-ts-webcompat-resolver": "^1.0.1",
-    "jest": "^29",
-    "react": "catalog:",
-    "ts-deepmerge": "^7.0.3"
-  },
-  "bin": {
-    "test-unit": "./test-unit.mjs"
-  },
   "exports": {
     "./define-config": {
-      "require": {
-        "types": "./dist/cjs/define-config.d.ts",
-        "default": "./dist/cjs/define-config.cjs"
-      },
       "import": {
-        "types": "./dist/esm/define-config.d.ts",
-        "default": "./dist/esm/define-config.mjs"
+        "default": "./dist/esm/define-config.mjs",
+        "types": "./dist/esm/define-config.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/define-config.cjs",
+        "types": "./dist/cjs/define-config.d.ts"
       }
     },
     "./define-next-config": {
-      "require": {
-        "types": "./dist/cjs/define-next-config.d.ts",
-        "default": "./dist/cjs/define-next-config.cjs"
-      },
       "import": {
-        "types": "./dist/esm/define-next-config.d.ts",
-        "default": "./dist/esm/define-next-config.mjs"
+        "default": "./dist/esm/define-next-config.mjs",
+        "types": "./dist/esm/define-next-config.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/define-next-config.cjs",
+        "types": "./dist/cjs/define-next-config.d.ts"
       }
     },
     "./define-react-config": {
-      "require": {
-        "types": "./dist/cjs/define-react-config.d.ts",
-        "default": "./dist/cjs/define-react-config.cjs"
-      },
       "import": {
-        "types": "./dist/esm/define-react-config.d.ts",
-        "default": "./dist/esm/define-react-config.mjs"
+        "default": "./dist/esm/define-react-config.mjs",
+        "types": "./dist/esm/define-react-config.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/define-react-config.cjs",
+        "types": "./dist/cjs/define-react-config.d.ts"
       }
     },
+    "./package.json": "./package.json",
     "./setup-file-react": {
-      "require": {
-        "types": "./dist/cjs/setup-file-react.d.ts",
-        "default": "./dist/cjs/setup-file-react.cjs"
-      },
       "import": {
-        "types": "./dist/esm/setup-file-react.d.ts",
-        "default": "./dist/esm/setup-file-react.mjs"
+        "default": "./dist/esm/setup-file-react.mjs",
+        "types": "./dist/esm/setup-file-react.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/setup-file-react.cjs",
+        "types": "./dist/cjs/setup-file-react.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
+  "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/jest-config",
+  "private": true,
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf dist/"
+  },
+  "type": "module",
   "types": "./dist/cjs/index.d.ts",
-  "main": "./dist/cjs/index.cjs"
+  "version": "0.1.0"
 }

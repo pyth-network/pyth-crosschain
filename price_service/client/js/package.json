@@ -1,52 +1,6 @@
 {
-  "name": "@pythnetwork/price-service-client",
-  "version": "1.11.0",
-  "description": "Pyth price service client",
-  "deprecated": "This package is deprecated and is no longer maintained. Please use @pythnetwork/hermes-client instead.",
   "author": {
     "name": "Pyth Data Association"
-  },
-  "homepage": "https://pyth.network",
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "price_service/client/js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
-    "build": "ts-duality",
-    "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle"
-  ],
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@types/jest": "^29.4.0",
-    "@types/yargs": "^17.0.10",
-    "eslint": "catalog:",
-    "jest": "^29.4.0",
-    "prettier": "catalog:",
-    "ts-jest": "^29.0.5",
-    "yargs": "^17.4.1"
   },
   "dependencies": {
     "@pythnetwork/price-service-sdk": "workspace:*",
@@ -57,52 +11,91 @@
     "ts-log": "^2.2.4",
     "ws": "^8.6.0"
   },
+  "deprecated": "This package is deprecated and is no longer maintained. Please use @pythnetwork/hermes-client instead.",
+  "description": "Pyth price service client",
+  "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "@types/yargs": "^17.0.10",
+    "jest": "^29.4.0",
+    "prettier": "catalog:",
+    "ts-jest": "^29.0.5",
+    "yargs": "^17.4.1"
+  },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
-    "./PriceServiceConnection": {
-      "require": {
-        "types": "./dist/cjs/PriceServiceConnection.d.ts",
-        "default": "./dist/cjs/PriceServiceConnection.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/PriceServiceConnection.d.ts",
-        "default": "./dist/esm/PriceServiceConnection.mjs"
-      }
-    },
-    "./ResillientWebSocket": {
-      "require": {
-        "types": "./dist/cjs/ResillientWebSocket.d.ts",
-        "default": "./dist/cjs/ResillientWebSocket.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/ResillientWebSocket.d.ts",
-        "default": "./dist/esm/ResillientWebSocket.mjs"
-      }
-    },
     ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
+      }
+    },
+    "./PriceServiceConnection": {
+      "import": {
+        "default": "./dist/esm/PriceServiceConnection.mjs",
+        "types": "./dist/esm/PriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/PriceServiceConnection.cjs",
+        "types": "./dist/cjs/PriceServiceConnection.d.ts"
+      }
+    },
+    "./package.json": "./package.json",
+    "./ResillientWebSocket": {
+      "import": {
+        "default": "./dist/esm/ResillientWebSocket.mjs",
+        "types": "./dist/esm/ResillientWebSocket.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/ResillientWebSocket.cjs",
+        "types": "./dist/cjs/ResillientWebSocket.d.ts"
       }
     },
     "./utils": {
-      "require": {
-        "types": "./dist/cjs/utils.d.ts",
-        "default": "./dist/cjs/utils.cjs"
-      },
       "import": {
-        "types": "./dist/esm/utils.d.ts",
-        "default": "./dist/esm/utils.mjs"
+        "default": "./dist/esm/utils.mjs",
+        "types": "./dist/esm/utils.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils.cjs",
+        "types": "./dist/cjs/utils.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
-  "module": "./dist/esm/index.mjs"
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/price-service-client",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "price_service/client/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf ./dist",
+    "example": "pnpm run build && node lib/examples/PriceServiceClient.js",
+    "fix:format": "prettier --write \"src/**/*.ts\"",
+    "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
+    "test:format": "prettier --check \"src/**/*.ts\""
+  },
+  "type": "module",
+  "types": "./dist/cjs/index.d.ts",
+  "version": "1.11.0"
 }

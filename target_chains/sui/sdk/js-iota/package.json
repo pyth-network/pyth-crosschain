@@ -1,44 +1,14 @@
 {
-  "name": "@pythnetwork/pyth-iota-js",
-  "version": "2.2.0",
-  "description": "Pyth Network IOTA Utilities",
-  "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/sui/sdk/js-iota"
+  "dependencies": {
+    "@iota/iota-sdk": "^0.5.0",
+    "@pythnetwork/price-service-client": "workspace:*",
+    "buffer": "^6.0.3"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "ts-duality",
-    "example-relay": "pnpm run build && node lib/examples/SuiRelay.js",
-    "test:lint": "eslint src/",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "fix:lint": "eslint --fix src/",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "prepublishOnly": "pnpm run build && pnpm test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle",
-    "iota"
-  ],
-  "license": "Apache-2.0",
+  "description": "Pyth Network IOTA Utilities",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
@@ -46,53 +16,77 @@
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.20",
-    "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "web3": "^1.8.2",
     "yargs": "^17.0.20"
   },
-  "dependencies": {
-    "@iota/iota-sdk": "^0.5.0",
-    "@pythnetwork/price-service-client": "workspace:*",
-    "buffer": "^6.0.3"
-  },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
-    "./IotaPriceServiceConnection": {
-      "require": {
-        "types": "./dist/cjs/IotaPriceServiceConnection.d.ts",
-        "default": "./dist/cjs/IotaPriceServiceConnection.cjs"
-      },
+    ".": {
       "import": {
-        "types": "./dist/esm/IotaPriceServiceConnection.d.ts",
-        "default": "./dist/esm/IotaPriceServiceConnection.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
       }
     },
     "./client": {
-      "require": {
-        "types": "./dist/cjs/client.d.ts",
-        "default": "./dist/cjs/client.cjs"
-      },
       "import": {
-        "types": "./dist/esm/client.d.ts",
-        "default": "./dist/esm/client.mjs"
+        "default": "./dist/esm/client.mjs",
+        "types": "./dist/esm/client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/client.cjs",
+        "types": "./dist/cjs/client.d.ts"
       }
     },
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
+    "./IotaPriceServiceConnection": {
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/IotaPriceServiceConnection.mjs",
+        "types": "./dist/esm/IotaPriceServiceConnection.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/IotaPriceServiceConnection.cjs",
+        "types": "./dist/cjs/IotaPriceServiceConnection.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.mjs"
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle",
+    "iota"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-iota-js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "target_chains/sui/sdk/js-iota",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf ./dist",
+    "example-relay": "pnpm run build && node lib/examples/SuiRelay.js",
+    "prepublishOnly": "pnpm run build",
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "version": "pnpm run format && git add -A src"
+  },
+  "type": "module",
+  "types": "./dist/cjs/index.d.ts",
+  "version": "2.2.0"
 }

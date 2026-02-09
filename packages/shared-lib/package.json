@@ -1,159 +1,155 @@
 {
-  "name": "@pythnetwork/shared-lib",
+  "dependencies": {
+    "dayjs": "catalog:",
+    "uuid": "catalog:"
+  },
   "description": "a collection of shared typescript typings and various utilities that are generally applicable across the JS / TS stack",
-  "version": "0.0.0",
-  "type": "module",
-  "files": [
-    "dist/**"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "packages/shared-lib"
-  },
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "scripts": {
-    "build": "ts-duality --copyOtherFiles",
-    "clean": "rm -rf ./dist",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "fix:format": "prettier --write .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:types": "tsc",
-    "test:unit": "test-unit"
-  },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:"
   },
-  "dependencies": {
-    "dayjs": "catalog:",
-    "uuid": "catalog:"
+  "engines": {
+    "node": "^24.0.0"
   },
-  "private": true,
   "exports": {
     "./constants": {
-      "require": {
-        "types": "./dist/cjs/constants/index.d.ts",
-        "default": "./dist/cjs/constants/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/constants/index.d.ts",
-        "default": "./dist/esm/constants/index.mjs"
+        "default": "./dist/esm/constants/index.mjs",
+        "types": "./dist/esm/constants/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/constants/index.cjs",
+        "types": "./dist/cjs/constants/index.d.ts"
       }
     },
     "./constants/no-op": {
-      "require": {
-        "types": "./dist/cjs/constants/no-op.d.ts",
-        "default": "./dist/cjs/constants/no-op.cjs"
-      },
       "import": {
-        "types": "./dist/esm/constants/no-op.d.ts",
-        "default": "./dist/esm/constants/no-op.mjs"
+        "default": "./dist/esm/constants/no-op.mjs",
+        "types": "./dist/esm/constants/no-op.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/constants/no-op.cjs",
+        "types": "./dist/cjs/constants/no-op.d.ts"
       }
     },
     "./emitter": {
-      "require": {
-        "types": "./dist/cjs/emitter/index.d.ts",
-        "default": "./dist/cjs/emitter/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/emitter/index.d.ts",
-        "default": "./dist/esm/emitter/index.mjs"
+        "default": "./dist/esm/emitter/index.mjs",
+        "types": "./dist/esm/emitter/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/emitter/index.cjs",
+        "types": "./dist/cjs/emitter/index.d.ts"
       }
     },
+    "./package.json": "./package.json",
     "./types": {
-      "require": {
-        "types": "./dist/cjs/types/index.d.ts",
-        "default": "./dist/cjs/types/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/types/index.d.ts",
-        "default": "./dist/esm/types/index.mjs"
-      }
-    },
-    "./util/create-uuid": {
-      "require": {
-        "types": "./dist/cjs/util/create-uuid.d.ts",
-        "default": "./dist/cjs/util/create-uuid.cjs"
+        "default": "./dist/esm/types/index.mjs",
+        "types": "./dist/esm/types/index.d.ts"
       },
-      "import": {
-        "types": "./dist/esm/util/create-uuid.d.ts",
-        "default": "./dist/esm/util/create-uuid.mjs"
-      }
-    },
-    "./util/error-to-string": {
       "require": {
-        "types": "./dist/cjs/util/error-to-string.d.ts",
-        "default": "./dist/cjs/util/error-to-string.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/util/error-to-string.d.ts",
-        "default": "./dist/esm/util/error-to-string.mjs"
+        "default": "./dist/cjs/types/index.cjs",
+        "types": "./dist/cjs/types/index.d.ts"
       }
     },
     "./util": {
-      "require": {
-        "types": "./dist/cjs/util/index.d.ts",
-        "default": "./dist/cjs/util/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/util/index.d.ts",
-        "default": "./dist/esm/util/index.mjs"
+        "default": "./dist/esm/util/index.mjs",
+        "types": "./dist/esm/util/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/index.cjs",
+        "types": "./dist/cjs/util/index.d.ts"
+      }
+    },
+    "./util/create-uuid": {
+      "import": {
+        "default": "./dist/esm/util/create-uuid.mjs",
+        "types": "./dist/esm/util/create-uuid.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/create-uuid.cjs",
+        "types": "./dist/cjs/util/create-uuid.d.ts"
+      }
+    },
+    "./util/error-to-string": {
+      "import": {
+        "default": "./dist/esm/util/error-to-string.mjs",
+        "types": "./dist/esm/util/error-to-string.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/error-to-string.cjs",
+        "types": "./dist/cjs/util/error-to-string.d.ts"
       }
     },
     "./util/is-null-or-undefined": {
-      "require": {
-        "types": "./dist/cjs/util/is-null-or-undefined.d.ts",
-        "default": "./dist/cjs/util/is-null-or-undefined.cjs"
-      },
       "import": {
-        "types": "./dist/esm/util/is-null-or-undefined.d.ts",
-        "default": "./dist/esm/util/is-null-or-undefined.mjs"
+        "default": "./dist/esm/util/is-null-or-undefined.mjs",
+        "types": "./dist/esm/util/is-null-or-undefined.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/is-null-or-undefined.cjs",
+        "types": "./dist/cjs/util/is-null-or-undefined.d.ts"
       }
     },
     "./util/is-number": {
-      "require": {
-        "types": "./dist/cjs/util/is-number.d.ts",
-        "default": "./dist/cjs/util/is-number.cjs"
-      },
       "import": {
-        "types": "./dist/esm/util/is-number.d.ts",
-        "default": "./dist/esm/util/is-number.mjs"
+        "default": "./dist/esm/util/is-number.mjs",
+        "types": "./dist/esm/util/is-number.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/is-number.cjs",
+        "types": "./dist/cjs/util/is-number.d.ts"
       }
     },
     "./util/omit-keys": {
-      "require": {
-        "types": "./dist/cjs/util/omit-keys.d.ts",
-        "default": "./dist/cjs/util/omit-keys.cjs"
-      },
       "import": {
-        "types": "./dist/esm/util/omit-keys.d.ts",
-        "default": "./dist/esm/util/omit-keys.mjs"
+        "default": "./dist/esm/util/omit-keys.mjs",
+        "types": "./dist/esm/util/omit-keys.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/omit-keys.cjs",
+        "types": "./dist/cjs/util/omit-keys.d.ts"
       }
     },
     "./util/wait": {
-      "require": {
-        "types": "./dist/cjs/util/wait.d.ts",
-        "default": "./dist/cjs/util/wait.cjs"
-      },
       "import": {
-        "types": "./dist/esm/util/wait.d.ts",
-        "default": "./dist/esm/util/wait.mjs"
+        "default": "./dist/esm/util/wait.mjs",
+        "types": "./dist/esm/util/wait.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/util/wait.cjs",
+        "types": "./dist/cjs/util/wait.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
+  "files": [
+    "dist/**"
+  ],
+  "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/shared-lib",
+  "private": true,
+  "repository": {
+    "directory": "packages/shared-lib",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "fix:format": "prettier --write .",
+    "test:format": "prettier --check .",
+    "test:types": "tsc",
+    "test:unit": "test-unit"
+  },
+  "type": "module",
   "types": "./dist/cjs/index.d.ts",
-  "main": "./dist/cjs/index.cjs"
+  "version": "0.0.0"
 }

@@ -1,125 +1,120 @@
 {
-  "name": "@pythnetwork/pyth-evm-js",
-  "version": "2.0.0",
-  "description": "Pyth Network EVM Utils in JS",
-  "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/ethereum/sdk/js"
+  "dependencies": {
+    "@pythnetwork/hermes-client": "workspace:*",
+    "viem": "catalog:"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "ts-duality",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle"
-  ],
-  "license": "Apache-2.0",
+  "description": "Pyth Network EVM Utils in JS",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@pythnetwork/jest-config": "workspace:",
+    "@pythnetwork/pyth-sdk-solidity": "workspace:*",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
     "@types/yargs": "^17.0.10",
-    "eslint": "catalog:",
     "jest": "^29.4.1",
     "prettier": "catalog:",
     "ts-jest": "^29.0.5"
   },
-  "dependencies": {
-    "@pythnetwork/hermes-client": "workspace:*",
-    "viem": "catalog:"
-  },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
-    "./filler": {
-      "require": {
-        "types": "./dist/cjs/filler.d.ts",
-        "default": "./dist/cjs/filler.cjs"
-      },
+    ".": {
       "import": {
-        "types": "./dist/esm/filler.d.ts",
-        "default": "./dist/esm/filler.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
       }
     },
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
+    "./filler": {
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/filler.mjs",
+        "types": "./dist/esm/filler.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/filler.cjs",
+        "types": "./dist/cjs/filler.d.ts"
       }
     },
     "./multicall3-bundler": {
-      "require": {
-        "types": "./dist/cjs/multicall3-bundler.d.ts",
-        "default": "./dist/cjs/multicall3-bundler.cjs"
-      },
       "import": {
-        "types": "./dist/esm/multicall3-bundler.d.ts",
-        "default": "./dist/esm/multicall3-bundler.mjs"
+        "default": "./dist/esm/multicall3-bundler.mjs",
+        "types": "./dist/esm/multicall3-bundler.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/multicall3-bundler.cjs",
+        "types": "./dist/cjs/multicall3-bundler.d.ts"
       }
     },
+    "./package.json": "./package.json",
     "./pyth-abi": {
-      "require": {
-        "types": "./dist/cjs/pyth-abi.d.ts",
-        "default": "./dist/cjs/pyth-abi.cjs"
-      },
       "import": {
-        "types": "./dist/esm/pyth-abi.d.ts",
-        "default": "./dist/esm/pyth-abi.mjs"
+        "default": "./dist/esm/pyth-abi.mjs",
+        "types": "./dist/esm/pyth-abi.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/pyth-abi.cjs",
+        "types": "./dist/cjs/pyth-abi.d.ts"
       }
     },
     "./tracer/debug-trace-call": {
-      "require": {
-        "types": "./dist/cjs/tracer/debug-trace-call.d.ts",
-        "default": "./dist/cjs/tracer/debug-trace-call.cjs"
-      },
       "import": {
-        "types": "./dist/esm/tracer/debug-trace-call.d.ts",
-        "default": "./dist/esm/tracer/debug-trace-call.mjs"
+        "default": "./dist/esm/tracer/debug-trace-call.mjs",
+        "types": "./dist/esm/tracer/debug-trace-call.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/tracer/debug-trace-call.cjs",
+        "types": "./dist/cjs/tracer/debug-trace-call.d.ts"
       }
     },
     "./tracer/trace-call-many": {
-      "require": {
-        "types": "./dist/cjs/tracer/trace-call-many.d.ts",
-        "default": "./dist/cjs/tracer/trace-call-many.cjs"
-      },
       "import": {
-        "types": "./dist/esm/tracer/trace-call-many.d.ts",
-        "default": "./dist/esm/tracer/trace-call-many.mjs"
+        "default": "./dist/esm/tracer/trace-call-many.mjs",
+        "types": "./dist/esm/tracer/trace-call-many.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/tracer/trace-call-many.cjs",
+        "types": "./dist/cjs/tracer/trace-call-many.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
-  "module": "./dist/esm/index.mjs"
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-evm-js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "target_chains/ethereum/sdk/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf ./dist",
+    "fix:format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "pnpm run build",
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "version": "pnpm run test:format && git add -A src"
+  },
+  "type": "module",
+  "types": "./dist/cjs/index.d.ts",
+  "version": "2.0.0"
 }

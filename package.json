@@ -1,25 +1,27 @@
 {
-  "name": "@pythnetwork/pyth-crosschain",
-  "private": true,
-  "packageManager": "pnpm@10.28.0",
-  "engines": {
-    "node": "^24.0.0",
-    "pnpm": ">=10.28.0"
-  },
-  "scripts": {
-    "fix:format": "prettier --write .",
-    "install:modules": "[ $CI ] && true || pnpm install",
-    "test:format": "prettier --check .",
-    "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
-  },
   "devDependencies": {
     "@better-builds/ts-duality": "catalog:",
-    "@pythnetwork/create-pyth-package": "workspace:",
-    "@cprussin/tsconfig": "catalog:",
+    "@biomejs/biome": "catalog:",
     "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/create-pyth-package": "workspace:",
     "prettier": "catalog:",
     "prettier-plugin-solidity": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0",
+    "pnpm": ">=10.28.0"
+  },
+  "name": "@pythnetwork/pyth-crosschain",
+  "packageManager": "pnpm@10.28.0",
+  "private": true,
+  "scripts": {
+    "fix:lint": "./scripts/biome-ci --write",
+    "fix:lint:unsafe": "./scripts/biome-ci --write --unsafe",
+    "install:modules": "[ $CI ] && true || pnpm install",
+    "test:lint": "./scripts/biome-ci",
+    "turbo": "[ ! -d node_modules ] && pnpm install; turbo"
   }
 }

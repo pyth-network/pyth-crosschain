@@ -1,112 +1,105 @@
 {
-  "name": "@pythnetwork/pyth-fuel-js",
-  "version": "1.1.0",
-  "description": "Pyth Network Fuel Utils in JS",
-  "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
+  "dependencies": {
+    "fuels": "catalog:"
+  },
+  "description": "Pyth Network Fuel Utils in JS",
+  "devDependencies": {
+    "@pythnetwork/hermes-client": "workspace:*",
+    "@types/node": "catalog:",
+    "copyfiles": "^2.4.1",
+    "prettier": "catalog:",
+    "ts-node": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json",
+    "./types": {
+      "import": {
+        "default": "./dist/esm/types/index.mjs",
+        "types": "./dist/esm/types/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/index.cjs",
+        "types": "./dist/cjs/types/index.d.ts"
+      }
+    },
+    "./types/common": {
+      "import": {
+        "default": "./dist/esm/types/common.mjs",
+        "types": "./dist/esm/types/common.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/common.cjs",
+        "types": "./dist/cjs/types/common.d.ts"
+      }
+    },
+    "./types/PythContract": {
+      "import": {
+        "default": "./dist/esm/types/PythContract.mjs",
+        "types": "./dist/esm/types/PythContract.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/PythContract.cjs",
+        "types": "./dist/cjs/types/PythContract.d.ts"
+      }
+    },
+    "./types/PythContractFactory": {
+      "import": {
+        "default": "./dist/esm/types/PythContractFactory.mjs",
+        "types": "./dist/esm/types/PythContractFactory.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/types/PythContractFactory.cjs",
+        "types": "./dist/cjs/types/PythContractFactory.d.ts"
+      }
+    }
+  },
   "files": [
     "dist/**/*"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/fuel/sdk/js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "usage-example": "ts-node src/examples/usage.ts",
-    "build": "pnpm run generate-fuel-types && ts-duality --copyOtherFiles",
-    "clean": "rm -rf ./dist",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && git add -A src",
-    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:format"
-  },
+  "homepage": "https://pyth.network",
   "keywords": [
     "pyth",
     "oracle"
   ],
   "license": "Apache-2.0",
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/hermes-client": "workspace:*",
-    "@types/node": "catalog:",
-    "@typescript-eslint/eslint-plugin": "^7.7.0",
-    "@typescript-eslint/parser": "^7.7.0",
-    "copyfiles": "^2.4.1",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
-    "ts-node": "catalog:"
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-fuel-js",
+  "publishConfig": {
+    "access": "public"
   },
-  "dependencies": {
-    "fuels": "catalog:"
+  "repository": {
+    "directory": "target_chains/fuel/sdk/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
   },
-  "engines": {
-    "node": "^24.0.0"
+  "scripts": {
+    "build": "pnpm run generate-fuel-types && ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "fix:format": "prettier --write \"src/**/*.ts\"",
+    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:format",
+    "prepublishOnly": "pnpm run build",
+    "test:format": "prettier --check \"src/**/*.ts\"",
+    "usage-example": "ts-node src/examples/usage.ts",
+    "version": "pnpm run test:format && git add -A src"
   },
   "type": "module",
-  "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
-      }
-    },
-    "./types/PythContract": {
-      "require": {
-        "types": "./dist/cjs/types/PythContract.d.ts",
-        "default": "./dist/cjs/types/PythContract.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/types/PythContract.d.ts",
-        "default": "./dist/esm/types/PythContract.mjs"
-      }
-    },
-    "./types/PythContractFactory": {
-      "require": {
-        "types": "./dist/cjs/types/PythContractFactory.d.ts",
-        "default": "./dist/cjs/types/PythContractFactory.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/types/PythContractFactory.d.ts",
-        "default": "./dist/esm/types/PythContractFactory.mjs"
-      }
-    },
-    "./types/common": {
-      "require": {
-        "types": "./dist/cjs/types/common.d.ts",
-        "default": "./dist/cjs/types/common.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/types/common.d.ts",
-        "default": "./dist/esm/types/common.mjs"
-      }
-    },
-    "./types": {
-      "require": {
-        "types": "./dist/cjs/types/index.d.ts",
-        "default": "./dist/cjs/types/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/types/index.d.ts",
-        "default": "./dist/esm/types/index.mjs"
-      }
-    },
-    "./package.json": "./package.json"
-  },
-  "module": "./dist/esm/index.mjs"
+  "types": "./dist/cjs/index.d.ts",
+  "version": "1.1.0"
 }

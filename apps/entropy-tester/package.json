@@ -1,54 +1,7 @@
 {
-  "name": "@pythnetwork/entropy-tester",
-  "version": "1.3.0",
-  "description": "Utility to test entropy provider callbacks",
-  "private": true,
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist/**/*",
-    "cli/**/*"
-  ],
-  "scripts": {
-    "build": "ts-duality --noEsm",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:types": "tsc",
-    "start:dev": "node cli/run.js",
-    "start:prod": "node cli/run.js",
-    "clean": "rm -rf ./dist"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pyth-network/pyth-crosschain.git",
-    "directory": "apps/entropy-tester"
-  },
+  "author": "",
   "bin": {
     "pyth-entropy-tester": "./cli/run.js"
-  },
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
-    "@cprussin/tsconfig": "catalog:",
-    "@types/express": "^4.17.21",
-    "@types/node": "catalog:",
-    "@types/yargs": "^17.0.10",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "catalog:",
-    "pino-pretty": "^11.2.1",
-    "prettier": "catalog:",
-    "ts-node": "catalog:"
   },
   "dependencies": {
     "@pythnetwork/contract-manager": "workspace:*",
@@ -59,10 +12,51 @@
     "yargs": "^17.5.1",
     "zod": "catalog:"
   },
-  "keywords": [],
-  "author": "",
-  "license": "Apache-2.0",
+  "description": "Utility to test entropy provider callbacks",
+  "devDependencies": {
+    "@cprussin/prettier-config": "catalog:",
+    "@cprussin/tsconfig": "catalog:",
+    "@types/express": "^4.17.21",
+    "@types/node": "catalog:",
+    "@types/yargs": "^17.0.10",
+    "pino-pretty": "^11.2.1",
+    "prettier": "catalog:",
+    "ts-node": "catalog:"
+  },
   "engines": {
     "node": "^24.0.0"
-  }
+  },
+  "exports": {
+    ".": {
+      "default": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**/*",
+    "cli/**/*"
+  ],
+  "keywords": [],
+  "license": "Apache-2.0",
+  "main": "./dist/index.cjs",
+  "name": "@pythnetwork/entropy-tester",
+  "private": true,
+  "repository": {
+    "directory": "apps/entropy-tester",
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "scripts": {
+    "build": "ts-duality --noEsm",
+    "clean": "rm -rf ./dist",
+    "fix:format": "prettier --write .",
+    "start:dev": "node cli/run.js",
+    "start:prod": "node cli/run.js",
+    "test:format": "prettier --check .",
+    "test:types": "tsc"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "version": "1.3.0"
 }
