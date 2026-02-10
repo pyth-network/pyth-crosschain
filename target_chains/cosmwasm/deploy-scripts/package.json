@@ -1,19 +1,5 @@
 {
-  "name": "@pythnetwork/cosmwasm-deploy-scripts",
-  "version": "1.1.0",
-  "description": "",
-  "private": "true",
-  "scripts": {
-    "build": "ts-duality",
-    "build-contract": "ts-node ./src/build-contract.ts",
-    "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts",
-    "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts",
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
-    "clean": "rm -rf ./dist"
-  },
   "author": "",
-  "license": "Apache-2.0",
   "dependencies": {
     "@cosmjs/crypto": "^0.32.3",
     "@ltd/j-toml": "^1.38.0",
@@ -25,67 +11,78 @@
     "rimraf": "^5.0.0",
     "yargs": "^17.0.1"
   },
+  "description": "",
   "devDependencies": {
     "@types/adm-zip": "^0.5.0",
     "@types/yargs": "^17.0.18",
-    "prettier": "catalog:",
     "ts-node": "catalog:"
   },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
     "./build-contract": {
-      "require": {
-        "types": "./dist/cjs/build-contract.d.ts",
-        "default": "./dist/cjs/build-contract.cjs"
-      },
       "import": {
-        "types": "./dist/esm/build-contract.d.ts",
-        "default": "./dist/esm/build-contract.mjs"
+        "default": "./dist/esm/build-contract.mjs",
+        "types": "./dist/esm/build-contract.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/build-contract.cjs",
+        "types": "./dist/cjs/build-contract.d.ts"
       }
     },
     "./configs": {
-      "require": {
-        "types": "./dist/cjs/configs.d.ts",
-        "default": "./dist/cjs/configs.cjs"
-      },
       "import": {
-        "types": "./dist/esm/configs.d.ts",
-        "default": "./dist/esm/configs.mjs"
+        "default": "./dist/esm/configs.mjs",
+        "types": "./dist/esm/configs.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/configs.cjs",
+        "types": "./dist/cjs/configs.d.ts"
       }
     },
     "./helper": {
-      "require": {
-        "types": "./dist/cjs/helper.d.ts",
-        "default": "./dist/cjs/helper.cjs"
-      },
       "import": {
-        "types": "./dist/esm/helper.d.ts",
-        "default": "./dist/esm/helper.mjs"
+        "default": "./dist/esm/helper.mjs",
+        "types": "./dist/esm/helper.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/helper.cjs",
+        "types": "./dist/cjs/helper.d.ts"
       }
     },
     "./instantiate-pyth": {
-      "require": {
-        "types": "./dist/cjs/instantiate-pyth.d.ts",
-        "default": "./dist/cjs/instantiate-pyth.cjs"
-      },
       "import": {
-        "types": "./dist/esm/instantiate-pyth.d.ts",
-        "default": "./dist/esm/instantiate-pyth.mjs"
+        "default": "./dist/esm/instantiate-pyth.mjs",
+        "types": "./dist/esm/instantiate-pyth.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/instantiate-pyth.cjs",
+        "types": "./dist/cjs/instantiate-pyth.d.ts"
       }
     },
     "./instantiate-wormhole": {
-      "require": {
-        "types": "./dist/cjs/instantiate-wormhole.d.ts",
-        "default": "./dist/cjs/instantiate-wormhole.cjs"
-      },
       "import": {
-        "types": "./dist/esm/instantiate-wormhole.d.ts",
-        "default": "./dist/esm/instantiate-wormhole.mjs"
+        "default": "./dist/esm/instantiate-wormhole.mjs",
+        "types": "./dist/esm/instantiate-wormhole.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/instantiate-wormhole.cjs",
+        "types": "./dist/cjs/instantiate-wormhole.d.ts"
       }
     },
     "./package.json": "./package.json"
-  }
+  },
+  "license": "Apache-2.0",
+  "name": "@pythnetwork/cosmwasm-deploy-scripts",
+  "private": "true",
+  "scripts": {
+    "build": "ts-duality",
+    "build-contract": "ts-node ./src/build-contract.ts",
+    "clean": "rm -rf ./dist",
+    "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts",
+    "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts"
+  },
+  "type": "module",
+  "version": "1.1.0"
 }

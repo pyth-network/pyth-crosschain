@@ -1,41 +1,23 @@
 {
-  "name": "@pythnetwork/xc-admin-cli",
-  "version": "0.1.0",
-  "private": "true",
-  "description": "",
   "author": "",
-  "homepage": "https://github.com/pyth-network/pyth-crosschain",
-  "license": "ISC",
-  "main": "./dist/index.cjs",
-  "type": "module",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
-  },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
-  },
-  "scripts": {
-    "build": "ts-duality --noEsm",
-    "cli": "pnpm run build && node dist/index.cjs",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "clean": "rm -rf ./dist"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@ledgerhq/hw-transport": "^6.31.4",
     "@ledgerhq/hw-transport-node-hid": "^6.29.5",
     "@pythnetwork/client": "catalog:",
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
     "@pythnetwork/pyth-solana-receiver": "workspace:*",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
-    "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "commander": "^9.5.0"
   },
+  "description": "",
   "dev-dependencies": {
     "ts-node": "catalog:"
   },
@@ -44,14 +26,30 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "default": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
     },
     "./ledger": {
-      "types": "./dist/ledger.d.ts",
-      "default": "./dist/ledger.cjs"
+      "default": "./dist/ledger.cjs",
+      "types": "./dist/ledger.d.ts"
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts"
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "./dist/index.cjs",
+  "name": "@pythnetwork/xc-admin-cli",
+  "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "scripts": {
+    "build": "ts-duality --noEsm",
+    "clean": "rm -rf ./dist",
+    "cli": "pnpm run build && node dist/index.cjs"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0"
 }

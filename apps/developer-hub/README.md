@@ -109,7 +109,7 @@ Update the `meta.json` file in each section to control navigation. Example:
 
    ```bash
    pnpm turbo run fix:format
-   pnpm turbo run fix:lint:eslint
+   pnpm turbo run fix:lint
    ```
 
 8. Commit and push your changes to your fork
@@ -211,10 +211,9 @@ content/docs/api-reference/
 - `pnpm turbo run start:dev` - Start development server
 - `pnpm turbo run build` - Build the project (includes API reference generation)
 - `pnpm generate:docs` - Generate API reference documentation manually
-- `pnpm turbo run fix:format` - Format code with Prettier
-- `pnpm turbo run fix:lint:eslint` - Fix ESLint issues
+- `pnpm turbo run fix:lint` - Fix any linting and formatting issues issues
 - `pnpm turbo run test:format` - Check formatting
-- `pnpm turbo run test:lint:eslint` - Check for linting errors
+- `pnpm turbo run test:lint` - Check for linting errors
 - `pnpm turbo run test:types` - Check TypeScript types
 
 ## Getting Help

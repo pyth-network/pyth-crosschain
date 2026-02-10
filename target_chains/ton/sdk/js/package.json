@@ -1,68 +1,60 @@
 {
-  "name": "@pythnetwork/pyth-ton-js",
-  "version": "0.4.0",
-  "description": "Pyth Network TON Utilities",
-  "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"
   },
-  "main": "./dist/cjs/index.cjs",
-  "types": "./dist/cjs/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "target_chains/ton/sdk/js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "ts-duality",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle"
-  ],
-  "license": "Apache-2.0",
+  "description": "Pyth Network TON Utilities",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.1.0",
     "@types/node": "^18.11.18",
-    "eslint": "catalog:",
     "jest": "^29.4.1",
-    "prettier": "catalog:",
     "ts-jest": "^29.0.5",
     "ts-node": "catalog:"
   },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
     ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
-  "module": "./dist/esm/index.mjs"
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-ton-js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "target_chains/ton/sdk/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality",
+    "clean": "rm -rf ./dist",
+    "prepublishOnly": "pnpm run build",
+    "version": "pnpm run test:format && git add -A src"
+  },
+  "type": "module",
+  "types": "./dist/cjs/index.d.ts",
+  "version": "0.4.0"
 }

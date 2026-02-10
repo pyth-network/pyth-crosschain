@@ -1,30 +1,23 @@
 {
-  "name": "pyth-mock-solidity",
-  "version": "1.1.0",
+  "author": "",
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
+  },
   "description": "** Deploy mock solidity pyth contract using the pyth solidity sdk **",
-  "type": "module",
   "directories": {
     "lib": "lib",
     "test": "test"
   },
-  "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write ."
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@pythnetwork/pyth-sdk-solidity": "^4.0.0"
-  },
-  "devDependencies": {
-    "prettier": "catalog:",
-    "prettier-plugin-solidity": "catalog:"
+  "engines": {
+    "node": "^24.0.0"
   },
   "files": [
     "dist/**/*"
   ],
-  "engines": {
-    "node": "^24.0.0"
-  }
+  "keywords": [],
+  "license": "ISC",
+  "name": "pyth-mock-solidity",
+  "scripts": {},
+  "type": "module",
+  "version": "1.1.0"
 }

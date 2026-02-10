@@ -1,26 +1,4 @@
 {
-  "private": true,
-  "name": "@pythnetwork/react-hooks",
-  "description": "collection of utility hooks used across react applications powering parts of the pyth network",
-  "version": "0.1.0",
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "scripts": {
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:types": "tsc"
-  },
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
-    "@cprussin/tsconfig": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "eslint": "catalog:"
-  },
   "dependencies": {
     "@pythnetwork/shared-lib": "workspace:",
     "next-themes": "catalog:",
@@ -30,14 +8,30 @@
     "sockette": "catalog:",
     "throttleit": "catalog:"
   },
-  "type": "module",
+  "description": "collection of utility hooks used across react applications powering parts of the pyth network",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
   "exports": {
+    "./nuqs": "./src/nuqs.ts",
     "./nuqs-adapters-next": "./src/nuqs-adapters-next.ts",
     "./nuqs-server": "./src/nuqs-server.ts",
     "./nuqs-testing": "./src/nuqs-testing.ts",
-    "./nuqs": "./src/nuqs.ts",
+    "./package.json": "./package.json",
     "./use-app-theme": "./src/use-app-theme.ts",
-    "./use-websocket": "./src/use-websocket.ts",
-    "./package.json": "./package.json"
-  }
+    "./use-websocket": "./src/use-websocket.ts"
+  },
+  "name": "@pythnetwork/react-hooks",
+  "private": true,
+  "scripts": {
+    "test:types": "tsc"
+  },
+  "type": "module",
+  "version": "0.1.0"
 }

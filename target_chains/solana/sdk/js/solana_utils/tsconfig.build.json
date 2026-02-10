@@ -1,10 +1,9 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false,
-    "incremental": false,
     "declaration": true,
-    "isolatedModules": false
+    "incremental": false,
+    "isolatedModules": false,
+    "noEmit": false
   },
   "exclude": [
     "node_modules",
@@ -12,5 +11,6 @@
     "examples/",
     "__tests__/*",
     "**/__tests__/*"
-  ]
+  ],
+  "extends": "./tsconfig.json"
 }

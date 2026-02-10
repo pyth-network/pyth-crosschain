@@ -1,41 +1,34 @@
 {
-  "name": "{{name}}",
+  "dependencies": {
+    "@pythnetwork/shared-lib": "workspace:"
+  },
   "description": "{{description}}",
-  "version": "0.0.0",
-  "type": "module",
-  "files": [
-    "dist/**"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "{{relativeFolder}}"
-  },
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "scripts": {
-    "build": "ts-duality --copyOtherFiles",
-    "clean": "rm -rf ./dist",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "fix:format": "prettier --write .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:types": "tsc",
-    "test:unit": "test-unit"
-  },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:"
   },
-  "dependencies": {
-    "@pythnetwork/shared-lib": "workspace:"
-  }
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "name": "{{name}}",
+  "repository": {
+    "directory": "{{relativeFolder}}",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "test:types": "tsc",
+    "test:unit": "test-unit"
+  },
+  "type": "module",
+  "version": "0.0.0"
 }

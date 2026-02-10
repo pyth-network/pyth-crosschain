@@ -1,251 +1,5 @@
 {
-  "name": "@pythnetwork/contract-manager",
-  "version": "1.1.0",
-  "description": "Set of tools to manage pyth contracts",
-  "private": true,
-  "exports": {
-    "./core/base": {
-      "require": {
-        "types": "./dist/cjs/core/base.d.ts",
-        "default": "./dist/cjs/core/base.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/base.d.ts",
-        "default": "./dist/esm/core/base.mjs"
-      }
-    },
-    "./core/chains": {
-      "require": {
-        "types": "./dist/cjs/core/chains.d.ts",
-        "default": "./dist/cjs/core/chains.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/chains.d.ts",
-        "default": "./dist/esm/core/chains.mjs"
-      }
-    },
-    "./core/contracts/aptos": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/aptos.d.ts",
-        "default": "./dist/cjs/core/contracts/aptos.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/aptos.d.ts",
-        "default": "./dist/esm/core/contracts/aptos.mjs"
-      }
-    },
-    "./core/contracts/cosmwasm": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/cosmwasm.d.ts",
-        "default": "./dist/cjs/core/contracts/cosmwasm.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/cosmwasm.d.ts",
-        "default": "./dist/esm/core/contracts/cosmwasm.mjs"
-      }
-    },
-    "./core/contracts/evm": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/evm.d.ts",
-        "default": "./dist/cjs/core/contracts/evm.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/evm.d.ts",
-        "default": "./dist/esm/core/contracts/evm.mjs"
-      }
-    },
-    "./core/contracts/evm_abis": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/evm_abis.d.ts",
-        "default": "./dist/cjs/core/contracts/evm_abis.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/evm_abis.d.ts",
-        "default": "./dist/esm/core/contracts/evm_abis.mjs"
-      }
-    },
-    "./core/contracts/fuel": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/fuel.d.ts",
-        "default": "./dist/cjs/core/contracts/fuel.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/fuel.d.ts",
-        "default": "./dist/esm/core/contracts/fuel.mjs"
-      }
-    },
-    "./core/contracts": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/index.d.ts",
-        "default": "./dist/cjs/core/contracts/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/index.d.ts",
-        "default": "./dist/esm/core/contracts/index.mjs"
-      }
-    },
-    "./core/contracts/iota": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/iota.d.ts",
-        "default": "./dist/cjs/core/contracts/iota.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/iota.d.ts",
-        "default": "./dist/esm/core/contracts/iota.mjs"
-      }
-    },
-    "./core/contracts/near": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/near.d.ts",
-        "default": "./dist/cjs/core/contracts/near.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/near.d.ts",
-        "default": "./dist/esm/core/contracts/near.mjs"
-      }
-    },
-    "./core/contracts/starknet": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/starknet.d.ts",
-        "default": "./dist/cjs/core/contracts/starknet.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/starknet.d.ts",
-        "default": "./dist/esm/core/contracts/starknet.mjs"
-      }
-    },
-    "./core/contracts/sui": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/sui.d.ts",
-        "default": "./dist/cjs/core/contracts/sui.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/sui.d.ts",
-        "default": "./dist/esm/core/contracts/sui.mjs"
-      }
-    },
-    "./core/contracts/ton": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/ton.d.ts",
-        "default": "./dist/cjs/core/contracts/ton.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/ton.d.ts",
-        "default": "./dist/esm/core/contracts/ton.mjs"
-      }
-    },
-    "./core/contracts/wormhole": {
-      "require": {
-        "types": "./dist/cjs/core/contracts/wormhole.d.ts",
-        "default": "./dist/cjs/core/contracts/wormhole.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/contracts/wormhole.d.ts",
-        "default": "./dist/esm/core/contracts/wormhole.mjs"
-      }
-    },
-    "./core/token": {
-      "require": {
-        "types": "./dist/cjs/core/token.d.ts",
-        "default": "./dist/cjs/core/token.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/core/token.d.ts",
-        "default": "./dist/esm/core/token.mjs"
-      }
-    },
-    "./node/utils/executor": {
-      "require": {
-        "types": "./dist/cjs/node/utils/executor.d.ts",
-        "default": "./dist/cjs/node/utils/executor.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/node/utils/executor.d.ts",
-        "default": "./dist/esm/node/utils/executor.mjs"
-      }
-    },
-    "./node/utils/governance": {
-      "require": {
-        "types": "./dist/cjs/node/utils/governance.d.ts",
-        "default": "./dist/cjs/node/utils/governance.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/node/utils/governance.d.ts",
-        "default": "./dist/esm/node/utils/governance.mjs"
-      }
-    },
-    "./node/utils/shell": {
-      "require": {
-        "types": "./dist/cjs/node/utils/shell.d.ts",
-        "default": "./dist/cjs/node/utils/shell.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/node/utils/shell.d.ts",
-        "default": "./dist/esm/node/utils/shell.mjs"
-      }
-    },
-    "./node/utils/store": {
-      "require": {
-        "types": "./dist/cjs/node/utils/store.d.ts",
-        "default": "./dist/cjs/node/utils/store.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/node/utils/store.d.ts",
-        "default": "./dist/esm/node/utils/store.mjs"
-      }
-    },
-    "./utils/exec-file-async": {
-      "require": {
-        "types": "./dist/cjs/utils/exec-file-async.d.ts",
-        "default": "./dist/cjs/utils/exec-file-async.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/utils/exec-file-async.d.ts",
-        "default": "./dist/esm/utils/exec-file-async.mjs"
-      }
-    },
-    "./utils/utils": {
-      "require": {
-        "types": "./dist/cjs/utils/utils.d.ts",
-        "default": "./dist/cjs/utils/utils.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/utils/utils.d.ts",
-        "default": "./dist/esm/utils/utils.mjs"
-      }
-    },
-    "./package.json": "./package.json",
-    "./data/chains/*.json": {
-      "default": "./dist/store/chains/*.json"
-    },
-    "./data/contracts/*.json": {
-      "default": "./dist/store/contracts/*.json"
-    },
-    "./data/tokens/*.json": {
-      "default": "./dist/store/tokens/*.json"
-    },
-    "./data/vaults/*.json": {
-      "default": "./dist/store/vaults/*.json"
-    }
-  },
-  "files": [
-    "dist/**/*"
-  ],
-  "scripts": {
-    "build": "ts-duality --copyOtherFiles",
-    "shell": "ts-node ./src/node/utils/shell.ts",
-    "fix:lint": "eslint src/ scripts/ --fix --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
-    "test:lint": "eslint src/ scripts/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\"",
-    "clean": "rm -rf ./dist"
-  },
   "author": "",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
-  },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
     "@coral-xyz/anchor": "^0.29.0",
@@ -292,19 +46,256 @@
     "web3-eth-contract": "^1.8.2",
     "yargs": "catalog:"
   },
+  "description": "Set of tools to manage pyth contracts",
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@pythnetwork/pyth-crosschain": "link:..",
     "@types/node": "catalog:",
     "@types/web3": "^1.2.2",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typedoc": "^0.25.7"
   },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
+  "exports": {
+    "./core/base": {
+      "import": {
+        "default": "./dist/esm/core/base.mjs",
+        "types": "./dist/esm/core/base.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/base.cjs",
+        "types": "./dist/cjs/core/base.d.ts"
+      }
+    },
+    "./core/chains": {
+      "import": {
+        "default": "./dist/esm/core/chains.mjs",
+        "types": "./dist/esm/core/chains.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/chains.cjs",
+        "types": "./dist/cjs/core/chains.d.ts"
+      }
+    },
+    "./core/contracts": {
+      "import": {
+        "default": "./dist/esm/core/contracts/index.mjs",
+        "types": "./dist/esm/core/contracts/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/index.cjs",
+        "types": "./dist/cjs/core/contracts/index.d.ts"
+      }
+    },
+    "./core/contracts/aptos": {
+      "import": {
+        "default": "./dist/esm/core/contracts/aptos.mjs",
+        "types": "./dist/esm/core/contracts/aptos.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/aptos.cjs",
+        "types": "./dist/cjs/core/contracts/aptos.d.ts"
+      }
+    },
+    "./core/contracts/cosmwasm": {
+      "import": {
+        "default": "./dist/esm/core/contracts/cosmwasm.mjs",
+        "types": "./dist/esm/core/contracts/cosmwasm.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/cosmwasm.cjs",
+        "types": "./dist/cjs/core/contracts/cosmwasm.d.ts"
+      }
+    },
+    "./core/contracts/evm": {
+      "import": {
+        "default": "./dist/esm/core/contracts/evm.mjs",
+        "types": "./dist/esm/core/contracts/evm.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/evm.cjs",
+        "types": "./dist/cjs/core/contracts/evm.d.ts"
+      }
+    },
+    "./core/contracts/evm_abis": {
+      "import": {
+        "default": "./dist/esm/core/contracts/evm_abis.mjs",
+        "types": "./dist/esm/core/contracts/evm_abis.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/evm_abis.cjs",
+        "types": "./dist/cjs/core/contracts/evm_abis.d.ts"
+      }
+    },
+    "./core/contracts/fuel": {
+      "import": {
+        "default": "./dist/esm/core/contracts/fuel.mjs",
+        "types": "./dist/esm/core/contracts/fuel.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/fuel.cjs",
+        "types": "./dist/cjs/core/contracts/fuel.d.ts"
+      }
+    },
+    "./core/contracts/iota": {
+      "import": {
+        "default": "./dist/esm/core/contracts/iota.mjs",
+        "types": "./dist/esm/core/contracts/iota.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/iota.cjs",
+        "types": "./dist/cjs/core/contracts/iota.d.ts"
+      }
+    },
+    "./core/contracts/near": {
+      "import": {
+        "default": "./dist/esm/core/contracts/near.mjs",
+        "types": "./dist/esm/core/contracts/near.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/near.cjs",
+        "types": "./dist/cjs/core/contracts/near.d.ts"
+      }
+    },
+    "./core/contracts/starknet": {
+      "import": {
+        "default": "./dist/esm/core/contracts/starknet.mjs",
+        "types": "./dist/esm/core/contracts/starknet.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/starknet.cjs",
+        "types": "./dist/cjs/core/contracts/starknet.d.ts"
+      }
+    },
+    "./core/contracts/sui": {
+      "import": {
+        "default": "./dist/esm/core/contracts/sui.mjs",
+        "types": "./dist/esm/core/contracts/sui.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/sui.cjs",
+        "types": "./dist/cjs/core/contracts/sui.d.ts"
+      }
+    },
+    "./core/contracts/ton": {
+      "import": {
+        "default": "./dist/esm/core/contracts/ton.mjs",
+        "types": "./dist/esm/core/contracts/ton.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/ton.cjs",
+        "types": "./dist/cjs/core/contracts/ton.d.ts"
+      }
+    },
+    "./core/contracts/wormhole": {
+      "import": {
+        "default": "./dist/esm/core/contracts/wormhole.mjs",
+        "types": "./dist/esm/core/contracts/wormhole.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/contracts/wormhole.cjs",
+        "types": "./dist/cjs/core/contracts/wormhole.d.ts"
+      }
+    },
+    "./core/token": {
+      "import": {
+        "default": "./dist/esm/core/token.mjs",
+        "types": "./dist/esm/core/token.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/core/token.cjs",
+        "types": "./dist/cjs/core/token.d.ts"
+      }
+    },
+    "./data/chains/*.json": {
+      "default": "./dist/store/chains/*.json"
+    },
+    "./data/contracts/*.json": {
+      "default": "./dist/store/contracts/*.json"
+    },
+    "./data/tokens/*.json": {
+      "default": "./dist/store/tokens/*.json"
+    },
+    "./data/vaults/*.json": {
+      "default": "./dist/store/vaults/*.json"
+    },
+    "./node/utils/executor": {
+      "import": {
+        "default": "./dist/esm/node/utils/executor.mjs",
+        "types": "./dist/esm/node/utils/executor.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/node/utils/executor.cjs",
+        "types": "./dist/cjs/node/utils/executor.d.ts"
+      }
+    },
+    "./node/utils/governance": {
+      "import": {
+        "default": "./dist/esm/node/utils/governance.mjs",
+        "types": "./dist/esm/node/utils/governance.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/node/utils/governance.cjs",
+        "types": "./dist/cjs/node/utils/governance.d.ts"
+      }
+    },
+    "./node/utils/shell": {
+      "import": {
+        "default": "./dist/esm/node/utils/shell.mjs",
+        "types": "./dist/esm/node/utils/shell.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/node/utils/shell.cjs",
+        "types": "./dist/cjs/node/utils/shell.d.ts"
+      }
+    },
+    "./node/utils/store": {
+      "import": {
+        "default": "./dist/esm/node/utils/store.mjs",
+        "types": "./dist/esm/node/utils/store.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/node/utils/store.cjs",
+        "types": "./dist/cjs/node/utils/store.d.ts"
+      }
+    },
+    "./package.json": "./package.json",
+    "./utils/exec-file-async": {
+      "import": {
+        "default": "./dist/esm/utils/exec-file-async.mjs",
+        "types": "./dist/esm/utils/exec-file-async.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/exec-file-async.cjs",
+        "types": "./dist/cjs/utils/exec-file-async.d.ts"
+      }
+    },
+    "./utils/utils": {
+      "import": {
+        "default": "./dist/esm/utils/utils.mjs",
+        "types": "./dist/esm/utils/utils.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/utils.cjs",
+        "types": "./dist/cjs/utils/utils.d.ts"
+      }
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "license": "Apache-2.0",
+  "name": "@pythnetwork/contract-manager",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "shell": "ts-node ./src/node/utils/shell.ts"
+  },
   "ts-duality": {
     "extraExports": {
       "./data/chains/*.json": {
@@ -320,5 +311,7 @@
         "default": "./dist/store/vaults/*.json"
       }
     }
-  }
+  },
+  "type": "module",
+  "version": "1.1.0"
 }

@@ -320,7 +320,7 @@ jobs:
           cd apps/developer-hub
           AFFECTED="${{ steps.changed-files.outputs.affected_products }}"
           for product in $AFFECTED; do
-            npx prettier --write "src/app/$product/route.ts" || true
+            npx biome check --write "src/app/$product/route.ts" || true
           done
 
       - name: Commit and push changes

@@ -1,6 +1,4 @@
 .gitignore
-.prettierignore
-prettier.config.js
 turbo.json
 build/
 .turbo/

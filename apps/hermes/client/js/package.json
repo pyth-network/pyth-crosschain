@@ -1,106 +1,98 @@
 {
-  "name": "@pythnetwork/hermes-client",
-  "version": "3.1.0",
-  "description": "Pyth Hermes Client",
   "author": {
     "name": "Pyth Data Association"
-  },
-  "homepage": "https://pyth.network",
-  "files": [
-    "dist/**/*"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "apps/hermes/client/js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "ts-duality",
-    "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
-    "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
-    "example": "node lib/examples/HermesClient.js",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run format && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle"
-  ],
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
-    "@types/jest": "^29.4.0",
-    "@types/node": "^20.14.2",
-    "@types/yargs": "^17.0.10",
-    "eslint": "catalog:",
-    "jest": "^29.4.0",
-    "openapi-zod-client": "^1.18.1",
-    "prettier": "catalog:",
-    "yargs": "^17.4.1"
   },
   "dependencies": {
     "@zodios/core": "^10.9.6",
     "eventsource": "^3.0.5",
     "zod": "^3.23.8"
   },
+  "description": "Pyth Hermes Client",
+  "devDependencies": {
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/jest": "^29.4.0",
+    "@types/node": "^20.14.2",
+    "@types/yargs": "^17.0.10",
+    "jest": "^29.4.0",
+    "openapi-zod-client": "^1.18.1",
+    "yargs": "^17.4.1"
+  },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
-    "./hermes-client": {
-      "require": {
-        "types": "./dist/cjs/hermes-client.d.ts",
-        "default": "./dist/cjs/hermes-client.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/hermes-client.d.ts",
-        "default": "./dist/esm/hermes-client.mjs"
-      }
-    },
     ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
       }
     },
-    "./utils": {
-      "require": {
-        "types": "./dist/cjs/utils.d.ts",
-        "default": "./dist/cjs/utils.cjs"
-      },
+    "./hermes-client": {
       "import": {
-        "types": "./dist/esm/utils.d.ts",
-        "default": "./dist/esm/utils.mjs"
+        "default": "./dist/esm/hermes-client.mjs",
+        "types": "./dist/esm/hermes-client.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/hermes-client.cjs",
+        "types": "./dist/cjs/hermes-client.d.ts"
+      }
+    },
+    "./package.json": "./package.json",
+    "./utils": {
+      "import": {
+        "default": "./dist/esm/utils.mjs",
+        "types": "./dist/esm/utils.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils.cjs",
+        "types": "./dist/cjs/utils.d.ts"
       }
     },
     "./zodSchemas": {
-      "require": {
-        "types": "./dist/cjs/zodSchemas.d.ts",
-        "default": "./dist/cjs/zodSchemas.cjs"
-      },
       "import": {
-        "types": "./dist/esm/zodSchemas.d.ts",
-        "default": "./dist/esm/zodSchemas.mjs"
+        "default": "./dist/esm/zodSchemas.mjs",
+        "types": "./dist/esm/zodSchemas.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/zodSchemas.cjs",
+        "types": "./dist/cjs/zodSchemas.d.ts"
       }
-    },
-    "./package.json": "./package.json"
+    }
   },
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/hermes-client",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "apps/hermes/client/js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality",
+    "build:schemas": "openapi-zod-client ./schema.json --output src/zodSchemas.ts",
+    "clean": "rm -rf ./dist",
+    "example": "node lib/examples/HermesClient.js",
+    "prepublishOnly": "pnpm run build",
+    "pull:schema": "curl -o schema.json -z schema.json https://hermes.pyth.network/docs/openapi.json",
+    "version": "pnpm run format && git add -A src"
+  },
+  "type": "module",
   "types": "./dist/cjs/index.d.ts",
-  "main": "./dist/cjs/index.cjs"
+  "version": "3.1.0"
 }

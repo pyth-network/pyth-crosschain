@@ -1,67 +1,60 @@
 {
-  "name": "@pythnetwork/pyth-lazer-sui-js",
-  "version": "0.3.0",
+  "dependencies": {
+    "@mysten/sui": "catalog:"
+  },
   "description": "TypeScript SDK for the Pyth Lazer Sui contract",
-  "license": "Apache-2.0",
-  "type": "module",
-  "files": [
-    "dist/**"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "lazer/contracts/pyth-lazer-sui-js"
-  },
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "sideEffects": false,
-  "scripts": {
-    "build": "ts-duality --copyOtherFiles",
-    "clean": "rm -rf ./dist",
-    "fix:lint": "eslint --fix . --max-warnings 0",
-    "fix:format": "prettier --write .",
-    "test:lint": "eslint . --max-warnings 0",
-    "test:format": "prettier --check .",
-    "test:types": "tsc",
-    "test:unit": "test-unit",
-    "example:fetch-and-verify": "tsx src/examples/fetch-and-verify.ts"
-  },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
     "@pythnetwork/jest-config": "workspace:",
     "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "tsx": "catalog:",
     "yargs": "catalog:"
   },
-  "dependencies": {
-    "@mysten/sui": "catalog:"
-  },
-  "private": false,
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": "^24.0.0"
   },
   "exports": {
     ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
       "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.mjs"
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
       }
     },
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist/**"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-lazer-sui-js",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "lazer/contracts/pyth-lazer-sui-js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "example:fetch-and-verify": "tsx src/examples/fetch-and-verify.ts",
+    "test:types": "tsc",
+    "test:unit": "test-unit"
+  },
+  "sideEffects": false,
+  "type": "module",
   "types": "./dist/cjs/index.d.ts",
-  "main": "./dist/cjs/index.cjs"
+  "version": "0.3.0"
 }

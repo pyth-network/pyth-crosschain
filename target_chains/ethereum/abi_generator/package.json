@@ -1,32 +1,29 @@
 {
-  "name": "abi_generator",
-  "version": "0.1.0",
-  "private": "true",
-  "description": "",
   "author": "",
-  "homepage": "https://github.com/pyth-network/pyth-crosschain",
-  "license": "Apache 2",
-  "main": "src/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  "bin": {
+    "generate-abis": "src/generate.js"
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
   },
-  "bin": {
-    "generate-abis": "src/generate.js"
-  },
-  "scripts": {
-    "test:format": "prettier --check .",
-    "fix:format": "prettier --write .",
-    "generate": "node src/generate.js"
-  },
+  "description": "",
   "devDependencies": {
-    "prettier": "catalog:",
     "solc": "^0.8.15"
   },
   "engines": {
     "node": "^24.0.0"
-  }
+  },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "Apache 2",
+  "main": "src/index.js",
+  "name": "abi_generator",
+  "private": "true",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "scripts": {
+    "generate": "node src/generate.js"
+  },
+  "version": "0.1.0"
 }

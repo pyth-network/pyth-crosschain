@@ -1,11 +1,10 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false,
-    "incremental": false,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "isolatedModules": false
+    "incremental": false,
+    "isolatedModules": false,
+    "noEmit": false
   },
   "exclude": [
     ".storybook",
@@ -14,5 +13,6 @@
     "examples/",
     "**/*.stories.*",
     "**/__tests__/*"
-  ]
+  ],
+  "extends": "./tsconfig.json"
 }

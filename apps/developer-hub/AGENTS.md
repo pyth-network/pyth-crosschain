@@ -8,17 +8,17 @@ The Developer Hub is a Next.js app rooted in `src/`: routes live under `src/app`
 
 - `pnpm turbo run start:dev` — Next.js dev server on port 3627 with hot reload.
 - `pnpm turbo run build` / `pnpm turbo run start:prod` — Build and preview the production bundle.
-- `pnpm turbo run fix:format|fix:lint:eslint|fix:lint:stylelint` — Auto-apply Prettier, ESLint, and Stylelint fixes.
-- `pnpm turbo run test:format|test:lint:*|test:types` — CI-aligned format/lint/type checks.
+- `pnpm turbo run fix:lint|fix:lint:stylelint` — Auto-apply Biome and Stylelint fixes.
+- `pnpm turbo run test:format|test:lint|test:types` — CI-aligned format/lint/type checks.
 - `pnpm run generate:docs` — Execute `scripts/generate-docs.ts` via Bun for bulk doc updates.
 
 ## Coding Style & Naming Conventions
 
-Follow the repo-wide Prettier profile from `@cprussin/prettier-config` and let it win. ESLint extends Next.js rules, so fix warnings rather than disabling them. React components and hooks live in PascalCase files (`src/components/DataWidget.tsx`, `src/lib/usePriceFeed.ts`), while route folders and MDX filenames stay kebab-case (`content/docs/price-feeds/core/index.mdx`). Keep SCSS modules scoped per component and draft styles with the shared design tokens.
+Follow the repo-wide Biome profile from the `biome.json` file in the root and let it win. Biome rules are enforced, so fix warnings rather than disabling them. React components and hooks live in PascalCase files (`src/components/DataWidget.tsx`, `src/lib/usePriceFeed.ts`), while route folders and MDX filenames stay kebab-case (`content/docs/price-feeds/core/index.mdx`). Keep SCSS modules scoped per component and draft styles with the shared design tokens.
 
 ## Testing Guidelines
 
-Treat linting and type-checking as the gate: run `pnpm turbo run test:lint:eslint`, `...test:lint:stylelint`, and `...test:types` before review. Jest inherits `@pythnetwork/jest-config`; colocate specs as `*.test.ts(x)` files or `__tests__` folders and run them with `pnpm jest <pattern>`. Trigger at least one production build (`pnpm turbo run build`) whenever you change routing, MDX schema, or generated docs.
+Treat linting and type-checking as the gate: run `pnpm turbo run test:lint`, `...test:lint:stylelint`, and `...test:types` before review. Jest inherits `@pythnetwork/jest-config`; colocate specs as `*.test.ts(x)` files or `__tests__` folders and run them with `pnpm jest <pattern>`. Trigger at least one production build (`pnpm turbo run build`) whenever you change routing, MDX schema, or generated docs.
 
 ## Commit & Pull Request Guidelines
 

@@ -1,30 +1,16 @@
 {
-  "name": "@pythnetwork/entropy-explorer",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "scripts": {
-    "build:vercel": "next build",
-    "fix:format": "prettier --write .",
-    "fix:lint:eslint": "eslint --fix .",
-    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
-    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_34F8THr7mZ3eAOQoCLdo8xWj9fdT vercel env pull",
-    "start:dev": "next dev --port 3006",
-    "start:prod": "next start --port 3006",
-    "test:format": "prettier --check .",
-    "test:lint:eslint": "eslint . --max-warnings 0",
-    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
-    "test:types": "tsc"
-  },
+  "browserslist": [
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version",
+    "not dead"
+  ],
   "dependencies": {
     "@phosphor-icons/react": "catalog:",
     "@pythnetwork/component-library": "workspace:*",
+    "@pythnetwork/react-hooks": "workspace:",
     "clsx": "catalog:",
     "next": "catalog:",
-    "@pythnetwork/react-hooks": "workspace:",
     "react": "catalog:",
     "react-aria": "catalog:",
     "react-dom": "catalog:",
@@ -32,10 +18,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
-    "@cprussin/prettier-config": "catalog:",
     "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
     "@svgr/webpack": "catalog:",
     "@types/jest": "catalog:",
     "@types/node": "catalog:",
@@ -43,19 +27,27 @@
     "@types/react-dom": "catalog:",
     "autoprefixer": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "eslint": "catalog:",
     "jest": "catalog:",
     "postcss": "catalog:",
-    "prettier": "catalog:",
     "sass": "catalog:",
     "stylelint": "catalog:",
     "stylelint-config-standard-scss": "catalog:",
     "vercel": "catalog:"
   },
-  "browserslist": [
-    "last 1 chrome version",
-    "last 1 firefox version",
-    "last 1 safari version",
-    "not dead"
-  ]
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "name": "@pythnetwork/entropy-explorer",
+  "private": true,
+  "scripts": {
+    "build:vercel": "next build",
+    "fix:lint:stylelint": "stylelint --fix 'src/**/*.scss'",
+    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_34F8THr7mZ3eAOQoCLdo8xWj9fdT vercel env pull",
+    "start:dev": "next dev --port 3006",
+    "start:prod": "next start --port 3006",
+    "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
+    "test:types": "tsc"
+  },
+  "type": "module",
+  "version": "0.0.0"
 }

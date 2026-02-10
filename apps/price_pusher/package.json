@@ -1,63 +1,6 @@
 {
-  "name": "@pythnetwork/price-pusher",
-  "version": "10.3.1",
-  "description": "Pyth Price Pusher",
-  "homepage": "https://pyth.network",
-  "main": "./dist/index.cjs",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
   "bin": {
     "pyth-price-pusher": "./dist/index.cjs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyth-network/pyth-crosschain",
-    "directory": "apps/price_pusher"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "ts-duality --noEsm",
-    "fix:format": "prettier --write \"src/**/*.ts\"",
-    "fix:lint": "eslint src/ --fix --max-warnings 0",
-    "test:format": "prettier --check \"src/**/*.ts\"",
-    "test:lint": "eslint src/ --max-warnings 0",
-    "start": "node dist/index.cjs",
-    "dev": "ts-node src/index.ts",
-    "prepublishOnly": "pnpm run build && pnpm run test:lint",
-    "preversion": "pnpm run test:lint",
-    "version": "pnpm run test:format && pnpm run test:lint && git add -A src",
-    "clean": "rm -rf ./dist"
-  },
-  "keywords": [
-    "pyth",
-    "oracle",
-    "evm",
-    "ethereum",
-    "injective",
-    "fuel",
-    "aptos",
-    "sui",
-    "near"
-  ],
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
-    "@types/ethereum-protocol": "^1.0.2",
-    "@types/express": "^4.17.21",
-    "@types/jest": "^27.4.1",
-    "@types/yargs": "^17.0.10",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "catalog:",
-    "jest": "^29.7.0",
-    "pino-pretty": "^11.2.1",
-    "prettier": "catalog:",
-    "ts-node": "catalog:"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.39.0",
@@ -91,144 +34,189 @@
     "yaml": "^2.1.1",
     "yargs": "^17.5.1"
   },
+  "description": "Pyth Price Pusher",
+  "devDependencies": {
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/ethereum-protocol": "^1.0.2",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^27.4.1",
+    "@types/yargs": "^17.0.10",
+    "jest": "^29.7.0",
+    "pino-pretty": "^11.2.1",
+    "ts-node": "catalog:"
+  },
   "engines": {
     "node": "^24.0.0"
   },
-  "type": "module",
   "exports": {
+    ".": {
+      "default": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
     "./aptos/aptos": {
-      "types": "./dist/aptos/aptos.d.ts",
-      "default": "./dist/aptos/aptos.cjs"
+      "default": "./dist/aptos/aptos.cjs",
+      "types": "./dist/aptos/aptos.d.ts"
     },
     "./aptos/balance-tracker": {
-      "types": "./dist/aptos/balance-tracker.d.ts",
-      "default": "./dist/aptos/balance-tracker.cjs"
+      "default": "./dist/aptos/balance-tracker.cjs",
+      "types": "./dist/aptos/balance-tracker.d.ts"
     },
     "./aptos/command": {
-      "types": "./dist/aptos/command.d.ts",
-      "default": "./dist/aptos/command.cjs"
+      "default": "./dist/aptos/command.cjs",
+      "types": "./dist/aptos/command.d.ts"
     },
     "./common": {
-      "types": "./dist/common.d.ts",
-      "default": "./dist/common.cjs"
+      "default": "./dist/common.cjs",
+      "types": "./dist/common.d.ts"
     },
     "./controller": {
-      "types": "./dist/controller.d.ts",
-      "default": "./dist/controller.cjs"
+      "default": "./dist/controller.cjs",
+      "types": "./dist/controller.d.ts"
     },
     "./evm/balance-tracker": {
-      "types": "./dist/evm/balance-tracker.d.ts",
-      "default": "./dist/evm/balance-tracker.cjs"
+      "default": "./dist/evm/balance-tracker.cjs",
+      "types": "./dist/evm/balance-tracker.d.ts"
     },
     "./evm/command": {
-      "types": "./dist/evm/command.d.ts",
-      "default": "./dist/evm/command.cjs"
+      "default": "./dist/evm/command.cjs",
+      "types": "./dist/evm/command.d.ts"
     },
     "./evm/custom-gas-station": {
-      "types": "./dist/evm/custom-gas-station.d.ts",
-      "default": "./dist/evm/custom-gas-station.cjs"
+      "default": "./dist/evm/custom-gas-station.cjs",
+      "types": "./dist/evm/custom-gas-station.d.ts"
     },
     "./evm/evm": {
-      "types": "./dist/evm/evm.d.ts",
-      "default": "./dist/evm/evm.cjs"
+      "default": "./dist/evm/evm.cjs",
+      "types": "./dist/evm/evm.d.ts"
     },
     "./evm/pyth-abi": {
-      "types": "./dist/evm/pyth-abi.d.ts",
-      "default": "./dist/evm/pyth-abi.cjs"
+      "default": "./dist/evm/pyth-abi.cjs",
+      "types": "./dist/evm/pyth-abi.d.ts"
     },
     "./evm/pyth-contract": {
-      "types": "./dist/evm/pyth-contract.d.ts",
-      "default": "./dist/evm/pyth-contract.cjs"
+      "default": "./dist/evm/pyth-contract.cjs",
+      "types": "./dist/evm/pyth-contract.d.ts"
     },
     "./evm/super-wallet": {
-      "types": "./dist/evm/super-wallet.d.ts",
-      "default": "./dist/evm/super-wallet.cjs"
+      "default": "./dist/evm/super-wallet.cjs",
+      "types": "./dist/evm/super-wallet.d.ts"
     },
     "./fuel/command": {
-      "types": "./dist/fuel/command.d.ts",
-      "default": "./dist/fuel/command.cjs"
+      "default": "./dist/fuel/command.cjs",
+      "types": "./dist/fuel/command.d.ts"
     },
     "./fuel/fuel": {
-      "types": "./dist/fuel/fuel.d.ts",
-      "default": "./dist/fuel/fuel.cjs"
-    },
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "default": "./dist/fuel/fuel.cjs",
+      "types": "./dist/fuel/fuel.d.ts"
     },
     "./injective/command": {
-      "types": "./dist/injective/command.d.ts",
-      "default": "./dist/injective/command.cjs"
+      "default": "./dist/injective/command.cjs",
+      "types": "./dist/injective/command.d.ts"
     },
     "./injective/injective": {
-      "types": "./dist/injective/injective.d.ts",
-      "default": "./dist/injective/injective.cjs"
+      "default": "./dist/injective/injective.cjs",
+      "types": "./dist/injective/injective.d.ts"
     },
     "./interface": {
-      "types": "./dist/interface.d.ts",
-      "default": "./dist/interface.cjs"
+      "default": "./dist/interface.cjs",
+      "types": "./dist/interface.d.ts"
     },
     "./metrics": {
-      "types": "./dist/metrics.d.ts",
-      "default": "./dist/metrics.cjs"
+      "default": "./dist/metrics.cjs",
+      "types": "./dist/metrics.d.ts"
     },
     "./near/command": {
-      "types": "./dist/near/command.d.ts",
-      "default": "./dist/near/command.cjs"
+      "default": "./dist/near/command.cjs",
+      "types": "./dist/near/command.d.ts"
     },
     "./near/near": {
-      "types": "./dist/near/near.d.ts",
-      "default": "./dist/near/near.cjs"
+      "default": "./dist/near/near.cjs",
+      "types": "./dist/near/near.d.ts"
     },
     "./options": {
-      "types": "./dist/options.d.ts",
-      "default": "./dist/options.cjs"
+      "default": "./dist/options.cjs",
+      "types": "./dist/options.d.ts"
     },
+    "./package.json": "./package.json",
     "./price-config": {
-      "types": "./dist/price-config.d.ts",
-      "default": "./dist/price-config.cjs"
+      "default": "./dist/price-config.cjs",
+      "types": "./dist/price-config.d.ts"
     },
     "./pyth-price-listener": {
-      "types": "./dist/pyth-price-listener.d.ts",
-      "default": "./dist/pyth-price-listener.cjs"
+      "default": "./dist/pyth-price-listener.cjs",
+      "types": "./dist/pyth-price-listener.d.ts"
     },
     "./solana/balance-tracker": {
-      "types": "./dist/solana/balance-tracker.d.ts",
-      "default": "./dist/solana/balance-tracker.cjs"
+      "default": "./dist/solana/balance-tracker.cjs",
+      "types": "./dist/solana/balance-tracker.d.ts"
     },
     "./solana/command": {
-      "types": "./dist/solana/command.d.ts",
-      "default": "./dist/solana/command.cjs"
+      "default": "./dist/solana/command.cjs",
+      "types": "./dist/solana/command.d.ts"
     },
     "./solana/solana": {
-      "types": "./dist/solana/solana.d.ts",
-      "default": "./dist/solana/solana.cjs"
+      "default": "./dist/solana/solana.cjs",
+      "types": "./dist/solana/solana.d.ts"
     },
     "./sui/balance-tracker": {
-      "types": "./dist/sui/balance-tracker.d.ts",
-      "default": "./dist/sui/balance-tracker.cjs"
+      "default": "./dist/sui/balance-tracker.cjs",
+      "types": "./dist/sui/balance-tracker.d.ts"
     },
     "./sui/command": {
-      "types": "./dist/sui/command.d.ts",
-      "default": "./dist/sui/command.cjs"
+      "default": "./dist/sui/command.cjs",
+      "types": "./dist/sui/command.d.ts"
     },
     "./sui/sui": {
-      "types": "./dist/sui/sui.d.ts",
-      "default": "./dist/sui/sui.cjs"
+      "default": "./dist/sui/sui.cjs",
+      "types": "./dist/sui/sui.d.ts"
     },
     "./ton/command": {
-      "types": "./dist/ton/command.d.ts",
-      "default": "./dist/ton/command.cjs"
+      "default": "./dist/ton/command.cjs",
+      "types": "./dist/ton/command.d.ts"
     },
     "./ton/ton": {
-      "types": "./dist/ton/ton.d.ts",
-      "default": "./dist/ton/ton.cjs"
+      "default": "./dist/ton/ton.cjs",
+      "types": "./dist/ton/ton.d.ts"
     },
     "./utils": {
-      "types": "./dist/utils.d.ts",
-      "default": "./dist/utils.cjs"
-    },
-    "./package.json": "./package.json"
+      "default": "./dist/utils.cjs",
+      "types": "./dist/utils.d.ts"
+    }
   },
-  "module": "./dist/esm/index.js"
+  "files": [
+    "dist/**/*"
+  ],
+  "homepage": "https://pyth.network",
+  "keywords": [
+    "pyth",
+    "oracle",
+    "evm",
+    "ethereum",
+    "injective",
+    "fuel",
+    "aptos",
+    "sui",
+    "near"
+  ],
+  "license": "Apache-2.0",
+  "main": "./dist/index.cjs",
+  "module": "./dist/esm/index.js",
+  "name": "@pythnetwork/price-pusher",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "apps/price_pusher",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "prepublishOnly": "pnpm run build",
+    "start": "node dist/index.cjs",
+    "version": "pnpm run test:format && git add -A src"
+  },
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "version": "10.3.1"
 }

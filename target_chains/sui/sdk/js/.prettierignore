@@ -1,6 +1,0 @@
-dist/
-lib/
-build/
-node_modules/
-package.json
-tsconfig*.json

@@ -1,26 +1,15 @@
 {
-  "name": "@pythnetwork/xc-admin-frontend",
-  "version": "0.2.0",
-  "private": true,
-  "engines": {
-    "node": "^24.0.0"
-  },
-  "type": "module",
-  "scripts": {
-    "build": "next build",
-    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
-    "start:dev": "next dev --port 3004",
-    "start:prod": "next start --port 3004",
-    "fix:format": "prettier --write .",
-    "fix:lint": "eslint --fix .",
-    "test:format": "prettier --check .",
-    "test:lint": "eslint .",
-    "test:types": "tsc"
-  },
+  "browserslist": [
+    "last 1 chrome version",
+    "last 1 firefox version",
+    "last 1 safari version",
+    "not dead"
+  ],
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@headlessui/react": "^2.2.0",
     "@pythnetwork/client": "catalog:",
+    "@pythnetwork/react-hooks": "workspace:",
     "@pythnetwork/solana-utils": "workspace:^",
     "@pythnetwork/xc-admin-common": "workspace:*",
     "@radix-ui/react-label": "^2.0.0",
@@ -39,7 +28,6 @@
     "message_buffer": "workspace:^",
     "next": "catalog:",
     "next-seo": "^7.0.1",
-    "@pythnetwork/react-hooks": "workspace:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hot-toast": "^2.4.0",
@@ -50,23 +38,27 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@cprussin/eslint-config": "catalog:",
     "@svgr/webpack": "^6.3.1",
     "@types/node": "^18.11.18",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "^10.4.8",
-    "eslint": "catalog:",
     "postcss": "^8.4.16",
-    "prettier": "catalog:",
-    "prettier-plugin-tailwindcss": "^0.1.13",
     "tailwindcss": "^3.1.8",
     "vercel": "^37.12.1"
   },
-  "browserslist": [
-    "last 1 chrome version",
-    "last 1 firefox version",
-    "last 1 safari version",
-    "not dead"
-  ]
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "name": "@pythnetwork/xc-admin-frontend",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "pull:env": "[ $CI ] || VERCEL_ORG_ID=team_BKQrg3JJFLxZyTqpuYtIY0rj VERCEL_PROJECT_ID=prj_TCjesnm3pxM7Ay8oxlTH4xLkkmP9 vercel env pull",
+    "start:dev": "next dev --port 3004",
+    "start:prod": "next start --port 3004",
+    "test:types": "tsc"
+  },
+  "type": "module",
+  "version": "0.2.0"
 }
