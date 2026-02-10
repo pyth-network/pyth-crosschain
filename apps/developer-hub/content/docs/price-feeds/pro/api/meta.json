@@ -6,5 +6,5 @@
     "[History](/price-feeds/pro/api/history)",
     "[Proxy (Beta)](/price-feeds/pro/api/proxy)"
   ],
-  "defaultOpen": true
+  "defaultOpen": false
 }
