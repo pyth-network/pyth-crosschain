@@ -59,7 +59,7 @@ catalog:
   "@clickhouse/client": ^1.15.0
   "@coral-xyz/anchor": ^0.30.1
   "@cprussin/jest-config": ^2.0.2
-  "@cprussin/tsconfig": ^3.1.2
+  "@cprussin/tsconfig": ^4.0.2 
   "@floating-ui/react": ^0.27.6
   "@headlessui/react": ^2.2.0
   "@heroicons/react": ^2.2.0
