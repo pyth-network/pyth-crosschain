@@ -235,6 +235,16 @@ export class EvmEntropyContract extends Storable {
     );
   }
 
+  async generateSetPythFeePayload(feeInWei: string): Promise<Buffer> {
+    const contract = this.getContract();
+    const data = contract.methods.setPythFee(feeInWei).encodeABI();
+    return this.chain.generateExecutorPayload(
+      await this.getOwner(),
+      this.address,
+      data,
+    );
+  }
+
   // Generates a payload to upgrade the executor contract, the owner of entropy contracts
   async generateUpgradeExecutorContractsPayload(
     newImplementation: string,

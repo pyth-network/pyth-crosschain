@@ -1,0 +1,21 @@
+[
+  { "chainName": "abstract",             "feeInWei": "3000000000000" },
+  { "chainName": "apechain_mainnet",     "feeInWei": "20000000000000000" },
+  { "chainName": "arbitrum",             "feeInWei": "3000000000000" },
+  { "chainName": "b3_mainnet",           "feeInWei": "3000000000000" },
+  { "chainName": "base",                 "feeInWei": "3000000000000" },
+  { "chainName": "berachain_mainnet",    "feeInWei": "10000000000000000" },
+  { "chainName": "blast",                "feeInWei": "3000000000000" },
+  { "chainName": "etherlink",            "feeInWei": "25000000000000000" },
+  { "chainName": "hyperevm",             "feeInWei": "400000000000000" },
+  { "chainName": "kaia",                 "feeInWei": "200000000000000000" },
+  { "chainName": "monad",                "feeInWei": "200000000000000000" },
+  { "chainName": "optimism",             "feeInWei": "3000000000000" },
+  { "chainName": "sanko",                "feeInWei": "2000000000000000" },
+  { "chainName": "sei_evm_mainnet",      "feeInWei": "100000000000000000" },
+  { "chainName": "soneium",              "feeInWei": "3000000000000" },
+  { "chainName": "fantom_sonic_mainnet", "feeInWei": "100000000000000000" },
+  { "chainName": "story",                "feeInWei": "10000000000000000" },
+  { "chainName": "unichain",             "feeInWei": "3000000000000" },
+  { "chainName": "zetachain",            "feeInWei": "200000000000000000" }
+]
