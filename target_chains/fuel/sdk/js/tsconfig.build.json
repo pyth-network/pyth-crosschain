@@ -1,16 +1,11 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false,
-    "incremental": false,
     "declaration": true,
-    "noUnusedLocals": false,
-    "isolatedModules": false
+    "incremental": false,
+    "isolatedModules": false,
+    "noEmit": false,
+    "noUnusedLocals": false
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/examples/",
-    "**/__tests__/*"
-  ]
+  "exclude": ["node_modules", "dist", "src/examples/", "**/__tests__/*"],
+  "extends": "./tsconfig.json"
 }

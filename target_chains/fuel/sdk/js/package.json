@@ -91,10 +91,10 @@
   "scripts": {
     "build": "pnpm run generate-fuel-types && ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
-    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm run fix:format",
+    "generate-fuel-types": "pnpm fuels typegen -i ../../contracts/pyth-contract/out/release/*-abi.json -o ./src/types && pnpm biome check --write --unsafe ./src",
     "prepublishOnly": "pnpm run build",
     "usage-example": "ts-node src/examples/usage.ts",
-    "version": "pnpm run test:format && git add -A src"
+    "version": "git add -A src"
   },
   "type": "module",
   "types": "./dist/cjs/index.d.ts",

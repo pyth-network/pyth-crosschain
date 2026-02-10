@@ -8,11 +8,11 @@
   Fuels version: 0.101.3
 */
 
+import type { Account, DeployContractOptions, Provider } from "fuels";
 import {
   ContractFactory as __ContractFactory,
   decompressBytecode,
 } from "fuels";
-import type { Provider, Account, DeployContractOptions } from "fuels";
 
 import { PythContract } from "./PythContract";
 
