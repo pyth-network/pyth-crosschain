@@ -15,7 +15,7 @@
     "price-feed-ids",
     "contract-addresses",
     "market-hours",
-    "external:[HIP-3 as a Service](https://docs.pyth.network/price-feeds/hip-3-service)",
+    "hip-3-service",
     "external:[Symbols List API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols)",
     "external:[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/lazer)",
     "---Understanding Pyth Pro---",

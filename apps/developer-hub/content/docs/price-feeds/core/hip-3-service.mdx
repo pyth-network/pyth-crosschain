@@ -1,10 +1,11 @@
 ---
 title: HIP-3 as a Service
 description: Complete oracle solution for Hyperliquid HIP-3 perpetual market deployers
-slug: /price-feeds/hip-3-service
+slug: /price-feeds/core/hip-3-service
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
+import Link from "next/link";
 import { IntegrationCard } from "../../../../src/components/IntegrationCard";
 import {
   Lightning,
@@ -19,6 +20,14 @@ Pyth Network provides **HIP-3 as a Service**, a complete end-to-end solution for
   New to HIP-3? Learn about Hyperliquid's permissionless perpetual markets in
   the [official Hyperliquid
   documentation](https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-improvement-proposals-hips/hip-3-builder-deployed-perpetuals).
+</Callout>
+
+{/* prettier-ignore */}
+<Callout type="info" title="Technical Specification">
+  For full technical details on the HIP-3 pusher including price sources, feed
+  composition, security model, and limitations, see the{" "}
+  <Link href="/price-feeds/pro/hip-3-service/technical-specification" target="_blank" rel="noopener noreferrer">Technical Specification</Link>{" "}
+  page.
 </Callout>
 
 ## What You Get
@@ -49,8 +58,8 @@ Deploying and operating a HIP-3 market typically requires all of the following:
 
 The HIP-3 pusher service monitors price changes and submits signed updates to the Hyperliquid blockchain whenever specific conditions are met (e.g., price deviation or time-based heartbeat).
 
-1.  **Data Sourcing**: The relayer is fully configurable and can connect to any data source that exposes price data via REST API or WebSocket. You can use [Pyth Core](/price-feeds/core), [Pyth Pro](/price-feeds/pro), [SEDA](https://www.seda.xyz/) or [Hyperliquid](https://hyperliquid.xyz/), or plug in your own custom data feeds.
-2.  **Robustness & Redundancy**: The service supports fallback configurations to ensure reliability—if the primary data source is unavailable, the next source in the priority chain is used.
+1.  **Data Sourcing**: The pusher is fully configurable and can connect to any data source that exposes price data via REST API or WebSocket. You can use [Pyth Core](/price-feeds/core), [Pyth Pro](/price-feeds/pro), [SEDA](https://www.seda.xyz/) or [Hyperliquid](https://hyperliquid.xyz/), or plug in your own custom data feeds.
+2.  **Robustness & Redundancy**: The service supports fallback configurations to ensure reliability. If the primary data source is unavailable, the next source in the priority chain is used.
 3.  **Submission**: Signed transactions are sent to the Hyperliquid validator network to update the market's oracle state.
 
 ## Why Pyth
