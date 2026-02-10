@@ -6,20 +6,13 @@ import {
     validateSignature,
 } from '../src/validate.js';
 import type { SigningPolicy } from '../src/types.js';
+import { hexToBytes } from '../src/hex.js';
 
 const TEST_VECTOR_HEX =
     'b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f50500000000';
 
-const EXPECTED_PUBKEY_HEX =
-    '74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214';
-
-function hexToBytes(hex: string): Uint8Array {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-    }
-    return bytes;
-}
+// Pubkey extracted from test vector: offset 8+128 hex chars (after magic+signature)
+const EXPECTED_PUBKEY_HEX = TEST_VECTOR_HEX.slice(8 + 128, 8 + 128 + 64);
 
 describe('validateSignature', () => {
     it('accepts valid signature from test vector', () => {

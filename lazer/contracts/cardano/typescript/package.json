@@ -15,8 +15,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "hello": "tsx test/hello-yaci.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:watch": "vitest"
   },
   "prettier": {
     "trailingComma": "es5",

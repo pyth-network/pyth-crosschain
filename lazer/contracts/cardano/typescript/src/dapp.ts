@@ -6,6 +6,7 @@ import {
     serializeRewardAddress,
 } from '@meshsdk/core';
 import blueprint from '../../aiken/plutus.json';
+import { bytesToHex } from './hex.js';
 
 /**
  * Load and parameterize the price verification validator from the Aiken blueprint.
@@ -101,8 +102,3 @@ export function buildVerifyPriceTx(
         .changeAddress(changeAddress);
 }
 
-function bytesToHex(bytes: Uint8Array): string {
-    return Array.from(bytes)
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
-}

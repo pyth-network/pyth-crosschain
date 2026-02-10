@@ -13,6 +13,9 @@ export {
     type TrustedSigner,
 } from './types.js';
 
+// Hex utilities
+export { bytesToHex, hexToBytes } from './hex.js';
+
 // Off-chain parsing
 export { parsePriceMessage, parsePriceUpdate } from './parse.js';
 
