@@ -211,8 +211,7 @@ content/docs/api-reference/
 - `pnpm turbo run start:dev` - Start development server
 - `pnpm turbo run build` - Build the project (includes API reference generation)
 - `pnpm generate:docs` - Generate API reference documentation manually
-- `pnpm turbo run fix:format` - Format code with Prettier
-- `pnpm turbo run fix:lint` - Fix Biome issues
+- `pnpm turbo run fix:lint` - Fix any linting and formatting issues issues
 - `pnpm turbo run test:format` - Check formatting
 - `pnpm turbo run test:lint` - Check for linting errors
 - `pnpm turbo run test:types` - Check TypeScript types
