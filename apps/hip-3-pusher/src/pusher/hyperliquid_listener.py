@@ -118,7 +118,8 @@ class HyperliquidListener:
         @retry(
             retry=retry_if_exception_type(Exception),
             wait=wait_fixed(1),
-            stop=stop_after_attempt(self.stop_after_attempt),
+            # For now, disable stop_after_attempt to avoid killing process.
+            # stop=stop_after_attempt(self.stop_after_attempt),
             reraise=True,
         )
         async def _run() -> None:
