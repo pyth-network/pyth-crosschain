@@ -111,3 +111,5 @@ public fun parse_and_verify_le_ecdsa_update(s: &State, clock: &Clock, update: ve
 
     update::parse_from_cursor(payload_cursor)
 }
+
+public struct ThisContractWasUpdated {}

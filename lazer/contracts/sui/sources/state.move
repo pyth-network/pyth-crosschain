@@ -43,6 +43,7 @@ public struct State has key {
     trusted_signers: vector<TrustedSignerInfo>,
     upgrade_cap: UpgradeCap,
     governance: Governance,
+    this_contract_is_meant_for_testing_only: u8,
 }
 
 /// Construct and share a unique Lazer State, taking ownership of the supplied
@@ -62,6 +63,7 @@ public(package) fun share(
         trusted_signers: vector[],
         upgrade_cap,
         governance,
+        this_contract_is_meant_for_testing_only: 0,
     })
 }
 
@@ -194,6 +196,7 @@ public fun new_for_test(ctx: &mut TxContext, governance: Governance): State {
             ctx
         ),
         governance,
+        this_contract_is_meant_for_testing_only: 0
     }
 }
 

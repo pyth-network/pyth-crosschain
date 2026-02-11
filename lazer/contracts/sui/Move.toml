@@ -8,4 +8,4 @@ edition = "2024"
 [dependencies.wormhole]
 git = "https://github.com/pyth-network/wormhole.git"
 subdir = "sui/wormhole"
-rev = "sui-package-update"
+rev = "lazer-proposal-test"

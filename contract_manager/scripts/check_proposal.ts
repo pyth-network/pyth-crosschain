@@ -248,7 +248,7 @@ async function main() {
         console.log(`Verifying UpgradeSuiLazerContract on '${targetChainId}'`);
 
         if (targetChainId === "sui") {
-          const chain = DefaultStore.chains.sui_mainnet;
+          const chain = DefaultStore.chains.sui_testnet;
 
           if (!(chain instanceof SuiChain)) {
             console.error("Could not find valid Sui mainnet chain in store");
@@ -262,7 +262,7 @@ async function main() {
 
           const contracts = Object.values(DefaultStore.lazer_contracts)
             .filter((c) => c instanceof SuiLazerContract)
-            .filter((c) => c.chain.isMainnet());
+            .filter((c) => !c.chain.isMainnet());
 
           if (contracts.length === 0) {
             console.error("Could not find valid Sui Lazer contract in store");
