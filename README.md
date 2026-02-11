@@ -10,6 +10,7 @@ Within this monorepo you will find the following subprojects:
 - [Target Chains](#target-chains)
 - [Hermes](#hermes)
 - [Fortuna](#fortuna)
+- [Pyth Lazer Pusher](#pyth-lazer-pusher)
 - [Local Development](#local-development)
   - [Setup](#setup)
   - [Pull requests](#pull-requests)
@@ -49,6 +50,12 @@ and [examples](https://github.com/pyth-network/pyth-examples/tree/main/price_fee
 > [fortuna](./apps/fortuna/)
 
 Fortuna is an off-chain service which can be used by [Entropy](https://pyth.network/entropy) providers.
+
+## Pyth Lazer Pusher
+
+> [pyth-lazer-pusher](./apps/pyth-lazer-pusher/)
+
+Price feed pushers that deliver Pyth Lazer data to external systems. Currently supports pushing to Bulk Trade validators.
 
 ## Local Development
 
