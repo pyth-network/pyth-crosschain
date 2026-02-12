@@ -34,6 +34,20 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: |
+          cd apps/developer-hub
+          pnpm install --frozen-lockfile
+
       - name: Get changed files and detect affected products
         id: changed-files
         run: |
@@ -101,6 +115,16 @@ jobs:
 
           # Deduplicate
           AFFECTED=$(echo "$AFFECTED" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ' | xargs)
+
+          # Include SKILL.md if key pages or product files are affected
+          INCLUDE_SKILL="false"
+          if echo "$CHANGED_FILES" | grep -qE "(getting-started|index|contract-addresses)"; then
+            INCLUDE_SKILL="true"
+          fi
+          if [ -n "$AFFECTED" ]; then
+            INCLUDE_SKILL="true"
+          fi
+          echo "include_skill=$INCLUDE_SKILL" >> $GITHUB_OUTPUT
           echo "affected_products=$AFFECTED" >> $GITHUB_OUTPUT
 
           # Check for new top-level doc directories that don't map to existing products
@@ -110,7 +134,7 @@ jobs:
               | sed 's|apps/developer-hub/content/docs/||' \
               | cut -d'/' -f1 \
               | sort -u)
-            KNOWN_DIRS="price-feeds entropy api-reference"
+            KNOWN_DIRS="price-feeds entropy api-reference express-relay oracle-integrity-staking metrics pyth-token"
             for dir in $NEW_DIRS; do
               if ! echo "$KNOWN_DIRS" | grep -qw "$dir"; then
                 NEW_PRODUCT="true"
@@ -127,24 +151,33 @@ jobs:
         run: |
           echo "No significant documentation changes detected. Skipping."
 
-      - name: Read static headers from affected product files
+      - name: Read content from affected product files
         if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
         id: headers
         run: |
           ROUTE_DIR="apps/developer-hub/src/app"
           AFFECTED="${{ steps.changed-files.outputs.affected_products }}"
 
-          # Build a JSON object mapping product filename -> current STATIC_HEADER content
+          # Build a JSON object mapping product filename -> current CONTENT content
           HEADERS_JSON="{}"
 
           for product in $AFFECTED; do
             ROUTE_FILE="$ROUTE_DIR/$product/route.ts"
             if [ -f "$ROUTE_FILE" ]; then
-              # Extract STATIC_HEADER content (between opening backtick and closing `; line)
-              sed -n '/const STATIC_HEADER = `/,/^`;/{/const STATIC_HEADER = `/d;/^`;/d;p}' "$ROUTE_FILE" > "/tmp/header-${product}.txt"
+              # Extract CONTENT content (between opening backtick and closing `; line)
+              sed -n '/const CONTENT = `/,/^`;/{/const CONTENT = `/d;/^`;/d;p}' "$ROUTE_FILE" > "/tmp/header-${product}.txt"
               HEADERS_JSON=$(jq --arg key "$product" --rawfile val "/tmp/header-${product}.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
             fi
           done
+
+          # Also extract SKILL.md content if flagged
+          if [ "${{ steps.changed-files.outputs.include_skill }}" = "true" ]; then
+            SKILL_FILE="$ROUTE_DIR/SKILL.md/route.ts"
+            if [ -f "$SKILL_FILE" ]; then
+              sed -n '/const content = `/,/^`;/{/const content = `/d;/^`;/d;p}' "$SKILL_FILE" > "/tmp/header-SKILL.md.txt"
+              HEADERS_JSON=$(jq --arg key "SKILL.md" --rawfile val "/tmp/header-SKILL.md.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
+            fi
+          fi
 
           echo "$HEADERS_JSON" > /tmp/current-headers.json
           echo "Extracted headers for: $AFFECTED"
@@ -178,34 +211,36 @@ jobs:
           echo "$CHANGES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Review static headers with GPT-4o
+      - name: Review curated content with GPT-4o
         if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
         env:
           OPENAI_API_KEY: ${{ secrets.PYTH_NETWORK_PYTH_CROSSCHAIN_OPENAI_API_KEY }}
         run: |
           # Write system prompt to file (avoids shell quoting issues)
           cat > /tmp/system-msg.txt << 'SYSMSG'
-          You review documentation changes and determine if product-specific llms.txt static headers need updating.
+          You review documentation changes and determine if product-specific llms.txt files need updating.
 
-          Architecture: Each product has a route file with a STATIC_HEADER constant (quick-start code, key IDs, contract addresses, API endpoints, SDKs) plus dynamically generated detailed docs from MDX pages. The dynamic content auto-updates at build time — you are ONLY reviewing the static headers.
+          Architecture: Each product has a route file with a CONTENT constant containing a FULLY CURATED quick-start guide. There is no dynamic content section — the entire file is hand-curated. Each file follows a consistent template: Overview, Key Concepts, Integration Code, Contract Addresses, Common Patterns, Troubleshooting, and Deep Dive Pages.
 
-          Be VERY CONSERVATIVE. Most changes do NOT require header updates. Only update for:
+          Be VERY CONSERVATIVE. Most changes do NOT require updates. Only update for:
           - New or changed contract addresses
           - New or changed API endpoints or base URLs
-          - New or changed SDK package names
+          - New or changed SDK package names or imports
           - Major restructuring of quick-start code examples
-          - New key features that should be highlighted in the header
+          - New key features that should be highlighted
+          - Corrections to errors in the curated content
 
-          Do NOT update for: typos, expanded explanations, new tutorial pages, minor doc fixes, clarifications.
+          Do NOT update for: typos in deep-dive pages, expanded explanations, new tutorial pages, minor doc fixes, clarifications in pages not directly referenced.
 
-          Return a JSON object where each key is a product filename and the value is either the string "NO_UPDATE_NEEDED" or the complete updated header content.
+          Return a JSON object where each key is a product filename and the value is either the string "NO_UPDATE_NEEDED" or the complete updated content string.
 
-          CRITICAL FORMATTING RULES for updated headers:
+          CRITICAL FORMATTING RULES for updated content:
           - The content is placed inside a JavaScript template literal (backtick string)
           - You MUST escape ALL backticks as \` (backslash backtick)
           - Code blocks must use \`\`\` instead of raw backticks
-          - Preserve the exact structure of headers you don't change
+          - Preserve the consistent template structure (Overview, Key Concepts, etc.)
           - Make MINIMAL targeted edits — do not rewrite unaffected sections
+          - Keep the Deep Dive Pages section URLs accurate
           SYSMSG
 
           # Write user message to file
@@ -241,13 +276,29 @@ jobs:
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -d @/tmp/request.json)
 
+          # Check for HTTP-level errors (rate limit, server error)
+          HTTP_ERROR=$(echo "$RESPONSE" | jq -r '.error.message // empty')
+          if [ -n "$HTTP_ERROR" ]; then
+            echo "::warning::OpenAI API error: $HTTP_ERROR"
+            echo "no_update=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
           # Extract response content
           RESULT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "ERROR"')
 
           if [ "$RESULT" = "ERROR" ]; then
-            echo "Error calling OpenAI API"
+            echo "::warning::Failed to extract response from OpenAI API"
             echo "$RESPONSE"
-            exit 1
+            echo "no_update=true" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Validate response is valid JSON
+          if ! echo "$RESULT" | jq empty 2>/dev/null; then
+            echo "::warning::OpenAI returned invalid JSON, skipping update"
+            echo "no_update=true" >> $GITHUB_ENV
+            exit 0
           fi
 
           echo "$RESULT" > /tmp/update-decisions.json
@@ -285,7 +336,7 @@ jobs:
             # Escape any unescaped backticks for JS template literal safety
             sed -i 's/\\`/__ESC__/g; s/`/\\`/g; s/__ESC__/\\`/g' /tmp/new-header.txt
 
-            # Use Python to safely replace the STATIC_HEADER content in the route file
+            # Use Python to safely replace the CONTENT content in the route file
             cat > /tmp/replace-header.py << 'PYEOF'
           import sys
 
@@ -298,7 +349,17 @@ jobs:
           with open(header_path) as f:
               new_header = f.read()
 
-          start_marker = "const STATIC_HEADER = `"
+          # Try module-level CONTENT first, then function-level content (SKILL.md)
+          start_marker = None
+          for marker in ["const CONTENT = `", "const content = `"]:
+              if marker in source:
+                  start_marker = marker
+                  break
+
+          if not start_marker:
+              print(f"ERROR: No content marker found in {file_path}")
+              sys.exit(1)
+
           end_marker = "\n`;"
 
           start = source.index(start_marker) + len(start_marker)
@@ -322,6 +383,10 @@ jobs:
           for product in $AFFECTED; do
             npx biome check --write "src/app/$product/route.ts" || true
           done
+          # Also format SKILL.md if it was updated
+          if [ "${{ steps.changed-files.outputs.include_skill }}" = "true" ]; then
+            npx biome check --write "src/app/SKILL.md/route.ts" || true
+          fi
 
       - name: Commit and push changes
         if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
@@ -333,14 +398,18 @@ jobs:
           for product in $AFFECTED; do
             git add "apps/developer-hub/src/app/$product/route.ts"
           done
+          # Also stage SKILL.md if updated
+          if [ "${{ steps.changed-files.outputs.include_skill }}" = "true" ]; then
+            git add "apps/developer-hub/src/app/SKILL.md/route.ts"
+          fi
 
           # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore(developer-hub): auto-update llms.txt product headers
+            git commit -m "chore(developer-hub): auto-update llms.txt curated content
 
-          Updated static headers based on documentation changes."
+          Updated curated content based on documentation changes."
 
             git push
             echo "Changes committed and pushed"
@@ -363,10 +432,10 @@ jobs:
 
             let body;
 
-            const dynamicContentNote = '\n\n> Note: New documentation pages are automatically included in the dynamic content section at build time.';
+            const dynamicContentNote = '\n\n> Note: Product files contain curated content. Deep dive page URLs in each file link to individual `.mdx` pages for full detail.';
 
             if (affectedProducts.length === 0) {
-              body = `## 🤖 llms.txt Static Header Review
+              body = `## 🤖 llms.txt Content Review
 
             Documentation changes detected, but no product-specific llms.txt files were affected.
             ${dynamicContentNote}
@@ -379,9 +448,9 @@ jobs:
             \`\`\`
             </details>`;
             } else if (noUpdate) {
-              body = `## 🤖 llms.txt Static Header Review
+              body = `## 🤖 llms.txt Content Review
 
-            Analyzed documentation changes — no updates to product static headers required.
+            Analyzed documentation changes — no updates to curated content required.
 
             **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
             ${dynamicContentNote}
@@ -394,9 +463,9 @@ jobs:
             \`\`\`
             </details>`;
             } else {
-              body = `## 🤖 llms.txt Product Headers Updated
+              body = `## 🤖 llms.txt Content Updated
 
-            I've automatically updated static headers in product-specific llms.txt files based on documentation changes.
+            I've automatically updated curated content in product-specific llms.txt files based on documentation changes.
 
             **Products reviewed:** ${affectedProducts.map(p => `\`${p}\``).join(', ')}
             **Products updated:** ${updatedProducts.map(p => `\`${p.trim()}\``).join(', ') || 'none'}

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 import { getLLMText } from "../../../lib/get-llm-text";
 import { source } from "../../../lib/source";
@@ -16,14 +17,21 @@ export async function GET(
     return new NextResponse("Page not found", { status: 404 });
   }
 
-  const content = await getLLMText(page);
+  let content: string;
+  try {
+    content = await getLLMText(page);
+  } catch {
+    return new NextResponse("Error generating content for this page", {
+      status: 500,
+    });
+  }
 
   return new NextResponse(content, {
-    status: 200,
     headers: {
-      "Content-Type": "text/markdown; charset=utf-8",
       "Cache-Control": "public, max-age=3600",
+      "Content-Type": "text/markdown; charset=utf-8",
     },
+    status: 200,
   });
 }
 

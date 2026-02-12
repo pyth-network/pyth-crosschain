@@ -3,11 +3,14 @@ import { NextResponse } from "next/server";
 export const revalidate = false;
 
 export function GET() {
-  const content = `# Pyth Network - Full Documentation
+  const content = `# This endpoint is deprecated
 
-This file has been replaced by product-specific documentation files for more efficient context loading.
+Pyth documentation is now served through a tiered system for more efficient AI agent context loading.
 
-Please read https://docs.pyth.network/llms.txt for routing to the right file.
+1. Start here: https://docs.pyth.network/llms.txt
+2. Machine-readable index: https://docs.pyth.network/llms-manifest.json
+
+The monolithic full-documentation file has been replaced by curated, product-specific files.
 
 ## Quick Routing
 
@@ -18,10 +21,10 @@ Please read https://docs.pyth.network/llms.txt for routing to the right file.
 `;
 
   return new NextResponse(content, {
-    status: 200,
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "public, max-age=86400",
+      "Content-Type": "text/plain; charset=utf-8",
     },
+    status: 200,
   });
 }
