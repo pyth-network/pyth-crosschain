@@ -9,6 +9,8 @@ members = [
     "apps/pyth-lazer-pusher/pusher-utils",
     "apps/pyth-lazer-pusher/pusher-base",
     "apps/pyth-lazer-pusher/websocket-delivery",
+    "apps/pyth-lazer-pusher/bulk-trade-pusher",
+    "apps/pyth-lazer-pusher/mock/bulk-trade-mock-validator",
     "pythnet/pythnet_sdk",
     "target_chains/starknet/tools/test_vaas",
 ]
