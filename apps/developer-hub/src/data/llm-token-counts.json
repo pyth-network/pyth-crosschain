@@ -1,0 +1,42 @@
+{
+  "files": {
+    "/llms.txt": {
+      "bytes": 2188,
+      "hash": "sha256:9466b04dabe56cf1ee46ca869026a667b80baec76e2b5e51d0b92cc27cc2d563",
+      "tokens": 518
+    },
+    "/llms-price-feeds-core.txt": {
+      "bytes": 8793,
+      "hash": "sha256:8b6069bfc1a2a732e8c8ff79efe50a83372cbd259cb817eca5dea2108d5107b7",
+      "tokens": 2473
+    },
+    "/llms-price-feeds-pro.txt": {
+      "bytes": 8728,
+      "hash": "sha256:ef8a9f4cc49773a78c89890c99e8319590821ea8c1b301bb7a7db622805995c4",
+      "tokens": 2261
+    },
+    "/llms-price-feeds.txt": {
+      "bytes": 2753,
+      "hash": "sha256:1cdcc7378f7aa5f2e95bd85f36d21bbfb2d5a9e992545d012f9f3254cba41c6b",
+      "tokens": 705
+    },
+    "/llms-entropy.txt": {
+      "bytes": 8116,
+      "hash": "sha256:2198d9f2b526528870eb7e326bcf242052b655dc1158c9cf6af2ef166e464f4c",
+      "tokens": 1962
+    },
+    "/llms-full.txt": {
+      "bytes": 695,
+      "hash": "sha256:dbc318db1667a346b4913828525c763b7f2c9030ca10cc368f67a3247cad1d69",
+      "tokens": 177
+    },
+    "/SKILL.md": {
+      "bytes": 10559,
+      "hash": "sha256:0244c601968f346ca28d40c670a8ae305cbc866b203255c212f7b3cfdaf76c15",
+      "tokens": 2882
+    }
+  },
+  "generated_at": "2026-02-12T00:05:21.926Z",
+  "tokenizer": "cl100k_base",
+  "tokenizer_note": "Token counts are approximate. Actual counts vary by model."
+}
