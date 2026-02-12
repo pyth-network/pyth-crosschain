@@ -1,6 +1,6 @@
 [project]
 name = "hip-3-pusher"
-version = "0.2.10"
+version = "0.2.11"
 description = "Hyperliquid HIP-3 market oracle pusher"
 readme = "README.md"
 requires-python = "==3.13.*"
