@@ -64,6 +64,9 @@ async def main() -> None:
         price_state.seda_state,
         price_state.seda_last_state,
         price_state.seda_ema_state,
+        price_state.seda_oracle_state,
+        price_state.seda_mark_state,
+        price_state.seda_external_state,
     )
     user_limit_listener = UserLimitListener(
         config, metrics, publisher.user_limit_address

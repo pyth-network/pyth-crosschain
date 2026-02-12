@@ -59,6 +59,9 @@ class SedaListener:
     """
 
     SOURCE_NAME = "seda"
+    ORACLE_PX_FIELD = "oracle_px"
+    MARK_PXS_FIELD = "mark_pxs"
+    EXT_PERP_PX_FIELD = "ext_perp_px"
 
     def __init__(
         self,
@@ -66,6 +69,9 @@ class SedaListener:
         seda_state: PriceSourceState,
         seda_last_state: PriceSourceState,
         seda_ema_state: PriceSourceState,
+        seda_oracle_state: PriceSourceState,
+        seda_mark_state: PriceSourceState,
+        seda_external_state: PriceSourceState,
         api_key_override: str | None = None,
     ) -> None:
         self.url = config.seda.url
@@ -81,6 +87,9 @@ class SedaListener:
         self.seda_state = seda_state
         self.seda_last_state = seda_last_state
         self.seda_ema_state = seda_ema_state
+        self.seda_oracle_state = seda_oracle_state
+        self.seda_mark_state = seda_mark_state
+        self.seda_external_state = seda_external_state
 
         self.price_field = config.seda.price_field
         self.timestamp_field = config.seda.timestamp_field
@@ -188,9 +197,14 @@ class SedaListener:
         result = message["data"]["result"]
 
         price = result[self.price_field]
-        timestamp = datetime.datetime.fromisoformat(
-            result[self.timestamp_field]
-        ).timestamp()
+        timestamp_field = result[self.timestamp_field]
+        if isinstance(timestamp_field, str):
+            timestamp = datetime.datetime.fromisoformat(timestamp_field).timestamp()
+        elif isinstance(timestamp_field, int):
+            timestamp = timestamp_field / 1000.0
+        elif isinstance(timestamp_field, float):
+            timestamp = timestamp_field
+        logger.debug("SEDA timestamp: {}", timestamp)
         session_flag = (
             result[self.session_flag_field] if self.session_flag_field else False
         )
@@ -217,6 +231,19 @@ class SedaListener:
             self.seda_ema_state.put(
                 feed_name, PriceUpdate(ema_price, timestamp, session_flag)
             )
+
+        # new format with exact pass-through data
+        oracle_px = result.get(self.ORACLE_PX_FIELD)
+        logger.debug("SEDA feed: {} oracle_px: {}", feed_name, oracle_px)
+        self.seda_oracle_state.put(feed_name, PriceUpdate(oracle_px, timestamp))
+
+        mark_pxs = result.get(self.MARK_PXS_FIELD)
+        logger.debug("SEDA feed: {} mark_pxs: {}", feed_name, mark_pxs)
+        self.seda_mark_state.put(feed_name, PriceUpdate(mark_pxs, timestamp))
+
+        ext_perp_px = result.get(self.EXT_PERP_PX_FIELD)
+        logger.debug("SEDA feed: {} ext_perp_px: {}", feed_name, ext_perp_px)
+        self.seda_external_state.put(feed_name, PriceUpdate(ext_perp_px, timestamp))
 
     def get_parsed_result(self, feed_name: str) -> dict[str, Any] | None:
         """
