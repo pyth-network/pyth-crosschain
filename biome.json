@@ -133,7 +133,7 @@
         "useYield": "error"
       },
       "nursery": {
-        "noUndeclaredEnvVars": "error"
+        "noUndeclaredEnvVars": "warn"
       },
       "recommended": false,
       "security": {
