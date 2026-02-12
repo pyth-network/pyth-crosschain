@@ -1,0 +1,12 @@
+[package]
+name = "pusher-utils"
+version = "0.1.0"
+edition = "2021"
+description = "Shared utilities for Pyth Lazer pushers"
+
+[dependencies]
+tokio-util = { version = "0.7", features = ["rt"] }
+tokio = { version = "1", features = ["time"] }
+
+[lints]
+workspace = true

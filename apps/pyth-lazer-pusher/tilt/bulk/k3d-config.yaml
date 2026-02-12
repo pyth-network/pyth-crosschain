@@ -1,0 +1,27 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: lazer-pusher-dev
+servers: 1
+agents: 0
+image: rancher/k3s:v1.31.4-k3s1
+ports:
+  # Expose mock validators for external access (optional)
+  - port: 8080:80
+    nodeFilters:
+      - loadbalancer
+  # Expose Prometheus metrics
+  - port: 9090:9090
+    nodeFilters:
+      - loadbalancer
+registries:
+  create:
+    name: k3d-registry.localhost
+    host: "0.0.0.0"
+    hostPort: "5111"
+options:
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*

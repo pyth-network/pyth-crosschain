@@ -1,0 +1,23 @@
+# Build artifacts
+/target/
+
+# Config with secrets
+config.toml
+*.secret
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+notes/**
+test_keys/**
