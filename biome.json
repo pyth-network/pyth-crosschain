@@ -132,6 +132,9 @@
         "useValidTypeof": "error",
         "useYield": "error"
       },
+      "nursery": {
+        "noUndeclaredEnvVars": "error"
+      },
       "recommended": false,
       "security": {
         "noDangerouslySetInnerHtmlWithChildren": "error"
