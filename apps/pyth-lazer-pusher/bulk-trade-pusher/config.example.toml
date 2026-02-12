@@ -1,0 +1,81 @@
+# Bulk Trade Pusher Configuration
+#
+# This service pushes Pyth Lazer price feeds to Bulk Trade validators.
+#
+# HA Strategy:
+# - Run 2-3 pusher instances
+# - All share the same oracle account (wallet)
+# - Each has its own signing key (approved for the account)
+# - Different signers = no collision = no coordination needed
+#
+# On missed updates: skip and send next available datapoint (no catch-up)
+
+# Prometheus metrics endpoint
+prometheus_address = "0.0.0.0:9090"
+
+# Pyth Lazer Configuration (Source)
+[lazer]
+# Router WebSocket endpoints
+endpoints = [
+    "wss://pyth-lazer-0.dourolabs.app/v1/stream",
+    "wss://pyth-lazer-1.dourolabs.app/v1/stream",
+]
+
+# Access token for Lazer API
+# Can also be set via BULK_PUSHER__LAZER__ACCESS_TOKEN env var
+access_token = "your-lazer-access-token"
+
+# Number of WebSocket connections to maintain for redundancy
+num_connections = 2
+
+# Connection timeout
+timeout = "5s"
+
+# Bulk Trade Configuration (Destination)
+[bulk]
+# Validator WebSocket endpoints (multi-node submission for redundancy)
+endpoints = [
+    "wss://exchange-wss.bulk.trade/ws",
+]
+
+# Ed25519 signing key (base58 encoded private key)
+# Each pusher instance has its OWN signing key that's approved for the oracle account.
+# Can also be set via BULK_PUSHER__BULK__SIGNING_KEY_BASE58 env var
+# IMPORTANT: Keep this secret! Use env var in production.
+signing_key_base58 = "your-base58-encoded-private-key"
+
+# Oracle account public key (base58 encoded)
+# This is the "account" field in the transaction - SHARED by all pushers.
+# The signing key must be approved/whitelisted for this account on Bulk's side.
+oracle_account_pubkey_base58 = "your-base58-encoded-oracle-account-pubkey"
+
+# Feed Configuration
+[feeds]
+# How often to batch and push prices (should match Bulk's expected interval)
+update_interval = "100ms"
+
+# Feed subscriptions - each feed specifies its ID and channel.
+# Feeds are grouped by channel for subscription (Lazer requires one subscription per channel).
+#
+# Available channels:
+# - "real_time" - Real-time updates (highest frequency)
+# - "fixed_rate_50ms" - Updates every 50ms
+# - "fixed_rate_200ms" - Updates every 200ms
+# - "fixed_rate_1000ms" - Updates every 1 second
+
+[[feeds.subscriptions]]
+feed_id = 1  # BTC/USD
+channel = "fixed_rate_50ms"
+
+[[feeds.subscriptions]]
+feed_id = 2  # ETH/USD
+channel = "fixed_rate_50ms"
+
+[[feeds.subscriptions]]
+feed_id = 6  # SOL/USD
+channel = "fixed_rate_50ms"
+
+# Add more feeds as needed (target ~10 feeds)
+# [[feeds.subscriptions]]
+# feed_id = 4  # PEPE/USD
+# channel = "fixed_rate_200ms"

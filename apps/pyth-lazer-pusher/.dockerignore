@@ -1,0 +1,35 @@
+# Build artifacts
+target/
+**/*.rs.bk
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local development
+notes/
+test_keys/
+tilt/
+.env
+*.env
+*.secret
+
+# Config with secrets
+config.toml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+
+# Documentation (not needed in image)
+*.md
+!README.md
