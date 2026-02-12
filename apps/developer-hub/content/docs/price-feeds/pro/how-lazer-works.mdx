@@ -25,7 +25,7 @@ Each publisher is configured with specific permissions defining which feeds they
 
 ### Relayers
 
-The Relayer service is the ingestion layer that receives and validates all incoming updates from publishers.
+Relayers act as the ingestion layer that receive and validate all incoming updates from publishers.
 
 **Key responsibilities:**
 
@@ -34,7 +34,7 @@ The Relayer service is the ingestion layer that receives and validates all incom
 - **Rate limiting**: Enforces configurable limits on publisher updates.
 - **Message forwarding**: Publishes validated updates to an internal message queue.
 
-Douro Labs operates the relayer service for the Pyth Pro network. It follows a strict, deterministic processing model:
+Relayers are required to follow a strict, deterministic processing model:
 
 - **No price dropping outside of circuit breakers**: All validated updates are forwarded to the message queue without dropping any prices (except for when a circuit breaker is triggered).
 - **FCFS processing**: Updates are processed on a first-come-first-served basis without prioritization.
@@ -43,16 +43,16 @@ This ensures reliable, predictable data flow from publishers to consumers.
 
 ### Message Queue
 
-The system uses a distributed message queue for pub/sub messaging with stream persistence.
+The message queue system uses a distributed message queue for pub/sub messaging with stream persistence.
 This allows the system to be deployed in a multi-datacenter environment and ensures reliable message delivery between services.
 
 **Message ordering**: The message queue ensures reliable delivery and maintains the exact sequence of messages within each data stream.
-This means every publisher update will be delivered at least once, and messages will be processed in the same order they arrived at the Relayer.
+This means every publisher update will be delivered at least once, and messages will be processed in the same order they arrived at the relayers.
 This sequential processing is essential for keeping all aggregators synchronized with the same feed state.
 
 ### Routers
 
-The Router is the real-time distribution layer that serves data to consumers.
+The router is the real-time distribution layer that serves data to consumers.
 It embeds aggregation logic to compute median prices, confidence intervals (using interquartile range), and best bid/ask prices, funding rates, and more from multiple publisher inputs.
 
 **Key features:**
@@ -64,19 +64,19 @@ It embeds aggregation logic to compute median prices, confidence intervals (usin
 
 #### Aggregation logic
 
-Each Router embeds an aggregator component that consumes publisher updates from the Message Queue and computes aggregated data feeds. The aggregator:
+Each router embeds an aggregator component that consumes publisher updates from the message queue and computes aggregated data feeds. The aggregator:
 
 - Computes median values resistant to outlier data from individual publishers.
 - Calculates confidence intervals using interquartile range to measure data spread.
 - Determines best bid/ask values filtered to ensure market consistency.
 - Automatically removes stale publisher data based on configurable timeouts.
 
-Pro guarantees deterministic aggregation: all aggregators produce the exact same aggregated results by relying solely on the consistent stream of price updates from the Message Queue.
-This ensures that every Router instance maintains identical feed state, providing consistent data to all consumers regardless of which Router they connect to.
+Pro guarantees deterministic aggregation: all aggregators produce the exact same aggregated results by relying solely on the consistent stream of price updates from the message queue.
+This ensures that every Router instance maintains identical feed state, providing consistent data to all consumers regardless of which router they connect to.
 
 ### History Service
 
-The History Service provides persistence and historical data queries.
+The history service provides persistence and historical data queries.
 
 **Key responsibilities:**
 
