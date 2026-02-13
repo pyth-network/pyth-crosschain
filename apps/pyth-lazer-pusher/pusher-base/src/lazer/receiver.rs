@@ -178,10 +178,13 @@ async fn process_lazer_updates(
             msg = receiver.recv() => {
                 match msg {
                     Some(r) => r,
-                    None => break,
+                    None => {
+                        panic!("Lazer receiver channel closed unexpectedly");
+                    },
                 }
             }
         };
+
         match response {
             AnyResponse::Json(ws_response) => {
                 if let WsResponse::StreamUpdated(update) = ws_response {

@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 use prometheus::{CounterVec, Gauge, Opts, Registry};
+use std::collections::HashMap;
 use std::net::SocketAddr;
 
 #[derive(Clone)]
@@ -16,23 +17,26 @@ impl BaseMetrics {
         clippy::expect_used,
         reason = "metric creation with static strings cannot fail"
     )]
-    pub fn new(prefix: &str) -> Self {
+    pub fn new(pusher: &str) -> Self {
+        let const_labels: HashMap<String, String> =
+            [("pusher".to_string(), pusher.to_string())].into();
+
         Self {
             lazer_updates_received: CounterVec::new(
-                Opts::new(
-                    format!("{prefix}lazer_updates_received_total"),
-                    "Price updates received from Lazer",
-                ),
+                Opts::new("lazer_updates_received_total", "Price updates received from Lazer")
+                    .const_labels(const_labels.clone()),
                 &["feed_id"],
             )
             .expect("failed to create metric"),
 
-            batch_size: Gauge::new(format!("{prefix}batch_size"), "Feeds in last pushed batch")
-                .expect("failed to create metric"),
+            batch_size: Gauge::with_opts(
+                Opts::new("batch_size", "Feeds in last pushed batch").const_labels(const_labels.clone()),
+            )
+            .expect("failed to create metric"),
 
-            last_push_timestamp: Gauge::new(
-                format!("{prefix}last_push_timestamp_seconds"),
-                "Last successful push timestamp",
+            last_push_timestamp: Gauge::with_opts(
+                Opts::new("last_push_timestamp_seconds", "Last successful push timestamp")
+                    .const_labels(const_labels),
             )
             .expect("failed to create metric"),
         }
@@ -66,6 +70,7 @@ impl BaseMetrics {
     }
 }
 
+/// Note: Metrics server doesn't support gracefull shutdown
 pub fn init_prometheus_exporter(address: SocketAddr) -> Result<()> {
     prometheus_exporter::start(address)?;
     Ok(())

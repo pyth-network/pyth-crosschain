@@ -7,7 +7,7 @@ pub mod types;
 
 pub use config::BaseConfig;
 pub use lazer::{
-    FeedRegistry, FeedSubscription, FeedsConfig, LazerChannel, LazerConfig, LazerReceiver,
+    FeedRegistry, FeedSubscription, FeedsConfig, LazerConfig, LazerReceiver,
 };
 pub use metrics::{init_prometheus_exporter, BaseMetrics};
 pub use pusher_utils::AppRuntime;
