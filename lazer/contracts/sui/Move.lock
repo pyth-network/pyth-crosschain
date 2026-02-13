@@ -43,11 +43,11 @@ deps = { MoveStdlib = "MoveStdlib" }
 [pinned.testnet.pyth_lazer]
 source = { root = true }
 use_environment = "testnet"
-manifest_digest = "725218D3CD1E1C4CC707240E40BCF35B0514D5C5EDEDAB630A23CEEFE3ED9E96"
+manifest_digest = "F288C113E77B36A432FB5039A19D4903E4D010F3359CFAA71EB297F9F67E3224"
 deps = { std = "MoveStdlib", sui = "Sui", wormhole = "wormhole" }
 
 [pinned.testnet.wormhole]
-source = { git = "https://github.com/pyth-network/wormhole.git", subdir = "sui/wormhole", rev = "93c0282bc8aa60a3d07e7ab2575edcecd7a357f0" }
+source = { git = "https://github.com/pyth-network/wormhole.git", subdir = "sui/wormhole", rev = "a596dc27243e6b6dab95539c98b0af9836af2bc2" }
 use_environment = "testnet"
 manifest_digest = "5745706258F61D6CE210904B3E6AE87A73CE9D31A6F93BE4718C442529332A87"
 deps = { std = "MoveStdlib", sui = "Sui" }

@@ -1,0 +1,8 @@
+[
+  {
+    "chain": "sui_testnet",
+    "stateId": "0x01162d85f90dff8679e36291e0bd2a8883da1059d2ebbe242475a1bf09706b16",
+    "wormholeStateId": "0x3c89c52e413edb9b0d9a145e02258c96916c79b1e57a12861bb61791ee5c5f81",
+    "type": "SuiLazerContract"
+  }
+]
