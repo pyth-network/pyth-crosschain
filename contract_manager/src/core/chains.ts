@@ -428,7 +428,15 @@ export class SuiChain extends Chain {
 
     const result = await execFileAsync(
       "sui",
-      ["move", "build", "--dump-bytecode-as-base64", "--path", path],
+      [
+        "move",
+        "build",
+        "--dump-bytecode-as-base64",
+        "--path",
+        path,
+        "--environment",
+        activeEnv,
+      ],
       { encoding: "utf8" },
     );
     try {
