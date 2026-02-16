@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-export function GET() {
-  const content = `---
+const CONTENT = `---
 name: pyth-dev
 description: End-to-end Pyth Network oracle integration playbook (Feb 2026). Prefer @pythnetwork/pyth-sdk-solidity for EVM smart contracts (IPyth interface) and @pythnetwork/hermes-client for TypeScript price fetching. For ultra-low latency HFT/MEV use cases, prefer @pythnetwork/pyth-lazer-sdk (Pyth Pro WebSocket streaming). For on-chain randomness (games/NFTs/lotteries), use @pythnetwork/entropy-sdk-solidity with IEntropyConsumer callback pattern. Covers pull-based oracle model (update-before-read), staleness thresholds, confidence intervals, fee payment, Hermes API integration, and chain-specific deployments across 100+ networks including Ethereum/Arbitrum/Base/Solana/Sui.
 user-invocable: true
@@ -255,10 +254,11 @@ These files use a tiered system: Start with product files below for curated quic
 - Example apps: [pyth-examples](https://github.com/pyth-network/pyth-examples)
 `;
 
-  return new NextResponse(content, {
+export function GET() {
+  return new NextResponse(CONTENT, {
     headers: {
       "Cache-Control": "public, max-age=86400",
-      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Type": "text/markdown; charset=utf-8",
     },
     status: 200,
   });
