@@ -54,8 +54,7 @@ Programmatic discovery with token counts and content hashes:
 `;
 
 export function GET() {
-  const content = CONTENT + `\nGenerated on: ${new Date().toISOString()}\n`;
-  return new NextResponse(content, {
+  return new NextResponse(CONTENT, {
     headers: {
       "Cache-Control": "public, max-age=86400",
       "Content-Type": "text/plain; charset=utf-8",

@@ -31,12 +31,12 @@
       "tokens": 177
     },
     "/SKILL.md": {
-      "bytes": 10559,
-      "hash": "sha256:0244c601968f346ca28d40c670a8ae305cbc866b203255c212f7b3cfdaf76c15",
-      "tokens": 2882
+      "bytes": 10593,
+      "hash": "sha256:fbae9126d0824d624f37cbe56e4f0a09dc464e736069c0675232a254daa358af",
+      "tokens": 2890
     }
   },
-  "generated_at": "2026-02-16T19:29:20.225Z",
+  "generated_at": "2026-02-16T19:49:45.026Z",
   "tokenizer": "cl100k_base",
   "tokenizer_note": "Token counts are approximate. Actual counts vary by model."
 }

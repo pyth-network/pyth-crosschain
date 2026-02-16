@@ -430,13 +430,18 @@ jobs:
       - name: Comment on PR
         if: steps.changed-files.outputs.significant == 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          AFFECTED_PRODUCTS: ${{ steps.changed-files.outputs.affected_products }}
+          NEW_PRODUCT: ${{ steps.changed-files.outputs.new_product }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
         with:
           script: |
             const noUpdate = process.env.no_update === 'true';
-            const affectedRaw = '${{ steps.changed-files.outputs.affected_products }}';
+            const affectedRaw = process.env.AFFECTED_PRODUCTS || '';
             const affectedProducts = affectedRaw.split(' ').filter(Boolean);
-            const newProduct = '${{ steps.changed-files.outputs.new_product }}' === 'true';
+            const newProduct = process.env.NEW_PRODUCT === 'true';
             const updatedProducts = (process.env.updated_products || '').split(',').filter(Boolean);
+            const changedFiles = process.env.CHANGED_FILES || '';
 
             const newProductWarning = newProduct
               ? `\n> ⚠️ **New product directory detected.** Please check if the \`llms.txt\` routing hub needs a new entry.\n`
@@ -456,7 +461,7 @@ jobs:
             <summary>Files analyzed</summary>
 
             \`\`\`
-            ${{ steps.changed-files.outputs.files }}
+            ${changedFiles}
             \`\`\`
             </details>`;
             } else if (noUpdate) {
@@ -471,7 +476,7 @@ jobs:
             <summary>Files analyzed</summary>
 
             \`\`\`
-            ${{ steps.changed-files.outputs.files }}
+            ${changedFiles}
             \`\`\`
             </details>`;
             } else {
@@ -489,7 +494,7 @@ jobs:
             <summary>Files that triggered this update</summary>
 
             \`\`\`
-            ${{ steps.changed-files.outputs.files }}
+            ${changedFiles}
             \`\`\`
             </details>`;
             }
