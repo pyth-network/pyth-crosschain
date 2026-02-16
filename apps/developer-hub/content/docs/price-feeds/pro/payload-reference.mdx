@@ -35,6 +35,7 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 | `fundingRate`         | `i64`    | Derivatives | Funding rate (perpetual futures).                                        |
 | `fundingTimestamp`    | `u64`    | Derivatives | When funding rate was last calculated (μs).                              |
 | `fundingRateInterval` | `u64`    | Derivatives | Interval between funding updates (μs).                                   |
+| `feedUpdateTimestamp` | `string` | All         | Timestamp when price was last generated for this feed (μs).              |
 
 **Scope:** _All_ = every feed type; _Spot_ = spot price feeds; _Derivatives_ = funding rate feeds.
 

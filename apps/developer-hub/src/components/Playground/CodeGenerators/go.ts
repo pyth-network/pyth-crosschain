@@ -65,6 +65,7 @@ type PriceFeed struct {
 	Confidence     int64  \`json:"confidence,omitempty"\`
 	Exponent       int    \`json:"exponent,omitempty"\`
 	PublisherCount int    \`json:"publisherCount,omitempty"\`
+	FeedUpdateTimestamp  string \`json:"feedUpdateTimestamp,omitempty"\`
 }
 
 type BinaryData struct {
@@ -137,7 +138,7 @@ func main() {
 			if update.Type == "streamUpdated" {
 				fmt.Printf("Price Update (Subscription %d):\\n", update.SubscriptionID)
 				for _, feed := range update.Parsed.PriceFeeds {
-					fmt.Printf("  Feed %d: Price=%s\\n", feed.PriceFeedID, feed.Price)
+					fmt.Printf("  Feed %d: Price=%s FeedUpdateTimestamp=%s\\n", feed.PriceFeedID, feed.Price, feed.FeedUpdateTimestamp)
 				}
 			}
 		}
