@@ -3,6 +3,7 @@ use aiken/collection/pairs
 use aiken/crypto
 use parser.{Parser, parse}
 use secp256k1
+use types/result.{Err, Ok, Result}
 use types/u8.{U8}
 
 pub type Guardians {
@@ -40,21 +41,36 @@ pub fn has_quorum(
       },
     )
 
-  expect_ordered_subset(recovered, self.set)
-  list.length(recovered) >= quorum(self)
+  and {
+    (is_ordered_subset(recovered, self.set) |> result.is_ok())?,
+    (list.length(recovered) >= quorum(self))?,
+  }
 }
 
 /// Checks that provided pairs of indices and values are an ordered subset of
-/// the original list.
-fn expect_ordered_subset(self: Pairs<Int, a>, original: List<a>) -> Void {
-  expect _ = { let
-      index,
-      left,
-      (seen, unseen),
-    <- pairs.foldl(self, (-1, original))
-    expect (index > seen)?
-    expect [right, ..unseen] = list.drop(unseen, index - 1 - seen)
-    expect left == right
-    (index, unseen)
-  }
+/// the original list. If not, returns first index that failed.
+fn is_ordered_subset(
+  self: Pairs<Int, a>,
+  original: List<a>,
+) -> Result<Void, Int> {
+  self
+    |> pairs.foldl(
+        // initial state is to the left of the original list
+        Ok((-1, original)),
+        fn(index, left, state) {
+          let (seen, unseen) <- result.and_then(state)
+          // check that index is increasing
+          let _ <- result.guard_then(index > seen, index)
+          // find matching item in original list
+          when list.drop(unseen, index - 1 - seen) is {
+            [right, ..unseen] -> {
+              let _ <- result.guard_then(left == right, index)
+              // if matches, advance past seen item
+              Ok((index, unseen))
+            }
+            _ -> Err(index)
+          }
+        },
+      )
+    |> result.void
 }
