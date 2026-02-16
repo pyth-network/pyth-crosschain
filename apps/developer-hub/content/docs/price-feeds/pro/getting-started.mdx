@@ -141,6 +141,15 @@ client.subscribe({
 });
 ```
 
+<Callout type="info" title="Production Tip: Include feedUpdateTimestamp">
+  For production applications, add `"feedUpdateTimestamp"` to the `properties`
+  array. This field lets you determine whether a price was freshly generated or
+  carried forward from an earlier update by comparing it against `timestampUs`.
+  See [Payload Reference — Price Availability
+  Semantics](/price-feeds/pro/payload-reference#core-price-properties) for
+  details.
+</Callout>
+
 <Callout type="info">
   For a detailed explanation of every property passed to `client.subscribe`, see
   the [Payload

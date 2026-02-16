@@ -58,7 +58,7 @@ client.send({
   type: "subscribe",
   subscriptionId: 1,
   priceFeedIds: [1, 2],
-  properties: ["price"],
+  properties: ["price", "feedUpdateTimestamp"],
   formats: ["solana"],
   channel: "fixed_rate@200ms",
 });
@@ -69,6 +69,17 @@ The most significant parameters are:
 - `subscriptionId` is an arbitrary numeric identifier for a subscription. It will be returned back in response by the server. It does not affect the signed payload.
 - `priceFeedIds` is the list of price feeds to receive price data for. It will also include the verified payloads for the price feeds. Refer to the [Price Feed IDs list](/price-feeds/pro/price-feed-ids) for the supported price feeds.
 - `properties` is the list of properties to retrieve, such as **price**, **bestBidPrice**, **bestAskPrice**, etc.
+
+<Callout type="info" title="Recommended: Include feedUpdateTimestamp">
+  For production applications, include `"feedUpdateTimestamp"` in your
+  `properties` array. This field lets you determine whether a price was freshly
+  generated or carried forward from an earlier update. Compare it against
+  `timestampUs` to assess price freshness. See [Payload Reference — Price
+  Availability
+  Semantics](/price-feeds/pro/payload-reference#core-price-properties) for
+  details.
+</Callout>
+
 - `formats`(formerly known as `chains`) specifies the binary encoding format for the payload. This field is mandatory, but can be set to an empty array (e.g., `formats: []`) if no binary payload is needed. Use **evm** or **solana** to receive a signed payload for onchain verification, or **leUnsigned** for offchain-only use without signatures. See [Binary Formats & Signature Schemes](/price-feeds/pro/payload-reference#binary-formats--signature-schemes) for all options.
 - `channel` determines the update rate: updates in the **real_time** channel are sent as frequently as possible, while **fixed_rate@200ms** and **fixed_rate@50ms** channels are updated at fixed rates.
 
@@ -116,7 +127,7 @@ client.subscribe({
   type: "subscribe",
   subscriptionId: 1,
   priceFeedIds: [1, 2],
-  properties: ["price"],
+  properties: ["price", "feedUpdateTimestamp"],
   formats: ["solana"],
   channel: "fixed_rate@200ms",
 });
@@ -141,11 +152,13 @@ By default, verified payloads contain the `parsed` field that one can use to eas
     "priceFeeds": [
       {
         "priceFeedId": 1,
-        "price": "1006900000000"
+        "price": "1006900000000",
+        "feedUpdateTimestamp": "1730986152400000"
       },
       {
         "priceFeedId": 2,
-        "price": "2006900000000"
+        "price": "2006900000000",
+        "feedUpdateTimestamp": "1730986152400000"
       }
     ]
   },
