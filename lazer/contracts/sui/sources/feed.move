@@ -131,6 +131,26 @@ public fun funding_rate_interval(feed: &Feed): Option<Option<u64>> {
     feed.funding_rate_interval
 }
 
+/// Get the market session
+public fun market_session(feed: &Feed): Option<MarketSession> {
+    feed.market_session
+}
+
+/// Get the EMA price
+public fun ema_price(feed: &Feed): Option<Option<I64>> {
+    feed.ema_price
+}
+
+/// Get the EMA confidence
+public fun ema_confidence(feed: &Feed): Option<Option<u64>> {
+    feed.ema_confidence
+}
+
+/// Get the feed update timestamp
+public fun feed_update_timestamp(feed: &Feed): Option<Option<u64>> {
+    feed.feed_update_timestamp
+}
+
 /// Set the feed ID
 public(package) fun set_feed_id(feed: &mut Feed, feed_id: u32) {
     feed.feed_id = feed_id;
