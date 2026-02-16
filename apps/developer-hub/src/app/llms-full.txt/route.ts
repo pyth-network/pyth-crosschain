@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-export function GET() {
-  const content = `# This endpoint is deprecated
+const CONTENT = `# This endpoint is deprecated
 
 Pyth documentation is now served through a tiered system for more efficient AI agent context loading.
 
@@ -20,11 +19,12 @@ The monolithic full-documentation file has been replaced by curated, product-spe
 - All price feeds (Core + Pro): https://docs.pyth.network/llms-price-feeds.txt
 `;
 
-  return new NextResponse(content, {
+export function GET() {
+  return new NextResponse(CONTENT, {
     headers: {
       "Cache-Control": "public, max-age=86400",
       "Content-Type": "text/plain; charset=utf-8",
     },
-    status: 200,
+    status: 410,
   });
 }

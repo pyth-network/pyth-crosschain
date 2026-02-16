@@ -7,5 +7,6 @@ const robots = (): MetadataRoute.Robots => ({
     userAgent: "*",
     ...(IS_PRODUCTION_SERVER ? { allow: "/" } : { disallow: "/" }),
   },
+  sitemap: "https://docs.pyth.network/sitemap.xml",
 });
 export default robots;
