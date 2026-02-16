@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { LLM_FILES } from "../data/llm-files";
 import { source } from "../lib/source";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -11,30 +12,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}${page.url}`,
   }));
 
-  const llmPages = [
-    { changeFrequency: "monthly" as const, url: `${baseUrl}/llms.txt` },
-    {
-      changeFrequency: "weekly" as const,
-      url: `${baseUrl}/llms-price-feeds-core.txt`,
-    },
-    {
-      changeFrequency: "weekly" as const,
-      url: `${baseUrl}/llms-price-feeds-pro.txt`,
-    },
-    {
-      changeFrequency: "weekly" as const,
-      url: `${baseUrl}/llms-entropy.txt`,
-    },
-    {
-      changeFrequency: "monthly" as const,
-      url: `${baseUrl}/llms-price-feeds.txt`,
-    },
-    {
-      changeFrequency: "weekly" as const,
-      url: `${baseUrl}/llms-manifest.json`,
-    },
-    { changeFrequency: "monthly" as const, url: `${baseUrl}/SKILL.md` },
-  ].map((p) => ({ ...p, lastModified: new Date() }));
+  const llmPages = LLM_FILES.filter((f) => !f.deprecated).map((f) => ({
+    changeFrequency: f.changeFrequency,
+    lastModified: new Date(),
+    url: `${baseUrl}${f.path}`,
+  }));
 
-  return [...docPages, ...llmPages];
+  const manifestPage = {
+    changeFrequency: "weekly" as const,
+    lastModified: new Date(),
+    url: `${baseUrl}/llms-manifest.json`,
+  };
+
+  return [...docPages, ...llmPages, manifestPage];
 }

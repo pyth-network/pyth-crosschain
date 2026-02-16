@@ -12,7 +12,7 @@
  *
  * ## How It Works
  *
- * Reads each route file, extracts the static content string from the template literal,
+ * Reads each route file, extracts the CONTENT template literal,
  * then counts tokens using js-tiktoken (cl100k_base encoding, same as GPT-4/GPT-4o).
  *
  * Token counts are approximate — actual counts vary by model and tokenizer.
@@ -24,68 +24,22 @@ import path from "node:path";
 
 import { getEncoding } from "js-tiktoken";
 
+import { LLM_FILES } from "../src/data/llm-files";
+
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUTPUT_PATH = path.join(ROOT, "src", "data", "llm-token-counts.json");
-
-const LLM_FILES: { path: string; routeFile: string }[] = [
-  {
-    path: "/llms.txt",
-    routeFile: "src/app/llms.txt/route.ts",
-  },
-  {
-    path: "/llms-price-feeds-core.txt",
-    routeFile: "src/app/llms-price-feeds-core.txt/route.ts",
-  },
-  {
-    path: "/llms-price-feeds-pro.txt",
-    routeFile: "src/app/llms-price-feeds-pro.txt/route.ts",
-  },
-  {
-    path: "/llms-price-feeds.txt",
-    routeFile: "src/app/llms-price-feeds.txt/route.ts",
-  },
-  {
-    path: "/llms-entropy.txt",
-    routeFile: "src/app/llms-entropy.txt/route.ts",
-  },
-  {
-    path: "/llms-full.txt",
-    routeFile: "src/app/llms-full.txt/route.ts",
-  },
-  {
-    path: "/SKILL.md",
-    routeFile: "src/app/SKILL.md/route.ts",
-  },
-];
 
 /**
  * Extract static content from a route file's template literal.
  *
- * Supports two patterns:
- * 1. `const STATIC_HEADER = \`...\`;`  (current Tier 2 files — static header only, excludes dynamic MDX dump)
- * 2. Inline template literal in `content = \`...\``  (Tier 1 files like llms.txt)
- * 3. `const CONTENT = \`...\`;`  (future Tier 2 files after restructure)
- *
- * For files that use getLLMTextByPaths(), only the static header is counted.
- * The dynamic content will be removed in Phase 2 of the restructure.
+ * Matches `const CONTENT = \`...\`;` at module level.
  */
 function extractContent(source: string): string {
-  // Try to match named template literals: STATIC_HEADER, CONTENT, or content
-  const patterns = [
-    /const\s+STATIC_HEADER\s*=\s*`([\s\S]*?)`;/,
-    /const\s+CONTENT\s*=\s*`([\s\S]*?)`;/,
-    /const\s+content\s*=\s*`([\s\S]*?)`;/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = source.match(pattern);
-    if (match?.[1]) {
-      // Unescape template literal escape sequences
-      return match[1].replace(/\\`/g, "`").replace(/\\\$/g, "$");
-    }
+  const match = source.match(/const\s+CONTENT\s*=\s*`([\s\S]*?)`;/);
+  if (match?.[1]) {
+    return match[1].replace(/\\`/g, "`").replace(/\\\$/g, "$");
   }
-
-  throw new Error("Could not extract content from route file");
+  throw new Error("Could not extract CONTENT from route file");
 }
 
 function sha256(content: string): string {
