@@ -35,20 +35,18 @@ impl WebsocketDeliveryClient {
     }
 
     /// Set metrics on all connections. Must be called before start_all.
-    pub fn with_metrics(self, metrics: DeliveryMetrics) -> Self {
+    pub async fn with_metrics(self, metrics: DeliveryMetrics) -> Self {
         for conn_arc in &self.connections {
-            if let Ok(mut conn) = conn_arc.try_lock() {
-                conn.set_metrics(metrics.clone());
-            }
+            let mut conn = conn_arc.lock().await;
+            conn.set_metrics(metrics.clone());
         }
         self
     }
 
-    pub fn start_all(&mut self, runtime: AppRuntime) {
+    pub async fn start_all(&mut self, runtime: AppRuntime) {
         for conn_arc in &self.connections {
-            if let Ok(mut conn) = conn_arc.try_lock() {
-                conn.start(self.incoming_tx.clone(), runtime.clone());
-            }
+            let mut conn = conn_arc.lock().await;
+            conn.start(self.incoming_tx.clone(), runtime.clone());
         }
     }
 

@@ -155,7 +155,16 @@ impl Connection {
         let runtime_clone = runtime.clone();
 
         runtime.spawn(async move {
-            run_connection_manager(tx_recv, incoming_tx, endpoint, config, connected, metrics, runtime_clone).await;
+            run_connection_manager(
+                tx_recv,
+                incoming_tx,
+                endpoint,
+                config,
+                connected,
+                metrics,
+                runtime_clone,
+            )
+            .await;
         });
 
         self.tx = Some(tx_send);
@@ -188,7 +197,8 @@ impl Drop for Connection {
     }
 }
 
-type WsStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
+type WsStream =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 struct SessionContext<'a> {
     endpoint: &'a Url,
@@ -262,7 +272,8 @@ async fn run_connection_manager(
             connected: &connected,
             runtime: &runtime,
         };
-        let disconnect_reason = run_session_loop(&mut write, &mut read, &mut outgoing_rx, &incoming_tx, &ctx).await;
+        let disconnect_reason =
+            run_session_loop(&mut write, &mut read, &mut outgoing_rx, &incoming_tx, &ctx).await;
 
         connected.store(false, Ordering::Release);
         if let Some(ref m) = metrics {
