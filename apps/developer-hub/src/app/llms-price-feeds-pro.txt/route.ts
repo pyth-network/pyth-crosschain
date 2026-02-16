@@ -230,8 +230,7 @@ For complete documentation, fetch any page as plain markdown:
 `;
 
 export function GET() {
-  const content = CONTENT + `\nGenerated on: ${new Date().toISOString()}\n`;
-  return new NextResponse(content, {
+  return new NextResponse(CONTENT, {
     headers: {
       "Cache-Control": "public, max-age=3600",
       "Content-Type": "text/plain; charset=utf-8",
