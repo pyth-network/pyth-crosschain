@@ -11,7 +11,9 @@ export async function GET(
   { params }: { params: Promise<{ slug: string[] }> },
 ) {
   const { slug } = await params;
-  const page = source.getPage(slug);
+  const page =
+    source.getPage(slug) ??
+    (slug.at(-1) === "index" ? source.getPage(slug.slice(0, -1)) : undefined);
 
   if (!page) {
     return new NextResponse("Page not found", { status: 404 });
