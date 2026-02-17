@@ -17,10 +17,10 @@ full on-chain Ed25519 signature verification. It consists of two components:
 ## Architecture
 
 ```
-                 ┌─────────────────────┐
+                 ┌──────────────────────┐
                  │  Pyth Lazer Server   │
                  │  (signed price data) │
-                 └──────────┬──────────┘
+                 └──────────┬───────────┘
                             │ signed messages (Solana envelope format)
                             ▼
                ┌────────────────────────┐
@@ -118,7 +118,7 @@ including a 0-ADA withdrawal from this validator's staking credential.
 
 The redeemer is:
 
-```
+```rust
 type PriceRedeemer {
   signed_prices: List<ByteArray>,
 }
@@ -146,7 +146,7 @@ Always fails.
 
 ### On-Chain Data Types
 
-```
+```rust
 PythSigningPolicy {
   trusted_signers: List<(VerificationKey, Interval<Int>)>
 }
