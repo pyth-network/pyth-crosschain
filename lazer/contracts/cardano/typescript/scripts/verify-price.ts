@@ -8,7 +8,7 @@ import {
     type UTxO,
 } from '@meshsdk/core'
 import { PythLazerClient } from '@pythnetwork/pyth-lazer-sdk'
-import { buildVerifyPriceTx, getPythPriceScript } from '../src/dapp.js'
+import { buildVerifyPriceTx, getRewardAddressFromUtxo } from '../src/dapp.js'
 import { parsePriceMessage, parsePriceUpdate } from '../src/parse.js'
 import { bytesToHex } from '../src/hex.js'
 
@@ -227,12 +227,8 @@ async function main() {
     const walletAddr = await wallet.getChangeAddress()
     console.log(`Wallet address: ${walletAddr}`)
 
-    // 2. Derive price script from signer policy ID
-    const priceScript = getPythPriceScript(signerPolicyId, 0)
+    // 2. Find signer NFT UTxO via Blockfrost asset lookup
     console.log(`Signer policy ID:     ${signerPolicyId}`)
-    console.log(`Price reward address: ${priceScript.rewardAddress}`)
-
-    // 3. Find signer NFT UTxO via Blockfrost asset lookup
     console.log(`\nLooking up signer NFT...`)
     const signerNftUtxo = await findSignerNftUtxo(
         network,
@@ -243,6 +239,10 @@ async function main() {
     console.log(
         `Signer NFT UTxO: ${signerNftUtxo.input.txHash}#${signerNftUtxo.input.outputIndex}`
     )
+
+    // 3. Derive reward address from the on-chain reference script
+    const rewardAddress = getRewardAddressFromUtxo(signerNftUtxo, 0)
+    console.log(`Price reward address: ${rewardAddress}`)
 
     // 4. Get price update — either from CLI arg or live from Pyth Lazer
     let update: Buffer
@@ -331,12 +331,7 @@ async function main() {
 
     buildVerifyPriceTx(
         txBuilder,
-        priceScript.scriptCbor,
-        priceScript.rewardAddress,
-        {
-            txHash: signerNftUtxo.input.txHash,
-            outputIndex: signerNftUtxo.input.outputIndex,
-        },
+        signerNftUtxo,
         [update],
         currentSlot - 100,
         currentSlot + 600,

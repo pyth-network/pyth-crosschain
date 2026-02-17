@@ -27,7 +27,7 @@ export {
 } from './validate.js';
 
 // dApp developer API — price verification
-export { buildVerifyPriceTx, getPythPriceScript } from './dapp.js';
+export { buildVerifyPriceTx, getRewardAddressFromUtxo, getPythPriceScript } from './dapp.js';
 
 // Contract owner (Pyth) API — signer NFT management and deployment
 export {

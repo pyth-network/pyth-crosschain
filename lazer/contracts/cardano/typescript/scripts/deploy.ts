@@ -4,6 +4,7 @@ import path from 'node:path'
 import {
     BlockfrostProvider,
     deserializeAddress,
+    mConStr0,
     MeshTxBuilder,
     MeshWallet,
     type UTxO,
@@ -154,9 +155,57 @@ async function main() {
         u.output.amount.some((a) => a.unit === signerPolicyId + SIGNER_TOKEN_NAME)
     )
 
-    if (existingNft) {
-        console.log('Signer NFT already exists — skipping.')
+    if (existingNft && existingNft.output.scriptRef === priceScript.scriptCbor) {
+        console.log('Signer NFT already exists with correct reference script — skipping.')
         console.log(`  UTxO: ${existingNft.input.txHash}#${existingNft.input.outputIndex}`)
+    } else if (existingNft) {
+        // NFT exists but reference script is missing or outdated — spend and recreate
+        if (!existingNft.output.scriptRef) {
+            console.log('Signer NFT exists but missing price reference script — updating...')
+        } else {
+            console.log('Signer NFT exists but price reference script changed — updating...')
+        }
+
+        const walletUtxos = await provider.fetchAddressUTxOs(walletAddr)
+        const txBuilder = new MeshTxBuilder({
+            fetcher: provider,
+            submitter: provider,
+        })
+
+        // Preserve the existing datum (as raw CBOR) while adding/updating the reference script
+        txBuilder
+            .spendingPlutusScriptV3()
+            .txIn(
+                existingNft.input.txHash,
+                existingNft.input.outputIndex,
+                existingNft.output.amount,
+                existingNft.output.address
+            )
+            .txInInlineDatumPresent()
+            .txInScript(signerScript.scriptCbor)
+            .txInRedeemerValue(mConStr0([]))
+            .txOut(signerAddress, [
+                { unit: signerPolicyId + SIGNER_TOKEN_NAME, quantity: '1' },
+            ])
+            .txOutInlineDatumValue(existingNft.output.plutusData!, 'CBOR')
+            .txOutReferenceScript(priceScript.scriptCbor, 'V3')
+            .requiredSignerHash(ownerPkh)
+
+        txBuilder.changeAddress(walletAddr).selectUtxosFrom(walletUtxos)
+        txBuilder.txInCollateral(
+            walletUtxos[0].input.txHash,
+            walletUtxos[0].input.outputIndex,
+            walletUtxos[0].output.amount,
+            walletUtxos[0].output.address
+        )
+
+        const unsignedTx = await txBuilder.complete()
+        const signedTx = await wallet.signTx(unsignedTx)
+        const txHash = await provider.submitTx(signedTx)
+        console.log(`Update tx submitted: ${txHash}`)
+        console.log('Waiting for confirmation...')
+        await waitForTx(provider, txHash, walletAddr)
+        console.log('Reference script updated.')
     } else {
         const walletUtxos = await provider.fetchAddressUTxOs(walletAddr)
         const txBuilder = new MeshTxBuilder({
@@ -170,7 +219,8 @@ async function main() {
             signerAddress,
             signerPolicyId,
             ownerPkh,
-            [] // empty signing policy — signers added later via buildUpdateSignersTx
+            [], // empty signing policy — signers added later via buildUpdateSignersTx
+            priceScript.scriptCbor
         )
         txBuilder.changeAddress(walletAddr).selectUtxosFrom(walletUtxos)
         txBuilder.txInCollateral(

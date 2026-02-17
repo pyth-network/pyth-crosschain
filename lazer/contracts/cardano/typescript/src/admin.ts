@@ -136,6 +136,7 @@ export function buildSigningPolicyDatum(
  * @param policyId - Script hash / policy ID hex (from {@link getSignerNftScript}).
  * @param ownerPkh - The owner's public key hash as hex (NOT bech32).
  * @param signers - The initial set of trusted signers to store in the datum.
+ * @param priceScriptCbor - Compiled price script CBOR hex to store as a reference script on the NFT output.
  * @returns The `txBuilder` with mint + output operations chained.
  */
 export function buildMintSignerNftTx(
@@ -148,7 +149,8 @@ export function buildMintSignerNftTx(
         pubkey: string;
         validFrom?: number;
         validTo?: number;
-    }>
+    }>,
+    priceScriptCbor: string
 ): MeshTxBuilder {
     const datum = buildSigningPolicyDatum(signers);
 
@@ -161,6 +163,7 @@ export function buildMintSignerNftTx(
             { unit: policyId + SIGNER_TOKEN_NAME, quantity: '1' },
         ])
         .txOutInlineDatumValue(datum)
+        .txOutReferenceScript(priceScriptCbor, 'V3')
         .requiredSignerHash(ownerPkh);
 }
 
@@ -178,6 +181,7 @@ export function buildMintSignerNftTx(
  * @param ownerPkh - The owner's public key hash as hex (NOT bech32).
  * @param signerUtxo - The existing UTxO at the script address containing the signer NFT.
  * @param newSigners - The new set of signers to store in the datum.
+ * @param priceScriptCbor - Compiled price script CBOR hex to re-attach as a reference script on the NFT output.
  * @returns The `txBuilder` with spend + output operations chained.
  */
 export function buildUpdateSignersTx(
@@ -191,7 +195,8 @@ export function buildUpdateSignersTx(
         pubkey: string;
         validFrom?: number;
         validTo?: number;
-    }>
+    }>,
+    priceScriptCbor: string
 ): MeshTxBuilder {
     const datum = buildSigningPolicyDatum(newSigners);
 
@@ -210,6 +215,7 @@ export function buildUpdateSignersTx(
             { unit: policyId + SIGNER_TOKEN_NAME, quantity: '1' },
         ])
         .txOutInlineDatumValue(datum)
+        .txOutReferenceScript(priceScriptCbor, 'V3')
         .requiredSignerHash(ownerPkh);
 }
 

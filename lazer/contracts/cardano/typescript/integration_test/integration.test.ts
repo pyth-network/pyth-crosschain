@@ -121,7 +121,8 @@ describe('Cardano Integration', () => {
                 signerAddress,
                 signerPolicyId,
                 ownerPkh,
-                [{ pubkey: SIGNER_PUBKEY }]
+                [{ pubkey: SIGNER_PUBKEY }],
+                priceScriptCbor
             );
             txBuilder
                 .changeAddress(ownerAddr)
@@ -158,12 +159,7 @@ describe('Cardano Integration', () => {
 
             buildVerifyPriceTx(
                 txBuilder,
-                priceScriptCbor,
-                priceRewardAddress,
-                {
-                    txHash: signerUtxo!.input.txHash,
-                    outputIndex: signerUtxo!.input.outputIndex,
-                },
+                signerUtxo!,
                 [signedPrice],
                 currentSlot - 100,
                 currentSlot + 100,
@@ -204,7 +200,8 @@ describe('Cardano Integration', () => {
                 signerPolicyId,
                 ownerPkh,
                 signerUtxo!,
-                [{ pubkey: SIGNER_PUBKEY }]
+                [{ pubkey: SIGNER_PUBKEY }],
+                priceScriptCbor
             );
             txBuilder
                 .changeAddress(ownerAddr)

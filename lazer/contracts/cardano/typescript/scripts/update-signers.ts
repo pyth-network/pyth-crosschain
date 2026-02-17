@@ -14,6 +14,7 @@ import {
     buildUpdateSignersTx,
     initializeValidators,
 } from '../src/admin.js'
+import { getPythPriceScript } from '../src/dapp.js'
 
 const SIGNER_TOKEN_NAME = '7369676e6572' // hex("signer")
 
@@ -262,6 +263,7 @@ async function main() {
     // 2. Initialize validators
     const validators = initializeValidators(ownerPkh, 0)
     const { signerScript, signerAddress, signerPolicyId } = validators
+    const priceScript = getPythPriceScript(signerPolicyId, 0)
 
     console.log(`Signer policy ID: ${signerPolicyId}`)
 
@@ -390,7 +392,8 @@ async function main() {
         signerPolicyId,
         ownerPkh,
         signerNftUtxo,
-        newSigners
+        newSigners,
+        priceScript.scriptCbor
     )
     txBuilder.changeAddress(ownerAddr).selectUtxosFrom(walletUtxos)
     txBuilder.txInCollateral(
