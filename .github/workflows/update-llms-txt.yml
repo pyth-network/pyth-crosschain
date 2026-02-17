@@ -154,7 +154,7 @@ jobs:
           echo "No significant documentation changes detected. Skipping."
 
       - name: Read content from affected product files
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true')
         id: headers
         env:
           AFFECTED: ${{ steps.changed-files.outputs.affected_products }}
@@ -169,7 +169,7 @@ jobs:
             ROUTE_FILE="$ROUTE_DIR/$product/route.ts"
             if [ -f "$ROUTE_FILE" ]; then
               # Extract CONTENT content (between opening backtick and closing `; line)
-              sed -n '/const CONTENT = `/,/^`;/{/const CONTENT = `/d;/^`;/d;p}' "$ROUTE_FILE" > "/tmp/header-${product}.txt"
+              sed -n '/const CONTENT = `/{s/const CONTENT = `//;:a;/^`;/q;p;n;ba}' "$ROUTE_FILE" > "/tmp/header-${product}.txt"
               HEADERS_JSON=$(jq --arg key "$product" --rawfile val "/tmp/header-${product}.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
             fi
           done
@@ -178,7 +178,7 @@ jobs:
           if [ "$INCLUDE_SKILL" = "true" ]; then
             SKILL_FILE="$ROUTE_DIR/SKILL.md/route.ts"
             if [ -f "$SKILL_FILE" ]; then
-              sed -n '/const CONTENT = `/,/^`;/{/const CONTENT = `/d;/^`;/d;p}' "$SKILL_FILE" > "/tmp/header-SKILL.md.txt"
+              sed -n '/const CONTENT = `/{s/const CONTENT = `//;:a;/^`;/q;p;n;ba}' "$SKILL_FILE" > "/tmp/header-SKILL.md.txt"
               HEADERS_JSON=$(jq --arg key "SKILL.md" --rawfile val "/tmp/header-SKILL.md.txt" '. + {($key): $val}' <<< "$HEADERS_JSON")
             fi
           fi
@@ -187,7 +187,7 @@ jobs:
           echo "Extracted headers for: $AFFECTED"
 
       - name: Gather context
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true')
         id: context
         env:
           CHANGED_FILES_LIST: ${{ steps.changed-files.outputs.files }}
@@ -216,7 +216,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Review curated content with GPT-4o
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != ''
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true')
         env:
           OPENAI_API_KEY: ${{ secrets.PYTH_NETWORK_PYTH_CROSSCHAIN_OPENAI_API_KEY }}
           DOC_CHANGES: ${{ steps.context.outputs.changes }}
@@ -321,7 +321,7 @@ jobs:
           fi
 
       - name: Update product route files
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
         run: |
           ROUTE_DIR="apps/developer-hub/src/app"
           DECISIONS=$(cat /tmp/update-decisions.json)
@@ -376,7 +376,7 @@ jobs:
           done
 
       - name: Format updated files
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
         env:
           AFFECTED: ${{ steps.changed-files.outputs.affected_products }}
           INCLUDE_SKILL: ${{ steps.changed-files.outputs.include_skill }}
@@ -391,13 +391,13 @@ jobs:
           fi
 
       - name: Re-run token counter
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
         run: |
           cd apps/developer-hub
           npx tsx scripts/count-llm-tokens.ts
 
       - name: Commit and push changes
-        if: steps.changed-files.outputs.significant == 'true' && steps.changed-files.outputs.affected_products != '' && env.no_update != 'true'
+        if: steps.changed-files.outputs.significant == 'true' && (steps.changed-files.outputs.affected_products != '' || steps.changed-files.outputs.include_skill == 'true') && env.no_update != 'true'
         env:
           AFFECTED: ${{ steps.changed-files.outputs.affected_products }}
           INCLUDE_SKILL: ${{ steps.changed-files.outputs.include_skill }}
