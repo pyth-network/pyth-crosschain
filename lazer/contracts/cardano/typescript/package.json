@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "deploy": "tsx scripts/deploy.ts",
     "verify-price": "tsx scripts/verify-price.ts",
-    "update-signers": "tsx scripts/update-signers.ts"
+    "signers": "tsx scripts/signers.ts"
   },
   "prettier": {
     "trailingComma": "es5",

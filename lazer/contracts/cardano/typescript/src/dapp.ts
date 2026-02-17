@@ -51,6 +51,26 @@ export function getPythPriceScript(
 }
 
 /**
+ * Unwrap an on-chain script reference to raw script CBOR.
+ *
+ * Blockfrost returns scriptRef in the on-chain format: a CBOR array
+ * `[language_id, script_bytes]` (e.g. `82 03 59xxxx...` for PlutusV3).
+ * `resolveScriptHash` expects just the raw script CBOR (the byte string part).
+ *
+ * If the hex already starts with a CBOR byte string (major type 2), it's
+ * returned as-is.
+ */
+function unwrapScriptRef(hex: string): string {
+    const firstByte = parseInt(hex.slice(0, 2), 16);
+    // Major type 4 (array) means it's wrapped as [language_id, script_cbor]
+    if ((firstByte >> 5) === 4) {
+        // Skip the 2-element array header (0x82) and 1-byte language tag (0x0N)
+        return hex.slice(4);
+    }
+    return hex;
+}
+
+/**
  * Derive the price script's reward address from the signer NFT UTxO's reference script.
  *
  * This lets dApp developers derive everything they need from the on-chain UTxO
@@ -72,7 +92,7 @@ export function getRewardAddressFromUtxo(
         );
     }
 
-    const scriptHash = resolveScriptHash(scriptRef, 'V3');
+    const scriptHash = resolveScriptHash(unwrapScriptRef(scriptRef), 'V3');
 
     return serializeRewardAddress(
         scriptHash,

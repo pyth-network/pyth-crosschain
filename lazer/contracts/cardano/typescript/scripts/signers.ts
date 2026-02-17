@@ -21,12 +21,21 @@ const SIGNER_TOKEN_NAME = '7369676e6572' // hex("signer")
 const VALID_NETWORKS = ['preview', 'preprod'] as const
 type Network = (typeof VALID_NETWORKS)[number]
 
+const VALID_COMMANDS = ['show', 'update'] as const
+type Command = (typeof VALID_COMMANDS)[number]
+
 const CONFIG_DIR = path.join(os.homedir(), '.config', 'pyth-lazer-cardano')
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json')
 
 interface ConfigFile {
     walletMnemonic?: string
     blockfrostKey?: string
+}
+
+interface ParsedSigner {
+    pubkey: string
+    validFrom?: number
+    validTo?: number
 }
 
 function loadConfigFile(): ConfigFile {
@@ -36,6 +45,72 @@ function loadConfigFile(): ConfigFile {
     } catch {
         return {}
     }
+}
+
+function usage(): never {
+    console.error(
+        'Usage:\n' +
+            '  npx tsx scripts/signers.ts show   --network <preview|preprod>\n' +
+            '  npx tsx scripts/signers.ts update --network <preview|preprod> --signer <pubkey>[:<from>:<to>] [...]\n' +
+            '\n' +
+            'Examples:\n' +
+            '  --signer abc123...def456                   # valid forever\n' +
+            '  --signer abc123...def456:1000:2000         # valid from slot 1000 to 2000\n' +
+            '  --signer abc123...def456:1000:             # valid from slot 1000, no end\n' +
+            '  --signer abc123...def456::2000             # no start, valid until slot 2000'
+    )
+    process.exit(1)
+}
+
+function parseGlobalArgs(): {
+    command: Command
+    network: Network
+    mnemonic: string
+    blockfrostKey: string
+} {
+    const args = process.argv.slice(2)
+
+    let command: Command | undefined
+    let network: Network | undefined
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--network' && args[i + 1]) {
+            network = args[++i] as Network
+        } else if (!command && VALID_COMMANDS.includes(args[i] as Command)) {
+            command = args[i] as Command
+        }
+    }
+
+    if (!command) {
+        usage()
+    }
+
+    if (!network || !VALID_NETWORKS.includes(network)) {
+        console.error('Error: --network <preview|preprod> is required')
+        usage()
+    }
+
+    const fileConfig = loadConfigFile()
+
+    const mnemonic = process.env.WALLET_MNEMONIC || fileConfig.walletMnemonic
+    if (!mnemonic) {
+        console.error(
+            'Error: WALLET_MNEMONIC not found.\n' +
+                `Set the WALLET_MNEMONIC env var or add "walletMnemonic" to ${CONFIG_FILE}`
+        )
+        process.exit(1)
+    }
+
+    const blockfrostKey =
+        process.env.BLOCKFROST_KEY || fileConfig.blockfrostKey
+    if (!blockfrostKey) {
+        console.error(
+            'Error: BLOCKFROST_KEY not found.\n' +
+                `Set the BLOCKFROST_KEY env var or add "blockfrostKey" to ${CONFIG_FILE}`
+        )
+        process.exit(1)
+    }
+
+    return { command, network, mnemonic, blockfrostKey }
 }
 
 function parseSignerArg(arg: string): ParsedSigner {
@@ -74,28 +149,8 @@ function parseSignerArg(arg: string): ParsedSigner {
     return result
 }
 
-function parseArgs(): {
-    network: Network
-    mnemonic: string
-    blockfrostKey: string
-    signers: ParsedSigner[]
-} {
+function parseSignerArgs(): ParsedSigner[] {
     const args = process.argv.slice(2)
-
-    const network = args[0] as Network
-    if (!VALID_NETWORKS.includes(network)) {
-        console.error(
-            'Usage: npx tsx scripts/update-signers.ts <preview|preprod> --signer <pubkey>[:<from>:<to>] [...]\n' +
-                '\n' +
-                'Examples:\n' +
-                '  --signer abc123...def456                   # valid forever\n' +
-                '  --signer abc123...def456:1000:2000         # valid from slot 1000 to 2000\n' +
-                '  --signer abc123...def456:1000:             # valid from slot 1000, no end\n' +
-                '  --signer abc123...def456::2000             # no start, valid until slot 2000'
-        )
-        process.exit(1)
-    }
-
     const signers: ParsedSigner[] = []
 
     for (let i = 1; i < args.length; i++) {
@@ -104,45 +159,9 @@ function parseArgs(): {
         }
     }
 
-    const fileConfig = loadConfigFile()
-
-    const mnemonic = process.env.WALLET_MNEMONIC || fileConfig.walletMnemonic
-    if (!mnemonic) {
-        console.error(
-            'Error: WALLET_MNEMONIC not found.\n' +
-                `Set the WALLET_MNEMONIC env var or add "walletMnemonic" to ${CONFIG_FILE}`
-        )
-        process.exit(1)
-    }
-
-    const blockfrostKey =
-        process.env.BLOCKFROST_KEY || fileConfig.blockfrostKey
-    if (!blockfrostKey) {
-        console.error(
-            'Error: BLOCKFROST_KEY not found.\n' +
-                `Set the BLOCKFROST_KEY env var or add "blockfrostKey" to ${CONFIG_FILE}`
-        )
-        process.exit(1)
-    }
-
-    return { network, mnemonic, blockfrostKey, signers }
+    return signers
 }
 
-interface ParsedSigner {
-    pubkey: string
-    validFrom?: number
-    validTo?: number
-}
-
-/**
- * Decode the on-chain signing policy datum into a list of signers.
- *
- * The datum structure is:
- *   Constr(0, [List<[pubkey_bytes, Constr(0, [lower_bound, upper_bound])]>])
- *
- * Where bounds are Constr(0, [BoundType, is_inclusive]):
- *   BoundType: Constr(0,[])=NegInf, Constr(1,[value])=Finite, Constr(2,[])=PosInf
- */
 /**
  * Decode the on-chain signing policy datum into a list of signers.
  *
@@ -239,11 +258,7 @@ async function waitForTx(
     throw new Error(`Timed out waiting for tx ${txHash} after ${timeoutMs}ms`)
 }
 
-async function main() {
-    const { network, mnemonic, blockfrostKey, signers: newSigners } =
-        parseArgs()
-
-    // 1. Set up wallet and provider
+async function setup(network: Network, mnemonic: string, blockfrostKey: string) {
     const provider = new BlockfrostProvider(blockfrostKey)
 
     const wallet = new MeshWallet({
@@ -260,14 +275,13 @@ async function main() {
     const ownerPkh = deserializeAddress(ownerAddr).pubKeyHash
     console.log(`Owner address: ${ownerAddr}`)
 
-    // 2. Initialize validators
     const validators = initializeValidators(ownerPkh, 0)
     const { signerScript, signerAddress, signerPolicyId } = validators
     const priceScript = getPythPriceScript(signerPolicyId, 0)
 
     console.log(`Signer policy ID: ${signerPolicyId}`)
 
-    // 3. Find signer NFT UTxO
+    // Find signer NFT UTxO
     const signerUtxos = await provider.fetchAddressUTxOs(signerAddress)
     const signerNftUtxo = signerUtxos.find((u: UTxO) =>
         u.output.amount.some(
@@ -288,7 +302,10 @@ async function main() {
         `Signer NFT UTxO: ${signerNftUtxo.input.txHash}#${signerNftUtxo.input.outputIndex}`
     )
 
-    // 4. Decode current signing policy
+    // Check whether the on-chain UTxO carries a reference script
+    const hasReferenceScript = !!signerNftUtxo.output.scriptRef
+
+    // Decode current signing policy
     const datumCbor = signerNftUtxo.output.plutusData
     let currentSigners: ParsedSigner[] = []
     if (datumCbor) {
@@ -299,7 +316,57 @@ async function main() {
         }
     }
 
-    // 5. Show diff
+    return {
+        provider,
+        wallet,
+        ownerAddr,
+        ownerPkh,
+        signerScript,
+        signerAddress,
+        signerPolicyId,
+        priceScript,
+        hasReferenceScript,
+        signerNftUtxo,
+        currentSigners,
+    }
+}
+
+async function showCommand(network: Network, mnemonic: string, blockfrostKey: string) {
+    const { currentSigners, priceScript, hasReferenceScript } =
+        await setup(network, mnemonic, blockfrostKey)
+
+    console.log(`Price script hash: ${priceScript.policyId}`)
+    if (!hasReferenceScript) {
+        console.log('  WARNING: no reference script attached to NFT UTxO')
+    }
+
+    console.log(`\n--- Current signers (${currentSigners.length}) ---`)
+    if (currentSigners.length === 0) {
+        console.log('  (none)')
+    } else {
+        for (const s of currentSigners) {
+            console.log(formatSigner(s))
+        }
+    }
+}
+
+async function updateCommand(network: Network, mnemonic: string, blockfrostKey: string) {
+    const newSigners = parseSignerArgs()
+
+    const {
+        provider,
+        wallet,
+        ownerAddr,
+        ownerPkh,
+        signerScript,
+        signerAddress,
+        signerPolicyId,
+        priceScript,
+        signerNftUtxo,
+        currentSigners,
+    } = await setup(network, mnemonic, blockfrostKey)
+
+    // Show diff
     const currentSet = new Set(currentSigners.map((s) => s.pubkey))
     const newSet = new Set(newSigners.map((s) => s.pubkey))
 
@@ -363,14 +430,14 @@ async function main() {
         console.log(`  = KEEP   ${unchanged.length} signer(s)`)
     }
 
-    // 6. Confirm
+    // Confirm
     const ok = await confirm('\nProceed with update?')
     if (!ok) {
         console.log('Aborted.')
         return
     }
 
-    // 7. Build and submit update transaction
+    // Build and submit update transaction
     console.log('\nBuilding update transaction...')
     const walletUtxos = await provider.fetchAddressUTxOs(ownerAddr)
     if (walletUtxos.length === 0) {
@@ -419,7 +486,20 @@ async function main() {
     )
 }
 
+async function main() {
+    const { command, network, mnemonic, blockfrostKey } = parseGlobalArgs()
+
+    switch (command) {
+        case 'show':
+            await showCommand(network, mnemonic, blockfrostKey)
+            break
+        case 'update':
+            await updateCommand(network, mnemonic, blockfrostKey)
+            break
+    }
+}
+
 main().catch((e) => {
-    console.error('Update failed:', e)
+    console.error('Failed:', e)
     process.exit(1)
 })
