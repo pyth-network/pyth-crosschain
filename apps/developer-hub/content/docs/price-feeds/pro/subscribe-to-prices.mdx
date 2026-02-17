@@ -30,6 +30,15 @@ The websocket servers are available at:
   service availability.
 </Callout>
 
+<Callout type="info" title="Expected Behavior During Deployments">
+  During routine deployments, one endpoint may temporarily return connection errors while the others remain operational. If you're using the official SDK or Rust client, you may see **INFO-level logs** showing retry attempts for a single endpoint — this is normal and expected behavior.
+
+  - **INFO logs with retries**: One endpoint is temporarily down, others are serving data. No action needed.
+  - **ERROR logs (all connections dropped)**: All endpoints are unreachable. Check [status.pyth.network](https://status.pyth.network) for outages.
+
+  As long as you're connected to all three endpoints, your application will continue receiving data seamlessly during single-endpoint maintenance.
+</Callout>
+
 <Steps>
   <Step>
   ### 1. Acquire an access token
