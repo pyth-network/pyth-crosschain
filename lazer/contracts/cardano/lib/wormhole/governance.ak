@@ -8,6 +8,13 @@ use wormhole/vaa
 
 // Reference: https://github.com/wormhole-foundation/wormhole/blob/main/whitepapers/0002_governance_messaging.md
 
+// Solana
+pub const emitter_chain: U16 = u16.from_int(1)
+
+// https://github.com/wormhole-foundation/wormhole/blob/e5947bb1bee40e573a022ef37a92e59fec1b1422/sdk/rust/vaas-serde/src/lib.rs#L35
+pub const emitter_address: ByteArray =
+  #"0000000000000000000000000000000000000000000000000000000000000004"
+
 pub type VAAGovernance {
   module: ByteArray,
   action: U8,

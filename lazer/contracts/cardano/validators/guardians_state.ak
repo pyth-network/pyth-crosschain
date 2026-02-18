@@ -5,7 +5,6 @@ use cardano/address.{Script}
 use cardano/assets.{PolicyId}
 use cardano/transaction.{InlineDatum, Output, OutputReference, Transaction}
 use secp256k1
-use types/u16
 use wormhole.{Guardians}
 use wormhole/governance
 use wormhole/vaa.{VAA}
@@ -135,8 +134,10 @@ fn is_valid_guardians_upgrade(
 ) {
   let keys = list.map(upgrade.recovered_keys, secp256k1.public_key)
   let VAA { body, .. } = vaa.parse_and_verify(upgrade.vaa, old, keys)
-  expect (u16.as_int(body.emitter_chain) == 1)?
-  expect (body.emitter_address == #"0000000000000000000000000000000000000000000000000000000000000004")?
   let parsed = governance.parse_guardian_set_upgrade(body.payload)
-  parsed == new
+  and {
+    (body.emitter_chain == governance.emitter_chain)?,
+    (body.emitter_address == governance.emitter_address)?,
+    (parsed == new)?,
+  }
 }
