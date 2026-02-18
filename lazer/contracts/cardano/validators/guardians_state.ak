@@ -1,12 +1,10 @@
-use aiken/collection/list
 use aiken/crypto.{ScriptHash}
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction}
-use secp256k1
 use state_home
 use wormhole.{Guardians}
 use wormhole/governance
-use wormhole/vaa.{VAA}
+use wormhole/vaa.{PreparedVAA, VAA}
 
 const genesis: Guardians =
   Guardians {
@@ -20,7 +18,7 @@ validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Never, id: PolicyId, self: Transaction) {
     let state <- state_home.mint(origin, home, id, self)
     expect guardians: Guardians = state
-    guardians == genesis
+    (guardians == genesis)?
   }
 
   else(_) {
@@ -28,21 +26,14 @@ validator init(origin: OutputReference, home: ScriptHash) {
   }
 }
 
-/// Upgrade VAA with needed preprocessing done off-chain
-pub type PreparedUpgrade {
-  vaa: ByteArray,
-  recovered_keys: List<ByteArray>,
-}
-
 validator update {
   spend(
-    old: Option<Data>,
-    upgrade: PreparedUpgrade,
+    old: Option<Guardians>,
+    upgrade: PreparedVAA,
     utxo: OutputReference,
     self: Transaction,
   ) {
     let old, new <- state_home.spend(old, utxo, self)
-    expect old: Guardians = old
     expect new: Guardians = new
     is_valid_guardians_upgrade(old, new, upgrade)
   }
@@ -55,10 +46,9 @@ validator update {
 fn is_valid_guardians_upgrade(
   old: Guardians,
   new: Guardians,
-  upgrade: PreparedUpgrade,
+  upgrade: PreparedVAA,
 ) {
-  let keys = list.map(upgrade.recovered_keys, secp256k1.public_key)
-  let VAA { body, .. } = vaa.parse_and_verify(upgrade.vaa, old, keys)
+  let VAA { body, .. } = vaa.parse_and_verify_prepared(upgrade, old)
   let parsed = governance.parse_guardian_set_upgrade(body.payload)
   and {
     (body.emitter_chain == governance.emitter_chain)?,

@@ -8,6 +8,17 @@ use types/u64.{U64}
 use types/u8.{U8}
 use wormhole.{Guardians}
 
+/// VAA with needed preprocessing done off-chain
+pub type PreparedVAA {
+  vaa: ByteArray,
+  recovered_keys: List<ByteArray>,
+}
+
+pub fn parse_and_verify_prepared(self: PreparedVAA, guardians: Guardians) -> VAA {
+  let keys = list.map(self.recovered_keys, secp256k1.public_key)
+  parse_and_verify(self.vaa, guardians, keys)
+}
+
 // Reference: https://wormhole.com/docs/protocol/infrastructure/vaas
 
 pub type VAA {

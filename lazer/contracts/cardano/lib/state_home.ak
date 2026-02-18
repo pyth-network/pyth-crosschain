@@ -7,11 +7,33 @@ use aiken/crypto.{ScriptHash}
 use aiken/option
 use cardano/address.{Script}
 use cardano/assets.{PolicyId}
-use cardano/transaction.{InlineDatum, Output, OutputReference, Transaction}
+use cardano/transaction.{
+  InlineDatum, Input, Output, OutputReference, Transaction,
+}
 
 const state_nft: ByteArray = "state"
 
 const owner_nft: ByteArray = "owner"
+
+pub type StateId =
+  PolicyId
+
+pub fn find_state(self: StateId, inputs: List<Input>) -> Data {
+  expect Some(state) =
+    list.find_map(
+      inputs,
+      fn(input) {
+        let credential = input.output.address.payment_credential
+        if credential == Script(self) {
+          expect InlineDatum(state) = input.output.datum
+          Some(state)
+        } else {
+          None
+        }
+      },
+    )
+  state
+}
 
 pub fn mint(
   origin: OutputReference,
@@ -59,10 +81,10 @@ fn burn_state(id: PolicyId, self: Transaction) {
 }
 
 pub fn spend(
-  old: Option<Data>,
+  old: Option<a>,
   utxo: OutputReference,
   self: Transaction,
-  with: fn(Data, Data) -> Bool,
+  with: fn(a, Data) -> Bool,
 ) {
   expect Some(old) = old
   let input = transaction.resolve_input(self.inputs, utxo)

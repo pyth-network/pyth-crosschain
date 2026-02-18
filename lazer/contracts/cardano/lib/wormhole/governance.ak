@@ -15,28 +15,29 @@ pub const emitter_chain: U16 = u16.from_int(1)
 pub const emitter_address: ByteArray =
   #"0000000000000000000000000000000000000000000000000000000000000004"
 
-pub type VAAGovernance {
+pub type GovernanceAction {
   module: ByteArray,
   action: U8,
   chain: U16,
   args: ByteArray,
 }
 
-pub fn parse_vaa_governance(src: ByteArray) -> VAAGovernance {
-  parser.run(vaa_governance, src)
+pub fn parse_governance_action(src: ByteArray) -> GovernanceAction {
+  parser.run(governance_action, src)
 }
 
-const vaa_governance: Parser<VAAGovernance> = {
+const governance_action: Parser<GovernanceAction> = {
     let module <- parse(parser.bytes(32))
     let action <- parse(u8.from_be)
     let chain <- parse(u16.from_be)
     let args <- parse(parser.rest)
 
-    VAAGovernance { module, action, chain, args } |> parser.return
+    GovernanceAction { module, action, chain, args } |> parser.return
   }
 
 pub fn parse_guardian_set_upgrade(src: ByteArray) -> Guardians {
-  let VAAGovernance { module, action, chain, args } = parse_vaa_governance(src)
+  let GovernanceAction { module, action, chain, args } =
+    parse_governance_action(src)
   expect
     (module == "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0Core")?
   expect (u8.as_int(action) == 2)?
