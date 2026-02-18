@@ -1,9 +1,8 @@
 use aiken/collection/list
-use aiken/collection/pairs
 use aiken/crypto
+use aiken/option
 use parser.{Parser, parse}
 use secp256k1
-use types/result.{Err, Ok, Result}
 use types/u8.{U8}
 
 pub type Guardians {
@@ -42,35 +41,37 @@ pub fn has_quorum(
     )
 
   and {
-    (is_ordered_subset(recovered, self.set) |> result.is_ok())?,
+    (not_ordered_subset(recovered, self.set) |> option.is_none())?,
     (list.length(recovered) >= quorum(self))?,
   }
 }
 
 /// Checks that provided pairs of indices and values are an ordered subset of
-/// the original list. If not, returns first index that failed.
-fn is_ordered_subset(
-  self: Pairs<Int, a>,
-  original: List<a>,
-) -> Result<Void, Int> {
-  self
-    |> pairs.foldl(
-        // initial state is to the left of the original list
-        Ok((-1, original)),
-        fn(index, left, state) {
-          let (seen, unseen) <- result.and_then(state)
-          // check that index is increasing
-          let _ <- result.guard_then(index > seen, index)
+/// the original list. Returns first index that failed or `None` otherwise.
+fn not_ordered_subset(self: Pairs<Int, a>, original: List<a>) -> Option<Int> {
+  // initial state is to the left of the original list
+  not_ordered_subset_(self, -1, original)
+}
+
+fn not_ordered_subset_(self, seen, unseen) {
+  when self is {
+    [] -> None
+    [Pair(index, left), ..self] ->
+      // check that index is increasing
+      if index > seen {
+        when list.drop(unseen, index - 1 - seen) is {
           // find matching item in original list
-          when list.drop(unseen, index - 1 - seen) is {
-            [right, ..unseen] -> {
-              let _ <- result.guard_then(left == right, index)
+          [right, ..unseen] ->
+            if left == right {
               // if matches, advance past seen item
-              Ok((index, unseen))
+              not_ordered_subset_(self, index, unseen)
+            } else {
+              Some(index)
             }
-            _ -> Err(index)
-          }
-        },
-      )
-    |> result.void
+          _ -> Some(index)
+        }
+      } else {
+        Some(index)
+      }
+  }
 }
