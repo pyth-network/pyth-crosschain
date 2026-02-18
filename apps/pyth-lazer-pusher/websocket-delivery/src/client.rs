@@ -54,25 +54,20 @@ impl WebsocketDeliveryClient {
         self.incoming_rx.take()
     }
 
-    pub async fn send_all<B>(&self, build_message: B) -> usize
-    where
-        B: Fn(&Url) -> String,
-    {
+    /// Send message to all connected endpoints. Returns number of messages sent.
+    /// If any endpoint is disconnected, the message will be dropped.
+    pub async fn broadcast(&self, message: &str) -> usize {
         let mut sent_count = 0;
         for conn_arc in &self.connections {
             let conn = conn_arc.lock().await;
             if conn.is_connected() {
-                let msg = build_message(conn.endpoint());
+                let msg = message.to_string();
                 if conn.send(msg).await {
                     sent_count += 1;
                 }
             }
         }
         sent_count
-    }
-
-    pub async fn send_all_same(&self, message: &str) -> usize {
-        self.send_all(|_| message.to_string()).await
     }
 
     pub async fn connected_count(&self) -> usize {

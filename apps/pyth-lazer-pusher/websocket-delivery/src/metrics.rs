@@ -6,7 +6,6 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct DeliveryMetrics {
     pub messages_sent: CounterVec,
-    pub delivery_latency: Histogram,
     pub connections_active: Gauge,
     pub connection_state: GaugeVec,
     pub reconnect_attempts: Counter,
@@ -28,13 +27,6 @@ impl DeliveryMetrics {
                 Opts::new("ws_messages_sent_total", "WebSocket messages sent")
                     .const_labels(const_labels.clone()),
                 &["status"],
-            )
-            .expect("failed to create metric"),
-
-            delivery_latency: Histogram::with_opts(
-                HistogramOpts::new("ws_delivery_latency_seconds", "Message delivery latency")
-                    .const_labels(const_labels.clone())
-                    .buckets(vec![0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]),
             )
             .expect("failed to create metric"),
 
@@ -73,7 +65,6 @@ impl DeliveryMetrics {
 
     pub fn register(&self, registry: &Registry) -> Result<(), prometheus::Error> {
         registry.register(Box::new(self.messages_sent.clone()))?;
-        registry.register(Box::new(self.delivery_latency.clone()))?;
         registry.register(Box::new(self.connections_active.clone()))?;
         registry.register(Box::new(self.connection_state.clone()))?;
         registry.register(Box::new(self.reconnect_attempts.clone()))?;
@@ -82,9 +73,8 @@ impl DeliveryMetrics {
         Ok(())
     }
 
-    pub fn record_success(&self, latency_secs: f64) {
+    pub fn record_success(&self) {
         self.messages_sent.with_label_values(&["success"]).inc();
-        self.delivery_latency.observe(latency_secs);
     }
 
     pub fn record_failure(&self, status: &str) {

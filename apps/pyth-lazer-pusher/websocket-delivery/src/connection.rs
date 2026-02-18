@@ -172,10 +172,16 @@ impl Connection {
 
     pub async fn send(&self, text: String) -> bool {
         let Some(ref tx) = self.tx else {
+            if let Some(ref m) = self.metrics {
+                m.record_failure("not_started");
+            }
             return false;
         };
 
         if !self.is_connected() {
+            if let Some(ref m) = self.metrics {
+                m.record_failure("not_connected");
+            }
             return false;
         }
 
@@ -230,7 +236,7 @@ async fn run_connection_manager(
 
         // Connect (with backoff on reconnects)
         if !is_first_attempt {
-            debug!(endpoint = %endpoint_str, delay_ms = reconnect_delay.as_millis(), "attempting reconnection");
+            info!(endpoint = %endpoint_str, delay_ms = reconnect_delay.as_millis(), "attempting reconnection");
             if let Some(ref m) = metrics {
                 m.record_reconnect_attempt();
             }
@@ -244,6 +250,13 @@ async fn run_connection_manager(
         }
         is_first_attempt = false;
 
+        // Drain stale messages that accumulated during the disconnect and reconnect delay
+        while outgoing_rx.try_recv().is_ok() {
+            if let Some(ref m) = metrics {
+                m.record_failure("drained");
+            }
+        }
+
         let ws = match connect_async(endpoint.as_str()).await {
             Ok((ws, _)) => {
                 info!(endpoint = %endpoint_str, "connected");
@@ -255,7 +268,7 @@ async fn run_connection_manager(
                 ws
             }
             Err(e) => {
-                debug!(endpoint = %endpoint_str, ?e, "connection failed");
+                warn!(endpoint = %endpoint_str, ?e, "connection failed");
                 reconnect_delay = (reconnect_delay * 2).min(config.reconnect_delay_max);
                 continue;
             }
@@ -291,8 +304,6 @@ async fn run_connection_manager(
             debug!(endpoint = %endpoint_str, "connection dropped, exiting manager");
             break;
         }
-
-        while outgoing_rx.try_recv().is_ok() {}
     }
 }
 
@@ -316,7 +327,13 @@ async fn run_session_loop(
             Some(msg) = outgoing_rx.recv() => {
                 if let Err(e) = write.send(msg).await {
                     error!(?e, "failed to send WebSocket message");
+                    if let Some(m) = ctx.metrics {
+                        m.record_failure("ws_send_error");
+                    }
                     return DisconnectReason::SendError;
+                }
+                if let Some(m) = ctx.metrics {
+                    m.record_success();
                 }
             }
 
