@@ -24,14 +24,30 @@ import { MintingValidator, SpendingValidator } from "./validator.js";
 import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import { runDevnetSession } from "./devnet.js";
 
-function getClient(network: NetworkId, mnemonic: string): SigningClient {
+function getClient(
+  network: NetworkId | "custom",
+  mnemonic: string,
+): SigningClient {
   return createClient({
-    network,
-    provider: {
-      kupoUrl: "http://localhost:1442",
-      ogmiosUrl: "http://localhost:1337",
-      type: "kupmios",
-    },
+    network: network === "custom" ? 0 : network,
+    provider:
+      network === "custom"
+        ? {
+            kupoUrl: "http://localhost:1442",
+            ogmiosUrl: "http://localhost:1337",
+            type: "kupmios",
+          }
+        : {
+            baseUrl: `https://${
+              {
+                mainnet: "api",
+                preview: "preview",
+                preprod: "preprod",
+              }[network]
+            }.koios.rest/api/v1`,
+            token: process.env.KOIOS_API_KEY!,
+            type: "koios",
+          },
     wallet: {
       mnemonic,
       type: "seed",
