@@ -177,7 +177,10 @@ class Publisher:
                     )
                 self._handle_response(push_response, list(oracle_pxs.keys()))
             except PushError:
-                # since rate limiting is expected, don't necessarily log
+                logger.error("Push API call failed")
+                self._update_attempts_total(
+                    "error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys())
+                )
                 pass
             except Exception as e:
                 logger.exception("Unexpected exception in push request: {}", repr(e))

@@ -115,21 +115,21 @@ class SedaListener:
             logger.info("No SEDA feeds needed")
             return
 
-        await asyncio.gather(
-            *[
-                self._run_single(feed_name, self.feeds[feed_name])
-                for feed_name in self.feeds
-            ]
-        )
-
-    async def _run_single(self, feed_name: str, feed_config: SedaFeedConfig) -> None:
-        """Run continuous polling loop for a single feed."""
         async with httpx.AsyncClient(timeout=self.poll_timeout) as client:
-            while True:
-                result = await self.poll_single_feed(client, feed_name, feed_config)
-                await asyncio.sleep(
-                    self.poll_interval if result["ok"] else self.poll_failure_interval
-                )
+            await asyncio.gather(
+                *[
+                    self._run_single(client, feed_name, self.feeds[feed_name])
+                    for feed_name in self.feeds
+                ]
+            )
+
+    async def _run_single(self, client: httpx.AsyncClient, feed_name: str, feed_config: SedaFeedConfig) -> None:
+        """Run continuous polling loop for a single feed."""
+        while True:
+            result = await self.poll_single_feed(client, feed_name, feed_config)
+            await asyncio.sleep(
+                self.poll_interval if result["ok"] else self.poll_failure_interval
+            )
 
     async def poll_single_feed(
         self,
@@ -172,16 +172,18 @@ class SedaListener:
         data: dict[str, Any],
     ) -> PollResult:
         """Execute HTTP POST request to SEDA API."""
+        resp: httpx.Response | None = None
         try:
-            resp = await client.post(
-                self.url, headers=headers, params=params, json=data
-            )
+            resp = await client.post(self.url, headers=headers, params=params, json=data)
             resp.raise_for_status()
             return {"ok": True, "status": resp.status_code, "json": resp.json()}
         except httpx.HTTPStatusError as e:
             return {"ok": False, "status": e.response.status_code, "error": repr(e)}
         except Exception as e:
             return {"ok": False, "status": None, "error": repr(e)}
+        finally:
+            if resp is not None:
+                await resp.aclose()
 
     def _parse_seda_message(self, feed_name: str, message: dict[str, Any]) -> None:
         """Parse SEDA response and store prices in state."""
