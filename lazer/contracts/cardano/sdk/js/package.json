@@ -1,0 +1,45 @@
+{
+  "dependencies": {
+    "@evolution-sdk/devnet": "^1.1.17",
+    "@evolution-sdk/evolution": "^0.3.17",
+    "@pythnetwork/shared-lib": "workspace:",
+    "date-fns": "catalog:",
+    "yargs": "catalog:"
+  },
+  "description": "TypeScript SDK for the Pyth Lazer Cardano contract",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/dockerode": "^4.0.1",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/yargs": "catalog:",
+    "jest": "catalog:",
+    "tsx": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "name": "@pythnetwork/pyth-lazer-cardano-js",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "directory": "lazer/contracts/sui/sdk/pyth-lazer-cardano-js",
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain"
+  },
+  "scripts": {
+    "cli": "pnpm tsx --env-file=.env src/cli.ts",
+    "build": "ts-duality --copyOtherFiles",
+    "clean": "rm -rf ./dist",
+    "test:types": "tsc",
+    "test:unit": "test-unit"
+  },
+  "type": "module",
+  "version": "0.0.0"
+}
