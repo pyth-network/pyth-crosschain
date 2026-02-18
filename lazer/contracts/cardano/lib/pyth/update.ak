@@ -2,11 +2,20 @@ use aiken/collection/list
 use aiken/crypto.{Signature, VerificationKey}
 use aiken/interval.{Interval}
 use parser.{Parser, parse}
+use state_home.{StateId}
 use types/u16
 
 const solana_format_magic_le = #"b9011a82"
 
+pub type Governance {
+  guardians: StateId,
+  emitter_chain: Int,
+  emitter_address: ByteArray,
+  seen_sequence: Int,
+}
+
 pub type TrustedSigners {
+  governance: Governance,
   set: List<TrustedSigner>,
 }
 
@@ -70,6 +79,12 @@ const price_update: Parser<PriceUpdate> = {
 
 const test_signers: TrustedSigners =
   TrustedSigners {
+    governance: Governance {
+      guardians: #"",
+      emitter_chain: 1,
+      emitter_address: #"",
+      seen_sequence: 0,
+    },
     set: [
       TrustedSigner {
         key: #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",

@@ -25,6 +25,7 @@ pub fn find_state(self: StateId, inputs: List<Input>) -> Data {
       fn(input) {
         let credential = input.output.address.payment_credential
         if credential == Script(self) {
+          expect assets.has_nft_strict(input.output.value, self, state_nft)?
           expect InlineDatum(state) = input.output.datum
           Some(state)
         } else {
