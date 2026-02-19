@@ -197,14 +197,9 @@ class SedaListener:
         result = message["data"]["result"]
 
         price = result[self.price_field]
-        timestamp_field = result[self.timestamp_field]
-        if isinstance(timestamp_field, str):
-            timestamp = datetime.datetime.fromisoformat(timestamp_field).timestamp()
-        elif isinstance(timestamp_field, int):
-            timestamp = timestamp_field / 1000.0
-        elif isinstance(timestamp_field, float):
-            timestamp = timestamp_field
-        logger.debug("SEDA timestamp: {}", timestamp)
+        timestamp = datetime.datetime.fromisoformat(
+            result[self.timestamp_field]
+        ).timestamp()
         session_flag = (
             result[self.session_flag_field] if self.session_flag_field else False
         )
