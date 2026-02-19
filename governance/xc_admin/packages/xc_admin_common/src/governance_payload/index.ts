@@ -22,8 +22,14 @@ import {
 import { EvmExecute } from "./ExecuteAction";
 import { SetTransactionFee } from "./SetTransactionFee";
 import { WithdrawFee } from "./WithdrawFee";
-import { UpgradeSuiLazerContract } from "./UpgradeLazerContract";
-import { UpdateTrustedSigner264Bit } from "./UpdateTrustedSigner";
+import {
+  UpgradeSuiLazerContract,
+  UpgradeCardanoLazerContract,
+} from "./UpgradeLazerContract";
+import {
+  UpdateTrustedSigner256Bit,
+  UpdateTrustedSigner264Bit,
+} from "./UpdateTrustedSigner";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
@@ -83,8 +89,17 @@ export function decodeGovernancePayload(
       return WithdrawFee.decode(data);
     case "UpgradeSuiLazerContract":
       return UpgradeSuiLazerContract.decode(data);
+    case "UpgradeCardanoLazerContract":
+      return UpgradeCardanoLazerContract.decode(data);
     case "UpdateTrustedSigner":
-      return UpdateTrustedSigner264Bit.decode(data);
+      const payloadLength = data.length - PythGovernanceHeader.span;
+      if (payloadLength == UpdateTrustedSigner264Bit.layout.span) {
+        return UpdateTrustedSigner264Bit.decode(data);
+      } else if (payloadLength == UpdateTrustedSigner256Bit.layout.span) {
+        return UpdateTrustedSigner256Bit.decode(data);
+      } else {
+        return undefined;
+      }
     default:
       return undefined;
   }

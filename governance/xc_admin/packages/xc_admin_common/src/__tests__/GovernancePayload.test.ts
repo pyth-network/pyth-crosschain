@@ -14,6 +14,9 @@ import {
   LazerAction,
   UpgradeSuiLazerContract,
   UpdateTrustedSigner264Bit,
+  UpdateTrustedSigner256Bit,
+  UpgradeCardanoLazerContract,
+  CardanoLazerScript,
 } from "..";
 import * as fc from "fast-check";
 import { type ChainName, CHAINS } from "../chains";
@@ -302,15 +305,33 @@ test("GovernancePayload ser/de", (done) => {
     ),
   ).toBeTruthy();
 
-  const updateTrustedSigner = new UpdateTrustedSigner264Bit(
+  const upgradeCardanoLazerContract = new UpgradeCardanoLazerContract(
+    "cardano_mainnet",
+    CardanoLazerScript.spend,
+    "34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+  );
+  const upgradeCardanoLazerContractBuffer =
+    upgradeCardanoLazerContract.encode();
+  console.log(upgradeCardanoLazerContractBuffer.toJSON());
+  expect(
+    upgradeCardanoLazerContractBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 2, 234, 191, 52, 175, 120, 123, 102, 232, 177, 8,
+        165, 215, 221, 127, 145, 34, 48, 22, 96, 121, 217, 245, 179, 11, 104,
+        207, 2, 15, 37, 242,
+      ]),
+    ),
+  );
+
+  const updateTrustedSigner264Bit = new UpdateTrustedSigner264Bit(
     "sui",
     "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b",
     10794n,
   );
-  const updateTrustedSignerBuffer = updateTrustedSigner.encode();
-  console.log(updateTrustedSignerBuffer.toJSON());
+  const updateTrustedSigner264BitBuffer = updateTrustedSigner264Bit.encode();
+  console.log(updateTrustedSigner264BitBuffer.toJSON());
   expect(
-    updateTrustedSignerBuffer.equals(
+    updateTrustedSigner264BitBuffer.equals(
       Buffer.from([
         80, 84, 71, 77, 3, 1, 0, 21, 3, 164, 56, 15, 1, 19, 110, 178, 100, 15,
         144, 193, 126, 30, 49, 158, 2, 187, 175, 190, 239, 46, 110, 103, 220,
@@ -318,6 +339,23 @@ test("GovernancePayload ser/de", (done) => {
       ]),
     ),
   ).toBeTruthy();
+
+  const updateTrustedSigner256Bit = new UpdateTrustedSigner256Bit(
+    "cardano_mainnet",
+    "74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+    10794n,
+  );
+  const updateTrustedSigner256BitBuffer = updateTrustedSigner256Bit.encode();
+  console.log(updateTrustedSigner256BitBuffer.toJSON());
+  expect(
+    updateTrustedSigner256BitBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 1, 234, 191, 116, 49, 58, 101, 37, 237, 249, 153, 54,
+        170, 20, 119, 233, 76, 114, 188, 92, 198, 23, 178, 23, 69, 245, 240, 50,
+        150, 243, 21, 68, 97, 242, 20, 0, 0, 0, 0, 0, 0, 42, 42,
+      ]),
+    ),
+  );
 
   done();
 });
@@ -499,6 +537,23 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           return new UpgradeSuiLazerContract(
             header.targetChainId,
             version,
+            buffer,
+          );
+        });
+    } else if (header.action === "UpgradeCardanoLazerContract") {
+      const scripts = Object.values(CardanoLazerScript);
+      return fc
+        .record({
+          script: fc.integer({
+            min: scripts[0]!,
+            max: scripts[scripts.length - 1]!,
+          }),
+          buffer: hexBytesArb({ minLength: 28, maxLength: 28 }),
+        })
+        .map(({ script, buffer }) => {
+          return new UpgradeCardanoLazerContract(
+            header.targetChainId,
+            script as CardanoLazerScript,
             buffer,
           );
         });

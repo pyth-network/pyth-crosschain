@@ -41,3 +41,54 @@ export class UpgradeSuiLazerContract extends PythGovernanceActionImpl {
     });
   }
 }
+
+export class UpgradeCardanoLazerContract extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<
+    Readonly<{ script: number; hash: string }>
+  > = BufferLayout.struct([
+    BufferLayout.u8("script"),
+    BufferLayoutExt.hexBytes(28, "hash"),
+  ]);
+
+  constructor(
+    targetChainId: ChainName,
+    readonly script: CardanoLazerScript,
+    readonly hash: string,
+  ) {
+    super(targetChainId, "UpgradeCardanoLazerContract");
+  }
+
+  static decode(data: Buffer): UpgradeCardanoLazerContract | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "UpgradeCardanoLazerContract",
+      this.layout,
+    );
+    if (!decoded) return undefined;
+
+    const { script, hash } = decoded[1];
+    if (!Object.values<number>(CardanoLazerScript).includes(script))
+      return undefined;
+
+    return new UpgradeCardanoLazerContract(
+      decoded[0].targetChainId,
+      script as CardanoLazerScript,
+      hash,
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(UpgradeCardanoLazerContract.layout, {
+      script: this.script,
+      hash: this.hash,
+    });
+  }
+}
+
+export type CardanoLazerScript =
+  (typeof CardanoLazerScript)[keyof typeof CardanoLazerScript];
+
+export const CardanoLazerScript = {
+  spend: 1,
+  withdraw: 2,
+} as const;

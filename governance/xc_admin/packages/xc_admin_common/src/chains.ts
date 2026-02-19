@@ -124,6 +124,9 @@ export const RECEIVER_CHAINS = {
   injective_evm: 60092,
   orange: 60093,
   tempo: 60094,
+  cardano_mainnet: 60095,
+  cardano_preprod: 60096,
+  cardano_preview: 60097,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

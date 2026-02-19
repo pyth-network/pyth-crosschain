@@ -32,6 +32,7 @@ export const EvmExecutorAction = {
 export const LazerAction = {
   UpgradeSuiLazerContract: 0,
   UpdateTrustedSigner: 1,
+  UpgradeCardanoLazerContract: 2,
 };
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
@@ -74,6 +75,8 @@ export function toActionName(
         return "UpgradeSuiLazerContract";
       case 1:
         return "UpdateTrustedSigner";
+      case 2:
+        return "UpgradeCardanoLazerContract";
     }
   }
   return undefined;
