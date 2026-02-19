@@ -176,8 +176,8 @@ class Publisher:
                         external_perp_pxs=external_perp_pxs,
                     )
                 self._handle_response(push_response, list(oracle_pxs.keys()))
-            except PushError:
-                logger.error("Push API call failed")
+            except PushError as e:
+                logger.exception("Push API call failed: {}", repr(e))
                 self._update_attempts_total(
                     "error", PushErrorReason.INTERNAL_ERROR, list(oracle_pxs.keys())
                 )
