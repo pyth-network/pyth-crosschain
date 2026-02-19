@@ -6,11 +6,17 @@
  *
  * In other places with `any`, we are simply accepting any type as `A`.
  */
-import type { Data, ScriptHash, UTxO } from "@evolution-sdk/evolution";
+import type {
+  Data,
+  ScriptHash,
+  SigningClient,
+  UTxO,
+} from "@evolution-sdk/evolution";
 import {
   Address,
-  Bytes,
   Cardano,
+  CBOR,
+  Effect,
   InlineDatum,
   PolicyId,
   Schema,
@@ -22,9 +28,27 @@ import type {
   PayToAddressParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
+import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
 
+const BASE_FEE = 1_000_000n;
 // TODO: env/param?
 const NETWORK_ID: 0 | 1 = 0;
+
+export const toMe = async (
+  client: SigningClient,
+  assets: Cardano.Assets.Assets,
+) => {
+  const { coinsPerUtxoByte } = await client.getProtocolParameters();
+  const address = await client.address();
+  const fee =
+    Effect.runSync(
+      calculateMinimumUtxoLovelace({ address, assets, coinsPerUtxoByte }),
+    ) + BASE_FEE;
+  return {
+    address: await client.address(),
+    assets: Cardano.Assets.addLovelace(assets, fee),
+  };
+};
 
 type RedeemerArg<T> = T | ((input: IndexedInput) => T);
 type DataSchema<T> = Schema.Schema<T, any>;
@@ -103,9 +127,9 @@ abstract class Validator<Params extends readonly any[], Redeemer> {
           params,
         )
       : this.blueprint.compiledCode;
-    const script = new Cardano.PlutusV3.PlutusV3({
-      bytes: Bytes.fromHex(compiledCode),
-    });
+    const decoded = UPLC.decodeDoubleCborHexToFlat(compiledCode);
+    const bytes = CBOR.toCBORBytes(decoded);
+    const script = new Cardano.PlutusV3.PlutusV3({ bytes });
     return {
       hash: Cardano.ScriptHash.fromScript(script),
       script,
@@ -181,7 +205,11 @@ export type SpendingValidatorBlueprint<
 };
 
 type SpendingScript<Datum> = Script & {
-  receive: (assets: Cardano.Assets.Assets, datum: Datum) => PayToAddressParams;
+  receive: (
+    assets: Cardano.Assets.Assets,
+    datum: Datum,
+    options?: { coinsPerUtxoByte?: bigint },
+  ) => PayToAddressParams;
 };
 
 export class SpendingValidator<
@@ -219,17 +247,32 @@ export class SpendingValidator<
     const { script, hash } = this.applyScript(params);
     return {
       hash,
-      receive: (assets, datum) => ({
-        address: new Address.Address({
+      receive: (assets, datumValue, { coinsPerUtxoByte } = {}) => {
+        const address = new Address.Address({
           networkId: NETWORK_ID,
           paymentCredential: hash,
-        }),
-        assets,
-        datum: new InlineDatum.InlineDatum({
-          data: applyPlutusOrWithSchema(this.blueprint.datum, datum),
-        }),
-        script,
-      }),
+        });
+        const datum = new InlineDatum.InlineDatum({
+          data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
+        });
+        const fee = coinsPerUtxoByte
+          ? Effect.runSync(
+              calculateMinimumUtxoLovelace({
+                address,
+                assets,
+                coinsPerUtxoByte,
+                datum,
+                scriptRef: script,
+              }),
+            ) + BASE_FEE
+          : 0n;
+        return {
+          address,
+          assets: Cardano.Assets.addLovelace(assets, fee),
+          datum,
+          script,
+        };
+      },
       script,
     };
   }

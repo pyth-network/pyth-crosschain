@@ -5,7 +5,7 @@ import path from "node:path";
 import process from "node:process";
 import { promisify } from "node:util";
 import type { SigningClient } from "@evolution-sdk/evolution";
-import { Cardano, createClient, Either } from "@evolution-sdk/evolution";
+import { Cardano, createClient, Data, Either } from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
   DEFAULT_CODEGEN_CONFIG,
@@ -19,7 +19,7 @@ import {
   Wormhole_state_init_mint,
   Wormhole_state_update_spend,
 } from "./offchain.js";
-import { MintingValidator, SpendingValidator } from "./validator.js";
+import { MintingValidator, SpendingValidator, toMe } from "./transaction.js";
 
 function getClient(
   network: NetworkId | "custom",
@@ -114,17 +114,20 @@ parser.command(
       },
       network: {
         choices: ["mainnet", "preprod", "preview", "custom"] as const,
+        default: process.env.CARDANO_NETWORK as NetworkId | undefined,
         demandOption: true,
         description: "Cardano network to use",
       },
     }),
   async ({ network, mnemonic }) => {
-    const client = getClient(network === "custom" ? 0 : network, mnemonic);
+    const client = getClient(network, mnemonic);
 
     const [origin] = await client.getWalletUtxos();
     if (!origin) {
       throw new Error("No UTxO to use as origin");
     }
+
+    const { coinsPerUtxoByte } = await client.getProtocolParameters();
 
     const spending = SpendingValidator.new(Wormhole_state_update_spend);
     const spendingScript = spending.script();
@@ -134,37 +137,46 @@ parser.command(
       spendingScript.hash.hash,
     );
     const stateToken = mintingScript.asset(
-      Cardano.AssetName.fromBytes(Buffer.from("state", "utf-8")),
+      Cardano.AssetName.fromBytes(Buffer.from("Pyth State", "utf-8")),
       1n,
     );
     const ownerToken = mintingScript.asset(
-      Cardano.AssetName.fromBytes(Buffer.from("owner", "utf-8")),
+      Cardano.AssetName.fromBytes(Buffer.from("Pyth Ops", "utf-8")),
       1n,
     );
-    const stateOutput = spendingScript.receive(stateToken, {
-      set: [Buffer.from("58cc3ae5c097b213ce3c81979e1b9f9570746aa5", "hex")],
-      set_index: 0n,
-    });
+    const stateOutput = spendingScript.receive(
+      stateToken,
+      {
+        set: [Buffer.from("58cc3ae5c097b213ce3c81979e1b9f9570746aa5", "hex")],
+        set_index: 0n,
+      },
+      { coinsPerUtxoByte },
+    );
 
     const tx = await client
       .newTx()
       .collectFrom({ inputs: [origin] })
       .attachScript(mintingScript)
       .mintAssets(
-        minting.mint(Cardano.Assets.merge(stateToken, ownerToken), "Never"),
+        minting.mint(
+          Cardano.Assets.merge(stateToken, ownerToken),
+          Data.constr(0n, []),
+        ),
       )
       .payToAddress(stateOutput)
-      .payToAddress({
-        address: await client.address(),
-        assets: ownerToken,
-      })
+      .payToAddress(await toMe(client, ownerToken))
       .buildEither({ debug: true });
 
-    const digest = Either.getOrThrowWith(tx, (e) => {
+    const digest = await Either.getOrThrowWith(tx, (e) => {
       throw JSON.stringify(e, undefined, 2);
     }).signAndSubmit();
 
-    console.log("Digest: ", digest);
+    await client.awaitTx(digest);
+
+    console.log(
+      "Wallet: ",
+      JSON.stringify(await client.getWalletUtxos(), undefined, 2),
+    );
   },
 );
 
@@ -176,7 +188,7 @@ parser.command(
     if (!process.env.CARDANO_MNEMONIC) {
       throw new Error("missing CARDANO_MNEMONIC");
     }
-    const client = getClient(0, process.env.CARDANO_MNEMONIC);
+    const client = getClient("custom", process.env.CARDANO_MNEMONIC);
     await runDevnetSession(client).catch(console.error);
   },
 );

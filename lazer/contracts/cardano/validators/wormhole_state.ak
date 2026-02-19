@@ -15,7 +15,7 @@ const genesis: Guardians =
   }
 
 validator init(origin: OutputReference, home: ScriptHash) {
-  mint(_: Never, id: PolicyId, self: Transaction) {
+  mint(_: Data, id: PolicyId, self: Transaction) {
     let state <- state_home.mint(origin, home, id, self)
     expect guardians: Guardians = state
     (guardians == genesis)?

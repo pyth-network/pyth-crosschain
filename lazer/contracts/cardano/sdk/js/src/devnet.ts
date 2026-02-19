@@ -1,5 +1,7 @@
+/** biome-ignore-all lint/suspicious/noConsole: used in CLI */
 import { Cluster, Config, Container, Genesis } from "@evolution-sdk/devnet";
-import { Address, type SigningClient } from "@evolution-sdk/evolution";
+import type { SigningClient } from "@evolution-sdk/evolution";
+import { Address } from "@evolution-sdk/evolution";
 import * as dateFns from "date-fns";
 
 const CLEAR_LINE = "\r\x1b[K";
@@ -9,15 +11,15 @@ export async function runDevnetSession(client: SigningClient) {
 
   const genesis: Config.ShelleyGenesis = {
     ...Config.DEFAULT_SHELLEY_GENESIS,
-    slotLength: 0.1,
     epochLength: 100,
     initialFunds: { [Address.toHex(address)]: 1_000_000_000 },
+    slotLength: 0.1,
   };
   const cluster = await Cluster.make({
     clusterName: "cli-devnet",
-    ports: { node: 3001, submit: 3002 },
     kupo: { enabled: true, port: 1442 },
     ogmios: { enabled: true, port: 1337 },
+    ports: { node: 3001, submit: 3002 },
     shelleyGenesis: genesis,
   });
 
@@ -36,6 +38,7 @@ export async function runDevnetSession(client: SigningClient) {
     return await Promise.all(
       (["cardanoNode", "kupo", "ogmios"] as const).map(
         async (service) =>
+          // biome-ignore lint/style/noNonNullAssertion: false positive
           [service, await Container.getStatus(cluster[service]!)] as const,
       ),
     );
