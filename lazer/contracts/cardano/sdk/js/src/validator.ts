@@ -1,14 +1,20 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: `I` in `Schema<A, I>` is
+ * invariant, so putting `Data` there results in errors when trying to match
+ * individual types in `Data` union againts each other. Our goal is mainly to
+ * type user-facing validator methods, which don't care about encoded type, so
+ * using `any` there only affects code in this file.
+ *
+ * In other places with `any`, we are simply accepting any type as `A`.
+ */
+import type { Data, ScriptHash, UTxO } from "@evolution-sdk/evolution";
 import {
   Address,
-  Data,
-  InlineDatum,
-  Schema,
-  ScriptHash,
-  UTxO,
-  PolicyId,
-  Cardano,
-  UPLC,
   Bytes,
+  Cardano,
+  InlineDatum,
+  PolicyId,
+  Schema,
+  UPLC,
 } from "@evolution-sdk/evolution";
 import type {
   CollectFromParams,
@@ -21,13 +27,11 @@ import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/Redeeme
 const NETWORK_ID: 0 | 1 = 0;
 
 type RedeemerArg<T> = T | ((input: IndexedInput) => T);
-// TODO: Second parameter's invariance in `Schema` type makes typing tricky
 type DataSchema<T> = Schema.Schema<T, any>;
 type WithSchema<T> = ReturnType<typeof Data.withSchema<T, any>>;
 type PlutusOrWithSchema<T> = T extends Data.Data
   ? Data.DataSchema
   : WithSchema<T>;
-// biome-ignore lint/suspicious/noExplicitAny: accepts any types
 type DataSchemas<Params extends readonly any[]> = {
   readonly [I in keyof Params]: DataSchema<Params[I]>;
 };
@@ -57,7 +61,6 @@ function applyRedeemerSchema<T>(
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: accepts any types
 function applyParamsWithSchemasToScript<Params extends readonly any[]>(
   schemas: DataSchemas<Params>,
   compiledCode: string,
@@ -72,11 +75,7 @@ export type Script = {
   hash: ScriptHash.ScriptHash;
 };
 
-type ValidatorBlueprint<
-  // biome-ignore lint/suspicious/noExplicitAny: accepts any types
-  Params extends readonly any[],
-  Redeemer,
-> = {
+type ValidatorBlueprint<Params extends readonly any[], Redeemer> = {
   readonly title: string;
   readonly hash: string;
   readonly compiledCode: string;
@@ -108,8 +107,8 @@ abstract class Validator<Params extends readonly any[], Redeemer> {
       bytes: Bytes.fromHex(compiledCode),
     });
     return {
-      script,
       hash: Cardano.ScriptHash.fromScript(script),
+      script,
     };
   }
 
@@ -124,7 +123,6 @@ type MintingScript = Script & {
 };
 
 export type MintingValidatorBlueprint<
-  // biome-ignore lint/suspicious/noExplicitAny: accepts any types
   Params extends readonly any[],
   Redeemer,
 > = ValidatorBlueprint<Params, Redeemer> & {
@@ -132,7 +130,6 @@ export type MintingValidatorBlueprint<
 };
 
 export class MintingValidator<
-  // biome-ignore lint/suspicious/noExplicitAny: accepts any types
   Params extends readonly any[],
   Redeemer,
 > extends Validator<Params, Redeemer> {
@@ -159,10 +156,10 @@ export class MintingValidator<
   script(...params: Params): MintingScript {
     const { script, hash } = this.applyScript(params);
     return {
-      script,
-      hash,
       asset: (name, quantity) =>
         Cardano.Assets.fromAsset(new PolicyId.PolicyId(hash), name, quantity),
+      hash,
+      script,
     };
   }
 
@@ -175,7 +172,6 @@ export class MintingValidator<
 }
 
 export type SpendingValidatorBlueprint<
-  // biome-ignore lint/suspicious/noExplicitAny: accepts any types
   Params extends readonly any[],
   Redeemer,
   Datum,
@@ -189,7 +185,6 @@ type SpendingScript<Datum> = Script & {
 };
 
 export class SpendingValidator<
-  // biome-ignore lint/suspicious/noExplicitAny: accepts any types
   Params extends readonly any[],
   Redeemer,
   Datum,
@@ -223,7 +218,6 @@ export class SpendingValidator<
   script(...params: Params): SpendingScript<Datum> {
     const { script, hash } = this.applyScript(params);
     return {
-      script,
       hash,
       receive: (assets, datum) => ({
         address: new Address.Address({
@@ -236,11 +230,12 @@ export class SpendingValidator<
         }),
         script,
       }),
+      script,
     };
   }
 
   spend(
-    inputs: ReadonlyArray<UTxO.UTxO>,
+    inputs: readonly UTxO.UTxO[],
     redeemer: RedeemerArg<Redeemer>,
   ): CollectFromParams {
     return {

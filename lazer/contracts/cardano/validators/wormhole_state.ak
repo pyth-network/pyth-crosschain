@@ -53,6 +53,7 @@ fn is_valid_guardians_upgrade(
   and {
     (body.emitter_chain == governance.emitter_chain)?,
     (body.emitter_address == governance.emitter_address)?,
+    (old.set_index < new.set_index)?,
     (parsed == new)?,
   }
 }

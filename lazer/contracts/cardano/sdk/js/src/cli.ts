@@ -1,28 +1,25 @@
-import {
-  createClient,
-  Either,
-  type SigningClient,
-} from "@evolution-sdk/evolution";
-import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
-import {
-  DEFAULT_CODEGEN_CONFIG,
-  generateTypeScript,
-} from "@evolution-sdk/evolution/blueprint";
-import { Cardano } from "@evolution-sdk/evolution";
+/** biome-ignore-all lint/suspicious/noConsole: this is CLI script */
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { promisify } from "node:util";
+import type { SigningClient } from "@evolution-sdk/evolution";
+import { Cardano, createClient, Either } from "@evolution-sdk/evolution";
+import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
+import {
+  DEFAULT_CODEGEN_CONFIG,
+  generateTypeScript,
+} from "@evolution-sdk/evolution/blueprint";
+import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { runDevnetSession } from "./devnet.js";
 import {
-  Guardians_state_init_mint,
-  Guardians_state_update_spend,
+  Wormhole_state_init_mint,
+  Wormhole_state_update_spend,
 } from "./offchain.js";
 import { MintingValidator, SpendingValidator } from "./validator.js";
-import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
-import { runDevnetSession } from "./devnet.js";
 
 function getClient(
   network: NetworkId | "custom",
@@ -41,17 +38,19 @@ function getClient(
             baseUrl: `https://${
               {
                 mainnet: "api",
-                preview: "preview",
                 preprod: "preprod",
+                preview: "preview",
               }[network]
             }.koios.rest/api/v1`,
-            token: process.env.KOIOS_API_KEY!,
+            ...(process.env.KOIOS_API_KEY
+              ? { token: process.env.KOIOS_API_KEY }
+              : {}),
             type: "koios",
           },
     wallet: {
+      accountIndex: 0,
       mnemonic,
       type: "seed",
-      accountIndex: 0,
     },
   });
 }
@@ -108,10 +107,10 @@ parser.command(
   (b) =>
     b.options({
       mnemonic: {
+        default: process.env.CARDANO_MNEMONIC,
         demandOption: true,
         description: "wallet mnemonic to use",
         type: "string",
-        default: process.env.CARDANO_MNEMONIC,
       },
       network: {
         choices: ["mainnet", "preprod", "preview", "custom"] as const,
@@ -127,11 +126,11 @@ parser.command(
       throw new Error("No UTxO to use as origin");
     }
 
-    const spending = SpendingValidator.new(Guardians_state_update_spend);
+    const spending = SpendingValidator.new(Wormhole_state_update_spend);
     const spendingScript = spending.script();
-    const minting = MintingValidator.new(Guardians_state_init_mint);
+    const minting = MintingValidator.new(Wormhole_state_init_mint);
     const mintingScript = minting.script(
-      { transaction_id: origin.transactionId.hash, output_index: origin.index },
+      { output_index: origin.index, transaction_id: origin.transactionId.hash },
       spendingScript.hash.hash,
     );
     const stateToken = mintingScript.asset(
@@ -143,8 +142,8 @@ parser.command(
       1n,
     );
     const stateOutput = spendingScript.receive(stateToken, {
-      set_index: 0n,
       set: [Buffer.from("58cc3ae5c097b213ce3c81979e1b9f9570746aa5", "hex")],
+      set_index: 0n,
     });
 
     const tx = await client
@@ -172,9 +171,12 @@ parser.command(
 parser.command(
   "devnet",
   "start local devnet",
-  () => {},
+  (b) => b.options({}),
   async () => {
-    const client = getClient(0, process.env.CARDANO_MNEMONIC!);
+    if (!process.env.CARDANO_MNEMONIC) {
+      throw new Error("missing CARDANO_MNEMONIC");
+    }
+    const client = getClient(0, process.env.CARDANO_MNEMONIC);
     await runDevnetSession(client).catch(console.error);
   },
 );

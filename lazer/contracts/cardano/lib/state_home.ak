@@ -11,9 +11,9 @@ use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
 
-const state_nft: ByteArray = "state"
+const state_nft: ByteArray = "Pyth State"
 
-const owner_nft: ByteArray = "owner"
+const owner_nft: ByteArray = "Pyth Ops"
 
 pub type StateId =
   PolicyId
