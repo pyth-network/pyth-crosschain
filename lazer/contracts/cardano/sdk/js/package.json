@@ -2,7 +2,9 @@
   "dependencies": {
     "@evolution-sdk/devnet": "^1.1.17",
     "@evolution-sdk/evolution": "^0.3.17",
+    "@noble/curves": "^2.0.1",
     "@pythnetwork/shared-lib": "workspace:",
+    "@wormhole-foundation/sdk-definitions": "^0.10.12",
     "date-fns": "catalog:",
     "yargs": "catalog:"
   },
