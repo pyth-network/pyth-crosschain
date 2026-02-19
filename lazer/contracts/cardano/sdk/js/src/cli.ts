@@ -22,13 +22,13 @@ import {
 import { MintingValidator, SpendingValidator, toMe } from "./transaction.js";
 
 function getClient(
-  network: NetworkId | "custom",
+  networkId: NetworkId | "custom",
   mnemonic: string,
 ): SigningClient {
   return createClient({
-    network: network === "custom" ? 0 : network,
+    network: networkId === "custom" ? 0 : networkId,
     provider:
-      network === "custom"
+      networkId === "custom"
         ? {
             kupoUrl: "http://localhost:1442",
             ogmiosUrl: "http://localhost:1337",
@@ -40,7 +40,7 @@ function getClient(
                 mainnet: "api",
                 preprod: "preprod",
                 preview: "preview",
-              }[network]
+              }[networkId]
             }.koios.rest/api/v1`,
             ...(process.env.KOIOS_API_KEY
               ? { token: process.env.KOIOS_API_KEY }
@@ -119,8 +119,8 @@ parser.command(
         description: "Cardano network to use",
       },
     }),
-  async ({ network, mnemonic }) => {
-    const client = getClient(network, mnemonic);
+  async ({ network: networkId, mnemonic }) => {
+    const client = getClient(networkId, mnemonic);
 
     const [origin] = await client.getWalletUtxos();
     if (!origin) {
@@ -150,7 +150,7 @@ parser.command(
         set: [Buffer.from("58cc3ae5c097b213ce3c81979e1b9f9570746aa5", "hex")],
         set_index: 0n,
       },
-      { coinsPerUtxoByte },
+      { coinsPerUtxoByte, networkId },
     );
 
     const tx = await client
@@ -167,9 +167,9 @@ parser.command(
       .payToAddress(await toMe(client, ownerToken))
       .buildEither({ debug: true });
 
-    const digest = await Either.getOrThrowWith(tx, (e) => {
-      throw JSON.stringify(e, undefined, 2);
-    }).signAndSubmit();
+    const digest = await Either.getOrThrowWith(tx, (e) =>
+      JSON.stringify(e, undefined, 2),
+    ).signAndSubmit();
 
     await client.awaitTx(digest);
 

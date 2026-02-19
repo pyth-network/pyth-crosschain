@@ -29,10 +29,18 @@ import type {
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
 import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
+import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 
-const BASE_FEE = 1_000_000n;
-// TODO: env/param?
-const NETWORK_ID: 0 | 1 = 0;
+/** A margin added to fees to make transactions pass in practice. */
+const FEE_MARGIN = 1_000_000n;
+
+const calculateFee = (params: {
+  address: Address.Address;
+  assets: Cardano.Assets.Assets;
+  datum?: Cardano.DatumOption.DatumOption;
+  scriptRef?: Cardano.Script.Script;
+  coinsPerUtxoByte: bigint;
+}): bigint => Effect.runSync(calculateMinimumUtxoLovelace(params)) + FEE_MARGIN;
 
 export const toMe = async (
   client: SigningClient,
@@ -40,13 +48,12 @@ export const toMe = async (
 ) => {
   const { coinsPerUtxoByte } = await client.getProtocolParameters();
   const address = await client.address();
-  const fee =
-    Effect.runSync(
-      calculateMinimumUtxoLovelace({ address, assets, coinsPerUtxoByte }),
-    ) + BASE_FEE;
   return {
     address: await client.address(),
-    assets: Cardano.Assets.addLovelace(assets, fee),
+    assets: Cardano.Assets.addLovelace(
+      assets,
+      calculateFee({ address, assets, coinsPerUtxoByte }),
+    ),
   };
 };
 
@@ -208,7 +215,7 @@ type SpendingScript<Datum> = Script & {
   receive: (
     assets: Cardano.Assets.Assets,
     datum: Datum,
-    options?: { coinsPerUtxoByte?: bigint },
+    options?: { networkId?: NetworkId | "custom"; coinsPerUtxoByte?: bigint },
   ) => PayToAddressParams;
 };
 
@@ -247,24 +254,26 @@ export class SpendingValidator<
     const { script, hash } = this.applyScript(params);
     return {
       hash,
-      receive: (assets, datumValue, { coinsPerUtxoByte } = {}) => {
+      receive: (
+        assets,
+        datumValue,
+        { coinsPerUtxoByte, networkId = "custom" } = {},
+      ) => {
         const address = new Address.Address({
-          networkId: NETWORK_ID,
+          networkId: networkId === "mainnet" ? 1 : 0,
           paymentCredential: hash,
         });
         const datum = new InlineDatum.InlineDatum({
           data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
         });
         const fee = coinsPerUtxoByte
-          ? Effect.runSync(
-              calculateMinimumUtxoLovelace({
-                address,
-                assets,
-                coinsPerUtxoByte,
-                datum,
-                scriptRef: script,
-              }),
-            ) + BASE_FEE
+          ? calculateFee({
+              address,
+              assets,
+              coinsPerUtxoByte,
+              datum,
+              scriptRef: script,
+            })
           : 0n;
         return {
           address,
