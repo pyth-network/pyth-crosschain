@@ -8,6 +8,7 @@ members = [
     "apps/hermes/client/rust",
     "apps/pyth-lazer-pusher/pusher-utils",
     "apps/pyth-lazer-pusher/pusher-base",
+    "apps/pyth-lazer-pusher/websocket-delivery",
     "pythnet/pythnet_sdk",
     "target_chains/starknet/tools/test_vaas",
 ]
