@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import boto3
 from cryptography.hazmat.primitives import serialization
@@ -19,7 +19,10 @@ from hyperliquid.utils.signing import (
     l1_payload,
 )
 from loguru import logger
-from mypy_boto3_kms import KMSClient
+if TYPE_CHECKING:
+    from mypy_boto3_kms import KMSClient
+else:
+    KMSClient = Any
 
 from pusher.config import Config
 from pusher.exception import PushError
