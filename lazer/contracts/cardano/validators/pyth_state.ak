@@ -1,19 +1,36 @@
 use aiken/collection/list
 use aiken/crypto.{ScriptHash}
+use aiken/interval.{Finite, IntervalBound, NegativeInfinity, PositiveInfinity}
 use cardano/assets.{PolicyId}
-use cardano/transaction.{OutputReference, Transaction}
-use pyth/governance.{UpdateTrustedSigner}
+use cardano/transaction.{OutputReference, Transaction, ValidityRange}
+use pyth/governance.{
+  Governance, UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
+}
 use pyth/update.{TrustedSigner, TrustedSigners} as pyth
-use state_home
-use types/u16
+use state.{State}
 use wormhole.{Guardians}
-use wormhole/vaa.{PreparedVAA, VAA}
+use wormhole/vaa.{PreparedVAA}
+
+pub type Pyth {
+  governance: Governance,
+  trusted_signers: TrustedSigners,
+  deprecated_withdraw_scripts: Pairs<ValidityRange, ScriptHash>,
+  withdraw_script: ScriptHash,
+}
+
+pub type Action {
+  GovernanceAction(PreparedVAA)
+  PurgeExpiredWithdrawScripts
+}
 
 validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Data, id: PolicyId, self: Transaction) {
-    let state <- state_home.mint(origin, home, id, self)
-    expect signers: TrustedSigners = state
-    list.is_empty(signers.set)?
+    let state <- state.mint(origin, id, self)
+    expect pyth: Pyth = state.data
+    and {
+      (state.home == home)?,
+      (pyth.governance.seen_sequence == 0)?,
+    }
   }
 
   else(_) {
@@ -23,16 +40,61 @@ validator init(origin: OutputReference, home: ScriptHash) {
 
 validator update {
   spend(
-    old: Option<TrustedSigners>,
-    upgrade: PreparedVAA,
+    old: Option<Pyth>,
+    action: Action,
     utxo: OutputReference,
     self: Transaction,
   ) {
-    let old, new <- state_home.spend(old, utxo, self)
-    expect new: TrustedSigners = new
+    let state, is_owner <- state.spend(old, utxo, self)
+    let pyth = state.data
     expect guardians: Guardians =
-      state_home.find_state(old.governance.guardians, self.reference_inputs)
-    is_valid_signers_upgrade(old, new, upgrade, guardians)?
+      state.find(pyth.governance.guardians, self.reference_inputs)
+
+    when action is {
+      GovernanceAction(action) -> {
+        let (action, governance) =
+          governance.parse_and_verify_action(action, pyth.governance, guardians)
+        let pyth = Pyth { ..pyth, governance }
+        when action is {
+          UpdateTrustedSigner(signer) -> {
+            let pyth =
+              Pyth {
+                ..pyth,
+                trusted_signers: update_trusted_signer(
+                  pyth.trusted_signers,
+                  signer,
+                ),
+              }
+            state.new(state.home, pyth)
+          }
+          UpgradeSpendScript(hash) -> state.new(hash, pyth)
+          UpgradeWithdrawScript { deprecated_validity, new_script } -> {
+            let pyth =
+              Pyth {
+                ..pyth,
+                withdraw_script: new_script,
+                deprecated_withdraw_scripts: [
+                  Pair(deprecated_validity, pyth.withdraw_script),
+                  ..pyth.deprecated_withdraw_scripts
+                ],
+              }
+            state.new(state.home, pyth)
+          }
+        }
+      }
+      PurgeExpiredWithdrawScripts -> {
+        expect is_owner?
+        let pyth =
+          Pyth {
+            ..pyth,
+            deprecated_withdraw_scripts: purge_expired_scripts(
+              pyth.deprecated_withdraw_scripts,
+              self.validity_range,
+            ),
+          }
+        state.new(state.home, pyth)
+      }
+    }
   }
 
   else(_) {
@@ -40,39 +102,45 @@ validator update {
   }
 }
 
-fn is_valid_signers_upgrade(
-  old: TrustedSigners,
-  new: TrustedSigners,
-  upgrade: PreparedVAA,
-  guardians: Guardians,
-) -> Bool {
-  let VAA { body, .. } = vaa.parse_and_verify_prepared(upgrade, guardians)
-  let UpdateTrustedSigner(signer) =
-    governance.parse_governance_action(body.payload)
-  and {
-    (u16.as_int(body.emitter_chain) == old.governance.emitter_chain)?,
-    (body.emitter_address == old.governance.emitter_address)?,
-    is_valid_signer_update(old.set, new.set, signer)?,
-  }
-}
-
-fn is_valid_signer_update(
-  old: List<TrustedSigner>,
-  new: List<TrustedSigner>,
-  change: TrustedSigner,
-) -> Bool {
-  if change.expires_at == 0 {
-    new == list.filter(old, fn(trusted) { trusted.key != change.key })
+fn update_trusted_signer(signers: TrustedSigners, signer: TrustedSigner) {
+  if signer.expires_at == 0 {
+    list.filter(signers, fn(trusted) { trusted.key != signer.key })
   } else {
-    new == list.map(
-      old,
+    list.map(
+      signers,
       fn(trusted) {
-        if trusted.key == change.key {
-          change
+        if trusted.key == signer.key {
+          signer
         } else {
           trusted
         }
       },
     )
+  }
+}
+
+fn purge_expired_scripts(
+  scripts: Pairs<ValidityRange, ScriptHash>,
+  interval: ValidityRange,
+) -> Pairs<ValidityRange, ScriptHash> {
+  let valid = entirely_before_range(interval)
+  list.filter(
+    scripts,
+    fn(Pair(range, _)) {
+      !interval.is_empty(interval.intersection(valid, range))
+    },
+  )
+}
+
+fn entirely_before_range(self: ValidityRange) -> ValidityRange {
+  when self.lower_bound is {
+    IntervalBound { bound_type: Finite(bound), is_inclusive } ->
+      if is_inclusive {
+        interval.entirely_before(bound)
+      } else {
+        interval.before(bound)
+      }
+    IntervalBound { bound_type: NegativeInfinity, .. } -> interval.empty
+    IntervalBound { bound_type: PositiveInfinity, .. } -> interval.everything
   }
 }

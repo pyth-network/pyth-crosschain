@@ -62,7 +62,6 @@ pub fn parse_unsafe(src: ByteArray) -> VAA {
   {
     let header <- parse(vaa_header)
     let body <- parse(vaa_body)
-
     VAA { header, body } |> parser.return
   }
     |> parser.run(src)
@@ -122,6 +121,7 @@ const test_recovered_keys =
 
 const test_guardians =
   Guardians {
+    seen_sequence: 0,
     set_index: 3,
     set: [
       #"58cc3ae5c097b213ce3c81979e1b9f9570746aa5",
@@ -147,15 +147,7 @@ const test_guardians =
   }
 
 test can_parse_vaa() {
-  let VAA { header, body } =
-    parser.run(
-      {
-        let header <- parse(vaa_header)
-        let body <- parse(vaa_body)
-        VAA { header, body } |> parser.return
-      },
-      test_vaa,
-    )
+  let VAA { header, body } = parse_unsafe(test_vaa)
 
   expect header.version == u8.from_int(1)
   expect header.guardian_set_index == u32.from_int(3)

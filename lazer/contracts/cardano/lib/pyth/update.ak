@@ -2,22 +2,12 @@ use aiken/collection/list
 use aiken/crypto.{Signature, VerificationKey}
 use aiken/interval.{Interval}
 use parser.{Parser, parse}
-use state_home.{StateId}
 use types/u16
 
 const solana_format_magic_le = #"b9011a82"
 
-pub type Governance {
-  guardians: StateId,
-  emitter_chain: Int,
-  emitter_address: ByteArray,
-  seen_sequence: Int,
-}
-
-pub type TrustedSigners {
-  governance: Governance,
-  set: List<TrustedSigner>,
-}
+pub type TrustedSigners =
+  List<TrustedSigner>
 
 pub type TrustedSigner {
   key: VerificationKey,
@@ -30,7 +20,7 @@ pub fn is_trusted(
   key: VerificationKey,
 ) {
   list.any(
-    self.set,
+    self,
     fn(trusted) {
       (trusted.key == key)? && interval.includes(
         interval.before(trusted.expires_at),
@@ -78,20 +68,12 @@ const price_update: Parser<PriceUpdate> = {
   }
 
 const test_signers: TrustedSigners =
-  TrustedSigners {
-    governance: Governance {
-      guardians: #"",
-      emitter_chain: 1,
-      emitter_address: #"",
-      seen_sequence: 0,
+  [
+    TrustedSigner {
+      key: #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+      expires_at: 1,
     },
-    set: [
-      TrustedSigner {
-        key: #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
-        expires_at: 1,
-      },
-    ],
-  }
+  ]
 
 const test_interval: Interval = interval.before(1)
 

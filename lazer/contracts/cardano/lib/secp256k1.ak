@@ -9,18 +9,12 @@ pub opaque type Signature {
 }
 
 pub fn signature(raw: ByteArray) -> Signature {
-  let length = bytearray.length(raw)
-  if length == 65 {
+  when bytearray.length(raw) is {
     // recoverable signature - we remove the recovery bit
-    Signature(bytearray.take(raw, 64))
-  } else {
-    expect (length == 64)?
-    Signature(raw)
+    65 -> Signature(bytearray.take(raw, 64))
+    64 -> Signature(raw)
+    _ -> fail @"unexpected signature length, must be 64 or 65"
   }
-}
-
-fn signature_to_bytearray(Signature(self): Signature) -> ByteArray {
-  self
 }
 
 /// Ethereum-style address - 20-byte suffix of Keccak256 hash of `PublicKey`.
@@ -31,49 +25,41 @@ pub opaque type PublicKey {
   PublicKey(ByteArray)
 }
 
-fn to_bytearray(PublicKey(self): PublicKey) -> ByteArray {
-  self
-}
-
 pub fn public_key(raw: ByteArray) -> PublicKey {
   let length = bytearray.length(raw)
   let flag = bytearray.at(raw, 0)
-  if length == 33 {
-    // compressed key with prefix 0x2 or 0x3
-    expect (flag == 2 || flag == 3)?
-  } else {
-    // uncompressed key with prefix 0x4
-    expect (length == 65)?
-    expect (flag == 4)?
-  }
+  expect or {
+      // compressed key with prefix 0x2 or 0x3
+      (length == 33)? && (flag == 2 || flag == 3)?,
+      // uncompressed key with prefix 0x4
+      (length == 65)? && (flag == 4)?,
+    }
   PublicKey(raw)
 }
 
-pub fn is_uncompressed(PublicKey(self): PublicKey) -> Bool {
-  let flag = bytearray.at(self, 0)
-  flag == 4
-}
-
-pub fn to_address(self: PublicKey) -> PublicKeyAddress {
-  // supporting compressed keys would be computationally expensive - caller
-  // should do it off-chain instead
-  if !is_uncompressed(self) {
-    fail @"secp256k1.to_address does not support compressed keys"
+pub fn to_address(PublicKey(raw): PublicKey) -> PublicKeyAddress {
+  if bytearray.length(raw) == 65 {
+    bytearray.drop(raw, 1)
+      |> crypto.keccak_256()
+      |> bytearray.drop(12)
   } else {
-    let coords = to_bytearray(self) |> bytearray.drop(1)
-    let hash = crypto.keccak_256(coords)
-    bytearray.drop(hash, 12)
+    // supporting compressed keys would be computationally expensive - caller
+    // should do it off-chain instead
+    fail @"secp256k1.to_address does not support compressed keys"
   }
 }
 
-pub fn is_compressed(PublicKey(self): PublicKey) -> Bool {
-  let flag = bytearray.at(self, 0)
-  flag == 2 || flag == 3
+pub fn verify_ecdsa(
+  self: PublicKey,
+  hash: Hash<Keccak_256, ByteArray>,
+  Signature(signature): Signature,
+) -> Bool {
+  to_compressed(self)
+    |> crypto.verify_ecdsa_signature(hash, signature)
 }
 
-pub fn to_compressed(self: PublicKey) -> ByteArray {
-  let raw = to_bytearray(self)
-  if is_compressed(self) {
+fn to_compressed(PublicKey(raw): PublicKey) -> ByteArray {
+  if bytearray.length(raw) == 33 {
     raw
   } else {
     let (x, y) =
@@ -91,15 +77,6 @@ pub fn to_compressed(self: PublicKey) -> ByteArray {
   }
 }
 
-pub fn verify_ecdsa(
-  self: PublicKey,
-  hash: Hash<Keccak_256, ByteArray>,
-  signature: Signature,
-) -> Bool {
-  to_compressed(self)
-    |> crypto.verify_ecdsa_signature(hash, signature_to_bytearray(signature))
-}
-
 test can_compress_uncompressed() {
   let key =
     public_key(
@@ -114,7 +91,7 @@ test can_compress_compressed() {
     public_key(
       #"02011ae2aa4a47942d486b54e4f3a10cfdba87ffd6bcf0e876ccc605ddf514189c",
     )
-  expect to_compressed(key) == to_bytearray(key)
+  expect PublicKey(to_compressed(key)) == key
 }
 
 test converts_to_address() {

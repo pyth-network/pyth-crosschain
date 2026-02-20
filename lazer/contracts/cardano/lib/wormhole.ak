@@ -6,6 +6,7 @@ use secp256k1
 use types/u8.{U8}
 
 pub type Guardians {
+  seen_sequence: Int,
   set_index: Int,
   set: List<secp256k1.PublicKeyAddress>,
 }

@@ -1,13 +1,14 @@
 use aiken/crypto.{ScriptHash}
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction}
-use state_home
+use state.{State}
 use wormhole.{Guardians}
 use wormhole/governance
-use wormhole/vaa.{PreparedVAA, VAA}
+use wormhole/vaa.{PreparedVAA}
 
 const genesis: Guardians =
   Guardians {
+    seen_sequence: 0,
     set_index: 0,
     // Certus One:
     // https://github.com/wormhole-foundation/wormhole/blob/fe93c28401ea42bc4e62450ddaf5083110802e78/guardianset/mainnetv2/v1.prototxt#L7
@@ -16,9 +17,9 @@ const genesis: Guardians =
 
 validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Data, id: PolicyId, self: Transaction) {
-    let state <- state_home.mint(origin, home, id, self)
-    expect guardians: Guardians = state
-    (guardians == genesis)?
+    let state <- state.mint(origin, id, self)
+    expect guardians: Guardians = state.data
+    (state.home == home)? && (guardians == genesis)?
   }
 
   else(_) {
@@ -33,27 +34,14 @@ validator update {
     utxo: OutputReference,
     self: Transaction,
   ) {
-    let old, new <- state_home.spend(old, utxo, self)
-    expect new: Guardians = new
-    is_valid_guardians_upgrade(old, new, upgrade)
+    let old, _ <- state.spend(old, utxo, self)
+    state.new(
+      old.home,
+      governance.parse_and_verify_guardian_set_upgrade(upgrade, old.data),
+    )
   }
 
   else(_) {
     fail
-  }
-}
-
-fn is_valid_guardians_upgrade(
-  old: Guardians,
-  new: Guardians,
-  upgrade: PreparedVAA,
-) {
-  let VAA { body, .. } = vaa.parse_and_verify_prepared(upgrade, old)
-  let parsed = governance.parse_guardian_set_upgrade(body.payload)
-  and {
-    (body.emitter_chain == governance.emitter_chain)?,
-    (body.emitter_address == governance.emitter_address)?,
-    (old.set_index < new.set_index)?,
-    (parsed == new)?,
   }
 }
