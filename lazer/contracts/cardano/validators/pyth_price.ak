@@ -1,7 +1,7 @@
 use aiken/collection/dict
 use aiken/collection/list
 use aiken/interval
-use cardano/address.{Credential}
+use cardano/address.{Credential, Script}
 use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
@@ -13,8 +13,11 @@ use pyth_state.{Pyth}
 use state.{StateId}
 
 validator pyth_price(pyth_id: StateId) {
-  withdraw(updates: List<ByteArray>, _: Credential, self: Transaction) {
+  withdraw(updates: List<ByteArray>, credential: Credential, self: Transaction) {
     expect pyth: Pyth = state.find(pyth_id, self.reference_inputs)
+    expect Script(hash) = credential
+    expect
+      pyth_state.is_active_withdraw_script(pyth, self.validity_range, hash)?
     expect _ =
       list.for_each(
         updates,
@@ -83,7 +86,7 @@ fn signer_ref_input(policy_id: ByteArray, value, trusted_signers) -> Input {
           governance: test_governance,
           trusted_signers,
           deprecated_withdraw_scripts: [],
-          withdraw_script: #"",
+          withdraw_script: test_withdraw_script_hash,
         },
       ),
       reference_script: None,
@@ -91,8 +94,10 @@ fn signer_ref_input(policy_id: ByteArray, value, trusted_signers) -> Input {
   }
 }
 
-const test_pyth_id: StateId =
-  #"41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41"
+const test_pyth_id = #"41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41"
+
+const test_withdraw_script_hash =
+  #"3174d2a33174d2a33174d2a33174d2a33174d2a33174d2a33174d2a3"
 
 test validate_single_price() {
   let ref_input =
@@ -101,10 +106,13 @@ test validate_single_price() {
       assets.from_asset(test_pyth_id, env.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 1000 }],
     )
-  let my_credential = address.Script(#"dddd")
-  let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
+  pyth_price.withdraw(
+    test_pyth_id,
+    [test_signed_price],
+    Script(test_withdraw_script_hash),
+    test_tx([ref_input]),
+  )
 }
 
 test validate_outdated_signer() fail {
@@ -114,24 +122,29 @@ test validate_outdated_signer() fail {
       assets.from_asset(test_pyth_id, env.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 500 }],
     )
-  let my_credential = address.Script(#"dddd")
-  let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
+  pyth_price.withdraw(
+    test_pyth_id,
+    [test_signed_price],
+    Script(test_withdraw_script_hash),
+    test_tx([ref_input]),
+  )
 }
 
 test validate_multiple_prices() {
-  let redeemer = [test_signed_price, test_signed_price]
   let ref_input =
     signer_ref_input(
       test_pyth_id,
       assets.from_asset(test_pyth_id, env.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
     )
-  let my_credential = address.Script(#"dddd")
-  let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(test_pyth_id, redeemer, my_credential, tx)
+  pyth_price.withdraw(
+    test_pyth_id,
+    [test_signed_price, test_signed_price],
+    Script(test_withdraw_script_hash),
+    test_tx([ref_input]),
+  )
 }
 
 test validate_wrong_signer() fail {
@@ -146,18 +159,23 @@ test validate_wrong_signer() fail {
         },
       ],
     )
-  let my_credential = address.Script(#"dddd")
-  let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
+  pyth_price.withdraw(
+    test_pyth_id,
+    [test_signed_price],
+    Script(test_withdraw_script_hash),
+    test_tx([ref_input]),
+  )
 }
 
 test validate_no_signer_set() fail {
-  let my_credential = address.Script(#"dddd")
   // No reference inputs at all
-  let tx = test_tx([])
-
-  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
+  pyth_price.withdraw(
+    test_pyth_id,
+    [test_signed_price],
+    Script(test_withdraw_script_hash),
+    test_tx([]),
+  )
 }
 
 test validate_missing_nft() fail {
@@ -168,8 +186,10 @@ test validate_missing_nft() fail {
       assets.zero,
       [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
     )
-  let my_credential = address.Script(#"dddd")
-  let tx = test_tx([ref_input])
-
-  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
+  pyth_price.withdraw(
+    test_pyth_id,
+    [test_signed_price],
+    Script(test_withdraw_script_hash),
+    test_tx([ref_input]),
+  )
 }

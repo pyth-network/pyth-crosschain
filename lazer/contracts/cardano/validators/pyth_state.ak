@@ -18,6 +18,19 @@ pub type Pyth {
   withdraw_script: ScriptHash,
 }
 
+pub fn is_active_withdraw_script(
+  self: Pyth,
+  range: ValidityRange,
+  hash: ScriptHash,
+) -> Bool {
+  (self.withdraw_script == hash)? || list.any(
+    self.deprecated_withdraw_scripts,
+    fn(Pair(validity, deprecated)) {
+      (deprecated == hash)? && interval.includes(validity, range)?
+    },
+  )
+}
+
 pub type Action {
   GovernanceAction(PreparedVAA)
   PurgeExpiredWithdrawScripts
