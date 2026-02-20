@@ -2,34 +2,31 @@ use aiken/collection/dict
 use aiken/collection/list
 use aiken/interval
 use cardano/address.{Credential}
-use cardano/assets.{AssetName, PolicyId}
+use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use pyth/update.{Governance, TrustedSigner, TrustedSigners}
+use env
+use pyth/governance.{Governance}
+use pyth/update.{TrustedSigner}
+use pyth_state.{Pyth}
+use state.{StateId}
 
-type PriceRedeemer {
-  signed_prices: List<ByteArray>,
-}
-
-validator pyth_price(signer_policy_id: PolicyId, signer_asset: AssetName) {
-  withdraw(redeemer: Data, _credential: Credential, tx: Transaction) {
-    expect price_redeemer: PriceRedeemer = redeemer
-    expect Some(reference_input) =
-      tx.reference_inputs
-        |> list.find(
-            fn(in) {
-              assets.has_nft(in.output.value, signer_policy_id, signer_asset)
-            },
-          )
-    expect InlineDatum(signers_datum) = reference_input.output.datum
-    expect signing_policy: TrustedSigners = signers_datum
-    list.for_each(
-      price_redeemer.signed_prices,
-      fn(p) {
-        expect _ = update.parse_and_verify(signing_policy, tx.validity_range, p)
-      },
-    )
+validator pyth_price(pyth_id: StateId) {
+  withdraw(updates: List<ByteArray>, _: Credential, self: Transaction) {
+    expect pyth: Pyth = state.find(pyth_id, self.reference_inputs)
+    expect _ =
+      list.for_each(
+        updates,
+        fn(update) {
+          expect _ =
+            update.parse_and_verify(
+              update,
+              pyth.trusted_signers,
+              self.validity_range,
+            )
+        },
+      )
     True
   }
 
@@ -37,10 +34,6 @@ validator pyth_price(signer_policy_id: PolicyId, signer_asset: AssetName) {
     fail
   }
 }
-
-// ── Tests ──
-
-const signer_token_name = "signer"
 
 fn test_tx(reference_inputs: List<Input>) -> Transaction {
   Transaction {
@@ -86,84 +79,66 @@ fn signer_ref_input(policy_id: ByteArray, value, trusted_signers) -> Input {
       address: address.from_script(policy_id),
       value,
       datum: InlineDatum(
-        TrustedSigners { governance: test_governance, set: trusted_signers },
+        Pyth {
+          governance: test_governance,
+          trusted_signers,
+          deprecated_withdraw_scripts: [],
+          withdraw_script: #"",
+        },
       ),
       reference_script: None,
     },
   }
 }
 
+const test_pyth_id: StateId =
+  #"41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41f41"
+
 test validate_single_price() {
-  let signer_policy_id = #"aaaa"
-  let redeemer = PriceRedeemer { signed_prices: [test_signed_price] }
   let ref_input =
     signer_ref_input(
-      signer_policy_id,
-      assets.from_asset(signer_policy_id, signer_token_name, 1),
+      test_pyth_id,
+      assets.from_asset(test_pyth_id, env.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 1000 }],
     )
   let my_credential = address.Script(#"dddd")
   let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(
-    signer_policy_id,
-    signer_token_name,
-    redeemer,
-    my_credential,
-    tx,
-  )
+  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
 }
 
 test validate_outdated_signer() fail {
-  let signer_policy_id = #"aaaa"
-  let redeemer = PriceRedeemer { signed_prices: [test_signed_price] }
   let ref_input =
     signer_ref_input(
-      signer_policy_id,
-      assets.from_asset(signer_policy_id, signer_token_name, 1),
+      test_pyth_id,
+      assets.from_asset(test_pyth_id, env.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 500 }],
     )
   let my_credential = address.Script(#"dddd")
   let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(
-    signer_policy_id,
-    signer_token_name,
-    redeemer,
-    my_credential,
-    tx,
-  )
+  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
 }
 
 test validate_multiple_prices() {
-  let signer_policy_id = #"aaaa"
-  let redeemer =
-    PriceRedeemer { signed_prices: [test_signed_price, test_signed_price] }
+  let redeemer = [test_signed_price, test_signed_price]
   let ref_input =
     signer_ref_input(
-      signer_policy_id,
-      assets.from_asset(signer_policy_id, signer_token_name, 1),
+      test_pyth_id,
+      assets.from_asset(test_pyth_id, env.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
     )
   let my_credential = address.Script(#"dddd")
   let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(
-    signer_policy_id,
-    signer_token_name,
-    redeemer,
-    my_credential,
-    tx,
-  )
+  pyth_price.withdraw(test_pyth_id, redeemer, my_credential, tx)
 }
 
 test validate_wrong_signer() fail {
-  let signer_policy_id = #"aaaa"
-  let redeemer = PriceRedeemer { signed_prices: [test_signed_price] }
   let ref_input =
     signer_ref_input(
-      signer_policy_id,
-      assets.from_asset(signer_policy_id, signer_token_name, 1),
+      test_pyth_id,
+      assets.from_asset(test_pyth_id, env.state_nft, 1),
       [
         TrustedSigner {
           key: #"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -174,49 +149,27 @@ test validate_wrong_signer() fail {
   let my_credential = address.Script(#"dddd")
   let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(
-    signer_policy_id,
-    signer_token_name,
-    redeemer,
-    my_credential,
-    tx,
-  )
+  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
 }
 
 test validate_no_signer_set() fail {
-  let signer_policy_id = #"aaaa"
-  let redeemer = PriceRedeemer { signed_prices: [test_signed_price] }
   let my_credential = address.Script(#"dddd")
   // No reference inputs at all
   let tx = test_tx([])
 
-  pyth_price.withdraw(
-    signer_policy_id,
-    signer_token_name,
-    redeemer,
-    my_credential,
-    tx,
-  )
+  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
 }
 
 test validate_missing_nft() fail {
-  let signer_policy_id = #"aaaa"
-  let redeemer = PriceRedeemer { signed_prices: [test_signed_price] }
   // Reference input has correct datum but no signer NFT in its value
   let ref_input =
     signer_ref_input(
-      signer_policy_id,
+      test_pyth_id,
       assets.zero,
       [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
     )
   let my_credential = address.Script(#"dddd")
   let tx = test_tx([ref_input])
 
-  pyth_price.withdraw(
-    signer_policy_id,
-    signer_token_name,
-    redeemer,
-    my_credential,
-    tx,
-  )
+  pyth_price.withdraw(test_pyth_id, [test_signed_price], my_credential, tx)
 }
