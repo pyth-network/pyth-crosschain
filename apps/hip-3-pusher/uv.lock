@@ -409,7 +409,7 @@ requires-dist = [
     { name = "boto3", specifier = "~=1.40.38" },
     { name = "cryptography", specifier = "~=46.0.1" },
     { name = "httpx", specifier = "~=0.28.1" },
-    { name = "hyperliquid-python-sdk", specifier = "~=0.19.0" },
+    { name = "hyperliquid-python-sdk", specifier = "~=0.22.0" },
     { name = "loguru", specifier = "~=0.7.3" },
     { name = "opentelemetry-exporter-prometheus", specifier = "~=0.58b0" },
     { name = "opentelemetry-sdk", specifier = "~=1.37.0" },
@@ -456,7 +456,7 @@ wheels = [
 
 [[package]]
 name = "hyperliquid-python-sdk"
-version = "0.19.0"
+version = "0.22.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "eth-account" },
@@ -465,9 +465,9 @@ dependencies = [
     { name = "requests" },
     { name = "websocket-client" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/32/fa/98b1281324c6988d75131bd153d82d7182dcb97b382312252eece4eafe9e/hyperliquid_python_sdk-0.19.0.tar.gz", hash = "sha256:1eb181c4f0f86ede56ad2111ddf5a25635dbd697cf44dae274e87c6c04b97e18", size = 24710, upload-time = "2025-09-11T02:01:09.833Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/7a/f0497091909094a722a3fda64a3fbf180adfacbda3c628b04c5267f230b0/hyperliquid_python_sdk-0.22.0.tar.gz", hash = "sha256:a26e3e015e050c094c411196e689ffaac4ff942fb0ef63bb2863502f63b33e5b", size = 25119, upload-time = "2026-02-04T19:06:13.886Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/94/ea445013267347df0da6f41e7bafcbb66f0d7ac8a673f961169b288a5329/hyperliquid_python_sdk-0.19.0-py3-none-any.whl", hash = "sha256:9d02526da98ed2a8c7ae957d6188b1a5285d393056fbb7b57b1dbe38c7773850", size = 24062, upload-time = "2025-09-11T02:01:08.619Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/74/f8f229f2c659cbf477539a6dccc24452ebe4130d960ba75f7485ee6c0551/hyperliquid_python_sdk-0.22.0-py3-none-any.whl", hash = "sha256:d47432d5dc5ea33cd6c60e01dcb0d773e822ee29c6b299042e59a8cd2c4e2c9f", size = 24529, upload-time = "2026-02-04T19:06:12.46Z" },
 ]
 
 [[package]]
