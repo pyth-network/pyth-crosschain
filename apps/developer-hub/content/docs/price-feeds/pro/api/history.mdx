@@ -54,12 +54,22 @@ List all available price feed symbols, optionally filtered.
 
 Returns price data at a specific historical timestamp.
 
+<Callout type="warn">
+  The `timestamp` parameter must be a **Unix timestamp in microseconds** (not seconds or milliseconds).
+  For fixed-rate channels, the timestamp must be **exactly divisible** by the channel rate:
+  - `fixed_rate@50ms` — divisible by `50000`
+  - `fixed_rate@200ms` — divisible by `200000`
+  - `fixed_rate@1000ms` — divisible by `1000000`
+
+  For example, `1704067200000000` is a valid timestamp for all channels (2024-01-01 00:00:00 UTC in microseconds).
+</Callout>
+
 **Query Parameters**
 
-| Parameter   | Type       | Required | Description                        | Example            |
-| ----------- | ---------- | -------- | ---------------------------------- | ------------------ |
-| `ids`       | `number[]` | Yes      | Price feed IDs                     | `1,2`              |
-| `timestamp` | `number`   | Yes      | Unix timestamp in **microseconds** | `1704067200000000` |
+| Parameter   | Type       | Required | Description                                                                                                                                   | Example            |
+| ----------- | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `ids`       | `number[]` | Yes      | Price feed IDs                                                                                                                                | `1,2`              |
+| `timestamp` | `number`   | Yes      | Unix timestamp in **microseconds**. For fixed-rate channels, must be divisible by the channel rate (e.g. `200000` for `fixed_rate@200ms`). | `1704067200000000` |
 
 ---
 
