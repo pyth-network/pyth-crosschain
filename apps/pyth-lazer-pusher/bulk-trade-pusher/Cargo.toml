@@ -1,0 +1,47 @@
+[package]
+name = "bulk-pusher"
+version = "0.1.0"
+edition = "2021"
+description = "Pushes Pyth Lazer price feeds to Bulk Trade validators"
+
+[[bin]]
+name = "bulk-pusher"
+path = "src/main.rs"
+
+[dependencies]
+# Internal
+pusher-base = { path = "../pusher-base" }
+websocket-delivery = { path = "../websocket-delivery" }
+
+# Pyth Lazer SDK (re-exported by pusher-base, but needed for types)
+pyth-lazer-protocol = "0.30.1"
+
+# Async runtime
+tokio = { version = "1.44", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = { version = "2.0", features = ["serde"] }
+
+# Crypto (for signing)
+bulk-keychain = "0.1"
+
+# Config
+clap = { version = "4.5", features = ["derive"] }
+config = "0.15"
+url = { version = "2.5", features = ["serde"] }
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+prometheus = "0.13"
+
+# Error handling
+anyhow = "1.0"
+
+# HTTP server (health endpoint)
+axum = "0.8"
+
+[lints]
+workspace = true

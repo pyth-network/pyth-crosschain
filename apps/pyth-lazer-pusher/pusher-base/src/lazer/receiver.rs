@@ -178,6 +178,7 @@ async fn process_lazer_updates(
             msg = receiver.recv() => {
                 match msg {
                     Some(r) => r,
+                    #[allow(clippy::panic, reason = "intentional crash on SDK channel drop")]
                     None => {
                         panic!("Lazer receiver channel closed unexpectedly");
                     },
