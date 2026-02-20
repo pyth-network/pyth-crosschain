@@ -1,9 +1,9 @@
+use env
 use parser.{Parser, parse}
 use pyth/update.{TrustedSigner}
 use types/u16
 use types/u64
 use types/u8.{U8}
-use env
 
 const governance_action_magic: ByteArray = "PTGM"
 
@@ -30,6 +30,7 @@ fn governance_action() -> Parser<GovernanceAction> {
       let key <- parse(parser.bytes(32))
       let expires_at <- parse(u64.from_be)
       UpdateTrustedSigner(
+        //TODO: Does expires_at have the correct units?
         TrustedSigner { key, expires_at: u64.as_int(expires_at) },
       )
         |> parser.return
