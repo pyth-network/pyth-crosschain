@@ -6,23 +6,23 @@ use aiken/collection/list
 use aiken/crypto.{ScriptHash}
 use aiken/option
 use cardano/address.{Script}
-use cardano/assets.{PolicyId}
+use cardano/assets.{AssetName, PolicyId}
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use env
 
 pub type StateId =
   PolicyId
 
-pub fn find(self: StateId, inputs: List<Input>) -> Data {
+pub fn find(config: StateConfig, id: StateId, inputs: List<Input>) -> Data {
   expect Some(state) =
     list.find_map(
       inputs,
       fn(input) {
         let credential = input.output.address.payment_credential
-        if credential == Script(self) {
-          expect assets.has_nft_strict(input.output.value, self, env.state_nft)?
+        if credential == Script(id) {
+          expect
+            assets.has_nft_strict(input.output.value, id, config.state_nft)?
           expect InlineDatum(state) = input.output.datum
           Some(state)
         } else {
@@ -31,6 +31,11 @@ pub fn find(self: StateId, inputs: List<Input>) -> Data {
       },
     )
   state
+}
+
+pub type StateConfig {
+  state_nft: AssetName,
+  owner_nft: AssetName,
 }
 
 pub type State<a> {
@@ -52,26 +57,28 @@ pub fn new(home: ScriptHash, data: Data) -> State<Data> {
 /// }
 /// ```
 pub fn mint(
+  config: StateConfig,
   origin: OutputReference,
   id: PolicyId,
   self: Transaction,
   with_initial: fn(State<Data>) -> Bool,
 ) -> Bool {
-  when assets.quantity_of(self.mint, id, env.state_nft) is {
-    1 -> mint_state(origin, id, self, with_initial)
-    -1 -> burn_state(id, self)
+  when assets.quantity_of(self.mint, id, config.state_nft) is {
+    1 -> mint_state(config, origin, id, self, with_initial)
+    -1 -> burn_state(config, id, self)
     _ -> fail @"invalid home state NFT quantity"
   }
 }
 
 fn mint_state(
+  config: StateConfig,
   origin: OutputReference,
   id: PolicyId,
   self: Transaction,
   with_initial: fn(State<Data>) -> Bool,
 ) {
   // state and owner NFTs should be minted in lockstep
-  expect (assets.quantity_of(self.mint, id, env.owner_nft) == 1)?
+  expect (assets.quantity_of(self.mint, id, config.owner_nft) == 1)?
   // inputs should contain origin to enforce uniqueness
   expect (transaction.find_input(self.inputs, origin) |> option.is_some())?
 
@@ -79,7 +86,7 @@ fn mint_state(
   expect Some(output) =
     list.find(
       self.outputs,
-      fn(o) { assets.has_nft_strict(o.value, id, env.state_nft) },
+      fn(o) { assets.has_nft_strict(o.value, id, config.state_nft) },
     )
   // output is locked to a script to enforce valid datum updates
   expect Script(home) = output.address.payment_credential
@@ -88,9 +95,9 @@ fn mint_state(
   with_initial(State { home, data })
 }
 
-fn burn_state(id: PolicyId, self: Transaction) {
+fn burn_state(config: StateConfig, id: PolicyId, self: Transaction) {
   // state and owner NFTs should be burned in lockstep
-  (assets.quantity_of(self.mint, id, env.owner_nft) == -1)?
+  (assets.quantity_of(self.mint, id, config.owner_nft) == -1)?
 }
 
 /// `spend` callback handler, to be used in backpassing style:
@@ -108,6 +115,7 @@ fn burn_state(id: PolicyId, self: Transaction) {
 /// }
 /// ```
 pub fn spend(
+  config: StateConfig,
   data: Option<a>,
   utxo: OutputReference,
   self: Transaction,
@@ -124,12 +132,12 @@ pub fn spend(
   // ID, this spending script will always ensure that updates to it are valid.
   expect [(id, asset, 1)] =
     assets.without_lovelace(input.value) |> assets.flatten()
-  expect asset == env.state_nft
+  expect (asset == config.state_nft)?
 
   when
     list.find(
       self.outputs,
-      fn(o) { assets.quantity_of(o.value, id, env.state_nft) != 0 },
+      fn(o) { assets.quantity_of(o.value, id, config.state_nft) != 0 },
     )
   is {
     // state was burned, it's up to mint to ensure validity
@@ -137,7 +145,7 @@ pub fn spend(
     // state is preserved, it should be updated correctly
     Some(Output { address, value, datum, .. }) -> {
       // output with the state NFT should contain nothing more than ADA
-      expect assets.has_nft_strict(value, id, env.state_nft)
+      expect assets.has_nft_strict(value, id, config.state_nft)?
       // output is locked to a script to enforce valid datum updates
       expect Script(new_home) = address.payment_credential
       // output should correctly update the state
@@ -146,7 +154,7 @@ pub fn spend(
       let is_owner =
         list.any(
           self.inputs,
-          fn(i) { assets.has_nft(i.output.value, id, env.owner_nft) },
+          fn(i) { assets.has_nft(i.output.value, id, config.owner_nft) },
         )
       let updated = with_old(State { home, data }, is_owner)
       (new_home == updated.home)? && (new_data == updated.data)?

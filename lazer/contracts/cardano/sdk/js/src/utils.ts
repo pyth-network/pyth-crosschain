@@ -7,21 +7,26 @@
  * In other places with `any`, we are simply accepting any type as `A`.
  */
 import type {
+  AssetName,
+  Cardano,
   Data,
-  ScriptHash,
+  DatumOption,
   SigningClient,
   UTxO,
 } from "@evolution-sdk/evolution";
 import {
   Address,
-  Cardano,
+  Assets,
   CBOR,
   Effect,
   InlineDatum,
   PolicyId,
   Schema,
+  ScriptHash,
   UPLC,
 } from "@evolution-sdk/evolution";
+import { PlutusV3 } from "@evolution-sdk/evolution/Cardano";
+import type { OutputReference } from "@evolution-sdk/evolution/plutus";
 import type {
   CollectFromParams,
   MintTokensParams,
@@ -30,31 +35,74 @@ import type {
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
 import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
 import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
+import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
 
 /** A margin added to fees to make transactions pass in practice. */
 const FEE_MARGIN = 1_000_000n;
 
-const calculateFee = (params: {
-  address: Address.Address;
-  assets: Cardano.Assets.Assets;
-  datum?: Cardano.DatumOption.DatumOption;
-  scriptRef?: Cardano.Script.Script;
-  coinsPerUtxoByte: bigint;
-}): bigint => Effect.runSync(calculateMinimumUtxoLovelace(params)) + FEE_MARGIN;
+export type TransactionContext = {
+  client: SigningClient;
+  parameters: TransactionParameters;
+};
+
+export const newTxCtx = async (
+  client: SigningClient,
+  networkId: TransactionParameters["networkId"],
+): Promise<TransactionContext> => ({
+  client,
+  parameters: { ...(await client.getProtocolParameters()), networkId },
+});
+
+export async function getOriginUtxo(client: SigningClient) {
+  const [origin] = await client.getWalletUtxos();
+  if (!origin) {
+    throw new Error("No UTxO to use as origin");
+  }
+  return origin;
+}
+
+type TransactionParameters = ProtocolParameters & {
+  networkId: NetworkId | "custom";
+};
+
+const calculateFee = (
+  {
+    script,
+    ...args
+  }: {
+    address: Address.Address;
+    assets: Assets.Assets;
+    datum?: DatumOption.DatumOption;
+    script?: Cardano.Script.Script;
+  },
+  { coinsPerUtxoByte }: { coinsPerUtxoByte: bigint },
+): bigint =>
+  Effect.runSync(
+    calculateMinimumUtxoLovelace({
+      ...args,
+      coinsPerUtxoByte,
+      ...(script ? { scriptRef: script } : {}),
+    }),
+  ) + FEE_MARGIN;
+
+export const utxoToOutRef = (
+  utxo: UTxO.UTxO,
+): OutputReference.OutputReference => ({
+  output_index: utxo.index,
+  transaction_id: utxo.transactionId.hash,
+});
 
 export const toMe = async (
-  client: SigningClient,
-  assets: Cardano.Assets.Assets,
-) => {
-  const { coinsPerUtxoByte } = await client.getProtocolParameters();
-  const address = await client.address();
-  return {
-    address: await client.address(),
-    assets: Cardano.Assets.addLovelace(
-      assets,
-      calculateFee({ address, assets, coinsPerUtxoByte }),
-    ),
-  };
+  ctx: TransactionContext,
+  assets: Assets.Assets,
+): Promise<PayToAddressParams> => {
+  const address = await ctx.client.address();
+  const payment = { address, assets };
+  payment.assets = Assets.addLovelace(
+    payment.assets,
+    calculateFee(payment, ctx.parameters),
+  );
+  return payment;
 };
 
 type RedeemerArg<T> = T | ((input: IndexedInput) => T);
@@ -69,6 +117,9 @@ type DataSchemas<Params extends readonly any[]> = {
 type SchemaTypes<Schemas extends readonly Schema.Schema<any, any>[]> = {
   readonly [I in keyof Schemas]: Schemas[I]["Type"];
 };
+type ReplaceItems<Items extends readonly any[], T> = {
+  readonly [_ in keyof Items]: T;
+};
 
 function applyPlutusOrWithSchema<T>(
   schema: PlutusOrWithSchema<T>,
@@ -78,6 +129,17 @@ function applyPlutusOrWithSchema<T>(
     return schema.toData(data);
   } else {
     return data as Data.Data;
+  }
+}
+
+function deapplyPlutusOrWithSchema<T>(
+  schema: PlutusOrWithSchema<T>,
+  data: Data.Data,
+): T {
+  if ("fromData" in schema) {
+    return schema.fromData(data);
+  } else {
+    return data as T;
   }
 }
 
@@ -136,9 +198,9 @@ abstract class Validator<Params extends readonly any[], Redeemer> {
       : this.blueprint.compiledCode;
     const decoded = UPLC.decodeDoubleCborHexToFlat(compiledCode);
     const bytes = CBOR.toCBORBytes(decoded);
-    const script = new Cardano.PlutusV3.PlutusV3({ bytes });
+    const script = new PlutusV3.PlutusV3({ bytes });
     return {
-      hash: Cardano.ScriptHash.fromScript(script),
+      hash: ScriptHash.fromScript(script),
       script,
     };
   }
@@ -147,10 +209,7 @@ abstract class Validator<Params extends readonly any[], Redeemer> {
 }
 
 type MintingScript = Script & {
-  asset: (
-    name: Cardano.AssetName.AssetName,
-    quantity: bigint,
-  ) => Cardano.Assets.Assets;
+  asset: (name: AssetName.AssetName, quantity: bigint) => Assets.Assets;
 };
 
 export type MintingValidatorBlueprint<
@@ -188,13 +247,13 @@ export class MintingValidator<
     const { script, hash } = this.applyScript(params);
     return {
       asset: (name, quantity) =>
-        Cardano.Assets.fromAsset(new PolicyId.PolicyId(hash), name, quantity),
+        Assets.fromAsset(new PolicyId.PolicyId(hash), name, quantity),
       hash,
       script,
     };
   }
 
-  mint(assets: Cardano.Assets.Assets, redeemer: Redeemer): MintTokensParams {
+  mint(assets: Assets.Assets, redeemer: Redeemer): MintTokensParams {
     return {
       assets,
       redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
@@ -213,10 +272,15 @@ export type SpendingValidatorBlueprint<
 
 type SpendingScript<Datum> = Script & {
   receive: (
-    assets: Cardano.Assets.Assets,
+    parameters: TransactionParameters,
+    assets: Assets.Assets,
     datum: Datum,
-    options?: { networkId?: NetworkId | "custom"; coinsPerUtxoByte?: bigint },
   ) => PayToAddressParams;
+};
+
+type SpendResults<Datums extends readonly any[]> = {
+  input: CollectFromParams;
+  datums: Datums;
 };
 
 export class SpendingValidator<
@@ -254,45 +318,48 @@ export class SpendingValidator<
     const { script, hash } = this.applyScript(params);
     return {
       hash,
-      receive: (
-        assets,
-        datumValue,
-        { coinsPerUtxoByte, networkId = "custom" } = {},
-      ) => {
-        const address = new Address.Address({
-          networkId: networkId === "mainnet" ? 1 : 0,
-          paymentCredential: hash,
-        });
-        const datum = new InlineDatum.InlineDatum({
-          data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
-        });
-        const fee = coinsPerUtxoByte
-          ? calculateFee({
-              address,
-              assets,
-              coinsPerUtxoByte,
-              datum,
-              scriptRef: script,
-            })
-          : 0n;
-        return {
-          address,
-          assets: Cardano.Assets.addLovelace(assets, fee),
-          datum,
+      receive: (parameters, assets, datumValue) => {
+        const payment = {
+          address: new Address.Address({
+            networkId: parameters.networkId === "mainnet" ? 1 : 0,
+            paymentCredential: hash,
+          }),
+          assets,
+          datum: new InlineDatum.InlineDatum({
+            data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
+          }),
           script,
         };
+        payment.assets = Assets.addLovelace(
+          payment.assets,
+          calculateFee(payment, parameters),
+        );
+        return payment;
       },
       script,
     };
   }
 
-  spend(
-    inputs: readonly UTxO.UTxO[],
+  spend<const Inputs extends readonly UTxO.UTxO[]>(
+    inputs: Inputs,
     redeemer: RedeemerArg<Redeemer>,
-  ): CollectFromParams {
+  ): SpendResults<ReplaceItems<Inputs, Datum>> {
     return {
-      inputs,
-      redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
+      datums: inputs.map(({ datumOption }) => {
+        if (!(datumOption instanceof InlineDatum.InlineDatum)) {
+          throw new Error(
+            "SpendingValidator.spend only supports inline inputs",
+          );
+        }
+        return deapplyPlutusOrWithSchema(
+          this.blueprint.datum,
+          datumOption.data,
+        );
+      }) as ReplaceItems<Inputs, Datum>,
+      input: {
+        inputs,
+        redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
+      },
     };
   }
 }

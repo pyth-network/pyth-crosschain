@@ -6,15 +6,15 @@ use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use env
 use pyth/governance.{Governance}
 use pyth/update.{TrustedSigner}
-use pyth_state.{Pyth}
+use pyth_state.{Pyth, config}
 use state.{StateId}
 
 validator pyth_price(pyth_id: StateId) {
   withdraw(updates: List<ByteArray>, credential: Credential, self: Transaction) {
-    expect pyth: Pyth = state.find(pyth_id, self.reference_inputs)
+    expect pyth: Pyth =
+      state.find(pyth_state.config, pyth_id, self.reference_inputs)
     expect Script(hash) = credential
     expect
       pyth_state.is_active_withdraw_script(pyth, self.validity_range, hash)?
@@ -68,7 +68,7 @@ const test_signer_pubkey =
 fn signer_ref_input(policy_id: ByteArray, value, trusted_signers) -> Input {
   let test_governance =
     Governance {
-      guardians: #"",
+      wormhole: #"",
       emitter_chain: 1,
       emitter_address: #"",
       seen_sequence: 0,
@@ -103,7 +103,7 @@ test validate_single_price() {
   let ref_input =
     signer_ref_input(
       test_pyth_id,
-      assets.from_asset(test_pyth_id, env.state_nft, 1),
+      assets.from_asset(test_pyth_id, config.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 1000 }],
     )
 
@@ -119,7 +119,7 @@ test validate_outdated_signer() fail {
   let ref_input =
     signer_ref_input(
       test_pyth_id,
-      assets.from_asset(test_pyth_id, env.state_nft, 1),
+      assets.from_asset(test_pyth_id, config.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 500 }],
     )
 
@@ -135,7 +135,7 @@ test validate_multiple_prices() {
   let ref_input =
     signer_ref_input(
       test_pyth_id,
-      assets.from_asset(test_pyth_id, env.state_nft, 1),
+      assets.from_asset(test_pyth_id, config.state_nft, 1),
       [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
     )
 
@@ -151,7 +151,7 @@ test validate_wrong_signer() fail {
   let ref_input =
     signer_ref_input(
       test_pyth_id,
-      assets.from_asset(test_pyth_id, env.state_nft, 1),
+      assets.from_asset(test_pyth_id, config.state_nft, 1),
       [
         TrustedSigner {
           key: #"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",

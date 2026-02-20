@@ -17,7 +17,7 @@ const governance_action_magic: ByteArray = "PTGM"
 const governance_action_module: U8 = u8.from_int(3)
 
 pub type Governance {
-  guardians: StateId,
+  wormhole: StateId,
   emitter_chain: Int,
   emitter_address: ByteArray,
   seen_sequence: Int,

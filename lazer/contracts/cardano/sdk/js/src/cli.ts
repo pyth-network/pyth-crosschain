@@ -1,11 +1,11 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is CLI script */
+
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { promisify } from "node:util";
-import type { SigningClient } from "@evolution-sdk/evolution";
-import { Cardano, createClient, Data, Either } from "@evolution-sdk/evolution";
+import { createClient, Either } from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
   DEFAULT_CODEGEN_CONFIG,
@@ -15,17 +15,12 @@ import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { runDevnetSession } from "./devnet.js";
-import {
-  Wormhole_state_init_mint,
-  Wormhole_state_update_spend,
-} from "./offchain.js";
-import { MintingValidator, SpendingValidator, toMe } from "./transaction.js";
+import { initPythState, initWormholeState } from "./transactions.js";
+import type { TransactionContext } from "./utils.js";
+import { getOriginUtxo } from "./utils.js";
 
-function getClient(
-  networkId: NetworkId | "custom",
-  mnemonic: string,
-): SigningClient {
-  return createClient({
+const getClient = (networkId: NetworkId | "custom", mnemonic: string) =>
+  createClient({
     network: networkId === "custom" ? 0 : networkId,
     provider:
       networkId === "custom"
@@ -53,6 +48,17 @@ function getClient(
       type: "seed",
     },
   });
+
+async function getCtx(
+  networkId: NetworkId | "custom",
+  mnemonic: string,
+): Promise<TransactionContext> {
+  const client = getClient(networkId, mnemonic);
+  const parameters = await client.getProtocolParameters();
+  return {
+    client,
+    parameters: { ...parameters, networkId },
+  };
 }
 
 const execFileAsync = promisify(execFile);
@@ -66,16 +72,22 @@ parser.command(
   "build contracts and off-chain bindings",
   (b) =>
     b.options({
+      env: {
+        choices: ["preview", "preprod", "default"] as const,
+        default: "default",
+      },
       "trace-level": {
         choices: ["silent", "compact", "verbose"] as const,
         default: "compact",
         demandOption: true,
       },
     }),
-  async ({ traceLevel }) => {
+  async ({ env, traceLevel }) => {
     await execFileAsync("aiken", [
       "build",
       path.resolve(import.meta.dirname, "../../../"),
+      "--env",
+      env,
       "--trace-level",
       traceLevel,
     ]);
@@ -118,64 +130,47 @@ parser.command(
         demandOption: true,
         description: "Cardano network to use",
       },
-    }),
-  async ({ network: networkId, mnemonic }) => {
-    const client = getClient(networkId, mnemonic);
-
-    const [origin] = await client.getWalletUtxos();
-    if (!origin) {
-      throw new Error("No UTxO to use as origin");
-    }
-
-    const { coinsPerUtxoByte } = await client.getProtocolParameters();
-
-    const spending = SpendingValidator.new(Wormhole_state_update_spend);
-    const spendingScript = spending.script();
-    const minting = MintingValidator.new(Wormhole_state_init_mint);
-    const mintingScript = minting.script(
-      { output_index: origin.index, transaction_id: origin.transactionId.hash },
-      spendingScript.hash.hash,
-    );
-    const stateToken = mintingScript.asset(
-      Cardano.AssetName.fromBytes(Buffer.from("Pyth State", "utf-8")),
-      1n,
-    );
-    const ownerToken = mintingScript.asset(
-      Cardano.AssetName.fromBytes(Buffer.from("Pyth Ops", "utf-8")),
-      1n,
-    );
-    const stateOutput = spendingScript.receive(
-      stateToken,
-      {
-        set: [Buffer.from("58cc3ae5c097b213ce3c81979e1b9f9570746aa5", "hex")],
-        set_index: 0n,
+      "emitter-chain": {
+        type: "number",
+        description: "emitter chain ID",
+        default: 1, // Solana
       },
-      { coinsPerUtxoByte, networkId },
-    );
+      "emitter-address": {
+        type: "string",
+        description: "emitter chain address",
+        demandOption: true,
+      },
+    }),
+  async ({ network: networkId, mnemonic, emitterChain, emitterAddress }) => {
+    const ctx = await getCtx(networkId, mnemonic);
 
-    const tx = await client
-      .newTx()
-      .collectFrom({ inputs: [origin] })
-      .attachScript(mintingScript)
-      .mintAssets(
-        minting.mint(
-          Cardano.Assets.merge(stateToken, ownerToken),
-          Data.constr(0n, []),
-        ),
-      )
-      .payToAddress(stateOutput)
-      .payToAddress(await toMe(client, ownerToken))
+    const wormholeOrigin = await getOriginUtxo(ctx.client);
+    const wormhole = await initWormholeState(ctx, wormholeOrigin);
+    const wormholeTx = await wormhole.tx
+      .collectFrom({ inputs: [wormholeOrigin] })
       .buildEither({ debug: true });
-
-    const digest = await Either.getOrThrowWith(tx, (e) =>
+    const wormholeDigest = await Either.getOrThrowWith(wormholeTx, (e) =>
       JSON.stringify(e, undefined, 2),
     ).signAndSubmit();
+    await ctx.client.awaitTx(wormholeDigest);
 
-    await client.awaitTx(digest);
+    const pythOrigin = await getOriginUtxo(ctx.client);
+    const pyth = await initPythState(ctx, pythOrigin, {
+      emitter_address: Buffer.from(emitterAddress, "hex"),
+      emitter_chain: BigInt(emitterChain),
+      wormhole: wormhole.policy_id.hash,
+    });
+    const pythTx = await pyth.tx
+      .collectFrom({ inputs: [pythOrigin] })
+      .buildEither({ debug: true });
+    const pythDigest = await Either.getOrThrowWith(pythTx, (e) =>
+      JSON.stringify(e, undefined, 2),
+    ).signAndSubmit();
+    await ctx.client.awaitTx(pythDigest);
 
     console.log(
       "Wallet: ",
-      JSON.stringify(await client.getWalletUtxos(), undefined, 2),
+      JSON.stringify(await ctx.client.getWalletUtxos(), undefined, 2),
     );
   },
 );

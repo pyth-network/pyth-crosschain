@@ -7,9 +7,10 @@ use pyth/governance.{
   Governance, UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
 }
 use pyth/update.{TrustedSigner, TrustedSigners} as pyth
-use state.{State}
+use state.{State, StateConfig}
 use wormhole.{Guardians}
 use wormhole/vaa.{PreparedVAA}
+use wormhole_state
 
 pub type Pyth {
   governance: Governance,
@@ -17,6 +18,9 @@ pub type Pyth {
   deprecated_withdraw_scripts: Pairs<ValidityRange, ScriptHash>,
   withdraw_script: ScriptHash,
 }
+
+pub const config =
+  StateConfig { state_nft: "Pyth State", owner_nft: "Pyth Ops" }
 
 pub fn is_active_withdraw_script(
   self: Pyth,
@@ -37,8 +41,8 @@ pub type Action {
 }
 
 validator init(origin: OutputReference, home: ScriptHash) {
-  mint(_: Data, id: PolicyId, self: Transaction) {
-    let state <- state.mint(origin, id, self)
+  mint(_: Never, id: PolicyId, self: Transaction) {
+    let state <- state.mint(config, origin, id, self)
     expect pyth: Pyth = state.data
     and {
       (state.home == home)?,
@@ -58,10 +62,14 @@ validator update {
     utxo: OutputReference,
     self: Transaction,
   ) {
-    let state, is_owner <- state.spend(old, utxo, self)
+    let state, is_owner <- state.spend(config, old, utxo, self)
     let pyth = state.data
     expect guardians: Guardians =
-      state.find(pyth.governance.guardians, self.reference_inputs)
+      state.find(
+        wormhole_state.config,
+        pyth.governance.wormhole,
+        self.reference_inputs,
+      )
 
     when action is {
       GovernanceAction(action) -> {
