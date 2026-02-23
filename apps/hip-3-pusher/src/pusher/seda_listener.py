@@ -123,7 +123,9 @@ class SedaListener:
                 ]
             )
 
-    async def _run_single(self, client: httpx.AsyncClient, feed_name: str, feed_config: SedaFeedConfig) -> None:
+    async def _run_single(
+        self, client: httpx.AsyncClient, feed_name: str, feed_config: SedaFeedConfig
+    ) -> None:
         """Run continuous polling loop for a single feed."""
         while True:
             result = await self.poll_single_feed(client, feed_name, feed_config)
@@ -174,7 +176,9 @@ class SedaListener:
         """Execute HTTP POST request to SEDA API."""
         resp: httpx.Response | None = None
         try:
-            resp = await client.post(self.url, headers=headers, params=params, json=data)
+            resp = await client.post(
+                self.url, headers=headers, params=params, json=data
+            )
             resp.raise_for_status()
             return {"ok": True, "status": resp.status_code, "json": resp.json()}
         except httpx.HTTPStatusError as e:
