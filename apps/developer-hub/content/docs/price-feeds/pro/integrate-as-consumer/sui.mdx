@@ -12,7 +12,7 @@ This guide is intended to serve users who want to consume prices from Pyth Pro o
 Integrating with Pyth Pro in smart contracts as a consumer is a three-step process:
 
 1. **Subscribe** to Pyth Pro websocket to receive price updates on backend or frontend.
-2. **Verify** price updates in a Programmable Transaction Block (PTB) using the Pyth Lazer SDK.
+2. **Verify** price updates in a Programmable Transaction Block (PTB) using the Pyth Lazer Sui SDK.
 3. **Consume** the verified `Update` in your smart contract.
 
 <Steps>
@@ -41,40 +41,65 @@ client.subscribe({
   <Step>
   ### Verify price updates in a PTB
 
-Pyth Pro provides a [Sui Move SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui), which allows consumers to verify and parse price updates on Sui.
+Pyth Pro provides a [Sui TypeScript SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui/sdk/js) that handles the verification call for you.
 
 <Callout type="warning">
   Always call `parse_and_verify_le_ecdsa_update` in a Programmable Transaction Block (PTB), not inside your smart contract.
-  This allows your contract to accept any version of the `Update` type, avoiding tight coupling to a specific Pyth Lazer package version.
+  This allows your contract to work with any newer version of the Pyth Lazer contract, since the `Update` type remains stable.
 </Callout>
 
-When constructing your transaction, first call the Pyth Lazer verification function, then pass the resulting `Update` to your contract:
+Install the Sui SDK:
+
+```bash copy
+npm install @pythnetwork/pyth-lazer-sui-js
+```
+
+Use the SDK to build your transaction:
 
 ```typescript copy
+import { SuiClient } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+import { addParseAndVerifyLeEcdsaUpdateCall } from "@pythnetwork/pyth-lazer-sui-js";
 
+// 1. Fetch the price update from Pyth Lazer in "leEcdsa" format:
+const lazer = await PythLazerClient.create({ token: lazerToken });
+const latestPrice = await lazer.getLatestPrice({
+  priceFeedIds: [1],
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+  formats: ["leEcdsa"],
+  channel: "fixed_rate@200ms",
+  jsonBinaryEncoding: "hex",
+});
+const update = Buffer.from(latestPrice.leEcdsa?.data ?? "", "hex");
+
+// 2. Create a new Sui transaction:
+const client = new SuiClient({ url: fullnodeUrl });
 const tx = new Transaction();
 
-// Step 1: Verify and parse the update in the PTB
-const [update] = tx.moveCall({
-  target: `${PYTH_LAZER_PACKAGE_ID}::pyth_lazer::parse_and_verify_le_ecdsa_update`,
-  arguments: [
-    tx.object(PYTH_LAZER_STATE_ID),  // Pyth Lazer State object
-    tx.object("0x6"),                 // Sui Clock object
-    tx.pure(updateBytes),             // Raw update from websocket
-  ],
+// 3. Add the parse and verify call:
+const verifiedUpdate = await addParseAndVerifyLeEcdsaUpdateCall({
+  client,
+  tx,
+  stateObjectId: stateId,
+  update,
 });
 
-// Step 2: Pass the verified Update to your contract
+// 4. Consume `verifiedUpdate` in your own contract:
 tx.moveCall({
   target: `${YOUR_PACKAGE_ID}::your_module::consume_price`,
-  arguments: [update],
+  arguments: [verifiedUpdate],
+});
+
+// 5. Sign and execute the transaction:
+const result = await client.signAndExecuteTransaction({
+  transaction: tx,
+  signer,
 });
 ```
 
 <Callout type="info">
-  The State object contains the list of trusted signers and must be passed to the verification function.
-  Consult the [contract addresses](/price-feeds/pro/contract-addresses) page for the Pyth Lazer package and state object IDs on mainnet and testnet.
+  Consult the [contract addresses](/price-feeds/pro/contract-addresses) page for the Pyth Lazer state object ID on mainnet and testnet.
 </Callout>
 
   </Step>
@@ -102,7 +127,7 @@ public fun consume_price(update: Update) {
     // Get the feeds vector
     let feeds = update.feeds_ref();
 
-    // Access the first feed using modern Move syntax
+    // Access the first feed
     let feed = &feeds[0];
 
     // Extract price data
@@ -175,7 +200,7 @@ if (price_opt.is_some()) {
     let inner_opt = price_opt.borrow();
     if (inner_opt.is_some()) {
         let price_i64 = inner_opt.borrow();
-        // Use i64 module functions to work with the value
+        // Use I64 methods to work with the value
         let is_negative = price_i64.is_negative();
         let abs_value = price_i64.abs();
     }
