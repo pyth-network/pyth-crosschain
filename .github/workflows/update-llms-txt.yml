@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "apps/developer-hub/content/docs/**"
+      - "apps/developer-hub/content/docs/**/*.mdx"
     types: [opened, synchronize]
 
 # Cancel in-progress runs for the same PR
