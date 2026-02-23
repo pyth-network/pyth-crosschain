@@ -99,7 +99,7 @@ const result = await client.signAndExecuteTransaction({
 ```
 
 <Callout type="info">
-  Consult the [contract addresses](/price-feeds/pro/contract-addresses) page for the Pyth Lazer state object ID on mainnet and testnet.
+  The `stateObjectId` is the Pyth Lazer State object on Sui. Contact the Pyth team or check the [Sui SDK README](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui/sdk/js) for the current mainnet and testnet state object IDs.
 </Callout>
 
   </Step>
@@ -160,24 +160,16 @@ let best_ask = feed.best_ask_price();
 // Get the exponent (typically negative, e.g., -8)
 let exponent = feed.exponent();
 
-// Additional properties
+// Confidence interval
 let confidence = feed.confidence();
+
+// Publisher count
 let publisher_count = feed.publisher_count();
 
 // For derivative feeds (e.g., perpetual futures)
 let funding_rate = feed.funding_rate();
 let funding_timestamp = feed.funding_timestamp();
 let funding_rate_interval = feed.funding_rate_interval();
-
-// Market session status
-let market_session = feed.market_session();
-
-// EMA values
-let ema_price = feed.ema_price();
-let ema_confidence = feed.ema_confidence();
-
-// Feed update timestamp
-let feed_update_timestamp = feed.feed_update_timestamp();
 ```
 
 <Callout type="warning">
@@ -192,7 +184,6 @@ Pyth prices can be negative (e.g., for certain derivative products). The SDK pro
 
 ```move copy
 use pyth_lazer::i64::{Self, I64};
-use pyth_lazer::i16::{Self, I16};
 
 // Check if a price exists and extract it
 let price_opt = feed.price();
@@ -200,9 +191,16 @@ if (price_opt.is_some()) {
     let inner_opt = price_opt.borrow();
     if (inner_opt.is_some()) {
         let price_i64 = inner_opt.borrow();
-        // Use I64 methods to work with the value
-        let is_negative = price_i64.is_negative();
-        let abs_value = price_i64.abs();
+
+        // Check if negative
+        let is_negative = price_i64.get_is_negative();
+
+        // Get the magnitude (must check sign first)
+        let magnitude = if (is_negative) {
+            price_i64.get_magnitude_if_negative()
+        } else {
+            price_i64.get_magnitude_if_positive()
+        };
     }
 }
 ```
