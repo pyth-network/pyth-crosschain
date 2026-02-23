@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": ["NODE_ENV"],
-  "globalPassThroughEnv": ["COREPACK_HOME"],
+  "globalPassThroughEnv": ["COREPACK_HOME", "FORCE_COLOR", "BIOME_BINARY"],
   "tasks": {
     "//#fix": {
       "cache": false,

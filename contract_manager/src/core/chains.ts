@@ -1,14 +1,5 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable n/no-process-env */
-
+/** biome-ignore-all lint/style/noProcessEnv: utils used through CLI */
+/** biome-ignore-all lint/suspicious/noConsole: utils used through CLI */
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
@@ -40,35 +31,37 @@ import { FUEL_ETH_ASSET_ID } from "@pythnetwork/pyth-fuel-js";
 import { PythContract } from "@pythnetwork/pyth-ton-js";
 import type { ChainName, DataSource } from "@pythnetwork/xc-admin-common";
 import {
-  SetFee,
   CosmosUpgradeContract,
-  EvmUpgradeContract,
-  toChainId,
-  SetDataSources,
-  SetValidPeriod,
-  EvmSetWormholeAddress,
-  UpgradeContract256Bit,
   EvmExecute,
-  UpgradeSuiLazerContract,
+  EvmSetWormholeAddress,
+  EvmUpgradeContract,
+  SetDataSources,
+  SetFee,
+  SetValidPeriod,
+  toChainId,
   UpdateTrustedSigner264Bit,
+  UpgradeContract256Bit,
+  UpgradeSuiLazerContract,
 } from "@pythnetwork/xc-admin-common";
 import { keyPairFromSeed } from "@ton/crypto";
 import type { ContractProvider, OpenedContract, Sender } from "@ton/ton";
-import { TonClient, WalletContractV4, Address } from "@ton/ton";
-import { AptosClient, AptosAccount, CoinClient, TxnBuilderTypes } from "aptos";
+import { Address, TonClient, WalletContractV4 } from "@ton/ton";
+import type { TxnBuilderTypes } from "aptos";
+import { AptosAccount, AptosClient, CoinClient } from "aptos";
 import * as bs58 from "bs58";
-import { BN, Provider, Wallet, WalletUnlocked } from "fuels";
+import type { BN, WalletUnlocked } from "fuels";
+import { Provider, Wallet } from "fuels";
 import * as micromustache from "micromustache";
 import * as nearAPI from "near-api-js";
-import { Contract, RpcProvider, Signer, ec, shortString } from "starknet";
+import { Contract, ec, RpcProvider, Signer, shortString } from "starknet";
 import * as chains from "viem/chains";
 import Web3 from "web3";
 
+import { execFileAsync } from "../utils/exec-file-async";
+import { hasProperty } from "../utils/utils";
 import type { KeyValueConfig, PrivateKey, TxResult } from "./base";
 import { Storable } from "./base";
 import type { TokenId } from "./token";
-import { execFileAsync } from "../utils/exec-file-async";
-import { hasProperty } from "../utils/utils";
 
 function computeHashOnElements(elements: string[]): string {
   let hash = "0";
@@ -212,13 +205,11 @@ export class GlobalChain extends Chain {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getAccountAddress(_privateKey: PrivateKey): Promise<string> {
+  getAccountAddress(_privateKey: PrivateKey): Promise<string> {
     throw new Error("Can not get account for GlobalChain.");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getAccountBalance(_privateKey: PrivateKey): Promise<number> {
+  getAccountBalance(_privateKey: PrivateKey): Promise<number> {
     throw new Error("Can not get account balance for GlobalChain.");
   }
 
@@ -229,9 +220,9 @@ export class GlobalChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       type: GlobalChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 }
@@ -269,13 +260,13 @@ export class CosmWasmChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       endpoint: this.endpoint,
-      id: this.id,
-      wormholeChainName: this.wormholeChainName,
-      mainnet: this.mainnet,
-      gasPrice: this.gasPrice,
-      prefix: this.prefix,
       feeDenom: this.feeDenom,
+      gasPrice: this.gasPrice,
+      id: this.id,
+      mainnet: this.mainnet,
+      prefix: this.prefix,
       type: CosmWasmChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -348,10 +339,10 @@ export class SuiChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: SuiChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -407,11 +398,11 @@ export class SuiChain extends Chain {
     return new SuiClient({ url: this.rpcUrl });
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const keypair = SuiEd25519Keypair.fromSecretKey(
       new Uint8Array(Buffer.from(privateKey, "hex")),
     );
-    return keypair.toSuiAddress();
+    return Promise.resolve(keypair.toSuiAddress());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -437,14 +428,21 @@ export class SuiChain extends Chain {
 
     const result = await execFileAsync(
       "sui",
-      ["move", "build", "--dump-bytecode-as-base64", "--path", path],
+      [
+        "move",
+        "build",
+        "--dump-bytecode-as-base64",
+        "--path",
+        path,
+        "--environment",
+        activeEnv,
+      ],
       { encoding: "utf8" },
     );
     try {
       return JSON.parse(result.stdout) as SuiPackage;
     } catch (error) {
       if (error instanceof SyntaxError) {
-        // eslint-disable-next-line unicorn/prefer-type-error
         throw new Error(`${result.stdout}\n${result.stderr}`);
       }
       throw error;
@@ -456,7 +454,7 @@ export class SuiChain extends Chain {
     signer: SuiEd25519Keypair,
   ): Promise<{ packageId: string; upgradeCapId: string }> {
     const tx = new SuiTransaction();
-    const upgrade_cap = tx.publish({ modules, dependencies });
+    const upgrade_cap = tx.publish({ dependencies, modules });
     tx.transferObjects([upgrade_cap], signer.toSuiAddress());
 
     const { digest, objectChanges } = await this.executeTransaction(
@@ -551,7 +549,6 @@ export class SuiChain extends Chain {
   ): Promise<{ stateId: string }> {
     const tx = new SuiTransaction();
     tx.moveCall({
-      target: `${packageId}::actions::init_lazer`,
       arguments: [
         tx.object(upgradeCapId),
         tx.pure.u16(emitterChain),
@@ -560,6 +557,7 @@ export class SuiChain extends Chain {
           Buffer.from(emitterAddress.replace(/^0x/, ""), "hex"),
         ),
       ],
+      target: `${packageId}::actions::init_lazer`,
     });
 
     const { objectChanges } = await this.executeTransaction(tx, signer, {
@@ -716,17 +714,17 @@ export class SuiChain extends Chain {
     );
 
     const verifiedVaa = tx.moveCall({
-      target: `${wormholeId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(wormholeStateId),
         tx.pure.vector("u8", vaa),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${wormholeId}::vaa::parse_and_verify`,
     });
 
     tx.moveCall({
-      target: `${packageId}::actions::update_trusted_signer`,
       arguments: [tx.object(stateId), verifiedVaa],
+      target: `${packageId}::actions::update_trusted_signer`,
     });
 
     const { digest } = await this.executeTransaction(tx, signer);
@@ -767,27 +765,27 @@ export class SuiChain extends Chain {
     );
 
     const verifiedVaa = tx.moveCall({
-      target: `${wormholeId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(wormholeStateId),
         tx.pure.vector("u8", vaa),
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${wormholeId}::vaa::parse_and_verify`,
     });
 
     const ticket = tx.moveCall({
-      target: `${packageId}::actions::upgrade`,
       arguments: [tx.object(stateId), verifiedVaa],
+      target: `${packageId}::actions::upgrade`,
     });
     const receipt = tx.upgrade({
-      modules: pkg.modules,
       dependencies: pkg.dependencies,
+      modules: pkg.modules,
       package: packageId,
       ticket,
     });
     tx.moveCall({
-      target: `${packageId}::actions::commit_upgrade`,
       arguments: [tx.object(stateId), receipt],
+      target: `${packageId}::actions::commit_upgrade`,
     });
 
     const { digest } = await this.executeTransaction(tx, signer);
@@ -816,9 +814,9 @@ export class SuiChain extends Chain {
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
 
     const res = await provider.signAndExecuteTransaction({
+      options,
       signer: keypair,
       transaction: tx,
-      options,
     });
 
     await provider.waitForTransaction({ digest: res.digest });
@@ -870,10 +868,10 @@ export class IotaChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: IotaChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -893,11 +891,11 @@ export class IotaChain extends Chain {
     return new IotaClient({ url: this.rpcUrl });
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const keypair = IotaEd25519Keypair.fromSecretKey(
       new Uint8Array(Buffer.from(privateKey, "hex")),
     );
-    return keypair.toIotaAddress();
+    return Promise.resolve(keypair.toIotaAddress());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -994,8 +992,8 @@ export class EvmChain extends Chain {
     return {
       id: this.id,
       mainnet: this.mainnet,
-      rpcUrl: this.rpcUrl,
       networkId: this.networkId,
+      rpcUrl: this.rpcUrl,
       type: EvmChain.type,
     };
   }
@@ -1015,7 +1013,8 @@ export class EvmChain extends Chain {
   }
 
   async estiamteAndSendTransaction(
-    transactionObject: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    transactionObject: any,
     txParams: { from?: string; value?: string },
   ) {
     const GAS_ESTIMATE_MULTIPLIER = 2;
@@ -1045,7 +1044,8 @@ export class EvmChain extends Chain {
         outputs: [{ name: "", type: "uint256" }],
         type: "function",
       },
-    ] as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    ] as any;
 
     const web3 = this.getWeb3();
     const contract = new web3.eth.Contract(
@@ -1066,9 +1066,11 @@ export class EvmChain extends Chain {
    */
   async deploy(
     privateKey: PrivateKey,
-    abi: any, // eslint-disable-line  @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    abi: any,
     bytecode: string,
-    deployArgs: any[], // eslint-disable-line  @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    deployArgs: any[],
     gasMultiplier = 1,
     gasPriceMultiplier = 1,
   ): Promise<string> {
@@ -1076,7 +1078,7 @@ export class EvmChain extends Chain {
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(signer);
     const contract = new web3.eth.Contract(abi);
-    const deployTx = contract.deploy({ data: bytecode, arguments: deployArgs });
+    const deployTx = contract.deploy({ arguments: deployArgs, data: bytecode });
     const gas = Math.trunc(
       (await deployTx.estimateGas({ from: signer.address })) * gasMultiplier,
     );
@@ -1116,10 +1118,10 @@ export class EvmChain extends Chain {
     }
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const web3 = this.getWeb3();
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
-    return signer.address;
+    return Promise.resolve(signer.address);
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -1169,10 +1171,10 @@ export class AptosChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: AptosChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -1187,11 +1189,11 @@ export class AptosChain extends Chain {
     );
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
     const account = new AptosAccount(
       new Uint8Array(Buffer.from(privateKey, "hex")),
     );
-    return account.address().toString();
+    return Promise.resolve(account.address().toString());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -1260,11 +1262,11 @@ export class FuelChain extends Chain {
 
   toJson(): KeyValueConfig {
     return {
-      id: this.id,
-      wormholeChainName: this.wormholeChainName,
-      mainnet: this.mainnet,
       gqlUrl: this.gqlUrl,
+      id: this.id,
+      mainnet: this.mainnet,
       type: FuelChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -1310,10 +1312,10 @@ export class StarknetChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: StarknetChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -1339,7 +1341,6 @@ export class StarknetChain extends Chain {
     const ARGENT_CLASS_HASH =
       "0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b";
     const ADDR_BOUND =
-      // eslint-disable-next-line unicorn/number-literal-case
       0x7_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_00n;
 
     const publicKey = await new Signer("0x" + privateKey).getPubKey();
@@ -1385,32 +1386,32 @@ export class TonChain extends Chain {
     super(id, mainnet, wormholeChainName, nativeToken);
   }
 
-  async getClient(): Promise<TonClient> {
+  getClient(): TonClient {
     // We are hacking rpcUrl to include the apiKey header which is a
     // header that is used to bypass rate limits on the TON network
     const [rpcUrl = "", apiKey = ""] = parseRpcUrl(this.rpcUrl).split("#");
 
     const client = new TonClient({
-      endpoint: rpcUrl,
       apiKey,
+      endpoint: rpcUrl,
     });
     return client;
   }
 
-  async getContract(address: string): Promise<OpenedContract<PythContract>> {
-    const client = await this.getClient();
+  getContract(address: string): OpenedContract<PythContract> {
+    const client = this.getClient();
     const contract = client.open(
       PythContract.createFromAddress(Address.parse(address)),
     );
     return contract;
   }
 
-  async getContractProvider(address: string): Promise<ContractProvider> {
-    const client = await this.getClient();
+  getContractProvider(address: string): ContractProvider {
+    const client = this.getClient();
     return client.provider(Address.parse(address));
   }
 
-  async getWallet(privateKey: PrivateKey): Promise<WalletContractV4> {
+  getWallet(privateKey: PrivateKey): WalletContractV4 {
     const keyPair = keyPairFromSeed(Buffer.from(privateKey, "hex"));
     return WalletContractV4.create({
       publicKey: keyPair.publicKey,
@@ -1418,8 +1419,8 @@ export class TonChain extends Chain {
     });
   }
 
-  async getSender(privateKey: PrivateKey): Promise<Sender> {
-    const client = await this.getClient();
+  getSender(privateKey: PrivateKey): Sender {
+    const client = this.getClient();
     const keyPair = keyPairFromSeed(Buffer.from(privateKey, "hex"));
     const wallet = WalletContractV4.create({
       publicKey: keyPair.publicKey,
@@ -1444,10 +1445,10 @@ export class TonChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: TonChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -1462,14 +1463,14 @@ export class TonChain extends Chain {
     );
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    const wallet = await this.getWallet(privateKey);
-    return wallet.address.toString();
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    const wallet = this.getWallet(privateKey);
+    return Promise.resolve(wallet.address.toString());
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
-    const wallet = await this.getWallet(privateKey);
-    const provider = await this.getContractProvider(wallet.address.toString());
+    const wallet = this.getWallet(privateKey);
+    const provider = this.getContractProvider(wallet.address.toString());
     const balance = await wallet.getBalance(provider);
     return Number(balance) / 10 ** 9;
   }
@@ -1508,11 +1509,11 @@ export class NearChain extends Chain {
   toJson(): KeyValueConfig {
     return {
       id: this.id,
-      wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
-      type: NearChain.type,
-      rpcUrl: this.rpcUrl,
       networkId: this.networkId,
+      rpcUrl: this.rpcUrl,
+      type: NearChain.type,
+      wormholeChainName: this.wormholeChainName,
     };
   }
 
@@ -1524,14 +1525,16 @@ export class NearChain extends Chain {
     return new UpgradeContract256Bit(this.wormholeChainName, codeHash).encode();
   }
 
-  async getAccountAddress(privateKey: PrivateKey): Promise<string> {
-    return Buffer.from(
-      SuiEd25519Keypair.fromSecretKey(
-        new Uint8Array(Buffer.from(privateKey, "hex")),
-      )
-        .getPublicKey()
-        .toRawBytes(),
-    ).toString("hex");
+  getAccountAddress(privateKey: PrivateKey): Promise<string> {
+    return Promise.resolve(
+      Buffer.from(
+        SuiEd25519Keypair.fromSecretKey(
+          new Uint8Array(Buffer.from(privateKey, "hex")),
+        )
+          .getPublicKey()
+          .toRawBytes(),
+      ).toString("hex"),
+    );
   }
 
   async getAccountBalance(privateKey: PrivateKey): Promise<number> {
@@ -1555,8 +1558,8 @@ export class NearChain extends Chain {
       await keyStore.setKey(this.networkId, address, keyPair);
     }
     const connectionConfig = {
-      networkId: this.networkId,
       keyStore,
+      networkId: this.networkId,
       nodeUrl: this.rpcUrl,
     };
     const nearConnection = await nearAPI.connect(connectionConfig);

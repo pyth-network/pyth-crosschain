@@ -176,6 +176,13 @@
       "confidence_ratio": 100
     },
     {
+      "alias": "SUIUSDE/USD",
+      "id": "8cead549d0e770dea8fdf5e018a85d59585265cf8bff16ba83962fc7996dbb7f",
+      "time_difference": 60,
+      "price_deviation": 0.5,
+      "confidence_ratio": 100
+    },
+    {
       "alias": "TRX/USD",
       "id": "67aed5a24fdad045475e7195c98a98aea119c763f272d4523f5bac93a4f33c2b",
       "time_difference": 60,

@@ -1,1 +1,0 @@
-../../../../../../packages/shared-lib/src/emitter/__tests__/emitter.test.ts

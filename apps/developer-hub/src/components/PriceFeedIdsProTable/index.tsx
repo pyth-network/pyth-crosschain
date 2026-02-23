@@ -296,16 +296,18 @@ export const PriceFeedIdsProTable = () => {
         </div>
       )}
 
-      <Table<Col>
-        {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
-        label="Pyth Pro price feed ids"
-        columns={columns}
-        onSortChange={updateSortDescriptor}
-        sortDescriptor={sortDescriptor}
-        stickyHeader="top"
-        fill
-        rounded
-      />
+      <div className={styles.tableWrapper}>
+        <Table<Col>
+          {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
+          label="Pyth Pro price feed ids"
+          columns={columns}
+          onSortChange={updateSortDescriptor}
+          sortDescriptor={sortDescriptor}
+          stickyHeader="top"
+          fill
+          rounded
+        />
+      </div>
       <Paginator
         numPages={numPages}
         currentPage={page}

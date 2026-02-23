@@ -1,9 +1,10 @@
 {
-  "extends": "@cprussin/tsconfig/base.json",
-  "include": ["scripts", "src"],
   "compilerOptions": {
     "module": "preserve",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "target": "ES2020",
   },
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["node_modules", "**/__tests__/*"],
+  "extends": "@cprussin/tsconfig/base.json",
+  "include": ["scripts", "src"],
 }

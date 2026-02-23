@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/useNumericSeparators: <explanation> */
 import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 // GUIDELINES to add a chain
 // PYTH will have:
@@ -124,6 +125,7 @@ export const RECEIVER_CHAINS = {
   injective_evm: 60092,
   orange: 60093,
   tempo: 60094,
+  megaeth: 60095,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,

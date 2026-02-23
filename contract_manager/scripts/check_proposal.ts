@@ -19,6 +19,7 @@ import {
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
+  UpdateTrustedSigner264Bit,
   UpgradeSuiLazerContract,
   WormholeMultisigInstruction,
 } from "@pythnetwork/xc-admin-common";
@@ -241,6 +242,28 @@ async function main() {
             );
           }
         }
+      }
+      if (instruction.governanceAction instanceof UpdateTrustedSigner264Bit) {
+        const { targetChainId, publicKey, expiresAt } =
+          instruction.governanceAction;
+
+        console.log(
+          `Verifying UpdateTrustedSigner264Bit on '${targetChainId}'`,
+        );
+
+        const expiresAtMs = expiresAt * 1000n;
+        if (expiresAtMs > Number.MAX_SAFE_INTEGER) {
+          console.error(
+            "expiration value in milliseconds cannot be represented as a JS integer:",
+            expiresAtMs,
+          );
+          continue;
+        }
+        const expiresAtDate = new Date(Number(expiresAtMs));
+
+        console.log("Trusted signer proposal info:");
+        console.log("  public key:", publicKey);
+        console.log("  expires at:", expiresAtDate);
       }
       if (instruction.governanceAction instanceof UpgradeSuiLazerContract) {
         const { targetChainId, version, hash } = instruction.governanceAction;

@@ -3,6 +3,7 @@ module pyth_lazer::feed;
 use pyth_lazer::i16::{Self, I16};
 use pyth_lazer::i64::{Self, I64};
 use sui::bcs;
+use pyth_lazer::market_session::{Self, MarketSession};
 
 #[error]
 const EInvalidProperty: vector<u8> = "Invalid property ID";
@@ -35,6 +36,14 @@ public struct Feed has copy, drop {
     funding_timestamp: Option<Option<u64>>,
     /// How often the funding rate and funding payments are calculated, in microseconds
     funding_rate_interval: Option<Option<u64>>,
+    /// Current market session
+    market_session: Option<MarketSession>,
+    /// Current aggregate price EMA
+    ema_price: Option<Option<I64>>,
+    /// Current price confidence EMA
+    ema_confidence: Option<Option<u64>>,
+    /// Timestamp when the price feed was updated
+    feed_update_timestamp: Option<Option<u64>>,
 }
 
 /// Create a new Feed with the specified parameters
@@ -49,6 +58,10 @@ public(package) fun new(
     funding_rate: Option<Option<I64>>,
     funding_timestamp: Option<Option<u64>>,
     funding_rate_interval: Option<Option<u64>>,
+    market_session: Option<MarketSession>,
+    ema_price: Option<Option<I64>>,
+    ema_confidence: Option<Option<u64>>,
+    feed_update_timestamp: Option<Option<u64>>,
 ): Feed {
     Feed {
         feed_id,
@@ -61,6 +74,10 @@ public(package) fun new(
         funding_rate,
         funding_timestamp,
         funding_rate_interval,
+        market_session,
+        ema_price,
+        ema_confidence,
+        feed_update_timestamp,
     }
 }
 
@@ -112,6 +129,26 @@ public fun funding_timestamp(feed: &Feed): Option<Option<u64>> {
 /// Get the funding rate interval
 public fun funding_rate_interval(feed: &Feed): Option<Option<u64>> {
     feed.funding_rate_interval
+}
+
+/// Get the market session
+public fun market_session(feed: &Feed): Option<MarketSession> {
+    feed.market_session
+}
+
+/// Get the EMA price
+public fun ema_price(feed: &Feed): Option<Option<I64>> {
+    feed.ema_price
+}
+
+/// Get the EMA confidence
+public fun ema_confidence(feed: &Feed): Option<Option<u64>> {
+    feed.ema_confidence
+}
+
+/// Get the feed update timestamp
+public fun feed_update_timestamp(feed: &Feed): Option<Option<u64>> {
+    feed.feed_update_timestamp
 }
 
 /// Set the feed ID
@@ -167,11 +204,35 @@ public(package) fun set_funding_rate_interval(
     feed.funding_rate_interval = funding_rate_interval;
 }
 
+/// Set the market session
+public(package) fun set_market_session(feed: &mut Feed, market_session: Option<MarketSession>) {
+    feed.market_session = market_session;
+}
+
+/// Set the EMA price
+public(package) fun set_ema_price(feed: &mut Feed, ema_price: Option<Option<I64>>) {
+    feed.ema_price = ema_price;
+}
+
+/// Set the EMA confidence
+public(package) fun set_ema_confidence(feed: &mut Feed, ema_confidence: Option<Option<u64>>) {
+    feed.ema_confidence = ema_confidence;
+}
+
+/// Set the feed update timestamp
+public(package) fun set_feed_update_timestamp(feed: &mut Feed, feed_update_timestamp: Option<Option<u64>>) {
+    feed.feed_update_timestamp = feed_update_timestamp;
+}
+
 /// Parse a feed from a BCS cursor
 public(package) fun parse_from_cursor(cursor: &mut bcs::BCS): Feed {
     let feed_id = cursor.peel_u32();
     let mut feed = new(
         feed_id,
+        option::none(),
+        option::none(),
+        option::none(),
+        option::none(),
         option::none(),
         option::none(),
         option::none(),
@@ -261,6 +322,37 @@ public(package) fun parse_from_cursor(cursor: &mut bcs::BCS): Feed {
                 );
             } else {
                 feed.set_funding_rate_interval(option::some(option::none()));
+            }
+        } else if (property_id == 9) {
+            // Market session
+            let market_session = cursor.peel_u16();
+            feed.set_market_session(
+                option::some(market_session::from_u16(market_session))
+            );
+        } else if (property_id == 10) {
+            // EMA price property
+            let ema_price = cursor.peel_u64();
+            if (ema_price != 0) {
+                feed.set_ema_price(option::some(option::some(i64::from_u64(ema_price))));
+            } else {
+                feed.set_ema_price(option::some(option::none()))
+            }
+        } else if (property_id == 11) {
+            // EMA confidence property
+            let ema_confidence = cursor.peel_u64();
+            if (ema_confidence != 0) {
+                feed.set_ema_confidence(option::some(option::some(ema_confidence)));
+            } else {
+                feed.set_ema_confidence(option::some(option::none()));
+            }
+        } else if (property_id == 12) {
+            // Feed update timestamp property
+            let exists = cursor.peel_bool();
+            if (exists) {
+                let feed_update_timestamp = cursor.peel_u64();
+                feed.set_feed_update_timestamp(option::some(option::some(feed_update_timestamp)));
+            } else {
+                feed.set_feed_update_timestamp(option::some(option::none()));
             }
         } else {
             // Unknown property - we cannot safely skip it without knowing its length

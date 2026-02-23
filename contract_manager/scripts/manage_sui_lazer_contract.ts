@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -34,9 +34,9 @@ function connectMainnetVault(wallet: Wallet) {
   // Override these URLs to use a different RPC node for mainnet / testnet.
   // TODO: extract these RPCs to a config file (?)
   const RPCS = {
+    devnet: "https://api.devnet.solana.com",
     "mainnet-beta": "https://api.mainnet-beta.solana.com",
     testnet: "https://api.testnet.solana.com",
-    devnet: "https://api.devnet.solana.com",
   } as Record<PythCluster, string>;
 
   const vault = getMainnetVault();
@@ -51,10 +51,7 @@ const parser = yargs()
   .usage("Deployment, upgrades and management of Sui PythLazer contracts.")
   .options({
     chain: {
-      type: "string",
       alias: "c",
-      description: "chain name to deploy to (from SuiChains.json)",
-      demandOption: true,
       coerce: (name: string) => {
         if (DefaultStore.chains[name] instanceof SuiChain) {
           return DefaultStore.chains[name];
@@ -62,42 +59,16 @@ const parser = yargs()
           throw new TypeError(`Not a valid Sui chain: ${name}`);
         }
       },
+      demandOption: true,
+      description: "chain name to deploy to (from SuiChains.json)",
+      type: "string",
     },
   })
   .strict()
   .demandCommand(1);
 
 const commonOptions = {
-  "private-key": {
-    type: "string",
-    description: "Bech32 private key to use for transactions",
-    demandOption: true,
-  },
-  wormhole: {
-    type: "string",
-    description: "Wormhole state object ID",
-    demandOption: true,
-  },
-  state: {
-    type: "string",
-    description: "State object ID",
-    demandOption: true,
-  },
-  emitter: {
-    type: "string",
-    description: "path to a solana wallet used as an emitter",
-    demandOption: true,
-  },
-  packagePath: {
-    type: "string",
-    description: "path to Sui Move package",
-    demandOption: true,
-    default: path.resolve(scriptDir, "../../lazer/contracts/sui"),
-  },
   contract: {
-    type: "string",
-    description: "Contract ID in SuiLazerContracts.json",
-    demandOption: true,
     coerce: (id: string) => {
       const contract = DefaultStore.lazer_contracts[id];
       if (!(contract instanceof SuiLazerContract)) {
@@ -105,22 +76,51 @@ const commonOptions = {
       }
       return contract;
     },
-  },
-  "trusted-signer": {
-    type: "string",
-    description: "trusted signer to update",
     demandOption: true,
+    description: "Contract ID in SuiLazerContracts.json",
+    type: "string",
+  },
+  emitter: {
+    demandOption: true,
+    description: "path to a solana wallet used as an emitter",
+    type: "string",
   },
   expires: {
-    type: "string",
-    description: "timestamp of expiration in seconds",
-    demandOption: true,
     coerce: BigInt,
+    demandOption: true,
+    description: "timestamp of expiration in seconds",
+    type: "string",
+  },
+  packagePath: {
+    default: path.resolve(scriptDir, "../../lazer/contracts/sui"),
+    demandOption: true,
+    description: "path to Sui Move package",
+    type: "string",
+  },
+  "private-key": {
+    demandOption: true,
+    description: "Bech32 private key to use for transactions",
+    type: "string",
   },
   "solana-wallet": {
-    type: "string",
-    description: "path to solana wallet used for creating a proposal",
     demandOption: true,
+    description: "path to solana wallet used for creating a proposal",
+    type: "string",
+  },
+  state: {
+    demandOption: true,
+    description: "State object ID",
+    type: "string",
+  },
+  "trusted-signer": {
+    demandOption: true,
+    description: "trusted signer to update",
+    type: "string",
+  },
+  wormhole: {
+    demandOption: true,
+    description: "Wormhole state object ID",
+    type: "string",
   },
 } as const satisfies Record<string, Options>;
 
@@ -129,23 +129,23 @@ parser.command(
   "deploy contract to a selected chain",
   (b) =>
     b.options({
-      "private-key": commonOptions["private-key"],
-      path: commonOptions.packagePath,
-      wormhole: commonOptions.wormhole,
-      "governance-chain": {
-        type: "number",
-        description: "Wormhole chain ID where the governance is located",
-        demandOption: true,
-        default: CHAINS.solana,
-      },
       "governance-address": {
-        type: "string",
         description: "address of the governance contract on its chain",
-      },
-      "upgrade-cap": {
         type: "string",
-        description: "existing UpgradeCap ID to use instead of publishing",
       },
+      "governance-chain": {
+        default: CHAINS.solana,
+        demandOption: true,
+        description: "Wormhole chain ID where the governance is located",
+        type: "number",
+      },
+      path: commonOptions.packagePath,
+      "private-key": commonOptions["private-key"],
+      "upgrade-cap": {
+        description: "existing UpgradeCap ID to use instead of publishing",
+        type: "string",
+      },
+      wormhole: commonOptions.wormhole,
     }),
   async ({
     chain,
@@ -188,8 +188,8 @@ parser.command(
     } else {
       console.info("Initializing package metadata...");
       const meta = {
-        version: "1",
         receiver_chain_id: chain.getWormholeChainId(),
+        version: "1",
       };
       await chain.updateLazerMeta(packagePath, meta);
 
@@ -214,8 +214,8 @@ parser.command(
       packageId,
       upgradeCapId,
       {
-        emitterChain: governanceChain,
         emitterAddress: governanceAddress,
+        emitterChain: governanceChain,
       },
       signer,
     );
@@ -234,8 +234,8 @@ parser.command(
   "updates `meta` module in package source using current on-chain contract",
   (b) =>
     b.options({
-      path: commonOptions.packagePath,
       contract: commonOptions.contract,
+      path: commonOptions.packagePath,
     }),
   async ({ chain, path: packagePath, contract }) => {
     const { version } = await chain.getStatePackageInfo(
@@ -243,8 +243,8 @@ parser.command(
       contract.stateId,
     );
     await chain.updateLazerMeta(packagePath, {
-      version,
       receiver_chain_id: chain.getWormholeChainId(),
+      version,
     });
   },
 );
@@ -254,10 +254,10 @@ parser.command(
   "upgrade specified test contract",
   (b) =>
     b.options({
-      "private-key": commonOptions["private-key"],
-      path: commonOptions.packagePath,
       contract: commonOptions.contract,
       emitter: commonOptions.emitter,
+      path: commonOptions.packagePath,
+      "private-key": commonOptions["private-key"],
     }),
   async ({
     chain,
@@ -294,12 +294,12 @@ parser.command(
 
     console.info("Performing signed upgrade...");
     const upgradeDigest = await chain.upgradeLazerContract({
-      stateId: contract.stateId,
-      wormholeStateId: contract.wormholeStateId,
-      pkg,
       meta,
-      vaa,
+      pkg,
       signer,
+      stateId: contract.stateId,
+      vaa,
+      wormholeStateId: contract.wormholeStateId,
     });
 
     console.info(
@@ -313,11 +313,11 @@ parser.command(
   "update trusted signer in a test contract",
   (b) =>
     b.options({
-      "private-key": commonOptions["private-key"],
       contract: commonOptions.contract,
       emitter: commonOptions.emitter,
-      signer: commonOptions["trusted-signer"],
       expires: commonOptions.expires,
+      "private-key": commonOptions["private-key"],
+      signer: commonOptions["trusted-signer"],
     }),
   async ({
     chain,
@@ -349,10 +349,10 @@ parser.command(
 
     console.info("Performing signed update...");
     const digest = await chain.updateTrustedSigner({
-      stateId: contract.stateId,
-      wormholeStateId: contract.wormholeStateId,
-      vaa,
       signer,
+      stateId: contract.stateId,
+      vaa,
+      wormholeStateId: contract.wormholeStateId,
     });
 
     console.info(
@@ -366,8 +366,8 @@ parser.command(
   "propose upgrade of a specified contract to governance",
   (b) =>
     b.options({
-      path: commonOptions.packagePath,
       contract: commonOptions.contract,
+      path: commonOptions.packagePath,
       wallet: commonOptions["solana-wallet"],
     }),
   async ({ chain, path: packagePath, contract, wallet: walletPath }) => {
@@ -400,8 +400,8 @@ parser.command(
   "propose update of a trusted signer",
   (b) =>
     b.options({
-      signer: commonOptions["trusted-signer"],
       expires: commonOptions.expires,
+      signer: commonOptions["trusted-signer"],
       wallet: commonOptions["solana-wallet"],
     }),
   async ({ chain, signer, expires, wallet: walletPath }) => {
@@ -425,12 +425,12 @@ parser.command(
   (b) =>
     b
       .options({
-        "private-key": commonOptions["private-key"],
         contract: commonOptions.contract,
         path: commonOptions.packagePath,
+        "private-key": commonOptions["private-key"],
         since: {
-          type: "number",
           description: "VAA sequence ID to start from (inclusive)",
+          type: "number",
         },
       })
       .array("ids"),

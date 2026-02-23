@@ -5,3 +5,6 @@ next-env.d.ts
 
 # Ai Migration
 .ai/**
+
+# Local planning docs (not for remote)
+docs/

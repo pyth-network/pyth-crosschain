@@ -1,0 +1,337 @@
+[
+  {
+    "chainName": "abstract",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "apechain_mainnet",
+    "fee": 2,
+    "exponent": 17
+  },
+  {
+    "chainName": "arbitrum",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "avalanche",
+    "fee": 5,
+    "exponent": 14
+  },
+  {
+    "chainName": "base",
+    "fee": 15,
+    "exponent": 11
+  },
+  {
+    "chainName": "berachain_mainnet",
+    "fee": 3,
+    "exponent": 15
+  },
+  {
+    "chainName": "bittensor_mainnet",
+    "fee": 5,
+    "exponent": 13
+  },
+  {
+    "chainName": "blast",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "boba",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "bsc",
+    "fee": 125,
+    "exponent": 11
+  },
+  {
+    "chainName": "bttc",
+    "fee": 25,
+    "exponent": 21
+  },
+  {
+    "chainName": "camp_network",
+    "fee": 2,
+    "exponent": 18
+  },
+  {
+    "chainName": "celo",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "chiliz",
+    "fee": 33,
+    "exponent": 16
+  },
+  {
+    "chainName": "coredao",
+    "fee": 2,
+    "exponent": 16
+  },
+  {
+    "chainName": "cronos_zkevm_mainnet",
+    "fee": 6,
+    "exponent": 16
+  },
+  {
+    "chainName": "ethereum",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "etherlink",
+    "fee": 1,
+    "exponent": 16
+  },
+  {
+    "chainName": "eventum_mainnet",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "filecoin",
+    "fee": 1,
+    "exponent": 16
+  },
+  {
+    "chainName": "flow_mainnet",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "gnosis",
+    "fee": 1,
+    "exponent": 16
+  },
+  {
+    "chainName": "gravity",
+    "fee": 1,
+    "exponent": 18
+  },
+  {
+    "chainName": "hedera",
+    "fee": 1,
+    "exponent": 16
+  },
+  {
+    "chainName": "hemi_mainnet",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "hyperevm",
+    "fee": 1,
+    "exponent": 14
+  },
+  {
+    "chainName": "injective_evm",
+    "fee": 1,
+    "exponent": 15
+  },
+  {
+    "chainName": "injective_inevm",
+    "fee": 1,
+    "exponent": 15
+  },
+  {
+    "chainName": "iota",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "kaia",
+    "fee": 2,
+    "exponent": 17
+  },
+  {
+    "chainName": "kava",
+    "fee": 15,
+    "exponent": 16
+  },
+  {
+    "chainName": "kcc",
+    "fee": 1,
+    "exponent": 15
+  },
+  {
+    "chainName": "kraken_ink_mainnet",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "lightlink_phoenix",
+    "fee": 1,
+    "exponent": 18
+  },
+  {
+    "chainName": "linea",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "manta",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "mantle",
+    "fee": 1,
+    "exponent": 16
+  },
+  {
+    "chainName": "merlin",
+    "fee": 1,
+    "exponent": 11
+  },
+  {
+    "chainName": "meter",
+    "fee": 4,
+    "exponent": 16
+  },
+  {
+    "chainName": "mezo",
+    "fee": 1,
+    "exponent": 11
+  },
+  {
+    "chainName": "mode",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "monad",
+    "fee": 5,
+    "exponent": 15
+  },
+  {
+    "chainName": "morph",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "neon",
+    "fee": 15,
+    "exponent": 16
+  },
+  {
+    "chainName": "opbnb",
+    "fee": 125,
+    "exponent": 11
+  },
+  {
+    "chainName": "optimism",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "plasma",
+    "fee": 5,
+    "exponent": 16
+  },
+  {
+    "chainName": "polygon",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "polygon_zkevm",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "polynomial",
+    "fee": 15,
+    "exponent": 11
+  },
+  {
+    "chainName": "ronin",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "scroll",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "sei_evm_mainnet",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "shimmer",
+    "fee": 1,
+    "exponent": 20
+  },
+  {
+    "chainName": "skate",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "soneium",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "story",
+    "fee": 6,
+    "exponent": 15
+  },
+  {
+    "chainName": "superseed_mainnet",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "swellchain",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "taiko_mainnet",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "unichain",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "viction",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "wemix",
+    "fee": 3,
+    "exponent": 16
+  },
+  {
+    "chainName": "worldchain",
+    "fee": 3,
+    "exponent": 12
+  },
+  {
+    "chainName": "zero_gravity",
+    "fee": 2,
+    "exponent": 17
+  },
+  {
+    "chainName": "zetachain",
+    "fee": 1,
+    "exponent": 17
+  },
+  {
+    "chainName": "zksync",
+    "fee": 3,
+    "exponent": 12
+  }
+]

@@ -2,58 +2,63 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-export function GET() {
-  const content = `# Pyth Network Documentation
+const CONTENT = `# Pyth Network Documentation
 
-> First-party financial oracle delivering real-time market data to blockchain applications.
+> First-party financial oracle delivering real-time market data to 100+ blockchains.
 
-Pyth Network provides low-latency price feeds and secure random numbers across 100+ blockchains.
+## AI Agent Playbook
 
-## AI Agent Skill: pyth-dev
+For an opinionated integration guide with code snippets and step-by-step procedures:
+> https://docs.pyth.network/SKILL.md
 
-End-to-end Pyth Network oracle integration playbook. Covers pull-based price feeds, random numbers, and MEV protection with opinionated SDK choices, 5-step operating procedure, security checklists, and ready-to-use code snippets.
+## Products
 
-→ [SKILL.md](https://docs.pyth.network/SKILL.md)
+### Pyth Core — Decentralized Price Oracle
+Pull-based oracle providing 500+ price feeds with 400ms updates across 100+ chains. Applications fetch signed prices from Hermes and verify on-chain in a single transaction.
+Best for: DeFi protocols, lending, DEXs, derivatives.
+Chains: EVM, Solana, Sui, Aptos, CosmWasm, NEAR, Starknet, and more.
+> https://docs.pyth.network/llms-price-feeds-core.txt
 
-## Instructions
+### Pyth Pro — Low-Latency Price Streaming
+Enterprise WebSocket streaming with configurable update channels (1ms–1s). Requires access token.
+Best for: HFT, MEV strategies, market making, risk management.
+SDK: \`@pythnetwork/pyth-lazer-sdk\` (TypeScript)
+> https://docs.pyth.network/llms-price-feeds-pro.txt
 
-This file is a routing index. To help users with Pyth Network, you MUST:
-1. Read the routing table below to identify which product the user needs.
-2. Fetch exactly ONE context file — the single best match for the user's question.
+### Entropy — On-Chain Randomness
+Secure verifiable random number generation using commit-reveal. Callback-based API.
+Best for: Gaming, NFT mints, lotteries, fair selection.
+> https://docs.pyth.network/llms-entropy.txt
 
-Do NOT attempt to answer using only this file — it does not contain implementation details.
-Do NOT fetch all files — each file is self-contained, so only one is needed.
+### Express Relay — MEV Protection
+Auction-based MEV capture and order flow protection for DeFi protocols.
+> https://docs.pyth.network/express-relay/index.mdx
 
-## Routing
+## Unsure Which Price Feed Product?
+Comparison of Core vs Pro with decision matrix:
+> https://docs.pyth.network/llms-price-feeds.txt
 
-If the user needs help with **on-chain price oracles, DeFi integration, or pull-based price feeds**:
-→ https://docs.pyth.network/llms-price-feeds-core.txt
+## Individual Page Access
+Fetch any documentation page as plain markdown by appending .mdx:
+  https://docs.pyth.network/price-feeds/core/getting-started.mdx
 
-If the user needs help with **high-frequency trading, MEV, ultra-low latency, or WebSocket streaming**:
-→ https://docs.pyth.network/llms-price-feeds-pro.txt
+## Machine-Readable Metadata
+Programmatic discovery with token counts and content hashes:
+> https://docs.pyth.network/llms-manifest.json
 
-If the user needs help with **random number generation, games, NFT mints, or lotteries**:
-→ https://docs.pyth.network/llms-entropy.txt
-
-If the user needs help with **both Core and Pro price feeds**, or you are unsure which to use:
-→ https://docs.pyth.network/llms-price-feeds.txt
-
-If the user needs help with **MEV protection or Express Relay**:
-→ https://docs.pyth.network/express-relay
-
-## About Pyth Products
-
-- **Pyth Core**: Decentralized oracle with 400ms updates across 100+ chains. Pull-based model.
-- **Pyth Pro**: Enterprise-grade, subscription-based, ultra-low latency WebSocket streaming.
-- **Entropy**: Secure on-chain random number generation using commit-reveal.
-- **Express Relay**: Auction-based MEV protection for DeFi protocols.
+## Instructions for AI Agents
+1. Read the product descriptions above to identify which product the user needs.
+2. Fetch exactly ONE product file — each is self-contained with code examples, addresses, and patterns.
+3. For deeper detail, fetch individual pages via .mdx URLs listed in each product file.
+4. Do NOT fetch all files — only fetch the single best match for the user's question.
 `;
 
-  return new NextResponse(content, {
-    status: 200,
+export function GET() {
+  return new NextResponse(CONTENT, {
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "public, max-age=86400",
+      "Content-Type": "text/plain; charset=utf-8",
     },
+    status: 200,
   });
 }

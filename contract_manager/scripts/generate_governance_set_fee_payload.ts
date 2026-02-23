@@ -5,6 +5,11 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable n/no-process-env */
+/* eslint-disable turbo/no-undeclared-env-vars */
+
+import fs from "node:fs";
+import path from "node:path";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -30,6 +35,11 @@ const parser = yargs(hideBin(process.argv))
       default: "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
       desc: "Vault ID",
     },
+    "rpc-url": {
+      type: "string",
+      desc: "Solana RPC URL",
+      default: process.env.SOLANA_RPC_URL,
+    },
   });
 
 async function main() {
@@ -37,9 +47,11 @@ async function main() {
     "config-path": configPath,
     "ops-key-path": opsKeyPath,
     vault: vaultId,
+    "rpc-url": rpcUrl,
   } = await parser.argv;
 
-  const config = await import(configPath, { assert: { type: "json" } });
+  const resolvedConfigPath = path.resolve(configPath);
+  const config = JSON.parse(fs.readFileSync(resolvedConfigPath, "utf8"));
 
   const updatePayloads: Buffer[] = [];
   for (const setFeeEntry of config) {
@@ -62,7 +74,7 @@ async function main() {
   }
 
   const keypair = await loadHotWallet(opsKeyPath);
-  vault.connect(keypair);
+  vault.connect(keypair, rpcUrl ? () => rpcUrl : undefined);
   const proposal = await vault.proposeWormholeMessage(updatePayloads);
   console.log("Proposal address:", proposal.address.toBase58());
 }

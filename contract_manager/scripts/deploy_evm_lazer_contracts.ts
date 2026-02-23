@@ -69,40 +69,51 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     chain: {
-      type: "string",
+      demandOption: true,
       description: "Chain name to deploy to (from EvmChains.json)",
-      demandOption: true,
-    },
-    "private-key": {
       type: "string",
-      description: "Private key for deployment and transactions",
-      demandOption: true,
     },
     deploy: {
-      type: "boolean",
+      default: true,
       description:
         "Deploy the PythLazer contract (default: true if no other flags specified)",
-      default: true,
-    },
-    verify: {
       type: "boolean",
-      description:
-        "Verify contract on block explorer (only used with --deploy)",
-      default: false,
     },
     "etherscan-api-key": {
-      type: "string",
       description:
         "Etherscan API key for verification (required if --verify is true)",
-    },
-    "update-signer": {
       type: "string",
-      description: "Update trusted signer address (requires --expires-at)",
     },
     "expires-at": {
-      type: "number",
       description:
         "Expiration timestamp for trusted signer in Unix timestamp format (required if --update-signer is specified)",
+      type: "number",
+    },
+    "gas-limit": {
+      description:
+        "Gas limit for forge deployment (skips simulation when set). Required for chains with non-standard gas models like MegaETH.",
+      type: "number",
+    },
+    "private-key": {
+      demandOption: true,
+      description: "Private key for deployment and transactions",
+      type: "string",
+    },
+    "raw-tx": {
+      type: "boolean",
+      description:
+        "Sign and send transactions via eth_sendRawTransaction. Required for chains like MegaETH that don't support eth_sendTransaction.",
+      default: false,
+    },
+    "update-signer": {
+      description: "Update trusted signer address (requires --expires-at)",
+      type: "string",
+    },
+    verify: {
+      default: false,
+      description:
+        "Verify contract on block explorer (only used with --deploy)",
+      type: "boolean",
     },
   })
   .check((argv) => {
@@ -147,6 +158,7 @@ async function deployPythLazerContract(
   privateKey: string,
   verify: boolean,
   etherscanApiKey?: string,
+  gasLimit?: number,
 ): Promise<string> {
   // Resolve path relative to this script's location, not CWD
   const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -173,6 +185,10 @@ async function deployPythLazerContract(
 
   if (verify && etherscanApiKey) {
     forgeCommand += ` --verify --etherscan-api-key ${etherscanApiKey}`;
+  }
+
+  if (gasLimit) {
+    forgeCommand += ` --skip-simulation --gas-limit ${gasLimit}`;
   }
 
   try {
@@ -264,9 +280,10 @@ async function updateTrustedSigner(
   trustedSigner: string,
   expiresAt: number,
   privateKey: PrivateKey,
+  rawTx: boolean,
 ): Promise<void> {
   const contract = getOrCreateLazerContract(chain, contractAddress);
-  await contract.updateTrustedSigner(trustedSigner, expiresAt, privateKey);
+  await contract.updateTrustedSigner(trustedSigner, expiresAt, privateKey, rawTx);
 }
 
 function findLazerContract(chain: EvmChain): EvmLazerContract | undefined {
@@ -289,6 +306,7 @@ export async function findOrDeployPythLazerContract(
   privateKey: string,
   verify: boolean,
   etherscanApiKey?: string,
+  gasLimit?: number,
 ): Promise<string> {
   const lazerContract = findLazerContract(chain);
   if (lazerContract) {
@@ -302,6 +320,7 @@ export async function findOrDeployPythLazerContract(
     privateKey,
     verify,
     etherscanApiKey,
+    gasLimit,
   );
   console.log(
     `✅ PythLazer contract deployed successfully at ${deployedAddress}`,
@@ -331,6 +350,7 @@ export async function main() {
         argv["private-key"],
         argv.verify,
         argv["etherscan-api-key"],
+        argv["gas-limit"],
       );
     }
 
@@ -366,6 +386,7 @@ export async function main() {
         argv["update-signer"],
         argv["expires-at"],
         toPrivateKey(argv["private-key"]),
+        argv["raw-tx"],
       );
 
       console.log(`\n✅ Trusted signer updated successfully`);

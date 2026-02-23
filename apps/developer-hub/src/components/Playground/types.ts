@@ -22,7 +22,8 @@ export type PriceFeedProperty =
   | "fundingRate"
   | "fundingTimestamp"
   | "fundingRateInterval"
-  | "marketSession";
+  | "marketSession"
+  | "feedUpdateTimestamp";
 
 // Update channel options
 export type Channel = "real_time" | "fixed_rate@50ms" | "fixed_rate@200ms";
@@ -100,6 +101,11 @@ export const PROPERTY_OPTIONS: {
     id: "marketSession",
     label: "Market Session",
     description: "Market session enum (e.g., regular, pre/post)",
+  },
+  {
+    id: "feedUpdateTimestamp",
+    label: "Feed Update Timestamp",
+    description: "Timestamp when price was last generated for this feed",
   },
 ];
 
