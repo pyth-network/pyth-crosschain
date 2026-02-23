@@ -1,6 +1,6 @@
 use aiken/collection/list
 use aiken/crypto.{ScriptHash}
-use aiken/interval.{Finite, IntervalBound, NegativeInfinity, PositiveInfinity}
+use aiken/interval
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction, ValidityRange}
 use pyth/governance.{
@@ -140,28 +140,24 @@ fn update_trusted_signer(signers: TrustedSigners, signer: TrustedSigner) {
   }
 }
 
-fn purge_expired_scripts(
+pub fn purge_expired_scripts(
   scripts: Pairs<ValidityRange, ScriptHash>,
-  interval: ValidityRange,
+  valid: ValidityRange,
 ) -> Pairs<ValidityRange, ScriptHash> {
-  let valid = entirely_before_range(interval)
   list.filter(
     scripts,
     fn(Pair(range, _)) {
-      !interval.is_empty(interval.intersection(valid, range))
+      !interval.is_empty(interval.intersection(range, valid))
     },
   )
 }
 
-fn entirely_before_range(self: ValidityRange) -> ValidityRange {
-  when self.lower_bound is {
-    IntervalBound { bound_type: Finite(bound), is_inclusive } ->
-      if is_inclusive {
-        interval.entirely_before(bound)
-      } else {
-        interval.before(bound)
-      }
-    IntervalBound { bound_type: NegativeInfinity, .. } -> interval.empty
-    IntervalBound { bound_type: PositiveInfinity, .. } -> interval.everything
-  }
+test keeps_valid_withdraw_script() {
+  let scripts = [Pair(interval.between(1, 5), #"")]
+  purge_expired_scripts(scripts, interval.between(3, 7)) == scripts
+}
+
+test purges_invalid_withdraw_script() {
+  let scripts = [Pair(interval.between(1, 5), #"")]
+  purge_expired_scripts(scripts, interval.between(6, 11)) == []
 }
