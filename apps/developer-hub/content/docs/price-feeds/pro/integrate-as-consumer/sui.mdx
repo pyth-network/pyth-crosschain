@@ -1,0 +1,207 @@
+---
+title: Consume Data on Sui
+description: Consume and verify Pyth Pro price updates in Sui Move smart contracts
+slug: /price-feeds/pro/integrate-as-consumer/sui
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+This guide is intended to serve users who want to consume prices from Pyth Pro on **Sui**.
+
+Integrating with Pyth Pro in smart contracts as a consumer is a three-step process:
+
+1. **Use** Pyth Lazer SDK in Sui Move smart contracts to parse and verify the price updates.
+2. **Subscribe** to Pyth Pro websocket to receive price updates on backend or frontend.
+3. **Include** the price updates into the smart contract transactions.
+
+<Steps>
+  <Step>
+  ### Use Pyth Lazer SDK in smart contracts
+
+Pyth Pro provides a [Sui Move SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui), which allows consumers to parse and verify the price updates on Sui.
+
+To start, add the Pyth Lazer package as a dependency in your `Move.toml` file:
+
+```toml copy
+[dependencies]
+pyth_lazer = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "lazer/contracts/sui", rev = "main" }
+```
+
+Once the SDK is added, you can import the necessary modules into your Move contract:
+
+```move copy
+use pyth_lazer::pyth_lazer;
+use pyth_lazer::update::Update;
+use pyth_lazer::feed::Feed;
+use pyth_lazer::state::State;
+use sui::clock::Clock;
+```
+
+To verify and parse a price update, call the `parse_and_verify_le_ecdsa_update` function with the Pyth Lazer state object, clock, and the raw update bytes:
+
+```move copy
+public fun update_price(
+    state: &State,
+    clock: &Clock,
+    update_data: vector<u8>,
+) {
+    // Parse and verify the update - this validates the signature
+    let update: Update = pyth_lazer::parse_and_verify_le_ecdsa_update(
+        state,
+        clock,
+        update_data
+    );
+
+    // Access update metadata
+    let timestamp = update.timestamp();
+    let channel = update.channel();
+
+    // Process price feeds
+    let feeds = update.feeds_ref();
+    // ...
+}
+```
+
+The `parse_and_verify_le_ecdsa_update` function:
+- Validates the update message magic number
+- Extracts and verifies the ECDSA signature against trusted signers
+- Parses the payload into a structured `Update` object
+
+<Callout type="info">
+  The State object contains the list of trusted signers and must be passed to the verification function.
+  The Pyth Lazer State object is deployed on Sui mainnet and testnet - consult the [contract addresses](/price-feeds/pro/contract-addresses) page for the latest addresses.
+</Callout>
+
+#### Accessing Price Feed Data
+
+The `Update` struct contains a vector of `Feed` objects. Each feed provides accessor functions for the available price properties:
+
+```move copy
+let feeds = update.feeds_ref();
+let feed = vector::borrow(feeds, 0);
+
+// Get the feed ID (e.g., 1 for BTC/USD, 2 for ETH/USD)
+let feed_id = feed.feed_id();
+
+// Get the price (returns Option<Option<I64>>)
+let price = feed.price();
+
+// Get bid/ask prices
+let best_bid = feed.best_bid_price();
+let best_ask = feed.best_ask_price();
+
+// Get the exponent (typically negative, e.g., -8)
+let exponent = feed.exponent();
+
+// Additional properties
+let confidence = feed.confidence();
+let publisher_count = feed.publisher_count();
+
+// For derivative feeds (e.g., perpetual futures)
+let funding_rate = feed.funding_rate();
+let funding_timestamp = feed.funding_timestamp();
+let funding_rate_interval = feed.funding_rate_interval();
+
+// Market session status
+let market_session = feed.market_session();
+
+// EMA values
+let ema_price = feed.ema_price();
+let ema_confidence = feed.ema_confidence();
+
+// Feed update timestamp
+let feed_update_timestamp = feed.feed_update_timestamp();
+```
+
+<Callout type="warning">
+  Many feed properties return `Option<Option<T>>`. The outer `Option` indicates whether the property was requested in the subscription.
+  The inner `Option` indicates whether a value is available (e.g., price may be `None` if there aren't enough publishers).
+  Always check both levels when accessing values.
+</Callout>
+
+#### Working with Signed Integers
+
+Pyth prices can be negative (e.g., for certain derivative products). The SDK provides `I64` and `I16` types for signed integers:
+
+```move copy
+use pyth_lazer::i64::{Self, I64};
+use pyth_lazer::i16::{Self, I16};
+
+// Check if a price exists and extract it
+let price_opt = feed.price();
+if (option::is_some(&price_opt)) {
+    let inner_opt = option::borrow(&price_opt);
+    if (option::is_some(inner_opt)) {
+        let price_i64: &I64 = option::borrow(inner_opt);
+        // Use i64 module functions to work with the value
+        let is_negative = i64::is_negative(price_i64);
+        let abs_value = i64::abs(price_i64);
+    }
+}
+```
+
+  </Step>
+  <Step>
+  ### Subscribe to Pyth Pro to receive Price Updates
+
+Pyth Pro provides a websocket endpoint to receive price updates. Moreover, Pyth Pro also provides a [TypeScript SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) to subscribe to the websocket endpoint.
+
+Consult [How to subscribe to prices](/price-feeds/pro/subscribe-to-prices) for a complete step-by-step guide.
+
+When subscribing, request the `leEcdsa` format which is compatible with Sui's secp256k1 signature verification:
+
+```typescript copy
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],  // BTC/USD, ETH/USD
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+  formats: ["leEcdsa"],  // Required for Sui
+  channel: "fixed_rate@200ms",
+  jsonBinaryEncoding: "hex",
+});
+```
+
+  </Step>
+  <Step>
+  ### Include the price updates into smart contract transactions
+
+Now that you have the price updates from the websocket, and your smart contract is able to parse and verify them, include the price updates in your Sui transactions.
+
+When constructing the transaction, pass:
+1. The Pyth Lazer `State` shared object
+2. The Sui `Clock` shared object
+3. The raw update bytes received from the websocket
+
+```typescript copy
+import { Transaction } from "@mysten/sui/transactions";
+
+const tx = new Transaction();
+
+tx.moveCall({
+  target: `${YOUR_PACKAGE_ID}::your_module::update_price`,
+  arguments: [
+    tx.object(PYTH_LAZER_STATE_ID),  // Pyth Lazer State object
+    tx.object("0x6"),                 // Sui Clock object
+    tx.pure(updateBytes),             // Raw update from websocket
+  ],
+});
+```
+
+  </Step>
+</Steps>
+
+## Additional Resources
+
+You may find these additional resources helpful for consuming prices from Pyth Pro in your Sui smart contracts.
+
+### Price Feed IDs
+
+Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page for a complete list of supported price feeds.
+
+### Examples
+
+[pyth-lazer-example-sui](https://github.com/pyth-network/pyth-examples/tree/main/lazer/sui) is a simple example contract that parses and consumes price updates from Pyth Pro on Sui.
+
+[pyth-lazer-example-js](https://github.com/pyth-network/pyth-examples/tree/main/lazer/js) is a simple example for subscribing to the Pyth Pro websocket.
