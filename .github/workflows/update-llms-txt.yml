@@ -20,7 +20,7 @@ defaults:
 jobs:
   update-llms-txt:
     # Only run if PR is from the same repo (not forks) and targets main
-    if: github.event.pull_request.base.ref == 'main'
+    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -116,7 +116,7 @@ jobs:
           fi
 
           # Deduplicate
-          AFFECTED=$(echo "$AFFECTED" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ' | xargs)
+          AFFECTED=$(echo "$AFFECTED" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
 
           # Include SKILL.md if key pages or product files are affected
           INCLUDE_SKILL="false"
