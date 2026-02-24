@@ -25,6 +25,7 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 
 | Property              | Type     | Scope       | Description                                                              |
 | --------------------- | -------- | ----------- | ------------------------------------------------------------------------ |
+| `feedUpdateTimestamp` | `u64`    | All         | Timestamp when price was last generated for this feed (μs).              |
 | `publisherCount`      | `u16`    | All         | Number of contributing publishers.                                       |
 | `exponent`            | `i16`    | All         | Decimal exponent: `actual_price = mantissa × 10^exponent`.               |
 | `marketSession`       | `string` | All         | Session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`.    |
@@ -32,10 +33,11 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 | `confidence`          | `i64`    | Spot        | Price uncertainty; higher = more disagreement.                           |
 | `bestBidPrice`        | `i64`    | Spot        | Highest bid across publishers.                                           |
 | `bestAskPrice`        | `i64`    | Spot        | Lowest ask across publishers.                                            |
+| `emaPrice`            | `i64`    | Spot        | Exponential moving average of the price.                                 |
+| `emaConfidence`       | `i64`    | Spot        | Exponential moving average of the confidence.                            |
 | `fundingRate`         | `i64`    | Derivatives | Funding rate (perpetual futures).                                        |
 | `fundingTimestamp`    | `u64`    | Derivatives | When funding rate was last calculated (μs).                              |
 | `fundingRateInterval` | `u64`    | Derivatives | Interval between funding updates (μs).                                   |
-| `feedUpdateTimestamp` | `string` | All         | Timestamp when price was last generated for this feed (μs).              |
 
 **Scope:** _All_ = every feed type; _Spot_ = spot price feeds; _Derivatives_ = funding rate feeds.
 
@@ -69,6 +71,8 @@ When you receive a `StreamUpdated` message from Pyth Pro, it contains the follow
     { name: "confidence", type: "i64" },
     { name: "marketSession", type: "string" },
     { name: "feedUpdateTimestamp", type: "string" },
+    { name: "emaPrice", type: "i64" },
+    { name: "emaConfidence", type: "i64" },
     { name: "evm", type: "object" },
     { name: "encoding", type: "string" },
     { name: "data", type: "string" },
@@ -88,7 +92,9 @@ When you receive a `StreamUpdated` message from Pyth Pro, it contains the follow
         "exponent": -8,
         "confidence": 1373488286,
         "marketSession": "regular",
-        "feedUpdateTimestamp": "1758690761750000"
+        "feedUpdateTimestamp": "1758690761750000",
+        "emaPrice": "11223843563091",
+        "emaConfidence": 1347630281
       }
     ]
   },
@@ -151,6 +157,27 @@ Based on the protocol specification, here are the technical details for each pro
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
+      invariants: ["Positive when present"],
+      usage:
+        "Risk management and price quality assessment. A high confidence value means high uncertainty (publishers disagree more).",
+      note: "A high confidence value means high uncertainty (publishers disagree more). See [Understanding Price Data](/price-feeds/pro/understanding-price-data) for how confidence differs from best bid/ask and when to use each metric.",
+    },
+    {
+      name: "emaPrice",
+      type: "optional non-zero i64",
+      description:
+        "Exponential moving average of the price field, represented as mantissa.",
+      availability: "Only included if requested in subscription properties",
+      invariants: ["Non-zero when present (null values filtered out)"],
+      usage:
+        "The price is stored in two parts: an integer mantissa value (the `price` field) and a power-of-ten `exponent`. The actual decimal representation of the price is given by: `decimal_price = price × 10^exponent`. For example: `1006900000000 × 10^(-8) = $10,069.00`",
+    },
+    {
+      name: "emaConfidence",
+      type: "optional i64",
+      description:
+        "Exponential moving average of the confidence field, represented as mantissa.",
+      availability: "Only included if requested in subscription properties",
       invariants: ["Positive when present"],
       usage:
         "Risk management and price quality assessment. A high confidence value means high uncertainty (publishers disagree more).",
