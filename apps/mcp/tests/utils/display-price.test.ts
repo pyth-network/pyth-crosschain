@@ -39,9 +39,15 @@ describe("addDisplayPrices", () => {
     expect(result.display_price).toBe(100);
   });
 
-  it("handles missing exponent (defaults to 0)", () => {
+  it("omits display fields when exponent is missing", () => {
     const feed = { price: 42 };
     const result = addDisplayPrices(feed);
-    expect(result.display_price).toBe(42);
+    expect(result.display_price).toBeUndefined();
+  });
+
+  it("omits display fields when exponent is null", () => {
+    const feed = { exponent: null, price: 42 };
+    const result = addDisplayPrices(feed);
+    expect(result.display_price).toBeUndefined();
   });
 });

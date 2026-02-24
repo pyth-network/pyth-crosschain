@@ -61,6 +61,18 @@ describe("withRetry", () => {
     expect(attempts).toBe(1);
   });
 
+  it("retries on TimeoutError", async () => {
+    let attempts = 0;
+    const result = await withRetry(() => {
+      attempts++;
+      if (attempts === 1)
+        throw new DOMException("Signal timed out", "TimeoutError");
+      return Promise.resolve("ok");
+    });
+    expect(result).toBe("ok");
+    expect(attempts).toBe(2);
+  });
+
   it("fails after max retries (1 retry = 2 total attempts)", async () => {
     let attempts = 0;
     await expect(

@@ -15,7 +15,11 @@ type PriceFields = {
 export function addDisplayPrices<T extends PriceFields>(
   feed: T,
 ): T & { display_price?: number; display_bid?: number; display_ask?: number } {
-  const factor = Math.pow(10, feed.exponent ?? 0);
+  if (feed.exponent == null) {
+    return { ...feed };
+  }
+
+  const factor = Math.pow(10, feed.exponent);
 
   return {
     ...feed,

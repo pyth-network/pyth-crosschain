@@ -104,10 +104,10 @@ describe("get_historical_price tool", () => {
     expect(data[0].display_price).toBeDefined();
     expect(data[0].display_bid).toBeDefined();
     expect(data[0].display_ask).toBeDefined();
-    // Second entry has null confidence/exponent and null bid/ask
+    // Second entry has null confidence/exponent — no display fields
     expect(data[1].confidence).toBeNull();
     expect(data[1].exponent).toBeNull();
-    expect(data[1].display_price).toBeDefined();
+    expect(data[1].display_price).toBeUndefined();
     expect(data[1].display_bid).toBeUndefined();
     expect(data[1].display_ask).toBeUndefined();
   });
