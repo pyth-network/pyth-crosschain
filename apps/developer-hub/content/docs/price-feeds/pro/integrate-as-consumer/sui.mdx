@@ -71,7 +71,7 @@ const latestPrice = await lazer.getLatestPrice({
   channel: "fixed_rate@200ms",
   jsonBinaryEncoding: "hex",
 });
-const update = Buffer.from(latestPrice.leEcdsa?.data ?? "", "hex");
+const update = Uint8Array.fromHex(latestPrice.leEcdsa?.data ?? "");
 
 // 2. Create a new Sui transaction:
 const client = new SuiClient({ url: fullnodeUrl });
