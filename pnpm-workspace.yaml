@@ -211,6 +211,7 @@ onlyBuiltDependencies:
   - esbuild
   - keccak
   - leveldown
+  - msw
   - node-hid
   - nx
   - protobufjs

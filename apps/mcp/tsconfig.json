@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": false,
+    "incremental": false
+  },
+  "exclude": ["node_modules", "dist", "tests"],
+  "extends": "@cprussin/tsconfig/base.json",
+  "include": ["src"]
+}
