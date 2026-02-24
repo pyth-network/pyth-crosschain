@@ -1,12 +1,9 @@
 import argparse
 from pathlib import Path
-from typing import Any
 
 from eth_account import Account
 from hyperliquid.exchange import Exchange
 from hyperliquid.utils import constants
-from hyperliquid.utils.constants import MAINNET_API_URL
-from hyperliquid.utils.signing import get_timestamp_ms, sign_l1_action
 
 
 def main() -> None:
