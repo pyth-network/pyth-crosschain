@@ -6,6 +6,9 @@
  *
  * In other places with `any`, we are simply accepting any type as `A`.
  */
+
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import type {
   AssetName,
   Cardano,
@@ -36,9 +39,34 @@ import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/Redeeme
 import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
 import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
+import fs from "node:fs/promises";
+import path from "node:path";
+
+export const execFileAsync = promisify(execFile);
+
+export async function withTempFile<T>(
+  src: string | Uint8Array,
+  f: (path: string) => Promise<T>,
+): Promise<T> {
+  const dir = await fs.mkdtemp("temp_file");
+  try {
+    const file = path.resolve(dir, "file.txt");
+    await fs.writeFile(file, src);
+    const res = await f(file);
+    return res;
+  } finally {
+    await fs.rm(dir, { recursive: true });
+  }
+}
 
 /** A margin added to fees to make transactions pass in practice. */
 const FEE_MARGIN = 1_000_000n;
+
+export const plutusV3FromAiken = (compiledCode: string) => {
+  const decoded = UPLC.decodeDoubleCborHexToFlat(compiledCode);
+  const bytes = CBOR.toCBORBytes(decoded);
+  return new PlutusV3.PlutusV3({ bytes });
+};
 
 export type TransactionContext = {
   client: SigningClient;
@@ -196,9 +224,7 @@ abstract class Validator<Params extends readonly any[], Redeemer> {
           params,
         )
       : this.blueprint.compiledCode;
-    const decoded = UPLC.decodeDoubleCborHexToFlat(compiledCode);
-    const bytes = CBOR.toCBORBytes(decoded);
-    const script = new PlutusV3.PlutusV3({ bytes });
+    const script = plutusV3FromAiken(compiledCode);
     return {
       hash: ScriptHash.fromScript(script),
       script,

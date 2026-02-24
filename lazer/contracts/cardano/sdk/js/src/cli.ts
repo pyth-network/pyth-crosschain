@@ -1,10 +1,8 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is CLI script */
 
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { promisify } from "node:util";
 import { createClient, Either } from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
@@ -17,7 +15,7 @@ import { hideBin } from "yargs/helpers";
 import { runDevnetSession } from "./devnet.js";
 import { initPythState, initWormholeState } from "./transactions.js";
 import type { TransactionContext } from "./utils.js";
-import { getOriginUtxo } from "./utils.js";
+import { execFileAsync, getOriginUtxo } from "./utils.js";
 
 const getClient = (networkId: NetworkId | "custom", mnemonic: string) =>
   createClient({
@@ -60,8 +58,6 @@ async function getCtx(
     parameters: { ...parameters, networkId },
   };
 }
-
-const execFileAsync = promisify(execFile);
 
 const parser = yargs().usage(
   "Deployment, upgrades and management of Cardano Pyth Lazer contracts",
@@ -118,6 +114,16 @@ parser.command(
   "initialize on-chain state of contracts",
   (b) =>
     b.options({
+      "emitter-address": {
+        demandOption: true,
+        description: "emitter chain address",
+        type: "string",
+      },
+      "emitter-chain": {
+        default: 1, // Solana
+        description: "emitter chain ID",
+        type: "number",
+      },
       mnemonic: {
         default: process.env.CARDANO_MNEMONIC,
         demandOption: true,
@@ -129,16 +135,6 @@ parser.command(
         default: process.env.CARDANO_NETWORK as NetworkId | undefined,
         demandOption: true,
         description: "Cardano network to use",
-      },
-      "emitter-chain": {
-        type: "number",
-        description: "emitter chain ID",
-        default: 1, // Solana
-      },
-      "emitter-address": {
-        type: "string",
-        description: "emitter chain address",
-        demandOption: true,
       },
     }),
   async ({ network: networkId, mnemonic, emitterChain, emitterAddress }) => {
