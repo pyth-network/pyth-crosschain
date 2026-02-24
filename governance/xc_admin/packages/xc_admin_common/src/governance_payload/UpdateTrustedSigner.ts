@@ -1,7 +1,7 @@
-import type { ChainName } from "../chains";
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 // 33-byte signer address, used by Sui
 export class UpdateTrustedSigner264Bit extends PythGovernanceActionImpl {
@@ -37,8 +37,8 @@ export class UpdateTrustedSigner264Bit extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(UpdateTrustedSigner264Bit.layout, {
-      publicKey: this.publicKey,
       expiresAt: this.expiresAt,
+      publicKey: this.publicKey,
     });
   }
 }
@@ -60,7 +60,7 @@ export class UpdateTrustedSigner256Bit extends PythGovernanceActionImpl {
     super(targetChainId, "UpdateTrustedSigner");
   }
 
-  static decode(data: Buffer): UpdateTrustedSigner264Bit | undefined {
+  static decode(data: Buffer): UpdateTrustedSigner256Bit | undefined {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpdateTrustedSigner",
@@ -68,7 +68,7 @@ export class UpdateTrustedSigner256Bit extends PythGovernanceActionImpl {
     );
     if (!decoded) return undefined;
 
-    return new UpdateTrustedSigner264Bit(
+    return new UpdateTrustedSigner256Bit(
       decoded[0].targetChainId,
       decoded[1].publicKey,
       decoded[1].expiresAt,
@@ -76,9 +76,9 @@ export class UpdateTrustedSigner256Bit extends PythGovernanceActionImpl {
   }
 
   encode(): Buffer {
-    return super.encodeWithPayload(UpdateTrustedSigner264Bit.layout, {
-      publicKey: this.publicKey,
+    return super.encodeWithPayload(UpdateTrustedSigner256Bit.layout, {
       expiresAt: this.expiresAt,
+      publicKey: this.publicKey,
     });
   }
 }
