@@ -92,6 +92,7 @@ const PriceFeedHeaderImpl = (props: PriceFeedHeaderImplProps) => (
           {...(props.isLoading
             ? { isLoading: true }
             : {
+                grow: true,
                 description: props.feed.product.description,
                 displaySymbol: props.feed.product.display_symbol,
                 icon: (
