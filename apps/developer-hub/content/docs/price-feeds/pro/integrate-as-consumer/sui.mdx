@@ -153,23 +153,23 @@ let feed_id = feed.feed_id();
 // Get the price (returns Option<Option<I64>>)
 let price = feed.price();
 
-// Get bid/ask prices
+// Get bid/ask prices (Option<Option<I64>>)
 let best_bid = feed.best_bid_price();
 let best_ask = feed.best_ask_price();
 
-// Get the exponent (typically negative, e.g., -8)
-let exponent = feed.exponent();
-
-// Confidence interval
+// Confidence interval (Option<Option<I64>>)
 let confidence = feed.confidence();
 
+// Get the exponent (typically negative, e.g., -8)
+let exponent = feed.exponent();             // Option<I16>
+
 // Publisher count
-let publisher_count = feed.publisher_count();
+let publisher_count = feed.publisher_count(); // Option<u16>
 
 // For derivative feeds (e.g., perpetual futures)
-let funding_rate = feed.funding_rate();
-let funding_timestamp = feed.funding_timestamp();
-let funding_rate_interval = feed.funding_rate_interval();
+let funding_rate = feed.funding_rate();               // Option<Option<I64>>
+let funding_timestamp = feed.funding_timestamp();     // Option<Option<u64>>
+let funding_rate_interval = feed.funding_rate_interval(); // Option<Option<u64>>
 ```
 
 <Callout type="warning">
