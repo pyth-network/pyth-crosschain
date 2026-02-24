@@ -36,5 +36,6 @@ def main() -> None:
     print("calling spotClearinghouseState...")
     print(info.spot_user_state(args.address))
 
+
 if __name__ == "__main__":
     main()

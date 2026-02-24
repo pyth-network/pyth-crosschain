@@ -7,9 +7,7 @@ from hyperliquid.utils import constants
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Set user abstraction type"
-    )
+    parser = argparse.ArgumentParser(description="Set user abstraction type")
     parser.add_argument(
         "--private-key-file",
         required=True,
