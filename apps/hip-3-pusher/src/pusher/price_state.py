@@ -122,6 +122,9 @@ class PriceState:
     SEDA = "seda"
     SEDA_LAST = "seda_last"
     SEDA_EMA = "seda_ema"
+    SEDA_ORACLE = "seda_oracle"
+    SEDA_MARK = "seda_mark"
+    SEDA_EXTERNAL = "seda_external"
 
     def __init__(self, config: Config) -> None:
         self.market_name = config.hyperliquid.market_name
@@ -138,6 +141,9 @@ class PriceState:
         self.seda_state = PriceSourceState(self.SEDA)
         self.seda_last_state = PriceSourceState(self.SEDA_LAST)
         self.seda_ema_state = PriceSourceState(self.SEDA_EMA)
+        self.seda_oracle_state = PriceSourceState(self.SEDA_ORACLE)
+        self.seda_mark_state = PriceSourceState(self.SEDA_MARK)
+        self.seda_external_state = PriceSourceState(self.SEDA_EXTERNAL)
 
         # Map source names to state objects for dynamic lookup
         self.all_states: dict[str, PriceSourceState] = {
@@ -149,6 +155,9 @@ class PriceState:
             self.SEDA: self.seda_state,
             self.SEDA_LAST: self.seda_last_state,
             self.SEDA_EMA: self.seda_ema_state,
+            self.SEDA_ORACLE: self.seda_oracle_state,
+            self.SEDA_MARK: self.seda_mark_state,
+            self.SEDA_EXTERNAL: self.seda_external_state,
         }
 
     def get_all_prices(self) -> OracleUpdate:

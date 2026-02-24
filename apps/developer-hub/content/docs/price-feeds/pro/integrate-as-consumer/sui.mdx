@@ -1,0 +1,199 @@
+---
+title: Consume Data on Sui
+description: Consume and verify Pyth Pro price updates in Sui Move smart contracts
+slug: /price-feeds/pro/integrate-as-consumer/sui
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+This guide is intended to serve users who want to consume prices from Pyth Pro on **Sui**.
+
+Integrating with Pyth Pro in smart contracts as a consumer is a three-step process:
+
+1. **Subscribe** to Pyth Pro websocket to receive price updates on backend or frontend.
+2. **Verify** price updates in a Programmable Transaction Block (PTB) using the Pyth Lazer Sui SDK.
+3. **Consume** the verified `Update` in your smart contract.
+
+<Steps>
+  <Step>
+  ### Subscribe to Pyth Pro to receive Price Updates
+
+Pyth Pro provides a websocket endpoint to receive price updates. Pyth Pro also provides a [TypeScript SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) to subscribe to the websocket endpoint.
+
+Consult [How to subscribe to prices](/price-feeds/pro/subscribe-to-prices) for a complete step-by-step guide.
+
+When subscribing, request the `leEcdsa` format which is compatible with Sui's secp256k1 signature verification:
+
+```typescript copy
+client.subscribe({
+  type: "subscribe",
+  subscriptionId: 1,
+  priceFeedIds: [1, 2],  // BTC/USD, ETH/USD
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+  formats: ["leEcdsa"],  // Required for Sui
+  channel: "fixed_rate@200ms",
+  jsonBinaryEncoding: "hex",
+});
+```
+
+  </Step>
+  <Step>
+  ### Verify price updates in a PTB
+
+Pyth Pro provides a [Sui TypeScript SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui/sdk/js) that handles the verification call for you.
+
+<Callout type="warning">
+  Always call `parse_and_verify_le_ecdsa_update` in a Programmable Transaction Block (PTB), not inside your smart contract.
+  This allows your contract to work with any newer version of the Pyth Lazer contract, since the `Update` type remains stable.
+</Callout>
+
+Install the Sui SDK:
+
+```bash copy
+npm install @pythnetwork/pyth-lazer-sui-js
+```
+
+Use the SDK to build your transaction:
+
+```typescript copy
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+import { addParseAndVerifyLeEcdsaUpdateCall } from "@pythnetwork/pyth-lazer-sui-js";
+
+// 1. Fetch the price update from Pyth Lazer in "leEcdsa" format:
+const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
+const latestPrice = await lazer.getLatestPrice({
+  channel: "fixed_rate@200ms",
+  formats: ["leEcdsa"],
+  jsonBinaryEncoding: "hex",
+  priceFeedIds: [1],
+  properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
+});
+const update = Buffer.from(latestPrice.leEcdsa?.data ?? "", "hex");
+
+// 2. Create a new Sui transaction:
+const signer = Ed25519Keypair.fromSecretKey(SUI_KEY);
+const client = new SuiGrpcClient({ baseUrl, network });
+const tx = new Transaction();
+
+// 3. Add the parse and verify call:
+const verifiedUpdate = await addParseAndVerifyLeEcdsaUpdateCall({
+  client: client.core,
+  stateObjectId: STATE_ID,
+  tx,
+  update,
+});
+
+// 4. Consume `verifiedUpdate` in your own contract with additional calls...
+tx.moveCall({
+  target: `${YOUR_PACKAGE_ID}::your_module::consume_price`,
+  arguments: [verifiedUpdate],
+});
+
+// 5. Sign and execute the transaction:
+const result = await client.signAndExecuteTransaction({
+  signer,
+  transaction: tx,
+});
+```
+
+<Callout type="info">
+  The `stateObjectId` is the Pyth Lazer State object on Sui. Contact the Pyth team or check the [Sui SDK README](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/sui/sdk/js) for the current mainnet and testnet state object IDs.
+</Callout>
+
+  </Step>
+  <Step>
+  ### Consume the verified Update in your smart contract
+
+Your contract receives a verified `Update` object and can extract the price data it needs. Add the Pyth Lazer package as a dependency in your `Move.toml` file:
+
+```toml copy
+[dependencies]
+pyth_lazer = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "lazer/contracts/sui", rev = "main" }
+```
+
+<Callout type="info">
+  To use testnet version of Pyth Lazer contract, use `rev = "sui-testnet"` instead. We use custom deployment of the [Wormhole](https://wormhole.com/) contract on testnet for maintenance purposes.
+</Callout>
+
+Import the necessary modules and write a function that accepts the `Update`:
+
+```move copy
+use pyth_lazer::update::Update;
+use pyth_lazer::feed::Feed;
+
+public fun consume_price(update: Update) {
+    // Access update metadata
+    let timestamp = update.timestamp();
+    let channel = update.channel();
+
+    // Get the feeds vector
+    let feeds = update.feeds_ref();
+
+    // Access the first feed
+    let feed = &feeds[0];
+
+    // Extract price data
+    let feed_id = feed.feed_id();
+    let price = feed.price();
+    let exponent = feed.exponent();
+
+    // Process the price data according to your application logic
+    // ...
+}
+```
+
+See [`pyth_lazer::feed`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/sui/sources/feed.move) module for additional fields and their types.
+
+<Callout type="warning">
+  Many feed properties return `Option<Option<T>>`. The outer `Option` indicates whether the property was requested in the subscription.
+  The inner `Option` indicates whether a value is available (e.g., price may be `None` if there aren't enough publishers).
+  Always check both levels when accessing values.
+</Callout>
+
+#### Working with Signed Integers
+
+Pyth prices can be negative (e.g., for certain derivative products). The SDK provides `I64` and `I16` types for signed integers:
+
+```move copy
+use pyth_lazer::i64::{Self, I64};
+
+// Check if a price exists and extract it
+let price_opt = feed.price();
+if (price_opt.is_some()) {
+    let inner_opt = price_opt.borrow();
+    if (inner_opt.is_some()) {
+        let price_i64 = inner_opt.borrow();
+
+        // Check if negative
+        let is_negative = price_i64.get_is_negative();
+
+        // Get the magnitude
+        let magnitude = if (is_negative) {
+            price_i64.get_magnitude_if_negative()
+        } else {
+            price_i64.get_magnitude_if_positive()
+        };
+    }
+}
+```
+
+  </Step>
+</Steps>
+
+## Additional Resources
+
+You may find these additional resources helpful for consuming prices from Pyth Pro in your Sui smart contracts.
+
+### Price Feed IDs
+
+Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page for a complete list of supported price feeds.
+
+### Examples
+
+Lazer Sui SDK contains a [complete example](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/sui/sdk/js/src/examples/fetch-and-verify.ts) of building a transaction using Lazer Sui contract.
+
+[pyth-lazer-example-js](https://github.com/pyth-network/pyth-examples/tree/main/lazer/js) is a simple example for subscribing to the Pyth Pro websocket.

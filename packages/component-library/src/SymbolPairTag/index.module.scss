@@ -50,12 +50,8 @@
 
     .description {
       color: theme.color("muted");
-
-      // this helps prevent long feed descriptions from looking gross
-      // and overflowing off the page, pushing the curren values off the page,
-      // too
       overflow: initial;
-      text-overflow: initial;
+      text-overflow: ellipsis;
       white-space: normal;
 
       @include theme.text("xs", "medium");
@@ -66,6 +62,12 @@
         text-overflow: ellipsis;
         white-space: unset;
       }
+    }
+  }
+
+  &:not([data-grow]) {
+    .nameAndDescription {
+      width: 0;
     }
   }
 

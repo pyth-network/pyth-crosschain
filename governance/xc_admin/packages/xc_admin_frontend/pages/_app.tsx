@@ -1,4 +1,3 @@
-import { NuqsAdapter } from '@pythnetwork/react-hooks/nuqs-adapters-next'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import {
   ConnectionProvider,
@@ -85,37 +84,35 @@ function MyApp({ Component, pageProps }: AppProps) {
   )
 
   return (
-    <NuqsAdapter>
-      <ConnectionProvider
-        endpoint={endpoint || clusterApiUrl(WalletAdapterNetwork.Devnet)}
-      >
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            <ClusterProvider>
-              <ProgramProvider>
-                <Head>
-                  <meta
-                    name="viewport"
-                    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-                  />
-                  {generateDefaultSeo(SEO)}
-                </Head>
-                <Component {...pageProps} />
-                <Toaster
-                  position="bottom-left"
-                  toastOptions={{
-                    style: {
-                      wordBreak: 'break-word',
-                    },
-                  }}
-                  reverseOrder={false}
+    <ConnectionProvider
+      endpoint={endpoint || clusterApiUrl(WalletAdapterNetwork.Devnet)}
+    >
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <ClusterProvider>
+            <ProgramProvider>
+              <Head>
+                <meta
+                  name="viewport"
+                  content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
                 />
-              </ProgramProvider>
-            </ClusterProvider>
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
-    </NuqsAdapter>
+                {generateDefaultSeo(SEO)}
+              </Head>
+              <Component {...pageProps} />
+              <Toaster
+                position="bottom-left"
+                toastOptions={{
+                  style: {
+                    wordBreak: 'break-word',
+                  },
+                }}
+                reverseOrder={false}
+              />
+            </ProgramProvider>
+          </ClusterProvider>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   )
 }
 
