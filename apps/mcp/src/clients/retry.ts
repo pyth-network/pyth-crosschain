@@ -20,7 +20,10 @@ function isRetryable(err: unknown): boolean {
   if (err instanceof TypeError && err.message.includes("fetch")) {
     return true; // network error
   }
-  if (err instanceof DOMException && err.name === "AbortError") {
+  if (
+    err instanceof DOMException &&
+    (err.name === "AbortError" || err.name === "TimeoutError")
+  ) {
     return true; // timeout
   }
   return false;
