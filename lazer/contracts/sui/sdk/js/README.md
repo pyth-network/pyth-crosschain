@@ -33,7 +33,7 @@ A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 SUI_FULLNODE_URL="https://fullnode.mainnet.sui.io:443"
 
 pnpm run example:fetch-and-verify \
-  --fullnode-url "$SUI_FULLNODE_URL" \
+  --base-url "$SUI_FULLNODE_URL" \
   --state-id "$STATE_ID" \
   --lazer-token "$LAZER_TOKEN"
 ```
