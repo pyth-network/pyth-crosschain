@@ -70,7 +70,7 @@ When you receive a `StreamUpdated` message from Pyth Pro, it contains the follow
     { name: "exponent", type: "i16" },
     { name: "confidence", type: "i64" },
     { name: "marketSession", type: "string" },
-    { name: "feedUpdateTimestamp", type: "string" },
+    { name: "feedUpdateTimestamp", type: "u64" },
     { name: "emaPrice", type: "i64" },
     { name: "emaConfidence", type: "i64" },
     { name: "evm", type: "object" },
@@ -92,7 +92,7 @@ When you receive a `StreamUpdated` message from Pyth Pro, it contains the follow
         "exponent": -8,
         "confidence": 1373488286,
         "marketSession": "regular",
-        "feedUpdateTimestamp": "1758690761750000",
+        "feedUpdateTimestamp": 1758690761750000,
         "emaPrice": "11223843563091",
         "emaConfidence": 1347630281
       }
@@ -199,7 +199,7 @@ Based on the protocol specification, here are the technical details for each pro
     },
     {
       name: "feedUpdateTimestamp",
-      type: "string",
+      type: "u64",
       description:
         "Represents the timestamp at which the price for this specific feed was last generated. This enables consumers to assess the actual freshness of the price and determine whether it was produced as part of the current update or carried forward from a previous one. If the value is equal to the update's `timestampUs`, the price was generated in this update. If it is earlier than `timestampUs`, the price is the most recent available value and was generated at an earlier time.",
       availability: "Only included if requested in subscription properties",

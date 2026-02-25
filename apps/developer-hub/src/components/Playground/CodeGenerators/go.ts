@@ -138,7 +138,7 @@ func main() {
 			if update.Type == "streamUpdated" {
 				fmt.Printf("Price Update (Subscription %d):\\n", update.SubscriptionID)
 				for _, feed := range update.Parsed.PriceFeeds {
-					fmt.Printf("  Feed %d: Price=%s FeedUpdateTimestamp=%s\\n", feed.PriceFeedID, feed.Price, feed.FeedUpdateTimestamp)
+					fmt.Printf("  Feed %d: Price=%s FeedUpdateTimestamp=%d\\n", feed.PriceFeedID, feed.Price, feed.FeedUpdateTimestamp)
 				}
 			}
 		}
