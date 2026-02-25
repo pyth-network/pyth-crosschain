@@ -65,7 +65,7 @@ type PriceFeed struct {
 	Confidence     int64  \`json:"confidence,omitempty"\`
 	Exponent       int    \`json:"exponent,omitempty"\`
 	PublisherCount int    \`json:"publisherCount,omitempty"\`
-	FeedUpdateTimestamp  string \`json:"feedUpdateTimestamp,omitempty"\`
+	FeedUpdateTimestamp int64  \`json:"feedUpdateTimestamp,omitempty"\`
 }
 
 type BinaryData struct {
