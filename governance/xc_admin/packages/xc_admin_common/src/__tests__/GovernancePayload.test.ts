@@ -557,7 +557,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           );
         });
     } else if (header.action === "UpdateTrustedSigner") {
-      return fc
+      const arb264Bit = fc
         .record({
           expiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
           publicKey: hexBytesArb({ maxLength: 33, minLength: 33 }),
@@ -569,6 +569,19 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             expiresAt,
           );
         });
+      const arb256Bit = fc
+        .record({
+          expiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
+          publicKey: hexBytesArb({ maxLength: 32, minLength: 32 }),
+        })
+        .map(({ publicKey, expiresAt }) => {
+          return new UpdateTrustedSigner256Bit(
+            header.targetChainId,
+            publicKey,
+            expiresAt,
+          );
+        });
+      return fc.oneof(arb264Bit, arb256Bit);
     } else {
       throw new Error("Unsupported action type");
     }
