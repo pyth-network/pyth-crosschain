@@ -19,10 +19,9 @@ pub fn find(config: StateConfig, id: StateId, inputs: List<Input>) -> Data {
     list.find_map(
       inputs,
       fn(input) {
-        let credential = input.output.address.payment_credential
-        if credential == Script(id) {
-          expect
-            assets.has_nft_strict(input.output.value, id, config.state_nft)?
+        if assets.has_nft_strict(input.output.value, id, config.state_nft) {
+          // state token outside of script address would imply a bug
+          expect Script(_) = input.output.address.payment_credential
           expect InlineDatum(state) = input.output.datum
           Some(state)
         } else {
