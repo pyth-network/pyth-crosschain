@@ -263,10 +263,15 @@ const config = {
         permanent: true,
       },
 
-      // HIP-3 redirect - fumadocs meta.json links prepend parent path
+      // HIP-3 redirects - index in Core under Push Feeds; full docs under Pyth Pro Resources
       {
-        source: "/price-feeds/core/hip-3-service",
-        destination: "/price-feeds/hip-3-service",
+        source: "/price-feeds/hip-3-service/technical-specification",
+        destination: "/price-feeds/pro/hip-3-service/technical-specification",
+        permanent: true,
+      },
+      {
+        source: "/price-feeds/hip-3-service",
+        destination: "/price-feeds/pro/hip-3-service",
         permanent: true,
       },
 

@@ -1,0 +1,376 @@
+---
+title: Technical Specification
+description: Technical specification for the HIP-3 price pusher (HIP-3 as a Service)
+slug: /price-feeds/pro/hip-3-service/technical-specification
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import {
+  Lightning,
+  Database,
+  CalendarBlank,
+  Link as LinkIcon,
+  Key,
+  LockKey,
+  UsersThree,
+} from "@phosphor-icons/react/dist/ssr";
+
+This page describes the technical specification for the HIP-3 price pusher. The pusher is a production-grade price publishing service that delivers continuous, robust prices for perpetual futures markets on Hyperliquid as part of [HIP-3 as a Service](/price-feeds/pro/hip-3-service).
+
+### Features of HIP-3 Price Pusher
+
+The price pusher provides the following capabilities:
+
+- **Multi-source price** with automatic failover
+- **Flexible feed composition**: combine, derive, and transform price feeds
+- **Production-grade reliability** with redundant connections and graceful degradation
+- **Multiple key security options** for operational flexibility
+
+### Scope
+
+The pusher handles:
+
+- Aggregating spot prices from configured sources
+- Constructing mark prices per your configuration
+- Publishing `setOracle` calls to Hyperliquid at ~3 second intervals
+- Monitoring and alerting on price gaps or source failures
+
+The pusher does **not** handle:
+
+- Market listing/delisting
+- Risk parameter configuration (margin tables, open interest caps, fees)
+- Trading halts
+- Any deployer-level operations
+
+## How HIP-3 Price Pusher Works
+
+### The Publishing Cycle
+
+Every ~3 seconds, the pusher:
+
+<Steps>
+  <Step>**Collects** the latest prices from all connected sources</Step>
+  <Step>**Resolves** each symbol's price using the waterfall priority</Step>
+  <Step>**Constructs** mark prices according to your configuration</Step>
+  <Step>
+    **Publishes** a single `setOracle` call containing all asset prices
+  </Step>
+</Steps>
+
+### Waterfall Price Resolution
+
+Each symbol has an ordered list of price sources. The pusher tries each source in priority order until it finds a fresh price:
+
+```text copy
+BTC Price Resolution:
+  Priority 1: Pyth Pro BTC      → stale (6.2s old) ✗
+  Priority 2: Pyth Core BTC/USD   → fresh (0.8s old) ✓ → Use this price
+  Priority 3: Hyperliquid Oracle
+  (not checked, already resolved)
+```
+
+{/* prettier-ignore */}
+<Callout type="info" title="Key behaviors">
+  - A price is considered **stale** if older than the configured threshold
+  (default: 5 seconds). 
+  - If **all sources fail** for a symbol, that symbol is
+  excluded from the update. No fabricated prices are ever published. 
+  - Sources are checked in **configuration order**, giving you control over priority.
+</Callout>
+
+#### Example: Multi-Source Resilience
+
+Consider a configuration with three sources for ETH:
+
+| Priority | Source                                                                                 | Status       | Age  |
+| -------- | -------------------------------------------------------------------------------------- | ------------ | ---- |
+| 1        | Pyth Pro                                                                               | Disconnected | n/a  |
+| 2        | Pyth Core                                                                              | Fresh        | 1.2s |
+| 3        | [Hyperliquid Oracle](https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/oracle) | Fresh        | 0.5s |
+
+**Result**: Pyth Core price is used. If Pyth Core also fails, [Hyperliquid Oracle](https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/oracle) provides the fallback. The system degrades gracefully through the chain.
+
+## Price Sources
+
+The pusher supports four primary data source types, each suited to different use cases.
+
+<Cards>
+  <Card icon={<Lightning size={18} />} title="Pyth Pro">
+    **Best for:** Primary low-latency feeds
+
+    - Sub-second price updates (200ms intervals)
+    - WebSocket connection with automatic reconnection
+    - Multiple endpoint support for redundancy
+
+  </Card>
+  <Card icon={<Database size={18} />} title="Pyth Core">
+    **Best for:** Broad asset coverage, Pyth Pro fallback
+
+    - Extensive feed catalog
+    - WebSocket streaming
+    - Natural fallback when Pyth Pro is unavailable
+
+  </Card>
+  <Card icon={<CalendarBlank size={18} />} title="SEDA">
+    **Best for:** Programmable oracle feeds, session-aware data, specialized assets
+
+    - **Programmable oracle logic**: each feed runs a custom [SEDA Oracle Program](https://docs.seda.xyz/) (WASM) that can query any public API and apply custom aggregation
+    - **HTTP polling** with configurable interval and faster retry on failure
+    - **Session awareness**: knows when markets are open or closed
+    - Custom field mapping for non-standard data formats
+    - Ideal for traditional assets with trading hours (equities, commodities, indices)
+
+  </Card>
+  <Card icon={<LinkIcon size={18} />} title="Hyperliquid Reference">
+    **Best for:** on-chain reference prices, mark construction
+
+    - **Channels:** `activeAssetCtx` (oracle and mark), `allMids` (mid prices)
+    - **Three Price Types:**
+      - `hl_oracle`: Oracle prices
+      - `hl_mark`: Mark prices
+      - `hl_mid`: Mid prices from order book
+
+  </Card>
+</Cards>
+
+## Feed Composition
+
+The pusher supports flexible feed composition to handle complex pricing scenarios. You can combine direct feeds, derived pairs, constant values, SEDA custom feeds with session-aware mark pricing, and oracle-mid averages depending on your requirements.
+
+### Direct Feeds
+
+You can use one source per symbol without derivation. Use a single source's price directly. Exponent scaling is applied automatically.
+
+### Derived Pairs
+
+Compute a price by dividing a base feed by a quote feed:
+
+```text copy
+BTC/USD = BTC (raw price) / USDT (raw price)
+```
+
+Both components must be fresh for the derived price to be valid. If either fails staleness checks, the entire pair fails and the waterfall continues to the next source.
+
+### Constant Values
+
+You can assign a fixed value to a symbol when appropriate (for example, stable or pegged assets). Use sparingly: constant prices do not respond to market conditions.
+
+### SEDA Custom Feeds
+
+[SEDA](https://docs.seda.xyz/) is a programmable oracle infrastructure. Unlike traditional oracle feeds that provide preset data, SEDA lets developers write custom **Oracle Programs**: WASM binaries that can query any public API, apply custom aggregation logic, and return structured price data. Each feed in the pusher runs its own SEDA program (`exec_program_id`) with custom inputs (`exec_inputs`), enabling entirely different oracle logic per asset.
+
+This programmability is what makes SEDA the enabler for asset classes that standard oracle feeds don't natively support: traditional equities with trading sessions, custom composite indices, commodities with session-specific pricing, or any asset requiring specialized data transformations.
+
+#### Custom Field Mapping
+
+SEDA program responses can use arbitrary field names. The pusher maps the following fields from each response:
+
+| Field                       | Default       | Description                                                          |
+| --------------------------- | ------------- | -------------------------------------------------------------------- |
+| `price_field`               | `"price"`     | Primary oracle price                                                 |
+| `timestamp_field`           | `"timestamp"` | ISO-format timestamp of when the price was generated                 |
+| `last_price_field`          | —             | Previous session's closing price (enables last-price oracle sources) |
+| `session_mark_px_ema_field` | —             | EMA price used for session-aware mark price construction             |
+| `session_flag_field`        | —             | Boolean indicating whether the market is closed (`true` = closed)    |
+
+#### Multiple Price States from One Response
+
+A single SEDA response can populate up to three independent price states: the primary oracle price (`seda`), the previous session close (`seda_last`), and the EMA (`seda_ema`). These are stored separately and can be referenced independently in waterfall configurations, enabling advanced mark pricing strategies from a single data source without requiring separate feeds or API calls.
+
+### Session-Aware Mark Pricing
+
+For assets with defined trading hours (equities, commodities, indices), the pusher supports session-aware mark pricing using SEDA's `session_flag` and EMA fields. This is the `session_ema` source type.
+
+The `session_flag` field from SEDA indicates whether the market is currently closed. Based on this flag, the pusher adjusts the mark price candidates sent to Hyperliquid:
+
+| Market State                 | Mark Price Candidates          | Effect                                           |
+| ---------------------------- | ------------------------------ | ------------------------------------------------ |
+| Open (`session_flag=false`)  | `[oracle_price, ema_price]`    | EMA can influence the mark via the median        |
+| Closed (`session_flag=true`) | `[oracle_price, oracle_price]` | Oracle is forced as the median; mark is anchored |
+
+This works because Hyperliquid computes the new mark as:
+
+```text copy
+new_mark = median(markPxs[0], markPxs[1], local_mark)
+```
+
+where `local_mark = median(best_bid, best_ask, last_trade)`.
+
+During off-hours, sending the oracle price twice guarantees it appears as the median (two out of three values). During market hours, the EMA provides a distinct second value that allows the mark to reflect trading activity while remaining anchored to the oracle.
+
+**Fallback behavior**: If the EMA price is unavailable during market hours, the pusher falls back to `[oracle_price, oracle_price]` rather than skipping the update entirely. This ensures continuous publishing even when one SEDA field is temporarily missing.
+
+#### Source-Level Session Filtering
+
+Individual price sources support a `use_session_flag` option. When set to `true`, that source is only used when `session_flag` is `true` (market closed). This enables configurations where a SEDA-sourced oracle price is active only during off-hours, while a different source (e.g., Pyth Pro) takes priority during market hours.
+
+<Callout type="info">
+  Session-aware mark pricing requires SEDA feeds configured with
+  `session_mark_px_ema_field` and `session_flag_field`. Without these fields,
+  the pusher uses standard mark construction.
+</Callout>
+
+### Oracle-Mid Average
+
+The `oracle_mid_average` source type computes a mark price by blending the oracle price with Hyperliquid's live order book mid price:
+
+```text copy
+mark_price = (oracle_price + mid_price) / 2
+```
+
+This creates a mark price that is responsive to real-time trading activity while remaining anchored to the oracle. Both prices must be fresh; if either the oracle price or the mid price is stale or missing, the waterfall continues to the next source.
+
+<Callout type="info">
+  The oracle price must be computed first in the same publish cycle (oracle
+  prices are always resolved before mark prices). The mid price comes from
+  Hyperliquid's `allMids` subscription.
+</Callout>
+
+## Hyperliquid Integration
+
+### Publishing Constraints
+
+Hyperliquid and the pusher use the following timing constraints:
+
+| Constraint       | Value       | Notes                                                              |
+| ---------------- | ----------- | ------------------------------------------------------------------ |
+| Minimum interval | 2.5 seconds | Hyperliquid rate limit                                             |
+| Target cadence   | ~3 seconds  | Normal operation                                                   |
+| Mark staleness   | 10 seconds  | Hyperliquid falls back to local mark if no update within this time |
+
+### Protocol Safeguards
+
+Hyperliquid enforces additional safeguards on all oracle updates. The following apply regardless of what the pusher publishes:
+
+- **Daily price cap**: Prices clamped at 10× start-of-day price
+- **Mark change limit**: Each update clamped to ±1% from previous mark
+- **Open Interest protection**: Updates rejected if implied open interest would exceed 10× configured cap
+
+<Callout>
+  See [Hyperliquid's HIP-3 deployer
+  actions](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions)
+  (`SetOracle` type) for the protocol-level specification of these safeguards.
+</Callout>
+
+### What Gets Published
+
+Each update sent to Hyperliquid includes the following per-asset fields. See Hyperliquid's [Robust price indices](https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices) for how these prices are used in the protocol.
+
+| Field             | Description                                                                                                                          | Must include all assets |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| `oraclePxs`       | Aggregated spot price, used for [funding rate](https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding) calculations and PnL | No                      |
+| `markPxs`         | Mark price candidates (0-2 values), used for margining and liquidations                                                              | No                      |
+| `externalPerpPxs` | External reference price; prevents sudden mark price deviations                                                                      | Yes                     |
+
+`externalPerpPxs` must include all assets. If any asset is missing, Hyperliquid rejects the entire update. `oraclePxs` is sent for whatever symbols resolved successfully; missing symbols simply receive no oracle update that cycle. `markPxs` is optional per symbol; if omitted, Hyperliquid uses its local mark exclusively.
+
+All three price types are resolved independently per symbol. The entire update is sent as a single atomic `setOracle` call; there is no partial publish.
+
+## Key Security Model
+
+The primary security mechanism is **sub-deployer isolation** at the protocol level. Regardless of how the signing key is stored or managed, restricting the pusher to a sub-deployer with `setOracle`-only permissions limits the blast radius of a key compromise to oracle updates. The key cannot halt trading, modify risk parameters, delist markets, or perform any other deployer-level operation.
+
+### Sub-Deployer Isolation
+
+The oracle pusher should be configured as a [sub-deployer](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions) with permissions restricted to the `setOracle` action only. This is the most important security decision for the pusher. Even if the signing key is fully compromised, the attacker can only publish price updates, and those updates are still subject to Hyperliquid's [protocol safeguards](#protocol-safeguards). Sub-deployer permissions can be revoked at any time by the main deployer.
+
+<Callout type="info">
+  Sub-deployer isolation mitigates the risks that previously motivated complex
+  key management solutions like KMS or multisig. With `setOracle`-only
+  permissions and protocol-level price clamps, the signing key has a narrow
+  scope of impact regardless of how it is stored.
+</Callout>
+
+### Signing Options
+
+The pusher supports multiple signing configurations. Choose based on your operational tradeoffs.
+
+{/* prettier-ignore */}
+<Cards>
+  <Card
+    icon={<Key size={18} />}
+    title="Secrets Vault"
+  >
+    - Private key sourced from a secrets vault and injected into the runtime environment
+    - Simple operational model with no external signing dependencies
+  </Card>
+  <Card icon={<LockKey size={18} />} title="AWS KMS">
+    - Private key never leaves the AWS KMS HSM
+    - Signing requests sent to KMS, signed responses returned
+    - IAM-based access control and CloudTrail audit trail
+  </Card>
+  <Card
+    icon={<UsersThree size={18} />}
+    title="Multisig"
+  >
+    - Signs via Hyperliquid's multisig wallet API
+    - Threshold schemes (e.g., 2-of-3) require coordinating multiple pusher instances or external signers
+  </Card>
+</Cards>
+
+## Reliability Features
+
+### Connection Management
+
+The pusher keeps connections to data sources healthy and redundant:
+
+- **Automatic reconnection** with fixed interval retry for all WebSocket sources
+- **Multiple endpoints** supported per source type for redundancy
+- **Health monitoring** with configurable alerting thresholds
+
+### Graceful Degradation
+
+The waterfall model ensures the system degrades gracefully:
+
+<Steps>
+  <Step>Primary source fails → Secondary source used</Step>
+  <Step>
+    All sources for a symbol fail → Symbol excluded (no stale/fabricated prices)
+  </Step>
+  <Step>
+    Critical sources unavailable → Alerts triggered, publishing continues for
+    healthy symbols
+  </Step>
+</Steps>
+
+### Staleness Protection
+
+Every price includes a timestamp from its source. Prices older than the staleness threshold (configurable, default 5 seconds) are rejected regardless of source priority.
+
+| Source      | Timestamp Origin                 |
+| ----------- | -------------------------------- |
+| Pyth Pro    | `timestampUs` from feed          |
+| Pyth Core   | `publish_time` from price object |
+| SEDA        | ISO datetime from response       |
+| Hyperliquid | Message receipt time             |
+
+## Limitations
+
+The following constraints and dependencies apply to the pusher. Understanding them helps you configure and operate the service effectively.
+
+### What the Pusher Cannot Do
+
+The pusher cannot override protocol rules or bypass source requirements. The following limitations apply:
+
+{/* prettier-ignore */}
+<Callout type="warning" title="Limitations">
+  - **Override protocol safeguards**: Hyperliquid's price clamps and open interest limits are enforced regardless of pusher inputs
+  - **Guarantee sub-second latency**: Publishing is rate-limited to ~3 second intervals by protocol design
+  - **Publish without valid sources**: If all sources fail for a symbol, no price is published (by design)
+</Callout>
+
+### Staleness Tradeoffs
+
+The staleness threshold balances freshness against availability:
+
+- **Too tight** (e.g., 2s): May reject valid prices during minor network delays
+- **Too loose** (e.g., 30s): May publish prices that don't reflect current market
+
+<Callout type="info" title="Recommended">
+  Set the staleness threshold to **3–5 seconds** for production. This balances
+  freshness against availability and avoids rejecting valid prices during minor
+  network delays while still excluding prices that no longer reflect current
+  market conditions.
+</Callout>

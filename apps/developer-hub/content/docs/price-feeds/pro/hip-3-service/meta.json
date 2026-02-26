@@ -1,5 +1,7 @@
 {
   "title": "HIP-3 as a Service",
   "description": "Complete oracle solution for Hyperliquid HIP-3 perpetual market deployers",
-  "pages": ["index"]
+  "pages": [
+    "[Technical Specification](/price-feeds/pro/hip-3-service/technical-specification)"
+  ]
 }
