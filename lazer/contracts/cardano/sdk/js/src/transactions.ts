@@ -40,7 +40,7 @@ export async function initWormholeState(
         ctx.parameters.networkId === "mainnet"
           ? // see `env/default.ak`
             "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
-          : "13947Bd48b18E53fdAeEe77F3473391aC727C638",
+          : "13947bd48b18e53fdaeee77f3473391ac727c638",
         "hex",
       ),
     ],

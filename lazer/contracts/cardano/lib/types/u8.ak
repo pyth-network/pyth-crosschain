@@ -15,7 +15,7 @@ pub fn as_int(U8(self): U8) -> Byte {
 }
 
 pub fn from_int(value: Int) -> U8 {
-  expect (value <= max)?
+  expect (value >= 0 && value <= max)?
   U8(value)
 }
 

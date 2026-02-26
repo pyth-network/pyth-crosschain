@@ -16,7 +16,7 @@ pub fn as_int(U64(self): U64) -> Int {
 }
 
 pub fn from_int(value: Int) -> U64 {
-  expect (value <= max)?
+  expect (value >= 0 && value <= max)?
   U64(value)
 }
 
