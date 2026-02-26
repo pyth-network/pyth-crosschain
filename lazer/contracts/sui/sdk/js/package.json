@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@mysten/sui": "catalog:"
+    "@mysten/sui": "^2.5.0"
   },
   "description": "TypeScript SDK for the Pyth Lazer Sui contract",
   "devDependencies": {

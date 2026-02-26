@@ -33,7 +33,7 @@ A runnable example is provided at `examples/FetchAndVerifyUpdate.ts`. It:
 SUI_FULLNODE_URL="https://fullnode.mainnet.sui.io:443"
 
 pnpm run example:fetch-and-verify \
-  --fullnode-url "$SUI_FULLNODE_URL" \
+  --base-url "$SUI_FULLNODE_URL" \
   --state-id "$STATE_ID" \
   --lazer-token "$LAZER_TOKEN"
 ```
@@ -41,31 +41,33 @@ pnpm run example:fetch-and-verify \
 The script's core logic is summarized below:
 
 ```ts
-import { SuiClient } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 import { addParseAndVerifyLeEcdsaUpdateCall } from "@pythnetwork/pyth-lazer-sui-js";
 
 // 1. Fetch the price update from Pyth Lazer in "leEcdsa" format:
-const lazer = await PythLazerClient.create({ token: lazerToken });
+const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
 const latestPrice = await lazer.getLatestPrice({
+  channel: "fixed_rate@200ms",
+  formats: ["leEcdsa"],
+  jsonBinaryEncoding: "hex",
   priceFeedIds: [1],
   properties: ["price", "bestBidPrice", "bestAskPrice", "exponent"],
-  formats: ["leEcdsa"],
-  channel: "fixed_rate@200ms",
-  jsonBinaryEncoding: "hex",
 });
 const update = Buffer.from(latestPrice.leEcdsa?.data ?? "", "hex");
 
 // 2. Create a new Sui transaction:
-const client = new SuiClient({ url: fullnodeUrl });
+const signer = Ed25519Keypair.fromSecretKey(SUI_KEY);
+const client = new SuiGrpcClient({ baseUrl, network });
 const tx = new Transaction();
 
 // 3. Add the parse and verify call:
 const verifiedUpdate = await addParseAndVerifyLeEcdsaUpdateCall({
-  client,
+  client: client.core,
+  stateObjectId: STATE_ID,
   tx,
-  stateObjectId: stateId,
   update,
 });
 
@@ -73,8 +75,8 @@ const verifiedUpdate = await addParseAndVerifyLeEcdsaUpdateCall({
 
 // 5. Sign and execute the transaction:
 const result = await client.signAndExecuteTransaction({
-  transaction: tx,
   signer,
+  transaction: tx,
 });
 ```
 

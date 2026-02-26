@@ -1,62 +1,43 @@
-import type { MoveValue, SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import type { GrpcCoreClient } from "@mysten/sui/grpc";
+import type { Transaction } from "@mysten/sui/transactions";
 
 export async function addParseAndVerifyLeEcdsaUpdateCall(opts: {
-  client: SuiClient;
+  client: GrpcCoreClient;
   tx: Transaction;
   stateObjectId: string;
   update: Uint8Array;
 }) {
   const { client, tx, stateObjectId, update } = opts;
-  const latestPackageId = await getLatestPackageId(client, stateObjectId);
+  const id = await getLatestPackageId(client, stateObjectId);
   return tx.moveCall({
-    target: `${latestPackageId}::pyth_lazer::parse_and_verify_le_ecdsa_update`,
     arguments: [
       tx.object(stateObjectId),
       tx.object.clock(),
       tx.pure.vector("u8", update),
     ],
+    target: `${id}::pyth_lazer::parse_and_verify_le_ecdsa_update`,
   });
 }
 
 async function getLatestPackageId(
-  client: SuiClient,
+  client: GrpcCoreClient,
   stateObjectId: string,
 ): Promise<string> {
-  const { data: stateObject, error } = await client.getObject({
-    id: stateObjectId,
-    options: { showContent: true },
+  const res = await client.getObject({
+    include: { json: true },
+    objectId: stateObjectId,
   });
-  if (!stateObject?.content || error) {
-    throw new Error(
-      `Failed to get Sui Lazer State: ${error?.code ?? "undefined"}`,
-    );
-  }
-  if (stateObject.content.dataType !== "moveObject") {
-    throw new Error(
-      `Sui Lazer State must be an object, got: ${stateObject.content.dataType}`,
-    );
-  }
 
-  const state = stateObject.content;
-  if (!hasStructField(state, "upgrade_cap")) {
-    throw new Error("Missing 'upgrade_cap' in Sui Lazer State");
-  }
-  const upgradeCap = state.fields.upgrade_cap;
+  const state = res.object.json;
   if (
-    !hasStructField(upgradeCap, "package") ||
-    typeof upgradeCap.fields.package !== "string"
+    hasProperty(state, "upgrade_cap") &&
+    hasProperty(state.upgrade_cap, "package") &&
+    typeof state.upgrade_cap.package === "string"
   ) {
-    throw new Error("Could not find 'package' string in Sui Lazer UpgradeCap");
+    return state.upgrade_cap.package;
+  } else {
+    throw new Error(`Invalid Lazer state: ${JSON.stringify(state)}`);
   }
-  return upgradeCap.fields.package;
-}
-
-function hasStructField<const F extends string>(
-  value: MoveValue,
-  name: F,
-): value is { fields: Record<F, MoveValue> } {
-  return hasProperty(value, "fields") && hasProperty(value.fields, name);
 }
 
 function hasProperty<const P extends string>(
