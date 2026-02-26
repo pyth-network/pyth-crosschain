@@ -8,7 +8,7 @@ pub opaque type U8 {
 
 pub const zero: U8 = U8(0)
 
-pub const max: Int = math.pow2(8)
+pub const max: Int = math.pow2(8) - 1
 
 pub fn as_int(U8(self): U8) -> Byte {
   self

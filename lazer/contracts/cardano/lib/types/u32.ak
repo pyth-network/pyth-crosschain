@@ -9,7 +9,7 @@ pub opaque type U32 {
 
 pub const zero: U32 = U32(0)
 
-pub const max: Int = math.pow2(32)
+pub const max: Int = math.pow2(32) - 1
 
 pub fn as_int(U32(self): U32) -> Int {
   self

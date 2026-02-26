@@ -9,7 +9,7 @@ pub opaque type U64 {
 
 pub const zero: U64 = U64(0)
 
-pub const max: Int = math.pow2(64)
+pub const max: Int = math.pow2(64) - 1
 
 pub fn as_int(U64(self): U64) -> Int {
   self

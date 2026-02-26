@@ -9,7 +9,7 @@ pub opaque type U16 {
 
 pub const zero: U16 = U16(0)
 
-pub const max: Int = math.pow2(16)
+pub const max: Int = math.pow2(16) - 1
 
 pub fn as_int(U16(self): U16) -> Int {
   self
