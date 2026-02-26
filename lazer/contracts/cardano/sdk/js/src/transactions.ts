@@ -91,9 +91,7 @@ export async function initPythState(
     tx: ctx.client
       .newTx()
       .attachScript(minter)
-      .mintAssets(
-        wormholeStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"),
-      )
+      .mintAssets(pythStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"))
       .payToAddress(state)
       .payToAddress(await toMe(ctx, ownerNFT)),
   };
