@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { SuiClient } from "@mysten/sui/client";
+import { SuiGrpcClient } from "@mysten/sui/grpc";
 import { Transaction } from "@mysten/sui/transactions";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
@@ -36,10 +36,15 @@ const argvPromise = yargs(hideBin(process.argv))
     description: "Wormhole state object id.",
     type: "string",
     demandOption: true,
+  })
+  .option("network", {
+    description: "Sui network (mainnet, testnet, devnet, localnet)",
+    type: "string",
+    default: "testnet",
   }).argv;
 
-export function getProvider(url: string) {
-  return new SuiClient({ url });
+export function getProvider(url: string, network: string) {
+  return new SuiGrpcClient({ baseUrl: url, network });
 }
 async function run() {
   if (process.env.SUI_KEY === undefined) {
@@ -55,7 +60,7 @@ async function run() {
     throw new Error("Not a valid input!");
   }
 
-  const provider = getProvider(argv["full-node"]);
+  const provider = getProvider(argv["full-node"], argv["network"]);
   const wormholeStateId = argv["wormhole-state-id"];
   const pythStateId = argv["pyth-state-id"];
 
@@ -90,15 +95,16 @@ async function run() {
     Buffer.from(process.env.SUI_KEY, "hex"),
   );
   tx.setGasBudget(1000000);
-  const result = await provider.signAndExecuteTransaction({
+  const result = await provider.core.signAndExecuteTransaction({
     signer: wallet,
     transaction: tx,
-    options: {
-      showEffects: true,
-      showEvents: true,
+    include: {
+      effects: true,
+      events: true,
     },
   });
-  console.dir(result, { depth: null });
+  const txResult = result.Transaction ?? result.FailedTransaction;
+  console.dir(txResult, { depth: null });
 }
 
 run();
