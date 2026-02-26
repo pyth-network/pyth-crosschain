@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/anthropic-tools/main/schemas/mcp-manifest.schema.json",
+  "name": "pyth-network",
+  "version": "0.1.0",
+  "description": "Official MCP server for Pyth Network oracle data - real-time prices, TWAP, historical data, and confidence intervals for 1,930+ price feeds across crypto, equities, FX, and commodities.",
+  "author": {
+    "name": "Pyth Network",
+    "url": "https://pyth.network"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Chop-Kampfire/pyth-mcp-server"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "pyth",
+    "oracle",
+    "price-feeds",
+    "defi",
+    "web3",
+    "crypto",
+    "real-time-data"
+  ],
+  "privacy_policies": [
+    "https://pyth.network/privacy-policy"
+  ],
+  "support": {
+    "documentation": "https://docs.pyth.network",
+    "issues": "https://github.com/Chop-Kampfire/pyth-mcp-server/issues",
+    "discord": "https://discord.gg/pythnetwork"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true,
+    "prompts": true
+  },
+  "requirements": {
+    "node": ">=18.0.0"
+  },
+  "configuration": {
+    "environment_variables": [
+      {
+        "name": "PYTH_HERMES_URL",
+        "description": "Hermes API endpoint for real-time data",
+        "default": "https://hermes.pyth.network",
+        "required": false
+      },
+      {
+        "name": "PYTH_BENCHMARKS_URL",
+        "description": "Benchmarks API endpoint for historical data",
+        "default": "https://benchmarks.pyth.network",
+        "required": false
+      }
+    ]
+  }
+}
