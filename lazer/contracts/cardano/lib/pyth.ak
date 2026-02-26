@@ -1,33 +1,37 @@
-use aiken/collection/list
+use aiken/collection/pairs
 use aiken/crypto.{Signature, VerificationKey}
 use aiken/interval.{Interval}
+use aiken/option
+use aiken/primitive/bytearray
+use cardano/transaction.{ValidityRange}
 use parser.{Parser, parse}
 use types/u16
 
 const solana_format_magic_le = #"b9011a82"
 
 pub type TrustedSigners =
-  List<TrustedSigner>
-
-pub type TrustedSigner {
-  key: VerificationKey,
-  expires_at: Int,
-}
+  Pairs<VerificationKey, ValidityRange>
 
 pub fn is_trusted(
   self: TrustedSigners,
-  interval: Interval,
   key: VerificationKey,
+  current: ValidityRange,
 ) {
-  list.any(
-    self,
-    fn(trusted) {
-      (trusted.key == key)? && interval.includes(
-        interval.before(trusted.expires_at),
-        interval,
-      )?
-    },
-  )
+  pairs.get_first(self, key)
+    |> option.map(fn(valid) { interval.includes(valid, current) })
+    |> option.or_else(False)
+}
+
+pub fn update_trusted_signer(
+  self: TrustedSigners,
+  key: VerificationKey,
+  valid: Option<ValidityRange>,
+) {
+  when valid is {
+    None -> pairs.delete_all(self, key)
+    Some(valid) ->
+      pairs.repsert_by_ascending_key(self, key, valid, bytearray.compare)
+  }
 }
 
 pub type PriceUpdate {
@@ -39,21 +43,17 @@ pub type PriceUpdate {
 pub fn parse_and_verify(
   src: ByteArray,
   signers: TrustedSigners,
-  interval: Interval,
+  current: ValidityRange,
 ) -> PriceUpdate {
-  let update = parse_unsafe(src)
+  let update = parser.run(price_update, src)
   expect
     crypto.verify_ed25519_signature(
       update.key,
       update.payload,
       update.signature,
     )?
-  expect is_trusted(signers, interval, update.key)?
+  expect is_trusted(signers, update.key, current)?
   update
-}
-
-fn parse_unsafe(src: ByteArray) -> PriceUpdate {
-  parser.run(price_update, src)
 }
 
 const price_update: Parser<PriceUpdate> = {
@@ -67,53 +67,71 @@ const price_update: Parser<PriceUpdate> = {
     PriceUpdate { signature, key, payload } |> parser.return
   }
 
-const test_signers: TrustedSigners =
-  [
-    TrustedSigner {
-      key: #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
-      expires_at: 1,
-    },
-  ]
-
 const test_interval: Interval = interval.before(1)
 
-test validate_basic() {
+const test_signers: TrustedSigners =
+  [
+    Pair(
+      #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+      test_interval,
+    ),
+  ]
+
+test can_parse_message() {
   let message =
     #"b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f50500000000"
 
   expect _ = parse_and_verify(message, test_signers, test_interval)
 }
 
-test validation_fails_with_wrong_signature() fail {
+test fails_with_wrong_signature() fail {
   let message =
     #"b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f50500000001"
 
   expect _ = parse_and_verify(message, test_signers, test_interval)
 }
 
-test validate_bad_magic() fail {
+test fails_with_bad_magic() fail {
   let message =
     #"c9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f50500000000"
 
   expect _ = parse_and_verify(message, test_signers, test_interval)
 }
 
-test validate_bad_length() fail {
+test fails_with_bad_length() fail {
   let message = #"c9011a82e5cddee2c1bd364c8c57e1"
 
   expect _ = parse_and_verify(message, test_signers, test_interval)
 }
 
-test validate_bad_payload_length_too_short() fail {
+test bad_payload_length_too_short() fail {
   let message =
     #"b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f505000000"
 
   expect _ = parse_and_verify(message, test_signers, test_interval)
 }
 
-test validate_bad_payload_length_too_long() fail {
+test bad_payload_length_too_long() fail {
   let message =
     #"b9011a82e5cddee2c1bd364c8c57e1c98a6a28d194afcad410ff412226c8b2ae931ff59a57147cb47c7307afc2a0a1abec4dd7e835a5b7113cf5aeac13a745c6bed6c60074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2141c0075d3c7931c9773f30a240600010102000000010000e1f5050000000000"
 
   expect _ = parse_and_verify(message, test_signers, test_interval)
+}
+
+test adds_new_signer() {
+  update_trusted_signer([], #"", Some(interval.before(10))) == [
+    Pair(#"", interval.before(10)),
+  ]
+}
+
+test removes_signer() {
+  update_trusted_signer([Pair(#"", interval.before(10))], #"", None) == []
+}
+
+test updates_signer() {
+  update_trusted_signer(
+    [Pair(#"aa", interval.before(42))],
+    #"bb",
+    Some(interval.before(12)),
+  ) == [Pair(#"aa", interval.before(42)), Pair(#"bb", interval.before(12))]
 }

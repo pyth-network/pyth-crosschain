@@ -6,8 +6,8 @@ use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
+use pyth
 use pyth/governance.{Governance}
-use pyth/update.{TrustedSigner}
 use pyth_state.{Pyth, config}
 use state.{StateId}
 
@@ -23,7 +23,7 @@ validator pyth_price(pyth_id: StateId) {
         updates,
         fn(update) {
           expect _ =
-            update.parse_and_verify(
+            pyth.parse_and_verify(
               update,
               pyth.trusted_signers,
               self.validity_range,
@@ -104,7 +104,7 @@ test validate_single_price() {
     signer_ref_input(
       test_pyth_id,
       assets.from_asset(test_pyth_id, config.state_nft, 1),
-      [TrustedSigner { key: test_signer_pubkey, expires_at: 1000 }],
+      [Pair(test_signer_pubkey, interval.before(1000))],
     )
 
   pyth_price.withdraw(
@@ -120,7 +120,7 @@ test validate_outdated_signer() fail {
     signer_ref_input(
       test_pyth_id,
       assets.from_asset(test_pyth_id, config.state_nft, 1),
-      [TrustedSigner { key: test_signer_pubkey, expires_at: 500 }],
+      [Pair(test_signer_pubkey, interval.before(500))],
     )
 
   pyth_price.withdraw(
@@ -136,7 +136,7 @@ test validate_multiple_prices() {
     signer_ref_input(
       test_pyth_id,
       assets.from_asset(test_pyth_id, config.state_nft, 1),
-      [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
+      [Pair(test_signer_pubkey, interval.before(10000))],
     )
 
   pyth_price.withdraw(
@@ -153,10 +153,10 @@ test validate_wrong_signer() fail {
       test_pyth_id,
       assets.from_asset(test_pyth_id, config.state_nft, 1),
       [
-        TrustedSigner {
-          key: #"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-          expires_at: 10000,
-        },
+        Pair(
+          #"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          interval.before(10000),
+        ),
       ],
     )
 
@@ -184,7 +184,7 @@ test validate_missing_nft() fail {
     signer_ref_input(
       test_pyth_id,
       assets.zero,
-      [TrustedSigner { key: test_signer_pubkey, expires_at: 10000 }],
+      [Pair(test_signer_pubkey, interval.before(10000))],
     )
   pyth_price.withdraw(
     test_pyth_id,

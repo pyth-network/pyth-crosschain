@@ -3,10 +3,10 @@ use aiken/crypto.{ScriptHash}
 use aiken/interval
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction, ValidityRange}
+use pyth.{TrustedSigners}
 use pyth/governance.{
   Governance, UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
 }
-use pyth/update.{TrustedSigner, TrustedSigners} as pyth
 use state.{State, StateConfig}
 use wormhole.{Guardians}
 use wormhole/vaa.{PreparedVAA}
@@ -43,10 +43,17 @@ pub type Action {
 validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Never, id: PolicyId, self: Transaction) {
     let state <- state.mint(config, origin, id, self)
-    expect pyth: Pyth = state.data
+    expect Pyth {
+      governance,
+      trusted_signers,
+      deprecated_withdraw_scripts,
+      withdraw_script: _,
+    }: Pyth = state.data
     and {
       (state.home == home)?,
-      (pyth.governance.seen_sequence == 0)?,
+      (governance.seen_sequence == 0)?,
+      (trusted_signers == [])?,
+      (deprecated_withdraw_scripts == [])?,
     }
   }
 
@@ -77,13 +84,14 @@ validator update {
           governance.parse_and_verify_action(action, pyth.governance, guardians)
         let pyth = Pyth { ..pyth, governance }
         when action is {
-          UpdateTrustedSigner(signer) -> {
+          UpdateTrustedSigner(key, valid) -> {
             let pyth =
               Pyth {
                 ..pyth,
-                trusted_signers: update_trusted_signer(
+                trusted_signers: pyth.update_trusted_signer(
                   pyth.trusted_signers,
-                  signer,
+                  key,
+                  valid,
                 ),
               }
             state.new(state.home, pyth)
@@ -120,23 +128,6 @@ validator update {
 
   else(_) {
     fail
-  }
-}
-
-fn update_trusted_signer(signers: TrustedSigners, signer: TrustedSigner) {
-  if signer.expires_at == 0 {
-    list.filter(signers, fn(trusted) { trusted.key != signer.key })
-  } else {
-    list.map(
-      signers,
-      fn(trusted) {
-        if trusted.key == signer.key {
-          signer
-        } else {
-          trusted
-        }
-      },
-    )
   }
 }
 

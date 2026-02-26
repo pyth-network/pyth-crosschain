@@ -1,9 +1,8 @@
-use aiken/crypto.{ScriptHash}
+use aiken/crypto.{ScriptHash, VerificationKey}
 use aiken/interval
 use cardano/transaction.{ValidityRange}
 use env
 use parser.{Parser, parse}
-use pyth/update.{TrustedSigner}
 use state.{StateId}
 use types/u16
 use types/u32.{U32}
@@ -24,7 +23,7 @@ pub type Governance {
 }
 
 pub type GovernanceAction {
-  UpdateTrustedSigner(TrustedSigner)
+  UpdateTrustedSigner(VerificationKey, Option<ValidityRange>)
   UpgradeSpendScript(ScriptHash)
   UpgradeWithdrawScript {
     deprecated_validity: ValidityRange,
@@ -63,8 +62,11 @@ fn governance_action(timestamp: U32) -> Parser<GovernanceAction> {
       let key <- parse(parser.bytes(32))
       let expires_at <- parse(u64.from_be)
       UpdateTrustedSigner(
-        //TODO: Does expires_at have the correct units?
-        TrustedSigner { key, expires_at: u64.as_int(expires_at) },
+        key,
+        when u64.as_int(expires_at) * 1000 is {
+          0 -> None
+          n -> Some(interval.before(n))
+        },
       )
         |> parser.return
     }
@@ -89,4 +91,27 @@ fn governance_action(timestamp: U32) -> Parser<GovernanceAction> {
     }
     _ -> fail @"unsupported action ID"
   }
+}
+
+test can_parse_upgrade_spend_script() {
+  let action =
+    parser.run(
+      governance_action(u32.zero),
+      #"5054474d0302eabf0134af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+    )
+  action == UpgradeSpendScript(
+    #"34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+  )
+}
+
+test can_parse_update_trusted_signer() {
+  let action =
+    parser.run(
+      governance_action(u32.zero),
+      #"5054474d0301eabf74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2140000000000002a2a",
+    )
+  action == UpdateTrustedSigner(
+    #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
+    Some(interval.before(10794 * 1000)),
+  )
 }

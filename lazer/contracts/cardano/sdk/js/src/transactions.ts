@@ -82,7 +82,7 @@ export async function initPythState(
   const state = spender.receive(ctx.parameters, stateNFT, {
     deprecated_withdraw_scripts: new Map(),
     governance: { ...initial, seen_sequence: 0n },
-    trusted_signers: [],
+    trusted_signers: new Map(),
     withdraw_script: new Uint8Array(),
   });
 
