@@ -108,7 +108,7 @@ export * from "./ExecuteAction";
 export { ExecutePostedVaa } from "./ExecutePostedVaa";
 export * from "./GovernanceDataSourceTransfer";
 export * from "./PythGovernanceAction";
-export * from "./PythGovernanceAction";
+
 export * from "./SetDataSources";
 export * from "./SetFee";
 export * from "./SetTransactionFee";
