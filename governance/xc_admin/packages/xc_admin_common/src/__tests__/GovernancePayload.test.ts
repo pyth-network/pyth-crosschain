@@ -538,21 +538,15 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           );
         });
     } else if (header.action === "UpgradeCardanoLazerContract") {
-      const scripts = Object.values(CardanoLazerScript);
       return fc
         .record({
           buffer: hexBytesArb({ maxLength: 28, minLength: 28 }),
-          script: fc.integer({
-            // biome-ignore lint/style/noNonNullAssertion: const definition
-            max: scripts[scripts.length - 1]!,
-            // biome-ignore lint/style/noNonNullAssertion: const definition
-            min: scripts[0]!,
-          }),
+          script: fc.constantFrom(...Object.values(CardanoLazerScript)),
         })
         .map(({ script, buffer }) => {
           return new UpgradeCardanoLazerContract(
             header.targetChainId,
-            script as CardanoLazerScript,
+            script,
             buffer,
           );
         });
