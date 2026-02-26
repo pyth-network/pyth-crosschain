@@ -41,7 +41,12 @@ const {
   .help()
   .parseAsync();
 
-const { SUI_KEY = "" } = process.env;
+const { SUI_KEY } = process.env;
+if (!SUI_KEY) {
+  throw new Error(
+    "'SUI_KEY' environment variable must be set to your Sui private key.",
+  );
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
