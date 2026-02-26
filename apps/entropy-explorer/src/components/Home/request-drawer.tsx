@@ -349,13 +349,20 @@ const FailureMessage = ({
     );
   } else if (isGasLimitExceeded(request)) {
     return "The callback used more gas than the set gas limit";
-  } else {
-    return (
-      <>
-        <b>Error response:</b> {request.reason}
-      </>
-    );
-  }
+      } else {
+        return (
+          <>
+            <b>Error response:</b> {request.reason}
+            {request.reason === "0x" && (
+              <p className={styles.details} style={{ marginTop: "8px", fontStyle: "italic" }}>
+                Note: A "0x" response typically indicates a generic revert (require without message) or an out-of-gas error. 
+                Try running the cast command below to see the full revert reason.
+              </p>
+            )}
+          </>
+        );
+      }
+  
 };
 
 const isGasLimitExceeded = (request: CallbackErrorRequest | FailedRequest) =>
