@@ -1,17 +1,14 @@
-import {
-  type ChainId,
-  type ChainName,
-  toChainId,
-  toChainName,
-} from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
 import { PACKET_DATA_SIZE } from "@solana/web3.js";
+import type { ChainId, ChainName } from "../chains";
+import { toChainId, toChainName } from "../chains";
 
 /** Each of the actions that can be directed to the Executor Module */
 export const ExecutorAction = {
   ExecutePostedVaa: 0,
 } as const;
 
+// biome-ignore assist/source/useSortedKeys: ordered by ID
 export const TargetAction = {
   UpgradeContract: 0,
   AuthorizeGovernanceDataSourceTransfer: 1,
@@ -29,11 +26,12 @@ export const EvmExecutorAction = {
   Execute: 0,
 } as const;
 
+// biome-ignore assist/source/useSortedKeys: ordered by ID
 export const LazerAction = {
   UpgradeSuiLazerContract: 0,
   UpdateTrustedSigner: 1,
   UpgradeCardanoLazerContract: 2,
-};
+} as const;
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
@@ -163,10 +161,10 @@ export class PythGovernanceHeader {
       throw new Error(`Invalid chain id ${this.targetChainId}`);
     const span = PythGovernanceHeader.layout.encode(
       {
-        magicNumber: MAGIC_NUMBER,
-        module,
         action,
         chain: toChainId(this.targetChainId),
+        magicNumber: MAGIC_NUMBER,
+        module,
       },
       buffer,
     );
@@ -174,7 +172,7 @@ export class PythGovernanceHeader {
   }
 }
 
-export const MAGIC_NUMBER = 0x4d475450;
+export const MAGIC_NUMBER = 0x4d_47_54_50;
 export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
 export const MODULE_EVM_EXECUTOR = 2;
