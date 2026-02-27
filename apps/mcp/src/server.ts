@@ -74,7 +74,7 @@ export function createServer(config: Config): {
     });
 
     // Flush pino's destination before exiting
-    await new Promise<void>((resolve) => logger.flush(resolve));
+    await new Promise<void>((resolve) => logger.flush(() => resolve()));
 
     await server.close();
     process.exit(exitCode);
