@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"],
+    "lib": ["DOM", "ESNext"]
   },
   "exclude": ["node_modules"],
   "extends": "@cprussin/tsconfig/base.json",
-  "include": ["src"],
+  "include": ["src"]
 }

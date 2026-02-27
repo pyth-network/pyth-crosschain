@@ -10,8 +10,14 @@ export type PreparedVAA = {
   recovered_keys: Uint8Array[];
 };
 
+export type PreparedGuardianSetUpgrade = {
+  vaa: PreparedVAA;
+  index: number;
+  guardians: readonly string[];
+};
+
 export async function prepareGuardianSetVAAs(): Promise<
-  { index: number; vaa: PreparedVAA }[]
+  PreparedGuardianSetUpgrade[]
 > {
   const vaas = await fetchGuardianSetVAAs();
   return vaas.map(({ index, vaa }) => {
@@ -19,6 +25,7 @@ export async function prepareGuardianSetVAAs(): Promise<
     const parsed = parseGuardianSetUpgrade(bytes);
     const keys = recoverVaaPublicKeys(parsed);
     return {
+      guardians: parsed.payload.actionArgs.guardians,
       index,
       vaa: {
         recovered_keys: keys.map(({ key }) => key),

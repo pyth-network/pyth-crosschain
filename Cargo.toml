@@ -8,6 +8,7 @@ members = [
     "apps/hermes/client/rust",
     "pythnet/pythnet_sdk",
     "target_chains/starknet/tools/test_vaas",
+    "lazer/contracts/cardano/sdk/rust",
 ]
 
 exclude = [

@@ -3,8 +3,8 @@
     "declaration": true,
     "incremental": false,
     "isolatedModules": false,
-    "noEmit": false,
+    "noEmit": false
   },
   "exclude": ["node_modules", "dist", "src/examples/", "**/__tests__/*"],
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.json"
 }

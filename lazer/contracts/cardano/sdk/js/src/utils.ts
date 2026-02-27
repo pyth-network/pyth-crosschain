@@ -8,6 +8,8 @@
  */
 
 import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
 import type {
   AssetName,
@@ -15,6 +17,7 @@ import type {
   Data,
   DatumOption,
   SigningClient,
+  TransactionHash,
   UTxO,
 } from "@evolution-sdk/evolution";
 import {
@@ -22,6 +25,7 @@ import {
   Assets,
   CBOR,
   Effect,
+  Either,
   InlineDatum,
   PolicyId,
   Schema,
@@ -36,11 +40,13 @@ import type {
   PayToAddressParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
+import type {
+  SigningTransactionBuilder,
+  ProtocolParameters as TransactionProtocolParameters,
+} from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
 import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
 import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
-import fs from "node:fs/promises";
-import path from "node:path";
 
 export const execFileAsync = promisify(execFile);
 
@@ -59,8 +65,22 @@ export async function withTempFile<T>(
   }
 }
 
-/** A margin added to fees to make transactions pass in practice. */
-const FEE_MARGIN = 1_000_000n;
+// Margins added to fees to make transactions pass in practice.
+const FEE_MARGIN_A = 1;
+const FEE_MARGIN_B = 1_000_000n;
+
+export const prepareProtocolParams = (
+  params: ProtocolParameters,
+): TransactionProtocolParameters => {
+  return {
+    coinsPerUtxoByte: params.coinsPerUtxoByte,
+    maxTxSize: params.maxTxSize,
+    minFeeCoefficient: BigInt(params.minFeeA * FEE_MARGIN_A),
+    minFeeConstant: BigInt(params.minFeeB) + FEE_MARGIN_B,
+    priceMem: params.priceMem,
+    priceStep: params.priceStep,
+  };
+};
 
 export const plutusV3FromAiken = (compiledCode: string) => {
   const decoded = UPLC.decodeDoubleCborHexToFlat(compiledCode);
@@ -111,7 +131,9 @@ const calculateFee = (
       coinsPerUtxoByte,
       ...(script ? { scriptRef: script } : {}),
     }),
-  ) + FEE_MARGIN;
+    // TODO: this is trial and error
+    // - we need more principled way to calculate fees
+  ) + FEE_MARGIN_B;
 
 export const utxoToOutRef = (
   utxo: UTxO.UTxO,
@@ -120,10 +142,10 @@ export const utxoToOutRef = (
   transaction_id: utxo.transactionId.hash,
 });
 
-export const toMe = async (
+export async function toMe(
   ctx: TransactionContext,
   assets: Assets.Assets,
-): Promise<PayToAddressParams> => {
+): Promise<PayToAddressParams> {
   const address = await ctx.client.address();
   const payment = { address, assets };
   payment.assets = Assets.addLovelace(
@@ -131,7 +153,22 @@ export const toMe = async (
     calculateFee(payment, ctx.parameters),
   );
   return payment;
-};
+}
+
+export async function runTx(
+  ctx: TransactionContext,
+  tx: SigningTransactionBuilder,
+): Promise<TransactionHash.TransactionHash> {
+  const digest = await Either.getOrThrowWith(
+    await tx.buildEither({
+      debug: true,
+      protocolParameters: prepareProtocolParams(ctx.parameters),
+    }),
+    (e) => JSON.stringify(e, undefined, 2),
+  ).signAndSubmit();
+  await ctx.client.awaitTx(digest);
+  return digest;
+}
 
 type RedeemerArg<T> = T | ((input: IndexedInput) => T);
 type DataSchema<T> = Schema.Schema<T, any>;

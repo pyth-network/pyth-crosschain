@@ -11,9 +11,7 @@ export async function runDevnetSession(client: SigningClient) {
 
   const genesis: Config.ShelleyGenesis = {
     ...Config.DEFAULT_SHELLEY_GENESIS,
-    epochLength: 100,
-    initialFunds: { [Address.toHex(address)]: 1_000_000_000 },
-    slotLength: 0.1,
+    initialFunds: { [Address.toHex(address)]: 1_000_000_000_000 },
   };
   const cluster = await Cluster.make({
     clusterName: "cli-devnet",
@@ -80,7 +78,7 @@ export async function runDevnetSession(client: SigningClient) {
         })}]`,
       );
 
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 3000));
     }
   } finally {
     await cleanUp();

@@ -36,9 +36,9 @@
     "url": "https://github.com/pyth-network/pyth-crosschain"
   },
   "scripts": {
-    "cli": "pnpm tsx --env-file=.env src/cli.ts",
     "build": "ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
+    "cli": "pnpm tsx --env-file=.env src/cli.ts",
     "test:types": "tsc",
     "test:unit": "test-unit"
   },
