@@ -11,10 +11,18 @@ import {
   alignTimestampToChannel,
   normalizeTimestampToMicroseconds,
 } from "../utils/timestamp.js";
-import { channelParam } from "./schemas.js";
 
 const GetHistoricalPriceInput = {
-  channel: channelParam,
+  channel: z
+    .string()
+    .regex(
+      /^(real_time|fixed_rate@\d+ms)$/,
+      "Invalid channel format. Valid: real_time, fixed_rate@50ms, fixed_rate@200ms, fixed_rate@1000ms",
+    )
+    .optional()
+    .describe(
+      "Override default channel (e.g. fixed_rate@200ms, real_time, fixed_rate@50ms, fixed_rate@1000ms)",
+    ),
   price_feed_ids: z
     .array(z.coerce.number().int().positive())
     .max(50)
@@ -45,7 +53,8 @@ export function registerGetHistoricalPrice(
     "get_historical_price",
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
-      description: `Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. For reference, the current server time is Unix ${Math.floor(Date.now() / 1000)} seconds. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000\u03BCs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.`,
+      description:
+        "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000\u03BCs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
       inputSchema: GetHistoricalPriceInput,
     },
     async (params) => {

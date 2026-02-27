@@ -8,14 +8,22 @@ import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
-import { channelParam } from "./schemas.js";
 
 const GetLatestPriceInput = {
   access_token: z
     .string()
     .optional()
     .describe("Pyth Pro access token. Get one at https://pyth.network/pricing"),
-  channel: channelParam,
+  channel: z
+    .string()
+    .regex(
+      /^(real_time|fixed_rate@\d+ms)$/,
+      "Invalid channel format. Valid: real_time, fixed_rate@50ms, fixed_rate@200ms, fixed_rate@1000ms",
+    )
+    .optional()
+    .describe(
+      "Override default channel (e.g. fixed_rate@200ms, real_time, fixed_rate@50ms, fixed_rate@1000ms)",
+    ),
   price_feed_ids: z
     .array(z.coerce.number().int().positive())
     .max(100)
@@ -47,7 +55,7 @@ export function registerGetLatestPrice(
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
       description:
-        "Get the most recent real-time price for one or more feeds. Requires an `access_token` parameter (get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token). Use get_symbols first to find symbols or feed IDs. IMPORTANT: symbols must be the full name including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD'). Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
+        "Get the most recent real-time price for one or more feeds. Requires an `access_token` parameter (get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token). Use get_symbols first to find symbols or feed IDs. IMPORTANT: symbols must be the full name including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD'). If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
       inputSchema: GetLatestPriceInput,
     },
     async (params) => {
@@ -101,10 +109,15 @@ export function registerGetLatestPrice(
 
       const channel = resolveChannel(params.channel, config);
 
+      // The Router API rejects requests with both symbols and priceFeedIds.
+      // When both are provided, prefer price_feed_ids and ignore symbols.
+      const effectiveSymbols =
+        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
+
       try {
         const feeds = await routerClient.getLatestPrice(
           params.access_token,
-          params.symbols,
+          effectiveSymbols,
           params.price_feed_ids,
           params.properties,
           channel,

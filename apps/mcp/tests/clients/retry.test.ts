@@ -1,14 +1,14 @@
-import { HttpError, withRetry } from "../../src/clients/retry.js";
+import { HttpError, withSingleRetry } from "../../src/clients/retry.js";
 
-describe("withRetry", () => {
+describe("withSingleRetry", () => {
   it("returns result on first success", async () => {
-    const result = await withRetry(() => Promise.resolve("ok"));
+    const result = await withSingleRetry(() => Promise.resolve("ok"));
     expect(result).toBe("ok");
   });
 
   it("retries on 503 and succeeds on second try", async () => {
     let attempts = 0;
-    const result = await withRetry(() => {
+    const result = await withSingleRetry(() => {
       attempts++;
       if (attempts === 1) throw new HttpError(503, "Service unavailable");
       return Promise.resolve("ok");
@@ -19,7 +19,7 @@ describe("withRetry", () => {
 
   it("retries on 429 and succeeds on second try", async () => {
     let attempts = 0;
-    const result = await withRetry(() => {
+    const result = await withSingleRetry(() => {
       attempts++;
       if (attempts === 1) throw new HttpError(429, "Too many requests");
       return Promise.resolve("ok");
@@ -31,7 +31,7 @@ describe("withRetry", () => {
   it("does not retry on 400", async () => {
     let attempts = 0;
     await expect(
-      withRetry(() => {
+      withSingleRetry(() => {
         attempts++;
         throw new HttpError(400, "Bad request");
       }),
@@ -42,7 +42,7 @@ describe("withRetry", () => {
   it("does not retry on 403", async () => {
     let attempts = 0;
     await expect(
-      withRetry(() => {
+      withSingleRetry(() => {
         attempts++;
         throw new HttpError(403, "Forbidden");
       }),
@@ -53,7 +53,7 @@ describe("withRetry", () => {
   it("does not retry on 404", async () => {
     let attempts = 0;
     await expect(
-      withRetry(() => {
+      withSingleRetry(() => {
         attempts++;
         throw new HttpError(404, "Not found");
       }),
@@ -63,7 +63,7 @@ describe("withRetry", () => {
 
   it("retries on TimeoutError", async () => {
     let attempts = 0;
-    const result = await withRetry(() => {
+    const result = await withSingleRetry(() => {
       attempts++;
       if (attempts === 1)
         throw new DOMException("Signal timed out", "TimeoutError");
@@ -76,7 +76,7 @@ describe("withRetry", () => {
   it("fails after max retries (1 retry = 2 total attempts)", async () => {
     let attempts = 0;
     await expect(
-      withRetry(() => {
+      withSingleRetry(() => {
         attempts++;
         throw new HttpError(503, "Service unavailable");
       }),

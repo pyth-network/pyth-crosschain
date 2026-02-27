@@ -18,6 +18,9 @@ const mockFeeds = [
     description: "Bitcoin / US Dollar",
     exponent: -8,
     hermes_id: "0xabc",
+    market_sessions: {
+      regular: { min_pub: null, schedule: "America/New_York;O,O,O,O,O,O,O;" },
+    },
     min_channel: "fixed_rate@200ms",
     name: "Bitcoin",
     pyth_lazer_id: 1,
@@ -30,6 +33,9 @@ const mockFeeds = [
     description: "Ethereum / US Dollar",
     exponent: -8,
     hermes_id: "0xdef",
+    market_sessions: {
+      regular: { min_pub: null, schedule: "America/New_York;O,O,O,O,O,O,O;" },
+    },
     min_channel: "fixed_rate@200ms",
     name: "Ethereum",
     pyth_lazer_id: 2,
@@ -42,6 +48,9 @@ const mockFeeds = [
     description: "Gold / US Dollar",
     exponent: -5,
     hermes_id: null,
+    market_sessions: {
+      regular: { min_pub: null, schedule: "America/New_York;O,O,O,O,O,O,O;" },
+    },
     min_channel: "fixed_rate@200ms",
     name: "Gold",
     pyth_lazer_id: 10,
@@ -52,7 +61,16 @@ const mockFeeds = [
 ];
 
 const msw = setupServer(
-  http.get(`${HISTORY_URL}/v1/symbols`, () => HttpResponse.json(mockFeeds)),
+  http.get(`${HISTORY_URL}/v1/symbols`, ({ request }) => {
+    const url = new URL(request.url);
+    const assetType = url.searchParams.get("asset_type");
+    if (assetType) {
+      return HttpResponse.json(
+        mockFeeds.filter((f) => f.asset_type === assetType),
+      );
+    }
+    return HttpResponse.json(mockFeeds);
+  }),
   http.get(`${HISTORY_URL}/v1/fixed_rate@200ms/history`, () =>
     HttpResponse.json({
       c: [51_500],
