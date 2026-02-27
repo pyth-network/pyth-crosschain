@@ -1,6 +1,6 @@
 use {
     crate::{
-        api::{ApiBlockChainState, ChainId, RequestLabel, RestError},
+        api::{examples, ApiBlockChainState, ChainId, RequestLabel, RestError},
         chain::reader::BlockNumber,
     },
     anyhow::Result,
@@ -25,8 +25,15 @@ use {
 get,
 path = "/v1/chains/{chain_id}/revelations/{sequence}",
 responses(
-(status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse),
-(status = 403, description = "Random value cannot currently be retrieved", body = String)
+(status = 200, description = "Random value successfully retrieved", body = GetRandomValueResponse,
+    example = json!({
+        "encoding": "hex",
+        "data": "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe"
+    })
+),
+(status = 403, description = "Random value cannot currently be retrieved", body = String,
+    example = json!("The request with the given sequence number has not been made yet, or the random value has already been revealed on chain.")
+)
 ),
 params(RevelationPathParams, RevelationQueryParams)
 )]
@@ -130,32 +137,43 @@ pub async fn revelation(
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Path)]
 pub struct RevelationPathParams {
-    #[param(value_type = String)]
+    /// The unique identifier for the blockchain (e.g., "ethereum", "avalanche")
+    #[param(value_type = String, example = examples::chain_id_example)]
     pub chain_id: ChainId,
+    /// The sequence number of the random value request
+    #[param(example = examples::sequence_example)]
     pub sequence: u64,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct RevelationQueryParams {
+    /// The encoding format for the random value (hex, base64, or array)
+    #[param(example = examples::encoding_example)]
     pub encoding: Option<BinaryEncoding>,
-    #[param(value_type = Option<u64>)]
+    /// Optional block number to verify the request was made at a specific block
+    #[param(value_type = Option<u64>, example = examples::block_number_example)]
     pub block_number: Option<BlockNumber>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
 #[serde(rename_all = "kebab-case")]
+#[schema(example = "hex")]
 pub enum BinaryEncoding {
+    /// Hexadecimal encoding (default)
     #[serde(rename = "hex")]
     Hex,
+    /// Base64 encoding
     #[serde(rename = "base64")]
     Base64,
+    /// Raw byte array encoding
     #[serde(rename = "array")]
     Array,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 pub struct GetRandomValueResponse {
+    /// The random value in the requested encoding format
     pub value: Blob,
 }
 
@@ -163,15 +181,23 @@ pub struct GetRandomValueResponse {
 #[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema, PartialEq)]
 #[serde(tag = "encoding", rename_all = "kebab-case")]
 pub enum Blob {
+    /// Random value encoded as hexadecimal string
     Hex {
+        /// The 32-byte random value as a hex string
         #[serde_as(as = "serde_with::hex::Hex")]
+        #[schema(example = "a905ab56567d31a7fda38ed819d97bc257f3ebe385fc5c72ce226d3bb855f0fe")]
         data: [u8; 32],
     },
+    /// Random value encoded as base64 string
     Base64 {
+        /// The 32-byte random value as a base64 string
         #[serde_as(as = "serde_with::base64::Base64")]
+        #[schema(example = "qQWrVlZ9MafaOO2BnZe8JX8z6+OFxccszibju4VfD+4=")]
         data: [u8; 32],
     },
+    /// Random value as a raw byte array
     Array {
+        /// The 32-byte random value as an array of integers
         #[serde(with = "array")]
         data: [u8; 32],
     },
