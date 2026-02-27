@@ -1,0 +1,46 @@
+# Development Dockerfile - builds ALL binaries for local dev with Tilt
+# For production, use per-crate Dockerfiles (e.g., bulk-trade-pusher/Dockerfile)
+#
+# Build context should be apps/pyth-lazer-pusher/
+
+FROM rust:1.88 AS builder
+
+WORKDIR /src
+
+# Copy source
+COPY pusher-utils pusher-utils
+COPY pusher-base pusher-base
+COPY websocket-delivery websocket-delivery
+COPY bulk-trade-pusher bulk-trade-pusher
+COPY mock mock
+COPY bulk-trade-cli bulk-trade-cli
+
+# Create workspace Cargo.toml on the fly (no Cargo.lock in context)
+RUN printf '[workspace]\nresolver = "2"\nmembers = ["pusher-utils", "pusher-base", "websocket-delivery", "bulk-trade-pusher", "bulk-trade-cli", "mock/bulk-trade-mock-validator"]\n\n[workspace.lints.rust]\nunsafe_code = "deny"\n\n[workspace.lints.clippy]\nunwrap_used = "warn"\nexpect_used = "warn"\npanic = "warn"\nindexing_slicing = "warn"\n' > Cargo.toml
+
+# Build all binaries
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/target \
+    cargo build && \
+    cp target/debug/bulk-pusher /bulk-pusher && \
+    cp target/debug/bulk-trade-mock-validator /bulk-trade-mock-validator && \
+    cp target/debug/bulk-trade-cli /bulk-trade-cli
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /bulk-pusher /app/bulk-pusher
+COPY --from=builder /bulk-trade-mock-validator /app/bulk-trade-mock-validator
+COPY --from=builder /bulk-trade-cli /app/bulk-trade-cli
+
+# Run as non-root user
+RUN useradd -r -u 1000 appuser
+USER appuser
+
+ENTRYPOINT ["/app/bulk-pusher"]
