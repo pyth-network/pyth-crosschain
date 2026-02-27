@@ -25,7 +25,7 @@ export class RouterClient {
     this.timeoutMs = config.requestTimeoutMs;
   }
 
-  getLatestPrice(
+  async getLatestPrice(
     token: string,
     symbols?: string[],
     priceFeedIds?: number[],
@@ -43,7 +43,7 @@ export class RouterClient {
     if ((priceFeedIds?.length ?? 0) > 0) body.priceFeedIds = priceFeedIds;
     if (channel) body.channel = channel;
 
-    return withSingleRetry(async () => {
+    return await withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "POST latest_price");
       const res = await fetch(url, {
         body: JSON.stringify(body),
