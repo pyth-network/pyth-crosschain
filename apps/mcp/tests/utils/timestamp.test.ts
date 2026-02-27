@@ -56,4 +56,9 @@ describe("alignTimestampToChannel", () => {
     const ts = 1_708_300_800_200_000; // divisible by 200,000
     expect(alignTimestampToChannel(ts, "fixed_rate@200ms")).toBe(ts);
   });
+
+  it("returns timestamp unchanged for fixed_rate@0ms (zero interval)", () => {
+    const ts = 1_708_300_800_123_456;
+    expect(alignTimestampToChannel(ts, "fixed_rate@0ms")).toBe(ts);
+  });
 });

@@ -67,7 +67,7 @@ function createSessionContext(): SessionContext {
 }
 
 describe("get_latest_price tool", () => {
-  it("returns auth error when no access_token", async () => {
+  it("returns validation error when no access_token", async () => {
     const config = {
       channel: "fixed_rate@200ms",
       historyUrl: HISTORY_URL,
@@ -95,11 +95,42 @@ describe("get_latest_price tool", () => {
     });
 
     expect(result.isError).toBe(true);
-    const text = (result.content as Array<{ type: string; text: string }>)[0]
-      .text;
-    expect(text).toContain("access token");
-    expect(text).toContain("access_token");
-    expect(text).toContain("pyth.network/pricing");
+  });
+
+  it("accepts 100 price_feed_ids + extra symbols (symbols are dropped)", async () => {
+    const config = {
+      channel: "fixed_rate@200ms",
+      historyUrl: HISTORY_URL,
+      logLevel: "info" as const,
+      requestTimeoutMs: 10_000,
+      routerUrl: ROUTER_URL,
+    };
+
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    const historyClient = new HistoryClient(config, logger);
+    const routerClient = new RouterClient(config, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
+
+    const client = await createTestClient(mcpServer);
+    const ids = Array.from({ length: 100 }, (_, i) => i + 1);
+    const result = await client.callTool({
+      arguments: {
+        access_token: "test-token",
+        price_feed_ids: ids,
+        symbols: ["BTC/USD", "ETH/USD"],
+      },
+      name: "get_latest_price",
+    });
+
+    // Should NOT fail validation — symbols are ignored when price_feed_ids are present
+    expect(result.isError).toBeFalsy();
   });
 
   it("returns price with display_price when access_token provided", async () => {

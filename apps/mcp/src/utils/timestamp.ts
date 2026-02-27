@@ -24,5 +24,6 @@ export function alignTimestampToChannel(
   const match = channel.match(/fixed_rate@(\d+)ms/);
   if (!match?.[1]) return timestampUs;
   const intervalUs = Number.parseInt(match[1], 10) * 1000;
+  if (intervalUs <= 0) return timestampUs;
   return Math.floor(timestampUs / intervalUs) * intervalUs;
 }

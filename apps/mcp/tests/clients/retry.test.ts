@@ -1,4 +1,41 @@
-import { HttpError, withSingleRetry } from "../../src/clients/retry.js";
+import {
+  HttpError,
+  parseRetryAfter,
+  withSingleRetry,
+} from "../../src/clients/retry.js";
+
+describe("parseRetryAfter", () => {
+  it("parses numeric Retry-After as seconds", () => {
+    const res = new Response(null, { headers: { "Retry-After": "120" } });
+    expect(parseRetryAfter(res)).toBe(120);
+  });
+
+  it("parses HTTP-date Retry-After", () => {
+    const futureDate = new Date(Date.now() + 30_000).toUTCString();
+    const res = new Response(null, { headers: { "Retry-After": futureDate } });
+    const result = parseRetryAfter(res);
+    expect(result).toBeGreaterThan(28);
+    expect(result).toBeLessThanOrEqual(30);
+  });
+
+  it("returns undefined for missing header", () => {
+    const res = new Response(null);
+    expect(parseRetryAfter(res)).toBeUndefined();
+  });
+
+  it("returns undefined for unparseable value", () => {
+    const res = new Response(null, {
+      headers: { "Retry-After": "not-a-date" },
+    });
+    expect(parseRetryAfter(res)).toBeUndefined();
+  });
+
+  it("clamps past HTTP-date to zero", () => {
+    const pastDate = new Date(Date.now() - 5000).toUTCString();
+    const res = new Response(null, { headers: { "Retry-After": pastDate } });
+    expect(parseRetryAfter(res)).toBe(0);
+  });
+});
 
 describe("withSingleRetry", () => {
   it("returns result on first success", async () => {
