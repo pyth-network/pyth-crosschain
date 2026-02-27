@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
+import { HttpError } from "../clients/retry.js";
 import type { Config } from "../config.js";
 import type { SessionContext } from "../server.js";
 import { resolveChannel } from "../utils/channel.js";
@@ -56,20 +57,22 @@ export function registerGetHistoricalPrice(
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
       description:
-        "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
+        "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
       inputSchema: GetHistoricalPriceInput,
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
-      const numFeedsRequested =
-        (params.price_feed_ids?.length ?? 0) + (params.symbols?.length ?? 0);
+
+      // When both are provided, prefer price_feed_ids and ignore symbols.
+      const effectiveSymbols =
+        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
 
       const baseMetrics = {
         apiKeyLast4: null as null,
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
-        numFeedsRequested,
+        numFeedsRequested: 0,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
         tokenHash: null as null,
@@ -78,7 +81,7 @@ export function registerGetHistoricalPrice(
 
       if (
         !(params.price_feed_ids?.length ?? 0) &&
-        !(params.symbols?.length ?? 0)
+        !(effectiveSymbols?.length ?? 0)
       ) {
         logToolCall(logger, {
           ...baseMetrics,
@@ -93,15 +96,18 @@ export function registerGetHistoricalPrice(
 
       const channel = resolveChannel(params.channel, config);
 
+      let ids: number[] = [];
+      let priceEndpointCalled = false;
+
       try {
         // Resolve symbols to IDs
-        let ids = params.price_feed_ids ? [...params.price_feed_ids] : [];
+        ids = params.price_feed_ids ? [...params.price_feed_ids] : [];
         let symbolLookupUpstreamMs = 0;
-        if ((params.symbols?.length ?? 0) > 0) {
+        if ((effectiveSymbols?.length ?? 0) > 0) {
           const { data: allFeeds, upstreamLatencyMs } =
             await historyClient.getSymbols();
           symbolLookupUpstreamMs = upstreamLatencyMs;
-          for (const symbol of params.symbols ?? []) {
+          for (const symbol of effectiveSymbols ?? []) {
             const feed = allFeeds.find((f) => f.symbol === symbol);
             if (!feed) {
               logToolCall(logger, {
@@ -118,12 +124,15 @@ export function registerGetHistoricalPrice(
 
         // Deduplicate
         ids = [...new Set(ids)];
+        baseMetrics.numFeedsRequested = ids.length;
 
-        const timestampUs = alignTimestampToChannel(
-          normalizeTimestampToMicroseconds(params.timestamp),
-          channel,
-        );
+        // Check for future timestamps before channel alignment
+        const normalizedUs = normalizeTimestampToMicroseconds(params.timestamp);
+        const nowUs = Date.now() * 1000;
 
+        const timestampUs = alignTimestampToChannel(normalizedUs, channel);
+
+        priceEndpointCalled = true;
         const { data: prices, upstreamLatencyMs: priceUpstreamMs } =
           await historyClient.getHistoricalPrice(channel, ids, timestampUs);
 
@@ -131,8 +140,12 @@ export function registerGetHistoricalPrice(
         const enriched = prices.map((p) => addDisplayPrices(p));
 
         if (enriched.length === 0) {
+          const hint =
+            normalizedUs > nowUs
+              ? "The requested timestamp is in the future. Historical data is only available for past timestamps."
+              : "No price data found for these feeds at the requested timestamp. Data is available from April 2025 onward. Try a more recent timestamp — some feeds may have started publishing after April 2025.";
           const responseText = JSON.stringify({
-            hint: "No price data found for these feeds at the requested timestamp. Data is available from April 2025 onward. Try a more recent timestamp — some feeds may have started publishing after April 2025.",
+            hint,
             prices: [],
           });
           logToolCall(logger, {
@@ -162,6 +175,24 @@ export function registerGetHistoricalPrice(
           content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
+        if (
+          priceEndpointCalled &&
+          err instanceof HttpError &&
+          (err.status === 400 || err.status === 404)
+        ) {
+          const idSnippet = ids.slice(0, 5).join(", ");
+          const suffix = ids.length > 5 ? ` and ${ids.length - 5} more` : "";
+          logToolCall(logger, {
+            ...baseMetrics,
+            errorType: "not_found",
+            latencyMs: Date.now() - start,
+            status: "error",
+          });
+          return toolError(
+            `No data found for the requested feeds (IDs: ${idSnippet}${suffix}). Verify feed IDs with get_symbols.`,
+          );
+        }
+
         logger.warn({ err }, "get_historical_price upstream error");
         logToolCall(logger, {
           ...baseMetrics,
