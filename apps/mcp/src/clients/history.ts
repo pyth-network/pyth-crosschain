@@ -1,6 +1,6 @@
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
-import { HttpError, parseRetryAfter, withRetry } from "./retry.js";
+import { HttpError, parseRetryAfter, withSingleRetry } from "./retry.js";
 import type { Feed, HistoricalPriceResponse, OHLCResponse } from "./types.js";
 import {
   FeedArraySchema,
@@ -25,7 +25,7 @@ export class HistoryClient {
     if (query) url.searchParams.set("query", query);
     if (assetType) url.searchParams.set("asset_type", assetType);
 
-    return withRetry(async () => {
+    return withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET symbols");
       const res = await fetch(url, {
         signal: AbortSignal.timeout(this.timeoutMs),
@@ -54,7 +54,7 @@ export class HistoryClient {
     url.searchParams.set("from", String(from));
     url.searchParams.set("to", String(to));
 
-    return withRetry(async () => {
+    return withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET candlestick data");
       const res = await fetch(url, {
         signal: AbortSignal.timeout(this.timeoutMs),
@@ -81,7 +81,7 @@ export class HistoryClient {
     }
     url.searchParams.set("timestamp", String(timestampUs));
 
-    return withRetry(async () => {
+    return withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "GET historical price");
       const res = await fetch(url, {
         signal: AbortSignal.timeout(this.timeoutMs),

@@ -7,12 +7,20 @@ import { RESOLUTIONS } from "../constants.js";
 import { resolveChannel } from "../utils/channel.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
-import { channelParam } from "./schemas.js";
 
 const MAX_CANDLES = 500;
 
 const GetCandlestickDataInput = {
-  channel: channelParam,
+  channel: z
+    .string()
+    .regex(
+      /^(real_time|fixed_rate@\d+ms)$/,
+      "Invalid channel format. Valid: real_time, fixed_rate@50ms, fixed_rate@200ms, fixed_rate@1000ms",
+    )
+    .optional()
+    .describe(
+      "Override default channel (e.g. fixed_rate@200ms, real_time, fixed_rate@50ms, fixed_rate@1000ms)",
+    ),
   from: z.coerce
     .number()
     .int()
@@ -42,7 +50,8 @@ export function registerGetCandlestickData(
     "get_candlestick_data",
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
-      description: `Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. For reference, the current server time is Unix ${Math.floor(Date.now() / 1000)} seconds. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.`,
+      description:
+        "Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.",
       inputSchema: GetCandlestickDataInput,
     },
     async (params) => {

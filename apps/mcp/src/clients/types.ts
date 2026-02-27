@@ -2,18 +2,26 @@ import { z } from "zod";
 
 // --- Zod Schemas (single source of truth) ---
 
-export const FeedSchema = z.object({
-  asset_type: z.string(),
-  description: z.string(),
-  exponent: z.number(),
-  hermes_id: z.string().nullable(),
-  min_channel: z.string(),
-  name: z.string(),
-  pyth_lazer_id: z.number(),
-  quote_currency: z.string(),
-  state: z.string(),
-  symbol: z.string(),
+const MarketSessionSchema = z.object({
+  min_pub: z.number().nullable(),
+  schedule: z.string(),
 });
+
+export const FeedSchema = z
+  .object({
+    asset_type: z.string(),
+    description: z.string(),
+    exponent: z.number(),
+    hermes_id: z.string().nullable(),
+    market_sessions: z.record(z.string(), MarketSessionSchema).optional(),
+    min_channel: z.string(),
+    name: z.string(),
+    pyth_lazer_id: z.number(),
+    quote_currency: z.string(),
+    state: z.string(),
+    symbol: z.string(),
+  })
+  .passthrough();
 
 export const FeedArraySchema = z.array(FeedSchema);
 

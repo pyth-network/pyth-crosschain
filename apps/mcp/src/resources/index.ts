@@ -47,12 +47,14 @@ export function registerAllResources(
       mimeType: "application/json",
     },
     async (uri, { asset_type }) => {
-      const feeds = await historyClient.getSymbols();
-      const filtered = feeds.filter((f) => f.asset_type === asset_type);
+      const feeds = await historyClient.getSymbols(
+        undefined,
+        asset_type as string,
+      );
       return {
         contents: [
           {
-            text: JSON.stringify(filtered),
+            text: JSON.stringify(feeds),
             uri: uri.href,
           },
         ],

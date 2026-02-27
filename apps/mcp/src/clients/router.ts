@@ -1,6 +1,6 @@
 import type { Logger } from "pino";
 import type { Config } from "../config.js";
-import { HttpError, parseRetryAfter, withRetry } from "./retry.js";
+import { HttpError, parseRetryAfter, withSingleRetry } from "./retry.js";
 import type { LatestPriceParsedFeed } from "./types.js";
 import { LatestPriceResponseSchema } from "./types.js";
 
@@ -43,7 +43,7 @@ export class RouterClient {
     if ((priceFeedIds?.length ?? 0) > 0) body.priceFeedIds = priceFeedIds;
     if (channel) body.channel = channel;
 
-    return withRetry(async () => {
+    return withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "POST latest_price");
       const res = await fetch(url, {
         body: JSON.stringify(body),

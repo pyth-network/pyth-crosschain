@@ -43,7 +43,7 @@ export function parseRetryAfter(res: Response): number | undefined {
   return Number.isFinite(seconds) ? seconds : undefined;
 }
 
-export async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+export async function withSingleRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
