@@ -55,7 +55,10 @@ describe("RouterClient", () => {
   const client = new RouterClient(config, logger);
 
   it("returns normalized feeds with snake_case and numeric values", async () => {
-    const feeds = await client.getLatestPrice("test-token", ["Crypto.BTC/USD"]);
+    const { data: feeds, upstreamLatencyMs } = await client.getLatestPrice(
+      "test-token",
+      ["Crypto.BTC/USD"],
+    );
     expect(feeds).toHaveLength(1);
     expect(feeds[0].price_feed_id).toBe(1);
     expect(feeds[0].timestamp_us).toBe(1_708_300_800_000_000);
@@ -65,10 +68,11 @@ describe("RouterClient", () => {
     expect(feeds[0].confidence).toBe(1_000_000);
     expect(feeds[0].exponent).toBe(-8);
     expect(feeds[0].publisher_count).toBe(5);
+    expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
   });
 
   it("sends Authorization header", async () => {
-    const feeds = await client.getLatestPrice("my-secret-token", [
+    const { data: feeds } = await client.getLatestPrice("my-secret-token", [
       "Crypto.BTC/USD",
     ]);
     expect(feeds).toHaveLength(1);

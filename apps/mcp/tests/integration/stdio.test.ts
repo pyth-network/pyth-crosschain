@@ -6,8 +6,18 @@ import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
 import { registerAllResources } from "../../src/resources/index.js";
+import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { createTestClient } from "../helpers.js";
+
+function createSessionContext(): SessionContext {
+  return {
+    serverVersion: "0.0.1",
+    sessionId: "test-session-id",
+    sessionStartTime: Date.now(),
+    toolCallCount: 0,
+  };
+}
 
 const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
@@ -139,7 +149,14 @@ describe("Integration: MCP server round-trip", () => {
     const historyClient = new HistoryClient(config, logger);
     const routerClient = new RouterClient(config, logger);
 
-    registerAllTools(mcpServer, config, historyClient, routerClient, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
     registerAllResources(mcpServer, historyClient);
 
     client = await createTestClient(mcpServer);
@@ -262,7 +279,14 @@ describe("Integration: auth gating", () => {
     const historyClient = new HistoryClient(config, logger);
     const routerClient = new RouterClient(config, logger);
 
-    registerAllTools(mcpServer, config, historyClient, routerClient, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
 
     const client = await createTestClient(mcpServer);
 

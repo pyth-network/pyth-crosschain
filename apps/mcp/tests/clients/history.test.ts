@@ -86,9 +86,10 @@ describe("HistoryClient", () => {
 
   describe("getSymbols", () => {
     it("returns feeds", async () => {
-      const feeds = await client.getSymbols();
+      const { data: feeds, upstreamLatencyMs } = await client.getSymbols();
       expect(feeds).toHaveLength(2);
       expect(feeds[0].symbol).toBe("BTC/USD");
+      expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
     });
 
     it("handles 400 error", async () => {
@@ -103,7 +104,7 @@ describe("HistoryClient", () => {
 
   describe("getCandlestickData", () => {
     it("returns OHLC data", async () => {
-      const data = await client.getCandlestickData(
+      const { data, upstreamLatencyMs } = await client.getCandlestickData(
         "fixed_rate@200ms",
         "BTC/USD",
         "D",
@@ -112,18 +113,21 @@ describe("HistoryClient", () => {
       );
       expect(data.s).toBe("ok");
       expect(data.t).toHaveLength(2);
+      expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe("getHistoricalPrice", () => {
     it("returns price data", async () => {
-      const prices = await client.getHistoricalPrice(
-        "fixed_rate@200ms",
-        [1],
-        1_708_300_800_000_000,
-      );
+      const { data: prices, upstreamLatencyMs } =
+        await client.getHistoricalPrice(
+          "fixed_rate@200ms",
+          [1],
+          1_708_300_800_000_000,
+        );
       expect(prices).toHaveLength(1);
       expect(prices[0].price_feed_id).toBe(1);
+      expect(upstreamLatencyMs).toBeGreaterThanOrEqual(0);
     });
   });
 });

@@ -5,6 +5,7 @@ import { setupServer } from "msw/node";
 import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
+import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { createTestClient } from "../helpers.js";
 
@@ -67,6 +68,15 @@ beforeAll(() => msw.listen({ onUnhandledRequest: "error" }));
 afterEach(() => msw.resetHandlers());
 afterAll(() => msw.close());
 
+function createSessionContext(): SessionContext {
+  return {
+    serverVersion: "0.0.1",
+    sessionId: "test-session-id",
+    sessionStartTime: Date.now(),
+    toolCallCount: 0,
+  };
+}
+
 describe("get_historical_price tool", () => {
   let client: Client;
 
@@ -82,7 +92,14 @@ describe("get_historical_price tool", () => {
     const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
     const historyClient = new HistoryClient(config, logger);
     const routerClient = new RouterClient(config, logger);
-    registerAllTools(mcpServer, config, historyClient, routerClient, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
     client = await createTestClient(mcpServer);
   });
 

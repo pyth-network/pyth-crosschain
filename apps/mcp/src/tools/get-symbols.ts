@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
 import type { Config } from "../config.js";
 import { ASSET_TYPES } from "../constants.js";
+import type { SessionContext } from "../server.js";
 import { toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
 
@@ -38,6 +39,7 @@ export function registerGetSymbols(
   _config: Config,
   historyClient: HistoryClient,
   logger: Logger,
+  sessionContext: SessionContext,
 ): void {
   server.registerTool(
     "get_symbols",
@@ -47,17 +49,28 @@ export function registerGetSymbols(
         "List available Pyth Pro price feeds. Use this FIRST to discover what feeds exist before calling get_latest_price, get_historical_price, or get_candlestick_data. Filter by asset_type (crypto, equity, fx, metal, rates, commodity, funding-rate) or search by name/symbol. Returns feed metadata including pyth_lazer_id (needed for get_historical_price), symbol, asset_type, and exponent.",
       inputSchema: GetSymbolsInput,
     },
-    async (params) => {
+    async (params, extra) => {
+      sessionContext.toolCallCount++;
       const start = Date.now();
-      try {
-        let feeds = await historyClient.getSymbols(
-          undefined,
-          params.asset_type,
-        );
 
+      const baseMetrics = {
+        apiKeyLast4: null as null,
+        clientName: sessionContext.clientName,
+        clientVersion: sessionContext.clientVersion,
+        requestId: extra.requestId,
+        sessionId: extra.sessionId ?? sessionContext.sessionId,
+        tokenHash: null as null,
+        tool: "get_symbols" as const,
+      };
+
+      try {
+        const { data: feeds, upstreamLatencyMs } =
+          await historyClient.getSymbols(undefined, params.asset_type);
+
+        let filtered = feeds;
         const q = params.query?.trim().toLowerCase();
         if (q) {
-          feeds = feeds.filter(
+          filtered = feeds.filter(
             (f) =>
               f.name.toLowerCase().includes(q) ||
               f.symbol.toLowerCase().includes(q) ||
@@ -65,10 +78,10 @@ export function registerGetSymbols(
           );
         }
 
-        const totalAvailable = feeds.length;
+        const totalAvailable = filtered.length;
         const offset = params.offset;
         const limit = params.limit;
-        const page = feeds.slice(offset, offset + limit);
+        const page = filtered.slice(offset, offset + limit);
         const hasMore = offset + limit < totalAvailable;
 
         const result = {
@@ -80,26 +93,27 @@ export function registerGetSymbols(
           total_available: totalAvailable,
         };
 
-        logToolCall(
-          logger,
-          "get_symbols",
-          "success",
-          Date.now() - start,
-          false,
-        );
+        const responseText = JSON.stringify(result);
+
+        logToolCall(logger, {
+          ...baseMetrics,
+          latencyMs: Date.now() - start,
+          numFeedsReturned: page.length,
+          responseSizeBytes: Buffer.byteLength(responseText),
+          status: "success",
+          upstreamLatencyMs,
+        });
         return {
-          content: [{ text: JSON.stringify(result), type: "text" as const }],
+          content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
         logger.warn({ err }, "get_symbols upstream error");
-        logToolCall(
-          logger,
-          "get_symbols",
-          "error",
-          Date.now() - start,
-          false,
-          "upstream",
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "upstream",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
         return toolError("Failed to fetch symbols. Please try again.");
       }
     },
