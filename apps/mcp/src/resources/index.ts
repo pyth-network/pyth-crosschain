@@ -17,7 +17,7 @@ export function registerAllResources(
       mimeType: "application/json",
     },
     async (uri) => {
-      const feeds = await historyClient.getSymbols();
+      const { data: feeds } = await historyClient.getSymbols();
       return {
         contents: [
           {
@@ -47,7 +47,7 @@ export function registerAllResources(
       mimeType: "application/json",
     },
     async (uri, { asset_type }) => {
-      const feeds = await historyClient.getSymbols(
+      const { data: feeds } = await historyClient.getSymbols(
         undefined,
         asset_type as string,
       );

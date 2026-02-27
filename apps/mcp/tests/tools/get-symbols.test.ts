@@ -6,6 +6,7 @@ import pino from "pino";
 import { HistoryClient } from "../../src/clients/history.js";
 import { RouterClient } from "../../src/clients/router.js";
 import { loadConfig } from "../../src/config.js";
+import type { SessionContext } from "../../src/server.js";
 import { registerAllTools } from "../../src/tools/index.js";
 import { createTestClient } from "../helpers.js";
 
@@ -75,6 +76,15 @@ beforeAll(() => msw.listen({ onUnhandledRequest: "error" }));
 afterEach(() => msw.resetHandlers());
 afterAll(() => msw.close());
 
+function createSessionContext(): SessionContext {
+  return {
+    serverVersion: "0.0.1",
+    sessionId: "test-session-id",
+    sessionStartTime: Date.now(),
+    toolCallCount: 0,
+  };
+}
+
 describe("get_symbols tool", () => {
   let client: Client;
 
@@ -84,7 +94,14 @@ describe("get_symbols tool", () => {
     const routerClient = new RouterClient(config, logger);
 
     const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
-    registerAllTools(mcpServer, config, historyClient, routerClient, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
     client = await createTestClient(mcpServer);
   });
 

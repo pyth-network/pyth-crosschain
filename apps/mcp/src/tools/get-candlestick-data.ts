@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { HistoryClient } from "../clients/history.js";
 import type { Config } from "../config.js";
 import { RESOLUTIONS } from "../constants.js";
+import type { SessionContext } from "../server.js";
 import { resolveChannel } from "../utils/channel.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
@@ -45,6 +46,7 @@ export function registerGetCandlestickData(
   config: Config,
   historyClient: HistoryClient,
   logger: Logger,
+  sessionContext: SessionContext,
 ): void {
   server.registerTool(
     "get_candlestick_data",
@@ -54,53 +56,61 @@ export function registerGetCandlestickData(
         "Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.",
       inputSchema: GetCandlestickDataInput,
     },
-    async (params) => {
+    async (params, extra) => {
+      sessionContext.toolCallCount++;
       const start = Date.now();
 
+      const baseMetrics = {
+        apiKeyLast4: null as null,
+        clientName: sessionContext.clientName,
+        clientVersion: sessionContext.clientVersion,
+        requestId: extra.requestId,
+        sessionId: extra.sessionId ?? sessionContext.sessionId,
+        tokenHash: null as null,
+        tool: "get_candlestick_data" as const,
+      };
+
       if (params.from >= params.to) {
-        logToolCall(
-          logger,
-          "get_candlestick_data",
-          "error",
-          Date.now() - start,
-          false,
-          "validation",
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "validation",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
         return toolError("'from' must be before 'to'");
       }
 
       const channel = resolveChannel(params.channel, config);
 
       try {
-        const data = await historyClient.getCandlestickData(
-          channel,
-          params.symbol,
-          params.resolution,
-          params.from,
-          params.to,
-        );
+        const { data, upstreamLatencyMs } =
+          await historyClient.getCandlestickData(
+            channel,
+            params.symbol,
+            params.resolution,
+            params.from,
+            params.to,
+          );
 
         if (data.s === "no_data") {
-          logToolCall(
-            logger,
-            "get_candlestick_data",
-            "error",
-            Date.now() - start,
-            false,
-            "no_data",
-          );
+          logToolCall(logger, {
+            ...baseMetrics,
+            errorType: "no_data",
+            latencyMs: Date.now() - start,
+            status: "error",
+            upstreamLatencyMs,
+          });
           return toolError(ErrorMessages.NO_DATA);
         }
 
         if (data.s === "error") {
-          logToolCall(
-            logger,
-            "get_candlestick_data",
-            "error",
-            Date.now() - start,
-            false,
-            "upstream",
-          );
+          logToolCall(logger, {
+            ...baseMetrics,
+            errorType: "upstream",
+            latencyMs: Date.now() - start,
+            status: "error",
+            upstreamLatencyMs,
+          });
           return toolError(
             data.errmsg ?? "Unknown error from Pyth History API",
           );
@@ -109,24 +119,21 @@ export function registerGetCandlestickData(
         const totalCandles = data.t.length;
 
         if (totalCandles === 0) {
-          logToolCall(
-            logger,
-            "get_candlestick_data",
-            "success",
-            Date.now() - start,
-            false,
-          );
+          const responseText = JSON.stringify({
+            candles: 0,
+            hint: "No candlestick data for this symbol/time range. Data is available from April 2025 onward. Try a more recent time range or a different resolution.",
+            s: "ok",
+          });
+          logToolCall(logger, {
+            ...baseMetrics,
+            latencyMs: Date.now() - start,
+            numFeedsReturned: 0,
+            responseSizeBytes: Buffer.byteLength(responseText),
+            status: "success",
+            upstreamLatencyMs,
+          });
           return {
-            content: [
-              {
-                text: JSON.stringify({
-                  candles: 0,
-                  hint: "No candlestick data for this symbol/time range. Data is available from April 2025 onward. Try a more recent time range or a different resolution.",
-                  s: "ok",
-                }),
-                type: "text" as const,
-              },
-            ],
+            content: [{ text: responseText, type: "text" as const }],
           };
         }
 
@@ -154,26 +161,26 @@ export function registerGetCandlestickData(
             }
           : result;
 
-        logToolCall(
-          logger,
-          "get_candlestick_data",
-          "success",
-          Date.now() - start,
-          false,
-        );
+        const responseText = JSON.stringify(response);
+        logToolCall(logger, {
+          ...baseMetrics,
+          latencyMs: Date.now() - start,
+          numFeedsReturned: truncated ? MAX_CANDLES : totalCandles,
+          responseSizeBytes: Buffer.byteLength(responseText),
+          status: "success",
+          upstreamLatencyMs,
+        });
         return {
-          content: [{ text: JSON.stringify(response), type: "text" as const }],
+          content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
         logger.warn({ err }, "get_candlestick_data upstream error");
-        logToolCall(
-          logger,
-          "get_candlestick_data",
-          "error",
-          Date.now() - start,
-          false,
-          "upstream",
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "upstream",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
         return toolError("Failed to fetch candlestick data. Please try again.");
       }
     },

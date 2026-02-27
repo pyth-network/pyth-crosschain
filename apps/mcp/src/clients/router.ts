@@ -13,6 +13,11 @@ const DEFAULT_PROPERTIES = [
   "confidence",
 ];
 
+export type UpstreamResult<T> = {
+  data: T;
+  upstreamLatencyMs: number;
+};
+
 export class RouterClient {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
@@ -31,7 +36,7 @@ export class RouterClient {
     priceFeedIds?: number[],
     properties?: string[],
     channel?: string,
-  ): Promise<LatestPriceParsedFeed[]> {
+  ): Promise<UpstreamResult<LatestPriceParsedFeed[]>> {
     const url = new URL("/v1/latest_price", this.baseUrl);
 
     const body: Record<string, unknown> = {
@@ -43,7 +48,8 @@ export class RouterClient {
     if ((priceFeedIds?.length ?? 0) > 0) body.priceFeedIds = priceFeedIds;
     if (channel) body.channel = channel;
 
-    return await withSingleRetry(async () => {
+    const fetchStart = Date.now();
+    const data = await withSingleRetry(async () => {
       this.logger.debug({ url: url.toString() }, "POST latest_price");
       const res = await fetch(url, {
         body: JSON.stringify(body),
@@ -64,9 +70,10 @@ export class RouterClient {
       }
 
       const json: unknown = await res.json();
-      const data = LatestPriceResponseSchema.parse(json);
-      return normalizeFeeds(data.parsed);
+      return LatestPriceResponseSchema.parse(json);
     });
+    const upstreamLatencyMs = Date.now() - fetchStart;
+    return { data: normalizeFeeds(data.parsed), upstreamLatencyMs };
   }
 }
 

@@ -4,10 +4,15 @@ import { z } from "zod";
 import { HttpError } from "../clients/retry.js";
 import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
+import type { SessionContext } from "../server.js";
 import { resolveChannel } from "../utils/channel.js";
 import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
-import { logToolCall } from "../utils/logger.js";
+import {
+  computeTokenHash,
+  getApiKeyLast4,
+  logToolCall,
+} from "../utils/logger.js";
 
 const GetLatestPriceInput = {
   access_token: z
@@ -49,6 +54,7 @@ export function registerGetLatestPrice(
   config: Config,
   routerClient: RouterClient,
   logger: Logger,
+  sessionContext: SessionContext,
 ): void {
   server.registerTool(
     "get_latest_price",
@@ -58,21 +64,33 @@ export function registerGetLatestPrice(
         "Get the most recent real-time price for one or more feeds. Requires an `access_token` parameter (get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token). Use get_symbols first to find symbols or feed IDs. IMPORTANT: symbols must be the full name including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD'). If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
       inputSchema: GetLatestPriceInput,
     },
-    async (params) => {
+    async (params, extra) => {
+      sessionContext.toolCallCount++;
       const start = Date.now();
+      const numFeedsRequested =
+        (params.symbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0);
+
+      const baseMetrics = {
+        apiKeyLast4: getApiKeyLast4(params.access_token),
+        clientName: sessionContext.clientName,
+        clientVersion: sessionContext.clientVersion,
+        numFeedsRequested,
+        requestId: extra.requestId,
+        sessionId: extra.sessionId ?? sessionContext.sessionId,
+        tokenHash: computeTokenHash(params.access_token),
+        tool: "get_latest_price" as const,
+      };
 
       if (
         !(params.symbols?.length ?? 0) &&
         !(params.price_feed_ids?.length ?? 0)
       ) {
-        logToolCall(
-          logger,
-          "get_latest_price",
-          "error",
-          Date.now() - start,
-          false,
-          "validation",
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "validation",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
         return toolError(
           "At least one of 'symbols' or 'price_feed_ids' is required",
         );
@@ -82,28 +100,24 @@ export function registerGetLatestPrice(
         (params.symbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0) >
         100
       ) {
-        logToolCall(
-          logger,
-          "get_latest_price",
-          "error",
-          Date.now() - start,
-          false,
-          "validation",
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "validation",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
         return toolError(
           "Combined total of symbols and price_feed_ids must not exceed 100",
         );
       }
 
       if (!params.access_token) {
-        logToolCall(
-          logger,
-          "get_latest_price",
-          "error",
-          Date.now() - start,
-          false,
-          "auth",
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          errorType: "auth",
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
         return toolError(ErrorMessages.MISSING_TOKEN);
       }
 
@@ -115,38 +129,39 @@ export function registerGetLatestPrice(
         (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
 
       try {
-        const feeds = await routerClient.getLatestPrice(
-          params.access_token,
-          effectiveSymbols,
-          params.price_feed_ids,
-          params.properties,
-          channel,
-        );
+        const { data: feeds, upstreamLatencyMs } =
+          await routerClient.getLatestPrice(
+            params.access_token,
+            effectiveSymbols,
+            params.price_feed_ids,
+            params.properties,
+            channel,
+          );
 
         const enriched = feeds.map((f) => addDisplayPrices(f));
+        const responseText = JSON.stringify(enriched);
 
-        logToolCall(
-          logger,
-          "get_latest_price",
-          "success",
-          Date.now() - start,
-          true,
-        );
+        logToolCall(logger, {
+          ...baseMetrics,
+          latencyMs: Date.now() - start,
+          numFeedsReturned: enriched.length,
+          responseSizeBytes: Buffer.byteLength(responseText),
+          status: "success",
+          upstreamLatencyMs,
+        });
         return {
-          content: [{ text: JSON.stringify(enriched), type: "text" as const }],
+          content: [{ text: responseText, type: "text" as const }],
         };
       } catch (err) {
         const errorType =
           err instanceof HttpError && err.status === 403 ? "auth" : "upstream";
 
-        logToolCall(
-          logger,
-          "get_latest_price",
-          "error",
-          Date.now() - start,
-          true,
+        logToolCall(logger, {
+          ...baseMetrics,
           errorType,
-        );
+          latencyMs: Date.now() - start,
+          status: "error",
+        });
 
         if (err instanceof HttpError && err.status === 403) {
           return toolError(ErrorMessages.INVALID_TOKEN);
