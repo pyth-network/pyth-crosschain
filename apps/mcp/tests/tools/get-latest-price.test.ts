@@ -133,6 +133,66 @@ describe("get_latest_price tool", () => {
     expect(result.isError).toBeFalsy();
   });
 
+  it("rejects empty access_token", async () => {
+    const config = {
+      channel: "fixed_rate@200ms",
+      historyUrl: HISTORY_URL,
+      logLevel: "info" as const,
+      requestTimeoutMs: 10_000,
+      routerUrl: ROUTER_URL,
+    };
+
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    const historyClient = new HistoryClient(config, logger);
+    const routerClient = new RouterClient(config, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
+
+    const client = await createTestClient(mcpServer);
+    const result = await client.callTool({
+      arguments: { access_token: "", symbols: ["BTC/USD"] },
+      name: "get_latest_price",
+    });
+
+    expect(result.isError).toBe(true);
+  });
+
+  it("rejects whitespace-only access_token", async () => {
+    const config = {
+      channel: "fixed_rate@200ms",
+      historyUrl: HISTORY_URL,
+      logLevel: "info" as const,
+      requestTimeoutMs: 10_000,
+      routerUrl: ROUTER_URL,
+    };
+
+    const mcpServer = new McpServer({ name: "test", version: "0.0.1" });
+    const historyClient = new HistoryClient(config, logger);
+    const routerClient = new RouterClient(config, logger);
+    registerAllTools(
+      mcpServer,
+      config,
+      historyClient,
+      routerClient,
+      logger,
+      createSessionContext(),
+    );
+
+    const client = await createTestClient(mcpServer);
+    const result = await client.callTool({
+      arguments: { access_token: "   ", symbols: ["BTC/USD"] },
+      name: "get_latest_price",
+    });
+
+    expect(result.isError).toBe(true);
+  });
+
   it("returns price with display_price when access_token provided", async () => {
     const config = {
       channel: "fixed_rate@200ms",

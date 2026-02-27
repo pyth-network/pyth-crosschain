@@ -17,6 +17,8 @@ import {
 const GetLatestPriceInput = {
   access_token: z
     .string()
+    .trim()
+    .min(1, "access_token must not be empty")
     .describe("Pyth Pro access token. Get one at https://pyth.network/pricing"),
   channel: z
     .string()
