@@ -40,7 +40,10 @@ export function parseRetryAfter(res: Response): number | undefined {
   const header = res.headers.get("Retry-After");
   if (!header) return undefined;
   const seconds = Number(header);
-  return Number.isFinite(seconds) ? seconds : undefined;
+  if (Number.isFinite(seconds)) return seconds;
+  const dateMs = Date.parse(header);
+  if (Number.isNaN(dateMs)) return undefined;
+  return Math.max(0, (dateMs - Date.now()) / 1000);
 }
 
 export async function withSingleRetry<T>(fn: () => Promise<T>): Promise<T> {

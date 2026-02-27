@@ -17,7 +17,6 @@ import {
 const GetLatestPriceInput = {
   access_token: z
     .string()
-    .optional()
     .describe("Pyth Pro access token. Get one at https://pyth.network/pricing"),
   channel: z
     .string()
@@ -67,24 +66,26 @@ export function registerGetLatestPrice(
     async (params, extra) => {
       sessionContext.toolCallCount++;
       const start = Date.now();
-      const numFeedsRequested =
-        (params.symbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0);
+
+      // The Router API rejects requests with both symbols and priceFeedIds.
+      // When both are provided, prefer price_feed_ids and ignore symbols.
+      const effectiveSymbols =
+        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
+      const effectiveCount =
+        (effectiveSymbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0);
 
       const baseMetrics = {
         apiKeyLast4: getApiKeyLast4(params.access_token),
         clientName: sessionContext.clientName,
         clientVersion: sessionContext.clientVersion,
-        numFeedsRequested,
+        numFeedsRequested: effectiveCount,
         requestId: extra.requestId,
         sessionId: extra.sessionId ?? sessionContext.sessionId,
         tokenHash: computeTokenHash(params.access_token),
         tool: "get_latest_price" as const,
       };
 
-      if (
-        !(params.symbols?.length ?? 0) &&
-        !(params.price_feed_ids?.length ?? 0)
-      ) {
+      if (effectiveCount === 0) {
         logToolCall(logger, {
           ...baseMetrics,
           errorType: "validation",
@@ -96,10 +97,7 @@ export function registerGetLatestPrice(
         );
       }
 
-      if (
-        (params.symbols?.length ?? 0) + (params.price_feed_ids?.length ?? 0) >
-        100
-      ) {
+      if (effectiveCount > 100) {
         logToolCall(logger, {
           ...baseMetrics,
           errorType: "validation",
@@ -111,22 +109,7 @@ export function registerGetLatestPrice(
         );
       }
 
-      if (!params.access_token) {
-        logToolCall(logger, {
-          ...baseMetrics,
-          errorType: "auth",
-          latencyMs: Date.now() - start,
-          status: "error",
-        });
-        return toolError(ErrorMessages.MISSING_TOKEN);
-      }
-
       const channel = resolveChannel(params.channel, config);
-
-      // The Router API rejects requests with both symbols and priceFeedIds.
-      // When both are provided, prefer price_feed_ids and ignore symbols.
-      const effectiveSymbols =
-        (params.price_feed_ids?.length ?? 0) > 0 ? undefined : params.symbols;
 
       try {
         const { data: feeds, upstreamLatencyMs } =
