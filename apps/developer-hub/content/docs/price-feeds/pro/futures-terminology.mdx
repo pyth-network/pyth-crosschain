@@ -4,7 +4,7 @@ description: Understanding futures contract ticker symbols and expiration dates 
 slug: /price-feeds/pro/futures-terminology
 ---
 
-Pyth Pro provides price feeds for futures contracts across multiple asset classes including commodities, equity indices, and more. This guide explains how to interpret futures ticker symbols.
+Pyth Pro provides price feeds for futures contracts across multiple asset classes including commodities and more. This guide explains how to interpret futures ticker symbols.
 
 ## Ticker Symbol Format
 
@@ -75,14 +75,6 @@ The year is represented by the **last digit** of the year:
 | NGK6   | Natural Gas May 2026 | Apr 28, 2026 |
 | NGM6   | Natural Gas June 2026 | May 27, 2026 |
 
-### Brent Crude
-
-| Symbol | Contract | Expiration |
-| ------ | -------- | ---------- |
-| BRJ6   | Brent April 2026 | Feb 27, 2026 |
-| BRK6   | Brent May 2026 | Mar 30, 2026 |
-| BRM6   | Brent June 2026 | Apr 29, 2026 |
-
 ### Corn
 
 | Symbol | Contract | Expiration |
@@ -91,14 +83,6 @@ The year is represented by the **last digit** of the year:
 | COK6   | Corn May 2026 | May 14, 2026 |
 | CON6   | Corn July 2026 | Jul 14, 2026 |
 
-### Equity Index Futures
-
-| Symbol | Contract | Expiration |
-| ------ | -------- | ---------- |
-| ESM6   | E-mini S&P 500 June 2026 | Jun 19, 2026 |
-| NQM6   | E-mini Nasdaq-100 June 2026 | Jun 19, 2026 |
-| NIDH6  | Nikkei 225 Dividend Index March 2026 | Mar 12, 2026 |
-
 ## Pyth Symbol Format
 
 On Pyth, futures symbols include the asset class prefix:
@@ -106,7 +90,6 @@ On Pyth, futures symbols include the asset class prefix:
 ```
 Commodities.WTIJ6/USD    → WTI April 2026 in USD
 Commodities.CCK6/USD     → Copper May 2026 in USD
-Equity.US.ESM6/USD       → E-mini S&P 500 June 2026 in USD
 ```
 
 ## Expiration and Rollover
