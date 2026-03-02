@@ -28,14 +28,7 @@ export function redactSecrets<T>(obj: T): T {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     const lower = key.toLowerCase();
-    const isSecret =
-      SECRET_KEYS.has(key) ||
-      SECRET_KEYS.has(lower) ||
-      lower.includes("token") ||
-      lower.includes("secret") ||
-      lower.includes("password") ||
-      lower.includes("auth") ||
-      lower === "authorization";
+    const isSecret = SECRET_KEYS.has(key) || SECRET_KEYS.has(lower);
     if (isSecret && value != null) {
       out[key] = REDACTED;
     } else if (value != null && typeof value === "object" && !(value instanceof Error)) {

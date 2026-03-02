@@ -6,7 +6,6 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@pythnetwork/pyth-lazer-sdk": "^5.2.1",
-    "isolated-vm": "^5.0.4",
     "pino": "catalog:",
     "prom-client": "catalog:",
     "zod": "^3.25.0"

@@ -1,7 +1,10 @@
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
+import pino from "pino";
 import { createServerCodeModeOnly } from "../../src/server.js";
 import { createTestClient } from "../helpers.js";
+
+const logger = pino({ level: "silent" });
 
 const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
@@ -49,7 +52,7 @@ describe("Security: token never leaks", () => {
       pythProAccessToken: SECRET_TOKEN,
       requestTimeoutMs: 10_000,
       routerUrl: ROUTER_URL,
-    });
+    }, logger);
     const client = await createTestClient(server);
 
     const result = await client.callTool({
@@ -77,7 +80,7 @@ describe("Security: token never leaks", () => {
       pythProAccessToken: undefined,
       requestTimeoutMs: 10_000,
       routerUrl: ROUTER_URL,
-    });
+    }, logger);
     const client = await createTestClient(server);
 
     const result = await client.callTool({

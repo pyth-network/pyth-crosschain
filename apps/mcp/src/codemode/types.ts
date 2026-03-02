@@ -28,7 +28,7 @@ type GetCandlestickDataInput = {
   channel?: string;
 };
 
-/** access_token is automatically provided by the server — do not include it in your input */
+/** Authentication is automatically provided by the server — do not include a token in your input */
 type GetLatestPriceInput = {
   price_feed_ids?: number[];
   symbols?: string[];
@@ -38,8 +38,8 @@ type GetLatestPriceInput = {
 
 declare const codemode: {
   get_symbols: (input: GetSymbolsInput) => Promise<{ feeds: Array<{ pyth_lazer_id: number; symbol: string; asset_type: string; name: string; description: string; exponent: number }>; count: number; offset: number; total_available: number; has_more: boolean; next_offset: number | null }>;
-  get_historical_price: (input: GetHistoricalPriceInput) => Promise<Array<{ price_feed_id: number; display_price?: number; price?: number; exponent?: number }>>;
+  get_historical_price: (input: GetHistoricalPriceInput) => Promise<Array<{ price_feed_id: number; price: number; exponent?: number; confidence?: number; best_bid_price?: number; best_ask_price?: number; publisher_count?: number; publish_time: number; display_price?: number; display_bid?: number; display_ask?: number }>>;
   get_candlestick_data: (input: GetCandlestickDataInput) => Promise<{ t: number[]; o: number[]; h: number[]; l: number[]; c: number[]; v: number[]; s: string }>;
-  get_latest_price: (input: GetLatestPriceInput) => Promise<Array<{ price_feed_id: number; display_price?: number; price?: number; exponent?: number }>>;
+  get_latest_price: (input: GetLatestPriceInput) => Promise<Array<{ price_feed_id: number; price?: number; exponent?: number; confidence?: number; best_bid_price?: number; best_ask_price?: number; publisher_count?: number; timestamp_us: number; display_price?: number; display_bid?: number; display_ask?: number }>>;
 };
 `.trim();

@@ -21,6 +21,17 @@ describe("redactSecrets", () => {
     expect(out.limit).toBe(50);
   });
 
+  it("does not redact keys that merely contain secret-like substrings", () => {
+    const out = redactSecrets({
+      author: "Alice",
+      authority: "admin",
+      token_count: 42,
+    });
+    expect(out.author).toBe("Alice");
+    expect(out.authority).toBe("admin");
+    expect(out.token_count).toBe(42);
+  });
+
   it("handles arrays", () => {
     const out = redactSecrets([{ access_token: "x" }, { id: 1 }]);
     expect(out[0].access_token).toBe("[REDACTED]");

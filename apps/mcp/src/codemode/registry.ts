@@ -27,44 +27,11 @@ export function registerCodeModeTools(
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
       description:
-        "Return Pyth Pro Code Mode type definitions. Use this to discover available codemode.* functions and their input shapes before calling execute().",
-      inputSchema: z.object({
-        code: z
-          .string()
-          .optional()
-          .describe(
-            "Optional JavaScript async arrow function to filter/inspect types. If omitted, returns the full type definitions.",
-          ),
-      }),
+        "Return Pyth Pro Code Mode type definitions. Lists all available codemode.* functions and their input/output shapes.",
+      inputSchema: z.object({}),
     },
-    async ({ code }) => {
-      if (!code || code.trim() === "") {
-        return { content: [{ text: CODE_MODE_TYPES, type: "text" as const }] };
-      }
-      const { execute: runSearch } = createExecutor({ timeoutMs: 5_000 });
-      const searchHostCall = async (_name: string, _arg: unknown) => {
-        throw new Error(
-          "search() cannot call codemode APIs; use execute() for that.",
-        );
-      };
-      const wrapped = code.trim().startsWith("async")
-        ? code
-        : `async () => (${code})`;
-      const result = await runSearch(
-        `(async () => { const types = ${JSON.stringify(CODE_MODE_TYPES)}; return (${wrapped})(); })()`,
-        searchHostCall,
-      );
-      if (!result.ok) {
-        return {
-          content: [{ text: result.error, type: "text" as const }],
-          isError: true as const,
-        };
-      }
-      const text =
-        typeof result.result === "string"
-          ? result.result
-          : JSON.stringify(result.result);
-      return { content: [{ text, type: "text" as const }] };
+    async () => {
+      return { content: [{ text: CODE_MODE_TYPES, type: "text" as const }] };
     },
   );
 
@@ -72,7 +39,7 @@ export function registerCodeModeTools(
     "execute",
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
-      description: `Execute JavaScript code against the Pyth Pro API. Write async code using codemode.* functions. Token for get_latest_price is injected automatically. ${CODE_MODE_TYPES.slice(0, 500)}...`,
+      description: `Execute JavaScript code against the Pyth Pro API. Write async code using codemode.* functions. Token for get_latest_price is injected automatically.\n\n${CODE_MODE_TYPES}`,
       inputSchema: z.object({
         code: z
           .string()

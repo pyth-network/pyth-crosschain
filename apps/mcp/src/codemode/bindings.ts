@@ -91,6 +91,10 @@ export function createBindings(ctx: BindingContext): Record<
         timestamp: number;
       }>(arg);
 
+      if (p?.timestamp == null || typeof p.timestamp !== "number") {
+        throw new Error("'timestamp' is required and must be a number");
+      }
+
       const effectiveSymbols =
         (p?.price_feed_ids?.length ?? 0) > 0 ? undefined : p?.symbols;
       if (
@@ -119,7 +123,7 @@ export function createBindings(ctx: BindingContext): Record<
       ids = [...new Set(ids)];
 
       const timestampUs = alignTimestampToChannel(
-        normalizeTimestampToMicroseconds(p!.timestamp),
+        normalizeTimestampToMicroseconds(p.timestamp),
         channel,
       );
       const { data: prices } = await historyClient.getHistoricalPrice(
@@ -140,6 +144,11 @@ export function createBindings(ctx: BindingContext): Record<
       }>(arg);
 
       if (!p?.symbol) throw new Error("symbol is required");
+      if (p.from == null || typeof p.from !== "number")
+        throw new Error("'from' is required and must be a number");
+      if (p.to == null || typeof p.to !== "number")
+        throw new Error("'to' is required and must be a number");
+      if (!p.resolution) throw new Error("'resolution' is required");
       if (p.from >= p.to) throw new Error("'from' must be before 'to'");
 
       const resolution = p.resolution;

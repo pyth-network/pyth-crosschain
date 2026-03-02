@@ -11,7 +11,7 @@ describe("Code Mode executor", () => {
     expect(result.ok && result.result).toBe(2);
   });
 
-  it("calls host binding and returns its result", async () => {
+  it("calls host binding via codemode.* and returns its result", async () => {
     const { execute } = createExecutor({ timeoutMs: 5_000 });
     const hostCall = async (_name: string, arg: unknown) => {
       expect(arg).toEqual({ query: "BTC" });
@@ -19,7 +19,7 @@ describe("Code Mode executor", () => {
     };
 
     const result = await execute(
-      `async () => await __hostCall('get_symbols', { query: "BTC" })`,
+      `async () => await codemode.get_symbols({ query: "BTC" })`,
       hostCall,
     );
 
@@ -29,7 +29,7 @@ describe("Code Mode executor", () => {
     });
   });
 
-  it("in isolate, fetch is not defined (no outbound network)", async () => {
+  it("fetch is not defined in sandbox (no outbound network)", async () => {
     const { execute } = createExecutor({ timeoutMs: 5_000 });
     const hostCall = async () => null;
 
@@ -53,5 +53,44 @@ describe("Code Mode executor", () => {
 
     expect(result.ok).toBe(false);
     expect(!result.ok && result.error).toContain("oops");
+  });
+
+  it("times out on infinite loop", async () => {
+    const { execute } = createExecutor({ timeoutMs: 100 });
+    const hostCall = async () => null;
+
+    const result = await execute(
+      `async () => { while (true) {} }`,
+      hostCall,
+    );
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toBeTruthy();
+  });
+
+  it("process is not defined in sandbox", async () => {
+    const { execute } = createExecutor({ timeoutMs: 5_000 });
+    const hostCall = async () => null;
+
+    const result = await execute(
+      `async () => { return typeof process; }`,
+      hostCall,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.result).toBe("undefined");
+  });
+
+  it("require is not defined in sandbox", async () => {
+    const { execute } = createExecutor({ timeoutMs: 5_000 });
+    const hostCall = async () => null;
+
+    const result = await execute(
+      `async () => { return typeof require; }`,
+      hostCall,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.result).toBe("undefined");
   });
 });

@@ -1,7 +1,10 @@
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
+import pino from "pino";
 import { createServerCodeModeOnly } from "../../src/server.js";
 import { createTestClient } from "../helpers.js";
+
+const logger = pino({ level: "silent" });
 
 const HISTORY_URL = "https://history.pyth-lazer.dourolabs.app";
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
@@ -76,7 +79,7 @@ describe("Integration: Code Mode only server", () => {
     const { server } = createServerCodeModeOnly({
       ...mockConfig,
       pythProAccessToken: "test-token-for-codemode",
-    });
+    }, logger);
     const client = await createTestClient(server);
 
     const result = await client.listTools();
@@ -90,7 +93,7 @@ describe("Integration: Code Mode only server", () => {
     const { server } = createServerCodeModeOnly({
       ...mockConfig,
       pythProAccessToken: undefined,
-    });
+    }, logger);
     const client = await createTestClient(server);
 
     const result = await client.callTool({
@@ -107,7 +110,7 @@ describe("Integration: Code Mode only server", () => {
   });
 
   it("execute runs multi-step workflow in one roundtrip", async () => {
-    const { server } = createServerCodeModeOnly(mockConfig);
+    const { server } = createServerCodeModeOnly(mockConfig, logger);
     const client = await createTestClient(server);
 
     const result = await client.callTool({

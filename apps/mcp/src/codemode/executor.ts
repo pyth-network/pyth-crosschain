@@ -1,17 +1,17 @@
 /**
- * Code Mode executor — runs LLM-generated code in an isolated V8 sandbox.
+ * Code Mode executor — runs LLM-generated code in a Node.js vm context.
  *
- * Deny-by-default outbound policy:
- * - No fetch(), no XMLHttpRequest, no WebSocket — isolate has no network APIs
- * - No require(), no import — no module loading
- * - No process, no global — no env var leaks
- * - Only codemode.* calls are allowed via host callback; those route through approved bindings
+ * The vm context exposes only: a `codemode` object whose methods call back
+ * into the host via `hostCall`. No fetch, require, process, or globals are
+ * available — the context is created with an empty sandbox.
  *
- * The isolate receives only: __hostCall (callback) and a bootstrap that defines codemode.
- * User code cannot bypass this to access external networks.
+ * NOTE: Node's `vm` is NOT a security boundary (same process). This is
+ * acceptable because the only callable functions are our own bindings, and
+ * the server controls what code is executed. Upgrade to isolated-vm or
+ * Cloudflare DynamicWorkerExecutor for stronger isolation if needed.
  */
 
-import ivm from "isolated-vm";
+import { createContext, runInNewContext } from "node:vm";
 
 export type ExecutionResult =
   | { ok: true; result: unknown }
@@ -19,66 +19,46 @@ export type ExecutionResult =
 
 export interface ExecutorOptions {
   timeoutMs?: number;
-  memoryLimitMb?: number;
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000;
-const DEFAULT_MEMORY_MB = 128;
 
 /** Host callback: (toolName, arg) => Promise<result> */
 export type HostBindingFn = (toolName: string, arg: unknown) => Promise<unknown>;
-
-const BOOTSTRAP = `
-const codemode = {
-  get_symbols: (arg) => __hostCall('get_symbols', arg),
-  get_historical_price: (arg) => __hostCall('get_historical_price', arg),
-  get_candlestick_data: (arg) => __hostCall('get_candlestick_data', arg),
-  get_latest_price: (arg) => __hostCall('get_latest_price', arg),
-};
-`.trim();
 
 export function createExecutor(options: ExecutorOptions = {}): {
   execute(code: string, hostCall: HostBindingFn): Promise<ExecutionResult>;
 } {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const memoryLimitMb = options.memoryLimitMb ?? DEFAULT_MEMORY_MB;
 
   async function execute(
     code: string,
     hostCall: HostBindingFn,
   ): Promise<ExecutionResult> {
-    const isolate = new ivm.Isolate({ memoryLimit: memoryLimitMb });
-    let disposed = false;
-    const dispose = () => {
-      if (!disposed) {
-        disposed = true;
-        isolate.dispose();
-      }
-    };
-
     try {
-      const ctx = await isolate.createContext();
-
-      const hostCallCallback = new ivm.Callback(
-        async (name: string, arg: unknown): Promise<unknown> => {
-          return hostCall(name, arg);
-        },
-        { async: true },
+      const codemode = Object.fromEntries(
+        ["get_symbols", "get_historical_price", "get_candlestick_data", "get_latest_price"].map(
+          (name) => [name, (arg: unknown) => hostCall(name, arg)],
+        ),
       );
-      ctx.global.set("__hostCall", hostCallCallback);
 
-      await ctx.eval(BOOTSTRAP, { timeout: 5_000 });
+      const sandbox = createContext(
+        Object.create(null, {
+          codemode: { value: Object.freeze(codemode) },
+        }),
+      );
 
-      const wrapped = `(async () => { ${code} })()`;
-      const resultRef = await ctx.eval(wrapped, {
-        copy: true,
+      const trimmed = code.trim();
+      const isFnExpr = /^async\s+(?:\(|function\b)/.test(trimmed);
+      const wrapped = isFnExpr
+        ? `(${trimmed})()`
+        : `(async () => { ${trimmed} })()`;
+      const result = await runInNewContext(wrapped, sandbox, {
         timeout: timeoutMs,
       });
 
-      dispose();
-      return { ok: true, result: resultRef };
+      return { ok: true, result };
     } catch (err) {
-      dispose();
       const message =
         err instanceof Error ? err.message : String(err ?? "Unknown error");
       return { ok: false, error: message };

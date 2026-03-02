@@ -100,13 +100,15 @@ export function createCleanupHandler(
 /**
  * Code Mode-only server — public endpoint. Registers only search and execute.
  * No legacy tools, no resources. Token for get_latest_price injected server-side.
+ * Transport-agnostic — does not install process handlers or call process.exit().
  */
-export function createServerCodeModeOnly(config: Config): {
+export function createServerCodeModeOnly(
+  config: Config,
+  logger: Logger,
+): {
   server: McpServer;
-  logger: Logger;
   sessionContext: SessionContext;
 } {
-  const logger = createLogger(config);
   const historyClient = new HistoryClient(config, logger);
   const routerClient = new RouterClient(config, logger);
 
@@ -138,38 +140,5 @@ export function createServerCodeModeOnly(config: Config): {
     },
   );
 
-  let cleanedUp = false;
-  const cleanup = async (exitCode = 0) => {
-    if (cleanedUp) return;
-    cleanedUp = true;
-
-    const clientInfo = server.server.getClientVersion();
-    if (clientInfo) {
-      sessionContext.clientName = clientInfo.name;
-      sessionContext.clientVersion = clientInfo.version;
-    }
-
-    logSessionEnd(logger, {
-      durationMs: Date.now() - sessionContext.sessionStartTime,
-      sessionId: sessionContext.sessionId,
-      totalToolCalls: sessionContext.toolCallCount,
-    });
-
-    await new Promise<void>((resolve) => logger.flush(() => resolve()));
-    await server.close();
-    process.exit(exitCode);
-  };
-  process.on("SIGTERM", () => cleanup(0));
-  process.on("SIGINT", () => cleanup(0));
-  process.on("beforeExit", () => cleanup(0));
-  process.on("uncaughtException", async (err) => {
-    logger.fatal({ err }, "uncaught exception");
-    await cleanup(1);
-  });
-  process.on("unhandledRejection", async (reason) => {
-    logger.fatal({ err: reason }, "unhandled rejection");
-    await cleanup(1);
-  });
-
-  return { logger, server, sessionContext };
+  return { server, sessionContext };
 }
