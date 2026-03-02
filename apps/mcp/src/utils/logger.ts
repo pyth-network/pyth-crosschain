@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Logger } from "pino";
 import { pino } from "pino";
 import type { Config } from "../config.js";
+import { recordToolCallMetrics } from "../metrics.js";
 
 export function createLogger(config: Config): Logger {
   return pino({
@@ -31,6 +32,7 @@ export type ToolCallMetrics = {
 };
 
 export function logToolCall(logger: Logger, metrics: ToolCallMetrics): void {
+  recordToolCallMetrics(metrics);
   logger.info({
     event: "tool_call",
     latency_ms: metrics.latencyMs,
