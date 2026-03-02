@@ -1,0 +1,27 @@
+name: Check Pyth Lazer Pusher
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/ci-pyth-lazer-pusher.yml
+      - apps/pyth-lazer-pusher/**
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/pyth-lazer-pusher
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Format check
+        run: cargo fmt --all -- --check
+        if: success() || failure()
+      - name: Clippy check
+        run: cargo clippy -p pusher-base -p websocket-delivery -p bulk-pusher -p bulk-trade-cli -p bulk-trade-mock-validator --all-targets -- --deny warnings
+        if: success() || failure()
+      - name: Run tests
+        run: cargo test -p pusher-base -p websocket-delivery -p bulk-pusher -p bulk-trade-cli -p bulk-trade-mock-validator
+        if: success() || failure()

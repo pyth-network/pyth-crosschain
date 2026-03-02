@@ -8,11 +8,11 @@ use crate::config::{load_signing_key, Config};
 use crate::metrics::{self, base_metrics, ws_metrics};
 use crate::signing::{ActionType, BulkSigner, OracleAction, OracleUpdate};
 use anyhow::{Context as _, Result};
+use pusher_base::AppRuntime;
 use pusher_base::{CachedPrice, LazerReceiver};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
-use pusher_base::AppRuntime;
 
 pub async fn run(config: Config, runtime: AppRuntime) -> Result<()> {
     info!("initializing bulk-trade-pusher");

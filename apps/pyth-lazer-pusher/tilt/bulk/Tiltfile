@@ -1,0 +1,319 @@
+# -*- mode: Python -*-
+
+# Tilt configuration for Bulk Trade pusher local development
+#
+# Usage:
+#   # First create the k3d cluster (one time, from repo root):
+#   k3d cluster create lazer-pusher-dev --config tilt/bulk/k3d-config.yaml
+#
+#   # Copy and edit .env file:
+#   cp tilt/bulk/.env.example tilt/bulk/.env
+#   # Edit .env with your Lazer access token
+#
+#   # Then run tilt (from this directory):
+#   cd tilt/bulk
+#   tilt up                    # Start all services
+#   tilt down                  # Stop all services
+
+load('ext://namespace', 'namespace_create')
+load('ext://dotenv', 'dotenv')
+
+# Load .env file if it exists
+dotenv()
+
+# Configuration
+REGISTRY = os.getenv('TILT_REGISTRY', 'k3d-registry.localhost:5111')
+LAZER_ACCESS_TOKEN = os.getenv('LAZER_ACCESS_TOKEN', '')
+NUM_PUSHERS = int(os.getenv('NUM_PUSHERS', '3'))
+NUM_VALIDATORS = int(os.getenv('NUM_VALIDATORS', '2'))
+
+if not LAZER_ACCESS_TOKEN:
+    warn('LAZER_ACCESS_TOKEN not set in .env - pushers will fail to connect to Lazer')
+
+print('Topology: %d pushers, %d validators' % (NUM_PUSHERS, NUM_VALIDATORS))
+
+# Create namespace
+namespace_create('lazer-pusher-dev')
+
+# Build the container image (context is apps/pyth-lazer-pusher/)
+docker_build(
+    REGISTRY + '/pyth-lazer-pusher',
+    '../..',
+    dockerfile='Dockerfile.dev',
+    only=[
+        'pusher-utils',
+        'pusher-base',
+        'websocket-delivery',
+        'bulk-trade-pusher',
+        'mock',
+        'bulk-trade-cli',
+    ],
+)
+
+# Deploy mock validators
+for v in range(1, NUM_VALIDATORS + 1):
+    name = 'mock-validator-%d' % v
+    k8s_yaml(
+        blob("""
+apiVersion: v1
+kind: Service
+metadata:
+  name: %s
+  namespace: lazer-pusher-dev
+  labels:
+    app: mock-bulk-validator
+spec:
+  selector:
+    app: mock-bulk-validator
+    instance: %s
+  ports:
+    - name: ws
+      port: 8080
+      targetPort: 8080
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: %s
+  namespace: lazer-pusher-dev
+  labels:
+    app: mock-bulk-validator
+    instance: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-bulk-validator
+      instance: %s
+  template:
+    metadata:
+      labels:
+        app: mock-bulk-validator
+        instance: %s
+      annotations:
+        metrics.agent.grafana.com/scrape: "true"
+        metrics.agent.grafana.com/port: "9090"
+    spec:
+      containers:
+        - name: mock-bulk-validator
+          image: %s/pyth-lazer-pusher
+          command: ["/app/bulk-trade-mock-validator"]
+          args:
+            - --port
+            - "8080"
+            - --metrics-port
+            - "9090"
+            - --instance
+            - "%s"
+            - --verbose
+          ports:
+            - name: ws
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: RUST_LOG
+              value: "debug,mock_bulk_validator=debug"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9090
+            initialDelaySeconds: 2
+            periodSeconds: 5
+""" % (name, name, name, name, name, name, REGISTRY, name))
+    )
+    k8s_resource(
+        name,
+        port_forwards=['%d:8080' % (8070 + v - 1), '%d:9090' % (9100 + v - 1)],
+        labels=['validators'],
+    )
+
+# Build validator endpoints for config substitution (single line to avoid YAML escaping issues)
+validator_endpoints = ', '.join(['"ws://mock-validator-%d:8080/ws"' % v for v in range(1, NUM_VALIDATORS + 1)])
+
+# Test signing keys (for local development only - NOT FOR PRODUCTION)
+# These are random Ed25519 keypairs encoded as base58
+TEST_SIGNING_KEYS = [
+    "oQG537AcCjUdTNi588knekiU1BQfJmX7do9xjfWZoXjrATxyg3yBEyG6PqH3nYk2dmoCL6shij238pz7yHVdbAm",
+    "3nGjgtg8exby478UdZ1sdCWj6gLUM9uGquEaPXehQd6NossmywWz4KxQEHDrwFPR5Efx1uECpPDmL78FPSE4fXh8",
+    "5Y4PEaf9iWnDAFZvnuK9PEcjTJ4rV8Gzxp7tSs1t8YVYKqH6SpE1z9LdpYHxmvYMbEQhVhb8pX12h77WPECN5sGK",
+    "34QcWV5DsVDW9La4iWWCMmg8arED7iX8F9datUodb8xexYdCBXf5uDQb29VRqPnfyieuxwS4LLnkTou3RtKjMTzn",
+    "3TAM6uG9Hd8RiyAB4PpZtFvtgCyuxZWasZVPDZJ1gwJ5XU7QuvFbWwYxaSCEF6EZRb7NMN9xnjiSZqQ9y4Z5zHCz",
+]
+signing_keys = [TEST_SIGNING_KEYS[i % len(TEST_SIGNING_KEYS)] for i in range(NUM_PUSHERS)]
+
+# Load pusher config template and substitute validator endpoints
+pusher_config_tpl = str(read_file('k8s/tilt/config.toml.tpl'))
+pusher_config = pusher_config_tpl.replace('{{VALIDATOR_ENDPOINTS}}', validator_endpoints)
+
+# Generate pusher ConfigMap
+k8s_yaml(
+    blob("""
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pusher-config
+  namespace: lazer-pusher-dev
+data:
+  config.toml: |
+%s
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lazer-secrets
+  namespace: lazer-pusher-dev
+type: Opaque
+stringData:
+  access-token: "%s"
+""" % ('\n'.join(['    ' + line for line in pusher_config.split('\n')]), LAZER_ACCESS_TOKEN))
+)
+
+# Generate per-pusher signing key secrets (each pusher has its own key file)
+for i in range(1, NUM_PUSHERS + 1):
+    k8s_yaml(
+        blob("""
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pusher-%d-signing-key
+  namespace: lazer-pusher-dev
+type: Opaque
+stringData:
+  signing.key: "%s"
+""" % (i, signing_keys[i-1]))
+    )
+
+# Pusher deployments
+validator_names = ['mock-validator-%d' % v for v in range(1, NUM_VALIDATORS + 1)]
+
+for i in range(1, NUM_PUSHERS + 1):
+    name = 'pusher-%d' % i
+    k8s_yaml(
+        blob("""
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: %s
+  namespace: lazer-pusher-dev
+  labels:
+    app: pyth-lazer-pusher
+    instance: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pyth-lazer-pusher
+      instance: %s
+  template:
+    metadata:
+      labels:
+        app: pyth-lazer-pusher
+        instance: %s
+      annotations:
+        metrics.agent.grafana.com/scrape: "true"
+        metrics.agent.grafana.com/port: "9090"
+    spec:
+      containers:
+        - name: pyth-lazer-pusher
+          image: %s/pyth-lazer-pusher
+          args:
+            - --config
+            - /config/config.toml
+          ports:
+            - name: health
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: RUST_LOG
+              value: "info,bulk_pusher=debug"
+            - name: BULK_PUSHER__LAZER__ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: lazer-secrets
+                  key: access-token
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: signing-key
+              mountPath: /secrets
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: pusher-config
+        - name: signing-key
+          secret:
+            secretName: %s-signing-key
+""" % (name, name, name, name, REGISTRY, name))
+    )
+    k8s_resource(
+        name,
+        resource_deps=validator_names,
+        port_forwards=['%d:8080' % (8080 + i), '%d:9090' % (9090 + i)],
+        labels=['pushers'],
+    )
+
+# Local convenience commands (run from pyth-crosschain root)
+local_resource(
+    'cargo-check',
+    cmd='cd ../../../.. && cargo check -p pusher-utils -p pusher-base -p websocket-delivery -p bulk-pusher -p bulk-trade-cli -p bulk-trade-mock-validator',
+    deps=['../../pusher-utils', '../../bulk-trade-pusher', '../../pusher-base', '../../websocket-delivery', '../../mock', '../../bulk-trade-cli'],
+    labels=['build'],
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+)
+
+local_resource(
+    'cargo-test',
+    cmd='cd ../../../.. && cargo test -p pusher-utils -p pusher-base -p websocket-delivery -p bulk-pusher -p bulk-trade-cli -p bulk-trade-mock-validator',
+    deps=['../../pusher-utils', '../../bulk-trade-pusher', '../../pusher-base', '../../websocket-delivery', '../../mock', '../../bulk-trade-cli'],
+    labels=['build'],
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+)
+
+local_resource(
+    'cargo-clippy',
+    cmd='cd ../../../.. && cargo clippy -p pusher-utils -p pusher-base -p websocket-delivery -p bulk-pusher -p bulk-trade-cli -p bulk-trade-mock-validator --all-targets',
+    deps=['../../pusher-utils', '../../bulk-trade-pusher', '../../pusher-base', '../../websocket-delivery', '../../mock', '../../bulk-trade-cli'],
+    labels=['build'],
+    auto_init=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+)

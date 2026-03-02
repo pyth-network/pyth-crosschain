@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 
 /// Lazer price receiver that manages subscriptions and caches prices.
 pub struct LazerReceiver {
@@ -188,30 +188,53 @@ async fn process_lazer_updates(
 
         match response {
             AnyResponse::Json(ws_response) => {
-                if let WsResponse::StreamUpdated(update) = ws_response {
-                    // Process parsed payload
-                    if let Some(parsed) = update.payload.parsed {
-                        // Convert timestamp from microseconds to milliseconds
-                        let timestamp_ms = parsed.timestamp_us.as_millis();
+                match ws_response {
+                    WsResponse::Error(error) => {
+                        error!("Lazer websocket error: {:?}", error);
+                    }
+                    WsResponse::Subscribed(subscribed) => {
+                        debug!("Lazer subscription successful: {:?}", subscribed);
+                    }
+                    WsResponse::SubscribedWithInvalidFeedIdsIgnored(subscribe_invalid) => {
+                        warn!(
+                            "Lazer subscription with invalid feed ids ignored: {:?}",
+                            subscribe_invalid
+                        );
+                    }
+                    WsResponse::Unsubscribed(unsubscribed) => {
+                        warn!(
+                            "Lazer subscription unexpectedly unsubscribed: {:?}",
+                            unsubscribed
+                        );
+                    }
+                    WsResponse::SubscriptionError(subscription_error) => {
+                        error!("Lazer subscription error: {:?}", subscription_error);
+                    }
+                    WsResponse::StreamUpdated(update) => {
+                        // Process parsed payload
+                        if let Some(parsed) = update.payload.parsed {
+                            // Convert timestamp from microseconds to milliseconds
+                            let timestamp_ms = parsed.timestamp_us.as_millis();
 
-                        for feed_payload in parsed.price_feeds {
-                            let feed_id = feed_payload.price_feed_id;
+                            for feed_payload in parsed.price_feeds {
+                                let feed_id = feed_payload.price_feed_id;
 
-                            if feed_registry.has_feed(feed_id) {
-                                // Record metrics if available
-                                if let Some(ref m) = metrics {
-                                    m.record_lazer_update(feed_id.0);
+                                if feed_registry.has_feed(feed_id) {
+                                    // Record metrics if available
+                                    if let Some(ref m) = metrics {
+                                        m.record_lazer_update(feed_id.0);
+                                    }
+
+                                    // Update cache
+                                    let cached = CachedPrice {
+                                        data: feed_payload,
+                                        timestamp_ms,
+                                        feed_id,
+                                    };
+
+                                    let mut cache = price_cache.write().await;
+                                    cache.insert(feed_id, cached);
                                 }
-
-                                // Update cache
-                                let cached = CachedPrice {
-                                    data: feed_payload,
-                                    timestamp_ms,
-                                    feed_id,
-                                };
-
-                                let mut cache = price_cache.write().await;
-                                cache.insert(feed_id, cached);
                             }
                         }
                     }
