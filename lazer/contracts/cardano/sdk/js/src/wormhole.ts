@@ -12,8 +12,9 @@ export type PreparedVAA = {
 
 export type PreparedGuardianSetUpgrade = {
   vaa: PreparedVAA;
+  seen_sequence: bigint;
   index: number;
-  guardians: readonly string[];
+  set: readonly string[];
 };
 
 export async function prepareGuardianSetVAAs(): Promise<
@@ -25,8 +26,9 @@ export async function prepareGuardianSetVAAs(): Promise<
     const parsed = parseGuardianSetUpgrade(bytes);
     const keys = recoverVaaPublicKeys(parsed);
     return {
-      guardians: parsed.payload.actionArgs.guardians,
       index,
+      seen_sequence: parsed.sequence,
+      set: parsed.payload.actionArgs.guardians,
       vaa: {
         recovered_keys: keys.map(({ key }) => key),
         vaa: bytes,

@@ -11,7 +11,7 @@ import {
 } from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
-  DEFAULT_CODEGEN_CONFIG,
+  createCodegenConfig,
   generateTypeScript,
 } from "@evolution-sdk/evolution/blueprint";
 import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
@@ -97,13 +97,20 @@ async function getCtx(
   return newTxCtx(client, networkId);
 }
 
-async function initAndUpgradeWormhole(ctx: TransactionContext) {
+async function initAndUpgradeWormhole(
+  ctx: TransactionContext,
+  initialGuardian: string,
+) {
   const wormholeOrigin = await getOriginUtxo(ctx.client);
   console.info(
     `Picked Wormhole origin: ${UTxO.toOutRefString(wormholeOrigin)}`,
   );
 
-  const wormhole = await initWormholeState(ctx, wormholeOrigin);
+  const wormhole = await initWormholeState(
+    ctx,
+    wormholeOrigin,
+    initialGuardian,
+  );
   const wormholeDigest = await runTx(ctx, wormhole.tx);
   console.info("Initialized Pyth Wormhole:", wormholeDigest);
 
@@ -172,18 +179,20 @@ parser.command(
     const blueprint = (await import("../../../plutus.json"))
       .default as PlutusBlueprint;
 
-    const offchainSrc = generateTypeScript(blueprint, {
-      ...DEFAULT_CODEGEN_CONFIG,
-      imports: {
-        data: [
-          "/** biome-ignore-all assist/source/useSortedKeys: generated code */",
-          "/** biome-ignore-all assist/source/organizeImports: generated code */",
-          'import { Data } from "@evolution-sdk/evolution";',
-        ].join("\n"),
-        tschema: 'import { TSchema } from "@evolution-sdk/evolution";',
-      },
-      useSuspend: false,
-    });
+    const offchainSrc = generateTypeScript(
+      blueprint,
+      createCodegenConfig({
+        imports: {
+          data: [
+            "/** biome-ignore-all assist/source/useSortedKeys: generated code */",
+            "/** biome-ignore-all assist/source/organizeImports: generated code */",
+            'import { Data } from "@evolution-sdk/evolution";',
+          ].join("\n"),
+          tschema: 'import { TSchema } from "@evolution-sdk/evolution";',
+        },
+        useSuspend: false,
+      }),
+    );
     await fs.writeFile(
       path.resolve(import.meta.dirname, "./offchain.ts"),
       offchainSrc,
@@ -208,12 +217,29 @@ parser.command(
       },
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
+      "initial-guardian": {
+        type: "string",
+        description: "initial Wormhole guardian",
+      },
     }),
-  async ({ network: networkId, mnemonic, emitterChain, emitterAddress }) => {
+  async ({
+    network: networkId,
+    mnemonic,
+    emitterChain,
+    emitterAddress,
+    initialGuardian,
+  }) => {
     const ctx = await getCtx(networkId, mnemonic);
 
     console.info("Initializing Pyth Wormhole...");
-    const whPolicy = await initAndUpgradeWormhole(ctx);
+    const whPolicy = await initAndUpgradeWormhole(
+      ctx,
+      initialGuardian ??
+        (networkId === "mainnet"
+          ? // see `env/default.ak`
+            "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
+          : "13947bd48b18e53fdaeee77f3473391ac727c638"),
+    );
 
     console.info("Initializing Pyth...");
     const pythOrigin = await getOriginUtxo(ctx.client);

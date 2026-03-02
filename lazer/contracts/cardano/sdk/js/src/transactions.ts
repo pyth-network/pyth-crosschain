@@ -31,6 +31,7 @@ const wormholeStateSpend = SpendingValidator.new(Wormhole_state_update_spend);
 export async function initWormholeState(
   ctx: TransactionContext,
   origin: UTxO.UTxO,
+  initialGuardian: string,
 ): Promise<{ policy: PolicyId.PolicyId; tx: SigningTransactionBuilder }> {
   const spender = wormholeStateSpend.script();
   const minter = wormholeStateMint.script(
@@ -41,15 +42,7 @@ export async function initWormholeState(
   const ownerNFT = minter.asset(WH_OWNER_NFT, 1n);
   const state = spender.receive(ctx.parameters, stateNFT, {
     seen_sequence: 0n,
-    set: [
-      Buffer.from(
-        ctx.parameters.networkId === "mainnet"
-          ? // see `env/default.ak`
-            "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
-          : "13947bd48b18e53fdaeee77f3473391ac727c638",
-        "hex",
-      ),
-    ],
+    set: [Buffer.from(initialGuardian, "hex")],
     set_index: 0n,
   });
 
@@ -75,10 +68,7 @@ export async function applyGuardianSetUpgrade(
     policy + AssetName.toHex(WH_STATE_NFT),
   );
 
-  const {
-    input,
-    datums: [oldState],
-  } = wormholeStateSpend.spend([state], upgrade.vaa);
+  const { input } = wormholeStateSpend.spend([state], upgrade.vaa);
   const spender = wormholeStateSpend.script();
 
   return ctx.client
@@ -86,10 +76,8 @@ export async function applyGuardianSetUpgrade(
     .collectFrom(input)
     .payToAddress(
       spender.receive(ctx.parameters, state.assets, {
-        seen_sequence: oldState.seen_sequence + 1n,
-        set: upgrade.guardians.map((g) =>
-          Buffer.from(g.replace(/^0x/, ""), "hex"),
-        ),
+        seen_sequence: upgrade.seen_sequence,
+        set: upgrade.set.map((g) => Buffer.from(g.replace(/^0x/, ""), "hex")),
         set_index: BigInt(upgrade.index),
       }),
     );
