@@ -30,8 +30,8 @@ pub fn parse_and_verify_guardian_set_upgrade(
   let new =
     parse_action(body)
       |> parse_guardian_set_upgrade(u64.as_int(body.sequence))
-  expect (old.seen_sequence < new.seen_sequence)?
-  expect (old.set_index + 1 == new.set_index)?
+  expect old.seen_sequence < new.seen_sequence
+  expect old.set_index + 1 == new.set_index
   new
 }
 
@@ -39,9 +39,9 @@ fn parse_guardian_set_upgrade(
   action: GovernanceAction,
   seen_sequence: Int,
 ) -> Guardians {
-  expect (action.module == core_module)?
-  expect (action.action == guardian_set_upgrade_action)?
-  expect (action.chain == u16.zero)?
+  expect action.module == core_module
+  expect action.action == guardian_set_upgrade_action
+  expect action.chain == u16.zero
   parser.run(new_guardian_set(seen_sequence), action.args)
 }
 
@@ -62,8 +62,8 @@ type GovernanceAction {
 }
 
 fn parse_action(body: VAABody) -> GovernanceAction {
-  expect (body.emitter_chain == emitter_chain)?
-  expect (body.emitter_address == emitter_address)?
+  expect body.emitter_chain == emitter_chain
+  expect body.emitter_address == emitter_address
   parser.run(governance_action, body.payload)
 }
 

@@ -48,11 +48,11 @@ pub fn parse_and_verify(
   recovered_keys: List<secp256k1.PublicKey>,
 ) -> VAA {
   let (header, body_src) = parser.run_partial(vaa_header, src)
-  expect (header.guardian_set_index == u32.from_int(guardians.set_index))?
+  expect header.guardian_set_index == u32.from_int(guardians.set_index)
 
   let hash = crypto.keccak_256(crypto.keccak_256(body_src))
   let signatures = list.zip(header.signatures, recovered_keys)
-  expect wormhole.has_quorum(guardians, hash, signatures)?
+  expect wormhole.has_quorum(guardians, hash, signatures)
 
   let body = parser.run(vaa_body, body_src)
   VAA { header, body }

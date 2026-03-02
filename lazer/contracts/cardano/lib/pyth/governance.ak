@@ -39,10 +39,10 @@ pub fn parse_and_verify_action(
   guardians: Guardians,
 ) -> (GovernanceAction, Governance) {
   let VAA { body, .. } = vaa.parse_and_verify_prepared(vaa, guardians)
-  expect (u16.as_int(body.emitter_chain) == governance.emitter_chain)?
-  expect (body.emitter_address == governance.emitter_address)?
+  expect u16.as_int(body.emitter_chain) == governance.emitter_chain
+  expect body.emitter_address == governance.emitter_address
   let seen_sequence = u64.as_int(body.sequence)
-  expect (governance.seen_sequence < seen_sequence)?
+  expect governance.seen_sequence < seen_sequence
   (
     parser.run(governance_action(body.timestamp), body.payload),
     Governance { ..governance, seen_sequence },
@@ -51,12 +51,12 @@ pub fn parse_and_verify_action(
 
 fn governance_action(timestamp: U32) -> Parser<GovernanceAction> {
   let magic <- parse(parser.bytes(4))
-  expect (magic == governance_action_magic)?
+  expect magic == governance_action_magic
   let module <- parse(u8.from_be)
-  expect (module == governance_action_module)?
+  expect module == governance_action_module
   let action <- parse(u8.from_be)
   let chain <- parse(u16.from_be)
-  expect (u16.as_int(chain) == env.chain_id)?
+  expect u16.as_int(chain) == env.chain_id
   when u8.as_int(action) is {
     1 -> {
       let key <- parse(parser.bytes(32))

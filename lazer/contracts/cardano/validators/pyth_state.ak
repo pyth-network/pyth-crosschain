@@ -112,7 +112,7 @@ validator update {
         }
       }
       PurgeExpiredWithdrawScripts -> {
-        expect is_owner?
+        expect is_owner
         let pyth =
           Pyth {
             ..pyth,

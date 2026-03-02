@@ -30,9 +30,9 @@ pub fn public_key(raw: ByteArray) -> PublicKey {
   let flag = bytearray.at(raw, 0)
   expect or {
       // compressed key with prefix 0x2 or 0x3
-      (length == 33)? && (flag == 2 || flag == 3)?,
+      length == 33 && ( flag == 2 || flag == 3 ),
       // uncompressed key with prefix 0x4
-      (length == 65)? && (flag == 4)?,
+      length == 65 && flag == 4,
     }
   PublicKey(raw)
 }

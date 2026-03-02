@@ -77,9 +77,9 @@ fn mint_state(
   with_initial: fn(State<Data>) -> Bool,
 ) {
   // state and owner NFTs should be minted in lockstep
-  expect (assets.quantity_of(self.mint, id, config.owner_nft) == 1)?
+  expect assets.quantity_of(self.mint, id, config.owner_nft) == 1
   // inputs should contain origin to enforce uniqueness
-  expect (transaction.find_input(self.inputs, origin) |> option.is_some())?
+  expect transaction.find_input(self.inputs, origin) |> option.is_some()
 
   // output with the NFT should contain nothing more than ADA
   expect Some(output) =

@@ -52,13 +52,13 @@ pub fn parse_and_verify(
       update.payload,
       update.signature,
     )?
-  expect is_trusted(signers, update.key, current)?
+  expect is_trusted(signers, update.key, current)
   update
 }
 
 const price_update: Parser<PriceUpdate> = {
     let magic <- parse(parser.bytes(4))
-    expect (magic == solana_format_magic_le)?
+    expect magic == solana_format_magic_le
     let signature <- parse(parser.bytes(64))
     let key <- parse(parser.bytes(32))
     let size <- parse(u16.from_le)

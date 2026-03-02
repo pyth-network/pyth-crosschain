@@ -62,9 +62,9 @@ pub const rest: Parser<ByteArray> = fn(bs) { (bs, #[]) }
 /// Parses exactly the specified amount of bytes as `ByteArray`. For parsing
 /// inidividual bytes as `Byte`, use `types/u8.from_be`.
 pub fn bytes(count: Int) -> Parser<ByteArray> {
-  expect (count >= 0)?
+  expect count >= 0
   fn(bs) {
-    expect (bytearray.length(bs) >= count)?
+    expect bytearray.length(bs) >= count
     (bytearray.take(bs, count), bytearray.drop(bs, count))
   }
 }
@@ -72,7 +72,7 @@ pub fn bytes(count: Int) -> Parser<ByteArray> {
 /// Repeatedly applies provided parser, `count` times, returning list of
 /// parsed results.
 pub fn repeat(self: Parser<a>, count: Int) -> Parser<List<a>> {
-  expect (count >= 0)?
+  expect count >= 0
   repeat_(self, [], count)
 }
 
