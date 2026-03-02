@@ -381,7 +381,7 @@ wheels = [
 
 [[package]]
 name = "hip-3-pusher"
-version = "0.2.11"
+version = "0.2.12"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
