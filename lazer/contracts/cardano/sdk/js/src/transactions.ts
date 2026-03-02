@@ -50,6 +50,7 @@ export async function initWormholeState(
     policy: PolicyId.fromBytes(minter.hash.hash),
     tx: ctx.client
       .newTx()
+      .collectFrom({ inputs: [origin] })
       .attachScript(minter)
       .mintAssets(
         wormholeStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"),
@@ -113,6 +114,7 @@ export async function initPythState(
     policy: PolicyId.fromBytes(minter.hash.hash),
     tx: ctx.client
       .newTx()
+      .collectFrom({ inputs: [origin] })
       .attachScript(minter)
       .mintAssets(pythStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"))
       .payToAddress(state)

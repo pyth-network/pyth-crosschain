@@ -215,12 +215,12 @@ parser.command(
         description: "emitter chain ID",
         type: "number",
       },
+      "initial-guardian": {
+        description: "initial Wormhole guardian",
+        type: "string",
+      },
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
-      "initial-guardian": {
-        type: "string",
-        description: "initial Wormhole guardian",
-      },
     }),
   async ({
     network: networkId,
@@ -248,10 +248,7 @@ parser.command(
       emitter_chain: BigInt(emitterChain),
       wormhole: whPolicy.hash,
     });
-    const pythDigest = await runTx(
-      ctx,
-      pyth.tx.collectFrom({ inputs: [pythOrigin] }),
-    );
+    const pythDigest = await runTx(ctx, pyth.tx);
     console.info("Initialized Pyth:", TransactionHash.toHex(pythDigest));
 
     console.info("Pyth Wormhole Policy ID:", PolicyId.toHex(whPolicy));
