@@ -6,6 +6,7 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@pythnetwork/pyth-lazer-sdk": "^5.2.1",
     "pino": "catalog:",
+    "prom-client": "catalog:",
     "zod": "^3.25.0"
   },
   "description": "MCP server for Pyth Pro real-time and historical market data",
@@ -51,11 +52,13 @@
     "url": "https://github.com/pyth-network/pyth-crosschain"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/http.ts --format esm --dts --clean",
     "clean": "rm -rf dist/",
     "prepublishOnly": "pnpm run build",
     "start": "node dist/index.js",
     "start:dev": "tsx src/index.ts",
+    "start:http": "node dist/http.js",
+    "start:http:dev": "tsx src/http.ts",
     "test:types": "tsc",
     "test:unit": "test-unit"
   },
