@@ -110,6 +110,17 @@ describe("withSingleRetry", () => {
     expect(attempts).toBe(2);
   });
 
+  it("retries on network TypeError variants", async () => {
+    let attempts = 0;
+    const result = await withSingleRetry(() => {
+      attempts++;
+      if (attempts === 1) throw new TypeError("network socket disconnected");
+      return Promise.resolve("ok");
+    });
+    expect(result).toBe("ok");
+    expect(attempts).toBe(2);
+  });
+
   it("fails after max retries (1 retry = 2 total attempts)", async () => {
     let attempts = 0;
     await expect(

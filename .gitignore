@@ -28,3 +28,4 @@ justfile
 dist/
 
 **/.ai/** 
+apps/mcp/docs/
