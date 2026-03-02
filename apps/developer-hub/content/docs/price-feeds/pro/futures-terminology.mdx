@@ -85,12 +85,41 @@ The year is represented by the **last digit** of the year:
 
 ## Pyth Symbol Format
 
-On Pyth, futures symbols include the asset class prefix:
+On Pyth, futures symbols include the asset class prefix. The table below lists all available futures assets:
 
-```
-Commodities.WTIJ6/USD    → WTI April 2026 in USD
-Commodities.CCK6/USD     → Copper May 2026 in USD
-```
+### Commodities
+
+| Asset | Ticker Root | Example Symbol |
+| ----- | ----------- | -------------- |
+| WTI Crude Oil | WTI | `Commodities.WTIJ6/USD` |
+| HH Natural Gas | NGD | `Commodities.NGDJ6/USD` |
+| LS Gasoil | GO | `Commodities.GOH6/USD` |
+| Copper | CC | `Commodities.CCH6/USD` |
+| Aluminium | AL | `Commodities.ALH6/USD` |
+| Nickel | NL | `Commodities.NLH6/USD` |
+| Lead | LE | `Commodities.LEH6/USD` |
+| Tin | TI | `Commodities.TIH6/USD` |
+| Palladium | PL | `Commodities.PLH6/USD` |
+| Platinum | PT | `Commodities.PTJ6/USD` |
+| Uranium | UR | `Commodities.URH6/USD` |
+| Corn | CO | `Commodities.COH6/USD` |
+| Raw Sugar | RS | `Commodities.RSH6/USD` |
+
+### Equity Indices
+
+| Asset | Ticker Root | Example Symbol |
+| ----- | ----------- | -------------- |
+| US 500 (S&P 500) | US500 | `Equity.US.US500H6/USD` |
+| US 100 (Nasdaq 100) | US100 | `Equity.US.US100H6/USD` |
+| US 30 (Dow Jones) | US30 | `Equity.US.US30H6/USD` |
+| E-mini S&P 500 | EM | `Equity.US.EMH6/USD` |
+| E-mini Nasdaq 100 | NM | `Equity.US.NMH6/USD` |
+| E-mini Dow | DM | `Equity.US.DMH6/USD` |
+| Nikkei 225 Dividend Index | NID | `Equity.US.NIDH6/USD` |
+| KOSPI 200 | KS | `Equity.KR.KSH6/KRW` |
+| KOSDAQ 150 | KQ | `Equity.KR.KQH6/KRW` |
+| Hang Seng | HKH | `Equity.HK.HKHH6/HKD` |
+| Euro FX | FCD | `Equity.US.FCDH6/USD` |
 
 ## Expiration and Rollover
 
