@@ -4,6 +4,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.1",
     "pino": "catalog:",
     "zod": "^3.25.0"
   },

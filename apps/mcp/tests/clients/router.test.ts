@@ -1,7 +1,11 @@
 import { HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import pino from "pino";
-import { RouterClient } from "../../src/clients/router.js";
+import {
+  extractHttpStatusFromMessage,
+  RouterClient,
+} from "../../src/clients/router.js";
+import { HttpError } from "../../src/clients/retry.js";
 
 const ROUTER_URL = "https://pyth-lazer.dourolabs.app";
 
@@ -102,5 +106,111 @@ describe("RouterClient", () => {
     await expect(
       client.getLatestPrice("bad-token", ["BTC/USD"]),
     ).rejects.toThrow("403");
+  });
+
+  it("maps 403 to HttpError with status for downstream instanceof check", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
+        HttpResponse.json({ error: "Forbidden" }, { status: 403 }),
+      ),
+    );
+    const err = await client
+      .getLatestPrice("bad-token", ["BTC/USD"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect((err as HttpError).status).toBe(403);
+  });
+
+  it("maps 429 to HttpError with status", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
+        HttpResponse.text("Rate limited", { status: 429 }),
+      ),
+    );
+    // 429 is retryable — after retry it still throws
+    const err = await client
+      .getLatestPrice("test-token", ["BTC/USD"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect((err as HttpError).status).toBe(429);
+  });
+
+  it("maps 503 to HttpError with status", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
+        HttpResponse.text("Service Unavailable", { status: 503 }),
+      ),
+    );
+    const err = await client
+      .getLatestPrice("test-token", ["BTC/USD"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect((err as HttpError).status).toBe(503);
+  });
+
+  it("throws HttpError(502) when parsed data is missing", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
+        HttpResponse.json({ leUnsigned: { data: "abc", encoding: "base64" } }),
+      ),
+    );
+    const err = await client
+      .getLatestPrice("test-token", ["BTC/USD"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect((err as HttpError).status).toBe(502);
+    expect((err as HttpError).message).toContain("no parsed data");
+  });
+
+  it("throws HttpError(502) when upstream returns malformed body", async () => {
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, () =>
+        new HttpResponse("not json", {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        }),
+      ),
+    );
+    const err = await client
+      .getLatestPrice("test-token", ["BTC/USD"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HttpError);
+    expect((err as HttpError).status).toBe(502);
+  });
+
+  it("rejects with timeout error when upstream is slow", async () => {
+    const shortTimeoutConfig = { ...config, requestTimeoutMs: 50 };
+    const shortClient = new RouterClient(shortTimeoutConfig, logger);
+
+    server.use(
+      http.post(`${ROUTER_URL}/v1/latest_price`, async () => {
+        await new Promise((r) => setTimeout(r, 30_000));
+        return HttpResponse.json(mockLatestPrice);
+      }),
+    );
+
+    const err = await shortClient
+      .getLatestPrice("test-token", ["BTC/USD"])
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(DOMException);
+    expect((err as DOMException).name).toBe("TimeoutError");
+  }, 15_000);
+});
+
+describe("extractHttpStatusFromMessage", () => {
+  it("extracts status from different HTTP error message formats", () => {
+    expect(
+      extractHttpStatusFromMessage("HTTP error! status: 403 - Unauthorized"),
+    ).toBe(403);
+    expect(extractHttpStatusFromMessage("http error status=429")).toBe(429);
+    expect(extractHttpStatusFromMessage("HTTP 503 Service Unavailable")).toBe(
+      503,
+    );
+  });
+
+  it("returns undefined when no status code exists", () => {
+    expect(
+      extractHttpStatusFromMessage("Failed to fetch latest price: malformed"),
+    ).toBeUndefined();
   });
 });

@@ -1,6 +1,7 @@
 const RETRY_BASE_DELAY_MS = 500;
 const JITTER_MAX_MS = 200;
 const MAX_RETRY_DELAY_MS = 30_000;
+const NETWORK_ERROR_PATTERN = /fetch|network|ECONNREFUSED|ENOTFOUND/i;
 
 export class HttpError extends Error {
   constructor(
@@ -17,7 +18,7 @@ function isRetryable(err: unknown): boolean {
   if (err instanceof HttpError) {
     return err.status === 429 || err.status === 503;
   }
-  if (err instanceof TypeError && err.message.includes("fetch")) {
+  if (err instanceof TypeError && NETWORK_ERROR_PATTERN.test(err.message)) {
     return true; // network error
   }
   if (
