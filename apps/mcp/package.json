@@ -1,18 +1,32 @@
 {
-  "name": "@pythnetwork/mcp",
-  "version": "0.1.0",
-  "private": true,
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.1",
+    "pino": "catalog:",
+    "prom-client": "catalog:",
+    "zod": "^3.25.0"
+  },
   "description": "MCP server for Pyth Pro real-time and historical market data",
-  "type": "module",
-  "license": "Apache-2.0",
+  "devDependencies": {
+    "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/jest-config": "workspace:",
+    "@types/node": "catalog:",
+    "msw": "^2.7.3",
+    "tsup": "^8.4.0",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": "^24.0.0"
+  },
   "homepage": "https://pyth.network",
+  "license": "Apache-2.0",
+  "name": "@pythnetwork/mcp",
+  "private": true,
   "repository": {
     "directory": "apps/mcp",
     "type": "git",
     "url": "https://github.com/pyth-network/pyth-crosschain"
-  },
-  "engines": {
-    "node": "^24.0.0"
   },
   "scripts": {
     "build": "tsup src/index.ts src/http.ts --format esm --dts --clean",
@@ -24,20 +38,6 @@
     "test:types": "tsc",
     "test:unit": "test-unit"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "@pythnetwork/pyth-lazer-sdk": "^5.2.1",
-    "pino": "catalog:",
-    "prom-client": "catalog:",
-    "zod": "^3.25.0"
-  },
-  "devDependencies": {
-    "@cprussin/tsconfig": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
-    "@types/node": "catalog:",
-    "msw": "^2.7.3",
-    "tsup": "^8.4.0",
-    "tsx": "catalog:",
-    "typescript": "catalog:"
-  }
+  "type": "module",
+  "version": "0.1.0"
 }
