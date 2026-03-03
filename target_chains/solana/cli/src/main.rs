@@ -48,12 +48,11 @@ const GUARDIAN_EXPIRATION_TIME: u32 = 86400;
 const SVM_CHAINS_WITH_RPC: &[(&str, Option<&str>)] = &[
     ("eclipse_testnet", Some("https://testnet.dev2.eclipsenetwork.xyz")),
     ("eclipse_mainnet", Some("https://mainnetbeta-rpc.eclipse.xyz")),
-    ("mantis_testnet", None),
     ("sonic_devnet", Some("https://api.testnet.sonic.game")),
     ("sonic_testnet", Some("https://api.testnet.sonic.game")),
-    ("mantis_mainnet", None),
     ("sonic_mainnet", Some("https://api.mainnet-alpha.sonic.game")),
     ("fogo_mainnet", Some("https://mainnet.fogo.io")),
+    // Fogo testnet uses testnet WH guardians
 ];
 
 fn main() -> Result<()> {
