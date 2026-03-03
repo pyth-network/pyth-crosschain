@@ -48,6 +48,8 @@ const httpServer = createHttpServer(async (req, res) => {
       }
 
       // Reject oversized request bodies early
+      // TODO: configure nginx.ingress.kubernetes.io/proxy-body-size on the K8s
+      // ingress to enforce this limit at the edge (not set by default).
       const contentLength = Number(req.headers["content-length"]);
       if (contentLength > MAX_BODY_BYTES) {
         res.writeHead(413, { "Content-Type": "application/json" });
