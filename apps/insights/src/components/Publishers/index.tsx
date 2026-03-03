@@ -22,7 +22,7 @@ import { PublisherIcon } from "../PublisherIcon";
 import { SemicircleMeter, Label } from "../SemicircleMeter";
 import { TokenIcon } from "../TokenIcon";
 
-const INITIAL_REWARD_POOL_SIZE = 60_000_000_000_000n;
+const INITIAL_REWARD_POOL_SIZE = 70_000_000_000_000n;
 
 export const Publishers = async () => {
   const [pythnetPublishers, pythtestConformancePublishers, oisStats] =
