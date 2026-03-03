@@ -7,7 +7,8 @@ making any changes.
 ## Key Commands
 - `pnpm --filter @pythnetwork/mcp build` — Build the project
 - `pnpm --filter @pythnetwork/mcp test:unit` — Run tests
-- `pnpm --filter @pythnetwork/mcp start:dev` — Start in stdio dev mode
+- `pnpm --filter @pythnetwork/mcp start:dev` — Start HTTP server (dev mode)
+- `pnpm --filter @pythnetwork/mcp start:stdio:dev` — Start stdio transport (dev mode)
 
 ## Conventions
 - TypeScript, strict mode
