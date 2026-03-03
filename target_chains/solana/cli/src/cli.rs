@@ -67,9 +67,7 @@ pub enum Action {
         about = "Initialize a wormhole receiver contract by sequentially replaying the guardian set updates"
     )]
     InitializeWormholeReceiver {},
-    #[clap(
-        about = "Initialize wormhole receiver on all known SVM chains with retries"
-    )]
+    #[clap(about = "Initialize wormhole receiver on all known SVM chains with retries")]
     InitializeWormholeReceiverAllSvm {
         #[clap(
             long,
@@ -77,11 +75,7 @@ pub enum Action {
             help = "Max attempts per chain before giving up"
         )]
         retries: u32,
-        #[clap(
-            long,
-            default_value = "2",
-            help = "Delay in seconds between retries"
-        )]
+        #[clap(long, default_value = "2", help = "Delay in seconds between retries")]
         retry_delay_seconds: u64,
     },
     #[clap(about = "Update the guardian set TTL to 24h")]

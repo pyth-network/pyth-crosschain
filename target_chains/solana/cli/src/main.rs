@@ -46,11 +46,20 @@ const UPGRADE_GUARDIAN_SET_VAA_4 : &str = "01000000030d03d4a37a6ff4361d917147308
 const UPGRADE_GUARDIAN_SET_VAA_5 : &str = "01000000040d00ada3cbcc53ec9abef64822eb3bf61784a1cf36dd7975a6f1fa793dfd35cd5b865b0b8daf6e7eec309d870423c5a5b7898cd56933ca82c824941d932766a014a70001b7731ff820ad5b3f97972428a81c8c8b1c55a42e8ae55f46a95ee7423fd4074b3f03c609cfff926a096fe642a1c939d7946972e1bea2bce02b40b766eb5b23e1010321738f8fb68652f1bb485b171badc3b0d347ad3cbcdc95aad0119020a5f1d46d1d9d92fd423a345b0f2ab2a722a25cace96acca0d1c4f2c839285ed06a6f0fb20104e67cedf1d48251817accb73647b0d16e1d565d1951baf62b1654b0bb26d516992df131dfdefcc499a41b7a49dead0cb03498ef6108018d88ab5c80397a83432401057f6a06e6d10f5d6cd84b552e866abc58c9899bb2a68956eaafca5988c19e8fc979a1d530636f1f897fb039d108d0b7fd4fde8679f75244cf3e10ffd1f605190c010675dac57d998d88ea80ad7078b6bf88d73abe8ed2ca960a17736c9a7dbfa168fa1c843b7e43883a0a15d0884bf2a397acacef142da51eec01bac331bd6e3aeb160008391dc0b9eed3fadc57528f2c32a6a060833aced6d617b95d39ea00300ca3e15951b175d1da741d31293d3bbedd1826d708675feb3bce56c58535592cdd4a5592000a8f30bde711c2d2b7e7f453be7a42b8da724008a34597c329c3989ecdd4f368f50d61b7b8c4c7d9f46e28334c4185d03284d90552b1f98cf0cd82c63fb5ecab63000cf67fb4e05463c3982a2379d1f779ad4364ba6ca5b240de82af4affc4c6ee58a52a972e21bbb254f15a4ea74cb511e32f06c021d9e774b34526e681dfa3537593000ea13cf78e719c7238fceb16f6fa1eb08de4c516b3e4c491b63382fdf3df5199543183c1ca67625178fb341484f58a18379bad73625637f0b64bae6b676b89033d000f8e4cfb95d01f4f84bf249038f64c10fb2d94f3a0429b01f853665deeebeae5e47e9d93926c97e1925b4be373e6ef96a606bc032b27a1bbcef95caa5c4f24dea0011111a9fc56e090fb01a739611ca9fd3de40ec53eeeb833e2b4fbab2dfdc176d60c734532248f2b2e5e0fbee8408245a8ca5d57440c6d596e981ade750a6e17928a011296e2fd4197141394987d06218f7b99b709adfb9e0511a177f9bfde8e7fbe1d4b55b9e4c2af3a70d2f73d6df12c3a60e6a677d476ff4393b9779f2735dbcd36e80169b6aee4a49c205b00010000000000000000000000000000000000000000000000000000000000000004fcdad9b63b91b4422000000000000000000000000000000000000000000000000000000000436f726502000000000005135893b5a76c3f739645648885bdccc06cd70a3cd3ff6cb952589bde862c25ef4392132fb9d4a42157114de8460193bdf3a2fcf81f86a09765f4762fd1107a0086b32d7a0977926a205131d8731d39cbeb8c82b2fd82faed2711d59af0f2499d16e726f6b211b39756c042441be6d8650b69b54ebe715e2343938f104aeb5581293216ce97d771e0cb721221b115e7caf07c4e3dc8e7c469f92c8cd88fb8005a2074a3bf913953d695260d88bc1aa25a4eee363ef0000ac0076727b35fbea2dac28fee5ccb0fea768eaf45ced136b9d9e24903464ae889f5c8a723fc14f93124b7c738843cbb89e864c862c38cddcccf95d2cc37a4dc036a8d232b48f62cdd4731412f4890da798f6896a3331f64b48c12d1d57fd9cbe70811d1f64e26238811de5553c40f64af41ee1b6057cc43ac8f567a31e7850da532b361988bfe0d3ae11b178e21ad2e77ae06711549cfbb1f9c7a9d8096e85e1487f35515d02a92753504a8d75471b9f49edb6fbebc898f403e4773e95feb15e80c9a99c8348d";
 const GUARDIAN_EXPIRATION_TIME: u32 = 86400;
 const SVM_CHAINS_WITH_RPC: &[(&str, Option<&str>)] = &[
-    ("eclipse_testnet", Some("https://testnet.dev2.eclipsenetwork.xyz")),
-    ("eclipse_mainnet", Some("https://mainnetbeta-rpc.eclipse.xyz")),
+    (
+        "eclipse_testnet",
+        Some("https://testnet.dev2.eclipsenetwork.xyz"),
+    ),
+    (
+        "eclipse_mainnet",
+        Some("https://mainnetbeta-rpc.eclipse.xyz"),
+    ),
     ("sonic_devnet", Some("https://api.testnet.sonic.game")),
     ("sonic_testnet", Some("https://api.testnet.sonic.game")),
-    ("sonic_mainnet", Some("https://api.mainnet-alpha.sonic.game")),
+    (
+        "sonic_mainnet",
+        Some("https://api.mainnet-alpha.sonic.game"),
+    ),
     ("fogo_mainnet", Some("https://mainnet.fogo.io")),
     // Fogo testnet uses testnet WH guardians
 ];
@@ -167,8 +176,7 @@ fn main() -> Result<()> {
                             eprintln!("[{chain}] attempt {attempt} failed: {last_error}");
                             if attempt < retries {
                                 eprintln!(
-                                    "[{chain}] retrying in {} seconds...",
-                                    retry_delay_seconds
+                                    "[{chain}] retrying in {retry_delay_seconds} seconds..."
                                 );
                                 sleep(retry_delay);
                             }
@@ -240,7 +248,11 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn initialize_wormhole_receiver(rpc_client: &RpcClient, wormhole: Pubkey, payer: &Keypair) -> Result<()> {
+fn initialize_wormhole_receiver(
+    rpc_client: &RpcClient,
+    wormhole: Pubkey,
+    payer: &Keypair,
+) -> Result<()> {
     // Check whether the wormhole config account exists, if it does not exist, initialize the wormhole receiver
     let wormhole_config = BridgeConfig::key(&wormhole, ());
 
@@ -254,8 +266,8 @@ fn initialize_wormhole_receiver(rpc_client: &RpcClient, wormhole: Pubkey, payer:
         }
         Err(_) => {
             println!("Initializing wormhole receiver");
-            let initial_guardian = hex::decode(INITIAL_GUARDIAN)
-                .context("failed to decode INITIAL_GUARDIAN hex")?;
+            let initial_guardian =
+                hex::decode(INITIAL_GUARDIAN).context("failed to decode INITIAL_GUARDIAN hex")?;
             let initialize_instruction = initialize(
                 wormhole,
                 payer.pubkey(),
