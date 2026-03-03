@@ -2,7 +2,7 @@ pub mod cli;
 
 use {
     anchor_client::anchor_lang::{InstructionData, ToAccountMetas},
-    anyhow::Result,
+    anyhow::{anyhow, Context, Result},
     borsh::BorshDeserialize,
     clap::Parser,
     cli::{Action, Cli},
@@ -24,6 +24,7 @@ use {
         system_instruction,
         transaction::Transaction,
     },
+    std::{thread::sleep, time::Duration},
     wormhole_core_bridge_solana::sdk::{WriteEncodedVaaArgs, VAA_START},
     wormhole_sdk::{
         vaa::{Body, Header},
@@ -44,6 +45,16 @@ const UPGRADE_GUARDIAN_SET_VAA_3 : &str = "01000000020d00ce45474d9e1b1e7790a2d21
 const UPGRADE_GUARDIAN_SET_VAA_4 : &str = "01000000030d03d4a37a6ff4361d91714730831e9d49785f61624c8f348a9c6c1d82bc1d98cadc5e936338204445c6250bb4928f3f3e165ad47ca03a5d63111168a2de4576856301049a5df10464ea4e1961589fd30fc18d1970a7a2ffaad617e56a0f7777f25275253af7d10a0f0f2494dc6e99fc80e444ab9ebbbee252ded2d5dcb50cbf7a54bb5a01055f4603b553b9ba9e224f9c55c7bca3da00abb10abd19e0081aecd3b352be061a70f79f5f388ebe5190838ef3cd13a2f22459c9a94206883b739c90b40d5d74640006a8fade3997f650a36e46bceb1f609edff201ab32362266f166c5c7da713f6a19590c20b68ed3f0119cb24813c727560ede086b3d610c2d7a1efa66f655bad90900080f5e495a75ea52241c59d145c616bfac01e57182ad8d784cbcc9862ed3afb60c0983ccbc690553961ffcf115a0c917367daada8e60be2cbb8b8008bac6341a8c010935ab11e0eea28b87a1edc5ccce3f1fac25f75b5f640fe6b0673a7cd74513c9dc01c544216cf364cc9993b09fda612e0cd1ced9c00fb668b872a16a64ebb55d27010ab2bc39617a2396e7defa24cd7c22f42dc31f3c42ffcd9d1472b02df8468a4d0563911e8fb6a4b5b0ce0bd505daa53779b08ff660967b31f246126ed7f6f29a7e000bdb6d3fd7b33bdc9ac3992916eb4aacb97e7e21d19649e7fa28d2dd6e337937e4274516a96c13ac7a8895da9f91948ea3a09c25f44b982c62ce8842b58e20c8a9000d3d1b19c8bb000856b6610b9d28abde6c35cb7705c6ca5db711f7be96d60eed9d72cfa402a6bfe8bf0496dbc7af35796fc768da51a067b95941b3712dce8ae1e7010ec80085033157fd1a5628fc0c56267469a86f0e5a66d7dede1ad4ce74ecc3dff95b60307a39c3bfbeedc915075070da30d0395def9635130584f709b3885e1bdc0010fc480eb9ee715a2d151b23722b48b42581d7f4001fc1696c75425040bfc1ffc5394fe418adb2b64bd3dc692efda4cc408163677dbe233b16bcdabb853a20843301118ee9e115e1a0c981f19d0772b850e666591322da742a9a12cce9f52a5665bd474abdd59c580016bee8aae67fdf39b315be2528d12eec3a652910e03cc4c6fa3801129d0d1e2e429e969918ec163d16a7a5b2c6729aa44af5dccad07d25d19891556a79b574f42d9adbd9e2a9ae5a6b8750331d2fccb328dd94c3bf8791ee1bfe85aa00661e99781981faea00010000000000000000000000000000000000000000000000000000000000000004fd4c6c55ec8dfd342000000000000000000000000000000000000000000000000000000000436f726502000000000004135893b5a76c3f739645648885bdccc06cd70a3cd3ff6cb952589bde862c25ef4392132fb9d4a42157114de8460193bdf3a2fcf81f86a09765f4762fd1107a0086b32d7a0977926a205131d8731d39cbeb8c82b2fd82faed2711d59af0f2499d16e726f6b211b39756c042441be6d8650b69b54ebe715e234354ce5b4d348fb74b958e8966e2ec3dbd4958a7cd15e7caf07c4e3dc8e7c469f92c8cd88fb8005a2074a3bf913953d695260d88bc1aa25a4eee363ef0000ac0076727b35fbea2dac28fee5ccb0fea768eaf45ced136b9d9e24903464ae889f5c8a723fc14f93124b7c738843cbb89e864c862c38cddcccf95d2cc37a4dc036a8d232b48f62cdd4731412f4890da798f6896a3331f64b48c12d1d57fd9cbe7081171aa1be1d36cafe3867910f99c09e347899c19c38192b6e7387ccd768277c17dab1b7a5027c0b3cf178e21ad2e77ae06711549cfbb1f9c7a9d8096e85e1487f35515d02a92753504a8d75471b9f49edb6fbebc898f403e4773e95feb15e80c9a99c8348d";
 const UPGRADE_GUARDIAN_SET_VAA_5 : &str = "01000000040d00ada3cbcc53ec9abef64822eb3bf61784a1cf36dd7975a6f1fa793dfd35cd5b865b0b8daf6e7eec309d870423c5a5b7898cd56933ca82c824941d932766a014a70001b7731ff820ad5b3f97972428a81c8c8b1c55a42e8ae55f46a95ee7423fd4074b3f03c609cfff926a096fe642a1c939d7946972e1bea2bce02b40b766eb5b23e1010321738f8fb68652f1bb485b171badc3b0d347ad3cbcdc95aad0119020a5f1d46d1d9d92fd423a345b0f2ab2a722a25cace96acca0d1c4f2c839285ed06a6f0fb20104e67cedf1d48251817accb73647b0d16e1d565d1951baf62b1654b0bb26d516992df131dfdefcc499a41b7a49dead0cb03498ef6108018d88ab5c80397a83432401057f6a06e6d10f5d6cd84b552e866abc58c9899bb2a68956eaafca5988c19e8fc979a1d530636f1f897fb039d108d0b7fd4fde8679f75244cf3e10ffd1f605190c010675dac57d998d88ea80ad7078b6bf88d73abe8ed2ca960a17736c9a7dbfa168fa1c843b7e43883a0a15d0884bf2a397acacef142da51eec01bac331bd6e3aeb160008391dc0b9eed3fadc57528f2c32a6a060833aced6d617b95d39ea00300ca3e15951b175d1da741d31293d3bbedd1826d708675feb3bce56c58535592cdd4a5592000a8f30bde711c2d2b7e7f453be7a42b8da724008a34597c329c3989ecdd4f368f50d61b7b8c4c7d9f46e28334c4185d03284d90552b1f98cf0cd82c63fb5ecab63000cf67fb4e05463c3982a2379d1f779ad4364ba6ca5b240de82af4affc4c6ee58a52a972e21bbb254f15a4ea74cb511e32f06c021d9e774b34526e681dfa3537593000ea13cf78e719c7238fceb16f6fa1eb08de4c516b3e4c491b63382fdf3df5199543183c1ca67625178fb341484f58a18379bad73625637f0b64bae6b676b89033d000f8e4cfb95d01f4f84bf249038f64c10fb2d94f3a0429b01f853665deeebeae5e47e9d93926c97e1925b4be373e6ef96a606bc032b27a1bbcef95caa5c4f24dea0011111a9fc56e090fb01a739611ca9fd3de40ec53eeeb833e2b4fbab2dfdc176d60c734532248f2b2e5e0fbee8408245a8ca5d57440c6d596e981ade750a6e17928a011296e2fd4197141394987d06218f7b99b709adfb9e0511a177f9bfde8e7fbe1d4b55b9e4c2af3a70d2f73d6df12c3a60e6a677d476ff4393b9779f2735dbcd36e80169b6aee4a49c205b00010000000000000000000000000000000000000000000000000000000000000004fcdad9b63b91b4422000000000000000000000000000000000000000000000000000000000436f726502000000000005135893b5a76c3f739645648885bdccc06cd70a3cd3ff6cb952589bde862c25ef4392132fb9d4a42157114de8460193bdf3a2fcf81f86a09765f4762fd1107a0086b32d7a0977926a205131d8731d39cbeb8c82b2fd82faed2711d59af0f2499d16e726f6b211b39756c042441be6d8650b69b54ebe715e2343938f104aeb5581293216ce97d771e0cb721221b115e7caf07c4e3dc8e7c469f92c8cd88fb8005a2074a3bf913953d695260d88bc1aa25a4eee363ef0000ac0076727b35fbea2dac28fee5ccb0fea768eaf45ced136b9d9e24903464ae889f5c8a723fc14f93124b7c738843cbb89e864c862c38cddcccf95d2cc37a4dc036a8d232b48f62cdd4731412f4890da798f6896a3331f64b48c12d1d57fd9cbe70811d1f64e26238811de5553c40f64af41ee1b6057cc43ac8f567a31e7850da532b361988bfe0d3ae11b178e21ad2e77ae06711549cfbb1f9c7a9d8096e85e1487f35515d02a92753504a8d75471b9f49edb6fbebc898f403e4773e95feb15e80c9a99c8348d";
 const GUARDIAN_EXPIRATION_TIME: u32 = 86400;
+const SVM_CHAINS_WITH_RPC: &[(&str, Option<&str>)] = &[
+    ("eclipse_testnet", Some("https://testnet.dev2.eclipsenetwork.xyz")),
+    ("eclipse_mainnet", Some("https://mainnetbeta-rpc.eclipse.xyz")),
+    ("mantis_testnet", None),
+    ("sonic_devnet", Some("https://api.testnet.sonic.game")),
+    ("sonic_testnet", Some("https://api.testnet.sonic.game")),
+    ("mantis_mainnet", None),
+    ("sonic_mainnet", Some("https://api.mainnet-alpha.sonic.game")),
+    ("fogo_mainnet", Some("https://mainnet.fogo.io")),
+];
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -121,90 +132,65 @@ fn main() -> Result<()> {
             let rpc_client = RpcClient::new(url);
             let payer =
                 read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+            initialize_wormhole_receiver(&rpc_client, wormhole, &payer)?;
+        }
+        Action::InitializeWormholeReceiverAllSvm {
+            retries,
+            retry_delay_seconds,
+        } => {
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+            let retries = retries.max(1);
+            let retry_delay = Duration::from_secs(retry_delay_seconds);
+            let mut failures: Vec<(String, String)> = vec![];
 
-            // Check whether the wormhole config account exists, if it does not exist, initialize the wormhole receiver
-            let wormhole_config = BridgeConfig::key(&wormhole, ());
+            for &(chain, default_url) in SVM_CHAINS_WITH_RPC {
+                let Some(rpc_url) = default_url else {
+                    eprintln!("[{chain}] skipping: unresolved RPC URL");
+                    continue;
+                };
 
-            let wormhole_account_data = rpc_client.get_account_data(&wormhole_config);
+                println!("\n[{chain}] rpc={rpc_url}");
 
-            let mut current_guardian_set_index = match wormhole_account_data {
-                Ok(data) => {
-                    let config = BridgeConfig::try_from_slice(&data)?;
-                    println!("Wormhole already initialized. config: {config:?}");
-                    config.guardian_set_index
+                let mut last_error = String::new();
+                let mut succeeded = false;
+                for attempt in 1..=retries {
+                    println!("[{chain}] attempt {attempt}/{retries}");
+                    let rpc_client = RpcClient::new(rpc_url.to_owned());
+                    match initialize_wormhole_receiver(&rpc_client, wormhole, &payer) {
+                        Ok(()) => {
+                            println!("[{chain}] success");
+                            succeeded = true;
+                            break;
+                        }
+                        Err(err) => {
+                            last_error = format!("{err:#}");
+                            eprintln!("[{chain}] attempt {attempt} failed: {last_error}");
+                            if attempt < retries {
+                                eprintln!(
+                                    "[{chain}] retrying in {} seconds...",
+                                    retry_delay_seconds
+                                );
+                                sleep(retry_delay);
+                            }
+                        }
+                    }
                 }
-                Err(_) => {
-                    println!("Initializing wormhole receiver");
-                    let initialize_instruction = initialize(
-                        wormhole,
-                        payer.pubkey(),
-                        0,
-                        GUARDIAN_EXPIRATION_TIME,
-                        &[hex::decode(INITIAL_GUARDIAN).unwrap().try_into().unwrap()],
-                    )
-                    .expect("Failed to create initialize instruction");
-                    process_transaction(&rpc_client, vec![initialize_instruction], &vec![&payer])?;
-                    0
+
+                if !succeeded {
+                    failures.push((chain.to_string(), last_error));
                 }
-            };
-
-            if current_guardian_set_index == 0 {
-                println!("Upgrading guardian set from 0 to 1");
-                process_upgrade_guardian_set(
-                    &rpc_client,
-                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1).unwrap(),
-                    wormhole,
-                    &payer,
-                    true,
-                )?;
-                current_guardian_set_index += 1;
             }
 
-            if current_guardian_set_index == 1 {
-                println!("Upgrading guardian set from 1 to 2");
-                process_upgrade_guardian_set(
-                    &rpc_client,
-                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2).unwrap(),
-                    wormhole,
-                    &payer,
-                    false,
-                )?;
-                current_guardian_set_index += 1;
-            }
-
-            if current_guardian_set_index == 2 {
-                println!("Upgrading guardian set from 2 to 3");
-                process_upgrade_guardian_set(
-                    &rpc_client,
-                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3).unwrap(),
-                    wormhole,
-                    &payer,
-                    false,
-                )?;
-                current_guardian_set_index += 1;
-            }
-
-            if current_guardian_set_index == 3 {
-                println!("Upgrading guardian set from 3 to 4");
-                process_upgrade_guardian_set(
-                    &rpc_client,
-                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_4).unwrap(),
-                    wormhole,
-                    &payer,
-                    false,
-                )?;
-                current_guardian_set_index += 1;
-            }
-
-            if current_guardian_set_index == 4 {
-                println!("Upgrading guardian set from 4 to 5");
-                process_upgrade_guardian_set(
-                    &rpc_client,
-                    &hex::decode(UPGRADE_GUARDIAN_SET_VAA_5).unwrap(),
-                    wormhole,
-                    &payer,
-                    false,
-                )?;
+            if !failures.is_empty() {
+                eprintln!("\nInitialization failures:");
+                for (chain, error) in &failures {
+                    eprintln!(" - {chain}: {error}");
+                }
+                return Err(anyhow!(
+                    "failed to initialize wormhole receiver on {} chain(s)",
+                    failures.len()
+                ));
             }
         }
 
@@ -255,6 +241,104 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+fn initialize_wormhole_receiver(rpc_client: &RpcClient, wormhole: Pubkey, payer: &Keypair) -> Result<()> {
+    // Check whether the wormhole config account exists, if it does not exist, initialize the wormhole receiver
+    let wormhole_config = BridgeConfig::key(&wormhole, ());
+
+    let wormhole_account_data = rpc_client.get_account_data(&wormhole_config);
+
+    let mut current_guardian_set_index = match wormhole_account_data {
+        Ok(data) => {
+            let config = BridgeConfig::try_from_slice(&data)?;
+            println!("Wormhole already initialized. config: {config:?}");
+            config.guardian_set_index
+        }
+        Err(_) => {
+            println!("Initializing wormhole receiver");
+            let initial_guardian = hex::decode(INITIAL_GUARDIAN)
+                .context("failed to decode INITIAL_GUARDIAN hex")?;
+            let initialize_instruction = initialize(
+                wormhole,
+                payer.pubkey(),
+                0,
+                GUARDIAN_EXPIRATION_TIME,
+                &[initial_guardian
+                    .try_into()
+                    .map_err(|_| anyhow!("invalid INITIAL_GUARDIAN size"))?],
+            )
+            .context("failed to create initialize instruction")?;
+            process_transaction(rpc_client, vec![initialize_instruction], &vec![payer])?;
+            0
+        }
+    };
+
+    if current_guardian_set_index == 0 {
+        println!("Upgrading guardian set from 0 to 1");
+        process_upgrade_guardian_set(
+            rpc_client,
+            &hex::decode(UPGRADE_GUARDIAN_SET_VAA_1)
+                .context("failed to decode guardian set VAA 1")?,
+            wormhole,
+            payer,
+            true,
+        )?;
+        current_guardian_set_index += 1;
+    }
+
+    if current_guardian_set_index == 1 {
+        println!("Upgrading guardian set from 1 to 2");
+        process_upgrade_guardian_set(
+            rpc_client,
+            &hex::decode(UPGRADE_GUARDIAN_SET_VAA_2)
+                .context("failed to decode guardian set VAA 2")?,
+            wormhole,
+            payer,
+            false,
+        )?;
+        current_guardian_set_index += 1;
+    }
+
+    if current_guardian_set_index == 2 {
+        println!("Upgrading guardian set from 2 to 3");
+        process_upgrade_guardian_set(
+            rpc_client,
+            &hex::decode(UPGRADE_GUARDIAN_SET_VAA_3)
+                .context("failed to decode guardian set VAA 3")?,
+            wormhole,
+            payer,
+            false,
+        )?;
+        current_guardian_set_index += 1;
+    }
+
+    if current_guardian_set_index == 3 {
+        println!("Upgrading guardian set from 3 to 4");
+        process_upgrade_guardian_set(
+            rpc_client,
+            &hex::decode(UPGRADE_GUARDIAN_SET_VAA_4)
+                .context("failed to decode guardian set VAA 4")?,
+            wormhole,
+            payer,
+            false,
+        )?;
+        current_guardian_set_index += 1;
+    }
+
+    if current_guardian_set_index == 4 {
+        println!("Upgrading guardian set from 4 to 5");
+        process_upgrade_guardian_set(
+            rpc_client,
+            &hex::decode(UPGRADE_GUARDIAN_SET_VAA_5)
+                .context("failed to decode guardian set VAA 5")?,
+            wormhole,
+            payer,
+            false,
+        )?;
+    }
+
+    Ok(())
+}
+
 pub fn process_upgrade_guardian_set(
     rpc_client: &RpcClient,
     vaa: &[u8],
@@ -262,9 +346,10 @@ pub fn process_upgrade_guardian_set(
     payer: &Keypair,
     legacy_guardian_set: bool,
 ) -> Result<()> {
-    let posted_vaa =
-        process_legacy_post_vaa(rpc_client, vaa, wormhole, payer, legacy_guardian_set).unwrap();
-    let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
+    let posted_vaa = process_legacy_post_vaa(rpc_client, vaa, wormhole, payer, legacy_guardian_set)
+        .context("failed to post guardian-set VAA")?;
+    let parsed_vaa: Vaa<&RawMessage> =
+        serde_wormhole::from_slice(vaa).context("failed to deserialize guardian-set VAA")?;
     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
     let guardian_set_index_old = header.guardian_set_index;
     let emitter = Pubkey::from(body.emitter_address.0);
@@ -278,7 +363,7 @@ pub fn process_upgrade_guardian_set(
         emitter,
         sequence,
     )
-    .unwrap();
+    .context("failed to build upgrade_guardian_set instruction")?;
 
     process_transaction(
         rpc_client,
@@ -346,7 +431,8 @@ pub fn process_legacy_post_vaa(
     payer: &Keypair,
     legacy_guardian_set: bool,
 ) -> Result<Pubkey> {
-    let parsed_vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(vaa).unwrap();
+    let parsed_vaa: Vaa<&RawMessage> =
+        serde_wormhole::from_slice(vaa).context("failed to deserialize posted VAA")?;
     let (header, body): (Header, Body<&RawMessage>) = parsed_vaa.into();
 
     let wormhole_config = BridgeConfig::key(&wormhole, ());
@@ -361,7 +447,10 @@ pub fn process_legacy_post_vaa(
         legacy_guardian_set,
     )?;
 
-    let vaa_hash = body.digest().unwrap().hash;
+    let vaa_hash = body
+        .digest()
+        .context("failed to hash VAA body digest")?
+        .hash;
     let vaa_pubkey = LegacyPostedVaa::key(&wormhole, vaa_hash);
 
     let signature_set_keypair = Keypair::new();
