@@ -183,7 +183,7 @@ fn main() -> Result<()> {
                 )?;
                 current_guardian_set_index += 1;
             }
-
+            
             if current_guardian_set_index == 3 {
                 println!("Upgrading guardian set from 3 to 4");
                 process_upgrade_guardian_set(
@@ -193,6 +193,7 @@ fn main() -> Result<()> {
                     &payer,
                     false,
                 )?;
+                current_guardian_set_index += 1;
             }
             
             if current_guardian_set_index == 4 {
