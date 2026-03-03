@@ -89,7 +89,9 @@ httpServer.listen(port, () => {
 
 const shutdown = async () => {
   logger.info("shutting down HTTP server");
-  httpServer.close();
+  await new Promise<void>((resolve, reject) =>
+    httpServer.close((err) => (err ? reject(err) : resolve())),
+  );
   await new Promise<void>((resolve) => logger.flush(() => resolve()));
   process.exit(0);
 };
