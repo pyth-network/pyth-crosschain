@@ -8,7 +8,7 @@ use wormhole/governance
 use wormhole/vaa.{PreparedVAA}
 
 const genesis: Guardians =
-  Guardians { seen_sequence: 0, set_index: 0, set: env.initial_guardians }
+  Guardians { set_index: 0, set: env.initial_guardians }
 
 pub const config =
   StateConfig { state_nft: "Pyth Wormhole", owner_nft: "Pyth Wormhole Ops" }

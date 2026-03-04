@@ -2,7 +2,6 @@ use aiken/collection/list
 use parser.{Parser, parse}
 use types/u16.{U16}
 use types/u32
-use types/u64
 use types/u8.{U8}
 use wormhole.{Guardians}
 use wormhole/vaa.{PreparedVAA, VAA, VAABody}
@@ -27,32 +26,27 @@ pub fn parse_and_verify_guardian_set_upgrade(
   old: Guardians,
 ) -> Guardians {
   let VAA { body, .. } = vaa.parse_and_verify_prepared(vaa, old)
-  let new =
-    parse_action(body)
-      |> parse_guardian_set_upgrade(u64.as_int(body.sequence))
-  expect old.seen_sequence < new.seen_sequence
+  // guardian set upgrades have random sequence numbers, so we ignore them
+  let new = parse_action(body) |> parse_guardian_set_upgrade()
   expect old.set_index + 1 == new.set_index
   new
 }
 
-fn parse_guardian_set_upgrade(
-  action: GovernanceAction,
-  seen_sequence: Int,
-) -> Guardians {
+fn parse_guardian_set_upgrade(action: GovernanceAction) -> Guardians {
   expect action.module == core_module
   expect action.action == guardian_set_upgrade_action
   expect action.chain == u16.zero
-  parser.run(new_guardian_set(seen_sequence), action.args)
+  parser.run(new_guardian_set, action.args)
 }
 
-fn new_guardian_set(seen_sequence: Int) -> Parser<Guardians> {
-  let set_index <- parse(u32.from_be)
-  let set_length <- parse(u8.from)
-  let set <- parse(parser.repeat(parser.bytes(20), u8.as_int(set_length)))
+const new_guardian_set: Parser<Guardians> = {
+    let set_index <- parse(u32.from_be)
+    let set_length <- parse(u8.from)
+    let set <- parse(parser.repeat(parser.bytes(20), u8.as_int(set_length)))
 
-  Guardians { seen_sequence, set_index: u32.as_int(set_index), set }
-    |> parser.return
-}
+    Guardians { set_index: u32.as_int(set_index), set }
+      |> parser.return
+  }
 
 type GovernanceAction {
   module: ByteArray,
@@ -82,8 +76,7 @@ test can_parse_vaa_governance() {
 
   let vaa = vaa.parse_unsafe(vaa)
   let action = parse_action(vaa.body)
-  let new_guardians =
-    parse_guardian_set_upgrade(action, u64.as_int(vaa.body.sequence))
+  let new_guardians = parse_guardian_set_upgrade(action)
 
   new_guardians.set_index == 4 && list.length(new_guardians.set) == 19
 }

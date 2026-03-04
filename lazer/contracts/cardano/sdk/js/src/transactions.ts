@@ -41,7 +41,6 @@ export async function initWormholeState(
   const stateNFT = minter.asset(WH_STATE_NFT, 1n);
   const ownerNFT = minter.asset(WH_OWNER_NFT, 1n);
   const state = spender.receive(ctx.parameters, stateNFT, {
-    seen_sequence: 0n,
     set: [Buffer.from(initialGuardian, "hex")],
     set_index: 0n,
   });

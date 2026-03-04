@@ -121,7 +121,6 @@ const test_recovered_keys =
 
 const test_guardians =
   Guardians {
-    seen_sequence: 0,
     set_index: 3,
     set: [
       #"58cc3ae5c097b213ce3c81979e1b9f9570746aa5",
