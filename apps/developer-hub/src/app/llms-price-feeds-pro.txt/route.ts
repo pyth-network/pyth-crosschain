@@ -106,9 +106,9 @@ EVM SDK: Add via git submodule from \`pyth-network/pyth-crosschain/lazer/contrac
         "priceFeedId": 1,
         "price": "11223872331053",
         "exponent": -8,
-        "confidence": 1373488286,
-        "bestBidPrice": "11222498842767",
-        "bestAskPrice": "11224513591935",
+        "confidence": 1373488286,        // EXPERIMENTAL: not yet covered by automated data quality assurance
+        "bestBidPrice": "11222498842767", // EXPERIMENTAL: not yet covered by automated data quality assurance
+        "bestAskPrice": "11224513591935", // EXPERIMENTAL: not yet covered by automated data quality assurance
         "publisherCount": 9,
         "marketSession": "regular"
       }
@@ -117,6 +117,8 @@ EVM SDK: Add via git submodule from \`pyth-network/pyth-crosschain/lazer/contrac
   "evm": { "encoding": "hex", "data": "0x..." }
 }
 \`\`\`
+
+**Experimental Fields**: The \`confidence\`, \`bestBidPrice\`, and \`bestAskPrice\` fields are experimental. They are not yet covered by automated data quality assurance, so their accuracy and reliability may vary. The current quality and uptime focus is on the aggregated \`price\` field. Use these fields with caution in production systems.
 
 Price calculation: \`actual_price = price * 10^exponent\`
 

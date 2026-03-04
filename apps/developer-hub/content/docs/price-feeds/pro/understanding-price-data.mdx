@@ -10,6 +10,11 @@ This page explains the key metrics in Pyth Pro price feeds and what they represe
 
 ## Confidence Interval
 
+<Callout type="warning" title="Experimental">
+  This field is **experimental** and not yet covered by automated data quality assurance.
+  See [Payload Reference](/price-feeds/pro/payload-reference) for details.
+</Callout>
+
 The confidence interval measures **the spread of price observations across publishers**. It measures how much individual publishers deviate from the aggregate price.
 
 <Callout type="warning">
@@ -41,6 +46,11 @@ The confidence interval is computed using the interquartile range of publisher d
 This approach ensures the confidence interval reflects the full range of what publishers are reporting, including their view of market depth.
 
 ## Best Bid and Best Ask
+
+<Callout type="warning" title="Experimental">
+  These fields are **experimental** and not yet covered by automated data quality assurance.
+  See [Payload Reference](/price-feeds/pro/payload-reference) for details.
+</Callout>
 
 Best Bid and Best Ask represent the **tightest bid and ask prices** across all contributing publishers.
 
