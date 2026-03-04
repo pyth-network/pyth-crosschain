@@ -68,9 +68,9 @@ pub fn parse_unsafe(src: ByteArray) -> VAA {
 }
 
 const vaa_header: Parser<VAAHeader> = {
-    let version <- parse(u8.from_be)
+    let version <- parse(u8.from)
     let guardian_set_index <- parse(u32.from_be)
-    let signatures_len <- parse(u8.from_be)
+    let signatures_len <- parse(u8.from)
     let signatures <-
       parse(parser.repeat(wormhole.signature, u8.as_int(signatures_len)))
 
@@ -83,7 +83,7 @@ const vaa_body: Parser<VAABody> = {
     let emitter_chain <- parse(u16.from_be)
     let emitter_address <- parse(parser.bytes(32))
     let sequence <- parse(u64.from_be)
-    let consistency_level <- parse(u8.from_be)
+    let consistency_level <- parse(u8.from)
     let payload <- parse(parser.rest)
 
     VAABody {

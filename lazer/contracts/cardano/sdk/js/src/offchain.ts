@@ -117,11 +117,6 @@ export const CardanoTransactionOutputReference = TSchema.Struct({
   })
 
 /**
- * TrustedSigners
- */
-export const PythTrustedSigners = TSchema.Map(AikenCryptoVerificationKey, CardanoTransactionValidityRange)
-
-/**
  * StateId
  */
 export const StateStateId = TSchema.ByteArray
@@ -135,6 +130,11 @@ export const PythGovernanceGovernance = TSchema.Struct({
     emitter_address: ByteArray,
     seen_sequence: Int
   })
+
+/**
+ * TrustedSigners
+ */
+export const PythMessageTrustedSigners = TSchema.Map(AikenCryptoVerificationKey, CardanoTransactionValidityRange)
 
 /**
  * PreparedVAA
@@ -158,7 +158,7 @@ export const Pyth_stateAction = TSchema.Union(
  */
 export const Pyth_statePyth = TSchema.Struct({
     governance: PythGovernanceGovernance,
-    trusted_signers: PythTrustedSigners,
+    trusted_signers: PythMessageTrustedSigners,
     deprecated_withdraw_scripts: Pairs_cardanoTransactionValidityRange_aikenCryptoScriptHash_,
     withdraw_script: AikenCryptoScriptHash
   })

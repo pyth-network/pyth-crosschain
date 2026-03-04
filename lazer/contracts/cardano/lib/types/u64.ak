@@ -24,6 +24,10 @@ pub const from_be: Parser<U64> =
   parser.bytes(8)
     |> parser.map(fn(bs) { U64(int.from_bytearray_big_endian(bs)) })
 
+pub const from_le: Parser<U64> =
+  parser.bytes(8)
+    |> parser.map(fn(bs) { U64(int.from_bytearray_little_endian(bs)) })
+
 pub fn to_be(self: U64) -> ByteArray {
   bytearray.from_int_big_endian(as_int(self), 8)
 }

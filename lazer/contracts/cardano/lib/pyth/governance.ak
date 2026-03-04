@@ -52,9 +52,9 @@ pub fn parse_and_verify_action(
 fn governance_action(timestamp: U32) -> Parser<GovernanceAction> {
   let magic <- parse(parser.bytes(4))
   expect magic == governance_action_magic
-  let module <- parse(u8.from_be)
+  let module <- parse(u8.from)
   expect module == governance_action_module
-  let action <- parse(u8.from_be)
+  let action <- parse(u8.from)
   let chain <- parse(u16.from_be)
   expect u16.as_int(chain) == env.chain_id
   when u8.as_int(action) is {
@@ -71,7 +71,7 @@ fn governance_action(timestamp: U32) -> Parser<GovernanceAction> {
         |> parser.return
     }
     2 -> {
-      let script <- parse(u8.from_be)
+      let script <- parse(u8.from)
       let hash <- parse(parser.bytes(28))
       when u8.as_int(script) is {
         1 -> UpgradeSpendScript(hash)

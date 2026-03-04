@@ -17,7 +17,7 @@ pub type Signature {
 }
 
 pub const signature: Parser<Signature> = {
-    let index <- parse(u8.from_be)
+    let index <- parse(u8.from)
     let signature <- parse(parser.bytes(65))
     Signature { index, signature } |> parser.return
   }

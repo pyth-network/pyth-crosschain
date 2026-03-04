@@ -47,7 +47,7 @@ fn parse_guardian_set_upgrade(
 
 fn new_guardian_set(seen_sequence: Int) -> Parser<Guardians> {
   let set_index <- parse(u32.from_be)
-  let set_length <- parse(u8.from_be)
+  let set_length <- parse(u8.from)
   let set <- parse(parser.repeat(parser.bytes(20), u8.as_int(set_length)))
 
   Guardians { seen_sequence, set_index: u32.as_int(set_index), set }
@@ -69,7 +69,7 @@ fn parse_action(body: VAABody) -> GovernanceAction {
 
 const governance_action: Parser<GovernanceAction> = {
     let module <- parse(parser.bytes(32))
-    let action <- parse(u8.from_be)
+    let action <- parse(u8.from)
     let chain <- parse(u16.from_be)
     let args <- parse(parser.rest)
 

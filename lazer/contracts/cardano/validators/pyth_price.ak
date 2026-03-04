@@ -6,8 +6,8 @@ use cardano/assets
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use pyth
 use pyth/governance.{Governance}
+use pyth/message
 use pyth_state.{Pyth, config}
 use state.{StateId}
 
@@ -23,7 +23,7 @@ validator pyth_price(pyth_id: StateId) {
         updates,
         fn(update) {
           expect _ =
-            pyth.parse_and_verify(
+            message.parse_and_verify(
               update,
               pyth.trusted_signers,
               self.validity_range,

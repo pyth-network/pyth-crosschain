@@ -19,7 +19,7 @@ pub fn from_int(value: Int) -> U8 {
   U8(value)
 }
 
-pub const from_be: Parser<U8> =
+pub const from: Parser<U8> =
   fn(bs) { (U8(bytearray.at(bs, 0)), bytearray.drop(bs, 1)) }
 
 pub fn to_be(self: U8) -> ByteArray {

@@ -3,10 +3,11 @@ use aiken/crypto.{ScriptHash}
 use aiken/interval
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction, ValidityRange}
-use pyth.{TrustedSigners}
+use pyth
 use pyth/governance.{
   Governance, UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
 }
+use pyth/message.{TrustedSigners}
 use state.{State, StateConfig}
 use wormhole.{Guardians}
 use wormhole/vaa.{PreparedVAA}
@@ -20,7 +21,7 @@ pub type Pyth {
 }
 
 pub const config =
-  StateConfig { state_nft: "Pyth State", owner_nft: "Pyth Ops" }
+  StateConfig { state_nft: pyth.state_nft, owner_nft: "Pyth Ops" }
 
 pub fn is_active_withdraw_script(
   self: Pyth,
@@ -88,7 +89,7 @@ validator update {
             let pyth =
               Pyth {
                 ..pyth,
-                trusted_signers: pyth.update_trusted_signer(
+                trusted_signers: message.update_trusted_signer(
                   pyth.trusted_signers,
                   key,
                   valid,
@@ -97,6 +98,7 @@ validator update {
             state.new(state.home, pyth)
           }
           UpgradeSpendScript(hash) -> state.new(hash, pyth)
+          // TODO: custom deprecation range through governance?
           UpgradeWithdrawScript { deprecated_validity, new_script } -> {
             let pyth =
               Pyth {

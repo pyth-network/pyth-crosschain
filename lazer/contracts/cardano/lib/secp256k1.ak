@@ -65,7 +65,7 @@ fn to_compressed(PublicKey(raw): PublicKey) -> ByteArray {
     let (x, y) =
       parser.run(
         {
-          let _ <- parse(u8.from_be)
+          let _ <- parse(u8.from)
           let x <- parse(parser.bytes(32))
           let y <- parse(parser.bytes(32))
           (x, y) |> parser.return
