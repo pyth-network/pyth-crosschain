@@ -1,0 +1,26 @@
+name: Publish Pyth MCP to Registry
+
+on:
+  push:
+    paths:
+      - 'apps/mcp/server.json'
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+
+      - name: Publish to MCP Registry
+        env:
+          MCP_REGISTRY_TOKEN: ${{ secrets.MCP_REGISTRY_TOKEN }}
+        run: |
+          cd apps/mcp
+          mcp-publisher publish --token $MCP_REGISTRY_TOKEN
