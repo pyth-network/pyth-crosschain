@@ -30,9 +30,9 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 | `exponent`            | `i16`    | All         | Decimal exponent: `actual_price = mantissa × 10^exponent`.               |
 | `marketSession`       | `string` | All         | Session: `regular`, `preMarket`, `postMarket`, `overNight`, `closed`.    |
 | `price`               | `i64`    | Spot        | Aggregate market price (mantissa). Use with `exponent` for actual price. |
-| `confidence`          | `i64`    | Spot        | Price uncertainty; higher = more disagreement.                           |
-| `bestBidPrice`        | `i64`    | Spot        | Highest bid across publishers.                                           |
-| `bestAskPrice`        | `i64`    | Spot        | Lowest ask across publishers.                                            |
+| `confidence`          | `i64`    | Spot        | Price uncertainty; higher = more disagreement. (Experimental)            |
+| `bestBidPrice`        | `i64`    | Spot        | Highest bid across publishers. (Experimental)                            |
+| `bestAskPrice`        | `i64`    | Spot        | Lowest ask across publishers. (Experimental)                             |
 | `emaPrice`            | `i64`    | Spot        | Exponential moving average of the price.                                 |
 | `emaConfidence`       | `i64`    | Spot        | Exponential moving average of the confidence.                            |
 | `fundingRate`         | `i64`    | Derivatives | Funding rate (perpetual futures).                                        |
@@ -40,6 +40,14 @@ A Pyth Pro payload is a real-time data update containing financial market inform
 | `fundingRateInterval` | `u64`    | Derivatives | Interval between funding updates (μs).                                   |
 
 **Scope:** _All_ = every feed type; _Spot_ = spot price feeds; _Derivatives_ = funding rate feeds.
+
+<Callout type="warning" title="Experimental">
+  The `confidence`, `bestBidPrice`, and `bestAskPrice` fields are **experimental**.
+  These fields are not yet covered by automated data quality assurance, so their
+  accuracy and reliability may vary. The current quality and uptime focus is on
+  the aggregated `price` field. Use experimental fields with caution in
+  production systems.
+</Callout>
 
 <Callout type="info">
   **Customizable Payload**: The payload structure is customizable based on the
@@ -153,7 +161,7 @@ Based on the protocol specification, here are the technical details for each pro
       name: "confidence",
       type: "optional i64",
       description:
-        "Confidence interval representing price uncertainty, calculated from all publisher prices, bids, and asks combined. Represented as mantissa.",
+        "**Experimental:** Confidence interval representing price uncertainty, calculated from all publisher prices, bids, and asks combined. Represented as mantissa. This field is not yet covered by automated data quality assurance.",
       availability: "Only included if requested in subscription properties",
       algorithm: "Refer to price aggregation for the current algorithm",
       algorithmLink: "/price-feeds/core/how-pyth-works/price-aggregation",
@@ -231,6 +239,12 @@ freshness and origin of the price.
 ### Market Depth Properties
 
 Best bid and best ask represent the tightest prices across publishers. For a detailed comparison with confidence intervals, see [Understanding Price Data](/price-feeds/pro/understanding-price-data).
+
+<Callout type="warning" title="Experimental">
+  The `bestBidPrice` and `bestAskPrice` fields are **experimental**. These fields
+  are not yet covered by automated data quality assurance, so their accuracy and
+  reliability may vary. Use with caution in production systems.
+</Callout>
 
 <PropertyCard
   properties={[
