@@ -3,7 +3,6 @@ use aiken/crypto.{ScriptHash}
 use aiken/interval
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction, ValidityRange}
-use pyth
 use pyth/governance.{
   Governance, UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
 }
@@ -21,7 +20,7 @@ pub type Pyth {
 }
 
 pub const config =
-  StateConfig { state_nft: pyth.state_nft, owner_nft: "Pyth Ops" }
+  StateConfig { state_nft: "Pyth State", owner_nft: "Pyth Ops" }
 
 pub fn is_active_withdraw_script(
   self: Pyth,

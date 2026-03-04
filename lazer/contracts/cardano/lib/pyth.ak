@@ -15,8 +15,6 @@ use types/u8.{U8}
 
 const price_update_magic_le = #"75d3c793"
 
-pub const state_nft = "Pyth State"
-
 pub type PriceUpdate {
   timestamp_us: U64,
   channel_id: U8,

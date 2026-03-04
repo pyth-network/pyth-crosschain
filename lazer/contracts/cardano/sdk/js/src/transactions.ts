@@ -76,7 +76,6 @@ export async function applyGuardianSetUpgrade(
     .collectFrom(input)
     .payToAddress(
       spender.receive(ctx.parameters, state.assets, {
-        seen_sequence: upgrade.seen_sequence,
         set: upgrade.set.map((g) => Buffer.from(g.replace(/^0x/, ""), "hex")),
         set_index: BigInt(upgrade.index),
       }),
