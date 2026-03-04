@@ -6,6 +6,9 @@ on:
         description: "Dispatch description"
         required: true
         type: string
+  pull_request:
+    paths:
+      - "Dockerfile.metis"
 permissions:
   contents: read
   id-token: write
@@ -19,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Log in to the Container registry
+        if: github.event_name == 'workflow_dispatch'
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
           registry: ${{ env.REGISTRY }}
@@ -36,6 +40,7 @@ jobs:
         with:
           context: .
           file: "./Dockerfile.metis"
-          push: true
+          push: ${{ github.event_name == 'workflow_dispatch' }}
+          no-cache: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
