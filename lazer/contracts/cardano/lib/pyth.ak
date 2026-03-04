@@ -390,8 +390,8 @@ test parses_update() {
     ) == 7
   expect Some(None) = feed112.best_bid_price
   expect Some(None) = feed112.best_ask_price
-  expect None = feed2.publisher_count
-  expect None = feed2.confidence
+  expect None = feed112.publisher_count
+  expect None = feed112.confidence
   expect Some(Some(2520)) = feed112.funding_rate
   expect Some(Some(funding_timestamp112)) = feed112.funding_timestamp
   expect u64.as_int(funding_timestamp112) == 1772613308916265
