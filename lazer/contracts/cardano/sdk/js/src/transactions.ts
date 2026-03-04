@@ -135,10 +135,6 @@ export async function purgeExpiredPythWithdrawScripts(
     policy + AssetName.toHex(PYTH_OWNER_NFT),
   );
 
-  const statePolicyID = Assets.flatten(state.assets)[0]?.[0];
-  if (!statePolicyID) {
-    throw new Error("Missing state policy ID");
-  }
   const {
     input,
     datums: [oldState],

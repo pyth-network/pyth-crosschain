@@ -3,6 +3,7 @@ use aiken/collection/list
 use aiken/interval
 use cardano/address.{Credential, Script}
 use cardano/assets
+use cardano/certificate.{Certificate}
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
@@ -12,6 +13,10 @@ use pyth_state.{Pyth, config}
 use state.{StateId}
 
 validator pyth_price(pyth_id: StateId) {
+  publish(_: Never, _c: Certificate, _t: Transaction) {
+    True
+  }
+
   withdraw(updates: List<ByteArray>, credential: Credential, self: Transaction) {
     expect pyth: Pyth =
       state.find(pyth_state.config, pyth_id, self.reference_inputs)
