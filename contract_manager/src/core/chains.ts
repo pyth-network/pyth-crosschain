@@ -1238,8 +1238,7 @@ export class FuelChain extends Chain {
   }
 
   async getProvider(): Promise<Provider> {
-    // @ts-expect-error - TODO: The typing does NOT indicate a create() function exists, so this is likely to blow up at runtime
-    return await Provider.create(this.gqlUrl);
+    return new Provider(this.gqlUrl);
   }
 
   async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {
