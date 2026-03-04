@@ -40,10 +40,7 @@ import type {
   PayToAddressParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
-import type {
-  SigningTransactionBuilder,
-  ProtocolParameters as TransactionProtocolParameters,
-} from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
+import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
 import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
 import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
@@ -64,23 +61,6 @@ export async function withTempFile<T>(
     await fs.rm(dir, { recursive: true });
   }
 }
-
-// Margins added to fees to make transactions pass in practice.
-const FEE_MARGIN_A = 1;
-const FEE_MARGIN_B = 1_000_000n;
-
-export const prepareProtocolParams = (
-  params: ProtocolParameters,
-): TransactionProtocolParameters => {
-  return {
-    coinsPerUtxoByte: params.coinsPerUtxoByte,
-    maxTxSize: params.maxTxSize,
-    minFeeCoefficient: BigInt(params.minFeeA * FEE_MARGIN_A),
-    minFeeConstant: BigInt(params.minFeeB) + FEE_MARGIN_B,
-    priceMem: params.priceMem,
-    priceStep: params.priceStep,
-  };
-};
 
 export const plutusV3FromAiken = (compiledCode: string) => {
   const decoded = UPLC.decodeDoubleCborHexToFlat(compiledCode);
@@ -131,9 +111,7 @@ const calculateFee = (
       coinsPerUtxoByte,
       ...(script ? { scriptRef: script } : {}),
     }),
-    // TODO: this is trial and error
-    // - we need more principled way to calculate fees
-  ) + FEE_MARGIN_B;
+  );
 
 export const utxoToOutRef = (
   utxo: UTxO.UTxO,
@@ -160,10 +138,7 @@ export async function runTx(
   tx: SigningTransactionBuilder,
 ): Promise<TransactionHash.TransactionHash> {
   const digest = await Either.getOrThrowWith(
-    await tx.buildEither({
-      debug: true,
-      protocolParameters: prepareProtocolParams(ctx.parameters),
-    }),
+    await tx.buildEither({ debug: true }),
     (e) => JSON.stringify(e, undefined, 2),
   ).signAndSubmit();
   await ctx.client.awaitTx(digest);

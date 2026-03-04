@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "@evolution-sdk/devnet": "^1.1.19",
-    "@evolution-sdk/evolution": "^0.3.19",
+    "@evolution-sdk/devnet": "^1.1.21",
+    "@evolution-sdk/evolution": "^0.3.21",
     "@noble/curves": "^2.0.1",
     "@pythnetwork/shared-lib": "workspace:",
     "@wormhole-foundation/sdk-definitions": "^0.10.12",
