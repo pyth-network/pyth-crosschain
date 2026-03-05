@@ -90,7 +90,7 @@ test can_parse_upgrade_spend_script() {
   let action =
     parser.run(
       governance_action(u32.zero),
-      #"5054474d0302eabf0134af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+      #"5054474d0302eac00134af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
     )
   action == UpgradeSpendScript(
     #"34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
@@ -101,7 +101,7 @@ test can_parse_update_trusted_signer() {
   let action =
     parser.run(
       governance_action(u32.zero),
-      #"5054474d0301eabf74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2140000000000002a2a",
+      #"5054474d0301eac074313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f2140000000000002a2a",
     )
   action == UpdateTrustedSigner(
     #"74313a6525edf99936aa1477e94c72bc5cc617b21745f5f03296f3154461f214",
