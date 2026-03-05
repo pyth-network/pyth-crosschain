@@ -21,10 +21,7 @@
         "default": "./dist/esm/index.mjs",
         "types": "./dist/esm/index.d.ts"
       },
-      "require": {
-        "default": "./dist/cjs/index.cjs",
-        "types": "./dist/cjs/index.d.ts"
-      }
+      "require": {}
     },
     "./package.json": "./package.json"
   },

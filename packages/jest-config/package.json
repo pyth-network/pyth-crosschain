@@ -23,30 +23,21 @@
         "default": "./dist/esm/define-config.mjs",
         "types": "./dist/esm/define-config.d.ts"
       },
-      "require": {
-        "default": "./dist/cjs/define-config.cjs",
-        "types": "./dist/cjs/define-config.d.ts"
-      }
+      "require": {}
     },
     "./define-next-config": {
       "import": {
         "default": "./dist/esm/define-next-config.mjs",
         "types": "./dist/esm/define-next-config.d.ts"
       },
-      "require": {
-        "default": "./dist/cjs/define-next-config.cjs",
-        "types": "./dist/cjs/define-next-config.d.ts"
-      }
+      "require": {}
     },
     "./define-react-config": {
       "import": {
         "default": "./dist/esm/define-react-config.mjs",
         "types": "./dist/esm/define-react-config.d.ts"
       },
-      "require": {
-        "default": "./dist/cjs/define-react-config.cjs",
-        "types": "./dist/cjs/define-react-config.d.ts"
-      }
+      "require": {}
     },
     "./package.json": "./package.json",
     "./setup-file-react": {
@@ -54,10 +45,7 @@
         "default": "./dist/esm/setup-file-react.mjs",
         "types": "./dist/esm/setup-file-react.d.ts"
       },
-      "require": {
-        "default": "./dist/cjs/setup-file-react.cjs",
-        "types": "./dist/cjs/setup-file-react.d.ts"
-      }
+      "require": {}
     }
   },
   "main": "./dist/cjs/index.cjs",
