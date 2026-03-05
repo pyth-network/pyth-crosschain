@@ -84,7 +84,7 @@ RUN npm install -g pnpm@10.28.0
 
 # Install Foundry/Forge
 RUN curl -L https://foundry.paradigm.xyz | bash \
-    && bash -c "source /home/worker/.bashrc && foundryup"
+    && /home/worker/.foundry/bin/foundryup
 ENV PATH="/home/worker/.foundry/bin:${PATH}"
 
 # Install agent runtime CLIs and puppeteer
