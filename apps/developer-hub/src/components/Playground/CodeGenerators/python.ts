@@ -65,6 +65,7 @@ async def subscribe_to_prices():
         "deliveryFormat": "${config.deliveryFormat}",
         "jsonBinaryEncoding": "${config.jsonBinaryEncoding}",
         "parsed": ${config.parsed ? "True" : "False"},
+        # "ignoreInvalidFeeds": True,  # Ignore invalid feed IDs instead of failing
     }
 
     # Headers for authentication

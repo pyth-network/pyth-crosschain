@@ -14,15 +14,15 @@ export function generateCliCode(config: PlaygroundConfig): string {
   const channel = config.channel;
 
   const subscribePayload = {
-    type: "subscribe",
-    subscriptionId: 1,
-    priceFeedIds,
-    properties,
-    formats,
     channel,
     deliveryFormat: config.deliveryFormat,
+    formats,
     jsonBinaryEncoding: config.jsonBinaryEncoding,
     parsed: config.parsed,
+    priceFeedIds,
+    properties,
+    subscriptionId: 1,
+    type: "subscribe",
   };
 
   const payloadStr = JSON.stringify(subscribePayload);
@@ -38,11 +38,13 @@ wscat -c "wss://pyth-lazer-0.dourolabs.app/v1/stream" \\
 # Once connected, send this subscription message:
 ${payloadStr}
 
+# To ignore invalid feed IDs instead of failing, add "ignoreInvalidFeeds": true to the message
+
 # Alternative: Using curl for one-shot requests (HTTP API)
 curl -X POST "https://pyth-lazer-0.dourolabs.app/v1/latest_price" \\
   -H "Authorization: Bearer ${token}" \\
   -H "Content-Type: application/json" \\
-  -d '${JSON.stringify({ priceFeedIds, properties, formats, parsed: config.parsed })}'
+  -d '${JSON.stringify({ formats, parsed: config.parsed, priceFeedIds, properties })}'
 
 # For redundancy, connect to multiple endpoints:
 # - wss://pyth-lazer-0.dourolabs.app/v1/stream

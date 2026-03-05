@@ -42,6 +42,7 @@ client.subscribe({
   deliveryFormat: "${config.deliveryFormat}",
   jsonBinaryEncoding: "${config.jsonBinaryEncoding}",
   parsed: ${String(config.parsed)},
+  // ignoreInvalidFeeds: true, // Ignore invalid feed IDs instead of failing
 });
 
 // Listen for price updates

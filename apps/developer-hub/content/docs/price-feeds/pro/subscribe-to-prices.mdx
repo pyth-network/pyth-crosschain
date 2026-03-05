@@ -82,6 +82,7 @@ The most significant parameters are:
 
 - `formats`(formerly known as `chains`) specifies the binary encoding format for the payload. This field is mandatory, but can be set to an empty array (e.g., `formats: []`) if no binary payload is needed. Use **evm** or **solana** to receive a signed payload for onchain verification, or **leUnsigned** for offchain-only use without signatures. See [Binary Formats & Signature Schemes](/price-feeds/pro/payload-reference#binary-formats--signature-schemes) for all options.
 - `channel` determines the update rate: updates in the **real_time** channel are sent as frequently as possible, while **fixed_rate@200ms** and **fixed_rate@50ms** channels are updated at fixed rates.
+- `ignoreInvalidFeeds` (optional, default: `false`) — if `true`, the subscription will ignore invalid feed IDs and subscribe to any valid feeds. The response will include details about which feeds were ignored and why. If all feeds are invalid, the subscription will still fail with a `subscriptionError`. See [Error Codes](/price-feeds/pro/error-codes) for the response format.
 
 There are also a few other configuration parameters -- see the [API documentation](https://pyth-lazer.dourolabs.app/docs) for more details.
 
