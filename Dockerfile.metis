@@ -88,13 +88,14 @@ RUN curl -L https://foundry.paradigm.xyz | bash \
 ENV PATH="/home/worker/.foundry/bin:${PATH}"
 
 # Install agent runtime CLIs and puppeteer
-RUN npm install -g @anthropic-ai/claude-code @openai/codex puppeteer
+RUN npm install -g @anthropic-ai/claude-code @openai/codex puppeteer solc
 
 # Verify all tools are available
 RUN claude --version && codex --version
 RUN node --version && npm --version && pnpm --version
 RUN rustc --version && cargo --version && rustfmt --version && cargo clippy --version
 RUN forge --version
+RUN solcjs --version
 RUN python3 --version
 RUN gh --version && rg --version && git --version && curl --version && jq --version
 
