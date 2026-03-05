@@ -3,7 +3,7 @@ use aiken/interval
 use cardano/transaction.{ValidityRange}
 use env
 use parser.{Parser, parse}
-use state.{StateId}
+use pyth.{Governance}
 use types/u16
 use types/u32.{U32}
 use types/u64
@@ -14,13 +14,6 @@ use wormhole/vaa.{PreparedVAA, VAA}
 const governance_action_magic: ByteArray = "PTGM"
 
 const governance_action_module: U8 = u8.from_int(3)
-
-pub type Governance {
-  wormhole: StateId,
-  emitter_chain: Int,
-  emitter_address: ByteArray,
-  seen_sequence: Int,
-}
 
 pub type GovernanceAction {
   UpdateTrustedSigner(VerificationKey, Option<ValidityRange>)

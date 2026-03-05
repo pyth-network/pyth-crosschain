@@ -7,9 +7,9 @@ use cardano/certificate.{Certificate}
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use pyth/governance.{Governance}
+use pyth.{Governance, Pyth}
 use pyth/message
-use pyth_state.{Pyth, config}
+use pyth_state.{config}
 use state.{StateId}
 
 validator pyth_price(pyth_id: StateId) {

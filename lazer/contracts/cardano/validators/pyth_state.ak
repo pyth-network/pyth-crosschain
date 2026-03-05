@@ -3,21 +3,15 @@ use aiken/crypto.{ScriptHash}
 use aiken/interval
 use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction, ValidityRange}
+use pyth.{Governance, Pyth}
 use pyth/governance.{
-  Governance, UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
+  UpdateTrustedSigner, UpgradeSpendScript, UpgradeWithdrawScript,
 }
-use pyth/message.{TrustedSigners}
+use pyth/message
 use state.{State, StateConfig}
 use wormhole.{Guardians}
 use wormhole/vaa.{PreparedVAA}
 use wormhole_state
-
-pub type Pyth {
-  governance: Governance,
-  trusted_signers: TrustedSigners,
-  deprecated_withdraw_scripts: Pairs<ValidityRange, ScriptHash>,
-  withdraw_script: ScriptHash,
-}
 
 pub const config =
   StateConfig { state_nft: "Pyth State", owner_nft: "Pyth Ops" }
