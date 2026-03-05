@@ -90,6 +90,10 @@ export class CosmWasmWormholeContract extends WormholeContract {
     super();
   }
 
+  getChain(): CosmWasmChain {
+    return this.chain;
+  }
+
   async getConfig() {
     const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
     return (await chainQuerier.getAllContractState({

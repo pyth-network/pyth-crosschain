@@ -124,7 +124,7 @@ catalog:
   dnum: ^2.14.0
   framer-motion: ^12.6.3
   fs-extra: ^11.3.2
-  fuels: 0.101.3
+  fuels: 0.103.0
   fumadocs-core: ^16.4.7
   fumadocs-mdx: ^14.2.5
   fumadocs-openapi: ^10.2.4

@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 /*
-  Fuels version: 0.101.3
+  Fuels version: 0.103.0
 */
 
 import type { Account, DeployContractOptions, Provider } from "fuels";

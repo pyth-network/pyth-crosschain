@@ -61,6 +61,10 @@ export class StarknetWormholeContract extends WormholeContract {
     super();
   }
 
+  getChain(): StarknetChain {
+    return this.chain;
+  }
+
   async getContractClient(): Promise<Contract> {
     const provider = this.chain.getProvider();
     const classData = await provider.getClassAt(this.address);
