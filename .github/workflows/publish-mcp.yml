@@ -1,0 +1,38 @@
+name: Publish Pyth MCP to Registry
+
+on:
+  push:
+    paths:
+      - 'apps/mcp/server.json'
+    branches:
+      - main
+
+concurrency:
+  group: publish-mcp-registry
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            apps/mcp/server.json
+          sparse-checkout-cone-mode: false
+
+      - name: Install mcp-publisher
+        run: |
+          curl -fL "https://github.com/modelcontextprotocol/registry/releases/download/v1.4.1/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+
+      - name: Authenticate to MCP Registry
+        run: mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        working-directory: apps/mcp
+        run: mcp-publisher publish

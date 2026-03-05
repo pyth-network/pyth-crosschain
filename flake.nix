@@ -47,6 +47,8 @@
         };
       in {
         devShells.default = pkgs.mkShell {
+          FORCE_COLOR = 1;
+          BIOME_BINARY = pkgs.lib.getExe pkgs.biome;
           buildInputs = [
             pkgs.cli
             pkgs.git
@@ -60,6 +62,7 @@
             pkgs.python3Packages.distutils
             pkgs.graphviz
             pkgs.anchor
+            pkgs.biome
           ];
         };
       }

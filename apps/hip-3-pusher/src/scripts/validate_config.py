@@ -263,12 +263,18 @@ class ConfigValidator:
         seda_state = PriceSourceState("seda_validation")
         seda_last_state = PriceSourceState("seda_last_validation")
         seda_ema_state = PriceSourceState("seda_ema_validation")
+        seda_oracle_state = PriceSourceState("seda_oracle_validation")
+        seda_mark_state = PriceSourceState("seda_mark_validation")
+        seda_external_state = PriceSourceState("seda_external_validation")
 
         listener = SedaListener(
             self.config,
             seda_state,
             seda_last_state,
             seda_ema_state,
+            seda_oracle_state,
+            seda_mark_state,
+            seda_external_state,
             api_key_override=self.seda_api_key,
         )
 

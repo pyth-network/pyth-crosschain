@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-export function GET() {
-  const content = `---
+const CONTENT = `---
 name: pyth-dev
 description: End-to-end Pyth Network oracle integration playbook (Feb 2026). Prefer @pythnetwork/pyth-sdk-solidity for EVM smart contracts (IPyth interface) and @pythnetwork/hermes-client for TypeScript price fetching. For ultra-low latency HFT/MEV use cases, prefer @pythnetwork/pyth-lazer-sdk (Pyth Pro WebSocket streaming). For on-chain randomness (games/NFTs/lotteries), use @pythnetwork/entropy-sdk-solidity with IEntropyConsumer callback pattern. Covers pull-based oracle model (update-before-read), staleness thresholds, confidence intervals, fee payment, Hermes API integration, and chain-specific deployments across 100+ networks including Ethereum/Arbitrum/Base/Solana/Sui.
 user-invocable: true
@@ -37,9 +36,9 @@ Use this Skill when the user asks for:
    - Requires enterprise subscription token from Pyth.
    - Sub-50ms latency for trading applications.
 
-4) **Randomness: entropy-sdk-solidity with callback pattern**
-   - Use \`@pythnetwork/entropy-sdk-solidity\` with IEntropyConsumer.
-   - Implement \`entropyCallback\` to receive random numbers.
+4) **Randomness: entropy-sdk-solidity v2 with callback pattern**
+   - Use \`@pythnetwork/entropy-sdk-solidity\` with IEntropyV2 and IEntropyConsumer.
+   - Call \`requestV2()\` and implement \`entropyCallback\` to receive random numbers.
    - Provider address: \`0x52DeaA1c84233F7bb8C8A45baeDE41091c616506\`.
 
 5) **Testing: Hardhat fork + MockPyth**
@@ -196,21 +195,20 @@ npm install @pythnetwork/entropy-sdk-solidity
 
 ### Solidity integration
 \`\`\`solidity
+import "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
 import "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
-import "@pythnetwork/entropy-sdk-solidity/IEntropy.sol";
 
 contract CoinFlip is IEntropyConsumer {
-    IEntropy public entropy;
-    address public provider = 0x52DeaA1c84233F7bb8C8A45baeDE41091c616506;
+    IEntropyV2 public entropy;
 
-    constructor(address entropyAddress) {
-        entropy = IEntropy(entropyAddress);
+    constructor(address entropyContract) {
+        entropy = IEntropyV2(entropyContract);
     }
 
     function flip() external payable returns (uint64) {
-        uint256 fee = entropy.getFee(provider);
-        bytes32 userRandom = keccak256(abi.encodePacked(block.timestamp, msg.sender));
-        return entropy.requestWithCallback{value: fee}(provider, userRandom);
+        uint256 fee = entropy.getFeeV2();
+        uint64 sequenceNumber = entropy.requestV2{value: fee}();
+        return sequenceNumber;
     }
 
     function entropyCallback(uint64 seq, address, bytes32 randomNumber) internal override {
@@ -243,21 +241,25 @@ Price {
 
 ## Progressive disclosure (read when needed)
 
+These files use a tiered system: Start with product files below for curated quick-starts (~2-3k tokens each). Each product file links to individual .mdx pages for deeper detail. Use the manifest for programmatic discovery.
+
 - Pyth Core integration: [llms-price-feeds-core.txt](https://docs.pyth.network/llms-price-feeds-core.txt)
 - Pyth Pro streaming: [llms-price-feeds-pro.txt](https://docs.pyth.network/llms-price-feeds-pro.txt)
 - Entropy randomness: [llms-entropy.txt](https://docs.pyth.network/llms-entropy.txt)
-- Solana integration: [solana guide](https://docs.pyth.network/price-feeds/core/use-real-time-data/solana)
-- Sui integration: [sui guide](https://docs.pyth.network/price-feeds/core/use-real-time-data/sui)
+- Machine-readable index: [llms-manifest.json](https://docs.pyth.network/llms-manifest.json)
+- Solana integration: [solana guide](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/solana)
+- Sui integration: [sui guide](https://docs.pyth.network/price-feeds/core/use-real-time-data/pull-integration/sui)
 - Contract addresses: [addresses](https://docs.pyth.network/price-feeds/core/contract-addresses)
 - Price feed IDs: [feed-ids](https://pyth.network/developers/price-feed-ids)
 - Example apps: [pyth-examples](https://github.com/pyth-network/pyth-examples)
 `;
 
-  return new NextResponse(content, {
-    status: 200,
+export function GET() {
+  return new NextResponse(CONTENT, {
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "public, max-age=86400",
+      "Content-Type": "text/markdown; charset=utf-8",
     },
+    status: 200,
   });
 }

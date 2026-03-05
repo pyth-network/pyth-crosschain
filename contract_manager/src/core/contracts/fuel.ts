@@ -66,6 +66,10 @@ export class FuelWormholeContract extends WormholeContract {
     super();
   }
 
+  getChain(): FuelChain {
+    return this.chain;
+  }
+
   async getContract(wallet?: Wallet): Promise<Contract> {
     const provider = await this.chain.getProvider();
 

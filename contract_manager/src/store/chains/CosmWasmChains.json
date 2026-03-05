@@ -22,7 +22,7 @@
     "id": "osmosis",
     "wormholeChainName": "osmosis",
     "mainnet": true,
-    "gasPrice": "0.025",
+    "gasPrice": "0.035",
     "prefix": "osmo",
     "feeDenom": "uosmo",
     "type": "CosmWasmChain"

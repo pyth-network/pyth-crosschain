@@ -15,15 +15,16 @@ import type { Contract } from "web3-eth-contract";
 
 import type { PrivateKey } from "../base";
 import { PriceFeedContract, Storable } from "../base";
-import { Chain, EvmChain } from "../chains";
+import type { Chain } from "../chains";
+import { EvmChain } from "../chains";
 import type { TokenQty } from "../token";
 import {
   EXECUTOR_ABI,
   EXTENDED_ENTROPY_ABI,
   EXTENDED_PYTH_ABI,
-  WORMHOLE_ABI,
-  PULSE_UPGRADEABLE_ABI,
   LAZER_ABI,
+  PULSE_UPGRADEABLE_ABI,
+  WORMHOLE_ABI,
 } from "./evm_abis";
 import { WormholeContract } from "./wormhole";
 
@@ -130,8 +131,8 @@ export class EvmWormholeContract extends WormholeContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: EvmWormholeContract.type,
     };
   }
@@ -274,8 +275,8 @@ export class EvmEntropyContract extends Storable {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: EvmEntropyContract.type,
     };
   }
@@ -331,12 +332,12 @@ export class EvmEntropyContract extends Storable {
   ): Promise<string> {
     const contract = this.getContract();
     const result = await contract.getPastEvents("RequestedWithCallback", {
-      fromBlock: block,
-      toBlock: block,
       filter: {
         provider,
         sequenceNumber: sequenceNumber,
       },
+      fromBlock: block,
+      toBlock: block,
     });
     return result[0]?.returnValues.userRandomNumber ?? "";
   }
@@ -461,8 +462,8 @@ export class EvmExecutorContract extends Storable {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: EvmExecutorContract.type,
     };
   }
@@ -505,8 +506,8 @@ export class EvmExecutorContract extends Storable {
       .getOwnerChainId()
       .call();
     return {
-      emitterChain: Number(ownerEmitterChainid),
       emitterAddress: ownerEmitterAddress.replace("0x", ""),
+      emitterChain: Number(ownerEmitterChainid),
     };
   }
 
@@ -643,13 +644,13 @@ export class EvmPriceFeedContract extends PriceFeedContract {
     const [emaPrice, emaConf, emaExpo, emaPublishTime] =
       await pythContract.methods.getEmaPriceUnsafe(feed).call();
     return {
-      price: { price, conf, expo, publishTime },
       emaPrice: {
-        price: emaPrice,
         conf: emaConf,
         expo: emaExpo,
+        price: emaPrice,
         publishTime: emaPublishTime,
       },
+      price: { conf, expo, price, publishTime },
     };
   }
 
@@ -686,8 +687,8 @@ export class EvmPriceFeedContract extends PriceFeedContract {
         emitterAddress: string;
       }) => {
         return {
-          emitterChain: Number(chainId),
           emitterAddress: emitterAddress.replace("0x", ""),
+          emitterChain: Number(chainId),
         };
       },
     );
@@ -699,8 +700,8 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       .governanceDataSource()
       .call();
     return {
-      emitterChain: Number(chainId),
       emitterAddress: emitterAddress.replace("0x", ""),
+      emitterChain: Number(chainId),
     };
   }
 
@@ -744,8 +745,8 @@ export class EvmPriceFeedContract extends PriceFeedContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: EvmPriceFeedContract.type,
     };
   }
@@ -799,8 +800,8 @@ export class EvmPulseContract extends Storable {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: EvmPulseContract.type,
     };
   }
@@ -976,8 +977,8 @@ export class EvmLazerContract extends Storable {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: EvmLazerContract.type,
     };
   }
@@ -1051,25 +1052,46 @@ export class EvmLazerContract extends Storable {
     trustedSigner: string,
     expiresAt: number,
     privateKey: PrivateKey,
+    rawTx = false,
   ): Promise<void> {
     const web3 = this.chain.getWeb3();
     const contract = this.getContract();
-
     const account = web3.eth.accounts.privateKeyToAccount(privateKey);
-    const gasEstimate = await contract.methods
-      .updateTrustedSigner(trustedSigner, expiresAt)
-      .estimateGas({ from: account.address });
 
-    const tx = await contract.methods
-      .updateTrustedSigner(trustedSigner, expiresAt)
-      .send({
+    if (rawTx) {
+      web3.eth.accounts.wallet.add(privateKey);
+      const data = contract.methods
+        .updateTrustedSigner(trustedSigner, expiresAt)
+        .encodeABI();
+      const gasEstimate = await web3.eth.estimateGas({
+        data,
         from: account.address,
-        gas: Math.floor(gasEstimate * 1.2), // 20% buffer
+        to: this.address,
       });
-
-    console.log(
-      `✅ Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
-    );
-    console.log(`Transaction hash: ${tx.transactionHash}`);
+      const tx = await web3.eth.sendTransaction({
+        data,
+        from: account.address,
+        gas: Math.ceil(Number(gasEstimate) * 1.2).toString(),
+        to: this.address,
+      });
+      console.log(
+        `Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
+      );
+      console.log(`Transaction hash: ${tx.transactionHash}`);
+    } else {
+      const gasEstimate = await contract.methods
+        .updateTrustedSigner(trustedSigner, expiresAt)
+        .estimateGas({ from: account.address });
+      const tx = await contract.methods
+        .updateTrustedSigner(trustedSigner, expiresAt)
+        .send({
+          from: account.address,
+          gas: Math.floor(gasEstimate * 1.2), // 20% buffer
+        });
+      console.log(
+        `Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
+      );
+      console.log(`Transaction hash: ${tx.transactionHash}`);
+    }
   }
 }

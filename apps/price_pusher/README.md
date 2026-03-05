@@ -182,7 +182,9 @@ pnpm run start solana \
 
 
 
-# Or, run the price pusher docker image instead of building from the source
+# Or, run the price pusher docker image instead of building from the source.
+# Note: There is no :latest tag. Find available version tags at:
+# https://gallery.ecr.aws/pyth-network/xc-price-pusher
 docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- npm run start -- <above-arguments>
 ```
 

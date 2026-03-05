@@ -27,7 +27,7 @@ from typing import Any
 
 import websockets
 from loguru import logger
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
+from tenacity import retry, retry_if_exception_type, wait_fixed
 
 from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError

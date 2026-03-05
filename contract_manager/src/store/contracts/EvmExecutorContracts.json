@@ -1,257 +1,262 @@
 [
   {
-    "chain": "arbitrum_sepolia",
     "address": "0x9DF02366A266D79DA5E978aDBEe8B8502117ee1a",
+    "chain": "arbitrum_sepolia",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "blast_s2_testnet",
     "address": "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb",
+    "chain": "blast_s2_testnet",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "chain": "base_sepolia",
-    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "optimism_sepolia",
     "address": "0x549Ebba8036Ab746611B4fFA1423eb0A4Df61440",
+    "chain": "optimism_sepolia",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "zetachain_testnet",
     "address": "0xfA25E653b44586dBbe27eE9d252192F0e4956683",
+    "chain": "zetachain_testnet",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "etherlink_testnet",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "sei_evm_testnet",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "kaia_testnet",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "chain": "b3_testnet",
-    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "apechain_testnet",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "soneium_minato_testnet",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "chain": "sanko_testnet",
-    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "abstract_testnet",
     "address": "0x0d8B7FE8598e2BcEcAf1E60f51B4b8B8E4453BA5",
+    "chain": "abstract_testnet",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
     "chain": "sonic_blaze_testnet",
-    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "unichain_sepolia",
-    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
     "chain": "tabi_testnet",
-    "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "chain": "story_testnet",
-    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "berachain_bepolia",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "hyperevm_testnet",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "arbitrum",
     "address": "0x24654078A8E043e8985D962a5100CDfA2026f92C",
+    "chain": "arbitrum",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
     "chain": "optimism",
-    "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "chain": "blast",
-    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "zetachain",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
     "chain": "base",
-    "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "sei_evm_mainnet",
     "address": "0x74f09cb3c7e2A01865f424FD14F6dc9A14E3e94E",
+    "chain": "sei_evm_mainnet",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "chain": "etherlink",
-    "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "kaia",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "chain": "b3_mainnet",
-    "address": "0x87047526937246727E4869C5f76A347160e08672",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "apechain_mainnet",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "sanko",
     "address": "0x87047526937246727E4869C5f76A347160e08672",
+    "chain": "sanko",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "unichain",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "abstract",
     "address": "0x6650bBd680A4cAdcB30AFfa0Ec78ca0811Db0B85",
+    "chain": "abstract",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "fantom_sonic_mainnet",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "chain": "berachain_mainnet",
-    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "hyperevm",
     "address": "0x5D289Ad1CE59fCC25b6892e7A303dfFf3a9f7167",
+    "chain": "hyperevm",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "story",
     "address": "0x6E7D74FA7d5c90FEF9F0512987605a6d546181Bb",
+    "chain": "story",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
     "chain": "soneium",
-    "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "sepolia",
     "address": "0xB0D4a9640aDdd415551B6A4fe75403c9f73A7C49",
+    "chain": "sepolia",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "ethereal_testnet",
     "address": "0xD458261E832415CFd3BAE5E416FdF3230ce6F134",
+    "chain": "ethereal_testnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "polynomial_testnet",
     "address": "0xf0a1b566B55e0A0CB5BeF52Eb2a57142617Bee67",
+    "chain": "polynomial_testnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "polynomial",
     "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "chain": "polynomial",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "ethereal_devnet",
     "address": "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "chain": "ethereal_devnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "ethereal_testnet_v2",
     "address": "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
+    "chain": "ethereal_testnet_v2",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "monad",
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
+    "chain": "monad",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "giwa_testnet",
     "address": "0x41c9e39574F40Ad34c79f1C99B66A45eFB830d4c",
+    "chain": "giwa_testnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "ethereal",
     "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "chain": "ethereal",
     "type": "EvmExecutorContract"
   },
   {
+    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "chain": "sonic_evm_testnet",
-    "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "monad_testnet",
     "address": "0x4374e5a8b9C22271E9EB878A2AA31DE97DF15DAF",
+    "chain": "monad_testnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "arc_testnet",
     "address": "0x36825bf3Fbdf5a29E2d5148bfe7Dcf7B5639e320",
+    "chain": "arc_testnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "tempo_testnet",
     "address": "0x8D254a21b3C86D32F7179855531CE99164721933",
+    "chain": "tempo_testnet",
     "type": "EvmExecutorContract"
   },
   {
-    "chain": "tempo",
     "address": "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+    "chain": "tempo",
+    "type": "EvmExecutorContract"
+  },
+  {
+    "address": "0x5744Cbf430D99456a0A8771208b674F27f8EF0Fb",
+    "chain": "megaeth",
     "type": "EvmExecutorContract"
   }
 ]

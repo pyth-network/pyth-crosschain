@@ -1,0 +1,106 @@
+FROM debian:trixie-20250203
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# System packages: build tools, Rust deps, agent support tools, Puppeteer browser deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    clang \
+    pkg-config \
+    libssl-dev \
+    protobuf-compiler \
+    python3 \
+    python3-pip \
+    git \
+    curl \
+    wget \
+    jq \
+    file \
+    ripgrep \
+    ca-certificates \
+    gnupg \
+    # Puppeteer / Chromium dependencies
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libxshmfence1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update && apt-get install -y --no-install-recommends gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install 1Password CLI
+RUN curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+      | gpg --dearmor -o /usr/share/keyrings/1password-archive-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main" \
+      > /etc/apt/sources.list.d/1password.list \
+    && apt-get update && apt-get install -y --no-install-recommends 1password-cli \
+    && rm -rf /var/lib/apt/lists/*
+RUN op --version
+
+# Install metis CLI binary (always pulls the current release)
+RUN curl -fsSL https://github.com/dourolabs/metis-releases/releases/download/latest/metis-x86_64-unknown-linux-gnu \
+      -o /usr/local/bin/metis \
+    && chmod +x /usr/local/bin/metis
+
+# Create non-root worker user
+RUN useradd -m -s /bin/bash -u 1000 worker
+
+# Install Rust as worker user
+USER worker
+ENV RUSTUP_HOME=/home/worker/.rustup
+ENV CARGO_HOME=/home/worker/.cargo
+ENV PATH="/home/worker/.cargo/bin:${PATH}"
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+      --default-toolchain 1.88.0 \
+      --component rustfmt,clippy
+
+# Install Node.js via NVM as worker user
+ENV NVM_DIR=/home/worker/.nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash \
+    && bash -c "source $NVM_DIR/nvm.sh && nvm install 24 && nvm alias default 24"
+# Create stable symlink so node/npm/npx are on PATH without sourcing nvm.sh
+RUN bash -c "source $NVM_DIR/nvm.sh && ln -sf \$(dirname \$(which node)) $NVM_DIR/default"
+ENV PATH="/home/worker/.nvm/default:${PATH}"
+
+# Install pnpm
+RUN npm install -g pnpm@10.28.0
+
+# Install Foundry/Forge
+RUN curl -L https://foundry.paradigm.xyz | bash \
+    && bash -c "source /home/worker/.bashrc && foundryup"
+ENV PATH="/home/worker/.foundry/bin:${PATH}"
+
+# Install agent runtime CLIs and puppeteer
+RUN npm install -g @anthropic-ai/claude-code @openai/codex puppeteer
+
+# Verify all tools are available
+RUN claude --version && codex --version
+RUN node --version && npm --version && pnpm --version
+RUN rustc --version && cargo --version && rustfmt --version && cargo clippy --version
+RUN forge --version
+RUN python3 --version
+RUN gh --version && rg --version && git --version && curl --version && jq --version
+
+# Set WORKDIR to a clean empty directory (NOT home dir)
+# Must be writable by worker — switch to root to create, then back
+USER root
+RUN mkdir -p /src && chown worker:worker /src
+USER worker
+WORKDIR /src

@@ -3,14 +3,10 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { Menu, Transition } from '@headlessui/react'
-import {
-  useQueryState,
-  parseAsStringLiteral,
-} from '@pythnetwork/react-hooks/nuqs'
 import { useWallet } from '@solana/wallet-adapter-react'
 import type { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
-import { useContext, useEffect, useState, useMemo, Fragment } from 'react'
+import { useContext, useEffect, useState, useMemo, Fragment, useCallback } from 'react'
 
 import { Proposal } from './Proposal'
 import { ProposalRow } from './ProposalRow'
@@ -20,6 +16,7 @@ import { useMultisigContext } from '../../../contexts/MultisigContext'
 import ClusterSwitch from '../../ClusterSwitch'
 import { Select } from '../../Select'
 import Loadbar from '../../loaders/Loadbar'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 type ProposalType = 'priceFeed' | 'governance' | 'lazer'
 
@@ -65,15 +62,15 @@ const Proposals = () => {
   const router = useRouter()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
-  const [statusFilter, setStatusFilter] = useQueryState(
+  const [statusFilter, setStatusFilter] = useSeacrhParamFromEnum(
     'status',
-    parseAsStringLiteral(PROPOSAL_STATUS_FILTERS).withDefault(
-      DEFAULT_PROPOSAL_STATUS_FILTER
-    )
+    PROPOSAL_STATUS_FILTERS,
+    DEFAULT_PROPOSAL_STATUS_FILTER
   )
-  const [voteStatus, setVoteStatus] = useQueryState(
+  const [voteStatus, setVoteStatus] = useSeacrhParamFromEnum(
     'voteStatus',
-    parseAsStringLiteral(VOTE_STATUSES).withDefault(DEFAULT_VOTE_STATUS)
+    VOTE_STATUSES,
+    DEFAULT_VOTE_STATUS
   )
   const { cluster } = useContext(ClusterContext)
   const { publicKey: walletPublicKey } = useWallet()
@@ -407,3 +404,29 @@ const Proposals = () => {
 }
 
 export default Proposals
+
+const useSeacrhParamFromEnum = <T extends string>(param: string, validValues: readonly T[], defaultValue: T) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const value = useMemo(
+    () => {
+      const current = searchParams.get(param);
+      return isInEnum(validValues, current) ? current : defaultValue;
+    },
+    [searchParams, param, validValues, defaultValue]
+  );
+  const updateValue = useCallback(
+    (newValue: T) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.set(param, newValue);
+      router.push(`${pathname}?${newSearchParams.toString()}`)
+    },
+    [searchParams, pathname, router, param]
+  );
+
+  return [value, updateValue] as const;
+}
+
+const isInEnum = <T,>(values: readonly T[], value: unknown): value is T =>
+  values.includes(value as T);

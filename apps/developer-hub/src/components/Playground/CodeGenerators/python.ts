@@ -111,13 +111,14 @@ def handle_message(data: dict[str, Any]) -> None:
             feed_id = feed.get("priceFeedId")
             price = feed.get("price", "N/A")
             exponent = feed.get("exponent", 0)
-            
+            feed_update_ts = feed.get("feedUpdateTimestamp", "N/A")
+
             # Calculate actual price if both values are present
             if price != "N/A" and exponent:
                 actual_price = int(price) * (10 ** exponent)
-                print(f"  Feed {feed_id}: {actual_price:.8f}")
+                print(f"  Feed {feed_id}: {actual_price:.8f} (feedUpdateTimestamp={feed_update_ts})")
             else:
-                print(f"  Feed {feed_id}: {price}")
+                print(f"  Feed {feed_id}: {price} (feedUpdateTimestamp={feed_update_ts})")
     
     elif msg_type == "subscribed":
         print(f"Successfully subscribed: {data}")

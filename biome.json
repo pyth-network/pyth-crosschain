@@ -26,7 +26,8 @@
       "!dist/**/*",
       "!coverage/**/*",
       "!node_modules/**/*",
-      "!*.tsbuildinfo"
+      "!*.tsbuildinfo",
+      "!governance/xc_admin/packages/xc_admin_common/src/chains.ts"
     ]
   },
   "formatter": {

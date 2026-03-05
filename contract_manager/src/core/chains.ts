@@ -428,7 +428,15 @@ export class SuiChain extends Chain {
 
     const result = await execFileAsync(
       "sui",
-      ["move", "build", "--dump-bytecode-as-base64", "--path", path],
+      [
+        "move",
+        "build",
+        "--dump-bytecode-as-base64",
+        "--path",
+        path,
+        "--environment",
+        activeEnv,
+      ],
       { encoding: "utf8" },
     );
     try {
@@ -1230,8 +1238,7 @@ export class FuelChain extends Chain {
   }
 
   async getProvider(): Promise<Provider> {
-    // @ts-expect-error - TODO: The typing does NOT indicate a create() function exists, so this is likely to blow up at runtime
-    return await Provider.create(this.gqlUrl);
+    return new Provider(this.gqlUrl);
   }
 
   async getWallet(privateKey: PrivateKey): Promise<WalletUnlocked> {

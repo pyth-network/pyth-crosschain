@@ -110,7 +110,7 @@
     .listbox {
       outline: none;
       overflow: auto;
-      width: theme.spacing(110);
+      min-width: theme.spacing(110);
       flex-grow: 1;
 
       .priceFeed {
@@ -126,9 +126,14 @@
         text-decoration: none;
         border-top: 1px solid theme.color("background", "secondary");
         -webkit-tap-highlight-color: transparent;
+        gap: theme.spacing(4);
 
         &[data-is-first] {
           border-top: none;
+        }
+
+        & > *:first-child {
+          flex-grow: 1;
         }
 
         & > *:last-child {

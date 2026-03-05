@@ -16,6 +16,7 @@ type OwnProps =
       icon: ReactNode | undefined;
       displaySymbol: string;
       description: string;
+      grow?: boolean | undefined;
     };
 
 type Props = Omit<ComponentProps<"div">, keyof OwnProps> & OwnProps;
@@ -24,6 +25,7 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
   <div
     className={clsx(styles.symbolPairTag, className)}
     data-loading={props.isLoading ? "" : undefined}
+    data-grow={!props.isLoading && props.grow ? "" : undefined}
     {...omitKeys<Record<string, unknown>>(props, [
       "displaySymbol",
       "description",
@@ -48,13 +50,18 @@ export const SymbolPairTag = ({ className, ...props }: Props) => (
           {props.isLoading ? (
             <Skeleton width={50} />
           ) : (
-            props.description.split("/")[0]
+            <Description description={props.description} />
           )}
         </div>
       )}
     </div>
   </div>
 );
+
+const Description = ({ description }: { description: string }) => {
+  const [firstSegment, lastSegment] = description.split("/");
+  return (lastSegment ?? "").trim() === "US DOLLAR" ? (firstSegment ?? "").trim() : description;
+}
 
 const SymbolName = ({ displaySymbol }: { displaySymbol: string }) => {
   const [firstPart, ...rest] = displaySymbol.split("/");

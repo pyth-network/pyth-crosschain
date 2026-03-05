@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.pyth-network/mcp",
+  "title": "Pyth Pro MCP Server",
+  "description": "Real-time and historical price feeds for 500+ crypto, equities, FX, and commodities assets.",
+  "version": "0.1.0",
+  "websiteUrl": "https://docs.pyth.network/price-feeds/pro",
+  "repository": {
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "source": "github",
+    "subfolder": "apps/mcp"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.pyth.network/mcp"
+    }
+  ]
+}
