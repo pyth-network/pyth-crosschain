@@ -1,6 +1,6 @@
 ---
 title: MCP Server
-description: One-page guide for Pyth Pro MCP setup, tools, and troubleshooting
+description: Connect AI assistants to Pyth market data via the Model Context Protocol
 slug: /price-feeds/pro/mcp
 ---
 
@@ -8,34 +8,32 @@ import { Callout } from "fumadocs-ui/components/callout";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
-The Pyth Pro MCP server gives AI assistants structured access to Pyth market data through the [Model Context Protocol](https://modelcontextprotocol.io/).  
-Your assistant can discover feeds, fetch latest prices, query historical snapshots, and return chart-ready candles in one conversation.
-
-This is the fastest path from natural language prompts to reliable price-feed analysis.
+The Pyth MCP server gives AI assistants direct, structured access to Pyth market data through the [Model Context Protocol](https://modelcontextprotocol.io/) — discover feeds, fetch real-time and historical prices, and generate chart-ready candles, all within a single conversation.
 
 <Callout type="info">
-  MCP endpoint: **https://mcp.pyth.network/mcp**. No self-hosting required.
+  MCP endpoint: **https://mcp.pyth.network/mcp** — no self-hosting required.
 </Callout>
 
-## Connect Pyth MCP
+## Tools
 
-### Connection Details
+| Category | Tool | Description |
+| --- | --- | --- |
+| Discovery | `get_symbols` | Find available feeds by query and asset type |
+| Real-time | `get_latest_price` | Fetch latest prices for up to 100 feeds |
+| Historical | `get_historical_price` | Get point-in-time prices for up to 50 feeds |
+| Charting | `get_candlestick_data` | Return OHLC candles (up to 500 per response) |
 
-- MCP endpoint: `https://mcp.pyth.network/mcp`
-- Transport: Streamable HTTP
-- Endpoint auth: no key required
-
-Authentication behavior:
-
-- `get_latest_price` requires an `access_token` parameter
-- `get_historical_price`, `get_symbols`, and `get_candlestick_data` do not require a token
+Recommended workflow: `get_symbols` → `get_latest_price` / `get_historical_price` → `get_candlestick_data`
 
 <Callout type="warning">
-  `get_latest_price` requires a Pyth Pro token in tool input. Get one at
-  [pyth.network/pricing](https://pyth.network/pricing).
+  `get_latest_price` requires a Pyth Pro access token passed as `access_token`. Get one at [pyth.network/pricing](https://pyth.network/pricing). All other tools work without a token.
 </Callout>
 
-### Client Setup
+## Setup
+
+- **Endpoint:** `https://mcp.pyth.network/mcp`
+- **Transport:** Streamable HTTP
+- **Auth:** No key required at the endpoint level
 
 <Tabs items={["Claude Desktop", "Claude Code", "Cursor", "Windsurf / Other"]}>
   <Tab value="Claude Desktop">
@@ -43,7 +41,7 @@ Authentication behavior:
       <Step>
         ### Open Settings
 
-        In Claude Desktop, open **Settings -> Developer -> Edit Config**.
+        In Claude Desktop, open **Settings → Developer → Edit Config**.
       </Step>
       <Step>
         ### Add the MCP Server
@@ -92,7 +90,7 @@ Authentication behavior:
       <Step>
         ### Open MCP Settings
 
-        In Cursor, go to **Settings -> Tools & MCP -> Add Custom MCP**.
+        In Cursor, go to **Settings → Tools & MCP → Add Custom MCP**.
       </Step>
       <Step>
         ### Add Config
@@ -110,30 +108,19 @@ Authentication behavior:
       <Step>
         ### Verify
 
-        Confirm `pyth` is connected in **Settings -> Tools & MCP**.
+        Confirm `pyth` is connected in **Settings → Tools & MCP**.
       </Step>
     </Steps>
 
   </Tab>
   <Tab value="Windsurf / Other">
-    Any MCP client with Streamable HTTP can connect to:
+    Any MCP client that supports Streamable HTTP can connect to:
 
     `https://mcp.pyth.network/mcp`
   </Tab>
 </Tabs>
 
-## Official Tools
-
-| Workflow Step | Tool | Description |
-| --- | --- | --- |
-| Discovery | `get_symbols` | Find available feeds by query and asset type |
-| Real-time | `get_latest_price` | Fetch latest prices for up to 100 feeds |
-| Historical | `get_historical_price` | Get point-in-time prices for up to 50 feeds |
-| Charting | `get_candlestick_data` | Return OHLC candles (up to 500 per response) |
-
-Use tools in this order:
-
-`get_symbols` -> `get_latest_price` / `get_historical_price` -> `get_candlestick_data`
+## Tool Reference
 
 ### get_symbols
 
@@ -153,36 +140,32 @@ Fetch latest prices for one or more feeds.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `access_token` | string | **Yes** | Pyth Pro token |
-| `symbols` | string[] | No* | Full symbols like `Crypto.BTC/USD` |
-| `price_feed_ids` | number[] | No* | Feed IDs from `get_symbols` |
+| `symbols` | string[] | No\* | Full symbols like `Crypto.BTC/USD` |
+| `price_feed_ids` | number[] | No\* | Feed IDs from `get_symbols` |
 | `channel` | string | No | `real_time` or `fixed_rate@{N}ms` |
 | `properties` | string[] | No | Requested fields |
 
 \* At least one of `symbols` or `price_feed_ids` is required.
 
-Rules:
-
 - Max combined feeds per request: `100`
-- If both `symbols` and `price_feed_ids` are sent, IDs are used
+- If both `symbols` and `price_feed_ids` are sent, IDs take precedence
 - Symbols must include asset-type prefix (`Crypto.BTC/USD`, not `BTC/USD`)
 
 ### get_historical_price
 
-Get prices at one historical timestamp.
+Get prices at a single historical timestamp.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `symbols` | string[] | No* | Full symbols |
-| `price_feed_ids` | number[] | No* | Feed IDs |
+| `symbols` | string[] | No\* | Full symbols |
+| `price_feed_ids` | number[] | No\* | Feed IDs |
 | `timestamp` | number | **Yes** | Unix seconds, milliseconds, or microseconds |
 | `channel` | string | No | `real_time` or `fixed_rate@{N}ms` |
 
 \* At least one of `symbols` or `price_feed_ids` is required.
 
-Rules:
-
 - Max feeds per request: `50`
-- If both IDs and symbols are sent, IDs are used
+- If both IDs and symbols are sent, IDs take precedence
 - Timestamp is normalized to microseconds and aligned down to channel interval
 
 <Callout type="info">
@@ -191,45 +174,45 @@ Rules:
 
 ### get_candlestick_data
 
-Fetch OHLC candlestick data.
+Fetch OHLC candlestick data for a single feed.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `symbol` | string | **Yes** | Full symbol (example: `Crypto.BTC/USD`) |
+| `symbol` | string | **Yes** | Full symbol (e.g. `Crypto.BTC/USD`) |
 | `resolution` | string | **Yes** | `1`, `5`, `15`, `30`, `60`, `120`, `240`, `360`, `720`, `D`, `W`, `M` |
 | `from` | number | **Yes** | Start time (Unix seconds) |
 | `to` | number | **Yes** | End time (Unix seconds) |
 | `channel` | string | No | `real_time` or `fixed_rate@{N}ms` |
 
-Rules:
-
 - `from` must be earlier than `to`
 - Max candles returned: `500`
-- Large result sets are truncated with `truncated: true` metadata
+- Large result sets are truncated with `truncated: true` in the response
 
 ## Troubleshooting
 
 ### Invalid or expired token
 
-- Symptom: `get_latest_price` returns auth error
-- Fix: verify/regenerate token and pass as `access_token`
+- **Symptom:** `get_latest_price` returns an auth error
+- **Fix:** Verify or regenerate your token and pass it as `access_token`
 
 ### Symbol not found
 
-- Symptom: historical lookup fails for symbol
-- Fix: run `get_symbols` first and copy exact symbol with prefix
+- **Symptom:** Lookup fails for a symbol
+- **Fix:** Run `get_symbols` first and use the exact symbol with its asset-type prefix
 
 ### No historical data
 
-- Symptom: historical/candle responses are empty
-- Fix: use post-April-2025 timestamps, ensure timestamp is not in the future
+- **Symptom:** Historical or candle responses are empty
+- **Fix:** Use timestamps after April 2025 and ensure the timestamp is not in the future
 
 ### Truncated candles
 
-- Symptom: response includes `truncated: true`
-- Fix: narrow time range or use a larger resolution
+- **Symptom:** Response includes `truncated: true`
+- **Fix:** Narrow the time range or use a larger resolution
 
-## Local Development (Optional)
+## Local Development
+
+Optionally run the MCP server locally:
 
 ```bash copy
 git clone https://github.com/pyth-network/pyth-crosschain.git
@@ -238,7 +221,7 @@ pnpm install
 pnpm --filter @pythnetwork/mcp build
 ```
 
-Local stdio config:
+Then configure your client with stdio transport:
 
 ```json copy
 {
@@ -253,16 +236,3 @@ Local stdio config:
   }
 }
 ```
-
-## Why Use This MCP
-
-- Natural language to structured price data
-- Single workflow for discovery, real-time, historical, and charting
-- Multi-asset coverage across crypto, FX, equity, metal, rates, commodity, and funding-rate
-
-## Common Use Cases
-
-- Protocol analytics and monitoring
-- Historical market snapshots
-- Quant research and backtesting inputs
-- Agent-native data pipelines in coding assistants
