@@ -6,10 +6,22 @@ name = "aiken-lang/stdlib"
 version = "v3.0.0"
 source = "github"
 
+[[requirements]]
+name = "pyth-network/pyth-lazer-cardano"
+version = "matej/init"
+source = "github"
+
 [[packages]]
 name = "aiken-lang/stdlib"
 version = "v3.0.0"
 requirements = []
 source = "github"
 
+[[packages]]
+name = "pyth-network/pyth-lazer-cardano"
+version = "matej/init"
+requirements = []
+source = "github"
+
 [etags]
+"pyth-network/pyth-lazer-cardano@matej/init" = [{ secs_since_epoch = 1772699172, nanos_since_epoch = 174874000 }, "a958695c68d69883388837e2dd6a7a4425ff88d9cdc05c40c454564df1697298"]

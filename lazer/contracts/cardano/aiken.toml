@@ -1,4 +1,4 @@
-name = "pyth-network/cardano-lazer"
+name = "pyth-network/pyth-lazer-cardano-contracts"
 version = "0.0.0"
 compiler = "v1.1.21"
 plutus = "v3"
@@ -13,6 +13,12 @@ platform = "github"
 [[dependencies]]
 name = "aiken-lang/stdlib"
 version = "v3.0.0"
+source = "github"
+
+[[dependencies]]
+name = "pyth-network/pyth-lazer-cardano"
+# TODO: replace with `main` or version tag once it gets merged
+version = "matej/init"
 source = "github"
 
 [config]

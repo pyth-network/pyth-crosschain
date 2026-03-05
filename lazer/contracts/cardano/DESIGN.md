@@ -48,7 +48,7 @@ helper types for parsing and converting differently-sized (un)signed integers
 
 Second, while Cardano supports secp256k1 in general, it doesn't specifically
 support recoverable signatures used by Wormhole, so to verify VAAs on-chain,
-we recover keys off-chain ([`sdk/js/src/wormhole.ts`], see `recoverVaaPublicKeys`)
+we recover keys off-chain ([`wormhole.ts`], see `recoverVaaPublicKeys`)
 and pass them together with VAA bytes into the transaction as a `PreparedVAA`
 (see [`wormhole/vaa`]). In the contract, we then have a helper module ([`secp256k1`])
 that can convert uncompressed secp256k1 keys into both compressed keys expected
@@ -156,17 +156,26 @@ Logic for Wormhole state minting and spending script can be found in [`validator
 Equivalent setup for Pyth state is in [`validators/pyth_state`], while the
 withdraw script invoked by users is in [`validators/pyth_price`] module.
 
-[`types/i16`]: ./lib/types/i16.ak
-[`types/i64`]: ./lib/types/i64.ak
-[`types/u8`]: ./lib/types/u8.ak
-[`types/u16`]: ./lib/types/u16.ak
-[`types/u32`]: ./lib/types/u32.ak
-[`types/u64`]: ./lib/types/u64.ak
+Finally, [`pyth/message`] and [`pyth`] modules implement parsing for Pyth Lazer
+messages and their payloads. These are to be shared between our contracts and
+user contracts, with users calling `pyth.get_updates(hash, transaction)` to get
+verified updates passed into the transaction (**TODO(matej):** [change `get_updates`
+signature](https://github.com/pyth-network/pyth-lazer-cardano/blob/9ddf746483af08481c221e3ba2aca68de0a3ae7a/lib/pyth.ak#L24))
+
+<!-- TODO: update links to `main` once merged -->
+[`parser`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/parser.ak
+[`pyth`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/pyth.ak
+[`pyth/message`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/pyth/message.ak
+[`wormhole.ts`]: ./sdk/js/src/wormhole.ts
 [`secp256k1`]: ./lib/secp256k1.ak
-[`wormhole/vaa`]: ./lib/wormhole/vaa.ak
-[`parser`]: ./lib/parser.ak
 [`state`]: ./lib/state.ak
+[`types/i16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/i16.ak
+[`types/i64`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/i64.ak
+[`types/u8`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u8.ak
+[`types/u16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u16.ak
+[`types/u32`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u32.ak
+[`types/u64`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u64.ak
 [`validators/wormhole_state`]: ./validators/wormhole_state.ak
 [`validators/pyth_state`]: ./validators/pyth_state.ak
 [`validators/pyth_price`]: ./validators/pyth_price.ak
-[`sdk/js/src/wormhole.ts`]: ./sdk/js/src/wormhole.ts
+[`wormhole/vaa`]: ./lib/wormhole/vaa.ak
