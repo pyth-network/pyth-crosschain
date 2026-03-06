@@ -62,7 +62,7 @@ Response per feed:
 | Field | Use |
 |-------|-----|
 | `display_price` | Human-readable price at that timestamp |
-| `publish_time` | Actual timestamp of the matched price (microseconds) |
+| `publish_time` | Actual timestamp of the matched price (Unix seconds) |
 
 ## Key Concepts
 
