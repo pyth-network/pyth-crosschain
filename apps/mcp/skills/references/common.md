@@ -7,6 +7,10 @@ Rules and limits shared across all Pyth MCP skills.
 Use symbols exactly as returned by `get_symbols`. Do not guess, abbreviate, or rewrite symbol formats.
 Symbols include an asset type prefix (e.g., `Crypto.BTC/USD`, `FX.EUR/USD`, `Equity.US.AAPL`).
 
+## Discovery Efficiency
+
+When you need multiple feeds of the same asset type, call `get_symbols({ "asset_type": "crypto" })` once and filter client-side. Only use per-ticker `get_symbols({ "query": "X" })` when searching across asset types or for a single specific feed.
+
 ## Timestamps
 
 | Context | Format |
