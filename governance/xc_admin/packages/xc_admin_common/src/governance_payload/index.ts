@@ -24,7 +24,8 @@ import {
   UpgradeContract256Bit,
 } from "./UpgradeContract";
 import {
-  UpgradeCardanoLazerContract,
+  UpgradeCardanoSpendScript,
+  UpgradeCardanoWithdrawScript,
   UpgradeSuiLazerContract,
 } from "./UpgradeLazerContract";
 import { WithdrawFee } from "./WithdrawFee";
@@ -87,8 +88,10 @@ export function decodeGovernancePayload(
       return WithdrawFee.decode(data);
     case "UpgradeSuiLazerContract":
       return UpgradeSuiLazerContract.decode(data);
-    case "UpgradeCardanoLazerContract":
-      return UpgradeCardanoLazerContract.decode(data);
+    case "UpgradeCardanoSpendScript":
+      return UpgradeCardanoSpendScript.decode(data);
+    case "UpgradeCardanoWithdrawScript":
+      return UpgradeCardanoWithdrawScript.decode(data);
     case "UpdateTrustedSigner": {
       const payloadLength = data.length - PythGovernanceHeader.span;
       if (payloadLength == UpdateTrustedSigner264Bit.layout.span) {

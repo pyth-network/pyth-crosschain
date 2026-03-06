@@ -92,13 +92,13 @@ validator update {
           }
           UpgradeSpendScript(hash) -> state.new(hash, pyth)
           // TODO: custom deprecation range through governance?
-          UpgradeWithdrawScript { deprecated_validity, new_script } -> {
+          UpgradeWithdrawScript { new_script, previous_validity } -> {
             let pyth =
               Pyth {
                 ..pyth,
                 withdraw_script: new_script,
                 deprecated_withdraw_scripts: [
-                  Pair(deprecated_validity, pyth.withdraw_script),
+                  Pair(previous_validity, pyth.withdraw_script),
                   ..pyth.deprecated_withdraw_scripts
                 ],
               }

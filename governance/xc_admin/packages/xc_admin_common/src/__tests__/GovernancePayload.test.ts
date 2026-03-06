@@ -4,7 +4,6 @@ import type { Arbitrary, IntArrayConstraints } from "fast-check";
 import * as fc from "fast-check";
 import type { ActionName, PythGovernanceAction } from "..";
 import {
-  CardanoLazerScript,
   decodeGovernancePayload,
   EvmExecute,
   EvmExecutorAction,
@@ -17,7 +16,8 @@ import {
   TargetAction,
   UpdateTrustedSigner256Bit,
   UpdateTrustedSigner264Bit,
-  UpgradeCardanoLazerContract,
+  UpgradeCardanoSpendScript,
+  UpgradeCardanoWithdrawScript,
   UpgradeSuiLazerContract,
 } from "..";
 import type { ChainName } from "../chains";
@@ -304,20 +304,36 @@ test("GovernancePayload ser/de", () => {
     ),
   ).toBeTruthy();
 
-  const upgradeCardanoLazerContract = new UpgradeCardanoLazerContract(
+  const upgradeCardanoSpendScript = new UpgradeCardanoSpendScript(
     "cardano_mainnet",
-    CardanoLazerScript.spend,
     "34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
   );
-  const upgradeCardanoLazerContractBuffer =
-    upgradeCardanoLazerContract.encode();
-  console.log(upgradeCardanoLazerContractBuffer.toJSON());
+  const upgradeCardanoSpendScriptBuffer = upgradeCardanoSpendScript.encode();
+  console.log(upgradeCardanoSpendScriptBuffer.toJSON());
   expect(
-    upgradeCardanoLazerContractBuffer.equals(
+    upgradeCardanoSpendScriptBuffer.equals(
       Buffer.from([
-        80, 84, 71, 77, 3, 2, 234, 192, 1, 52, 175, 120, 123, 102, 232, 177, 8,
+        80, 84, 71, 77, 3, 2, 234, 192, 52, 175, 120, 123, 102, 232, 177, 8,
         165, 215, 221, 127, 145, 34, 48, 22, 96, 121, 217, 245, 179, 11, 104,
         207, 2, 15, 37, 242,
+      ]),
+    ),
+  ).toBeTruthy();
+
+  const upgradeCardanoWithdrawScript = new UpgradeCardanoWithdrawScript(
+    "cardano_mainnet",
+    "34af787b66e8b108a5d7dd7f912230166079d9f5b30b68cf020f25f2",
+    1234n,
+  );
+  const upgradeCardanoWithdrawScriptBuffer =
+    upgradeCardanoWithdrawScript.encode();
+  console.log(upgradeCardanoWithdrawScriptBuffer.toJSON());
+  expect(
+    upgradeCardanoWithdrawScriptBuffer.equals(
+      Buffer.from([
+        80, 84, 71, 77, 3, 3, 234, 192, 52, 175, 120, 123, 102, 232, 177, 8,
+        165, 215, 221, 127, 145, 34, 48, 22, 96, 121, 217, 245, 179, 11, 104,
+        207, 2, 15, 37, 242, 0, 0, 0, 0, 0, 0, 4, 210,
       ]),
     ),
   ).toBeTruthy();
@@ -537,19 +553,24 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             buffer,
           );
         });
-    } else if (header.action === "UpgradeCardanoLazerContract") {
+    } else if (header.action === "UpgradeCardanoSpendScript") {
+      return hexBytesArb({ maxLength: 28, minLength: 28 }).map(
+        (buffer) => new UpgradeCardanoSpendScript(header.targetChainId, buffer),
+      );
+    } else if (header.action === "UpgradeCardanoWithdrawScript") {
       return fc
         .record({
           buffer: hexBytesArb({ maxLength: 28, minLength: 28 }),
-          script: fc.constantFrom(...Object.values(CardanoLazerScript)),
+          previousExpiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
         })
-        .map(({ script, buffer }) => {
-          return new UpgradeCardanoLazerContract(
-            header.targetChainId,
-            script,
-            buffer,
-          );
-        });
+        .map(
+          ({ buffer, previousExpiresAt }) =>
+            new UpgradeCardanoWithdrawScript(
+              header.targetChainId,
+              buffer,
+              previousExpiresAt,
+            ),
+        );
     } else if (header.action === "UpdateTrustedSigner") {
       const arb264Bit = fc
         .record({

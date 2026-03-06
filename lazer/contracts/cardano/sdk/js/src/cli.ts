@@ -150,6 +150,11 @@ const commonOptions = {
     demandOption: true,
     description: "Cardano network to use",
   },
+  state: {
+    demandOption: true,
+    description: "Policy ID of the state token",
+    type: "string",
+  },
 } as const;
 
 parser.command(
@@ -263,11 +268,7 @@ parser.command(
     b.options({
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
-      state: {
-        demandOption: true,
-        description: "Policy ID of the state token",
-        type: "string",
-      },
+      state: commonOptions.state,
       wormhole: {
         demandOption: true,
         description: "Policy ID of the Wormhole state token",

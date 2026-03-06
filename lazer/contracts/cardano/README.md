@@ -1,0 +1,107 @@
+# Pyth Lazer for Cardano
+
+See [`DESIGN`](./DESIGN.md) for description of contract architecture.
+
+**(TODO)**
+
+## Setup
+
+Prepare `./sdk/js/.env` file using [`.env.example`](./sdk/js/.env.example) as
+a template. Make sure to install [Aiken](https://aiken-lang.org), e.g. through
+`aikup`:
+
+```bash
+brew install aiken-lang/tap/aikup
+aikup install
+```
+
+## Building and testing
+
+Contract can be built and checked separately using `aiken build` and
+`aiken check` commands, but to correctly generate off-chain bindings, switch to
+`./sdk/js` directory and use `pnpm cli build` command.
+
+For debugging purposes, it is useful to pass `--trace-level=verbose` to `build`
+commands - this will generate friendly traces from `except` and `?` syntax shown
+in error logs, but will inflate contract sizes.
+
+## Devnet
+
+For local development, run `pnpm cli devnet` in a separate terminal to start
+a local network. The setup will automatically give your wallet funds for
+testing.
+
+## Deploying
+
+Build on-chain scripts and off-chain bindings:
+
+```bash
+set -euo pipefail
+
+REPO=$(git rev-parse --show-toplevel)
+
+cd "$REPO/lazer/contracts/cardano/sdk/js"
+
+# Environment can be "default" | "preprod" | "preview"
+pnpm cli build --env preview
+```
+
+Initialize contracts state:
+
+```bash
+CARDANO_NETWORK="custom"
+# Wormhole emitter chain ID, see:
+# https://wormhole.com/docs/products/reference/chain-ids
+GOVERNANCE_CHAIN="1" # for Solana
+# Wormhole emitter address
+GOVERNANCE_ADDRESS="a36234ef3749a2c94136b6345bceff450791ef1ebc99e918f16f8075a441bb24"
+# Has to match contract `env` config, determines Wormhole network
+INITIAL_GUARDIAN="58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
+
+pnpm cli init --network "$CARDANO_NETWORK" \
+  --emitter-chain "$GOVERNANCE_CHAIN" \
+  --emitter-address "$GOVERNANCE_ADDRESS" \
+  --initial-guardian "$INITIAL_GUARDIAN"
+```
+
+Generate withdraw script upgrade for devnet:
+
+```bash
+# Emitter key matching configuration used for deploy
+EMITTER_KEY="$HOME/.config/solana/id.json"
+
+cd "$REPO/contract_manager"
+
+pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
+  test-update-trusted-signer \
+  --emitter "$EMITTER_KEY" \
+  --signer "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b" \
+  --expires "1799422709"
+```
+
+and execute VAA provided in output:
+
+**TODO**
+
+or propose withdraw script on production:
+
+```bash
+# Key for ops wallet capable of submitting proposals
+WALLET_KEY="$HOME/.config/solana/id.json"
+
+cd "$REPO/contract_manager"
+
+pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
+  propose-update-trusted-signer \
+  --wallet "$WALLET_KEY" \
+  --signer "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b" \
+  --expires "1799422709"
+```
+
+and execute VAA created by the accepted proposal:
+
+**TODO**
+
+Then do the same with used withdraw script:
+
+**TODO**

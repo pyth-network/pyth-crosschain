@@ -330,10 +330,7 @@ parser.command(
     const emitterWallet = await loadHotWallet(emitterPath);
     const emitter = new WormholeEmitter("devnet", emitterWallet);
     const signer = Ed25519Keypair.fromSecretKey(privateKey);
-
-    console.info(
-      `Adding trusted signer ${emitter.wallet.publicKey.toBase58()} ...`,
-    );
+    console.info("Using wallet:", emitterWallet.publicKey.toBase58());
 
     console.info("Submitting governance message to Wormhole...");
     const payload = chain.generateGovernanceUpdateTrustedSignerPayload(
@@ -404,14 +401,14 @@ parser.command(
       signer: commonOptions["trusted-signer"],
       wallet: commonOptions["solana-wallet"],
     }),
-  async ({ chain, signer, expires, wallet: walletPath }) => {
+  async ({ chain, signer: trustedSigner, expires, wallet: walletPath }) => {
     const wallet = await loadHotWallet(walletPath);
     const vault = connectMainnetVault(wallet);
     console.info("Using wallet:", wallet.publicKey.toBase58());
 
     console.info("Submitting governance proposal...");
     const payload = chain.generateGovernanceUpdateTrustedSignerPayload(
-      signer,
+      trustedSigner,
       expires,
     );
     const proposal = await vault.proposeWormholeMessage([payload]);

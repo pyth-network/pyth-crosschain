@@ -36,59 +36,79 @@ export class UpgradeSuiLazerContract extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(UpgradeSuiLazerContract.layout, {
-      version: this.version,
       hash: this.hash,
+      version: this.version,
     });
   }
 }
 
-export class UpgradeCardanoLazerContract extends PythGovernanceActionImpl {
-  static layout: BufferLayout.Structure<
-    Readonly<{ script: number; hash: string }>
-  > = BufferLayout.struct([
-    BufferLayout.u8("script"),
-    BufferLayoutExt.hexBytes(28, "hash"),
-  ]);
+export class UpgradeCardanoSpendScript extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(28, "hash")]);
 
   constructor(
     targetChainId: ChainName,
-    readonly script: CardanoLazerScript,
     readonly hash: string,
   ) {
-    super(targetChainId, "UpgradeCardanoLazerContract");
+    super(targetChainId, "UpgradeCardanoSpendScript");
   }
 
-  static decode(data: Buffer): UpgradeCardanoLazerContract | undefined {
+  static decode(data: Buffer): UpgradeCardanoSpendScript | undefined {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
-      "UpgradeCardanoLazerContract",
+      "UpgradeCardanoSpendScript",
       this.layout,
     );
     if (!decoded) return undefined;
 
-    const { script, hash } = decoded[1];
-    if (!Object.values<number>(CardanoLazerScript).includes(script))
-      return undefined;
-
-    return new UpgradeCardanoLazerContract(
+    return new UpgradeCardanoSpendScript(
       decoded[0].targetChainId,
-      script as CardanoLazerScript,
-      hash,
+      decoded[1].hash,
     );
   }
 
   encode(): Buffer {
-    return super.encodeWithPayload(UpgradeCardanoLazerContract.layout, {
-      script: this.script,
+    return super.encodeWithPayload(UpgradeCardanoSpendScript.layout, {
       hash: this.hash,
     });
   }
 }
 
-export type CardanoLazerScript =
-  (typeof CardanoLazerScript)[keyof typeof CardanoLazerScript];
+export class UpgradeCardanoWithdrawScript extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<
+    Readonly<{ hash: string; previousExpiresAt: bigint }>
+  > = BufferLayout.struct([
+    BufferLayoutExt.hexBytes(28, "hash"),
+    BufferLayoutExt.u64be("previousExpiresAt"),
+  ]);
 
-export const CardanoLazerScript = {
-  spend: 1,
-  withdraw: 2,
-} as const;
+  constructor(
+    targetChainId: ChainName,
+    readonly hash: string,
+    readonly previousExpiresAt: bigint,
+  ) {
+    super(targetChainId, "UpgradeCardanoWithdrawScript");
+  }
+
+  static decode(data: Buffer): UpgradeCardanoWithdrawScript | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "UpgradeCardanoWithdrawScript",
+      this.layout,
+    );
+    if (!decoded) return undefined;
+
+    return new UpgradeCardanoWithdrawScript(
+      decoded[0].targetChainId,
+      decoded[1].hash,
+      decoded[1].previousExpiresAt,
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(UpgradeCardanoWithdrawScript.layout, {
+      hash: this.hash,
+      previousExpiresAt: this.previousExpiresAt,
+    });
+  }
+}
