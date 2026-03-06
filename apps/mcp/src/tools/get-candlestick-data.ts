@@ -139,6 +139,10 @@ export function registerGetCandlestickData(
 
         const truncated = totalCandles > MAX_CANDLES;
 
+        // Note: The upstream History API (TradingView-format) returns OHLC values
+        // in human-readable (display) format, not raw integers with exponents.
+        // No addDisplayPrices() transformation is needed here, unlike get_latest_price
+        // and get_historical_price which return raw integer prices.
         const result = truncated
           ? {
               c: data.c.slice(0, MAX_CANDLES),
