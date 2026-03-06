@@ -175,7 +175,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
    ```json
    get_historical_price({
      "symbols": ["FX.GBP/USD", "FX.JPY/USD"],
-     "timestamp": 1751068800
+     "timestamp": 1750982400
    })
    ```
 

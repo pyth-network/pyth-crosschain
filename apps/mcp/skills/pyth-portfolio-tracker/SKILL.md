@@ -167,7 +167,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
    ```json
    get_historical_price({
      "symbols": ["Crypto.BTC/USD", "Crypto.ETH/USD", "Crypto.SOL/USD"],
-     "timestamp": 1740787200
+     "timestamp": 1746057600
    })
    ```
 
@@ -178,4 +178,4 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
    | BTC | 2 | $95,000.00 | $97,423.50 | +$4,847.00 | +2.6% |
    | ETH | 50 | $980.00 | $1,050.00 | +$3,500.00 | +7.1% |
    | SOL | 1000 | $20.50 | $22.10 | +$1,600.00 | +7.8% |
-   | **Total** | | $239,500.00 | $269,447.00 | **+$9,947.00** | **+4.2%** |
+   | **Total** | | $259,500.00 | $269,447.00 | **+$9,947.00** | **+3.8%** |
