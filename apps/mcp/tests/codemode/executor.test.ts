@@ -93,4 +93,31 @@ describe("Code Mode executor", () => {
     expect(result.ok).toBe(true);
     expect(result.ok && result.result).toBe("undefined");
   });
+
+  it("cannot escape sandbox via host function constructor", async () => {
+    const { execute } = createExecutor({ timeoutMs: 5_000 });
+    const hostCall = async () => null;
+
+    const result = await execute(
+      `async () => codemode.get_symbols.constructor("return typeof process")()`,
+      hostCall,
+    );
+
+    // With severed prototype, .constructor is undefined and calling it throws
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toBeTruthy();
+  });
+
+  it("times out on never-settling promise", async () => {
+    const { execute } = createExecutor({ timeoutMs: 200 });
+    const hostCall = async () => null;
+
+    const result = await execute(
+      `async () => await new Promise(() => {})`,
+      hostCall,
+    );
+
+    expect(result.ok).toBe(false);
+    expect(!result.ok && result.error).toContain("timed out");
+  });
 });

@@ -84,10 +84,11 @@ export function registerCodeModeTools(
         };
       }
 
-      const resultText =
+      const raw =
         typeof result.result === "string"
           ? result.result
           : JSON.stringify(result.result);
+      const resultText = raw ?? "undefined";
       const resultSizeBytes = Buffer.byteLength(resultText);
 
       bindingContext.logger.info({

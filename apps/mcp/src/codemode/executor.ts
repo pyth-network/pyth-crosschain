@@ -38,7 +38,13 @@ export function createExecutor(options: ExecutorOptions = {}): {
     try {
       const codemode = Object.fromEntries(
         ["get_symbols", "get_historical_price", "get_candlestick_data", "get_latest_price"].map(
-          (name) => [name, (arg: unknown) => hostCall(name, arg)],
+          (name) => {
+            const fn = (arg: unknown) => hostCall(name, arg);
+            // Sever the prototype chain so sandbox code cannot reach the host
+            // Function constructor via fn.constructor("return process")().
+            Object.setPrototypeOf(fn, null);
+            return [name, fn];
+          },
         ),
       );
 
@@ -53,9 +59,22 @@ export function createExecutor(options: ExecutorOptions = {}): {
       const wrapped = isFnExpr
         ? `(${trimmed})()`
         : `(async () => { ${trimmed} })()`;
-      const result = await runInNewContext(wrapped, sandbox, {
+
+      // runInNewContext timeout only covers synchronous execution.
+      // Race with a timer to also catch never-settling promises.
+      const vmPromise = runInNewContext(wrapped, sandbox, {
         timeout: timeoutMs,
       });
+      let timer: ReturnType<typeof setTimeout>;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Execution timed out")),
+          timeoutMs,
+        );
+      });
+      const result = await Promise.race([vmPromise, timeoutPromise]).finally(
+        () => clearTimeout(timer!),
+      );
 
       return { ok: true, result };
     } catch (err) {
