@@ -18,7 +18,7 @@ When you need multiple feeds of the same asset type, call `get_symbols({ "asset_
 | `get_candlestick_data` `from`/`to` | Unix seconds (integer) |
 | `get_historical_price` `timestamp` | Unix seconds preferred; milliseconds and microseconds also accepted (auto-detected) |
 | Response `timestamp_us` | Microseconds |
-| Response `publish_time` | Microseconds |
+| Response `publish_time` | Unix seconds |
 | Candlestick `t[]` | Unix seconds |
 
 No data earlier than April 2025. Some feeds start later.

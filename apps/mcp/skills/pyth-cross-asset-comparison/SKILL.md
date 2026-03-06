@@ -38,7 +38,6 @@ get_symbols({ "query": "BTC" })
 ### Fetch candlestick data (one call per asset)
 
 ```json
-```json
 get_candlestick_data({
   "symbol": "Crypto.BTC/USD",
   "from": 1743465600,
