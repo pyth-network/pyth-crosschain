@@ -44,6 +44,7 @@ get_candlestick_data({
   "to": 1746057600,
   "resolution": "D"
 })
+```
 
 Response arrays (index 0 = earliest):
 
