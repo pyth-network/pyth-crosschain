@@ -1,0 +1,163 @@
+---
+name: pyth-integration-helper
+description: >
+  Helps developers integrate Pyth price feeds into their applications. Explains
+  feed discovery, symbol formats, ID types, exponents, and pricing channels.
+  Use when a user asks "how do I use Pyth?", "what's the feed ID for X?",
+  "how do prices work?", or needs guidance on Pyth Pro vs Pyth Core.
+---
+
+# Pyth Integration Helper
+
+## Golden Rule
+
+Understand the user's integration context first (language, chain, use case), then use `get_symbols` to find specific feeds and explain the symbol/ID/exponent/channel system.
+
+## Decision Guide
+
+| User asks | Action |
+|-----------|--------|
+| "How to use Pyth?" | Explain MCP tools overview, link to docs |
+| "Symbol/feed for X?" | `get_symbols({ "query": "X" })` |
+| "How do prices work?" | Explain exponent, display_price, confidence |
+| "What asset types exist?" | List the 7 types or browse with `get_symbols` |
+| "Pyth Pro vs Pyth Core?" | Explain Lazer vs Hermes distinction |
+| "Get an access token?" | Link to https://pyth.network/pricing |
+| "What channels?" | Explain real_time, fixed_rate@50ms/200ms/1000ms |
+
+For symbol format, timestamp rules, and API limits, see [common.md](../references/common.md).
+
+## Tool Reference
+
+### Feed discovery
+
+```json
+get_symbols({ "query": "AAPL" })
+```
+
+Key response fields for integration:
+
+| Field | Purpose |
+|-------|---------|
+| `symbol` | Full name with prefix (e.g., `Equity.US.AAPL`). Pass to tools. |
+| `pyth_lazer_id` | Numeric ID for this MCP server's `price_feed_ids` parameter |
+| `hermes_id` | Hex ID for Pyth Core/Hermes. **Not used** by this MCP server. |
+| `exponent` | Power of 10 to convert raw price to human price |
+| `asset_type` | crypto, fx, equity, metal, rates, commodity, funding-rate |
+| `min_channel` | Minimum update frequency for this feed |
+| `quote_currency` | Price denomination (usually "USD") |
+
+### Browse by asset type
+
+```json
+get_symbols({ "asset_type": "crypto", "limit": 200 })
+```
+
+### Paginate all feeds
+
+```json
+get_symbols({ "limit": 200, "offset": 0 })
+get_symbols({ "limit": 200, "offset": 200 })
+```
+
+Continue until `has_more: false`.
+
+## Key Concepts
+
+### Symbol format
+
+| Asset type | Example symbol |
+|------------|---------------|
+| crypto | `Crypto.BTC/USD` |
+| equity | `Equity.US.AAPL` |
+| fx | `FX.EUR/USD` |
+| metal | `Metal.XAU/USD` |
+| rates | `Rates.US_FED_FUNDS` |
+| commodity | `Commodity.WTI/USD` |
+| funding-rate | `FundingRate.BTC/USD` |
+
+Always use symbols exactly as returned by `get_symbols`. Never construct them manually.
+
+### ID types
+
+| ID | Source | Used by |
+|----|--------|---------|
+| `pyth_lazer_id` | Pyth Pro (Lazer) | This MCP server's `price_feed_ids` parameter |
+| `hermes_id` | Pyth Core (Hermes) | On-chain contracts, Hermes API. **Not used** here. |
+
+This MCP server uses Pyth Pro (Lazer) infrastructure.
+
+### Price model
+
+```
+display_price = price * 10^exponent
+```
+
+Example: `price = 9742350000`, `exponent = -5` -> `display_price = 97423.50`
+
+All tools that return prices include pre-computed `display_price`, `display_bid`, and `display_ask`. Always use these.
+
+### Channels
+
+| Channel | Update rate | Use case |
+|---------|------------|----------|
+| `real_time` | As fast as available | Low-latency trading |
+| `fixed_rate@50ms` | Every 50ms | High-frequency |
+| `fixed_rate@200ms` | Every 200ms | Default for most tools |
+| `fixed_rate@1000ms` | Every 1000ms | Cost-efficient polling |
+
+Each feed has a `min_channel` — you cannot request a faster rate than this.
+
+### Auth
+
+Only `get_latest_price` requires an `access_token`. Get one at https://pyth.network/pricing.
+`get_symbols`, `get_historical_price`, and `get_candlestick_data` are public.
+
+## Critical Mistakes to Avoid
+
+1. **Confusing Pyth Pro (Lazer) with Pyth Core (Hermes).** This MCP server uses Pyth Pro. The `hermes_id` field is for Pyth Core on-chain contracts — do not use it with this server's tools. Use `pyth_lazer_id` or `symbol`.
+
+2. **Using `hermes_id` with this MCP server's tools.** The `price_feed_ids` parameter expects `pyth_lazer_id` (integer), not `hermes_id` (hex string). Passing a hermes_id will fail or return wrong data.
+
+3. **Doing exponent math manually when `display_price` is pre-computed.** All price responses include `display_price`. There is no need to compute `price * 10^exponent` yourself.
+
+## Examples
+
+### Example 1: How do I use Pyth in my trading bot?
+
+1. Explain available tools:
+   - `get_symbols` — discover feeds and their IDs
+   - `get_latest_price` — real-time prices (requires access token)
+   - `get_historical_price` — point-in-time historical prices
+   - `get_candlestick_data` — OHLC candle data for charting/analysis
+
+2. Find the feed:
+   ```json
+   get_symbols({ "query": "BTC" })
+   ```
+   Returns `symbol: "Crypto.BTC/USD"`, `pyth_lazer_id: 1`.
+
+3. Explain the flow:
+   - For live price: `get_latest_price` with access token
+   - For historical analysis: `get_candlestick_data` with time range
+   - Prices in USD by default (`quote_currency: "USD"`)
+   - Use `display_price` for human-readable output
+
+### Example 2: What's the feed ID for AAPL?
+
+1. Search:
+   ```json
+   get_symbols({ "query": "AAPL" })
+   ```
+
+2. From the response:
+
+   | Field | Value |
+   |-------|-------|
+   | `symbol` | `Equity.US.AAPL` |
+   | `pyth_lazer_id` | (numeric ID from response) |
+   | `hermes_id` | (hex string — for Hermes/on-chain only) |
+   | `exponent` | -5 |
+   | `asset_type` | equity |
+
+3. Use `symbol: "Equity.US.AAPL"` or `price_feed_ids: [<pyth_lazer_id>]` when calling other tools.
