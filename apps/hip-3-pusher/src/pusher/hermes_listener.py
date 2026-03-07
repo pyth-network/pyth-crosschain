@@ -4,13 +4,12 @@ from typing import Any
 
 import websockets
 from loguru import logger
-from tenacity import retry
 from websockets import ClientConnection
 
 from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceSourceState, PriceUpdate
-from pusher.retry import build_listener_retry_kwargs
+from pusher.retry import run_with_listener_retry
 
 
 class HermesListener:
@@ -43,18 +42,12 @@ class HermesListener:
 
     async def subscribe_single(self, url: str) -> None:
         logger.info("Starting Hermes listener loop: {}", url)
-
-        @retry(
-            **build_listener_retry_kwargs(
-                listener_name="HermesListener",
-                endpoint=url,
-                stop_after_attempt_count=self.stop_after_attempt,
-            )
+        await run_with_listener_retry(
+            operation=lambda: self.subscribe_single_inner(url),
+            listener_name="HermesListener",
+            endpoint=url,
+            stop_after_attempt_count=self.stop_after_attempt,
         )
-        async def _run() -> None:
-            return await self.subscribe_single_inner(url)
-
-        return await _run()
 
     async def subscribe_single_inner(self, url: str) -> None:
         async with websockets.connect(url) as ws:
@@ -105,7 +98,9 @@ class HermesListener:
             raise
         except json.JSONDecodeError as e:
             logger.exception("Failed to decode JSON message: {}", repr(e))
-            raise StaleConnectionError("Failed to decode JSON message, reconnecting") from e
+            raise StaleConnectionError(
+                "Failed to decode JSON message, reconnecting"
+            ) from e
         except Exception as e:
             logger.exception("Unexpected exception: {}", repr(e))
             raise

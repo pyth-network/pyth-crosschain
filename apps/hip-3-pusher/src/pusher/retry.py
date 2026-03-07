@@ -1,7 +1,16 @@
-from typing import Any
+from collections.abc import Awaitable, Callable
+from typing import NoReturn, TypeVar
 
 from loguru import logger
-from tenacity import RetryCallState, retry_if_exception_type, stop_after_attempt, wait_fixed
+from tenacity import (
+    AsyncRetrying,
+    RetryCallState,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_fixed,
+)
+
+T = TypeVar("T")
 
 
 def _log_before_sleep(
@@ -29,7 +38,7 @@ def _log_exhaustion_and_reraise(
     retry_state: RetryCallState,
     listener_name: str,
     endpoint: str,
-) -> None:
+) -> NoReturn:
     exc = retry_state.outcome.exception() if retry_state.outcome is not None else None
     if exc is None:
         exc = RuntimeError(
@@ -46,22 +55,27 @@ def _log_exhaustion_and_reraise(
     raise exc
 
 
-def build_listener_retry_kwargs(
+async def run_with_listener_retry(
+    operation: Callable[[], Awaitable[T]],
     listener_name: str,
     endpoint: str,
     stop_after_attempt_count: int,
-) -> dict[str, Any]:
+) -> T:
     def before_sleep(retry_state: RetryCallState) -> None:
         _log_before_sleep(retry_state, listener_name, endpoint)
 
-    def retry_error_callback(retry_state: RetryCallState) -> None:
+    def retry_error_callback(retry_state: RetryCallState) -> NoReturn:
         _log_exhaustion_and_reraise(retry_state, listener_name, endpoint)
 
-    return {
-        "retry": retry_if_exception_type(Exception),
-        "wait": wait_fixed(1),
-        "stop": stop_after_attempt(stop_after_attempt_count),
-        "before_sleep": before_sleep,
-        "retry_error_callback": retry_error_callback,
-        "reraise": True,
-    }
+    async for attempt in AsyncRetrying(
+        retry=retry_if_exception_type(Exception),
+        wait=wait_fixed(1),
+        stop=stop_after_attempt(stop_after_attempt_count),
+        before_sleep=before_sleep,
+        retry_error_callback=retry_error_callback,
+        reraise=True,
+    ):
+        with attempt:
+            return await operation()
+
+    raise RuntimeError("Retry loop completed without result or exception")

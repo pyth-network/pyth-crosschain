@@ -1,3 +1,4 @@
+import asyncio
 from types import SimpleNamespace
 
 import pytest
@@ -6,7 +7,7 @@ from pusher.exception import StaleConnectionError
 from pusher.retry import (
     _log_before_sleep,
     _log_exhaustion_and_reraise,
-    build_listener_retry_kwargs,
+    run_with_listener_retry,
 )
 
 
@@ -29,7 +30,9 @@ def _retry_state(
     )
 
 
-def test_log_before_sleep_emits_attempt_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_log_before_sleep_emits_attempt_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: list[tuple[str, tuple[object, ...]]] = []
 
     def fake_info(message: str, *args: object) -> None:
@@ -93,13 +96,17 @@ def test_log_exhaustion_and_reraise_with_none_exception_raises_runtime_error() -
         )
 
 
-def test_build_listener_retry_kwargs_sets_hooks_and_stop_limit() -> None:
-    kwargs = build_listener_retry_kwargs(
-        listener_name="HyperliquidListener",
-        endpoint="wss://hyperliquid.example",
-        stop_after_attempt_count=7,
+def test_run_with_listener_retry_returns_operation_result() -> None:
+    async def operation() -> str:
+        return "ok"
+
+    result = asyncio.run(
+        run_with_listener_retry(
+            operation=operation,
+            listener_name="HyperliquidListener",
+            endpoint="wss://hyperliquid.example",
+            stop_after_attempt_count=7,
+        )
     )
 
-    assert kwargs["stop"].max_attempt_number == 7
-    assert kwargs["before_sleep"] is not None
-    assert kwargs["retry_error_callback"] is not None
+    assert result == "ok"

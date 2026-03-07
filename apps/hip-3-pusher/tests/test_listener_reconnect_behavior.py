@@ -1,7 +1,5 @@
 import asyncio
 import json
-from collections.abc import Iterator
-from types import SimpleNamespace
 
 import pytest
 
@@ -98,9 +96,11 @@ def test_hyperliquid_stale_channel_detection_propagates(
     )
     fake_ws = _HyperliquidFakeWs()
 
-    monkeypatch.setattr("pusher.hyperliquid_listener.websockets.connect", lambda _url: fake_ws)
+    monkeypatch.setattr(
+        "pusher.hyperliquid_listener.websockets.connect", lambda _url: fake_ws
+    )
 
-    times: Iterator[float] = iter([0.0, 10.0])
+    times = iter([0.0, 10.0])
     monkeypatch.setattr("pusher.hyperliquid_listener.time.time", lambda: next(times))
 
     with pytest.raises(StaleConnectionError, match="No messages in channel"):

@@ -27,12 +27,11 @@ from typing import Any
 
 import websockets
 from loguru import logger
-from tenacity import retry
 
 from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceSourceState, PriceUpdate
-from pusher.retry import build_listener_retry_kwargs
+from pusher.retry import run_with_listener_retry
 
 # Default WebSocket URLs (can be overridden in config)
 # Note: Other RPC providers exist but may have incomplete support for all channels
@@ -115,18 +114,12 @@ class HyperliquidListener:
 
     async def subscribe_single(self, url: str) -> None:
         logger.info("Starting Hyperliquid listener loop: {}", url)
-
-        @retry(
-            **build_listener_retry_kwargs(
-                listener_name="HyperliquidListener",
-                endpoint=url,
-                stop_after_attempt_count=self.stop_after_attempt,
-            )
+        await run_with_listener_retry(
+            operation=lambda: self.subscribe_single_inner(url),
+            listener_name="HyperliquidListener",
+            endpoint=url,
+            stop_after_attempt_count=self.stop_after_attempt,
         )
-        async def _run() -> None:
-            return await self.subscribe_single_inner(url)
-
-        return await _run()
 
     async def subscribe_single_inner(self, url: str) -> None:
         async with websockets.connect(url) as ws:
