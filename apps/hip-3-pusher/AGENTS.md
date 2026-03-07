@@ -9,6 +9,7 @@ Application code lives in `src/pusher/` with listeners (`lazer_listener.py`, `he
 - `uv run mypy src/`: run strict type checks for production code.
 - `uv run pytest tests/`: run the full app test suite.
 - `python -m pytest tests/test_retry_utils.py tests/test_listener_reconnect_behavior.py`: fast focused verification for retry/listener changes.
+- `uv lock`: regenerate `uv.lock` when dependencies or project metadata changes require lockfile updates.
 
 ## Coding Style & Naming Conventions
 Use Python 3.13 style with fully typed function signatures in `src/`. Keep modules snake_case and classes PascalCase. Prefer explicit reconnect exceptions over sentinel return values in listeners. For logging, use `logger.exception(...)` where traceback context is useful. Keep retry/reconnect log levels intentional: expected reconnect events should be `INFO`, not `WARNING`.
@@ -33,7 +34,7 @@ Add or update regression tests under `tests/` for:
 - decode-error reconnect behavior across listeners
 
 ## Commit & Pull Request Guidelines
-Use concise conventional-style messages (`fix(hip-3-pusher): ...`). Keep PR scope focused on one behavioral change family (retry, parsing, metrics, etc.). In PR descriptions, include the exact verification commands run and mention any CI-sensitive typing or lint decisions.
+Use concise conventional-style messages (`fix(hip-3-pusher): ...`). Keep PR scope focused on one behavioral change family (retry, parsing, metrics, etc.). In PR descriptions, include the exact verification commands run and mention any CI-sensitive typing or lint decisions. If dependency metadata or version changes affect lock resolution, run `uv lock` and commit the resulting `uv.lock` update in the same PR.
 
 ## Security & Configuration Tips
 Do not commit secrets or tokens from runtime configs. Keep local caches and generated artifacts out of git (for example, `.hypothesis/` should remain ignored). Validate `git status` before commit to avoid accidentally staging environment-specific files.
