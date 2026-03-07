@@ -88,10 +88,6 @@ parser.command(
     const emitter = new WormholeEmitter("devnet", emitterWallet);
     console.info("Using wallet:", emitterWallet.publicKey.toBase58());
 
-    console.info(
-      `Adding trusted signer ${emitter.wallet.publicKey.toBase58()} ...`,
-    );
-
     console.info("Submitting governance message to Wormhole...");
     const payload = new UpdateTrustedSigner256Bit(
       chain,
