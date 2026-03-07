@@ -17,6 +17,7 @@ tsconfig.tsbuildinfo
 *mnemonic*
 */*.sui.log*
 __pycache__
+.hypothesis/
 .DS_Store
 .vercel
 .direnv
