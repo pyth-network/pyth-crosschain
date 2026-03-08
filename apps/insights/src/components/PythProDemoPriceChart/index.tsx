@@ -56,7 +56,7 @@ export function PythProDemoPriceChartImpl({
   selectedSource,
 }: PythProDemoPriceChartImplProps) {
   /** hooks */
-  const { theme } = useAppTheme();
+  const { effectiveTheme } = useAppTheme();
 
   /** refs */
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -120,11 +120,11 @@ export function PythProDemoPriceChartImpl({
     if (!containerRef.current) return;
 
     const grayColor =
-      theme === "dark"
+      effectiveTheme === "dark"
         ? (getThemeCssVar("--theme-palette-gray-800") ?? "#ccc")
         : (getThemeCssVar("--theme-palette-gray-300") ?? "#f1f1f3");
     const grayText =
-      theme === "dark"
+      effectiveTheme === "dark"
         ? (getThemeCssVar("--theme-palette-gray-300") ?? "#f1f1f3")
         : (getThemeCssVar("--theme-palette-gray-800") ?? "#ccc");
 
@@ -174,7 +174,7 @@ export function PythProDemoPriceChartImpl({
       seriesMapRef.current = {};
       seriesDataRef.current = {};
     };
-  }, [handleSetChartRef, theme]);
+  }, [handleSetChartRef, effectiveTheme]);
 
   useEffect(() => {
     if (
