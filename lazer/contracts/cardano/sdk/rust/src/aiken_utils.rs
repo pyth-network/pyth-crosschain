@@ -11,11 +11,15 @@ use uplc::{
 
 pub fn with_project(
     dir: Option<&Path>,
+    env: Option<String>,
     with: impl FnOnce(&mut Project<EventTarget>) -> Result<()>,
 ) -> Result<()> {
     let mut with = Some(with);
     aiken_project::watch::with_project(dir, true, false, false, |project| {
-        project.compile(Options::default())?;
+        project.compile(Options {
+            env: env.clone(),
+            ..Options::default()
+        })?;
         let with = with.take().ok_or_else(|| {
             vec![io::Error::other(anyhow!("expected single project in directory")).into()]
         })?;
@@ -56,10 +60,10 @@ pub fn term_to_data(term: Term<NamedDeBruijn>) -> PlutusData {
 }
 
 pub fn eval_to_data(program: Program<DeBruijn>) -> Result<PlutusData> {
-    Ok(term_to_data(
-        program
-            .eval(ExBudget::max())
-            .result()
-            .map_err(|e| anyhow!("{e:?}"))?,
-    ))
+    let result = program.eval(ExBudget::max());
+    let traces = result.traces();
+    if !traces.is_empty() {
+        println!("traces: {traces:#?}")
+    }
+    Ok(term_to_data(result.result().map_err(|e| anyhow!("{e:?}"))?))
 }

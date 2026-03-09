@@ -14,7 +14,7 @@ fn main() -> Result<()> {
     let opts = Opts::parse();
     match opts.command {
         Command::Eval(EvalOpts { module, name, args }) => {
-            let res = eval(opts.dir.as_deref(), &module, &name, &args)?;
+            let res = eval(opts.dir.as_deref(), &module, &name, &args, opts.env)?;
             let bytes = res.encode_fragment().map_err(|e| anyhow!("{e}"))?;
             println!("{}", hex::encode(bytes));
         }
@@ -22,9 +22,15 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn eval(dir: Option<&Path>, module: &str, name: &str, args: &[String]) -> Result<PlutusData> {
+fn eval(
+    dir: Option<&Path>,
+    module: &str,
+    name: &str,
+    args: &[String],
+    env: Option<String>,
+) -> Result<PlutusData> {
     let mut program = None;
-    with_project(dir, |project| {
+    with_project(dir, env, |project| {
         let export = project
             .export(&module, name, Tracing::verbose())
             .map_err(|e| anyhow!("{e}"))?;
@@ -41,6 +47,9 @@ struct Opts {
     /// Project directory
     #[clap(long)]
     dir: Option<PathBuf>,
+    /// Environment used for compilation
+    #[clap(long)]
+    env: Option<String>,
     #[clap(subcommand)]
     command: Command,
 }
