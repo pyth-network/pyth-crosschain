@@ -64,7 +64,10 @@ pnpm cli init --network "$CARDANO_NETWORK" \
   --initial-guardian "$INITIAL_GUARDIAN"
 ```
 
-Generate withdraw script upgrade for devnet:
+This outputs policy IDs identifying Wormhole and Pyth deployments. We will refer to them
+as `WORMHOLE_ID` and `PYTH_ID`.
+
+Generate trusted signer proposal for self-managed testnet deployment:
 
 ```bash
 # Emitter key matching configuration used for deploy
@@ -79,11 +82,7 @@ pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
   --expires "1799422709"
 ```
 
-and execute VAA provided in output:
-
-**TODO**
-
-or propose withdraw script on production:
+or propose signer update to governance on production:
 
 ```bash
 # Key for ops wallet capable of submitting proposals
@@ -98,10 +97,27 @@ pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
   --expires "1799422709"
 ```
 
-and execute VAA created by the accepted proposal:
+and execute VAA provided in the output:
 
-**TODO**
+```bash
+cd "$REPO/lazer/contracts/cardano/sdk/js"
 
-Then do the same with used withdraw script:
+pnpm cli execute --network "$CARDANO_NETWORK" \
+  --wormhole "$WORMHOLE_ID" \
+  --state "$PYTH_ID" \
+  --vaa "$VAA"
+```
 
-**TODO**
+Then do the same with used withdraw script - on testnet:
+
+```bash
+# TODO
+```
+
+or production:
+
+```bash
+# TODO
+```
+
+executing the VAA provided in output.

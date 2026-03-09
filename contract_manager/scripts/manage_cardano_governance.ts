@@ -1,7 +1,11 @@
 /** biome-ignore-all lint/suspicious/noConsole: this is a CLI script */
 import type { Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client";
-import { UpdateTrustedSigner256Bit } from "@pythnetwork/xc-admin-common";
+import {
+  UpdateTrustedSigner256Bit,
+  UpgradeCardanoSpendScript,
+  UpgradeCardanoWithdrawScript,
+} from "@pythnetwork/xc-admin-common";
 import type { Options } from "yargs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -62,6 +66,11 @@ const commonOptions = {
     description: "timestamp of expiration in seconds",
     type: "string",
   },
+  script: {
+    demandOption: true,
+    description: "script hash",
+    type: "string",
+  },
   "solana-wallet": {
     demandOption: true,
     description: "path to solana wallet used for creating a proposal",
@@ -92,6 +101,69 @@ parser.command(
     const payload = new UpdateTrustedSigner256Bit(
       chain,
       trustedSigner,
+      expires,
+    ).encode();
+    const submitted = await emitter.sendMessage(payload);
+
+    console.info(
+      `Awaiting signed VAA #${submitted.sequenceNumber.toString()}...`,
+    );
+    const vaa = await submitted.fetchVaa(10);
+
+    console.info(
+      `VAA ID: "1/${submitted.emitter.toBuffer().toString("hex")}/${submitted.sequenceNumber}"`,
+    );
+    console.info("VAA:", JSON.stringify(vaa.toString("hex")));
+  },
+);
+
+parser.command(
+  "test-upgrade-spend-script",
+  "create VAA for upgrading a spending script in a test contract",
+  (b) =>
+    b.options({
+      emitter: commonOptions.emitter,
+      script: commonOptions.script,
+    }),
+  async ({ chain, emitter: emitterPath, script }) => {
+    const emitterWallet = await loadHotWallet(emitterPath);
+    const emitter = new WormholeEmitter("devnet", emitterWallet);
+    console.info("Using wallet:", emitterWallet.publicKey.toBase58());
+
+    console.info("Submitting governance message to Wormhole...");
+    const payload = new UpgradeCardanoSpendScript(chain, script).encode();
+    const submitted = await emitter.sendMessage(payload);
+
+    console.info(
+      `Awaiting signed VAA #${submitted.sequenceNumber.toString()}...`,
+    );
+    const vaa = await submitted.fetchVaa(10);
+
+    console.info(
+      `VAA ID: "1/${submitted.emitter.toBuffer().toString("hex")}/${submitted.sequenceNumber}"`,
+    );
+    console.info("VAA:", JSON.stringify(vaa.toString("hex")));
+  },
+);
+
+parser.command(
+  "test-upgrade-withdraw-script",
+  "create VAA for upgrading a withdrawing script in a test contract",
+  (b) =>
+    b.options({
+      emitter: commonOptions.emitter,
+      expires: commonOptions.expires,
+      script: commonOptions.script,
+    }),
+  async ({ chain, emitter: emitterPath, expires, script }) => {
+    const emitterWallet = await loadHotWallet(emitterPath);
+    const emitter = new WormholeEmitter("devnet", emitterWallet);
+    console.info("Using wallet:", emitterWallet.publicKey.toBase58());
+
+    console.info("Submitting governance message to Wormhole...");
+    const payload = new UpgradeCardanoWithdrawScript(
+      chain,
+      script,
       expires,
     ).encode();
     const submitted = await emitter.sendMessage(payload);

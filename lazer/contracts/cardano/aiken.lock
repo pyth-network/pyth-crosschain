@@ -8,7 +8,7 @@ source = "github"
 
 [[requirements]]
 name = "pyth-network/pyth-lazer-cardano"
-version = "matej/init"
+version = "main"
 source = "github"
 
 [[packages]]
@@ -19,9 +19,9 @@ source = "github"
 
 [[packages]]
 name = "pyth-network/pyth-lazer-cardano"
-version = "matej/init"
+version = "main"
 requirements = []
 source = "github"
 
 [etags]
-"pyth-network/pyth-lazer-cardano@matej/init" = [{ secs_since_epoch = 1773068114, nanos_since_epoch = 894995000 }, "9eea57f3cf86b829734f1feec0b9a91a7179aa530f55725da73b1cdb9c722c65"]
+"pyth-network/pyth-lazer-cardano@main" = [{ secs_since_epoch = 1773084392, nanos_since_epoch = 816502000 }, "a46dacd97a22eb07feeaf966d48c3116c8249ddc836705656e3135cea285bcfc"]

@@ -96,8 +96,6 @@ const PYTH_OWNER_NFT = AssetName.fromBytes(Buffer.from("Pyth Ops", "utf-8"));
 const pythStateMint = MintingValidator.new(Pyth_state_init_mint);
 const pythStateSpend = SpendingValidator.new(Pyth_state_update_spend);
 
-// TODO: which script do we want to reference in state UTxO - spending or
-// withdrawing one?
 export async function initPythState(
   ctx: ClientContext,
   origin: UTxO.UTxO,

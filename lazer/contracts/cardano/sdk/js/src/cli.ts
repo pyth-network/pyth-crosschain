@@ -141,6 +141,13 @@ parser.command(
       path.resolve(import.meta.dirname, "./offchain.ts"),
       offchainSrc,
     );
+
+    console.info("Script hashes:");
+    for (const { title, hash } of blueprint.validators) {
+      if (!title.endsWith(".else")) {
+        console.info(`  ${title}: ${hash}`);
+      }
+    }
   },
 );
 
@@ -203,7 +210,7 @@ parser.command(
 );
 
 parser.command(
-  "execute-governance-action",
+  "execute",
   "Executes supported governance action, using provided VAA",
   (b) =>
     b.options({

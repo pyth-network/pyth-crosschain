@@ -118,7 +118,6 @@ pub fn execute_governance_action(
       state.new(home, pyth)
     }
     UpgradeSpendScript(hash) -> state.new(hash, pyth)
-    // TODO: custom deprecation range through governance?
     UpgradeWithdrawScript { new_script, previous_validity } -> {
       let pyth =
         Pyth {

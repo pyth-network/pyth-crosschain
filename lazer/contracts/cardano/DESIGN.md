@@ -159,22 +159,20 @@ withdraw script invoked by users is in [`validators/pyth_price`] module.
 Finally, [`pyth/message`] and [`pyth`] modules implement parsing for Pyth Lazer
 messages and their payloads. These are to be shared between our contracts and
 user contracts, with users calling `pyth.get_updates(hash, transaction)` to get
-verified updates passed into the transaction (**TODO(matej):** [change `get_updates`
-signature](https://github.com/pyth-network/pyth-lazer-cardano/blob/9ddf746483af08481c221e3ba2aca68de0a3ae7a/lib/pyth.ak#L24))
+verified updates passed into the transaction.
 
-<!-- TODO: update links to `main` once merged -->
-[`parser`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/parser.ak
-[`pyth`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/pyth.ak
-[`pyth/message`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/pyth/message.ak
+[`parser`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/parser.ak
+[`pyth`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/pyth.ak
+[`pyth/message`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/pyth/message.ak
 [`wormhole.ts`]: ./sdk/js/src/wormhole.ts
 [`secp256k1`]: ./lib/secp256k1.ak
 [`state`]: ./lib/state.ak
-[`types/i16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/i16.ak
-[`types/i64`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/i64.ak
-[`types/u8`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u8.ak
-[`types/u16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u16.ak
-[`types/u32`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u32.ak
-[`types/u64`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/matej/init/lib/types/u64.ak
+[`types/i16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/i16.ak
+[`types/i64`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/i64.ak
+[`types/u8`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/u8.ak
+[`types/u16`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/u16.ak
+[`types/u32`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/u32.ak
+[`types/u64`]: https://github.com/pyth-network/pyth-lazer-cardano/blob/main/lib/types/u64.ak
 [`validators/wormhole_state`]: ./validators/wormhole_state.ak
 [`validators/pyth_state`]: ./validators/pyth_state.ak
 [`validators/pyth_price`]: ./validators/pyth_price.ak

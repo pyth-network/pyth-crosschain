@@ -17,8 +17,7 @@ source = "github"
 
 [[dependencies]]
 name = "pyth-network/pyth-lazer-cardano"
-# TODO: replace with `main` or version tag once it gets merged
-version = "matej/init"
+version = "main"
 source = "github"
 
 [config]
