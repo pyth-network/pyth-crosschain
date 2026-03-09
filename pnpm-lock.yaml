@@ -1993,9 +1993,9 @@ importers:
       '@noble/curves':
         specifier: ^2.0.1
         version: 2.0.1
-      '@pythnetwork/shared-lib':
-        specifier: 'workspace:'
-        version: link:../../../../../packages/shared-lib
+      '@pythnetwork/xc-admin-common':
+        specifier: workspace:*
+        version: link:../../../../../governance/xc_admin/packages/xc_admin_common
       '@wormhole-foundation/sdk-definitions':
         specifier: ^0.10.12
         version: 0.10.12
@@ -44107,7 +44107,7 @@ snapshots:
       inherits: 2.0.4
       ripemd160: 2.0.2
       safe-buffer: 5.2.1
-      sha.js: 2.4.11
+      sha.js: 2.4.12
 
   create-jest-runner@0.11.2:
     dependencies:
@@ -56909,7 +56909,7 @@ snapshots:
 
   web3-utils@1.10.0:
     dependencies:
-      bn.js: 5.2.1
+      bn.js: 5.2.3
       ethereum-bloom-filters: 1.2.0
       ethereumjs-util: 7.1.5
       ethjs-unit: 0.1.6

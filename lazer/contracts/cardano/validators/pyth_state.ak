@@ -73,39 +73,8 @@ validator update {
       )
 
     when action is {
-      GovernanceAction(action) -> {
-        let (action, governance) =
-          governance.parse_and_verify_action(action, pyth.governance, guardians)
-        let pyth = Pyth { ..pyth, governance }
-        when action is {
-          UpdateTrustedSigner(key, valid) -> {
-            let pyth =
-              Pyth {
-                ..pyth,
-                trusted_signers: message.update_trusted_signer(
-                  pyth.trusted_signers,
-                  key,
-                  valid,
-                ),
-              }
-            state.new(state.home, pyth)
-          }
-          UpgradeSpendScript(hash) -> state.new(hash, pyth)
-          // TODO: custom deprecation range through governance?
-          UpgradeWithdrawScript { new_script, previous_validity } -> {
-            let pyth =
-              Pyth {
-                ..pyth,
-                withdraw_script: new_script,
-                deprecated_withdraw_scripts: [
-                  Pair(previous_validity, pyth.withdraw_script),
-                  ..pyth.deprecated_withdraw_scripts
-                ],
-              }
-            state.new(state.home, pyth)
-          }
-        }
-      }
+      GovernanceAction(action) ->
+        execute_governance_action(pyth, action, guardians, state.home)
       PurgeExpiredWithdrawScripts -> {
         expect is_owner
         let pyth =
@@ -123,6 +92,45 @@ validator update {
 
   else(_) {
     fail
+  }
+}
+
+pub fn execute_governance_action(
+  pyth: Pyth,
+  action: PreparedVAA,
+  guardians: Guardians,
+  home: ScriptHash,
+) {
+  let (action, governance) =
+    governance.parse_and_verify_action(action, pyth.governance, guardians)
+  let pyth = Pyth { ..pyth, governance }
+  when action is {
+    UpdateTrustedSigner(key, valid) -> {
+      let pyth =
+        Pyth {
+          ..pyth,
+          trusted_signers: message.update_trusted_signer(
+            pyth.trusted_signers,
+            key,
+            valid,
+          ),
+        }
+      state.new(home, pyth)
+    }
+    UpgradeSpendScript(hash) -> state.new(hash, pyth)
+    // TODO: custom deprecation range through governance?
+    UpgradeWithdrawScript { new_script, previous_validity } -> {
+      let pyth =
+        Pyth {
+          ..pyth,
+          withdraw_script: new_script,
+          deprecated_withdraw_scripts: [
+            Pair(previous_validity, pyth.withdraw_script),
+            ..pyth.deprecated_withdraw_scripts
+          ],
+        }
+      state.new(home, pyth)
+    }
   }
 }
 

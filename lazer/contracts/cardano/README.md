@@ -54,7 +54,7 @@ CARDANO_NETWORK="custom"
 # https://wormhole.com/docs/products/reference/chain-ids
 GOVERNANCE_CHAIN="1" # for Solana
 # Wormhole emitter address
-GOVERNANCE_ADDRESS="a36234ef3749a2c94136b6345bceff450791ef1ebc99e918f16f8075a441bb24"
+GOVERNANCE_ADDRESS="5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e"
 # Has to match contract `env` config, determines Wormhole network
 INITIAL_GUARDIAN="58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
 

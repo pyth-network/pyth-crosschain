@@ -20,6 +20,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { runDevnetSession } from "./devnet.js";
 import {
+  applyGovernanceAction,
   applyGuardianSetUpgrade,
   initPythState,
   initWormholeState,
@@ -27,7 +28,7 @@ import {
 } from "./transactions.js";
 import type { TransactionContext } from "./utils.js";
 import { execFileAsync, getOriginUtxo, newTxCtx, runTx } from "./utils.js";
-import { prepareGuardianSetVAAs } from "./wormhole.js";
+import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
 async function getCustomSlotConfig(): Promise<SlotConfig> {
   const healthRes = await fetch("http://127.0.0.1:1337/health");
@@ -115,7 +116,10 @@ async function initAndUpgradeWormhole(
   console.info("Initialized Pyth Wormhole:", wormholeDigest);
 
   console.info("Upgrading Pyth Wormhole...");
-  const upgrades = await prepareGuardianSetVAAs();
+  const upgrades =
+    ctx.parameters.networkId === "mainnet"
+      ? await prepareGuardianSetVAAs()
+      : [];
   for (const upgrade of upgrades) {
     console.info(`...to guardian set #${upgrade.index}...`);
     const digest = await runTx(
@@ -153,6 +157,11 @@ const commonOptions = {
   state: {
     demandOption: true,
     description: "Policy ID of the state token",
+    type: "string",
+  },
+  wormhole: {
+    demandOption: true,
+    description: "Policy ID of the Wormhole state token",
     type: "string",
   },
 } as const;
@@ -262,6 +271,44 @@ parser.command(
 );
 
 parser.command(
+  "execute-governance-action",
+  "Executes supported governance action, using provided VAA",
+  (b) =>
+    b.options({
+      mnemonic: commonOptions.mnemonic,
+      network: commonOptions.network,
+      state: commonOptions.state,
+      vaa: {
+        demandOption: true,
+        description: "VAA encoded as a hex string",
+        type: "string",
+      },
+      wormhole: commonOptions.wormhole,
+    }),
+  async ({
+    network: networkId,
+    mnemonic,
+    state: statePolicy,
+    wormhole: wormholePolicy,
+    vaa,
+  }) => {
+    const prepared = prepareGovernanceAction(Buffer.from(vaa, "hex"));
+    console.log(`Executing ${prepared.action.action}...`);
+
+    const ctx = await getCtx(networkId, mnemonic);
+    const tx = await applyGovernanceAction(
+      ctx,
+      wormholePolicy,
+      statePolicy,
+      prepared,
+      "preview", // TODO
+    );
+    const digest = await runTx(ctx, tx);
+    console.log("Digest:", digest);
+  },
+);
+
+parser.command(
   "purge-withdraw-scripts",
   "Removes expired withdraw scripts",
   (b) =>
@@ -269,11 +316,7 @@ parser.command(
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       state: commonOptions.state,
-      wormhole: {
-        demandOption: true,
-        description: "Policy ID of the Wormhole state token",
-        type: "string",
-      },
+      wormhole: commonOptions.wormhole,
     }),
   async ({
     network: networkId,

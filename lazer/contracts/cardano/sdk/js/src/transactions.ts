@@ -1,15 +1,26 @@
 import path from "node:path";
-import type { UTxO } from "@evolution-sdk/evolution";
-import { AssetName, Assets, PolicyId, Schema } from "@evolution-sdk/evolution";
+import type { ScriptHash, UTxO } from "@evolution-sdk/evolution";
+import {
+  AssetName,
+  Assets,
+  Data,
+  PolicyId,
+  Schema,
+  TSchema,
+} from "@evolution-sdk/evolution";
 import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
 import { aikenEval } from "./eval.js";
 import {
+  AikenCryptoScriptHash,
+  ByteArray,
   CardanoTransactionValidityRange,
   Pairs_cardanoTransactionValidityRange_aikenCryptoScriptHash_,
   Pyth_state_init_mint,
   Pyth_state_update_spend,
+  PythPyth,
   Wormhole_state_init_mint,
   Wormhole_state_update_spend,
+  WormholeVaaPreparedVAA,
 } from "./offchain.js";
 import type { TransactionContext } from "./utils.js";
 import {
@@ -18,7 +29,11 @@ import {
   toMe,
   utxoToOutRef,
 } from "./utils.js";
-import type { PreparedGuardianSetUpgrade } from "./wormhole.js";
+import type {
+  PreparedGovernanceAction,
+  PreparedGuardianSetUpgrade,
+  PreparedVAA,
+} from "./wormhole.js";
 
 const WH_STATE_NFT = AssetName.fromBytes(Buffer.from("Pyth Wormhole", "utf-8"));
 const WH_OWNER_NFT = AssetName.fromBytes(
@@ -120,6 +135,79 @@ export async function initPythState(
       .payToAddress(state)
       .payToAddress(await toMe(ctx, ownerNFT)),
   };
+}
+
+export async function applyGovernanceAction(
+  ctx: TransactionContext,
+  whPolicy: string,
+  policy: string,
+  action: PreparedGovernanceAction,
+  env: string,
+) {
+  const guardians = await ctx.client.getUtxoByUnit(
+    whPolicy + AssetName.toHex(WH_STATE_NFT),
+  );
+  const state = await ctx.client.getUtxoByUnit(
+    policy + AssetName.toHex(PYTH_STATE_NFT),
+  );
+
+  // TODO: if spending script changes schema, this function won't support the update
+  const {
+    input,
+    datums: [oldState],
+  } = pythStateSpend.spend([state], {
+    _tag: "GovernanceAction",
+    governanceAction: action.vaa,
+  });
+
+  if (guardians.datumOption?._tag !== "InlineDatum") {
+    throw new Error("invalid Guardians datum");
+  }
+
+  const spender = pythStateSpend.script();
+  const { home, data } = await executeGovernanceAction(
+    oldState,
+    action.vaa,
+    guardians.datumOption.data,
+    spender.hash,
+    env,
+  );
+  const newState = spender.receive(ctx.parameters, state.assets, data);
+
+  return ctx.client
+    .newTx()
+    .readFrom({ referenceInputs: [guardians] })
+    .collectFrom(input)
+    .payToAddress(newState);
+}
+
+const PythState =
+  // biome-ignore assist/source/useSortedKeys: order-sensitive
+  TSchema.Struct({ home: ByteArray, data: PythPyth });
+
+async function executeGovernanceAction(
+  pyth: (typeof PythState)["Type"]["data"],
+  action: PreparedVAA,
+  guardians: Data.Data,
+  home: ScriptHash.ScriptHash,
+  env: string,
+): Promise<(typeof PythState)["Type"]> {
+  const newState = await aikenEval(
+    path.resolve(import.meta.dirname, "../../../"),
+    "pyth_state",
+    "execute_governance_action",
+    [
+      Schema.encodeSync(PythPyth)(pyth),
+      Schema.encodeSync(WormholeVaaPreparedVAA)(action),
+      guardians,
+      Schema.encodeSync(AikenCryptoScriptHash)(home.hash),
+    ],
+    { env },
+  );
+  if (!(newState instanceof Data.Constr)) {
+    throw new Error("expected State Constr");
+  }
+  return Schema.decodeSync(PythState)(newState);
 }
 
 export async function purgeExpiredPythWithdrawScripts(

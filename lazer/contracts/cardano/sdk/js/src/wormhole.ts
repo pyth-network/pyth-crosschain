@@ -1,4 +1,10 @@
 import { secp256k1 } from "@noble/curves/secp256k1.js";
+import {
+  decodeGovernancePayload,
+  UpdateTrustedSigner256Bit,
+  UpgradeCardanoSpendScript,
+  UpgradeCardanoWithdrawScript,
+} from "@pythnetwork/xc-admin-common";
 import type { VAA } from "@wormhole-foundation/sdk-definitions";
 import * as wormhole from "@wormhole-foundation/sdk-definitions";
 
@@ -9,6 +15,41 @@ export type PreparedVAA = {
   vaa: Uint8Array;
   recovered_keys: Uint8Array[];
 };
+
+export type PreparedGovernanceAction = {
+  vaa: PreparedVAA;
+  action:
+    | UpdateTrustedSigner256Bit
+    | UpgradeCardanoSpendScript
+    | UpgradeCardanoWithdrawScript;
+};
+
+export function prepareGovernanceAction(
+  vaa: Uint8Array,
+): PreparedGovernanceAction {
+  const parsed = wormhole.deserialize("Uint8Array", vaa);
+  const keys = recoverVaaPublicKeys(parsed);
+  const action = decodeGovernancePayload(Buffer.from(parsed.payload));
+  if (!action) {
+    throw new Error("Could not decode governance action");
+  }
+  if (
+    !(
+      action instanceof UpdateTrustedSigner256Bit ||
+      action instanceof UpgradeCardanoSpendScript ||
+      action instanceof UpgradeCardanoWithdrawScript
+    )
+  ) {
+    throw new TypeError("Not a valid Cardano governance action");
+  }
+  return {
+    action,
+    vaa: {
+      recovered_keys: keys.map(({ key }) => key),
+      vaa,
+    },
+  };
+}
 
 export type PreparedGuardianSetUpgrade = {
   vaa: PreparedVAA;
