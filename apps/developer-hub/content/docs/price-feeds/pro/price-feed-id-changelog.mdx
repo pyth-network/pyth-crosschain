@@ -1,0 +1,23 @@
+---
+title: Price Feed ID Changelog
+description: Daily UTC changelog for Pyth Pro Price Feed ID updates
+slug: /price-feeds/pro/price-feed-id-changelog
+---
+
+import { Suspense } from "react";
+import { PriceFeedIdsProChangelog } from "../../../../src/components/PriceFeedIdsProChangelog";
+import { Callout } from "fumadocs-ui/components/callout";
+
+<Callout type="info">
+  This page is built from daily snapshots of the [Symbols List
+  API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols) and grouped
+  by UTC date.
+
+  The default view focuses on status transitions (including `Coming Soon ->
+  Stable`). Turn on `Include all property changes` to inspect every detected
+  field diff.
+</Callout>
+
+<Suspense>
+  <PriceFeedIdsProChangelog />
+</Suspense>
