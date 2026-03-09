@@ -9,6 +9,7 @@ import {
   TSchema,
 } from "@evolution-sdk/evolution";
 import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
+import type { ClientContext } from "./client.js";
 import { aikenEval } from "./eval.js";
 import {
   AikenCryptoScriptHash,
@@ -22,13 +23,7 @@ import {
   Wormhole_state_update_spend,
   WormholeVaaPreparedVAA,
 } from "./offchain.js";
-import type { TransactionContext } from "./utils.js";
-import {
-  MintingValidator,
-  SpendingValidator,
-  toMe,
-  utxoToOutRef,
-} from "./utils.js";
+import { MintingValidator, SpendingValidator, utxoToOutRef } from "./utils.js";
 import type {
   PreparedGovernanceAction,
   PreparedGuardianSetUpgrade,
@@ -44,7 +39,7 @@ const wormholeStateMint = MintingValidator.new(Wormhole_state_init_mint);
 const wormholeStateSpend = SpendingValidator.new(Wormhole_state_update_spend);
 
 export async function initWormholeState(
-  ctx: TransactionContext,
+  ctx: ClientContext,
   origin: UTxO.UTxO,
   initialGuardian: string,
 ): Promise<{ policy: PolicyId.PolicyId; tx: SigningTransactionBuilder }> {
@@ -55,7 +50,7 @@ export async function initWormholeState(
   );
   const stateNFT = minter.asset(WH_STATE_NFT, 1n);
   const ownerNFT = minter.asset(WH_OWNER_NFT, 1n);
-  const state = spender.receive(ctx.parameters, stateNFT, {
+  const state = spender.receive(ctx, stateNFT, {
     set: [Buffer.from(initialGuardian, "hex")],
     set_index: 0n,
   });
@@ -70,18 +65,16 @@ export async function initWormholeState(
         wormholeStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"),
       )
       .payToAddress(state)
-      .payToAddress(await toMe(ctx, ownerNFT)),
+      .payToAddress(await ctx.payToMe(ownerNFT)),
   };
 }
 
 export async function applyGuardianSetUpgrade(
-  ctx: TransactionContext,
+  ctx: ClientContext,
   policy: string,
   upgrade: PreparedGuardianSetUpgrade,
 ) {
-  const state = await ctx.client.getUtxoByUnit(
-    policy + AssetName.toHex(WH_STATE_NFT),
-  );
+  const state = await ctx.getNftUtxo(policy, WH_STATE_NFT);
 
   const { input } = wormholeStateSpend.spend([state], upgrade.vaa);
   const spender = wormholeStateSpend.script();
@@ -90,7 +83,7 @@ export async function applyGuardianSetUpgrade(
     .newTx()
     .collectFrom(input)
     .payToAddress(
-      spender.receive(ctx.parameters, state.assets, {
+      spender.receive(ctx, state.assets, {
         set: upgrade.set.map((g) => Buffer.from(g.replace(/^0x/, ""), "hex")),
         set_index: BigInt(upgrade.index),
       }),
@@ -106,7 +99,7 @@ const pythStateSpend = SpendingValidator.new(Pyth_state_update_spend);
 // TODO: which script do we want to reference in state UTxO - spending or
 // withdrawing one?
 export async function initPythState(
-  ctx: TransactionContext,
+  ctx: ClientContext,
   origin: UTxO.UTxO,
   initial: {
     wormhole: Uint8Array;
@@ -118,7 +111,7 @@ export async function initPythState(
   const minter = pythStateMint.script(utxoToOutRef(origin), spender.hash.hash);
   const stateNFT = minter.asset(PYTH_STATE_NFT, 1n);
   const ownerNFT = minter.asset(PYTH_OWNER_NFT, 1n);
-  const state = spender.receive(ctx.parameters, stateNFT, {
+  const state = spender.receive(ctx, stateNFT, {
     deprecated_withdraw_scripts: new Map(),
     governance: { ...initial, seen_sequence: 0n },
     trusted_signers: new Map(),
@@ -133,23 +126,19 @@ export async function initPythState(
       .attachScript(minter)
       .mintAssets(pythStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"))
       .payToAddress(state)
-      .payToAddress(await toMe(ctx, ownerNFT)),
+      .payToAddress(await ctx.payToMe(ownerNFT)),
   };
 }
 
 export async function applyGovernanceAction(
-  ctx: TransactionContext,
+  ctx: ClientContext,
   whPolicy: string,
   policy: string,
   action: PreparedGovernanceAction,
   env: string,
 ) {
-  const guardians = await ctx.client.getUtxoByUnit(
-    whPolicy + AssetName.toHex(WH_STATE_NFT),
-  );
-  const state = await ctx.client.getUtxoByUnit(
-    policy + AssetName.toHex(PYTH_STATE_NFT),
-  );
+  const guardians = await ctx.getNftUtxo(whPolicy, WH_STATE_NFT);
+  const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
 
   // TODO: if spending script changes schema, this function won't support the update
   const {
@@ -165,14 +154,14 @@ export async function applyGovernanceAction(
   }
 
   const spender = pythStateSpend.script();
-  const { home, data } = await executeGovernanceAction(
+  const { data } = await executeGovernanceAction(
     oldState,
     action.vaa,
     guardians.datumOption.data,
     spender.hash,
     env,
   );
-  const newState = spender.receive(ctx.parameters, state.assets, data);
+  const newState = spender.receive(ctx, state.assets, data);
 
   return ctx.client
     .newTx()
@@ -211,19 +200,13 @@ async function executeGovernanceAction(
 }
 
 export async function purgeExpiredPythWithdrawScripts(
-  ctx: TransactionContext,
+  ctx: ClientContext,
   whPolicy: string,
   policy: string,
 ) {
-  const guardians = await ctx.client.getUtxoByUnit(
-    whPolicy + AssetName.toHex(WH_STATE_NFT),
-  );
-  const state = await ctx.client.getUtxoByUnit(
-    policy + AssetName.toHex(PYTH_STATE_NFT),
-  );
-  const owner = await ctx.client.getUtxoByUnit(
-    policy + AssetName.toHex(PYTH_OWNER_NFT),
-  );
+  const guardians = await ctx.getNftUtxo(whPolicy, WH_STATE_NFT);
+  const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
+  const owner = await ctx.getNftUtxo(policy, PYTH_OWNER_NFT);
 
   const {
     input,
@@ -249,7 +232,7 @@ export async function purgeExpiredPythWithdrawScripts(
       },
     },
   );
-  const newState = spender.receive(ctx.parameters, state.assets, {
+  const newState = spender.receive(ctx, state.assets, {
     ...oldState,
     deprecated_withdraw_scripts: newScripts,
   });
@@ -261,8 +244,7 @@ export async function purgeExpiredPythWithdrawScripts(
     .collectFrom({ ...input, inputs: [...input.inputs, owner] })
     .payToAddress(newState)
     .payToAddress(
-      await toMe(
-        ctx,
+      await ctx.payToMe(
         Assets.fromAsset(PolicyId.fromHex(policy), PYTH_OWNER_NFT, 1n),
       ),
     );

@@ -11,21 +11,10 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import type {
-  AssetName,
-  Cardano,
-  Data,
-  DatumOption,
-  SigningClient,
-  TransactionHash,
-  UTxO,
-} from "@evolution-sdk/evolution";
+import type { AssetName, Cardano, Data, UTxO } from "@evolution-sdk/evolution";
 import {
-  Address,
   Assets,
   CBOR,
-  Effect,
-  Either,
   InlineDatum,
   PolicyId,
   Schema,
@@ -40,10 +29,7 @@ import type {
   PayToAddressParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
-import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
-import { calculateMinimumUtxoLovelace } from "@evolution-sdk/evolution/sdk/builders/TxBuilderImpl";
-import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
-import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
+import type { ClientContext } from "./client";
 
 export const execFileAsync = promisify(execFile);
 
@@ -68,82 +54,12 @@ export const plutusV3FromAiken = (compiledCode: string) => {
   return new PlutusV3.PlutusV3({ bytes });
 };
 
-export type TransactionContext = {
-  client: SigningClient;
-  parameters: TransactionParameters;
-};
-
-export const newTxCtx = async (
-  client: SigningClient,
-  networkId: TransactionParameters["networkId"],
-): Promise<TransactionContext> => ({
-  client,
-  parameters: { ...(await client.getProtocolParameters()), networkId },
-});
-
-export async function getOriginUtxo(client: SigningClient) {
-  const [origin] = await client.getWalletUtxos();
-  if (!origin) {
-    throw new Error("No UTxO to use as origin");
-  }
-  return origin;
-}
-
-type TransactionParameters = ProtocolParameters & {
-  networkId: NetworkId | "custom";
-};
-
-const calculateFee = (
-  {
-    script,
-    ...args
-  }: {
-    address: Address.Address;
-    assets: Assets.Assets;
-    datum?: DatumOption.DatumOption;
-    script?: Cardano.Script.Script;
-  },
-  { coinsPerUtxoByte }: { coinsPerUtxoByte: bigint },
-): bigint =>
-  Effect.runSync(
-    calculateMinimumUtxoLovelace({
-      ...args,
-      coinsPerUtxoByte,
-      ...(script ? { scriptRef: script } : {}),
-    }),
-  );
-
 export const utxoToOutRef = (
   utxo: UTxO.UTxO,
 ): OutputReference.OutputReference => ({
   output_index: utxo.index,
   transaction_id: utxo.transactionId.hash,
 });
-
-export async function toMe(
-  ctx: TransactionContext,
-  assets: Assets.Assets,
-): Promise<PayToAddressParams> {
-  const address = await ctx.client.address();
-  const payment = { address, assets };
-  payment.assets = Assets.addLovelace(
-    payment.assets,
-    calculateFee(payment, ctx.parameters),
-  );
-  return payment;
-}
-
-export async function runTx(
-  ctx: TransactionContext,
-  tx: SigningTransactionBuilder,
-): Promise<TransactionHash.TransactionHash> {
-  const digest = await Either.getOrThrowWith(
-    await tx.buildEither({ debug: true }),
-    (e) => JSON.stringify(e, undefined, 2),
-  ).signAndSubmit();
-  await ctx.client.awaitTx(digest);
-  return digest;
-}
 
 type RedeemerArg<T> = T | ((input: IndexedInput) => T);
 type DataSchema<T> = Schema.Schema<T, any>;
@@ -310,7 +226,7 @@ export type SpendingValidatorBlueprint<
 
 type SpendingScript<Datum> = Script & {
   receive: (
-    parameters: TransactionParameters,
+    ctx: ClientContext,
     assets: Assets.Assets,
     datum: Datum,
   ) => PayToAddressParams;
@@ -356,22 +272,16 @@ export class SpendingValidator<
     const { script, hash } = this.applyScript(params);
     return {
       hash,
-      receive: (parameters, assets, datumValue) => {
+      receive: (ctx, assets, datumValue) => {
         const payment = {
-          address: new Address.Address({
-            networkId: parameters.networkId === "mainnet" ? 1 : 0,
-            paymentCredential: hash,
-          }),
+          address: ctx.newAddress(hash),
           assets,
           datum: new InlineDatum.InlineDatum({
             data: applyPlutusOrWithSchema(this.blueprint.datum, datumValue),
           }),
           script,
         };
-        payment.assets = Assets.addLovelace(
-          payment.assets,
-          calculateFee(payment, parameters),
-        );
+        payment.assets = ctx.assetsWithFee(payment);
         return payment;
       },
       script,

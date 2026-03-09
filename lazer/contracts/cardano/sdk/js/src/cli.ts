@@ -3,21 +3,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import {
-  createClient,
-  PolicyId,
-  TransactionHash,
-  UTxO,
-} from "@evolution-sdk/evolution";
+import { PolicyId, TransactionHash, UTxO } from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
   createCodegenConfig,
   generateTypeScript,
 } from "@evolution-sdk/evolution/blueprint";
-import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
-import type { SlotConfig } from "@evolution-sdk/evolution/Time";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import type { Network } from "./client.js";
+import { ClientContext, getOfflineDevnetClient } from "./client.js";
 import { runDevnetSession } from "./devnet.js";
 import {
   applyGovernanceAction,
@@ -26,83 +21,15 @@ import {
   initWormholeState,
   purgeExpiredPythWithdrawScripts,
 } from "./transactions.js";
-import type { TransactionContext } from "./utils.js";
-import { execFileAsync, getOriginUtxo, newTxCtx, runTx } from "./utils.js";
+import { execFileAsync } from "./utils.js";
 import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
-async function getCustomSlotConfig(): Promise<SlotConfig> {
-  const healthRes = await fetch("http://127.0.0.1:1337/health");
-  const { startTime } = await healthRes.json();
-
-  const summariesRes = await fetch("http://localhost:1337", {
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      method: "queryLedgerState/eraSummaries",
-    }),
-    method: "POST",
-  });
-  const { result: summaries } = await summariesRes.json();
-  const { slotLength } = summaries[summaries.length - 1].parameters;
-
-  return {
-    slotLength: slotLength.milliseconds,
-    zeroSlot: 0n,
-    zeroTime: BigInt(Date.parse(startTime)),
-  };
-}
-
-const getClient = async (
-  networkId: NetworkId | "custom",
-  mnemonic: string,
-  slotConfig?: SlotConfig,
-) =>
-  createClient({
-    network: networkId === "custom" ? 0 : networkId,
-    provider:
-      networkId === "custom"
-        ? {
-            kupoUrl: "http://localhost:1442",
-            ogmiosUrl: "http://localhost:1337",
-            type: "kupmios",
-          }
-        : {
-            baseUrl: `https://${
-              {
-                mainnet: "api",
-                preprod: "preprod",
-                preview: "preview",
-              }[networkId]
-            }.koios.rest/api/v1`,
-            ...(process.env.KOIOS_API_KEY
-              ? { token: process.env.KOIOS_API_KEY }
-              : {}),
-            type: "koios",
-          },
-    ...(slotConfig ? { slotConfig } : {}),
-    wallet: {
-      accountIndex: 0,
-      mnemonic,
-      type: "seed",
-    },
-  });
-
-async function getCtx(
-  networkId: NetworkId | "custom",
-  mnemonic: string,
-): Promise<TransactionContext> {
-  const client = await getClient(
-    networkId,
-    mnemonic,
-    networkId === "custom" ? await getCustomSlotConfig() : undefined,
-  );
-  return newTxCtx(client, networkId);
-}
-
 async function initAndUpgradeWormhole(
-  ctx: TransactionContext,
+  ctx: ClientContext,
   initialGuardian: string,
+  // TODO: env used for upgrades list
 ) {
-  const wormholeOrigin = await getOriginUtxo(ctx.client);
+  const wormholeOrigin = await ctx.getOriginUtxo();
   console.info(
     `Picked Wormhole origin: ${UTxO.toOutRefString(wormholeOrigin)}`,
   );
@@ -112,18 +39,15 @@ async function initAndUpgradeWormhole(
     wormholeOrigin,
     initialGuardian,
   );
-  const wormholeDigest = await runTx(ctx, wormhole.tx);
+  const wormholeDigest = await ctx.run(wormhole.tx);
   console.info("Initialized Pyth Wormhole:", wormholeDigest);
 
   console.info("Upgrading Pyth Wormhole...");
   const upgrades =
-    ctx.parameters.networkId === "mainnet"
-      ? await prepareGuardianSetVAAs()
-      : [];
+    ctx.network === "mainnet" ? await prepareGuardianSetVAAs() : [];
   for (const upgrade of upgrades) {
     console.info(`...to guardian set #${upgrade.index}...`);
-    const digest = await runTx(
-      ctx,
+    const digest = await ctx.run(
       await applyGuardianSetUpgrade(
         ctx,
         PolicyId.toHex(wormhole.policy),
@@ -142,6 +66,12 @@ const parser = yargs().usage(
 );
 
 const commonOptions = {
+  koiosKey: {
+    default: process.env.KOIOS_API_KEY,
+    demandOption: true,
+    description: "Koios API key to use",
+    type: "string",
+  },
   mnemonic: {
     default: process.env.CARDANO_MNEMONIC,
     demandOption: true,
@@ -149,8 +79,8 @@ const commonOptions = {
     type: "string",
   },
   network: {
-    choices: ["mainnet", "preprod", "preview", "custom"] as const,
-    default: process.env.CARDANO_NETWORK as NetworkId | undefined,
+    choices: ["mainnet", "preprod", "preview", "devnet"] as const,
+    default: process.env.CARDANO_NETWORK as Network,
     demandOption: true,
     description: "Cardano network to use",
   },
@@ -233,36 +163,38 @@ parser.command(
         description: "initial Wormhole guardian",
         type: "string",
       },
+      "koios-key": commonOptions.koiosKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
     }),
   async ({
-    network: networkId,
-    mnemonic,
-    emitterChain,
     emitterAddress,
+    emitterChain,
     initialGuardian,
+    koiosKey,
+    mnemonic,
+    network,
   }) => {
-    const ctx = await getCtx(networkId, mnemonic);
+    const ctx = await ClientContext.create(network, mnemonic, koiosKey);
 
     console.info("Initializing Pyth Wormhole...");
     const whPolicy = await initAndUpgradeWormhole(
       ctx,
       initialGuardian ??
-        (networkId === "mainnet"
+        (network === "mainnet"
           ? // see `env/default.ak`
             "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
           : "13947bd48b18e53fdaeee77f3473391ac727c638"),
     );
 
     console.info("Initializing Pyth...");
-    const pythOrigin = await getOriginUtxo(ctx.client);
+    const pythOrigin = await ctx.getOriginUtxo();
     const pyth = await initPythState(ctx, pythOrigin, {
       emitter_address: Buffer.from(emitterAddress, "hex"),
       emitter_chain: BigInt(emitterChain),
       wormhole: whPolicy.hash,
     });
-    const pythDigest = await runTx(ctx, pyth.tx);
+    const pythDigest = await ctx.run(pyth.tx);
     console.info("Initialized Pyth:", TransactionHash.toHex(pythDigest));
 
     console.info("Pyth Wormhole Policy ID:", PolicyId.toHex(whPolicy));
@@ -275,6 +207,7 @@ parser.command(
   "Executes supported governance action, using provided VAA",
   (b) =>
     b.options({
+      "koios-key": commonOptions.koiosKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       state: commonOptions.state,
@@ -286,24 +219,26 @@ parser.command(
       wormhole: commonOptions.wormhole,
     }),
   async ({
-    network: networkId,
+    koiosKey,
     mnemonic,
+    network,
     state: statePolicy,
-    wormhole: wormholePolicy,
     vaa,
+    wormhole: wormholePolicy,
   }) => {
     const prepared = prepareGovernanceAction(Buffer.from(vaa, "hex"));
     console.log(`Executing ${prepared.action.action}...`);
 
-    const ctx = await getCtx(networkId, mnemonic);
-    const tx = await applyGovernanceAction(
-      ctx,
-      wormholePolicy,
-      statePolicy,
-      prepared,
-      "preview", // TODO
+    const ctx = await ClientContext.create(network, mnemonic, koiosKey);
+    const digest = await ctx.run(
+      await applyGovernanceAction(
+        ctx,
+        wormholePolicy,
+        statePolicy,
+        prepared,
+        "preview", // TODO
+      ),
     );
-    const digest = await runTx(ctx, tx);
     console.log("Digest:", digest);
   },
 );
@@ -313,21 +248,22 @@ parser.command(
   "Removes expired withdraw scripts",
   (b) =>
     b.options({
+      koiosKey: commonOptions.koiosKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       state: commonOptions.state,
       wormhole: commonOptions.wormhole,
     }),
   async ({
+    koiosKey,
     network: networkId,
     mnemonic,
     state: statePolicy,
     wormhole: wormholePolicy,
   }) => {
     console.info("Purging expired withdraw scripts...");
-    const ctx = await getCtx(networkId, mnemonic);
-    const digest = await runTx(
-      ctx,
+    const ctx = await ClientContext.create(networkId, mnemonic, koiosKey);
+    const digest = await ctx.run(
       await purgeExpiredPythWithdrawScripts(ctx, wormholePolicy, statePolicy),
     );
     console.log("Digest:", digest);
@@ -342,8 +278,8 @@ parser.command(
     if (!process.env.CARDANO_MNEMONIC) {
       throw new Error("missing CARDANO_MNEMONIC");
     }
-    const client = await getClient("custom", process.env.CARDANO_MNEMONIC);
-    await runDevnetSession(client).catch(console.error);
+    const client = getOfflineDevnetClient(process.env.CARDANO_MNEMONIC);
+    await runDevnetSession(client);
   },
 );
 
