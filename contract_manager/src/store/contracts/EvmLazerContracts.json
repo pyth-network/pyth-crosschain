@@ -88,5 +88,10 @@
     "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
     "chain": "polygon",
     "type": "EvmLazerContract"
+  },
+  {
+    "address": "0xACeA761c27A909d4D3895128EBe6370FDE2dF481",
+    "chain": "arbitrum",
+    "type": "EvmLazerContract"
   }
 ]

@@ -100,10 +100,10 @@ const parser = yargs(hideBin(process.argv))
       type: "string",
     },
     "raw-tx": {
-      type: "boolean",
+      default: false,
       description:
         "Sign and send transactions via eth_sendRawTransaction. Required for chains like MegaETH that don't support eth_sendTransaction.",
-      default: false,
+      type: "boolean",
     },
     "update-signer": {
       description: "Update trusted signer address (requires --expires-at)",
@@ -283,7 +283,12 @@ async function updateTrustedSigner(
   rawTx: boolean,
 ): Promise<void> {
   const contract = getOrCreateLazerContract(chain, contractAddress);
-  await contract.updateTrustedSigner(trustedSigner, expiresAt, privateKey, rawTx);
+  await contract.updateTrustedSigner(
+    trustedSigner,
+    expiresAt,
+    privateKey,
+    rawTx,
+  );
 }
 
 function findLazerContract(chain: EvmChain): EvmLazerContract | undefined {
