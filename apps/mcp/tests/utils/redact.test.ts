@@ -58,7 +58,13 @@ describe("redactAuthHeader", () => {
 describe("safeForLog", () => {
   it("redacts token-like strings", () => {
     expect(safeForLog("sk_abcdef")).toBe("[REDACTED]");
+    expect(safeForLog("pk_abcdef")).toBe("[REDACTED]");
     expect(safeForLog("Bearer xyz")).toBe("[REDACTED]");
+  });
+
+  it("does not redact pk_ or Bearer when embedded mid-string", () => {
+    expect(safeForLog("error: invalid pk_xxx")).toBe("error: invalid pk_xxx");
+    expect(safeForLog("no Bearer here")).toBe("no Bearer here");
   });
 
   it("passes through safe strings", () => {

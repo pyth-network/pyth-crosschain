@@ -50,7 +50,7 @@ export function redactAuthHeader(value: string | undefined): string {
 /** Safe string for logging — never logs raw tokens. */
 export function safeForLog(value: unknown): unknown {
   if (typeof value === "string") {
-    if (/^sk_|pk_|Bearer\s/i.test(value)) return REDACTED;
+    if (/^(?:sk_|pk_|Bearer\s)/i.test(value)) return REDACTED;
     return value;
   }
   if (value != null && typeof value === "object") {

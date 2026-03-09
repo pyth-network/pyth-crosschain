@@ -108,6 +108,31 @@ describe("Code Mode executor", () => {
     expect(!result.ok && result.error).toBeTruthy();
   });
 
+  it("cannot escape sandbox via host return value prototype chain", async () => {
+    const { execute } = createExecutor({ timeoutMs: 5_000 });
+    const hostCall = async () => ({ feeds: [{ symbol: "BTC/USD" }] });
+
+    const result = await execute(
+      `async () => {
+        const x = await codemode.get_symbols({});
+        // If return values are marshaled, x.constructor is Object from
+        // the sandbox realm (not host), so this should not give process.
+        try {
+          const proc = x.constructor.constructor("return typeof process")();
+          return proc;
+        } catch {
+          return "blocked";
+        }
+      }`,
+      hostCall,
+    );
+
+    expect(result.ok).toBe(true);
+    // Marshaled values have sandbox-realm constructors — typeof process
+    // inside the sandbox should be "undefined", or the attempt is blocked.
+    expect(result.ok && result.result).not.toBe("object");
+  });
+
   it("times out on never-settling promise", async () => {
     const { execute } = createExecutor({ timeoutMs: 200 });
     const hostCall = async () => null;

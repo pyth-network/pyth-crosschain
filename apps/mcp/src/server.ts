@@ -136,6 +136,7 @@ export function createServerCodeModeOnly(
     },
     {
       executionId: () => `exec-${sessionContext.sessionId}-${++executionCounter}`,
+      onToolCall: () => { sessionContext.toolCallCount += 1; },
       sessionId: sessionContext.sessionId,
     },
   );

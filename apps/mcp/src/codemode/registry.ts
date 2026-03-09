@@ -15,6 +15,7 @@ export function registerCodeModeTools(
   bindingContext: BindingContext,
   executionContext: {
     executionId: () => string;
+    onToolCall?: () => void;
     requestId?: string | number;
     sessionId?: string;
   },
@@ -31,6 +32,7 @@ export function registerCodeModeTools(
       inputSchema: z.object({}),
     },
     async () => {
+      executionContext.onToolCall?.();
       return { content: [{ text: CODE_MODE_TYPES, type: "text" as const }] };
     },
   );
@@ -49,6 +51,7 @@ export function registerCodeModeTools(
       }),
     },
     async ({ code }, extra) => {
+      executionContext.onToolCall?.();
       const execId = executionContext.executionId();
       const start = Date.now();
       const metrics = { toolsCalled: [] as string[], toolCallsInExecution: 0 };
@@ -87,7 +90,7 @@ export function registerCodeModeTools(
       const raw =
         typeof result.result === "string"
           ? result.result
-          : JSON.stringify(result.result);
+          : JSON.stringify(result.result) ?? "undefined";
       const resultText = raw ?? "undefined";
       const resultSizeBytes = Buffer.byteLength(resultText);
 
