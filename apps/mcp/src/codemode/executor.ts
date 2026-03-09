@@ -57,15 +57,30 @@ export function createExecutor(options: ExecutorOptions = {}): {
       // Create sandbox context first so we can marshal return values into it.
       const sandbox = createContext(Object.create(null));
 
+      // Create a bridge function inside the sandbox that produces sandbox-realm
+      // Promises. This prevents escape via un-awaited Promise prototype chains:
+      // `codemode.get_symbols({}).constructor.constructor("return process")()`.
+      type BridgeFn = (
+        fn: (resolve: (v: unknown) => void, reject: (e: unknown) => void) => void,
+      ) => Promise<unknown>;
+      const bridge: BridgeFn = runInContext(
+        `(function(fn) { return new Promise(function(r, j) { fn(r, j); }); })`,
+        sandbox,
+      );
+
       const codemode = Object.fromEntries(
         ["get_symbols", "get_historical_price", "get_candlestick_data", "get_latest_price"].map(
           (name) => {
-            const fn = async (arg: unknown) => {
-              const result = await hostCall(name, arg);
-              // Marshal return value through JSON and parse in sandbox realm
-              // to sever host prototype chains and prevent escape.
-              return marshalToSandbox(result, sandbox);
-            };
+            // Return sandbox-realm Promises via the bridge instead of host-realm
+            // async function Promises to prevent prototype chain escape.
+            const fn = (arg: unknown) =>
+              bridge((resolve, reject) => {
+                hostCall(name, arg)
+                  .then((result) => resolve(marshalToSandbox(result, sandbox)))
+                  .catch((err) =>
+                    reject(err instanceof Error ? err.message : String(err)),
+                  );
+              });
             // Sever the prototype chain so sandbox code cannot reach the host
             // Function constructor via fn.constructor("return process")().
             Object.setPrototypeOf(fn, null);

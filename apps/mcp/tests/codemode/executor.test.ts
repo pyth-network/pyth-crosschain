@@ -133,6 +133,30 @@ describe("Code Mode executor", () => {
     expect(result.ok && result.result).not.toBe("object");
   });
 
+  it("cannot escape sandbox via un-awaited Promise prototype chain", async () => {
+    const { execute } = createExecutor({ timeoutMs: 5_000 });
+    const hostCall = async () => ({ feeds: [] });
+
+    const result = await execute(
+      `async () => {
+        const p = codemode.get_symbols({});
+        // p is a sandbox-realm Promise — its constructor chain should not
+        // give access to host Function or process.
+        try {
+          const F = p.constructor.constructor;
+          return F("return typeof process")();
+        } catch {
+          return "blocked";
+        }
+      }`,
+      hostCall,
+    );
+
+    expect(result.ok).toBe(true);
+    // Should be "blocked" or "undefined" — never "object"
+    expect(result.ok && result.result).not.toBe("object");
+  });
+
   it("times out on never-settling promise", async () => {
     const { execute } = createExecutor({ timeoutMs: 200 });
     const hostCall = async () => null;
