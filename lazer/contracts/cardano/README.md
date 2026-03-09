@@ -78,7 +78,7 @@ cd "$REPO/contract_manager"
 pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
   test-update-trusted-signer \
   --emitter "$EMITTER_KEY" \
-  --signer "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b" \
+  --signer "80efc1f480c5615af3fb673d42287e993da9fbc3506b6e41dfa32950820c2e6c" \
   --expires "1799422709"
 ```
 
@@ -93,7 +93,7 @@ cd "$REPO/contract_manager"
 pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
   propose-update-trusted-signer \
   --wallet "$WALLET_KEY" \
-  --signer "03a4380f01136eb2640f90c17e1e319e02bbafbeef2e6e67dc48af53f9827e155b" \
+  --signer "80efc1f480c5615af3fb673d42287e993da9fbc3506b6e41dfa32950820c2e6c" \
   --expires "1799422709"
 ```
 
