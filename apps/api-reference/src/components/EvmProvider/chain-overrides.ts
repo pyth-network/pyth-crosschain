@@ -112,4 +112,23 @@ export const chainOverrides: readonly Chain[] = [
       },
     },
   }),
+  defineChain({
+    id: 4326,
+    name: "MegaETH",
+    nativeCurrency: {
+      name: "Ether",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: { http: ["https://mainnet.megaeth.com/rpc"] },
+    },
+    testnet: false,
+    blockExplorers: {
+      default: {
+        name: "MegaETH Explorer",
+        url: "https://mega.etherscan.io/",
+      },
+    },
+  }),
 ];
