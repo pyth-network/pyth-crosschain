@@ -59,7 +59,7 @@ Never present raw integer `price` values to users.
 | `offset` | number | No | Pagination offset, default 0 |
 
 Response: `{ count, feeds[], has_more, next_offset, offset, total_available }`.
-Feed fields: `symbol`, `name`, `description`, `asset_type`, `pyth_lazer_id`, `hermes_id` (Pyth Core only — not used by this server), `exponent`, `quote_currency`, `min_channel`, `state`, `market_sessions`.
+Feed fields: `symbol`, `name`, `description`, `asset_type`, `pyth_lazer_id`, `exponent`, `quote_currency`, `min_channel`, `state`, `market_sessions`.
 
 ### get_latest_price
 

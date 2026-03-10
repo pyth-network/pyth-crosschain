@@ -4,7 +4,7 @@ description: >
   Helps developers integrate Pyth price feeds into their applications. Explains
   feed discovery, symbol formats, ID types, exponents, and pricing channels.
   Use when a user asks "how do I use Pyth?", "what's the feed ID for X?",
-  "how do prices work?", or needs guidance on Pyth Pro vs Pyth Core.
+  or "how do prices work?".
 ---
 
 # Pyth Integration Helper
@@ -21,7 +21,7 @@ Understand the user's integration context first (language, chain, use case), the
 | "Symbol/feed for X?" | `get_symbols({ "query": "X" })` |
 | "How do prices work?" | Explain exponent, display_price, confidence |
 | "What asset types exist?" | List the 7 types or browse with `get_symbols` |
-| "Pyth Pro vs Pyth Core?" | Explain Lazer vs Hermes distinction |
+| "How does Pyth Pro work?" | Explain Pyth Pro architecture and data delivery |
 | "Get an access token?" | Link to https://pyth.network/pricing |
 | "What channels?" | Explain real_time, fixed_rate@50ms/200ms/1000ms |
 
@@ -41,7 +41,6 @@ Key response fields for integration:
 |-------|---------|
 | `symbol` | Full name with prefix (e.g., `Equity.US.AAPL`). Pass to tools. |
 | `pyth_lazer_id` | Numeric ID for this MCP server's `price_feed_ids` parameter |
-| `hermes_id` | Hex ID for Pyth Core/Hermes. **Not used** by this MCP server. |
 | `exponent` | Power of 10 to convert raw price to human price |
 | `asset_type` | crypto, fx, equity, metal, rates, commodity, funding-rate |
 | `min_channel` | Minimum update frequency for this feed |
@@ -78,14 +77,9 @@ Continue until `has_more: false`.
 
 Always use symbols exactly as returned by `get_symbols`. Never construct them manually.
 
-### ID types
+### Feed IDs
 
-| ID | Source | Used by |
-|----|--------|---------|
-| `pyth_lazer_id` | Pyth Pro (Lazer) | This MCP server's `price_feed_ids` parameter |
-| `hermes_id` | Pyth Core (Hermes) | On-chain contracts, Hermes API. **Not used** here. |
-
-This MCP server uses Pyth Pro (Lazer) infrastructure.
+Use `pyth_lazer_id` (numeric) when passing feed IDs to this server's `price_feed_ids` parameter. You can also use the full `symbol` string instead.
 
 ### Price model
 
@@ -119,11 +113,9 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
 
 ## Critical Mistakes to Avoid
 
-1. **Confusing Pyth Pro (Lazer) with Pyth Core (Hermes).** This MCP server uses Pyth Pro. The `hermes_id` field is for Pyth Core on-chain contracts — do not use it with this server's tools. Use `pyth_lazer_id` or `symbol`.
+1. **Using the wrong ID type.** The `price_feed_ids` parameter expects `pyth_lazer_id` (integer). Always use `pyth_lazer_id` or `symbol` when calling tools.
 
-2. **Using `hermes_id` with this MCP server's tools.** The `price_feed_ids` parameter expects `pyth_lazer_id` (integer), not `hermes_id` (hex string). Passing a hermes_id will fail or return wrong data.
-
-3. **Doing exponent math manually when `display_price` is pre-computed.** All price responses include `display_price`. There is no need to compute `price * 10^exponent` yourself.
+2. **Doing exponent math manually when `display_price` is pre-computed.** All price responses include `display_price`. There is no need to compute `price * 10^exponent` yourself.
 
 ## Examples
 
