@@ -24,8 +24,10 @@ Enterprise WebSocket streaming with configurable update channels (1ms–1s). Req
 Best for: HFT, MEV strategies, market making, risk management.
 SDK: \`@pythnetwork/pyth-lazer-sdk\` (TypeScript)
 > https://docs.pyth.network/llms-price-feeds-pro.txt
-MCP docs for AI assistants (setup, tools, troubleshooting):
+MCP server for AI assistants (setup, tools, troubleshooting):
 > https://docs.pyth.network/price-feeds/pro/mcp.mdx
+Pre-built MCP skills (price alerts, portfolio tracking, FX conversion, volatility analysis, and more):
+> https://docs.pyth.network/price-feeds/pro/mcp-skills.mdx
 
 ### Entropy — On-Chain Randomness
 Secure verifiable random number generation using commit-reveal. Callback-based API.
