@@ -27,6 +27,7 @@ const SNAPSHOT_RETENTION_DAYS = 10;
 const FETCH_TIMEOUT_MS = 30_000;
 
 const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+const MISSING = Symbol("missing");
 
 const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
 const DATA_DIR = path.join(
@@ -135,11 +136,23 @@ async function fetchCurrentSymbols(): Promise<SymbolRecord[]> {
   }
 
   const records: SymbolRecord[] = [];
-  for (const item of rawData) {
+  const failures: Array<{ index: number; error: string }> = [];
+  for (const [index, item] of rawData.entries()) {
     const result = symbolRecordSchema.safeParse(item);
     if (result.success) {
       records.push(sortKeys(result.data) as SymbolRecord);
+    } else {
+      failures.push({ index, error: result.error.message });
     }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(
+      `${String(failures.length)} symbol record(s) failed schema validation:\n${failures
+        .slice(0, 5)
+        .map((f) => `  [${String(f.index)}]: ${f.error}`)
+        .join("\n")}${failures.length > 5 ? `\n  ... and ${String(failures.length - 5)} more` : ""}`,
+    );
   }
 
   return records.toSorted((a, b) => a.pyth_lazer_id - b.pyth_lazer_id);
@@ -168,12 +181,19 @@ async function loadExistingRollup(): Promise<DailyRollupFile> {
   try {
     const content = await fs.readFile(ROLLUPS_PATH, "utf8");
     return JSON.parse(content) as DailyRollupFile;
-  } catch {
-    return {
-      generatedAt: new Date().toISOString(),
-      endpoint: SYMBOLS_ENDPOINT,
-      days: [],
-    };
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as NodeJS.ErrnoException).code === "ENOENT"
+    ) {
+      return {
+        generatedAt: new Date().toISOString(),
+        endpoint: SYMBOLS_ENDPOINT,
+        days: [],
+      };
+    }
+    throw error;
   }
 }
 
@@ -274,7 +294,10 @@ function diffValues(
   after: unknown,
   pathPrefix = "",
 ): FieldDiff[] {
-  if (JSON.stringify(before) === JSON.stringify(after)) return [];
+  if (before === MISSING && after === MISSING) return [];
+  if (before !== MISSING && after !== MISSING) {
+    if (JSON.stringify(before) === JSON.stringify(after)) return [];
+  }
 
   const beforeIsObject =
     typeof before === "object" && before !== null && !Array.isArray(before);
@@ -291,18 +314,24 @@ function diffValues(
     const fields: FieldDiff[] = [];
     for (const key of [...keys].toSorted((a, b) => a.localeCompare(b))) {
       const nextPath = pathPrefix === "" ? key : `${pathPrefix}.${key}`;
-      fields.push(
-        ...diffValues(
-          beforeObj[key] ?? null,
-          afterObj[key] ?? null,
-          nextPath,
-        ),
-      );
+      const bVal = key in beforeObj ? beforeObj[key] : MISSING;
+      const aVal = key in afterObj ? afterObj[key] : MISSING;
+      fields.push(...diffValues(bVal, aVal, nextPath));
     }
     return fields;
   }
 
-  return [{ path: pathPrefix === "" ? "$" : pathPrefix, before, after }];
+  // Serialize MISSING as "<absent>" so diffs clearly show added/removed keys
+  const serializeDiffValue = (v: unknown) =>
+    v === MISSING ? "<absent>" : v;
+
+  return [
+    {
+      path: pathPrefix === "" ? "$" : pathPrefix,
+      before: serializeDiffValue(before),
+      after: serializeDiffValue(after),
+    },
+  ];
 }
 
 /**

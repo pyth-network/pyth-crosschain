@@ -140,6 +140,8 @@ export const PriceFeedIdsProChangelog = () => {
         if (
           !includeAllFieldDiffs &&
           change.changeType !== "went_live" &&
+          change.changeType !== "added" &&
+          change.changeType !== "removed" &&
           change.statusBefore === change.statusAfter
         ) {
           return false;
