@@ -20,6 +20,7 @@
     "external:[Symbols List API](https://history.pyth-lazer.dourolabs.app/history/v1/symbols)",
     "external:[Example Applications](https://github.com/pyth-network/pyth-examples/tree/main/lazer)",
     "mcp",
+    "mcp-skills",
     "---Understanding Pyth Pro---",
     "how-lazer-works",
     "understanding-price-data"
