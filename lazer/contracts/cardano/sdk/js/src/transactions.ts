@@ -119,7 +119,7 @@ export async function initPythState(
     deprecated_withdraw_scripts: new Map(),
     governance: { ...initial, seen_sequence: 0n },
     trusted_signers: new Map(),
-    withdraw_script: new Uint8Array(),
+    withdraw_script: withdrawer.hash.hash,
   });
 
   return {

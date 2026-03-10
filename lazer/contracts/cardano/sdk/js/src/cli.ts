@@ -27,9 +27,7 @@ import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
 async function initAndUpgradeWormhole(ctx: ClientContext, mainnet: boolean) {
   const wormholeOrigin = await ctx.getOriginUtxo();
-  console.info(
-    `Picked Wormhole origin: ${UTxO.toOutRefString(wormholeOrigin)}`,
-  );
+  console.info("Picked Wormhole origin:", UTxO.toOutRefString(wormholeOrigin));
 
   const initialGuardian = mainnet
     ? // see `env/default.ak`
@@ -190,6 +188,7 @@ parser.command(
 
     console.info("Initializing Pyth...");
     const pythOrigin = await ctx.getOriginUtxo();
+    console.info("Picked Pyth origin:", UTxO.toOutRefString(pythOrigin));
     const pyth = await initPythState(ctx, pythOrigin, {
       emitter_address: Buffer.from(emitterAddress, "hex"),
       emitter_chain: BigInt(emitterChain),
