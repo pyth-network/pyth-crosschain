@@ -40,10 +40,15 @@ pub type StateConfig {
 pub type State<a> {
   home: ScriptHash,
   data: a,
+  reference_script: Option<ScriptHash>,
 }
 
-pub fn new(home: ScriptHash, data: Data) -> State<Data> {
-  State { home, data }
+pub fn new(
+  home: ScriptHash,
+  data: Data,
+  reference_script: Option<ScriptHash>,
+) -> State<Data> {
+  State { home, data, reference_script }
 }
 
 /// `mint` callback handler, to be used in backpassing style:
@@ -91,7 +96,8 @@ fn mint_state(
   expect Script(home) = output.address.payment_credential
   // output should initialize the state
   expect InlineDatum(data) = output.datum
-  with_initial(State { home, data })
+  let reference_script = output.reference_script
+  with_initial(State { home, data, reference_script })
 }
 
 fn burn_state(config: StateConfig, id: PolicyId, self: Transaction) {
@@ -142,7 +148,7 @@ pub fn spend(
     // state was burned, it's up to mint to ensure validity
     None -> True
     // state is preserved, it should be updated correctly
-    Some(Output { address, value, datum, .. }) -> {
+    Some(Output { address, value, datum, reference_script }) -> {
       // output with the state NFT should contain nothing more than ADA
       expect assets.has_nft_strict(value, id, config.state_nft)?
       // output is locked to a script to enforce valid datum updates
@@ -155,8 +161,12 @@ pub fn spend(
           self.inputs,
           fn(i) { assets.has_nft(i.output.value, id, config.owner_nft) },
         )
-      let updated = with_old(State { home, data }, is_owner)
-      (new_home == updated.home)? && (new_data == updated.data)?
+      let updated = with_old(State { home, data, reference_script }, is_owner)
+      and {
+        (new_home == updated.home)?,
+        (new_data == updated.data)?,
+        (reference_script == updated.reference_script)?,
+      }
     }
   }
 }

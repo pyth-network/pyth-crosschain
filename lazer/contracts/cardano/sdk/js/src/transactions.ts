@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { ScriptHash, UTxO } from "@evolution-sdk/evolution";
+import type { UTxO } from "@evolution-sdk/evolution";
 import {
   AssetName,
   Assets,
@@ -12,10 +12,10 @@ import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/bui
 import type { ClientContext } from "./client.js";
 import { aikenEval } from "./eval.js";
 import {
-  AikenCryptoScriptHash,
   ByteArray,
   CardanoTransactionValidityRange,
   Pairs_cardanoTransactionValidityRange_aikenCryptoScriptHash_,
+  Pyth_price_pyth_price_withdraw,
   Pyth_state_init_mint,
   Pyth_state_update_spend,
   PythPyth,
@@ -23,7 +23,12 @@ import {
   Wormhole_state_update_spend,
   WormholeVaaPreparedVAA,
 } from "./offchain.js";
-import { MintingValidator, SpendingValidator, utxoToOutRef } from "./utils.js";
+import {
+  MintingValidator,
+  SpendingValidator,
+  utxoToOutRef,
+  WithdrawingValidator,
+} from "./utils.js";
 import type {
   PreparedGovernanceAction,
   PreparedGuardianSetUpgrade,
@@ -107,6 +112,7 @@ export async function initPythState(
 ): Promise<{ policy: PolicyId.PolicyId; tx: SigningTransactionBuilder }> {
   const spender = pythStateSpend.script();
   const minter = pythStateMint.script(utxoToOutRef(origin), spender.hash.hash);
+  const withdrawer = pythPriceWithdraw.script(minter.hash.hash);
   const stateNFT = minter.asset(PYTH_STATE_NFT, 1n);
   const ownerNFT = minter.asset(PYTH_OWNER_NFT, 1n);
   const state = spender.receive(ctx, stateNFT, {
@@ -123,7 +129,8 @@ export async function initPythState(
       .collectFrom({ inputs: [origin] })
       .attachScript(minter)
       .mintAssets(pythStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"))
-      .payToAddress(state)
+      // TODO: how to enforce inline reference script on updates?
+      .payToAddress({ ...state, script: withdrawer.script })
       .payToAddress(await ctx.payToMe(ownerNFT)),
   };
 }
@@ -133,12 +140,11 @@ export async function applyGovernanceAction(
   whPolicy: string,
   policy: string,
   action: PreparedGovernanceAction,
-  env: string,
+  env?: "preprod" | "preview",
 ) {
   const guardians = await ctx.getNftUtxo(whPolicy, WH_STATE_NFT);
   const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
 
-  // TODO: if spending script changes schema, this function won't support the update
   const {
     input,
     datums: [oldState],
@@ -153,48 +159,73 @@ export async function applyGovernanceAction(
 
   const spender = pythStateSpend.script();
   const { data } = await executeGovernanceAction(
-    oldState,
+    {
+      data: oldState,
+      home: spender.hash.hash,
+      reference_script: oldState.withdraw_script,
+    },
     action.vaa,
     guardians.datumOption.data,
-    spender.hash,
     env,
   );
   const newState = spender.receive(ctx, state.assets, data);
 
   return ctx.client
     .newTx()
+    .attachScript(spender)
     .readFrom({ referenceInputs: [guardians] })
     .collectFrom(input)
     .payToAddress(newState);
 }
 
-const PythState =
+const StatePyth =
   // biome-ignore assist/source/useSortedKeys: order-sensitive
-  TSchema.Struct({ home: ByteArray, data: PythPyth });
+  TSchema.Struct({
+    home: ByteArray,
+    data: PythPyth,
+    reference_script: TSchema.NullOr(ByteArray),
+  });
 
 async function executeGovernanceAction(
-  pyth: (typeof PythState)["Type"]["data"],
+  state: (typeof StatePyth)["Type"],
   action: PreparedVAA,
   guardians: Data.Data,
-  home: ScriptHash.ScriptHash,
-  env: string,
-): Promise<(typeof PythState)["Type"]> {
+  env?: "preprod" | "preview",
+): Promise<(typeof StatePyth)["Type"]> {
   const newState = await aikenEval(
     path.resolve(import.meta.dirname, "../../../"),
     "pyth_state",
     "execute_governance_action",
     [
-      Schema.encodeSync(PythPyth)(pyth),
+      Schema.encodeSync(StatePyth)(state),
       Schema.encodeSync(WormholeVaaPreparedVAA)(action),
       guardians,
-      Schema.encodeSync(AikenCryptoScriptHash)(home.hash),
     ],
     { env },
   );
   if (!(newState instanceof Data.Constr)) {
     throw new Error("expected State Constr");
   }
-  return Schema.decodeSync(PythState)(newState);
+  return Schema.decodeSync(StatePyth)(newState);
+}
+
+const pythPriceWithdraw = WithdrawingValidator.new(
+  Pyth_price_pyth_price_withdraw,
+);
+
+export function withdrawScriptHash(policy: string) {
+  return pythPriceWithdraw.script(Buffer.from(policy, "hex")).hash;
+}
+
+export function verifyPrices(
+  ctx: ClientContext,
+  policy: string,
+  updates: Uint8Array[],
+) {
+  const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
+
+  // TODO: attach `withdraw` to state instead of `spend`
+  return ctx.client.newTx().withdraw(withdrawer.withdraw(0n, updates));
 }
 
 export async function purgeExpiredPythWithdrawScripts(
@@ -238,6 +269,7 @@ export async function purgeExpiredPythWithdrawScripts(
   return ctx.client
     .newTx()
     .setValidity(validityRange)
+    .attachScript(spender)
     .readFrom({ referenceInputs: [guardians] })
     .collectFrom({ ...input, inputs: [...input.inputs, owner] })
     .payToAddress(newState)

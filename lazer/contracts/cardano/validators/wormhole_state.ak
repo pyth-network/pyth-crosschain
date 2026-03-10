@@ -13,7 +13,6 @@ const genesis: Guardians =
 pub const config =
   StateConfig { state_nft: "Pyth Wormhole", owner_nft: "Pyth Wormhole Ops" }
 
-// TODO: spending script never changes, what if we merge these together?
 validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Never, id: PolicyId, self: Transaction) {
     let state <- state.mint(config, origin, id, self)
@@ -37,6 +36,7 @@ validator update {
     state.new(
       old.home,
       governance.parse_and_verify_guardian_set_upgrade(upgrade, old.data),
+      old.reference_script,
     )
   }
 

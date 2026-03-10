@@ -27,6 +27,7 @@ import type {
   CollectFromParams,
   MintTokensParams,
   PayToAddressParams,
+  WithdrawParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
 import type { ClientContext } from "./client";
@@ -307,6 +308,57 @@ export class SpendingValidator<
       input: {
         inputs,
         redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
+      },
+    };
+  }
+}
+
+export type WithdrawingValidatorBlueprint<
+  Params extends readonly any[],
+  Redeemer,
+> = ValidatorBlueprint<Params, Redeemer> & {
+  readonly title: `${string}.withdraw`;
+};
+
+export type WithdrawingScript<Redeemer> = Script & {
+  withdraw(amount: bigint, redeemer: Redeemer): WithdrawParams;
+};
+
+export class WithdrawingValidator<
+  Params extends readonly any[],
+  Redeemer,
+> extends Validator<Params, Redeemer> {
+  private constructor(
+    protected override readonly blueprint: WithdrawingValidatorBlueprint<
+      Params,
+      Redeemer
+    >,
+  ) {
+    super(blueprint);
+  }
+
+  static new<const B extends WithdrawingValidatorBlueprint<any, any>>(
+    blueprint: B,
+  ): WithdrawingValidator<ValidatorParameters<B>, ValidatorRedeemer<B>> {
+    return new WithdrawingValidator(
+      blueprint as unknown as WithdrawingValidatorBlueprint<
+        ValidatorParameters<B>,
+        ValidatorRedeemer<B>
+      >,
+    );
+  }
+
+  script(...params: Params): WithdrawingScript<Redeemer> {
+    const { script, hash } = this.applyScript(params);
+    return {
+      hash,
+      script,
+      withdraw: (amount, redeemer) => {
+        return {
+          amount,
+          redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
+          stakeCredential: hash,
+        };
       },
     };
   }

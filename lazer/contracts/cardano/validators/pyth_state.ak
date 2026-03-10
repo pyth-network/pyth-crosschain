@@ -34,6 +34,7 @@ pub type Action {
   PurgeExpiredWithdrawScripts
 }
 
+// TODO: track withdraw script?
 validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Never, id: PolicyId, self: Transaction) {
     let state <- state.mint(config, origin, id, self)
@@ -74,18 +75,20 @@ validator update {
 
     when action is {
       GovernanceAction(action) ->
-        execute_governance_action(pyth, action, guardians, state.home)
+        execute_governance_action(state, action, guardians)
       PurgeExpiredWithdrawScripts -> {
         expect is_owner
-        let pyth =
+        state.new(
+          state.home,
           Pyth {
-            ..pyth,
+            ..state.data,
             deprecated_withdraw_scripts: purge_expired_scripts(
-              pyth.deprecated_withdraw_scripts,
+              state.data.deprecated_withdraw_scripts,
               self.validity_range,
             ),
-          }
-        state.new(state.home, pyth)
+          },
+          state.reference_script,
+        )
       }
     }
   }
@@ -96,11 +99,11 @@ validator update {
 }
 
 pub fn execute_governance_action(
-  pyth: Pyth,
+  state: State<Pyth>,
   action: PreparedVAA,
   guardians: Guardians,
-  home: ScriptHash,
 ) {
+  let pyth = state.data
   let (action, governance) =
     governance.parse_and_verify_action(action, pyth.governance, guardians)
   let pyth = Pyth { ..pyth, governance }
@@ -115,9 +118,9 @@ pub fn execute_governance_action(
             valid,
           ),
         }
-      state.new(home, pyth)
+      state.new(state.home, pyth, state.reference_script)
     }
-    UpgradeSpendScript(hash) -> state.new(hash, pyth)
+    UpgradeSpendScript(hash) -> state.new(hash, pyth, state.reference_script)
     UpgradeWithdrawScript { new_script, previous_validity } -> {
       let pyth =
         Pyth {
@@ -128,7 +131,7 @@ pub fn execute_governance_action(
             ..pyth.deprecated_withdraw_scripts
           ],
         }
-      state.new(home, pyth)
+      state.new(state.home, pyth, Some(new_script))
     }
   }
 }

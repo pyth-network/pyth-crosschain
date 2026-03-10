@@ -49,25 +49,22 @@ pnpm cli build --env preview
 Initialize contracts state:
 
 ```bash
-CARDANO_NETWORK="custom"
+CARDANO_NETWORK="devnet"
 # Wormhole emitter chain ID, see:
 # https://wormhole.com/docs/products/reference/chain-ids
 GOVERNANCE_CHAIN="1" # for Solana
 # Wormhole emitter address
 GOVERNANCE_ADDRESS="5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e"
-# Has to match contract `env` config, determines Wormhole network
-INITIAL_GUARDIAN="58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
 
 pnpm cli init --network "$CARDANO_NETWORK" \
   --emitter-chain "$GOVERNANCE_CHAIN" \
-  --emitter-address "$GOVERNANCE_ADDRESS" \
-  --initial-guardian "$INITIAL_GUARDIAN"
+  --emitter-address "$GOVERNANCE_ADDRESS"
 ```
 
 This outputs policy IDs identifying Wormhole and Pyth deployments. We will refer to them
 as `WORMHOLE_ID` and `PYTH_ID`.
 
-Generate trusted signer proposal for self-managed testnet deployment:
+Generate trusted signer proposal for testnet self-managed deployment:
 
 ```bash
 # Emitter key matching configuration used for deploy
@@ -121,3 +118,7 @@ or production:
 ```
 
 executing the VAA provided in output.
+
+<!-- TODO:
+  To update, produce governance action with new CLI, but apply it with old CLI.
+-->

@@ -20,19 +20,22 @@ import {
   initPythState,
   initWormholeState,
   purgeExpiredPythWithdrawScripts,
+  withdrawScriptHash,
 } from "./transactions.js";
 import { execFileAsync } from "./utils.js";
 import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
-async function initAndUpgradeWormhole(
-  ctx: ClientContext,
-  initialGuardian: string,
-  // TODO: env used for upgrades list
-) {
+async function initAndUpgradeWormhole(ctx: ClientContext, mainnet: boolean) {
   const wormholeOrigin = await ctx.getOriginUtxo();
   console.info(
     `Picked Wormhole origin: ${UTxO.toOutRefString(wormholeOrigin)}`,
   );
+
+  const initialGuardian = mainnet
+    ? // see `env/default.ak`
+      "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
+    : "13947bd48b18e53fdaeee77f3473391ac727c638";
+  const upgrades = mainnet ? await prepareGuardianSetVAAs() : [];
 
   const wormhole = await initWormholeState(
     ctx,
@@ -40,11 +43,12 @@ async function initAndUpgradeWormhole(
     initialGuardian,
   );
   const wormholeDigest = await ctx.run(wormhole.tx);
-  console.info("Initialized Pyth Wormhole:", wormholeDigest);
+  console.info(
+    "Initialized Pyth Wormhole:",
+    TransactionHash.toHex(wormholeDigest),
+  );
 
   console.info("Upgrading Pyth Wormhole...");
-  const upgrades =
-    ctx.network === "mainnet" ? await prepareGuardianSetVAAs() : [];
   for (const upgrade of upgrades) {
     console.info(`...to guardian set #${upgrade.index}...`);
     const digest = await ctx.run(
@@ -54,7 +58,7 @@ async function initAndUpgradeWormhole(
         upgrade,
       ),
     );
-    console.info(`(Digest: ${digest})`);
+    console.info(`(Digest: ${TransactionHash.toHex(digest)})`);
   }
   console.info("...done.");
 
@@ -88,6 +92,11 @@ const commonOptions = {
     demandOption: true,
     description: "Policy ID of the state token",
     type: "string",
+  },
+  verbose: {
+    default: false,
+    description: "whether to enable verbose logging",
+    type: "boolean",
   },
   wormhole: {
     demandOption: true,
@@ -141,13 +150,6 @@ parser.command(
       path.resolve(import.meta.dirname, "./offchain.ts"),
       offchainSrc,
     );
-
-    console.info("Script hashes:");
-    for (const { title, hash } of blueprint.validators) {
-      if (!title.endsWith(".else")) {
-        console.info(`  ${title}: ${hash}`);
-      }
-    }
   },
 );
 
@@ -166,33 +168,25 @@ parser.command(
         description: "emitter chain ID",
         type: "number",
       },
-      "initial-guardian": {
-        description: "initial Wormhole guardian",
-        type: "string",
-      },
       "koios-key": commonOptions.koiosKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
+      verbose: commonOptions.verbose,
     }),
   async ({
     emitterAddress,
     emitterChain,
-    initialGuardian,
     koiosKey,
     mnemonic,
     network,
+    verbose,
   }) => {
-    const ctx = await ClientContext.create(network, mnemonic, koiosKey);
+    const ctx = await ClientContext.create(network, mnemonic, koiosKey, {
+      debug: verbose,
+    });
 
     console.info("Initializing Pyth Wormhole...");
-    const whPolicy = await initAndUpgradeWormhole(
-      ctx,
-      initialGuardian ??
-        (network === "mainnet"
-          ? // see `env/default.ak`
-            "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
-          : "13947bd48b18e53fdaeee77f3473391ac727c638"),
-    );
+    const whPolicy = await initAndUpgradeWormhole(ctx, network === "mainnet");
 
     console.info("Initializing Pyth...");
     const pythOrigin = await ctx.getOriginUtxo();
@@ -223,6 +217,7 @@ parser.command(
         description: "VAA encoded as a hex string",
         type: "string",
       },
+      verbose: commonOptions.verbose,
       wormhole: commonOptions.wormhole,
     }),
   async ({
@@ -231,22 +226,38 @@ parser.command(
     network,
     state: statePolicy,
     vaa,
+    verbose,
     wormhole: wormholePolicy,
   }) => {
     const prepared = prepareGovernanceAction(Buffer.from(vaa, "hex"));
     console.log(`Executing ${prepared.action.action}...`);
 
-    const ctx = await ClientContext.create(network, mnemonic, koiosKey);
+    const envs: Record<string, "preview" | "preprod" | undefined> = {
+      cardano_preprod: "preprod",
+      cardano_preview: "preview",
+    };
+    const ctx = await ClientContext.create(network, mnemonic, koiosKey, {
+      debug: verbose,
+    });
     const digest = await ctx.run(
       await applyGovernanceAction(
         ctx,
         wormholePolicy,
         statePolicy,
         prepared,
-        "preview", // TODO
+        envs[prepared.action.targetChainId],
       ),
     );
-    console.log("Digest:", digest);
+    console.log("Digest:", TransactionHash.toHex(digest));
+  },
+);
+
+parser.command(
+  "withdraw-script-hash",
+  "Computes withdraw script hash",
+  (b) => b.options({ state: commonOptions.state }),
+  ({ state }) => {
+    console.log("Hash:", withdrawScriptHash(state));
   },
 );
 
@@ -259,6 +270,7 @@ parser.command(
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       state: commonOptions.state,
+      verbose: commonOptions.verbose,
       wormhole: commonOptions.wormhole,
     }),
   async ({
@@ -266,10 +278,13 @@ parser.command(
     network: networkId,
     mnemonic,
     state: statePolicy,
+    verbose,
     wormhole: wormholePolicy,
   }) => {
     console.info("Purging expired withdraw scripts...");
-    const ctx = await ClientContext.create(networkId, mnemonic, koiosKey);
+    const ctx = await ClientContext.create(networkId, mnemonic, koiosKey, {
+      debug: verbose,
+    });
     const digest = await ctx.run(
       await purgeExpiredPythWithdrawScripts(ctx, wormholePolicy, statePolicy),
     );

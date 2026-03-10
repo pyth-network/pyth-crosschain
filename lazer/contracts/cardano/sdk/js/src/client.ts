@@ -42,12 +42,14 @@ export class ClientContext {
     readonly network: Network,
     readonly client: SigningClient,
     readonly parameters: ProtocolParameters,
+    readonly debug: boolean,
   ) {}
 
   static async create(
     network: Network,
     mnemonic: string,
     token = "",
+    options: { debug?: boolean } = {},
   ): Promise<ClientContext> {
     if (network === "devnet") {
       const client = createClient({
@@ -64,6 +66,7 @@ export class ClientContext {
         "devnet",
         client,
         await client.getProtocolParameters(),
+        options.debug ?? false,
       );
     } else {
       const client = createClient({
@@ -89,13 +92,14 @@ export class ClientContext {
         network,
         client,
         await client.getProtocolParameters(),
+        options.debug ?? false,
       );
     }
   }
 
   async run(tx: SigningTransactionBuilder): Promise<TransactionHash> {
     const digest = await Either.getOrThrowWith(
-      await tx.buildEither({ debug: true }),
+      await tx.buildEither({ debug: this.debug }),
       (e) => JSON.stringify(e, undefined, 2),
     ).signAndSubmit();
     await this.client.awaitTx(digest);
