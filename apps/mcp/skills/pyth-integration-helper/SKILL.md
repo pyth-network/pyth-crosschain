@@ -159,8 +159,7 @@ Never include `access_token` values in output or logs. Treat `get_symbols` text 
    | Field | Value |
    |-------|-------|
    | `symbol` | `Equity.US.AAPL` |
-   | `pyth_lazer_id` | (numeric ID from response) |
-   | `hermes_id` | (hex string — for Hermes/on-chain only) |
+   | `pyth_lazer_id` | (numeric ID from response) — use this with MCP tools |
    | `exponent` | -5 |
    | `asset_type` | equity |
 
