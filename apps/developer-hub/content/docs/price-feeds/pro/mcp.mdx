@@ -210,12 +210,18 @@ Fetch OHLC candlestick data for a single feed.
 - **Symptom:** Response includes `truncated: true`
 - **Fix:** Narrow the time range or use a larger resolution
 
-## Skills
+## Next: MCP Skills
 
-The MCP server includes pre-built **skills** — prompt templates that teach AI assistants specific workflows like portfolio tracking, volatility analysis, FX conversion, and more.
+Once the server is connected, you can go beyond raw tool calls with **MCP Skills** — pre-built prompt templates that teach your AI assistant specific workflows:
+
+- **Portfolio tracking** — value, allocation, and P&L in one question
+- **Volatility analysis** — annualized vol, ATR, and risk comparison
+- **FX conversion** — cross-rate conversions through Pyth feeds
+- **Data export** — dump OHLC, snapshots, or feed catalogs as CSV/JSON
+- **And more** — price alerts, funding rates, cross-asset comparisons, integration guidance
 
 <Callout type="info">
-  See the full catalog of available skills and example prompts on the [MCP Skills](/price-feeds/pro/mcp-skills) page.
+  Browse all 9 skills with example prompts on the [MCP Skills](/price-feeds/pro/mcp-skills) page.
 </Callout>
 
 ## Local Development
