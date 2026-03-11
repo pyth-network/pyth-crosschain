@@ -175,9 +175,7 @@ fn main() -> Result<()> {
                             last_error = format!("{err:#}");
                             eprintln!("[{chain}] attempt {attempt} failed: {last_error}");
                             if attempt < retries {
-                                eprintln!(
-                                    "[{chain}] retrying in {retry_delay_seconds} seconds..."
-                                );
+                                eprintln!("[{chain}] retrying in {retry_delay_seconds} seconds...");
                                 sleep(retry_delay);
                             }
                         }
