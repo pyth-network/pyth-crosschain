@@ -4,7 +4,7 @@ import { Play } from "@phosphor-icons/react/dist/ssr/Play";
 import { Stop } from "@phosphor-icons/react/dist/ssr/Stop";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Callout } from "fumadocs-ui/components/callout";
-import { useCallback, useMemo, useRef } from "react";
+import { Suspense, useCallback, useMemo, useRef } from "react";
 import { AccessTokenInput } from "../../Playground/AccessTokenInput";
 import { ChainSelector } from "../../Playground/ChainSelector";
 import { ChannelSelector } from "../../Playground/ChannelSelector";
@@ -144,8 +144,10 @@ function PlaygroundContent() {
 
 export function PlaygroundPage() {
   return (
-    <PlaygroundProvider>
-      <PlaygroundContent />
-    </PlaygroundProvider>
+    <Suspense>
+      <PlaygroundProvider>
+        <PlaygroundContent />
+      </PlaygroundProvider>
+    </Suspense>
   );
 }
