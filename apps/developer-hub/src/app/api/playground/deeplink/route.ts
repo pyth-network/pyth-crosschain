@@ -4,5 +4,5 @@ import { Cookies } from "../../../../cookies/initialAccessTokenCookie";
 
 export async function POST(request: NextRequest) {
   await Cookies.setInitialAccessToken(request);
-  return NextResponse.redirect("/playground", { status: 303 });
+  return NextResponse.redirect(new URL("/playground", request.url), { status: 303 });
 }
