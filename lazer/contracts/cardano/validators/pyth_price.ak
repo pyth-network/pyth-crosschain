@@ -1,11 +1,12 @@
 use aiken/collection/dict
 use aiken/collection/list
+use aiken/crypto.{ScriptHash}
 use aiken/interval
 use cardano/address.{Credential, Script}
 use cardano/assets
 use cardano/certificate.{Certificate}
 use cardano/transaction.{
-  InlineDatum, Input, Output, OutputReference, Transaction,
+  InlineDatum, Input, Output, OutputReference, Transaction, ValidityRange,
 }
 use pyth.{Governance, Pyth}
 use pyth/message
@@ -21,8 +22,7 @@ validator pyth_price(pyth_id: StateId) {
     expect pyth: Pyth =
       state.find(pyth_state.config, pyth_id, self.reference_inputs)
     expect Script(hash) = credential
-    expect
-      pyth_state.is_active_withdraw_script(pyth, self.validity_range, hash)?
+    expect is_active_withdraw_script(pyth, self.validity_range, hash)
     expect _ =
       list.for_each(
         updates,
@@ -41,6 +41,19 @@ validator pyth_price(pyth_id: StateId) {
   else(_) {
     fail
   }
+}
+
+pub fn is_active_withdraw_script(
+  self: Pyth,
+  range: ValidityRange,
+  hash: ScriptHash,
+) -> Bool {
+  self.withdraw_script == hash || list.any(
+    self.deprecated_withdraw_scripts,
+    fn(Pair(validity, deprecated)) {
+      deprecated == hash && interval.includes(validity, range)
+    },
+  )
 }
 
 fn test_tx(reference_inputs: List<Input>) -> Transaction {

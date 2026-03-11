@@ -102,7 +102,7 @@ fn mint_state(
 
 fn burn_state(config: StateConfig, id: PolicyId, self: Transaction) {
   // state and owner NFTs should be burned in lockstep
-  (assets.quantity_of(self.mint, id, config.owner_nft) == -1)?
+  assets.quantity_of(self.mint, id, config.owner_nft) == -1
 }
 
 /// `spend` callback handler, to be used in backpassing style:
@@ -137,7 +137,7 @@ pub fn spend(
   // ID, this spending script will always ensure that updates to it are valid.
   expect [(id, asset, 1)] =
     assets.without_lovelace(input.value) |> assets.flatten()
-  expect (asset == config.state_nft)?
+  expect asset == config.state_nft
 
   when
     list.find(
@@ -150,7 +150,7 @@ pub fn spend(
     // state is preserved, it should be updated correctly
     Some(Output { address, value, datum, reference_script }) -> {
       // output with the state NFT should contain nothing more than ADA
-      expect assets.has_nft_strict(value, id, config.state_nft)?
+      expect assets.has_nft_strict(value, id, config.state_nft)
       // output is locked to a script to enforce valid datum updates
       expect Script(new_home) = address.payment_credential
       // output should correctly update the state
@@ -163,9 +163,9 @@ pub fn spend(
         )
       let updated = with_old(State { home, data, reference_script }, is_owner)
       and {
-        (new_home == updated.home)?,
-        (new_data == updated.data)?,
-        (reference_script == updated.reference_script)?,
+        new_home == updated.home,
+        new_data == updated.data,
+        reference_script == updated.reference_script,
       }
     }
   }

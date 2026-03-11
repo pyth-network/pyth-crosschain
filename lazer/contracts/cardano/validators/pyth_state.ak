@@ -16,19 +16,6 @@ use wormhole_state
 pub const config =
   StateConfig { state_nft: "Pyth State", owner_nft: "Pyth Ops" }
 
-pub fn is_active_withdraw_script(
-  self: Pyth,
-  range: ValidityRange,
-  hash: ScriptHash,
-) -> Bool {
-  (self.withdraw_script == hash)? || list.any(
-    self.deprecated_withdraw_scripts,
-    fn(Pair(validity, deprecated)) {
-      (deprecated == hash)? && interval.includes(validity, range)?
-    },
-  )
-}
-
 pub type Action {
   GovernanceAction(PreparedVAA)
   PurgeExpiredWithdrawScripts
@@ -45,10 +32,10 @@ validator init(origin: OutputReference, home: ScriptHash) {
       withdraw_script: _,
     }: Pyth = state.data
     and {
-      (state.home == home)?,
-      (governance.seen_sequence == 0)?,
-      (trusted_signers == [])?,
-      (deprecated_withdraw_scripts == [])?,
+      state.home == home,
+      governance.seen_sequence == 0,
+      trusted_signers == [],
+      deprecated_withdraw_scripts == [],
     }
   }
 

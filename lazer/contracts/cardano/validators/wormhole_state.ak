@@ -17,7 +17,7 @@ validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Never, id: PolicyId, self: Transaction) {
     let state <- state.mint(config, origin, id, self)
     expect guardians: Guardians = state.data
-    (state.home == home)? && (guardians == genesis)?
+    state.home == home && guardians == genesis
   }
 
   else(_) {

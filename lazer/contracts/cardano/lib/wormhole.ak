@@ -41,8 +41,8 @@ pub fn has_quorum(
     )
 
   and {
-    (not_ordered_subset(recovered, self.set) |> option.is_none())?,
-    (list.length(recovered) >= quorum(self))?,
+    not_ordered_subset(recovered, self.set) |> option.is_none(),
+    list.length(recovered) >= quorum(self),
   }
 }
 
