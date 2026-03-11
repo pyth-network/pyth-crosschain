@@ -1,11 +1,16 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "extends": ["//"],
+  "extends": [
+    "//"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["generate:docs"],
+      "dependsOn": [
+        "generate:docs"
+      ],
       "env": [
         "VERCEL_ENV",
+        "COOKIE_SIGNING_SECRET",
         "GOOGLE_ANALYTICS_ID",
         "DISABLE_ACCESSIBILITY_REPORTING",
         "PYTH_PRO_DEMO_TOKEN",
@@ -14,10 +19,6 @@
         "PLAYGROUND_RATE_LIMIT_WINDOW_MS",
         "PLAYGROUND_RATE_LIMIT_MAX_REQUESTS"
       ]
-    },
-    "generate:docs": {
-      "dependsOn": ["//#install:modules", "^build"],
-      "outputs": ["content/docs/api-reference/**"]
     },
     "fix:lint": {
       "dependsOn": [
@@ -29,27 +30,58 @@
       ]
     },
     "fix:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build", "build"],
-      "cache": false
+      "cache": false,
+      "dependsOn": [
+        "//#install:modules",
+        "^build",
+        "build"
+      ]
     },
     "fix:lint:stylelint": {
-      "dependsOn": ["//#install:modules"],
-      "cache": false
+      "cache": false,
+      "dependsOn": [
+        "//#install:modules"
+      ]
+    },
+    "generate:docs": {
+      "dependsOn": [
+        "//#install:modules",
+        "^build"
+      ],
+      "outputs": [
+        "content/docs/api-reference/**"
+      ]
     },
     "start:prod": {
-      "dependsOn": ["//#install:modules", "build"]
+      "dependsOn": [
+        "//#install:modules",
+        "build"
+      ]
     },
     "test:lint": {
-      "dependsOn": ["test:lint:eslint", "test:lint:stylelint"]
+      "dependsOn": [
+        "test:lint:eslint",
+        "test:lint:stylelint"
+      ]
     },
     "test:lint:eslint": {
-      "dependsOn": ["//#install:modules", "^build", "build"]
+      "dependsOn": [
+        "//#install:modules",
+        "^build",
+        "build"
+      ]
     },
     "test:lint:stylelint": {
-      "dependsOn": ["//#install:modules"]
+      "dependsOn": [
+        "//#install:modules"
+      ]
     },
     "test:types": {
-      "dependsOn": ["//#install:modules", "^build", "build"]
+      "dependsOn": [
+        "//#install:modules",
+        "^build",
+        "build"
+      ]
     }
   }
 }
