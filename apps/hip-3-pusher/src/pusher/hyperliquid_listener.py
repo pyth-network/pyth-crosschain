@@ -27,11 +27,11 @@ from typing import Any
 
 import websockets
 from loguru import logger
-from tenacity import retry, retry_if_exception_type, wait_fixed
 
 from pusher.config import STALE_TIMEOUT_SECONDS, Config
 from pusher.exception import StaleConnectionError
 from pusher.price_state import PriceSourceState, PriceUpdate
+from pusher.retry import run_with_listener_retry
 
 # Default WebSocket URLs (can be overridden in config)
 # Note: Other RPC providers exist but may have incomplete support for all channels
@@ -114,18 +114,12 @@ class HyperliquidListener:
 
     async def subscribe_single(self, url: str) -> None:
         logger.info("Starting Hyperliquid listener loop: {}", url)
-
-        @retry(
-            retry=retry_if_exception_type(Exception),
-            wait=wait_fixed(1),
-            # For now, disable stop_after_attempt to avoid killing process.
-            # stop=stop_after_attempt(self.stop_after_attempt),
-            reraise=True,
+        await run_with_listener_retry(
+            operation=lambda: self.subscribe_single_inner(url),
+            listener_name="HyperliquidListener",
+            endpoint=url,
+            stop_after_attempt_count=self.stop_after_attempt,
         )
-        async def _run() -> None:
-            return await self.subscribe_single_inner(url)
-
-        return await _run()
 
     async def subscribe_single_inner(self, url: str) -> None:
         async with websockets.connect(url) as ws:
@@ -184,7 +178,7 @@ class HyperliquidListener:
                             now - channel_last_message_timestamp[data_channel]
                             > STALE_TIMEOUT_SECONDS
                         ):
-                            logger.warning(
+                            logger.info(
                                 "HyperliquidLister: no messages in channel {} stale in {} seconds; reconnecting...",
                                 data_channel,
                                 STALE_TIMEOUT_SECONDS,
@@ -198,7 +192,7 @@ class HyperliquidListener:
                         await ws.send(json.dumps({"method": "ping"}))
                         last_ping_timestamp = now
                 except TimeoutError:
-                    logger.warning(
+                    logger.info(
                         "HyperliquidListener: No messages overall in {} seconds, reconnecting...",
                         STALE_TIMEOUT_SECONDS,
                     )
@@ -208,7 +202,7 @@ class HyperliquidListener:
                 except websockets.ConnectionClosed as e:
                     rc = e.rcvd.code if e.rcvd else None
                     rr = e.rcvd.reason if e.rcvd else None
-                    logger.warning(
+                    logger.info(
                         "HyperliquidListener: Websocket connection closed (code={} reason={}); reconnecting...",
                         rc,
                         rr,
@@ -218,8 +212,14 @@ class HyperliquidListener:
                     logger.exception(
                         "Failed to decode JSON message: {} error: {}", message, repr(e)
                     )
+                    raise StaleConnectionError(
+                        "Failed to decode JSON message, reconnecting"
+                    ) from e
+                except StaleConnectionError:
+                    raise
                 except Exception as e:
                     logger.exception("Unexpected exception: {}", repr(e))
+                    raise
 
     def parse_hyperliquid_active_asset_ctx_update(
         self, message: dict[str, Any], now: float
@@ -251,6 +251,8 @@ class HyperliquidListener:
                 self.hl_mid_state.put(mid, PriceUpdate(mids[mid], now))
             logger.debug("allMids: {}", mids)
         except Exception as e:
-            logger.error(
-                "parse_hyperliquid_all_mids_update error: message: {} e: {}", message, e
+            logger.exception(
+                "parse_hyperliquid_all_mids_update error: message: {} e: {}",
+                message,
+                repr(e),
             )
