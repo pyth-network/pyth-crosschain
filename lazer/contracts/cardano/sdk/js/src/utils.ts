@@ -27,12 +27,16 @@ import type {
   CollectFromParams,
   MintTokensParams,
   PayToAddressParams,
+  RegisterStakeParams,
   WithdrawParams,
 } from "@evolution-sdk/evolution/sdk/builders/operations/Operations";
 import type { IndexedInput } from "@evolution-sdk/evolution/sdk/builders/RedeemerBuilder";
 import type { ClientContext } from "./client";
 
 export const execFileAsync = promisify(execFile);
+
+export const timeout = (delay?: number) =>
+  new Promise((r) => setTimeout(r, delay));
 
 export async function withTempFile<T>(
   src: string | Uint8Array,
@@ -309,6 +313,56 @@ export class SpendingValidator<
         inputs,
         redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
       },
+    };
+  }
+}
+
+export type PublishingValidatorBlueprint<
+  Params extends readonly any[],
+  Redeemer,
+> = ValidatorBlueprint<Params, Redeemer> & {
+  readonly title: `${string}.publish`;
+};
+
+export type PublishingScript<Redeemer> = Script & {
+  publish(redeemer: Redeemer): RegisterStakeParams;
+};
+
+export class PublishingValidator<
+  Params extends readonly any[],
+  Redeemer,
+> extends Validator<Params, Redeemer> {
+  private constructor(
+    protected override readonly blueprint: PublishingValidatorBlueprint<
+      Params,
+      Redeemer
+    >,
+  ) {
+    super(blueprint);
+  }
+
+  static new<const B extends PublishingValidatorBlueprint<any, any>>(
+    blueprint: B,
+  ): PublishingValidator<ValidatorParameters<B>, ValidatorRedeemer<B>> {
+    return new PublishingValidator(
+      blueprint as unknown as PublishingValidatorBlueprint<
+        ValidatorParameters<B>,
+        ValidatorRedeemer<B>
+      >,
+    );
+  }
+
+  script(...params: Params): PublishingScript<Redeemer> {
+    const { script, hash } = this.applyScript(params);
+    return {
+      hash,
+      publish: (redeemer) => {
+        return {
+          redeemer: applyRedeemerSchema(this.blueprint.redeemer, redeemer),
+          stakeCredential: hash,
+        };
+      },
+      script,
     };
   }
 }

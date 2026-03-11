@@ -4,12 +4,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {
+  Address,
   createClient,
   PolicyId,
   PrivateKey,
   TransactionHash,
   UTxO,
-  Address,
 } from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
@@ -27,9 +27,10 @@ import {
   initPythState,
   initWormholeState,
   purgeExpiredPythWithdrawScripts,
+  verifyPrices,
   withdrawScriptHash,
 } from "./transactions.js";
-import { execFileAsync } from "./utils.js";
+import { execFileAsync, timeout } from "./utils.js";
 import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
 async function initAndUpgradeWormhole(ctx: ClientContext, mainnet: boolean) {
@@ -212,6 +213,8 @@ parser.command(
     const whPolicy = await initAndUpgradeWormhole(ctx, network === "mainnet");
 
     console.info("Initializing Pyth...");
+    // Wait for API to settle
+    await timeout(10_000);
     const pythOrigin = await ctx.getFreshUtxo();
     console.info("Picked Pyth origin:", UTxO.toOutRefString(pythOrigin));
     const pyth = await initPythState(ctx, pythOrigin, {
@@ -339,6 +342,43 @@ parser.command(
     }
     const client = getOfflineDevnetClient(process.env.CARDANO_MNEMONIC);
     await runDevnetSession(client);
+  },
+);
+
+parser.command(
+  "verify-updates",
+  "submits a test transaction for verifying price updates on-chain",
+  (b) =>
+    b.options({
+      "api-key": commonOptions.apiKey,
+      mnemonic: commonOptions.mnemonic,
+      network: commonOptions.network,
+      state: commonOptions.state,
+      update: {
+        array: true,
+        demandOption: true,
+        description: "updates to verify as hex-encoded payloads",
+        type: "string",
+      },
+      verbose: commonOptions.verbose,
+    }),
+  async ({ apiKey, mnemonic, network, update, state, verbose }) => {
+    const ctx = await ClientContext.create(
+      network,
+      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
+      // apiKey ?? process.env.KOIOS_API_KEY,
+      apiKey ?? process.env.BLOCKFROST_API_KEY,
+      { debug: verbose },
+    );
+
+    const digest = await ctx.run(
+      await verifyPrices(
+        ctx,
+        state,
+        update.map((u) => Buffer.from(u, "hex")),
+      ),
+    );
+    console.info("Digest:", TransactionHash.toHex(digest));
   },
 );
 

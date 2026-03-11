@@ -15,6 +15,7 @@ import {
   ByteArray,
   CardanoTransactionValidityRange,
   Pairs_cardanoTransactionValidityRange_aikenCryptoScriptHash_,
+  Pyth_price_pyth_price_publish,
   Pyth_price_pyth_price_withdraw,
   Pyth_state_init_mint,
   Pyth_state_update_spend,
@@ -25,6 +26,7 @@ import {
 } from "./offchain.js";
 import {
   MintingValidator,
+  PublishingValidator,
   SpendingValidator,
   utxoToOutRef,
   WithdrawingValidator,
@@ -112,7 +114,9 @@ export async function initPythState(
 ): Promise<{ policy: PolicyId.PolicyId; tx: SigningTransactionBuilder }> {
   const spender = pythStateSpend.script();
   const minter = pythStateMint.script(utxoToOutRef(origin), spender.hash.hash);
+  const publisher = pythPricePublish.script(minter.hash.hash);
   const withdrawer = pythPriceWithdraw.script(minter.hash.hash);
+
   const stateNFT = minter.asset(PYTH_STATE_NFT, 1n);
   const ownerNFT = minter.asset(PYTH_OWNER_NFT, 1n);
   const state = spender.receive(ctx, stateNFT, {
@@ -128,10 +132,11 @@ export async function initPythState(
       .newTx()
       .collectFrom({ inputs: [origin] })
       .attachScript(minter)
+      .attachScript(publisher)
       .mintAssets(pythStateMint.mint(Assets.merge(stateNFT, ownerNFT), "Never"))
-      // TODO: how to enforce inline reference script on updates?
       .payToAddress({ ...state, script: withdrawer.script })
-      .payToAddress(await ctx.payToMe(ownerNFT)),
+      .payToAddress(await ctx.payToMe(ownerNFT))
+      .registerStake(publisher.publish("Never")),
   };
 }
 
@@ -158,6 +163,7 @@ export async function applyGovernanceAction(
   }
 
   const spender = pythStateSpend.script();
+  const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
   const { data } = await executeGovernanceAction(
     {
       data: oldState,
@@ -175,7 +181,7 @@ export async function applyGovernanceAction(
     .attachScript(spender)
     .readFrom({ referenceInputs: [guardians] })
     .collectFrom(input)
-    .payToAddress(newState);
+    .payToAddress({ ...newState, script: withdrawer.script });
 }
 
 const StatePyth =
@@ -209,6 +215,7 @@ async function executeGovernanceAction(
   return Schema.decodeSync(StatePyth)(newState);
 }
 
+const pythPricePublish = PublishingValidator.new(Pyth_price_pyth_price_publish);
 const pythPriceWithdraw = WithdrawingValidator.new(
   Pyth_price_pyth_price_withdraw,
 );
@@ -217,15 +224,23 @@ export function withdrawScriptHash(policy: string) {
   return pythPriceWithdraw.script(Buffer.from(policy, "hex")).hash;
 }
 
-export function verifyPrices(
+export async function verifyPrices(
   ctx: ClientContext,
   policy: string,
   updates: Uint8Array[],
 ) {
   const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
+  const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
 
-  // TODO: attach `withdraw` to state instead of `spend`
-  return ctx.client.newTx().withdraw(withdrawer.withdraw(0n, updates));
+  const now = BigInt(Date.now());
+  return (
+    ctx.client
+      .newTx()
+      // without validity set, Evolution seems to default to no bounds
+      .setValidity({ from: now, to: now + 60_000n })
+      .readFrom({ referenceInputs: [state] })
+      .withdraw(withdrawer.withdraw(0n, updates))
+  );
 }
 
 export async function purgeExpiredPythWithdrawScripts(
