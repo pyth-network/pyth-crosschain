@@ -58,9 +58,11 @@ async function setInitialAccessToken(request: NextRequest) {
     body = {
       initialAccessToken: params.get("initialAccessToken"),
     };
-  } else {
-    body = await request.json(); // Default to JSON
-  }
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.next();
+    }
 
   const parsed = initialAccessTokenSchema.safeParse(body);
 
