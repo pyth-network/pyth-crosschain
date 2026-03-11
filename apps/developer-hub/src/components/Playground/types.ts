@@ -53,13 +53,13 @@ export type PlaygroundConfig = {
 // Default configuration values
 export const DEFAULT_CONFIG: PlaygroundConfig = {
   accessToken: "", // Empty means use demo token
-  priceFeedIds: [1, 2], // BTC/USD and ETH/USD
-  properties: ["price"],
-  formats: ["solana"],
   channel: "fixed_rate@200ms",
   deliveryFormat: "json",
+  formats: ["solana"],
   jsonBinaryEncoding: "hex",
   parsed: true,
+  priceFeedIds: [1, 2], // BTC/USD and ETH/USD
+  properties: ["price"],
 };
 
 // Available options for selectors
@@ -68,44 +68,44 @@ export const PROPERTY_OPTIONS: {
   label: string;
   description: string;
 }[] = [
-  { id: "price", label: "Price", description: "Aggregate market price" },
-  { id: "bestBidPrice", label: "Best Bid", description: "Highest bid price" },
-  { id: "bestAskPrice", label: "Best Ask", description: "Lowest ask price" },
+  { description: "Aggregate market price", id: "price", label: "Price" },
+  { description: "Highest bid price", id: "bestBidPrice", label: "Best Bid" },
+  { description: "Lowest ask price", id: "bestAskPrice", label: "Best Ask" },
   {
+    description: "Price confidence interval",
     id: "confidence",
     label: "Confidence",
-    description: "Price confidence interval",
   },
-  { id: "exponent", label: "Exponent", description: "Decimal exponent" },
+  { description: "Decimal exponent", id: "exponent", label: "Exponent" },
   {
+    description: "Number of publishers",
     id: "publisherCount",
     label: "Publisher Count",
-    description: "Number of publishers",
   },
   {
+    description: "Perpetual futures funding rate",
     id: "fundingRate",
     label: "Funding Rate",
-    description: "Perpetual futures funding rate",
   },
   {
+    description: "Last funding calculation time",
     id: "fundingTimestamp",
     label: "Funding Timestamp",
-    description: "Last funding calculation time",
   },
   {
+    description: "Duration between funding updates",
     id: "fundingRateInterval",
     label: "Funding Interval",
-    description: "Duration between funding updates",
   },
   {
+    description: "Market session enum (e.g., regular, pre/post)",
     id: "marketSession",
     label: "Market Session",
-    description: "Market session enum (e.g., regular, pre/post)",
   },
   {
+    description: "Timestamp when price was last generated for this feed",
     id: "feedUpdateTimestamp",
     label: "Feed Update Timestamp",
-    description: "Timestamp when price was last generated for this feed",
   },
 ];
 
@@ -114,13 +114,13 @@ export const CHAIN_OPTIONS: {
   label: string;
   description: string;
 }[] = [
-  { id: "solana", label: "Solana", description: "Ed25519 EdDSA signature" },
-  { id: "evm", label: "EVM", description: "secp256k1 ECDSA signature" },
-  { id: "leEcdsa", label: "LE ECDSA", description: "Little-endian secp256k1" },
+  { description: "Ed25519 EdDSA signature", id: "solana", label: "Solana" },
+  { description: "secp256k1 ECDSA signature", id: "evm", label: "EVM" },
+  { description: "Little-endian secp256k1", id: "leEcdsa", label: "LE ECDSA" },
   {
+    description: "Raw payload without signature",
     id: "leUnsigned",
     label: "Unsigned",
-    description: "Raw payload without signature",
   },
 ];
 
@@ -130,19 +130,19 @@ export const CHANNEL_OPTIONS: {
   description: string;
 }[] = [
   {
+    description: "Updates as fast as possible (1-50ms)",
     id: "real_time",
     label: "Real Time",
-    description: "Updates as fast as possible (1-50ms)",
   },
   {
+    description: "Updates every 50 milliseconds",
     id: "fixed_rate@50ms",
     label: "Fixed 50ms",
-    description: "Updates every 50 milliseconds",
   },
   {
+    description: "Updates every 200 milliseconds",
     id: "fixed_rate@200ms",
     label: "Fixed 200ms",
-    description: "Updates every 200 milliseconds",
   },
 ];
 

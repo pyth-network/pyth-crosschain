@@ -1,10 +1,12 @@
 "use client";
 
+import { useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import type { ReactNode } from "react";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -40,9 +42,22 @@ export function PlaygroundProvider({
   children,
   initialConfig,
 }: PlaygroundProviderProps) {
+  /** routing */
+  const [initialAccessToken, setInitialAccessToken] = useQueryState(
+    "initialAccessToken",
+    {
+      defaultValue: "",
+      shallow: true,
+    },
+  );
+
   const [config, setConfig] = useState<PlaygroundConfig>(() => ({
     ...DEFAULT_CONFIG,
     ...initialConfig,
+    accessToken:
+      initialAccessToken ??
+      initialConfig?.accessToken ??
+      DEFAULT_CONFIG.accessToken,
   }));
 
   const updateConfig = useCallback((partial: Partial<PlaygroundConfig>) => {
@@ -56,6 +71,15 @@ export function PlaygroundProvider({
     }),
     [config, updateConfig],
   );
+
+  /** effects */
+  useEffect(() => {
+    // if the page was loaded with an access token in the URL,
+    // clear it out after the initial state creation operation.
+    // this will allow the <AccessTokenInput /> to pick up the token
+    // but it won't hang around in the URL
+    if (initialAccessToken) setInitialAccessToken(null);
+  }, [initialAccessToken, setInitialAccessToken]);
 
   return (
     <PlaygroundContext.Provider value={value}>

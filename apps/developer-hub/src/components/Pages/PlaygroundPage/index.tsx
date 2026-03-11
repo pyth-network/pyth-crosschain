@@ -5,13 +5,13 @@ import { Stop } from "@phosphor-icons/react/dist/ssr/Stop";
 import { Button } from "@pythnetwork/component-library/Button";
 import { Callout } from "fumadocs-ui/components/callout";
 import { useCallback, useMemo, useRef } from "react";
-
-import styles from "./index.module.scss";
 import { AccessTokenInput } from "../../Playground/AccessTokenInput";
 import { ChainSelector } from "../../Playground/ChainSelector";
 import { ChannelSelector } from "../../Playground/ChannelSelector";
 import { CodePreview } from "../../Playground/CodePreview";
 import { DeliveryFormatToggle } from "../../Playground/DeliveryFormatToggle";
+import type { StreamCallbacks } from "../../Playground/hooks/use-stream-execution";
+import { useStreamExecution } from "../../Playground/hooks/use-stream-execution";
 import type { OutputPanelHandle } from "../../Playground/OutputPanel";
 import { OutputPanel } from "../../Playground/OutputPanel";
 import {
@@ -20,8 +20,7 @@ import {
 } from "../../Playground/PlaygroundContext";
 import { PriceFeedSelector } from "../../Playground/PriceFeedSelector";
 import { PropertiesSelector } from "../../Playground/PropertiesSelector";
-import type { StreamCallbacks } from "../../Playground/hooks/use-stream-execution";
-import { useStreamExecution } from "../../Playground/hooks/use-stream-execution";
+import styles from "./index.module.scss";
 
 function PlaygroundContent() {
   const { config } = usePlaygroundContext();
@@ -78,7 +77,7 @@ function PlaygroundContent() {
             Configure subscription parameters, generate code, and test real-time
             price streams.
           </p>
-          <Callout type="warning" className={styles.disclaimer}>
+          <Callout className={styles.disclaimer} type="warning">
             This playground is for internal preview only and may contain bugs.
           </Callout>
         </div>
@@ -106,8 +105,6 @@ function PlaygroundContent() {
 
               <div className={styles.runSection}>
                 <Button
-                  variant={isStreaming ? "danger" : "primary"}
-                  size="sm"
                   beforeIcon={
                     isStreaming ? (
                       <Stop weight="fill" />
@@ -115,9 +112,11 @@ function PlaygroundContent() {
                       <Play weight="fill" />
                     )
                   }
-                  onPress={handleRunClick}
                   className={styles.runButton ?? ""}
                   isDisabled={status === "connecting"}
+                  onPress={handleRunClick}
+                  size="sm"
+                  variant={isStreaming ? "danger" : "primary"}
                 >
                   {isStreaming ? "Stop" : "Run"}
                 </Button>
@@ -129,11 +128,11 @@ function PlaygroundContent() {
               </div>
 
               <OutputPanel
+                error={error}
+                messages={messages}
+                onClear={clearMessages}
                 ref={outputPanelRef}
                 status={status}
-                messages={messages}
-                error={error}
-                onClear={clearMessages}
               />
             </div>
           </div>
