@@ -9,7 +9,7 @@ import {
   TSchema,
 } from "@evolution-sdk/evolution";
 import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
-import type { ClientContext } from "./client.js";
+import { ClientContext } from "./client.js";
 import { aikenEval } from "./eval.js";
 import {
   ByteArray,
@@ -142,12 +142,10 @@ export async function initPythState(
 
 export async function applyGovernanceAction(
   ctx: ClientContext,
-  whPolicy: string,
   policy: string,
   action: PreparedGovernanceAction,
   env?: "preprod" | "preview",
 ) {
-  const guardians = await ctx.getNftUtxo(whPolicy, WH_STATE_NFT);
   const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
 
   const {
@@ -158,9 +156,10 @@ export async function applyGovernanceAction(
     governanceAction: action.vaa,
   });
 
-  if (guardians.datumOption?._tag !== "InlineDatum") {
-    throw new Error("invalid Guardians datum");
-  }
+  const guardians = await ctx.getNftUtxo(
+    Buffer.from(oldState.governance.wormhole).toString("hex"),
+    WH_STATE_NFT,
+  );
 
   const spender = pythStateSpend.script();
   const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
@@ -171,7 +170,7 @@ export async function applyGovernanceAction(
       reference_script: oldState.withdraw_script,
     },
     action.vaa,
-    guardians.datumOption.data,
+    ClientContext.readUtxo(guardians),
     env,
   );
   const newState = spender.receive(ctx, state.assets, data);
@@ -245,10 +244,8 @@ export async function verifyPrices(
 
 export async function purgeExpiredPythWithdrawScripts(
   ctx: ClientContext,
-  whPolicy: string,
   policy: string,
 ) {
-  const guardians = await ctx.getNftUtxo(whPolicy, WH_STATE_NFT);
   const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
   const owner = await ctx.getNftUtxo(policy, PYTH_OWNER_NFT);
 
@@ -259,10 +256,17 @@ export async function purgeExpiredPythWithdrawScripts(
     _tag: "PurgeExpiredWithdrawScripts",
   });
 
+  const guardians = await ctx.getNftUtxo(
+    Buffer.from(oldState.governance.wormhole).toString("hex"),
+    WH_STATE_NFT,
+  );
+
   const from = BigInt(Date.now());
-  const validityRange = { from, to: from + 300_000n };
+  const validityRange = { from, to: from + 60_000n };
 
   const spender = pythStateSpend.script();
+  const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
+
   const newScripts = await purgeExpiredScripts(
     oldState.deprecated_withdraw_scripts,
     {
@@ -286,8 +290,9 @@ export async function purgeExpiredPythWithdrawScripts(
     .setValidity(validityRange)
     .attachScript(spender)
     .readFrom({ referenceInputs: [guardians] })
-    .collectFrom({ ...input, inputs: [...input.inputs, owner] })
-    .payToAddress(newState)
+    .collectFrom({ inputs: [owner] })
+    .collectFrom(input)
+    .payToAddress({ ...newState, script: withdrawer.script })
     .payToAddress(
       await ctx.payToMe(
         Assets.fromAsset(PolicyId.fromHex(policy), PYTH_OWNER_NFT, 1n),

@@ -100,11 +100,6 @@ const commonOptions = {
     description: "whether to enable verbose logging",
     type: "boolean",
   },
-  wormhole: {
-    demandOption: true,
-    description: "Policy ID of the Wormhole state token",
-    type: "string",
-  },
 } as const;
 
 parser.command(
@@ -245,18 +240,8 @@ parser.command(
         type: "string",
       },
       verbose: commonOptions.verbose,
-      // TODO: retrieve from state
-      wormhole: commonOptions.wormhole,
     }),
-  async ({
-    apiKey,
-    mnemonic,
-    network,
-    state: statePolicy,
-    vaa,
-    verbose,
-    wormhole: wormholePolicy,
-  }) => {
+  async ({ apiKey, mnemonic, network, state, vaa, verbose }) => {
     const prepared = prepareGovernanceAction(Buffer.from(vaa, "hex"));
     console.log(`Executing ${prepared.action.action}...`);
 
@@ -276,8 +261,7 @@ parser.command(
     const digest = await ctx.run(
       await applyGovernanceAction(
         ctx,
-        wormholePolicy,
-        statePolicy,
+        state,
         prepared,
         envs[prepared.action.targetChainId],
       ),
@@ -305,19 +289,11 @@ parser.command(
       network: commonOptions.network,
       state: commonOptions.state,
       verbose: commonOptions.verbose,
-      wormhole: commonOptions.wormhole,
     }),
-  async ({
-    apiKey,
-    network: networkId,
-    mnemonic,
-    state: statePolicy,
-    verbose,
-    wormhole: wormholePolicy,
-  }) => {
+  async ({ apiKey, network, mnemonic, state, verbose }) => {
     console.info("Purging expired withdraw scripts...");
     const ctx = await ClientContext.create(
-      networkId,
+      network,
       mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
       // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
       apiKey ?? process.env.BLOCKFROST_API_KEY,
@@ -326,9 +302,9 @@ parser.command(
       },
     );
     const digest = await ctx.run(
-      await purgeExpiredPythWithdrawScripts(ctx, wormholePolicy, statePolicy),
+      await purgeExpiredPythWithdrawScripts(ctx, state),
     );
-    console.log("Digest:", digest);
+    console.log("Digest:", TransactionHash.toHex(digest));
   },
 );
 

@@ -3,12 +3,13 @@ import {
   AssetName,
   Assets,
   createClient,
+  DatumOption,
   Effect,
   Either,
   UTxO,
 } from "@evolution-sdk/evolution";
 import { Address } from "@evolution-sdk/evolution/Address";
-import type { DatumOption } from "@evolution-sdk/evolution/DatumOption";
+import type { Data } from "@evolution-sdk/evolution/Data";
 import type { KeyHash } from "@evolution-sdk/evolution/KeyHash";
 import type { Script } from "@evolution-sdk/evolution/Script";
 import type { ScriptHash } from "@evolution-sdk/evolution/ScriptHash";
@@ -33,7 +34,7 @@ const DEVNET_PROVIDER = {
 export type Payment = {
   address: Address;
   assets: Assets.Assets;
-  datum?: DatumOption;
+  datum?: DatumOption.DatumOption;
   script?: Script;
 };
 
@@ -160,6 +161,13 @@ export class ClientContext {
     name: AssetName.AssetName,
   ): Promise<UTxO.UTxO> {
     return await this.client.getUtxoByUnit(policy + AssetName.toHex(name));
+  }
+
+  static readUtxo({ datumOption }: UTxO.UTxO): Data {
+    if (!DatumOption.isInlineDatum(datumOption)) {
+      throw new TypeError("UTxO does not have inline datum");
+    }
+    return datumOption.data;
   }
 }
 

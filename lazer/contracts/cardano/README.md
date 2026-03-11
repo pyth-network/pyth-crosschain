@@ -100,7 +100,6 @@ and execute VAA provided in the output:
 cd "$REPO/lazer/contracts/cardano/sdk/js"
 
 pnpm cli execute --network "$CARDANO_NETWORK" \
-  --wormhole "$WORMHOLE_ID" \
   --state "$PYTH_ID" \
   --vaa "$VAA"
 ```
