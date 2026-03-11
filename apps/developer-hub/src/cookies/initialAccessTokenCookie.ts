@@ -49,36 +49,38 @@ function decrypt(value: string): string | null {
 async function setInitialAccessToken(request: NextRequest) {
   if (request.method !== "POST") return NextResponse.next();
 
-  const contentType = request.headers.get("content-type") || "";
-  let body: unknown;
+  try {
+    const contentType = request.headers.get("content-type") || "";
+    let body: unknown;
 
-  if (contentType.includes("application/x-www-form-urlencoded")) {
-    const formData = await request.text();
-    const params = new URLSearchParams(formData);
-    body = {
-      initialAccessToken: params.get("initialAccessToken"),
-    };
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.next();
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      const formData = await request.text();
+      const params = new URLSearchParams(formData);
+      body = {
+        initialAccessToken: params.get("initialAccessToken"),
+      };
+    } else {
+      body = await request.json(); // Default to JSON
     }
 
-  const parsed = initialAccessTokenSchema.safeParse(body);
+    const parsed = initialAccessTokenSchema.safeParse(body);
 
-  if (parsed.success) {
-    const c = await cookies();
-    c.set(
-      INITIAL_ACCESS_TOKEN_COOKIE_NAME,
-      encrypt(JSON.stringify(parsed.data)),
-      {
-        httpOnly: true,
-        maxAge: 60, // 60 seconds
-        path: "/playground",
-        sameSite: "lax", // Allow cross-site form POST
-        secure: true,
-      },
-    );
+    if (parsed.success) {
+      const c = await cookies();
+      c.set(
+        INITIAL_ACCESS_TOKEN_COOKIE_NAME,
+        encrypt(JSON.stringify(parsed.data)),
+        {
+          httpOnly: true,
+          maxAge: 60, // 60 seconds
+          path: "/playground",
+          sameSite: "lax", // Allow cross-site form POST
+          secure: true,
+        },
+      );
+    }
+  } catch {
+    /* don't care if it failed, just continue on to developer hub */
   }
 
   return NextResponse.next();
