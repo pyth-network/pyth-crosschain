@@ -74,7 +74,7 @@ async function setInitialAccessToken(request: NextRequest) {
           httpOnly: true,
           maxAge: 60, // 60 seconds
           path: "/playground",
-          sameSite: "lax", // Allow cross-site form POST
+          sameSite: "lax",
           secure: true,
         },
       );
