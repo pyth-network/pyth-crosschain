@@ -5,6 +5,7 @@ import {
   createClient,
   Effect,
   Either,
+  UTxO,
 } from "@evolution-sdk/evolution";
 import { Address } from "@evolution-sdk/evolution/Address";
 import type { DatumOption } from "@evolution-sdk/evolution/DatumOption";
@@ -20,7 +21,6 @@ import type {
 } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
 import type { TransactionHash } from "@evolution-sdk/evolution/TransactionHash";
-import type { UTxO } from "@evolution-sdk/evolution/UTxO";
 
 export type Network = Exclude<NetworkId, number> | "devnet";
 
@@ -38,6 +38,8 @@ export type Payment = {
 };
 
 export class ClientContext {
+  private usedUtxos: UTxO.UTxOSet = UTxO.empty();
+
   private constructor(
     readonly network: Network,
     readonly client: SigningClient,
@@ -72,15 +74,19 @@ export class ClientContext {
       const client = createClient({
         network,
         provider: {
-          baseUrl: `https://${
-            {
-              mainnet: "api",
-              preprod: "preprod",
-              preview: "preview",
-            }[network]
-          }.koios.rest/api/v1`,
-          token,
-          type: "koios",
+          // TODO:
+          // baseUrl: `https://${
+          //   {
+          //     mainnet: "api",
+          //     preprod: "preprod",
+          //     preview: "preview",
+          //   }[network]
+          // }.koios.rest/api/v1`,
+          // token,
+          // type: "koios",
+          baseUrl: "https://cardano-preview.blockfrost.io/api/v0",
+          projectId: token,
+          type: "blockfrost",
         },
         wallet: {
           accountIndex: 0,
@@ -127,12 +133,19 @@ export class ClientContext {
     });
   }
 
-  async getOriginUtxo() {
-    const [origin] = await this.client.getWalletUtxos();
-    if (!origin) {
-      throw new Error("No UTxO to use as an origin");
+  /**
+   * Gets fresh UTxO, tracking locally used ones to avoid attempts to
+   * double-spend.
+   */
+  async getFreshUtxo() {
+    const utxos = await this.client.getWalletUtxos();
+    // Blockfrost provider was returning spent UTxOs
+    const fresh = utxos.find((u) => !UTxO.has(this.usedUtxos, u));
+    if (!fresh) {
+      throw new Error(`Could not find a valid UTxO (from ${utxos.length})`);
     }
-    return origin;
+    this.usedUtxos = UTxO.add(this.usedUtxos, fresh);
+    return fresh;
   }
 
   async payToMe(assets: Assets.Assets): Promise<PayToAddressParams> {
@@ -142,7 +155,10 @@ export class ClientContext {
     return payment;
   }
 
-  async getNftUtxo(policy: string, name: AssetName.AssetName): Promise<UTxO> {
+  async getNftUtxo(
+    policy: string,
+    name: AssetName.AssetName,
+  ): Promise<UTxO.UTxO> {
     return await this.client.getUtxoByUnit(policy + AssetName.toHex(name));
   }
 }

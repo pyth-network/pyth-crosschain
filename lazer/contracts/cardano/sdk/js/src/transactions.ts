@@ -201,7 +201,7 @@ async function executeGovernanceAction(
       Schema.encodeSync(WormholeVaaPreparedVAA)(action),
       guardians,
     ],
-    { env },
+    env ? { env } : undefined,
   );
   if (!(newState instanceof Data.Constr)) {
     throw new Error("expected State Constr");

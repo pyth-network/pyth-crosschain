@@ -3,7 +3,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { PolicyId, TransactionHash, UTxO } from "@evolution-sdk/evolution";
+import {
+  createClient,
+  PolicyId,
+  PrivateKey,
+  TransactionHash,
+  UTxO,
+  Address,
+} from "@evolution-sdk/evolution";
 import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
 import {
   createCodegenConfig,
@@ -26,7 +33,7 @@ import { execFileAsync } from "./utils.js";
 import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
 async function initAndUpgradeWormhole(ctx: ClientContext, mainnet: boolean) {
-  const wormholeOrigin = await ctx.getOriginUtxo();
+  const wormholeOrigin = await ctx.getFreshUtxo();
   console.info("Picked Wormhole origin:", UTxO.toOutRefString(wormholeOrigin));
 
   const initialGuardian = mainnet
@@ -68,15 +75,11 @@ const parser = yargs().usage(
 );
 
 const commonOptions = {
-  koiosKey: {
-    default: process.env.KOIOS_API_KEY,
-    demandOption: true,
-    description: "Koios API key to use",
+  apiKey: {
+    description: "API key to use",
     type: "string",
   },
   mnemonic: {
-    default: process.env.CARDANO_MNEMONIC,
-    demandOption: true,
     description: "wallet mnemonic to use",
     type: "string",
   },
@@ -102,6 +105,22 @@ const commonOptions = {
     type: "string",
   },
 } as const;
+
+parser.command(
+  "new-wallet",
+  "generates a new wallet mnemonic and appends it to .env",
+  (b) => b.options({}),
+  async () => {
+    const mnemonic = PrivateKey.generateMnemonic();
+    const envPath = path.resolve(import.meta.dirname, "../.env");
+    await fs.appendFile(envPath, `\nCARDANO_MNEMONIC="${mnemonic}"\n`);
+    const address = await createClient({
+      network: 0,
+      wallet: { mnemonic, type: "seed" },
+    }).address();
+    console.log("Funding address:", Address.toBech32(address));
+  },
+);
 
 parser.command(
   "build",
@@ -156,6 +175,7 @@ parser.command(
   "initialize on-chain state of contracts",
   (b) =>
     b.options({
+      "api-key": commonOptions.apiKey,
       "emitter-address": {
         demandOption: true,
         description: "emitter chain address",
@@ -166,28 +186,33 @@ parser.command(
         description: "emitter chain ID",
         type: "number",
       },
-      "koios-key": commonOptions.koiosKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       verbose: commonOptions.verbose,
     }),
   async ({
+    apiKey,
     emitterAddress,
     emitterChain,
-    koiosKey,
     mnemonic,
     network,
     verbose,
   }) => {
-    const ctx = await ClientContext.create(network, mnemonic, koiosKey, {
-      debug: verbose,
-    });
+    const ctx = await ClientContext.create(
+      network,
+      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
+      // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
+      apiKey ?? process.env.BLOCKFROST_API_KEY,
+      {
+        debug: verbose,
+      },
+    );
 
     console.info("Initializing Pyth Wormhole...");
     const whPolicy = await initAndUpgradeWormhole(ctx, network === "mainnet");
 
     console.info("Initializing Pyth...");
-    const pythOrigin = await ctx.getOriginUtxo();
+    const pythOrigin = await ctx.getFreshUtxo();
     console.info("Picked Pyth origin:", UTxO.toOutRefString(pythOrigin));
     const pyth = await initPythState(ctx, pythOrigin, {
       emitter_address: Buffer.from(emitterAddress, "hex"),
@@ -207,7 +232,7 @@ parser.command(
   "Executes supported governance action, using provided VAA",
   (b) =>
     b.options({
-      "koios-key": commonOptions.koiosKey,
+      "api-key": commonOptions.apiKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       state: commonOptions.state,
@@ -217,10 +242,11 @@ parser.command(
         type: "string",
       },
       verbose: commonOptions.verbose,
+      // TODO: retrieve from state
       wormhole: commonOptions.wormhole,
     }),
   async ({
-    koiosKey,
+    apiKey,
     mnemonic,
     network,
     state: statePolicy,
@@ -235,9 +261,15 @@ parser.command(
       cardano_preprod: "preprod",
       cardano_preview: "preview",
     };
-    const ctx = await ClientContext.create(network, mnemonic, koiosKey, {
-      debug: verbose,
-    });
+    const ctx = await ClientContext.create(
+      network,
+      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
+      // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
+      apiKey ?? process.env.BLOCKFROST_API_KEY,
+      {
+        debug: verbose,
+      },
+    );
     const digest = await ctx.run(
       await applyGovernanceAction(
         ctx,
@@ -265,7 +297,7 @@ parser.command(
   "Removes expired withdraw scripts",
   (b) =>
     b.options({
-      koiosKey: commonOptions.koiosKey,
+      "api-key": commonOptions.apiKey,
       mnemonic: commonOptions.mnemonic,
       network: commonOptions.network,
       state: commonOptions.state,
@@ -273,7 +305,7 @@ parser.command(
       wormhole: commonOptions.wormhole,
     }),
   async ({
-    koiosKey,
+    apiKey,
     network: networkId,
     mnemonic,
     state: statePolicy,
@@ -281,9 +313,15 @@ parser.command(
     wormhole: wormholePolicy,
   }) => {
     console.info("Purging expired withdraw scripts...");
-    const ctx = await ClientContext.create(networkId, mnemonic, koiosKey, {
-      debug: verbose,
-    });
+    const ctx = await ClientContext.create(
+      networkId,
+      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
+      // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
+      apiKey ?? process.env.BLOCKFROST_API_KEY,
+      {
+        debug: verbose,
+      },
+    );
     const digest = await ctx.run(
       await purgeExpiredPythWithdrawScripts(ctx, wormholePolicy, statePolicy),
     );
