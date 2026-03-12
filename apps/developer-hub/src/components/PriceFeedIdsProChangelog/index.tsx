@@ -14,7 +14,7 @@ import type { ColumnConfig } from "@pythnetwork/component-library/Table";
 import { Table } from "@pythnetwork/component-library/Table";
 import { Callout } from "fumadocs-ui/components/callout";
 import { matchSorter } from "match-sorter";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -68,7 +68,7 @@ const State = {
     type: StateType.Loaded as const,
     data,
   }),
-  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+  Error: (error: unknown) => ({ type: StateType.Error as const, error }),
 };
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
@@ -89,6 +89,7 @@ const columns: ColumnConfig<Col>[] = [
 
 export const PriceFeedIdsProChangelog = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [state, setState] = useState<State>(State.NotLoaded());
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
@@ -110,7 +111,7 @@ export const PriceFeedIdsProChangelog = () => {
         }
       })
       .catch((error: unknown) => {
-        setState(State.Failed(error));
+        setState(State.Error(error));
       });
   }, []);
 
@@ -123,14 +124,15 @@ export const PriceFeedIdsProChangelog = () => {
   }, [search]);
 
   useEffect(() => {
-    const url = new URL(window.location.href);
+    const params = new URLSearchParams(searchParams.toString());
     if (debouncedSearch) {
-      url.searchParams.set("q", debouncedSearch);
+      params.set("q", debouncedSearch);
     } else {
-      url.searchParams.delete("q");
+      params.delete("q");
     }
-    window.history.replaceState({}, "", url.toString());
-  }, [debouncedSearch]);
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : "?", { scroll: false });
+  }, [debouncedSearch, router, searchParams]);
 
   const filteredDays = useMemo(() => {
     if (state.type !== StateType.Loaded) return [];

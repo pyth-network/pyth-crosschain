@@ -1,43 +1,30 @@
 /**
- * Daily changelog generator for Pyth Pro price feed IDs.
+ * CLI entrypoint: generates daily-rollups.json from the governance repo.
  *
- * Usage: pnpm run generate:pro-price-feed-changelog
+ * Usage:
+ *   GOVERNANCE_REPO_PATH=/path/to/clone pnpm run generate:pro-price-feed-changelog
  *
- * Fetches the current state of all Pyth Pro symbols, saves a UTC-dated
- * snapshot, computes an incremental diff against the previous day's
- * snapshot, and prepends the result to daily-rollups.json. Snapshots
- * older than 10 days are pruned automatically.
+ * Environment variables:
+ *   GOVERNANCE_REPO_PATH — local path to pyth-lazer-governance checkout (required)
+ *   FULL_REBUILD         — set to "true" to ignore existing rollup and rebuild from scratch
  */
 
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
 
-import type {
-  ChangeEntry,
-  ChangeType,
-  DailyRollup,
-  DailyRollupFile,
-  FieldDiff,
-} from "../src/data/pro-price-feed-changelog/types";
+import type { DailyRollupFile } from "../src/data/pro-price-feed-changelog/types";
+import {
+  checkShrinkage,
+  diffStates,
+  groupByDate,
+  listProposalDirs,
+  loadAfterFeeds,
+  loadExistingRollup,
+  transformFeeds,
+} from "./lib/pro-price-feed-changelog";
 
-const SYMBOLS_ENDPOINT =
-  "https://history.pyth-lazer.dourolabs.app/history/v1/symbols";
-const SNAPSHOT_RETENTION_DAYS = 10;
-const FETCH_TIMEOUT_MS = 30_000;
-
-const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
-const MISSING = Symbol("missing");
-
+const SOURCE = "pyth-network/pyth-lazer-governance";
 const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
-const DATA_DIR = path.join(
-  SCRIPT_DIR,
-  "..",
-  "src",
-  "data",
-  "pro-price-feed-changelog",
-);
-const SNAPSHOTS_DIR = path.join(DATA_DIR, "snapshots");
 const ROLLUPS_PATH = path.join(
   SCRIPT_DIR,
   "..",
@@ -47,333 +34,141 @@ const ROLLUPS_PATH = path.join(
   "daily-rollups.json",
 );
 
-const symbolRecordSchema = z
-  .object({
-    pyth_lazer_id: z.number().int().positive(),
-    state: z.string().nullish(),
-    symbol: z.string().nullish(),
-    name: z.string().nullish(),
-  })
-  .passthrough();
-
-type SymbolRecord = z.infer<typeof symbolRecordSchema>;
-
-type SnapshotPayload = {
-  date: string;
-  records: SymbolRecord[];
-};
-
 async function main() {
-  await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
-  await fs.mkdir(path.dirname(ROLLUPS_PATH), { recursive: true });
-
-  const today = utcDate();
-  const todaySnapshotPath = path.join(SNAPSHOTS_DIR, `${today}.json`);
-
-  const symbols = await fetchCurrentSymbols();
-
-  if (!(await fileExists(todaySnapshotPath))) {
-    const snapshot: SnapshotPayload = { date: today, records: symbols };
-    await fs.writeFile(
-      todaySnapshotPath,
-      `${JSON.stringify(snapshot)}\n`,
+  const repoPath = process.env.GOVERNANCE_REPO_PATH;
+  if (!repoPath) {
+    console.error(
+      "Error: GOVERNANCE_REPO_PATH environment variable is required.\n" +
+        "Set it to the local path of the pyth-lazer-governance checkout.",
     );
+    process.exit(1);
   }
 
-  const previousSnapshot = await loadPreviousSnapshot(today);
-  const rollupFileExisted = await fileExists(ROLLUPS_PATH);
-  const existingRollup = await loadExistingRollup();
-
-  let updated = false;
-  if (
-    previousSnapshot &&
-    !existingRollup.days.some((d) => d.date === today)
-  ) {
-    const newDay = buildDailyRollup({
-      previous: previousSnapshot,
-      current: { date: today, records: symbols },
-    });
-    if (newDay.changes.length > 0) {
-      existingRollup.days.unshift(newDay);
-      updated = true;
-    }
-  }
-
-  if (updated || !rollupFileExisted) {
-    existingRollup.generatedAt = new Date().toISOString();
-    await fs.writeFile(
-      ROLLUPS_PATH,
-      `${JSON.stringify(existingRollup)}\n`,
-    );
-  }
-
-  await pruneOldSnapshots();
-
-  console.log(
-    `Done. ${existingRollup.days.length} day(s) in rollup, ${symbols.length} symbols tracked.`,
-  );
-}
-
-async function fetchCurrentSymbols(): Promise<SymbolRecord[]> {
-  const response = await fetch(SYMBOLS_ENDPOINT, {
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch symbols: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  const rawData: unknown = await response.json();
-  if (!Array.isArray(rawData)) {
-    throw new Error("Unexpected symbols payload shape: expected an array");
-  }
-
-  if (rawData.length > 50_000) {
-    throw new Error(
-      `Unexpected record count (${rawData.length}), aborting as safety measure`,
-    );
-  }
-
-  const records: SymbolRecord[] = [];
-  const failures: Array<{ index: number; error: string }> = [];
-  for (const [index, item] of rawData.entries()) {
-    const result = symbolRecordSchema.safeParse(item);
-    if (result.success) {
-      records.push(sortKeys(result.data) as SymbolRecord);
-    } else {
-      failures.push({ index, error: result.error.message });
-    }
-  }
-
-  if (failures.length > 0) {
-    throw new Error(
-      `${String(failures.length)} symbol record(s) failed schema validation:\n${failures
-        .slice(0, 5)
-        .map((f) => `  [${String(f.index)}]: ${f.error}`)
-        .join("\n")}${failures.length > 5 ? `\n  ... and ${String(failures.length - 5)} more` : ""}`,
-    );
-  }
-
-  return records.toSorted((a, b) => a.pyth_lazer_id - b.pyth_lazer_id);
-}
-
-async function loadPreviousSnapshot(
-  excludeDate: string,
-): Promise<SnapshotPayload | null> {
-  const files = await fs.readdir(SNAPSHOTS_DIR);
-  const snapshotDates = files
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => f.replace(".json", ""))
-    .filter((d) => d < excludeDate)
-    .toSorted((a, b) => b.localeCompare(a));
-
-  const mostRecentDate = snapshotDates[0];
-  if (!mostRecentDate) return null;
-
-  const filePath = path.join(SNAPSHOTS_DIR, `${mostRecentDate}.json`);
-  return JSON.parse(
-    await fs.readFile(filePath, "utf8"),
-  ) as SnapshotPayload;
-}
-
-async function loadExistingRollup(): Promise<DailyRollupFile> {
+  // Verify the path exists and is a directory
   try {
-    const content = await fs.readFile(ROLLUPS_PATH, "utf8");
-    return JSON.parse(content) as DailyRollupFile;
-  } catch (error: unknown) {
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      (error as NodeJS.ErrnoException).code === "ENOENT"
-    ) {
-      return {
-        generatedAt: new Date().toISOString(),
-        endpoint: SYMBOLS_ENDPOINT,
-        days: [],
-      };
+    const stat = await fs.stat(repoPath);
+    if (!stat.isDirectory()) {
+      console.error(`Error: GOVERNANCE_REPO_PATH is not a directory: ${repoPath}`);
+      process.exit(1);
     }
-    throw error;
+  } catch {
+    console.error(`Error: GOVERNANCE_REPO_PATH does not exist: ${repoPath}`);
+    process.exit(1);
   }
-}
 
-function buildDailyRollup({
-  previous,
-  current,
-}: {
-  previous: SnapshotPayload;
-  current: SnapshotPayload;
-}): DailyRollup {
-  const previousById = new Map<number, SymbolRecord>(
-    previous.records.map((r) => [r.pyth_lazer_id, r]),
-  );
-  const currentById = new Map<number, SymbolRecord>(
-    current.records.map((r) => [r.pyth_lazer_id, r]),
+  const fullRebuild = process.env.FULL_REBUILD === "true";
+
+  // 1. List and group proposal dirs by date
+  const dirs = await listProposalDirs(repoPath);
+  console.log(`Found ${String(dirs.length)} proposal directories.`);
+
+  const dateToDir = groupByDate(dirs);
+  const sortedDates = [...dateToDir.keys()].sort();
+  console.log(`Grouped into ${String(sortedDates.length)} unique dates.`);
+
+  if (sortedDates.length === 0) {
+    console.log("No proposals found. Nothing to generate.");
+    return;
+  }
+
+  // 2. Load existing rollup (unless full rebuild)
+  await fs.mkdir(path.dirname(ROLLUPS_PATH), { recursive: true });
+  const existing =
+    !fullRebuild ? await loadExistingRollup(ROLLUPS_PATH) : null;
+  const existingDates = new Set(existing?.days.map((d) => d.date) ?? []);
+
+  // 3. Determine which dates need processing
+  // We need pairs of consecutive dates for diffing, so we need at least 2 dates
+  const datesToProcess = sortedDates.filter((d) => !existingDates.has(d));
+  console.log(
+    `${String(datesToProcess.length)} new date(s) to process${fullRebuild ? " (full rebuild)" : ""}.`,
   );
 
-  const allIds = new Set<number>([
-    ...previousById.keys(),
-    ...currentById.keys(),
-  ]);
-  const changes: ChangeEntry[] = [];
-  const totals: Record<ChangeType, number> = {
-    went_live: 0,
-    added: 0,
-    changed: 0,
-    removed: 0,
+  // 4. Load and transform feeds for each date, then diff consecutive pairs
+  const newDays = [];
+
+  // Build the full sequence: we need the state from the day *before* each new date for diffing
+  for (let i = 0; i < sortedDates.length; i++) {
+    const currentDate = sortedDates[i];
+    if (!currentDate) continue;
+    if (!datesToProcess.includes(currentDate)) continue;
+
+    // Find the previous date in the sequence
+    const prevDate = i > 0 ? sortedDates[i - 1] : undefined;
+    if (!prevDate) {
+      // First date ever — no diff possible, skip (or treat all feeds as "added")
+      const dir = dateToDir.get(currentDate);
+      if (!dir) continue;
+
+      try {
+        const rawFeeds = await loadAfterFeeds(repoPath, dir);
+        const publicFeeds = transformFeeds(rawFeeds);
+        // Diff against empty state → everything is "added"
+        const day = diffStates(currentDate, [], publicFeeds);
+        if (day.changes.length > 0) {
+          newDays.push(day);
+        }
+        console.log(
+          `  ${currentDate}: ${String(publicFeeds.length)} feeds (first snapshot, ${String(day.changes.length)} added)`,
+        );
+      } catch (error: unknown) {
+        const code =
+          error instanceof Error ? error.message.slice(0, 80) : "unknown";
+        console.error(`  ${currentDate}: failed to load — ${code}`);
+      }
+      continue;
+    }
+
+    const prevDir = dateToDir.get(prevDate);
+    const currDir = dateToDir.get(currentDate);
+    if (!prevDir || !currDir) continue;
+
+    try {
+      const [prevRaw, currRaw] = await Promise.all([
+        loadAfterFeeds(repoPath, prevDir),
+        loadAfterFeeds(repoPath, currDir),
+      ]);
+      const prevPublic = transformFeeds(prevRaw);
+      const currPublic = transformFeeds(currRaw);
+
+      const day = diffStates(currentDate, prevPublic, currPublic);
+      if (day.changes.length > 0) {
+        newDays.push(day);
+      }
+      console.log(
+        `  ${currentDate}: ${String(day.changes.length)} change(s)`,
+      );
+    } catch (error: unknown) {
+      const code =
+        error instanceof Error ? error.message.slice(0, 80) : "unknown";
+      console.error(`  ${currentDate}: failed — ${code}`);
+    }
+  }
+
+  // 5. Merge new days into existing rollup
+  const mergedDays = fullRebuild
+    ? newDays
+    : [...(existing?.days ?? []), ...newDays];
+
+  // Sort by date descending (newest first)
+  mergedDays.sort((a, b) => b.date.localeCompare(a.date));
+
+  const proposed: DailyRollupFile = {
+    generatedAt: new Date().toISOString(),
+    source: SOURCE,
+    days: mergedDays,
   };
 
-  for (const id of [...allIds].toSorted((a, b) => a - b)) {
-    const before = previousById.get(id);
-    const after = currentById.get(id);
-
-    if (!before && after) {
-      changes.push({
-        changeType: "added",
-        pythLazerId: id,
-        symbol: String(after.symbol ?? "unknown"),
-        name: String(after.name ?? "unknown"),
-        statusBefore: null,
-        statusAfter: after.state ?? null,
-        changedFields: [],
-      });
-      totals.added++;
-      continue;
-    }
-
-    if (before && !after) {
-      changes.push({
-        changeType: "removed",
-        pythLazerId: id,
-        symbol: String(before.symbol ?? "unknown"),
-        name: String(before.name ?? "unknown"),
-        statusBefore: before.state ?? null,
-        statusAfter: null,
-        changedFields: [],
-      });
-      totals.removed++;
-      continue;
-    }
-
-    if (!before || !after) continue;
-
-    const changedFields = diffValues(before, after);
-    if (changedFields.length === 0) continue;
-
-    const statusBefore = before.state ?? null;
-    const statusAfter = after.state ?? null;
-    const wentLive =
-      statusAfter === "stable" &&
-      statusBefore !== null &&
-      statusBefore !== "stable";
-
-    const changeType: ChangeType = wentLive ? "went_live" : "changed";
-    changes.push({
-      changeType,
-      pythLazerId: id,
-      symbol: String(after.symbol ?? "unknown"),
-      name: String(after.name ?? "unknown"),
-      statusBefore,
-      statusAfter,
-      changedFields,
-    });
-    totals[changeType]++;
+  // 6. Shrinkage guard
+  if (existing && !fullRebuild) {
+    checkShrinkage(existing, proposed);
   }
 
-  return { date: current.date, totals, changes };
-}
-
-/**
- * Computes field-level diffs between two values.
- *
- * Precondition: object keys should be sorted consistently (via sortKeys)
- * for the JSON.stringify fast-path comparison to work correctly.
- */
-function diffValues(
-  before: unknown,
-  after: unknown,
-  pathPrefix = "",
-): FieldDiff[] {
-  if (before === MISSING && after === MISSING) return [];
-  if (before !== MISSING && after !== MISSING) {
-    if (JSON.stringify(before) === JSON.stringify(after)) return [];
-  }
-
-  const beforeIsObject =
-    typeof before === "object" && before !== null && !Array.isArray(before);
-  const afterIsObject =
-    typeof after === "object" && after !== null && !Array.isArray(after);
-
-  if (beforeIsObject && afterIsObject) {
-    const beforeObj = before as Record<string, unknown>;
-    const afterObj = after as Record<string, unknown>;
-    const keys = new Set([
-      ...Object.keys(beforeObj),
-      ...Object.keys(afterObj),
-    ]);
-    const fields: FieldDiff[] = [];
-    for (const key of [...keys].toSorted((a, b) => a.localeCompare(b))) {
-      const nextPath = pathPrefix === "" ? key : `${pathPrefix}.${key}`;
-      const bVal = key in beforeObj ? beforeObj[key] : MISSING;
-      const aVal = key in afterObj ? afterObj[key] : MISSING;
-      fields.push(...diffValues(bVal, aVal, nextPath));
-    }
-    return fields;
-  }
-
-  // Serialize MISSING as "<absent>" so diffs clearly show added/removed keys
-  const serializeDiffValue = (v: unknown) =>
-    v === MISSING ? "<absent>" : v;
-
-  return [
-    {
-      path: pathPrefix === "" ? "$" : pathPrefix,
-      before: serializeDiffValue(before),
-      after: serializeDiffValue(after),
-    },
-  ];
-}
-
-/**
- * Recursively sorts object keys for deterministic comparison.
- * Filters out prototype pollution keys (__proto__, constructor, prototype).
- */
-function sortKeys(value: unknown): unknown {
-  if (value === null || typeof value !== "object") return value;
-  if (Array.isArray(value)) return value.map(sortKeys);
-  const record = value as Record<string, unknown>;
-  return Object.fromEntries(
-    Object.keys(record)
-      .filter((key) => !BLOCKED_KEYS.has(key))
-      .toSorted((a, b) => a.localeCompare(b))
-      .map((key) => [key, sortKeys(record[key])]),
+  // 7. Write output
+  await fs.writeFile(ROLLUPS_PATH, `${JSON.stringify(proposed)}\n`);
+  console.log(
+    `\nDone. ${String(proposed.days.length)} day(s) in rollup, ${String(newDays.length)} new.`,
   );
-}
-
-async function pruneOldSnapshots() {
-  const files = await fs.readdir(SNAPSHOTS_DIR);
-  const snapshotFiles = files
-    .filter((f) => f.endsWith(".json"))
-    .toSorted((a, b) => b.localeCompare(a));
-
-  const toDelete = snapshotFiles.slice(SNAPSHOT_RETENTION_DAYS);
-  for (const fileName of toDelete) {
-    await fs.unlink(path.join(SNAPSHOTS_DIR, fileName));
-    console.log(`Pruned old snapshot: ${fileName}`);
-  }
-}
-
-function utcDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-async function fileExists(filePath: string) {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 await main();

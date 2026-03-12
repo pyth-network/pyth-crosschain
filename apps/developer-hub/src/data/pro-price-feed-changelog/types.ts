@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const scalarValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+export type ScalarValue = z.infer<typeof scalarValueSchema>;
+
 export const changeTypeSchema = z.enum([
   "went_live",
   "added",
@@ -10,8 +18,8 @@ export type ChangeType = z.infer<typeof changeTypeSchema>;
 
 export const fieldDiffSchema = z.object({
   path: z.string(),
-  before: z.unknown(),
-  after: z.unknown(),
+  before: scalarValueSchema,
+  after: scalarValueSchema,
 });
 export type FieldDiff = z.infer<typeof fieldDiffSchema>;
 
@@ -40,7 +48,7 @@ export type DailyRollup = z.infer<typeof dailyRollupSchema>;
 
 export const dailyRollupFileSchema = z.object({
   generatedAt: z.string(),
-  endpoint: z.string(),
+  source: z.string(),
   days: z.array(dailyRollupSchema),
 });
 export type DailyRollupFile = z.infer<typeof dailyRollupFileSchema>;

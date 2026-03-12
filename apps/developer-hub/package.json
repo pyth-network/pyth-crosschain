@@ -78,6 +78,7 @@
     "generate:pro-price-feed-changelog": "tsx ./scripts/generate-pro-price-feed-changelog.ts",
     "start:dev": "next dev --port 3627",
     "start:prod": "next start --port 3627",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:lint:stylelint": "stylelint 'src/**/*.scss' --max-warnings 0",
     "test:types": "tsc"
   },
