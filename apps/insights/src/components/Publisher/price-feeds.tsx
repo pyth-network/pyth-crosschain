@@ -1,13 +1,13 @@
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import { notFound } from "next/navigation";
-
-import { getPriceFeeds } from "./get-price-feeds";
 import type { Cluster } from "../../services/pyth";
 import { parseCluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import type { PriceComponent } from "../PriceComponentsCard";
 import { PriceComponentsCard } from "../PriceComponentsCard";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import { getPriceFeeds } from "./get-price-feeds";
+import styles from "./price-feeds.module.scss";
 
 type Props = {
   params: Promise<{
@@ -30,31 +30,32 @@ export const PriceFeeds = async ({ params }: Props) => {
 
   return (
     <PriceFeedsCard
-      metricsTime={metricsTime}
-      publisherKey={key}
       cluster={parsedCluster}
+      metricsTime={metricsTime}
       priceFeeds={feeds.map(({ ranking, feed, status }) => ({
-        symbol: feed.symbol,
+        assetClass: feed.product.asset_type,
+        deviationScore: ranking?.deviation_score,
+        displaySymbol: feed.product.display_symbol,
+        feedKey: feed.product.price_account,
+        firstEvaluation: ranking?.first_ranking_time,
+        id: feed.product.price_account,
         name: (
           <SymbolPairTag
-            displaySymbol={feed.product.display_symbol}
+            className={styles.symbol}
             description={feed.product.description}
+            displaySymbol={feed.product.display_symbol}
             icon={<PriceFeedIcon assetClass={feed.product.asset_type} />}
           />
         ),
-        score: ranking?.final_score,
+        nameAsString: feed.product.display_symbol,
         rank: ranking?.final_rank,
-        uptimeScore: ranking?.uptime_score,
-        deviationScore: ranking?.deviation_score,
+        score: ranking?.final_score,
         stalledScore: ranking?.stalled_score,
         status,
-        feedKey: feed.product.price_account,
-        nameAsString: feed.product.display_symbol,
-        id: feed.product.price_account,
-        assetClass: feed.product.asset_type,
-        displaySymbol: feed.product.display_symbol,
-        firstEvaluation: ranking?.first_ranking_time,
+        symbol: feed.symbol,
+        uptimeScore: ranking?.uptime_score,
       }))}
+      publisherKey={key}
     />
   );
 };
@@ -73,29 +74,29 @@ type PriceFeedsCardProps =
 
 const PriceFeedsCard = (props: PriceFeedsCardProps) => (
   <PriceComponentsCard
-    label="Price Feeds"
-    searchPlaceholder="Feed symbol"
-    nameLoadingSkeleton={<SymbolPairTag isLoading />}
     extraColumns={[
       {
-        id: "assetClassBadge",
-        name: "ASSET CLASS",
         alignment: "left",
         allowsSorting: true,
+        id: "assetClassBadge",
+        name: "ASSET CLASS",
       },
     ]}
+    label="Price Feeds"
+    nameLoadingSkeleton={<SymbolPairTag isLoading />}
     nameWidth={90}
+    searchPlaceholder="Feed symbol"
     {...(props.isLoading
       ? { isLoading: true }
       : {
           metricsTime: props.metricsTime,
           priceComponents: props.priceFeeds.map((feed) => ({
             ...feed,
-            cluster: props.cluster,
-            publisherKey: props.publisherKey,
             assetClassBadge: (
               <AssetClassBadge>{feed.assetClass}</AssetClassBadge>
             ),
+            cluster: props.cluster,
+            publisherKey: props.publisherKey,
           })),
         })}
   />
