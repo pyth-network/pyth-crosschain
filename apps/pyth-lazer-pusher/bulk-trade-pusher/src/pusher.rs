@@ -6,8 +6,9 @@
 use crate::bulk_client::BulkClient;
 use crate::config::{load_signing_key, Config};
 use crate::metrics::{self, base_metrics, ws_metrics};
-use crate::signing::{ActionType, BulkSigner, OracleAction, OracleUpdate};
+use crate::signing::BulkSigner;
 use anyhow::{Context as _, Result};
+use bulk_keychain::PythOraclePrice;
 use pusher_base::AppRuntime;
 use pusher_base::{CachedPrice, LazerReceiver};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -18,7 +19,8 @@ pub async fn run(config: Config, runtime: AppRuntime) -> Result<()> {
     info!("initializing bulk-trade-pusher");
 
     let signing_key = load_signing_key(&config.bulk.signing_key_path)?;
-    let signer = BulkSigner::from_base58(&signing_key).context("failed to initialize signer")?;
+    let signer = BulkSigner::new(&signing_key, &config.bulk.oracle_account_pubkey_base58)
+        .context("failed to initialize signer")?;
     info!(
         signer_pubkey = signer.pubkey_base58(),
         oracle_account = %config.bulk.oracle_account_pubkey_base58,
@@ -44,7 +46,6 @@ pub async fn run(config: Config, runtime: AppRuntime) -> Result<()> {
         receiver,
         signer,
         bulk_client,
-        &config.bulk.oracle_account_pubkey_base58,
         runtime,
     )
     .await
@@ -53,9 +54,8 @@ pub async fn run(config: Config, runtime: AppRuntime) -> Result<()> {
 async fn run_push_loop(
     update_interval: Duration,
     receiver: LazerReceiver,
-    signer: BulkSigner,
+    mut signer: BulkSigner,
     bulk_client: BulkClient,
-    oracle_account: &str,
     runtime: AppRuntime,
 ) -> Result<()> {
     info!(
@@ -97,16 +97,16 @@ async fn run_push_loop(
             continue;
         }
 
-        let oracles: Vec<OracleUpdate> = prices
+        let oracles: Vec<PythOraclePrice> = prices
             .iter()
             .filter_map(|cached| {
                 let price = cached.data.price.as_ref()?;
                 let exponent = cached.data.exponent?;
-                Some(OracleUpdate {
-                    t: cached.timestamp_ms,
-                    price_feed_id: cached.feed_id.0,
-                    px: price.mantissa_i64(),
-                    expo: exponent,
+                Some(PythOraclePrice {
+                    timestamp: cached.timestamp_ms,
+                    feed_index: u64::from(cached.feed_id.0),
+                    price: u64::try_from(price.mantissa_i64()).unwrap_or(0),
+                    exponent,
                 })
             })
             .collect();
@@ -127,13 +127,7 @@ async fn run_push_loop(
             .map(|d| d.as_nanos() as u64)
             .unwrap_or(0);
 
-        let action = OracleAction {
-            action_type: ActionType::PythOracle,
-            oracles,
-            nonce,
-        };
-
-        let tx = match signer.sign_transaction(action, oracle_account) {
+        let tx = match signer.sign_transaction(oracles, nonce) {
             Ok(tx) => tx,
             Err(e) => {
                 error!(?e, "failed to sign transaction");

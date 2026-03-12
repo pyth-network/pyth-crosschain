@@ -68,8 +68,9 @@ async fn main() -> anyhow::Result<()> {
     let runtime = AppRuntime::new();
 
     let health_address = config.health_address;
+    let health_runtime = runtime.clone();
     runtime.spawn(async move {
-        health::start_health_server(health_address, required_feeds).await;
+        health::start_health_server(health_address, required_feeds, health_runtime).await;
     });
 
     let pusher_runtime = runtime.clone();
