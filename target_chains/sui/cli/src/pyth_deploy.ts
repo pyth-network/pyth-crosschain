@@ -1,16 +1,20 @@
 import { Transaction } from "@mysten/sui/transactions";
 
-import { MIST_PER_SUI, normalizeSuiObjectId, fromB64 } from "@mysten/sui/utils";
+import {
+  MIST_PER_SUI,
+  normalizeSuiObjectId,
+  fromBase64,
+} from "@mysten/sui/utils";
 
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { execSync } from "child_process";
-import { SuiClient } from "@mysten/sui/client";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { bcs } from "@mysten/sui/bcs";
 import type { DataSource } from "@pythnetwork/xc-admin-common/governance_payload/SetDataSources";
 
 export async function publishPackage(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   packagePath: string,
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
   // Build contracts
@@ -34,7 +38,9 @@ export async function publishPackage(
   txb.setGasBudget(MIST_PER_SUI / 2n); // 0.5 SUI
 
   const [upgradeCap] = txb.publish({
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
+    modules: buildOutput.modules.map((m: string) =>
+      Array.from(fromBase64(m)),
+    ),
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d),
     ),
@@ -97,7 +103,7 @@ export async function publishPackage(
 
 export async function initPyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   pythPackageId: string,
   deployerCapId: string,
   upgradeCapId: string,

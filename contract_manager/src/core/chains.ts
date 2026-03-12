@@ -13,8 +13,8 @@ import type {
   MoveStruct as SuiMoveStruct,
   MoveValue as SuiMoveValue,
   SuiTransactionBlockResponseOptions,
-} from "@mysten/sui/client";
-import { SuiClient } from "@mysten/sui/client";
+} from "@mysten/sui/jsonRpc";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Ed25519Keypair as SuiEd25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction as SuiTransaction } from "@mysten/sui/transactions";
 import {
@@ -394,8 +394,11 @@ export class SuiChain extends Chain {
     ).encode();
   }
 
-  getProvider(): SuiClient {
-    return new SuiClient({ url: this.rpcUrl });
+  getProvider(): SuiJsonRpcClient {
+    return new SuiJsonRpcClient({
+      url: this.rpcUrl,
+      network: this.mainnet ? "mainnet" : "testnet",
+    });
   }
 
   getAccountAddress(privateKey: PrivateKey): Promise<string> {
@@ -611,7 +614,7 @@ export class SuiChain extends Chain {
    * `{ .., upgrade_cap: UpgradeCap }` convention.
    */
   async getStatePackageInfo(
-    client: SuiClient,
+    client: SuiJsonRpcClient,
     stateId: string,
   ): Promise<{
     package: string;
@@ -658,7 +661,7 @@ export class SuiChain extends Chain {
   }
 
   private async getStateObject(
-    client: SuiClient,
+    client: SuiJsonRpcClient,
     stateId: string,
   ): Promise<SuiMoveStruct> {
     const { data: stateObject, error } = await client.getObject({

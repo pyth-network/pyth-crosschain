@@ -1491,8 +1491,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       '@mysten/sui':
-        specifier: ^1.3.0
-        version: 1.26.1(typescript@5.9.3)
+        specifier: ^2.5.0
+        version: 2.5.0(typescript@5.9.3)
       '@pythnetwork/client':
         specifier: 'catalog:'
         version: 2.22.1(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -2937,8 +2937,8 @@ importers:
         specifier: ^0.9.12
         version: 0.9.24(bufferutil@4.0.9)(encoding@0.1.13)(google-protobuf@3.21.4)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@mysten/sui':
-        specifier: ^1.3.0
-        version: 1.26.1(typescript@5.9.3)
+        specifier: ^2.5.0
+        version: 2.5.0(typescript@5.9.3)
       '@pythnetwork/contract-manager':
         specifier: workspace:*
         version: link:../../../contract_manager
@@ -2995,9 +2995,6 @@ importers:
 
   target_chains/sui/sdk/js:
     dependencies:
-      '@mysten/sui':
-        specifier: ^1.3.0
-        version: 1.26.1(typescript@5.9.3)
       '@pythnetwork/hermes-client':
         specifier: workspace:*
         version: link:../../../../apps/hermes/client/js
@@ -3005,6 +3002,9 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
     devDependencies:
+      '@mysten/sui':
+        specifier: ^2.5.0
+        version: 2.5.0(typescript@5.9.3)
       '@pythnetwork/jest-config':
         specifier: 'workspace:'
         version: link:../../../../packages/jest-config

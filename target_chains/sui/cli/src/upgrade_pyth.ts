@@ -1,6 +1,10 @@
 import { Transaction } from "@mysten/sui/transactions";
-import { fromB64, MIST_PER_SUI, normalizeSuiObjectId } from "@mysten/sui/utils";
-import { SuiClient } from "@mysten/sui/client";
+import {
+  fromBase64,
+  MIST_PER_SUI,
+  normalizeSuiObjectId,
+} from "@mysten/sui/utils";
+import { SuiJsonRpcClient } from "@mysten/sui/jsonRpc";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 import { execSync } from "child_process";
@@ -18,7 +22,9 @@ export function buildForBytecodeAndDigest(packagePath: string) {
     ),
   );
   return {
-    modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
+    modules: buildOutput.modules.map((m: string) =>
+      Array.from(fromBase64(m)),
+    ),
     dependencies: buildOutput.dependencies.map((d: string) =>
       normalizeSuiObjectId(d),
     ),
@@ -28,7 +34,7 @@ export function buildForBytecodeAndDigest(packagePath: string) {
 
 export async function upgradePyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   modules: number[][],
   dependencies: string[],
   signedVaa: Buffer,
@@ -78,7 +84,7 @@ export async function upgradePyth(
 
 export async function migratePyth(
   keypair: Ed25519Keypair,
-  provider: SuiClient,
+  provider: SuiJsonRpcClient,
   signedUpgradeVaa: Buffer,
   contract: SuiPriceFeedContract,
   pythPackageOld: string,

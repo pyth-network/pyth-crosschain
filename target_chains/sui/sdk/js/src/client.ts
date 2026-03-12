@@ -5,7 +5,7 @@
 import { Buffer } from "node:buffer";
 
 import { bcs } from "@mysten/sui/bcs";
-import { SuiClient } from "@mysten/sui/client";
+import type { ClientWithCoreApi } from "@mysten/sui/client";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import type { HexString } from "@pythnetwork/hermes-client";
@@ -24,7 +24,7 @@ export class SuiPythClient {
   private priceFeedObjectIdCache = new Map<HexString, ObjectId>();
   private baseUpdateFee: number | undefined;
   constructor(
-    public provider: SuiClient,
+    public provider: ClientWithCoreApi,
     public pythStateId: ObjectId,
     public wormholeStateId: ObjectId,
   ) {
@@ -34,18 +34,14 @@ export class SuiPythClient {
 
   async getBaseUpdateFee(): Promise<number> {
     if (this.baseUpdateFee === undefined) {
-      const result = await this.provider.getObject({
-        id: this.pythStateId,
-        options: { showContent: true },
+      const result = await this.provider.core.getObject({
+        objectId: this.pythStateId,
+        include: { json: true },
       });
-      if (
-        !result.data?.content ||
-        result.data.content.dataType !== "moveObject"
-      )
+      const json = result.object.json as Record<string, unknown> | null;
+      if (!json)
         throw new Error("Unable to fetch pyth state object");
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
+      this.baseUpdateFee = Number(json.base_update_fee);
     }
 
     return this.baseUpdateFee;
@@ -58,27 +54,23 @@ export class SuiPythClient {
    * @returns package id
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    const state = await this.provider
-      .getObject({
-        id: objectId,
-        options: {
-          showContent: true,
-        },
-      })
-      .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
-          return result.data.content.fields;
-        }
-        console.log(result.data?.content);
+    const result = await this.provider.core.getObject({
+      objectId,
+      include: { json: true },
+    });
+    const json = result.object.json as Record<string, unknown> | null;
+    if (!json) {
+      throw new Error(`Cannot fetch package id for object ${objectId}`);
+    }
 
-        throw new Error(`Cannot fetch package id for object ${objectId}`);
-      });
-
-    if ("upgrade_cap" in state) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-      return state.upgrade_cap.fields.package;
+    if ("upgrade_cap" in json) {
+      const upgradeCap = json.upgrade_cap as Record<string, unknown>;
+      // JSON-RPC wraps nested objects in { type, fields }, gRPC may not.
+      const fields = (upgradeCap.fields ?? upgradeCap) as Record<
+        string,
+        unknown
+      >;
+      return fields.package as string;
     }
 
     throw new Error("upgrade_cap not found");
@@ -299,28 +291,43 @@ export class SuiPythClient {
     const normalizedFeedId = feedId.replace("0x", "");
     if (!this.priceFeedObjectIdCache.has(normalizedFeedId)) {
       const { id: tableId, fieldType } = await this.getPriceTableInfo();
-      const result = await this.provider.getDynamicFieldObject({
-        parentId: tableId,
-        name: {
-          type: `${fieldType}::price_identifier::PriceIdentifier`,
-          value: {
-            bytes: [...Buffer.from(normalizedFeedId, "hex")],
+      // BCS-encode the PriceIdentifier struct name.
+      // PriceIdentifier has a single field `bytes: vector<u8>`, so its BCS
+      // encoding is the same as just encoding the inner vector<u8>.
+      const nameBcs = bcs
+        .vector(bcs.U8)
+        .serialize([...Buffer.from(normalizedFeedId, "hex")])
+        .toBytes();
+      try {
+        const result = await this.provider.core.getDynamicObjectField({
+          parentId: tableId,
+          name: {
+            type: `${fieldType}::price_identifier::PriceIdentifier`,
+            bcs: nameBcs,
           },
-        },
-      });
-      if (!result.data?.content) {
-        return undefined;
+          include: { json: true },
+        });
+        const json = result.object.json as Record<string, unknown> | null;
+        if (!json) {
+          return undefined;
+        }
+        this.priceFeedObjectIdCache.set(
+          normalizedFeedId,
+          json.value as string,
+        );
+      } catch (e: unknown) {
+        // Only treat "not found" errors as missing feed; re-throw others
+        // (e.g. network timeouts, auth failures) so callers see real outages.
+        const msg = e instanceof Error ? e.message : String(e);
+        if (
+          msg.includes("Could not find the referenced object") ||
+          msg.includes("dynamicFieldNotFound") ||
+          msg.includes("not found")
+        ) {
+          return undefined;
+        }
+        throw e;
       }
-      if (result.data.content.dataType !== "moveObject") {
-        throw new Error("Price feed type mismatch");
-      }
-      this.priceFeedObjectIdCache.set(
-        normalizedFeedId,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        result.data.content.fields.value,
-      );
     }
     return this.priceFeedObjectIdCache.get(normalizedFeedId);
   }
@@ -331,24 +338,29 @@ export class SuiPythClient {
    */
   async getPriceTableInfo(): Promise<{ id: ObjectId; fieldType: ObjectId }> {
     if (this.priceTableInfo === undefined) {
-      const result = await this.provider.getDynamicFieldObject({
+      // BCS-encode the "price_info" name as vector<u8>
+      const nameBcs = bcs
+        .vector(bcs.U8)
+        .serialize([...Buffer.from("price_info")])
+        .toBytes();
+      const result = await this.provider.core.getDynamicObjectField({
         parentId: this.pythStateId,
         name: {
           type: "vector<u8>",
-          value: "price_info",
+          bcs: nameBcs,
         },
       });
-      if (!result.data?.type) {
+      if (!result.object.type) {
         throw new Error(
           "Price Table not found, contract may not be initialized",
         );
       }
-      let type = result.data.type.replace("0x2::table::Table<", "");
+      let type = result.object.type.replace("0x2::table::Table<", "");
       type = type.replace(
         "::price_identifier::PriceIdentifier, 0x2::object::ID>",
         "",
       );
-      this.priceTableInfo = { id: result.data.objectId, fieldType: type };
+      this.priceTableInfo = { id: result.object.objectId, fieldType: type };
     }
     return this.priceTableInfo;
   }
