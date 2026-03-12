@@ -24,6 +24,7 @@ import {
   type DailyRollupFile,
   type FieldDiff,
 } from "../../data/pro-price-feed-changelog/types";
+import { errorToString } from "../../lib/error-to-string";
 import styles from "./index.module.scss";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -124,7 +125,7 @@ export const PriceFeedIdsProChangelog = () => {
   }, [search]);
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     if (debouncedSearch) {
       params.set("q", debouncedSearch);
     } else {
@@ -132,7 +133,8 @@ export const PriceFeedIdsProChangelog = () => {
     }
     const qs = params.toString();
     router.replace(qs ? `?${qs}` : "?", { scroll: false });
-  }, [debouncedSearch, router, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reading searchParams here would cause a re-render loop
+  }, [debouncedSearch, router]);
 
   const filteredDays = useMemo(() => {
     if (state.type !== StateType.Loaded) return [];
@@ -362,8 +364,3 @@ const summarizeChangedFields = (changedFields: FieldDiff[]) => {
   return `${topFields.join(", ")}, +${String(changedFields.length - 3)} more`;
 };
 
-const errorToString = (error: unknown) => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "An error occurred, please try again";
-};

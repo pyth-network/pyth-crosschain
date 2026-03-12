@@ -9,30 +9,21 @@ import * as fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
-import type {
-  ChangeEntry,
-  ChangeType,
-  DailyRollup,
-  DailyRollupFile,
-  FieldDiff,
-  ScalarValue,
+import {
+  dailyRollupFileSchema,
+  type ChangeEntry,
+  type ChangeType,
+  type DailyRollup,
+  type DailyRollupFile,
+  type FieldDiff,
 } from "../../src/data/pro-price-feed-changelog/types";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DIR_NAME_REGEX = /^\d{4}-\d{2}-\d{2}-T\d{6}-.+/;
+const DIR_NAME_REGEX = /^\d{4}-\d{2}-\d{2}-T\d{6}-[a-zA-Z0-9_-]+$/;
 const DATE_EXTRACT_REGEX = /^(\d{4}-\d{2}-\d{2})/;
-
-/** Only these metadata keys are allowed in the public output. */
-export const SAFE_METADATA_KEYS = new Set([
-  "name",
-  "description",
-  "asset_type",
-  "quote_currency",
-  "cmc_id",
-]);
 
 // ---------------------------------------------------------------------------
 // Governance feed schema (input from after.json)
@@ -261,28 +252,33 @@ export function diffStates(
 // diffRecordFields — field-level diff between two public records
 // ---------------------------------------------------------------------------
 
+/** Keys of PublicFeedRecord that are diffable (excludes the ID key). */
+const DIFFABLE_KEYS = [
+  "asset_type",
+  "cmc_id",
+  "description",
+  "exponent",
+  "min_publishers",
+  "name",
+  "quote_currency",
+  "schedule",
+  "state",
+  "symbol",
+] as const satisfies Exclude<keyof PublicFeedRecord, "pyth_lazer_id">[];
+
 function diffRecordFields(
   before: PublicFeedRecord,
   after: PublicFeedRecord,
 ): FieldDiff[] {
   const fields: FieldDiff[] = [];
 
-  for (const key of Object.keys(before).sort()) {
-    if (key === "pyth_lazer_id") continue;
-
-    const bVal = before[key as keyof PublicFeedRecord] as ScalarValue;
-    const aVal = after[key as keyof PublicFeedRecord] as ScalarValue;
+  for (const key of DIFFABLE_KEYS) {
+    const bVal = before[key];
+    const aVal = after[key];
 
     if (bVal === aVal) continue;
-    // Handle null comparisons and type coercion edge cases
-    if (
-      bVal !== null &&
-      aVal !== null &&
-      String(bVal) === String(aVal)
-    )
-      continue;
 
-    fields.push({ path: key, before: bVal, after: aVal });
+    fields.push({ path: key, before: bVal ?? null, after: aVal ?? null });
   }
 
   return fields;
@@ -304,21 +300,9 @@ export function sanitizeDirName(dir: string): string {
 export async function loadExistingRollup(
   rollupPath: string,
 ): Promise<DailyRollupFile | null> {
+  let content: string;
   try {
-    const content = await fs.readFile(rollupPath, "utf8");
-    const parsed = JSON.parse(content) as unknown;
-    // Accept both old `endpoint` and new `source` field for backward compat during migration
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "endpoint" in parsed &&
-      !("source" in parsed)
-    ) {
-      const obj = parsed as Record<string, unknown>;
-      obj.source = obj.endpoint;
-      delete obj.endpoint;
-    }
-    return parsed as DailyRollupFile;
+    content = await fs.readFile(rollupPath, "utf8");
   } catch (error: unknown) {
     if (
       typeof error === "object" &&
@@ -330,6 +314,9 @@ export async function loadExistingRollup(
     }
     throw error;
   }
+
+  const parsed = JSON.parse(content) as unknown;
+  return dailyRollupFileSchema.parse(parsed);
 }
 
 // ---------------------------------------------------------------------------

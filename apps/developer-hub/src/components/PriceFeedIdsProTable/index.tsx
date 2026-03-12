@@ -12,6 +12,7 @@ import { matchSorter } from "match-sorter";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
+import { errorToString } from "../../lib/error-to-string";
 import styles from "./index.module.scss";
 
 const FEED_STATES = ["stable", "coming_soon", "inactive"] as const;
@@ -371,12 +372,3 @@ type Col =
   | "exponent"
   | "state";
 
-const errorToString = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  } else if (typeof error === "string") {
-    return error;
-  } else {
-    return "An error occurred, please try again";
-  }
-};

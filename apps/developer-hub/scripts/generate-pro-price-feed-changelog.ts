@@ -78,67 +78,68 @@ async function main() {
   const existingDates = new Set(existing?.days.map((d) => d.date) ?? []);
 
   // 3. Determine which dates need processing
-  // We need pairs of consecutive dates for diffing, so we need at least 2 dates
-  const datesToProcess = sortedDates.filter((d) => !existingDates.has(d));
+  const datesToProcessSet = new Set(
+    sortedDates.filter((d) => !existingDates.has(d)),
+  );
   console.log(
-    `${String(datesToProcess.length)} new date(s) to process${fullRebuild ? " (full rebuild)" : ""}.`,
+    `${String(datesToProcessSet.size)} new date(s) to process${fullRebuild ? " (full rebuild)" : ""}.`,
   );
 
-  // 4. Load and transform feeds for each date, then diff consecutive pairs
+  // 4. Load and transform feeds for each date, then diff consecutive pairs.
+  //    Cache the previous date's transformed feeds to avoid redundant I/O.
   const newDays = [];
+  let cachedPublic: { date: string; feeds: ReturnType<typeof transformFeeds> } | null = null;
 
-  // Build the full sequence: we need the state from the day *before* each new date for diffing
   for (let i = 0; i < sortedDates.length; i++) {
     const currentDate = sortedDates[i];
     if (!currentDate) continue;
-    if (!datesToProcess.includes(currentDate)) continue;
-
-    // Find the previous date in the sequence
-    const prevDate = i > 0 ? sortedDates[i - 1] : undefined;
-    if (!prevDate) {
-      // First date ever — no diff possible, skip (or treat all feeds as "added")
-      const dir = dateToDir.get(currentDate);
-      if (!dir) continue;
-
-      try {
-        const rawFeeds = await loadAfterFeeds(repoPath, dir);
-        const publicFeeds = transformFeeds(rawFeeds);
-        // Diff against empty state → everything is "added"
-        const day = diffStates(currentDate, [], publicFeeds);
-        if (day.changes.length > 0) {
-          newDays.push(day);
-        }
-        console.log(
-          `  ${currentDate}: ${String(publicFeeds.length)} feeds (first snapshot, ${String(day.changes.length)} added)`,
-        );
-      } catch (error: unknown) {
-        const code =
-          error instanceof Error ? error.message.slice(0, 80) : "unknown";
-        console.error(`  ${currentDate}: failed to load — ${code}`);
-      }
+    if (!datesToProcessSet.has(currentDate)) {
+      // Invalidate cache — the next new date needs to re-load this date's feeds
+      cachedPublic = null;
       continue;
     }
 
-    const prevDir = dateToDir.get(prevDate);
     const currDir = dateToDir.get(currentDate);
-    if (!prevDir || !currDir) continue;
+    if (!currDir) continue;
+
+    // Find the previous date in the sequence
+    const prevDate = i > 0 ? sortedDates[i - 1] : undefined;
 
     try {
-      const [prevRaw, currRaw] = await Promise.all([
-        loadAfterFeeds(repoPath, prevDir),
-        loadAfterFeeds(repoPath, currDir),
-      ]);
-      const prevPublic = transformFeeds(prevRaw);
+      // Load previous date's feeds — use cache if available
+      let prevPublic: ReturnType<typeof transformFeeds>;
+      if (!prevDate) {
+        prevPublic = [];
+      } else if (cachedPublic?.date === prevDate) {
+        prevPublic = cachedPublic.feeds;
+      } else {
+        const prevDir = dateToDir.get(prevDate);
+        if (!prevDir) {
+          cachedPublic = null;
+          continue;
+        }
+        const prevRaw = await loadAfterFeeds(repoPath, prevDir);
+        prevPublic = transformFeeds(prevRaw);
+      }
+
+      // Load current date's feeds
+      const currRaw = await loadAfterFeeds(repoPath, currDir);
       const currPublic = transformFeeds(currRaw);
 
       const day = diffStates(currentDate, prevPublic, currPublic);
       if (day.changes.length > 0) {
         newDays.push(day);
       }
-      console.log(
-        `  ${currentDate}: ${String(day.changes.length)} change(s)`,
-      );
+
+      // Cache current feeds for the next iteration
+      cachedPublic = { date: currentDate, feeds: currPublic };
+
+      const label = !prevDate
+        ? `${String(currPublic.length)} feeds (first snapshot, ${String(day.changes.length)} added)`
+        : `${String(day.changes.length)} change(s)`;
+      console.log(`  ${currentDate}: ${label}`);
     } catch (error: unknown) {
+      cachedPublic = null;
       const code =
         error instanceof Error ? error.message.slice(0, 80) : "unknown";
       console.error(`  ${currentDate}: failed — ${code}`);

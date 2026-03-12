@@ -9,7 +9,6 @@ import * as path from "node:path";
 import type {
   DailyRollupFile,
 } from "../../src/data/pro-price-feed-changelog/types";
-import { publicFeedRecordSchema } from "../lib/pro-price-feed-changelog";
 import {
   checkShrinkage,
   diffStates,
@@ -193,9 +192,6 @@ describe("transformFeeds", () => {
     expect(record.asset_type).toBe("crypto");
     expect(record.quote_currency).toBe("USD");
     expect(record.cmc_id).toBe("1");
-
-    // Strict schema passes
-    expect(() => publicFeedRecordSchema.parse(record)).not.toThrow();
   });
 
   it("excludes sensitive metadata fields", () => {
@@ -350,21 +346,15 @@ describe("loadExistingRollup", () => {
     expect(result).toEqual(data);
   });
 
-  it("migrates old endpoint field to source", async () => {
+  it("throws on malformed rollup file", async () => {
     const tmp = await makeTempDir();
     const filePath = path.join(tmp, "rollup.json");
     await fs.writeFile(
       filePath,
-      JSON.stringify({
-        generatedAt: "2026-03-09T00:00:00Z",
-        endpoint: "https://old-endpoint.example.com",
-        days: [],
-      }),
+      JSON.stringify({ invalid: true }),
     );
 
-    const result = await loadExistingRollup(filePath);
-    expect(result?.source).toBe("https://old-endpoint.example.com");
-    expect((result as Record<string, unknown>).endpoint).toBeUndefined();
+    await expect(loadExistingRollup(filePath)).rejects.toThrow();
   });
 });
 

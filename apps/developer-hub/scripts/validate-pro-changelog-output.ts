@@ -22,12 +22,53 @@ const ROLLUPS_PATH = path.join(
 
 const SENSITIVE_PATTERNS = [
   "hermes_id",
-  "publisher",
-  "publicKey",
-  "governanceSource",
-  "allowedPublisher",
-  "signingKey",
-];
+  "publickey",
+  "governancesource",
+  "allowedpublisher",
+  "signingkey",
+  "privatekey",
+  "secret",
+  "credential",
+  "apikey",
+  "auth_token",
+  "encryption",
+] as const;
+
+/** Keys that are allowed in the output JSON — anything else is suspicious. */
+const ALLOWED_KEYS = new Set([
+  "generatedAt",
+  "source",
+  "days",
+  "date",
+  "totals",
+  "went_live",
+  "added",
+  "changed",
+  "removed",
+  "changes",
+  "changeType",
+  "pythLazerId",
+  "symbol",
+  "name",
+  "statusBefore",
+  "statusAfter",
+  "changedFields",
+  "path",
+  "before",
+  "after",
+]);
+
+function collectKeys(value: unknown, keys: Set<string>): void {
+  if (typeof value !== "object" || value === null) return;
+  if (Array.isArray(value)) {
+    for (const item of value) collectKeys(item, keys);
+    return;
+  }
+  for (const [key, child] of Object.entries(value)) {
+    keys.add(key);
+    collectKeys(child, keys);
+  }
+}
 
 async function main() {
   const content = await fs.readFile(ROLLUPS_PATH, "utf8");
@@ -45,11 +86,24 @@ async function main() {
     `Schema OK: ${String(result.data.days.length)} day(s) in rollup.`,
   );
 
-  // Sensitive keyword check
+  // Structural key check — flag any unexpected keys in the output
+  const allKeys = new Set<string>();
+  collectKeys(data, allKeys);
+  const unexpectedKeys = [...allKeys].filter((k) => !ALLOWED_KEYS.has(k));
+  if (unexpectedKeys.length > 0) {
+    console.error(
+      `Unexpected key(s) found in output: ${unexpectedKeys.join(", ")}`,
+    );
+    process.exit(1);
+  }
+
+  console.log("Structural key check passed.");
+
+  // Sensitive keyword check on raw content (defense-in-depth)
   const lower = content.toLowerCase();
   const found: string[] = [];
   for (const pattern of SENSITIVE_PATTERNS) {
-    if (lower.includes(pattern.toLowerCase())) {
+    if (lower.includes(pattern)) {
       found.push(pattern);
     }
   }
