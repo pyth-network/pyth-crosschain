@@ -4,6 +4,7 @@ import type { HistoryClient } from "../clients/history.js";
 import type { RouterClient } from "../clients/router.js";
 import type { Config } from "../config.js";
 import type { SessionContext } from "../server.js";
+import { registerConvertDateToTimestamp } from "./convert-date-to-timestamp.js";
 import { registerGetCandlestickData } from "./get-candlestick-data.js";
 import { registerGetHistoricalPrice } from "./get-historical-price.js";
 import { registerGetLatestPrice } from "./get-latest-price.js";
@@ -18,6 +19,7 @@ export function registerAllTools(
   sessionContext: SessionContext,
 ): void {
   registerGetSymbols(server, config, historyClient, logger, sessionContext);
+  registerConvertDateToTimestamp(server, logger, sessionContext);
   registerGetCandlestickData(
     server,
     config,

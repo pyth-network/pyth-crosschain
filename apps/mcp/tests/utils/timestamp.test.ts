@@ -1,6 +1,10 @@
 import {
+  DATA_AVAILABLE_FROM_ISO,
+  DATA_AVAILABLE_FROM_UNIX,
   alignTimestampToChannel,
+  getServerTime,
   normalizeTimestampToMicroseconds,
+  unixSecondsToISO,
 } from "../../src/utils/timestamp.js";
 
 describe("normalizeTimestampToMicroseconds", () => {
@@ -60,5 +64,39 @@ describe("alignTimestampToChannel", () => {
   it("returns timestamp unchanged for fixed_rate@0ms (zero interval)", () => {
     const ts = 1_708_300_800_123_456;
     expect(alignTimestampToChannel(ts, "fixed_rate@0ms")).toBe(ts);
+  });
+});
+
+describe("unixSecondsToISO", () => {
+  it("converts Unix seconds to ISO 8601 string", () => {
+    expect(unixSecondsToISO(1767225600)).toBe("2026-01-01T00:00:00.000Z");
+  });
+
+  it("converts epoch 0 correctly", () => {
+    expect(unixSecondsToISO(0)).toBe("1970-01-01T00:00:00.000Z");
+  });
+});
+
+describe("getServerTime", () => {
+  it("returns current time as ISO and Unix seconds", () => {
+    const before = Math.floor(Date.now() / 1000);
+    const result = getServerTime();
+    const after = Math.floor(Date.now() / 1000);
+
+    expect(result.server_unix_seconds).toBeGreaterThanOrEqual(before);
+    expect(result.server_unix_seconds).toBeLessThanOrEqual(after);
+    expect(result.server_time_utc).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/,
+    );
+  });
+});
+
+describe("DATA_AVAILABLE_FROM constants", () => {
+  it("has consistent Unix/ISO values", () => {
+    expect(DATA_AVAILABLE_FROM_UNIX).toBe(1743465600);
+    expect(DATA_AVAILABLE_FROM_ISO).toBe("2025-04-01T00:00:00Z");
+    expect(unixSecondsToISO(DATA_AVAILABLE_FROM_UNIX)).toBe(
+      "2025-04-01T00:00:00.000Z",
+    );
   });
 });

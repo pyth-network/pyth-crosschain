@@ -166,10 +166,11 @@ describe("Integration: MCP server round-trip", () => {
     const result = await client.listTools();
     const names = result.tools.map((t) => t.name);
     expect(names).toContain("get_symbols");
+    expect(names).toContain("convert_date_to_timestamp");
     expect(names).toContain("get_candlestick_data");
     expect(names).toContain("get_historical_price");
     expect(names).toContain("get_latest_price");
-    expect(names).toHaveLength(4);
+    expect(names).toHaveLength(5);
   });
 
   it("all tools have readOnlyHint annotation", async () => {
@@ -218,7 +219,8 @@ describe("Integration: MCP server round-trip", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data[0].display_price).toBeDefined();
+    expect(data.prices[0].display_price).toBeDefined();
+    expect(data.server_time_utc).toBeDefined();
   });
 
   it("get_latest_price returns enriched data", async () => {
@@ -229,8 +231,9 @@ describe("Integration: MCP server round-trip", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data[0].display_price).toBeDefined();
-    expect(data[0].evm).toBeUndefined();
+    expect(data.prices[0].display_price).toBeDefined();
+    expect(data.prices[0].evm).toBeUndefined();
+    expect(data.server_time_utc).toBeDefined();
   });
 
   it("lists resources", async () => {

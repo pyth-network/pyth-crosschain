@@ -6,8 +6,14 @@ import type { Config } from "../config.js";
 import { RESOLUTIONS } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { resolveChannel } from "../utils/channel.js";
-import { ErrorMessages, toolError } from "../utils/errors.js";
+import { toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
+import {
+  DATA_AVAILABLE_FROM_ISO,
+  DATA_AVAILABLE_FROM_UNIX,
+  getServerTime,
+  unixSecondsToISO,
+} from "../utils/timestamp.js";
 
 const MAX_CANDLES = 500;
 
@@ -53,7 +59,7 @@ export function registerGetCandlestickData(
     {
       annotations: { destructiveHint: false, readOnlyHint: true },
       description:
-        "Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.",
+        "Fetch OHLC candlestick data for a symbol. Use for charting, technical analysis, backtesting. IMPORTANT: The symbol must be the full name from get_symbols including the asset type prefix (e.g. 'Crypto.BTC/USD', 'Equity.US.AAPL', 'FX.EUR/USD') — never use bare names like 'BTC/USD'. Historical data is available from April 2025 onward — do not request timestamps before that. Resolutions: 1/5/15/30/60 minutes, 120/240/360/720 (multi-hour), D (daily), W (weekly), M (monthly). Timestamps are Unix seconds.\n\nTimestamp reference (Unix seconds):\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetCandlestickDataInput,
     },
     async (params, extra) => {
@@ -93,6 +99,9 @@ export function registerGetCandlestickData(
           );
 
         if (data.s === "no_data") {
+          const fromISO = unixSecondsToISO(params.from);
+          const toISO = unixSecondsToISO(params.to);
+          const nowSeconds = Math.floor(Date.now() / 1000);
           logToolCall(logger, {
             ...baseMetrics,
             errorType: "no_data",
@@ -100,7 +109,13 @@ export function registerGetCandlestickData(
             status: "error",
             upstreamLatencyMs,
           });
-          return toolError(ErrorMessages.NO_DATA);
+          return toolError(
+            `No candlestick data for ${params.symbol} from ${fromISO} to ${toISO}. ` +
+              `Data available from ${DATA_AVAILABLE_FROM_ISO} to ${unixSecondsToISO(nowSeconds)}. ` +
+              (params.from < DATA_AVAILABLE_FROM_UNIX
+                ? `Your 'from' (${fromISO}) is before data availability. Try from=${DATA_AVAILABLE_FROM_UNIX} (${DATA_AVAILABLE_FROM_ISO}).`
+                : `Try a different time range or symbol.`),
+          );
         }
 
         if (data.s === "error") {
@@ -119,10 +134,20 @@ export function registerGetCandlestickData(
         const totalCandles = data.t.length;
 
         if (totalCandles === 0) {
+          const nowSeconds = Math.floor(Date.now() / 1000);
           const responseText = JSON.stringify({
             candles: 0,
-            hint: "No candlestick data for this symbol/time range. Data is available from April 2025 onward. Try a more recent time range or a different resolution.",
+            hint: `No candlestick data for this symbol/time range. Data available from ${DATA_AVAILABLE_FROM_ISO} onward.`,
+            requested_from_iso: unixSecondsToISO(params.from),
+            requested_to_iso: unixSecondsToISO(params.to),
             s: "ok",
+            valid_range: {
+              from_iso: DATA_AVAILABLE_FROM_ISO,
+              from_unix: DATA_AVAILABLE_FROM_UNIX,
+              to_iso: unixSecondsToISO(nowSeconds),
+              to_unix: nowSeconds,
+            },
+            ...getServerTime(),
           });
           logToolCall(logger, {
             ...baseMetrics,
@@ -162,8 +187,9 @@ export function registerGetCandlestickData(
               returned: MAX_CANDLES,
               total_available: totalCandles,
               truncated: true,
+              ...getServerTime(),
             }
-          : result;
+          : { ...result, ...getServerTime() };
 
         const responseText = JSON.stringify(response);
         logToolCall(logger, {

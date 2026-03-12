@@ -56,6 +56,7 @@ https://mcp.pyth.network/mcp
 | `get_latest_price` | Real-time prices for one or more feeds | Yes (access token) |
 | `get_historical_price` | Point-in-time price snapshots | No |
 | `get_candlestick_data` | OHLC candlestick bars for charting and analysis | No |
+| `convert_date_to_timestamp` | Convert date strings to Unix timestamps | No |
 
 > **Tip:** Use `get_symbols` first to discover available feeds before calling other tools.
 
