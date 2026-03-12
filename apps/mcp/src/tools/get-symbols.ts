@@ -7,6 +7,7 @@ import { ASSET_TYPES } from "../constants.js";
 import type { SessionContext } from "../server.js";
 import { toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
+import { getServerTime } from "../utils/timestamp.js";
 
 const GetSymbolsInput = {
   asset_type: z
@@ -91,6 +92,7 @@ export function registerGetSymbols(
           next_offset: hasMore ? offset + limit : null,
           offset,
           total_available: totalAvailable,
+          ...getServerTime(),
         };
 
         const responseText = JSON.stringify(result);

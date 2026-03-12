@@ -116,17 +116,19 @@ describe("get_historical_price tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data).toHaveLength(2);
-    expect(data[0].price_feed_id).toBe(1);
-    expect(data[0].display_price).toBeDefined();
-    expect(data[0].display_bid).toBeDefined();
-    expect(data[0].display_ask).toBeDefined();
+    expect(data.prices).toHaveLength(2);
+    expect(data.server_time_utc).toBeDefined();
+    expect(data.server_unix_seconds).toBeDefined();
+    expect(data.prices[0].price_feed_id).toBe(1);
+    expect(data.prices[0].display_price).toBeDefined();
+    expect(data.prices[0].display_bid).toBeDefined();
+    expect(data.prices[0].display_ask).toBeDefined();
     // Second entry has null confidence/exponent — no display fields
-    expect(data[1].confidence).toBeNull();
-    expect(data[1].exponent).toBeNull();
-    expect(data[1].display_price).toBeUndefined();
-    expect(data[1].display_bid).toBeUndefined();
-    expect(data[1].display_ask).toBeUndefined();
+    expect(data.prices[1].confidence).toBeNull();
+    expect(data.prices[1].exponent).toBeNull();
+    expect(data.prices[1].display_price).toBeUndefined();
+    expect(data.prices[1].display_bid).toBeUndefined();
+    expect(data.prices[1].display_ask).toBeUndefined();
   });
 
   it("returns enriched prices via feed IDs", async () => {
@@ -142,8 +144,8 @@ describe("get_historical_price tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data).toHaveLength(2);
-    expect(data[0].display_price).toBeDefined();
+    expect(data.prices).toHaveLength(2);
+    expect(data.prices[0].display_price).toBeDefined();
   });
 
   it("returns error for unknown symbol", async () => {
@@ -260,10 +262,11 @@ describe("get_historical_price tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
+    expect(data.direction).toBe("too_late");
     expect(data.hint).toContain("future");
-    expect(data.hint).toContain(
-      "Historical data is only available for past timestamps",
-    );
+    expect(data.requested_timestamp_iso).toBeDefined();
+    expect(data.valid_range).toBeDefined();
+    expect(data.server_time_utc).toBeDefined();
   });
 
   it("shows April 2025 hint when past timestamp returns empty", async () => {
@@ -288,8 +291,11 @@ describe("get_historical_price tool", () => {
     const data = JSON.parse(
       (result.content as Array<{ type: string; text: string }>)[0].text,
     );
-    expect(data.hint).toContain("April 2025");
+    expect(data.direction).toBe("too_early");
+    expect(data.hint).toContain("2025-04-01");
     expect(data.hint).not.toContain("future");
+    expect(data.requested_timestamp_iso).toBe("2023-11-14T22:13:20.000Z");
+    expect(data.valid_range.from_unix).toBe(1743465600);
   });
 
   it("returns specific error for nonexistent feed ID (400/404)", async () => {
@@ -312,6 +318,8 @@ describe("get_historical_price tool", () => {
       .text;
     expect(text).toContain("999999");
     expect(text).toContain("Verify feed IDs with get_symbols");
+    // ISO echo should be present
+    expect(text).toMatch(/\d{4}-\d{2}-\d{2}T/);
   });
 
   it("returns generic error when getSymbols fails with 400", async () => {

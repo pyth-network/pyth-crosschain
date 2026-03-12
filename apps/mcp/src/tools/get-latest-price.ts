@@ -13,6 +13,7 @@ import {
   getApiKeyLast4,
   logToolCall,
 } from "../utils/logger.js";
+import { getServerTime } from "../utils/timestamp.js";
 
 const GetLatestPriceInput = {
   access_token: z
@@ -124,7 +125,10 @@ export function registerGetLatestPrice(
           );
 
         const enriched = feeds.map((f) => addDisplayPrices(f));
-        const responseText = JSON.stringify(enriched);
+        const responseText = JSON.stringify({
+          prices: enriched,
+          ...getServerTime(),
+        });
 
         logToolCall(logger, {
           ...baseMetrics,
