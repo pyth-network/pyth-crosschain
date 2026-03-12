@@ -182,7 +182,7 @@ catalog:
   type-fest: ^5.2.0
   typedoc: ^0.26.8
   typescript: ^5.9.3
-  vercel: ^41.4.1
+  vercel: ^50.32.4
   viem: ^2.39.0
   wagmi: ^2.14.16
   yargs: ^18.0.0

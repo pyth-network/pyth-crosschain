@@ -112,42 +112,43 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
           icon,
           assetClass,
         }) => ({
-          id: symbol,
-          href: `/price-feeds/${encodeURIComponent(symbol)}`,
-          textValue: displaySymbol,
           data: {
+            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
+            confidenceInterval: (
+              <LiveConfidence cluster={Cluster.Pythnet} feedKey={key} />
+            ),
             exponent: (
               <LiveValue
-                field="exponent"
-                feedKey={key}
-                defaultValue={exponent}
                 cluster={Cluster.Pythnet}
+                defaultValue={exponent}
+                feedKey={key}
+                field="exponent"
               />
             ),
             numPublishers: (
               <LiveValue
-                field="numQuoters"
-                feedKey={key}
-                defaultValue={numQuoters}
                 cluster={Cluster.Pythnet}
+                defaultValue={numQuoters}
+                feedKey={key}
+                field="numQuoters"
               />
             ),
-            price: <LivePrice feedKey={key} cluster={Cluster.Pythnet} />,
-            confidenceInterval: (
-              <LiveConfidence feedKey={key} cluster={Cluster.Pythnet} />
+            price: <LivePrice cluster={Cluster.Pythnet} feedKey={key} />,
+            priceFeedId: (
+              <FeedKey className={styles.feedKey ?? ""} feedKey={key} />
             ),
             priceFeedName: (
               <SymbolPairTag
+                className={styles.symbol}
                 description={description}
                 displaySymbol={displaySymbol}
                 icon={icon}
               />
             ),
-            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
-            priceFeedId: (
-              <FeedKey feedKey={key} className={styles.feedKey ?? ""} />
-            ),
           },
+          href: `/price-feeds/${encodeURIComponent(symbol)}`,
+          id: symbol,
+          textValue: displaySymbol,
         }),
       ),
     [paginatedItems],
@@ -173,21 +174,21 @@ const ResolvedPriceFeedsCard = ({ priceFeeds, ...props }: Props) => {
 
   return (
     <PriceFeedsCardContents
-      numResults={numResults}
-      search={search}
-      sortDescriptor={sortDescriptor}
       assetClass={assetClass}
       assetClasses={assetClasses}
+      mkPageLink={mkPageLink}
       numPages={numPages}
-      page={page}
-      pageSize={pageSize}
+      numResults={numResults}
+      onAssetClassChange={updateAssetClass}
+      onPageChange={updatePage}
+      onPageSizeChange={updatePageSize}
       onSearchChange={updateSearch}
       onSortChange={updateSortDescriptor}
-      onAssetClassChange={updateAssetClass}
-      onPageSizeChange={updatePageSize}
-      onPageChange={updatePage}
-      mkPageLink={mkPageLink}
+      page={page}
+      pageSize={pageSize}
       rows={rows}
+      search={search}
+      sortDescriptor={sortDescriptor}
       {...props}
     />
   );
@@ -226,42 +227,45 @@ type PriceFeedsCardContents = Pick<Props, "id"> &
 
 const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
   <Card
-    id={id}
-    icon={<ChartLine />}
     className={styles.priceFeedsCard}
+    icon={<ChartLine />}
+    id={id}
     title={
       <>
         <span>Price Feeds</span>
         {!props.isLoading && (
-          <Badge style="filled" variant="neutral" size="md">
+          <Badge size="md" style="filled" variant="neutral">
             {props.numResults}
           </Badge>
         )}
       </>
     }
-    toolbarClassName={styles.toolbar}
     toolbar={
       <>
         <SearchInput
+          className={styles.searchInput ?? ""}
+          placeholder="Feed symbol"
           size="sm"
           width={50}
-          placeholder="Feed symbol"
-          className={styles.searchInput ?? ""}
           {...(props.isLoading
-            ? { isPending: true, isDisabled: true }
+            ? { isDisabled: true, isPending: true }
             : {
-                value: props.search,
                 onChange: props.onSearchChange,
+                value: props.search,
               })}
         />
         <Select
+          hideLabel
           label="Asset Class"
           size="sm"
           variant="outline"
-          hideLabel
           {...(props.isLoading
-            ? { isPending: true, options: [], buttonLabel: "Asset Class" }
+            ? { buttonLabel: "Asset Class", isPending: true, options: [] }
             : {
+                buttonLabel:
+                  props.assetClass === "" ? "Asset Class" : props.assetClass,
+                hideGroupLabel: true,
+                onSelectionChange: props.onAssetClassChange,
                 optionGroups: [
                   { name: "All", options: [{ id: "" }] },
                   {
@@ -269,34 +273,29 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
                     options: props.assetClasses.map((id) => ({ id })),
                   },
                 ],
-                hideGroupLabel: true,
-                show: ({ id }) => (id === "" ? "All" : id),
                 placement: "bottom end",
-                buttonLabel:
-                  props.assetClass === "" ? "Asset Class" : props.assetClass,
                 selectedKey: props.assetClass,
-                onSelectionChange: props.onAssetClassChange,
+                show: ({ id }) => (id === "" ? "All" : id),
               })}
         />
       </>
     }
+    toolbarClassName={styles.toolbar}
     {...(!props.isLoading && {
       footer: (
         <Paginator
-          numPages={props.numPages}
           currentPage={props.page}
-          onPageChange={props.onPageChange}
-          pageSize={props.pageSize}
-          onPageSizeChange={props.onPageSizeChange}
           mkPageLink={props.mkPageLink}
+          numPages={props.numPages}
+          onPageChange={props.onPageChange}
+          onPageSizeChange={props.onPageSizeChange}
+          pageSize={props.pageSize}
         />
       ),
     })}
   >
     <EntityList
-      label="Price Feeds"
       className={styles.entityList ?? ""}
-      headerLoadingSkeleton={<SymbolPairTag isLoading />}
       fields={[
         { id: "assetClass", name: "Asset Class" },
         { id: "priceFeedId", name: "Price Feed ID" },
@@ -304,7 +303,9 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
         { id: "exponent", name: "Exponent" },
         { id: "numPublishers", name: "# Publishers" },
       ]}
+      headerLoadingSkeleton={<SymbolPairTag isLoading />}
       isLoading={props.isLoading}
+      label="Price Feeds"
       rows={
         props.isLoading
           ? []
@@ -320,78 +321,78 @@ const PriceFeedsCardContents = ({ id, ...props }: PriceFeedsCardContents) => (
       }
     />
     <Table
-      rounded
-      fill
-      label="Price Feeds"
-      stickyHeader="appHeader"
       className={styles.table ?? ""}
       columns={[
         {
+          alignment: "left",
+          allowsSorting: true,
           id: "priceFeedName",
-          name: "PRICE FEED",
           isRowHeader: true,
-          alignment: "left",
           loadingSkeleton: <SymbolPairTag isLoading />,
-          allowsSorting: true,
+          name: "PRICE FEED",
         },
         {
+          alignment: "left",
+          allowsSorting: true,
           id: "assetClass",
-          name: "ASSET CLASS",
-          alignment: "left",
-          width: 45,
           loadingSkeletonWidth: 20,
-          allowsSorting: true,
+          name: "ASSET CLASS",
+          width: 45,
         },
         {
+          alignment: "left",
           id: "priceFeedId",
-          name: "PRICE FEED ID",
-          alignment: "left",
-          width: 40,
           loadingSkeletonWidth: 30,
+          name: "PRICE FEED ID",
+          width: 40,
         },
         {
-          id: "price",
-          name: <PriceName uppercase />,
           alignment: "right",
-          width: 45,
+          id: "price",
           loadingSkeletonWidth: SKELETON_WIDTH,
+          name: <PriceName uppercase />,
+          width: 45,
         },
         {
-          id: "confidenceInterval",
-          name: "CONFIDENCE INTERVAL",
           alignment: "left",
-          width: 45,
+          id: "confidenceInterval",
           loadingSkeletonWidth: SKELETON_WIDTH,
+          name: "CONFIDENCE INTERVAL",
+          width: 45,
         },
         {
+          alignment: "left",
           id: "exponent",
           name: "EXPONENT",
-          alignment: "left",
           width: 8,
         },
         {
+          alignment: "left",
           id: "numPublishers",
           name: "# PUBLISHERS",
-          alignment: "left",
           width: 8,
         },
       ]}
+      fill
+      label="Price Feeds"
+      rounded
+      stickyHeader="appHeader"
       {...(props.isLoading
         ? {
             isLoading: true,
           }
         : {
-            rows: props.rows,
-            sortDescriptor: props.sortDescriptor,
-            onSortChange: props.onSortChange,
             emptyState: (
               <NoResults
-                query={props.search}
                 onClearSearch={() => {
                   props.onSearchChange("");
                 }}
+                query={props.search}
               />
             ),
+            onSortChange: props.onSortChange,
+            rows: props.rows,
+            sortDescriptor: props.sortDescriptor,
           })}
     />
   </Card>

@@ -50,18 +50,11 @@
 
     .description {
       color: theme.color("muted");
-      overflow: initial;
+      overflow: hidden;
       text-overflow: ellipsis;
-      white-space: normal;
+      white-space: unset;
 
       @include theme.text("xs", "medium");
-
-      // reset the above on large devices, to match when the price feeds grid switches over
-      @include theme.breakpoint("2xl") {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: unset;
-      }
     }
   }
 

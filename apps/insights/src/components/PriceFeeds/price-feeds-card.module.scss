@@ -1,6 +1,10 @@
 @use "@pythnetwork/component-library/theme";
 
 .priceFeedsCard {
+  .symbol {
+    flex-grow: 1;
+  }
+
   .toolbar {
     .searchInput {
       flex-grow: 1;

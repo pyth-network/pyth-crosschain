@@ -104,6 +104,7 @@
         display: flex;
         flex-flow: row nowrap;
         gap: theme.spacing(3);
+        flex-grow: 1;
       }
 
       .headingEnd {
