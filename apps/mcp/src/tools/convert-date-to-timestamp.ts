@@ -87,32 +87,32 @@ export function registerConvertDateToTimestamp(
         );
       }
 
-      // Round-trip check for bare dates and Z-terminated datetimes to catch
-      // silently normalized invalid calendar dates (e.g. Feb 30 → Mar 2)
-      const isUTC =
-        isBareDate || input.endsWith("Z") || input.endsWith("z");
-      if (isUTC) {
-        const dateMatch = input.match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (dateMatch) {
-          const [, yearStr, monthStr, dayStr] = dateMatch;
-          const year = Number(yearStr);
-          const month = Number(monthStr);
-          const day = Number(dayStr);
-          if (
-            parsed.getUTCFullYear() !== year ||
-            parsed.getUTCMonth() + 1 !== month ||
-            parsed.getUTCDate() !== day
-          ) {
-            logToolCall(logger, {
-              ...baseMetrics,
-              errorType: "validation",
-              latencyMs: Date.now() - start,
-              status: "error",
-            });
-            return toolError(
-              `Invalid calendar date: ${yearStr}-${monthStr}-${dayStr} does not exist. The date was normalized to ${parsed.toISOString()}, which is not what you intended.`,
-            );
-          }
+      // Round-trip check: validate the calendar date components independently
+      // to catch silently normalized invalid dates (e.g. Feb 30 → Mar 2).
+      // We construct a separate UTC Date from just year/month/day so this works
+      // for all inputs, including offset datetimes where the parsed UTC date
+      // legitimately differs from the input date.
+      const dateMatch = input.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dateMatch) {
+        const [, yearStr, monthStr, dayStr] = dateMatch;
+        const year = Number(yearStr);
+        const month = Number(monthStr);
+        const day = Number(dayStr);
+        const probe = new Date(Date.UTC(year, month - 1, day));
+        if (
+          probe.getUTCFullYear() !== year ||
+          probe.getUTCMonth() + 1 !== month ||
+          probe.getUTCDate() !== day
+        ) {
+          logToolCall(logger, {
+            ...baseMetrics,
+            errorType: "validation",
+            latencyMs: Date.now() - start,
+            status: "error",
+          });
+          return toolError(
+            `Invalid calendar date: ${yearStr}-${monthStr}-${dayStr} does not exist. The date was normalized to ${probe.toISOString().slice(0, 10)}, which is not what you intended.`,
+          );
         }
       }
 
