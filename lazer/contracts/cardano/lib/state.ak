@@ -127,16 +127,18 @@ pub fn spend(
   with_old: fn(State<a>, Bool) -> State<Data>,
 ) {
   expect Some(data) = data
-  let input = transaction.resolve_input(self.inputs, utxo)
-  expect Script(home) = input.address.payment_credential
+  let Output { address, value, reference_script, datum: _ } =
+    transaction.resolve_input(self.inputs, utxo)
+  expect Script(home) = address.payment_credential
+  let old = State { home, data, reference_script }
 
   // The output contains state NFT and nothing else, except ADA. We can't
   // check policy ID (minting script hash) here without introducing circular
-  // dependency, so malicious entity could send here a token from a different
-  // policy, but as long as we only trust state tied to a well known policy
-  // ID, this spending script will always ensure that updates to it are valid.
-  expect [(id, asset, 1)] =
-    assets.without_lovelace(input.value) |> assets.flatten()
+  // dependency, so malicious entity (or different deployment of our contract)
+  // could send here a token from a different policy, but as long as we only
+  // trust state tied to a well known policy ID, this spending script will
+  // always ensure that updates to it are valid.
+  expect [(id, asset, 1)] = assets.without_lovelace(value) |> assets.flatten()
   expect asset == config.state_nft
 
   when
@@ -161,7 +163,7 @@ pub fn spend(
           self.inputs,
           fn(i) { assets.has_nft(i.output.value, id, config.owner_nft) },
         )
-      let updated = with_old(State { home, data, reference_script }, is_owner)
+      let updated = with_old(old, is_owner)
       and {
         new_home == updated.home,
         new_data == updated.data,

@@ -21,7 +21,6 @@ pub type Action {
   PurgeExpiredWithdrawScripts
 }
 
-// TODO: track withdraw script?
 validator init(origin: OutputReference, home: ScriptHash) {
   mint(_: Never, id: PolicyId, self: Transaction) {
     let state <- state.mint(config, origin, id, self)
@@ -29,13 +28,14 @@ validator init(origin: OutputReference, home: ScriptHash) {
       governance,
       trusted_signers,
       deprecated_withdraw_scripts,
-      withdraw_script: _,
+      withdraw_script,
     }: Pyth = state.data
     and {
       state.home == home,
       governance.seen_sequence == 0,
       trusted_signers == [],
       deprecated_withdraw_scripts == [],
+      state.reference_script == Some(withdraw_script),
     }
   }
 

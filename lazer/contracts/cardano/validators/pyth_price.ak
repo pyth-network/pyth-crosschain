@@ -4,7 +4,7 @@ use aiken/crypto.{ScriptHash}
 use aiken/interval
 use cardano/address.{Credential, Script}
 use cardano/assets
-use cardano/certificate.{Certificate}
+use cardano/certificate.{Certificate, RegisterCredential}
 use cardano/transaction.{
   InlineDatum, Input, Output, OutputReference, Transaction, ValidityRange,
 }
@@ -14,7 +14,8 @@ use pyth_state.{config}
 use state.{StateId}
 
 validator pyth_price(pyth_id: StateId) {
-  publish(_: Never, _c: Certificate, _t: Transaction) {
+  publish(_: Never, certificate: Certificate, _t: Transaction) {
+    expect RegisterCredential { .. } = certificate
     True
   }
 
