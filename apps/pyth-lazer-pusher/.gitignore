@@ -21,3 +21,4 @@ Thumbs.db
 
 notes/**
 test_keys/**
+config.local.toml

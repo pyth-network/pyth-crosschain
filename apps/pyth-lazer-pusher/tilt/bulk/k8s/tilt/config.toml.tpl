@@ -18,7 +18,7 @@ endpoints = [
     {{VALIDATOR_ENDPOINTS}}
 ]
 signing_key_path = "/secrets/signing.key"
-oracle_account_pubkey_base58 = "LocalTestOracleAccount"
+oracle_account_pubkey_base58 = "gCGUPL8RFfxndjVYrAQL3z28XtQjY2zJcFu7Tk3CT9Z"
 
 [feeds]
 update_interval = "500ms"

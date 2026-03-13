@@ -129,6 +129,7 @@ impl LazerReceiver {
                 runtime_clone,
             )
             .await;
+            drop(lazer_client);
         });
 
         Ok(Self {

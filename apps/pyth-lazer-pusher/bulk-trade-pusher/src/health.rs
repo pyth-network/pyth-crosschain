@@ -8,6 +8,7 @@
 
 use crate::metrics;
 use axum::{extract::State, http::StatusCode, routing::get, Router};
+use pusher_base::AppRuntime;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -66,7 +67,11 @@ pub fn check_health(required_feeds: &[u32]) -> HealthStatus {
 }
 
 /// Start the health HTTP server.
-pub async fn start_health_server(address: SocketAddr, required_feeds: Vec<u32>) {
+pub async fn start_health_server(
+    address: SocketAddr,
+    required_feeds: Vec<u32>,
+    runtime: AppRuntime,
+) {
     let feeds: Arc<[u32]> = required_feeds.into();
 
     let app = Router::new()
@@ -84,7 +89,11 @@ pub async fn start_health_server(address: SocketAddr, required_feeds: Vec<u32>) 
         }
     };
 
-    if let Err(e) = axum::serve(listener, app).await {
+    let shutdown = async move { runtime.cancelled().await };
+    if let Err(e) = axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown)
+        .await
+    {
         warn!(?e, "health server error");
     }
 }

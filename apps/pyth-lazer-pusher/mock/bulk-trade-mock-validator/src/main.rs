@@ -73,37 +73,48 @@ struct BulkRequestPayload {
     #[allow(dead_code, reason = "required for serde deserialization")]
     #[serde(rename = "type")]
     payload_type: String,
-    payload: OracleTransaction,
+    payload: TransactionPayload,
 }
 
-/// Oracle transaction inside the request
+/// Signed transaction payload (matches bulk-keychain 0.1.8 SignedTransaction format)
 #[derive(Debug, Clone, Deserialize)]
-struct OracleTransaction {
-    action: OracleAction,
+struct TransactionPayload {
+    actions: Vec<serde_json::Value>,
+    nonce: u64,
     account: String,
     signer: String,
     #[allow(dead_code, reason = "required for serde deserialization")]
     signature: String,
 }
 
+/// Oracle action wrapper: `{"o": {"oracles": [...]}}`
 #[derive(Debug, Clone, Deserialize)]
-struct OracleAction {
-    #[allow(dead_code, reason = "required for serde deserialization")]
-    #[serde(rename = "type")]
-    action_type: String,
+struct OracleActionWrapper {
+    o: OracleActionInner,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct OracleActionInner {
     oracles: Vec<OracleUpdate>,
-    #[allow(dead_code, reason = "used for logging only when verbose")]
-    nonce: u64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct OracleUpdate {
     t: u64,
     #[serde(rename = "fi")]
-    price_feed_id: u32,
-    px: i64,
-    #[serde(rename = "ex")]
-    expo: i16,
+    feed_index: u64,
+    px: u64,
+    #[serde(rename = "e")]
+    exponent: i16,
+}
+
+/// Extract oracle updates from the actions array.
+fn extract_oracles(actions: &[serde_json::Value]) -> Vec<OracleUpdate> {
+    actions
+        .iter()
+        .filter_map(|action| serde_json::from_value::<OracleActionWrapper>(action.clone()).ok())
+        .flat_map(|wrapper| wrapper.o.oracles)
+        .collect()
 }
 
 /// Response to send back
@@ -119,14 +130,33 @@ struct BulkResponse {
 struct BulkResponseData {
     #[serde(rename = "type")]
     data_type: String,
-    payload: BulkResponsePayload,
+    ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct BulkResponsePayload {
-    status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    message: Option<String>,
+fn ok_response(id: u64) -> BulkResponse {
+    BulkResponse {
+        response_type: "post".to_string(),
+        id,
+        data: BulkResponseData {
+            data_type: "ack".to_string(),
+            ok: true,
+            error: None,
+        },
+    }
+}
+
+fn error_response(id: u64, msg: impl Into<String>) -> BulkResponse {
+    BulkResponse {
+        response_type: "post".to_string(),
+        id,
+        data: BulkResponseData {
+            data_type: "ack".to_string(),
+            ok: false,
+            error: Some(msg.into()),
+        },
+    }
 }
 
 /// Metrics for the mock validator
@@ -231,7 +261,7 @@ struct ValidatorState {
     /// Track (account, nonce) pairs for nonce-based deduplication
     seen_nonces: RwLock<HashSet<(String, u64)>>,
     /// Track (account, feed_id) -> last update time for time-based deduplication
-    last_update_times: RwLock<HashMap<(String, u32), Instant>>,
+    last_update_times: RwLock<HashMap<(String, u64), Instant>>,
     /// Track unique signers
     seen_signers: RwLock<HashSet<String>>,
     /// Track prices: feed_id -> (price, timestamp)
@@ -460,17 +490,7 @@ async fn process_message(
                 .messages_by_status
                 .with_label_values(&["parse_error"])
                 .inc();
-            return BulkResponse {
-                response_type: "post".to_string(),
-                id: 0,
-                data: BulkResponseData {
-                    data_type: "action".to_string(),
-                    payload: BulkResponsePayload {
-                        status: "error".to_string(),
-                        message: Some(format!("Invalid JSON: {e}")),
-                    },
-                },
-            };
+            return error_response(0, format!("Invalid JSON: {e}"));
         }
     };
 
@@ -483,6 +503,7 @@ async fn process_message(
 
     let request_id = request.id;
     let tx = request.request.payload;
+    let oracles = extract_oracles(&tx.actions);
     let now = Instant::now();
 
     // Track signer
@@ -507,42 +528,32 @@ async fn process_message(
             "[{peer_addr}] Received oracle update: account={}, signer={}, nonce={}, feeds={}",
             tx.account,
             tx.signer,
-            tx.action.nonce,
-            tx.action.oracles.len()
+            tx.nonce,
+            oracles.len()
         );
-        for oracle in &tx.action.oracles {
-            let price = (oracle.px as f64) * 10_f64.powi(i32::from(oracle.expo));
+        for oracle in &oracles {
+            let price = (oracle.px as f64) * 10_f64.powi(i32::from(oracle.exponent));
             info!(
-                "[{peer_addr}]   feed_id={} @ {price} (px={}, expo={})",
-                oracle.price_feed_id, oracle.px, oracle.expo
+                "[{peer_addr}]   feed_id={} @ {price} (px={}, exponent={})",
+                oracle.feed_index, oracle.px, oracle.exponent
             );
         }
     }
 
     // Check 1: Nonce-based deduplication (account, nonce) pairs
     {
-        let nonce_key = (tx.account.clone(), tx.action.nonce);
+        let nonce_key = (tx.account.clone(), tx.nonce);
         let mut seen_nonces = state.seen_nonces.write().await;
         if seen_nonces.contains(&nonce_key) {
             info!(
                 "[{peer_addr}] Deduplicated: nonce {} already seen for account {}",
-                tx.action.nonce, tx.account
+                tx.nonce, tx.account
             );
             metrics
                 .messages_by_status
                 .with_label_values(&["dedup_nonce"])
                 .inc();
-            return BulkResponse {
-                response_type: "post".to_string(),
-                id: request_id,
-                data: BulkResponseData {
-                    data_type: "action".to_string(),
-                    payload: BulkResponsePayload {
-                        status: "error".to_string(),
-                        message: Some("duplicate nonce".to_string()),
-                    },
-                },
-            };
+            return error_response(request_id, "duplicate nonce");
         }
         seen_nonces.insert(nonce_key);
     }
@@ -551,13 +562,13 @@ async fn process_message(
     // If ANY feed in this update was already updated within the window, reject the whole update
     if !dedup_window.is_zero() {
         let mut last_updates = state.last_update_times.write().await;
-        for oracle in &tx.action.oracles {
-            let key = (tx.account.clone(), oracle.price_feed_id);
+        for oracle in &oracles {
+            let key = (tx.account.clone(), oracle.feed_index);
             if let Some(last_time) = last_updates.get(&key) {
                 if now.duration_since(*last_time) < dedup_window {
                     info!(
                         "[{peer_addr}] Deduplicated: feed {} for account {} updated {}ms ago (window={}ms)",
-                        oracle.price_feed_id,
+                        oracle.feed_index,
                         tx.account,
                         now.duration_since(*last_time).as_millis(),
                         dedup_window.as_millis()
@@ -566,23 +577,13 @@ async fn process_message(
                         .messages_by_status
                         .with_label_values(&["dedup_time"])
                         .inc();
-                    return BulkResponse {
-                        response_type: "post".to_string(),
-                        id: request_id,
-                        data: BulkResponseData {
-                            data_type: "action".to_string(),
-                            payload: BulkResponsePayload {
-                                status: "error".to_string(),
-                                message: Some("duplicate update within time window".to_string()),
-                            },
-                        },
-                    };
+                    return error_response(request_id, "duplicate update within time window");
                 }
             }
         }
         // Update timestamps for all feeds in this update
-        for oracle in &tx.action.oracles {
-            let key = (tx.account.clone(), oracle.price_feed_id);
+        for oracle in &oracles {
+            let key = (tx.account.clone(), oracle.feed_index);
             last_updates.insert(key, now);
         }
     }
@@ -590,9 +591,9 @@ async fn process_message(
     // Update prices after passing dedup checks
     {
         let mut prices = state.prices.write().await;
-        for oracle in &tx.action.oracles {
-            let price = (oracle.px as f64) * 10_f64.powi(i32::from(oracle.expo));
-            let feed_id_str = oracle.price_feed_id.to_string();
+        for oracle in &oracles {
+            let price = (oracle.px as f64) * 10_f64.powi(i32::from(oracle.exponent));
+            let feed_id_str = oracle.feed_index.to_string();
             prices.insert(feed_id_str.clone(), (price, oracle.t));
 
             metrics
@@ -613,17 +614,7 @@ async fn process_message(
             .messages_by_status
             .with_label_values(&["dedup_random"])
             .inc();
-        return BulkResponse {
-            response_type: "post".to_string(),
-            id: request_id,
-            data: BulkResponseData {
-                data_type: "action".to_string(),
-                payload: BulkResponsePayload {
-                    status: "error".to_string(),
-                    message: Some("duplicate nonce".to_string()),
-                },
-            },
-        };
+        return error_response(request_id, "duplicate nonce");
     }
 
     // Simulate random failures (for chaos testing)
@@ -633,17 +624,7 @@ async fn process_message(
             .messages_by_status
             .with_label_values(&["error"])
             .inc();
-        return BulkResponse {
-            response_type: "post".to_string(),
-            id: request_id,
-            data: BulkResponseData {
-                data_type: "action".to_string(),
-                payload: BulkResponsePayload {
-                    status: "error".to_string(),
-                    message: Some("Simulated error".to_string()),
-                },
-            },
-        };
+        return error_response(request_id, "Simulated error");
     }
 
     // Success
@@ -652,15 +633,5 @@ async fn process_message(
         .messages_by_status
         .with_label_values(&["accepted"])
         .inc();
-    BulkResponse {
-        response_type: "post".to_string(),
-        id: request_id,
-        data: BulkResponseData {
-            data_type: "action".to_string(),
-            payload: BulkResponsePayload {
-                status: "ok".to_string(),
-                message: None,
-            },
-        },
-    }
+    ok_response(request_id)
 }
