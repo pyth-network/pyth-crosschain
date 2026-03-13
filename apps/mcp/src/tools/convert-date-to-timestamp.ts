@@ -11,8 +11,9 @@ import {
   unixSecondsToISO,
 } from "../utils/timestamp.js";
 
-const BARE_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TZ_INDICATOR_RE = /[Zz]|[+-]\d{2}:\d{2}|[+-]\d{4}$/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATETIME_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:?\d{2})$/;
 
 const ConvertDateToTimestampInput = {
   date_string: z
@@ -53,12 +54,11 @@ export function registerConvertDateToTimestamp(
 
       const input = params.date_string.trim();
 
-      // Parse the date
-      const isBareDate = BARE_DATE_RE.test(input);
-      const hasTimezone = TZ_INDICATOR_RE.test(input);
+      // Validate format: only ISO 8601 bare dates or datetimes with timezone
+      const isBareDate = ISO_DATE_RE.test(input);
+      const isISODatetime = ISO_DATETIME_RE.test(input);
 
-      // Reject ambiguous formats (have time component but no timezone)
-      if (!isBareDate && !hasTimezone) {
+      if (!isBareDate && !isISODatetime) {
         logToolCall(logger, {
           ...baseMetrics,
           errorType: "validation",
@@ -66,7 +66,7 @@ export function registerConvertDateToTimestamp(
           status: "error",
         });
         return toolError(
-          "Ambiguous timezone. Use ISO 8601 with explicit timezone (e.g. 2026-01-01T12:00:00Z) or bare date (YYYY-MM-DD, interpreted as UTC midnight).",
+          "Invalid date format. Use ISO 8601: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ",
         );
       }
 
@@ -85,6 +85,35 @@ export function registerConvertDateToTimestamp(
         return toolError(
           "Invalid date format. Use ISO 8601: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ",
         );
+      }
+
+      // Round-trip check for bare dates and Z-terminated datetimes to catch
+      // silently normalized invalid calendar dates (e.g. Feb 30 → Mar 2)
+      const isUTC =
+        isBareDate || input.endsWith("Z") || input.endsWith("z");
+      if (isUTC) {
+        const dateMatch = input.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (dateMatch) {
+          const [, yearStr, monthStr, dayStr] = dateMatch;
+          const year = Number(yearStr);
+          const month = Number(monthStr);
+          const day = Number(dayStr);
+          if (
+            parsed.getUTCFullYear() !== year ||
+            parsed.getUTCMonth() + 1 !== month ||
+            parsed.getUTCDate() !== day
+          ) {
+            logToolCall(logger, {
+              ...baseMetrics,
+              errorType: "validation",
+              latencyMs: Date.now() - start,
+              status: "error",
+            });
+            return toolError(
+              `Invalid calendar date: ${yearStr}-${monthStr}-${dayStr} does not exist. The date was normalized to ${parsed.toISOString()}, which is not what you intended.`,
+            );
+          }
+        }
       }
 
       const unixSeconds = Math.floor(parsed.getTime() / 1000);

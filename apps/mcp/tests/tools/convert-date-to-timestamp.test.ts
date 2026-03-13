@@ -116,7 +116,7 @@ describe("convert_date_to_timestamp tool", () => {
     expect(data.is_in_valid_range).toBe(false);
   });
 
-  it("rejects ambiguous timezone formats", async () => {
+  it("rejects datetime without timezone", async () => {
     const result = await client.callTool({
       arguments: { date_string: "2026-01-01T12:00:00" },
       name: "convert_date_to_timestamp",
@@ -125,7 +125,7 @@ describe("convert_date_to_timestamp tool", () => {
     expect(result.isError).toBe(true);
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
-    expect(text).toContain("Ambiguous timezone");
+    expect(text).toContain("Invalid date format");
   });
 
   it("rejects invalid date strings", async () => {
@@ -137,7 +137,7 @@ describe("convert_date_to_timestamp tool", () => {
     expect(result.isError).toBe(true);
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
-    expect(text).toContain("Ambiguous timezone");
+    expect(text).toContain("Invalid date format");
   });
 
   it("rejects non-ISO formats like 'January 1, 2026'", async () => {
@@ -149,7 +149,94 @@ describe("convert_date_to_timestamp tool", () => {
     expect(result.isError).toBe(true);
     const text = (result.content as Array<{ type: string; text: string }>)[0]
       .text;
-    expect(text).toContain("Ambiguous timezone");
+    expect(text).toContain("Invalid date format");
+  });
+
+  it("rejects non-ISO format 'Sat Jan 01 2026 00:00:00 GMT+0000'", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "Sat Jan 01 2026 00:00:00 GMT+0000" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Invalid date format");
+  });
+
+  it("rejects invalid calendar date Feb 30", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "2026-02-30" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Invalid calendar date");
+    expect(text).toContain("does not exist");
+  });
+
+  it("rejects invalid calendar date Apr 31", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "2026-04-31" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Invalid calendar date");
+    expect(text).toContain("does not exist");
+  });
+
+  it("accepts valid non-leap year Feb 28", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "2026-02-28" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBeFalsy();
+  });
+
+  it("accepts valid leap year Feb 29", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "2024-02-29" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBeFalsy();
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.iso8601).toBe("2024-02-29T00:00:00.000Z");
+  });
+
+  it("rejects Feb 29 on non-leap year", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "2025-02-29" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Invalid calendar date");
+  });
+
+  it("accepts datetime with offset where UTC date differs from input date", async () => {
+    // 2026-01-31T23:00:00-05:00 = 2026-02-01T04:00:00Z
+    // UTC date (Feb 1) differs from input date (Jan 31) — valid timezone conversion
+    const result = await client.callTool({
+      arguments: { date_string: "2026-01-31T23:00:00-05:00" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBeFalsy();
+    const data = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0].text,
+    );
+    expect(data.iso8601).toBe("2026-02-01T04:00:00.000Z");
   });
 
   it("handles timezone offset format", async () => {
