@@ -123,7 +123,7 @@ export function registerConvertDateToTimestamp(
       }
 
       const unixSeconds = Math.floor(parsed.getTime() / 1000);
-      const unixMicroseconds = unixSeconds * 1_000_000;
+      const unixMicroseconds = parsed.getTime() * 1000;
       const nowSeconds = Math.floor(Date.now() / 1000);
       const isInValidRange =
         unixSeconds >= DATA_AVAILABLE_FROM_UNIX && unixSeconds <= nowSeconds;
