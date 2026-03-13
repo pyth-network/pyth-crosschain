@@ -5,9 +5,11 @@ import {
   Data,
   PolicyId,
   Schema,
+  ScriptHash,
   TSchema,
 } from "@evolution-sdk/evolution";
 import type { SigningTransactionBuilder } from "@evolution-sdk/evolution/sdk/builders/TransactionBuilder";
+import { UpgradeCardanoSpendScript } from "@pythnetwork/xc-admin-common";
 import { ClientContext } from "./client.js";
 import { aikenEval } from "./eval.js";
 import {
@@ -183,7 +185,14 @@ export async function applyGovernanceAction(
       .attachScript(spender)
       .readFrom({ referenceInputs: [guardians] })
       .collectFrom(input)
-      .payToAddress({ ...newState, script: withdrawer.script }),
+      .payToAddress({
+        ...newState,
+        address:
+          action.action instanceof UpgradeCardanoSpendScript
+            ? ctx.newAddress(ScriptHash.fromHex(action.action.hash))
+            : newState.address,
+        script: withdrawer.script,
+      }),
   ];
 }
 
