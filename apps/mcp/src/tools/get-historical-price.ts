@@ -59,10 +59,16 @@ export function registerGetHistoricalPrice(
   server.registerTool(
     "get_historical_price",
     {
-      annotations: { destructiveHint: false, readOnlyHint: true },
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+        readOnlyHint: true,
+      },
       description:
         "Get price data for specific feeds at a historical timestamp. Use get_symbols first to find feed IDs or symbols. If both price_feed_ids and symbols are provided, only price_feed_ids are used. Accepts Unix seconds, milliseconds, or microseconds (auto-detected). Historical data is available from April 2025 onward — do not request timestamps before that. The timestamp is internally converted to microseconds and aligned (rounded down) to the channel rate — e.g. for fixed_rate@200ms, it must be divisible by 200,000μs. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.\n\nTimestamp reference:\n  2025-04-01 (earliest available) = 1743465600\n  2026-01-01 = 1767225600\n  2026-06-01 = 1780272000\nAlways double-check your timestamp math — year-boundary errors are common.",
       inputSchema: GetHistoricalPriceInput,
+      title: "Get Historical Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;
