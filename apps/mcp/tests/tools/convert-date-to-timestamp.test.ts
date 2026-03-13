@@ -224,6 +224,19 @@ describe("convert_date_to_timestamp tool", () => {
     expect(text).toContain("Invalid calendar date");
   });
 
+  it("rejects invalid calendar date with timezone offset", async () => {
+    const result = await client.callTool({
+      arguments: { date_string: "2026-02-30T12:00:00+05:00" },
+      name: "convert_date_to_timestamp",
+    });
+
+    expect(result.isError).toBe(true);
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
+    expect(text).toContain("Invalid calendar date");
+    expect(text).toContain("does not exist");
+  });
+
   it("accepts datetime with offset where UTC date differs from input date", async () => {
     // 2026-01-31T23:00:00-05:00 = 2026-02-01T04:00:00Z
     // UTC date (Feb 1) differs from input date (Jan 31) — valid timezone conversion
