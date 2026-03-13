@@ -1,12 +1,11 @@
-import type { Time } from "@evolution-sdk/evolution";
+/** biome-ignore-all lint/suspicious/noConsole: utilities used in CLI */
+import type { Time, UTxO } from "@evolution-sdk/evolution";
 import {
   AssetName,
   Assets,
   createClient,
   DatumOption,
   Effect,
-  Either,
-  UTxO,
 } from "@evolution-sdk/evolution";
 import { Address } from "@evolution-sdk/evolution/Address";
 import type { Data } from "@evolution-sdk/evolution/Data";
@@ -21,7 +20,9 @@ import type {
   SigningClient,
 } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
+import { SLOT_CONFIG_NETWORK } from "@evolution-sdk/evolution/Time";
 import type { TransactionHash } from "@evolution-sdk/evolution/TransactionHash";
+import { Schedule } from "effect";
 
 export type Network = Exclude<NetworkId, number> | "devnet";
 
@@ -38,9 +39,17 @@ export type Payment = {
   script?: Script;
 };
 
-export class ClientContext {
-  private usedUtxos: UTxO.UTxOSet = UTxO.empty();
+export type Provider =
+  | {
+      type: "koios";
+      token: string;
+    }
+  | {
+      type: "blockfrost";
+      projectId: string;
+    };
 
+export class ClientContext {
   private constructor(
     readonly network: Network,
     readonly client: SigningClient,
@@ -50,8 +59,8 @@ export class ClientContext {
 
   static async create(
     network: Network,
+    provider: Provider,
     mnemonic: string,
-    token = "",
     options: { debug?: boolean } = {},
   ): Promise<ClientContext> {
     if (network === "devnet") {
@@ -74,21 +83,32 @@ export class ClientContext {
     } else {
       const client = createClient({
         network,
-        provider: {
-          // TODO:
-          // baseUrl: `https://${
-          //   {
-          //     mainnet: "api",
-          //     preprod: "preprod",
-          //     preview: "preview",
-          //   }[network]
-          // }.koios.rest/api/v1`,
-          // token,
-          // type: "koios",
-          baseUrl: "https://cardano-preview.blockfrost.io/api/v0",
-          projectId: token,
-          type: "blockfrost",
-        },
+        provider:
+          provider.type === "blockfrost"
+            ? {
+                baseUrl: `https://cardano-${network}.blockfrost.io/api/v0`,
+                ...provider,
+              }
+            : {
+                baseUrl: `https://${
+                  {
+                    mainnet: "api",
+                    preprod: "preprod",
+                    preview: "preview",
+                  }[network]
+                }.koios.rest/api/v1`,
+                ...provider,
+              },
+        slotConfig:
+          SLOT_CONFIG_NETWORK[
+            (
+              {
+                mainnet: "Mainnet",
+                preprod: "Preprod",
+                preview: "Preview",
+              } as const
+            )[network]
+          ],
         wallet: {
           accountIndex: 0,
           mnemonic,
@@ -104,13 +124,34 @@ export class ClientContext {
     }
   }
 
-  async run(tx: SigningTransactionBuilder): Promise<TransactionHash> {
-    const digest = await Either.getOrThrowWith(
-      await tx.buildEither({ debug: this.debug }),
-      (e) => JSON.stringify(e, undefined, 2),
-    ).signAndSubmit();
-    await this.client.awaitTx(digest);
-    return digest;
+  // biome-ignore lint/suspicious/noExplicitAny: false positive
+  async run<const R extends any[]>(
+    build: () => Promise<[SigningTransactionBuilder, ...R]>,
+  ): Promise<readonly [TransactionHash, ...R]> {
+    return await Effect.runPromise(this.runEffect(build));
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: false positive
+  runEffect<const R extends any[]>(
+    build: () => Promise<[SigningTransactionBuilder, ...R]>,
+  ): Effect.Effect<readonly [TransactionHash, ...R], Error> {
+    const { client, debug } = this;
+    const times = 2;
+
+    let attempt = 1;
+    return Effect.gen(function* () {
+      console.info(`(Attempt #${attempt++} out of ${times + 1}...)`);
+      const [tx, ...res] = yield* Effect.tryPromise(() => build());
+      const built = yield* Effect.catchAllDefect((e) =>
+        // .buildEffect `throw`s internally, we need to handle that
+        Effect.fail(e as Error),
+      )(tx.buildEffect({ debug }));
+      const digest = yield* built.Effect.signAndSubmit();
+      console.log("digest:", digest);
+      yield* client.Effect.awaitTx(digest);
+      console.log("awaited");
+      return [digest, ...res] as const;
+    }).pipe(Effect.retry({ schedule: Schedule.fixed("5 seconds"), times }));
   }
 
   calculateFee({ script, ...args }: Payment): bigint {
@@ -139,14 +180,11 @@ export class ClientContext {
    * double-spend.
    */
   async getFreshUtxo() {
-    const utxos = await this.client.getWalletUtxos();
-    // Blockfrost provider was returning spent UTxOs
-    const fresh = utxos.find((u) => !UTxO.has(this.usedUtxos, u));
-    if (!fresh) {
-      throw new Error(`Could not find a valid UTxO (from ${utxos.length})`);
+    const [utxo] = await this.client.getWalletUtxos();
+    if (!utxo) {
+      throw new Error("Could not find a valid UTxO");
     }
-    this.usedUtxos = UTxO.add(this.usedUtxos, fresh);
-    return fresh;
+    return utxo;
   }
 
   async payToMe(assets: Assets.Assets): Promise<PayToAddressParams> {

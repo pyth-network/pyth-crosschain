@@ -1,5 +1,4 @@
 import path from "node:path";
-import type { UTxO } from "@evolution-sdk/evolution";
 import {
   AssetName,
   Assets,
@@ -47,14 +46,15 @@ const wormholeStateSpend = SpendingValidator.new(Wormhole_state_update_spend);
 
 export async function initWormholeState(
   ctx: ClientContext,
-  origin: UTxO.UTxO,
   initialGuardian: string,
-): Promise<{ policy: PolicyId.PolicyId; tx: SigningTransactionBuilder }> {
+): Promise<[SigningTransactionBuilder, PolicyId.PolicyId]> {
+  const origin = await ctx.getFreshUtxo();
   const spender = wormholeStateSpend.script();
   const minter = wormholeStateMint.script(
     utxoToOutRef(origin),
     spender.hash.hash,
   );
+
   const stateNFT = minter.asset(WH_STATE_NFT, 1n);
   const ownerNFT = minter.asset(WH_OWNER_NFT, 1n);
   const state = spender.receive(ctx, stateNFT, {
@@ -62,9 +62,8 @@ export async function initWormholeState(
     set_index: 0n,
   });
 
-  return {
-    policy: PolicyId.fromBytes(minter.hash.hash),
-    tx: ctx.client
+  return [
+    ctx.client
       .newTx()
       .collectFrom({ inputs: [origin] })
       .attachScript(minter)
@@ -73,28 +72,31 @@ export async function initWormholeState(
       )
       .payToAddress(state)
       .payToAddress(await ctx.payToMe(ownerNFT)),
-  };
+    PolicyId.fromBytes(minter.hash.hash),
+  ];
 }
 
 export async function applyGuardianSetUpgrade(
   ctx: ClientContext,
   policy: string,
   upgrade: PreparedGuardianSetUpgrade,
-) {
-  const state = await ctx.getNftUtxo(policy, WH_STATE_NFT);
-
-  const { input } = wormholeStateSpend.spend([state], upgrade.vaa);
+): Promise<[SigningTransactionBuilder]> {
   const spender = wormholeStateSpend.script();
 
-  return ctx.client
-    .newTx()
-    .collectFrom(input)
-    .payToAddress(
-      spender.receive(ctx, state.assets, {
-        set: upgrade.set.map((g) => Buffer.from(g.replace(/^0x/, ""), "hex")),
-        set_index: BigInt(upgrade.index),
-      }),
-    );
+  const state = await ctx.getNftUtxo(policy, WH_STATE_NFT);
+  const { input } = wormholeStateSpend.spend([state], upgrade.vaa);
+
+  return [
+    ctx.client
+      .newTx()
+      .collectFrom(input)
+      .payToAddress(
+        spender.receive(ctx, state.assets, {
+          set: upgrade.set.map((g) => Buffer.from(g.replace(/^0x/, ""), "hex")),
+          set_index: BigInt(upgrade.index),
+        }),
+      ),
+  ];
 }
 
 const PYTH_STATE_NFT = AssetName.fromBytes(Buffer.from("Pyth State", "utf-8"));
@@ -105,13 +107,13 @@ const pythStateSpend = SpendingValidator.new(Pyth_state_update_spend);
 
 export async function initPythState(
   ctx: ClientContext,
-  origin: UTxO.UTxO,
   initial: {
     wormhole: Uint8Array;
     emitter_chain: bigint;
     emitter_address: Uint8Array;
   },
-): Promise<{ policy: PolicyId.PolicyId; tx: SigningTransactionBuilder }> {
+): Promise<[SigningTransactionBuilder, PolicyId.PolicyId]> {
+  const origin = await ctx.getFreshUtxo();
   const spender = pythStateSpend.script();
   const minter = pythStateMint.script(utxoToOutRef(origin), spender.hash.hash);
   const publisher = pythPricePublish.script(minter.hash.hash);
@@ -126,9 +128,8 @@ export async function initPythState(
     withdraw_script: withdrawer.hash.hash,
   });
 
-  return {
-    policy: PolicyId.fromBytes(minter.hash.hash),
-    tx: ctx.client
+  return [
+    ctx.client
       .newTx()
       .collectFrom({ inputs: [origin] })
       .attachScript(minter)
@@ -137,7 +138,8 @@ export async function initPythState(
       .payToAddress({ ...state, script: withdrawer.script })
       .payToAddress(await ctx.payToMe(ownerNFT))
       .registerStake(publisher.publish("Never")),
-  };
+    PolicyId.fromBytes(minter.hash.hash),
+  ];
 }
 
 export async function applyGovernanceAction(
@@ -145,7 +147,7 @@ export async function applyGovernanceAction(
   policy: string,
   action: PreparedGovernanceAction,
   env?: "preprod" | "preview",
-) {
+): Promise<[SigningTransactionBuilder]> {
   const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
 
   const {
@@ -175,12 +177,14 @@ export async function applyGovernanceAction(
   );
   const newState = spender.receive(ctx, state.assets, data);
 
-  return ctx.client
-    .newTx()
-    .attachScript(spender)
-    .readFrom({ referenceInputs: [guardians] })
-    .collectFrom(input)
-    .payToAddress({ ...newState, script: withdrawer.script });
+  return [
+    ctx.client
+      .newTx()
+      .attachScript(spender)
+      .readFrom({ referenceInputs: [guardians] })
+      .collectFrom(input)
+      .payToAddress({ ...newState, script: withdrawer.script }),
+  ];
 }
 
 const StatePyth =
@@ -227,25 +231,25 @@ export async function verifyPrices(
   ctx: ClientContext,
   policy: string,
   updates: Uint8Array[],
-) {
+): Promise<[SigningTransactionBuilder]> {
   const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
   const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
 
   const now = BigInt(Date.now());
-  return (
+  return [
     ctx.client
       .newTx()
       // without validity set, Evolution seems to default to no bounds
       .setValidity({ from: now, to: now + 60_000n })
       .readFrom({ referenceInputs: [state] })
-      .withdraw(withdrawer.withdraw(0n, updates))
-  );
+      .withdraw(withdrawer.withdraw(0n, updates)),
+  ];
 }
 
 export async function purgeExpiredPythWithdrawScripts(
   ctx: ClientContext,
   policy: string,
-) {
+): Promise<[SigningTransactionBuilder]> {
   const state = await ctx.getNftUtxo(policy, PYTH_STATE_NFT);
   const owner = await ctx.getNftUtxo(policy, PYTH_OWNER_NFT);
 
@@ -269,35 +273,28 @@ export async function purgeExpiredPythWithdrawScripts(
 
   const newScripts = await purgeExpiredScripts(
     oldState.deprecated_withdraw_scripts,
-    {
-      lower_bound: {
-        bound_type: { _tag: "Finite", finite: validityRange.from },
-        is_inclusive: true,
-      },
-      upper_bound: {
-        bound_type: { _tag: "Finite", finite: validityRange.to },
-        is_inclusive: true,
-      },
-    },
+    interval(validityRange),
   );
   const newState = spender.receive(ctx, state.assets, {
     ...oldState,
     deprecated_withdraw_scripts: newScripts,
   });
 
-  return ctx.client
-    .newTx()
-    .setValidity(validityRange)
-    .attachScript(spender)
-    .readFrom({ referenceInputs: [guardians] })
-    .collectFrom({ inputs: [owner] })
-    .collectFrom(input)
-    .payToAddress({ ...newState, script: withdrawer.script })
-    .payToAddress(
-      await ctx.payToMe(
-        Assets.fromAsset(PolicyId.fromHex(policy), PYTH_OWNER_NFT, 1n),
+  return [
+    ctx.client
+      .newTx()
+      .setValidity(validityRange)
+      .attachScript(spender)
+      .readFrom({ referenceInputs: [guardians] })
+      .collectFrom({ inputs: [owner] })
+      .collectFrom(input)
+      .payToAddress({ ...newState, script: withdrawer.script })
+      .payToAddress(
+        await ctx.payToMe(
+          Assets.fromAsset(PolicyId.fromHex(policy), PYTH_OWNER_NFT, 1n),
+        ),
       ),
-    );
+  ];
 }
 
 type ValidityRange = Schema.Schema.Type<typeof CardanoTransactionValidityRange>;
@@ -324,3 +321,26 @@ async function purgeExpiredScripts(
     Pairs_cardanoTransactionValidityRange_aikenCryptoScriptHash_,
   )(newScripts);
 }
+
+const interval = (range: { from?: bigint; to?: bigint }): ValidityRange => ({
+  lower_bound:
+    "from" in range
+      ? {
+          bound_type: { _tag: "Finite", finite: range.from },
+          is_inclusive: true,
+        }
+      : {
+          bound_type: { _tag: "NegativeInfinity" },
+          is_inclusive: false,
+        },
+  upper_bound:
+    "to" in range
+      ? {
+          bound_type: { _tag: "Finite", finite: range.to },
+          is_inclusive: true,
+        }
+      : {
+          bound_type: { _tag: "PositiveInfinity" },
+          is_inclusive: false,
+        },
+});

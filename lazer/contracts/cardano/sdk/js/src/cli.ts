@@ -9,13 +9,10 @@ import {
   PolicyId,
   PrivateKey,
   TransactionHash,
-  UTxO,
 } from "@evolution-sdk/evolution";
-import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint";
-import {
-  createCodegenConfig,
-  generateTypeScript,
-} from "@evolution-sdk/evolution/blueprint";
+import { generateTypeScript } from "@evolution-sdk/evolution/blueprint/codegen";
+import { createCodegenConfig } from "@evolution-sdk/evolution/blueprint/codegen-config";
+import type { PlutusBlueprint } from "@evolution-sdk/evolution/blueprint/types";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import type { Network } from "./client.js";
@@ -30,25 +27,40 @@ import {
   verifyPrices,
   withdrawScriptHash,
 } from "./transactions.js";
-import { execFileAsync, timeout } from "./utils.js";
+import { execFileAsync } from "./utils.js";
 import { prepareGovernanceAction, prepareGuardianSetVAAs } from "./wormhole.js";
 
-async function initAndUpgradeWormhole(ctx: ClientContext, mainnet: boolean) {
-  const wormholeOrigin = await ctx.getFreshUtxo();
-  console.info("Picked Wormhole origin:", UTxO.toOutRefString(wormholeOrigin));
+async function createCtx(
+  network: Network,
+  apiKey?: string,
+  mnemonic?: string,
+  verbose = false,
+): Promise<ClientContext> {
+  return await ClientContext.create(
+    network,
+    { token: apiKey ?? process.env.KOIOS_API_KEY ?? "", type: "koios" },
+    // {
+    //   projectId: apiKey ?? process.env.BLOCKFROST_API_KEY ?? "",
+    //   type: "blockfrost",
+    // },
+    mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
+    { debug: verbose },
+  );
+}
 
+async function initAndUpgradeWormhole(
+  ctx: ClientContext,
+  mainnet: boolean,
+): Promise<PolicyId.PolicyId> {
   const initialGuardian = mainnet
     ? // see `env/default.ak`
       "58cc3ae5c097b213ce3c81979e1b9f9570746aa5"
     : "13947bd48b18e53fdaeee77f3473391ac727c638";
   const upgrades = mainnet ? await prepareGuardianSetVAAs() : [];
 
-  const wormhole = await initWormholeState(
-    ctx,
-    wormholeOrigin,
-    initialGuardian,
+  const [wormholeDigest, wormhole] = await ctx.run(() =>
+    initWormholeState(ctx, initialGuardian),
   );
-  const wormholeDigest = await ctx.run(wormhole.tx);
   console.info(
     "Initialized Pyth Wormhole:",
     TransactionHash.toHex(wormholeDigest),
@@ -57,18 +69,14 @@ async function initAndUpgradeWormhole(ctx: ClientContext, mainnet: boolean) {
   console.info("Upgrading Pyth Wormhole...");
   for (const upgrade of upgrades) {
     console.info(`...to guardian set #${upgrade.index}...`);
-    const digest = await ctx.run(
-      await applyGuardianSetUpgrade(
-        ctx,
-        PolicyId.toHex(wormhole.policy),
-        upgrade,
-      ),
+    const [digest] = await ctx.run(() =>
+      applyGuardianSetUpgrade(ctx, PolicyId.toHex(wormhole), upgrade),
     );
     console.info(`(Digest: ${TransactionHash.toHex(digest)})`);
   }
   console.info("...done.");
 
-  return wormhole.policy;
+  return wormhole;
 }
 
 const parser = yargs().usage(
@@ -194,34 +202,23 @@ parser.command(
     network,
     verbose,
   }) => {
-    const ctx = await ClientContext.create(
-      network,
-      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
-      // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
-      apiKey ?? process.env.BLOCKFROST_API_KEY,
-      {
-        debug: verbose,
-      },
-    );
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
 
     console.info("Initializing Pyth Wormhole...");
     const whPolicy = await initAndUpgradeWormhole(ctx, network === "mainnet");
 
     console.info("Initializing Pyth...");
-    // Wait for API to settle
-    await timeout(10_000);
-    const pythOrigin = await ctx.getFreshUtxo();
-    console.info("Picked Pyth origin:", UTxO.toOutRefString(pythOrigin));
-    const pyth = await initPythState(ctx, pythOrigin, {
-      emitter_address: Buffer.from(emitterAddress, "hex"),
-      emitter_chain: BigInt(emitterChain),
-      wormhole: whPolicy.hash,
-    });
-    const pythDigest = await ctx.run(pyth.tx);
+    const [pythDigest, pyth] = await ctx.run(() =>
+      initPythState(ctx, {
+        emitter_address: Buffer.from(emitterAddress, "hex"),
+        emitter_chain: BigInt(emitterChain),
+        wormhole: whPolicy.hash,
+      }),
+    );
     console.info("Initialized Pyth:", TransactionHash.toHex(pythDigest));
 
     console.info("Pyth Wormhole Policy ID:", PolicyId.toHex(whPolicy));
-    console.info("Pyth Policy ID:", PolicyId.toHex(pyth.policy));
+    console.info("Pyth Policy ID:", PolicyId.toHex(pyth));
   },
 );
 
@@ -242,6 +239,8 @@ parser.command(
       verbose: commonOptions.verbose,
     }),
   async ({ apiKey, mnemonic, network, state, vaa, verbose }) => {
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
+
     const prepared = prepareGovernanceAction(Buffer.from(vaa, "hex"));
     console.log(`Executing ${prepared.action.action}...`);
 
@@ -249,17 +248,8 @@ parser.command(
       cardano_preprod: "preprod",
       cardano_preview: "preview",
     };
-    const ctx = await ClientContext.create(
-      network,
-      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
-      // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
-      apiKey ?? process.env.BLOCKFROST_API_KEY,
-      {
-        debug: verbose,
-      },
-    );
-    const digest = await ctx.run(
-      await applyGovernanceAction(
+    const [digest] = await ctx.run(() =>
+      applyGovernanceAction(
         ctx,
         state,
         prepared,
@@ -292,17 +282,10 @@ parser.command(
     }),
   async ({ apiKey, network, mnemonic, state, verbose }) => {
     console.info("Purging expired withdraw scripts...");
-    const ctx = await ClientContext.create(
-      network,
-      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
-      // TODO: koiosKey ?? process.env.KOIOS_API_KEY,
-      apiKey ?? process.env.BLOCKFROST_API_KEY,
-      {
-        debug: verbose,
-      },
-    );
-    const digest = await ctx.run(
-      await purgeExpiredPythWithdrawScripts(ctx, state),
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
+
+    const [digest] = await ctx.run(() =>
+      purgeExpiredPythWithdrawScripts(ctx, state),
     );
     console.log("Digest:", TransactionHash.toHex(digest));
   },
@@ -339,16 +322,10 @@ parser.command(
       verbose: commonOptions.verbose,
     }),
   async ({ apiKey, mnemonic, network, update, state, verbose }) => {
-    const ctx = await ClientContext.create(
-      network,
-      mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
-      // apiKey ?? process.env.KOIOS_API_KEY,
-      apiKey ?? process.env.BLOCKFROST_API_KEY,
-      { debug: verbose },
-    );
+    const ctx = await createCtx(network, apiKey, mnemonic, verbose);
 
-    const digest = await ctx.run(
-      await verifyPrices(
+    const [digest] = await ctx.run(() =>
+      verifyPrices(
         ctx,
         state,
         update.map((u) => Buffer.from(u, "hex")),

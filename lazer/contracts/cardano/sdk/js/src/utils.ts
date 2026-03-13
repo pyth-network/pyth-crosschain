@@ -35,9 +35,6 @@ import type { ClientContext } from "./client";
 
 export const execFileAsync = promisify(execFile);
 
-export const timeout = (delay?: number) =>
-  new Promise((r) => setTimeout(r, delay));
-
 export async function withTempFile<T>(
   src: string | Uint8Array,
   f: (path: string) => Promise<T>,
