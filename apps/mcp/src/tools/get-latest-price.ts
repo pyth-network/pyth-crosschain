@@ -61,10 +61,16 @@ export function registerGetLatestPrice(
   server.registerTool(
     "get_latest_price",
     {
-      annotations: { destructiveHint: false, readOnlyHint: true },
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+        readOnlyHint: true,
+      },
       description:
         "Get the most recent real-time price for one or more feeds. Requires an `access_token` parameter (get one at https://docs.pyth.network/price-feeds/pro/acquire-access-token). Use get_symbols first to find symbols or feed IDs. IMPORTANT: symbols must be the full name including asset type prefix (e.g. 'Crypto.BTC/USD', not 'BTC/USD'). If both price_feed_ids and symbols are provided, only price_feed_ids are used. Prices are integers with an exponent field — human-readable price = price * 10^exponent. Pre-computed display_price fields are included for convenience.",
       inputSchema: GetLatestPriceInput,
+      title: "Get Latest Price",
     },
     async (params, extra) => {
       sessionContext.toolCallCount++;

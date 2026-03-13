@@ -33,10 +33,16 @@ export function registerConvertDateToTimestamp(
   server.registerTool(
     "convert_date_to_timestamp",
     {
-      annotations: { destructiveHint: false, readOnlyHint: true },
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+        readOnlyHint: true,
+      },
       description:
         "Convert a date string to Unix timestamp for use with get_historical_price and get_candlestick_data. Use this tool when you need to compute timestamps — do not calculate Unix timestamps manually. Accepts ISO 8601 dates (e.g. '2026-01-01', '2026-01-01T12:00:00Z'). Returns seconds, microseconds, ISO 8601, and whether the date is within the available data range (April 2025 onward).",
       inputSchema: ConvertDateToTimestampInput,
+      title: "Convert Date to Timestamp",
     },
     (params, extra) => {
       sessionContext.toolCallCount++;
