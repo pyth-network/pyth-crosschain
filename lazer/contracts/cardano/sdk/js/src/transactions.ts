@@ -227,7 +227,7 @@ export function withdrawScriptHash(policy: string) {
   return pythPriceWithdraw.script(Buffer.from(policy, "hex")).hash;
 }
 
-export async function verifyPrices(
+export async function verifyUpdates(
   ctx: ClientContext,
   policy: string,
   updates: Uint8Array[],
@@ -239,8 +239,8 @@ export async function verifyPrices(
   return [
     ctx.client
       .newTx()
-      // without validity set, Evolution seems to default to no bounds
-      .setValidity({ from: now, to: now + 60_000n })
+      // without validity set, Evolution SDK seems to default to no bounds
+      .setValidity({ from: now - 10_000n, to: now + 300_000n })
       .readFrom({ referenceInputs: [state] })
       .withdraw(withdrawer.withdraw(0n, updates)),
   ];
@@ -265,8 +265,8 @@ export async function purgeExpiredPythWithdrawScripts(
     WH_STATE_NFT,
   );
 
-  const from = BigInt(Date.now());
-  const validityRange = { from, to: from + 60_000n };
+  const now = BigInt(Date.now());
+  const validityRange = { from: now - 10_000n, to: now + 300_000n };
 
   const spender = pythStateSpend.script();
   const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));

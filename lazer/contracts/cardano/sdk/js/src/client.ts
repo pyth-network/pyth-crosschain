@@ -6,6 +6,7 @@ import {
   createClient,
   DatumOption,
   Effect,
+  TransactionHash,
 } from "@evolution-sdk/evolution";
 import { Address } from "@evolution-sdk/evolution/Address";
 import type { Data } from "@evolution-sdk/evolution/Data";
@@ -21,7 +22,6 @@ import type {
 } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
 import { SLOT_CONFIG_NETWORK } from "@evolution-sdk/evolution/Time";
-import type { TransactionHash } from "@evolution-sdk/evolution/TransactionHash";
 import { Schedule } from "effect";
 
 export type Network = Exclude<NetworkId, number> | "devnet";
@@ -127,14 +127,14 @@ export class ClientContext {
   // biome-ignore lint/suspicious/noExplicitAny: false positive
   async run<const R extends any[]>(
     build: () => Promise<[SigningTransactionBuilder, ...R]>,
-  ): Promise<readonly [TransactionHash, ...R]> {
+  ): Promise<readonly [TransactionHash.TransactionHash, ...R]> {
     return await Effect.runPromise(this.runEffect(build));
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: false positive
   runEffect<const R extends any[]>(
     build: () => Promise<[SigningTransactionBuilder, ...R]>,
-  ): Effect.Effect<readonly [TransactionHash, ...R], Error> {
+  ): Effect.Effect<readonly [TransactionHash.TransactionHash, ...R], Error> {
     const { client, debug } = this;
     const times = 2;
 
@@ -147,11 +147,11 @@ export class ClientContext {
         Effect.fail(e as Error),
       )(tx.buildEffect({ debug }));
       const digest = yield* built.Effect.signAndSubmit();
-      console.log("digest:", digest);
+      if (debug) console.debug(`digest ${TransactionHash.toHex(digest)}...`);
       yield* client.Effect.awaitTx(digest);
-      console.log("awaited");
+      if (debug) console.debug(`...confirmed`);
       return [digest, ...res] as const;
-    }).pipe(Effect.retry({ schedule: Schedule.fixed("5 seconds"), times }));
+    }).pipe(Effect.retry({ schedule: Schedule.spaced("5 seconds"), times }));
   }
 
   calculateFee({ script, ...args }: Payment): bigint {

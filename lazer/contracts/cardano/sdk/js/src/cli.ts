@@ -24,7 +24,7 @@ import {
   initPythState,
   initWormholeState,
   purgeExpiredPythWithdrawScripts,
-  verifyPrices,
+  verifyUpdates,
   withdrawScriptHash,
 } from "./transactions.js";
 import { execFileAsync } from "./utils.js";
@@ -38,11 +38,11 @@ async function createCtx(
 ): Promise<ClientContext> {
   return await ClientContext.create(
     network,
-    { token: apiKey ?? process.env.KOIOS_API_KEY ?? "", type: "koios" },
-    // {
-    //   projectId: apiKey ?? process.env.BLOCKFROST_API_KEY ?? "",
-    //   type: "blockfrost",
-    // },
+    // { token: apiKey ?? process.env.KOIOS_API_KEY ?? "", type: "koios" },
+    {
+      projectId: apiKey ?? process.env.BLOCKFROST_API_KEY ?? "",
+      type: "blockfrost",
+    },
     mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
     { debug: verbose },
   );
@@ -325,7 +325,7 @@ parser.command(
     const ctx = await createCtx(network, apiKey, mnemonic, verbose);
 
     const [digest] = await ctx.run(() =>
-      verifyPrices(
+      verifyUpdates(
         ctx,
         state,
         update.map((u) => Buffer.from(u, "hex")),
