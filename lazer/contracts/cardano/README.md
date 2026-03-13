@@ -49,6 +49,7 @@ pnpm cli build --env preview
 Initialize contracts state:
 
 ```bash
+# Can be "mainnet" | "preprod" | "preview" | "devnet"
 CARDANO_NETWORK="devnet"
 # Wormhole emitter chain ID, see:
 # https://wormhole.com/docs/products/reference/chain-ids
@@ -61,8 +62,7 @@ pnpm cli init --network "$CARDANO_NETWORK" \
   --emitter-address "$GOVERNANCE_ADDRESS"
 ```
 
-This outputs policy IDs identifying Wormhole and Pyth deployments. We will refer to them
-as `WORMHOLE_ID` and `PYTH_ID`.
+This outputs policy IDs identifying Wormhole and Pyth deployments. We will refer to Pyth policy ID as `PYTH_ID`.
 
 Generate trusted signer proposal for testnet self-managed deployment:
 
@@ -104,20 +104,96 @@ pnpm cli execute --network "$CARDANO_NETWORK" \
   --vaa "$VAA"
 ```
 
-Then do the same with used withdraw script - on testnet:
+## Upgrading (TODO)
+
+### Withdraw script
+
+First get the withdraw script hash:
 
 ```bash
-# TODO
+cd "$REPO/lazer/contracts/cardano/sdk/js"
+
+pnpm cli withdraw-script-hash --state "$PYTH_ID"
+```
+
+Then on testnet / self-managed deployments:
+
+```bash
+# Emitter key matching configuration used for deploy
+EMITTER_KEY="$HOME/.config/solana/id.json"
+
+cd "$REPO/contract_manager"
+
+pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
+  test-upgrade-withdraw-script \
+  --emitter "$EMITTER_KEY" \
+  --script "$WITHDRAW_SCRIPT_HASH" \
+  --expires "1799422709"
 ```
 
 or production:
 
 ```bash
-# TODO
+WALLET_KEY="$HOME/.config/solana/id.json"
+
+cd "$REPO/contract_manager"
+
+pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
+  propose-upgrade-withdraw-script \
+  --wallet "$WALLET_KEY" \
+  --script "$WITHDRAW_SCRIPT_HASH" \
+  --expires "1799422709"
 ```
 
-executing the VAA provided in output.
+Finally, execute the proposal with:
+
+```bash
+cd "$REPO/lazer/contracts/cardano/sdk/js"
+
+pnpm cli execute --network "$CARDANO_NETWORK" \
+  --state "$PYTH_ID" \
+  --vaa "$VAA"
+```
+
+Spend script upgrades use the same flow. First get the spend script hash:
+
+```bash
+cd "$REPO/lazer/contracts/cardano/sdk/js"
+
+pnpm cli spend-script-hash
+```
+
+On testnet / self-managed deployments:
+
+```bash
+EMITTER_KEY="$HOME/.config/solana/id.json"
+
+cd "$REPO/contract_manager"
+
+pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
+  test-upgrade-spend-script \
+  --emitter "$EMITTER_KEY" \
+  --script "$NEW_SPEND_SCRIPT_HASH"
+```
+
+or production:
+
+```bash
+WALLET_KEY="$HOME/.config/solana/id.json"
+
+cd "$REPO/contract_manager"
+
+pnpm tsx scripts/manage_cardano_governance.ts -c "cardano_$CARDANO_NETWORK" \
+  propose-upgrade-spend-script \
+  --wallet "$WALLET_KEY" \
+  --script "$NEW_SPEND_SCRIPT_HASH"
+```
+
+As with withdraw script upgrades, apply the printed VAA directly for the test
+flow, or wait for governance to emit the VAA for the production flow and then
+run `pnpm cli execute`.
 
 <!-- TODO:
-  To update, produce governance action with new CLI, but apply it with old CLI.
+    We'll need to expand on which CLI version to run and how to provide correct
+    script binary for the process.
 -->

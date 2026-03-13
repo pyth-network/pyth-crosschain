@@ -8,6 +8,7 @@ import {
   createClient,
   PolicyId,
   PrivateKey,
+  ScriptHash,
   TransactionHash,
 } from "@evolution-sdk/evolution";
 import { generateTypeScript } from "@evolution-sdk/evolution/blueprint/codegen";
@@ -24,6 +25,7 @@ import {
   initPythState,
   initWormholeState,
   purgeExpiredPythWithdrawScripts,
+  spendScriptHash,
   verifyUpdates,
   withdrawScriptHash,
 } from "./transactions.js";
@@ -261,11 +263,20 @@ parser.command(
 );
 
 parser.command(
+  "spend-script-hash",
+  "Computes spend script hash",
+  (b) => b.options({}),
+  () => {
+    console.log("Hash:", ScriptHash.toHex(spendScriptHash()));
+  },
+);
+
+parser.command(
   "withdraw-script-hash",
   "Computes withdraw script hash",
   (b) => b.options({ state: commonOptions.state }),
   ({ state }) => {
-    console.log("Hash:", withdrawScriptHash(state));
+    console.log("Hash:", ScriptHash.toHex(withdrawScriptHash(state)));
   },
 );
 

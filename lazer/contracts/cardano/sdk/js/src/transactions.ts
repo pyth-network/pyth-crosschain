@@ -107,6 +107,8 @@ const PYTH_OWNER_NFT = AssetName.fromBytes(Buffer.from("Pyth Ops", "utf-8"));
 const pythStateMint = MintingValidator.new(Pyth_state_init_mint);
 const pythStateSpend = SpendingValidator.new(Pyth_state_update_spend);
 
+export const spendScriptHash = () => pythStateSpend.script().hash;
+
 export async function initPythState(
   ctx: ClientContext,
   initial: {

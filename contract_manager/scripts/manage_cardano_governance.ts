@@ -205,4 +205,49 @@ parser.command(
   },
 );
 
+parser.command(
+  "propose-upgrade-spend-script",
+  "propose upgrade of a spending script",
+  (b) =>
+    b.options({
+      script: commonOptions.script,
+      wallet: commonOptions["solana-wallet"],
+    }),
+  async ({ chain, script, wallet: walletPath }) => {
+    const wallet = await loadHotWallet(walletPath);
+    const vault = connectMainnetVault(wallet);
+    console.info("Using wallet:", wallet.publicKey.toBase58());
+
+    console.info("Submitting governance proposal...");
+    const payload = new UpgradeCardanoSpendScript(chain, script).encode();
+    const proposal = await vault.proposeWormholeMessage([payload]);
+    console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
+parser.command(
+  "propose-upgrade-withdraw-script",
+  "propose upgrade of a withdrawing script",
+  (b) =>
+    b.options({
+      expires: commonOptions.expires,
+      script: commonOptions.script,
+      wallet: commonOptions["solana-wallet"],
+    }),
+  async ({ chain, expires, script, wallet: walletPath }) => {
+    const wallet = await loadHotWallet(walletPath);
+    const vault = connectMainnetVault(wallet);
+    console.info("Using wallet:", wallet.publicKey.toBase58());
+
+    console.info("Submitting governance proposal...");
+    const payload = new UpgradeCardanoWithdrawScript(
+      chain,
+      script,
+      expires,
+    ).encode();
+    const proposal = await vault.proposeWormholeMessage([payload]);
+    console.log("Proposal address:", proposal.address.toBase58());
+  },
+);
+
 await parser.parseAsync(hideBin(process.argv));

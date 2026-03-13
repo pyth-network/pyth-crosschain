@@ -175,10 +175,6 @@ export class ClientContext {
     });
   }
 
-  /**
-   * Gets fresh UTxO, tracking locally used ones to avoid attempts to
-   * double-spend.
-   */
   async getFreshUtxo() {
     const [utxo] = await this.client.getWalletUtxos();
     if (!utxo) {
