@@ -21,7 +21,6 @@ import type {
   SigningClient,
 } from "@evolution-sdk/evolution/sdk/client/Client";
 import type { ProtocolParameters } from "@evolution-sdk/evolution/sdk/provider/Provider";
-import { SLOT_CONFIG_NETWORK } from "@evolution-sdk/evolution/Time";
 import { Schedule } from "effect";
 
 export type Network = Exclude<NetworkId, number> | "devnet";
@@ -47,6 +46,10 @@ export type Provider =
   | {
       type: "blockfrost";
       projectId: string;
+    }
+  | {
+      type: "maestro";
+      apiKey: string;
     };
 
 export class ClientContext {
@@ -81,39 +84,36 @@ export class ClientContext {
         options.debug ?? false,
       );
     } else {
+      const wallet = {
+        accountIndex: 0,
+        mnemonic,
+        type: "seed",
+      } as const;
+      let baseUrl: string;
+      switch (provider.type) {
+        case "blockfrost": {
+          baseUrl = `https://cardano-${network}.blockfrost.io/api/v0`;
+          break;
+        }
+        case "koios": {
+          baseUrl = `https://${
+            {
+              mainnet: "api",
+              preprod: "preprod",
+              preview: "preview",
+            }[network]
+          }.koios.rest/api/v1`;
+          break;
+        }
+        case "maestro": {
+          baseUrl = `https://${network}.gomaestro-api.org/v1`;
+          break;
+        }
+      }
       const client = createClient({
         network,
-        provider:
-          provider.type === "blockfrost"
-            ? {
-                baseUrl: `https://cardano-${network}.blockfrost.io/api/v0`,
-                ...provider,
-              }
-            : {
-                baseUrl: `https://${
-                  {
-                    mainnet: "api",
-                    preprod: "preprod",
-                    preview: "preview",
-                  }[network]
-                }.koios.rest/api/v1`,
-                ...provider,
-              },
-        slotConfig:
-          SLOT_CONFIG_NETWORK[
-            (
-              {
-                mainnet: "Mainnet",
-                preprod: "Preprod",
-                preview: "Preview",
-              } as const
-            )[network]
-          ],
-        wallet: {
-          accountIndex: 0,
-          mnemonic,
-          type: "seed",
-        },
+        provider: { baseUrl, ...provider },
+        wallet,
       });
       return new ClientContext(
         network,

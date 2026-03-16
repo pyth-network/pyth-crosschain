@@ -40,11 +40,12 @@ async function createCtx(
 ): Promise<ClientContext> {
   return await ClientContext.create(
     network,
-    { token: apiKey ?? process.env.KOIOS_API_KEY ?? "", type: "koios" },
-    // {
-    //   projectId: apiKey ?? process.env.BLOCKFROST_API_KEY ?? "",
-    //   type: "blockfrost",
-    // },
+    {
+      projectId: apiKey ?? process.env.BLOCKFROST_API_KEY ?? "",
+      type: "blockfrost",
+    },
+    // { token: apiKey ?? process.env.KOIOS_API_KEY ?? "", type: "koios" },
+    // { apiKey: apiKey ?? process.env.MAESTRO_API_KEY ?? "", type: "maestro" },
     mnemonic ?? process.env.CARDANO_MNEMONIC ?? "",
     { debug: verbose },
   );
