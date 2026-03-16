@@ -251,8 +251,7 @@ export async function verifyUpdates(
     ctx.client
       .newTx()
       // without validity set, Evolution SDK seems to default to no bounds
-      // TODO: why are we out of sync with server slots?
-      .setValidity({ from: now - 100_000n, to: now + 300_000n })
+      .setValidity({ from: now, to: now + 300_000n })
       .readFrom({ referenceInputs: [state] })
       .withdraw(withdrawer.withdraw(0n, updates)),
   ];
@@ -278,7 +277,7 @@ export async function purgeExpiredPythWithdrawScripts(
   );
 
   const now = BigInt(Date.now());
-  const validityRange = { from: now - 10_000n, to: now + 300_000n };
+  const validityRange = { from: now, to: now + 300_000n };
 
   const spender = pythStateSpend.script();
   const withdrawer = pythPriceWithdraw.script(Buffer.from(policy, "hex"));
