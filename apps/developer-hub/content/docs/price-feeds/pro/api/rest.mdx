@@ -29,9 +29,9 @@ Returns price data at a specific historical timestamp.
 
 All fields from `/v1/latest_price`, plus:
 
-| Field       | Type     | Required | Description                    |
-| ----------- | -------- | -------- | ------------------------------ |
-| `timestamp` | `string` | Yes      | Unix timestamp in microseconds |
+| Field       | Type     | Required | Description                                                                                                                                   |
+| ----------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timestamp` | `string` | Yes      | Unix timestamp in **microseconds**. For fixed-rate channels, must be divisible by the channel rate (e.g. `200000` for `fixed_rate@200ms`). |
 
 For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
 
