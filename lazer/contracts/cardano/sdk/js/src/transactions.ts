@@ -251,7 +251,8 @@ export async function verifyUpdates(
     ctx.client
       .newTx()
       // without validity set, Evolution SDK seems to default to no bounds
-      .setValidity({ from: now - 10_000n, to: now + 300_000n })
+      // TODO: why are we out of sync with server slots?
+      .setValidity({ from: now - 100_000n, to: now + 300_000n })
       .readFrom({ referenceInputs: [state] })
       .withdraw(withdrawer.withdraw(0n, updates)),
   ];
