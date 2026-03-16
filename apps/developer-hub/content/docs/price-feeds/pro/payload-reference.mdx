@@ -216,11 +216,13 @@ Based on the protocol specification, here are the technical details for each pro
 />
 
 <Callout type="info">
-  **Price Availability Semantics**: In rare cases, the `price` field may be
-  absent from the response. This can only happen when a feed has been recently
-  activated and no price has ever been produced yet. Once a feed produces its
-  first valid price, a price will always be provided for that feed going
-  forward.
+  **Price Availability Semantics**: The `price` field may be absent from the
+  response when no price has been produced for a feed — for example, during
+  off-hours or when a feed has been recently activated.
+
+**Starting March 23, 2026**, once a feed produces its first valid price, a
+price will always be provided for that feed going forward, even during
+off-hours (the most recent price will be carried forward).
 
 To determine when the price was generated, consumers must check
 `feedUpdateTimestamp`:
