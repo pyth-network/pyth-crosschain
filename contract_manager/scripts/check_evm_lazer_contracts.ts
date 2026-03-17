@@ -9,7 +9,7 @@ import type {
 } from "@pythnetwork/pyth-lazer-sdk";
 import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
 
-import { EvmLazerContract } from "../src/core/contracts/evm";
+import { EvmLazerContract } from "../src/core/contracts/lazer/evm";
 import { DefaultStore } from "../src/node/utils/store";
 
 // --- Variant configuration ---
@@ -185,6 +185,13 @@ async function main() {
     process.exit(1);
   }
 
+  if (payloads.size !== variants.length) {
+    console.error(
+      `Only ${payloads.size}/${variants.length} payloads fetched, some variants failed.`,
+    );
+    process.exit(1);
+  }
+
   // Collect results
   const chainInfos: ChainInfo[] = [];
   const results: VerifyResult[] = [];
@@ -324,9 +331,18 @@ async function main() {
     console.log(`Gas (avg):        ${avgGas}`);
   }
 
+  if (totalTests === 0) {
+    console.error(
+      "No chains matched the filter — nothing was tested.",
+    );
+    process.exit(1);
+  }
+
   if (failed > 0) {
     process.exit(1);
   }
+
+  process.exit(0);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

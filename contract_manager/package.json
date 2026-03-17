@@ -16,6 +16,7 @@
     "@pythnetwork/price-service-client": "workspace:*",
     "@pythnetwork/pyth-fuel-js": "workspace:*",
     "@pythnetwork/pyth-iota-js": "workspace:*",
+    "@pythnetwork/pyth-lazer-sdk": "^6.2.1",
     "@pythnetwork/pyth-sdk-solidity": "workspace:^",
     "@pythnetwork/pyth-starknet-js": "^0.2.1",
     "@pythnetwork/pyth-sui-js": "workspace:*",
