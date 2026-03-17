@@ -1,21 +1,20 @@
-import { TransactionInstruction } from "@solana/web3.js";
-import {
-  type MultisigInstruction,
-  MultisigInstructionProgram,
-  UNRECOGNIZED_INSTRUCTION,
-} from ".";
-import type { AnchorAccounts } from "./anchor";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { TransactionInstruction } from "@solana/web3.js";
+import type { MultisigInstruction } from ".";
+import { MultisigInstructionProgram, UNRECOGNIZED_INSTRUCTION } from ".";
+import type { AnchorAccounts } from "./anchor";
 
 // Source: https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
 export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.BpfUpgradableLoader;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {
@@ -37,12 +36,12 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             {},
             {
               named: {
-                programData: instruction.keys[0]!,
-                program: instruction.keys[1]!,
                 buffer: instruction.keys[2]!,
-                spill: instruction.keys[3]!,
-                rent: instruction.keys[4]!,
                 clock: instruction.keys[5]!,
+                program: instruction.keys[1]!,
+                programData: instruction.keys[0]!,
+                rent: instruction.keys[4]!,
+                spill: instruction.keys[3]!,
                 upgradeAuthority: instruction.keys[6]!,
               },
               remaining: instruction.keys.slice(7),
@@ -54,14 +53,14 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             {},
             {
               named: {
-                programData: instruction.keys[0]!,
                 currentAuthority: instruction.keys[1]!,
                 newAuthority: instruction.keys[2]!,
+                programData: instruction.keys[0]!,
               },
               remaining: instruction.keys.slice(3),
             },
           );
-        case 5:
+        case 5: {
           let args;
           // Close instruction supports closing two types of accounts:
           // - A program which takes 4 keys (programData, spill, upgradeAuthority, program)
@@ -69,10 +68,10 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
           if (instruction.keys.length >= 4) {
             args = {
               named: {
+                program: instruction.keys[3],
                 programData: instruction.keys[0],
                 spill: instruction.keys[1],
                 upgradeAuthority: instruction.keys[2],
-                program: instruction.keys[3],
               },
               remaining: instruction.keys.slice(4),
             };
@@ -92,6 +91,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
             {},
             args as AnchorAccounts,
           );
+        }
         default: // Many more cases are not supported
           throw Error("Not implemented");
       }
