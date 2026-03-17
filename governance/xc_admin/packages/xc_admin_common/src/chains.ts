@@ -126,6 +126,7 @@ export const RECEIVER_CHAINS = {
   orange: 60093,
   tempo: 60094,
   megaeth: 60095,
+  fluent: 60096,
 
   // Testnets as a separate chain ids (to use stable data sources and governance for them)
   injective_testnet: 60013,
