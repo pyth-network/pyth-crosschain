@@ -12,6 +12,7 @@ import {
   UNRECOGNIZED_INSTRUCTION,
 } from "./multisig_transaction";
 import type { AnchorAccounts } from "./multisig_transaction/anchor";
+import { safeBufferConcat } from "./utils/buffer";
 
 export const PRICE_STORE_PROGRAM_ID: PublicKey = new PublicKey(
   "3m6sv6HGqEbuyLV84mD7rJn4MAC9LhUa1y1AUNVqcPfr",
@@ -70,14 +71,10 @@ export function createPriceStoreInstruction(
   switch (data.type) {
     case "Initialize": {
       const [configKey, configBump] = findPriceStoreConfigAddress();
-      // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+
-      // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
-      // This causes a structural typing mismatch during Vercel builds where the Node environment
-      // resolves these types differently than local builds.
-      const instructionData = Buffer.concat([
+      const instructionData = safeBufferConcat([
         Buffer.from([InstructionId.Initialize, configBump]),
         data.data.authorityKey.toBuffer(),
-      ] as unknown as Uint8Array[]);
+      ]);
 
       return new TransactionInstruction({
         data: instructionData,
@@ -105,18 +102,14 @@ export function createPriceStoreInstruction(
       const [configKey, configBump] = findPriceStoreConfigAddress();
       const [publisherConfigKey, publisherConfigBump] =
         findPriceStorePublisherConfigAddress(data.data.publisherKey);
-      // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+
-      // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
-      // This causes a structural typing mismatch during Vercel builds where the Node environment
-      // resolves these types differently than local builds.
-      const instructionData = Buffer.concat([
+      const instructionData = safeBufferConcat([
         Buffer.from([
           InstructionId.InitializePublisher,
           configBump,
           publisherConfigBump,
         ]),
         data.data.publisherKey.toBuffer(),
-      ] as unknown as Uint8Array[]);
+      ]);
       return new TransactionInstruction({
         data: instructionData,
         keys: [
@@ -179,7 +172,8 @@ export function parsePriceStoreInstruction(
       data = {
         data: {
           authorityKey,
-          payerKey: instruction.keys[0]?.pubkey,
+          // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
+          payerKey: instruction.keys[0]!.pubkey,
         },
         type: "Initialize",
       };
@@ -195,8 +189,10 @@ export function parsePriceStoreInstruction(
       }
       data = {
         data: {
-          authorityKey: instruction.keys[0]?.pubkey,
-          bufferKey: instruction.keys[3]?.pubkey,
+          // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
+          authorityKey: instruction.keys[0]!.pubkey,
+          // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
+          bufferKey: instruction.keys[3]!.pubkey,
           publisherKey,
         },
         type: "InitializePublisher",
