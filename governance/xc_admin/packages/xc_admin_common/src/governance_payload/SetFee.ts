@@ -1,10 +1,10 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
 import {
   PythGovernanceActionImpl,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
-import type { ChainName } from "../chains";
 
 /** Set the fee on the target chain to newFeeValue * 10^newFeeExpo */
 export class SetFee extends PythGovernanceActionImpl {
@@ -40,8 +40,8 @@ export class SetFee extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(SetFee.layout, {
-      newFeeValue: this.newFeeValue,
       newFeeExpo: this.newFeeExpo,
+      newFeeValue: this.newFeeValue,
     });
   }
 }
@@ -98,13 +98,21 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
     const fieldsBuf = Buffer.alloc(SetFeeInToken.layout.span);
     SetFeeInToken.layout.encode(
       {
-        newFeeValue: this.newFeeValue,
         newFeeExpo: this.newFeeExpo,
+        newFeeValue: this.newFeeValue,
         tokenLen: this.token.length,
       },
       fieldsBuf,
     );
 
-    return Buffer.concat([headerBuffer, fieldsBuf, this.token]);
+    // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+
+    // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
+    // This causes a structural typing mismatch during Vercel builds where the Node environment
+    // resolves these types differently than local builds.
+    return Buffer.concat([
+      headerBuffer,
+      fieldsBuf,
+      this.token,
+    ] as unknown as Uint8Array[]);
   }
 }

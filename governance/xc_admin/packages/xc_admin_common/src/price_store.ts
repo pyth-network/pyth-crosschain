@@ -1,18 +1,17 @@
+import type { AccountMeta, Connection } from "@solana/web3.js";
 import {
-  type AccountMeta,
-  Connection,
   MAX_SEED_LENGTH,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { PRICE_FEED_OPS_KEY } from "./multisig";
+import type { MultisigInstruction } from "./multisig_transaction";
 import {
-  type MultisigInstruction,
   MultisigInstructionProgram,
   UNRECOGNIZED_INSTRUCTION,
 } from "./multisig_transaction";
-import { type AnchorAccounts } from "./multisig_transaction/anchor";
-import { PRICE_FEED_OPS_KEY } from "./multisig";
+import type { AnchorAccounts } from "./multisig_transaction/anchor";
 
 export const PRICE_STORE_PROGRAM_ID: PublicKey = new PublicKey(
   "3m6sv6HGqEbuyLV84mD7rJn4MAC9LhUa1y1AUNVqcPfr",
@@ -47,7 +46,7 @@ enum InstructionId {
 }
 
 // Recommended buffer size, enough to hold 5000 prices.
-export const PRICE_STORE_BUFFER_SPACE = 100048;
+export const PRICE_STORE_BUFFER_SPACE = 100_048;
 
 export function findPriceStoreConfigAddress(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
@@ -71,37 +70,45 @@ export function createPriceStoreInstruction(
   switch (data.type) {
     case "Initialize": {
       const [configKey, configBump] = findPriceStoreConfigAddress();
+      // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+
+      // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
+      // This causes a structural typing mismatch during Vercel builds where the Node environment
+      // resolves these types differently than local builds.
       const instructionData = Buffer.concat([
         Buffer.from([InstructionId.Initialize, configBump]),
         data.data.authorityKey.toBuffer(),
-      ]);
+      ] as unknown as Uint8Array[]);
 
       return new TransactionInstruction({
+        data: instructionData,
         keys: [
           {
-            pubkey: data.data.payerKey,
             isSigner: true,
             isWritable: true,
+            pubkey: data.data.payerKey,
           },
           {
-            pubkey: configKey,
             isSigner: false,
             isWritable: true,
+            pubkey: configKey,
           },
           {
-            pubkey: SystemProgram.programId,
             isSigner: false,
             isWritable: false,
+            pubkey: SystemProgram.programId,
           },
         ],
         programId: PRICE_STORE_PROGRAM_ID,
-        data: instructionData,
       });
     }
     case "InitializePublisher": {
       const [configKey, configBump] = findPriceStoreConfigAddress();
       const [publisherConfigKey, publisherConfigBump] =
         findPriceStorePublisherConfigAddress(data.data.publisherKey);
+      // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+
+      // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
+      // This causes a structural typing mismatch during Vercel builds where the Node environment
+      // resolves these types differently than local builds.
       const instructionData = Buffer.concat([
         Buffer.from([
           InstructionId.InitializePublisher,
@@ -109,37 +116,37 @@ export function createPriceStoreInstruction(
           publisherConfigBump,
         ]),
         data.data.publisherKey.toBuffer(),
-      ]);
+      ] as unknown as Uint8Array[]);
       return new TransactionInstruction({
+        data: instructionData,
         keys: [
           {
-            pubkey: data.data.authorityKey,
             isSigner: true,
             isWritable: true,
+            pubkey: data.data.authorityKey,
           },
           {
+            isSigner: false,
+            isWritable: false,
             pubkey: configKey,
-            isSigner: false,
-            isWritable: false,
           },
           {
+            isSigner: false,
+            isWritable: true,
             pubkey: publisherConfigKey,
-            isSigner: false,
-            isWritable: true,
           },
           {
+            isSigner: false,
+            isWritable: true,
             pubkey: data.data.bufferKey,
-            isSigner: false,
-            isWritable: true,
           },
           {
-            pubkey: SystemProgram.programId,
             isSigner: false,
             isWritable: false,
+            pubkey: SystemProgram.programId,
           },
         ],
         programId: PRICE_STORE_PROGRAM_ID,
-        data: instructionData,
       });
     }
     default: {
@@ -155,7 +162,7 @@ export function parsePriceStoreInstruction(
   if (!instruction.programId.equals(PRICE_STORE_PROGRAM_ID)) {
     throw new Error("program ID mismatch");
   }
-  if (instruction.data.length < 1) {
+  if (instruction.data.length === 0) {
     throw new Error("instruction data is too short");
   }
   const instructionId = instruction.data.readInt8(0);
@@ -170,11 +177,11 @@ export function parsePriceStoreInstruction(
         throw new Error("invalid number of accounts");
       }
       data = {
-        type: "Initialize",
         data: {
-          payerKey: instruction.keys[0]!.pubkey,
           authorityKey,
+          payerKey: instruction.keys[0]?.pubkey,
         },
+        type: "Initialize",
       };
       break;
     }
@@ -187,12 +194,12 @@ export function parsePriceStoreInstruction(
         throw new Error("invalid number of accounts");
       }
       data = {
-        type: "InitializePublisher",
         data: {
-          authorityKey: instruction.keys[0]!.pubkey,
-          bufferKey: instruction.keys[3]!.pubkey,
+          authorityKey: instruction.keys[0]?.pubkey,
+          bufferKey: instruction.keys[3]?.pubkey,
           publisherKey,
         },
+        type: "InitializePublisher",
       };
       break;
     }
@@ -220,6 +227,7 @@ export function parsePriceStoreInstruction(
     a.pubkey.equals(b.pubkey);
 
   const accountMismatch = expected.keys.some(
+    // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
     (ex, index) => !accountEquals(ex, instruction.keys[index]!),
   );
   if (accountMismatch) {
@@ -235,12 +243,12 @@ export function parsePriceStoreInstruction(
 export class PriceStoreMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.PythPriceStore;
   readonly name: string;
-  readonly args: { [key: string]: any };
+  readonly args: { [key: string]: unknown };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
-    args: { [key: string]: any },
+    args: { [key: string]: unknown },
     accounts: AnchorAccounts,
   ) {
     this.name = name;
@@ -292,15 +300,15 @@ export async function createDeterministicPublisherBufferAccountInstruction(
   const [bufferKey, seed] =
     await findDetermisticPublisherBufferAddress(publisher);
   return SystemProgram.createAccountWithSeed({
-    fromPubkey: base,
     basePubkey: base,
-    newAccountPubkey: bufferKey,
-    seed,
-    space: PRICE_STORE_BUFFER_SPACE,
+    fromPubkey: base,
     lamports: await connection.getMinimumBalanceForRentExemption(
       PRICE_STORE_BUFFER_SPACE,
     ),
+    newAccountPubkey: bufferKey,
     programId: PRICE_STORE_PROGRAM_ID,
+    seed,
+    space: PRICE_STORE_BUFFER_SPACE,
   });
 }
 
@@ -312,12 +320,12 @@ export async function createDetermisticPriceStoreInitializePublisherInstruction(
     await findDetermisticPublisherBufferAddress(publisherKey)
   )[0];
   return createPriceStoreInstruction({
-    type: "InitializePublisher",
     data: {
       authorityKey,
       bufferKey,
       publisherKey,
     },
+    type: "InitializePublisher",
   });
 }
 

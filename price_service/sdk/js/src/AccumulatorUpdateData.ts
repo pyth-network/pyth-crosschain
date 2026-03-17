@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import { safeBufferConcat } from "./utils/buffer.js";
 
 const ACCUMULATOR_MAGIC = "504e4155";
 const MAJOR_VERSION = 1;
@@ -65,14 +66,14 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   const emaConf = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
   return {
-    feedId,
-    price,
     confidence,
-    exponent,
-    publishTime,
-    prevPublishTime,
-    emaPrice,
     emaConf,
+    emaPrice,
+    exponent,
+    feedId,
+    prevPublishTime,
+    price,
+    publishTime,
   };
 }
 
@@ -100,14 +101,14 @@ export function parseTwapMessage(message: Buffer): TwapMessage {
   const publishSlot = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
   return {
-    feedId,
-    cumulativePrice,
     cumulativeConf,
-    numDownSlots,
+    cumulativePrice,
     exponent,
-    publishTime,
+    feedId,
+    numDownSlots,
     prevPublishTime,
     publishSlot,
+    publishTime,
   };
 }
 
@@ -157,15 +158,11 @@ export function sliceAccumulatorUpdateData(
   }
 
   const sliceUpdates = updates.slice(start, end);
-  // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+ 
-  // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
-  // This causes a structural typing mismatch during Vercel builds where the Node environment 
-  // resolves these types differently than local builds.
-  return Buffer.concat([
+  return safeBufferConcat([
     data.subarray(0, endOfVaa),
     Buffer.from([sliceUpdates.length]),
     ...sliceUpdates,
-  ] as unknown as Uint8Array[]);
+  ]);
 }
 
 export function parseAccumulatorUpdateData(
@@ -213,5 +210,5 @@ export function parseAccumulatorUpdateData(
     throw new Error("Didn't reach the end of the message");
   }
 
-  return { vaa, updates };
+  return { updates, vaa };
 }
