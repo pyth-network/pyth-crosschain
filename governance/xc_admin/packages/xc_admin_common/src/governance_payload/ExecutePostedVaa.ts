@@ -1,17 +1,11 @@
-import type { ChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  type PythGovernanceAction,
-  PythGovernanceHeader,
-  safeLayoutDecode,
-} from ".";
 import { Layout } from "@solana/buffer-layout";
-import {
-  type AccountMeta,
-  PACKET_DATA_SIZE,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import type { AccountMeta, TransactionInstruction } from "@solana/web3.js";
+import { PACKET_DATA_SIZE, PublicKey } from "@solana/web3.js";
+import type { ChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
+import type { PythGovernanceAction } from ".";
+import { PythGovernanceHeader, safeLayoutDecode } from ".";
 
 class Vector<T> extends Layout<T[]> {
   private element: Layout<T>;
@@ -29,7 +23,7 @@ class Vector<T> extends Layout<T[]> {
     return BufferLayout.struct<Readonly<{ length: number; elements: T[] }>>([
       BufferLayout.u32("length"),
       BufferLayout.seq(this.element, src.length, "elements"),
-    ]).encode({ length: src.length, elements: src }, b, offset);
+    ]).encode({ elements: src, length: src.length }, b, offset);
   }
 
   override getSpan(b: Buffer, offset?: number): number {
@@ -89,17 +83,17 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     );
     if (!deserialized) return undefined;
 
-    let instructions: TransactionInstruction[] = deserialized.map((ix) => {
-      let programId: PublicKey = new PublicKey(ix.programId);
-      let keys: AccountMeta[] = ix.accounts.map((acc) => {
+    const instructions: TransactionInstruction[] = deserialized.map((ix) => {
+      const programId: PublicKey = new PublicKey(ix.programId);
+      const keys: AccountMeta[] = ix.accounts.map((acc) => {
         return {
-          pubkey: new PublicKey(acc.pubkey),
           isSigner: Boolean(acc.isSigner),
           isWritable: Boolean(acc.isWritable),
+          pubkey: new PublicKey(acc.pubkey),
         };
       });
-      let data: Buffer = Buffer.from(ix.data);
-      return { programId, keys, data };
+      const data: Buffer = Buffer.from(ix.data);
+      return { data, keys, programId };
     });
     return new ExecutePostedVaa(header.targetChainId, instructions);
   }
@@ -113,20 +107,20 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
     // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway
     const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-    let instructions: InstructionData[] = this.instructions.map((ix) => {
-      let programId = ix.programId.toBytes();
-      let accounts: AccountMetadata[] = ix.keys.map((acc) => {
+    const instructions: InstructionData[] = this.instructions.map((ix) => {
+      const programId = ix.programId.toBytes();
+      const accounts: AccountMetadata[] = ix.keys.map((acc) => {
         return {
-          pubkey: acc.pubkey.toBytes(),
           isSigner: acc.isSigner ? 1 : 0,
           isWritable: acc.isWritable ? 1 : 0,
+          pubkey: acc.pubkey.toBytes(),
         };
       });
-      let data = [...ix.data];
-      return { programId, accounts, data };
+      const data = [...ix.data];
+      return { accounts, data, programId };
     });
 
     const span = ExecutePostedVaa.layout.encode(instructions, buffer);
-    return Buffer.concat([headerBuffer, buffer.subarray(0, span)]);
+    return safeBufferConcat([headerBuffer, buffer.subarray(0, span)]);
   }
 }
