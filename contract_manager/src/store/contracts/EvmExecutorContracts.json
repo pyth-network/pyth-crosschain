@@ -273,5 +273,10 @@
     "address": "0x26DD80569a8B23768A1d80869Ed7339e07595E85",
     "chain": "bsc",
     "type": "EvmExecutorContract"
+  },
+  {
+    "address": "0x23f0e8FAeE7bbb405E7A7C3d60138FCfd43d7509",
+    "chain": "fluent",
+    "type": "EvmExecutorContract"
   }
 ]
