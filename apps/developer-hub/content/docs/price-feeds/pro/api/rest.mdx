@@ -4,6 +4,8 @@ description: On-demand price queries via REST
 slug: /price-feeds/pro/api/rest
 ---
 
+import { Callout } from "fumadocs-ui/components/callout";
+
 ## Base URL
 
 ```
@@ -27,7 +29,11 @@ Returns the most recent price data for the requested feeds. The request body fol
 | --------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `channel` | `string` | Yes      | Subscription channel. One of: `real_time`, `fixed_rate@1ms`, `fixed_rate@50ms`, `fixed_rate@200ms`, `fixed_rate@1000ms` |
 
-> **Note:** Each feed has a minimum supported channel (`min_channel`), discoverable via [`/v1/symbols`](https://pyth-lazer-0.dourolabs.app/docs). You must use a channel at or above the feed's `min_channel`.
+<Callout type="info">
+  Each feed has a minimum supported channel (`min_channel`), discoverable via
+  [`/v1/symbols`](https://pyth-lazer-0.dourolabs.app/docs). You must use a
+  channel at or above the feed's `min_channel`.
+</Callout>
 
 ### POST /v1/price
 
