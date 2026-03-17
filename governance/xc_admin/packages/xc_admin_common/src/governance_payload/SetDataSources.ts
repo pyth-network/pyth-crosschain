@@ -62,6 +62,14 @@ export class SetDataSources implements PythGovernanceAction {
       return buf;
     });
 
-    return Buffer.concat([headerBuffer, numSourcesBuf, ...dataSourceBufs]);
+    // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+ 
+    // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
+    // This causes a structural typing mismatch during Vercel builds where the Node environment 
+    // resolves these types differently than local builds.
+    return Buffer.concat([
+      headerBuffer,
+      numSourcesBuf,
+      ...dataSourceBufs,
+    ] as unknown as Uint8Array[]);
   }
 }

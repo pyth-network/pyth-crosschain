@@ -157,11 +157,15 @@ export function sliceAccumulatorUpdateData(
   }
 
   const sliceUpdates = updates.slice(start, end);
+  // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+ 
+  // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
+  // This causes a structural typing mismatch during Vercel builds where the Node environment 
+  // resolves these types differently than local builds.
   return Buffer.concat([
     data.subarray(0, endOfVaa),
     Buffer.from([sliceUpdates.length]),
-    ...updates.slice(start, end),
-  ]);
+    ...sliceUpdates,
+  ] as unknown as Uint8Array[]);
 }
 
 export function parseAccumulatorUpdateData(
