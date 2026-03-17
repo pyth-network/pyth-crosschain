@@ -21,7 +21,13 @@ https://pyth-lazer.dourolabs.app
 
 Returns the most recent price data for the requested feeds. The request body follows the same schema as the WebSocket subscribe message — see the [Payload Reference](/price-feeds/pro/payload-reference) for full details.
 
-> **Note:** The `channel` field is required in all REST and WebSocket request bodies. See the [Subscription Channels](/price-feeds/pro/payload-reference#subscription-channels) section for available values.
+**Request Body**
+
+| Field     | Type     | Required | Description                                                                                                             |
+| --------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `channel` | `string` | Yes      | Subscription channel. One of: `real_time`, `fixed_rate@1ms`, `fixed_rate@50ms`, `fixed_rate@200ms`, `fixed_rate@1000ms` |
+
+> **Note:** Each feed has a minimum supported channel (`min_channel`), discoverable via [`/v1/symbols`](https://pyth-lazer-0.dourolabs.app/docs). You must use a channel at or above the feed's `min_channel`.
 
 ### POST /v1/price
 
@@ -31,9 +37,9 @@ Returns price data at a specific historical timestamp.
 
 All fields from `/v1/latest_price`, plus:
 
-| Field       | Type     | Required | Description                                                                                                                                  |
-| ----------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `timestamp` | `u64`    | Yes      | Unix timestamp in microseconds. Must be a raw integer — do not wrap in quotes.                                                               |
+| Field       | Type  | Required | Description                                                              |
+| ----------- | ----- | -------- | ------------------------------------------------------------------------ |
+| `timestamp` | `u64` | Yes      | Unix timestamp in microseconds. Must be a raw integer — do not quote it. |
 
 For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
 
