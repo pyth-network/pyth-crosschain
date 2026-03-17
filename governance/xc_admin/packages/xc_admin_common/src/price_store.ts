@@ -239,12 +239,14 @@ export function parsePriceStoreInstruction(
 export class PriceStoreMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.PythPriceStore;
   readonly name: string;
-  readonly args: { [key: string]: unknown };
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
+  readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
-    args: { [key: string]: unknown },
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
+    args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {
     this.name = name;
