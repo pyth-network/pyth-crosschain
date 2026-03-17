@@ -1,14 +1,12 @@
 /**
- * We explicitly cast the array of Buffers to Uint8Array[] before concatenation.
+ * Concatenates an array of Buffers/Uint8Arrays into a single Buffer.
  *
- * TypeScript 5.6+ introduced Iterator helpers on Uint8Array that @types/node's
- * Buffer Iterator does not have. This causes a structural typing mismatch during
- * Vercel builds where the Node environment resolves these types differently than
- * local builds.
+ * Note: With the buffer-types.d.ts declaration file, Buffer is now properly
+ * assignable to Uint8Array without requiring type casts.
  */
 export function safeBufferConcat(
-  list: readonly unknown[],
+  list: readonly (Buffer | Uint8Array)[],
   totalLength?: number,
 ): Buffer {
-  return Buffer.concat(list as unknown as Uint8Array[], totalLength);
+  return Buffer.concat(list, totalLength);
 }
