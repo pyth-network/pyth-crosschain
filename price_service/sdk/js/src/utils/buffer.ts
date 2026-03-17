@@ -7,7 +7,7 @@
  * local builds.
  */
 export function safeBufferConcat(
-  list: readonly Uint8Array[],
+  list: readonly unknown[],
   totalLength?: number,
 ): Buffer {
   return Buffer.concat(list as unknown as Uint8Array[], totalLength);
