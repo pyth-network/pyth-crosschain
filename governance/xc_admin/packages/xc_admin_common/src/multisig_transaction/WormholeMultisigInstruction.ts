@@ -1,17 +1,14 @@
 import { createReadOnlyWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { WormholeInstructionCoder } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/coder/instruction";
+import type { WormholeInstructionCoder } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/coder/instruction";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
-import { Connection, TransactionInstruction } from "@solana/web3.js";
-import {
-  type MultisigInstruction,
-  MultisigInstructionProgram,
-  UNRECOGNIZED_INSTRUCTION,
-} from ".";
-import {
-  decodeGovernancePayload,
-  type PythGovernanceAction,
-} from "../governance_payload";
-import { type AnchorAccounts, resolveAccountNames } from "./anchor";
+import type { TransactionInstruction } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
+import type { PythGovernanceAction } from "../governance_payload";
+import { decodeGovernancePayload } from "../governance_payload";
+import type { MultisigInstruction } from ".";
+import { MultisigInstructionProgram, UNRECOGNIZED_INSTRUCTION } from ".";
+import type { AnchorAccounts } from "./anchor";
+import { resolveAccountNames } from "./anchor";
 
 export class WormholeMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.WormholeBridge;

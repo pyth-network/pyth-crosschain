@@ -1,3 +1,3 @@
 "use client";
 
-export { Breadcrumbs, Breadcrumb } from "react-aria-components";
+export { Breadcrumb, Breadcrumbs } from "react-aria-components";

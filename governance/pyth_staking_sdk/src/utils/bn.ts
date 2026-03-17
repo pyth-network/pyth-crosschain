@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+// biome-ignore-all lint/suspicious/noExplicitAny: Type conversion utilities require any for generic transformations
 import { BN } from "@coral-xyz/anchor";
 
 import type { ConvertBigIntToBN, ConvertBNToBigInt } from "../types.js";

@@ -3,8 +3,13 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Switch as SwitchComponent } from "./index.jsx";
 
 const meta = {
-  component: SwitchComponent,
   argTypes: {
+    children: {
+      control: "text",
+      table: {
+        category: "Label",
+      },
+    },
     isDisabled: {
       control: "boolean",
       table: {
@@ -22,13 +27,8 @@ const meta = {
         category: "Behavior",
       },
     },
-    children: {
-      control: "text",
-      table: {
-        category: "Label",
-      },
-    },
   },
+  component: SwitchComponent,
 } satisfies Meta<typeof SwitchComponent>;
 export default meta;
 

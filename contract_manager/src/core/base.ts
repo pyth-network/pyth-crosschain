@@ -139,25 +139,25 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     return {
       dataSources: [
         {
-          emitterChain: 1,
           emitterAddress:
             "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+          emitterChain: 1,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "f8cd23c2ab91237730770bbea08d61005cdda0984348f3f6eecb559638c0bba0",
+          emitterChain: 26,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
+          emitterChain: 26,
         },
       ],
       governanceDataSource: {
-        emitterChain: 1,
         emitterAddress:
           "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+        emitterChain: 1,
       },
       wormholeConfig: {
         governanceChainId: 1,
@@ -170,25 +170,25 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
     return {
       dataSources: [
         {
-          emitterChain: 1,
           emitterAddress:
             "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+          emitterChain: 1,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6",
+          emitterChain: 26,
         },
         {
-          emitterChain: 26,
           emitterAddress:
             "e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71",
+          emitterChain: 26,
         },
       ],
       governanceDataSource: {
-        emitterChain: 1,
         emitterAddress:
           "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
+        emitterChain: 1,
       },
       wormholeConfig: {
         governanceChainId: 1,

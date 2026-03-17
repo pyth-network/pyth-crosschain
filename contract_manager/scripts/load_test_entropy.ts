@@ -7,11 +7,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -21,30 +20,30 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain to load test the entropy contract on",
-    },
-    "tester-address": {
       type: "string",
-      demandOption: true,
-      desc: "Address of the EntropyTester contract",
-    },
-    provider: {
-      type: "string",
-      desc: "Address of the entropy provider to use for requests (defaults to default provider)",
-    },
-    "success-count": {
-      type: "number",
-      default: 100,
-      desc: "How many successful requests to make",
-    },
-    "revert-count": {
-      type: "number",
-      default: 0,
-      desc: "How many requests to make where the callback should revert",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
+    provider: {
+      desc: "Address of the entropy provider to use for requests (defaults to default provider)",
+      type: "string",
+    },
+    "revert-count": {
+      default: 0,
+      desc: "How many requests to make where the callback should revert",
+      type: "number",
+    },
+    "success-count": {
+      default: 100,
+      desc: "How many successful requests to make",
+      type: "number",
+    },
+    "tester-address": {
+      demandOption: true,
+      desc: "Address of the EntropyTester contract",
+      type: "string",
+    },
   });
 
 const ABI = [
@@ -89,14 +88,13 @@ async function main() {
     argv.revertCount,
   );
   const totalCount = argv.successCount + argv.revertCount;
-  const result = await contract.chain.estiamteAndSendTransaction(
+  const _result = await contract.chain.estiamteAndSendTransaction(
     transactionObject,
     {
       from: address,
       value: (fee * totalCount).toString(),
     },
   );
-  console.log("Submitted transaction", result.transactionHash);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

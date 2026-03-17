@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import {
-  Status as StatusComponent,
-  VARIANTS,
   SIZES,
   STYLES,
+  Status as StatusComponent,
+  VARIANTS,
 } from "./index.jsx";
 
 const meta = {
-  component: StatusComponent,
   argTypes: {
     children: {
       control: "text",
@@ -16,9 +15,9 @@ const meta = {
         category: "Contents",
       },
     },
-    variant: {
+    size: {
       control: "inline-radio",
-      options: VARIANTS,
+      options: SIZES,
       table: {
         category: "Variant",
       },
@@ -30,22 +29,23 @@ const meta = {
         category: "Variant",
       },
     },
-    size: {
+    variant: {
       control: "inline-radio",
-      options: SIZES,
+      options: VARIANTS,
       table: {
         category: "Variant",
       },
     },
   },
+  component: StatusComponent,
 } satisfies Meta<typeof StatusComponent>;
 export default meta;
 
 export const Status = {
   args: {
     children: "A STATUS",
-    variant: "neutral",
-    style: "filled",
     size: "md",
+    style: "filled",
+    variant: "neutral",
   },
 } satisfies StoryObj<typeof StatusComponent>;

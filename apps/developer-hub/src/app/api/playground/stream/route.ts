@@ -25,11 +25,6 @@ function parseRawSocketDataToStr(rawData: WebSocket.Data) {
 // Request body schema
 const StreamRequestSchema = z.object({
   accessToken: z.string().optional().default(""),
-  priceFeedIds: z
-    .array(z.number())
-    .min(1, "At least one price feed ID required"),
-  properties: z.array(z.string()).min(1, "At least one property required"),
-  formats: z.array(z.string()).min(1, "At least one format required"),
   channel: z.enum([
     "real_time",
     "fixed_rate@1ms",
@@ -38,8 +33,13 @@ const StreamRequestSchema = z.object({
     "fixed_rate@1000ms",
   ]),
   deliveryFormat: z.enum(["json", "binary"]),
+  formats: z.array(z.string()).min(1, "At least one format required"),
   jsonBinaryEncoding: z.enum(["hex", "base64"]).optional().default("hex"),
   parsed: z.boolean().optional().default(true),
+  priceFeedIds: z
+    .array(z.number())
+    .min(1, "At least one price feed ID required"),
+  properties: z.array(z.string()).min(1, "At least one property required"),
 });
 
 type StreamRequest = z.infer<typeof StreamRequestSchema>;
@@ -71,15 +71,15 @@ function createSseMessage(event: string, data: unknown): string {
  */
 function buildSubscriptionMessage(config: StreamRequest): string {
   return JSON.stringify({
-    type: "subscribe",
-    subscriptionId: 1,
-    priceFeedIds: config.priceFeedIds,
-    properties: config.properties,
-    formats: config.formats,
-    deliveryFormat: config.deliveryFormat,
     channel: config.channel,
+    deliveryFormat: config.deliveryFormat,
+    formats: config.formats,
     jsonBinaryEncoding: config.jsonBinaryEncoding,
     parsed: config.parsed,
+    priceFeedIds: config.priceFeedIds,
+    properties: config.properties,
+    subscriptionId: 1,
+    type: "subscribe",
   });
 }
 
@@ -92,13 +92,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return new Response(
-        JSON.stringify({ error: "Invalid request", details: error.errors }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        JSON.stringify({ details: error.errors, error: "Invalid request" }),
+        { headers: { "Content-Type": "application/json" }, status: 400 },
       );
     }
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-      status: 400,
       headers: { "Content-Type": "application/json" },
+      status: 400,
     });
   }
 
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
   if (usesDemoToken && !demoToken) {
     return new Response(
       JSON.stringify({ error: "Demo token not configured on server" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      { headers: { "Content-Type": "application/json" }, status: 500 },
     );
   }
 
@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
   if (usesDemoToken) {
     const clientIp = getClientIp(request);
     const rateLimitResult = checkRateLimit(clientIp, {
-      windowMs: PLAYGROUND_RATE_LIMIT_WINDOW_MS,
       maxRequests: PLAYGROUND_RATE_LIMIT_MAX_REQUESTS,
+      windowMs: PLAYGROUND_RATE_LIMIT_WINDOW_MS,
     });
 
     if (!rateLimitResult.allowed) {
@@ -132,11 +132,11 @@ export async function POST(request: NextRequest) {
           resetIn: rateLimitResult.resetIn,
         }),
         {
-          status: 429,
           headers: {
             "Content-Type": "application/json",
             "Retry-After": String(retryAfterSeconds),
           },
+          status: 429,
         },
       );
     }
@@ -149,6 +149,16 @@ export async function POST(request: NextRequest) {
   let isClosed = false;
 
   const stream = new ReadableStream({
+    cancel() {
+      // Client disconnected
+      if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      isClosed = true;
+    },
     start(controller) {
       const cleanup = () => {
         if (isClosed) return;
@@ -178,9 +188,9 @@ export async function POST(request: NextRequest) {
       );
       timeoutId = setTimeout(() => {
         sendEvent("close", {
-          timestamp: new Date().toISOString(),
-          reason: "timeout",
           message: `Stream closed after ${String(maxDurationSeconds)} seconds`,
+          reason: "timeout",
+          timestamp: new Date().toISOString(),
         });
         cleanup();
         controller.close();
@@ -198,9 +208,9 @@ export async function POST(request: NextRequest) {
 
         websocket.addEventListener("open", () => {
           sendEvent("connected", {
-            timestamp: new Date().toISOString(),
             endpoint: PYTH_PRO_WS_ENDPOINT,
             message: "Connected to Pyth Pro WebSocket",
+            timestamp: new Date().toISOString(),
           });
 
           // Send subscription message
@@ -208,8 +218,8 @@ export async function POST(request: NextRequest) {
           websocket?.send(subscriptionMessage);
 
           sendEvent("subscribed", {
-            timestamp: new Date().toISOString(),
             subscription: JSON.parse(subscriptionMessage) as unknown,
+            timestamp: new Date().toISOString(),
           });
         });
 
@@ -220,24 +230,24 @@ export async function POST(request: NextRequest) {
             const messageData = parseRawSocketDataToStr(rawData);
             const parsedData: unknown = JSON.parse(messageData);
             sendEvent("message", {
-              timestamp: new Date().toISOString(),
               data: parsedData,
+              timestamp: new Date().toISOString(),
             });
           } catch {
             // If not JSON, send as raw string
             const rawData = event.data;
             const dataStr = parseRawSocketDataToStr(rawData);
             sendEvent("message", {
-              timestamp: new Date().toISOString(),
               data: dataStr,
+              timestamp: new Date().toISOString(),
             });
           }
         });
 
         websocket.addEventListener("error", () => {
           sendEvent("error", {
-            timestamp: new Date().toISOString(),
             error: "WebSocket connection error",
+            timestamp: new Date().toISOString(),
           });
         });
 
@@ -245,41 +255,30 @@ export async function POST(request: NextRequest) {
           const closeEvent = event as { code?: number; reason?: string };
           if (isClosed) return;
           sendEvent("close", {
-            timestamp: new Date().toISOString(),
-            reason: "websocket_closed",
             code: closeEvent.code,
             message: closeEvent.reason ?? "WebSocket connection closed",
+            reason: "websocket_closed",
+            timestamp: new Date().toISOString(),
           });
           cleanup();
           controller.close();
         });
       } catch (error) {
         sendEvent("error", {
-          timestamp: new Date().toISOString(),
           error: error instanceof Error ? error.message : "Failed to connect",
+          timestamp: new Date().toISOString(),
         });
         cleanup();
         controller.close();
       }
     },
-
-    cancel() {
-      // Client disconnected
-      if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.close();
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      isClosed = true;
-    },
   });
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      "Content-Type": "text/event-stream",
       "X-Accel-Buffering": "no",
     },
   });

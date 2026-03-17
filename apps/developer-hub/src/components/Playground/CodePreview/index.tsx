@@ -8,8 +8,6 @@ import { useCopy } from "@pythnetwork/component-library/useCopy";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
-
-import styles from "./index.module.scss";
 import {
   generateCode,
   getFileExtension,
@@ -18,11 +16,12 @@ import {
 import { usePlaygroundContext } from "../PlaygroundContext";
 import type { CodeLanguage } from "../types";
 import { CODE_LANGUAGE_OPTIONS } from "../types";
+import styles from "./index.module.scss";
 
 // Dynamically import Monaco to avoid SSR issues
 const Editor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
   loading: () => <div className={styles.editorLoading}>Loading editor...</div>,
+  ssr: false,
 });
 
 type CodePreviewProps = {
@@ -69,14 +68,14 @@ export function CodePreview({ className }: CodePreviewProps) {
         <div className={styles.tabs}>
           {CODE_LANGUAGE_OPTIONS.map((option) => (
             <button
-              key={option.id}
-              type="button"
               className={clsx(styles.tab, {
                 [styles.active ?? ""]: activeLanguage === option.id,
               })}
+              key={option.id}
               onClick={() => {
                 setActiveLanguage(option.id);
               }}
+              type="button"
             >
               {option.label}
             </button>
@@ -85,30 +84,30 @@ export function CodePreview({ className }: CodePreviewProps) {
 
         <div className={styles.actions}>
           <Button
-            variant="ghost"
-            size="sm"
+            aria-label={isCopied ? "Copied!" : "Copy"}
             beforeIcon={
               isCopied ? (
-                <Check weight="bold" className={styles.checkIcon ?? ""} />
+                <Check className={styles.checkIcon ?? ""} weight="bold" />
               ) : (
                 <Copy weight="bold" />
               )
             }
+            className={styles.actionButton ?? ""}
             hideText
             onPress={copy}
-            className={styles.actionButton ?? ""}
-            aria-label={isCopied ? "Copied!" : "Copy"}
+            size="sm"
+            variant="ghost"
           >
             {isCopied ? "Copied!" : "Copy"}
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
+            aria-label="Download"
             beforeIcon={<DownloadSimple weight="bold" />}
+            className={styles.actionButton ?? ""}
             hideText
             onPress={handleDownload}
-            className={styles.actionButton ?? ""}
-            aria-label="Download"
+            size="sm"
+            variant="ghost"
           >
             Download
           </Button>
@@ -120,29 +119,29 @@ export function CodePreview({ className }: CodePreviewProps) {
         <Editor
           height="100%"
           language={monacoLanguage}
-          value={code}
-          theme="vs-dark"
           options={{
-            readOnly: true,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            folding: true,
             fontSize: 13,
             lineNumbers: "on",
-            renderLineHighlight: "none",
-            folding: true,
-            wordWrap: "on",
-            automaticLayout: true,
-            scrollbar: {
-              vertical: "auto",
-              horizontal: "auto",
-              verticalScrollbarSize: 8,
-              horizontalScrollbarSize: 8,
-            },
+            minimap: { enabled: false },
             padding: {
-              top: 16,
               bottom: 16,
+              top: 16,
             },
+            readOnly: true,
+            renderLineHighlight: "none",
+            scrollBeyondLastLine: false,
+            scrollbar: {
+              horizontal: "auto",
+              horizontalScrollbarSize: 8,
+              vertical: "auto",
+              verticalScrollbarSize: 8,
+            },
+            wordWrap: "on",
           }}
+          theme="vs-dark"
+          value={code}
         />
       </div>
     </div>

@@ -1,22 +1,21 @@
-import { readFileSync } from "fs";
-import { toHex, fromBech32 } from "@cosmjs/encoding";
-import { ethers } from "ethers";
-import assert from "assert";
-import { getNetworkInfo, Network } from "@injectivelabs/networks";
+import assert from "node:assert";
+import { readFileSync } from "node:fs";
+import { fromBech32, toHex } from "@cosmjs/encoding";
+import type { Network } from "@injectivelabs/networks";
+import { getNetworkInfo } from "@injectivelabs/networks";
+import type { ContractInfo, Msgs, TxResponse } from "@injectivelabs/sdk-ts";
 import {
+  ChainGrpcWasmApi,
+  createTransactionForAddressAndMsg,
   DEFAULT_STD_FEE,
-  MsgStoreCode,
   MsgInstantiateContract,
+  MsgMigrateContract,
+  MsgStoreCode,
+  MsgUpdateAdmin,
   PrivateKey,
   TxGrpcClient,
-  type TxResponse,
-  type Msgs,
-  MsgMigrateContract,
-  MsgUpdateAdmin,
-  createTransactionForAddressAndMsg,
-  ChainGrpcWasmApi,
-  type ContractInfo,
 } from "@injectivelabs/sdk-ts";
+import { ethers } from "ethers";
 import type { Deployer } from "./index.js";
 
 export type InjectiveHost = {
@@ -49,11 +48,11 @@ export class InjectiveDeployer implements Deployer {
     const networkInfo = getNetworkInfo(this.network);
 
     const { signBytes, txRaw } = await createTransactionForAddressAndMsg({
-      message: msg,
       address: this.injectiveAddress(),
-      endpoint: networkInfo.rest,
       chainId: networkInfo.chainId,
+      endpoint: networkInfo.rest,
       fee,
+      message: msg,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
 
@@ -66,11 +65,7 @@ export class InjectiveDeployer implements Deployer {
     const txResponse = await txService.broadcast(txRaw);
 
     if (txResponse.code !== 0) {
-      console.error(`Transaction failed: ${txResponse.rawLog}`);
     } else {
-      console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(txResponse.txHash)}`,
-      );
     }
 
     return txResponse;
@@ -78,7 +73,6 @@ export class InjectiveDeployer implements Deployer {
 
   async deployArtifact(artifact: string): Promise<number> {
     const contract_bytes = readFileSync(artifact);
-    console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
 
     const store_code = MsgStoreCode.fromJSON({
       sender: this.injectiveAddress(),
@@ -89,7 +83,7 @@ export class InjectiveDeployer implements Deployer {
       amount: [
         {
           // gas = 5000000 & gasPrice = 160000000
-          amount: String(160000000 * 5000000),
+          amount: String(160_000_000 * 5_000_000),
           denom: "inj",
         },
       ],
@@ -102,17 +96,9 @@ export class InjectiveDeployer implements Deployer {
     });
 
     var codeId: number;
-    try {
-      // {"key":"code_id","value":"\"14\""}
-      const ci = extractFromRawLog(txResponse.rawLog, "code_id");
-      codeId = parseInt(ci);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing deploy code result. Printing raw log",
-      );
-      console.error(txResponse.rawLog);
-      throw e;
-    }
+    // {"key":"code_id","value":"\"14\""}
+    const ci = extractFromRawLog(txResponse.rawLog, "code_id");
+    codeId = Number.parseInt(ci);
 
     return codeId;
   }
@@ -123,67 +109,47 @@ export class InjectiveDeployer implements Deployer {
     label: string,
   ): Promise<string> {
     const instantiate_msg = MsgInstantiateContract.fromJSON({
-      sender: this.injectiveAddress(),
       admin: this.injectiveAddress(),
       codeId,
       label,
       msg: inst_msg,
+      sender: this.injectiveAddress(),
     });
 
     const txResponse = await this.signAndBroadcastMsg(instantiate_msg);
 
-    let address: string = "";
-    try {
-      address = extractFromRawLog(txResponse.rawLog, "contract_address");
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing instantiation result. Printing raw log",
-      );
-      console.error(txResponse.rawLog);
-      throw e;
-    }
-
-    console.log(
-      `Instantiated Pyth at ${address} (${convert_injective_address_to_hex(
-        address,
-      )})`,
-    );
+    let address = "";
+    address = extractFromRawLog(txResponse.rawLog, "contract_address");
 
     return address;
   }
 
   async migrate(contract: string, codeId: number): Promise<void> {
     const migrate_msg = MsgMigrateContract.fromJSON({
-      sender: this.injectiveAddress(),
-      contract,
       codeId,
+      contract,
       msg: {
         action: "",
       },
+      sender: this.injectiveAddress(),
     });
 
     const txResponse = await this.signAndBroadcastMsg(migrate_msg);
 
     let resultCodeId: number;
-    try {
-      resultCodeId = parseInt(extractFromRawLog(txResponse.rawLog, "code_id"));
-      assert.strictEqual(codeId, resultCodeId);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing migration result. Printing raw log",
-      );
-      console.error(txResponse.rawLog);
-      throw e;
-    }
+    resultCodeId = Number.parseInt(
+      extractFromRawLog(txResponse.rawLog, "code_id"),
+    );
+    assert.strictEqual(codeId, resultCodeId);
   }
 
   async updateAdmin(newAdmin: string, contract: string): Promise<void> {
     const currAdmin = this.injectiveAddress();
 
     const updateAdminMsg = new MsgUpdateAdmin({
-      sender: currAdmin,
-      newAdmin,
       contract,
+      newAdmin,
+      sender: currAdmin,
     });
 
     await this.signAndBroadcastMsg(updateAdminMsg);
@@ -201,10 +167,10 @@ export class InjectiveDeployer implements Deployer {
     const { codeId, creator, admin } = contractInfo;
 
     return {
-      codeId,
       address: contract,
-      creator: creator,
       admin: admin,
+      codeId,
+      creator: creator,
       initMsg: undefined,
     } as unknown as ContractInfo;
   }
@@ -217,12 +183,12 @@ export class InjectiveDeployer implements Deployer {
 
 // Injective addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
-function convert_injective_address_to_hex(human_addr: string) {
+function _convert_injective_address_to_hex(human_addr: string) {
   return "0x" + toHex(ethers.utils.zeroPad(fromBech32(human_addr).data, 32));
 }
 
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
-  return rx.exec(rawLog)![1]!;
+  return rx.exec(rawLog)?.[1]!;
 }

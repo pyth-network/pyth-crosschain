@@ -5,10 +5,9 @@ import { motion } from "motion/react";
 import type { ComponentProps } from "react";
 import { useId, useMemo } from "react";
 import type { Key } from "react-aria-components";
-import { ToggleButtonGroup, ToggleButton } from "react-aria-components";
-
-import styles from "./index.module.scss";
+import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import buttonStyles from "../Button/index.module.scss";
+import styles from "./index.module.scss";
 
 type OwnProps = {
   selectedKey?: Key | undefined;
@@ -58,25 +57,25 @@ export const SingleToggleGroup = ({
     >
       {items.map(({ className: tabClassName, children, ...toggleButton }) => (
         <ToggleButton
-          key={toggleButton.id}
           className={clsx(
             styles.toggleButton,
             buttonStyles.button,
             tabClassName,
           )}
+          data-rounded={rounded ? "" : undefined}
           data-size="sm"
           data-variant="ghost"
-          data-rounded={rounded ? "" : undefined}
+          key={toggleButton.id}
           {...toggleButton}
         >
           {(args) => (
             <>
               {args.isSelected && (
                 <motion.span
-                  layoutId={`${id}-bubble`}
                   className={styles.bubble}
-                  transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                  layoutId={`${id}-bubble`}
                   style={{ originY: "top" }}
+                  transition={{ bounce: 0.3, duration: 0.6, type: "spring" }}
                 />
               )}
               <span className={buttonStyles.text}>

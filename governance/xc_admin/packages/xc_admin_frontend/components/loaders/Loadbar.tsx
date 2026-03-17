@@ -1,14 +1,14 @@
-import React from 'react'
+import type React from "react";
 
 type LoadbarProps = {
-  theme?: string
-  width?: string | null
-}
+  theme?: string;
+  width?: string | null;
+};
 
 const Loadbar: React.FC<LoadbarProps> = ({ theme, width }) => {
-  let color = 'bg-dark-300'
-  if (theme == 'light') {
-    color = 'bg-beige-300'
+  let color = "bg-dark-300";
+  if (theme == "light") {
+    color = "bg-beige-300";
   }
   return (
     <div className=" animate-pulse">
@@ -29,7 +29,7 @@ const Loadbar: React.FC<LoadbarProps> = ({ theme, width }) => {
 
       <span className="sr-only">Loading...</span>
     </div>
-  )
-}
+  );
+};
 
-export default Loadbar
+export default Loadbar;

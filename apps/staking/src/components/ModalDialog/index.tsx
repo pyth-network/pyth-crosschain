@@ -38,9 +38,9 @@ export const ModalDialog = ({
   ...props
 }: ModalDialogProps) => (
   <ModalOverlay
-    isKeyboardDismissDisabled={closeDisabled === true || noClose === true}
     className="fixed left-0 top-0 z-50 h-[var(--visual-viewport-height)] w-screen overflow-y-auto bg-black/30 px-4 py-8 backdrop-blur data-[entering]:duration-300 data-[exiting]:duration-300 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:fade-in data-[exiting]:fade-out xs:py-16 sm:px-8 sm:py-32"
     isDismissable={!closeDisabled && !noClose}
+    isKeyboardDismissDisabled={closeDisabled === true || noClose === true}
     {...props}
   >
     <Modal className="pointer-events-none grid min-h-full place-content-center data-[entering]:duration-500 data-[exiting]:duration-300 data-[entering]:animate-in data-[exiting]:animate-out data-[entering]:zoom-in-90 data-[exiting]:zoom-out-110">
@@ -50,10 +50,10 @@ export const ModalDialog = ({
             {!noClose && (
               <div className="absolute right-3 top-3">
                 <Button
-                  onPress={options.close}
                   className="size-10"
-                  size="nopad"
                   isDisabled={closeDisabled ?? false}
+                  onPress={options.close}
+                  size="nopad"
                 >
                   <XMarkIcon className="size-6" />
                 </Button>
@@ -75,7 +75,7 @@ export const ModalDialog = ({
             {typeof children === "function" ? children(options) : children}
             {!noClose && closeButtonText !== undefined && (
               <div className="mt-14 flex flex-row justify-end">
-                <Button size="noshrink" onPress={options.close}>
+                <Button onPress={options.close} size="noshrink">
                   {closeButtonText}
                 </Button>
               </div>

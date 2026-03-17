@@ -3,11 +3,10 @@
 import { Table } from "@pythnetwork/component-library/Table";
 import { useMemo } from "react";
 import { useCollator } from "react-aria";
-
-import styles from "./reference-data.module.scss";
 import { Cluster } from "../../services/pyth";
 import { AssetClassBadge } from "../AssetClassBadge";
 import { LiveValue } from "../LivePrices";
+import styles from "./reference-data.module.scss";
 
 type Props = {
   feed: {
@@ -45,37 +44,37 @@ export const ReferenceData = ({ feed }: Props) => {
         ...Object.entries({
           "Asset Type": <AssetClassBadge>{feed.assetClass}</AssetClassBadge>,
           Base: feed.base,
-          Description: feed.description,
-          Symbol: feed.symbol,
-          Country: feed.country,
-          "Quote Currency": feed.quoteCurrency,
-          Tenor: feed.tenor,
           "CMS Symbol": feed.cmsSymbol,
-          "CQS Symbol": feed.cqsSymbol,
-          "NASDAQ Symbol": feed.nasdaqSymbol,
-          "Generic Symbol": feed.genericSymbol,
-          "Weekly Schedule": feed.weeklySchedule,
-          Schedule: feed.schedule,
           "Contract ID": feed.contractId,
+          Country: feed.country,
+          "CQS Symbol": feed.cqsSymbol,
+          Description: feed.description,
           "Display Symbol": feed.displaySymbol,
+          "Generic Symbol": feed.genericSymbol,
+          "NASDAQ Symbol": feed.nasdaqSymbol,
+          "Quote Currency": feed.quoteCurrency,
+          Schedule: feed.schedule,
+          Symbol: feed.symbol,
+          Tenor: feed.tenor,
+          "Weekly Schedule": feed.weeklySchedule,
         }),
         ...Object.entries({
           Exponent: "exponent",
+          "Last Slot": "lastSlot",
+          "Minimum Publishers": "minPublishers",
           "Price Components": "numComponentPrices",
           "Price Quoters": "numQuoters",
-          "Minimum Publishers": "minPublishers",
-          "Last Slot": "lastSlot",
           "Valid Slot": "validSlot",
         } as const).map(
           ([key, value]) =>
             [
               key,
-              <span key={key} className={styles.value}>
+              <span className={styles.value} key={key}>
                 <LiveValue
+                  cluster={Cluster.Pythnet}
+                  defaultValue={feed[value]}
                   feedKey={feed.feedKey}
                   field={value}
-                  defaultValue={feed[value]}
-                  cluster={Cluster.Pythnet}
                 />
               </span>,
             ] as const,
@@ -87,7 +86,6 @@ export const ReferenceData = ({ feed }: Props) => {
         .filter((entry) => entry !== undefined)
         .sort(([a], [b]) => collator.compare(a, b))
         .map(([field, value]) => ({
-          id: field,
           data: {
             field: <span className={styles.field}>{field}</span>,
             value:
@@ -97,27 +95,28 @@ export const ReferenceData = ({ feed }: Props) => {
                 value
               ),
           },
+          id: field,
         })),
     [collator, feed],
   );
 
   return (
     <Table
-      label="Reference Data"
-      fill
-      stickyHeader="top"
       className={styles.referenceData ?? ""}
       columns={[
         {
-          id: "field",
-          name: "Field",
           alignment: "left",
+          id: "field",
           isRowHeader: true,
+          name: "Field",
           sticky: true,
         },
-        { id: "value", name: "Value", fill: true, alignment: "left" },
+        { alignment: "left", fill: true, id: "value", name: "Value" },
       ]}
+      fill
+      label="Reference Data"
       rows={rows}
+      stickyHeader="top"
     />
   );
 };

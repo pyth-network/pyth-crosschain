@@ -5,15 +5,13 @@ import {
 import { CosmosUpgradeContract } from "../governance_payload/UpgradeContract";
 
 test("Upgrade contract ser/de", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const expectedUpgradeContract = new CosmosUpgradeContract(
     "injective",
     BigInt("18446744073709551614"),
   );
   const buffer = expectedUpgradeContract.encode();
-
-  console.log(buffer.toJSON());
   expect(
     buffer.equals(
       Buffer.from([

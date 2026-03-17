@@ -5,17 +5,18 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import type { SuiObjectRef, PaginatedCoins } from "@mysten/sui/client";
+import type { PaginatedCoins, SuiObjectRef } from "@mysten/sui/client";
 import { SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 import type { Logger } from "pino";
 
 import type { IPricePusher, PriceInfo, PriceItem } from "../interface.js";
 import { ChainPriceListener } from "../interface.js";
 import type { DurationInSeconds } from "../utils.js";
+
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
 const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
@@ -81,8 +82,8 @@ export class SuiPriceListener extends ChainPriceListener {
       const timestamp = priceInfo.timestamp;
 
       return {
-        price: negative ? `-${magnitude}` : magnitude,
         conf,
+        price: negative ? `-${magnitude}` : magnitude,
         publishTime: Number(timestamp),
       };
     } catch (error) {
@@ -268,11 +269,11 @@ export class SuiPricePusher implements IPricePusher {
       tx.setGasPayment([gasObject]);
       tx.setGasBudget(this.gasBudget);
       const result = await this.provider.signAndExecuteTransaction({
-        signer: this.signer,
-        transaction: tx,
         options: {
           showEffects: true,
         },
+        signer: this.signer,
+        transaction: tx,
       });
 
       nextGasObject = result.effects?.mutated
@@ -375,9 +376,9 @@ export class SuiPricePusher implements IPricePusher {
       throw new Error("Failed to refresh object reference");
     } else {
       return {
-        digest: objectResponse.data!.digest,
-        objectId: objectResponse.data!.objectId,
-        version: objectResponse.data!.version,
+        digest: objectResponse.data?.digest,
+        objectId: objectResponse.data?.objectId,
+        version: objectResponse.data?.version,
       };
     }
   }
@@ -392,16 +393,16 @@ export class SuiPricePusher implements IPricePusher {
     let numCoins = 0;
     while (hasNextPage) {
       const paginatedCoins: PaginatedCoins = await provider.getCoins({
-        owner,
         cursor,
+        owner,
       });
       numCoins += paginatedCoins.data.length;
       for (const c of paginatedCoins.data)
         coins.add(
           JSON.stringify({
+            digest: c.digest,
             objectId: c.coinObjectId,
             version: c.version,
-            digest: c.digest,
           }),
         );
       hasNextPage = paginatedCoins.hasNextPage;
@@ -435,9 +436,9 @@ export class SuiPricePusher implements IPricePusher {
     );
     tx.setGasPayment([gasCoin]);
     const result = await provider.signAndExecuteTransaction({
+      options: { showEffects: true },
       signer,
       transaction: tx,
-      options: { showEffects: true },
     });
     const error = result.effects?.status.error;
     if (error) {
@@ -445,7 +446,7 @@ export class SuiPricePusher implements IPricePusher {
         `Failed to initialize gas pool: ${error}. Try re-running the script`,
       );
     }
-    const newCoins = result.effects!.created!.map((obj) => obj.reference);
+    const newCoins = result.effects?.created?.map((obj) => obj.reference);
     if (newCoins.length !== numGasObjects) {
       throw new Error(
         `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${JSON.stringify(newCoins)}`,
@@ -486,9 +487,9 @@ export class SuiPricePusher implements IPricePusher {
       let mergeResult;
       try {
         mergeResult = await provider.signAndExecuteTransaction({
+          options: { showEffects: true },
           signer,
           transaction: mergeTx,
-          options: { showEffects: true },
         });
       } catch (error_) {
         logger.error(error_, "Merge transaction failed with error");
@@ -517,7 +518,7 @@ export class SuiPricePusher implements IPricePusher {
           `Failed to merge coins when initializing gas pool: ${error}. Try re-running the script`,
         );
       }
-      finalCoin = mergeResult.effects!.mutated!.map((obj) => obj.reference)[0];
+      finalCoin = mergeResult.effects?.mutated?.map((obj) => obj.reference)[0];
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion

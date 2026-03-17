@@ -6,7 +6,7 @@ type Props = Omit<ComponentProps<typeof Badge>, "children"> & {
 };
 
 export const AssetClassBadge = ({ children, ...props }: Props) => (
-  <Badge variant="neutral" style="outline" size="xs" {...props}>
+  <Badge size="xs" style="outline" variant="neutral" {...props}>
     {children.toUpperCase()}
   </Badge>
 );

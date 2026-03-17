@@ -1,10 +1,10 @@
-import { PublicKey } from "@solana/web3.js";
 import type { PermissionData, Product } from "@pythnetwork/client";
+import type { PublicKey } from "@solana/web3.js";
+import type { CoreInstructionAccounts } from "./core/core_functions";
 import type {
   LazerConfig,
   LazerInstructionAccounts,
 } from "./lazer/lazer_functions";
-import type { CoreInstructionAccounts } from "./core/core_functions";
 /**
  * Represents the different Pyth programs supported by the application.
  */
@@ -114,8 +114,8 @@ export type InstructionAccountsTypeMap = {
 /**
  * Result of validating an uploaded configuration
  */
-export interface ValidationResult {
+export type ValidationResult = {
   isValid: boolean;
   error?: string;
   changes?: any;
-}
+};

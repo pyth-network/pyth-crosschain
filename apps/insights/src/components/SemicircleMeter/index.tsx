@@ -41,27 +41,27 @@ export const SemicircleMeter = ({
       <>
         <Suspense>
           <RadialBarChart
-            data={[{ value: args[0].percentage }]}
-            innerRadius="100%"
-            startAngle={210}
-            endAngle={-30}
             barSize={16}
             className={styles.chart ?? ""}
+            data={[{ value: args[0].percentage }]}
+            endAngle={-30}
+            innerRadius="100%"
+            startAngle={210}
             {...(width && { width })}
             {...(height && { height })}
           >
             <PolarAngleAxis
-              type="number"
-              domain={[0, 100]}
               angleAxisId={0}
+              domain={[0, 100]}
               tick={false}
+              type="number"
             />
             <RadialBar
               angleAxisId={0}
               background={{ className: styles.background }}
-              dataKey="value"
               className={styles.bar ?? ""}
               cornerRadius={999}
+              dataKey="value"
             />
           </RadialBarChart>
         </Suspense>

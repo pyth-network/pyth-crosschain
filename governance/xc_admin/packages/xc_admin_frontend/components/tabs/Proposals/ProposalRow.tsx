@@ -5,49 +5,48 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import {
+  getManyProposalsInstructions,
   getMultisigCluster,
   MultisigParser,
-  getManyProposalsInstructions,
-} from '@pythnetwork/xc-admin-common'
-import { useWallet } from '@solana/wallet-adapter-react'
-import type { AccountMeta } from '@solana/web3.js'
-import type { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useRouter } from 'next/router'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-
-import { StatusTag } from './StatusTag'
-import { getInstructionsSummary, getProposalStatus } from './utils'
-import { ClusterContext } from '../../../contexts/ClusterContext'
-import { useMultisigContext } from '../../../contexts/MultisigContext'
+} from "@pythnetwork/xc-admin-common";
+import { useWallet } from "@solana/wallet-adapter-react";
+import type { AccountMeta } from "@solana/web3.js";
+import type { MultisigAccount, TransactionAccount } from "@sqds/mesh/lib/types";
+import { useRouter } from "next/router";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { ClusterContext } from "../../../contexts/ClusterContext";
+import { useMultisigContext } from "../../../contexts/MultisigContext";
+import { StatusTag } from "./StatusTag";
+import { getInstructionsSummary, getProposalStatus } from "./utils";
 
 export const ProposalRow = ({
   proposal,
   multisig,
 }: {
-  proposal: TransactionAccount
-  multisig: MultisigAccount | undefined
+  proposal: TransactionAccount;
+  multisig: MultisigAccount | undefined;
 }) => {
-  const [time, setTime] = useState<Date>()
+  const [time, setTime] = useState<Date>();
   const [instructions, setInstructions] =
-    useState<(readonly [string, number])[]>()
-  const status = getProposalStatus(proposal, multisig)
-  const { cluster } = useContext(ClusterContext)
+    useState<(readonly [string, number])[]>();
+  const status = getProposalStatus(proposal, multisig);
+  const { cluster } = useContext(ClusterContext);
   const {
     isLoading: isMultisigLoading,
     connection,
     readOnlySquads,
-  } = useMultisigContext()
-  const router = useRouter()
-  const elementRef = useRef<HTMLDivElement>(null)
-  const { publicKey: walletPublicKey } = useWallet()
+  } = useMultisigContext();
+  const router = useRouter();
+  const elementRef = useRef<HTMLDivElement>(null);
+  const { publicKey: walletPublicKey } = useWallet();
   const formattedTime = time?.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
+    day: "numeric",
+    hour: "numeric",
     hour12: false,
-  })
+    minute: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
   /**
    * Fetch the block time of the first transaction of the proposal
@@ -55,12 +54,12 @@ export const ProposalRow = ({
    * when the proposal is in view
    */
   useEffect(() => {
-    let isCancelled = false
-    const element = elementRef.current
+    let isCancelled = false;
+    const element = elementRef.current;
     const observer = new IntersectionObserver(async (entries) => {
       if (entries[0]?.isIntersecting) {
         if (isMultisigLoading) {
-          return
+          return;
         }
 
         // set proposal time
@@ -68,75 +67,73 @@ export const ProposalRow = ({
           connection
             .getSignaturesForAddress(proposal.publicKey)
             .then((txs) => {
-              if (isCancelled) return
-              const firstBlockTime = txs?.[txs.length - 1]?.blockTime
+              if (isCancelled) return;
+              const firstBlockTime = txs?.[txs.length - 1]?.blockTime;
               if (firstBlockTime) {
-                setTime(new Date(firstBlockTime * 1000))
+                setTime(new Date(firstBlockTime * 1000));
               }
             })
-            .catch((error) => {
-              console.error(
-                `Error fetching proposal time for ${proposal.publicKey.toBase58()}: ${error}`
-              )
-            })
+            .catch((_error) => {
+              // Silently ignore errors fetching block time
+            });
         }
 
         // calculate instructions summary
         if (!instructions) {
           const [proposalInstructions] = await getManyProposalsInstructions(
             readOnlySquads,
-            [proposal]
-          )
+            [proposal],
+          );
 
           const multisigParser = MultisigParser.fromCluster(
-            getMultisigCluster(cluster)
-          )
+            getMultisigCluster(cluster),
+          );
           const parsedInstructions =
             proposalInstructions?.map((ix) =>
               multisigParser.parseInstruction({
-                programId: ix.programId,
                 data: ix.data as Buffer,
                 keys: ix.keys as AccountMeta[],
-              })
-            ) ?? []
+                programId: ix.programId,
+              }),
+            ) ?? [];
 
           const summary = getInstructionsSummary({
-            instructions: parsedInstructions,
             cluster,
-          })
+            instructions: parsedInstructions,
+          });
 
           // show only the first two instructions
           // and group the rest under 'other'
-          const shortSummary = summary.slice(0, 2)
+          const shortSummary = summary.slice(0, 2);
           const otherValue = summary
             .slice(2)
             .map(({ count }) => count)
-            .reduce((total, item) => total + item, 0)
+            .reduce((total, item) => total + item, 0);
           const updatedSummary = [
             ...shortSummary.map(({ name, count }) => [name, count] as const),
             ...(otherValue > 0
-              ? ([['other', otherValue]] as [string, number][])
+              ? ([["other", otherValue]] as [string, number][])
               : []),
-          ]
+          ];
 
           if (!isCancelled) {
-            setInstructions(updatedSummary)
+            setInstructions(updatedSummary);
           }
         }
       }
-    })
+    });
 
     if (element) {
-      observer.observe(element)
+      observer.observe(element);
     }
 
     // Clean up function
     return () => {
-      isCancelled = true
+      isCancelled = true;
       if (element) {
-        observer.unobserve(element)
+        observer.unobserve(element);
       }
-    }
+    };
   }, [
     time,
     cluster,
@@ -145,35 +142,35 @@ export const ProposalRow = ({
     readOnlySquads,
     isMultisigLoading,
     instructions,
-  ])
+  ]);
 
   const handleClickIndividualProposal = useCallback(
     (proposalPubkey: string) => {
-      router.query.proposal = proposalPubkey
+      router.query.proposal = proposalPubkey;
       router.push(
         {
           pathname: router.pathname,
           query: router.query,
         },
         undefined,
-        { scroll: true }
-      )
+        { scroll: true },
+      );
     },
-    [router]
-  )
+    [router],
+  );
 
   return (
     <div
       aria-label="view proposal"
-      ref={elementRef}
       className="my-2 cursor-pointer bg-[#1E1B2F] hover:bg-darkGray2"
       onClick={() => {
-        handleClickIndividualProposal(proposal.publicKey.toBase58())
+        handleClickIndividualProposal(proposal.publicKey.toBase58());
       }}
       onKeyDown={(e) => {
-        if (e.key === 'Enter')
-          handleClickIndividualProposal(proposal.publicKey.toBase58())
+        if (e.key === "Enter")
+          handleClickIndividualProposal(proposal.publicKey.toBase58());
       }}
+      ref={elementRef}
       role="button"
       tabIndex={0}
     >
@@ -187,9 +184,9 @@ export const ProposalRow = ({
         <div className="flex">
           <span className="mr-2">
             {proposal.publicKey.toBase58().slice(0, 6) +
-              '...' +
+              "..." +
               proposal.publicKey.toBase58().slice(-6)}
-          </span>{' '}
+          </span>{" "}
         </div>
         <div className="flex flex-grow gap-4">
           {instructions?.map(([name, count]) => (
@@ -199,7 +196,7 @@ export const ProposalRow = ({
           ))}
         </div>
         <div className="flex space-x-2">
-          {proposal.approved.length > 0 && status === 'active' && (
+          {proposal.approved.length > 0 && status === "active" && (
             <div>
               <StatusTag
                 proposalStatus="executed"
@@ -207,7 +204,7 @@ export const ProposalRow = ({
               />
             </div>
           )}
-          {proposal.rejected.length > 0 && status === 'active' && (
+          {proposal.rejected.length > 0 && status === "active" && (
             <div>
               <StatusTag
                 proposalStatus="rejected"
@@ -239,5 +236,5 @@ export const ProposalRow = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

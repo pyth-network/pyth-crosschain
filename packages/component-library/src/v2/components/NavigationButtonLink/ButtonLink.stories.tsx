@@ -1,12 +1,9 @@
 import { ArrowSquareOut, ChartLine } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { ButtonLink } from "./ButtonLink";
 import { IconControl } from "../../__stories__/helpers";
+import { ButtonLink } from "./ButtonLink";
 
 const meta = {
-  title: "V2/ButtonLink",
-  component: ButtonLink,
   args: {
     afterIcon: ArrowSquareOut,
     beforeIcon: ChartLine,
@@ -15,13 +12,15 @@ const meta = {
     target: "_blank",
   },
   argTypes: {
-    beforeIcon: {
-      ...IconControl,
-    },
     afterIcon: {
       ...IconControl,
     },
+    beforeIcon: {
+      ...IconControl,
+    },
   },
+  component: ButtonLink,
+  title: "V2/ButtonLink",
 } satisfies Meta<typeof ButtonLink>;
 
 export default meta;

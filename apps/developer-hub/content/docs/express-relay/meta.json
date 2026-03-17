@@ -1,6 +1,4 @@
 {
-  "root": true,
-  "title": "Express Relay",
   "description": "Eliminate MEV",
   "icon": "Gavel",
   "pages": [
@@ -15,5 +13,7 @@
     "errors",
     "---Understanding Express Relay---",
     "how-express-relay-works"
-  ]
+  ],
+  "root": true,
+  "title": "Express Relay"
 }

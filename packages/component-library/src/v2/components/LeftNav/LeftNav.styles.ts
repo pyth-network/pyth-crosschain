@@ -37,11 +37,6 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
     },
 
     /**
-     * class name applied to the <span /> that wraps around the vertical ellipsis
-     */
-    ellipsis: {},
-
-    /**
      * class name applied to the section that holds
      * a UI affordance to display the current user
      * and an additional actions menu on it
@@ -65,6 +60,18 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
      * displayed next to the user's avatar
      */
     currentUserDetails: {
+      "& > span": {
+        "&:last-child": {
+          color: theme.resolveThemeColor(theme.colors.muted),
+          fontSize: theme.tokens.fontSizes.sm,
+        },
+        display: "block",
+        maxWidth: "100%",
+        minWidth: 0,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+      },
       alignItems: "flex-start",
       display: "inline-flex",
       flexFlow: "column",
@@ -72,31 +79,17 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
       gap: theme.spacing(1),
       minWidth: 0,
       width: "100%",
-
-      "& > span": {
-        display: "block",
-        maxWidth: "100%",
-        minWidth: 0,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        "&:last-child": {
-          color: theme.resolveThemeColor(theme.colors.muted),
-          fontSize: theme.tokens.fontSizes.sm,
-        },
-      },
     },
+
+    /**
+     * class name applied to the <span /> that wraps around the vertical ellipsis
+     */
+    ellipsis: {},
 
     /**
      * simple <div /> wrapping around the <svg /> of the Pyth logo
      */
     logoWrapper: {
-      alignItems: "center",
-      display: "flex",
-      gap: theme.spacing(2),
-      justifyContent: "space-between",
-      padding: theme.spacing(4),
-
       "& > button": {
         marginRight: `calc(${theme.spacing(2)} * -1)`,
       },
@@ -106,87 +99,36 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
         height: theme.tokens.fontSizes.base,
         width: "auto",
       },
+      alignItems: "center",
+      display: "flex",
+      gap: theme.spacing(2),
+      justifyContent: "space-between",
+      padding: theme.spacing(4),
     },
 
     /**
      * container around all the nav links in the left panel
      */
     navLinks: {
+      "& > a": {
+        display: "flex",
+      },
       flexGrow: 1,
       overflowY: "auto",
-
-      "& > a": {
-        display: "flex",
-      },
-    },
-
-    /**
-     * class name for the wrapper that contains additional
-     * links that are displayed near the bottom of the left nav
-     */
-    supportLinks: {
-      ...theme.flexVertical(),
-      borderTop: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
-      flexGrow: 0,
-      flexShrink: 0,
-      marginBottom: theme.spacing(2),
-
-      "& > a": {
-        display: "flex",
-      },
-    },
-
-    /**
-     * top-most area that contains the PYTH logo
-     */
-    top: {
-      flexShrink: 0,
     },
 
     /**
      * root of the <nav />
      */
     root: {
-      backgroundColor: theme.resolveThemeColor(theme.colors.background.primary),
-      borderRight: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
-      display: "flex",
-      flexFlow: "column",
-      height: "100vh",
-      minHeight: 0,
-      width: leftNavDesktopWidth,
+      '&[data-hasactionsmenu="true"]': {
+        "& $currentUser": {
+          "& > $currentUserDetails": {},
+          gridTemplateColumns: "auto 1fr auto",
+        },
+      },
 
       '&[data-open="false"]': {
-        width: leftNavCollapsedWidth,
-
-        "& $logoWrapper": {
-          display: "flex",
-          justifyContent: "center",
-
-          "& > button": {
-            marginRight: "unset",
-          },
-        },
-
-        "& $navLinks, & $supportLinks": {
-          '& [data-leftnavlink="true"]': {
-            fontSize: 0,
-            gap: 0,
-            justifyContent: "center",
-            overflow: "hidden",
-            padding: theme.spacing(2),
-            whiteSpace: "nowrap",
-
-            "& > *:not(svg), & > [data-aftericon]": {
-              display: "none",
-            },
-
-            "& > svg": {
-              height: theme.spacing(5),
-              width: "auto",
-            },
-          },
-        },
-
         "& $currentUser": {
           gridTemplateColumns: "auto",
           justifyItems: "center",
@@ -196,24 +138,74 @@ export const { classes } = createStyles("pyth-v2-left-nav", (theme) => {
         "& $currentUserDetails": {
           display: "none",
         },
-      },
 
-      '&[data-hasactionsmenu="true"]': {
-        "& $currentUser": {
-          gridTemplateColumns: "auto 1fr auto",
-
-          "& > $currentUserDetails": {},
+        "& $logoWrapper": {
+          "& > button": {
+            marginRight: "unset",
+          },
+          display: "flex",
+          justifyContent: "center",
         },
+
+        "& $navLinks, & $supportLinks": {
+          '& [data-leftnavlink="true"]': {
+            "& > *:not(svg), & > [data-aftericon]": {
+              display: "none",
+            },
+
+            "& > svg": {
+              height: theme.spacing(5),
+              width: "auto",
+            },
+            fontSize: 0,
+            gap: 0,
+            justifyContent: "center",
+            overflow: "hidden",
+            padding: theme.spacing(2),
+            whiteSpace: "nowrap",
+          },
+        },
+        width: leftNavCollapsedWidth,
       },
 
       '&[data-open="false"][data-hasactionsmenu="true"]': {
         "& $currentUser": {
-          gridTemplateColumns: "auto",
           "& $ellipsis": {
             display: "none",
           },
+          gridTemplateColumns: "auto",
         },
       },
+      backgroundColor: theme.resolveThemeColor(theme.colors.background.primary),
+      borderRight: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
+      display: "flex",
+      flexFlow: "column",
+      height: "100vh",
+      minHeight: 0,
+      width: leftNavDesktopWidth,
+    },
+
+    /**
+     * class name for the wrapper that contains additional
+     * links that are displayed near the bottom of the left nav
+     */
+    supportLinks: {
+      ...theme.flexVertical(),
+
+      "& > a": {
+        display: "flex",
+      },
+      borderTop: `1px solid ${theme.resolveThemeColor(theme.colors.border)}`,
+      flexGrow: 0,
+      flexShrink: 0,
+      marginBottom: theme.spacing(2),
+    },
+
+    /**
+     * top-most area that contains the PYTH logo
+     */
+    top: {
+      flexShrink: 0,
     },
   };
 });

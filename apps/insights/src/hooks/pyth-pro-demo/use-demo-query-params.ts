@@ -3,14 +3,13 @@ import { useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
 import { useCallback } from "react";
-
-import type { PythProDemoQueryParams } from "./types";
 import type { AllAllowedSymbols } from "../../schemas/pyth/pyth-pro-demo-schema";
 import {
   ALL_ALLOWED_SYMBOLS,
   PlaybackSpeedSchema,
   ValidDateSchema,
 } from "../../schemas/pyth/pyth-pro-demo-schema";
+import type { PythProDemoQueryParams } from "./types";
 
 type PythProDemoQueryParamKeys = keyof PythProDemoQueryParams;
 

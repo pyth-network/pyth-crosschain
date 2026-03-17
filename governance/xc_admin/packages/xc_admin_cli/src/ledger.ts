@@ -1,10 +1,9 @@
 import type { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
-import Transport, {
-  StatusCodes,
-  TransportStatusError,
-} from "@ledgerhq/hw-transport";
+import type Transport from "@ledgerhq/hw-transport";
+import { StatusCodes, TransportStatusError } from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { VersionedTransaction } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 
 export class LedgerNodeWallet implements Wallet {
   private _derivationPath: Buffer;
@@ -31,14 +30,12 @@ export class LedgerNodeWallet implements Wallet {
       derivationChange,
     );
     const publicKey = await getPublicKey(transport, derivationPath);
-    console.log(`Loaded ledger: ${publicKey.toBase58()}}`);
     return new LedgerNodeWallet(derivationPath, transport, publicKey);
   }
 
   async signTransaction<T extends Transaction | VersionedTransaction>(
     tx: T,
   ): Promise<T> {
-    console.log("Please approve the transaction on your ledger device...");
     const transport = this._transport;
     const publicKey = this.publicKey;
 

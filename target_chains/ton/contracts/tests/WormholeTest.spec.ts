@@ -1,6 +1,9 @@
-import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { Cell, toNano } from "@ton/core";
-import { WormholeTest, WormholeTestConfig } from "../wrappers/WormholeTest";
+import type { Cell } from "@ton/core";
+import { toNano } from "@ton/core";
+import type { SandboxContract, TreasuryContract } from "@ton/sandbox";
+import { Blockchain } from "@ton/sandbox";
+import type { WormholeTestConfig } from "../wrappers/WormholeTest";
+import { WormholeTest } from "../wrappers/WormholeTest";
 import "@ton/test-utils";
 import { compile } from "@ton/blueprint";
 import {
@@ -32,18 +35,18 @@ describe("WormholeTest", () => {
   });
 
   async function deployContract(
-    guardianSetIndex: number = 0,
+    guardianSetIndex = 0,
     guardianSet: string[] = GUARDIAN_SET_0,
     chainId: number = CHAIN_ID,
     governanceChainId: number = GOVERNANCE_CHAIN_ID,
     governanceContract: string = GOVERNANCE_CONTRACT,
   ) {
     const config: WormholeTestConfig = {
-      guardianSetIndex,
-      guardianSet,
       chainId,
       governanceChainId,
       governanceContract,
+      guardianSet,
+      guardianSetIndex,
     };
 
     wormholeTest = blockchain.openContract(
@@ -56,10 +59,10 @@ describe("WormholeTest", () => {
     );
 
     expect(deployResult.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: wormholeTest.address,
       deploy: true,
+      from: deployer.address,
       success: true,
+      to: wormholeTest.address,
     });
 
     const guardianSetIndexRes = await wormholeTest.getCurrentGuardianSetIndex();
@@ -125,7 +128,7 @@ describe("WormholeTest", () => {
     );
     expect(result.version).toBe(1);
     expect(result.vm_guardian_set_index).toBe(0);
-    expect(result.timestamp).toBe(1628094930);
+    expect(result.timestamp).toBe(1_628_094_930);
     expect(result.nonce).toBe(3);
     expect(result.emitter_chain_id).toBe(1);
     expect(result.emitter_address.toString()).toBe(
@@ -150,8 +153,8 @@ describe("WormholeTest", () => {
     );
     expect(getUpdateGuardianSetResult.transactions).toHaveTransaction({
       from: deployer.address,
-      to: wormholeTest.address,
       success: true,
+      to: wormholeTest.address,
     });
 
     const getCurrentGuardianSetIndexResult =
@@ -167,10 +170,10 @@ describe("WormholeTest", () => {
       Buffer.from(invalid_mainnet_upgrade_vaa, "hex"),
     );
     expect(result.transactions).toHaveTransaction({
-      from: deployer.address,
-      to: wormholeTest.address,
-      success: false,
       exitCode: 1001, // ERROR_INVALID_VERSION = 1001
+      from: deployer.address,
+      success: false,
+      to: wormholeTest.address,
     });
   });
 
@@ -227,8 +230,8 @@ describe("WormholeTest", () => {
       );
     expect(sendUpdateGuardianSetResult.transactions).toHaveTransaction({
       from: deployer.address,
-      to: wormholeTest.address,
       success: true,
+      to: wormholeTest.address,
     });
 
     getGovernanceActionIsConsumedResult =

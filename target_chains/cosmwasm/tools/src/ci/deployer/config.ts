@@ -1,8 +1,8 @@
 import { Network } from "@injectivelabs/networks";
-import type { TerraHost } from "./terra.js";
-import type { InjectiveHost } from "./injective.js";
 import { NETWORKS } from "../network.js";
+import type { InjectiveHost } from "./injective.js";
 import type { OsmosisHost } from "./osmosis.js";
+import type { TerraHost } from "./terra.js";
 
 export enum CONFIG_TYPE {
   TERRA = "terra",
@@ -12,52 +12,52 @@ export enum CONFIG_TYPE {
 
 export const CONFIG: Config = {
   [NETWORKS.TERRA_MAINNET]: {
-    type: CONFIG_TYPE.TERRA,
     host: {
-      URL: "https://phoenix-lcd.terra.dev",
       chainID: "phoenix-1",
       name: "mainnet",
+      URL: "https://phoenix-lcd.terra.dev",
     },
+    type: CONFIG_TYPE.TERRA,
   },
   [NETWORKS.TERRA_TESTNET]: {
-    type: CONFIG_TYPE.TERRA,
     host: {
-      URL: "https://pisco-lcd.terra.dev",
       chainID: "pisco-1",
       name: "testnet",
+      URL: "https://pisco-lcd.terra.dev",
     },
+    type: CONFIG_TYPE.TERRA,
   },
   [NETWORKS.TERRA_LOCAL]: {
-    type: CONFIG_TYPE.TERRA,
     host: {
-      URL: "http://localhost:1317",
       chainID: "localterra",
       name: "localterra",
+      URL: "http://localhost:1317",
     },
+    type: CONFIG_TYPE.TERRA,
   },
   [NETWORKS.INJECTIVE_MAINNET]: {
-    type: CONFIG_TYPE.INJECTIVE,
     host: {
       network: Network.Mainnet,
     },
+    type: CONFIG_TYPE.INJECTIVE,
   },
   [NETWORKS.INJECTIVE_TESTNET]: {
-    type: CONFIG_TYPE.INJECTIVE,
     host: {
       network: Network.Testnet,
     },
+    type: CONFIG_TYPE.INJECTIVE,
   },
   [NETWORKS.OSMOSIS_TESTNET]: {
-    type: CONFIG_TYPE.OSMOSIS,
     host: {
       endpoint: "https://rpc-test.osmosis.zone:443",
     },
+    type: CONFIG_TYPE.OSMOSIS,
   },
   [NETWORKS.OSMOSIS_LOCAL]: {
-    type: CONFIG_TYPE.OSMOSIS,
     host: {
       endpoint: "http://localhost:26657",
     },
+    type: CONFIG_TYPE.OSMOSIS,
   },
 };
 

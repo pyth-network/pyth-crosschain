@@ -26,10 +26,10 @@ export const SectionCard = ({
     <p className={styles.sectionCardDescription}>{description}</p>
     {url && urlLabel && (
       <Link
-        href={url}
         className={styles.sectionCardUrl}
-        target={target}
+        href={url}
         rel={target === "_blank" ? "noopener noreferrer" : undefined}
+        target={target}
       >
         {urlLabel}
       </Link>

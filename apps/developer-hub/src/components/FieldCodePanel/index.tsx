@@ -2,9 +2,8 @@
 
 import clsx from "clsx";
 import { useMemo, useState } from "react";
-
-import styles from "./index.module.scss";
 import { FIELDS_WITHOUT_SPECS } from "../PropertyCard/constants";
+import styles from "./index.module.scss";
 
 type Field = {
   name: string;
@@ -53,11 +52,11 @@ export function FieldCodePanel({ fields, exampleJson }: FieldCodePanelProps) {
       const isHighlighted = fieldPattern?.test(line);
       return (
         <span
-          key={index}
           className={clsx(
             styles.codeLine,
             isHighlighted && styles.highlightedLine,
           )}
+          key={index}
         >
           {line}
           {"\n"}
@@ -84,12 +83,21 @@ export function FieldCodePanel({ fields, exampleJson }: FieldCodePanelProps) {
                   const fieldHasSpecs = hasDetailedSpecs(field.name);
                   return (
                     <tr
-                      key={field.name}
                       className={clsx(
                         styles.row,
                         styles.clickable,
                         highlightedField === field.name && styles.highlighted,
                       )}
+                      key={field.name}
+                      onClick={() => {
+                        handleFieldClick(field.name);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleFieldClick(field.name);
+                        }
+                      }}
                       onMouseEnter={() => {
                         setHighlightedField(field.name);
                         if (fieldHasSpecs) {
@@ -100,17 +108,8 @@ export function FieldCodePanel({ fields, exampleJson }: FieldCodePanelProps) {
                         setHighlightedField(undefined);
                         setHoveredFieldWithSpecs(undefined);
                       }}
-                      onClick={() => {
-                        handleFieldClick(field.name);
-                      }}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          handleFieldClick(field.name);
-                        }
-                      }}
                     >
                       <td className={clsx(styles.tableCell, styles.fieldName)}>
                         <code className={styles.fieldNameCode}>

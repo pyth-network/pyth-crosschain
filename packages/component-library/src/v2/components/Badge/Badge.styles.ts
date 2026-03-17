@@ -11,11 +11,10 @@ export const { classes } = createStyles("v2-badge", (theme) => {
     variantStyles = {
       ...variantStyles,
       [`&[data-variant="${variant}"]`]: {
-        borderColor: border,
-
         '&[data-style="filled"]': {
           background: background,
         },
+        borderColor: border,
 
         color: theme.resolveThemeColor(
           theme.colors.foreground,
@@ -29,6 +28,41 @@ export const { classes } = createStyles("v2-badge", (theme) => {
 
   return {
     root: {
+      '&[data-size="lg"]': {
+        fontSize: theme.tokens.fontSizes.sm,
+        fontWeight: theme.tokens.fontWeights.semibold,
+        height: theme.spacing(9),
+        padding: `0 ${theme.spacing(5)}`,
+      },
+
+      '&[data-size="md"]': {
+        fontSize: theme.tokens.fontSizes.xs,
+        fontWeight: theme.tokens.fontWeights.medium,
+        height: theme.spacing(6),
+        padding: `0 ${theme.spacing(3)}`,
+      },
+
+      '&[data-size="xs"]': {
+        fontSize: theme.tokens.fontSizes.xs2,
+        fontWeight: theme.tokens.fontWeights.medium,
+        height: theme.spacing(4),
+        padding: `0 ${theme.spacing(2)}`,
+      },
+
+      '&[data-style="filled"]': {
+        color: theme.resolveThemeColor(theme.colors.background.primary),
+      },
+
+      '&[data-variant="muted"]': {
+        '&[data-style="filled"]': {
+          background: mutedColor,
+        },
+
+        '&[data-style="outline"]': {
+          color: mutedColor,
+        },
+        borderColor: mutedColor,
+      },
       alignItems: "center",
       borderRadius: theme.tokens.borderRadius.xl3,
       borderStyle: "solid",
@@ -42,43 +76,6 @@ export const { classes } = createStyles("v2-badge", (theme) => {
       transitionProperty: "color, background-color, border-color",
       transitionTimingFunction: "linear",
       whiteSpace: "nowrap",
-
-      '&[data-size="xs"]': {
-        fontSize: theme.tokens.fontSizes.xs2,
-        fontWeight: theme.tokens.fontWeights.medium,
-        height: theme.spacing(4),
-        padding: `0 ${theme.spacing(2)}`,
-      },
-
-      '&[data-size="md"]': {
-        fontSize: theme.tokens.fontSizes.xs,
-        fontWeight: theme.tokens.fontWeights.medium,
-        height: theme.spacing(6),
-        padding: `0 ${theme.spacing(3)}`,
-      },
-
-      '&[data-size="lg"]': {
-        fontSize: theme.tokens.fontSizes.sm,
-        fontWeight: theme.tokens.fontWeights.semibold,
-        height: theme.spacing(9),
-        padding: `0 ${theme.spacing(5)}`,
-      },
-
-      '&[data-variant="muted"]': {
-        borderColor: mutedColor,
-
-        '&[data-style="filled"]': {
-          background: mutedColor,
-        },
-
-        '&[data-style="outline"]': {
-          color: mutedColor,
-        },
-      },
-
-      '&[data-style="filled"]': {
-        color: theme.resolveThemeColor(theme.colors.background.primary),
-      },
 
       ...variantStyles,
     },

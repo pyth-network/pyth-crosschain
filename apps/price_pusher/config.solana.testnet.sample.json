@@ -1,9 +1,9 @@
 {
   "endpoint": "https://api.devnet.solana.com",
   "keypair-file": "./id.json",
-  "shard-id": 1,
   "price-config-file": "./price-config.stable.sample.yaml",
   "price-service-endpoint": "https://hermes.pyth.network/",
+  "pushing-frequency": "30",
   "pyth-contract-address": "pythWSnswVUd12oZpeFP8e9CVaEqJg25g1Vtc2biRsT",
-  "pushing-frequency": "30"
+  "shard-id": 1
 }

@@ -7,11 +7,12 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 import { BN } from "fuels";
-import * as nearAPI from "near-api-js";
+import type * as nearAPI from "near-api-js";
 
 import type { KeyValueConfig, PriceFeed, PrivateKey, TxResult } from "../base";
 import { PriceFeedContract } from "../base";
-import { Chain, NearChain } from "../chains";
+import type { Chain } from "../chains";
+import { NearChain } from "../chains";
 import { WormholeContract } from "./wormhole";
 
 export class NearWormholeContract extends WormholeContract {
@@ -49,8 +50,8 @@ export class NearWormholeContract extends WormholeContract {
 
   toJson(): KeyValueConfig {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: NearWormholeContract.type,
     };
   }
@@ -65,11 +66,11 @@ export class NearWormholeContract extends WormholeContract {
       senderPrivateKey,
     );
     const outcome = await account.functionCall({
-      contractId: this.address,
-      methodName: "submit_vaa",
       args: { vaa: vaa.toString("hex") },
-      gas: new BN(300e12),
       attachedDeposit: new BN(1e12),
+      contractId: this.address,
+      gas: new BN(300e12),
+      methodName: "submit_vaa",
     });
     return { id: outcome.transaction.hash, info: outcome };
   }
@@ -117,10 +118,10 @@ export class NearPriceFeedContract extends PriceFeedContract {
 
   toJson(): KeyValueConfig {
     return {
-      chain: this.chain.getId(),
       address: this.address,
-      governanceDataSourceChain: this.governanceDataSource.emitterChain,
+      chain: this.chain.getId(),
       governanceDataSourceAddress: this.governanceDataSource.emitterAddress,
+      governanceDataSourceChain: this.governanceDataSource.emitterChain,
       lastExecutedGovernanceSequence: this.lastExecutedGovernanceSequence,
       type: NearPriceFeedContract.type,
     };
@@ -178,8 +179,8 @@ export class NearPriceFeedContract extends PriceFeedContract {
       });
     return outcome.map((item) => {
       return {
-        emitterChain: item.chain,
         emitterAddress: Buffer.from(item.emitter).toString("hex"),
+        emitterChain: item.chain,
       };
     });
   }
@@ -192,9 +193,9 @@ export class NearPriceFeedContract extends PriceFeedContract {
       expo: number;
       publish_time: number;
     } | null = await account.viewFunction({
+      args: { price_identifier: feedId },
       contractId: this.address,
       methodName: "get_price_unsafe",
-      args: { price_identifier: feedId },
     });
     const emaPrice: {
       price: string;
@@ -202,24 +203,24 @@ export class NearPriceFeedContract extends PriceFeedContract {
       expo: number;
       publish_time: number;
     } | null = await account.viewFunction({
+      args: { price_id: feedId },
       contractId: this.address,
       methodName: "get_ema_price_unsafe",
-      args: { price_id: feedId },
     });
     return price === null || emaPrice === null
       ? undefined
       : {
-          price: {
-            price: price.price,
-            conf: price.conf,
-            expo: price.expo.toString(),
-            publishTime: price.publish_time.toString(),
-          },
           emaPrice: {
-            price: emaPrice.price,
             conf: emaPrice.conf,
             expo: emaPrice.expo.toString(),
+            price: emaPrice.price,
             publishTime: emaPrice.publish_time.toString(),
+          },
+          price: {
+            conf: price.conf,
+            expo: price.expo.toString(),
+            price: price.price,
+            publishTime: price.publish_time.toString(),
           },
         };
   }
@@ -239,11 +240,11 @@ export class NearPriceFeedContract extends PriceFeedContract {
     const results = [];
     for (const vaa of vaas) {
       const outcome = await account.functionCall({
-        contractId: this.address,
-        methodName: "update_price_feeds",
         args: { data: vaa.toString("hex") },
-        gas: new BN(300e12),
         attachedDeposit: new BN(1e12),
+        contractId: this.address,
+        gas: new BN(300e12),
+        methodName: "update_price_feeds",
       });
       results.push({ id: outcome.transaction.hash, info: outcome });
     }
@@ -265,11 +266,11 @@ export class NearPriceFeedContract extends PriceFeedContract {
       senderPrivateKey,
     );
     const outcome = await account.functionCall({
-      contractId: this.address,
-      methodName: "execute_governance_instruction",
       args: { vaa: vaa.toString("hex") },
-      gas: new BN(300e12),
       attachedDeposit: new BN(1e12),
+      contractId: this.address,
+      gas: new BN(300e12),
+      methodName: "execute_governance_instruction",
     });
     return { id: outcome.transaction.hash, info: outcome };
   }

@@ -1,18 +1,18 @@
 import type { PythCluster } from "@pythnetwork/client";
 import {
-  MultisigInstructionProgram,
-  MultisigParser,
-  UNRECOGNIZED_INSTRUCTION,
-} from "../multisig_transaction";
-import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
+import {
+  MultisigInstructionProgram,
+  MultisigParser,
+  UNRECOGNIZED_INSTRUCTION,
+} from "../multisig_transaction";
 import { SystemProgramMultisigInstruction } from "../multisig_transaction/SystemProgramInstruction";
 
 test("System multisig instruction parse", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
 
@@ -20,8 +20,8 @@ test("System multisig instruction parse", (done) => {
 
   const transferInstruction = SystemProgram.transfer({
     fromPubkey: new PublicKey(1),
-    toPubkey: new PublicKey(2),
     lamports: 100,
+    toPubkey: new PublicKey(2),
   });
 
   const parsedInstruction = parser.parseInstruction(transferInstruction);
@@ -42,9 +42,9 @@ test("System multisig instruction parse", (done) => {
   }
 
   const badInstruction = new TransactionInstruction({
+    data: Buffer.from([1, 2, 3, 4]),
     keys: [],
     programId: new PublicKey(SystemProgram.programId),
-    data: Buffer.from([1, 2, 3, 4]),
   });
   const parsedBadInstruction = parser.parseInstruction(badInstruction);
   if (parsedBadInstruction instanceof SystemProgramMultisigInstruction) {

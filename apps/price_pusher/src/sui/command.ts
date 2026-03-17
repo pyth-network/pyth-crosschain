@@ -16,64 +16,58 @@ import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
 import { createSuiBalanceTracker } from "./balance-tracker.js";
 import { SuiPriceListener, SuiPricePusher } from "./sui.js";
-import { filterInvalidPriceItems } from "../utils.js";
 
 export default {
-  command: "sui",
-  describe:
-    "Run price pusher for sui. Most of the arguments below are" +
-    "network specific, so there's one set of values for mainnet and" +
-    " another for testnet. See config.sui.mainnet.sample.json for the " +
-    "appropriate values for your network. ",
   builder: {
+    "account-index": {
+      default: 0,
+      description: "Index of the account to use derived by the mnemonic",
+      required: true,
+      type: "number",
+    } as Options,
     endpoint: {
       description:
         "RPC endpoint URL for sui. The pusher will periodically" +
         "poll for updates. The polling interval is configurable via the " +
         "`polling-frequency` command-line argument.",
-      type: "string",
       required: true,
+      type: "string",
+    } as Options,
+    "gas-budget": {
+      default: 500_000_000,
+      description: "Gas budget for each price update",
+      required: true,
+      type: "number",
+    } as Options,
+    "ignore-gas-objects": {
+      default: [],
+      description:
+        "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
+      required: false,
+      type: "array",
+    } as Options,
+    "num-gas-objects": {
+      default: 30,
+      description: "Number of gas objects in the pool.",
+      required: true,
+      type: "number",
     } as Options,
     "pyth-state-id": {
       description:
         "Pyth State Id. Can be found here" +
         "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
     "wormhole-state-id": {
       description:
         "Wormhole State Id. Can be found here" +
         "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
+      required: true,
       type: "string",
-      required: true,
-    } as Options,
-    "num-gas-objects": {
-      description: "Number of gas objects in the pool.",
-      type: "number",
-      required: true,
-      default: 30,
-    } as Options,
-    "ignore-gas-objects": {
-      description:
-        "Gas objects to ignore when merging gas objects on startup -- use this for locked objects.",
-      type: "array",
-      required: false,
-      default: [],
-    } as Options,
-    "gas-budget": {
-      description: "Gas budget for each price update",
-      type: "number",
-      required: true,
-      default: 500_000_000,
-    } as Options,
-    "account-index": {
-      description: "Index of the account to use derived by the mnemonic",
-      type: "number",
-      required: true,
-      default: 0,
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -85,6 +79,12 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
+  command: "sui",
+  describe:
+    "Run price pusher for sui. Most of the arguments below are" +
+    "network specific, so there's one set of values for mainnet and" +
+    " another for testnet. See config.sui.mainnet.sample.json for the " +
+    "appropriate values for your network. ",
   handler: async function (argv: any) {
     const {
       endpoint,
@@ -118,7 +118,7 @@ export default {
     const suiAddress = keypair.getPublicKey().toSuiAddress();
     logger.info(`Pushing updates from wallet address: ${suiAddress}`);
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =
@@ -178,20 +178,20 @@ export default {
       suiPusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
-        pushingFrequency,
         metrics: metrics!,
+        pushingFrequency,
       },
     );
 
     // Create and start the balance tracker if metrics are enabled
     if (metrics) {
       const balanceTracker = createSuiBalanceTracker({
-        client: suiClient,
         address: suiAddress,
+        client: suiClient,
+        logger,
+        metrics,
         network: "sui",
         updateInterval: pushingFrequency,
-        metrics,
-        logger,
       });
 
       // Start the balance tracker

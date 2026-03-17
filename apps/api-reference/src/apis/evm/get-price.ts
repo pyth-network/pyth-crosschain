@@ -1,14 +1,21 @@
-import { readApi, solidity, ethersJS } from "./common";
 import { ParameterType } from "../../components/EvmApi";
+import { ethersJS, readApi, solidity } from "./common";
 
 export const getPrice = readApi<"id">({
-  name: "getPrice (deprecated)",
-  summary: `
-Get the **latest** price object for the requested price feed ID.
-
-**Note**: We recommend using [\`getPriceNoOlderThan()\`](getPriceNoOlderThan) instead of this endpoint
-as it gives more flexibility to specify the maximum age of the price.
-`,
+  code: [
+    solidity(
+      ({ id }) => `
+bytes32 priceId = ${id ?? "/* <id> */"};
+PythStructs.Price memory currentBasePrice = pyth.getPrice(priceId);
+    `,
+    ),
+    ethersJS(
+      ({ id }) => `
+const priceId = ${id ? `'${id}'` : "/* <id> */"};
+const [price, conf, expo, timestamp] = await contract.getPrice(priceId);
+    `,
+    ),
+  ],
   description: `
 This method returns the latest price object for the requested price feed ID.
 
@@ -43,25 +50,18 @@ The above method can return the following error response:
   update or does not exist. Try calling
   [\`updatePriceFeeds()\`](updatePriceFeeds) to update the price feed.
 `,
+  name: "getPrice (deprecated)",
   parameters: [
     {
+      description: "The ID of the price feed you want to read",
       name: "id",
       type: ParameterType.PriceFeedId,
-      description: "The ID of the price feed you want to read",
     },
   ],
-  code: [
-    solidity(
-      ({ id }) => `
-bytes32 priceId = ${id ?? "/* <id> */"};
-PythStructs.Price memory currentBasePrice = pyth.getPrice(priceId);
-    `,
-    ),
-    ethersJS(
-      ({ id }) => `
-const priceId = ${id ? `'${id}'` : "/* <id> */"};
-const [price, conf, expo, timestamp] = await contract.getPrice(priceId);
-    `,
-    ),
-  ],
+  summary: `
+Get the **latest** price object for the requested price feed ID.
+
+**Note**: We recommend using [\`getPriceNoOlderThan()\`](getPriceNoOlderThan) instead of this endpoint
+as it gives more flexibility to specify the maximum age of the price.
+`,
 });

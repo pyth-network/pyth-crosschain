@@ -18,18 +18,18 @@ const FEED_STATES = ["stable", "coming_soon", "inactive"] as const;
 type FeedState = (typeof FEED_STATES)[number];
 
 const FEED_STATE_LABELS: Record<FeedState, string> = {
-  stable: "Stable",
   coming_soon: "Coming Soon",
   inactive: "Inactive",
+  stable: "Stable",
 };
 
 const FEED_STATE_BADGE_VARIANT: Record<
   FeedState,
   "success" | "warning" | "neutral"
 > = {
-  stable: "success",
   coming_soon: "warning",
   inactive: "neutral",
+  stable: "success",
 };
 
 export const PriceFeedIdsProTable = () => {
@@ -68,7 +68,7 @@ export const PriceFeedIdsProTable = () => {
     { id: "description", name: "Description" },
     { id: "name", name: "Name" },
     { id: "symbol", name: "Symbol" },
-    { id: "pyth_lazer_id", name: "Pyth Pro ID", isRowHeader: true },
+    { id: "pyth_lazer_id", isRowHeader: true, name: "Pyth Pro ID" },
     { id: "exponent", name: "Exponent" },
     { id: "state", name: "Status" },
   ];
@@ -176,9 +176,9 @@ export const PriceFeedIdsProTable = () => {
       return [...exactIdMatches, ...otherMatchesArray];
     },
     {
-      defaultSort: "pyth_lazer_id",
-      defaultPageSize: 10,
       defaultDescending: false,
+      defaultPageSize: 10,
+      defaultSort: "pyth_lazer_id",
     },
   );
 
@@ -223,47 +223,47 @@ export const PriceFeedIdsProTable = () => {
   const allSelected = selectedStates.size === FEED_STATES.length;
 
   const rows = paginatedItems.map((feed) => ({
-    id: feed.pyth_lazer_id,
     data: {
       asset_type: feed.asset_type,
       description: feed.description,
-      name: feed.name,
-      symbol: feed.symbol,
-      pyth_lazer_id: feed.pyth_lazer_id,
       exponent: feed.exponent,
+      name: feed.name,
+      pyth_lazer_id: feed.pyth_lazer_id,
       state: (
-        <Badge variant={FEED_STATE_BADGE_VARIANT[feed.state]} size="xs">
+        <Badge size="xs" variant={FEED_STATE_BADGE_VARIANT[feed.state]}>
           {FEED_STATE_LABELS[feed.state]}
         </Badge>
       ),
+      symbol: feed.symbol,
     },
+    id: feed.pyth_lazer_id,
   }));
 
   return (
     <>
       <SearchInput
+        className={styles.searchInput ?? ""}
         label="Search price feeds"
+        onChange={updateSearch}
         placeholder="Search by symbol, name, or ID (comma/space separated)"
         value={search}
-        onChange={updateSearch}
-        className={styles.searchInput ?? ""}
       />
 
       {statusCounts && (
         <div
+          aria-label="Filter by status"
           className={styles.statusFilters}
           role="group"
-          aria-label="Filter by status"
         >
           <button
-            type="button"
             className={styles.filterButton}
             onClick={toggleAll}
+            type="button"
           >
             <Badge
-              variant={allSelected ? "info" : "neutral"}
-              style="outline"
               size="md"
+              style="outline"
+              variant={allSelected ? "info" : "neutral"}
             >
               {allSelected && <Check className={styles.checkIcon} />}
               All ({statusCounts.all})
@@ -273,19 +273,19 @@ export const PriceFeedIdsProTable = () => {
             const isSelected = selectedStates.has(feedState);
             return (
               <button
-                key={feedState}
-                type="button"
                 className={styles.filterButton}
+                key={feedState}
                 onClick={() => {
                   toggleState(feedState);
                 }}
+                type="button"
               >
                 <Badge
+                  size="md"
+                  style="outline"
                   variant={
                     isSelected ? FEED_STATE_BADGE_VARIANT[feedState] : "neutral"
                   }
-                  style="outline"
-                  size="md"
                 >
                   {isSelected && <Check className={styles.checkIcon} />}
                   {FEED_STATE_LABELS[feedState]} ({statusCounts[feedState]})
@@ -299,23 +299,23 @@ export const PriceFeedIdsProTable = () => {
       <div className={styles.tableWrapper}>
         <Table<Col>
           {...(isLoading ? { isLoading: true } : { isLoading: false, rows })}
-          label="Pyth Pro price feed ids"
           columns={columns}
+          fill
+          label="Pyth Pro price feed ids"
           onSortChange={updateSortDescriptor}
+          rounded
           sortDescriptor={sortDescriptor}
           stickyHeader="top"
-          fill
-          rounded
         />
       </div>
       <Paginator
-        numPages={numPages}
-        currentPage={page}
-        onPageChange={updatePage}
-        pageSize={pageSize}
-        onPageSizeChange={updatePageSize}
-        mkPageLink={mkPageLink}
         className={styles.paginator ?? ""}
+        currentPage={page}
+        mkPageLink={mkPageLink}
+        numPages={numPages}
+        onPageChange={updatePage}
+        onPageSizeChange={updatePageSize}
+        pageSize={pageSize}
       />
     </>
   );
@@ -329,13 +329,13 @@ enum StateType {
 }
 
 const State = {
-  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
-  Loading: () => ({ type: StateType.Loading as const }),
+  Failed: (error: unknown) => ({ error, type: StateType.Error as const }),
   Loaded: (feeds: Awaited<ReturnType<typeof getPythProFeeds>>) => ({
-    type: StateType.Loaded as const,
     feeds,
+    type: StateType.Loaded as const,
   }),
-  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
 };
 type State = ReturnType<(typeof State)[keyof typeof State]>;
 
@@ -354,11 +354,11 @@ const pythProSchema = z.array(
   z.object({
     asset_type: z.string(),
     description: z.string(),
-    name: z.string(),
-    symbol: z.string(),
-    pyth_lazer_id: z.number().int().positive(),
     exponent: z.number(),
+    name: z.string(),
+    pyth_lazer_id: z.number().int().positive(),
     state: z.enum(["stable", "coming_soon", "inactive"]),
+    symbol: z.string(),
   }),
 );
 

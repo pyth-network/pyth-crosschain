@@ -1,7 +1,5 @@
 import { BorshCoder } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-
-import { convertBNToBigInt } from "./bn.js";
 import {
   POSITION_BUFFER_SIZE,
   POSITIONS_ACCOUNT_HEADER_SIZE,
@@ -14,6 +12,7 @@ import type {
   TargetWithParameters,
 } from "../types.js";
 import { PositionState } from "../types.js";
+import { convertBNToBigInt } from "./bn.js";
 
 export const getPositionState = (
   position: Position,
@@ -117,14 +116,14 @@ export const summarizeAccountPositions = (
   epoch: bigint,
 ) => {
   const summary = {
-    voting: {
+    integrityPool: {
       [PositionState.LOCKED]: 0n,
       [PositionState.LOCKING]: 0n,
       [PositionState.PREUNLOCKING]: 0n,
       [PositionState.UNLOCKED]: 0n,
       [PositionState.UNLOCKING]: 0n,
     },
-    integrityPool: {
+    voting: {
       [PositionState.LOCKED]: 0n,
       [PositionState.LOCKING]: 0n,
       [PositionState.PREUNLOCKING]: 0n,

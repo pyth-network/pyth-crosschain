@@ -11,103 +11,98 @@ import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { PythSolanaReceiver } from "@pythnetwork/pyth-solana-receiver";
 import {
-  Keypair,
   Connection,
+  Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
 } from "@solana/web3.js";
-import {
-  searcherClient,
-  SearcherClient,
-} from "jito-ts/dist/sdk/block-engine/searcher";
+import type { SearcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
+import { searcherClient } from "jito-ts/dist/sdk/block-engine/searcher";
 import type { Logger } from "pino";
 import { pino } from "pino";
 import type { Options } from "yargs";
-
+import { Controller } from "../controller.js";
+import type { IBalanceTracker } from "../interface.js";
+import { PricePusherMetrics } from "../metrics.js";
 import * as options from "../options.js";
 import { readPriceConfigFile } from "../price-config.js";
 import { PythPriceListener } from "../pyth-price-listener.js";
+import { filterInvalidPriceItems } from "../utils.js";
+import { createSolanaBalanceTracker } from "./balance-tracker.js";
 import {
   SolanaPriceListener,
   SolanaPricePusher,
   SolanaPricePusherJito,
 } from "./solana.js";
-import { Controller } from "../controller.js";
-import type { IBalanceTracker } from "../interface.js";
-import { PricePusherMetrics } from "../metrics.js";
-import { filterInvalidPriceItems } from "../utils.js";
-import { createSolanaBalanceTracker } from "./balance-tracker.js";
 
 export default {
-  command: "solana",
-  describe: "run price pusher for solana",
   builder: {
-    endpoint: {
-      description: "Solana RPC API endpoint",
+    "address-lookup-table-account": {
+      description: "The pubkey of the ALT to use when updating price feeds",
+      optional: true,
       type: "string",
-      required: true,
-    } as Options,
-    "keypair-file": {
-      description: "Path to a keypair file",
-      type: "string",
-      required: true,
-    } as Options,
-    "shard-id": {
-      description: "Shard ID",
-      type: "number",
-      required: true,
     } as Options,
     "compute-unit-price-micro-lamports": {
+      default: 50_000,
       description: "Priority fee per compute unit",
       type: "number",
-      default: 50_000,
+    } as Options,
+    "dynamic-jito-tips": {
+      default: false,
+      description: "Use dynamic jito tips",
+      type: "boolean",
+    } as Options,
+    endpoint: {
+      description: "Solana RPC API endpoint",
+      required: true,
+      type: "string",
+    } as Options,
+    "jito-bundle-size": {
+      default: 5,
+      description: "Number of transactions in each Jito bundle",
+      type: "number",
     } as Options,
     "jito-endpoints": {
       description: "Jito endpoint(s) - comma-separated list of endpoints",
-      type: "string",
       optional: true,
+      type: "string",
     } as Options,
     "jito-keypair-file": {
       description:
         "Path to the jito keypair file (need for grpc authentication)",
-      type: "string",
       optional: true,
+      type: "string",
     } as Options,
     "jito-tip-lamports": {
       description: "Lamports to tip the jito builder",
-      type: "number",
       optional: true,
+      type: "number",
     } as Options,
-    "dynamic-jito-tips": {
-      description: "Use dynamic jito tips",
-      type: "boolean",
-      default: false,
+    "keypair-file": {
+      description: "Path to a keypair file",
+      required: true,
+      type: "string",
     } as Options,
     "max-jito-tip-lamports": {
+      default: LAMPORTS_PER_SOL / 100,
       description: "Maximum jito tip lamports",
       type: "number",
-      default: LAMPORTS_PER_SOL / 100,
     } as Options,
-    "jito-bundle-size": {
-      description: "Number of transactions in each Jito bundle",
+    "shard-id": {
+      description: "Shard ID",
+      required: true,
       type: "number",
-      default: 5,
-    } as Options,
-    "updates-per-jito-bundle": {
-      description: "Number of price updates in each Jito bundle",
-      type: "number",
-      default: 6,
-    } as Options,
-    "address-lookup-table-account": {
-      description: "The pubkey of the ALT to use when updating price feeds",
-      type: "string",
-      optional: true,
     } as Options,
     "treasury-id": {
       description:
         "The treasuryId to use. Useful when the corresponding treasury account is indexed in the ALT passed to --address-lookup-table-account. This is a tx size optimization and is optional; if not set, a random treasury account will be used.",
-      type: "number",
       optional: true,
+      type: "number",
+    } as Options,
+    "updates-per-jito-bundle": {
+      default: 6,
+      description: "Number of price updates in each Jito bundle",
+      type: "number",
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -119,6 +114,8 @@ export default {
     ...options.enableMetrics,
     ...options.metricsPort,
   },
+  command: "solana",
+  describe: "run price pusher for solana",
   handler: async function (argv: any) {
     const {
       endpoint,
@@ -158,7 +155,7 @@ export default {
       logger.info(`Metrics server started on port ${metricsPort}`);
     }
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =
@@ -188,20 +185,20 @@ export default {
     const connection = new Connection(endpoint, "processed");
     const pythSolanaReceiver = new PythSolanaReceiver({
       connection,
-      wallet,
       pushOracleProgramId: new PublicKey(pythContractAddress),
       treasuryId: treasuryId,
+      wallet,
     });
 
     // Create and start the balance tracker if metrics are enabled
     if (metrics) {
       const balanceTracker: IBalanceTracker = createSolanaBalanceTracker({
         connection,
-        publicKey: keypair.publicKey,
-        network: "solana",
-        updateInterval: 60,
-        metrics,
         logger,
+        metrics,
+        network: "solana",
+        publicKey: keypair.publicKey,
+        updateInterval: 60,
       });
 
       // Start the balance tracker
@@ -277,8 +274,8 @@ export default {
       solanaPricePusher,
       logger.child({ module: "Controller" }, { level: controllerLogLevel }),
       {
-        pushingFrequency,
         metrics: metrics!,
+        pushingFrequency,
       },
     );
 

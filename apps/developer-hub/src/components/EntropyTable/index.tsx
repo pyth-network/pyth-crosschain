@@ -8,13 +8,12 @@ import type {
 import { Table } from "@pythnetwork/component-library/Table";
 import IEntropyV2 from "@pythnetwork/entropy-sdk-solidity/abis/IEntropyV2.json";
 import { useEffect, useRef, useState } from "react";
-import type { PublicClient, Abi } from "viem";
+import type { Abi, PublicClient } from "viem";
 import { createPublicClient, formatEther, http, isAddress } from "viem";
-
+import CopyAddress from "../CopyAddress";
 import { FORTUNA_API_URLS } from "./constants";
 import type { EntropyDeployment } from "./entropy-api-data-fetcher";
 import { fetchEntropyDeployments } from "./entropy-api-data-fetcher";
-import CopyAddress from "../CopyAddress";
 import styles from "./index.module.scss";
 
 function isValidAddress(address: string): address is `0x${string}` {
@@ -66,7 +65,7 @@ const EntropyTableContent = ({
 }) => {
   const fees = useEntropyFees(chains);
   const columns: ColumnConfig<Col>[] = [
-    { id: "chain", name: "Chain", isRowHeader: true },
+    { id: "chain", isRowHeader: true, name: "Chain" },
     { id: "address", name: "Contract" },
     { id: "delay", name: "Reveal Delay" },
     { id: "gasLimit", name: "Default Gas Limit" },
@@ -76,35 +75,35 @@ const EntropyTableContent = ({
   const rows: RowConfig<Col>[] = Object.entries(chains)
     .sort(([chainNameA], [chainNameB]) => chainNameA.localeCompare(chainNameB))
     .map(([chainName, deployment]) => ({
-      id: chainName,
       data: {
-        chain: chainName,
         address: deployment.explorer ? (
           <CopyAddress
-            maxLength={6}
             address={deployment.address}
+            maxLength={6}
             url={`${deployment.explorer}/address/${deployment.address}`}
           />
         ) : (
-          <CopyAddress maxLength={6} address={deployment.address} />
+          <CopyAddress address={deployment.address} maxLength={6} />
         ),
+        chain: chainName,
         delay: deployment.delay,
-        gasLimit: deployment.gasLimit,
         fee:
           formatEther(fees[chainName] ?? BigInt(deployment.default_fee)) +
           ` ${deployment.nativeCurrency ?? "ETH"}`,
+        gasLimit: deployment.gasLimit,
       },
+      id: chainName,
     }));
 
   return (
     <Table<Col>
       className={styles.table ?? ""}
-      label="Entropy deployments"
       columns={columns}
-      rows={rows}
-      isLoading={false}
-      rounded
       fill
+      isLoading={false}
+      label="Entropy deployments"
+      rounded
+      rows={rows}
       stickyHeader="top"
     />
   );
@@ -118,13 +117,13 @@ enum StateType {
 }
 
 const State = {
-  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
-  Loading: () => ({ type: StateType.Loading as const }),
+  Failed: (error: unknown) => ({ error, type: StateType.Error as const }),
   Loaded: (chains: Awaited<ReturnType<typeof getEntropyDeployments>>) => ({
-    type: StateType.Loaded as const,
     chains,
+    type: StateType.Loaded as const,
   }),
-  Failed: (error: unknown) => ({ type: StateType.Error as const, error }),
+  Loading: () => ({ type: StateType.Loading as const }),
+  NotLoaded: () => ({ type: StateType.NotLoaded as const }),
 };
 
 type State = ReturnType<(typeof State)[keyof typeof State]>;
@@ -148,7 +147,7 @@ function useEntropyFees(
     const cached = clientsRef.current.get(rpc);
     if (cached) return cached;
     const client = createPublicClient({
-      transport: http(rpc, { timeout: 10_000, retryCount: 1 }),
+      transport: http(rpc, { retryCount: 1, timeout: 10_000 }),
     });
     clientsRef.current.set(rpc, client);
     return client;
@@ -173,10 +172,10 @@ function useEntropyFees(
             try {
               const client = getClient(deployment.rpc);
               const fee = await client.readContract({
-                address: deployment.address,
                 abi: IEntropyV2 as unknown as Abi,
-                functionName: "getFeeV2",
+                address: deployment.address,
                 args: [],
+                functionName: "getFeeV2",
               });
               return [chainName, fee] as const;
             } catch {
@@ -200,15 +199,14 @@ function useEntropyFees(
       }
     }
 
-    loadInBatches().catch((error: unknown) => {
-      // eslint-disable-next-line no-console
-      console.error("Failed to load entropy fees:", error);
+    loadInBatches().catch((_error: unknown) => {
+      // Silently ignore errors loading entropy fees
     });
 
     return () => {
       isCancelled = true;
     };
-  }, [chains]);
+  }, [chains, getClient]);
 
   return feesByChain;
 }

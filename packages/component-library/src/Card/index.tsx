@@ -4,10 +4,9 @@ import clsx from "clsx";
 import type { ComponentProps, ElementType, ReactNode } from "react";
 import { use } from "react";
 import { OverlayTriggerStateContext } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import { Button } from "../unstyled/Button/index.jsx";
 import { Link } from "../unstyled/Link/index.jsx";
+import styles from "./index.module.scss";
 
 export const VARIANTS = ["primary", "secondary", "tertiary"] as const;
 
@@ -62,8 +61,6 @@ const cardProps = <T extends ElementType>({
   ...props
 }: Props<T>) => ({
   ...props,
-  "data-variant": variant,
-  className: clsx(styles.card, className),
   children: (
     <>
       <div className={styles.cardHoverBackground} />
@@ -87,4 +84,6 @@ const cardProps = <T extends ElementType>({
       {footer && <div className={styles.footer}>{footer}</div>}
     </>
   ),
+  className: clsx(styles.card, className),
+  "data-variant": variant,
 });

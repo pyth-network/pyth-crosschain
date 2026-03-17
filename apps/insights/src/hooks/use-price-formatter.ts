@@ -14,8 +14,8 @@ export const usePriceFormatter = (
     maximumSignificantDigits: 6,
   });
   const exponentBasedFormatter = useNumberFormatter({
-    minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
   });
 
   const format = useCallback(

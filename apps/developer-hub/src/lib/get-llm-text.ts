@@ -9,7 +9,6 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkMdx from "remark-mdx";
 
-
 const processor = remark()
   .use(remarkMath)
   .use(remarkMdx)

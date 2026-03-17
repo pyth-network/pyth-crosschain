@@ -1,14 +1,15 @@
 require("dotenv").config({ path: ".env" });
-import { utils, Wallet } from "zksync-web3";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { CHAINS } from "@pythnetwork/xc-admin-common";
 import { assert } from "chai";
-import { writeFileSync } from "fs";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Wallet } from "zksync-web3";
 import {
   deployWormholeContract,
   findWormholeContract,
 } from "./zkSyncDeployWormhole";
+
 // import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
@@ -59,8 +60,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   let wormholeReceiverContractAddress = await findWormholeContract(chainName);
   if (!wormholeReceiverContractAddress) {
-    console.log(`Wormhole contract not found for chain ${chainName}`);
-    console.log("Deploying Wormhole contract...");
     wormholeReceiverContractAddress = await deployWormholeContract(
       deployer,
       chainName,
@@ -82,8 +81,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   const pythImplContract = await deployer.deploy(pythImplArtifact);
 
-  console.log(`Deployed Pyth implementation on ${pythImplContract.address}`);
-
   const pythInitData = pythImplContract.interface.encodeFunctionData(
     "initialize",
     [
@@ -98,12 +95,10 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     ],
   );
 
-  const pythProxyContract = await deployer.deploy(pythProxyArtifact, [
+  const _pythProxyContract = await deployer.deploy(pythProxyArtifact, [
     pythImplContract.address,
     pythInitData,
   ]);
-
-  console.log(`Deployed Pyth contract on ${pythProxyContract.address}`);
 
   //   const networkId = hre.network.config.chainId;
   //   const registryPath = `networks/${networkId}.json`;

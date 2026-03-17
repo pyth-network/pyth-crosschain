@@ -4,12 +4,12 @@ import { z } from "zod";
 import { SYMBOLS_API_URL } from "../types";
 
 const priceFeedSchema = z.object({
-  pyth_lazer_id: z.number().int().positive(),
-  name: z.string(),
-  symbol: z.string(),
-  description: z.string(),
   asset_type: z.string(),
+  description: z.string(),
   exponent: z.number(),
+  name: z.string(),
+  pyth_lazer_id: z.number().int().positive(),
+  symbol: z.string(),
 });
 
 const priceFeedsSchema = z.array(priceFeedSchema);
@@ -50,25 +50,25 @@ export function usePriceFeeds(): UsePriceFeedsState {
 
         const feeds: PriceFeedData[] = parsed
           .map((feed) => ({
+            assetType: feed.asset_type,
+            description: feed.description,
             id: feed.pyth_lazer_id,
             name: feed.name,
             symbol: feed.symbol,
-            description: feed.description,
-            assetType: feed.asset_type,
           }))
           .sort((first, second) => first.id - second.id);
 
-        setState({ status: "loaded", feeds });
+        setState({ feeds, status: "loaded" });
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           return;
         }
         setState({
-          status: "error",
           error:
             error instanceof Error
               ? error.message
               : "Failed to load price feeds",
+          status: "error",
         });
       }
     };

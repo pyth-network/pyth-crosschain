@@ -46,12 +46,10 @@ export abstract class WormholeContract extends Storable {
     const currentIndex = await this.getCurrentGuardianSetIndex();
     for (let i = currentIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
       const vaa = MAINNET_UPGRADE_VAAS[i] ?? "";
-      const result = await this.upgradeGuardianSets(
+      const _result = await this.upgradeGuardianSets(
         senderPrivateKey,
         Buffer.from(vaa, "hex"),
       );
-      // eslint-disable-next-line no-console, @typescript-eslint/restrict-template-expressions
-      console.log(`Submitted upgrade VAA ${i} with tx id ${result.id}`);
       // make sure the upgrade is complete before continuing
       while ((await this.getCurrentGuardianSetIndex()) <= i) {
         await new Promise((resolve) => setTimeout(resolve, 5000));

@@ -1,33 +1,33 @@
 import {
-  Gear,
+  BookOpen,
   Gauge,
+  Gear,
+  Lifebuoy,
   SignOut,
   UserCircle,
-  Lifebuoy,
-  BookOpen,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
 import type { ActionMenuItem } from "../ActionsMenu";
-import { LeftNav } from "./LeftNav";
 import { ButtonLink } from "../NavigationButtonLink";
+import { LeftNav } from "./LeftNav";
 
 const actionMenuItems: ActionMenuItem[] = [
   {
-    key: "profile",
     component: "Profile",
     icon: UserCircle,
+    key: "profile",
   },
   {
-    key: "settings",
     component: "Settings",
     icon: Gear,
+    key: "settings",
   },
   {
-    key: "sign-out",
     component: "Sign out",
     icon: SignOut,
+    key: "sign-out",
   },
 ];
 
@@ -36,10 +36,10 @@ const defaultLinks = (
     <ButtonLink beforeIcon={Gauge} href="/dashboard">
       Dashboard
     </ButtonLink>
-    <ButtonLink href="/feeds" beforeIcon={UserCircle}>
+    <ButtonLink beforeIcon={UserCircle} href="/feeds">
       Feeds
     </ButtonLink>
-    <ButtonLink href="/settings" beforeIcon={Gear}>
+    <ButtonLink beforeIcon={Gear} href="/settings">
       Settings
     </ButtonLink>
   </>
@@ -60,11 +60,6 @@ const LeftNavStory: Meta<typeof LeftNav>["render"] = (args) => {
 };
 
 const meta = {
-  title: "V2/LeftNav",
-  component: LeftNav,
-  parameters: {
-    layout: "fullscreen",
-  },
   args: {
     actionMenuItems,
     additionalUserMeta: "Admin",
@@ -103,7 +98,12 @@ const meta = {
     children: { control: false },
     onCollapseChange: { action: "onCollapseChange" },
   },
+  component: LeftNav,
+  parameters: {
+    layout: "fullscreen",
+  },
   render: LeftNavStory,
+  title: "V2/LeftNav",
 } satisfies Meta<typeof LeftNav>;
 
 export default meta;

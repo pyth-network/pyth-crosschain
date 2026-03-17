@@ -13,30 +13,30 @@ import { DefaultStore } from "../src/node/utils/store";
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0 --config <path/to/config.json>")
   .options({
-    "ops-key-path": {
-      type: "string",
-      demandOption: true,
-      desc: "Path to the ops key file",
-    },
     contract: {
-      type: "string",
       demandOption: true,
       desc: "Contract to update the trusted signer on. (e.g mumbai_0xff1a0f4744e8582DF1aE09D5611b887B6a12925C)",
-    },
-    "trusted-signer": {
       type: "string",
-      demandOption: true,
-      desc: "Address of the trusted signer",
     },
     "expires-at": {
-      type: "number",
       demandOption: true,
       desc: "Expiration timestamp for the trusted signer",
+      type: "number",
+    },
+    "ops-key-path": {
+      demandOption: true,
+      desc: "Path to the ops key file",
+      type: "string",
+    },
+    "trusted-signer": {
+      demandOption: true,
+      desc: "Address of the trusted signer",
+      type: "string",
     },
     vault: {
-      type: "string",
       default: "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj",
       desc: "Vault ID",
+      type: "string",
     },
   });
 
@@ -62,20 +62,15 @@ async function main() {
     throw new TypeError(`ID '${argv.contract}' is not an EVM Lazer contract.`);
   }
   const updatePayloads: Buffer[] = [];
-  console.log(`Generating payload for contract ${contract.getId()}`);
   const payload = await contract.generateUpdateTrustedSignerPayload(
     argv["trusted-signer"],
     argv["expires-at"],
   );
   updatePayloads.push(payload);
-
-  console.log("Using vault at for proposal", vault.getId());
   const wallet = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet", wallet.publicKey.toBase58());
   // eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-confusing-void-expression
   await vault.connect(wallet);
-  const proposal = await vault.proposeWormholeMessage(updatePayloads);
-  console.log("Proposal address", proposal.address.toBase58());
+  const _proposal = await vault.proposeWormholeMessage(updatePayloads);
 }
 
 main();

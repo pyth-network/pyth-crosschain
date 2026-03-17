@@ -15,9 +15,10 @@ import { IotaPythClient } from "@pythnetwork/pyth-iota-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 import type { PrivateKey, TxResult } from "../base";
-import { Chain, IotaChain } from "../chains";
-import { WormholeContract } from "./wormhole";
 import { PriceFeedContract } from "../base";
+import type { Chain } from "../chains";
+import { IotaChain } from "../chains";
+import { WormholeContract } from "./wormhole";
 
 type ObjectId = string;
 
@@ -73,8 +74,8 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     return {
       chain: this.chain.getId(),
       stateId: this.stateId,
-      wormholeStateId: this.wormholeStateId,
       type: IotaPriceFeedContract.type,
+      wormholeStateId: this.wormholeStateId,
     };
   }
 
@@ -113,9 +114,9 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     if (priceInfo.fields.price.fields.negative) price = "-" + price;
     return {
       conf: priceInfo.fields.conf,
-      publishTime: priceInfo.fields.timestamp,
       expo,
       price,
+      publishTime: priceInfo.fields.timestamp,
     };
   }
 
@@ -168,8 +169,8 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     );
 
     tx.moveCall({
-      target: `${packageId}::migrate::migrate`,
       arguments: [tx.object(this.stateId), verificationReceipt!],
+      target: `${packageId}::migrate::migrate`,
     });
 
     return this.executeTransaction(tx, keypair);
@@ -226,8 +227,8 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     );
 
     tx.moveCall({
-      target: `${packageId}::governance::execute_governance_instruction`,
       arguments: [tx.object(this.stateId), verificationReceipt!],
+      target: `${packageId}::governance::execute_governance_instruction`,
     });
 
     const result = await this.executeTransaction(tx, keypair);
@@ -249,20 +250,20 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     );
 
     const [upgradeTicket] = tx.moveCall({
-      target: `${packageId}::contract_upgrade::authorize_upgrade`,
       arguments: [tx.object(this.stateId), verificationReceipt!],
+      target: `${packageId}::contract_upgrade::authorize_upgrade`,
     });
 
     const [upgradeReceipt] = tx.upgrade({
-      modules,
       dependencies,
+      modules,
       package: packageId,
       ticket: upgradeTicket!,
     });
 
     tx.moveCall({
-      target: `${packageId}::contract_upgrade::commit_upgrade`,
       arguments: [tx.object(this.stateId), upgradeReceipt!],
+      target: `${packageId}::contract_upgrade::commit_upgrade`,
     });
     const result = await this.executeTransaction(tx, keypair);
     return { id: result.digest, info: result };
@@ -283,17 +284,17 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     const wormholePackageId = await this.getWormholePackageId();
 
     const [verifiedVAA] = tx.moveCall({
-      target: `${wormholePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(this.wormholeStateId),
         tx.pure.arguments([...vaa]),
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
+      target: `${wormholePackageId}::vaa::parse_and_verify`,
     });
 
     const [verificationReceipt] = tx.moveCall({
-      target: `${packageId}::governance::verify_vaa`,
       arguments: [tx.object(this.stateId), verifiedVAA!],
+      target: `${packageId}::governance::verify_vaa`,
     });
     return verificationReceipt;
   }
@@ -312,12 +313,12 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     });
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
     return provider.signAndExecuteTransaction({
-      signer: keypair,
-      transaction: tx,
       options: {
         showEffects: true,
         showEvents: true,
       },
+      signer: keypair,
+      transaction: tx,
     });
   }
 
@@ -331,11 +332,11 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
     const result = await provider.getDynamicFieldObject({
-      parentId: this.stateId,
       name: {
         type: "vector<u8>",
         value: "data_sources",
       },
+      parentId: this.stateId,
     });
     if (!result.data?.content) {
       throw new Error(
@@ -357,10 +358,10 @@ export class IotaPriceFeedContract extends PriceFeedContract {
         };
       }) => {
         return {
-          emitterChain: Number(fields.emitter_chain),
           emitterAddress: Buffer.from(
             fields.emitter_address.fields.value.fields.data,
           ).toString("hex"),
+          emitterChain: Number(fields.emitter_chain),
         };
       },
     );
@@ -375,8 +376,8 @@ export class IotaPriceFeedContract extends PriceFeedContract {
     const emitterAddress =
       governanceFields.emitter_address.fields.value.fields.data;
     return {
-      emitterChain: Number(chainId),
       emitterAddress: Buffer.from(emitterAddress).toString("hex"),
+      emitterChain: Number(chainId),
     };
   }
 
@@ -494,34 +495,34 @@ export class IotaWormholeContract extends WormholeContract {
     const coreObjectId = this.stateId;
     const corePackageId = await this.client.getWormholePackageId();
     const [verifiedVaa] = tx.moveCall({
-      target: `${corePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(coreObjectId),
         tx.pure(uint8ArrayToBCS(new Uint8Array(vaa))),
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
+      target: `${corePackageId}::vaa::parse_and_verify`,
     });
 
     const [decreeTicket] = tx.moveCall({
-      target: `${corePackageId}::update_guardian_set::authorize_governance`,
       arguments: [tx.object(coreObjectId)],
+      target: `${corePackageId}::update_guardian_set::authorize_governance`,
     });
 
     const [decreeReceipt] = tx.moveCall({
-      target: `${corePackageId}::governance_message::verify_vaa`,
       arguments: [tx.object(coreObjectId), verifiedVaa!, decreeTicket!],
+      target: `${corePackageId}::governance_message::verify_vaa`,
       typeArguments: [
         `${corePackageId}::update_guardian_set::GovernanceWitness`,
       ],
     });
 
     tx.moveCall({
-      target: `${corePackageId}::update_guardian_set::update_guardian_set`,
       arguments: [
         tx.object(coreObjectId),
         decreeReceipt!,
         tx.object(IOTA_CLOCK_OBJECT_ID),
       ],
+      target: `${corePackageId}::update_guardian_set::update_guardian_set`,
     });
 
     const keypair = Ed25519Keypair.fromSecretKey(
@@ -557,12 +558,12 @@ export class IotaWormholeContract extends WormholeContract {
     });
     tx.setGasBudget(BigInt(dryRun.input.gasData.budget.toString()) * BigInt(2));
     return provider.signAndExecuteTransaction({
-      signer: keypair,
-      transaction: tx,
       options: {
         showEffects: true,
         showEvents: true,
       },
+      signer: keypair,
+      transaction: tx,
     });
   }
 }

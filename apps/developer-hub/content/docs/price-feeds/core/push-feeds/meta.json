@@ -1,5 +1,5 @@
 {
-  "title": "Push Feeds",
+  "defaultOpen": false,
   "pages": [
     "[HIP-3 as a Service](/price-feeds/hip-3-service)",
     "evm",
@@ -9,5 +9,5 @@
     "movement",
     "sui"
   ],
-  "defaultOpen": false
+  "title": "Push Feeds"
 }

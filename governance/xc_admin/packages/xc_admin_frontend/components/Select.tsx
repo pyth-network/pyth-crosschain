@@ -3,24 +3,24 @@ import {
   Label,
   Listbox,
   ListboxButton,
-  ListboxOptions,
   ListboxOption,
+  ListboxOptions,
   Transition,
-} from '@headlessui/react'
-import type { ComponentProps } from 'react'
-import { Fragment } from 'react'
+} from "@headlessui/react";
+import type { ComponentProps } from "react";
+import { Fragment } from "react";
 
-import Arrow from '../images/icons/down.inline.svg'
+import Arrow from "../images/icons/down.inline.svg";
 
 type OwnProps<T> = {
-  label: string
-  options: readonly T[]
-  value: T
-  onChange: (newValue: T) => void
-}
+  label: string;
+  options: readonly T[];
+  value: T;
+  onChange: (newValue: T) => void;
+};
 
 type Props<T> = Omit<ComponentProps<typeof Listbox>, keyof OwnProps<T>> &
-  OwnProps<T>
+  OwnProps<T>;
 
 export const Select = <T extends string>({
   options,
@@ -34,7 +34,7 @@ export const Select = <T extends string>({
         <>
           <ListboxButton className="inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0">
             <span className="mr-3">{props.value}</span>
-            <Arrow className={open && 'rotate-180'} />
+            <Arrow className={open && "rotate-180"} />
           </ListboxButton>
           <Transition
             as={Fragment}
@@ -48,9 +48,9 @@ export const Select = <T extends string>({
             <ListboxOptions className="absolute right-0 mt-2 w-full origin-top-right z-10">
               {options.map((option) => (
                 <ListboxOption
+                  className="block w-full bg-darkGray py-3 px-6 text-left text-sm hover:bg-darkGray2 cursor-pointer"
                   key={option}
                   value={option}
-                  className="block w-full bg-darkGray py-3 px-6 text-left text-sm hover:bg-darkGray2 cursor-pointer"
                 >
                   {option}
                 </ListboxOption>
@@ -61,4 +61,4 @@ export const Select = <T extends string>({
       )}
     </Listbox>
   </Field>
-)
+);

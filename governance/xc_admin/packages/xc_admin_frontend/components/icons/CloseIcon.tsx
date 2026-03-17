@@ -1,10 +1,10 @@
 const CloseIcon = () => {
   return (
     <svg
-      width={13}
+      fill="none"
       height={13}
       viewBox="0 0 13 13"
-      fill="none"
+      width={13}
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
@@ -12,7 +12,7 @@ const CloseIcon = () => {
         fill="#E6DAFE"
       />
     </svg>
-  )
-}
+  );
+};
 
-export default CloseIcon
+export default CloseIcon;

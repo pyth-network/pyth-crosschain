@@ -5,24 +5,24 @@ import { SearchInput } from "@pythnetwork/component-library/SearchInput";
 import type { Props as SelectProps } from "@pythnetwork/component-library/Select";
 import { Select } from "@pythnetwork/component-library/Select";
 import Image from "next/image";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ComponentProps } from "react";
 import { Suspense, useCallback, useMemo, useTransition } from "react";
 import { useCollator } from "react-aria";
 
 import type { ChainSlug } from "../../entropy-deployments";
+import {
+  CHAIN_LABELS,
+  EntropyDeployments,
+  getChainName,
+  isSpecialChainKey,
+  parseChainSlug,
+} from "../../entropy-deployments";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "../../pages";
 import { Status, StatusParams } from "../../requests";
 import type { ConstrainedOmit } from "../../type-utils";
 import { Status as StatusComponent } from "../Status";
 import { ChainTag } from "./chain-tag";
-import {
-  EntropyDeployments,
-  CHAIN_LABELS,
-  getChainName,
-  isSpecialChainKey,
-  parseChainSlug,
-} from "../../entropy-deployments";
 
 export const SearchBar = (props: ComponentProps<typeof ResolvedSearchBar>) => (
   <Suspense fallback={<SearchInput isPending {...props} />}>
@@ -39,16 +39,16 @@ const ResolvedSearchBar = (
 
 const useSearchBar = () => {
   const search = useSearchParam({
+    defaultValue: "",
     paramName: "search",
     parse: id,
-    defaultValue: "",
     serialize: id,
   });
 
   return {
-    onChange: search.onChange,
     defaultValue: search.value,
     isPending: search.isTransitioning,
+    onChange: search.onChange,
   };
 };
 
@@ -67,25 +67,25 @@ const ResolvedPaginator = (
 
 const usePaginator = () => {
   const pageSize = useSearchParam({
+    defaultValue: DEFAULT_PAGE_SIZE,
     paramName: "pageSize",
     parse: parseInt,
-    defaultValue: DEFAULT_PAGE_SIZE,
     serialize: toString,
   });
   const page = useSearchParam({
+    defaultValue: 1,
     paramName: "page",
     parse: parseInt,
-    defaultValue: 1,
     preservePageOnChange: true,
     serialize: toString,
   });
 
   return {
     currentPage: page.value,
-    onPageChange: page.onChange,
-    isPageTransitioning: page.isTransitioning,
-    onPageSizeChange: pageSize.onChange,
     isPageSizeTransitioning: pageSize.isTransitioning,
+    isPageTransitioning: page.isTransitioning,
+    onPageChange: page.onChange,
+    onPageSizeChange: pageSize.onChange,
     pageSize: pageSize.value,
     pageSizeOptions: PAGE_SIZES as unknown as number[],
   };
@@ -108,16 +108,21 @@ const ResolvedStatusSelect = (
 
 const useStatusSelect = () => {
   const status = useSearchParam({
+    defaultValue: "all",
     paramName: "status",
     parse: parseStatus,
-    defaultValue: "all",
     serialize: serializeStatus,
   });
 
   return {
-    selectedKey: status.value,
-    onSelectionChange: status.onChange,
+    buttonLabel:
+      status.value === "all" ? (
+        "Status"
+      ) : (
+        <StatusComponent size="xs" status={status.value} />
+      ),
     isPending: status.isTransitioning,
+    onSelectionChange: status.onChange,
     optionGroups: useMemo(
       () => [
         {
@@ -136,6 +141,7 @@ const useStatusSelect = () => {
       ],
       [],
     ),
+    selectedKey: status.value,
     show: useCallback(
       (status: { id: Status | "all" }) =>
         status.id === "all" ? (
@@ -145,12 +151,6 @@ const useStatusSelect = () => {
         ),
       [],
     ),
-    buttonLabel:
-      status.value === "all" ? (
-        "Status"
-      ) : (
-        <StatusComponent size="xs" status={status.value} />
-      ),
   };
 };
 
@@ -194,18 +194,17 @@ const ResolvedChainSelect = (
 
 const useChainSelect = () => {
   const chain = useSearchParam<ChainSlug>({
+    defaultValue: "all-mainnet",
     paramName: "chain",
     parse: parseChainSlug,
-    defaultValue: "all-mainnet",
     serialize: toString,
   });
   const collator = useCollator();
 
   return {
-    selectedKey: chain.value,
-    onSelectionChange: chain.onChange,
-    isPending: chain.isTransitioning,
     buttonLabel: getChainName(chain.value),
+    isPending: chain.isTransitioning,
+    onSelectionChange: chain.onChange,
     optionGroups: useMemo(
       () => [
         {
@@ -225,6 +224,7 @@ const useChainSelect = () => {
       ],
       [collator],
     ),
+    selectedKey: chain.value,
     show: useCallback(
       (chain: { id: ChainSlug }) =>
         isSpecialChainKey(chain.id) ? (
@@ -242,9 +242,9 @@ const useChainSelect = () => {
       icon: (
         <Image
           alt=""
+          height={20}
           src={EntropyDeployments[chain.value].icon}
           width={20}
-          height={20}
         />
       ),
     }),
@@ -266,8 +266,10 @@ const entropyDeploymentsByNetwork = (
     .toSorted((a, b) => collator.compare(a.name, b.name));
 
 const id = <T,>(value: T) => value;
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Helper function intentionally shadows global parseInt for consistency
 const parseInt = (value: string) => Number.parseInt(value, 10);
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Helper function intentionally shadows global toString for consistency
 const toString = <T extends { toString: () => string }>(value: T) =>
   value.toString();
 
@@ -295,7 +297,6 @@ const useSearchParam = <T,>({
   }, [searchParams, paramName, parse, defaultValue]);
 
   return {
-    value,
     isTransitioning,
     onChange: useCallback(
       (newValue: T) => {
@@ -319,12 +320,12 @@ const useSearchParam = <T,>({
         pathname,
         router,
         value,
-        startTransition,
         defaultValue,
         paramName,
         preservePageOnChange,
         serialize,
       ],
     ),
+    value,
   };
 };

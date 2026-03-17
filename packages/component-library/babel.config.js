@@ -1,6 +1,6 @@
 const config = {
-  presets: ["@babel/preset-typescript"],
   plugins: ["babel-plugin-react-compiler"],
+  presets: ["@babel/preset-typescript"],
 };
 
 export default config;

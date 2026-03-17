@@ -17,8 +17,8 @@ export const { classes } = createStyles("v2-input", (theme) => {
       [`&[data-inputsize="${size}"] $input`]: {
         borderRadius: theme.tokens.borderRadius.lg,
         fontSize: styles.fontSize,
-        padding: styles.padding,
         height: styles.height,
+        padding: styles.padding,
       },
     };
   }
@@ -28,24 +28,16 @@ export const { classes } = createStyles("v2-input", (theme) => {
      * class name applied to the input, itself
      */
     input: {
-      border: `1px solid ${theme.resolveThemeColor(theme.colors.forms.input.border)}`,
-      borderRadius: theme.tokens.borderRadius.lg,
-      // need to be explicit with the font family
-      fontFamily: theme.tokens.fontFamilies.normal,
-      padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
-      transition:
-        "background-color .2s ease, box-shadow .2s ease, color .2s ease",
-
       "&::placeholder": {
         color: theme.resolveThemeColor(theme.colors.forms.input.placeholder),
       },
 
-      "&:focus": {
-        boxShadow: `0 0 0 3px ${theme.resolveThemeColor(theme.colors.focus)}`,
-        outline: "none",
-      },
-
       "&:disabled": {
+        "&::placeholder": {
+          color: theme.resolveThemeColor(
+            theme.colors.forms.input.disabled.placeholder,
+          ),
+        },
         backgroundColor: theme.resolveThemeColor(
           theme.colors.forms.input.disabled.background,
         ),
@@ -53,13 +45,19 @@ export const { classes } = createStyles("v2-input", (theme) => {
           theme.colors.forms.input.disabled.foreground,
         ),
         cursor: "not-allowed",
-
-        "&::placeholder": {
-          color: theme.resolveThemeColor(
-            theme.colors.forms.input.disabled.placeholder,
-          ),
-        },
       },
+
+      "&:focus": {
+        boxShadow: `0 0 0 3px ${theme.resolveThemeColor(theme.colors.focus)}`,
+        outline: "none",
+      },
+      border: `1px solid ${theme.resolveThemeColor(theme.colors.forms.input.border)}`,
+      borderRadius: theme.tokens.borderRadius.lg,
+      // need to be explicit with the font family
+      fontFamily: theme.tokens.fontFamilies.normal,
+      padding: `${theme.spacing(1)} ${theme.spacing(3)}`,
+      transition:
+        "background-color .2s ease, box-shadow .2s ease, color .2s ease",
     },
     /**
      * class name applied to the optional label that appears above

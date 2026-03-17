@@ -1,11 +1,10 @@
 "use client";
 
 import clsx from "clsx";
-import type { ReactNode, ElementType } from "react";
-
-import styles from "./index.module.scss";
+import type { ElementType, ReactNode } from "react";
 import type { Props as CardProps } from "../Card/index.jsx";
 import { Card } from "../Card/index.jsx";
+import styles from "./index.module.scss";
 
 type OwnPropsSingle = {
   header: ReactNode;
@@ -67,8 +66,8 @@ export const StatCard = <T extends ElementType>({
               )}
               <h2 className={styles.header}>{props.header}</h2>
               <div
-                data-small={props.small ? "" : undefined}
                 className={styles.stats}
+                data-small={props.small ? "" : undefined}
               >
                 <div className={styles.mainStat}>{props.stat}</div>
                 {props.miniStat && (

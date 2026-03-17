@@ -33,15 +33,15 @@ const formatTimeDifference = (
 ): { value: number; unit: string } => {
   if (seconds >= 3600) {
     const hours = Math.floor(seconds / 3600);
-    return { value: hours, unit: hours === 1 ? "hour" : "hours" };
+    return { unit: hours === 1 ? "hour" : "hours", value: hours };
   }
 
   if (seconds >= 60) {
     const minutes = Math.floor(seconds / 60);
-    return { value: minutes, unit: minutes === 1 ? "minute" : "minutes" };
+    return { unit: minutes === 1 ? "minute" : "minutes", value: minutes };
   }
 
-  return { value: seconds, unit: seconds === 1 ? "second" : "seconds" };
+  return { unit: seconds === 1 ? "second" : "seconds", value: seconds };
 };
 
 const formatUpdateParams = (feed: SponsoredFeed): string => {
@@ -102,29 +102,29 @@ export const SponsoredFeedsTable = ({
   const columns = useMemo(
     () => [
       {
-        id: "name",
-        name: "Name",
-        isRowHeader: true,
         alignment: "left" as const,
+        id: "name",
+        isRowHeader: true,
+        name: "Name",
       },
       ...(hasAccountAddress
         ? [
             {
+              alignment: "left" as const,
               id: "accountAddress",
               name: "Account Address",
-              alignment: "left" as const,
             },
           ]
         : []),
       {
+        alignment: "left" as const,
         id: "priceFeedId",
         name: "Price Feed Id",
-        alignment: "left" as const,
       },
       {
+        alignment: "left" as const,
         id: "updateParameters",
         name: "Update Parameters",
-        alignment: "left" as const,
       },
     ],
     [hasAccountAddress],
@@ -142,12 +142,12 @@ export const SponsoredFeedsTable = ({
           updateParameters: ReactNode;
           accountAddress: ReactNode | undefined;
         } = {
+          accountAddress: undefined,
           name: <span className={styles.nameLabel}>{feed.alias}</span>,
           priceFeedId: (
             <CopyButton text={feed.id}>{truncateHex(feed.id)}</CopyButton>
           ),
           updateParameters: <UpdateParams feed={feed} isDefault={isDefault} />,
-          accountAddress: undefined,
         };
 
         if (hasAccountAddress) {
@@ -159,8 +159,8 @@ export const SponsoredFeedsTable = ({
         }
 
         return {
-          id: feed.id,
           data: rowData,
+          id: feed.id,
         };
       }),
     [feeds, defaultParams, hasAccountAddress],
@@ -198,7 +198,7 @@ export const SponsoredFeedsTable = ({
           {paramEntries
             .filter(([params]) => params !== defaultParams)
             .map(([params, count]) => (
-              <div key={params} className={styles.summaryItem}>
+              <div className={styles.summaryItem} key={params}>
                 <span
                   className={clsx(styles.statusDot, styles.statusDotException)}
                 />
@@ -210,12 +210,12 @@ export const SponsoredFeedsTable = ({
         </div>
 
         <Table
-          label="Sponsored Feeds"
-          fill
+          className={clsx("not-prose", styles.table)}
           columns={columns}
+          fill
+          label="Sponsored Feeds"
           rows={rows}
           stickyHeader="top"
-          className={clsx("not-prose", styles.table)}
         />
       </div>
     </div>

@@ -4,18 +4,36 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Card as CardComponent, VARIANTS } from "./index.jsx";
 
 const meta = {
-  component: CardComponent,
-  globals: {
-    background: "primary",
-  },
-  parameters: {
-    layout: "padded",
-  },
   argTypes: {
+    children: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
+    footer: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
     href: {
       control: "text",
       table: {
         category: "Link",
+      },
+    },
+    icon: {
+      control: "select",
+      mapping: Object.fromEntries(
+        Object.entries(Icon).map(([key, Icon]) => [
+          key,
+          <Icon key={key} weights={new Map()} />,
+        ]),
+      ),
+      options: Object.keys(Icon),
+      table: {
+        category: "Contents",
       },
     },
     target: {
@@ -24,7 +42,13 @@ const meta = {
         category: "Link",
       },
     },
-    children: {
+    title: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
+    toolbar: {
       control: "text",
       table: {
         category: "Contents",
@@ -37,37 +61,13 @@ const meta = {
         category: "Variant",
       },
     },
-    title: {
-      control: "text",
-      table: {
-        category: "Contents",
-      },
-    },
-    icon: {
-      control: "select",
-      options: Object.keys(Icon),
-      mapping: Object.fromEntries(
-        Object.entries(Icon).map(([key, Icon]) => [
-          key,
-          <Icon weights={new Map()} key={key} />,
-        ]),
-      ),
-      table: {
-        category: "Contents",
-      },
-    },
-    toolbar: {
-      control: "text",
-      table: {
-        category: "Contents",
-      },
-    },
-    footer: {
-      control: "text",
-      table: {
-        category: "Contents",
-      },
-    },
+  },
+  component: CardComponent,
+  globals: {
+    background: "primary",
+  },
+  parameters: {
+    layout: "padded",
   },
 } satisfies Meta<typeof CardComponent>;
 export default meta;
@@ -75,9 +75,9 @@ export default meta;
 export const Card = {
   args: {
     children: "This is a card!",
-    variant: "secondary",
+    footer: "",
     title: "",
     toolbar: "",
-    footer: "",
+    variant: "secondary",
   },
 } satisfies StoryObj<typeof CardComponent>;

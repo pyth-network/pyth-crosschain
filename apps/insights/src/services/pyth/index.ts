@@ -1,11 +1,12 @@
+// biome-ignore-all lint/suspicious/useAwait: Async functions return promises for API consistency
 import type { PriceData } from "@pythnetwork/client";
 import {
-  PythHttpClient,
   getPythProgramKeyForCluster,
+  PythHttpClient,
   parsePriceData,
 } from "@pythnetwork/client";
-import type { AccountInfo } from "@solana/web3.js";
-import { Connection, PublicKey } from "@solana/web3.js";
+import type { AccountInfo, PublicKey } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 
 import { PYTHNET_RPC, PYTHTEST_CONFORMANCE_RPC } from "../../config/isomorphic";
 

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNestedTernary: Nested ternary is intentional for direction calculation
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Logger } from "pino";
 import { z } from "zod";
@@ -10,9 +11,9 @@ import { addDisplayPrices } from "../utils/display-price.js";
 import { ErrorMessages, toolError } from "../utils/errors.js";
 import { logToolCall } from "../utils/logger.js";
 import {
+  alignTimestampToChannel,
   DATA_AVAILABLE_FROM_ISO,
   DATA_AVAILABLE_FROM_UNIX,
-  alignTimestampToChannel,
   getServerTime,
   normalizeTimestampToMicroseconds,
   unixSecondsToISO,

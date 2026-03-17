@@ -65,14 +65,14 @@ export function parsePriceFeedMessage(message: Buffer): PriceFeedMessage {
   const emaConf = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
   return {
-    feedId,
-    price,
     confidence,
-    exponent,
-    publishTime,
-    prevPublishTime,
-    emaPrice,
     emaConf,
+    emaPrice,
+    exponent,
+    feedId,
+    prevPublishTime,
+    price,
+    publishTime,
   };
 }
 
@@ -100,14 +100,14 @@ export function parseTwapMessage(message: Buffer): TwapMessage {
   const publishSlot = new BN(message.subarray(cursor, cursor + 8), "be");
   cursor += 8;
   return {
-    feedId,
-    cumulativePrice,
     cumulativeConf,
-    numDownSlots,
+    cumulativePrice,
     exponent,
-    publishTime,
+    feedId,
+    numDownSlots,
     prevPublishTime,
     publishSlot,
+    publishTime,
   };
 }
 
@@ -209,5 +209,5 @@ export function parseAccumulatorUpdateData(
     throw new Error("Didn't reach the end of the message");
   }
 
-  return { vaa, updates };
+  return { updates, vaa };
 }

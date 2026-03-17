@@ -1,46 +1,46 @@
 import type { PythCluster } from "@pythnetwork/client";
 import {
-  BpfUpgradableLoaderInstruction,
-  MultisigInstructionProgram,
-  MultisigParser,
-  UNRECOGNIZED_INSTRUCTION,
-} from "../multisig_transaction";
-import {
   PublicKey,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from "@solana/web3.js";
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
+import {
+  BpfUpgradableLoaderInstruction,
+  MultisigInstructionProgram,
+  MultisigParser,
+  UNRECOGNIZED_INSTRUCTION,
+} from "../multisig_transaction";
 
 test("Bpf Upgradable Loader multisig instruction parse", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
 
   const parser = MultisigParser.fromCluster(cluster);
 
   const upgradeInstruction = new TransactionInstruction({
-    programId: BPF_UPGRADABLE_LOADER,
     data: Buffer.from([3, 0, 0, 0]),
     keys: [
-      { pubkey: new PublicKey(0), isSigner: false, isWritable: true },
-      { pubkey: new PublicKey(1), isSigner: false, isWritable: true },
-      { pubkey: new PublicKey(2), isSigner: false, isWritable: true },
-      { pubkey: new PublicKey(3), isSigner: false, isWritable: true },
-      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-      { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
+      { isSigner: false, isWritable: true, pubkey: new PublicKey(0) },
+      { isSigner: false, isWritable: true, pubkey: new PublicKey(1) },
+      { isSigner: false, isWritable: true, pubkey: new PublicKey(2) },
+      { isSigner: false, isWritable: true, pubkey: new PublicKey(3) },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY },
+      { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
       {
-        pubkey: new PublicKey(4),
         isSigner: true,
         isWritable: false,
+        pubkey: new PublicKey(4),
       },
       {
-        pubkey: new PublicKey(5),
         isSigner: true,
         isWritable: false,
+        pubkey: new PublicKey(5),
       },
     ],
+    programId: BPF_UPGRADABLE_LOADER,
   });
 
   const parsedInstruction = parser.parseInstruction(upgradeInstruction);
@@ -50,35 +50,35 @@ test("Bpf Upgradable Loader multisig instruction parse", (done) => {
     );
     expect(parsedInstruction.name).toBe("Upgrade");
     expect(
-      parsedInstruction.accounts.named.programData!.pubkey.equals(
+      parsedInstruction.accounts.named.programData?.pubkey.equals(
         new PublicKey(0),
       ),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.program!.pubkey.equals(new PublicKey(1)),
+      parsedInstruction.accounts.named.program?.pubkey.equals(new PublicKey(1)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.buffer!.pubkey.equals(new PublicKey(2)),
+      parsedInstruction.accounts.named.buffer?.pubkey.equals(new PublicKey(2)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.spill!.pubkey.equals(new PublicKey(3)),
+      parsedInstruction.accounts.named.spill?.pubkey.equals(new PublicKey(3)),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.rent!.pubkey.equals(SYSVAR_RENT_PUBKEY),
+      parsedInstruction.accounts.named.rent?.pubkey.equals(SYSVAR_RENT_PUBKEY),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.clock!.pubkey.equals(
+      parsedInstruction.accounts.named.clock?.pubkey.equals(
         SYSVAR_CLOCK_PUBKEY,
       ),
     ).toBeTruthy();
     expect(
-      parsedInstruction.accounts.named.upgradeAuthority!.pubkey.equals(
+      parsedInstruction.accounts.named.upgradeAuthority?.pubkey.equals(
         new PublicKey(4),
       ),
     ).toBeTruthy();
     expect(parsedInstruction.accounts.remaining.length).toBe(1);
     expect(
-      parsedInstruction.accounts.remaining[0]!.pubkey.equals(new PublicKey(5)),
+      parsedInstruction.accounts.remaining[0]?.pubkey.equals(new PublicKey(5)),
     ).toBeTruthy();
     expect(parsedInstruction.args).toEqual({});
   } else {
@@ -86,9 +86,9 @@ test("Bpf Upgradable Loader multisig instruction parse", (done) => {
   }
 
   const badInstruction = new TransactionInstruction({
+    data: Buffer.from([9]),
     keys: [],
     programId: new PublicKey(BPF_UPGRADABLE_LOADER),
-    data: Buffer.from([9]),
   });
 
   const parsedBadInstruction = parser.parseInstruction(badInstruction);

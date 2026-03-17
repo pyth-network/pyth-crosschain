@@ -1,24 +1,15 @@
 {
   "address": "tstPARXbQ5yxVkRU2UcZRbYphzbUEW6t5ihzpLaafgz",
-  "metadata": {
-    "name": "wallet_tester",
-    "version": "1.0.0",
-    "spec": "0.1.0",
-    "description": "Created with Anchor"
-  },
   "instructions": [
     {
-      "name": "test",
-      "discriminator": [163, 36, 134, 53, 232, 223, 146, 222],
       "accounts": [
         {
           "name": "payer",
-          "writable": true,
-          "signer": true
+          "signer": true,
+          "writable": true
         },
         {
           "name": "test_receipt",
-          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -26,14 +17,23 @@
                 "path": "payer"
               }
             ]
-          }
+          },
+          "writable": true
         },
         {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
         }
       ],
-      "args": []
+      "args": [],
+      "discriminator": [163, 36, 134, 53, 232, 223, 146, 222],
+      "name": "test"
     }
-  ]
+  ],
+  "metadata": {
+    "description": "Created with Anchor",
+    "name": "wallet_tester",
+    "spec": "0.1.0",
+    "version": "1.0.0"
+  }
 }

@@ -1,13 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import type { Contract, Sender } from "@ton/core";
-import {
-  Address,
-  beginCell,
-  Cell,
-  Dictionary,
-  SendMode,
-  toNano,
-} from "@ton/core";
+import type { Address, Cell, Contract, Sender } from "@ton/core";
+import { beginCell, Dictionary, SendMode, toNano } from "@ton/core";
 import type { ContractProvider } from "@ton/ton";
 
 export const PYTH_CONTRACT_ADDRESS_MAINNET =
@@ -52,9 +45,9 @@ export class PythContract implements Contract {
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: toNano("0.1"),
     });
   }
 
@@ -70,9 +63,9 @@ export class PythContract implements Contract {
       .endCell();
 
     await provider.internal(via, {
-      value: updateFee,
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: updateFee,
     });
   }
 
@@ -87,9 +80,9 @@ export class PythContract implements Contract {
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: toNano("0.1"),
     });
   }
 
@@ -104,9 +97,9 @@ export class PythContract implements Contract {
       .endCell();
 
     await provider.internal(via, {
-      value: toNano("0.1"),
-      sendMode: SendMode.PAY_GAS_SEPARATELY,
       body: messageBody,
+      sendMode: SendMode.PAY_GAS_SEPARATELY,
+      value: toNano("0.1"),
     });
   }
 
@@ -121,9 +114,9 @@ export class PythContract implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -144,9 +137,9 @@ export class PythContract implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -162,9 +155,9 @@ export class PythContract implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
@@ -185,16 +178,16 @@ export class PythContract implements Contract {
     const publishTime = result.stack.readNumber();
 
     return {
-      price,
       conf,
       expo,
+      price,
       publishTime,
     };
   }
 
   async getUpdateFee(provider: ContractProvider, vm: Buffer) {
     const result = await provider.get("get_update_fee", [
-      { type: "slice", cell: createCellChain(vm) },
+      { cell: createCellChain(vm), type: "slice" },
     ]);
 
     return result.stack.readNumber();
@@ -242,8 +235,8 @@ export class PythContract implements Contract {
 
     return {
       expirationTime,
-      keys,
       keyCount,
+      keys,
     };
   }
 }
@@ -312,7 +305,7 @@ export function parseDataSource(cell: Cell): DataSource | null | undefined {
   }
   const emitterChain = slice.loadUint(16);
   const emitterAddress = slice.loadUintBig(256).toString(16).padStart(64, "0");
-  return { emitterChain, emitterAddress };
+  return { emitterAddress, emitterChain };
 }
 
 export function parseGuardianSetKeys(cell: Cell): string[] {

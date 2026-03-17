@@ -4,9 +4,8 @@ import { Input as BaseInput } from "@base-ui/react/input";
 import type { Nullish } from "@pythnetwork/shared-lib/types";
 import cx from "clsx";
 import type { ReactNode } from "react";
-
-import { classes } from "./Input.styles";
 import type { InputSize } from "../../theme/theme";
+import { classes } from "./Input.styles";
 
 export type InputProps = Omit<BaseInputProps, "size"> & {
   label?: Nullish<ReactNode>;

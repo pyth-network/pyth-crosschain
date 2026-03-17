@@ -3,17 +3,15 @@
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-import type { PopoverProps, Button as BaseButton } from "react-aria-components";
+import type { Button as BaseButton, PopoverProps } from "react-aria-components";
 import {
-  Label,
   Select as BaseSelect,
-  Popover,
-  Header,
   Collection,
+  Header,
+  Label,
+  Popover,
   SelectValue,
 } from "react-aria-components";
-
-import styles from "./index.module.scss";
 import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import { DropdownCaretDown } from "../DropdownCaretDown/index.jsx";
@@ -23,6 +21,7 @@ import {
   ListBoxItem,
   ListBoxSection,
 } from "../unstyled/ListBox/index.jsx";
+import styles from "./index.module.scss";
 
 export type Props<T extends { id: string | number }> = Omit<
   ComponentProps<typeof BaseSelect>,
@@ -99,24 +98,24 @@ export const Select = <T extends { id: string | number }>({
   >
     <Label className={styles.label}>{label}</Label>
     <Button
-      className={styles.trigger ?? ""}
       afterIcon={
         isPending ? (
           <Spinner
-            label="Loading..."
-            isIndeterminate
             className={styles.spinner ?? ""}
+            isIndeterminate
+            label="Loading..."
           />
         ) : (
           <DropdownCaretDown className={styles.caret} />
         )
       }
-      variant={variant}
-      size={size}
-      rounded={rounded}
-      hideText={hideText}
       beforeIcon={icon}
+      className={styles.trigger ?? ""}
+      hideText={hideText}
       isPending={isPending === true}
+      rounded={rounded}
+      size={size}
+      variant={variant}
     >
       <ButtonLabel
         buttonLabel={buttonLabel}
@@ -127,8 +126,8 @@ export const Select = <T extends { id: string | number }>({
     <Popover
       {...(placement && { placement })}
       {...("optionGroups" in props && {
-        "data-grouped": "",
         "data-group-label-hidden": props.hideGroupLabel ? "" : undefined,
+        "data-grouped": "",
       })}
       className={styles.popover ?? ""}
     >
@@ -145,8 +144,8 @@ export const Select = <T extends { id: string | number }>({
         <ListBox className={styles.listbox ?? ""} items={props.optionGroups}>
           {({ name, options, hideLabel }) => (
             <ListBoxSection
-              data-label-hidden={hideLabel ? "" : undefined}
               className={styles.section ?? ""}
+              data-label-hidden={hideLabel ? "" : undefined}
               id={name}
             >
               <Header className={styles.groupLabel ?? ""}>{name}</Header>
@@ -177,12 +176,12 @@ const Item = <T extends { id: string | number }>({
   textValue,
 }: ItemProps<T>) => (
   <ListBoxItem
-    id={typeof children === "object" ? children.id : children}
     className={styles.listboxItem ?? ""}
+    id={typeof children === "object" ? children.id : children}
     textValue={getTextValue({ children, show, textValue })}
   >
     <span>{show?.(children) ?? children.id}</span>
-    <Check weight="bold" className={styles.check} />
+    <Check className={styles.check} weight="bold" />
   </ListBoxItem>
 );
 

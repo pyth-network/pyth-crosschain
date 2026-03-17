@@ -19,9 +19,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch testnet contract fees instead of mainnet",
+      type: "boolean",
     },
   });
 
@@ -38,7 +38,7 @@ async function main() {
     }
   }
 
-  let totalFeeUsd = 0;
+  let _totalFeeUsd = 0;
   for (const contract of Object.values(DefaultStore.contracts)) {
     if (contract.getChain().isMainnet() === argv.testnet) continue;
     if (
@@ -52,22 +52,12 @@ async function main() {
         let feeUsd = 0;
         if (fee.denom !== undefined && prices[fee.denom] !== undefined) {
           feeUsd = Number(fee.amount) * (prices[fee.denom] ?? 0);
-          totalFeeUsd += feeUsd;
-          console.log(
-            `${contract.getId()} ${fee.amount} ${fee.denom} ($${feeUsd})`,
-          );
+          _totalFeeUsd += feeUsd;
         } else {
-          console.log(
-            `${contract.getId()} ${fee.amount} ${fee.denom} ($ value unknown)`,
-          );
         }
-      } catch (error) {
-        console.error(`Error fetching fees for ${contract.getId()}`, error);
-      }
+      } catch (_error) {}
     }
   }
-
-  console.log(`Total fees in USD: $${totalFeeUsd}`);
 }
 
 main();

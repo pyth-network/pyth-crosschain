@@ -51,9 +51,6 @@ type MetaFile = {
 };
 
 export async function generateDocs(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log("Starting API reference documentation generation...\n");
-
   await generateMdxFilesFromOpenApi();
 
   await generateMetaFiles();
@@ -63,9 +60,6 @@ export async function generateDocs(): Promise<void> {
   await updateMdxTitles();
 
   await updateIndexCards();
-
-  // eslint-disable-next-line no-console
-  console.log("\nDocumentation generation complete!");
 }
 
 // ============================================================================
@@ -87,13 +81,7 @@ export async function generateDocs(): Promise<void> {
  * - Creates an index.mdx file listing all endpoints
  */
 async function generateMdxFilesFromOpenApi(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log("Generating MDX files from OpenAPI specifications...");
-
   for (const [serviceName, config] of Object.entries(products)) {
-    // eslint-disable-next-line no-console
-    console.log(`\n  Processing service: ${serviceName}`);
-
     generatedEndpoints[serviceName] = [];
 
     const serviceOpenapi = createOpenAPI({
@@ -102,9 +90,27 @@ async function generateMdxFilesFromOpenApi(): Promise<void> {
 
     // Generate MDX files using fumadocs-openapi
     await generateFiles({
+      frontmatter: (context) => {
+        const ctx = context as { type?: string; path?: string };
+        if (ctx.type === "operation" && ctx.path) {
+          return {
+            title: ctx.path,
+          };
+        }
+        return {};
+      },
+      index: {
+        items: [
+          {
+            path: `${config.product}/${serviceName}/index.mdx`,
+          },
+        ],
+        url: {
+          baseUrl: "/api-reference/",
+          contentDir: "./content/docs/api-reference",
+        },
+      },
       input: serviceOpenapi,
-      output: OUTPUT_DIR,
-      per: "operation", // One file per API operation
       name: (output, document) => {
         // Generate file name based on operation type
         if (output.type === "operation") {
@@ -118,26 +124,8 @@ async function generateMdxFilesFromOpenApi(): Promise<void> {
 
         return `${config.product}/${serviceName}/webhooks/${output.item.name}`;
       },
-      frontmatter: (context) => {
-        const ctx = context as { type?: string; path?: string };
-        if (ctx.type === "operation" && ctx.path) {
-          return {
-            title: ctx.path,
-          };
-        }
-        return {};
-      },
-      index: {
-        url: {
-          baseUrl: "/api-reference/",
-          contentDir: "./content/docs/api-reference",
-        },
-        items: [
-          {
-            path: `${config.product}/${serviceName}/index.mdx`,
-          },
-        ],
-      },
+      output: OUTPUT_DIR,
+      per: "operation", // One file per API operation
     });
   }
 }
@@ -162,9 +150,6 @@ function generateOperationFileName(
   // Track this endpoint for meta file generation
   generatedEndpoints[serviceName]?.push(operationId);
 
-  // eslint-disable-next-line no-console
-  console.log(`    ✓ ${operationId}`);
-
   // Return file path: product/service/operationId
   return `${productName}/${serviceName}/${operationId}`;
 }
@@ -180,9 +165,6 @@ function generateOperationFileName(
  * These meta.json files are used by Fumadocs to build the navigation sidebar.
  */
 async function generateMetaFiles(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log("\nGenerating meta.json navigation files...");
-
   const productGroups = groupServicesByProduct();
 
   await generateRootMetaFile(productGroups);
@@ -205,15 +187,13 @@ async function generateRootMetaFile(
   productGroups: Record<string, string[]>,
 ): Promise<void> {
   const rootMeta: MetaFile = {
-    root: true,
-    title: "API Reference",
     icon: "Code",
     pages: Object.keys(productGroups),
+    root: true,
+    title: "API Reference",
   };
 
   await writeJson(path.join(OUTPUT_DIR, "meta.json"), rootMeta);
-  // eslint-disable-next-line no-console
-  console.log("  ✓ api-reference/meta.json");
 }
 
 async function generateProductAndServiceMetaFiles(
@@ -221,28 +201,24 @@ async function generateProductAndServiceMetaFiles(
 ): Promise<void> {
   for (const [productName, services] of Object.entries(productGroups)) {
     const productMeta: MetaFile = {
-      title: formatProductTitle(productName),
       pages: services,
+      title: formatProductTitle(productName),
     };
 
     const productDir = path.join(OUTPUT_DIR, productName);
     await fs.mkdir(productDir, { recursive: true });
     await writeJson(path.join(productDir, "meta.json"), productMeta);
-    // eslint-disable-next-line no-console
-    console.log(`  ✓ ${productName}/meta.json`);
 
     // Generate service-level meta.json files
     for (const serviceName of services) {
       const endpoints = generatedEndpoints[serviceName] ?? [];
       const serviceMeta: MetaFile = {
-        title: formatServiceTitle(serviceName),
         pages: ["index", ...endpoints],
+        title: formatServiceTitle(serviceName),
       };
 
       const serviceDir = path.join(productDir, serviceName);
       await writeJson(path.join(serviceDir, "meta.json"), serviceMeta);
-      // eslint-disable-next-line no-console
-      console.log(`  ✓ ${productName}/${serviceName}/meta.json`);
     }
   }
 }
@@ -270,9 +246,6 @@ const serviceDescriptions: Record<string, string> = {
 };
 
 async function generateApiReferenceIndex(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log("\nGenerating API Reference index page...");
-
   const productGroups = groupServicesByProduct();
 
   // Map service names to their configurations and metadata
@@ -287,18 +260,18 @@ async function generateApiReferenceIndex(): Promise<void> {
     }
   > = {
     fortuna: {
-      name: "fortuna",
-      product: "entropy",
-      icon: "DiceSix",
       colorScheme: "green",
       description: "Random number generation API with callback support",
+      icon: "DiceSix",
+      name: "fortuna",
+      product: "entropy",
     },
     hermes: {
-      name: "hermes",
-      product: "pyth-core",
-      icon: "Database",
       colorScheme: "blue",
       description: "REST API for accessing price feeds and updates",
+      icon: "Database",
+      name: "hermes",
+      product: "pyth-core",
     },
   };
 
@@ -353,14 +326,9 @@ ${productSections.join("\n")}
 
   const indexPath = path.join(OUTPUT_DIR, "index.mdx");
   await fs.writeFile(indexPath, indexContent);
-  // eslint-disable-next-line no-console
-  console.log("  ✓ api-reference/index.mdx");
 }
 
 async function updateMdxTitles(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log("\nUpdating MDX file titles to use endpoint paths...");
-
   for (const [serviceName, config] of Object.entries(products)) {
     const serviceDir = path.join(OUTPUT_DIR, config.product, serviceName);
 
@@ -396,8 +364,8 @@ async function updateMdxTitles(): Promise<void> {
 async function updateSingleMdxTitle(
   serviceDir: string,
   fileName: string,
-  productName: string,
-  serviceName: string,
+  _productName: string,
+  _serviceName: string,
 ): Promise<void> {
   const filePath = path.join(serviceDir, fileName);
   const content = await fs.readFile(filePath, "utf8");
@@ -420,8 +388,6 @@ async function updateSingleMdxTitle(
   // Only write if content actually changed
   if (updatedContent !== content) {
     await fs.writeFile(filePath, updatedContent);
-    // eslint-disable-next-line no-console
-    console.log(`  ✓ ${productName}/${serviceName}/${fileName}`);
   }
 }
 
@@ -429,9 +395,6 @@ async function updateSingleMdxTitle(
  * Updates index.mdx files to use APICard components.
  **/
 async function updateIndexCards(): Promise<void> {
-  // eslint-disable-next-line no-console
-  console.log("\nUpdating index pages with APICard components...");
-
   for (const [serviceName, config] of Object.entries(products)) {
     const serviceDir = path.join(OUTPUT_DIR, config.product, serviceName);
     const indexPath = path.join(serviceDir, "index.mdx");
@@ -454,8 +417,6 @@ async function updateIndexCards(): Promise<void> {
     const newIndexContent = generateIndexContent(cardData, serviceName);
 
     await fs.writeFile(indexPath, newIndexContent);
-    // eslint-disable-next-line no-console
-    console.log(`  ✓ ${config.product}/${serviceName}/index.mdx`);
   }
 }
 
@@ -506,10 +467,10 @@ function extractCardDataFromMdx(
   const description = extractDescriptionFromFrontmatter(content);
 
   return {
-    href: `/api-reference/${productName}/${serviceName}/${operationId}`,
-    route,
-    method,
     description,
+    href: `/api-reference/${productName}/${serviceName}/${operationId}`,
+    method,
+    route,
   };
 }
 

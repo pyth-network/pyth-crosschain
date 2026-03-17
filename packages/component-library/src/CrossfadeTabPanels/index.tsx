@@ -21,14 +21,14 @@ export const CrossfadeTabPanels = ({ items }: Props) => {
   const state = use(TabListStateContext);
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
+    <AnimatePresence initial={false} mode="popLayout">
       {state && (
         <AnimatedPanel
-          shouldForceMount
-          key={state.selectedKey}
-          initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          key={state.selectedKey}
+          shouldForceMount
           transition={{ duration: 0.5, ease: "linear" }}
           {...items.find((item) => item.id === state.selectedKey)}
         />

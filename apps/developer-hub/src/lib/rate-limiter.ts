@@ -19,8 +19,8 @@ type RateLimiterConfig = {
 };
 
 const DEFAULT_CONFIG: RateLimiterConfig = {
-  windowMs: 60 * 1000, // 1 minute
   maxRequests: 5, // 5 requests per minute
+  windowMs: 60 * 1000, // 1 minute
 };
 
 // In-memory store for rate limit entries
@@ -87,13 +87,19 @@ export function checkRateLimit(
     return {
       allowed: true,
       remaining: maxRequests - entry.timestamps.length,
-      resetIn: firstTimestamp === undefined ? windowMs : windowMs - (now - firstTimestamp),
+      resetIn:
+        firstTimestamp === undefined
+          ? windowMs
+          : windowMs - (now - firstTimestamp),
     };
   }
 
   // Rate limit exceeded
   const oldestTimestamp = entry.timestamps[0];
-  const resetIn = oldestTimestamp === undefined ? windowMs : windowMs - (now - oldestTimestamp);
+  const resetIn =
+    oldestTimestamp === undefined
+      ? windowMs
+      : windowMs - (now - oldestTimestamp);
 
   return {
     allowed: false,
@@ -136,7 +142,9 @@ export function getRateLimitStatus(
 
   const remaining = Math.max(0, maxRequests - validTimestamps.length);
   const oldestTimestamp = validTimestamps[0];
-  const resetIn = oldestTimestamp ? windowMs - (now - oldestTimestamp) : windowMs;
+  const resetIn = oldestTimestamp
+    ? windowMs - (now - oldestTimestamp)
+    : windowMs;
 
   return {
     allowed: remaining > 0,
@@ -144,4 +152,3 @@ export function getRateLimitStatus(
     resetIn,
   };
 }
-

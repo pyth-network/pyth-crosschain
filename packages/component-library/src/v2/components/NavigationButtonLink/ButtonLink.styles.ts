@@ -14,19 +14,6 @@ export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
   return {
     root: {
       '&[data-leftnavlink="true"]': {
-        background: theme.resolveThemeColor(
-          theme.colors.button.navlink.background.normal,
-        ),
-        color: foregroundColor,
-        justifyContent: "flex-start",
-        marginLeft: theme.spacing(2),
-        marginRight: theme.spacing(2),
-        marginTop: theme.spacing(2),
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(2),
-        outline: "none",
-        textDecoration: "none",
-
         "&:hover": {
           // we flip the colors so the contrast works when we go to the dark theme
           backgroundColor: hoverBackgroundColor,
@@ -51,6 +38,18 @@ export const { classes } = createStyles("pyth-left-nav-link", (theme) => {
           ),
           cursor: "not-allowed",
         },
+        background: theme.resolveThemeColor(
+          theme.colors.button.navlink.background.normal,
+        ),
+        color: foregroundColor,
+        justifyContent: "flex-start",
+        marginLeft: theme.spacing(2),
+        marginRight: theme.spacing(2),
+        marginTop: theme.spacing(2),
+        outline: "none",
+        paddingLeft: theme.spacing(2),
+        paddingRight: theme.spacing(2),
+        textDecoration: "none",
       },
     },
   };

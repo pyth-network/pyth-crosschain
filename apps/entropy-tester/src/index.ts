@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import type { PrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { EvmChain } from "@pythnetwork/contract-manager/core/chains";
-import { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
+import type { EvmEntropyContract } from "@pythnetwork/contract-manager/core/contracts/evm";
 import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 import type { Logger } from "pino";
 import { pino } from "pino";
@@ -48,8 +48,8 @@ async function loadConfig(configPath: string): Promise<LoadedConfig[]> {
     z.strictObject({
       "chain-id": z.string(),
       interval: z.string(),
-      "rpc-endpoint": z.string().optional(),
       retries: z.number().default(DEFAULT_RETRIES),
+      "rpc-endpoint": z.string().optional(),
     }),
   );
   const configContent = (await import(configPath, {
@@ -95,7 +95,6 @@ async function testLatency(
   const provider = await contract.getDefaultProvider();
   const userRandomNumber = contract.generateUserRandomNumber();
   const requestResponseSchema = z.object({
-    transactionHash: z.string(),
     events: z.object({
       RequestedWithCallback: z.object({
         returnValues: z.object({
@@ -103,6 +102,7 @@ async function testLatency(
         }),
       }),
     }),
+    transactionHash: z.string(),
   });
   const requestResponse = requestResponseSchema.parse(
     await contract.requestRandomness(
@@ -133,7 +133,7 @@ async function testLatency(
       // 0 means the request is cleared
       const endTime = Date.now();
       logger.info(
-        { sequenceNumber, latency: endTime - startTime },
+        { latency: endTime - startTime, sequenceNumber },
         `Successful callback`,
       );
       break;
@@ -149,22 +149,22 @@ async function testLatency(
 }
 
 const RUN_OPTIONS = {
-  validate: {
-    description: "Only validate the configs and exit",
-    type: "boolean",
-    default: false,
-    required: false,
-  },
   config: {
     description: "Yaml config file",
-    type: "string",
     required: true,
+    type: "string",
   },
   "private-key": {
-    type: "string",
-    required: true,
     description:
       "Path to the private key to sign the transactions with. Should be hex encoded",
+    required: true,
+    type: "string",
+  },
+  validate: {
+    default: false,
+    description: "Only validate the configs and exit",
+    required: false,
+    type: "boolean",
   },
 } as const;
 
@@ -219,7 +219,7 @@ export const main = function () {
                 } catch (error) {
                   lastError = error as Error;
                   child.warn(
-                    { attempt, maxRetries: retries, error: error },
+                    { attempt, error: error, maxRetries: retries },
                     `Attempt ${attempt.toString()}/${retries.toString()} failed, ${attempt < retries ? "retrying..." : "all retries exhausted"}`,
                   );
 

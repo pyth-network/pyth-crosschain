@@ -1,10 +1,8 @@
 require("dotenv").config({ path: ".env" });
-import { utils, Wallet } from "zksync-web3";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import { assert } from "chai";
-import { writeFileSync } from "fs";
-import { ethers } from "ethers";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Wallet } from "zksync-web3";
 
 function envOrErr(name: string): string {
   const res = process.env[name];
@@ -34,12 +32,5 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // await depositHandle.wait();
 
   const pythImplArtifact = await deployer.loadArtifact("PythUpgradable");
-  const pythImplContract = await deployer.deploy(pythImplArtifact);
-
-  console.log(
-    `Deployed Pyth implementation contract on ${pythImplContract.address}`,
-  );
-  console.log(
-    "Please use this address as the candidate new implementation in the deployment script.",
-  );
+  const _pythImplContract = await deployer.deploy(pythImplArtifact);
 }

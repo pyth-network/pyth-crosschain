@@ -37,98 +37,98 @@ export const chainOverrides: readonly Chain[] = [
   //   },
   // }),
   defineChain({
-    id: 999,
-    name: "Hyperliquid",
-    nativeCurrency: {
-      name: "Hyper",
-      symbol: "HYPE",
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: { http: ["https://rpc.hyperliquid.xyz/evm"] },
-    },
-    testnet: false,
     blockExplorers: {
       default: {
         name: "Hyperliquid",
         url: "https://hyperevmscan.io/",
       },
     },
-  }),
-  defineChain({
-    id: 964,
-    name: "Bittensor",
+    id: 999,
+    name: "Hyperliquid",
     nativeCurrency: {
-      name: "TAO",
-      symbol: "TAO",
       decimals: 18,
+      name: "Hyper",
+      symbol: "HYPE",
     },
     rpcUrls: {
-      default: { http: ["https://bittensor-finney.api.onfinality.io/public"] },
+      default: { http: ["https://rpc.hyperliquid.xyz/evm"] },
     },
     testnet: false,
+  }),
+  defineChain({
     blockExplorers: {
       default: {
         name: "Bittensor",
         url: "https://evm.taostats.io/",
       },
     },
-  }),
-  defineChain({
-    id: 484,
-    name: "Camp",
+    id: 964,
+    name: "Bittensor",
     nativeCurrency: {
-      name: "CAMP",
-      symbol: "CAMP",
       decimals: 18,
+      name: "TAO",
+      symbol: "TAO",
     },
     rpcUrls: {
-      default: { http: ["https://rpc.camp.raas.gelato.cloud"] },
+      default: { http: ["https://bittensor-finney.api.onfinality.io/public"] },
     },
     testnet: false,
+  }),
+  defineChain({
     blockExplorers: {
       default: {
         name: "Campscout",
         url: "https://camp.cloud.blockscout.com/",
       },
     },
-  }),
-  defineChain({
-    id: 31_612,
-    name: "Mezo",
+    id: 484,
+    name: "Camp",
     nativeCurrency: {
-      name: "BTC",
-      symbol: "BTC",
       decimals: 18,
+      name: "CAMP",
+      symbol: "CAMP",
     },
     rpcUrls: {
-      default: { http: ["https://jsonrpc-mezo.boar.network"] },
+      default: { http: ["https://rpc.camp.raas.gelato.cloud"] },
     },
     testnet: false,
+  }),
+  defineChain({
     blockExplorers: {
       default: {
         name: "Mezo Explorer",
         url: "https://explorer.mezo.org/",
       },
     },
-  }),
-  defineChain({
-    id: 4326,
-    name: "MegaETH",
+    id: 31_612,
+    name: "Mezo",
     nativeCurrency: {
-      name: "Ether",
-      symbol: "ETH",
       decimals: 18,
+      name: "BTC",
+      symbol: "BTC",
     },
     rpcUrls: {
-      default: { http: ["https://mainnet.megaeth.com/rpc"] },
+      default: { http: ["https://jsonrpc-mezo.boar.network"] },
     },
     testnet: false,
+  }),
+  defineChain({
     blockExplorers: {
       default: {
         name: "MegaETH Explorer",
         url: "https://mega.etherscan.io/",
       },
     },
+    id: 4326,
+    name: "MegaETH",
+    nativeCurrency: {
+      decimals: 18,
+      name: "Ether",
+      symbol: "ETH",
+    },
+    rpcUrls: {
+      default: { http: ["https://mainnet.megaeth.com/rpc"] },
+    },
+    testnet: false,
   }),
 ];

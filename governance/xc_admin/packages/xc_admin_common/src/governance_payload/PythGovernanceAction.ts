@@ -1,11 +1,7 @@
-import {
-  type ChainId,
-  type ChainName,
-  toChainId,
-  toChainName,
-} from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
 import { PACKET_DATA_SIZE } from "@solana/web3.js";
+import type { ChainId, ChainName } from "../chains";
+import { toChainId, toChainName } from "../chains";
 
 /** Each of the actions that can be directed to the Executor Module */
 export const ExecutorAction = {
@@ -13,15 +9,15 @@ export const ExecutorAction = {
 } as const;
 
 export const TargetAction = {
-  UpgradeContract: 0,
   AuthorizeGovernanceDataSourceTransfer: 1,
+  RequestGovernanceDataSourceTransfer: 5,
   SetDataSources: 2,
   SetFee: 3,
-  SetValidPeriod: 4,
-  RequestGovernanceDataSourceTransfer: 5,
-  SetWormholeAddress: 6,
   SetFeeInToken: 7,
   SetTransactionFee: 8,
+  SetValidPeriod: 4,
+  SetWormholeAddress: 6,
+  UpgradeContract: 0,
   WithdrawFee: 9,
 } as const;
 
@@ -30,8 +26,8 @@ export const EvmExecutorAction = {
 } as const;
 
 export const LazerAction = {
-  UpgradeSuiLazerContract: 0,
   UpdateTrustedSigner: 1,
+  UpgradeSuiLazerContract: 0,
 };
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
@@ -160,10 +156,10 @@ export class PythGovernanceHeader {
       throw new Error(`Invalid chain id ${this.targetChainId}`);
     const span = PythGovernanceHeader.layout.encode(
       {
-        magicNumber: MAGIC_NUMBER,
-        module,
         action,
         chain: toChainId(this.targetChainId),
+        magicNumber: MAGIC_NUMBER,
+        module,
       },
       buffer,
     );
@@ -171,7 +167,7 @@ export class PythGovernanceHeader {
   }
 }
 
-export const MAGIC_NUMBER = 0x4d475450;
+export const MAGIC_NUMBER = 0x4d_47_54_50;
 export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
 export const MODULE_EVM_EXECUTOR = 2;
@@ -183,11 +179,11 @@ export const MODULES = [
   MODULE_LAZER,
 ];
 
-export interface PythGovernanceAction {
+export type PythGovernanceAction = {
   readonly targetChainId: ChainName;
 
   encode(): Buffer;
-}
+};
 
 /** Helper class for implementing PythGovernanceAction using a BufferLayout.Layout for the payload. */
 export abstract class PythGovernanceActionImpl implements PythGovernanceAction {

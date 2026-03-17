@@ -5,8 +5,8 @@ import animate from "tailwindcss-animate";
 import reactAria from "tailwindcss-react-aria-components";
 
 const tailwindConfig = {
-  darkMode: "class",
   content: ["src/components/**/*.{ts,tsx}", "src/markdown-components.tsx"],
+  darkMode: "class",
   plugins: [
     forms,
     animate,
@@ -21,10 +21,6 @@ const tailwindConfig = {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
       },
-      fontFamily: {
-        sans: ["var(--font-sans)"],
-        mono: ["var(--font-mono)"],
-      },
       colors: {
         pythpurple: {
           100: "#E6DAFE",
@@ -35,15 +31,19 @@ const tailwindConfig = {
           950: "#0C0B1A",
         },
       },
+      fontFamily: {
+        mono: ["var(--font-mono)"],
+        sans: ["var(--font-sans)"],
+      },
       height: {
         header: "var(--header-height)",
       },
+      screens: {
+        "3xl": "2560px",
+        xs: "412px",
+      },
       spacing: {
         "header-height": "var(--header-height)",
-      },
-      screens: {
-        xs: "412px",
-        "3xl": "2560px",
       },
     },
   },

@@ -5,13 +5,13 @@ import { IS_PRODUCTION_SERVER } from "../config/server";
 const robots = (): MetadataRoute.Robots => ({
   rules: IS_PRODUCTION_SERVER
     ? {
-        userAgent: "*",
         allow: "/",
         disallow: ["/pyth-feeds-demo"],
+        userAgent: "*",
       }
     : {
-        userAgent: "*",
         disallow: "/",
+        userAgent: "*",
       },
 });
 export default robots;

@@ -1,7 +1,7 @@
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { WalletError } from "@solana/wallet-adapter-base";
 import clsx from "clsx";
-import { LazyMotion, m, domAnimation } from "framer-motion";
+import { domAnimation, LazyMotion, m } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "react-aria-components";
 
@@ -21,7 +21,7 @@ const UnknownError = ({ error }: { error: unknown }) => {
 
   const toggleDetailsOpen = useCallback(() => {
     setDetailsOpen((cur) => !cur);
-  }, [setDetailsOpen]);
+  }, []);
 
   const message = useMemo(() => {
     if (error instanceof Error) {
@@ -35,7 +35,7 @@ const UnknownError = ({ error }: { error: unknown }) => {
 
   return (
     <LazyMotion features={domAnimation}>
-      <Button onPress={toggleDetailsOpen} className="text-left">
+      <Button className="text-left" onPress={toggleDetailsOpen}>
         <div className="text-red-600">
           Uh oh, an error occurred! Please try again
         </div>
@@ -49,9 +49,9 @@ const UnknownError = ({ error }: { error: unknown }) => {
         </div>
       </Button>
       <m.div
+        animate={{ height: detailsOpen ? "auto" : 0 }}
         className="overflow-hidden pt-1 opacity-60"
         initial={{ height: 0 }}
-        animate={{ height: detailsOpen ? "auto" : 0 }}
       >
         {message}
       </m.div>

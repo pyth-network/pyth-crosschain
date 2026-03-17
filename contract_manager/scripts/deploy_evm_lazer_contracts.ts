@@ -172,9 +172,6 @@ async function deployPythLazerContract(
   );
   const rpcUrl = chain.rpcUrl;
 
-  console.log(`Deploying PythLazer contract to ${chain.getId()}...`);
-  console.log(`RPC URL: ${rpcUrl}`);
-
   // Clean up any previous deployment output
   if (existsSync(deploymentOutputPath)) {
     unlinkSync(deploymentOutputPath);
@@ -190,51 +187,34 @@ async function deployPythLazerContract(
   if (gasLimit) {
     forgeCommand += ` --skip-simulation --gas-limit ${gasLimit}`;
   }
+  const _output = execSync(forgeCommand, {
+    cwd: lazerContractsDir,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
 
-  try {
-    // Execute forge script
-    console.log("Running forge deployment script...");
-    const output = execSync(forgeCommand, {
-      cwd: lazerContractsDir,
-      encoding: "utf8",
-      stdio: "pipe",
-    });
-
-    console.log(output);
-
-    // Read deployment output from JSON file written by the forge script
-    if (!existsSync(deploymentOutputPath)) {
-      throw new Error(
-        "Deployment output file not found. Deployment may have failed.",
-      );
-    }
-
-    const deploymentOutput = JSON.parse(
-      readFileSync(deploymentOutputPath, "utf8"),
-    ) as DeploymentOutput;
-
-    // Verify chain ID matches
-    if (deploymentOutput.chainId !== chain.networkId) {
-      throw new Error(
-        `Chain ID mismatch: expected ${chain.networkId}, got ${deploymentOutput.chainId}`,
-      );
-    }
-
-    console.log(
-      `\nPythLazer implementation deployed at: ${deploymentOutput.implementationAddress}`,
+  // Read deployment output from JSON file written by the forge script
+  if (!existsSync(deploymentOutputPath)) {
+    throw new Error(
+      "Deployment output file not found. Deployment may have failed.",
     );
-    console.log(
-      `PythLazer proxy deployed at: ${deploymentOutput.proxyAddress}`,
-    );
-
-    // Clean up the output file
-    unlinkSync(deploymentOutputPath);
-
-    return deploymentOutput.proxyAddress;
-  } catch (error) {
-    console.error("Deployment failed:", error);
-    throw error;
   }
+
+  const deploymentOutput = JSON.parse(
+    readFileSync(deploymentOutputPath, "utf8"),
+  ) as DeploymentOutput;
+
+  // Verify chain ID matches
+  if (deploymentOutput.chainId !== chain.networkId) {
+    throw new Error(
+      `Chain ID mismatch: expected ${chain.networkId}, got ${deploymentOutput.chainId}`,
+    );
+  }
+
+  // Clean up the output file
+  unlinkSync(deploymentOutputPath);
+
+  return deploymentOutput.proxyAddress;
 }
 
 /**
@@ -243,14 +223,9 @@ async function deployPythLazerContract(
  * @param address - The deployed contract address
  */
 function updateContractsFile(chain: EvmChain, address: string): void {
-  console.log(`Updating contracts file for ${chain.getId()}`);
   const lazerContract = new EvmLazerContract(chain, address);
   DefaultStore.lazer_contracts[lazerContract.getId()] = lazerContract;
   DefaultStore.saveAllContracts();
-
-  console.log(`\nUpdated EvmLazerContracts.json with new deployment`);
-  console.log(`Chain: ${chain.getId()}`);
-  console.log(`Address: ${address}`);
 }
 
 /**
@@ -297,9 +272,6 @@ function findLazerContract(chain: EvmChain): EvmLazerContract | undefined {
       contract instanceof EvmLazerContract &&
       contract.chain.getId() === chain.getId()
     ) {
-      console.log(
-        `Found lazer contract for ${chain.getId()} at ${contract.address}`,
-      );
       return contract;
     }
   }
@@ -315,9 +287,6 @@ export async function findOrDeployPythLazerContract(
 ): Promise<string> {
   const lazerContract = findLazerContract(chain);
   if (lazerContract) {
-    console.log(
-      `Found lazer contract for ${chain.getId()} at ${lazerContract.address}`,
-    );
     return lazerContract.address;
   }
   const deployedAddress = await deployPythLazerContract(
@@ -326,9 +295,6 @@ export async function findOrDeployPythLazerContract(
     verify,
     etherscanApiKey,
     gasLimit,
-  );
-  console.log(
-    `✅ PythLazer contract deployed successfully at ${deployedAddress}`,
   );
   updateContractsFile(chain, deployedAddress);
   return deployedAddress;
@@ -345,11 +311,6 @@ export async function main() {
 
     // Step 1: Deploy contract if requested
     if (argv.deploy) {
-      console.log(`Deploying PythLazer contract to ${chain.getId()}...`);
-      console.log(`Chain: ${chain.getId()}`);
-      console.log(`RPC URL: ${chain.rpcUrl}`);
-      console.log(`Verification: ${argv.verify ? "Enabled" : "Disabled"}`);
-
       deployedAddress = await findOrDeployPythLazerContract(
         chain,
         argv["private-key"],
@@ -361,23 +322,15 @@ export async function main() {
 
     // Step 2: Update trusted signer if requested
     if (argv["update-signer"] && argv["expires-at"]) {
-      console.log(`\nUpdating trusted signer on ${chain.getId()}...`);
-      console.log(`Signer Address: ${argv["update-signer"]}`);
-      console.log(
-        `Expires At: ${new Date(argv["expires-at"] * 1000).toISOString()}`,
-      );
-
       let contractAddress: string;
 
       // Use deployed address if we just deployed, otherwise find existing contract
       if (deployedAddress) {
         contractAddress = deployedAddress;
-        console.log(`Using newly deployed contract at ${contractAddress}`);
       } else {
         const lazerContract = findLazerContract(chain);
         if (lazerContract) {
           contractAddress = lazerContract.address;
-          console.log(`Using existing contract at ${contractAddress}`);
         } else {
           throw new Error(
             `No lazer contract found for ${chain.getId()}. Deploy a contract first using --deploy.`,
@@ -393,29 +346,13 @@ export async function main() {
         toPrivateKey(argv["private-key"]),
         argv["raw-tx"],
       );
-
-      console.log(`\n✅ Trusted signer updated successfully`);
     }
-
-    // Summary
-    console.log(`\n Operation Summary:`);
     if (argv.deploy && argv["update-signer"]) {
-      console.log(`\n✅ Contract deployed at: ${deployedAddress}`);
-      console.log(`Trusted signer updated: ${argv["update-signer"]}`);
-      console.log(
-        `Expires at: ${new Date((argv["expires-at"] ?? 0) * 1000).toISOString()}`,
-      );
     } else if (argv.deploy) {
-      console.log(`Contract deployed at ${deployedAddress}`);
     } else if (argv["update-signer"]) {
-      console.log(`Trusted signer updated successfully`);
     } else {
-      console.log(
-        `No operations performed. Use --deploy to deploy or --update-signer to update trusted signer.`,
-      );
     }
-  } catch (error) {
-    console.error("Operation failed:", error);
+  } catch (_error) {
     process.exit(1);
   }
 }

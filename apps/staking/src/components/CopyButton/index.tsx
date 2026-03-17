@@ -1,4 +1,4 @@
-import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { ComponentProps } from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -32,7 +32,7 @@ export const CopyButton = ({
 
   useEffect(() => {
     setIsCopied(false);
-  }, [text]);
+  }, []);
 
   useEffect(() => {
     if (isCopied) {
@@ -49,12 +49,12 @@ export const CopyButton = ({
 
   return (
     <Button
-      onPress={copy}
-      isDisabled={isCopied}
       className={clsx(
         "group mx-[-0.25em] -mt-0.5 inline-block rounded-md px-[0.25em] py-0.5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-pythpurple-400",
         className,
       )}
+      isDisabled={isCopied}
+      onPress={copy}
       {...(isCopied && { "data-is-copied": true })}
       {...props}
     >

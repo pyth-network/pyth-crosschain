@@ -1,9 +1,6 @@
 import type { Idl } from "@coral-xyz/anchor";
-import {
-  type AccountMeta,
-  PublicKey,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import type { AccountMeta, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 type NamedAccounts = Record<string, AccountMeta>;
 type RemainingAccounts = AccountMeta[];
@@ -25,7 +22,7 @@ export function resolveAccountNames(
   const remaining: RemainingAccounts = [];
   instruction.keys.map((account, idx) => {
     if (idx < ix.accounts.length) {
-      named[ix.accounts[idx]!.name] = account;
+      named[ix.accounts[idx]?.name] = account;
     } else {
       remaining.push(account);
     }
@@ -48,18 +45,18 @@ export async function idlSetBuffer(
   buffer: PublicKey,
   idlAuthority: PublicKey,
 ): Promise<TransactionInstruction> {
-  let idlAddress = await getIdlAddress(programId);
+  const idlAddress = await getIdlAddress(programId);
   return {
-    programId,
     data: IDL_SET_BUFFER_DISCRIMINATOR,
     keys: [
-      { pubkey: buffer, isSigner: false, isWritable: true },
-      { pubkey: idlAddress, isSigner: false, isWritable: true },
+      { isSigner: false, isWritable: true, pubkey: buffer },
+      { isSigner: false, isWritable: true, pubkey: idlAddress },
       {
-        pubkey: idlAuthority,
         isSigner: true,
         isWritable: true,
+        pubkey: idlAuthority,
       },
     ],
+    programId,
   };
 }

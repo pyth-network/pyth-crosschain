@@ -1,10 +1,11 @@
 import { ArrowLongDownIcon } from "@heroicons/react/24/outline";
 import { epochToDate } from "@pythnetwork/staking-sdk";
 import clsx from "clsx";
-import type { HTMLAttributes, ReactNode, ComponentProps } from "react";
+import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 import { Button } from "../Button";
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Date component intentionally shadows global Date
 import { Date } from "../Date";
 import { ModalDialog } from "../ModalDialog";
 import { StakingTimeline } from "../StakingTimeline";
@@ -64,7 +65,7 @@ export const ProgramSection = ({
         <Button className="mx-auto block w-full max-w-96 lg:hidden">
           Token Overview
         </Button>
-        <ModalDialog title="Token Overview" description={name}>
+        <ModalDialog description={name} title="Token Overview">
           <TokenOverview className={className} {...tokenOverview} />
         </ModalDialog>
       </DialogTrigger>
@@ -134,18 +135,18 @@ const TokenOverview = ({
     {...props}
   >
     <Position
+      details={availableToStakeDetails}
       name="Available to Stake"
       nameClassName="bg-[rgba(43,_129,_167,_0.25)]"
-      details={availableToStakeDetails}
       {...(stakeDescription !== undefined && {
         actions: (
           <TransferButton
-            size="small"
             actionDescription={stakeDescription}
             actionName="Stake"
             max={available}
-            transfer={stake}
+            size="small"
             successMessage="Your tokens are now in warm up and will be staked at the start of the next epoch"
+            transfer={stake}
           >
             <StakingTimeline currentEpoch={currentEpoch} />
           </TransferButton>
@@ -168,15 +169,15 @@ const TokenOverview = ({
       {...(cancelWarmupDescription !== undefined && {
         actions: (
           <TransferButton
-            size="small"
-            variant="secondary"
             actionDescription={cancelWarmupDescription}
             actionName="Cancel"
-            submitButtonText="Cancel Warmup"
-            title="Cancel Warmup"
             max={warmup}
-            transfer={cancelWarmup}
+            size="small"
+            submitButtonText="Cancel Warmup"
             successMessage="Your tokens are no longer in warmup for staking"
+            title="Cancel Warmup"
+            transfer={cancelWarmup}
+            variant="secondary"
           />
         ),
       })}
@@ -190,13 +191,13 @@ const TokenOverview = ({
       {...(unstakeDescription !== undefined && {
         actions: (
           <TransferButton
-            size="small"
-            variant="secondary"
             actionDescription={unstakeDescription}
             actionName="Unstake"
             max={staked}
-            transfer={unstake}
+            size="small"
             successMessage="Your tokens are now cooling down and will be available to withdraw at the end of the next epoch"
+            transfer={unstake}
+            variant="secondary"
           >
             <StakingTimeline cooldownOnly currentEpoch={currentEpoch} />
           </TransferButton>
@@ -207,8 +208,6 @@ const TokenOverview = ({
     </Position>
     <Arrow />
     <Position
-      name="Cooldown"
-      nameClassName="bg-[rgba(179,_157,_222,_0.25)]"
       details={
         <>
           {cooldown > 0n && (
@@ -225,6 +224,8 @@ const TokenOverview = ({
           )}
         </>
       }
+      name="Cooldown"
+      nameClassName="bg-[rgba(179,_157,_222,_0.25)]"
     >
       {cooldown + cooldown2}
     </Position>

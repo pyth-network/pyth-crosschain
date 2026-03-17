@@ -1,5 +1,5 @@
+import type { DurationInMs } from "../index";
 import {
-  DurationInMs,
   Price,
   PriceFeed,
   PriceFeedMetadata,
@@ -24,7 +24,7 @@ describe("Test http endpoints", () => {
 
     const priceFeeds = await connection.getLatestPriceFeeds(ids);
     expect(priceFeeds).toBeDefined();
-    expect(priceFeeds!.length).toEqual(ids.length);
+    expect(priceFeeds?.length).toEqual(ids.length);
 
     for (const priceFeed of priceFeeds!) {
       expect(priceFeed.id.length).toBe(64); // 32 byte address has size 64 in hex
@@ -46,7 +46,7 @@ describe("Test http endpoints", () => {
 
     const priceFeeds = await connection.getLatestPriceFeeds(ids);
     expect(priceFeeds).toBeDefined();
-    expect(priceFeeds!.length).toEqual(ids.length);
+    expect(priceFeeds?.length).toEqual(ids.length);
 
     for (const priceFeed of priceFeeds!) {
       expect(priceFeed.getMetadata()).toBeInstanceOf(PriceFeedMetadata);
@@ -64,7 +64,7 @@ describe("Test http endpoints", () => {
 
     const priceFeeds = await connection.getLatestPriceFeeds(ids);
     expect(priceFeeds).toBeDefined();
-    expect(priceFeeds!.length).toEqual(ids.length);
+    expect(priceFeeds?.length).toEqual(ids.length);
 
     for (const priceFeed of priceFeeds!) {
       expect(priceFeed.getMetadata()).toBeUndefined();
@@ -96,7 +96,7 @@ describe("Test http endpoints", () => {
     const ids = await connection.getPriceFeedIds();
     expect(ids.length).toBeGreaterThan(0);
 
-    const publishTime10SecAgo = Math.floor(new Date().getTime() / 1000) - 10;
+    const publishTime10SecAgo = Math.floor(Date.now() / 1000) - 10;
     const [vaa, vaaPublishTime] = await connection.getVaa(
       ids[0],
       publishTime10SecAgo,
@@ -110,39 +110,36 @@ describe("Test http endpoints", () => {
 describe("Test websocket endpoints", () => {
   jest.setTimeout(60 * 1000);
 
-  test.concurrent(
-    "websocket subscription works without verbose and binary",
-    async () => {
-      const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT);
+  test.concurrent("websocket subscription works without verbose and binary", async () => {
+    const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT);
 
-      const ids = await connection.getPriceFeedIds();
-      expect(ids.length).toBeGreaterThan(0);
+    const ids = await connection.getPriceFeedIds();
+    expect(ids.length).toBeGreaterThan(0);
 
-      const counter: Map<string, number> = new Map();
-      let totalCounter = 0;
+    const counter: Map<string, number> = new Map();
+    let totalCounter = 0;
 
-      await connection.subscribePriceFeedUpdates(ids, (priceFeed) => {
-        expect(priceFeed.id.length).toBe(64); // 32 byte address has size 64 in hex
-        expect(priceFeed.getMetadata()).toBeUndefined();
-        expect(priceFeed.getVAA()).toBeUndefined();
+    await connection.subscribePriceFeedUpdates(ids, (priceFeed) => {
+      expect(priceFeed.id.length).toBe(64); // 32 byte address has size 64 in hex
+      expect(priceFeed.getMetadata()).toBeUndefined();
+      expect(priceFeed.getVAA()).toBeUndefined();
 
-        counter.set(priceFeed.id, (counter.get(priceFeed.id) ?? 0) + 1);
-        totalCounter += 1;
-      });
+      counter.set(priceFeed.id, (counter.get(priceFeed.id) ?? 0) + 1);
+      totalCounter += 1;
+    });
 
-      // Wait for 30 seconds
-      await sleep(30000);
-      connection.closeWebSocket();
+    // Wait for 30 seconds
+    await sleep(30_000);
+    connection.closeWebSocket();
 
-      expect(totalCounter).toBeGreaterThan(30);
+    expect(totalCounter).toBeGreaterThan(30);
 
-      for (const id of ids) {
-        expect(counter.get(id)).toBeDefined();
-        // Make sure it receives more than 1 update
-        expect(counter.get(id)).toBeGreaterThan(1);
-      }
-    },
-  );
+    for (const id of ids) {
+      expect(counter.get(id)).toBeDefined();
+      // Make sure it receives more than 1 update
+      expect(counter.get(id)).toBeGreaterThan(1);
+    }
+  });
 
   test.concurrent("websocket subscription works with verbose", async () => {
     const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT, {
@@ -161,7 +158,7 @@ describe("Test websocket endpoints", () => {
     });
 
     // Wait for 20 seconds
-    await sleep(20000);
+    await sleep(20_000);
     await connection.unsubscribePriceFeedUpdates(ids);
 
     for (const id of ids) {
@@ -186,7 +183,7 @@ describe("Test websocket endpoints", () => {
     });
 
     // Wait for 20 seconds
-    await sleep(20000);
+    await sleep(20_000);
     connection.closeWebSocket();
 
     for (const id of ids) {
@@ -196,37 +193,34 @@ describe("Test websocket endpoints", () => {
 
   // This test only works on Hermes and is not stable because there might
   // be no out of order updates. Hence the last check is commented out.
-  test.concurrent(
-    "websocket subscription works with allow out of order",
-    async () => {
-      const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT, {
-        priceFeedRequestConfig: { allowOutOfOrder: true, verbose: true },
-      });
+  test.concurrent("websocket subscription works with allow out of order", async () => {
+    const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT, {
+      priceFeedRequestConfig: { allowOutOfOrder: true, verbose: true },
+    });
 
-      const ids = await connection.getPriceFeedIds();
-      expect(ids.length).toBeGreaterThan(0);
+    const ids = await connection.getPriceFeedIds();
+    expect(ids.length).toBeGreaterThan(0);
 
-      const observedSlots: number[] = [];
+    const observedSlots: number[] = [];
 
-      await connection.subscribePriceFeedUpdates(ids, (priceFeed) => {
-        expect(priceFeed.getMetadata()).toBeDefined();
-        expect(priceFeed.getVAA()).toBeUndefined();
-        observedSlots.push(priceFeed.getMetadata()!.slot!);
-      });
+    await connection.subscribePriceFeedUpdates(ids, (priceFeed) => {
+      expect(priceFeed.getMetadata()).toBeDefined();
+      expect(priceFeed.getVAA()).toBeUndefined();
+      observedSlots.push(priceFeed.getMetadata()?.slot!);
+    });
 
-      // Wait for 20 seconds
-      await sleep(20000);
-      connection.closeWebSocket();
+    // Wait for 20 seconds
+    await sleep(20_000);
+    connection.closeWebSocket();
 
-      // Check for out of order slots but don't assert on it since it's not stable
-      for (let i = 1; i < observedSlots.length; i++) {
-        if (observedSlots[i] < observedSlots[i - 1]) {
-          // Out of order slot found, but we don't assert on it
-          break;
-        }
+    // Check for out of order slots but don't assert on it since it's not stable
+    for (let i = 1; i < observedSlots.length; i++) {
+      if (observedSlots[i] < observedSlots[i - 1]) {
+        // Out of order slot found, but we don't assert on it
+        break;
       }
+    }
 
-      // expect(seenOutOfOrder).toBe(true);
-    },
-  );
+    // expect(seenOutOfOrder).toBe(true);
+  });
 });

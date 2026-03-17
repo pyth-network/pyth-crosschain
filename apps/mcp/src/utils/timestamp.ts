@@ -1,5 +1,5 @@
 /** Earliest timestamp with available data: 2025-04-01T00:00:00Z */
-export const DATA_AVAILABLE_FROM_UNIX = 1743465600;
+export const DATA_AVAILABLE_FROM_UNIX = 1_743_465_600;
 export const DATA_AVAILABLE_FROM_ISO = "2025-04-01T00:00:00Z";
 
 /** Convert Unix seconds to ISO 8601 string. */

@@ -3,8 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "example-relay": {
-      "dependsOn": ["build"],
       "cache": false,
+      "dependsOn": ["build"],
       "env": ["SUI_KEY"]
     }
   }

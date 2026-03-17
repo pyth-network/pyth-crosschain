@@ -1,5 +1,5 @@
 export const priceFeeds = {
-  updateFrequency: "400ms",
+  featuredComingSoon: ["Rates.US1Y"],
   featuredFeeds: [
     "ECO.US.GDP",
     "Crypto.ARC/USD",
@@ -9,5 +9,5 @@ export const priceFeeds = {
     "Crypto.WSTHYPE/STHYPE.RR",
     "Crypto.YNETHX/WETH.RR",
   ],
-  featuredComingSoon: ["Rates.US1Y"],
+  updateFrequency: "400ms",
 };

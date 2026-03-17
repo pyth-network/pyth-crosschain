@@ -1,11 +1,10 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import type { ActionName, PythGovernanceAction } from "./PythGovernanceAction";
 import {
-  type ActionName,
-  type PythGovernanceAction,
   PythGovernanceActionImpl,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import * as BufferLayout from "@solana/buffer-layout";
-import type { ChainName } from "../chains";
 
 /**
  * Authorize transferring the governance data source from the sender's emitter address to another emitter.

@@ -7,7 +7,7 @@ import styles from "./not-found.module.scss";
 export default function NotFound() {
   return (
     <div className={styles.container}>
-      <Card variant="secondary" className={styles.card} nonInteractive>
+      <Card className={styles.card} nonInteractive variant="secondary">
         <div className={styles.content}>
           <div className={styles.header}>
             <h1 className={styles.heading}>You Found a Dead Route.</h1>
@@ -19,7 +19,7 @@ export default function NotFound() {
           </div>
 
           <div className={styles.navigationGrid}>
-            <Link href="/price-feeds" className={styles.navCard}>
+            <Link className={styles.navCard} href="/price-feeds">
               <div className={styles.navIcon}>
                 <ChartLine size={24} weight="regular" />
               </div>
@@ -31,7 +31,7 @@ export default function NotFound() {
               </div>
             </Link>
 
-            <Link href="/entropy" className={styles.navCard}>
+            <Link className={styles.navCard} href="/entropy">
               <div className={styles.navIcon}>
                 <DiceSix size={24} weight="regular" />
               </div>
@@ -44,8 +44,8 @@ export default function NotFound() {
             </Link>
 
             <Link
-              href="/price-feeds/pro/acquire-access-token"
               className={styles.navCard}
+              href="/price-feeds/pro/acquire-access-token"
             >
               <div className={styles.navIcon}>
                 <Key size={24} weight="regular" />
@@ -61,8 +61,8 @@ export default function NotFound() {
             </Link>
 
             <Link
-              href="/price-feeds/pro/price-feed-ids"
               className={styles.navCard}
+              href="/price-feeds/pro/price-feed-ids"
             >
               <div className={styles.navIcon}>
                 <List size={24} weight="regular" />
@@ -79,10 +79,10 @@ export default function NotFound() {
           <p className={styles.footerText}>
             Missing something? If your old link used to work,{" "}
             <a
-              href="https://dev-forum.pyth.network/"
-              target="_blank"
-              rel="noopener noreferrer"
               className={styles.footerLink}
+              href="https://dev-forum.pyth.network/"
+              rel="noopener noreferrer"
+              target="_blank"
             >
               open a thread in the Developer Forum
             </a>

@@ -2,9 +2,9 @@ import { z } from "zod";
 
 import type { ChainSlug, EntropyDeployment } from "./entropy-deployments";
 import {
+  EntropyDeployments,
   getChainNetworkId,
   parseChainSlug,
-  EntropyDeployments,
 } from "./entropy-deployments";
 import type { PAGE_SIZE } from "./pages";
 import { DEFAULT_PAGE_SIZE } from "./pages";
@@ -60,7 +60,6 @@ export const getRequests = async ({
         const parsed = fortunaSchema.safeParse(await response.json());
         return parsed.success
           ? Result.Success({
-              numPages: Math.ceil(parsed.data.total_results / pageSize),
               currentPage: parsed.data.requests.map((request) => {
                 const common = {
                   chain: getChain(request.network_id),
@@ -76,12 +75,12 @@ export const getRequests = async ({
                   case "completed": {
                     const completedCommon = {
                       ...common,
-                      callbackTxHash: request.state.reveal_tx_hash,
                       callbackTimestamp: request.last_updated_at,
+                      callbackTxHash: request.state.reveal_tx_hash,
                       gasUsed: request.state.gas_used,
-                      randomNumber: request.state.combined_random_number,
                       providerContribution:
                         request.state.provider_random_number,
+                      randomNumber: request.state.combined_random_number,
                     };
                     return request.state.callback_failed
                       ? Request.CallbackErrored({
@@ -98,13 +97,14 @@ export const getRequests = async ({
                   case "failed": {
                     return Request.Failed({
                       ...common,
-                      reason: request.state.reason.replace(/^Reverted: /, ""),
                       providerContribution:
                         request.state.provider_random_number,
+                      reason: request.state.reason.replace(/^Reverted: /, ""),
                     });
                   }
                 }
               }),
+              numPages: Math.ceil(parsed.data.total_results / pageSize),
             })
           : Result.ErrorResult(parsed.error);
       } catch (error) {
@@ -150,21 +150,21 @@ export enum ResultType {
 }
 
 const Result = {
+  BadSearch: (search: string) => ({
+    search,
+    type: ResultType.BadSearch as const,
+  }),
+  ErrorResult: (error: Error) => ({
+    error,
+    type: ResultType.ErrorResult as const,
+  }),
   Success: ({
     numPages,
     currentPage,
   }: {
     numPages: number;
     currentPage: Request[];
-  }) => ({ type: ResultType.Success as const, numPages, currentPage }),
-  BadSearch: (search: string) => ({
-    type: ResultType.BadSearch as const,
-    search,
-  }),
-  ErrorResult: (error: Error) => ({
-    type: ResultType.ErrorResult as const,
-    error,
-  }),
+  }) => ({ currentPage, numPages, type: ResultType.Success as const }),
 };
 type Result = ReturnType<(typeof Result)[keyof typeof Result]>;
 
@@ -173,15 +173,15 @@ const hexStringSchema = z.custom<`0x${string}`>(
 );
 
 const completedStateSchema = z.strictObject({
+  callback_failed: z.boolean(),
+  callback_gas_used: z.string(),
+  callback_return_value: z.string(),
   combined_random_number: z.string(),
   gas_used: z.string().transform((value) => Number.parseInt(value, 10)),
   provider_random_number: z.string(),
   reveal_block_number: z.number(),
   reveal_tx_hash: hexStringSchema,
   state: z.literal("completed"),
-  callback_failed: z.boolean(),
-  callback_return_value: z.string(),
-  callback_gas_used: z.string(),
 });
 
 const pendingStateSchema = z.strictObject({
@@ -195,7 +195,6 @@ const failedSchema = z.strictObject({
 });
 
 const fortunaSchema = z.strictObject({
-  total_results: z.number(),
   requests: z.array(
     z.strictObject({
       chain_id: z.string(),
@@ -208,10 +207,11 @@ const fortunaSchema = z.strictObject({
       request_tx_hash: hexStringSchema,
       sender: hexStringSchema,
       sequence: z.number(),
-      user_random_number: z.string(),
       state: z.union([completedStateSchema, pendingStateSchema, failedSchema]),
+      user_random_number: z.string(),
     }),
   ),
+  total_results: z.number(),
 });
 
 export enum Status {
@@ -248,20 +248,20 @@ type CallbackErrorArgs = CompletedArgs & {
 };
 
 const Request = {
-  Pending: (args: PendingArgs) => ({
-    status: Status.Pending as const,
-    ...args,
-  }),
-  Failed: (args: FailedArgs) => ({
-    status: Status.Failed as const,
-    ...args,
-  }),
   CallbackErrored: (args: CallbackErrorArgs) => ({
     status: Status.CallbackError as const,
     ...args,
   }),
   Complete: (args: CompletedArgs) => ({
     status: Status.Complete as const,
+    ...args,
+  }),
+  Failed: (args: FailedArgs) => ({
+    status: Status.Failed as const,
+    ...args,
+  }),
+  Pending: (args: PendingArgs) => ({
+    status: Status.Pending as const,
     ...args,
   }),
 };

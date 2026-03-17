@@ -1,11 +1,11 @@
 import {
-  Dialog,
-  TransitionChild,
-  Transition,
-  DialogTitle,
-  Description,
-  DialogPanel,
   CloseButton,
+  Description,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
 } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { ReactNode } from "react";
@@ -30,8 +30,8 @@ export const Modal = ({
   title,
   description,
 }: ModalProps) => (
-  <Transition show={show} as={Fragment} {...(afterLeave && { afterLeave })}>
-    <Dialog onClose={onClose} className="relative z-50">
+  <Transition as={Fragment} show={show} {...(afterLeave && { afterLeave })}>
+    <Dialog className="relative z-50" onClose={onClose}>
       <TransitionChild
         as="div"
         className="fixed inset-0 bg-black/25 dark:bg-white/10"

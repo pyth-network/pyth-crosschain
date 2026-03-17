@@ -17,17 +17,17 @@ const OpenAPIPage = createAPIPage(openapi);
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
-    APIPage: OpenAPIPage,
     APICard,
     APICards,
-    Tabs,
+    APIPage: OpenAPIPage,
     Tab,
+    Tabs,
     ...components,
-    InfoBox: InfoBox,
-    YouTubeEmbed,
     BinaryFormatCards,
     FieldCodePanel,
+    InfoBox: InfoBox,
     PropertyCard,
     PropertyFieldLinker,
+    YouTubeEmbed,
   };
 }

@@ -24,8 +24,8 @@ export const Publishers = async ({ params }: Props) => {
 
   const [feed, testFeed, pythnetPublishers, pythtestConformancePublishers] =
     await Promise.all([
-      getFeedForSymbolRequest({ symbol, cluster: Cluster.Pythnet }),
-      getFeedForSymbolRequest({ symbol, cluster: Cluster.PythtestConformance }),
+      getFeedForSymbolRequest({ cluster: Cluster.Pythnet, symbol }),
+      getFeedForSymbolRequest({ cluster: Cluster.PythtestConformance, symbol }),
       getPublishers(Cluster.Pythnet, symbol),
       getPublishers(Cluster.PythtestConformance, symbol),
     ]);
@@ -39,39 +39,39 @@ export const Publishers = async ({ params }: Props) => {
     notFound()
   ) : (
     <PublishersCard
-      metricsTime={metricsTime}
-      symbol={symbol}
-      displaySymbol={feed.product.display_symbol}
       assetClass={feed.product.asset_type}
+      displaySymbol={feed.product.display_symbol}
+      metricsTime={metricsTime}
       publishers={publishers.map(
         ({ ranking, publisher, status, cluster, knownPublisher }) => ({
-          id: `${publisher}-${ClusterToName[cluster]}`,
+          cluster,
+          deviationScore: ranking?.deviation_score,
           feedKey:
             cluster === Cluster.Pythnet
               ? feed.product.price_account
               : (testFeed?.product.price_account ?? ""),
-          score: ranking?.final_score,
-          uptimeScore: ranking?.uptime_score,
-          deviationScore: ranking?.deviation_score,
-          stalledScore: ranking?.stalled_score,
-          cluster,
-          status,
-          publisherKey: publisher,
-          rank: ranking?.final_rank,
           firstEvaluation: ranking?.first_ranking_time,
+          id: `${publisher}-${ClusterToName[cluster]}`,
           name: (
             <PublisherTag
-              publisherKey={publisher}
               cluster={cluster}
+              publisherKey={publisher}
               {...(knownPublisher && {
-                name: knownPublisher.name,
                 icon: <PublisherIcon knownPublisher={knownPublisher} />,
+                name: knownPublisher.name,
               })}
             />
           ),
           nameAsString: `${knownPublisher?.name ?? ""}${publisher}`,
+          publisherKey: publisher,
+          rank: ranking?.final_rank,
+          score: ranking?.final_score,
+          stalledScore: ranking?.stalled_score,
+          status,
+          uptimeScore: ranking?.uptime_score,
         }),
       )}
+      symbol={symbol}
     />
   );
 };
@@ -92,11 +92,11 @@ const getPublishers = async (cluster: Cluster, symbol: string) => {
     );
 
     return {
-      ranking,
-      publisher,
-      status: getStatus(ranking),
       cluster,
       knownPublisher: lookupPublisher(publisher),
+      publisher,
+      ranking,
+      status: getStatus(ranking),
     };
   });
 };

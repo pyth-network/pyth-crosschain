@@ -22,8 +22,9 @@ import {
 import type { DataSource } from "@pythnetwork/xc-admin-common";
 
 import type { PrivateKey, TxResult } from "../base";
-import { PriceFeedContract, getDefaultDeploymentConfig } from "../base";
-import { Chain, CosmWasmChain } from "../chains";
+import { getDefaultDeploymentConfig, PriceFeedContract } from "../base";
+import type { Chain } from "../chains";
+import { CosmWasmChain } from "../chains";
 import type { TokenQty } from "../token";
 import { WormholeContract } from "./wormhole";
 
@@ -48,8 +49,8 @@ export type DeploymentConfig = {
 
 const convertDataSource = (source: DataSource) => {
   return {
-    emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
     chain_id: source.emitterChain,
+    emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
   };
 };
 
@@ -66,8 +67,8 @@ export class CosmWasmWormholeContract extends WormholeContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: CosmWasmWormholeContract.type,
     };
   }
@@ -152,8 +153,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     return config.config_v1.data_sources.map(
       ({ emitter, chain_id }: WormholeSource) => {
         return {
-          emitterChain: Number(chain_id),
           emitterAddress: Buffer.from(emitter, "base64").toString("hex"),
+          emitterChain: Number(chain_id),
         };
       },
     );
@@ -164,8 +165,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     const { emitter: emitterAddress, chain_id: chainId } =
       config.config_v1.governance_source;
     return {
-      emitterChain: Number(chainId),
       emitterAddress: Buffer.from(emitterAddress, "base64").toString("hex"),
+      emitterChain: Number(chainId),
     };
   }
 
@@ -228,8 +229,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
       label: "pyth",
     });
     await executor.updateContractAdmin({
-      newAdminAddr: result.contractAddr,
       contractAddr: result.contractAddr,
+      newAdminAddr: result.contractAddr,
     });
     return new CosmWasmPriceFeedContract(chain, result.contractAddr);
   }
@@ -240,8 +241,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
 
   toJson() {
     return {
-      chain: this.chain.getId(),
       address: this.address,
+      chain: this.chain.getId(),
       type: CosmWasmPriceFeedContract.type,
     };
   }
@@ -284,9 +285,9 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
   private parsePrice(priceInfo: Price) {
     return {
       conf: priceInfo.conf.toString(),
-      publishTime: priceInfo.publish_time.toString(),
       expo: priceInfo.expo.toString(),
       price: priceInfo.price.toString(),
+      publishTime: priceInfo.publish_time.toString(),
     };
   }
 
@@ -295,8 +296,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     try {
       const response = await querier.getPriceFeed(this.address, feedId);
       return {
-        price: this.parsePrice(response.price),
         emaPrice: this.parsePrice(response.ema_price),
+        price: this.parsePrice(response.price),
       };
     } catch {
       return;
@@ -348,8 +349,8 @@ export class CosmWasmPriceFeedContract extends PriceFeedContract {
     const pythExecutor = new PythWrapperExecutor(executor);
     const result = await pythExecutor.executeUpdatePriceFeeds({
       contractAddr: this.address,
-      vaas: base64Vaas,
       fund,
+      vaas: base64Vaas,
     });
     return { id: result.txHash, info: result };
   }

@@ -2,9 +2,8 @@ import { Card } from "@pythnetwork/component-library/Card";
 import { SymbolPairTag } from "@pythnetwork/component-library/SymbolPairTag";
 import cx from "clsx";
 import type { PropsWithChildren, Ref } from "react";
-
-import styles from "./index.module.scss";
 import { PriceFeedIcon } from "../PriceFeedIcon";
+import styles from "./index.module.scss";
 
 type PriceCardProps = PropsWithChildren & {
   /**
@@ -57,8 +56,8 @@ export function PriceCard({
     <Card href={href} ref={ref} variant="tertiary">
       <div className={cx(styles.feedCardContents, className)}>
         <SymbolPairTag
-          displaySymbol={displaySymbol}
           description={description ?? ""}
+          displaySymbol={displaySymbol}
           icon={<PriceFeedIcon assetClass={assetClass ?? ""} />}
         />
         {children && <div className={styles.prices}>{children}</div>}

@@ -35,10 +35,10 @@ export const TabList = ({ label, className, ...props }: Props) => {
               <p>{body}</p>
               {args.isSelected && (
                 <motion.span
-                  layoutId={layoutId}
                   className={styles.bar}
-                  transition={{ type: "spring", bounce: 0.6, duration: 0.6 }}
+                  layoutId={layoutId}
                   style={{ originX: "left" }}
+                  transition={{ bounce: 0.6, duration: 0.6, type: "spring" }}
                 />
               )}
             </>

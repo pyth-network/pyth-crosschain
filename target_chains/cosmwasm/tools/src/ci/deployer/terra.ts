@@ -1,19 +1,17 @@
+import assert from "node:assert";
+import { readFileSync } from "node:fs";
+import { fromBech32, toHex } from "@cosmjs/encoding";
+import type { Msg, WaitTxBroadcastResult, Wallet } from "@terra-money/terra.js";
 import {
+  isTxError,
   LCDClient,
   MnemonicKey,
-  Msg,
   MsgInstantiateContract,
   MsgMigrateContract,
   MsgStoreCode,
   MsgUpdateContractAdmin,
-  type WaitTxBroadcastResult,
-  Wallet,
-  isTxError,
 } from "@terra-money/terra.js";
-import { readFileSync } from "fs";
-import { fromBech32, toHex } from "@cosmjs/encoding";
 import { ethers } from "ethers";
-import assert from "assert";
 import type { ContractInfo, Deployer } from "./index.js";
 
 export type TerraHost = {
@@ -33,17 +31,13 @@ export class TerraDeployer implements Deployer {
 
   private async signAndBroadcastMsg(msg: Msg): Promise<WaitTxBroadcastResult> {
     const tx = await this.wallet.createAndSignTx({
-      msgs: [msg],
       feeDenoms: this.feeDenoms,
+      msgs: [msg],
     });
     const res = await this.wallet.lcd.tx.broadcast(tx);
 
     if (isTxError(res)) {
-      console.error(`Transaction failed: ${res.raw_log}`);
     } else {
-      console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(res.txhash)}`,
-      );
     }
 
     return res;
@@ -51,7 +45,6 @@ export class TerraDeployer implements Deployer {
 
   async deployArtifact(artifact: string): Promise<number> {
     const contract_bytes = readFileSync(artifact);
-    console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
 
     const store_code = new MsgStoreCode(
       this.wallet.key.accAddress,
@@ -61,17 +54,9 @@ export class TerraDeployer implements Deployer {
     const rs = await this.signAndBroadcastMsg(store_code);
 
     var codeId: number;
-    try {
-      // {"key":"code_id","value":"14"}
-      const ci = extractFromRawLog(rs.raw_log, "code_id");
-      codeId = parseInt(ci);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing deploy code result. Printing raw log",
-      );
-      console.error(rs.raw_log);
-      throw e;
-    }
+    // {"key":"code_id","value":"14"}
+    const ci = extractFromRawLog(rs.raw_log, "code_id");
+    codeId = Number.parseInt(ci);
 
     return codeId;
   }
@@ -91,24 +76,9 @@ export class TerraDeployer implements Deployer {
     );
     const rs = await this.signAndBroadcastMsg(instMsg);
 
-    var address: string = "";
-
-    try {
-      // {"key":"_contract_address","value":"terra1xxx3ps3gm3wceg4g300hvggdv7ga0hmsk64srccffmfy4wvcrugqnlvt8w"}
-      address = extractFromRawLog(rs.raw_log, "_contract_address");
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing instantiation result. Printing raw log",
-      );
-      console.error(rs.raw_log);
-      throw e;
-    }
-
-    console.log(
-      `Instantiated ${label} at ${address} (${convert_terra_address_to_hex(
-        address,
-      )})`,
-    );
+    var address = "";
+    // {"key":"_contract_address","value":"terra1xxx3ps3gm3wceg4g300hvggdv7ga0hmsk64srccffmfy4wvcrugqnlvt8w"}
+    address = extractFromRawLog(rs.raw_log, "_contract_address");
     return address;
   }
 
@@ -123,17 +93,11 @@ export class TerraDeployer implements Deployer {
     );
 
     const rs = await this.signAndBroadcastMsg(migrateMsg);
-    try {
-      // {"key":"code_id","value":"13"}
-      let resultCodeId = parseInt(extractFromRawLog(rs.raw_log, "code_id"));
-      assert.strictEqual(codeId, resultCodeId);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing migration result. Printing raw log",
-      );
-      console.error(rs.raw_log);
-      throw e;
-    }
+    // {"key":"code_id","value":"13"}
+    const resultCodeId = Number.parseInt(
+      extractFromRawLog(rs.raw_log, "code_id"),
+    );
+    assert.strictEqual(codeId, resultCodeId);
   }
 
   /**
@@ -156,10 +120,10 @@ export class TerraDeployer implements Deployer {
       await this.wallet.lcd.wasm.contractInfo(contract);
 
     return {
-      codeId: code_id,
       address: address ?? contract,
-      creator: creator,
       admin: admin,
+      codeId: code_id,
+      creator: creator,
       initMsg: init_msg,
     };
   }
@@ -185,5 +149,5 @@ export function convert_terra_address_to_hex(human_addr: string) {
 // enter key of what to extract
 export function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
-  return rx.exec(rawLog)![1]!;
+  return rx.exec(rawLog)?.[1]!;
 }

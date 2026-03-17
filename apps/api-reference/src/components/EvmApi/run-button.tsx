@@ -4,18 +4,17 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { getEvmPriceFeedContractAddress } from "@pythnetwork/contract-manager/utils/utils";
 import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import PythErrorsAbi from "@pythnetwork/pyth-sdk-solidity/abis/PythErrors.json";
-import { ConnectKitButton, Avatar } from "connectkit";
+import { Avatar, ConnectKitButton } from "connectkit";
 import { useCallback, useMemo, useState } from "react";
 import { ContractFunctionExecutionError } from "viem";
 import { useAccount, useConfig } from "wagmi";
 import { readContract, simulateContract, writeContract } from "wagmi/actions";
-
-import type { Parameter } from "./parameter";
-import { TRANSFORMS } from "./parameter";
 import { useIsMounted } from "../../use-is-mounted";
 import { Button } from "../Button";
 import { Code } from "../Code";
 import { InlineLink } from "../InlineLink";
+import type { Parameter } from "./parameter";
+import { TRANSFORMS } from "./parameter";
 
 const abi = [...PythAbi, ...PythErrorsAbi] as const;
 
@@ -57,8 +56,8 @@ export const RunButton = <ParameterName extends string>(
           {({ show, isConnected, address, truncatedAddress, ensName }) => (
             <InlineLink
               as="button"
-              onClick={show}
               className="mb-2 flex flex-row items-center justify-center gap-2"
+              onClick={show}
             >
               {isConnected ? (
                 <>
@@ -74,9 +73,9 @@ export const RunButton = <ParameterName extends string>(
       )}
       {(props.type === EvmApiType.Read || (isMounted && isConnected)) && (
         <Button
+          className="mb-8 flex h-10 w-full flex-row items-center justify-center gap-2"
           disabled={disabled}
           loading={status.type === StatusType.Loading}
-          className="mb-8 flex h-10 w-full flex-row items-center justify-center gap-2"
           onClick={run}
         >
           {status.type === StatusType.Loading ? (
@@ -99,9 +98,9 @@ export const RunButton = <ParameterName extends string>(
               {"link" in status.data &&
                 typeof status.data.link === "string" && (
                   <InlineLink
+                    className="text-sm text-blue-500 hover:underline"
                     href={status.data.link}
                     target="_blank"
-                    className="text-sm text-blue-500 hover:underline"
                   >
                     Open in explorer↗
                   </InlineLink>
@@ -173,7 +172,7 @@ const useRunButton = <ParameterName extends string>({
       }
       switch (props.type) {
         case EvmApiType.Read: {
-          readContract(config, { abi, address, functionName, args })
+          readContract(config, { abi, address, args, functionName })
             .then((result) => {
               setStatus(Results(result));
             })
@@ -189,8 +188,8 @@ const useRunButton = <ParameterName extends string>({
             simulateContract(config, {
               abi,
               address,
-              functionName,
               args,
+              functionName,
               value,
             })
               .then(({ request }) => writeContract(config, request))
@@ -215,7 +214,7 @@ const useRunButton = <ParameterName extends string>({
         }
       }
     }
-  }, [config, functionName, setStatus, args, value, props.type]);
+  }, [config, functionName, args, value, props.type]);
 
   const { isConnected } = useAccount();
 
@@ -228,7 +227,7 @@ const useRunButton = <ParameterName extends string>({
     [args, status, props, isConnected, value],
   );
 
-  return { status, run, disabled };
+  return { disabled, run, status };
 };
 
 enum StatusType {
@@ -241,12 +240,12 @@ enum StatusType {
 const None = () => ({ type: StatusType.None as const });
 const Loading = () => ({ type: StatusType.Loading as const });
 const ErrorStatus = (error: unknown) => ({
-  type: StatusType.Error as const,
   error,
+  type: StatusType.Error as const,
 });
 const Results = (data: unknown) => ({
-  type: StatusType.Results as const,
   data,
+  type: StatusType.Results as const,
 });
 
 type Status =

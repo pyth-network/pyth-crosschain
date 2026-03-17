@@ -1,15 +1,14 @@
 import { Transition } from "@headlessui/react";
-import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { OffsetOrPosition } from "shiki";
-
+import { getLogger } from "../../browser-logger";
+import { Button } from "../Button";
 import style from "./style.module.css";
 import type { SupportedLanguage } from "./supported-language";
 import { useHighlightedCode } from "./use-highlighted-code";
-import { getLogger } from "../../browser-logger";
-import { Button } from "../Button";
 
 export * from "./supported-language";
 
@@ -28,9 +27,9 @@ export const Code = ({ language, children, dimRange }: CodeProps) => {
         {chompedCode}
       </CopyButton>
       <HighlightedCode
-        language={language}
         className={style.code}
         dimRange={dimRange}
+        language={language}
       >
         {chompedCode}
       </HighlightedCode>
@@ -67,7 +66,7 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
 
   useEffect(() => {
     setIsCopied(false);
-  }, [children]);
+  }, []);
 
   useEffect(() => {
     if (isCopied) {
@@ -88,14 +87,13 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
       {...props}
     >
       <Button
-        onClick={copy}
         className="rounded-md p-2 text-neutral-800 dark:text-neutral-300"
+        onClick={copy}
       >
         <ClipboardDocumentIcon className="size-4" />
         <div className="sr-only">Copy code to clipboaord</div>
       </Button>
       <Transition
-        show={isCopied}
         as="div"
         className="absolute inset-0 rounded-md border border-green-500 bg-green-50 p-2 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-500"
         enter="transition-opacity duration-150"
@@ -104,6 +102,7 @@ const CopyButton = ({ children, className, ...props }: CopyButtonProps) => {
         leave="transition-opacity duration-150"
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
+        show={isCopied}
       >
         <CheckIcon className="size-4 stroke-2" />
       </Transition>
@@ -139,7 +138,7 @@ const HighlightedCode = ({
               <pre className="shiki">
                 <code>
                   {children.split("\n").map((line, i) => (
-                    <div key={i} className="line">
+                    <div className="line" key={i}>
                       {line}
                     </div>
                   ))}

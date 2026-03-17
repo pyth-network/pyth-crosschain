@@ -4,11 +4,11 @@ import type { PriceData } from "@pythnetwork/client";
 import { PriceStatus } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { isNullOrUndefined } from "@pythnetwork/shared-lib/util";
-import { useResizeObserver, useMountEffect } from "@react-hookz/web";
+import { useMountEffect, useResizeObserver } from "@react-hookz/web";
 import {
-  startOfMinute,
-  startOfHour,
   startOfDay,
+  startOfHour,
+  startOfMinute,
   startOfSecond,
 } from "date-fns";
 import type {
@@ -21,27 +21,26 @@ import type {
 } from "lightweight-charts";
 import {
   AreaSeries,
+  createChart,
   LineSeries,
   LineStyle,
-  createChart,
 } from "lightweight-charts";
 import { useTheme } from "next-themes";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import { z } from "zod";
-
+import { useLivePriceData } from "../../../hooks/use-live-price-data";
+import { usePriceFormatter } from "../../../hooks/use-price-formatter";
+import { Cluster } from "../../../services/pyth";
+import styles from "./chart.module.scss";
 import type { ChartHoverCardProps } from "./chart-hover-card";
 import { ChartHoverCard } from "./chart-hover-card";
-import styles from "./chart.module.scss";
 import {
   quickSelectWindowToMilliseconds,
   useChartQuickSelectWindow,
   useChartResolution,
 } from "./use-chart-toolbar";
-import { useLivePriceData } from "../../../hooks/use-live-price-data";
-import { usePriceFormatter } from "../../../hooks/use-price-formatter";
-import { Cluster } from "../../../services/pyth";
 
 type Props = {
   symbol: string;
@@ -70,9 +69,9 @@ export const Chart = ({ symbol, feedId }: Props) => {
   return (
     <>
       <div
-        style={{ width: "100%", height: "100%" }}
         className={styles.chart}
         ref={chartContainerRef}
+        style={{ height: "100%", width: "100%" }}
       />
       <ChartHoverCard ref={hoverCardRef} {...hoverCardData} />
     </>
@@ -142,7 +141,7 @@ const useChartElem = (
     }
   }, [livePriceData, resolution]);
 
-  function maybeResetVisibleRange() {
+  const maybeResetVisibleRange = useCallback(() => {
     if (chartRef.current === undefined || didResetVisibleRange.current) {
       return;
     }
@@ -160,7 +159,7 @@ const useChartElem = (
         .setVisibleRange({ from: first.time, to: last.time });
       didResetVisibleRange.current = true;
     }
-  }
+  }, []);
 
   const fetchHistoricalData = useCallback(
     function fetchHistoricalData({
@@ -269,7 +268,7 @@ const useChartElem = (
           isBackfilling.current = false;
         });
     },
-    [symbol, chartRef, logger],
+    [symbol, logger, maybeResetVisibleRange],
   );
 
   useMountEffect(() => {
@@ -282,10 +281,6 @@ const useChartElem = (
     }
 
     const chart = createChart(chartElem, {
-      layout: {
-        attributionLogo: false,
-        background: { color: "transparent" },
-      },
       grid: {
         horzLines: {
           color: "transparent",
@@ -294,13 +289,17 @@ const useChartElem = (
           color: "transparent",
         },
       },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: true,
+      layout: {
+        attributionLogo: false,
+        background: { color: "transparent" },
       },
       localization: {
-        priceFormatter: priceFormatter.format,
         dateFormat: "dd MMM yy,",
+        priceFormatter: priceFormatter.format,
+      },
+      timeScale: {
+        secondsVisible: true,
+        timeVisible: true,
       },
     });
 
@@ -340,8 +339,8 @@ const useChartElem = (
       if (remainingDataMs <= threshold) {
         fetchHistoricalData({
           from: newFromMs / 1000,
-          to: newToMs / 1000,
           resolution,
+          to: newToMs / 1000,
         });
       }
     });
@@ -385,8 +384,8 @@ const useChartElem = (
 
     fetchHistoricalData({
       from: from / 1000,
-      to: to / 1000,
       resolution,
+      to: to / 1000,
     });
   }, [quickSelectWindow, resolution, fetchHistoricalData]);
 
@@ -401,7 +400,7 @@ const useChartElem = (
     }
   }, [livePriceData?.exponent, priceFormatter]);
 
-  return { chartRef, chartContainerRef };
+  return { chartContainerRef, chartRef };
 };
 
 type ChartRefContents = {
@@ -415,28 +414,28 @@ type ChartRefContents = {
 const historicalDataSchema = z.array(
   z
     .strictObject({
-      timestamp: z.number(),
-      price: z.number(),
       confidence: z.number(),
+      price: z.number(),
       status: z.nativeEnum(PriceStatus),
+      timestamp: z.number(),
     })
     .transform((d) => ({
-      time: Number(d.timestamp) as UTCTimestamp,
-      price: d.price,
       confidence: d.confidence,
+      price: d.price,
       status: d.status,
+      time: Number(d.timestamp) as UTCTimestamp,
     })),
 );
 const priceFormat = {
-  type: "price",
-  precision: 5,
   minMove: 0.000_01,
+  precision: 5,
+  type: "price",
 } as const;
 
 const confidenceConfig = {
-  priceFormat,
   lineStyle: LineStyle.Dashed,
   lineWidth: 1,
+  priceFormat,
 } as const;
 
 const useChartResize = (
@@ -469,14 +468,14 @@ const useChartHoverCard = (
   priceFormatter: ReturnType<typeof usePriceFormatter>,
 ) => {
   const dateFormatter = useDateFormatter({
-    year: "2-digit",
-    month: "short",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
     hour12: false,
+    minute: "2-digit",
+    month: "short",
+    second: "2-digit",
     timeZone: "UTC",
+    year: "2-digit",
   });
 
   const hoverCardRef = useRef<HTMLDivElement | null>(null);
@@ -559,14 +558,14 @@ const useChartHoverCard = (
       );
 
       setHoverCardData({
-        timestamp: formattedTimestamp,
-        price: formattedPrice,
         confidence: formattedConfidence,
+        price: formattedPrice,
         style: {
+          display: "block",
           left: `${String(left)}px`,
           top: `${String(top)}px`,
-          display: "block",
         },
+        timestamp: formattedTimestamp,
       });
     };
 
@@ -583,7 +582,7 @@ const useChartHoverCard = (
     hoverCardElement,
   ]);
 
-  return { hoverCardRef, hoverCardData };
+  return { hoverCardData, hoverCardRef };
 };
 
 const applyColors = (
@@ -604,24 +603,24 @@ const applyColors = (
     layout: {
       textColor: colors.muted,
     },
-    timeScale: {
+    rightPriceScale: {
       borderColor: colors.border,
     },
-    rightPriceScale: {
+    timeScale: {
       borderColor: colors.border,
     },
   });
   series.confidenceHigh.applyOptions({
+    bottomColor: colors.chartConfidence,
     lineColor: colors.chartConfidence,
     priceLineColor: colors.chartConfidence,
     topColor: colors.chartConfidence,
-    bottomColor: colors.chartConfidence,
   });
   series.confidenceLow.applyOptions({
+    bottomColor: colors.background,
     lineColor: colors.chartConfidence,
     priceLineColor: colors.chartConfidence,
     topColor: colors.background,
-    bottomColor: colors.background,
   });
   series.price.applyOptions({
     color: colors.chartPrimary,
@@ -634,16 +633,16 @@ const getColors = (container: HTMLDivElement, resolvedTheme: string) => {
   return {
     background: style.getPropertyValue(`--chart-background-${resolvedTheme}`),
     border: style.getPropertyValue(`--border-${resolvedTheme}`),
-    muted: style.getPropertyValue(`--muted-${resolvedTheme}`),
+    chartConfidence: style.getPropertyValue(
+      `--chart-series-muted-${resolvedTheme}`,
+    ),
     chartNeutral: style.getPropertyValue(
       `--chart-series-neutral-${resolvedTheme}`,
     ),
     chartPrimary: style.getPropertyValue(
       `--chart-series-primary-${resolvedTheme}`,
     ),
-    chartConfidence: style.getPropertyValue(
-      `--chart-series-muted-${resolvedTheme}`,
-    ),
+    muted: style.getPropertyValue(`--muted-${resolvedTheme}`),
   };
 };
 

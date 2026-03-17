@@ -2,7 +2,7 @@
 
 import { Switch } from "@pythnetwork/component-library/Switch";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
-import { useQueryState, parseAsBoolean } from "@pythnetwork/react-hooks/nuqs";
+import { parseAsBoolean, useQueryState } from "@pythnetwork/react-hooks/nuqs";
 import { Suspense, useCallback, useMemo } from "react";
 
 import { Cluster } from "../../services/pyth";
@@ -66,8 +66,8 @@ const ResolvedPublishersCard = ({
   return (
     <PublishersCardImpl
       includeTestFeeds={includeTestFeeds}
-      updateIncludeTestFeeds={updateIncludeTestFeeds}
       publishers={publishersFilteredByCluster}
+      updateIncludeTestFeeds={updateIncludeTestFeeds}
       {...props}
     />
   );
@@ -83,10 +83,10 @@ type PublishersCardImplProps =
 
 const PublishersCardImpl = (props: PublishersCardImplProps) => (
   <PriceComponentsCard
-    label="Publishers"
-    searchPlaceholder="Publisher key or name"
-    nameLoadingSkeleton={<PublisherTag isLoading />}
     identifiesPublisher
+    label="Publishers"
+    nameLoadingSkeleton={<PublisherTag isLoading />}
+    searchPlaceholder="Publisher key or name"
     toolbarExtra={
       <Switch
         {...(props.isLoading
@@ -106,9 +106,9 @@ const PublishersCardImpl = (props: PublishersCardImplProps) => (
           metricsTime: props.metricsTime,
           priceComponents: props.publishers.map((feed) => ({
             ...feed,
-            symbol: props.symbol,
-            displaySymbol: props.displaySymbol,
             assetClass: props.assetClass,
+            displaySymbol: props.displaySymbol,
+            symbol: props.symbol,
           })),
         })}
   />

@@ -1,9 +1,7 @@
-import { SystemInstruction, TransactionInstruction } from "@solana/web3.js";
-import {
-  type MultisigInstruction,
-  MultisigInstructionProgram,
-  UNRECOGNIZED_INSTRUCTION,
-} from ".";
+import type { TransactionInstruction } from "@solana/web3.js";
+import { SystemInstruction } from "@solana/web3.js";
+import type { MultisigInstruction } from ".";
+import { MultisigInstructionProgram, UNRECOGNIZED_INSTRUCTION } from ".";
 import type { AnchorAccounts } from "./anchor";
 
 export class SystemProgramMultisigInstruction implements MultisigInstruction {
@@ -67,7 +65,7 @@ export class SystemProgramMultisigInstruction implements MultisigInstruction {
           data = SystemInstruction.decodeNonceWithdraw(instruction);
           break;
         case "UpgradeNonceAccount": // I couldn't find the decode function for this
-          throw Error("UpgradeNonceAccount not implemented");
+          throw new Error("UpgradeNonceAccount not implemented");
       }
       return new SystemProgramMultisigInstruction(instructionType, data, {
         named: {},

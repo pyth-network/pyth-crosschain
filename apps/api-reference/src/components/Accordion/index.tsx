@@ -1,5 +1,5 @@
 import { Disclosure, DisclosurePanel } from "@headlessui/react";
-import { LazyMotion, AnimatePresence, m, domAnimation } from "framer-motion";
+import { AnimatePresence, domAnimation, LazyMotion, m } from "framer-motion";
 import type { ComponentProps, Ref } from "react";
 import { forwardRef } from "react";
 
@@ -15,15 +15,15 @@ const AccordionPanelImpl = (
   { style, ...props }: ComponentProps<typeof m.div>,
   ref: Ref<HTMLDivElement>,
 ) => (
-  <DisclosurePanel static ref={ref} style={{ display: "contents" }}>
+  <DisclosurePanel ref={ref} static style={{ display: "contents" }}>
     {({ open }) => (
       <AnimatePresence initial={false}>
         {open && (
           <m.div
-            style={{ ...style, overflow: "hidden" }}
-            initial={{ height: 0 }}
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
+            initial={{ height: 0 }}
+            style={{ ...style, overflow: "hidden" }}
             {...props}
           />
         )}

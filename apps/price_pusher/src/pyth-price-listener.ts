@@ -2,11 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable unicorn/prefer-add-event-listener */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-import type { HexString, PriceUpdate } from "@pythnetwork/hermes-client";
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type {
+  HermesClient,
+  HexString,
+  PriceUpdate,
+} from "@pythnetwork/hermes-client";
 import type { Logger } from "pino";
 
-import type { PriceInfo, IPriceListener, PriceItem } from "./interface.js";
+import type { IPriceListener, PriceInfo, PriceItem } from "./interface.js";
 import { sleep } from "./utils.js";
 
 type TimestampInMs = number & { readonly _: unique symbol };
@@ -58,8 +61,8 @@ export class PythPriceListener implements IPriceListener {
     const eventSource = await this.hermesClient.getPriceUpdatesStream(
       this.priceIds,
       {
-        parsed: true,
         ignoreInvalidPriceIds: true,
+        parsed: true,
       },
     );
     eventSource.onmessage = (event: MessageEvent) => {
@@ -94,7 +97,6 @@ export class PythPriceListener implements IPriceListener {
     };
 
     eventSource.onerror = async (error: Event) => {
-      console.error("Error receiving updates from Hermes:", error);
       eventSource.close();
       await sleep(5000); // Wait a bit before trying to reconnect
       void this.startListening(); // Attempt to restart the listener

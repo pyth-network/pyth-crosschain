@@ -1,24 +1,25 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 /* eslint-disable react/prop-types */
-import { Dialog, Transition } from '@headlessui/react'
-import type { Dispatch, SetStateAction } from 'react'
-import { Fragment } from 'react'
+import { Dialog, Transition } from "@headlessui/react";
+import type { Dispatch, SetStateAction } from "react";
+import { Fragment } from "react";
 
-import CloseIcon from '../icons/CloseIcon'
+import CloseIcon from "../icons/CloseIcon";
 
 const Modal: React.FC<{
-  isModalOpen: boolean
-  setIsModalOpen: Dispatch<SetStateAction<boolean>>
-  closeModal: () => void
-  content: any
+  isModalOpen: boolean;
+  setIsModalOpen: Dispatch<SetStateAction<boolean>>;
+  closeModal: () => void;
+  // biome-ignore lint/suspicious/noExplicitAny: Modal accepts any content type
+  content: any;
 }> = ({ isModalOpen, setIsModalOpen, closeModal, content }) => {
   return (
-    <Transition appear show={isModalOpen} as={Fragment}>
+    <Transition appear as={Fragment} show={isModalOpen}>
       <Dialog
         as="div"
         className="relative z-40"
         onClose={() => {
-          setIsModalOpen(false)
+          setIsModalOpen(false);
         }}
       >
         <Transition.Child
@@ -59,7 +60,7 @@ const Modal: React.FC<{
         </div>
       </Dialog>
     </Transition>
-  )
-}
+  );
+};
 
-export default Modal
+export default Modal;

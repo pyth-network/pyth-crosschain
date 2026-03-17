@@ -13,24 +13,23 @@ import path from "node:path";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig, DefaultAddresses } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  getWeb3Contract,
-  getOrDeployWormholeContract,
-  topupAccountsIfNecessary,
-} from "./common";
 import type { DeploymentType } from "../src/core/base";
 import { toDeploymentType, toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import {
-  PULSE_DEFAULT_PROVIDER,
-  PULSE_DEFAULT_KEEPER,
   EvmPulseContract,
+  PULSE_DEFAULT_KEEPER,
+  PULSE_DEFAULT_PROVIDER,
 } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig, DefaultAddresses } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+  topupAccountsIfNecessary,
+} from "./common";
 
 type DeploymentConfig = {
   type: DeploymentType;
@@ -47,9 +46,9 @@ const parser = yargs(hideBin(process.argv))
   .options({
     ...COMMON_DEPLOY_OPTIONS,
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
+      type: "string",
     },
   });
 
@@ -58,16 +57,13 @@ async function deployPulseContracts(
   config: DeploymentConfig,
   executorAddr: string,
 ): Promise<string> {
-  console.log("Deploying PulseUpgradeable on", chain.getId(), "...");
-
   // Get the artifact and ensure bytecode is properly formatted
-  const pulseArtifact = JSON.parse(
+  const _pulseArtifact = JSON.parse(
     fs.readFileSync(
       path.join(config.jsonOutputDir, "PulseUpgradeable.json"),
       "utf8",
     ),
   );
-  console.log("PulseArtifact bytecode type:", typeof pulseArtifact.bytecode);
 
   const pulseImplAddr = await deployIfNotCached(
     CACHE_FILE,
@@ -77,15 +73,11 @@ async function deployPulseContracts(
     [],
   );
 
-  console.log("PulseUpgradeable implementation deployed at:", pulseImplAddr);
-
   const pulseImplContract = getWeb3Contract(
     config.jsonOutputDir,
     "PulseUpgradeable",
     pulseImplAddr,
   );
-
-  console.log("Preparing initialization data...");
 
   const pulseInitData = pulseImplContract.methods
     .initialize(
@@ -100,8 +92,6 @@ async function deployPulseContracts(
       3600, // exclusivityPeriodSeconds - 1 hour
     )
     .encodeABI();
-
-  console.log("Deploying ERC1967Proxy for Pulse...");
 
   return await deployIfNotCached(
     CACHE_FILE,
@@ -140,12 +130,12 @@ async function main() {
   }
 
   const deploymentConfig: DeploymentConfig = {
-    type: toDeploymentType(argv.deploymentType),
     gasMultiplier: argv.gasMultiplier,
     gasPriceMultiplier: argv.gasPriceMultiplier,
-    privateKey: toPrivateKey(argv.privateKey),
     jsonOutputDir: argv.stdOutputDir,
+    privateKey: toPrivateKey(argv.privateKey),
     saveContract: argv.saveContract,
+    type: toDeploymentType(argv.deploymentType),
   };
 
   const wormholeContract = await getOrDeployWormholeContract(
@@ -156,15 +146,10 @@ async function main() {
 
   await topupPulseAccountsIfNecessary(chain, deploymentConfig);
 
-  const maskedDeploymentConfig = {
+  const _maskedDeploymentConfig = {
     ...deploymentConfig,
     privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
   };
-  console.log(
-    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, undefined, 2)}\n`,
-  );
-
-  console.log(`Deploying pulse contracts on ${chain.getId()}...`);
 
   const executorAddr = wormholeContract.address; // Using wormhole contract as executor for Pulse
   const pulseAddr = await deployPulseContracts(
@@ -174,15 +159,10 @@ async function main() {
   );
 
   if (deploymentConfig.saveContract) {
-    console.log("Saving the contract in the store...");
     const contract = new EvmPulseContract(chain, pulseAddr);
     DefaultStore.pulse_contracts[contract.getId()] = contract;
     DefaultStore.saveAllContracts();
   }
-
-  console.log(
-    `✅ Deployed pulse contracts on ${chain.getId()} at ${pulseAddr}\n\n`,
-  );
 }
 
 main();

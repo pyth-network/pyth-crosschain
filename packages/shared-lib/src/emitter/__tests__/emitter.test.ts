@@ -56,7 +56,7 @@ describe("IsomorphicEventEmitter tests", () => {
     for (let i = 0; i < count; i++) {
       const reason = `reason ${(Math.random() * 10_000).toString()}`;
       const awesome = Boolean(Math.floor(Math.random() * 1));
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      // biome-ignore lint/style/noNonNullAssertion: Test code - array access is guaranteed valid
       const food = FOOD_TYPES.at(
         Math.floor(Math.random() * FOOD_TYPES.length),
       )!;

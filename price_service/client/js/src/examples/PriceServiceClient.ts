@@ -11,15 +11,15 @@ const argv = yargs(hideBin(process.argv))
   .option("endpoint", {
     description:
       "Endpoint URL for the price service. e.g: https://endpoint/example",
-    type: "string",
     required: true,
+    type: "string",
   })
   .option("price-ids", {
     description:
       "Space separated price feed ids (in hex without leading 0x) to fetch." +
       " e.g: f9c0172ba10dfa4d19088d...",
-    type: "array",
     required: true,
+    type: "array",
   })
   .help()
   .alias("help", "h")
@@ -37,27 +37,11 @@ async function run() {
   });
 
   const priceIds = argv.priceIds as string[];
-  const priceFeeds = await connection.getLatestPriceFeeds(priceIds);
-  console.log(priceFeeds);
-  console.log(priceFeeds?.at(0)?.getPriceNoOlderThan(60));
+  const _priceFeeds = await connection.getLatestPriceFeeds(priceIds);
 
-  console.log("Subscribing to price feed updates.");
+  await connection.subscribePriceFeedUpdates(priceIds, (priceFeed) => {});
 
-  await connection.subscribePriceFeedUpdates(priceIds, (priceFeed) => {
-    console.log(
-      `Current price for ${priceFeed.id}: ${JSON.stringify(
-        priceFeed.getPriceNoOlderThan(60),
-      )}.`,
-    );
-    console.log(priceFeed.getVAA());
-  });
-
-  await sleep(600000);
-
-  // To close the websocket you should either unsubscribe from all
-  // price feeds or call `connection.stopWebSocket()` directly.
-
-  console.log("Unsubscribing from price feed updates.");
+  await sleep(600_000);
   await connection.unsubscribePriceFeedUpdates(priceIds);
 
   // connection.closeWebSocket();

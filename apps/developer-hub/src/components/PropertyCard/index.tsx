@@ -102,7 +102,7 @@ export function PropertyCard({
         if (part.startsWith("`") && part.endsWith("`")) {
           const codeText = part.slice(1, -1);
           return (
-            <code key={index} className={styles.detailCode}>
+            <code className={styles.detailCode} key={index}>
               {codeText}
             </code>
           );
@@ -123,8 +123,8 @@ export function PropertyCard({
       >
         {properties.map((property) => (
           <div
-            key={property.name}
             id={`property-${property.name}`}
+            key={property.name}
             ref={(el) => {
               propertyRefs.current[property.name] = el;
             }}
@@ -153,8 +153,8 @@ export function PropertyCard({
                     <dd className={styles.detailDescription}>
                       {property.algorithmLink ? (
                         <Link
-                          href={property.algorithmLink}
                           className={styles.detailLink}
+                          href={property.algorithmLink}
                         >
                           See {property.algorithm.replace("Refer to ", "")}
                         </Link>
@@ -178,7 +178,7 @@ export function PropertyCard({
                       <dt className={styles.detailTerm}>Possible Values</dt>
                       <dd className={styles.valuesList}>
                         {property.possibleValues.map((val) => (
-                          <code key={val} className={styles.valueCode}>
+                          <code className={styles.valueCode} key={val}>
                             {val}
                           </code>
                         ))}
@@ -214,7 +214,7 @@ export function PropertyCard({
               </dl>
 
               {property.warning && (
-                <Callout type="warn" title="Note">
+                <Callout title="Note" type="warn">
                   The <code>{property.name}</code> field may be absent if the{" "}
                   {property.name} couldn&apos;t be computed. Use the last valid{" "}
                   {property.name} or wait for a fresh update.
@@ -230,7 +230,7 @@ export function PropertyCard({
                         const linkText = linkMatch[1];
                         const linkUrl = linkMatch[2];
                         return (
-                          <Link key={index} href={linkUrl}>
+                          <Link href={linkUrl} key={index}>
                             {linkText}
                           </Link>
                         );

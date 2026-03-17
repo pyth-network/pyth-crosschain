@@ -5,19 +5,6 @@ import type { StorybookConfig } from "@storybook/nextjs";
 const resolve = createRequire(import.meta.url).resolve;
 
 const config = {
-  framework: "@storybook/nextjs",
-
-  stories: [
-    "../src/**/*.mdx",
-    "../src/**/?(*.)story.tsx",
-    "../src/**/?(*.)stories.tsx",
-  ],
-
-  features: {
-    backgrounds: true,
-    measure: false,
-  },
-
   addons: [
     "@storybook/addon-themes",
     {
@@ -31,13 +18,13 @@ const config = {
               {
                 loader: "css-loader",
                 options: {
+                  esModule: false,
+                  importLoaders: 1,
                   modules: {
                     auto: true,
-                    localIdentName: "[name]__[local]--[hash:base64:5]",
                     exportLocalsConvention: "as-is",
+                    localIdentName: "[name]__[local]--[hash:base64:5]",
                   },
-                  importLoaders: 1,
-                  esModule: false,
                 },
               },
               {
@@ -49,6 +36,18 @@ const config = {
         ],
       },
     },
+  ],
+
+  features: {
+    backgrounds: true,
+    measure: false,
+  },
+  framework: "@storybook/nextjs",
+
+  stories: [
+    "../src/**/*.mdx",
+    "../src/**/?(*.)story.tsx",
+    "../src/**/?(*.)stories.tsx",
   ],
 
   webpackFinal: (config) => {

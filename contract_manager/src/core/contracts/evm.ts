@@ -611,9 +611,6 @@ export class EvmPriceFeedContract extends PriceFeedContract {
       web3 = this.chain.getWeb3();
       amount = BigInt(await web3.eth.getBalance(this.address));
     } catch {
-      console.error(
-        "Error getting balance with given RPC, moving to viem default RPC",
-      );
       web3 = this.chain.getViemDefaultWeb3();
       amount = BigInt(await web3.eth.getBalance(this.address));
     }
@@ -1068,30 +1065,22 @@ export class EvmLazerContract extends Storable {
         from: account.address,
         to: this.address,
       });
-      const tx = await web3.eth.sendTransaction({
+      const _tx = await web3.eth.sendTransaction({
         data,
         from: account.address,
         gas: Math.ceil(Number(gasEstimate) * 1.2).toString(),
         to: this.address,
       });
-      console.log(
-        `Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
-      );
-      console.log(`Transaction hash: ${tx.transactionHash}`);
     } else {
       const gasEstimate = await contract.methods
         .updateTrustedSigner(trustedSigner, expiresAt)
         .estimateGas({ from: account.address });
-      const tx = await contract.methods
+      const _tx = await contract.methods
         .updateTrustedSigner(trustedSigner, expiresAt)
         .send({
           from: account.address,
           gas: Math.floor(gasEstimate * 1.2), // 20% buffer
         });
-      console.log(
-        `Updated trusted signer ${trustedSigner} with expiration ${expiresAt}`,
-      );
-      console.log(`Transaction hash: ${tx.transactionHash}`);
     }
   }
 }

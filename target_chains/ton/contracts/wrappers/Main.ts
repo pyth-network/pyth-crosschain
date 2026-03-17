@@ -1,13 +1,8 @@
-import {
-  Cell,
-  contractAddress,
-  type ContractProvider,
-  type Sender,
-} from "@ton/core";
 import type { HexString } from "@pythnetwork/price-service-sdk";
-
-import { BaseWrapper } from "./BaseWrapper";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
+import type { Cell, ContractProvider, Sender } from "@ton/core";
+import { contractAddress } from "@ton/core";
+import { BaseWrapper } from "./BaseWrapper";
 
 export type MainConfig = {
   singleUpdateFee: number;

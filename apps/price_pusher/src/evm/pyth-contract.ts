@@ -14,7 +14,7 @@ export const createPythContract = (
   address: Address,
 ): PythContract =>
   getContract({
-    client,
     abi: PythAbi,
     address,
+    client,
   });

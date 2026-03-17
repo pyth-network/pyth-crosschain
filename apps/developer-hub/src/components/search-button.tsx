@@ -15,17 +15,17 @@ export const SearchButton = () => {
   return (
     <>
       <SearchButtonComponent
-        size="sm"
-        smallScreenContent="Search"
         largeScreenContent="Search"
         onClick={handleSearch}
+        size="sm"
+        smallScreenContent="Search"
       />
       {open &&
         createPortal(
           <DefaultSearchDialog
-            open={open}
-            onOpenChange={setOpen}
             api="/api/search"
+            onOpenChange={setOpen}
+            open={open}
           />,
           document.body,
         )}

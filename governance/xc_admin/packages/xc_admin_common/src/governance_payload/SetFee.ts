@@ -1,10 +1,10 @@
+import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
+import * as BufferLayoutExt from "./BufferLayoutExt";
 import {
   PythGovernanceActionImpl,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
-import type { ChainName } from "../chains";
 
 /** Set the fee on the target chain to newFeeValue * 10^newFeeExpo */
 export class SetFee extends PythGovernanceActionImpl {
@@ -40,8 +40,8 @@ export class SetFee extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(SetFee.layout, {
-      newFeeValue: this.newFeeValue,
       newFeeExpo: this.newFeeExpo,
+      newFeeValue: this.newFeeValue,
     });
   }
 }
@@ -98,8 +98,8 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
     const fieldsBuf = Buffer.alloc(SetFeeInToken.layout.span);
     SetFeeInToken.layout.encode(
       {
-        newFeeValue: this.newFeeValue,
         newFeeExpo: this.newFeeExpo,
+        newFeeValue: this.newFeeValue,
         tokenLen: this.token.length,
       },
       fieldsBuf,

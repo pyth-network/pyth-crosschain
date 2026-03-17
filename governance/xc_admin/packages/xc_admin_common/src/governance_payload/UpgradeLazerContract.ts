@@ -1,7 +1,7 @@
-import type { ChainName } from "../chains";
-import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
+import type { ChainName } from "../chains";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 
 export class UpgradeSuiLazerContract extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<
@@ -36,8 +36,8 @@ export class UpgradeSuiLazerContract extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(UpgradeSuiLazerContract.layout, {
-      version: this.version,
       hash: this.hash,
+      version: this.version,
     });
   }
 }

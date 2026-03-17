@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
-import Image from "next/image";
+import type Image from "next/image";
 import type { ComponentProps } from "react";
 
 import styles from "./index.module.scss";
@@ -23,22 +23,22 @@ const DualModeImage = ({
 }: Props) => {
   const commonProps = {
     alt,
-    width,
     height,
     sizes,
+    width,
     ...props,
   };
 
   return (
     <>
       <ImageZoom
-        src={lightSrc}
         className={clsx(styles.lightImage, className)}
+        src={lightSrc}
         {...commonProps}
       />
       <ImageZoom
-        src={darkSrc}
         className={clsx(styles.darkImage, className)}
+        src={darkSrc}
         {...commonProps}
       />
     </>

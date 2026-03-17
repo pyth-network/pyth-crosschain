@@ -5,10 +5,10 @@ import { Table } from "@pythnetwork/component-library/Table";
 import { useDrawer } from "@pythnetwork/component-library/useDrawer";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import {
-  parseAsString,
-  parseAsInteger,
-  useQueryStates,
   createSerializer,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
 } from "@pythnetwork/react-hooks/nuqs";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
@@ -24,9 +24,9 @@ export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
   const collator = useCollator();
   const pathname = usePathname();
   const queryStates = {
+    assetClass: parseAsString.withDefault(""),
     page: parseAsInteger.withDefault(1),
     search: parseAsString.withDefault(""),
-    assetClass: parseAsString.withDefault(""),
   };
   const serialize = createSerializer(queryStates);
   const [, setQuery] = useQueryStates(queryStates);
@@ -35,10 +35,14 @@ export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
       Object.entries(numFeedsByAssetClass)
         .sort(([a], [b]) => collator.compare(a, b))
         .map(([assetClass, count]) => {
-          const newQuery = { assetClass, search: "", page: 1 };
+          const newQuery = { assetClass, page: 1, search: "" };
           return {
-            id: assetClass,
+            data: {
+              assetClass,
+              count: <Badge style="outline">{count}</Badge>,
+            },
             href: `${pathname}${serialize(newQuery)}`,
+            id: assetClass,
             onAction: () => {
               drawer.close().catch((error: unknown) => {
                 logger.error(error);
@@ -46,10 +50,6 @@ export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
               setQuery(newQuery).catch((error: unknown) => {
                 logger.error("Failed to update query", error);
               });
-            },
-            data: {
-              assetClass,
-              count: <Badge style="outline">{count}</Badge>,
             },
           };
         }),
@@ -65,20 +65,20 @@ export const AssetClassTable = ({ numFeedsByAssetClass }: Props) => {
   );
   return (
     <Table
-      fill
-      stickyHeader="top"
-      label="Asset Classes"
       columns={[
         {
-          id: "assetClass",
-          name: "ASSET CLASS",
-          isRowHeader: true,
-          fill: true,
           alignment: "left",
+          fill: true,
+          id: "assetClass",
+          isRowHeader: true,
+          name: "ASSET CLASS",
         },
-        { id: "count", name: "COUNT", alignment: "center" },
+        { alignment: "center", id: "count", name: "COUNT" },
       ]}
+      fill
+      label="Asset Classes"
       rows={assetClassRows}
+      stickyHeader="top"
     />
   );
 };

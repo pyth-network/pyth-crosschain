@@ -1,5 +1,6 @@
 // Disable the following rule because this file is the intended place to declare
 // and load all env variables.
+// biome-ignore-all lint/style/noProcessEnv: This file is the intended place to declare and load all env variables
 /* eslint-disable n/no-process-env */
 
 import { Redis } from "ioredis";
@@ -53,11 +54,11 @@ type ClickhouseDbConfig = {
 };
 
 export const CLICKHOUSE: ClickhouseDbConfig = {
+  password: demand("CLICKHOUSE_PASSWORD"),
   url:
     process.env.CLICKHOUSE_URL ??
     "https://ryf56suqpb.eu-west-2.aws.clickhouse.cloud:8443",
   username: process.env.CLICKHOUSE_USERNAME ?? "insights",
-  password: demand("CLICKHOUSE_PASSWORD"),
 };
 
 export const CLICKHOUSE_PYTH_PRO: ClickhouseDbConfig = {
@@ -70,11 +71,11 @@ export const CLICKHOUSE_PYTH_PRO: ClickhouseDbConfig = {
 
 export const CLICKHOUSE_PYTH_ANALYTICS: ClickhouseDbConfig = {
   password: demand("CLICKHOUSE_PYTH_ANALYTICS_PASSWORD"),
-  username:
-    process.env.CLICKHOUSE_PYTH_ANALYTICS_USERNAME ?? "analytics_readonly",
   url:
     process.env.CLICKHOUSE_PYTH_ANALYTICS_URL ??
     "https://e3ovtrijn4.ap-northeast-1.aws.clickhouse.cloud:8443",
+  username:
+    process.env.CLICKHOUSE_PYTH_ANALYTICS_USERNAME ?? "analytics_readonly",
 };
 
 export const SOLANA_RPC =

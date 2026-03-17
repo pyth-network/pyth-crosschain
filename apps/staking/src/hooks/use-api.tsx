@@ -9,10 +9,9 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
 import { createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
-
+import * as api from "../api";
 import { StateType as DataStateType, useData } from "./use-data";
 import { useNetwork } from "./use-network";
-import * as api from "../api";
 
 export enum StateType {
   NotLoaded,
@@ -54,16 +53,16 @@ const State = {
     hermesClient: HermesClient,
     onCreateAccount: (newAccount: PublicKey) => Promise<void>,
   ) => ({
-    type: StateType.LoadedNoStakeAccount as const,
     dashboardDataCacheKey: [
       isMainnet ? "mainnet" : "devnet",
       client.wallet.publicKey.toBase58(),
     ],
-    loadData: () => api.loadData(client, pythnetClient, hermesClient),
     deposit: async (amount: bigint) => {
       const account = await api.createStakeAccountAndDeposit(client, amount);
       return onCreateAccount(account);
     },
+    loadData: () => api.loadData(client, pythnetClient, hermesClient),
+    type: StateType.LoadedNoStakeAccount as const,
     wallet,
   }),
 
@@ -98,12 +97,15 @@ const State = {
       };
 
     return {
-      type: StateType.Loaded as const,
       account,
       allAccounts,
-      selectAccount,
+      cancelWarmupGovernance: bindApi(api.cancelWarmupGovernance),
+      cancelWarmupIntegrityStaking: bindApi(api.cancelWarmupIntegrityStaking),
+
+      claim: bindApi(api.claim),
       dashboardDataCacheKey,
-      wallet,
+      delegateIntegrityStaking: bindApi(api.delegateIntegrityStaking),
+      deposit: bindApi(api.deposit),
 
       loadData: () =>
         api.loadData(
@@ -113,19 +115,16 @@ const State = {
           account,
           simulationPayer,
         ),
-
-      claim: bindApi(api.claim),
-      deposit: bindApi(api.deposit),
-      withdraw: bindApi(api.withdraw),
-      stakeGovernance: bindApi(api.stakeGovernance),
-      cancelWarmupGovernance: bindApi(api.cancelWarmupGovernance),
-      unstakeGovernance: bindApi(api.unstakeGovernance),
-      delegateIntegrityStaking: bindApi(api.delegateIntegrityStaking),
-      unstakeIntegrityStaking: bindApi(api.unstakeIntegrityStaking),
-      cancelWarmupIntegrityStaking: bindApi(api.cancelWarmupIntegrityStaking),
-      reassignPublisherAccount: bindApi(api.reassignPublisherAccount),
       optPublisherOut: bindApi(api.optPublisherOut),
+      reassignPublisherAccount: bindApi(api.reassignPublisherAccount),
+      selectAccount,
+      stakeGovernance: bindApi(api.stakeGovernance),
+      type: StateType.Loaded as const,
       unstakeAllIntegrityStaking: bindApi(api.unstakeAllIntegrityStaking),
+      unstakeGovernance: bindApi(api.unstakeGovernance),
+      unstakeIntegrityStaking: bindApi(api.unstakeIntegrityStaking),
+      wallet,
+      withdraw: bindApi(api.withdraw),
     };
   },
 
@@ -134,9 +133,9 @@ const State = {
     error: LoadStakeAccountsError,
     reset: () => void,
   ) => ({
-    type: StateType.ErrorLoadingStakeAccounts as const,
     error,
     reset,
+    type: StateType.ErrorLoadingStakeAccounts as const,
     wallet,
   }),
 };
@@ -193,9 +192,9 @@ const useApiContext = (
             connection,
             wallet: {
               publicKey: wallet.publicKey,
+              sendTransaction: wallet.sendTransaction,
               signAllTransactions: wallet.signAllTransactions,
               signTransaction: wallet.signTransaction,
-              sendTransaction: wallet.sendTransaction,
             },
           })
         : undefined,

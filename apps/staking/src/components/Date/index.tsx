@@ -8,16 +8,17 @@ type Props = Omit<HTMLProps<HTMLSpanElement>, "children"> & {
   options?: DateFormatterOptions | undefined | "time";
 };
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Date component intentionally shadows global Date
 export const Date = ({ children, options, ...props }: Props) => {
   const formatter = useDateFormatter(
     options === "time"
       ? {
-          year: "numeric",
-          month: "numeric",
           day: "numeric",
           hour: "numeric",
           minute: "numeric",
+          month: "numeric",
           second: "numeric",
+          year: "numeric",
         }
       : options,
   );

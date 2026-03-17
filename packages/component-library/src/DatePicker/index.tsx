@@ -3,11 +3,11 @@
 
 import {
   getLocalTimeZone,
-  Time,
+  now,
   parseDate,
   parseDateTime,
+  Time,
   today,
-  now,
 } from "@internationalized/date";
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr/CalendarBlank";
 import { CaretLeft } from "@phosphor-icons/react/dist/ssr/CaretLeft";
@@ -30,6 +30,7 @@ import {
 import { useLocale } from "react-aria";
 import type { DateValue } from "react-aria-components";
 import {
+  DatePicker as BaseDatePicker,
   Button,
   Calendar,
   CalendarCell,
@@ -39,7 +40,6 @@ import {
   CalendarHeaderCell,
   DateInput,
   DatePickerStateContext,
-  DatePicker as BaseDatePicker,
   DateSegment,
   Dialog,
   Group,
@@ -209,11 +209,11 @@ export function DatePicker({
             onFocusChange={setFocusedDate}
           >
             <div className={cx(styles.calendarHeader)}>
-              <Button slot="previous" className={cx(styles.navButton)}>
+              <Button className={cx(styles.navButton)} slot="previous">
                 <CaretLeft className={styles.navIcon} />
               </Button>
               <Heading className={styles.heading} />
-              <Button slot="next" className={cx(styles.navButton)}>
+              <Button className={cx(styles.navButton)} slot="next">
                 <CaretRight className={styles.navIcon} />
               </Button>
             </div>
@@ -286,21 +286,21 @@ function DatePickerFooter({
   return (
     <div className={cx(styles.footer)}>
       <DesignSystemButton
-        size="sm"
-        variant="outline"
         onClick={(e) => {
           e.stopPropagation();
           handleClear();
         }}
+        size="sm"
+        variant="outline"
       >
         Clear
       </DesignSystemButton>
       <DesignSystemButton
-        size="sm"
         onClick={(e) => {
           e.stopPropagation();
           handleTodayOrNow();
         }}
+        size="sm"
         variant="outline"
       >
         {type === "date" ? "Today" : "Now"}
@@ -380,15 +380,14 @@ function DatePickerTimeField() {
   if (!state?.hasTime) return null;
 
   return (
-    <div className={cx(styles.timeField)} aria-label="Time">
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-label on div is intentional for accessibility
+    <div aria-label="Time" className={cx(styles.timeField)}>
       <Label className={cx(styles.timeLabel)}>Time</Label>
       <div className={cx(styles.timeSelects)} data-uses-ampm={!uses24Hour}>
         <Select
           className={cx(styles.timeSelect)}
-          label="Hour"
           hideLabel
-          options={hourOptions}
-          selectedKey={uses24Hour ? hour24 : hour12}
+          label="Hour"
           onSelectionChange={(newHour) => {
             const nextHour = Number(newHour);
             updateTime(
@@ -396,34 +395,36 @@ function DatePickerTimeField() {
               minute,
             );
           }}
+          options={hourOptions}
+          selectedKey={uses24Hour ? hour24 : hour12}
           show={(value) => value.id.toString().padStart(2, "0")}
           size="sm"
           variant="outline"
         />
         <Select
-          label="Minute"
           hideLabel
-          options={minuteOptions}
-          selectedKey={minute}
+          label="Minute"
           onSelectionChange={(newMinute) => {
             updateTime(hour24, Number(newMinute));
           }}
+          options={minuteOptions}
+          selectedKey={minute}
           show={(value) => value.id.toString().padStart(2, "0")}
           size="sm"
           variant="outline"
         />
         {!uses24Hour && (
           <Select
-            label="AM/PM"
             hideLabel
-            options={periodOptions}
-            selectedKey={period}
+            label="AM/PM"
             onSelectionChange={(newPeriod) => {
               updateTime(
                 to24Hour(hour12, newPeriod === "PM" ? "PM" : "AM"),
                 minute,
               );
             }}
+            options={periodOptions}
+            selectedKey={period}
             show={(value) => value.id}
             size="sm"
             variant="outline"

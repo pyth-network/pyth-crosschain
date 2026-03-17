@@ -1,7 +1,7 @@
-import { Transaction } from "@ton/core";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
+import type { Transaction } from "@ton/core";
 
-const GOVERNANCE_MAGIC = 0x5054474d;
+const GOVERNANCE_MAGIC = 0x50_54_47_4d;
 const GOVERNANCE_MODULE = 1;
 const AUTHORIZE_UPGRADE_CONTRACT_ACTION = 0;
 const TARGET_CHAIN_ID = 1;
@@ -16,8 +16,6 @@ function computedGeneric(transaction: Transaction) {
 
 export function printTxGasStats(name: string, transaction: Transaction) {
   const txComputed = computedGeneric(transaction);
-  console.log(`${name} used ${txComputed.gasUsed} gas`);
-  console.log(`${name} gas cost: ${txComputed.gasFees}`);
   return txComputed.gasFees;
 }
 

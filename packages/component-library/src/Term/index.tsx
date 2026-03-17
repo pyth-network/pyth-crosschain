@@ -2,13 +2,13 @@
 
 import clsx from "clsx";
 import type { ComponentProps, ReactNode } from "react";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import {
+  Button,
   Dialog,
   DialogTrigger,
   OverlayArrow,
   Popover,
-  Button,
 } from "react-aria-components";
 
 import styles from "./index.module.scss";
@@ -39,11 +39,12 @@ export const Term = ({ className, children, term, ...props }: Props) => {
     >
       <Button
         className={clsx(className, styles.term)}
-        onHoverStart={() => {
-          setIsOpen(true);
-          if (closeTimeout.current) {
-            clearTimeout(closeTimeout.current);
-            closeTimeout.current = undefined;
+        onBlur={() => {
+          didEscape.current = false;
+        }}
+        onFocus={() => {
+          if (!didEscape.current) {
+            setIsOpen(true);
           }
         }}
         onHoverEnd={() => {
@@ -52,13 +53,12 @@ export const Term = ({ className, children, term, ...props }: Props) => {
           }, HOVER_END_DELAY);
           didEscape.current = false;
         }}
-        onFocus={() => {
-          if (!didEscape.current) {
-            setIsOpen(true);
+        onHoverStart={() => {
+          setIsOpen(true);
+          if (closeTimeout.current) {
+            clearTimeout(closeTimeout.current);
+            closeTimeout.current = undefined;
           }
-        }}
-        onBlur={() => {
-          didEscape.current = false;
         }}
         onPress={() => {
           setIsOpen(true);
@@ -70,7 +70,7 @@ export const Term = ({ className, children, term, ...props }: Props) => {
       </Button>
       <Popover className={styles.popover ?? ""} isNonModal placement="top">
         <OverlayArrow className={styles.arrow ?? ""}>
-          <svg width={12} height={12} viewBox="0 0 12 12">
+          <svg height={12} viewBox="0 0 12 12" width={12}>
             <path d="M0 0 L6 6 L12 0" />
           </svg>
         </OverlayArrow>

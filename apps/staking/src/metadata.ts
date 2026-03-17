@@ -1,23 +1,14 @@
 import type { Metadata, Viewport } from "next";
 
 export const metadata = {
-  metadataBase: new URL("https://staking.pyth.network"),
-  title: {
-    default: "Pyth Network Staking & Delegation",
-    template: "%s | Pyth Network Staking & Delegation",
-  },
   applicationName: "Pyth Network Staking & Delegation",
   description:
     "Stake PYTH tokens to participate in governance or earn yield and protect DeFi by staking to publishers.",
-  referrer: "strict-origin-when-cross-origin",
-  openGraph: {
-    type: "website",
-  },
-  twitter: {
-    creator: "@PythNetwork",
-    card: "summary_large_image",
-  },
   icons: {
+    apple: {
+      sizes: "180x180",
+      url: "/apple-touch-icon.png",
+    },
     icon: [
       {
         media: "(prefers-color-scheme: light)",
@@ -30,20 +21,29 @@ export const metadata = {
         url: "/favicon-light.ico",
       },
       {
-        type: "image/png",
         sizes: "32x32",
+        type: "image/png",
         url: "/favicon-32x32.png",
       },
       {
-        type: "image/png",
         sizes: "16x16",
+        type: "image/png",
         url: "/favicon-16x16.png",
       },
     ],
-    apple: {
-      url: "/apple-touch-icon.png",
-      sizes: "180x180",
-    },
+  },
+  metadataBase: new URL("https://staking.pyth.network"),
+  openGraph: {
+    type: "website",
+  },
+  referrer: "strict-origin-when-cross-origin",
+  title: {
+    default: "Pyth Network Staking & Delegation",
+    template: "%s | Pyth Network Staking & Delegation",
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@PythNetwork",
   },
 } satisfies Metadata;
 

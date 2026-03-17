@@ -6,13 +6,12 @@ import {
   DotsThreeVertical,
 } from "@phosphor-icons/react/dist/ssr";
 import cx from "clsx";
-
-import { classes } from "./LeftNav.styles";
-import type { LeftNavProps } from "./types";
 import { PythLogo } from "../../svg/PythLogo";
 import { ActionsMenu } from "../ActionsMenu";
 import { Avatar } from "../Avatar";
 import { Button } from "../Button";
+import { classes } from "./LeftNav.styles";
+import type { LeftNavProps } from "./types";
 
 export function LeftNav({
   actionMenuItems,
@@ -30,8 +29,8 @@ export function LeftNav({
   return (
     <nav
       className={cx(classes.root, className)}
-      data-hasactionsmenu={actionMenuItems.length > 0}
       data-collapsed={collapsed}
+      data-hasactionsmenu={actionMenuItems.length > 0}
       data-open={!collapsed}
     >
       <div className={classes.top}>
@@ -53,10 +52,10 @@ export function LeftNav({
       <ActionsMenu
         align="center"
         className={classes.actionsMenuPopover}
-        triggerClassName={classes.actionsMenuTrigger}
         menuItems={actionMenuItems}
         popoverTitle="My Account"
         side="top"
+        triggerClassName={classes.actionsMenuTrigger}
       >
         <Button
           className={classes.currentUser}

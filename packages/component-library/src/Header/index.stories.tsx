@@ -4,6 +4,14 @@ import { ThemeProvider } from "next-themes";
 import { Header as HeaderComponent } from "./index.jsx";
 
 const meta = {
+  argTypes: {
+    appName: {
+      control: "text",
+      table: {
+        category: "Contents",
+      },
+    },
+  },
   component: HeaderComponent,
   decorators: [
     (Story) => (
@@ -17,14 +25,6 @@ const meta = {
   },
   parameters: {
     layout: "fullscreen",
-  },
-  argTypes: {
-    appName: {
-      control: "text",
-      table: {
-        category: "Contents",
-      },
-    },
   },
 } satisfies Meta<typeof HeaderComponent>;
 export default meta;

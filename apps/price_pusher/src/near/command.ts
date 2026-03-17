@@ -9,33 +9,31 @@ import { Controller } from "../controller";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import { PythPriceListener } from "../pyth-price-listener";
-import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
 import { filterInvalidPriceItems } from "../utils";
+import { NearAccount, NearPriceListener, NearPricePusher } from "./near";
 
 export default {
-  command: "near",
-  describe: "run price pusher for near",
   builder: {
-    "node-url": {
-      description:
-        "NEAR RPC API url. used to make JSON RPC calls to interact with NEAR.",
-      type: "string",
+    "account-id": {
+      description: "payer account identifier.",
       required: true,
+      type: "string",
     } as Options,
     network: {
       description: "testnet or mainnet.",
-      type: "string",
       required: true,
+      type: "string",
     } as Options,
-    "account-id": {
-      description: "payer account identifier.",
-      type: "string",
+    "node-url": {
+      description:
+        "NEAR RPC API url. used to make JSON RPC calls to interact with NEAR.",
       required: true,
+      type: "string",
     } as Options,
     "private-key-path": {
       description: "path to payer private key file.",
-      type: "string",
       required: false,
+      type: "string",
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -45,6 +43,8 @@ export default {
     ...options.logLevel,
     ...options.controllerLogLevel,
   },
+  command: "near",
+  describe: "run price pusher for near",
   handler: async function (argv: any) {
     // FIXME: type checks for this
     const {
@@ -66,7 +66,7 @@ export default {
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const hermesClient = new HermesClient(priceServiceEndpoint);
 
-    let priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
+    let priceItems = priceConfigs.map(({ id, alias }) => ({ alias, id }));
 
     // Better to filter out invalid price items before creating the pyth listener
     const { existingPriceItems, invalidPriceItems } =

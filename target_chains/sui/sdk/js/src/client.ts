@@ -5,8 +5,8 @@
 import { Buffer } from "node:buffer";
 
 import { bcs } from "@mysten/sui/bcs";
-import { SuiClient } from "@mysten/sui/client";
-import { Transaction } from "@mysten/sui/transactions";
+import type { SuiClient } from "@mysten/sui/client";
+import type { Transaction } from "@mysten/sui/transactions";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import type { HexString } from "@pythnetwork/hermes-client";
 
@@ -69,7 +69,6 @@ export class SuiPythClient {
         if (result.data?.content?.dataType == "moveObject") {
           return result.data.content.fields;
         }
-        console.log(result.data?.content);
 
         throw new Error(`Cannot fetch package id for object ${objectId}`);
       });
@@ -94,7 +93,6 @@ export class SuiPythClient {
     const verifiedVaas = [];
     for (const vaa of vaas) {
       const [verifiedVaa] = tx.moveCall({
-        target: `${wormholePackageId}::vaa::parse_and_verify`,
         arguments: [
           tx.object(this.wormholeStateId),
           tx.pure(
@@ -107,6 +105,7 @@ export class SuiPythClient {
           ),
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
+        target: `${wormholePackageId}::vaa::parse_and_verify`,
       });
       verifiedVaas.push(verifiedVaa);
     }
@@ -126,7 +125,6 @@ export class SuiPythClient {
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
     const [priceUpdatesHotPotato] = tx.moveCall({
-      target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
       arguments: [
         tx.object(this.pythStateId),
         tx.pure(
@@ -140,6 +138,7 @@ export class SuiPythClient {
         verifiedVaas[0]!,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
     });
     return priceUpdatesHotPotato!;
   }
@@ -163,7 +162,6 @@ export class SuiPythClient {
       }
       priceInfoObjects.push(priceInfoObjectId);
       [priceUpdatesHotPotato] = tx.moveCall({
-        target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
           tx.object(this.pythStateId),
           priceUpdatesHotPotato,
@@ -171,12 +169,13 @@ export class SuiPythClient {
           coins[coinId],
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
+        target: `${packageId}::pyth::update_single_price_feed`,
       });
       coinId++;
     }
     tx.moveCall({
-      target: `${packageId}::hot_potato_vector::destroy`,
       arguments: [priceUpdatesHotPotato],
+      target: `${packageId}::hot_potato_vector::destroy`,
       typeArguments: [`${packageId}::price_info::PriceInfo`],
     });
     return priceInfoObjects;
@@ -254,7 +253,6 @@ export class SuiPythClient {
     const vaa = this.extractVaaBytesFromAccumulatorMessage(updates[0]!);
     const verifiedVaas = await this.verifyVaas([vaa], tx);
     tx.moveCall({
-      target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
       arguments: [
         tx.object(this.pythStateId),
         tx.pure(
@@ -268,6 +266,7 @@ export class SuiPythClient {
         verifiedVaas[0]!,
         tx.object(SUI_CLOCK_OBJECT_ID),
       ],
+      target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
     });
   }
 
@@ -300,13 +299,13 @@ export class SuiPythClient {
     if (!this.priceFeedObjectIdCache.has(normalizedFeedId)) {
       const { id: tableId, fieldType } = await this.getPriceTableInfo();
       const result = await this.provider.getDynamicFieldObject({
-        parentId: tableId,
         name: {
           type: `${fieldType}::price_identifier::PriceIdentifier`,
           value: {
             bytes: [...Buffer.from(normalizedFeedId, "hex")],
           },
         },
+        parentId: tableId,
       });
       if (!result.data?.content) {
         return undefined;
@@ -332,11 +331,11 @@ export class SuiPythClient {
   async getPriceTableInfo(): Promise<{ id: ObjectId; fieldType: ObjectId }> {
     if (this.priceTableInfo === undefined) {
       const result = await this.provider.getDynamicFieldObject({
-        parentId: this.pythStateId,
         name: {
           type: "vector<u8>",
           value: "price_info",
         },
+        parentId: this.pythStateId,
       });
       if (!result.data?.type) {
         throw new Error(
@@ -348,7 +347,7 @@ export class SuiPythClient {
         "::price_identifier::PriceIdentifier, 0x2::object::ID>",
         "",
       );
-      this.priceTableInfo = { id: result.data.objectId, fieldType: type };
+      this.priceTableInfo = { fieldType: type, id: result.data.objectId };
     }
     return this.priceTableInfo;
   }

@@ -25,9 +25,9 @@ export async function BasePage(props: { params: { slug: string[] } }) {
 
   return (
     <DocsPage
-      toc={page.data.toc}
-      tableOfContent={{ style: "clerk" }}
       full={page.data.full}
+      tableOfContent={{ style: "clerk" }}
+      toc={page.data.toc}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>

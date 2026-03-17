@@ -9,7 +9,7 @@ export const baseOptions: BaseLayoutProps = {
     enabled: true,
     title: (
       <>
-        <Logo width="1em" height="1em" />
+        <Logo height="1em" width="1em" />
         Developer Hub
       </>
     ),
@@ -25,10 +25,10 @@ export const baseOptions: BaseLayoutProps = {
 
 export const docsOptions: DocsLayoutProps = {
   ...baseOptions,
-  tree: source.pageTree,
   sidebar: {
     // these are commented out because we don't have the app shell anymore
     // tabs: false,
     // collapsible: false,
   },
+  tree: source.pageTree,
 };

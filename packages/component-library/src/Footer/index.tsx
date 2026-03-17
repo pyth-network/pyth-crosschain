@@ -1,19 +1,18 @@
 import clsx from "clsx";
 import type { ComponentProps, ElementType } from "react";
-
-import styles from "./index.module.scss";
-import Wordmark from "./wordmark.svg";
 import type { Props as ButtonProps } from "../Button/index.jsx";
 import { Button } from "../Button/index.jsx";
 import { SupportDrawer } from "../Header/index.jsx";
 import { Link } from "../Link/index.jsx";
 import { socialLinks } from "../social-links.jsx";
+import styles from "./index.module.scss";
+import Wordmark from "./wordmark.svg";
 
 export const Footer = ({ className, ...props }: ComponentProps<"footer">) => (
   <footer className={clsx(styles.footer, className)} {...props}>
     <div className={styles.topContent}>
       <div className={styles.main}>
-        <Link href="https://www.pyth.network" className={styles.logoLink ?? ""}>
+        <Link className={styles.logoLink ?? ""} href="https://www.pyth.network">
           <Wordmark className={styles.logo} />
           <div className={styles.logoLabel}>Pyth Homepage</div>
         </Link>
@@ -107,11 +106,11 @@ const SocialLink = <T extends ElementType>({
   ...props
 }: SocialLinkProps<T>) => (
   <Button
-    target="_blank"
-    variant="ghost"
-    size="sm"
     beforeIcon={icon}
     hideText
+    size="sm"
+    target="_blank"
+    variant="ghost"
     {...props}
   />
 );

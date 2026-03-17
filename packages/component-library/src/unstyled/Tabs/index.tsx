@@ -14,8 +14,8 @@ type TabProps = ComponentProps<typeof BaseTab> & {
 export const Tab = ({ ref, prefetch, onHoverStart, ...props }: TabProps) => {
   const prefetchProps = usePrefetch({
     href: props.href,
-    prefetch,
     onHoverStart,
+    prefetch,
     ref,
   });
 

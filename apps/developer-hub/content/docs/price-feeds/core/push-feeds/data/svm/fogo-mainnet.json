@@ -1,60 +1,60 @@
 {
   "feeds": [
     {
-      "alias": "FOGO/USD",
       "account_address": "F8sWmNDxAChncYJ1L6Qh1uV47VMMYyvJLet7WCpC8MP8",
+      "alias": "FOGO/USD",
+      "confidence_ratio": 100,
       "id": "245f89fb8084840bd098d661a026032ee21062270003426797c9196d2d8d4e43",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     },
     {
-      "alias": "USDC/USD",
       "account_address": "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
+      "alias": "USDC/USD",
+      "confidence_ratio": 100,
       "id": "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     },
     {
-      "alias": "SOL/USD",
       "account_address": "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
+      "alias": "SOL/USD",
+      "confidence_ratio": 100,
       "id": "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     },
     {
-      "alias": "ETH/USD",
       "account_address": "42amVS4KgzR9rA28tkVYqVXjq9Qa8dcZQMbH5EYFX6XC",
+      "alias": "ETH/USD",
+      "confidence_ratio": 100,
       "id": "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     },
     {
-      "alias": "USDT/USD",
       "account_address": "HT2PLQBcG5EiCcNSaMHAjSgd9F98ecpATbk4Sk5oYuM",
+      "alias": "USDT/USD",
+      "confidence_ratio": 100,
       "id": "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     },
     {
-      "alias": "IFOGO/FOGO",
       "account_address": "6D38R3ufqMUp2yyVnybWjMKdKrQw59zNfQAf4EHRYDnd",
+      "alias": "IFOGO/FOGO",
+      "confidence_ratio": 100,
       "id": "73cb634654bb300aa53ad8e2c60e31eb897eb0af317f8313ca13caad34f75f02",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     },
     {
-      "alias": "STFOGO/FOGO",
       "account_address": "6JC2CLDNZdXSWwJYMDcEAySaTFazNRTHNwkS3pUB15CM",
+      "alias": "STFOGO/FOGO",
+      "confidence_ratio": 100,
       "id": "98601fdcfe6c4600f0788380e87631c3d4488c737991aeea27737ec31676f55d",
-      "time_difference": 60,
       "price_deviation": 0.5,
-      "confidence_ratio": 100
+      "time_difference": 60
     }
   ]
 }

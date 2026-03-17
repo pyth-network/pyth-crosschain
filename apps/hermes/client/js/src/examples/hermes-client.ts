@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { HermesClient, PriceUpdate } from "../HermesClient";
+import type { PriceUpdate } from "../HermesClient";
+import { HermesClient } from "../HermesClient";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,15 +11,15 @@ const argv = yargs(hideBin(process.argv))
   .option("endpoint", {
     description:
       "Endpoint URL for the price service. e.g: https://endpoint/example",
-    type: "string",
     required: true,
+    type: "string",
   })
   .option("price-ids", {
     description:
       "Space separated price feed ids (in hex without leading 0x) to fetch." +
       " e.g: f9c0172ba10dfa4d19088d...",
-    type: "array",
     required: true,
+    type: "array",
   })
   .help()
   .alias("help", "h")
@@ -57,44 +57,28 @@ async function run() {
   const connection = new HermesClient(endpoint, { headers });
 
   const priceIds = argv.priceIds as string[];
-
-  // Get price feeds
-  console.log(`Price feeds matching "btc" with asset type "crypto":`);
-  const priceFeeds = await connection.getPriceFeeds({
-    query: "btc",
+  const _priceFeeds = await connection.getPriceFeeds({
     assetType: "crypto",
+    query: "btc",
   });
-  console.log(priceFeeds);
-
-  // Latest price updates
-  console.log(`Latest price updates for price IDs ${priceIds}:`);
-  const priceUpdates = await connection.getLatestPriceUpdates(priceIds);
-  console.log(priceUpdates);
-
-  // Streaming price updates
-  console.log(`Streaming latest prices for price IDs ${priceIds}...`);
+  const _priceUpdates = await connection.getLatestPriceUpdates(priceIds);
   const eventSource = await connection.getPriceUpdatesStream(priceIds, {
-    encoding: "hex",
-    parsed: true,
     allowUnordered: false,
     benchmarksOnly: true,
+    encoding: "hex",
+    parsed: true,
   });
 
   eventSource.onmessage = (event: MessageEvent<string>) => {
-    console.log("Received price update:", event.data);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const priceUpdate = JSON.parse(event.data) as PriceUpdate;
+    const _priceUpdate = JSON.parse(event.data) as PriceUpdate;
   };
 
   eventSource.onerror = (error: Event) => {
-    console.error("Error receiving updates:", error);
     eventSource.close();
   };
 
   await sleep(5000);
-
-  // To stop listening to the updates, you can call eventSource.close();
-  console.log("Closing event source.");
   eventSource.close();
 }
 

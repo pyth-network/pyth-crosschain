@@ -1,8 +1,8 @@
 {
   "grpc-endpoint": "https://k8s.testnet.chain.grpc-web.injective.network",
-  "pyth-contract-address": "inj18rlflp3735h25jmjx97d22c72sxk260amdjxlu",
-  "price-service-endpoint": "https://hermes-beta.pyth.network",
   "mnemonic-file": "./mnemonic",
+  "network": "testnet",
   "price-config-file": "./price-config.beta.sample.yaml",
-  "network": "testnet"
+  "price-service-endpoint": "https://hermes-beta.pyth.network",
+  "pyth-contract-address": "inj18rlflp3735h25jmjx97d22c72sxk260amdjxlu"
 }

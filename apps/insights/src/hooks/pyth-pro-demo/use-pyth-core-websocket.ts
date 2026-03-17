@@ -113,8 +113,8 @@ export function usePythCoreWebSocket(): UseDataProviderSocketHookReturnType {
       if (!feedId) return;
 
       const subscribeMessage = {
-        type: "subscribe",
         ids: [feedId],
+        type: "subscribe",
       };
       socket.json(subscribeMessage);
     },

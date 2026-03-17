@@ -7,9 +7,9 @@ advanceBlock = () => {
   return new Promise((resolve, reject) => {
     web3.currentProvider.send(
       {
+        id: Date.now(),
         jsonrpc: "2.0",
         method: "evm_mine",
-        id: new Date().getTime(),
       },
       (err, result) => {
         if (err) {
@@ -30,10 +30,9 @@ function sleep(ms) {
 module.exports = function (callback) {
   const fn = async () => {
     while (true) {
-      console.log(await advanceBlock());
       await sleep(1000);
     }
   };
 
-  fn().catch((reason) => console.error(reason));
+  fn().catch((reason) => {});
 };

@@ -11,7 +11,7 @@ export const Changelog = () => {
   const { isOpen, toggleOpen } = useChangelog();
 
   return (
-    <ModalDialog title="Changelog" isOpen={isOpen} onOpenChange={toggleOpen}>
+    <ModalDialog isOpen={isOpen} onOpenChange={toggleOpen} title="Changelog">
       <ul className="flex max-w-prose flex-col divide-y divide-neutral-600/50">
         {messages.map(({ id, message }) => (
           <li key={id}>{message}</li>
@@ -28,9 +28,9 @@ type ChangelogMessageProps = {
 
 export const ChangelogMessage = ({ date, children }: ChangelogMessageProps) => {
   const dateFormatter = useDateFormatter({
-    year: "numeric",
-    month: "short",
     day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 
   return (
@@ -111,8 +111,8 @@ export const messages = [
             <li>
               New Oracle Integrity Staking{" "}
               <Link
-                href="https://forum.pyth.network/c/oracle-integrity-staking-ois-discussion/8"
                 className="underline"
+                href="https://forum.pyth.network/c/oracle-integrity-staking-ois-discussion/8"
                 target="_blank"
               >
                 discussion catalogue
@@ -127,16 +127,16 @@ export const messages = [
             The Pyth contributors take security extremely seriously. The
             contract code is{" "}
             <Link
-              href="https://github.com/pyth-network/governance/tree/main/staking/programs/staking"
               className="underline"
+              href="https://github.com/pyth-network/governance/tree/main/staking/programs/staking"
               target="_blank"
             >
               open source
             </Link>{" "}
             and the upgrade authority is governed by the Pyth DAO. The official{" "}
             <Link
-              href="https://github.com/pyth-network/audit-reports/blob/main/2024_09_11/pyth_cip_final_report.pdf"
               className="underline"
+              href="https://github.com/pyth-network/audit-reports/blob/main/2024_09_11/pyth_cip_final_report.pdf"
               target="_blank"
             >
               audit report
@@ -144,8 +144,8 @@ export const messages = [
             is publicly accessible. All on-chain contract codes are verified
             using{" "}
             <Link
-              href="https://github.com/Ellipsis-Labs/solana-verifiable-build/"
               className="underline"
+              href="https://github.com/Ellipsis-Labs/solana-verifiable-build/"
               target="_blank"
             >
               Solana verifiable build
@@ -174,16 +174,16 @@ export const messages = [
           <p>
             Please reach out in the official{" "}
             <Link
-              href="https://discord.com/invite/PythNetwork"
               className="underline"
+              href="https://discord.com/invite/PythNetwork"
               target="_blank"
             >
               Pyth Discord
             </Link>{" "}
             or the{" "}
             <Link
-              href="https://forum.pyth.network"
               className="underline"
+              href="https://forum.pyth.network"
               target="_blank"
             >
               Pyth DAO Forum

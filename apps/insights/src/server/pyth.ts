@@ -94,7 +94,7 @@ const fetchPythData = async (
   }
 
   return await fetch(url, {
-    next: { revalidate: DEFAULT_NEXT_FETCH_TTL },
     headers: VERCEL_REQUEST_HEADERS,
+    next: { revalidate: DEFAULT_NEXT_FETCH_TTL },
   });
 };

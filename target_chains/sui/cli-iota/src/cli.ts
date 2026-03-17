@@ -1,45 +1,45 @@
+import { execSync } from "node:child_process";
+import { resolve } from "node:path";
+import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
+import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
+import type { IotaChain } from "@pythnetwork/contract-manager/core/chains";
+import type { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
+import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import createCLI from "yargs";
 import { hideBin } from "yargs/helpers";
-import { IotaChain } from "@pythnetwork/contract-manager/core/chains";
-import { IotaPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/iota";
-import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { execSync } from "child_process";
 import { initPyth, publishPackage } from "./pyth_deploy.js";
-import { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";
-import { resolve } from "path";
 import {
   buildForBytecodeAndDigest,
   migratePyth,
   upgradePyth,
 } from "./upgrade_pyth.js";
-import { DefaultStore } from "@pythnetwork/contract-manager/node/utils/store";
 
 const OPTIONS = {
-  "private-key": {
-    type: "string",
-    demandOption: true,
-    desc: "Private key to use to sign transaction",
-  },
   contract: {
-    type: "string",
     demandOption: true,
     desc: "Contract to use for the command (e.g iota_0x68dda579251917b3db28e35c4df495c6e664ccc085ede867a9b773c8ebedc2c1)",
-  },
-  path: {
     type: "string",
-    default: "../../contracts",
-    desc: "Path to the iota contracts, will use ../../contracts by default",
   },
   endpoint: {
-    type: "string",
     default: "https://hermes.pyth.network",
     desc: "Price service endpoint to use, defaults to https://hermes.pyth.network",
+    type: "string",
   },
   "feed-id": {
-    type: "array",
     demandOption: true,
     desc: "Price feed ids to create without the leading 0x (e.g f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b). Can be provided multiple times for multiple feed updates",
+    type: "array",
+  },
+  path: {
+    default: "../../contracts",
+    desc: "Path to the iota contracts, will use ../../contracts by default",
+    type: "string",
+  },
+  "private-key": {
+    demandOption: true,
+    desc: "Private key to use to sign transaction",
+    type: "string",
   },
 } as const;
 
@@ -61,9 +61,9 @@ yargs
       return yargs
         .options({
           contract: OPTIONS.contract,
+          endpoint: OPTIONS.endpoint,
           "feed-id": OPTIONS["feed-id"],
           "private-key": OPTIONS["private-key"],
-          endpoint: OPTIONS.endpoint,
         })
         .usage(
           "$0 create --contract <contract-id> --feed-id <feed-id> --private-key <private-key>",
@@ -74,11 +74,10 @@ yargs
       const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
-      const digest = await contract.executeCreatePriceFeed(
+      const _digest = await contract.executeCreatePriceFeed(
         argv["private-key"],
         vaas.map((vaa) => Buffer.from(vaa, "base64")),
       );
-      console.log("Transaction successful. Digest:", digest);
     },
   )
   .command(
@@ -88,8 +87,8 @@ yargs
       return yargs
         .options({
           contract: OPTIONS.contract,
-          "private-key": OPTIONS["private-key"],
           endpoint: OPTIONS.endpoint,
+          "private-key": OPTIONS["private-key"],
         })
         .usage(
           "$0 create-all --contract <contract-id> --private-key <private-key>",
@@ -103,12 +102,10 @@ yargs
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
         const batch = feedIds.slice(i, i + BATCH_SIZE);
         const vaas = await priceService.getLatestVaas(batch);
-        const digest = await contract.executeCreatePriceFeed(
+        const _digest = await contract.executeCreatePriceFeed(
           argv["private-key"],
           vaas.map((vaa) => Buffer.from(vaa, "base64")),
         );
-        console.log("Transaction successful. Digest:", digest);
-        console.log(`Progress: ${i + BATCH_SIZE}/${feedIds.length}`);
       }
     },
   )
@@ -123,7 +120,7 @@ yargs
         .usage("$0 generate-digest --path <path-to-contracts>");
     },
     async (argv) => {
-      const buildOutput: {
+      const _buildOutput: {
         modules: string[];
         dependencies: string[];
         digest: number[];
@@ -135,8 +132,6 @@ yargs
           },
         ),
       );
-      console.log("Contract digest:");
-      console.log(Buffer.from(buildOutput.digest).toString("hex"));
     },
   )
   .command(
@@ -145,13 +140,13 @@ yargs
     (yargs) => {
       return yargs
         .options({
-          "private-key": OPTIONS["private-key"],
           chain: {
-            type: "string",
             demandOption: true,
             desc: "Chain to deploy the code to. Can be iota_mainnet or iota_testnet",
+            type: "string",
           },
           path: OPTIONS.path,
+          "private-key": OPTIONS["private-key"],
         })
         .usage(
           "$0 deploy --private-key <private-key> --chain [iota_mainnet|iota_testnet] --path <path-to-contracts>",
@@ -187,9 +182,9 @@ yargs
       return yargs
         .options({
           contract: OPTIONS.contract,
+          endpoint: OPTIONS.endpoint,
           "feed-id": OPTIONS["feed-id"],
           "private-key": OPTIONS["private-key"],
-          endpoint: OPTIONS.endpoint,
         })
         .usage(
           "$0 update-feeds --contract <contract-id> --feed-id <feed-id> --private-key <private-key>",
@@ -200,12 +195,11 @@ yargs
       const priceService = new PriceServiceConnection(argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
-      const digest = await contract.executeUpdatePriceFeedWithFeeds(
+      const _digest = await contract.executeUpdatePriceFeedWithFeeds(
         argv["private-key"],
         vaas.map((vaa) => Buffer.from(vaa, "base64")),
         feedIds,
       );
-      console.log("Transaction successful. Digest:", digest);
     },
   )
   .command(
@@ -214,14 +208,14 @@ yargs
     (yargs) => {
       return yargs
         .options({
-          "private-key": OPTIONS["private-key"],
           contract: OPTIONS.contract,
+          path: OPTIONS.path,
+          "private-key": OPTIONS["private-key"],
           vaa: {
-            type: "string",
             demandOption: true,
             desc: "Signed Vaa for upgrading the package in hex format",
+            type: "string",
           },
-          path: OPTIONS.path,
         })
         .usage(
           "$0 upgrade --private-key <private-key> --contract <contract-id> --vaa <upgrade-vaa>",
@@ -238,10 +232,7 @@ yargs
       // Build for modules and dependencies
       const { modules, dependencies, digest } =
         buildForBytecodeAndDigest(pythContractsPath);
-      //Execute upgrade with signed governance VAA.
-      console.log("Digest is", digest.toString("hex"));
       const pythPackageOld = await contract.getPackageId(contract.stateId);
-      console.log("Old package id:", pythPackageOld);
       const signedVaa = Buffer.from(argv.vaa, "hex");
       const upgradeResults = await upgradePyth(
         keypair,
@@ -251,17 +242,12 @@ yargs
         signedVaa,
         contract,
       );
-      console.log("Tx digest", upgradeResults.digest);
       if (
         !upgradeResults.effects ||
         upgradeResults.effects.status.status !== "success"
       ) {
         throw new Error("Upgrade failed");
       }
-
-      console.log(
-        "Upgrade successful, Executing the migrate function in a separate transaction...",
-      );
 
       // We can not do the migration in the same transaction since the newly published package is not found
       // on chain at the beginning of the transaction.
@@ -273,7 +259,6 @@ yargs
         contract,
         pythPackageOld,
       );
-      console.log("Tx digest", migrateResults.digest);
       if (
         !migrateResults.effects ||
         migrateResults.effects.status.status !== "success"
@@ -282,7 +267,6 @@ yargs
           `Migrate failed. Old package id is ${pythPackageOld}. Please do the migration manually`,
         );
       }
-      console.log("Migrate successful");
     },
   )
   .demandCommand().argv;

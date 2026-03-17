@@ -33,8 +33,8 @@ const ConformanceReport = (props: ConformanceReportProps) => {
     downloadReport()
       .catch((error: unknown) => {
         open({
-          title: "Error",
           contents: "Error generating conformance report",
+          title: "Error",
         });
         logger.error(error);
       })
@@ -46,21 +46,21 @@ const ConformanceReport = (props: ConformanceReportProps) => {
   return (
     <div className={styles.conformanceReport}>
       <Select
+        hideLabel
+        label="Timeframe"
+        onSelectionChange={setTimeframe}
         options={INTERVALS.map((interval) => ({ id: interval }))}
         placement="bottom end"
         selectedKey={timeframe}
-        onSelectionChange={setTimeframe}
         size="sm"
-        label="Timeframe"
         variant="outline"
-        hideLabel
       />
       <Button
-        variant="outline"
-        size="sm"
-        onClick={handleReport}
         afterIcon={<Download key="download" />}
         isPending={isGeneratingReport}
+        onClick={handleReport}
+        size="sm"
+        variant="outline"
       >
         Report
       </Button>

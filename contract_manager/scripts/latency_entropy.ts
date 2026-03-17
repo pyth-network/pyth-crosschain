@@ -5,11 +5,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -19,9 +18,9 @@ const parser = yargs(hideBin(process.argv))
   )
   .options({
     chain: {
-      type: "string",
       demandOption: true,
       desc: "test latency for the contract on this chain",
+      type: "string",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
   });
@@ -35,16 +34,14 @@ async function main() {
   const providerInfo = await contract.getProviderInfo(provider);
   const userRandomNumber = contract.generateUserRandomNumber();
   const privateKey = toPrivateKey(argv.privateKey);
-  const requestResponse = await contract.requestRandomness(
+  const _requestResponse = await contract.requestRandomness(
     userRandomNumber,
     provider,
     privateKey,
   );
-  console.log("Request tx hash:", requestResponse.transactionHash);
-  const startTime = Date.now();
+  const _startTime = Date.now();
   const sequenceNumber = providerInfo.sequenceNumber;
   const revealUrl = providerInfo.uri + `/revelations/${sequenceNumber}`;
-  console.log("Checking this url for revelation:", revealUrl);
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
@@ -52,17 +49,15 @@ async function main() {
     if (fortunaResponse.status === 200) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = (await fortunaResponse.json()) as any;
-      const endTime = Date.now();
-      console.log(`Fortuna Latency: ${endTime - startTime}ms`);
+      const _endTime = Date.now();
       const providerRevelation = "0x" + payload.value.data;
-      const revealResponse = await contract.revealRandomness(
+      const _revealResponse = await contract.revealRandomness(
         userRandomNumber,
         providerRevelation,
         provider,
         sequenceNumber,
         privateKey,
       );
-      console.log("Reveal tx hash:", revealResponse.transactionHash);
       break;
     }
     await new Promise((resolve) => setTimeout(resolve, 300));

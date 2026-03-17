@@ -64,9 +64,9 @@ const MountedHome = ({ enableGovernance, enableOis }: MountedHomeProps) => {
     case ApiStateType.Loaded: {
       return (
         <StakeAccountLoadedHome
+          api={api}
           enableGovernance={enableGovernance}
           enableOis={enableOis}
-          api={api}
         />
       );
     }

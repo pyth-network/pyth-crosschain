@@ -17,7 +17,7 @@ import type { Coin } from "@cosmjs/stargate";
  *
  * @interface ChainExecutor
  */
-export interface ChainExecutor {
+export type ChainExecutor = {
   /**
    * `storeCode` stores a cosmwasm contract code on chain.
    * @param {StoreCodeRequest} req
@@ -96,7 +96,7 @@ export interface ChainExecutor {
   updateContractAdmin(
     req: UpdateContractAdminRequest,
   ): Promise<UpdateContractAdminResponse>;
-}
+};
 
 export type StoreCodeRequest = {
   contractBytes: Buffer;

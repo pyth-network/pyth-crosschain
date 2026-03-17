@@ -1,4 +1,5 @@
 export { LandingPage as default } from "../../../components/Pages/LandingPage";
+
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -17,7 +18,7 @@ export async function generateMetadata(props: {
   if (!page) notFound();
 
   return {
-    title: page.data.title,
     description: page.data.description,
+    title: page.data.title,
   } satisfies Metadata;
 }

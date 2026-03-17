@@ -1,8 +1,8 @@
 import cx from "clsx";
 import type { PropsWithChildren, ReactNode } from "react";
 import type {
-  TooltipTriggerComponentProps,
   TooltipProps as AriaTooltipProps,
+  TooltipTriggerComponentProps,
 } from "react-aria-components";
 import { Tooltip as AriaTooltip, TooltipTrigger } from "react-aria-components";
 

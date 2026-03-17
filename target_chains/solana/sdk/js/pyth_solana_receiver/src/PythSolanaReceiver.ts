@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable tsdoc/syntax */
 
-// eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer as IsomorphicBuffer } from "buffer";
-
-import type { IdlAccounts } from "@coral-xyz/anchor";
-import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import type { IdlAccounts, Wallet } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
   parseAccumulatorUpdateData,
   parsePriceFeedMessage,
@@ -15,15 +12,16 @@ import type {
   PriorityFeeConfig,
 } from "@pythnetwork/solana-utils";
 import { TransactionBuilder } from "@pythnetwork/solana-utils";
-import type { Signer } from "@solana/web3.js";
-import {
+import type {
   AddressLookupTableAccount,
   Connection,
+  Signer,
   Transaction,
   VersionedTransaction,
-  PublicKey,
-  Keypair,
 } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
+// eslint-disable-next-line unicorn/prefer-node-protocol
+import { Buffer as IsomorphicBuffer } from "buffer";
 
 import {
   DEFAULT_PUSH_ORACLE_PROGRAM_ID,
@@ -433,24 +431,24 @@ export class PythSolanaReceiver {
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
         postInstructions.push({
+          computeUnits: POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
           instruction: await this.receiver.methods
             .postUpdateAtomic({
-              vaa: trimmedVaa,
               merklePriceUpdate: update,
               treasuryId,
+              vaa: trimmedVaa,
             })
             .accounts({
-              priceUpdateAccount: priceUpdateKeypair.publicKey,
-              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
               config: getConfigPda(this.receiver.programId),
               guardianSet: getGuardianSetPda(
                 guardianSetIndex,
                 this.wormhole.programId,
               ),
+              priceUpdateAccount: priceUpdateKeypair.publicKey,
+              treasury: getTreasuryPda(treasuryId, this.receiver.programId),
             })
             .instruction(),
           signers: [priceUpdateKeypair],
-          computeUnits: POST_UPDATE_ATOMIC_COMPUTE_BUDGET,
         });
         priceFeedIdToPriceUpdateAccount[
           "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
@@ -464,9 +462,9 @@ export class PythSolanaReceiver {
       }
     }
     return {
+      closeInstructions,
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      closeInstructions,
     };
   }
 
@@ -507,20 +505,20 @@ export class PythSolanaReceiver {
       for (const update of accumulatorUpdateData.updates) {
         const priceUpdateKeypair = new Keypair();
         postInstructions.push({
+          computeUnits: POST_UPDATE_COMPUTE_BUDGET,
           instruction: await this.receiver.methods
             .postUpdate({
               merklePriceUpdate: update,
               treasuryId,
             })
             .accounts({
+              config: getConfigPda(this.receiver.programId),
               encodedVaa,
               priceUpdateAccount: priceUpdateKeypair.publicKey,
               treasury: getTreasuryPda(treasuryId, this.receiver.programId),
-              config: getConfigPda(this.receiver.programId),
             })
             .instruction(),
           signers: [priceUpdateKeypair],
-          computeUnits: POST_UPDATE_COMPUTE_BUDGET,
         });
 
         priceFeedIdToPriceUpdateAccount[
@@ -535,9 +533,9 @@ export class PythSolanaReceiver {
     }
 
     return {
+      closeInstructions,
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      closeInstructions,
     };
   }
 
@@ -580,6 +578,7 @@ export class PythSolanaReceiver {
       for (const update of accumulatorUpdateData.updates) {
         const feedId = parsePriceFeedMessage(update.message).feedId;
         postInstructions.push({
+          computeUnits: UPDATE_PRICE_FEED_COMPUTE_BUDGET,
           instruction: await this.pushOracle.methods
             .updatePriceFeed(
               {
@@ -590,18 +589,17 @@ export class PythSolanaReceiver {
               [...feedId],
             )
             .accounts({
-              pythSolanaReceiver: this.receiver.programId,
+              config: getConfigPda(this.receiver.programId),
               encodedVaa,
               priceFeedAccount: this.getPriceFeedAccountAddress(
                 shardId,
                 feedId,
               ),
+              pythSolanaReceiver: this.receiver.programId,
               treasury: getTreasuryPda(treasuryId, this.receiver.programId),
-              config: getConfigPda(this.receiver.programId),
             })
             .instruction(),
           signers: [],
-          computeUnits: UPDATE_PRICE_FEED_COMPUTE_BUDGET,
         });
 
         priceFeedIdToPriceUpdateAccount[
@@ -610,9 +608,9 @@ export class PythSolanaReceiver {
       }
     }
     return {
+      closeInstructions,
       postInstructions,
       priceFeedIdToPriceUpdateAccount,
-      closeInstructions,
     };
   }
 

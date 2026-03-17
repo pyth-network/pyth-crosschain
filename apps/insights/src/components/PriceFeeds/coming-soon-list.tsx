@@ -8,9 +8,8 @@ import { Table } from "@pythnetwork/component-library/Table";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useCollator, useFilter } from "react-aria";
-
-import styles from "./coming-soon-list.module.scss";
 import { AssetClassBadge } from "../AssetClassBadge";
+import styles from "./coming-soon-list.module.scss";
 
 type Props = {
   comingSoonFeeds: {
@@ -61,9 +60,8 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
     () =>
       filteredFeeds.map(
         ({ symbol, assetClass, description, displaySymbol, icon }) => ({
-          id: symbol,
-          href: `/price-feeds/${encodeURIComponent(symbol)}`,
           data: {
+            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
             priceFeedName: (
               <SymbolPairTag
                 description={description}
@@ -71,8 +69,9 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
                 icon={icon}
               />
             ),
-            assetClass: <AssetClassBadge>{assetClass}</AssetClassBadge>,
           },
+          href: `/price-feeds/${encodeURIComponent(symbol)}`,
+          id: symbol,
         }),
       ),
     [filteredFeeds],
@@ -82,13 +81,18 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
     <div className={styles.comingSoonList}>
       <div className={styles.searchBar}>
         <SearchInput
+          onChange={setSearch}
+          placeholder="Feed symbol"
           size="sm"
           value={search}
-          onChange={setSearch}
           width={50}
-          placeholder="Feed symbol"
         />
         <Select
+          buttonLabel={assetClass === "" ? "Asset Class" : assetClass}
+          hideGroupLabel
+          hideLabel
+          label="Asset Class"
+          onSelectionChange={setAssetClass}
           optionGroups={[
             { name: "All", options: [{ id: "" }] },
             {
@@ -96,46 +100,41 @@ export const ComingSoonList = ({ comingSoonFeeds }: Props) => {
               options: assetClasses.map((id) => ({ id })),
             },
           ]}
-          hideGroupLabel
-          show={({ id }) => (id === "" ? "All" : id)}
           placement="bottom end"
           selectedKey={assetClass}
-          onSelectionChange={setAssetClass}
-          label="Asset Class"
+          show={({ id }) => (id === "" ? "All" : id)}
           size="sm"
           variant="outline"
-          hideLabel
-          buttonLabel={assetClass === "" ? "Asset Class" : assetClass}
         />
       </div>
       <Table
-        fill
-        stickyHeader="top"
-        label="Coming Soon"
         className={styles.priceFeeds ?? ""}
-        emptyState={
-          <NoResults
-            query={search}
-            onClearSearch={() => {
-              setSearch("");
-            }}
-          />
-        }
         columns={[
           {
-            id: "priceFeedName",
-            name: "PRICE FEED",
-            isRowHeader: true,
             alignment: "left",
+            id: "priceFeedName",
+            isRowHeader: true,
+            name: "PRICE FEED",
           },
           {
+            alignment: "right",
             id: "assetClass",
             name: "ASSET CLASS",
-            alignment: "right",
             width: 40,
           },
         ]}
+        emptyState={
+          <NoResults
+            onClearSearch={() => {
+              setSearch("");
+            }}
+            query={search}
+          />
+        }
+        fill
+        label="Coming Soon"
         rows={rows}
+        stickyHeader="top"
       />
     </div>
   );

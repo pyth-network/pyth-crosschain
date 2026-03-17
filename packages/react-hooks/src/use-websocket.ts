@@ -59,8 +59,6 @@ export function useWebSocket(
   const connectSocket = useCallback(() => {
     if (!enabled || !url) return;
 
-    console.info("connecting to", url);
-
     const w = new Sockette(url, {
       onclose: (...args) => {
         if (wsRef.current !== w) return;
@@ -101,8 +99,7 @@ export function useWebSocket(
   const closeSocket = useCallback(() => {
     if (!wsRef.current) return;
 
-    if (url) console.info("closing", url);
-    wsRef.current.close();
+    if (url) wsRef.current.close();
     setStatus("closed");
   }, [url]);
 

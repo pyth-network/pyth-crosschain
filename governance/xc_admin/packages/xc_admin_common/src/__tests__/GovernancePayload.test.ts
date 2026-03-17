@@ -1,43 +1,41 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-  PythGovernanceHeader,
-  ExecutePostedVaa,
-  TargetAction,
-  ExecutorAction,
-  type ActionName,
-  type PythGovernanceAction,
-  decodeGovernancePayload,
-  EvmSetWormholeAddress,
-  EvmExecutorAction,
-  EvmExecute,
-  StarknetSetWormholeAddress,
-  LazerAction,
-  UpgradeSuiLazerContract,
-  UpdateTrustedSigner264Bit,
-} from "..";
+import type { Arbitrary, IntArrayConstraints } from "fast-check";
 import * as fc from "fast-check";
-import { type ChainName, CHAINS } from "../chains";
-import { Arbitrary, type IntArrayConstraints } from "fast-check";
+import type { ActionName, PythGovernanceAction } from "..";
+import {
+  decodeGovernancePayload,
+  EvmExecute,
+  EvmExecutorAction,
+  EvmSetWormholeAddress,
+  ExecutePostedVaa,
+  ExecutorAction,
+  LazerAction,
+  PythGovernanceHeader,
+  StarknetSetWormholeAddress,
+  TargetAction,
+  UpdateTrustedSigner264Bit,
+  UpgradeSuiLazerContract,
+} from "..";
+import type { ChainName } from "../chains";
+import { CHAINS } from "../chains";
+import {
+  AuthorizeGovernanceDataSourceTransfer,
+  RequestGovernanceDataSourceTransfer,
+} from "../governance_payload/GovernanceDataSourceTransfer";
+import type { DataSource } from "../governance_payload/SetDataSources";
+import { SetDataSources } from "../governance_payload/SetDataSources";
+import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
+import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
+import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
 import {
   CosmosUpgradeContract,
   EvmUpgradeContract,
   UpgradeContract256Bit,
 } from "../governance_payload/UpgradeContract";
-import {
-  AuthorizeGovernanceDataSourceTransfer,
-  RequestGovernanceDataSourceTransfer,
-} from "../governance_payload/GovernanceDataSourceTransfer";
-import { SetFee, SetFeeInToken } from "../governance_payload/SetFee";
-import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
-import {
-  type DataSource,
-  SetDataSources,
-} from "../governance_payload/SetDataSources";
-import { SetTransactionFee } from "../governance_payload/SetTransactionFee";
 import { WithdrawFee } from "../governance_payload/WithdrawFee";
 
 test("GovernancePayload ser/de", (done) => {
-  jest.setTimeout(60000);
+  jest.setTimeout(60_000);
 
   // Valid header 1
   let expectedGovernanceHeader = new PythGovernanceHeader(
@@ -114,8 +112,8 @@ test("GovernancePayload ser/de", (done) => {
   expectedExecutePostedVaa = new ExecutePostedVaa("pythnet", [
     SystemProgram.transfer({
       fromPubkey: new PublicKey("AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES"),
+      lamports: 890_880,
       toPubkey: new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj"),
-      lamports: 890880,
     }),
   ]);
 
@@ -138,7 +136,7 @@ test("GovernancePayload ser/de", (done) => {
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(
-    executePostedVaaArgs?.instructions[0]!.programId.equals(
+    executePostedVaaArgs?.instructions[0]?.programId.equals(
       SystemProgram.programId,
     ),
   ).toBeTruthy();
@@ -172,7 +170,6 @@ test("GovernancePayload ser/de", (done) => {
     new RequestGovernanceDataSourceTransfer("starknet", 1);
   const requestGovernanceDataSourceTransferBuffer =
     requestGovernanceDataSourceTransfer.encode();
-  console.log(requestGovernanceDataSourceTransferBuffer.toJSON());
   expect(
     requestGovernanceDataSourceTransferBuffer.equals(
       Buffer.from([80, 84, 71, 77, 1, 5, 234, 147, 0, 0, 0, 1]),
@@ -186,7 +183,6 @@ test("GovernancePayload ser/de", (done) => {
     );
   const authorizeGovernanceDataSourceTransferBuffer =
     authorizeGovernanceDataSourceTransfer.encode();
-  console.log(authorizeGovernanceDataSourceTransferBuffer.toJSON());
   expect(
     authorizeGovernanceDataSourceTransferBuffer.equals(
       Buffer.from([80, 84, 71, 77, 1, 1, 234, 147, 1, 2, 3]),
@@ -195,7 +191,6 @@ test("GovernancePayload ser/de", (done) => {
 
   const setFee = new SetFee("starknet", 42n, 8n);
   const setFeeBuffer = setFee.encode();
-  console.log(setFeeBuffer.toJSON());
   expect(
     setFeeBuffer.equals(
       Buffer.from([
@@ -215,7 +210,6 @@ test("GovernancePayload ser/de", (done) => {
     ),
   );
   const setFeeInTokenBuffer = setFeeInToken.encode();
-  console.log(setFeeInTokenBuffer.toJSON());
   expect(
     setFeeInTokenBuffer.equals(
       Buffer.from([
@@ -229,18 +223,17 @@ test("GovernancePayload ser/de", (done) => {
 
   const setDataSources = new SetDataSources("starknet", [
     {
-      emitterChain: 1,
       emitterAddress:
         "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+      emitterChain: 1,
     },
     {
-      emitterChain: 3,
       emitterAddress:
         "000000000000000000000000000000000000000000000000000000000000012d",
+      emitterChain: 3,
     },
   ]);
   const setDataSourcesBuffer = setDataSources.encode();
-  console.log(setDataSourcesBuffer.toJSON());
   expect(
     setDataSourcesBuffer.equals(
       Buffer.from([
@@ -258,7 +251,6 @@ test("GovernancePayload ser/de", (done) => {
     "05033f06d5c47bcce7960ea703b04a0bf64bf33f6f2eb5613496da747522d9c2",
   );
   const setWormholeAddressBuffer = setWormholeAddress.encode();
-  console.log(setWormholeAddressBuffer.toJSON());
   expect(
     setWormholeAddressBuffer.equals(
       Buffer.from([
@@ -274,7 +266,6 @@ test("GovernancePayload ser/de", (done) => {
     "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee",
   );
   const upgradeContractBuffer = upgradeContract.encode();
-  console.log(upgradeContractBuffer.toJSON());
   expect(
     upgradeContractBuffer.equals(
       Buffer.from([
@@ -291,7 +282,6 @@ test("GovernancePayload ser/de", (done) => {
     "043d0ed8155263af0862372df3af9403c502358661f317f62fbdc026d03beaee",
   );
   const upgradeSuiLazerContractBuffer = upgradeSuiLazerContract.encode();
-  console.log(upgradeSuiLazerContractBuffer.toJSON());
   expect(
     upgradeSuiLazerContractBuffer.equals(
       Buffer.from([
@@ -308,7 +298,6 @@ test("GovernancePayload ser/de", (done) => {
     10794n,
   );
   const updateTrustedSignerBuffer = updateTrustedSigner.encode();
-  console.log(updateTrustedSignerBuffer.toJSON());
   expect(
     updateTrustedSignerBuffer.equals(
       Buffer.from([
@@ -359,8 +348,8 @@ function hexBytesArb(constraints?: IntArrayConstraints): Arbitrary<string> {
 
 function dataSourceArb(): Arbitrary<DataSource> {
   return fc.record({
+    emitterAddress: hexBytesArb({ maxLength: 32, minLength: 32 }),
     emitterChain: uintArb(16),
-    emitterAddress: hexBytesArb({ minLength: 32, maxLength: 32 }),
   });
 }
 
@@ -379,13 +368,13 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       const cosmosArb = fc.bigUintN(64).map((codeId) => {
         return new CosmosUpgradeContract(header.targetChainId, codeId);
       });
-      const arb256bit = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+      const arb256bit = hexBytesArb({ maxLength: 32, minLength: 32 }).map(
         (buffer) => {
           return new UpgradeContract256Bit(header.targetChainId, buffer);
         },
       );
 
-      const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
+      const evmArb = hexBytesArb({ maxLength: 20, minLength: 20 }).map(
         (address) => {
           return new EvmUpgradeContract(header.targetChainId, address);
         },
@@ -405,7 +394,7 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       });
     } else if (header.action === "SetFee") {
       return fc
-        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .record({ e: fc.bigUintN(64), v: fc.bigUintN(64) })
         .map(({ v, e }) => {
           return new SetFee(header.targetChainId, v, e);
         });
@@ -417,16 +406,16 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       return fc.bigUintN(32).map((index) => {
         return new RequestGovernanceDataSourceTransfer(
           header.targetChainId,
-          parseInt(index.toString()),
+          Number.parseInt(index.toString()),
         );
       });
     } else if (header.action === "SetWormholeAddress") {
-      const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
+      const evmArb = hexBytesArb({ maxLength: 20, minLength: 20 }).map(
         (address) => {
           return new EvmSetWormholeAddress(header.targetChainId, address);
         },
       );
-      const starknetArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+      const starknetArb = hexBytesArb({ maxLength: 32, minLength: 32 }).map(
         (address) => {
           return new StarknetSetWormholeAddress(header.targetChainId, address);
         },
@@ -435,10 +424,10 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "Execute") {
       return fc
         .record({
-          executerAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          callAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          value: fc.bigUintN(256),
+          callAddress: hexBytesArb({ maxLength: 20, minLength: 20 }),
           callData: bufferArb(),
+          executerAddress: hexBytesArb({ maxLength: 20, minLength: 20 }),
+          value: fc.bigUintN(256),
         })
         .map(
           ({ executerAddress, callAddress, value, callData }) =>
@@ -453,12 +442,12 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "SetFeeInToken") {
       return fc
         .record({
-          value: fc.bigUintN(64),
           expo: fc.bigUintN(64),
-          token: fc.array(fc.integer({ min: 0, max: 255 }), {
-            minLength: 0,
+          token: fc.array(fc.integer({ max: 255, min: 0 }), {
             maxLength: 128,
+            minLength: 0,
           }),
+          value: fc.bigUintN(64),
         })
         .map(({ value, expo, token }) => {
           return new SetFeeInToken(
@@ -470,16 +459,16 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         });
     } else if (header.action === "SetTransactionFee") {
       return fc
-        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .record({ e: fc.bigUintN(64), v: fc.bigUintN(64) })
         .map(({ v, e }) => {
           return new SetTransactionFee(header.targetChainId, v, e);
         });
     } else if (header.action === "WithdrawFee") {
       return fc
         .record({
-          targetAddress: hexBytesArb({ minLength: 20, maxLength: 20 }),
-          value: fc.bigUintN(64),
           expo: fc.bigUintN(64),
+          targetAddress: hexBytesArb({ maxLength: 20, minLength: 20 }),
+          value: fc.bigUintN(64),
         })
         .map(({ targetAddress, value, expo }) => {
           return new WithdrawFee(
@@ -492,8 +481,8 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "UpgradeSuiLazerContract") {
       return fc
         .record({
-          version: fc.bigInt({ min: 0n, max: 2n ** 64n - 1n }),
-          buffer: hexBytesArb({ minLength: 32, maxLength: 32 }),
+          buffer: hexBytesArb({ maxLength: 32, minLength: 32 }),
+          version: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
         })
         .map(({ version, buffer }) => {
           return new UpgradeSuiLazerContract(
@@ -505,8 +494,8 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
     } else if (header.action === "UpdateTrustedSigner") {
       return fc
         .record({
-          publicKey: hexBytesArb({ minLength: 33, maxLength: 33 }),
-          expiresAt: fc.bigInt({ min: 0n, max: 2n ** 64n - 1n }),
+          expiresAt: fc.bigInt({ max: 2n ** 64n - 1n, min: 0n }),
+          publicKey: hexBytesArb({ maxLength: 33, minLength: 33 }),
         })
         .map(({ publicKey, expiresAt }) => {
           return new UpdateTrustedSigner264Bit(

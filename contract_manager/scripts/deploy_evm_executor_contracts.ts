@@ -5,15 +5,6 @@
 /* eslint-disable tsdoc/syntax */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import type { BaseDeployConfig } from "./common";
-import {
-  COMMON_DEPLOY_OPTIONS,
-  deployIfNotCached,
-  findExecutorContract,
-  getOrDeployWormholeContract,
-  getWeb3Contract,
-} from "./common";
 import type { DeploymentType } from "../src/core/base";
 import {
   getDefaultDeploymentConfig,
@@ -23,6 +14,14 @@ import {
 import { EvmChain } from "../src/core/chains";
 import { EvmExecutorContract } from "../src/core/contracts/evm";
 import { DefaultStore } from "../src/node/utils/store";
+import type { BaseDeployConfig } from "./common";
+import {
+  COMMON_DEPLOY_OPTIONS,
+  deployIfNotCached,
+  findExecutorContract,
+  getOrDeployWormholeContract,
+  getWeb3Contract,
+} from "./common";
 
 const CACHE_FILE = ".cache-deploy-evm-executor";
 
@@ -34,9 +33,9 @@ const parser = yargs(hideBin(process.argv))
   .options({
     ...COMMON_DEPLOY_OPTIONS,
     chain: {
-      type: "string",
       demandOption: true,
       desc: "Chain to upload the contract on. Can be one of the evm chains available in the store",
+      type: "string",
     },
   });
 
@@ -112,12 +111,12 @@ export async function main() {
   const chain = DefaultStore.getChainOrThrow(argv.chain, EvmChain);
 
   const deploymentConfig: DeploymentConfig = {
-    type: toDeploymentType(argv.deploymentType),
     gasMultiplier: argv.gasMultiplier,
     gasPriceMultiplier: argv.gasPriceMultiplier,
-    privateKey: toPrivateKey(argv.privateKey),
     jsonOutputDir: argv.stdOutputDir,
+    privateKey: toPrivateKey(argv.privateKey),
     saveContract: argv.saveContract,
+    type: toDeploymentType(argv.deploymentType),
   };
 
   const wormholeContract = await getOrDeployWormholeContract(
@@ -126,15 +125,10 @@ export async function main() {
     CACHE_FILE,
   );
 
-  const maskedDeploymentConfig = {
+  const _maskedDeploymentConfig = {
     ...deploymentConfig,
     privateKey: deploymentConfig.privateKey ? `<REDACTED>` : undefined,
   };
-  console.log(
-    `Deployment config: ${JSON.stringify(maskedDeploymentConfig, undefined, 2)}\n`,
-  );
-
-  console.log(`Deploying executor contracts on ${chain.getId()}...`);
 
   const executorContract = await getOrDeployExecutorContract(
     chain,
@@ -143,15 +137,10 @@ export async function main() {
   );
 
   if (deploymentConfig.saveContract) {
-    console.log("Saving the contract in the store...");
     DefaultStore.executor_contracts[executorContract.getId()] =
       executorContract;
     DefaultStore.saveAllContracts();
   }
-
-  console.log(
-    `✅ Executor contract on ${chain.getId()} at ${executorContract.address}\n\n`,
-  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

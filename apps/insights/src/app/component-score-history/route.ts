@@ -18,9 +18,9 @@ export const GET = async (req: NextRequest) => {
     const { cluster, publisherKey, symbol, from, to } = parsed.data;
     const data = await getFeedScoreHistory({
       cluster,
+      from,
       publisherKey,
       symbol,
-      from,
       to,
     });
     return Response.json(data);
@@ -33,8 +33,8 @@ export const GET = async (req: NextRequest) => {
 
 const queryParamsSchema = z.object({
   cluster: z.enum(CLUSTER_NAMES).transform((value) => toCluster(value)),
+  from: z.string(),
   publisherKey: z.string(),
   symbol: z.string().transform((value) => decodeURIComponent(value)),
-  from: z.string(),
   to: z.string(),
 });

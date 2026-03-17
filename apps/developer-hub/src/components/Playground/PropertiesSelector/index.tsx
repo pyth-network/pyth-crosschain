@@ -2,11 +2,10 @@
 
 import { Check } from "@phosphor-icons/react/dist/ssr/Check";
 import clsx from "clsx";
-
-import styles from "./index.module.scss";
 import { usePlaygroundContext } from "../PlaygroundContext";
 import type { PriceFeedProperty } from "../types";
 import { PROPERTY_OPTIONS } from "../types";
+import styles from "./index.module.scss";
 
 type PropertiesSelectorProps = {
   className?: string;
@@ -39,27 +38,27 @@ export function PropertiesSelector({ className }: PropertiesSelectorProps) {
       </div>
 
       <div
+        aria-label="Property selection"
         className={styles.chipGrid}
         role="group"
-        aria-label="Property selection"
       >
         {PROPERTY_OPTIONS.map((option) => {
           const isSelected = selectedProperties.includes(option.id);
           return (
             <button
-              key={option.id}
-              type="button"
+              aria-pressed={isSelected}
               className={clsx(styles.chip, {
                 [styles.selected ?? ""]: isSelected,
               })}
+              key={option.id}
               onClick={() => {
                 handleToggle(option.id);
               }}
-              aria-pressed={isSelected}
               title={option.description}
+              type="button"
             >
               {isSelected && (
-                <Check weight="bold" className={styles.checkIcon} />
+                <Check className={styles.checkIcon} weight="bold" />
               )}
               <span className={styles.chipLabel}>{option.label}</span>
             </button>

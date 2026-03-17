@@ -18,21 +18,21 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --network <mainnet|testnet> --code-hash <hash> --ops-key-path <ops_key_path>\n",
   )
   .options({
-    network: {
-      type: "string",
-      choices: ["mainnet", "testnet"],
-      description: "Network to deploy to",
-      demandOption: true,
-    },
     "code-hash": {
-      type: "string",
-      description: "Sha-256 HEX of the wasm file",
       demandOption: true,
+      description: "Sha-256 HEX of the wasm file",
+      type: "string",
+    },
+    network: {
+      choices: ["mainnet", "testnet"],
+      demandOption: true,
+      description: "Network to deploy to",
+      type: "string",
     },
     "ops-key-path": {
-      type: "string",
-      description: "Path to operations key file",
       demandOption: true,
+      description: "Path to operations key file",
+      type: "string",
     },
   });
 
@@ -53,24 +53,14 @@ async function main() {
   if (Buffer.from(codeHash, "hex").length != 32) {
     throw new Error("invalid code hash format");
   }
-  console.log(
-    `Upgrading contract on Near ${argv.network} to code hash: ${codeHash}`,
-  );
 
   // Generate governance payload for the upgrade
   const payload = chain.generateGovernanceUpgradePayload(codeHash);
-  console.log("Governance payload:", payload);
-
-  // Create and submit governance proposal
-  console.log("Using vault for proposal:", vault?.getId());
   const keypair = await loadHotWallet(argv["ops-key-path"]);
-  console.log("Using wallet:", keypair.publicKey.toBase58());
   vault?.connect(keypair);
-  const proposal = await vault?.proposeWormholeMessage([payload]);
-  console.log("Proposal address:", proposal?.address.toBase58());
+  const _proposal = await vault?.proposeWormholeMessage([payload]);
 }
 
 main().catch((error) => {
-  console.error("Error during upgrade:", error);
   process.exit(1);
 });

@@ -1,7 +1,7 @@
-import type { Config } from "jest";
 import { nextjs } from "@cprussin/jest-config/next";
-import { defineJestConfig } from "./define-config.js";
+import type { Config } from "jest";
 import { merge } from "ts-deepmerge";
+import { defineJestConfig } from "./define-config.js";
 import { defineReactConfig } from "./define-react-config.js";
 
 export function defineJestConfigForNextJs(config?: Config): Config {

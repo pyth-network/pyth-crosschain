@@ -3,8 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "cli": {
-      "dependsOn": ["^build"],
-      "cache": false
+      "cache": false,
+      "dependsOn": ["^build"]
     }
   }
 }

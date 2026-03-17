@@ -1,4 +1,5 @@
-declare module '*.svg' {
-  const content: any
-  export default content
+declare module "*.svg" {
+  // biome-ignore lint/suspicious/noExplicitAny: SVG module declaration requires any type
+  const content: any;
+  export default content;
 }

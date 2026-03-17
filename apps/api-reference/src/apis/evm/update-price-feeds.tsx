@@ -1,16 +1,32 @@
+import { ParameterType } from "../../components/EvmApi";
 import {
   BTCUSD,
   ETHUSD,
+  ethersJS,
   getLatestPriceUpdate,
   solidity,
-  ethersJS,
   writeApi,
 } from "./common";
-import { ParameterType } from "../../components/EvmApi";
 
 export const updatePriceFeeds = writeApi<"updateData" | "fee">({
-  name: "updatePriceFeeds",
-  summary: "Update the on-chain price feeds using the provided `updateData`.",
+  code: [
+    solidity(
+      ({ updateData, fee }) => `
+bytes[] memory updateData = new bytes[](1);
+updateData[0] = ${updateData ? `hex"${updateData}` : "/* <updateData> */"};
+uint fee = ${fee ?? "/* <fee> */"};
+pyth.updatePriceFeeds{value: fee}(updateData);
+    `,
+    ),
+    ethersJS(
+      ({ updateData, fee }) => `
+const updateData = ${updateData ? `['${updateData}']` : "/* <updateData> */"};
+const fee = ethers.toBigInt(${fee ?? "/* <fee> */"});
+const tx = await contract.updatePriceFeeds(updateData, {value: fee});
+const receipt = await tx.wait();
+    `,
+    ),
+  ],
   description: `
   This method updates the on-chain price feeds using the provided \`updateData\`, which contains serialized and signed price update data from Pyth Network.
   You can retrieve the latest price \`updateData\` for a given set of price feeds from the [Hermes API](https://hermes.pyth.network/docs).
@@ -30,24 +46,6 @@ export const updatePriceFeeds = writeApi<"updateData" | "fee">({
   - \`InvalidUpdateData\`: The provided update data is invalid or incorrectly signed.
   - \`InsufficientFee\`: The fee provided is less than the required fee. Try calling [getUpdateFee](getUpdateFee) to get the required fee.
   `,
-  parameters: [
-    {
-      name: "updateData",
-      type: ParameterType.HexArray,
-      description:
-        "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
-      defaultValue:
-        "0x504e41550100000003b801000000040d00cea20e5677f66ed178e9410ddd8280617c06921916e8fd4b71e597d7f6c6d0a14daf3bb3e1a0d8c9e051c8d0................",
-    },
-    {
-      name: "fee",
-      type: ParameterType.Int,
-      description:
-        "The update fee in **wei**. This fee is sent as the value of the transaction.",
-      defaultValue: "1",
-    },
-  ],
-  valueParam: "fee",
   examples: [
     {
       name: "Latest BTC/USD update data",
@@ -58,24 +56,26 @@ export const updatePriceFeeds = writeApi<"updateData" | "fee">({
       parameters: (ctx) => getParams(ETHUSD, ctx),
     },
   ],
-  code: [
-    solidity(
-      ({ updateData, fee }) => `
-bytes[] memory updateData = new bytes[](1);
-updateData[0] = ${updateData ? `hex"${updateData}` : "/* <updateData> */"};
-uint fee = ${fee ?? "/* <fee> */"};
-pyth.updatePriceFeeds{value: fee}(updateData);
-    `,
-    ),
-    ethersJS(
-      ({ updateData, fee }) => `
-const updateData = ${updateData ? `['${updateData}']` : "/* <updateData> */"};
-const fee = ethers.toBigInt(${fee ?? "/* <fee> */"});
-const tx = await contract.updatePriceFeeds(updateData, {value: fee});
-const receipt = await tx.wait();
-    `,
-    ),
+  name: "updatePriceFeeds",
+  parameters: [
+    {
+      defaultValue:
+        "0x504e41550100000003b801000000040d00cea20e5677f66ed178e9410ddd8280617c06921916e8fd4b71e597d7f6c6d0a14daf3bb3e1a0d8c9e051c8d0................",
+      description:
+        "The price update data for the contract to verify. Fetch this data from [Hermes API](https://hermes.pyth.network/docs/#/rest/latest_price_updates).",
+      name: "updateData",
+      type: ParameterType.HexArray,
+    },
+    {
+      defaultValue: "1",
+      description:
+        "The update fee in **wei**. This fee is sent as the value of the transaction.",
+      name: "fee",
+      type: ParameterType.Int,
+    },
   ],
+  summary: "Update the on-chain price feeds using the provided `updateData`.",
+  valueParam: "fee",
 });
 
 const getParams = async (
@@ -90,7 +90,7 @@ const getParams = async (
     throw new TypeError("Invalid fee");
   }
   return {
-    updateData: feed.binary.data,
     fee: fee.toString(),
+    updateData: feed.binary.data,
   };
 };

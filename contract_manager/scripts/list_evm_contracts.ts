@@ -9,9 +9,9 @@ const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")
   .options({
     testnet: {
-      type: "boolean",
       default: false,
       desc: "Fetch testnet contract fees instead of mainnet",
+      type: "boolean",
     },
   });
 
@@ -32,13 +32,9 @@ async function main() {
           contract: contract.address,
           version: version,
         });
-        console.log(`Fetched version for ${contract.getId()}`);
-      } catch (error) {
-        console.error(`Error fetching version for ${contract.getId()}`, error);
-      }
+      } catch (_error) {}
     }
   }
-  console.table(entries);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

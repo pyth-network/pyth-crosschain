@@ -8,10 +8,10 @@ import type { ReactNode } from "react";
 import "./global.css";
 
 export const TABS = [
-  { segment: "", children: "Home" },
-  { segment: "price-feeds", children: "Price Feeds" },
-  { segment: "express-relay", children: "Express Relay" },
-  { segment: "entropy", children: "Entropy" },
+  { children: "Home", segment: "" },
+  { children: "Price Feeds", segment: "price-feeds" },
+  { children: "Express Relay", segment: "express-relay" },
+  { children: "Entropy", segment: "entropy" },
 ];
 
 export const Root = ({ children, googleAnalyticsId }: Props) => (

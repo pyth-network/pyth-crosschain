@@ -5,44 +5,44 @@ import { InfoBox as InfoBoxComponent } from "./index.jsx";
 
 const iconControl = {
   control: "select",
-  options: Object.keys(icons),
+  description: "The icon of the info box.",
   mapping: Object.fromEntries(
     Object.entries(icons).map(([iconName, Icon]) => [
       iconName,
       <Icon key={iconName} weights={new Map()} />,
     ]),
   ),
-  description: "The icon of the info box.",
+  options: Object.keys(icons),
   table: {
     category: "Appearance",
   },
 } as const;
 
 const meta = {
-  component: InfoBoxComponent,
   argTypes: {
-    header: {
-      control: "text",
-      table: {
-        category: "Content",
-      },
-    },
     children: {
       control: "text",
       table: {
         category: "Content",
       },
     },
+    header: {
+      control: "text",
+      table: {
+        category: "Content",
+      },
+    },
+    icon: iconControl,
     variant: {
       control: "select",
-      options: ["neutral", "info", "warning", "error", "data", "success"],
       description: "The variant of the info box.",
+      options: ["neutral", "info", "warning", "error", "data", "success"],
       table: {
         category: "Appearance",
       },
     },
-    icon: iconControl,
   },
+  component: InfoBoxComponent,
 } satisfies Meta<typeof InfoBoxComponent>;
 export default meta;
 

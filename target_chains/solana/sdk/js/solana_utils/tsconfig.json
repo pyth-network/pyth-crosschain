@@ -1,8 +1,8 @@
 {
-  "extends": "@cprussin/tsconfig/base.json",
   "compilerOptions": {
-    "moduleResolution": "bundler",
-    "module": "preserve"
+    "module": "preserve",
+    "moduleResolution": "bundler"
   },
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules"],
+  "extends": "@cprussin/tsconfig/base.json"
 }

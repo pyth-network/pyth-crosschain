@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/useAwait: Async functions return promises for API consistency
 import "server-only";
 
 import { createClient } from "@clickhouse/client";
@@ -5,7 +6,12 @@ import { PriceStatus } from "@pythnetwork/client";
 import type { ZodSchema, ZodTypeDef } from "zod";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-
+import { redisCache } from "../cache";
+import {
+  CLICKHOUSE,
+  CLICKHOUSE_PYTH_ANALYTICS,
+  CLICKHOUSE_PYTH_PRO,
+} from "../config/server";
 import type {
   GetPythHistoricalPricesType,
   GetPythProFeedPricesOpts,
@@ -15,13 +21,8 @@ import {
   GetPythHistoricalPricesReturnTypeSchema,
   GetPythProFeedPricesOptsSchema,
 } from "./clickhouse-schema";
-import { Cluster, ClusterToName } from "./pyth";
-import { redisCache } from "../cache";
-import {
-  CLICKHOUSE,
-  CLICKHOUSE_PYTH_ANALYTICS,
-  CLICKHOUSE_PYTH_PRO,
-} from "../config/server";
+import type { Cluster } from "./pyth";
+import { ClusterToName } from "./pyth";
 
 const pythCoreClient = createClient(CLICKHOUSE);
 const pythProClient = createClient(CLICKHOUSE_PYTH_PRO);
@@ -31,17 +32,17 @@ const _getPublisherRankings = async (cluster: Cluster) =>
   safeQuery(
     z.array(
       z.strictObject({
-        key: z.string(),
-        rank: z.number(),
         activeFeeds: z
           .string()
           .transform((value) => Number.parseInt(value, 10)),
+        averageScore: z.number(),
         inactiveFeeds: z
           .string()
           .transform((value) => Number.parseInt(value, 10)),
-        averageScore: z.number(),
-        timestamp: z.string().transform((value) => new Date(`${value} UTC`)),
+        key: z.string(),
+        rank: z.number(),
         scoreTime: z.string().transform((value) => new Date(value)),
+        timestamp: z.string().transform((value) => new Date(`${value} UTC`)),
       }),
     ),
     {
@@ -160,16 +161,16 @@ const _getRankingsBySymbol = async (symbol: string) =>
 
 const rankingsSchema = z.array(
   z.strictObject({
-    time: z.string().transform((time) => new Date(time)),
-    first_ranking_time: z.string().transform((time) => new Date(time)),
-    symbol: z.string(),
     cluster: z.enum(["pythnet", "pythtest-conformance"]),
-    publisher: z.string(),
-    uptime_score: z.number(),
     deviation_score: z.number(),
-    stalled_score: z.number(),
-    final_score: z.number(),
     final_rank: z.number(),
+    final_score: z.number(),
+    first_ranking_time: z.string().transform((time) => new Date(time)),
+    publisher: z.string(),
+    stalled_score: z.number(),
+    symbol: z.string(),
+    time: z.string().transform((time) => new Date(time)),
+    uptime_score: z.number(),
   }),
 );
 
@@ -177,8 +178,8 @@ const _getYesterdaysPrices = async (symbols: string[]) =>
   safeQuery(
     z.array(
       z.object({
-        symbol: z.string(),
         price: z.number(),
+        symbol: z.string(),
       }),
     ),
     {
@@ -206,8 +207,8 @@ const _getPublisherRankingHistory = async ({
   safeQuery(
     z.array(
       z.strictObject({
-        timestamp: z.string().transform((value) => new Date(value)),
         rank: z.number(),
+        timestamp: z.string().transform((value) => new Date(value)),
       }),
     ),
     {
@@ -222,7 +223,7 @@ const _getPublisherRankingHistory = async ({
           )
           ORDER BY timestamp ASC
         `,
-      query_params: { key, cluster: ClusterToName[cluster] },
+      query_params: { cluster: ClusterToName[cluster], key },
     },
   );
 
@@ -243,11 +244,11 @@ export const getFeedScoreHistory = async ({
   safeQuery(
     z.array(
       z.strictObject({
-        time: z.string().transform((value) => new Date(value)),
-        score: z.number(),
-        uptimeScore: z.number(),
         deviationScore: z.number(),
+        score: z.number(),
         stalledScore: z.number(),
+        time: z.string().transform((value) => new Date(value)),
+        uptimeScore: z.number(),
       }),
     ),
     {
@@ -269,9 +270,9 @@ export const getFeedScoreHistory = async ({
       `,
       query_params: {
         cluster: ClusterToName[cluster],
+        from,
         publisherKey,
         symbol,
-        from,
         to,
       },
     },
@@ -289,9 +290,9 @@ const _getFeedPriceHistory = async ({
   safeQuery(
     z.array(
       z.strictObject({
-        time: z.string().transform((value) => new Date(value)),
-        price: z.number(),
         confidence: z.number(),
+        price: z.number(),
+        time: z.string().transform((value) => new Date(value)),
       }),
     ),
     {
@@ -325,8 +326,8 @@ const _getPublisherAverageScoreHistory = async ({
   safeQuery(
     z.array(
       z.strictObject({
-        time: z.string().transform((value) => new Date(value)),
         averageScore: z.number(),
+        time: z.string().transform((value) => new Date(value)),
       }),
     ),
     {
@@ -345,7 +346,7 @@ const _getPublisherAverageScoreHistory = async ({
           )
           ORDER BY time ASC
         `,
-      query_params: { key, cluster: ClusterToName[cluster] },
+      query_params: { cluster: ClusterToName[cluster], key },
     },
   );
 
@@ -366,20 +367,20 @@ export const getHistoricalPrices = async ({
   resolution?: Resolution;
 }) => {
   const queryParams: Record<string, number | string | string[]> = {
-    symbol,
-    from,
-    to,
-    publisher,
     cluster: "pythnet",
+    from,
+    publisher,
+    symbol,
+    to,
   };
 
   return safeQuery(
     z.array(
       z.strictObject({
-        timestamp: z.number(),
-        price: z.number(),
         confidence: z.number(),
+        price: z.number(),
         status: z.nativeEnum(PriceStatus),
+        timestamp: z.number(),
       }),
     ),
     {
@@ -405,8 +406,8 @@ export const getHistoricalPrices = async ({
 const GetPriceFeedMetadataForSymbolSchema = z.object({
   minChannel: z.string(),
   name: z.string().nonempty(),
-  pythLazerId: z.number(),
   pythCoreId: z.string(),
+  pythLazerId: z.number(),
 });
 
 /**
@@ -492,8 +493,8 @@ OFFSET 0;`,
   const out = allResults.flatMap((results) =>
     results.map<GetPythHistoricalPricesType>((r) => ({
       ...r,
-      symbol,
       source: "nbbo",
+      symbol,
     })),
   );
 
@@ -553,8 +554,8 @@ OFFSET 0`,
       ask,
       bid,
       price,
-      symbol,
       source: "pyth_pro",
+      symbol,
     };
   });
 }

@@ -21,14 +21,16 @@ export type BinaryFormat = {
 
 const DEFAULT_FORMATS: BinaryFormat[] = [
   {
+    algorithm: "secp256k1 ECDSA",
     id: "evm",
     name: "EVM",
-    algorithm: "secp256k1 ECDSA",
+    signature: "65 bytes",
     specs: [
       { label: "Hash", value: "Keccak-256" },
       { label: "Signature", value: "65 bytes" },
       { label: "Verification", value: "Recoverable ECDSA" },
     ],
+    use: "Onchain",
     useCases: [
       "Ethereum",
       "Arbitrum",
@@ -37,52 +39,50 @@ const DEFAULT_FORMATS: BinaryFormat[] = [
       "BSC",
       "Avalanche",
     ],
-    signature: "65 bytes",
     verification: "Recoverable ECDSA",
-    use: "Onchain",
   },
   {
+    algorithm: "Ed25519 EdDSA",
     id: "solana",
     name: "Solana",
-    algorithm: "Ed25519 EdDSA",
+    signature: "64 bytes",
     specs: [
       { label: "Signature", value: "64 bytes" },
       { label: "Public Key", value: "32 bytes" },
       { label: "Verification", value: "Direct Ed25519" },
     ],
-    useCases: ["Solana", "Fogo", "Ed25519-native chains"],
-    signature: "64 bytes",
-    verification: "Direct Ed25519",
     use: "Onchain",
+    useCases: ["Solana", "Fogo", "Ed25519-native chains"],
+    verification: "Direct Ed25519",
   },
   {
+    algorithm: "secp256k1 ECDSA (little-endian)",
     id: "leEcdsa",
     name: "Little-Endian ECDSA",
-    algorithm: "secp256k1 ECDSA (little-endian)",
+    signature: "65 bytes",
     specs: [
       { label: "Hash", value: "Keccak-256" },
       { label: "Byte Order", value: "Little-endian" },
       { label: "Verification", value: "Custom impl" },
     ],
-    useCases: ["Custom implementations", "Little-endian chains"],
-    signature: "65 bytes",
-    verification: "Custom implementation",
     use: "Onchain",
+    useCases: ["Custom implementations", "Little-endian chains"],
+    verification: "Custom implementation",
   },
   {
+    algorithm: "None",
     id: "leUnsigned",
     name: "Unsigned",
-    algorithm: "None",
+    note: "No cryptographic signature - for offchain use only",
+    signature: "None",
     specs: [
       { label: "Signature", value: "None" },
       { label: "Verification", value: "N/A" },
       { label: "Use", value: "Offchain only" },
     ],
-    useCases: ["Development", "Testing", "Analytics", "Backend services"],
-    note: "No cryptographic signature - for offchain use only",
-    signature: "None",
-    verification: "N/A",
     use: "Offchain",
+    useCases: ["Development", "Testing", "Analytics", "Backend services"],
+    verification: "N/A",
   },
 ];
 
@@ -99,7 +99,7 @@ export function BinaryFormatCards({
 
   return (
     <div className={styles.container}>
-      <Tabs items={["Compare", "Cards"]} defaultIndex={0}>
+      <Tabs defaultIndex={0} items={["Compare", "Cards"]}>
         <Tab value="Compare">
           <table className={styles.comparisonTable}>
             <thead>
@@ -114,7 +114,7 @@ export function BinaryFormatCards({
             </thead>
             <tbody>
               {formats.map((format) => (
-                <tr key={format.id} className={styles.tableRow}>
+                <tr className={styles.tableRow} key={format.id}>
                   <td className={styles.tableCell}>
                     <code className={styles.formatCode}>{format.id}</code>
                   </td>
@@ -136,17 +136,17 @@ export function BinaryFormatCards({
           <div className={styles.grid}>
             {formats.map((format) => (
               <button
-                key={format.id}
-                type="button"
                 className={clsx(
                   styles.card,
                   selectedFormat === format.id && styles.selected,
                 )}
+                key={format.id}
                 onClick={() => {
                   setSelectedFormat(
                     selectedFormat === format.id ? undefined : format.id,
                   );
                 }}
+                type="button"
               >
                 <div className={styles.cardHeader}>
                   <h4 className={styles.formatName}>{format.name}</h4>
@@ -155,7 +155,7 @@ export function BinaryFormatCards({
 
                 <div className={styles.specs}>
                   {format.specs.map((spec) => (
-                    <div key={spec.label} className={styles.specRow}>
+                    <div className={styles.specRow} key={spec.label}>
                       <span className={styles.specLabel}>{spec.label}</span>
                       <span className={styles.specValue}>{spec.value}</span>
                     </div>
@@ -166,7 +166,7 @@ export function BinaryFormatCards({
                   <span className={styles.useCasesLabel}>Best for:</span>
                   <div className={styles.useCasesTags}>
                     {format.useCases.map((useCase) => (
-                      <span key={useCase} className={styles.tag}>
+                      <span className={styles.tag} key={useCase}>
                         {useCase}
                       </span>
                     ))}

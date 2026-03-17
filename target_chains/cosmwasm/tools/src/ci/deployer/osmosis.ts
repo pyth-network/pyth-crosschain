@@ -1,17 +1,15 @@
-import { getSigningOsmosisClient, cosmwasm } from "osmojs";
-import { estimateOsmoFee } from "@osmonauts/utils";
-import { readFileSync } from "fs";
-import { type DeliverTxResponse, calculateFee } from "@cosmjs/stargate";
-import assert from "assert";
-
-import type { ContractInfo, Deployer } from "./index.js";
-import { convert_terra_address_to_hex, extractFromRawLog } from "./terra.js";
-import {
-  type EncodeObject,
-  DirectSecp256k1HdWallet,
-} from "@cosmjs/proto-signing";
-import Long from "long";
+import assert from "node:assert";
+import { readFileSync } from "node:fs";
 import { wasmTypes } from "@cosmjs/cosmwasm-stargate";
+import type { EncodeObject } from "@cosmjs/proto-signing";
+import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import type { DeliverTxResponse } from "@cosmjs/stargate";
+import { calculateFee } from "@cosmjs/stargate";
+import { estimateOsmoFee } from "@osmonauts/utils";
+import Long from "long";
+import { cosmwasm, getSigningOsmosisClient } from "osmojs";
+import type { ContractInfo, Deployer } from "./index.js";
+import { extractFromRawLog } from "./terra.js";
 
 export type OsmosisHost = {
   endpoint: string;
@@ -35,9 +33,9 @@ export class OsmosisDeployer implements Deployer {
     const signer = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic);
 
     const client = await getSigningOsmosisClient({
+      defaultTypes: wasmTypes,
       rpcEndpoint: this.endpoint,
       signer,
-      defaultTypes: wasmTypes,
     });
 
     const address = await this.getAccountAddress();
@@ -53,18 +51,14 @@ export class OsmosisDeployer implements Deployer {
     // which seems to be not enough
     // hence again multiplying by 1.3
     const fee = calculateFee(
-      parseInt((parseInt(gas) * 1.3).toFixed()),
+      Number.parseInt((Number.parseInt(gas) * 1.3).toFixed(0)),
       "0.025uosmo",
     );
 
     const rs = await client.signAndBroadcast(address, [msg], fee);
 
     if (rs.code !== 0) {
-      console.error(`Transaction failed: ${rs.events}`);
     } else {
-      console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(rs.transactionHash)}`,
-      );
     }
 
     client.disconnect();
@@ -74,7 +68,6 @@ export class OsmosisDeployer implements Deployer {
 
   async deployArtifact(artifact: string): Promise<number> {
     const contract_bytes = readFileSync(artifact);
-    console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
 
     const storeCode = cosmwasm.wasm.v1.MessageComposer.withTypeUrl.storeCode({
       sender: await this.getAccountAddress(),
@@ -86,17 +79,9 @@ export class OsmosisDeployer implements Deployer {
       throw new Error("error parsing raw logs: rawLog undefined");
 
     var codeId: number;
-    try {
-      // {"key":"code_id","value":"14"}
-      const ci = extractFromRawLog(rs.rawLog, "code_id");
-      codeId = parseInt(ci);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing deploy code result. Printing raw log",
-      );
-      console.error(rs.rawLog);
-      throw e;
-    }
+    // {"key":"code_id","value":"14"}
+    const ci = extractFromRawLog(rs.rawLog, "code_id");
+    codeId = Number.parseInt(ci);
 
     return codeId;
   }
@@ -109,79 +94,58 @@ export class OsmosisDeployer implements Deployer {
     const accAddress = await this.getAccountAddress();
     const instMsg =
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.instantiateContract({
-        sender: accAddress,
         admin: accAddress,
         // FIXME: soon this file will be removed
         // not spending any time on this bug
         // @ts-ignore
         codeId: Long.fromNumber(codeId),
+        funds: [],
         label,
         msg: Buffer.from(JSON.stringify(inst_msg)),
-        funds: [],
+        sender: accAddress,
       });
 
     const rs = await this.signAndBroadcast(instMsg);
     if (rs.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
 
-    var address: string = "";
-    try {
-      // {"key":"_contract_address","value":"terra1xxx3ps3gm3wceg4g300hvggdv7ga0hmsk64srccffmfy4wvcrugqnlvt8w"}
-      address = extractFromRawLog(rs.rawLog, "_contract_address");
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing instantiation result. Printing raw log",
-      );
-      console.error(rs.rawLog);
-      throw e;
-    }
-
-    console.log(
-      `Instantiated ${label} at ${address} (${convert_terra_address_to_hex(
-        address,
-      )})`,
-    );
+    var address = "";
+    // {"key":"_contract_address","value":"terra1xxx3ps3gm3wceg4g300hvggdv7ga0hmsk64srccffmfy4wvcrugqnlvt8w"}
+    address = extractFromRawLog(rs.rawLog, "_contract_address");
     return address;
   }
 
   async migrate(contract: string, codeId: number): Promise<void> {
     const migrateMsg =
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.migrateContract({
-        sender: await this.getAccountAddress(),
-        contract,
         // @ts-ignore
         codeId: Long.fromNumber(codeId),
+        contract,
         msg: Buffer.from(
           JSON.stringify({
             action: "",
           }),
         ),
+        sender: await this.getAccountAddress(),
       });
 
     const rs = await this.signAndBroadcast(migrateMsg);
     if (rs.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
-
-    try {
-      // {"key":"code_id","value":"13"}
-      let resultCodeId = parseInt(extractFromRawLog(rs.rawLog, "code_id"));
-      assert.strictEqual(codeId, resultCodeId);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing migration result. Printing raw log",
-      );
-      console.error(rs.rawLog);
-      throw e;
-    }
+    // {"key":"code_id","value":"13"}
+    const resultCodeId = Number.parseInt(
+      extractFromRawLog(rs.rawLog, "code_id"),
+    );
+    assert.strictEqual(codeId, resultCodeId);
   }
 
   async updateAdmin(newAdmin: string, contract: string): Promise<void> {
     const currAdmin = await this.getAccountAddress();
     const updateAdminMsg =
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.updateAdmin({
-        sender: currAdmin,
-        newAdmin,
         contract,
+        newAdmin,
+        sender: currAdmin,
       });
 
     const rs = await this.signAndBroadcast(updateAdminMsg);
@@ -201,10 +165,10 @@ export class OsmosisDeployer implements Deployer {
     const { codeId, creator, admin } = contractInfo;
 
     return {
-      codeId: Number(codeId),
       address: address,
-      creator: creator,
       admin: admin,
+      codeId: Number(codeId),
+      creator: creator,
       initMsg: undefined,
     };
   }

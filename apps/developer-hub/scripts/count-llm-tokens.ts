@@ -63,18 +63,8 @@ async function main() {
       const hash = `sha256:${sha256(content)}`;
 
       files[file.path] = { bytes, hash, tokens };
-
-      let status = "";
-      if (tokens > 10_000) {
-        status = " !! OVER BUDGET";
-      } else if (tokens > 8000) {
-        status = " ! near budget";
-      }
-      console.log(
-        `  ${file.path.padEnd(35)} ${String(tokens).padStart(6)} tokens  ${String(bytes).padStart(7)} bytes${status}`,
-      );
     } catch {
-      console.log(`  ${file.path.padEnd(35)}  SKIP (could not extract)`);
+      // Skip files that don't have CONTENT template literals
     }
   }
 
@@ -88,11 +78,8 @@ async function main() {
 
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2) + "\n");
-
-  console.log(`\nWritten to ${path.relative(ROOT, OUTPUT_PATH)}`);
 }
 
-main().catch((err) => {
-  console.error(err);
+main().catch((_err) => {
   process.exit(1);
 });

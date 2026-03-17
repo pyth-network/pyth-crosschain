@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useState, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useDateFormatter, useNumberFormatter } from "react-aria";
-import { ResponsiveContainer, Tooltip, Area, XAxis, YAxis } from "recharts";
+import { Area, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { CategoricalChartState } from "recharts/types/chart/types";
 
 import styles from "./ois-apy-history.module.scss";
@@ -30,14 +30,11 @@ export const OisApyHistory = ({ apyHistory }: Props) => {
   const [selectedPoint, setSelectedPoint] = useState<
     (typeof apyHistory)[number] | undefined
   >(undefined);
-  const updateSelectedPoint = useCallback(
-    (chart: CategoricalChartState) => {
-      setSelectedPoint(
-        (chart.activePayload as { payload: Point }[] | undefined)?.[0]?.payload,
-      );
-    },
-    [setSelectedPoint],
-  );
+  const updateSelectedPoint = useCallback((chart: CategoricalChartState) => {
+    setSelectedPoint(
+      (chart.activePayload as { payload: Point }[] | undefined)?.[0]?.payload,
+    );
+  }, []);
   const currentPoint = useMemo(
     () => selectedPoint ?? apyHistory.at(-1),
     [selectedPoint, apyHistory],
@@ -61,22 +58,22 @@ export const OisApyHistory = ({ apyHistory }: Props) => {
       <Suspense
         fallback={<div style={{ height: `${CHART_HEIGHT.toString()}px` }} />}
       >
-        <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
+        <ResponsiveContainer height={CHART_HEIGHT} width="100%">
           <AreaChart
-            data={apyHistory}
             className={styles.chart ?? ""}
+            data={apyHistory}
+            margin={{ bottom: 0, left: 0, right: 0, top: 0 }}
             onMouseEnter={updateSelectedPoint}
-            onMouseMove={updateSelectedPoint}
             onMouseLeave={updateSelectedPoint}
-            margin={{ bottom: 0, left: 0, top: 0, right: 0 }}
+            onMouseMove={updateSelectedPoint}
           >
             <Tooltip content={() => <></>} />
             <Area
-              type="monotone"
+              className={styles.chartArea ?? ""}
               dataKey="apy"
               dot={false}
-              className={styles.chartArea ?? ""}
               stroke="currentColor"
+              type="monotone"
             />
             <XAxis dataKey="date" hide />
             <YAxis hide />

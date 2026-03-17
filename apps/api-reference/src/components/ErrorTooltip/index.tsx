@@ -10,7 +10,7 @@ type Props = {
 };
 
 export const ErrorTooltip = ({ className, children }: Props) => (
-  <Tooltip arrow={{ width: 6, height: 10 }} gap={0} placement="top-end">
+  <Tooltip arrow={{ height: 10, width: 6 }} gap={0} placement="top-end">
     <Tooltip.Trigger
       as={ExclamationCircleIcon}
       className={clsx("text-red-500 dark:text-red-700", className)}

@@ -1,23 +1,27 @@
 import * as icons from "@phosphor-icons/react/dist/ssr";
 import type { Meta, StoryObj } from "@storybook/react";
-
-import { SearchButton as SearchButtonComponent } from "./index.jsx";
 import { SIZES } from "../Button/index.jsx";
+import { SearchButton as SearchButtonComponent } from "./index.jsx";
 
 const iconControl = {
   control: "select",
-  options: Object.keys(icons),
   mapping: Object.fromEntries(
     Object.entries(icons).map(([iconName, Icon]) => [
       iconName,
       <Icon key={iconName} weights={new Map()} />,
     ]),
   ),
+  options: Object.keys(icons),
 } as const;
 
 const meta = {
-  component: SearchButtonComponent,
   argTypes: {
+    beforeIcon: {
+      ...iconControl,
+      table: {
+        category: "Contents",
+      },
+    },
     size: {
       control: "inline-radio",
       options: SIZES,
@@ -25,20 +29,15 @@ const meta = {
         category: "Variant",
       },
     },
-    beforeIcon: {
-      ...iconControl,
-      table: {
-        category: "Contents",
-      },
-    },
   },
+  component: SearchButtonComponent,
 } satisfies Meta<typeof SearchButtonComponent>;
 export default meta;
 
 export const SearchButton = {
   args: {
     largeScreenContent: "Search",
-    smallScreenContent: "Search",
     size: "sm",
+    smallScreenContent: "Search",
   },
 } satisfies StoryObj<typeof SearchButtonComponent>;

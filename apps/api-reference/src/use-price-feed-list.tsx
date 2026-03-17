@@ -3,7 +3,7 @@
 import { PythHttpClient } from "@pythnetwork/client";
 import { Connection, PublicKey } from "@solana/web3.js";
 import type { ComponentProps } from "react";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { z } from "zod";
 
 const PYTHNET_RPC_URL = "https://api2.pythnet.pyth.network";
@@ -24,12 +24,12 @@ const NotInitialized = () => ({
 });
 const Loading = () => ({ type: PriceFeedListContextType.Loading as const });
 const Loaded = (priceFeedList: PriceFeed[]) => ({
-  type: PriceFeedListContextType.Loaded as const,
   priceFeedList,
+  type: PriceFeedListContextType.Loaded as const,
 });
 const ErrorState = (error: unknown) => ({
-  type: PriceFeedListContextType.Error as const,
   error,
+  type: PriceFeedListContextType.Error as const,
 });
 
 export type PriceFeedListContext =
@@ -38,8 +38,9 @@ export type PriceFeedListContext =
   | ReturnType<typeof Loaded>
   | ReturnType<typeof ErrorState>;
 
-const PriceFeedListContext =
-  createContext<PriceFeedListContext>(NotInitialized());
+const PriceFeedListContext = createContext<PriceFeedListContext>(
+  NotInitialized(),
+);
 
 export const PriceFeedListProvider = (
   props: Omit<ComponentProps<typeof PriceFeedListContext.Provider>, "value">,
@@ -70,8 +71,8 @@ const loadPriceFeedList = async (signal: AbortSignal) => {
   const pythClient = new PythHttpClient(
     new Connection(PYTHNET_RPC_URL, {
       commitment: "confirmed",
-      wsEndpoint: PYTHNET_WS_URL,
       fetch: (url, init) => fetch(url, { signal, ...init }),
+      wsEndpoint: PYTHNET_WS_URL,
     }),
     PROGRAM_KEY,
   );
@@ -79,18 +80,18 @@ const loadPriceFeedList = async (signal: AbortSignal) => {
     await pythClient.getData(),
   );
   return onChainData.products.map((product) => ({
-    name: product.symbol,
     description: product.description,
     feedId: product.price_account,
+    name: product.symbol,
   }));
 };
 
 const onChainDataSchema = z.object({
   products: z.array(
     z.object({
-      symbol: z.string(),
       description: z.string(),
       price_account: z.string(),
+      symbol: z.string(),
     }),
   ),
 });

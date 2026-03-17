@@ -5,6 +5,10 @@ export type ChainOverride = {
 };
 
 export const EntropyDeploymentsConfig: Record<string, ChainOverride> = {
+  "143": {
+    explorer: "https://monadvision.com",
+    nativeCurrency: "MON",
+  },
   // Example overrides - add your custom configurations here
   // "network-id": {
   //   rpc: "https://custom-rpc-url.com",
@@ -14,16 +18,12 @@ export const EntropyDeploymentsConfig: Record<string, ChainOverride> = {
 
   // Override examples (uncomment and modify as needed):
   "998": {
-    rpc: "https://rpc.hyperliquid-testnet.xyz/evm",
-    nativeCurrency: "HYPE",
     explorer: "https://testnet.purrsec.com/",
+    nativeCurrency: "HYPE",
+    rpc: "https://rpc.hyperliquid-testnet.xyz/evm",
   },
   "999": {
-    rpc: "https://rpc.hypurrscan.io",
     nativeCurrency: "HYPE",
-  },
-  "143": {
-    nativeCurrency: "MON",
-    explorer: "https://monadvision.com",
+    rpc: "https://rpc.hypurrscan.io",
   },
 };

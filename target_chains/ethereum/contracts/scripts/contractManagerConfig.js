@@ -14,8 +14,7 @@ function convertChainId(number) {
 }
 
 function getDefaultConfig(chainName) {
-  const chain = DefaultStore.chains[chainName];
-  console.log("***chain", chain);
+  const _chain = DefaultStore.chains[chainName];
   const { dataSources, governanceDataSource, wormholeConfig } =
     getDefaultDeploymentConfig("stable");
 
@@ -38,13 +37,13 @@ function getDefaultConfig(chainName) {
   );
 
   return {
-    governanceEmitter,
-    governanceChainId,
     emitterAddresses,
     emitterChainIds,
-    wormholeInitialSigners,
+    governanceChainId,
+    governanceEmitter,
     wormholeGovernanceChainId,
     wormholeGovernanceContract,
+    wormholeInitialSigners,
   };
 }
 function saveConfig(chainName, address) {
@@ -52,8 +51,6 @@ function saveConfig(chainName, address) {
   const contract = new EvmContract(chain, address);
   DefaultStore.contracts[contract.getId()] = contract;
   DefaultStore.saveAllContracts();
-  console.log("Added the following to your evm contract configs");
-  console.log(Store.serialize(contract));
 }
 
-module.exports = { saveConfig, getDefaultConfig };
+module.exports = { getDefaultConfig, saveConfig };

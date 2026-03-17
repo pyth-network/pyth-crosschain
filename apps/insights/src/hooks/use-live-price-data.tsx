@@ -3,9 +3,9 @@
 import type { PriceData } from "@pythnetwork/client";
 import { useLogger } from "@pythnetwork/component-library/useLogger";
 import { PublicKey } from "@solana/web3.js";
-import { useEffect, useState, useMemo } from "react";
-
-import { Cluster, subscribe, unsubscribe } from "../services/pyth";
+import { useEffect, useMemo, useState } from "react";
+import type { Cluster } from "../services/pyth";
+import { subscribe, unsubscribe } from "../services/pyth";
 
 export const useLivePriceData = (cluster: Cluster, feedKey: string) => {
   const logger = useLogger();
@@ -50,9 +50,9 @@ export const useLivePriceComponent = (
     current: current?.priceComponents.find((component) =>
       component.publisher.equals(publisherKey),
     ),
+    exponent: current?.exponent,
     prev: prev?.priceComponents.find((component) =>
       component.publisher.equals(publisherKey),
     ),
-    exponent: current?.exponent,
   };
 };

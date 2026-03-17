@@ -8,6 +8,7 @@ import { createLogger } from "./utils/logger.js";
 
 const config = loadConfig();
 const logger = createLogger(config);
+// biome-ignore lint/style/noProcessEnv: Standard port configuration from environment
 const port = Number(process.env.PORT) || 8080;
 
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
@@ -73,12 +74,16 @@ const httpServer = createHttpServer(async (req, res) => {
           res.end("Internal Server Error");
         }
       } finally {
-        await transport.close().catch((err: unknown) =>
-          logger.error({ err }, "transport close failed"),
-        );
-        await server.close().catch((err: unknown) =>
-          logger.error({ err }, "server close failed"),
-        );
+        await transport
+          .close()
+          .catch((err: unknown) =>
+            logger.error({ err }, "transport close failed"),
+          );
+        await server
+          .close()
+          .catch((err: unknown) =>
+            logger.error({ err }, "server close failed"),
+          );
       }
       return;
     }

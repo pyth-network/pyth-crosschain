@@ -5,13 +5,12 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 import type { PrivateKey } from "../src/core/base";
 import { toPrivateKey } from "../src/core/base";
 import { EvmChain } from "../src/core/chains";
-import { EvmEntropyContract } from "../src/core/contracts";
+import type { EvmEntropyContract } from "../src/core/contracts";
 import { DefaultStore } from "../src/node/utils/store";
+import { COMMON_DEPLOY_OPTIONS, findEntropyContract } from "./common";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -20,23 +19,23 @@ const parser = yargs(hideBin(process.argv))
       "Usage: $0 --private-key <private-key> --chain <chain-id> | --all-chains <testnet|mainnet>",
   )
   .options({
-    provider: {
+    "all-chains": {
+      choices: ["testnet", "mainnet"],
+      conflicts: "chain",
+      desc: "test latency for all entropy contracts deployed either on mainnet or testnet",
       type: "string",
-      desc: "Provider address to use for the request. Will use the default provider if not specified",
-      demandOption: false,
     },
     chain: {
-      type: "string",
-      desc: "test latency for the contract on this chain",
       conflicts: "all-chains",
-    },
-    "all-chains": {
+      desc: "test latency for the contract on this chain",
       type: "string",
-      conflicts: "chain",
-      choices: ["testnet", "mainnet"],
-      desc: "test latency for all entropy contracts deployed either on mainnet or testnet",
     },
     "private-key": COMMON_DEPLOY_OPTIONS["private-key"],
+    provider: {
+      demandOption: false,
+      desc: "Provider address to use for the request. Will use the default provider if not specified",
+      type: "string",
+    },
   });
 
 async function testLatency(
@@ -52,11 +51,9 @@ async function testLatency(
     privateKey,
     true, // with callback
   );
-  console.log(`Request tx hash  : ${requestResponse.transactionHash}`);
   // Read the sequence number for the request from the transaction events.
   const sequenceNumber =
     requestResponse.events.RequestedWithCallback.returnValues.sequenceNumber;
-  console.log(`sequence         : ${sequenceNumber}`);
 
   const startTime = Date.now();
 
@@ -83,18 +80,10 @@ async function testLatency(
     );
 
     if (event !== undefined) {
-      console.log(`Random number    : ${event.returnValues.randomNumber}`);
-      const endTime = Date.now();
-      console.log(`Fortuna Latency  : ${endTime - startTime}ms`);
-      console.log(
-        `Revealed after   : ${
-          currentBlock - requestResponse.blockNumber
-        } blocks`,
-      );
+      const _endTime = Date.now();
       break;
     }
     if (Date.now() - startTime > 60_000) {
-      console.log("Timeout: 60s passed without the callback being called.");
       break;
     }
   }
@@ -112,7 +101,6 @@ async function main() {
         contract.getChain().isMainnet() ===
         (argv["all-chains"] === "mainnet")
       ) {
-        console.log(`Testing latency for ${contract.getId()}...`);
         await testLatency(contract, privateKey);
       }
     }

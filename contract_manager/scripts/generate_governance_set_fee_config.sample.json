@@ -1,42 +1,42 @@
 [
   {
     "chainName": "aurora",
-    "fee": 3,
-    "exponent": 12
+    "exponent": 12,
+    "fee": 3
   },
   {
     "chainName": "avalanche",
-    "fee": 25,
-    "exponent": 13
+    "exponent": 13,
+    "fee": 25
   },
   {
     "chainName": "conflux_espace",
-    "fee": 1,
-    "exponent": 17
+    "exponent": 17,
+    "fee": 1
   },
   {
     "chainName": "cronos",
-    "fee": 6,
-    "exponent": 16
+    "exponent": 16,
+    "fee": 6
   },
   {
     "chainName": "meter",
-    "fee": 2,
-    "exponent": 16
+    "exponent": 16,
+    "fee": 2
   },
   {
     "chainName": "ronin",
-    "fee": 1,
-    "exponent": 15
+    "exponent": 15,
+    "fee": 1
   },
   {
     "chainName": "sei_evm_mainnet",
-    "fee": 1,
-    "exponent": 16
+    "exponent": 16,
+    "fee": 1
   },
   {
     "chainName": "shimmer",
-    "fee": 1,
-    "exponent": 18
+    "exponent": 18,
+    "fee": 1
   }
 ]

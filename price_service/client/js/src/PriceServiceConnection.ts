@@ -15,7 +15,7 @@ import { PriceFeed } from "@pythnetwork/price-service-sdk";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
 import axiosRetry from "axios-retry";
-import * as WebSocket from "isomorphic-ws";
+import type * as WebSocket from "isomorphic-ws";
 import type { Logger } from "ts-log";
 
 import { ResilientWebSocket } from "./ResillientWebSocket";
@@ -111,11 +111,11 @@ export class PriceServiceConnection {
 
     this.httpClient = axios.create({
       baseURL: endpoint,
-      timeout: config?.timeout || 5000,
       headers:
         this.accessToken === undefined
           ? {}
           : { Authorization: `Bearer ${this.accessToken}` },
+      timeout: config?.timeout || 5000,
     });
     axiosRetry(this.httpClient, {
       retries: config?.httpRetries || 3,
@@ -124,20 +124,20 @@ export class PriceServiceConnection {
     });
 
     this.priceFeedRequestConfig = {
+      allowOutOfOrder: config?.priceFeedRequestConfig?.allowOutOfOrder,
       binary: config?.priceFeedRequestConfig?.binary,
       verbose: config?.priceFeedRequestConfig?.verbose ?? config?.verbose,
-      allowOutOfOrder: config?.priceFeedRequestConfig?.allowOutOfOrder,
     };
 
     this.priceFeedCallbacks = new Map();
 
     // Default logger is console for only warnings and errors.
     this.logger = config?.logger || {
-      trace: () => {},
       debug: () => {},
-      info: () => {},
-      warn: console.warn,
       error: console.error,
+      info: () => {},
+      trace: () => {},
+      warn: console.warn,
     };
 
     this.onWsError = (error: Error) => {
@@ -184,9 +184,9 @@ export class PriceServiceConnection {
 
     const response = await this.httpClient.get("/api/latest_price_feeds", {
       params: {
+        binary: this.priceFeedRequestConfig.binary,
         ids: priceIds,
         verbose: this.priceFeedRequestConfig.verbose,
-        binary: this.priceFeedRequestConfig.binary,
       },
     });
     const priceFeedsJson = response.data as any[];
@@ -254,10 +254,10 @@ export class PriceServiceConnection {
   ): Promise<PriceFeed> {
     const response = await this.httpClient.get("/api/get_price_feed", {
       params: {
+        binary: this.priceFeedRequestConfig.binary,
         id: priceId,
         publish_time: publishTime,
         verbose: this.priceFeedRequestConfig.verbose,
-        binary: this.priceFeedRequestConfig.binary,
       },
     });
 
@@ -304,15 +304,15 @@ export class PriceServiceConnection {
         newPriceIds.push(id);
       }
 
-      this.priceFeedCallbacks.get(id)!.add(cb);
+      this.priceFeedCallbacks.get(id)?.add(cb);
     }
 
     const message: ClientMessage = {
+      allow_out_of_order: this.priceFeedRequestConfig.allowOutOfOrder,
+      binary: this.priceFeedRequestConfig.binary,
       ids: newPriceIds,
       type: "subscribe",
       verbose: this.priceFeedRequestConfig.verbose,
-      binary: this.priceFeedRequestConfig.binary,
-      allow_out_of_order: this.priceFeedRequestConfig.allowOutOfOrder,
     };
 
     await this.wsClient?.send(JSON.stringify(message));
@@ -349,9 +349,9 @@ export class PriceServiceConnection {
           this.priceFeedCallbacks.delete(id);
           idRemoved = true;
         } else {
-          this.priceFeedCallbacks.get(id)!.delete(cb);
+          this.priceFeedCallbacks.get(id)?.delete(cb);
 
-          if (this.priceFeedCallbacks.get(id)!.size === 0) {
+          if (this.priceFeedCallbacks.get(id)?.size === 0) {
             this.priceFeedCallbacks.delete(id);
             idRemoved = true;
           }
@@ -392,11 +392,11 @@ export class PriceServiceConnection {
     this.wsClient.onReconnect = () => {
       if (this.priceFeedCallbacks.size > 0) {
         const message: ClientMessage = {
+          allow_out_of_order: this.priceFeedRequestConfig.allowOutOfOrder,
+          binary: this.priceFeedRequestConfig.binary,
           ids: [...this.priceFeedCallbacks.keys()],
           type: "subscribe",
           verbose: this.priceFeedRequestConfig.verbose,
-          binary: this.priceFeedRequestConfig.binary,
-          allow_out_of_order: this.priceFeedRequestConfig.allowOutOfOrder,
         };
 
         this.logger.info("Resubscribing to existing price feeds.");

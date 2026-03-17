@@ -32,8 +32,8 @@ export function useBybitWebSocket(): UseDataProviderSocketHookReturnType {
       if (!isAllowedSymbol(selectedSource)) return;
 
       const subscribeMessage = {
-        op: "subscribe",
         args: [`orderbook.1.${selectedSource}`],
+        op: "subscribe",
       };
       socket.json(subscribeMessage);
     },
@@ -58,7 +58,12 @@ export function useBybitWebSocket(): UseDataProviderSocketHookReturnType {
         const orderBookData = data as BybitOrderBookData;
         const bookData = orderBookData.data;
 
-        if (bookData.b?.length && bookData.a?.length) {
+        if (
+          bookData.b &&
+          bookData.b.length > 0 &&
+          bookData.a &&
+          bookData.a.length > 0
+        ) {
           // Get best bid and ask (first elements in the arrays)
           const bestBid = Number.parseFloat(bookData.b[0]?.[0] ?? "");
           const bestAsk = Number.parseFloat(bookData.a[0]?.[0] ?? "");

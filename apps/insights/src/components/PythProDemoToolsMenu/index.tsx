@@ -5,13 +5,12 @@ import { Popover } from "@pythnetwork/component-library/Popover";
 import { Select } from "@pythnetwork/component-library/Select";
 import cx from "clsx";
 import { useCallback, useState } from "react";
-
-import { PythProDemoSourceSelector } from "../PythProDemoSourceSelector";
-import classes from "./index.module.scss";
 import { usePythProAppStateContext } from "../../context/pyth-pro-demo";
 import { ALLOWED_PLAYBACK_SPEEDS } from "../../schemas/pyth/pyth-pro-demo-schema";
 import { isReplaySymbol } from "../../util/pyth-pro-demo";
 import { PythProApiTokensMenu } from "../PythProApiTokensMenu";
+import { PythProDemoSourceSelector } from "../PythProDemoSourceSelector";
+import classes from "./index.module.scss";
 
 export function PythProDemoToolsMenu() {
   return (

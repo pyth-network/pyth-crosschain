@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { HermesClient } from "@pythnetwork/hermes-client";
+import type { HermesClient } from "@pythnetwork/hermes-client";
 import { AptosAccount, AptosClient } from "aptos";
 import type { Logger } from "pino";
 
@@ -39,11 +39,11 @@ export class AptosPriceListener extends ChainPriceListener {
       const handle = (res.data as any).info.handle;
 
       const priceItemRes = await client.getTableItem(handle, {
-        key_type: `${this.pythModule}::price_identifier::PriceIdentifier`,
-        value_type: `${this.pythModule}::price_info::PriceInfo`,
         key: {
           bytes: priceId,
         },
+        key_type: `${this.pythModule}::price_identifier::PriceIdentifier`,
+        value_type: `${this.pythModule}::price_info::PriceInfo`,
       });
 
       const multiplier =
@@ -58,8 +58,8 @@ export class AptosPriceListener extends ChainPriceListener {
       );
 
       return {
-        price: price.toString(),
         conf: priceItemRes.price_feed.price.conf,
+        price: price.toString(),
         publishTime: Number(priceItemRes.price_feed.price.timestamp),
       };
     } catch (error) {
@@ -97,8 +97,7 @@ export class AptosPricePusher implements IPricePusher {
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
-    // @ts-expect-error - TODO: this class member is unused. remove this exception when it is
-    private overrideGasPriceMultiplier: number,
+    _overrideGasPriceMultiplier: number,
   ) {
     this.sequenceNumberLocked = false;
   }
@@ -148,9 +147,9 @@ export class AptosPricePusher implements IPricePusher {
     const rawTx = await client.generateTransaction(
       account.address(),
       {
+        arguments: [priceFeedUpdateData],
         function: `${this.pythContractAddress}::pyth::update_price_feeds_with_funder`,
         type_arguments: [],
-        arguments: [priceFeedUpdateData],
       },
       {
         sequence_number: sequenceNumber.toFixed(0),

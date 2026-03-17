@@ -1,11 +1,12 @@
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import type { PythCluster } from "@pythnetwork/client";
-import {
-  type ValidationResult,
-  type DownloadableProduct,
-  type DownloadableConfig,
-  ProgramType,
+import type { TransactionInstruction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import type {
+  DownloadableConfig,
+  DownloadableProduct,
+  ValidationResult,
 } from "../types";
+import { ProgramType } from "../types";
 
 /**
  * Program ID for the Pyth Lazer program
@@ -41,13 +42,13 @@ export type LazerConfigParams = {
 /**
  * Lazer program instruction accounts needed for generateInstructions
  */
-export interface LazerInstructionAccounts {
+export type LazerInstructionAccounts = {
   fundingAccount: PublicKey;
   // Lazer-specific properties
   lazerProgramClient?: any; // Replace with proper type when available
   cluster: PythCluster;
   additionalAccounts?: Record<string, PublicKey>;
-}
+};
 
 /**
  * Lazer feed configuration
@@ -95,14 +96,14 @@ export function getConfig(params: LazerConfigParams): LazerConfig {
 
   // Simulating some async operation
   return {
-    programType: ProgramType.PYTH_LAZER,
     // Include cluster if provided in options
     cluster: options?.cluster as PythCluster | undefined,
     feeds: [],
     metadata: {
-      source: endpoint ?? "unknown",
       network: network ?? "unknown",
+      source: endpoint ?? "unknown",
     },
+    programType: ProgramType.PYTH_LAZER,
   };
 }
 
@@ -119,19 +120,19 @@ export function getDownloadableConfig(config: LazerConfig): DownloadableConfig {
       {
         address: "",
         metadata: {
-          symbol: feed.id,
           asset_type: feed.metadata.asset_type?.toString() ?? "",
           country: feed.metadata.country?.toString() ?? "",
           quote_currency: feed.metadata.quote_currency?.toString() ?? "",
+          symbol: feed.id,
           tenor: feed.metadata.tenor?.toString() ?? "",
         },
         priceAccounts: [
           {
             address: "",
-            publishers: [],
             expo: 0,
-            minPub: 0,
             maxLatency: 0,
+            minPub: 0,
+            publishers: [],
           },
         ],
       },
@@ -156,22 +157,22 @@ export function validateUploadedConfig(
   try {
     if (typeof uploadedConfig !== "object" || uploadedConfig === null) {
       return {
-        isValid: false,
         error: "Invalid JSON format for Lazer configuration",
+        isValid: false,
       };
     }
 
     // More detailed validation would be implemented here
     // For now, return not implemented error
     return {
-      isValid: false,
       error: "Uploading configuration for Pyth Lazer is not yet supported",
+      isValid: false,
     };
   } catch (error) {
     return {
-      isValid: false,
       error:
         error instanceof Error ? error.message : "Unknown validation error",
+      isValid: false,
     };
   }
 }

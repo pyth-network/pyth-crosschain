@@ -1,38 +1,39 @@
+import * as fs from "node:fs";
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
 import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import type { BN } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { AccountType, parseProductData } from "@pythnetwork/client";
+import type { PythCluster } from "@pythnetwork/client/lib/cluster";
+import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import {
-  getPythClusterApiUrl,
-  type PythCluster,
-} from "@pythnetwork/client/lib/cluster";
+  CLAIM_RECORD_SEED,
+  createDeterministicPublisherBufferAccountInstruction,
+  decodeGovernancePayload,
+  ExecutePostedVaa,
+  envOrErr,
+  getCreateAccountWithSeedInstruction,
+  MultisigParser,
+  mapKey,
+  PriceStoreMultisigInstruction,
+  PythMultisigInstruction,
+  REMOTE_EXECUTOR_ADDRESS,
+  WORMHOLE_ADDRESS,
+  WORMHOLE_API_ENDPOINT,
+} from "@pythnetwork/xc-admin-common";
+import type {
+  AccountMeta,
+  Commitment,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
-  type AccountMeta,
-  type Commitment,
   ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
-  TransactionInstruction,
 } from "@solana/web3.js";
-import * as fs from "fs";
-import {
-  decodeGovernancePayload,
-  ExecutePostedVaa,
-  getCreateAccountWithSeedInstruction,
-  MultisigParser,
-  PythMultisigInstruction,
-  WORMHOLE_ADDRESS,
-  WORMHOLE_API_ENDPOINT,
-  CLAIM_RECORD_SEED,
-  mapKey,
-  REMOTE_EXECUTOR_ADDRESS,
-  envOrErr,
-  PriceStoreMultisigInstruction,
-  createDeterministicPublisherBufferAccountInstruction,
-} from "@pythnetwork/xc-admin-common";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
@@ -76,7 +77,6 @@ async function run() {
   const productAccountToSymbol: { [key: string]: string } = {};
   while (true) {
     lastSequenceNumber += 1;
-    console.log(`Trying sequence number : ${lastSequenceNumber}`);
 
     const response = (await (
       await fetch(
@@ -96,8 +96,6 @@ async function run() {
       ) {
         const preInstructions: TransactionInstruction[] = [];
 
-        console.log(`Found VAA ${lastSequenceNumber}, relaying vaa ...`);
-
         await postVaaSolana(
           provider.connection,
           signTransactionFactory(KEYPAIR),
@@ -107,17 +105,15 @@ async function run() {
           { commitment: COMMITMENT },
         );
 
-        console.log(`VAA ${lastSequenceNumber} relayed. executing ...`);
-
-        let extraAccountMetas: AccountMeta[] = [
-          { pubkey: executorKey, isSigner: false, isWritable: true },
+        const extraAccountMetas: AccountMeta[] = [
+          { isSigner: false, isWritable: true, pubkey: executorKey },
         ];
 
         for (const ix of governancePayload.instructions) {
           extraAccountMetas.push({
-            pubkey: ix.programId,
             isSigner: false,
             isWritable: false,
+            pubkey: ix.programId,
           });
           extraAccountMetas.push(
             ...ix.keys.filter((acc) => {
@@ -126,9 +122,6 @@ async function run() {
           );
 
           const parsedInstruction = multisigParser.parseInstruction(ix);
-
-          console.log("Parsed instruction:");
-          console.dir(parsedInstruction, { depth: null });
 
           if (
             parsedInstruction instanceof PythMultisigInstruction &&
@@ -144,19 +137,19 @@ async function run() {
               ),
             );
             productAccountToSymbol[
-              parsedInstruction.accounts.named.productAccount!.pubkey.toBase58()
+              parsedInstruction.accounts.named.productAccount?.pubkey.toBase58()
             ] = parsedInstruction.args.symbol;
           } else if (
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addPrice"
           ) {
             const productAccount = await provider.connection.getAccountInfo(
-              parsedInstruction.accounts.named.productAccount!.pubkey,
+              parsedInstruction.accounts.named.productAccount?.pubkey,
             );
             const productSymbol = productAccount
               ? parseProductData(productAccount.data).product.symbol
               : productAccountToSymbol[
-                  parsedInstruction.accounts.named.productAccount!.pubkey.toBase58()
+                  parsedInstruction.accounts.named.productAccount?.pubkey.toBase58()
                 ];
             if (productSymbol) {
               preInstructions.push(
@@ -169,7 +162,7 @@ async function run() {
                 ),
               );
             } else {
-              throw Error("Product account not found");
+              throw new Error("Product account not found");
             }
           } else if (
             parsedInstruction instanceof PriceStoreMultisigInstruction &&
@@ -200,22 +193,15 @@ async function run() {
             // Use a high compute unit limit to avoid running out of compute units
             // as some operations can use a lot of compute units.
             .postInstructions([
-              ComputeBudgetProgram.setComputeUnitLimit({ units: 1000000 }),
+              ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
             ])
             .rpc({ skipPreflight: false });
         } catch (e) {
           if (SKIP_FAILED_REMOTE_INSTRUCTIONS) {
-            console.error(e);
           } else throw e;
         }
       }
     } else if (response.code == 5) {
-      console.log(`All VAAs have been relayed`);
-      console.log(
-        `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
-          "hex",
-        )}/${lastSequenceNumber}`,
-      );
       break;
     } else {
       throw new Error("Could not connect to wormhole api");
@@ -226,8 +212,7 @@ async function run() {
 (async () => {
   try {
     await run();
-  } catch (err) {
-    console.error(err);
+  } catch (_err) {
     throw new Error();
   }
 })();

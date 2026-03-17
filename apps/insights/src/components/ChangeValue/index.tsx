@@ -38,7 +38,7 @@ const Contents = (props: Props) => {
   } else {
     return (
       <>
-        <CaretUp weight="fill" className={styles.caret} />
+        <CaretUp className={styles.caret} weight="fill" />
         {props.children}
       </>
     );

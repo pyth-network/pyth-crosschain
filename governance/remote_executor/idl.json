@@ -1,49 +1,16 @@
 {
-  "version": "0.1.0",
-  "name": "remote_executor",
-  "instructions": [
-    {
-      "name": "executePostedVaa",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "postedVaa",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "claimRecord",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet"
-          ]
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    }
-  ],
   "accounts": [
     {
-      "name": "ClaimRecord",
       "docs": ["This struct records"],
+      "name": "ClaimRecord",
       "type": {
-        "kind": "struct",
         "fields": [
           {
             "name": "sequence",
             "type": "u64"
           }
-        ]
+        ],
+        "kind": "struct"
       }
     }
   ],
@@ -76,5 +43,38 @@
       "code": 6006,
       "name": "PostedVaaHeaderWrongMagicNumber"
     }
-  ]
+  ],
+  "instructions": [
+    {
+      "accounts": [
+        {
+          "isMut": true,
+          "isSigner": true,
+          "name": "payer"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "postedVaa"
+        },
+        {
+          "docs": [
+            "The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet"
+          ],
+          "isMut": true,
+          "isSigner": false,
+          "name": "claimRecord"
+        },
+        {
+          "isMut": false,
+          "isSigner": false,
+          "name": "systemProgram"
+        }
+      ],
+      "args": [],
+      "name": "executePostedVaa"
+    }
+  ],
+  "name": "remote_executor",
+  "version": "0.1.0"
 }
