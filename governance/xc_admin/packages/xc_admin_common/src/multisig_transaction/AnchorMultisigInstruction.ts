@@ -1,25 +1,24 @@
-import {
-  type MultisigInstruction,
-  MultisigInstructionProgram,
-  UNRECOGNIZED_INSTRUCTION,
-  UnrecognizedProgram,
-} from ".";
-import {
-  type AnchorAccounts,
-  IDL_SET_BUFFER_DISCRIMINATOR,
-  resolveAccountNames,
-} from "./anchor";
-import messageBufferIdl from "message_buffer/idl/message_buffer.json";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import { type Idl, BorshCoder } from "@coral-xyz/anchor";
-import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
-import meshIdl from "@sqds/mesh/lib/mesh-idl/mesh.json";
-import stakingIdl from "./idl/staking.json";
-import integrityPoolIdl from "./idl/integrity-pool.json";
+import type { Idl } from "@coral-xyz/anchor";
+import { BorshCoder } from "@coral-xyz/anchor";
 import {
   DEFAULT_RECEIVER_PROGRAM_ID,
   pythSolanaReceiverIdl,
 } from "@pythnetwork/pyth-solana-receiver";
+import type { TransactionInstruction } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import meshIdl from "@sqds/mesh/lib/mesh-idl/mesh.json";
+import messageBufferIdl from "message_buffer/idl/message_buffer.json";
+import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
+import type { MultisigInstruction } from ".";
+import {
+  MultisigInstructionProgram,
+  UNRECOGNIZED_INSTRUCTION,
+  UnrecognizedProgram,
+} from ".";
+import type { AnchorAccounts } from "./anchor";
+import { IDL_SET_BUFFER_DISCRIMINATOR, resolveAccountNames } from "./anchor";
+import integrityPoolIdl from "./idl/integrity-pool.json";
+import stakingIdl from "./idl/staking.json";
 
 export const MESH_PROGRAM_ID = new PublicKey(
   "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho",
@@ -34,12 +33,14 @@ export const INTEGRITY_POOL_PROGRAM_ID = new PublicKey(
 export class AnchorMultisigInstruction implements MultisigInstruction {
   readonly program: MultisigInstructionProgram;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     program: MultisigInstructionProgram,
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {
