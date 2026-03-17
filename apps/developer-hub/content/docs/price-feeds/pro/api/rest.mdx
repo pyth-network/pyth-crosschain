@@ -33,7 +33,6 @@ All fields from `/v1/latest_price`, plus:
 
 | Field       | Type     | Required | Description                                                                                                                                  |
 | ----------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `channel`   | `string` | Yes      | Subscription channel. One of: `real_time`, `fixed_rate@1ms`, `fixed_rate@50ms`, `fixed_rate@200ms`, `fixed_rate@1000ms`                      |
 | `timestamp` | `u64`    | Yes      | Unix timestamp in microseconds. Must be a raw integer — do not wrap in quotes.                                                               |
 
 For the full response schema — including price feed fields, signed payloads, and available properties — see the [Payload Reference](/price-feeds/pro/payload-reference).
