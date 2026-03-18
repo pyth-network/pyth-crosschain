@@ -1,32 +1,35 @@
 {
   "dependencies": {
-    "@evolution-sdk/devnet": "^1.1.28",
-    "@evolution-sdk/evolution": "^0.3.28",
-    "@noble/curves": "^2.0.1",
-    "@pythnetwork/xc-admin-common": "workspace:*",
-    "@wormhole-foundation/sdk-definitions": "^0.10.12",
-    "date-fns": "catalog:",
-    "effect": "^3.19.19",
-    "yargs": "catalog:"
+    "@evolution-sdk/evolution": "^0.3.28"
   },
-  "description": "TypeScript SDK for the Pyth Lazer Cardano contract",
+  "description": "User-facing SDK for the Pyth Lazer Cardano integration",
   "devDependencies": {
     "@cprussin/tsconfig": "catalog:",
-    "@pythnetwork/jest-config": "workspace:",
-    "@types/dockerode": "^4.0.1",
-    "@types/jest": "catalog:",
     "@types/node": "catalog:",
-    "@types/yargs": "catalog:",
-    "jest": "catalog:",
     "tsx": "catalog:"
   },
   "engines": {
     "node": "^24.0.0"
   },
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./dist/esm/index.mjs",
+        "types": "./dist/esm/index.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/index.cjs",
+        "types": "./dist/cjs/index.d.ts"
+      }
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist/**"
   ],
-  "name": "@pythnetwork/pyth-lazer-cardano-js",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "name": "@pythnetwork/pyth-lazer-cardano-sdk",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -39,10 +42,9 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
-    "cli": "pnpm tsx --env-file=.env src/cli.ts",
-    "test:types": "tsc",
-    "test:unit": "test-unit"
+    "test:types": "tsc"
   },
   "type": "module",
-  "version": "0.0.0"
+  "types": "./dist/cjs/index.d.ts",
+  "version": "0.1.0"
 }
