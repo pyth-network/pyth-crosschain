@@ -25,6 +25,7 @@ impl DeliveryMetrics {
         Self {
             messages_sent: CounterVec::new(
                 Opts::new("ws_messages_sent_total", "WebSocket messages sent")
+                    .namespace("lazer_pusher")
                     .const_labels(const_labels.clone()),
                 &["status"],
             )
@@ -32,12 +33,14 @@ impl DeliveryMetrics {
 
             connections_active: Gauge::with_opts(
                 Opts::new("ws_connections_active", "Connected endpoints")
+                    .namespace("lazer_pusher")
                     .const_labels(const_labels.clone()),
             )
             .expect("failed to create metric"),
 
             connection_state: GaugeVec::new(
                 Opts::new("ws_connection_state", "Connection state (1=up, 0=down)")
+                    .namespace("lazer_pusher")
                     .const_labels(const_labels.clone()),
                 &["endpoint"],
             )
@@ -45,19 +48,23 @@ impl DeliveryMetrics {
 
             reconnect_attempts: Counter::with_opts(
                 Opts::new("ws_reconnect_attempts_total", "Reconnection attempts")
+                    .namespace("lazer_pusher")
                     .const_labels(const_labels.clone()),
             )
             .expect("failed to create metric"),
 
             ping_latency: Histogram::with_opts(
                 HistogramOpts::new("ws_ping_latency_seconds", "Ping round-trip latency")
+                    .namespace("lazer_pusher")
                     .const_labels(const_labels.clone())
                     .buckets(vec![0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0]),
             )
             .expect("failed to create metric"),
 
             ping_timeouts: Counter::with_opts(
-                Opts::new("ws_ping_timeouts_total", "Ping timeouts").const_labels(const_labels),
+                Opts::new("ws_ping_timeouts_total", "Ping timeouts")
+                    .namespace("lazer_pusher")
+                    .const_labels(const_labels),
             )
             .expect("failed to create metric"),
         }

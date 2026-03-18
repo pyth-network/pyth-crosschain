@@ -6,6 +6,8 @@ use anyhow::Result;
 use bulk_keychain::SignedTransaction;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, trace, warn};
@@ -76,6 +78,7 @@ struct PendingRequest {
 pub struct BulkClient {
     tx: mpsc::Sender<SignedTransaction>,
     task_handle: Option<tokio::task::JoinHandle<()>>,
+    queue_depth: Arc<AtomicUsize>,
 }
 
 impl BulkClient {
@@ -94,24 +97,37 @@ impl BulkClient {
             .ok_or_else(|| anyhow::anyhow!("incoming receiver already taken"))?;
 
         let (tx, rx) = mpsc::channel::<SignedTransaction>(TX_CHANNEL_BUFFER_SIZE);
+        let queue_depth = Arc::new(AtomicUsize::new(0));
         let endpoints = client.endpoints().await;
         let handle = runtime.spawn(run_delivery_task(
             client,
             rx,
             incoming_rx,
             endpoints,
+            queue_depth.clone(),
             runtime.clone(),
         ));
 
         Ok(Self {
             tx,
             task_handle: Some(handle),
+            queue_depth,
         })
     }
 
     /// Returns false if queue is full.
     pub fn push(&self, tx: SignedTransaction) -> bool {
-        self.tx.try_send(tx).is_ok()
+        self.queue_depth.fetch_add(1, Ordering::Relaxed);
+        if self.tx.try_send(tx).is_ok() {
+            true
+        } else {
+            self.queue_depth.fetch_sub(1, Ordering::Relaxed);
+            false
+        }
+    }
+
+    pub fn queue_depth(&self) -> usize {
+        self.queue_depth.load(Ordering::Relaxed)
     }
 
     pub fn is_running(&self) -> bool {
@@ -137,6 +153,7 @@ async fn run_delivery_task(
     mut tx_rx: mpsc::Receiver<SignedTransaction>,
     mut incoming_rx: mpsc::Receiver<IncomingMessage>,
     endpoints: Vec<Url>,
+    queue_depth: Arc<AtomicUsize>,
     runtime: AppRuntime,
 ) {
     let mut request_id: u64 = 1;
@@ -153,6 +170,7 @@ async fn run_delivery_task(
             }
 
             Some(tx) = tx_rx.recv() => {
+                queue_depth.fetch_sub(1, Ordering::Relaxed);
                 let id = request_id;
                 request_id += 1;
                 let now = Instant::now();
@@ -261,7 +279,7 @@ fn cleanup_expired(pending: &mut HashMap<(String, u64), PendingRequest>, timeout
     pending.retain(|key, req| {
         if now.duration_since(req.sent_at) > timeout {
             warn!(endpoint = %key.0, request_id = key.1, "request timed out");
-            metrics::record_push_error();
+            metrics::record_push_timeout();
             false
         } else {
             true
