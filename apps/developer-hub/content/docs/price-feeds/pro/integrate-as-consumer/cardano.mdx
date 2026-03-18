@@ -1,0 +1,183 @@
+---
+title: Consume Data on Cardano (Beta)
+description: Consume and verify Pyth Pro price updates in Cardano smart contracts
+slug: /price-feeds/pro/integrate-as-consumer/cardano
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+<Callout type="warning">
+  Cardano integration is currently in Beta and the API may change before release.
+</Callout>
+
+This guide is intended to serve users who want to consume prices from Pyth Pro on **Cardano**.
+
+Integrating with Pyth Pro in Cardano smart contracts as a consumer is a three-step process:
+
+1. **Use** the `pyth-lazer-cardano` Aiken library in your on-chain code.
+2. **Subscribe** to Pyth Pro websocket to receive signed price updates.
+3. **Include** those updates in a Cardano transaction by doing a zero withdrawal from the Pyth withdraw script.
+
+<Steps>
+<Step>
+### Use the Aiken library in your on-chain code
+
+Add the Pyth Lazer Cardano library to your `aiken.toml` file:
+
+```toml copy
+[[dependencies]]
+name = "pyth-network/pyth-lazer-cardano"
+version = "main"
+source = "github"
+```
+
+Your contract should read verified updates from the transaction, not verify the signatures itself. The Aiken library exposes `pyth.get_updates`, which reads:
+
+- the Pyth state from the transaction's `reference_inputs`
+- the verified update bytes from the redeemer of the Pyth withdraw script
+
+Here is a minimal example that searches for the `ADA/USD` feed (`Pyth Pro` feed
+ID `16`) and converts the result into Aiken's `Rational` type:
+
+```rust copy
+use aiken/collection/list
+use aiken/math/rational.{Rational}
+use cardano/assets.{PolicyId}
+use cardano/transaction.{Transaction}
+use pyth
+use types/u32
+
+fn read_ada_usd_price(pyth_id: PolicyId, self: Transaction) -> Rational {
+  expect [update] = pyth.get_updates(pyth_id, self)
+  expect Some(feed) = list.find(update.feeds, fn(feed) {
+    u32.as_int(feed.feed_id) == 16
+  })
+  expect Some(Some(price)) = feed.price
+  expect Some(exponent) = feed.exponent
+  expect Some(multiplier) = rational.from_int(10) |> rational.pow(exponent)
+
+  rational.from_int(price) |> rational.mul(multiplier)
+}
+```
+
+The returned `PriceUpdate` values include:
+
+- `timestamp_us`
+- `channel_id`
+- `feeds`
+
+Each `Feed` includes fields such as `feed_id`, `price`, `best_bid_price`, `best_ask_price`, `exponent`, `confidence`, `ema_price`, and `feed_update_timestamp`.
+
+<Callout type="warning">
+  `pyth.get_updates` requires the Pyth state UTxO to be present as a reference
+  input. If you omit that reference input, your validator will fail when it
+  tries to locate the `Pyth State` NFT and withdraw-script hash.
+</Callout>
+
+</Step>
+<Step>
+### Fetch a signed price update off-chain
+
+Pyth Pro provides a [TypeScript SDK](https://www.npmjs.com/package/@pythnetwork/pyth-lazer-sdk) for fetching signed updates. Request the `solana` format for the binary update, as this format is used by the Cardano Pyth integration.
+
+The example below follows [`fetch-and-verify.ts`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/cardano/sdk/js/src/examples/fetch-and-verify.ts) and fetches one signed update that can be passed into the verification script redeemer:
+
+```typescript copy
+import { PythLazerClient } from "@pythnetwork/pyth-lazer-sdk";
+
+const lazer = await PythLazerClient.create({ token: LAZER_TOKEN });
+const latestPrice = await lazer.getLatestPrice({
+  channel: "fixed_rate@200ms",
+  formats: ["solana"],
+  jsonBinaryEncoding: "hex",
+  priceFeedIds: [16],
+  properties: ["price", "exponent"],
+});
+
+const update = Buffer.from(latestPrice.solana?.data ?? "", "hex");
+```
+
+If you need a streaming integration instead of a one-shot fetch, consult [How to subscribe to prices](/price-feeds/pro/subscribe-to-prices). Regardless of transport, the transaction must receive the signed update as raw bytes.
+
+</Step>
+<Step>
+### Include the updates into the Cardano transaction
+
+Pyth's own Cardano integration builds a transaction with the following shape:
+
+1. Set a short validity window.
+2. Add the Pyth state UTxO as a reference input.
+3. Withdraw `0` lovelace from the Pyth withdraw script, with the list of signed updates as the redeemer.
+4. Include your own script in the same transaction so that your validator can call `pyth.get_updates(pyth_id, self)`.
+
+The `pyth_id` below is the Pyth deployment policy ID for your network. The Pyth state UTxO is the UTxO holding the `Pyth State` NFT under that policy ID.
+
+<Tabs items={["Evolution SDK"]}>
+<Tab value="Evolution SDK">
+
+```typescript copy
+import {
+  createEvolutionClient,
+  getPythScriptHash,
+  getPythState,
+} from "@pythnetwork/pyth-lazer-cardano-js";
+
+const client = createEvolutionClient(CARDANO_NETWORK, CARDANO_PROVIDER);
+
+const pythState = await getPythState(POLICY_ID, client);
+const pythScript = getPythScriptHash(pythState);
+
+// In your own transaction, include Pyth State UTxO as a reference input, and
+// trigger 0-withdrawal on the verification script, together with the price
+// update as a redeemer, to perform price verification on-chain.
+
+const wallet = client.attachWallet({
+  mnemonic: CARDANO_MNEMONIC,
+  type: "seed"
+});
+
+const now = BigInt(Date.now());
+const tx = wallet
+  .newTx()
+  .setValidity({ from: now - 60_000n, to: now + 60_000n })
+  .readFrom({ referenceInputs: [pythState] })
+  .withdraw({
+    amount: 0n,
+    redeemer: [update],
+    stakeCredential: ScriptHash.fromHex(pythScript),
+  });
+
+// Add your own scripts and transaction data...
+
+// Sign and execute the transaction:
+const builtTx = await tx.build();
+const digest = await builtTx.signAndSubmit();
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="warning">
+  The zero-withdrawal and your consuming validator must be in the **same
+  transaction**. `pyth.get_updates` reads the withdrawal redeemer directly from
+  the transaction that is currently being validated.
+</Callout>
+
+</Step>
+</Steps>
+
+## Additional Resources
+
+You may find these additional resources helpful for consuming prices from Pyth Pro in Cardano smart contracts.
+
+### Price Feed IDs
+
+Pyth Pro supports a wide range of price feeds. Consult the [Price Feed IDs](/price-feeds/pro/price-feed-ids) page for a complete list of supported price feeds.
+
+### Contract Sources
+
+The Cardano contract implementation lives in [`lazer/contracts/cardano`](https://github.com/pyth-network/pyth-crosschain/tree/main/lazer/contracts/cardano).
+
+The off-chain flow shown above comes from [`fetch-and-verify.ts`](https://github.com/pyth-network/pyth-crosschain/blob/main/lazer/contracts/cardano/sdk/js/src/examples/fetch-and-verify.ts).
