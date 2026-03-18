@@ -1,3 +1,5 @@
+// biome-ignore-all lint/style/noProcessEnv: Deploy script uses env vars for configuration
+// biome-ignore lint/style/noCommonJs: dotenv requires CommonJS for immediate initialization
 require("dotenv").config({ path: ".env" });
 
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";

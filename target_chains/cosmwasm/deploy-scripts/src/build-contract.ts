@@ -32,10 +32,10 @@ function cargoPreSetup(contractTomlFilePath: string, feature: string) {
   const parsedToml = toml.parse(originalTomlContentStr);
 
   // add default feature to the cargo.toml
-  // @ts-ignore
+  // @ts-expect-error
   parsedToml.features.default = [feature];
 
-  // @ts-ignore
+  // @ts-expect-error
   const updatedToml = toml.stringify(parsedToml, {
     forceInlineArraySpacing: 0,
     // don't remove this or else stringify will return an array of strings
@@ -87,7 +87,7 @@ function build() {
           `;
 
   // build contract by running the command
-  exec(buildCommand, (_error, stdout, stderr) => {
+  exec(buildCommand, (_error, _stdout, _stderr) => {
     cleanup();
   });
 }

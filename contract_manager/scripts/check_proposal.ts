@@ -204,8 +204,11 @@ async function main() {
         }
       }
       if (instruction.governanceAction instanceof UpdateTrustedSigner264Bit) {
-        const { targetChainId, publicKey, expiresAt } =
-          instruction.governanceAction;
+        const {
+          targetChainId: _targetChainId,
+          publicKey: _publicKey,
+          expiresAt,
+        } = instruction.governanceAction;
 
         const expiresAtMs = expiresAt * 1000n;
         if (expiresAtMs > Number.MAX_SAFE_INTEGER) {
@@ -243,6 +246,7 @@ async function main() {
               contract.stateId,
             );
             if (BigInt(info.version) + 1n !== version) {
+              /* legacy no-op */
             }
           }
 
@@ -253,8 +257,10 @@ async function main() {
           const pkg = await chain.buildPackage(packagePath);
           const buildHash = Buffer.from(pkg.digest).toString("hex");
           if (buildHash !== hash) {
+            /* legacy no-op */
           }
         } else {
+          /* legacy no-op */
         }
       }
     }

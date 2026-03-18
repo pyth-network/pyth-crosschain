@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable unicorn/no-process-exit */
@@ -134,9 +135,11 @@ export class PriceServiceConnection {
     // Default logger is console for only warnings and errors.
     this.logger = config?.logger || {
       debug: () => {},
+      // biome-ignore lint/suspicious/noConsole: Default logger fallback
       error: console.error,
       info: () => {},
       trace: () => {},
+      // biome-ignore lint/suspicious/noConsole: Default logger fallback
       warn: console.warn,
     };
 

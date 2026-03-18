@@ -55,7 +55,9 @@ async function main() {
           _totalFeeUsd += feeUsd;
         } else {
         }
-      } catch (_error) {}
+      } catch (_error) {
+        // Intentionally empty
+      }
     }
   }
 }

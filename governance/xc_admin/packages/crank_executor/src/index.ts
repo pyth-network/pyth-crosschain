@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 import * as fs from "node:fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
@@ -51,6 +52,6 @@ async function run() {
   try {
     await run();
   } catch (_err) {
-    throw new Error();
+    throw new Error("Failed to execute proposals");
   }
 })();

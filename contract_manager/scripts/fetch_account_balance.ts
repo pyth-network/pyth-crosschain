@@ -42,7 +42,9 @@ async function getBalance(
     const balance =
       await DefaultStore.chains[chain]?.getAccountBalance(privateKey);
     return { address, balance, chain };
-  } catch (_error) {}
+  } catch (_error) {
+    // Ignore errors and return undefined balance
+  }
   return { address, balance: undefined, chain };
 }
 

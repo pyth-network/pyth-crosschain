@@ -172,7 +172,7 @@ export class AptosPricePusher implements IPricePusher {
       void this.waitForTransactionConfirmation(client, pendingTx.hash);
 
       return;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "Error executing messages");
 
       // Reset the sequence number to re-sync it (in case that was the issue)
@@ -227,7 +227,7 @@ export class AptosPricePusher implements IPricePusher {
             `Fetched account sequence number: ${this.lastSequenceNumber}`,
           );
           return this.lastSequenceNumber;
-        } catch (error: any) {
+        } catch (error: unknown) {
           throw new Error(`Failed to retrieve sequence number ${error}`);
         } finally {
           this.sequenceNumberLocked = false;

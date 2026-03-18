@@ -206,7 +206,7 @@ describe("Test websocket endpoints", () => {
     await connection.subscribePriceFeedUpdates(ids, (priceFeed) => {
       expect(priceFeed.getMetadata()).toBeDefined();
       expect(priceFeed.getVAA()).toBeUndefined();
-      observedSlots.push(priceFeed.getMetadata()?.slot!);
+      observedSlots.push(priceFeed.getMetadata()?.slot);
     });
 
     // Wait for 20 seconds
@@ -215,7 +215,7 @@ describe("Test websocket endpoints", () => {
 
     // Check for out of order slots but don't assert on it since it's not stable
     for (let i = 1; i < observedSlots.length; i++) {
-      if (observedSlots[i] < observedSlots[i - 1]) {
+      if (observedSlots[i]! < observedSlots[i - 1]!) {
         // Out of order slot found, but we don't assert on it
         break;
       }

@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
-
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "@pythnetwork/xc-admin-common";
 import yargs from "yargs";
@@ -62,6 +54,10 @@ async function main() {
         ]
       : DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
 
+  if (!vault) {
+    throw new Error("Vault not found");
+  }
+
   let startSequenceNumber: number;
   let endSequenceNumber: number;
 
@@ -72,7 +68,7 @@ async function main() {
     // this is unreachable but it makes the typescript linter happy.
     throw new Error("Either --offset or --sequence must be provided");
   } else {
-    const lastSequenceNumber = await vault?.getLastSequenceNumber();
+    const lastSequenceNumber = await vault.getLastSequenceNumber();
     startSequenceNumber = (lastSequenceNumber ?? 0) - argv.offset;
     endSequenceNumber = lastSequenceNumber ?? 0;
   }
@@ -83,9 +79,9 @@ async function main() {
     seqNumber++
   ) {
     const submittedWormholeMessage = new SubmittedWormholeMessage(
-      await vault?.getEmitter(),
+      await vault.getEmitter(),
       seqNumber,
-      vault?.cluster,
+      vault.cluster,
     );
     const vaa = await submittedWormholeMessage.fetchVaa();
     const decodedAction = decodeGovernancePayload(parseVaa(vaa).payload);

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: CLI tool uses any for flexible command handling
 import fs from "node:fs";
 import type { Idl } from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
@@ -419,7 +420,7 @@ multisigCommand(
           ),
         ),
       )
-    ).flatMap((stakeAccounts, index) => {
+    ).flatMap((stakeAccounts) => {
       if (stakeAccounts.length === 0) {
       }
       return stakeAccounts;
@@ -431,7 +432,7 @@ multisigCommand(
           .instructions,
     );
 
-    const _proposalAddresses = await vault.proposeInstructions(
+    await vault.proposeInstructions(
       instructions,
       cluster,
       DEFAULT_PRIORITY_FEE_CONFIG,
@@ -545,7 +546,7 @@ multisigCommand(
       );
     }
 
-    const _proposalAddresses = await vault.proposeInstructions(
+    await vault.proposeInstructions(
       instructions,
       cluster,
       DEFAULT_PRIORITY_FEE_CONFIG,
@@ -724,7 +725,7 @@ program
       await squad.getTransaction(new PublicKey(transaction)),
     );
     const parser = MultisigParser.fromCluster(cluster);
-    const _parsed = onChainInstructions.map((ix) =>
+    onChainInstructions.map((ix) =>
       parser.parseInstruction({
         data: ix.data as Buffer,
         keys: ix.keys as AccountMeta[],

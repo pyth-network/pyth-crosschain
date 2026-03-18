@@ -6,11 +6,11 @@ const {
 } = require("@pythnetwork/contract-manager");
 
 function convertAddress(address) {
-  return "0x" + address;
+  return `0x${address}`;
 }
 
 function convertChainId(number) {
-  return "0x" + number.toString(16);
+  return `0x${number.toString(16)}`;
 }
 
 function getDefaultConfig(chainName) {

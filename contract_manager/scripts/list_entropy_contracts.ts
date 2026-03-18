@@ -59,7 +59,9 @@ async function main() {
         seq: providerInfo.sequenceNumber,
         version,
       });
-    } catch (_error) {}
+    } catch (_error) {
+      // Intentionally empty
+    }
   }
 }
 

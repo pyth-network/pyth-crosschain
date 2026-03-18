@@ -92,6 +92,7 @@ export async function executeProposal(
     ) {
       transaction.add(
         await getPostMessageFeeInstruction(
+          // biome-ignore lint/style/noNonNullAssertion: legacy assertion
           multisigParser.wormholeBridgeAddress!,
           squad,
         ),
@@ -115,15 +116,22 @@ export async function executeProposal(
       parsedInstruction.name == "addPrice"
     ) {
       /// Add price, fetch the symbol from the product account
-      const productAccount = await squad.connection.getAccountInfo(
-        parsedInstruction.accounts.named.productAccount?.pubkey,
-      );
+      const productAccountPubkey =
+        parsedInstruction.accounts.named.productAccount?.pubkey;
+      if (!productAccountPubkey) {
+        throw new Error(
+          "productAccount pubkey is required for addPrice instruction",
+        );
+      }
+      const productAccount =
+        await squad.connection.getAccountInfo(productAccountPubkey);
       if (productAccount) {
         transaction.add(
           await getCreateAccountWithSeedInstruction(
             squad.connection,
             cluster,
             squad.wallet.publicKey,
+            // biome-ignore lint/style/noNonNullAssertion: legacy assertion
             parseProductData(productAccount.data).product.symbol!,
             AccountType.Price,
           ),

@@ -51,7 +51,7 @@ export class OsmosisDeployer implements Deployer {
     // which seems to be not enough
     // hence again multiplying by 1.3
     const fee = calculateFee(
-      Number.parseInt((Number.parseInt(gas) * 1.3).toFixed(0)),
+      Number.parseInt((Number.parseInt(gas, 10) * 1.3).toFixed(0), 10),
       "0.025uosmo",
     );
 
@@ -81,7 +81,7 @@ export class OsmosisDeployer implements Deployer {
     var codeId: number;
     // {"key":"code_id","value":"14"}
     const ci = extractFromRawLog(rs.rawLog, "code_id");
-    codeId = Number.parseInt(ci);
+    codeId = Number.parseInt(ci, 10);
 
     return codeId;
   }
@@ -97,7 +97,7 @@ export class OsmosisDeployer implements Deployer {
         admin: accAddress,
         // FIXME: soon this file will be removed
         // not spending any time on this bug
-        // @ts-ignore
+        // @ts-expect-error
         codeId: Long.fromNumber(codeId),
         funds: [],
         label,
@@ -118,7 +118,7 @@ export class OsmosisDeployer implements Deployer {
   async migrate(contract: string, codeId: number): Promise<void> {
     const migrateMsg =
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.migrateContract({
-        // @ts-ignore
+        // @ts-expect-error
         codeId: Long.fromNumber(codeId),
         contract,
         msg: Buffer.from(
@@ -135,6 +135,7 @@ export class OsmosisDeployer implements Deployer {
     // {"key":"code_id","value":"13"}
     const resultCodeId = Number.parseInt(
       extractFromRawLog(rs.rawLog, "code_id"),
+      10,
     );
     assert.strictEqual(codeId, resultCodeId);
   }

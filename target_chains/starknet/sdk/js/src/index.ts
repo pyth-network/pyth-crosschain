@@ -52,10 +52,10 @@ export class ByteBuffer {
     while (pos < buffer.length) {
       if (pos + 31 <= buffer.length) {
         const slice = buffer.subarray(pos, pos + 31);
-        data.push("0x" + slice.toString("hex"));
+        data.push(`0x${slice.toString("hex")}`);
       } else {
         const slice = buffer.subarray(pos);
-        data.push("0x" + slice.toString("hex"));
+        data.push(`0x${slice.toString("hex")}`);
         return new ByteBuffer(buffer.length - pos, data);
       }
       pos += 31;

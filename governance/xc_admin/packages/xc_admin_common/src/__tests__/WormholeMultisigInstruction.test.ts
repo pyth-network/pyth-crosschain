@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noDoneCallback: test behavior was existing pre-biome */
 import crypto from "node:crypto";
 
 // @ts-expect-error
@@ -7,7 +8,7 @@ import { createWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import type { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
-import type { TransactionInstruction } from "@solana/web3.js";
+import type { AccountMeta, TransactionInstruction } from "@solana/web3.js";
 import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ExecutePostedVaa,
@@ -17,11 +18,23 @@ import {
 } from "..";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 
+/**
+ * Helper function to safely get an account key from instruction keys array
+ */
+function getKeyAtIndex(keys: AccountMeta[], index: number): PublicKey {
+  const key = keys[index];
+  if (!key) {
+    throw new Error(`Expected key at index ${index} but found undefined`);
+  }
+  return key.pubkey;
+}
+
 test("Wormhole multisig instruction parse: send message without governance payload", (done) => {
   jest.setTimeout(60_000);
 
   const cluster: PythCluster = "devnet";
   const wormholeProgram = createWormholeProgramInterface(
+    // biome-ignore lint/style/noNonNullAssertion: legacy assertion
     WORMHOLE_ADDRESS[cluster]!,
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
@@ -51,7 +64,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         expect(parsedInstruction.name).toBe("postMessage");
         expect(
           parsedInstruction.accounts.named.bridge?.pubkey.equals(
-            instruction.keys[0]?.pubkey,
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.bridge?.isSigner).toBe(
@@ -62,7 +75,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.message?.pubkey.equals(
-            instruction.keys[1]?.pubkey,
+            getKeyAtIndex(instruction.keys, 1),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.message?.isSigner).toBe(
@@ -73,7 +86,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.emitter?.pubkey.equals(
-            instruction.keys[2]?.pubkey,
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.emitter?.isSigner).toBe(
@@ -84,7 +97,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.sequence?.pubkey.equals(
-            instruction.keys[3]?.pubkey,
+            getKeyAtIndex(instruction.keys, 3),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.sequence?.isSigner).toBe(
@@ -95,7 +108,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.payer?.pubkey.equals(
-            instruction.keys[4]?.pubkey,
+            getKeyAtIndex(instruction.keys, 4),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.payer?.isSigner).toBe(
@@ -106,7 +119,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.feeCollector?.pubkey.equals(
-            instruction.keys[5]?.pubkey,
+            getKeyAtIndex(instruction.keys, 5),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.feeCollector?.isSigner).toBe(
@@ -117,7 +130,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.clock?.pubkey.equals(
-            instruction.keys[6]?.pubkey,
+            getKeyAtIndex(instruction.keys, 6),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.clock?.isSigner).toBe(
@@ -128,7 +141,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.rent?.pubkey.equals(
-            instruction.keys[7]?.pubkey,
+            getKeyAtIndex(instruction.keys, 7),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.rent?.isSigner).toBe(
@@ -139,7 +152,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         );
         expect(
           parsedInstruction.accounts.named.systemProgram?.pubkey.equals(
-            instruction.keys[8]?.pubkey,
+            getKeyAtIndex(instruction.keys, 8),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.systemProgram?.isSigner).toBe(
@@ -166,6 +179,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
 
   const cluster: PythCluster = "devnet";
   const wormholeProgram = createWormholeProgramInterface(
+    // biome-ignore lint/style/noNonNullAssertion: legacy assertion
     WORMHOLE_ADDRESS[cluster]!,
     new AnchorProvider(
       new Connection(getPythClusterApiUrl(cluster)),
@@ -203,7 +217,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         expect(parsedInstruction.name).toBe("postMessage");
         expect(
           parsedInstruction.accounts.named.bridge?.pubkey.equals(
-            instruction.keys[0]?.pubkey,
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.bridge?.isSigner).toBe(
@@ -214,7 +228,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.message?.pubkey.equals(
-            instruction.keys[1]?.pubkey,
+            getKeyAtIndex(instruction.keys, 1),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.message?.isSigner).toBe(
@@ -225,7 +239,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.emitter?.pubkey.equals(
-            instruction.keys[2]?.pubkey,
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.emitter?.isSigner).toBe(
@@ -236,7 +250,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.sequence?.pubkey.equals(
-            instruction.keys[3]?.pubkey,
+            getKeyAtIndex(instruction.keys, 3),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.sequence?.isSigner).toBe(
@@ -247,7 +261,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.payer?.pubkey.equals(
-            instruction.keys[4]?.pubkey,
+            getKeyAtIndex(instruction.keys, 4),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.payer?.isSigner).toBe(
@@ -258,7 +272,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.feeCollector?.pubkey.equals(
-            instruction.keys[5]?.pubkey,
+            getKeyAtIndex(instruction.keys, 5),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.feeCollector?.isSigner).toBe(
@@ -269,7 +283,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.clock?.pubkey.equals(
-            instruction.keys[6]?.pubkey,
+            getKeyAtIndex(instruction.keys, 6),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.clock?.isSigner).toBe(
@@ -280,7 +294,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.rent?.pubkey.equals(
-            instruction.keys[7]?.pubkey,
+            getKeyAtIndex(instruction.keys, 7),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.rent?.isSigner).toBe(
@@ -291,7 +305,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(
           parsedInstruction.accounts.named.systemProgram?.pubkey.equals(
-            instruction.keys[8]?.pubkey,
+            getKeyAtIndex(instruction.keys, 8),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.systemProgram?.isSigner).toBe(
@@ -317,26 +331,32 @@ test("Wormhole multisig instruction parse: send message with governance payload"
             parsedInstruction.governanceAction
               .instructions as TransactionInstruction[]
           ).forEach((instruction, i) => {
+            const expectedInstruction = executePostedVaa.instructions[i];
+            expect(expectedInstruction).toBeDefined();
+            if (!expectedInstruction) {
+              throw new Error(
+                `Expected instruction at index ${i} but found undefined`,
+              );
+            }
+
             expect(
-              instruction.programId.equals(
-                executePostedVaa.instructions[i]?.programId,
-              ),
+              instruction.programId.equals(expectedInstruction.programId),
             ).toBeTruthy();
             expect(
-              instruction.data.equals(executePostedVaa.instructions[i]?.data),
+              instruction.data.equals(expectedInstruction.data),
             ).toBeTruthy();
             instruction.keys.forEach((account, j) => {
-              expect(
-                account.pubkey.equals(
-                  executePostedVaa.instructions[i]?.keys[j]?.pubkey,
-                ),
-              ).toBeTruthy();
-              expect(account.isSigner).toBe(
-                executePostedVaa.instructions[i]?.keys[j]?.isSigner,
-              );
-              expect(account.isWritable).toBe(
-                executePostedVaa.instructions[i]?.keys[j]?.isWritable,
-              );
+              const expectedKey = expectedInstruction.keys[j];
+              expect(expectedKey).toBeDefined();
+              if (!expectedKey) {
+                throw new Error(
+                  `Expected key at index ${j} but found undefined`,
+                );
+              }
+
+              expect(account.pubkey.equals(expectedKey.pubkey)).toBeTruthy();
+              expect(account.isSigner).toBe(expectedKey.isSigner);
+              expect(account.isWritable).toBe(expectedKey.isWritable);
             });
           });
           done();

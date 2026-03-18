@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Example file uses env vars for configuration
 import { Buffer } from "node:buffer";
 
 import { IotaClient } from "@iota/iota-sdk/client";
@@ -60,7 +61,7 @@ async function run() {
   const newFeeds = [];
   const existingFeeds = [];
   for (const feed of feeds) {
-    if ((await client.getPriceFeedObjectId(feed)) == undefined) {
+    if ((await client.getPriceFeedObjectId(feed)) === undefined) {
       newFeeds.push(feed);
     } else {
       existingFeeds.push(feed);

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: CLI tool with flexible types
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import { getDefaultDeploymentConfig } from "@pythnetwork/contract-manager/core/base";
@@ -145,7 +146,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           .positional("seed", { demandOption: true, type: "string" })
           .option("signer", { type: "string" });
       },
-      async (argv) => {},
+      async (_argv) => {},
     )
     .command(
       "init-wormhole",
@@ -374,7 +375,7 @@ function getSender() {
 
 async function executeTransaction(
   network: string,
-  txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
+  _txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
 ) {
   const endpoint = (DefaultStore.chains[network] as AptosChain).rpcUrl;
   const _client = new AptosClient(endpoint);
@@ -475,7 +476,7 @@ function createDeployDerivedTransaction(
 
   return new TxnBuilderTypes.TransactionPayloadEntryFunction(
     TxnBuilderTypes.EntryFunction.natural(
-      deployer + "::deployer",
+      `${deployer}::deployer`,
       "deploy_derived",
       [],
       [

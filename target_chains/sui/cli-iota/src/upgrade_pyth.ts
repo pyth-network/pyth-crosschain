@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
 import { execSync } from "node:child_process";
 import type { IotaClient } from "@iota/iota-sdk/client";
 import type { Ed25519Keypair } from "@iota/iota-sdk/keypairs/ed25519";

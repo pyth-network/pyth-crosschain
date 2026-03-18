@@ -673,9 +673,7 @@ function parseMessageBuffer(
     accountData.length,
   );
   let start = 0;
-  for (let i = 0; i < msgBufferHeader.endOffsets.length; i++) {
-    const endOffset = msgBufferHeader.endOffsets[i];
-
+  for (const endOffset of msgBufferHeader.endOffsets) {
     if (endOffset == 0) {
       break;
     }

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: Legacy code uses non-null assertions
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
@@ -81,9 +82,11 @@ export async function sendTransactionsJito(
     signedTransactions.push(tx);
   }
 
-  const firstTransactionSignature = bs58.encode(
-    signedTransactions[0]?.signatures[0]!,
-  );
+  const firstTxSignature = signedTransactions[0]?.signatures[0];
+  if (!firstTxSignature) {
+    throw new Error("No transaction signature found");
+  }
+  const firstTransactionSignature = bs58.encode(firstTxSignature);
 
   const bundle = new Bundle(signedTransactions, 2);
 

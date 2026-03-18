@@ -93,6 +93,7 @@ export type PriceFeedMetadata = {
 
 // Converts JSON types to/from your types
 // and asserts the results at runtime
+// biome-ignore lint/complexity/noStaticOnlyClass: legacy API
 export class Convert {
   public static toPriceFeed(json: any): PriceFeed {
     return cast(json, r("PriceFeed"));

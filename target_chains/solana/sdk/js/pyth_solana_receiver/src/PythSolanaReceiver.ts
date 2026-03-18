@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: Legacy code uses non-null assertions
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable tsdoc/syntax */
 
@@ -451,7 +452,7 @@ export class PythSolanaReceiver {
           signers: [priceUpdateKeypair],
         });
         priceFeedIdToPriceUpdateAccount[
-          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+          `0x${parsePriceFeedMessage(update.message).feedId.toString("hex")}`
         ] = priceUpdateKeypair.publicKey;
 
         closeInstructions.push(
@@ -522,7 +523,7 @@ export class PythSolanaReceiver {
         });
 
         priceFeedIdToPriceUpdateAccount[
-          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+          `0x${parsePriceFeedMessage(update.message).feedId.toString("hex")}`
         ] = priceUpdateKeypair.publicKey;
         closeInstructions.push(
           await this.buildClosePriceUpdateInstruction(
@@ -603,7 +604,7 @@ export class PythSolanaReceiver {
         });
 
         priceFeedIdToPriceUpdateAccount[
-          "0x" + parsePriceFeedMessage(update.message).feedId.toString("hex")
+          `0x${parsePriceFeedMessage(update.message).feedId.toString("hex")}`
         ] = this.getPriceFeedAccountAddress(shardId, feedId);
       }
     }
@@ -753,13 +754,13 @@ export function getPriceFeedAccountForProgram(
   priceFeedId: Buffer | string,
   pushOracleProgramId?: PublicKey,
 ): PublicKey {
-  if (typeof priceFeedId == "string") {
+  if (typeof priceFeedId === "string") {
     priceFeedId = priceFeedId.startsWith("0x")
       ? IsomorphicBuffer.from(priceFeedId.slice(2), "hex")
       : IsomorphicBuffer.from(priceFeedId, "hex");
   }
 
-  if (priceFeedId.length != 32) {
+  if (priceFeedId.length !== 32) {
     throw new Error("Feed ID should be 32 bytes long");
   }
   const shardBuffer = IsomorphicBuffer.alloc(2);

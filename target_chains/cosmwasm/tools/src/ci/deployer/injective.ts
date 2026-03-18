@@ -64,10 +64,6 @@ export class InjectiveDeployer implements Deployer {
     const txService = new TxGrpcClient(networkInfo.grpc);
     const txResponse = await txService.broadcast(txRaw);
 
-    if (txResponse.code !== 0) {
-    } else {
-    }
-
     return txResponse;
   }
 
@@ -98,7 +94,7 @@ export class InjectiveDeployer implements Deployer {
     var codeId: number;
     // {"key":"code_id","value":"\"14\""}
     const ci = extractFromRawLog(txResponse.rawLog, "code_id");
-    codeId = Number.parseInt(ci);
+    codeId = Number.parseInt(ci, 10);
 
     return codeId;
   }
@@ -136,9 +132,9 @@ export class InjectiveDeployer implements Deployer {
 
     const txResponse = await this.signAndBroadcastMsg(migrate_msg);
 
-    let resultCodeId: number;
-    resultCodeId = Number.parseInt(
+    const resultCodeId = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
     assert.strictEqual(codeId, resultCodeId);
   }
@@ -183,12 +179,14 @@ export class InjectiveDeployer implements Deployer {
 
 // Injective addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
-function _convert_injective_address_to_hex(human_addr: string) {
-  return "0x" + toHex(ethers.utils.zeroPad(fromBech32(human_addr).data, 32));
+export function convertInjectiveAddressToHex(human_addr: string) {
+  return `0x${toHex(ethers.utils.zeroPad(fromBech32(human_addr).data, 32))}`;
 }
 
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
+  // biome-ignore lint/style/noNonNullAssertion: legacy assertion
+  // biome-ignore lint/suspicious/noNonNullAssertedOptionalChain: legacy assertion
   return rx.exec(rawLog)?.[1]!;
 }

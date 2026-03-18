@@ -22,7 +22,10 @@ export function resolveAccountNames(
   const remaining: RemainingAccounts = [];
   instruction.keys.map((account, idx) => {
     if (idx < ix.accounts.length) {
-      named[ix.accounts[idx]?.name] = account;
+      const accountName = ix.accounts[idx]?.name;
+      if (accountName !== undefined) {
+        named[accountName] = account;
+      }
     } else {
       remaining.push(account);
     }
@@ -35,7 +38,7 @@ export const IDL_SET_BUFFER_DISCRIMINATOR = Buffer.from(
   "hex",
 );
 
-async function getIdlAddress(programId: PublicKey): Promise<PublicKey> {
+function getIdlAddress(programId: PublicKey): Promise<PublicKey> {
   const programSigner = PublicKey.findProgramAddressSync([], programId)[0];
   return PublicKey.createWithSeed(programSigner, "anchor:idl", programId);
 }

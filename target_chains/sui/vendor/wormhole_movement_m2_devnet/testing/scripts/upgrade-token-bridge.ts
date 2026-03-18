@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Vendor script uses env vars for configuration
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import { resolve } from "node:path";
@@ -43,8 +44,12 @@ async function main() {
   const dstTokenBridgePath = resolve(`${__dirname}/../../token_bridge`);
 
   // Build for digest.
-  const { modules, dependencies, digest } =
-    buildForBytecodeAndDigest(dstTokenBridgePath);
+  // biome-ignore lint/correctness/noUnusedVariables: Used for digest computation
+  const {
+    modules: _modules,
+    dependencies: _dependencies,
+    digest,
+  } = buildForBytecodeAndDigest(dstTokenBridgePath);
 
   // We will use the signed VAA when we execute the upgrade.
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
@@ -54,7 +59,7 @@ async function main() {
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex"),
+    `0x${digest.toString("hex")}`,
   );
   const moduleName = Buffer.alloc(32);
   moduleName.write("TokenBridge", 32 - "TokenBridge".length);
@@ -127,7 +132,7 @@ async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 

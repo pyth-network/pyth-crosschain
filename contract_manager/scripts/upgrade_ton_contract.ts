@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/use-unknown-in-catch-callback-variable */
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable n/no-process-exit */
-/* eslint-disable unicorn/prefer-top-level-await */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import fs from "node:fs";
 import path from "node:path";
 
@@ -55,12 +47,9 @@ async function main() {
   const compiled = JSON.parse(fs.readFileSync(compiledPath, "utf8"));
   const newCode = Cell.fromHex(compiled.hex);
 
-  const _tx = await contract.upgradeContract(
-    toPrivateKey(argv["private-key"]),
-    newCode,
-  );
+  await contract.upgradeContract(toPrivateKey(argv["private-key"]), newCode);
 }
 
-main().catch((error) => {
+main().catch(() => {
   process.exit(1);
 });

@@ -10,7 +10,7 @@ export function generateVaaFromDigest(
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex"),
+    `0x${digest.toString("hex")}`,
   );
 
   // Sui is not supported yet by the SDK, so we need to adjust the payload.

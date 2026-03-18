@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 import fs from "node:fs";
 import path from "node:path";
 import type { Idl } from "@coral-xyz/anchor";

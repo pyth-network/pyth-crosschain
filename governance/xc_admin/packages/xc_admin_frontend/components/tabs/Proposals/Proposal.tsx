@@ -310,8 +310,10 @@ export const Proposal = ({
         if (refreshData) await refreshData().fetchData();
         toast.success(msg);
         // biome-ignore lint/suspicious/noExplicitAny: Legacy error handling pattern
-      } catch (error: any) {
-        toast.error(capitalizeFirstLetter(error.message));
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occurred";
+        toast.error(capitalizeFirstLetter(errorMessage));
       } finally {
         setIsTransactionLoading(false);
       }

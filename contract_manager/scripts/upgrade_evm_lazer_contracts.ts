@@ -48,7 +48,7 @@ type UpgradeImplementationOutput = {
 };
 
 function deployLazerImplementation(
-  chain: string,
+  _chain: string,
   rpcUrl: string,
   privateKey: string,
   chainNetworkId: number,
@@ -71,7 +71,7 @@ function deployLazerImplementation(
   if (existsSync(upgradeOutputPath)) {
     unlinkSync(upgradeOutputPath);
   }
-  const _output = execSync(forgeCommand, {
+  execSync(forgeCommand, {
     cwd: lazerContractsDir,
     encoding: "utf8",
     stdio: "pipe",
@@ -158,7 +158,7 @@ async function main() {
   }
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   vault?.connect(wallet, registry);
-  const _proposal = await vault?.proposeWormholeMessage(payloads);
+  await vault?.proposeWormholeMessage(payloads);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

@@ -11,7 +11,7 @@ advanceBlock = () => {
         jsonrpc: "2.0",
         method: "evm_mine",
       },
-      (err, result) => {
+      (err, _result) => {
         if (err) {
           return reject(err);
         }
@@ -27,12 +27,12 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-module.exports = function (callback) {
+module.exports = (_callback) => {
   const fn = async () => {
     while (true) {
       await sleep(1000);
     }
   };
 
-  fn().catch((reason) => {});
+  fn().catch((_reason) => {});
 };

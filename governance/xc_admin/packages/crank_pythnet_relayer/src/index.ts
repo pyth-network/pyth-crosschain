@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 import * as fs from "node:fs";
 import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
@@ -136,21 +137,28 @@ async function run() {
                 AccountType.Product,
               ),
             );
-            productAccountToSymbol[
-              parsedInstruction.accounts.named.productAccount?.pubkey.toBase58()
-            ] = parsedInstruction.args.symbol;
+            const productAccountPubkey =
+              parsedInstruction.accounts.named.productAccount?.pubkey;
+            if (productAccountPubkey) {
+              productAccountToSymbol[productAccountPubkey.toBase58()] =
+                parsedInstruction.args.symbol;
+            }
           } else if (
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addPrice"
           ) {
-            const productAccount = await provider.connection.getAccountInfo(
-              parsedInstruction.accounts.named.productAccount?.pubkey,
-            );
+            const productAccountPubkey =
+              parsedInstruction.accounts.named.productAccount?.pubkey;
+            if (!productAccountPubkey) {
+              throw new Error(
+                "Product account pubkey not found in instruction",
+              );
+            }
+            const productAccount =
+              await provider.connection.getAccountInfo(productAccountPubkey);
             const productSymbol = productAccount
               ? parseProductData(productAccount.data).product.symbol
-              : productAccountToSymbol[
-                  parsedInstruction.accounts.named.productAccount?.pubkey.toBase58()
-                ];
+              : productAccountToSymbol[productAccountPubkey.toBase58()];
             if (productSymbol) {
               preInstructions.push(
                 await getCreateAccountWithSeedInstruction(
@@ -213,6 +221,6 @@ async function run() {
   try {
     await run();
   } catch (_err) {
-    throw new Error();
+    throw new Error("Failed to execute Pythnet relayer");
   }
 })();

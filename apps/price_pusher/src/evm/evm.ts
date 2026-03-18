@@ -172,7 +172,7 @@ export class EvmPricePusher implements IPricePusher {
         Math.round(Number(updateFee) * (this.updateFeeMultiplier || 1)),
       );
       this.logger.debug(`Update fee: ${updateFee}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(
         error,
         "An unidentified error has occured when getting the update fee.",
@@ -199,7 +199,7 @@ export class EvmPricePusher implements IPricePusher {
         address: this.pusherAddress,
       })) - 1;
 
-    let gasPriceToOverride = undefined;
+    let gasPriceToOverride;
 
     if (this.lastPushAttempt !== undefined) {
       if (this.lastPushAttempt.nonce <= lastExecutedNonce) {
@@ -256,7 +256,7 @@ export class EvmPricePusher implements IPricePusher {
       this.logger.info({ hash }, "Price update sent");
 
       void this.waitForTransactionReceipt(hash);
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.debug(
         { err: error },
         "Simulating or sending transactions failed.",
@@ -409,7 +409,7 @@ export class EvmPricePusher implements IPricePusher {
           );
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.warn({ err: error }, "Failed to get transaction receipt");
     }
   }

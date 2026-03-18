@@ -135,6 +135,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const codeId: number = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
 
     return {
@@ -151,7 +152,6 @@ export class InjectiveExecutor implements ChainExecutor {
       admin: this.getAddress(),
       codeId,
       label,
-      // @ts-ignore: bug in the injective's sdk
       msg: instMsg,
       sender: this.getAddress(),
     });
@@ -205,6 +205,7 @@ export class InjectiveExecutor implements ChainExecutor {
 
     const resultCodeId: number = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
     assert.strictEqual(newCodeId, resultCodeId);
 

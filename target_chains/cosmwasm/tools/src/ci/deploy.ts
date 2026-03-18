@@ -26,7 +26,9 @@ async function deploy() {
     (a) => !actual_artifacts.includes(a),
   );
   if (missing_artifacts.length > 0) {
-    missing_artifacts.forEach((file) => {});
+    for (const _file of missing_artifacts) {
+      /* legacy no-op */
+    }
     process.exit(1);
   }
 
@@ -34,7 +36,9 @@ async function deploy() {
     (a) => !artifacts.includes(a),
   );
   if (unexpected_artifacts.length > 0) {
-    unexpected_artifacts.forEach((file) => {});
+    for (const _file of unexpected_artifacts) {
+      /* legacy no-op */
+    }
     process.exit(1);
   }
 
@@ -89,6 +93,7 @@ async function deploy() {
     },
   };
   addresses[contract] = await deployer.instantiate(
+    // biome-ignore lint/style/noNonNullAssertion: legacy assertion
     codeIds[contract]!,
     inst_msg,
     "wormhole",
@@ -126,6 +131,7 @@ async function deploy() {
     wormhole_contract: addresses["wormhole.wasm"],
   };
   addresses[contract] = await deployer.instantiate(
+    // biome-ignore lint/style/noNonNullAssertion: legacy assertion
     codeIds[contract]!,
     inst_msg,
     "pyth",

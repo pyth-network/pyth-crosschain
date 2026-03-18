@@ -94,9 +94,11 @@ function formatResults(results: FeeResult[], showEth: boolean): void {
   const failedResults = results.filter((r) => r.error);
 
   if (successfulResults.length > 0) {
+    /* legacy no-op */
   }
 
   if (failedResults.length > 0) {
+    /* legacy no-op */
   }
 }
 
@@ -141,6 +143,6 @@ async function main() {
   formatResults(results, argv.showEth);
 }
 
-main().catch((error) => {
+main().catch(() => {
   process.exit(1);
 });

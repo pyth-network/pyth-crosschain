@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Vendor script uses env vars for configuration
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import { resolve } from "node:path";
@@ -56,7 +57,7 @@ async function main() {
   const published = governance.publishWormholeUpgradeContract(
     timestamp,
     2,
-    "0x" + digest.toString("hex"),
+    `0x${digest.toString("hex")}`,
   );
   published.writeUInt16BE(21, published.length - 34);
 
@@ -123,7 +124,7 @@ async function getPackageId(
       },
     })
     .then((result) => {
-      if (result.data?.content?.dataType == "moveObject") {
+      if (result.data?.content?.dataType === "moveObject") {
         return result.data.content.fields;
       }
 

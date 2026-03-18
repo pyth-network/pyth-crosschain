@@ -186,6 +186,7 @@ export function getConfig(params: CoreConfigParams): RawConfig {
           ) {
             processedPriceKeys.add(priceAccountKey);
             const priceConfig: PriceRawConfig =
+              // biome-ignore lint/style/noNonNullAssertion: legacy non-null assertion
               priceRawConfigs[priceAccountKey]!;
             priceAccounts.push(priceConfig);
             priceAccountKey = priceConfig.next
@@ -221,19 +222,23 @@ export function getConfig(params: CoreConfigParams): RawConfig {
         products: parsed.productAccountKeys
           .filter((key) => {
             const keyStr = key.toBase58();
+            const productConfig = productRawConfigs[keyStr];
             // Only include products that exist, have price accounts, and haven't been processed yet
             return (
-              productRawConfigs[keyStr] &&
-              productRawConfigs[keyStr].priceAccounts.length > 0 &&
+              productConfig !== undefined &&
+              productConfig.priceAccounts.length > 0 &&
               !processedProducts.has(keyStr)
             );
           })
           .map((key) => {
             const keyStr = key.toBase58();
-            const product = productRawConfigs[keyStr];
+            const productConfig = productRawConfigs[keyStr];
+            if (!productConfig) {
+              throw new Error(`Product config not found for key: ${keyStr}`);
+            }
             // Mark this product as processed
             processedProducts.set(keyStr, true);
-            return product;
+            return productConfig;
           }),
       };
     });
@@ -261,15 +266,22 @@ export function getDownloadableConfig(
 ): DownloadableConfig {
   // Convert the raw config to a user-friendly format for download
   if (rawConfig.mappingAccounts.length > 0) {
+    const largestMapping = rawConfig.mappingAccounts.sort(
+      (mapping1, mapping2) =>
+        mapping2.products.length - mapping1.products.length,
+    )[0];
+
+    if (!largestMapping) {
+      return {};
+    }
+
     const symbolToData = Object.fromEntries(
-      rawConfig.mappingAccounts
-        ?.sort(
-          (mapping1, mapping2) =>
-            mapping2.products.length - mapping1.products.length,
-        )[0]
-        ?.products.sort((product1, product2) =>
-          product1.metadata.symbol?.localeCompare(product2.metadata.symbol!),
-        )
+      largestMapping.products
+        .sort((product1, product2) => {
+          const symbol1 = product1.metadata.symbol ?? "";
+          const symbol2 = product2.metadata.symbol ?? "";
+          return symbol1.localeCompare(symbol2);
+        })
         .map((product) => {
           const { price_account, ...metadataWithoutPriceAccount } =
             product.metadata;
@@ -279,15 +291,19 @@ export function getDownloadableConfig(
             {
               address: product.address.toBase58(),
               metadata: metadataWithoutPriceAccount,
-              priceAccounts: product.priceAccounts.map((p: PriceRawConfig) => {
-                return {
-                  address: p.address.toBase58(),
-                  expo: p.expo,
-                  maxLatency: p.maxLatency,
-                  minPub: p.minPub,
-                  publishers: p.publishers.map((p) => p.toBase58()),
-                };
-              }),
+              priceAccounts: product.priceAccounts.map(
+                (priceAccount: PriceRawConfig) => {
+                  return {
+                    address: priceAccount.address.toBase58(),
+                    expo: priceAccount.expo,
+                    maxLatency: priceAccount.maxLatency,
+                    minPub: priceAccount.minPub,
+                    publishers: priceAccount.publishers.map((publisher) =>
+                      publisher.toBase58(),
+                    ),
+                  };
+                },
+              ),
             },
           ];
         }),
@@ -516,12 +532,19 @@ async function generateAddInstructions(
   );
 
   if (newChanges.metadata) {
+    const tailMappingAccount = rawConfig.mappingAccounts[0]?.address;
+    if (!tailMappingAccount) {
+      throw new Error(
+        `No mapping account found in rawConfig for adding product ${symbol}`,
+      );
+    }
+
     const instruction = await pythProgramClient.methods
       .addProduct({ ...newChanges.metadata })
       .accounts({
         fundingAccount,
         productAccount: productAccountKey,
-        tailMappingAccount: rawConfig.mappingAccounts[0]?.address,
+        tailMappingAccount,
       })
       .instruction();
 
@@ -660,12 +683,19 @@ async function generateDeleteInstructions(
     );
 
     // Delete product account
+    const mappingAccount = accounts.rawConfig.mappingAccounts[0]?.address;
+    if (!mappingAccount) {
+      throw new Error(
+        "No mapping account found in rawConfig for deleting product",
+      );
+    }
+
     instructions.push(
       await pythProgramClient.methods
         .delProduct()
         .accounts({
           fundingAccount,
-          mappingAccount: accounts.rawConfig.mappingAccounts[0]?.address,
+          mappingAccount,
           productAccount: new PublicKey(prev.address || ""),
         })
         .instruction(),

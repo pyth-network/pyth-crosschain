@@ -24,7 +24,7 @@ it("Unit test compressed u16 size", async () => {
   expect(getSizeOfCompressedU16(16_384)).toBe(3);
 });
 
-it("Unit test for getSizeOfTransaction", async () => {
+it("Unit test for getSizeOfTransaction", () => {
   jest.setTimeout(60_000);
 
   const payer = new Keypair();
@@ -96,9 +96,9 @@ it("Unit test for getSizeOfTransaction", async () => {
         addresses: [
           SystemProgram.programId,
           ComputeBudgetProgram.programId,
-          ...ixsToSend[0]?.keys.map((key) => key.pubkey),
-          ...ixsToSend[1]?.keys.map((key) => key.pubkey),
-          ...ixsToSend[2]?.keys.map((key) => key.pubkey),
+          ...(ixsToSend?.[0]?.keys.map((key) => key.pubkey) ?? []),
+          ...(ixsToSend?.[1]?.keys.map((key) => key.pubkey) ?? []),
+          ...(ixsToSend?.[2]?.keys.map((key) => key.pubkey) ?? []),
         ],
         deactivationSlot: BigInt(0),
         lastExtendedSlot: 0,

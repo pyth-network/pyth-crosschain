@@ -116,7 +116,8 @@ export default {
   },
   command: "solana",
   describe: "run price pusher for solana",
-  handler: async function (argv: any) {
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     const {
       endpoint,
       keypairFile,

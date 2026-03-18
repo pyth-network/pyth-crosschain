@@ -100,7 +100,7 @@ export class TonPricePusher implements IPricePusher {
         ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -121,7 +121,7 @@ export class TonPricePusher implements IPricePusher {
       }
 
       this.logger.info("updatePriceFeed successful");
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "updatePriceFeed failed");
     }
   }

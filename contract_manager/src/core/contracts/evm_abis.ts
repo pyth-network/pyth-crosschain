@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+// biome-ignore-all lint/suspicious/noExplicitAny: ABI definitions require any type for flexibility
 import EntropyAbi from "@pythnetwork/entropy-sdk-solidity/abis/IEntropy.json";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 

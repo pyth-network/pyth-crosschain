@@ -32,7 +32,9 @@ async function main() {
           contract: contract.address,
           version: version,
         });
-      } catch (_error) {}
+      } catch (_error) {
+        // Intentionally empty
+      }
     }
   }
 }

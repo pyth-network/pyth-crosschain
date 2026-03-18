@@ -4,6 +4,7 @@ import "@matterlabs/hardhat-zksync-deploy";
 import "@matterlabs/hardhat-zksync-solc";
 // import "@matterlabs/hardhat-zksync-verify"; UNCOMMENT THIS AND INSTALL THIS PACKAGE TO VERIFY ZKSYNC
 
+// biome-ignore lint/style/noCommonJs: library only supports CJS
 module.exports = {
   defaultNetwork: "mathMainnet",
   etherscan: {

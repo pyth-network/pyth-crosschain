@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: Legacy code uses non-null assertions
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { Address, Cell, Contract, Sender } from "@ton/core";
 import { beginCell, Dictionary, SendMode, toNano } from "@ton/core";
@@ -318,7 +319,7 @@ export function parseGuardianSetKeys(cell: Cell): string[] {
         const bitsToSkip = slice.remainingBits - 160;
         slice = slice.skip(bitsToSkip);
         const key = slice.loadBits(160);
-        keys.push("0x" + key.toString());
+        keys.push(`0x${key.toString()}`);
       }
       if (slice.remainingRefs > 0) {
         parseCell(slice.loadRef());

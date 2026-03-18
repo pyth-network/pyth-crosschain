@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 import { HermesClient } from "@pythnetwork/hermes-client";
 import { calculateUpdatePriceFeedsFee } from "@pythnetwork/pyth-ton-js";
 import type { DataSource } from "@pythnetwork/xc-admin-common";
@@ -33,7 +34,7 @@ export async function run(provider: NetworkProvider) {
   const chainId = Number.parseInt(process.env.CHAIN_ID, 10);
 
   // Validate that chainId is a valid number
-  if (isNaN(chainId)) {
+  if (Number.isNaN(chainId)) {
     throw new Error("CHAIN_ID must be a valid number");
   }
 

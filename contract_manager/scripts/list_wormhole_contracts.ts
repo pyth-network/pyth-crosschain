@@ -37,7 +37,9 @@ async function main() {
           contract: contract.address,
           guardianSetIndex: index,
         });
-      } catch (_error) {}
+      } catch (_error) {
+        // Intentionally empty
+      }
     }
   }
 }

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable unicorn/prefer-top-level-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

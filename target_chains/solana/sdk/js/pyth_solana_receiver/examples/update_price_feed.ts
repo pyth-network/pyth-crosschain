@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv lint/suspicious/useAwait: Example file uses env vars
 import fs from "node:fs";
 import os from "node:os";
 import { Wallet } from "@coral-xyz/anchor";
@@ -60,7 +61,7 @@ async function main() {
 
   await transactionBuilder.addPriceConsumerInstructions(
     async (
-      getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
+      _getPriceUpdateAccount: (priceFeedId: string) => PublicKey,
     ): Promise<InstructionWithEphemeralSigners[]> => {
       // You can generate instructions here that use the price updates posted above.
       // getPriceUpdateAccount(<price feed id>) will give you the account you need.

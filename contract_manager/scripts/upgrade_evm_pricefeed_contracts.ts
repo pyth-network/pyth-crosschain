@@ -1,8 +1,3 @@
-/* eslint-disable @typescript-eslint/await-thenable */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable no-console */
 import { readFileSync } from "node:fs";
 
 import yargs from "yargs";
@@ -36,9 +31,14 @@ async function main() {
       "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
     ];
 
+  const stdOutput = argv["std-output"];
+  if (!stdOutput) {
+    throw new Error("--std-output is required");
+  }
+
   const payloads: Buffer[] = [];
   for (const chain of selectedChains) {
-    const artifact = JSON.parse(readFileSync(argv["std-output"], "utf8"));
+    const artifact = JSON.parse(readFileSync(stdOutput, "utf8"));
     const address = await runIfNotCached(`deploy-${chain.getId()}`, () => {
       return chain.deploy(
         toPrivateKey(argv["private-key"]),
@@ -53,7 +53,7 @@ async function main() {
   }
   const wallet = await loadHotWallet(argv["ops-key-path"]);
   await vault?.connect(wallet);
-  const _proposal = await vault?.proposeWormholeMessage(payloads);
+  await vault?.proposeWormholeMessage(payloads);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises, unicorn/prefer-top-level-await

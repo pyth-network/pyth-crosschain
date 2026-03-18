@@ -1,3 +1,5 @@
+// biome-ignore-all lint/style/noProcessEnv: Deploy script uses env vars for configuration
+// biome-ignore lint/style/noCommonJs: dotenv requires CommonJS for immediate initialization
 require("dotenv").config({ path: ".env" });
 
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
@@ -18,6 +20,7 @@ import {
 // import {Wallet as ZkWallet} from "zksync-ethers";      // Use These packages if "zksync-web3" doesn't work
 // import { Deployer as ZkDeployer } from "@matterlabs/hardhat-zksync";
 
+// biome-ignore lint/style/noCommonJs: Dynamic import required for config resolution
 const { getDefaultConfig } = require("../scripts/contractManagerConfig");
 
 function envOrErr(name: string): string {
@@ -117,7 +120,7 @@ async function deployExecutorContract(
 async function deployEntropyContract(
   deployer: Deployer,
   executorContractAddress: string,
-  chainId: number,
+  _chainId: number,
   isMainnet: boolean,
 ) {
   const entropyImplArtifact = await deployer.loadArtifact("EntropyUpgradable");

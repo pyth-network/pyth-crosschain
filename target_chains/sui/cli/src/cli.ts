@@ -230,7 +230,7 @@ yargs
       const pythContractsPath = resolve(`${__dirname}/${argv.path}`);
 
       // Build for modules and dependencies
-      const { modules, dependencies, digest } =
+      const { modules, dependencies } =
         buildForBytecodeAndDigest(pythContractsPath);
       const pythPackageOld = await contract.getPackageId(contract.stateId);
       const signedVaa = Buffer.from(argv.vaa, "hex");

@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable unicorn/no-nested-ternary */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable no-console */
 import Web3 from "web3";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -308,7 +304,8 @@ function getSelectedChains(argv: {
   if (selectedChains.length === 0) {
     const mode = argv.testnets
       ? "testnet"
-      : argv.mainnets
+      : // biome-ignore lint/style/noNestedTernary: legacy ternary
+        argv.mainnets
         ? "mainnet"
         : "specified";
     throw new Error(`No valid ${mode} entropy chains found`);
@@ -359,9 +356,6 @@ async function main() {
     _transferMethod = `${argv.amount} ETH (fixed amount)`;
   }
 
-  if (argv.dryRun) {
-  }
-
   const results: TransferResult[] = [];
 
   // Process each chain
@@ -378,19 +372,8 @@ async function main() {
     );
     results.push(result);
   }
-
-  const successful = results.filter((r) => r.success);
-  const failed = results.filter((r) => !r.success);
-
-  if (successful.length > 0) {
-  }
-
-  if (failed.length > 0) {
-  }
 }
 
-// eslint-disable-next-line unicorn/prefer-top-level-await, @typescript-eslint/use-unknown-in-catch-callback-variable
-main().catch((error) => {
-  // eslint-disable-next-line n/no-process-exit, unicorn/no-process-exit
+main().catch(() => {
   process.exit(1);
 });

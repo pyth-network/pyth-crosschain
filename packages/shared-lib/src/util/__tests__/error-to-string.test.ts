@@ -28,7 +28,7 @@ describe("errorToString()", () => {
   it("parses JSON strings that resolve to objects", () => {
     const error = JSON.stringify({ code: 400, message: "oops" });
 
-    expect(errorToString(error)).toBe('{"message":"oops","code":400}');
+    expect(errorToString(error)).toBe('{"code":400,"message":"oops"}');
   });
 
   it("parses JSON strings that resolve to string literals", () => {

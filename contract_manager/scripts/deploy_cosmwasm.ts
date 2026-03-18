@@ -1,11 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-/* eslint-disable unicorn/prefer-top-level-await */
-
-/* eslint-disable no-console */
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { COMMON_DEPLOY_OPTIONS } from "./common";
@@ -36,7 +28,7 @@ const parser = yargs(hideBin(process.argv))
 
 async function main() {
   const argv = await parser.argv;
-  const { code, wormholeContract } = argv;
+  const { code: _code, wormholeContract: _wormholeContract } = argv;
 }
 
 main();

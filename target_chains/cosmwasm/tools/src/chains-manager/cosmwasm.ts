@@ -65,7 +65,12 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getBalance(): Promise<number> {
-    const address = (await this.signer.getAccounts())[0]?.address;
+    const accounts = await this.signer.getAccounts();
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new Error("No accounts found in signer");
+    }
+    const address = firstAccount.address;
     const cosmwasmClient = await CosmWasmClient.connect(this.endpoint);
 
     // We are interested only in the coin that we pay gas fees in.
@@ -78,13 +83,23 @@ export class CosmwasmExecutor implements ChainExecutor {
   }
 
   async getAddress(): Promise<string> {
-    return (await this.signer.getAccounts())[0]?.address;
+    const accounts = await this.signer.getAccounts();
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new Error("No accounts found in signer");
+    }
+    return firstAccount.address;
   }
 
   private async signAndBroadcastMsg(
     encodedMsgObject: EncodeObject,
   ): Promise<DeliverTxResponse> {
-    const address = (await this.signer.getAccounts())[0]?.address;
+    const accounts = await this.signer.getAccounts();
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new Error("No accounts found in signer");
+    }
+    const address = firstAccount.address;
 
     const cosmwasmClient = await SigningCosmWasmClient.connectWithSigner(
       this.endpoint,
@@ -102,6 +117,7 @@ export class CosmwasmExecutor implements ChainExecutor {
     if (txResponse.code !== 0) {
       throw new Error(`Transaction failed: ${txResponse.rawLog}`);
     } else {
+      /* no-op */
     }
 
     return txResponse;
@@ -124,6 +140,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 
     const codeId = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
 
     return {
@@ -218,6 +235,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 
     const resultCodeId = Number.parseInt(
       extractFromRawLog(txResponse.rawLog, "code_id"),
+      10,
     );
 
     assert.strictEqual(newCodeId, resultCodeId);

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: Legacy code uses non-null assertions
 /* eslint-disable no-console */
 /* eslint-disable unicorn/no-null */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */

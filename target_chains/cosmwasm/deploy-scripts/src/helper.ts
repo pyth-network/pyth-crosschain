@@ -33,7 +33,7 @@ export async function getContractBytesDict(
     uniqueArtifactsZipName.map(async (artifactZipName) => {
       return new Promise<void>((resolve, reject) => {
         const dl = new DownloaderHelper(
-          githubArtifactsLink + artifactZipName + ".zip",
+          `${githubArtifactsLink + artifactZipName}.zip`,
           tmpCodeStorageDir,
         );
 
@@ -53,7 +53,7 @@ export async function getContractBytesDict(
   // extract zip files
   uniqueArtifactsZipName.map(async (artifactZipName) => {
     const zip = new AdmZip(
-      path.resolve(tmpCodeStorageDir + "/" + artifactZipName + ".zip"),
+      path.resolve(`${tmpCodeStorageDir}/${artifactZipName}.zip`),
     );
     zip.extractAllTo(path.resolve(tmpCodeStorageDir));
   });
@@ -61,7 +61,7 @@ export async function getContractBytesDict(
   const contractBytesDict: { [fileName: string]: Buffer } = {};
   for (const uniqueArtifactZipName of uniqueArtifactsZipName) {
     const contractBytes = readFileSync(
-      tmpCodeStorageDir + "/" + uniqueArtifactZipName + "/pyth_cosmwasm.wasm",
+      `${tmpCodeStorageDir}/${uniqueArtifactZipName}/pyth_cosmwasm.wasm`,
     );
     contractBytesDict[uniqueArtifactZipName] = contractBytes;
   }

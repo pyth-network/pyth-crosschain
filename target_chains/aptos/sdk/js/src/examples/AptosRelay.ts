@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Example file uses env vars for configuration
 import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -53,7 +54,7 @@ async function run() {
     sender,
     new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
-        argv.pythContract + "::pyth",
+        `${argv.pythContract}::pyth`,
         "update_price_feeds_with_funder",
         [],
         [AptosPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)],

@@ -144,11 +144,14 @@ const PermissionDepermissionKey = ({
         setIsSubmitButtonLoading(false);
         closeModal();
         // biome-ignore lint/suspicious/noExplicitAny: Error handling with axios response
-      } catch (error: any) {
-        if (error.response) {
-          toast.error(capitalizeFirstLetter(error.response.data));
-        } else {
+      } catch (error: unknown) {
+        if (error && typeof error === "object" && "response" in error) {
+          const axiosError = error as { response?: { data?: string } };
+          toast.error(capitalizeFirstLetter(axiosError.response?.data ?? ""));
+        } else if (error instanceof Error) {
           toast.error(capitalizeFirstLetter(error.message));
+        } else {
+          toast.error("An unknown error occurred");
         }
         setIsSubmitButtonLoading(false);
       }

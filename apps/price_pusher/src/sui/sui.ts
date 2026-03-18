@@ -72,7 +72,7 @@ export class SuiPriceListener extends ChainPriceListener {
 
       const priceInfo =
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
           .price.fields;
       const { magnitude, negative } = priceInfo.price.fields;
@@ -147,7 +147,7 @@ export class SuiPricePusher implements IPricePusher {
 
     if ("upgrade_cap" in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       return state.upgrade_cap.fields.package;
     }
 
@@ -264,7 +264,7 @@ export class SuiPricePusher implements IPricePusher {
       return;
     }
 
-    let nextGasObject: SuiObjectRef | undefined = undefined;
+    let nextGasObject: SuiObjectRef | undefined;
     try {
       tx.setGasPayment([gasObject]);
       tx.setGasBudget(this.gasBudget);
@@ -284,7 +284,7 @@ export class SuiPricePusher implements IPricePusher {
         { hash: result.digest },
         "Successfully updated price with transaction digest",
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
         String(error).includes("Balance of gas object") ||
         String(error).includes("GasBalanceTooLow")
@@ -347,7 +347,7 @@ export class SuiPricePusher implements IPricePusher {
       coinResult.data.content.dataType == "moveObject"
     ) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       balance = coinResult.data.content.fields.balance;
     } else throw new Error("Bad coin object");
     const splitAmount =
@@ -500,6 +500,7 @@ export class SuiPricePusher implements IPricePusher {
           )
         ) {
           // eslint-disable-next-line unicorn/no-array-for-each
+          // biome-ignore lint/suspicious/noExplicitAny: Legacy parameter type
           Object.values((error_ as any).data).forEach((lockedObjects: any) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, unicorn/no-array-for-each
             lockedObjects.forEach((lockedObject: [string, number, string]) => {

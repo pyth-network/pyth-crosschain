@@ -39,10 +39,7 @@ async function executeForGovernanceContract(
     if (lastExecutedSequence >= parsedVaa.sequence) {
       return;
     }
-    const { id } = await contract.executeGovernanceInstruction(
-      senderPrivateKey,
-      vaa,
-    );
+    await contract.executeGovernanceInstruction(senderPrivateKey, vaa);
   }
 }
 

@@ -104,7 +104,7 @@ export class FuelPricePusher implements IPricePusher {
         ignoreInvalidPriceIds: true,
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -127,7 +127,7 @@ export class FuelPricePusher implements IPricePusher {
         { transactionId: result?.transactionId },
         "updatePriceFeed successful",
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "updatePriceFeed failed");
     }
   }

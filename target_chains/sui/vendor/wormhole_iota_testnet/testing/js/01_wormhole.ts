@@ -49,7 +49,7 @@ describe(" 1. Wormhole", () => {
             const found = result.objectChanges?.filter(
               (item) => "created" === item.type!,
             );
-            if (found?.length == 1 && "objectId" in found[0]) {
+            if (found?.length === 1 && "objectId" in found[0]) {
               return found[0].objectId;
             }
 
@@ -69,7 +69,7 @@ describe(" 1. Wormhole", () => {
         // Construct transaction block to send multiple messages.
         for (let i = 0; i < numMessages; ++i) {
           // Make a unique message.
-          const payload = basePayload + `... ${i}`;
+          const payload = `${basePayload}... ${i}`;
           payloads.push(payload);
 
           addPrepareMessageAndPublishMessage(

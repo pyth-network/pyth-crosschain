@@ -41,7 +41,8 @@ export default {
   },
   command: "fuel",
   describe: "run price pusher for Fuel",
-  handler: async function (argv: any) {
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     const {
       endpoint,
       privateKeyFile,

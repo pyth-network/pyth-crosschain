@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv: Deploy script uses env vars for configuration
 import type { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import {
   DefaultStore,
@@ -17,7 +18,7 @@ export function findWormholeContract(chainId: string): string | undefined {
 
 export async function deployWormholeContract(
   deployer: Deployer,
-  chainName: string,
+  _chainName: string,
   wormholeGovernanceChainId: string,
   wormholeGovernanceContract: string,
   wormholeInitialSigners: string[],

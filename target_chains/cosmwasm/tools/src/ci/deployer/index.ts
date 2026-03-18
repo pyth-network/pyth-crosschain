@@ -24,6 +24,7 @@ export type Deployer = {
   getContractInfo(contract: string): Promise<ContractInfo>;
 };
 
+// biome-ignore lint/complexity/noStaticOnlyClass: legacy API
 export class DeployerFactory {
   static create(config: NetworkConfig, mnemonic: string): Deployer {
     switch (config.type) {

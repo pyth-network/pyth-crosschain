@@ -81,7 +81,7 @@ export class NearPricePusher implements IPricePusher {
     let priceFeedUpdateData;
     try {
       priceFeedUpdateData = await this.getPriceFeedsUpdateData(priceIds);
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }
@@ -91,7 +91,7 @@ export class NearPricePusher implements IPricePusher {
       try {
         updateFee = await this.account.getUpdateFeeEstimate(data);
         this.logger.debug(`Update fee: ${updateFee}`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.logger.error(error, "getUpdateFeeEstimate failed");
         continue;
       }
@@ -117,7 +117,7 @@ export class NearPricePusher implements IPricePusher {
         } else {
           this.logger.error({ failureMessages }, "updatePriceFeeds failed");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.logger.error(error, "updatePriceFeeds failed");
       }
     }

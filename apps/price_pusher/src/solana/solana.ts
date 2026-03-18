@@ -122,7 +122,7 @@ export class SolanaPricePusher implements IPricePusher {
         },
       );
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed:");
       return;
     }
@@ -150,7 +150,7 @@ export class SolanaPricePusher implements IPricePusher {
         this.pythSolanaReceiver.wallet,
       );
       this.logger.info({ signatures }, "updatePriceFeed successful");
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "updatePriceFeed failed");
       return;
     }
@@ -189,7 +189,7 @@ export class SolanaPricePusherJito implements IPricePusher {
       return Math.floor(
         Number(data[0].landed_tips_50th_percentile) * LAMPORTS_PER_SOL,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       this.logger.error({ err: error }, "getRecentJitoTips failed");
       return undefined;
@@ -212,7 +212,7 @@ export class SolanaPricePusherJito implements IPricePusher {
         encoding: "base64",
       });
       priceFeedUpdateData = response.binary.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(error, "getPriceFeedsUpdateData failed");
       return;
     }

@@ -298,8 +298,12 @@ const UpdatePermissions = () => {
                 `Proposal sent! 🚀 Proposal Pubkey: ${JSON.stringify(proposalPubkey)}`,
               );
               setIsSendProposalButtonLoading(false);
-            } catch (error: any) {
-              toast.error(capitalizeFirstLetter(error.message));
+            } catch (error: unknown) {
+              const errorMessage =
+                error instanceof Error
+                  ? error.message
+                  : "An unknown error occurred";
+              toast.error(capitalizeFirstLetter(errorMessage));
               setIsSendProposalButtonLoading(false);
             }
           }

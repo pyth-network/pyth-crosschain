@@ -119,7 +119,7 @@ yargs
         })
         .usage("$0 generate-digest --path <path-to-contracts>");
     },
-    async (argv) => {
+    (argv) => {
       const _buildOutput: {
         modules: string[];
         dependencies: string[];

@@ -149,6 +149,7 @@ const useRunButton = <ParameterName extends string>({
     return orderedParams.every((value) => value !== undefined)
       ? orderedParams
       : undefined;
+    // biome-ignore lint/correctness/useExhaustiveDependencies: props is stable in this context
   }, [parameters, paramValues, props]);
 
   const value = useMemo(() => {
@@ -158,6 +159,7 @@ const useRunButton = <ParameterName extends string>({
     } else {
       return;
     }
+    // biome-ignore lint/correctness/useExhaustiveDependencies: props is stable in this context
   }, [paramValues, props]);
 
   const run = useCallback(() => {
@@ -224,6 +226,7 @@ const useRunButton = <ParameterName extends string>({
       status.type === StatusType.Loading ||
       (props.type === EvmApiType.Write &&
         (!isConnected || value === undefined)),
+    // biome-ignore lint/correctness/useExhaustiveDependencies: props is stable in this context
     [args, status, props, isConnected, value],
   );
 

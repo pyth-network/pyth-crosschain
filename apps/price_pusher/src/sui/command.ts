@@ -85,7 +85,8 @@ export default {
     "network specific, so there's one set of values for mainnet and" +
     " another for testnet. See config.sui.mainnet.sample.json for the " +
     "appropriate values for your network. ",
-  handler: async function (argv: any) {
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     const {
       endpoint,
       priceConfigFile,

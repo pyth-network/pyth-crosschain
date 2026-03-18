@@ -1,4 +1,3 @@
-import { sha256 } from "@cosmjs/crypto";
 import { toPrivateKey } from "@pythnetwork/contract-manager/core/base";
 import { CosmWasmChain } from "@pythnetwork/contract-manager/core/chains";
 import { CosmWasmPriceFeedContract } from "@pythnetwork/contract-manager/core/contracts/cosmwasm";
@@ -63,10 +62,6 @@ async function run() {
     [pythArtifactZipName],
     argv.contractVersion,
   );
-
-  const _checksum = Buffer.from(
-    sha256(contractBytesDict[pythArtifactZipName]!),
-  ).toString("hex");
 
   const storeCodeRes = await chainExecutor.storeCode({
     contractBytes: contractBytesDict[pythArtifactZipName]!,

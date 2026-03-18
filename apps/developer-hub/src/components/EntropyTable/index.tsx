@@ -206,6 +206,7 @@ function useEntropyFees(
     return () => {
       isCancelled = true;
     };
+    // biome-ignore lint/correctness/useExhaustiveDependencies: getClient is stable in this context
   }, [chains, getClient]);
 
   return feesByChain;

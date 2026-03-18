@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noProcessEnv lint/nursery/noUndeclaredEnvVars: Script uses env vars for configuration
 import { SuiClient } from "@mysten/sui/client";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
@@ -65,7 +66,7 @@ async function run() {
     if (typeof feed !== "string") {
       throw new Error(`Not a valid string input ${feed}`);
     }
-    if ((await client.getPriceFeedObjectId(feed)) == undefined) {
+    if ((await client.getPriceFeedObjectId(feed)) === undefined) {
       newFeeds.push(feed);
     } else {
       existingFeeds.push(feed);

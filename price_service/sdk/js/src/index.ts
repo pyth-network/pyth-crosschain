@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type {

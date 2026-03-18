@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noExplicitAny: Legacy code uses any for flexibility
 import { execSync } from "node:child_process";
 import type { SuiClient } from "@mysten/sui/client";
 import type { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";

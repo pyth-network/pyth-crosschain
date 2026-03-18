@@ -422,7 +422,6 @@ describe("PythTest", () => {
 
   it("should correctly update price feeds", async () => {
     await deployContract();
-    let result;
 
     await updateGuardianSets(pythTest, deployer);
 
@@ -437,7 +436,7 @@ describe("PythTest", () => {
     const updateData = Buffer.from(HERMES_BTC_ETH_UPDATE, "hex");
     const updateFee = await pythTest.getUpdateFee(updateData);
 
-    result = await pythTest.sendUpdatePriceFeeds(
+    const result = await pythTest.sendUpdatePriceFeeds(
       deployer.getSender(),
       updateData,
       toNano(updateFee),
@@ -1173,74 +1172,72 @@ describe("PythTest", () => {
     });
 
     // Get the output message
-    const outMessage = result.transactions[1].outMessages.values()[0];
+    const outMessage = result.transactions[1]?.outMessages.values()[0];
 
     // Verify excess value is returned
     expect(
-      (outMessage.info as CommonMessageInfoInternal).value.coins,
+      (outMessage?.info as CommonMessageInfoInternal).value.coins,
     ).toBeGreaterThan(0);
 
-    const cs = outMessage.body.beginParse();
+    const cs = outMessage?.body.beginParse();
 
     // Verify message header
-    const op = cs.loadUint(32);
+    const op = cs?.loadUint(32);
     expect(op).toBe(5); // OP_PARSE_PRICE_FEED_UPDATES
 
     // Verify number of price feeds
-    const numPriceFeeds = cs.loadUint(8);
+    const numPriceFeeds = cs?.loadUint(8);
     expect(numPriceFeeds).toBe(2); // We expect BTC and ETH price feeds
 
     // Load and verify price feeds
-    const priceFeedsCell = cs.loadRef();
+    const priceFeedsCell = cs?.loadRef();
     let currentCell = priceFeedsCell;
 
     // First price feed (BTC)
-    const btcCs = currentCell.beginParse();
-    const btcPriceId =
-      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const btcCs = currentCell?.beginParse();
+    const btcPriceId = `0x${btcCs?.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
 
-    const btcPriceFeedCell = btcCs.loadRef();
-    const btcPriceFeedSlice = btcPriceFeedCell.beginParse();
+    const btcPriceFeedCell = btcCs?.loadRef();
+    const btcPriceFeedSlice = btcPriceFeedCell?.beginParse();
 
     // Verify BTC current price
-    const btcCurrentPriceCell = btcPriceFeedSlice.loadRef();
-    const btcCurrentPrice = btcCurrentPriceCell.beginParse();
-    expect(btcCurrentPrice.loadInt(64)).toBe(HERMES_BTC_PRICE);
-    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_CONF);
-    expect(btcCurrentPrice.loadInt(32)).toBe(HERMES_BTC_EXPO);
-    expect(btcCurrentPrice.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
+    const btcCurrentPriceCell = btcPriceFeedSlice?.loadRef();
+    const btcCurrentPrice = btcCurrentPriceCell?.beginParse();
+    expect(btcCurrentPrice?.loadInt(64)).toBe(HERMES_BTC_PRICE);
+    expect(btcCurrentPrice?.loadUint(64)).toBe(HERMES_BTC_CONF);
+    expect(btcCurrentPrice?.loadInt(32)).toBe(HERMES_BTC_EXPO);
+    expect(btcCurrentPrice?.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
 
     // Verify BTC EMA price
-    const btcEmaPriceCell = btcPriceFeedSlice.loadRef();
-    const btcEmaPrice = btcEmaPriceCell.beginParse();
-    expect(btcEmaPrice.loadInt(64)).toBe(HERMES_BTC_EMA_PRICE);
-    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_EMA_CONF);
-    expect(btcEmaPrice.loadInt(32)).toBe(HERMES_BTC_EMA_EXPO);
-    expect(btcEmaPrice.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
+    const btcEmaPriceCell = btcPriceFeedSlice?.loadRef();
+    const btcEmaPrice = btcEmaPriceCell?.beginParse();
+    expect(btcEmaPrice?.loadInt(64)).toBe(HERMES_BTC_EMA_PRICE);
+    expect(btcEmaPrice?.loadUint(64)).toBe(HERMES_BTC_EMA_CONF);
+    expect(btcEmaPrice?.loadInt(32)).toBe(HERMES_BTC_EMA_EXPO);
+    expect(btcEmaPrice?.loadUint(64)).toBe(HERMES_BTC_PUBLISH_TIME);
 
     // Move to ETH price feed
-    currentCell = btcCs.loadRef();
+    currentCell = btcCs?.loadRef();
 
     // Second price feed (ETH)
-    const ethCs = currentCell.beginParse();
-    const ethPriceId =
-      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const ethCs = currentCell?.beginParse();
+    const ethPriceId = `0x${ethCs?.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
 
-    const ethPriceFeedCell = ethCs.loadRef();
-    const ethPriceFeedSlice = ethPriceFeedCell.beginParse();
+    const ethPriceFeedCell = ethCs?.loadRef();
+    const ethPriceFeedSlice = ethPriceFeedCell?.beginParse();
 
     // Verify ETH current price
-    const ethCurrentPriceCell = ethPriceFeedSlice.loadRef();
-    const ethCurrentPrice = ethCurrentPriceCell.beginParse();
-    expect(ethCurrentPrice.loadInt(64)).toBe(HERMES_ETH_PRICE);
-    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_CONF);
-    expect(ethCurrentPrice.loadInt(32)).toBe(HERMES_ETH_EXPO);
-    expect(ethCurrentPrice.loadUint(64)).toBe(HERMES_ETH_PUBLISH_TIME);
+    const ethCurrentPriceCell = ethPriceFeedSlice?.loadRef();
+    const ethCurrentPrice = ethCurrentPriceCell?.beginParse();
+    expect(ethCurrentPrice?.loadInt(64)).toBe(HERMES_ETH_PRICE);
+    expect(ethCurrentPrice?.loadUint(64)).toBe(HERMES_ETH_CONF);
+    expect(ethCurrentPrice?.loadInt(32)).toBe(HERMES_ETH_EXPO);
+    expect(ethCurrentPrice?.loadUint(64)).toBe(HERMES_ETH_PUBLISH_TIME);
 
     // Verify ETH EMA price
-    const ethEmaPriceCell = ethPriceFeedSlice.loadRef();
+    const ethEmaPriceCell = ethPriceFeedSlice?.loadRef();
     const ethEmaPrice = ethEmaPriceCell.beginParse();
     expect(ethEmaPrice.loadInt(64)).toBe(HERMES_ETH_EMA_PRICE);
     expect(ethEmaPrice.loadUint(64)).toBe(HERMES_ETH_EMA_CONF);
@@ -1320,8 +1317,7 @@ describe("PythTest", () => {
 
     // First price feed (SOL)
     const solCs = currentCell.beginParse();
-    const solPriceId =
-      "0x" + solCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const solPriceId = `0x${solCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(solPriceId).toBe(SOL_PRICE_FEED_ID);
 
     const solPriceFeedCell = solCs.loadRef();
@@ -1348,8 +1344,7 @@ describe("PythTest", () => {
 
     currentCell = pythCs.loadRef(); // Move to USDT
     const usdtCs = currentCell.beginParse();
-    const usdtPriceId =
-      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const usdtPriceId = `0x${usdtCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
 
     const usdtPriceFeedCell = usdtCs.loadRef();
@@ -1431,8 +1426,7 @@ describe("PythTest", () => {
 
     // First price feed (BTC)
     const btcCs = currentCell.beginParse();
-    const btcPriceId =
-      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const btcPriceId = `0x${btcCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
 
     const btcPriceFeedCell = btcCs.loadRef();
@@ -1459,8 +1453,7 @@ describe("PythTest", () => {
 
     // Second price feed (ETH)
     const ethCs = currentCell.beginParse();
-    const ethPriceId =
-      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const ethPriceId = `0x${ethCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
 
     const ethPriceFeedCell = ethCs.loadRef();
@@ -1555,8 +1548,7 @@ describe("PythTest", () => {
 
     // First price feed (SOL)
     const solCs = currentCell.beginParse();
-    const solPriceId =
-      "0x" + solCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const solPriceId = `0x${solCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(solPriceId).toBe(SOL_PRICE_FEED_ID);
 
     const solPriceFeedCell = solCs.loadRef();
@@ -1583,8 +1575,7 @@ describe("PythTest", () => {
 
     currentCell = pythCs.loadRef(); // Move to USDT
     const usdtCs = currentCell.beginParse();
-    const usdtPriceId =
-      "0x" + usdtCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const usdtPriceId = `0x${usdtCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(usdtPriceId).toBe(USDT_PRICE_FEED_ID);
 
     const usdtPriceFeedCell = usdtCs.loadRef();
@@ -1827,8 +1818,7 @@ describe("PythTest", () => {
 
     // First price feed (ETH)
     const ethCs = currentCell.beginParse();
-    const ethPriceId =
-      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const ethPriceId = `0x${ethCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
 
     const ethPriceFeedCell = ethCs.loadRef();
@@ -1855,8 +1845,7 @@ describe("PythTest", () => {
 
     // Second price feed (BTC)
     const btcCs = currentCell.beginParse();
-    const btcPriceId =
-      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const btcPriceId = `0x${btcCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
 
     const btcPriceFeedCell = btcCs.loadRef();
@@ -1930,8 +1919,7 @@ describe("PythTest", () => {
 
     // First price feed (ETH)
     const ethCs = currentCell.beginParse();
-    const ethPriceId =
-      "0x" + ethCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const ethPriceId = `0x${ethCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(ethPriceId).toBe(ETH_PRICE_FEED_ID);
 
     const ethPriceFeedCell = ethCs.loadRef();
@@ -1957,8 +1945,7 @@ describe("PythTest", () => {
 
     // Second price feed (BTC)
     const btcCs = currentCell.beginParse();
-    const btcPriceId =
-      "0x" + btcCs.loadUintBig(256).toString(16).padStart(64, "0");
+    const btcPriceId = `0x${btcCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
     expect(btcPriceId).toBe(BTC_PRICE_FEED_ID);
 
     const btcPriceFeedCell = btcCs.loadRef();
@@ -2046,8 +2033,7 @@ describe("PythTest", () => {
 
     for (let i = 0; i < expectedFeeds.length; i++) {
       const feedCs = currentCell.beginParse();
-      const priceId =
-        "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
+      const priceId = `0x${feedCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
       expect(priceId).toBe(expectedFeeds[i].id);
 
       const priceFeedCell = feedCs.loadRef();
@@ -2225,8 +2211,7 @@ describe("PythTest", () => {
 
     for (let i = 0; i < expectedFeeds.length; i++) {
       const feedCs = currentCell.beginParse();
-      const priceId =
-        "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
+      const priceId = `0x${feedCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
       expect(priceId).toBe(expectedFeeds[i].id);
 
       const priceFeedCell = feedCs.loadRef();
@@ -2416,8 +2401,7 @@ describe("PythTest", () => {
 
     for (let i = 0; i < expectedFeeds.length; i++) {
       const feedCs = currentCell.beginParse();
-      const priceId =
-        "0x" + feedCs.loadUintBig(256).toString(16).padStart(64, "0");
+      const priceId = `0x${feedCs.loadUintBig(256).toString(16).padStart(64, "0")}`;
       expect(priceId).toBe(expectedFeeds[i].id);
 
       const priceFeedCell = feedCs.loadRef();

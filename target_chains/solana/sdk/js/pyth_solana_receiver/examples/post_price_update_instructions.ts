@@ -1,3 +1,4 @@
+// biome-ignore-all lint/nursery/noUndeclaredEnvVars lint/style/noProcessEnv: Example file uses env vars for configuration
 import fs from "node:fs";
 import os from "node:os";
 import { Wallet } from "@coral-xyz/anchor";
@@ -33,6 +34,7 @@ async function main() {
   const {
     postInstructions,
     closeInstructions,
+    // biome-ignore lint/correctness/noUnusedVariables: Kept for future use
     priceFeedIdToPriceUpdateAccount,
   } =
     await pythSolanaReceiver.buildPostPriceUpdateInstructions(priceUpdateData);

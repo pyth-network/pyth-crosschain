@@ -164,7 +164,7 @@ export class InjectivePricePusher implements IPricePusher {
       account.baseAccount.sequence++;
 
       return txResponse;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // The sequence number was invalid and hence we will have to fetch it again
       if (/account sequence mismatch/.exec(JSON.stringify(error)) !== null) {
         this.accounts[injectiveAddress] = undefined;
@@ -225,7 +225,7 @@ export class InjectivePricePusher implements IPricePusher {
         { hash: rs.txHash },
         `Successfully broadcasted txHash for chunk ${chunkIndex}`,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
         this.logger.error(error, `Account not found for chunk ${chunkIndex}`);
 

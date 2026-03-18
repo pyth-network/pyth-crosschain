@@ -45,7 +45,8 @@ export default {
   },
   command: "near",
   describe: "run price pusher for near",
-  handler: async function (argv: any) {
+  // biome-ignore lint/suspicious/noExplicitAny: yargs handler requires any type for argv
+  handler: async (argv: any) => {
     // FIXME: type checks for this
     const {
       nodeUrl,

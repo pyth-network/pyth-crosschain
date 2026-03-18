@@ -14,7 +14,7 @@ function computedGeneric(transaction: Transaction) {
   return transaction.description.computePhase;
 }
 
-export function printTxGasStats(name: string, transaction: Transaction) {
+export function printTxGasStats(_name: string, transaction: Transaction) {
   const txComputed = computedGeneric(transaction);
   return txComputed.gasFees;
 }

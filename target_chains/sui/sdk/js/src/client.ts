@@ -1,3 +1,4 @@
+// biome-ignore-all lint/style/noNonNullAssertion: Legacy code uses non-null assertions
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -44,7 +45,7 @@ export class SuiPythClient {
       )
         throw new Error("Unable to fetch pyth state object");
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
     }
 
@@ -66,7 +67,7 @@ export class SuiPythClient {
         },
       })
       .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
+        if (result.data?.content?.dataType === "moveObject") {
           return result.data.content.fields;
         }
 
@@ -75,7 +76,7 @@ export class SuiPythClient {
 
     if ("upgrade_cap" in state) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       return state.upgrade_cap.fields.package;
     }
@@ -316,7 +317,7 @@ export class SuiPythClient {
       this.priceFeedObjectIdCache.set(
         normalizedFeedId,
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+        // @ts-expect-error
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         result.data.content.fields.value,
       );

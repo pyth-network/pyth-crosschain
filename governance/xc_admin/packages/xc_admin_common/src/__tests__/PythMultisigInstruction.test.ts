@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noDoneCallback: test behavior was existing pre-biome */
 import crypto from "node:crypto";
 
 // @ts-expect-error
@@ -10,9 +11,21 @@ import {
   getPythClusterApiUrl,
   getPythProgramKeyForCluster,
 } from "@pythnetwork/client/lib/cluster";
+import type { AccountMeta } from "@solana/web3.js";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { MultisigInstructionProgram, MultisigParser } from "..";
 import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
+
+/**
+ * Helper function to safely get an account key from instruction keys array
+ */
+function getKeyAtIndex(keys: AccountMeta[], index: number): PublicKey {
+  const key = keys[index];
+  if (!key) {
+    throw new Error(`Expected key at index ${index} but found undefined`);
+  }
+  return key.pubkey;
+}
 
 test("Pyth multisig instruction parse: create price account", (done) => {
   jest.setTimeout(60_000);
@@ -46,7 +59,7 @@ test("Pyth multisig instruction parse: create price account", (done) => {
         expect(parsedInstruction.name).toBe("addPrice");
         expect(
           parsedInstruction.accounts.named.fundingAccount?.pubkey.equals(
-            instruction.keys[0]?.pubkey,
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.fundingAccount?.isSigner).toBe(
@@ -57,7 +70,7 @@ test("Pyth multisig instruction parse: create price account", (done) => {
         ).toBe(instruction.keys[0]?.isWritable);
         expect(
           parsedInstruction.accounts.named.productAccount?.pubkey.equals(
-            instruction.keys[1]?.pubkey,
+            getKeyAtIndex(instruction.keys, 1),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.productAccount?.isSigner).toBe(
@@ -68,7 +81,7 @@ test("Pyth multisig instruction parse: create price account", (done) => {
         ).toBe(instruction.keys[1]?.isWritable);
         expect(
           parsedInstruction.accounts.named.priceAccount?.pubkey.equals(
-            instruction.keys[2]?.pubkey,
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.priceAccount?.isSigner).toBe(
@@ -79,7 +92,7 @@ test("Pyth multisig instruction parse: create price account", (done) => {
         );
         expect(
           parsedInstruction.accounts.named.permissionsAccount?.pubkey.equals(
-            instruction.keys[3]?.pubkey,
+            getKeyAtIndex(instruction.keys, 3),
           ),
         ).toBeTruthy();
         expect(
@@ -130,7 +143,7 @@ test("Pyth multisig instruction parse: set minimum publishers", (done) => {
         expect(parsedInstruction.name).toBe("setMinPub");
         expect(
           parsedInstruction.accounts.named.fundingAccount?.pubkey.equals(
-            instruction.keys[0]?.pubkey,
+            getKeyAtIndex(instruction.keys, 0),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.fundingAccount?.isSigner).toBe(
@@ -141,7 +154,7 @@ test("Pyth multisig instruction parse: set minimum publishers", (done) => {
         ).toBe(instruction.keys[0]?.isWritable);
         expect(
           parsedInstruction.accounts.named.priceAccount?.pubkey.equals(
-            instruction.keys[1]?.pubkey,
+            getKeyAtIndex(instruction.keys, 1),
           ),
         ).toBeTruthy();
         expect(parsedInstruction.accounts.named.priceAccount?.isSigner).toBe(
@@ -152,7 +165,7 @@ test("Pyth multisig instruction parse: set minimum publishers", (done) => {
         );
         expect(
           parsedInstruction.accounts.named.permissionsAccount?.pubkey.equals(
-            instruction.keys[2]?.pubkey,
+            getKeyAtIndex(instruction.keys, 2),
           ),
         ).toBeTruthy();
         expect(
