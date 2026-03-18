@@ -331,7 +331,7 @@ export class IotaPriceFeedContract extends PriceFeedContract {
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
     const result = await provider.getDynamicFieldObject({
-      parentId: this.stateId,
+      parentObjectId: this.stateId,
       name: {
         type: "vector<u8>",
         value: "data_sources",

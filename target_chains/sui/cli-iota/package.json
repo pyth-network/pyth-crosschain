@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.12",
-    "@iota/iota-sdk": "^0.5.0",
+    "@iota/iota-sdk": "^1.11.0",
     "@pythnetwork/contract-manager": "workspace:*",
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",
