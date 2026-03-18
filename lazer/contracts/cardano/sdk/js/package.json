@@ -5,8 +5,11 @@
   "description": "User-facing SDK for the Pyth Lazer Cardano integration",
   "devDependencies": {
     "@cprussin/tsconfig": "catalog:",
+    "@pythnetwork/pyth-lazer-sdk": "^5.2.0",
     "@types/node": "catalog:",
-    "tsx": "catalog:"
+    "@types/yargs": "catalog:",
+    "tsx": "catalog:",
+    "yargs": "catalog:"
   },
   "engines": {
     "node": "^24.0.0"
@@ -42,6 +45,7 @@
   "scripts": {
     "build": "ts-duality --copyOtherFiles",
     "clean": "rm -rf ./dist",
+    "example:fetch-and-verify": "tsx src/examples/fetch-and-verify.ts",
     "test:types": "tsc"
   },
   "type": "module",

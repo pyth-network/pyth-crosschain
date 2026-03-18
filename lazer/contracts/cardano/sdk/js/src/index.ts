@@ -1,3 +1,4 @@
+import type { UTxO } from "@evolution-sdk/evolution";
 import {
   AssetName,
   createClient,
@@ -6,7 +7,10 @@ import {
   Schema,
   TSchema,
 } from "@evolution-sdk/evolution";
-import type { NetworkId } from "@evolution-sdk/evolution/sdk/client/Client";
+import type {
+  NetworkId,
+  ProviderOnlyClient,
+} from "@evolution-sdk/evolution/sdk/client/Client";
 
 /**
  * Cardano network identifier.
@@ -19,7 +23,7 @@ export type Network = Exclude<NetworkId, number>;
 export type Provider =
   | {
       type: "koios";
-      token: string;
+      token?: string;
     }
   | {
       type: "blockfrost";
@@ -30,14 +34,50 @@ export type Provider =
       apiKey: string;
     };
 
-const PYTH_STATE_NFT = AssetName.fromBytes(
-  Buffer.from("Pyth State", "utf-8"),
-);
+/**
+ * Create Cardano client using Evolution SDK.
+ * @param network public network to use
+ * @param provider API provider and token
+ * @returns
+ */
+export function createEvolutionClient(
+  network: Network,
+  provider: Provider,
+): ProviderOnlyClient {
+  return createClient({
+    network,
+    provider: { ...provider, baseUrl: resolveBaseUrl(network, provider) },
+  });
+}
+
+function resolveBaseUrl(network: Network, provider: Provider): string {
+  switch (provider.type) {
+    case "blockfrost": {
+      return `https://cardano-${network}.blockfrost.io/api/v0`;
+    }
+    case "koios": {
+      return `https://${
+        {
+          mainnet: "api",
+          preprod: "preprod",
+          preview: "preview",
+        }[network]
+      }.koios.rest/api/v1`;
+    }
+    case "maestro": {
+      return `https://${network}.gomaestro-api.org/v1`;
+    }
+  }
+}
+
+const PYTH_STATE_NFT = AssetName.fromBytes(Buffer.from("Pyth State", "utf-8"));
 
 // Minimal schema matching the on-chain Pyth state datum layout.
 // Only the `withdraw_script` field is used; the preceding fields
 // are defined to keep positional alignment with the Plutus struct.
+// biome-ignore assist/source/useSortedKeys: order-sensistive
 const PythStateDatum = TSchema.Struct({
+  // biome-ignore assist/source/useSortedKeys: order-sensitive
   governance: TSchema.Struct({
     wormhole: TSchema.ByteArray,
     emitter_chain: TSchema.Integer,
@@ -52,25 +92,12 @@ const PythStateDatum = TSchema.Struct({
   withdraw_script: TSchema.ByteArray,
 });
 
-function resolveBaseUrl(
-  network: Network,
-  provider: Provider,
-): string {
-  switch (provider.type) {
-    case "blockfrost": {
-      return `https://cardano-${network}.blockfrost.io/api/v0`;
-    }
-    case "koios": {
-      return `https://${{
-        mainnet: "api",
-        preprod: "preprod",
-        preview: "preview",
-      }[network]}.koios.rest/api/v1`;
-    }
-    case "maestro": {
-      return `https://${network}.gomaestro-api.org/v1`;
-    }
-  }
+export async function getPythState(
+  policyId: string,
+  client: ProviderOnlyClient,
+): Promise<UTxO.UTxO> {
+  const unit = policyId + AssetName.toHex(PYTH_STATE_NFT);
+  return await client.getUtxoByUnit(unit);
 }
 
 /**
@@ -80,34 +107,19 @@ function resolveBaseUrl(
  * The withdraw script hash is read from the inline datum attached to the
  * State NFT UTxO identified by `policyId`.
  *
- * @param policyId - Hex-encoded policy ID of the Pyth deployment.
- * @param network  - Cardano network to query (e.g. `"preprod"`).
- * @param provider - Provider configuration for the Cardano node.
+ * @param pythState - fetched Pyth State UTxO
  * @returns The withdraw script hash as a hex string.
  */
-export async function getWithdrawScriptHash(
-  policyId: string,
-  network: Network,
-  provider: Provider,
-): Promise<string> {
-  const baseUrl = resolveBaseUrl(network, provider);
-  const client = createClient({
-    network,
-    provider: { baseUrl, ...provider },
-  });
-
-  const unit = policyId + AssetName.toHex(PYTH_STATE_NFT);
-  const utxo = await client.getUtxoByUnit(unit);
-
-  if (!DatumOption.isInlineDatum(utxo.datumOption)) {
+export function getPythScriptHash(pythState: UTxO.UTxO): string {
+  if (!DatumOption.isInlineDatum(pythState.datumOption)) {
     throw new TypeError("State NFT UTxO does not have an inline datum");
   }
 
-  const datum = utxo.datumOption.data;
-  if (!(datum instanceof Data.Constr)) {
+  const { data } = pythState.datumOption;
+  if (!(data instanceof Data.Constr)) {
     throw new TypeError("State NFT datum is not a Constr");
   }
 
-  const state = Schema.decodeSync(PythStateDatum)(datum);
+  const state = Schema.decodeSync(PythStateDatum)(data);
   return Buffer.from(state.withdraw_script).toString("hex");
 }
