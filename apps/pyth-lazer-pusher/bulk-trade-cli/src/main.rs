@@ -126,6 +126,12 @@ struct PusherMetrics {
     ping_latency_sum: f64,
     ping_latency_count: f64,
     ping_timeouts: f64,
+    // New observability metrics
+    feeds_configured: f64,
+    prices_skipped_total: f64,
+    push_queue_depth: f64,
+    push_queue_drops_total: f64,
+    push_timeouts_total: f64,
 }
 
 /// Metrics scraped from a validator instance
@@ -745,6 +751,12 @@ async fn scrape_pusher_metrics(endpoint: &str) -> Result<PusherMetrics> {
                 "lazer_pusher_ws_ping_latency_seconds_sum" => metrics.ping_latency_sum = value,
                 "lazer_pusher_ws_ping_latency_seconds_count" => metrics.ping_latency_count = value,
                 "lazer_pusher_ws_ping_timeouts_total" => metrics.ping_timeouts += value,
+                // Observability metrics
+                "lazer_pusher_feeds_configured" => metrics.feeds_configured = value,
+                "lazer_pusher_prices_skipped_total" => metrics.prices_skipped_total += value,
+                "lazer_pusher_push_queue_depth" => metrics.push_queue_depth = value,
+                "lazer_pusher_push_queue_drops_total" => metrics.push_queue_drops_total += value,
+                "lazer_pusher_push_timeouts_total" => metrics.push_timeouts_total += value,
                 _ => {}
             }
         }
@@ -1040,6 +1052,8 @@ fn render_overview(f: &mut Frame, app: &App, area: Rect) {
     let total_errors: f64 = app.pushers.iter().map(|p| p.push_error).sum();
     let total_push_rate: f64 = app.pushers.iter().map(|p| p.push_rate).sum();
     let total_msg_rate: f64 = app.validators.iter().map(|v| v.msg_rate).sum();
+    let total_timeouts: f64 = app.pushers.iter().map(|p| p.push_timeouts_total).sum();
+    let total_queue_drops: f64 = app.pushers.iter().map(|p| p.push_queue_drops_total).sum();
 
     let success_rate = if total_pushes > 0.0 {
         (total_accepted / total_pushes) * 100.0
@@ -1084,6 +1098,16 @@ fn render_overview(f: &mut Frame, app: &App, area: Rect) {
             Span::raw("  "),
             Span::styled(
                 format!("✗{total_errors:.0}"),
+                Style::default().fg(Color::Red),
+            ),
+            Span::raw("  "),
+            Span::styled(
+                format!("⏱{total_timeouts:.0}"),
+                Style::default().fg(Color::Magenta),
+            ),
+            Span::raw("  "),
+            Span::styled(
+                format!("↓{total_queue_drops:.0}"),
                 Style::default().fg(Color::Red),
             ),
         ]),
@@ -1370,6 +1394,15 @@ fn render_pushers(f: &mut Frame, app: &App, area: Rect) {
                 })
                 .style(ping_style),
                 Cell::from(format!("{:.0}", p.batch_size)),
+                Cell::from(format!("{:.0}/{:.0}", p.batch_size, p.feeds_configured)),
+                Cell::from(format!("{:.0}", p.push_queue_depth)),
+                Cell::from(format!("{:.0}", p.push_timeouts_total)).style(
+                    if p.push_timeouts_total > 0.0 {
+                        Style::default().fg(Color::Red)
+                    } else {
+                        Style::default().fg(Color::DarkGray)
+                    },
+                ),
             ])
             .style(row_style)
         })
@@ -1388,11 +1421,15 @@ fn render_pushers(f: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(8),
             Constraint::Length(8),
             Constraint::Length(6),
+            Constraint::Length(8),
+            Constraint::Length(6),
+            Constraint::Length(8),
         ],
     )
     .header(
         Row::new(vec![
             "", "Instance", "Rate", "Pushes", "Accept", "Dedup", "Error", "Succ%", "Ping", "Batch",
+            "Feeds", "Queue", "Timeout",
         ])
         .style(
             Style::default()

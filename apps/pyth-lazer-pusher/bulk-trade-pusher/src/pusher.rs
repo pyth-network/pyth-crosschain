@@ -41,6 +41,8 @@ pub async fn run(config: Config, runtime: AppRuntime) -> Result<()> {
     .await
     .context("failed to start Lazer receiver")?;
 
+    base_metrics().set_feeds_configured(receiver.feed_registry().len());
+
     run_push_loop(
         config.base.feeds.update_interval,
         receiver,
@@ -92,10 +94,15 @@ async fn run_push_loop(
                 .collect()
         };
 
+        metrics::set_push_queue_depth(bulk_client.queue_depth());
+
         if prices.is_empty() {
             debug!("no prices available, skipping push");
+            metrics::record_prices_skipped();
             continue;
         }
+
+        metrics::record_price_ages(&prices);
 
         let oracles: Vec<PythOraclePrice> = prices
             .iter()
@@ -113,6 +120,7 @@ async fn run_push_loop(
 
         if oracles.is_empty() {
             debug!("no valid prices to push");
+            metrics::record_prices_skipped();
             continue;
         }
 
@@ -137,6 +145,7 @@ async fn run_push_loop(
 
         if !bulk_client.push(tx) {
             warn!("failed to queue transaction (queue full)");
+            metrics::record_push_queue_drop();
         }
     }
 }
