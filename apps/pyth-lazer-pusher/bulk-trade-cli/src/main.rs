@@ -728,21 +728,21 @@ async fn scrape_pusher_metrics(endpoint: &str) -> Result<PusherMetrics> {
 
         if let Some((name, value)) = parse_metric_line(line) {
             match name.as_str() {
-                "bulk_pushes_total" => metrics.bulk_pushes_total += value,
-                "bulk_push_results_total" if line.contains("accepted") => {
+                "lazer_pusher_bulk_pushes_total" => metrics.bulk_pushes_total += value,
+                "lazer_pusher_bulk_push_results_total" if line.contains("accepted") => {
                     metrics.push_accepted += value
                 }
-                "bulk_push_results_total" if line.contains("deduplicated") => {
+                "lazer_pusher_bulk_push_results_total" if line.contains("deduplicated") => {
                     metrics.push_deduplicated += value
                 }
-                "bulk_push_results_total" if line.contains("error") => metrics.push_error += value,
-                "lazer_updates_received_total" => metrics.lazer_updates += value,
-                "bulk_connections_active" => metrics.bulk_connections = value,
-                "batch_size" => metrics.batch_size = value,
+                "lazer_pusher_bulk_push_results_total" if line.contains("error") => metrics.push_error += value,
+                "lazer_pusher_updates_received_total" => metrics.lazer_updates += value,
+                "lazer_pusher_bulk_connections_active" => metrics.bulk_connections = value,
+                "lazer_pusher_batch_size" => metrics.batch_size = value,
                 // Ping/pong metrics from websocket-delivery
-                "ws_ping_latency_seconds_sum" => metrics.ping_latency_sum = value,
-                "ws_ping_latency_seconds_count" => metrics.ping_latency_count = value,
-                "ws_ping_timeouts_total" => metrics.ping_timeouts += value,
+                "lazer_pusher_ws_ping_latency_seconds_sum" => metrics.ping_latency_sum = value,
+                "lazer_pusher_ws_ping_latency_seconds_count" => metrics.ping_latency_count = value,
+                "lazer_pusher_ws_ping_timeouts_total" => metrics.ping_timeouts += value,
                 _ => {}
             }
         }

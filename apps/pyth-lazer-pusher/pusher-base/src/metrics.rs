@@ -24,9 +24,10 @@ impl BaseMetrics {
         Self {
             lazer_updates_received: CounterVec::new(
                 Opts::new(
-                    "lazer_updates_received_total",
+                    "updates_received_total",
                     "Price updates received from Lazer",
                 )
+                .namespace("lazer_pusher")
                 .const_labels(const_labels.clone()),
                 &["feed_id"],
             )
@@ -34,6 +35,7 @@ impl BaseMetrics {
 
             batch_size: Gauge::with_opts(
                 Opts::new("batch_size", "Feeds in last pushed batch")
+                    .namespace("lazer_pusher")
                     .const_labels(const_labels.clone()),
             )
             .expect("failed to create metric"),
@@ -43,6 +45,7 @@ impl BaseMetrics {
                     "last_push_timestamp_seconds",
                     "Last successful push timestamp",
                 )
+                .namespace("lazer_pusher")
                 .const_labels(const_labels),
             )
             .expect("failed to create metric"),

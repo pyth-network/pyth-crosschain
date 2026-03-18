@@ -32,24 +32,29 @@ impl BulkMetrics {
             base: BaseMetrics::new("bulk-trade"),
             ws: DeliveryMetrics::new("bulk-trade"),
 
-            bulk_pushes_total: Counter::new("bulk_pushes_total", "Push responses received")
-                .expect("failed to create metric"),
+            bulk_pushes_total: Counter::with_opts(
+                Opts::new("bulk_pushes_total", "Push responses received")
+                    .namespace("lazer_pusher"),
+            )
+            .expect("failed to create metric"),
 
             bulk_push_results: CounterVec::new(
-                Opts::new("bulk_push_results_total", "Push results by status"),
+                Opts::new("bulk_push_results_total", "Push results by status")
+                    .namespace("lazer_pusher"),
                 &["status"],
             )
             .expect("failed to create metric"),
 
             bulk_push_latency: Histogram::with_opts(
                 HistogramOpts::new("bulk_push_latency_seconds", "Push latency")
+                    .namespace("lazer_pusher")
                     .buckets(vec![0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]),
             )
             .expect("failed to create metric"),
 
-            bulk_connections_active: Gauge::new(
-                "bulk_connections_active",
-                "Connected validator endpoints",
+            bulk_connections_active: Gauge::with_opts(
+                Opts::new("bulk_connections_active", "Connected validator endpoints")
+                    .namespace("lazer_pusher"),
             )
             .expect("failed to create metric"),
         }
