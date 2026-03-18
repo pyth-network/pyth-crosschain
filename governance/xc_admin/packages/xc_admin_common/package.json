@@ -450,6 +450,16 @@
         "types": "./dist/cjs/remote_executor.d.ts"
       }
     },
+    "./utils/buffer": {
+      "import": {
+        "default": "./dist/esm/utils/buffer.mjs",
+        "types": "./dist/esm/utils/buffer.d.ts"
+      },
+      "require": {
+        "default": "./dist/cjs/utils/buffer.cjs",
+        "types": "./dist/cjs/utils/buffer.d.ts"
+      }
+    },
     "./wormhole": {
       "import": {
         "default": "./dist/esm/wormhole.mjs",

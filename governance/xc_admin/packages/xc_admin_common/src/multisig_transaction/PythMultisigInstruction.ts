@@ -9,11 +9,13 @@ import { resolveAccountNames } from "./anchor";
 export class PythMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.PythOracle;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

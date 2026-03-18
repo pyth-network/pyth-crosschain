@@ -31,3 +31,4 @@ dist/
 **/.ai/** 
 apps/mcp/docs/
 CLAUDE.md
+.claude/**

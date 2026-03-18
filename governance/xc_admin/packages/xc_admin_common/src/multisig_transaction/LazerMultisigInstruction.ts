@@ -10,11 +10,13 @@ import { MultisigInstructionProgram, UNRECOGNIZED_INSTRUCTION } from "./index";
 export class LazerMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.Lazer;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

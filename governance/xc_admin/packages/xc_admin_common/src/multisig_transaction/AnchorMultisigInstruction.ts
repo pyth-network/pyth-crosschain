@@ -33,12 +33,14 @@ export const INTEGRITY_POOL_PROGRAM_ID = new PublicKey(
 export class AnchorMultisigInstruction implements MultisigInstruction {
   readonly program: MultisigInstructionProgram;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     program: MultisigInstructionProgram,
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

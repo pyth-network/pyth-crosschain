@@ -1,5 +1,6 @@
 import * as BufferLayout from "@solana/buffer-layout";
 import type { ChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 import {
   PythGovernanceActionImpl,
@@ -105,6 +106,10 @@ export class SetFeeInToken extends PythGovernanceActionImpl {
       fieldsBuf,
     );
 
-    return Buffer.concat([headerBuffer, fieldsBuf, this.token]);
+    // We explicitly cast the array of Buffers to Uint8Array[] because TypeScript 5.6+
+    // introduced Iterator helpers on Uint8Array that @types/node's Buffer Iterator does not have.
+    // This causes a structural typing mismatch during Vercel builds where the Node environment
+    // resolves these types differently than local builds.
+    return safeBufferConcat([headerBuffer, fieldsBuf, this.token]);
   }
 }

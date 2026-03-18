@@ -117,5 +117,6 @@ export type InstructionAccountsTypeMap = {
 export type ValidationResult = {
   isValid: boolean;
   error?: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   changes?: any;
 };

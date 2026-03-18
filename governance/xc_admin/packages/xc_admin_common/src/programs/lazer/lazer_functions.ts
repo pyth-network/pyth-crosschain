@@ -45,6 +45,7 @@ export type LazerConfigParams = {
 export type LazerInstructionAccounts = {
   fundingAccount: PublicKey;
   // Lazer-specific properties
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   lazerProgramClient?: any; // Replace with proper type when available
   cluster: PythCluster;
   additionalAccounts?: Record<string, PublicKey>;

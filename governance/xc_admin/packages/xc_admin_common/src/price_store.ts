@@ -12,6 +12,7 @@ import {
   UNRECOGNIZED_INSTRUCTION,
 } from "./multisig_transaction";
 import type { AnchorAccounts } from "./multisig_transaction/anchor";
+import { safeBufferConcat } from "./utils/buffer";
 
 export const PRICE_STORE_PROGRAM_ID: PublicKey = new PublicKey(
   "3m6sv6HGqEbuyLV84mD7rJn4MAC9LhUa1y1AUNVqcPfr",
@@ -70,7 +71,7 @@ export function createPriceStoreInstruction(
   switch (data.type) {
     case "Initialize": {
       const [configKey, configBump] = findPriceStoreConfigAddress();
-      const instructionData = Buffer.concat([
+      const instructionData = safeBufferConcat([
         Buffer.from([InstructionId.Initialize, configBump]),
         data.data.authorityKey.toBuffer(),
       ]);
@@ -101,7 +102,7 @@ export function createPriceStoreInstruction(
       const [configKey, configBump] = findPriceStoreConfigAddress();
       const [publisherConfigKey, publisherConfigBump] =
         findPriceStorePublisherConfigAddress(data.data.publisherKey);
-      const instructionData = Buffer.concat([
+      const instructionData = safeBufferConcat([
         Buffer.from([
           InstructionId.InitializePublisher,
           configBump,
@@ -171,7 +172,8 @@ export function parsePriceStoreInstruction(
       data = {
         data: {
           authorityKey,
-          payerKey: instruction.keys[0]?.pubkey,
+          // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
+          payerKey: instruction.keys[0]!.pubkey,
         },
         type: "Initialize",
       };
@@ -187,8 +189,10 @@ export function parsePriceStoreInstruction(
       }
       data = {
         data: {
-          authorityKey: instruction.keys[0]?.pubkey,
-          bufferKey: instruction.keys[3]?.pubkey,
+          // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
+          authorityKey: instruction.keys[0]!.pubkey,
+          // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
+          bufferKey: instruction.keys[3]!.pubkey,
           publisherKey,
         },
         type: "InitializePublisher",
@@ -219,6 +223,7 @@ export function parsePriceStoreInstruction(
     a.pubkey.equals(b.pubkey);
 
   const accountMismatch = expected.keys.some(
+    // biome-ignore lint/style/noNonNullAssertion: existing logic, keeping the null assertion override
     (ex, index) => !accountEquals(ex, instruction.keys[index]!),
   );
   if (accountMismatch) {
@@ -234,11 +239,13 @@ export function parsePriceStoreInstruction(
 export class PriceStoreMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.PythPriceStore;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

@@ -76,6 +76,7 @@ export function getProgramName(program: MultisigInstructionProgram) {
 export type MultisigInstruction = {
   readonly program: MultisigInstructionProgram;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 };
@@ -83,11 +84,13 @@ export type MultisigInstruction = {
 export class UnrecognizedProgram implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.UnrecognizedProgram;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

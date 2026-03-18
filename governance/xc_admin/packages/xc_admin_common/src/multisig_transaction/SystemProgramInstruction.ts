@@ -7,11 +7,13 @@ import type { AnchorAccounts } from "./anchor";
 export class SystemProgramMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.SystemProgram;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

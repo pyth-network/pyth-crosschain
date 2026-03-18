@@ -1,5 +1,6 @@
 import * as BufferLayout from "@solana/buffer-layout";
 import type { ChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
 import type { ActionName, PythGovernanceAction } from "./PythGovernanceAction";
 import {
   PythGovernanceActionImpl,
@@ -45,7 +46,7 @@ export class AuthorizeGovernanceDataSourceTransfer
       this.targetChainId,
       this.actionName,
     ).encode();
-    return Buffer.concat([headerBuffer, this.claimVaa]);
+    return safeBufferConcat([headerBuffer, this.claimVaa]);
   }
 }
 

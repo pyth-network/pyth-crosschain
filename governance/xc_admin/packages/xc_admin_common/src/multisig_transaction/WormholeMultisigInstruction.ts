@@ -13,12 +13,14 @@ import { resolveAccountNames } from "./anchor";
 export class WormholeMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.WormholeBridge;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
   readonly governanceAction: PythGovernanceAction | undefined;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
     governanceAction: PythGovernanceAction | undefined,

@@ -12,11 +12,13 @@ import type { AnchorAccounts } from "./anchor";
 export class SolanaStakingMultisigInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.SolanaStakingProgram;
   readonly name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: legacy typing
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
 
   constructor(
     name: string,
+    // biome-ignore lint/suspicious/noExplicitAny: legacy typing
     args: { [key: string]: any },
     accounts: AnchorAccounts,
   ) {

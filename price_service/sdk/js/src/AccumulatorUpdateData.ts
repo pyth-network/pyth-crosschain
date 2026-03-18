@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import { safeBufferConcat } from "./utils/buffer.js";
 
 const ACCUMULATOR_MAGIC = "504e4155";
 const MAJOR_VERSION = 1;
@@ -157,10 +158,10 @@ export function sliceAccumulatorUpdateData(
   }
 
   const sliceUpdates = updates.slice(start, end);
-  return Buffer.concat([
+  return safeBufferConcat([
     data.subarray(0, endOfVaa),
     Buffer.from([sliceUpdates.length]),
-    ...updates.slice(start, end),
+    ...sliceUpdates,
   ]);
 }
 

@@ -3,6 +3,7 @@ import { Layout } from "@solana/buffer-layout";
 import type { AccountMeta, TransactionInstruction } from "@solana/web3.js";
 import { PACKET_DATA_SIZE, PublicKey } from "@solana/web3.js";
 import type { ChainName } from "../chains";
+import { safeBufferConcat } from "../utils/buffer";
 import type { PythGovernanceAction } from ".";
 import { PythGovernanceHeader, safeLayoutDecode } from ".";
 
@@ -120,6 +121,6 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     });
 
     const span = ExecutePostedVaa.layout.encode(instructions, buffer);
-    return Buffer.concat([headerBuffer, buffer.subarray(0, span)]);
+    return safeBufferConcat([headerBuffer, buffer.subarray(0, span)]);
   }
 }
